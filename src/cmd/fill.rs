@@ -63,8 +63,8 @@ Common options:
 
 type ByteString = Vec<u8>;
 
-type BoxedWriter = csv::Writer<Box<io::Write + 'static>>;
-type BoxedReader = csv::Reader<Box<io::Read + 'static>>;
+type BoxedWriter = csv::Writer<Box<dyn io::Write + 'static>>;
+type BoxedReader = csv::Reader<Box<dyn io::Read + 'static>>;
 
 #[derive(Deserialize)]
 struct Args {

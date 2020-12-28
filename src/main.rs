@@ -13,6 +13,7 @@ extern crate serde_derive;
 extern crate stats;
 extern crate tabwriter;
 extern crate threadpool;
+extern crate date_time_parser;
 
 use std::borrow::ToOwned;
 use std::env;
@@ -57,6 +58,7 @@ macro_rules! command_list {
     join        Join CSV files
     partition   Partition CSV data based on a column value
     sample      Randomly sample CSV data
+    rename      Rename the columns of CSV data efficiently
     reverse     Reverse rows of CSV data
     search      Search CSV data with regexes
     select      Select columns from CSV
