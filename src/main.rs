@@ -13,7 +13,6 @@ extern crate serde_derive;
 extern crate stats;
 extern crate tabwriter;
 extern crate threadpool;
-extern crate date_time_parser;
 
 use std::borrow::ToOwned;
 use std::env;

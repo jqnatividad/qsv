@@ -51,6 +51,8 @@ since the 0.13.0 release that I found useful. It also implements percentage samp
   (i.e., mean, standard deviation, median, range, etc.)
 * **table** - Show aligned output of any CSV data using
   [elastic tabstops](https://github.com/BurntSushi/tabwriter).
+* **transpose** - Transpose rows/columns of CSV data.
+
 
 
 ### A whirlwind tour
