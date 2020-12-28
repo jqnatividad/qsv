@@ -9,17 +9,16 @@ This README contains information on how to
 [install `xsv`](https://github.com/BurntSushi/xsv#installation), in addition to
 a quick tour of several commands.
 
-[![Linux build status](https://api.travis-ci.org/BurntSushi/xsv.svg)](https://travis-ci.org/BurntSushi/xsv)
-[![Windows build status](https://ci.appveyor.com/api/projects/status/github/BurntSushi/xsv?svg=true)](https://ci.appveyor.com/project/BurntSushi/xsv)
-[![](https://meritbadge.herokuapp.com/xsv)](https://crates.io/crates/xsv)
-
 Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org).
 
+**NOTE:** This is a fork of the popular https://github.com/BurntSushi/xsv, merging several pending PRs
+since the 0.13.0 release that I found useful. It also implements percentage sampling.
 
 ### Available commands
 
 * **cat** - Concatenate CSV files by row or by column.
 * **count** - Count the rows in a CSV file. (Instantaneous with an index.)
+* **fill** - Fill empty values.
 * **fixlengths** - Force a CSV file to have same-length records by either
   padding or truncating them.
 * **flatten** - A flattened view of CSV records. Useful for viewing one record
@@ -38,6 +37,7 @@ Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org).
 * **partition** - Partition CSV data based on a column value.
 * **sample** - Randomly draw rows from CSV data using reservoir sampling (i.e.,
   use memory proportional to the size of the sample).
+* **rename** -  Rename the columns of CSV data efficiently.
 * **reverse** - Reverse order of rows in CSV data.
 * **search** - Run a regex over CSV data. Applies the regex to each field
   individually and shows only matching rows.

@@ -18,6 +18,9 @@ When an index is present, this command will use random indexing if the sample
 size is less than 10% of the total number of records. This allows for efficient
 sampling such that the entire CSV file is not parsed.
 
+When sample-size is between 0 and 1 exclusive, it is treated as a percentage
+of the CSV to sample (e.g. 0.20 is 20 percent). This requires an index.
+
 This command is intended to provide a means to sample from a CSV data set that
 is too big to fit into memory (for example, for use with commands like 'xsv
 frequency' or 'xsv stats'). It will however visit every CSV record exactly

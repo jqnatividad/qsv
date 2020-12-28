@@ -4,6 +4,6 @@ version=$(git describe --abbrev=0 --tags)
 name="xsv-$version-x86_64-unknown-linux-gnu"
 
 ./scripts/build-release
-github-release upload --user BurntSushi --repo xsv --tag $version \
+github-release upload --user jqnatividad --repo xsv --tag $version \
   --name "$name.tar.gz" \
   --file "./builds/$name.tar.gz"
