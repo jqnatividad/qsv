@@ -11,8 +11,8 @@ a quick tour of several commands.
 
 Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org).
 
-**NOTE:** This is a fork of the popular https://github.com/BurntSushi/xsv, merging several pending PRs
-since the 0.13.0 release that I found useful. It also implements percentage sampling.
+| **NOTE:** This is a fork of the popular https://github.com/BurntSushi/xsv, merging several pending PRs since the 0.13.0 release that I found useful. It also implements percentage sampling. |
+|----|
 
 ### Available commands
 
