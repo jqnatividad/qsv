@@ -1,4 +1,4 @@
-xsv is a command line program for indexing, slicing, analyzing, splitting
+qsv is a command line program for indexing, slicing, analyzing, splitting
 and joining CSV files. Commands should be simple, fast and composable:
 
 1. Simple tasks should be easy.
@@ -11,7 +11,7 @@ a quick tour of several commands.
 
 Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org).
 
-| **NOTE:** This is a fork of the popular https://github.com/BurntSushi/xsv, merging several pending PRs since the 0.13.0 release that I found useful. It also implements percentage sampling. |
+| **NOTE:** qsv is a fork of the popular https://github.com/BurntSushi/xsv, merging several pending PRs since the 0.13.0 release that I found useful. It also implements percentage sampling. |
 |----|
 
 ### Available commands
