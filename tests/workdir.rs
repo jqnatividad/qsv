@@ -12,9 +12,9 @@ use csv;
 
 use Csv;
 
-static XSV_INTEGRATION_TEST_DIR: &'static str = "xit";
+static QSV_INTEGRATION_TEST_DIR: &'static str = "xit";
 
-static NEXT_ID: atomic::AtomicUsize = atomic::ATOMIC_USIZE_INIT;
+static NEXT_ID: atomic::AtomicUsize = atomic::AtomicUsize::new(0);
 
 pub struct Workdir {
     root: PathBuf,
@@ -32,7 +32,7 @@ impl Workdir {
         if root.ends_with("deps") {
             root.pop();
         }
-        let dir = root.join(XSV_INTEGRATION_TEST_DIR)
+        let dir = root.join(QSV_INTEGRATION_TEST_DIR)
                       .join(name)
                       .join(&format!("test-{}", id));
         // println!("{:?}", dir);
@@ -83,7 +83,7 @@ impl Workdir {
     }
 
     pub fn command(&self, sub_command: &str) -> process::Command {
-        let mut cmd = process::Command::new(&self.xsv_bin());
+        let mut cmd = process::Command::new(&self.qsv_bin());
         cmd.current_dir(&self.dir).arg(sub_command);
         cmd
     }
@@ -142,8 +142,8 @@ impl Workdir {
         self.dir.join(name)
     }
 
-    pub fn xsv_bin(&self) -> PathBuf {
-        self.root.join("xsv")
+    pub fn qsv_bin(&self) -> PathBuf {
+        self.root.join("qsv")
     }
 }
 

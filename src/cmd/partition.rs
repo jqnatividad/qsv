@@ -19,8 +19,8 @@ The files are written to the output directory with filenames based on the
 values in the partition column and the `--filename` flag.
 
 Usage:
-    xsv partition [options] <column> <outdir> [<input>]
-    xsv partition --help
+    qsv partition [options] <column> <outdir> [<input>]
+    qsv partition --help
 
 partition options:
     --filename <filename>  A filename template to use when constructing
@@ -135,7 +135,7 @@ impl Args {
     }
 }
 
-type BoxedWriter = csv::Writer<Box<io::Write+'static>>;
+type BoxedWriter = csv::Writer<Box<dyn io::Write+'static>>;
 
 /// Generates unique filenames based on CSV values.
 struct WriterGenerator {

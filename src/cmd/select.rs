@@ -5,7 +5,7 @@ use config::{Config, Delimiter};
 use select::SelectColumns;
 use util;
 
-static USAGE: &'static str = "
+static USAGE: &'static str = r#"
 Select columns from CSV data efficiently.
 
 This command lets you manipulate the columns in CSV data. You can re-order
@@ -14,28 +14,32 @@ name if there is a header row (duplicate column names can be disambiguated with
 more indexing). Finally, column ranges can be specified.
 
   Select the first and fourth columns:
-  $ xsv select 1,4
+  $ qsv select 1,4
 
   Select the first 4 columns (by index and by name):
-  $ xsv select 1-4
-  $ xsv select Header1-Header4
+  $ qsv select 1-4
+  $ qsv select Header1-Header4
 
   Ignore the first 2 columns (by range and by omission):
-  $ xsv select 3-
-  $ xsv select '!1-2'
+  $ qsv select 3-
+  $ qsv select '!1-2'
 
   Select the third column named 'Foo':
-  $ xsv select 'Foo[2]'
+  $ qsv select 'Foo[2]'
+
+  Select columns using a regex using '/<regex>/':
+  $ qsv select /^a/
+  $ qsv select '/^.*\d.*$/'
 
   Re-order and duplicate columns arbitrarily:
-  $ xsv select 3-1,Header3-Header1,Header1,Foo[2],Header1
+  $ qsv select 3-1,Header3-Header1,Header1,Foo[2],Header1
 
   Quote column names that conflict with selector syntax:
-  $ xsv select '\"Date - Opening\",\"Date - Actual Closing\"'
+  $ qsv select '\"Date - Opening\",\"Date - Actual Closing\"'
 
 Usage:
-    xsv select [options] [--] <selection> [<input>]
-    xsv select --help
+    qsv select [options] [--] <selection> [<input>]
+    qsv select --help
 
 Common options:
     -h, --help             Display this message
@@ -45,7 +49,7 @@ Common options:
                            sliced, etc.)
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
-";
+"#;
 
 #[derive(Deserialize)]
 struct Args {

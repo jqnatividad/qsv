@@ -16,7 +16,7 @@ Note that multiple CSV files may be given to this command. This is useful with
 the --intersect flag.
 
 Usage:
-    xsv headers [options] [<input>...]
+    qsv headers [options] [<input>...]
 
 headers options:
     -j, --just-names       Only show the header names (hide column index).
@@ -57,7 +57,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     }
 
-    let mut wtr: Box<io::Write> =
+    let mut wtr: Box<dyn io::Write> =
         if args.flag_just_names {
             Box::new(io::stdout())
         } else {

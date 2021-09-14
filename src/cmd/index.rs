@@ -19,8 +19,8 @@ data changes after the index is made, commands that try to use it will result
 in an error (you have to regenerate the index before it can be used again).
 
 Usage:
-    xsv index [options] <input>
-    xsv index --help
+    qsv index [options] <input>
+    qsv index --help
 
 index options:
     -o, --output <file>    Write index to <file> instead of <input>.idx.

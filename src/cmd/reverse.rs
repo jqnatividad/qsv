@@ -11,7 +11,7 @@ or when keys are not unique and order of rows with the same key needs to be pres
 Note that this requires reading all of the CSV data into memory.
 
 Usage:
-    xsv reverse [options] [<input>]
+    qsv reverse [options] [<input>]
 
 Common options:
     -h, --help             Display this message
