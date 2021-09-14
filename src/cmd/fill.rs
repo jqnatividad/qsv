@@ -42,8 +42,8 @@ re-ordered during output due to the buffering of rows
 collected before the first valid value.
 
 Usage:
-    xsv fill [options] [--] <selection> [<input>]
-    xsv fill --help
+    qsv fill [options] [--] <selection> [<input>]
+    qsv fill --help
 
 fill options:
     -g --groupby <keys>    Group by specified columns.

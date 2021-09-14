@@ -14,11 +14,11 @@ Sorts CSV data lexicographically.
 Note that this requires reading all of the CSV data into memory.
 
 Usage:
-    xsv sort [options] [<input>]
+    qsv sort [options] [<input>]
 
 sort options:
     -s, --select <arg>     Select a subset of columns to sort.
-                           See 'xsv select --help' for the format details.
+                           See 'qsv select --help' for the format details.
     -N, --numeric          Compare according to string numerical value
     -R, --reverse          Reverse order
 

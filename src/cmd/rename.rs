@@ -11,14 +11,14 @@ This command lets you rename the columns in CSV data. You must specify
 all of the headers, and separate them by a comma.
 
   Change the name of the columns:
-  $ xsv rename id,name,title
+  $ qsv rename id,name,title
 
   Use column names that contains commas and conflict with the separator:
-  $ xsv rename '\"Date - Opening\",\"Date - Actual Closing\"'
+  $ qsv rename '\"Date - Opening\",\"Date - Actual Closing\"'
 
 Usage:
-    xsv rename [options] [--] <headers> [<input>]
-    xsv rename --help
+    qsv rename [options] [--] <headers> [<input>]
+    qsv rename --help
 
 Common options:
     -h, --help             Display this message

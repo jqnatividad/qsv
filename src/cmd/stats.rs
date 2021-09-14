@@ -30,16 +30,16 @@ default set of statistics corresponds to statistics that can be computed
 efficiently on a stream of data (i.e., constant memory).
 
 Computing statistics on a large file can be made much faster if you create
-an index for it first with 'xsv index'.
+an index for it first with 'qsv index'.
 
 Usage:
-    xsv stats [options] [<input>]
+    qsv stats [options] [<input>]
 
 stats options:
     -s, --select <arg>     Select a subset of columns to compute stats for.
-                           See 'xsv select --help' for the format details.
-                           This is provided here because piping 'xsv select'
-                           into 'xsv stats' will disable the use of indexing.
+                           See 'qsv select --help' for the format details.
+                           This is provided here because piping 'qsv select'
+                           into 'qsv stats' will disable the use of indexing.
     --everything           Show all statistics available.
     --mode                 Show the mode.
                            This requires storing all CSV data in memory.

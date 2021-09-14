@@ -17,7 +17,7 @@ There is also a condensed view (-c or --condense) that will shorten the
 contents of each field to provide a summary view.
 
 Usage:
-    xsv flatten [options] [<input>]
+    qsv flatten [options] [<input>]
 
 flatten options:
     -c, --condense <arg>  Limits the length of each field to the value

@@ -15,13 +15,13 @@ with the '--select' flag (but the full row is still written to the output if
 there is a match).
 
 Usage:
-    xsv search [options] <regex> [<input>]
-    xsv search --help
+    qsv search [options] <regex> [<input>]
+    qsv search --help
 
 search options:
     -i, --ignore-case      Case insensitive search. This is equivalent to
                            prefixing the regex with '(?i)'.
-    -s, --select <arg>     Select the columns to search. See 'xsv select -h'
+    -s, --select <arg>     Select the columns to search. See 'qsv select -h'
                            for the full syntax.
     -v, --invert-match     Select only rows that did not match
 

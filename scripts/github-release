@@ -1,7 +1,7 @@
 #!/bin/sh
 
 version=$(git describe --abbrev=0 --tags)
-name="xsv-$version-x86_64-unknown-linux-gnu"
+name="qsv-$version-x86_64-unknown-linux-gnu"
 
-github-release release --user jqnatividad --repo xsv --tag $version \
-  --name "xsv-$version" --pre-release
+github-release release --user jqnatividad --repo qsv --tag $version \
+  --name "qsv-$version" --pre-release

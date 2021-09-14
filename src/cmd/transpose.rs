@@ -11,7 +11,7 @@ Note that by default this reads all of the CSV data into memory,
 unless --multipass is given.
 
 Usage:
-    xsv transpose [options] [<input>]
+    qsv transpose [options] [<input>]
 
 transpose options:
     -m, --multipass        Process the transpose by making multiple

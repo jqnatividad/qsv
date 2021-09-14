@@ -42,7 +42,7 @@ run_test_suite() {
     cargo test --target $TARGET
 
     # sanity check the file type
-    file target/$TARGET/debug/xsv
+    file target/$TARGET/debug/qsv
 }
 
 main() {

@@ -17,7 +17,7 @@ Therefore, you should use the 'sample' or 'slice' command to trim down large
 CSV data before formatting it with this command.
 
 Usage:
-    xsv table [options] [<input>]
+    qsv table [options] [<input>]
 
 table options:
     -w, --width <arg>      The minimum width of each column.

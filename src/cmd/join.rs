@@ -28,11 +28,11 @@ The columns arguments specify the columns to join for each input. Columns can
 be referenced by name or index, starting at 1. Specify multiple columns by
 separating them with a comma. Specify a range of columns with `-`. Both
 columns1 and columns2 must specify exactly the same number of columns.
-(See 'xsv select --help' for the full syntax.)
+(See 'qsv select --help' for the full syntax.)
 
 Usage:
-    xsv join [options] <columns1> <input1> <columns2> <input2>
-    xsv join --help
+    qsv join [options] <columns1> <input1> <columns2> <input2>
+    qsv join --help
 
 join options:
     --no-case              When set, joins are done case insensitively.

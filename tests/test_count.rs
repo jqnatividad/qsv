@@ -1,7 +1,7 @@
 use {CsvData, qcheck};
 use workdir::Workdir;
 
-/// This tests whether `xsv count` gets the right answer.
+/// This tests whether `qsv count` gets the right answer.
 ///
 /// It does some simple case analysis to handle whether we want to test counts
 /// in the presence of headers and/or indexes.

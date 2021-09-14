@@ -1,9 +1,9 @@
 #!/bin/sh
 
 version=$(git describe --abbrev=0 --tags)
-name="xsv-$version-x86_64-unknown-linux-gnu"
+name="qsv-$version-x86_64-unknown-linux-gnu"
 
 ./scripts/build-release
-github-release upload --user jqnatividad --repo xsv --tag $version \
+github-release upload --user jqnatividad --repo qsv --tag $version \
   --name "$name.tar.gz" \
   --file "./builds/$name.tar.gz"

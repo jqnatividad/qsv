@@ -1,18 +1,18 @@
 [package]
-name = "xsv"
-version = "0.13.1"  #:version
-authors = ["Andrew Gallant <jamslam@gmail.com>"]
-description = "A high performance CSV command line toolkit."
-documentation = "https://burntsushi.net/rustdoc/xsv/"
-homepage = "https://github.com/BurntSushi/xsv"
-repository = "https://github.com/BurntSushi/xsv"
+name = "qsv"
+version = "0.14.0"  #:version
+authors = ["Joel Natividad <joel@datHere.com>"]
+description = "A high performance CSV command line toolkit forked from xsv."
+documentation = "https://github.com/jqnatividad/qsv"
+homepage = "https://github.com/jqnatividad/qsv"
+repository = "https://github.com/jqnatividad/qsv"
 readme = "README.md"
 keywords = ["csv", "tsv", "slice", "command"]
 license = "Unlicense/MIT"
 autotests = false
 
 [[bin]]
-name = "xsv"
+name = "qsv"
 test = false
 bench = false
 doctest = false

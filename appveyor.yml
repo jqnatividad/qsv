@@ -13,9 +13,9 @@ init:
 environment:
   CARGO_HOME: "c:\\cargo"
   RUSTUP_HOME: "c:\\rustup"
-  CARGO_TARGET_DIR: "c:\\projects\\xsv\\target"
+  CARGO_TARGET_DIR: "c:\\projects\\qsv\\target"
   global:
-    PROJECT_NAME: xsv
+    PROJECT_NAME: qsv
     RUST_BACKTRACE: full
   matrix:
     # Stable channel
@@ -53,7 +53,7 @@ before_deploy:
   - cargo build --release
   - mkdir staging
   # TODO update this part to copy the artifacts that make sense for your project
-  - copy target\release\xsv.exe staging
+  - copy target\release\qsv.exe staging
   - cd staging
     # release zipfile will look like 'rust-everywhere-v1.2.3-x86_64-pc-windows-msvc'
   - 7z a ../%PROJECT_NAME%-%APPVEYOR_REPO_TAG_NAME%-%TARGET%.zip *

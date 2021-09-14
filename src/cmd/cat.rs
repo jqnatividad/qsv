@@ -19,9 +19,9 @@ data given are used. Headers in subsequent inputs are ignored. (This behavior
 can be disabled with --no-headers.)
 
 Usage:
-    xsv cat rows    [options] [<input>...]
-    xsv cat columns [options] [<input>...]
-    xsv cat --help
+    qsv cat rows    [options] [<input>...]
+    qsv cat columns [options] [<input>...]
+    qsv cat --help
 
 cat options:
     -p, --pad              When concatenating columns, this flag will cause
