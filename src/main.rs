@@ -45,6 +45,7 @@ macro_rules! command_list {
 "
     cat         Concatenate by row or column
     count       Count records
+    fill        Fill empty values
     fixlengths  Makes all records have same length
     flatten     Show one field per line
     fmt         Format CSV output (change field delimiter)
@@ -56,6 +57,7 @@ macro_rules! command_list {
     join        Join CSV files
     partition   Partition CSV data based on a column value
     sample      Randomly sample CSV data
+    rename      Rename the columns of CSV data efficiently
     reverse     Reverse rows of CSV data
     search      Search CSV data with regexes
     select      Select columns from CSV
@@ -64,6 +66,7 @@ macro_rules! command_list {
     split       Split CSV data into many files
     stats       Compute basic statistics
     table       Align CSV data into columns
+    transpose   Transpose rows/columns of CSV data
 "
     )
 }
@@ -142,6 +145,7 @@ Please choose one of the following commands:",
 enum Command {
     Cat,
     Count,
+    Fill,
     FixLengths,
     Flatten,
     Fmt,
@@ -152,6 +156,7 @@ enum Command {
     Input,
     Join,
     Partition,
+    Rename,
     Reverse,
     Sample,
     Search,
@@ -161,6 +166,7 @@ enum Command {
     Split,
     Stats,
     Table,
+    Transpose,
 }
 
 impl Command {
@@ -177,6 +183,7 @@ impl Command {
         match self {
             Command::Cat => cmd::cat::run(argv),
             Command::Count => cmd::count::run(argv),
+            Command::Fill => cmd::fill::run(argv),
             Command::FixLengths => cmd::fixlengths::run(argv),
             Command::Flatten => cmd::flatten::run(argv),
             Command::Fmt => cmd::fmt::run(argv),
@@ -187,6 +194,7 @@ impl Command {
             Command::Input => cmd::input::run(argv),
             Command::Join => cmd::join::run(argv),
             Command::Partition => cmd::partition::run(argv),
+            Command::Rename => cmd::rename::run(argv),
             Command::Reverse => cmd::reverse::run(argv),
             Command::Sample => cmd::sample::run(argv),
             Command::Search => cmd::search::run(argv),
@@ -196,6 +204,7 @@ impl Command {
             Command::Split => cmd::split::run(argv),
             Command::Stats => cmd::stats::run(argv),
             Command::Table => cmd::table::run(argv),
+            Command::Transpose => cmd::transpose::run(argv),
         }
     }
 }

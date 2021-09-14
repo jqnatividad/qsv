@@ -11,7 +11,8 @@ Select columns from CSV data efficiently.
 This command lets you manipulate the columns in CSV data. You can re-order
 them, duplicate them or drop them. Columns can be referenced by index or by
 name if there is a header row (duplicate column names can be disambiguated with
-more indexing). Finally, column ranges can be specified.
+more indexing). Column ranges can also be specified. Finally, columns can be
+selected using regular expressions.
 
   Select the first and fourth columns:
   $ qsv select 1,4
@@ -30,6 +31,10 @@ more indexing). Finally, column ranges can be specified.
   Select columns using a regex using '/<regex>/':
   $ qsv select /^a/
   $ qsv select '/^.*\d.*$/'
+
+  Select columns using a regex using '/<regex>/':
+  $ xsv select /^a/
+  $ xsv select '/^.*\d.*$/'
 
   Re-order and duplicate columns arbitrarily:
   $ qsv select 3-1,Header3-Header1,Header1,Foo[2],Header1

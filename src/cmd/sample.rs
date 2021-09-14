@@ -18,6 +18,9 @@ When an index is present, this command will use random indexing if the sample
 size is less than 10% of the total number of records. This allows for efficient
 sampling such that the entire CSV file is not parsed.
 
+When sample-size is between 0 and 1 exclusive, it is treated as a percentage
+of the CSV to sample (e.g. 0.20 is 20 percent). This requires an index.
+
 This command is intended to provide a means to sample from a CSV data set that
 is too big to fit into memory (for example, for use with commands like 'qsv
 frequency' or 'qsv stats'). It will however visit every CSV record exactly
@@ -46,7 +49,7 @@ Common options:
 #[derive(Deserialize)]
 struct Args {
     arg_input: Option<String>,
-    arg_sample_size: u64,
+    arg_sample_size: f64,
     flag_output: Option<String>,
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
@@ -58,24 +61,27 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers);
-    let sample_size = args.arg_sample_size;
+    let mut sample_size = args.arg_sample_size;
 
     let mut wtr = Config::new(&args.flag_output).writer()?;
     let sampled = match rconfig.indexed()? {
         Some(mut idx) => {
-            if do_random_access(sample_size, idx.count()) {
+            if sample_size < 1.0 {
+                sample_size = sample_size * idx.count() as f64;
+            }
+            if do_random_access(sample_size as u64, idx.count()) {
                 rconfig.write_headers(&mut *idx, &mut wtr)?;
-                sample_random_access(&mut idx, sample_size)?
+                sample_random_access(&mut idx, sample_size as u64)?
             } else {
                 let mut rdr = rconfig.reader()?;
                 rconfig.write_headers(&mut rdr, &mut wtr)?;
-                sample_reservoir(&mut rdr, sample_size, args.flag_seed)?
+                sample_reservoir(&mut rdr, sample_size as u64, args.flag_seed)?
             }
         }
         _ => {
             let mut rdr = rconfig.reader()?;
             rconfig.write_headers(&mut rdr, &mut wtr)?;
-            sample_reservoir(&mut rdr, sample_size, args.flag_seed)?
+            sample_reservoir(&mut rdr, sample_size as u64, args.flag_seed)?
         }
     };
     for row in sampled.into_iter() {

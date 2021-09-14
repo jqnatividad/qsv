@@ -1,4 +1,4 @@
-xsv is a command line program for indexing, slicing, analyzing, splitting
+qsv is a command line program for indexing, slicing, analyzing, splitting
 and joining CSV files. Commands should be simple, fast and composable:
 
 1. Simple tasks should be easy.
@@ -6,20 +6,19 @@ and joining CSV files. Commands should be simple, fast and composable:
 3. Composition should not come at the expense of performance.
 
 This README contains information on how to
-[install `xsv`](https://github.com/BurntSushi/xsv#installation), in addition to
+[install `xsv`](https://github.com/jqnatividad/qsv#installation), in addition to
 a quick tour of several commands.
-
-[![Linux build status](https://api.travis-ci.org/BurntSushi/xsv.svg)](https://travis-ci.org/BurntSushi/xsv)
-[![Windows build status](https://ci.appveyor.com/api/projects/status/github/BurntSushi/xsv?svg=true)](https://ci.appveyor.com/project/BurntSushi/xsv)
-[![](https://meritbadge.herokuapp.com/xsv)](https://crates.io/crates/xsv)
 
 Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org).
 
+| **NOTE:** qsv is a fork of the popular https://github.com/BurntSushi/xsv, merging several pending PRs since the 0.13.0 release that I found useful. It also implements percentage sampling. |
+|----|
 
 ### Available commands
 
 * **cat** - Concatenate CSV files by row or by column.
 * **count** - Count the rows in a CSV file. (Instantaneous with an index.)
+* **fill** - Fill empty values.
 * **fixlengths** - Force a CSV file to have same-length records by either
   padding or truncating them.
 * **flatten** - A flattened view of CSV records. Useful for viewing one record
@@ -38,6 +37,7 @@ Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org).
 * **partition** - Partition CSV data based on a column value.
 * **sample** - Randomly draw rows from CSV data using reservoir sampling (i.e.,
   use memory proportional to the size of the sample).
+* **rename** -  Rename the columns of CSV data efficiently.
 * **reverse** - Reverse order of rows in CSV data.
 * **search** - Run a regex over CSV data. Applies the regex to each field
   individually and shows only matching rows.
@@ -51,6 +51,8 @@ Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org).
   (i.e., mean, standard deviation, median, range, etc.)
 * **table** - Show aligned output of any CSV data using
   [elastic tabstops](https://github.com/BurntSushi/tabwriter).
+* **transpose** - Transpose rows/columns of CSV data.
+
 
 
 ### A whirlwind tour
@@ -62,7 +64,7 @@ city in the world. So grab the data and start examining it:
 
 ```bash
 $ curl -LO https://burntsushi.net/stuff/worldcitiespop.csv
-$ xsv headers worldcitiespop.csv
+$ qsv headers worldcitiespop.csv
 1   Country
 2   City
 3   AccentCity
@@ -76,7 +78,7 @@ The next thing you might want to do is get an overview of the kind of data that
 appears in each column. The `stats` command will do this for you:
 
 ```bash
-$ xsv stats worldcitiespop.csv --everything | xsv table
+$ qsv stats worldcitiespop.csv --everything | qsv table
 field       type     min            max            min_length  max_length  mean          stddev         median     mode         cardinality
 Country     Unicode  ad             zw             2           2                                                   cn           234
 City        Unicode   bab el ahmar  Þykkvibaer     1           91                                                  san jose     2351892
@@ -87,7 +89,7 @@ Latitude    Float    -54.933333     82.483333      1           12          27.18
 Longitude   Float    -179.983333    180            1           14          37.08886      63.22301       35.28      23.8         1167162
 ```
 
-The `xsv table` command takes any CSV data and formats it into aligned columns
+The `qsv table` command takes any CSV data and formats it into aligned columns
 using [elastic tabstops](https://github.com/BurntSushi/tabwriter). You'll
 notice that it even gets alignment right with respect to Unicode characters.
 
@@ -95,8 +97,8 @@ So, this command takes about 12 seconds to run on my machine, but we can speed
 it up by creating an index and re-running the command:
 
 ```bash
-$ xsv index worldcitiespop.csv
-$ xsv stats worldcitiespop.csv --everything | xsv table
+$ qsv index worldcitiespop.csv
+$ qsv stats worldcitiespop.csv --everything | qsv table
 ...
 ```
 
@@ -112,9 +114,9 @@ makes slice operations extremely fast because *only the sliced portion* has to
 be parsed. For example, let's say you wanted to grab the last 10 records:
 
 ```bash
-$ xsv count worldcitiespop.csv
+$ qsv count worldcitiespop.csv
 3173958
-$ xsv slice worldcitiespop.csv -s 3173948 | xsv table
+$ qsv slice worldcitiespop.csv -s 3173948 | qsv table
 Country  City               AccentCity         Region  Population  Latitude     Longitude
 zw       zibalonkwe         Zibalonkwe         06                  -19.8333333  27.4666667
 zw       zibunkululu        Zibunkululu        06                  -19.6666667  27.6166667
@@ -137,9 +139,9 @@ the CSV data. In this case, maybe we only care about the country, city and
 population. So let's take a look at 10 random rows:
 
 ```bash
-$ xsv select Country,AccentCity,Population worldcitiespop.csv \
-  | xsv sample 10 \
-  | xsv table
+$ qsv select Country,AccentCity,Population worldcitiespop.csv \
+  | qsv sample 10 \
+  | qsv table
 Country  AccentCity       Population
 cn       Guankoushang
 za       Klipdrift
@@ -157,7 +159,7 @@ Whoops! It seems some cities don't have population counts. How pervasive is
 that?
 
 ```bash
-$ xsv frequency worldcitiespop.csv --limit 5
+$ qsv frequency worldcitiespop.csv --limit 5
 field,value,count
 Country,cn,238985
 Country,ru,215938
@@ -196,7 +198,7 @@ Longitude,25.3,474
 Longitude,23.1,459
 ```
 
-(The `xsv frequency` command builds a frequency table for each column in the
+(The `qsv frequency` command builds a frequency table for each column in the
 CSV data. This one only took 5 seconds.)
 
 So it seems that most cities do not have a population count associated with
@@ -204,10 +206,10 @@ them at all. No matter—we can adjust our previous command so that it only
 shows rows with a population count:
 
 ```bash
-$ xsv search -s Population '[0-9]' worldcitiespop.csv \
-  | xsv select Country,AccentCity,Population \
-  | xsv sample 10 \
-  | xsv table
+$ qsv search -s Population '[0-9]' worldcitiespop.csv \
+  | qsv select Country,AccentCity,Population \
+  | qsv sample 10 \
+  | qsv table
 Country  AccentCity       Population
 es       Barañáin         22264
 es       Puerto Real      36946
@@ -227,10 +229,10 @@ countries these are:
 
 ```bash
 curl -LO https://gist.githubusercontent.com/anonymous/063cb470e56e64e98cf1/raw/98e2589b801f6ca3ff900b01a87fbb7452eb35c7/countrynames.csv
-$ xsv headers countrynames.csv
+$ qsv headers countrynames.csv
 1   Abbrev
 2   Country
-$ xsv join --no-case  Country sample.csv Abbrev countrynames.csv | xsv table
+$ qsv join --no-case  Country sample.csv Abbrev countrynames.csv | qsv table
 Country  AccentCity       Population  Abbrev  Country
 es       Barañáin         22264       ES      Spain
 es       Puerto Real      36946       ES      Spain
@@ -249,9 +251,9 @@ no longer need. This is easy to fix by re-ordering columns with the `xsv
 select` command:
 
 ```bash
-$ xsv join --no-case  Country sample.csv Abbrev countrynames.csv \
-  | xsv select 'Country[1],AccentCity,Population' \
-  | xsv table
+$ qsv join --no-case  Country sample.csv Abbrev countrynames.csv \
+  | qsv select 'Country[1],AccentCity,Population' \
+  | qsv table
 Country                                                                              AccentCity       Population
 Spain                                                                                Barañáin         22264
 Spain                                                                                Puerto Real      36946
@@ -269,10 +271,10 @@ Perhaps we can do this with the original CSV data? Indeed we can—because
 joins in `xsv` are fast.
 
 ```bash
-$ xsv join --no-case Abbrev countrynames.csv Country worldcitiespop.csv \
-  | xsv select '!Abbrev,Country[1]' \
+$ qsv join --no-case Abbrev countrynames.csv Country worldcitiespop.csv \
+  | qsv select '!Abbrev,Country[1]' \
   > worldcitiespop_countrynames.csv
-$ xsv sample 10 worldcitiespop_countrynames.csv | xsv table
+$ qsv sample 10 worldcitiespop_countrynames.csv | qsv table
 Country                      City                   AccentCity             Region  Population  Latitude    Longitude
 Sri Lanka                    miriswatte             Miriswatte             36                  7.2333333   79.9
 Romania                      livezile               Livezile               26      1985        44.512222   22.863333
@@ -291,7 +293,7 @@ the second occurrence of the `Country` column." Since we joined with
 `countrynames.csv` first, the first `Country` name (fully expanded) is now
 included in the CSV data.
 
-This `xsv join` command takes about 7 seconds on my machine. The performance
+This `qsv join` command takes about 7 seconds on my machine. The performance
 comes from constructing a very simple hash index of one of the CSV data files
 given. The `join` command does an inner join by default, but it also has left,
 right and full outer join support too.
@@ -299,26 +301,26 @@ right and full outer join support too.
 
 ### Installation
 
-Binaries for Windows, Linux and macOS are available [from Github](https://github.com/BurntSushi/xsv/releases/latest).
+Binaries for Windows, Linux and macOS are available [from Github](https://github.com/jqnatividad/xsv/releases/latest).
 
 If you're a **macOS Homebrew** user, then you can install xsv
 from homebrew-core:
 
 ```
-$ brew install xsv
+$ brew install qsv
 ```
 
 If you're a **macOS MacPorts** user, then you can install xsv
 from the [official ports](https://www.macports.org/ports.php?by=name&substr=xsv):
 
 ```
-$ sudo port install xsv
+$ sudo port install qsv
 ```
 
 If you're a **Nix/NixOS** user, you can install xsv from nixpkgs:
 
 ```
-$ nix-env -i xsv
+$ nix-env -i qsv
 ```
 
 Alternatively, you can compile from source by
@@ -327,14 +329,14 @@ Alternatively, you can compile from source by
 and installing `xsv` using Cargo:
 
 ```bash
-cargo install xsv
+cargo install qsv
 ```
 
 Compiling from this repository also works similarly:
 
 ```bash
-git clone git://github.com/BurntSushi/xsv
-cd xsv
+git clone git://github.com/jqnatividad/qsv
+cd qsv
 cargo build --release
 ```
 
@@ -381,5 +383,4 @@ hope of dealing with data that large.
 
 ### Naming collision
 
-This project is unrelated to another similar project with the same name:
-https://mj.ucw.cz/sw/xsv/
+This project is unrelated to https://en.wikipedia.org/wiki/Intel_Quick_Sync_Video
