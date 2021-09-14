@@ -6,23 +6,23 @@ and joining CSV files. Commands should be simple, fast and composable:
 3. Composition should not come at the expense of performance.
 
 This README contains information on how to
-[install `xsv`](https://github.com/jqnatividad/qsv#installation), in addition to
+[install `qsv`](https://github.com/jqnatividad/qsv#installation), in addition to
 a quick tour of several commands.
 
 Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org).
 
-| **NOTE:** qsv is a fork of the popular https://github.com/BurntSushi/xsv, merging several pending PRs since the 0.13.0 release that I found useful. It also implements percentage sampling. |
+| **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) CSV utility, merging several pending PRs since the 0.13.0 release that I found useful. It also implements [percentage sampling](https://github.com/BurntSushi/xsv/issues/257). |
 |----|
 
 ### Available commands
 
 * **cat** - Concatenate CSV files by row or by column.
 * **count** - Count the rows in a CSV file. (Instantaneous with an index.)
-* **fill** - Fill empty values.
+* **fill** - Fill empty values. _**(NEW)**_
 * **fixlengths** - Force a CSV file to have same-length records by either
   padding or truncating them.
 * **flatten** - A flattened view of CSV records. Useful for viewing one record
-  at a time. e.g., `xsv slice -i 5 data.csv | xsv flatten`.
+  at a time. e.g., `qsv slice -i 5 data.csv | qsv flatten`.
 * **fmt** - Reformat CSV data with different delimiters, record terminators
   or quoting rules. (Supports ASCII delimited data.)
 * **frequency** - Build frequency tables of each column in CSV data. (Uses
@@ -36,8 +36,8 @@ Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org).
   fast.
 * **partition** - Partition CSV data based on a column value.
 * **sample** - Randomly draw rows from CSV data using reservoir sampling (i.e.,
-  use memory proportional to the size of the sample).
-* **rename** -  Rename the columns of CSV data efficiently.
+  use memory proportional to the size of the sample). _**(EXTENDED)**_
+* **rename** -  Rename the columns of CSV data efficiently. _**(NEW)**_
 * **reverse** - Reverse order of rows in CSV data.
 * **search** - Run a regex over CSV data. Applies the regex to each field
   individually and shows only matching rows.
@@ -48,10 +48,10 @@ Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org).
 * **sort** - Sort CSV data.
 * **split** - Split one CSV file into many CSV files of N chunks.
 * **stats** - Show basic types and statistics of each column in the CSV file.
-  (i.e., mean, standard deviation, median, range, etc.)
+  (i.e., mean, standard deviation, median, range, nullcount, etc.) _**(EXTENDED)**_
 * **table** - Show aligned output of any CSV data using
   [elastic tabstops](https://github.com/BurntSushi/tabwriter).
-* **transpose** - Transpose rows/columns of CSV data.
+* **transpose** - Transpose rows/columns of CSV data. _**(NEW)**_
 
 
 
@@ -247,7 +247,7 @@ gb       Leatherhead      43544       GB      Great Britain | UK | England | Sco
 ```
 
 Whoops, now we have two columns called `Country` and an `Abbrev` column that we
-no longer need. This is easy to fix by re-ordering columns with the `xsv
+no longer need. This is easy to fix by re-ordering columns with the `qsv
 select` command:
 
 ```bash
@@ -268,7 +268,7 @@ Great Britain | UK | England | Scotland | Wales | Northern Ireland | United King
 ```
 
 Perhaps we can do this with the original CSV data? Indeed we can—because
-joins in `xsv` are fast.
+joins in `qsv` are fast.
 
 ```bash
 $ qsv join --no-case Abbrev countrynames.csv Country worldcitiespop.csv \
@@ -301,32 +301,12 @@ right and full outer join support too.
 
 ### Installation
 
-Binaries for Windows, Linux and macOS are available [from Github](https://github.com/jqnatividad/xsv/releases/latest).
-
-If you're a **macOS Homebrew** user, then you can install xsv
-from homebrew-core:
-
-```
-$ brew install qsv
-```
-
-If you're a **macOS MacPorts** user, then you can install xsv
-from the [official ports](https://www.macports.org/ports.php?by=name&substr=xsv):
-
-```
-$ sudo port install qsv
-```
-
-If you're a **Nix/NixOS** user, you can install xsv from nixpkgs:
-
-```
-$ nix-env -i qsv
-```
+Binaries for Windows, Linux and macOS are available [from Github](https://github.com/jqnatividad/qsv/releases/latest).
 
 Alternatively, you can compile from source by
 [installing Cargo](https://crates.io/install)
 ([Rust's](https://www.rust-lang.org/) package manager)
-and installing `xsv` using Cargo:
+and installing `qsv` using Cargo:
 
 ```bash
 cargo install qsv
@@ -341,46 +321,12 @@ cargo build --release
 ```
 
 Compilation will probably take a few minutes depending on your machine. The
-binary will end up in `./target/release/xsv`.
+binary will end up in `./target/release/qsv`.
 
 
 ### Benchmarks
 
 I've compiled some [very rough
-benchmarks](https://github.com/BurntSushi/xsv/blob/master/BENCHMARKS.md) of
-various `xsv` commands.
+benchmarks](https://github.com/jqnatividad/qsv/blob/master/BENCHMARKS.md) of
+various `qsv` commands.
 
-
-### Motivation
-
-Here are several valid criticisms of this project:
-
-1. You shouldn't be working with CSV data because CSV is a terrible format.
-2. If your data is gigabytes in size, then CSV is the wrong storage type.
-3. Various SQL databases provide all of the operations available in `xsv` with
-   more sophisticated indexing support. And the performance is a zillion times
-   better.
-
-I'm sure there are more criticisms, but the impetus for this project was a 40GB
-CSV file that was handed to me. I was tasked with figuring out the shape of the
-data inside of it and coming up with a way to integrate it into our existing
-system. It was then that I realized that every single CSV tool I knew about was
-woefully inadequate. They were just too slow or didn't provide enough
-flexibility. (Another project I had comprised of a few dozen CSV files. They
-were smaller than 40GB, but they were each supposed to represent the same kind
-of data. But they all had different column and unintuitive column names. Useful
-CSV inspection tools were critical here—and they had to be reasonably fast.)
-
-The key ingredients for helping me with my task were indexing, random sampling,
-searching, slicing and selecting columns. All of these things made dealing with
-40GB of CSV data a bit more manageable (or dozens of CSV files).
-
-Getting handed a large CSV file *once* was enough to launch me on this quest.
-From conversations I've had with others, CSV data files this large don't seem
-to be a rare event. Therefore, I believe there is room for a tool that has a
-hope of dealing with data that large.
-
-
-### Naming collision
-
-This project is unrelated to https://en.wikipedia.org/wiki/Intel_Quick_Sync_Video
