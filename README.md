@@ -18,7 +18,7 @@ Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org).
 
 * **cat** - Concatenate CSV files by row or by column.
 * **count** - Count the rows in a CSV file. (Instantaneous with an index.)
-* **fill** - Fill empty values. _**(NEW)**_
+* **fill** - Fill empty values. _**([NEW](https://github.com/jqnatividad/qsv/pull/4))**_
 * **fixlengths** - Force a CSV file to have same-length records by either
   padding or truncating them.
 * **flatten** - A flattened view of CSV records. Useful for viewing one record
@@ -36,22 +36,22 @@ Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org).
   fast.
 * **partition** - Partition CSV data based on a column value.
 * **sample** - Randomly draw rows from CSV data using reservoir sampling (i.e.,
-  use memory proportional to the size of the sample). _**(EXTENDED)**_
-* **rename** -  Rename the columns of CSV data efficiently. _**(NEW)**_
+  use memory proportional to the size of the sample). _**([EXTENDED](https://github.com/BurntSushi/xsv/issues/257))**_
+* **rename** -  Rename the columns of CSV data efficiently. _**([NEW](https://github.com/jqnatividad/qsv/pull/5))**_
 * **reverse** - Reverse order of rows in CSV data.
 * **search** - Run a regex over CSV data. Applies the regex to each field
   individually and shows only matching rows.
-* **select** - Select or re-order columns from CSV data. _**(EXTENDED)**_
+* **select** - Select or re-order columns from CSV data. _**([EXTENDED](https://github.com/jqnatividad/qsv/pull/2))**_
 * **slice** - Slice rows from any part of a CSV file. When an index is present,
   this only has to parse the rows in the slice (instead of all rows leading up
   to the start of the slice).
 * **sort** - Sort CSV data.
 * **split** - Split one CSV file into many CSV files of N chunks.
 * **stats** - Show basic types and statistics of each column in the CSV file.
-  (i.e., mean, standard deviation, median, range, nullcount, etc.) _**(EXTENDED)**_
+  (i.e., mean, standard deviation, median, range, nullcount, etc.) _**([EXTENDED](https://github.com/jqnatividad/qsv/pull/1))**_
 * **table** - Show aligned output of any CSV data using
   [elastic tabstops](https://github.com/BurntSushi/tabwriter).
-* **transpose** - Transpose rows/columns of CSV data. _**(NEW)**_
+* **transpose** - Transpose rows/columns of CSV data. _**([NEW](https://github.com/jqnatividad/qsv/pull/3))**_
 
 
 
