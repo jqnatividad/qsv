@@ -7,6 +7,7 @@ use util;
 use std::str::from_utf8;
 
 use self::Number::{Float, Int};
+use serde::Deserialize;
 
 static USAGE: &'static str = "
 Sorts CSV data lexicographically.

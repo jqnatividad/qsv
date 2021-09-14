@@ -3,6 +3,7 @@ use csv::ByteRecord;
 use std::str;
 use util;
 use CliResult;
+use serde::Deserialize;
 
 static USAGE: &'static str = "
 Transpose the rows/columns of CSV data.

@@ -11,6 +11,7 @@ use CliResult;
 use config::{Config, Delimiter};
 use select::SelectColumns;
 use util::{self, FilenameTemplate};
+use serde::Deserialize;
 
 static USAGE: &'static str = "
 Partitions the given CSV data into chunks based on the value of a column

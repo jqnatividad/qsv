@@ -5,6 +5,7 @@ use tabwriter::TabWriter;
 use CliResult;
 use config::Delimiter;
 use util;
+use serde::Deserialize;
 
 static USAGE: &'static str = "
 Prints the fields of the first row in the CSV data.

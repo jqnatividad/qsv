@@ -6,6 +6,7 @@ use tabwriter::TabWriter;
 use CliResult;
 use config::{Config, Delimiter};
 use util;
+use serde::Deserialize;
 
 static USAGE: &'static str = "
 Prints flattened records such that fields are labeled separated by a new line.

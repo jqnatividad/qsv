@@ -3,6 +3,7 @@ use csv;
 use CliResult;
 use config::{Config, Delimiter};
 use util;
+use serde::Deserialize;
 
 static USAGE: &'static str = "
 Read CSV data with special quoting rules.

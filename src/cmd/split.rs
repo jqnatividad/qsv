@@ -10,6 +10,7 @@ use CliResult;
 use config::{Config, Delimiter};
 use index::Indexed;
 use util::{self, FilenameTemplate};
+use serde::Deserialize;
 
 static USAGE: &'static str = "
 Splits the given CSV data into chunks.

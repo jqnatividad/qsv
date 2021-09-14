@@ -9,6 +9,7 @@ use CliResult;
 use config::{Config, Delimiter};
 use select::{SelectColumns, Selection};
 use util;
+use serde::Deserialize;
 
 static USAGE: &'static str = "
 Fill empty fields in selected columns of a CSV.

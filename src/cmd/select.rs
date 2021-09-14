@@ -4,6 +4,7 @@ use CliResult;
 use config::{Config, Delimiter};
 use select::SelectColumns;
 use util;
+use serde::Deserialize;
 
 static USAGE: &'static str = r#"
 Select columns from CSV data efficiently.

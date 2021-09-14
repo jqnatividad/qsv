@@ -7,6 +7,7 @@ use stats::Frequencies;
 
 use {Csv, CsvData, qcheck_sized};
 use workdir::Workdir;
+use serde::Deserialize;
 
 fn setup(name: &str) -> (Workdir, process::Command) {
     let rows = vec![

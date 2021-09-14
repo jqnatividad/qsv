@@ -16,6 +16,7 @@ use config::{Config, Delimiter};
 use index::Indexed;
 use select::{SelectColumns, Selection};
 use util;
+use serde::Deserialize;
 
 use self::FieldType::{TUnknown, TNull, TUnicode, TFloat, TInteger};
 

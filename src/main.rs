@@ -8,8 +8,6 @@ extern crate num_cpus;
 extern crate rand;
 extern crate regex;
 extern crate serde;
-#[macro_use]
-extern crate serde_derive;
 extern crate stats;
 extern crate tabwriter;
 extern crate threadpool;
@@ -19,6 +17,8 @@ use std::env;
 use std::fmt;
 use std::io;
 use std::process;
+
+use serde::Deserialize;
 
 use docopt::Docopt;
 

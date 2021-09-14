@@ -9,6 +9,7 @@ use CliResult;
 use config::{Config, Delimiter};
 use index::Indexed;
 use util;
+use serde::Deserialize;
 
 static USAGE: &'static str = "
 Randomly samples CSV data uniformly using memory proportional to the size of

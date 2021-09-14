@@ -1,6 +1,7 @@
 use CliResult;
 use config::{Config, Delimiter};
 use util;
+use serde::Deserialize;
 
 static USAGE: &'static str = "
 Reverses rows of CSV data.

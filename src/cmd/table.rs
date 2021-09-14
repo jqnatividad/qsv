@@ -6,6 +6,7 @@ use tabwriter::TabWriter;
 use CliResult;
 use config::{Config, Delimiter};
 use util;
+use serde::Deserialize;
 
 static USAGE: &'static str = "
 Outputs CSV data as a table with columns in alignment.

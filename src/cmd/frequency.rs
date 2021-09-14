@@ -11,6 +11,7 @@ use config::{Config, Delimiter};
 use index::Indexed;
 use select::{SelectColumns, Selection};
 use util;
+use serde::Deserialize;
 
 static USAGE: &'static str = "
 Compute a frequency table on CSV data.

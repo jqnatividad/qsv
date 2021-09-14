@@ -3,6 +3,7 @@ use csv;
 use CliResult;
 use config::{Delimiter, Config};
 use util;
+use serde::Deserialize;
 
 static USAGE: &'static str = "
 Prints a count of the number of records in the CSV data.

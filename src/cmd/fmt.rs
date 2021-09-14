@@ -3,6 +3,7 @@ use csv;
 use CliResult;
 use config::{Config, Delimiter};
 use util;
+use serde::Deserialize;
 
 static USAGE: &'static str = "
 Formats CSV data with a custom delimiter or CRLF line endings.

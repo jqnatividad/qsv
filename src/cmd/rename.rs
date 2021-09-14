@@ -3,6 +3,7 @@ use csv;
 use CliResult;
 use config::{Config, Delimiter};
 use util;
+use serde::Deserialize;
 
 static USAGE: &'static str = "
 Rename the columns of CSV data efficiently.

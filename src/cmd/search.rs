@@ -5,6 +5,7 @@ use CliResult;
 use config::{Config, Delimiter};
 use select::SelectColumns;
 use util;
+use serde::Deserialize;
 
 static USAGE: &'static str = "
 Filters CSV data by whether the given regex matches a row.
