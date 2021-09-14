@@ -74,15 +74,20 @@ function run {
 }
 
 run count qsv count "$data"
+run fill qsv fill -v Unknown Population "$data"
 run flatten qsv flatten "$data"
 run flatten_condensed qsv flatten "$data" --condense 50
 run frequency qsv frequency "$data"
+run frequency_selregex qsv frequency -s /^R/ "$data"
 run index qsv index "$data"
+run rename qsv rename 'country,city,accent_city,region,population,lat,long' "$data"
 run sample_10 qsv sample 10 "$data"
 run sample_1000 qsv sample 1000 "$data"
 run sample_100000 qsv sample 100000 "$data"
+run --index sample_25pct_index qsv sample 0.25 "$data"
 run search qsv search -s Country "'(?i)us'" "$data"
 run select qsv select Country "$data"
+run select_regex qsv select /^L/ "$data"
 run sort qsv sort -s AccentCity "$data"
 run slice_one_middle qsv slice -i 500000 "$data"
 run --index slice_one_middle_index qsv slice -i 500000 "$data"
@@ -90,3 +95,4 @@ run stats qsv stats "$data"
 run --index stats_index qsv stats "$data"
 run stats_everything qsv stats "$data" --everything
 run --index stats_everything_index qsv stats "$data" --everything
+run transpose qsv transpose "$data"
