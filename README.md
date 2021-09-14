@@ -41,7 +41,7 @@ Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org).
 * **reverse** - Reverse order of rows in CSV data.
 * **search** - Run a regex over CSV data. Applies the regex to each field
   individually and shows only matching rows.
-* **select** - Select or re-order columns from CSV data.
+* **select** - Select or re-order columns from CSV data. _**(EXTENDED)**_
 * **slice** - Slice rows from any part of a CSV file. When an index is present,
   this only has to parse the rows in the slice (instead of all rows leading up
   to the start of the slice).
