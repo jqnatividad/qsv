@@ -85,7 +85,7 @@ stats_everything_index		1.61 seconds	28.26 MB/sec
 transpose			0.56 seconds	81.27 MB/sec
 ```
 
-![qsv 0.14.1 vs qsv 0.14.0 vs xsv 0.13.0](qsv-benchmarks.png?raw=true "Benchmarks")
+![qsv 0.14.1 vs qsv 0.14.0 vs xsv 0.13.0](qsv-benchmarks.svg?raw=true "Benchmarks")
 
 ## Details
 
