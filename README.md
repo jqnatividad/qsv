@@ -323,6 +323,20 @@ cargo build --release
 Compilation will probably take a few minutes depending on your machine. The
 binary will end up in `./target/release/qsv`.
 
+If you want to squeeze more performance from your build, set this environment
+variable before compiling:
+
+```bash
+export CARGO_BUILD_RUSTFLAGS='-C target-cpu=native'
+```
+
+Do note though that the resulting binary will only run on machines with the
+same architecture as the machine you compiled from.  To find out your CPU 
+architecture and other valid values for `target-cpu`:
+
+```bash
+rustc --print target-cpus
+```
 
 ### Benchmarks
 

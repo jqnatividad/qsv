@@ -21,6 +21,8 @@ doctest = false
 name = "tests"
 
 [profile.release]
+lto = "fat"
+codegen-units = 1
 opt-level = 3
 debug = true
 
@@ -28,6 +30,7 @@ debug = true
 opt-level = 3
 
 [dependencies]
+mimalloc = { version = "*", default-features = false }
 byteorder = "1"
 crossbeam-channel = "0.2.4"
 csv = "1.1.0"

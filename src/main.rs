@@ -22,6 +22,9 @@ use serde::Deserialize;
 
 use docopt::Docopt;
 
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
 macro_rules! wout {
     ($($arg:tt)*) => ({
         use std::io::Write;
