@@ -10,29 +10,29 @@ These benchmarks were run on Virtualbox VM on Windows 11 with a Ryzen 7 4800H an
 (VM configured with Ubuntu 20.04 LTS assigned 8 CPUs and 12 GB of memory)
 
 ```
-count					0.11 seconds	413.76 MB/sec
-fill					1.13 seconds	40.27 MB/sec
-flatten					5.48 seconds	8.30 MB/sec
+count				0.11 seconds	413.76 MB/sec
+fill				1.13 seconds	40.27 MB/sec
+flatten				5.48 seconds	8.30 MB/sec
 flatten_condensed		5.52 seconds	8.24 MB/sec
-frequency				3.05 seconds	14.92 MB/sec
+frequency			3.05 seconds	14.92 MB/sec
 frequency_selregex		0.48 seconds	94.82 MB/sec
-index					0.11 seconds	413.76 MB/sec
-rename					0.36 seconds	126.42 MB/sec
-sample_10				0.23 seconds	197.88 MB/sec
-sample_1000				0.24 seconds	189.64 MB/sec
+index				0.11 seconds	413.76 MB/sec
+rename				0.36 seconds	126.42 MB/sec
+sample_10			0.23 seconds	197.88 MB/sec
+sample_1000			0.24 seconds	189.64 MB/sec
 sample_100000			0.33 seconds	137.92 MB/sec
 sample_25pct_index		0.42 seconds	108.36 MB/sec
-search					0.17 seconds	267.72 MB/sec
-select					0.15 seconds	303.42 MB/sec
+search				0.17 seconds	267.72 MB/sec
+select				0.15 seconds	303.42 MB/sec
 select_regex			0.18 seconds	252.85 MB/sec
-sort					2.29 seconds	19.87 MB/sec
+sort				2.29 seconds	19.87 MB/sec
 slice_one_middle		0.11 seconds	413.76 MB/sec
-slice_one_middle_index	0.01 seconds	4551.36 MB/sec
-stats					1.42 seconds	32.05 MB/sec
-stats_index				0.19 seconds	239.54 MB/sec
+slice_one_middle_index		0.01 seconds	4551.36 MB/sec
+stats				1.42 seconds	32.05 MB/sec
+stats_index			0.19 seconds	239.54 MB/sec
 stats_everything		3.37 seconds	13.50 MB/sec
-stats_everything_index	2.60 seconds	17.50 MB/sec
-transpose				0.72 seconds	63.21 MB/sec
+stats_everything_index		2.60 seconds	17.50 MB/sec
+transpose			0.72 seconds	63.21 MB/sec
 ```
 ### Details
 
