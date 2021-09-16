@@ -13,11 +13,15 @@ set -e
 
 pat="$1"
 data=/tmp/worldcitiespop_mil.csv
+countrydata=/tmp/countrynames.csv
 data_idx=/tmp/worldcitiespop_mil.csv.idx
 if [ ! -r "$data" ]; then
   curl -sS https://burntsushi.net/stuff/worldcitiespop_mil.csv > "$data"
 fi
 data_size=$(stat --format '%s' "$data")
+if [ ! -r "$countydata" ]; then
+  curl -sS https://gist.githubusercontent.com/anonymous/063cb470e56e64e98cf1/raw/98e2589b801f6ca3ff900b01a87fbb7452eb35c7/countrynames.csv > "$countrydata"
+fi
 
 function real_seconds {
   cmd=$(echo $@ "> /dev/null 2>&1")
@@ -74,16 +78,26 @@ function run {
 }
 
 run count qsv count "$data"
+run --index count_index qsv count "$data"
 run fill qsv fill -v Unknown Population "$data"
+run fixlengths qsv fixlengths "$data"
 run flatten qsv flatten "$data"
 run flatten_condensed qsv flatten "$data" --condense 50
+run fmt qsv fmt --crlf "$data"
 run frequency qsv frequency "$data"
+run --index frequency_index qsv frequency "$data"
 run frequency_selregex qsv frequency -s /^R/ "$data"
 run index qsv index "$data"
+run join qsv join --no-case Country "$data" Abbrev "$countrydata"
+run partition qsv partition Region /tmp/partitioned "$data"
 run rename qsv rename 'country,city,accent_city,region,population,lat,long' "$data"
+run reverse qsv reverse "$data"
 run sample_10 qsv sample 10 "$data"
+run --index sample_10_index qsv sample 10 "$data"
 run sample_1000 qsv sample 1000 "$data"
+run --index sample_1000_index qsv sample 1000 "$data"
 run sample_100000 qsv sample 100000 "$data"
+run --index sample_100000_index qsv sample 100000 "$data"
 run --index sample_25pct_index qsv sample 0.25 "$data"
 run search qsv search -s Country "'(?i)us'" "$data"
 run select qsv select Country "$data"
@@ -95,4 +109,5 @@ run stats qsv stats "$data"
 run --index stats_index qsv stats "$data"
 run stats_everything qsv stats "$data" --everything
 run --index stats_everything_index qsv stats "$data" --everything
+run table qsv table "$data"
 run transpose qsv transpose "$data"
