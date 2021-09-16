@@ -65,7 +65,7 @@ pub type CsvVecs = Vec<Vec<String>>;
 
 pub trait Csv {
     fn to_vecs(self) -> CsvVecs;
-    fn from_vecs(CsvVecs) -> Self;
+    fn from_vecs(vecs: CsvVecs) -> Self;
 }
 
 impl Csv for CsvVecs {

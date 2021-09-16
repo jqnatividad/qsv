@@ -19,11 +19,7 @@ environment:
     RUST_BACKTRACE: full
   matrix:
     # Stable channel
-    - TARGET: i686-pc-windows-gnu
-      CHANNEL: stable
     - TARGET: i686-pc-windows-msvc
-      CHANNEL: stable
-    - TARGET: x86_64-pc-windows-gnu
       CHANNEL: stable
     - TARGET: x86_64-pc-windows-msvc
       CHANNEL: stable
@@ -36,7 +32,6 @@ matrix:
 install:
   - curl -sSf -o rustup-init.exe https://win.rustup.rs/
   - rustup-init.exe -y --default-host %TARGET% --no-modify-path
-  - if defined MSYS2_BITS set PATH=%PATH%;C:\msys64\mingw%MSYS2_BITS%\bin
   - rustc -V
   - cargo -V
 
@@ -64,7 +59,7 @@ deploy:
   # All the zipped artifacts will be deployed
   artifact: /.*\.zip/
   auth_token:
-    secure: vv4vBCEosGlyQjaEC1+kraP2P6O4CQSa+Tw50oHWFTGcmuXxaWS0/yEXbxsIRLpw
+    secure: 8//SAFjFXUhi0kdkaoG8IXOibK+SJ9L5je2xQRFvhKUBv74KpbsKBCMtjozCfj/R
   provider: GitHub
   # deploy when a new tag is pushed and only on the stable channel
   on:
