@@ -6,21 +6,19 @@ use std::io;
 use std::iter::{FromIterator, repeat};
 use std::str::{self, FromStr};
 
-use channel;
-use csv;
 use stats::{Commute, OnlineStats, MinMax, Unsorted, merge_all};
 use threadpool::ThreadPool;
 
-use CliResult;
-use config::{Config, Delimiter};
-use index::Indexed;
-use select::{SelectColumns, Selection};
-use util;
-use serde::Deserialize;
+use crate::CliResult;
+use crate::config::{Config, Delimiter};
+use crate::index::Indexed;
+use crate::select::{SelectColumns, Selection};
+use crate::util;
+use crate::serde::Deserialize;
 
 use self::FieldType::{TUnknown, TNull, TUnicode, TFloat, TInteger};
 
-static USAGE: &'static str = "
+static USAGE: &str = "
 Computes basic statistics on CSV data.
 
 Basic statistics includes mean, median, mode, standard deviation, sum, max and
@@ -149,11 +147,11 @@ impl Args {
                 let mut idx = args.rconfig().indexed().unwrap().unwrap();
                 idx.seek((i * chunk_size) as u64).unwrap();
                 let it = idx.byte_records().take(chunk_size);
-                send.send(args.compute(&sel, it).unwrap());
+                send.send(args.compute(&sel, it).unwrap()).unwrap();
             });
         }
         drop(send);
-        Ok((headers, merge_all(recv).unwrap_or_else(Vec::new)))
+        Ok((headers, merge_all(recv.iter()).unwrap_or_else(Vec::new)))
     }
 
     fn stats_to_records(&self, stats: Vec<Stats>) -> Vec<csv::StringRecord> {
@@ -165,7 +163,7 @@ impl Args {
         for mut stat in stats.into_iter() {
             let (send, recv) = channel::bounded(0);
             results.push(recv);
-            pool.execute(move || { send.send(stat.to_record()); });
+            pool.execute(move || { send.send(stat.to_record()).unwrap(); });
         }
         for (i, recv) in results.into_iter().enumerate() {
             records[i] = recv.recv().unwrap();
@@ -273,47 +271,49 @@ impl Stats {
         if which.median { median = Some(Default::default()); }
         Stats {
             typ: Default::default(),
-            sum: sum,
-            minmax: minmax,
-            online: online,
-            mode: mode,
-            median: median,
+            sum,
+            minmax,
+            online,
+            mode,
+            median,
             nullcount: 0,
-            which: which,
+            which,
         }
     }
 
+    #[allow(clippy::option_map_unit_fn)]
     fn add(&mut self, sample: &[u8]) {
         let sample_type = FieldType::from_sample(sample);
         self.typ.merge(sample_type);
 
         let t = self.typ;
-        self.sum.as_mut().map(|v| v.add(t, sample));
-        self.minmax.as_mut().map(|v| v.add(t, sample));
-        self.mode.as_mut().map(|v| v.add(sample.to_vec()));
+        if let Some(v) = self.sum.as_mut() { v.add(t, sample) };
+        if let Some(v) = self.minmax.as_mut() { v.add(t, sample) };
+        if let Some(v) = self.mode.as_mut() { v.add(sample.to_vec()) };
         if sample_type.is_null() { self.nullcount += 1; }
         match self.typ {
             TUnknown => {}
             TNull => {
                 if self.which.include_nulls {
-                    self.online.as_mut().map(|v| { v.add_null(); });
+                    if let Some(v) = self.online.as_mut() { v.add_null(); };
                 }
             }
             TUnicode => {}
             TFloat | TInteger => {
                 if sample_type.is_null() {
                     if self.which.include_nulls {
-                        self.online.as_mut().map(|v| { v.add_null(); });
+                        if let Some(v) = self.online.as_mut() { v.add_null(); };
                     }
                 } else {
                     let n = from_bytes::<f64>(sample).unwrap();
-                    self.median.as_mut().map(|v| { v.add(n); });
-                    self.online.as_mut().map(|v| { v.add(n); });
+                    if let Some(v) = self.median.as_mut() { v.add(n); };
+                    if let Some(v) = self.online.as_mut() { v.add(n); };
                 }
             }
         }
     }
 
+    #[allow(clippy::wrong_self_convention)]
     fn to_record(&mut self) -> csv::StringRecord {
         let typ = self.typ;
         let mut pieces = vec![];
@@ -412,8 +412,8 @@ impl FieldType {
             Err(_) => return TUnknown,
             Ok(s) => s,
         };
-        if let Ok(_) = string.parse::<i64>() { return TInteger; }
-        if let Ok(_) = string.parse::<f64>() { return TFloat; }
+        if string.parse::<i64>().is_ok() { return TInteger; }
+        if string.parse::<f64>().is_ok() { return TFloat; }
         TUnicode
     }
 

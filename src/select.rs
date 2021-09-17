@@ -306,7 +306,7 @@ impl OneSelector {
         match *self {
             OneSelector::Start => Ok(0),
             OneSelector::End => Ok(
-                if first_record.len() == 0 {
+                if first_record.is_empty() {
                     0
                 } else {
                     first_record.len() - 1
@@ -402,7 +402,7 @@ impl Selection {
         }
 
         let mut normal = inds.clone();
-        normal.sort();
+        normal.sort_unstable();
         normal.dedup();
         let mut set: Vec<_> =
             repeat(false).take(normal[normal.len()-1] + 1).collect();

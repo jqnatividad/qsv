@@ -3,15 +3,13 @@ use std::io;
 use std::iter;
 use std::ops;
 
-use csv;
+use crate::CliResult;
+use crate::config::{Config, Delimiter};
+use crate::select::{SelectColumns, Selection};
+use crate::util;
+use crate::serde::Deserialize;
 
-use CliResult;
-use config::{Config, Delimiter};
-use select::{SelectColumns, Selection};
-use util;
-use serde::Deserialize;
-
-static USAGE: &'static str = "
+static USAGE: &str = "
 Fill empty fields in selected columns of a CSV.
 
 This command fills empty fields in the selected column

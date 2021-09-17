@@ -1,9 +1,9 @@
-use CliResult;
-use config::{Config, Delimiter};
-use util;
-use serde::Deserialize;
+use crate::CliResult;
+use crate::config::{Config, Delimiter};
+use crate::util;
+use crate::serde::Deserialize;
 
-static USAGE: &'static str = "
+static USAGE: &str = "
 Reverses rows of CSV data.
 
 Useful for cases when there is no column that can be used for sorting in reverse order,

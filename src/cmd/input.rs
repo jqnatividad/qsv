@@ -1,11 +1,9 @@
-use csv;
+use crate::CliResult;
+use crate::config::{Config, Delimiter};
+use crate::util;
+use crate::serde::Deserialize;
 
-use CliResult;
-use config::{Config, Delimiter};
-use util;
-use serde::Deserialize;
-
-static USAGE: &'static str = "
+static USAGE: &str = "
 Read CSV data with special quoting rules.
 
 Generally, all qsv commands support basic options like specifying the delimiter

@@ -1,11 +1,11 @@
-use config::{Config, Delimiter};
-use csv::ByteRecord;
+use crate::config::{Config, Delimiter};
+use crate::csv::ByteRecord;
 use std::str;
-use util;
-use CliResult;
-use serde::Deserialize;
+use crate::util;
+use crate::CliResult;
+use crate::serde::Deserialize;
 
-static USAGE: &'static str = "
+static USAGE: &str = "
 Transpose the rows/columns of CSV data.
 
 Note that by default this reads all of the CSV data into memory,

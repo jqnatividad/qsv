@@ -1,13 +1,12 @@
-use csv;
 use regex::bytes::RegexBuilder;
 
-use CliResult;
-use config::{Config, Delimiter};
-use select::SelectColumns;
-use util;
-use serde::Deserialize;
+use crate::CliResult;
+use crate::config::{Config, Delimiter};
+use crate::select::SelectColumns;
+use crate::util;
+use crate::serde::Deserialize;
 
-static USAGE: &'static str = "
+static USAGE: &str = "
 Filters CSV data by whether the given regex matches a row.
 
 The regex is applied to each field in each row, and if any field matches,
