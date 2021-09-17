@@ -187,7 +187,7 @@ impl GroupMemorizer for GroupValues {
 
     fn memorize_first(&mut self, selection: &Selection, record: &csv::ByteRecord) {
         for &col in selection.iter().filter(|&col| !record[*col].is_empty()) {
-            self.map.entry(col).or_insert(record[col].to_vec());
+            self.map.entry(col).or_insert_with(|| record[col].to_vec());
         }
     }
 
