@@ -105,7 +105,7 @@ impl Args {
             let key = match self.flag_prefix_length {
                 // We exceed --prefix-length, so ignore the extra bytes.
                 Some(len) if len < column.len() => &column[0..len],
-                _ => &column[..],
+                _ => column,
             };
             let mut entry = writers.entry(key.to_vec());
             let wtr = match entry {

@@ -6,7 +6,6 @@ use std::ops;
 use std::slice;
 use std::str::FromStr;
 
-use csv;
 use regex::bytes::Regex;
 use serde::de::{Deserializer, Deserialize, Error};
 
@@ -29,7 +28,7 @@ impl SelectColumns {
             };
         Ok(SelectColumns {
             selectors: SelectorParser::new(s).parse()?,
-            invert: invert,
+            invert,
         })
     }
 

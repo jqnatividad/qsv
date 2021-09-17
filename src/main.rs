@@ -48,6 +48,7 @@ macro_rules! command_list {
 "
     cat         Concatenate by row or column
     count       Count records
+    dedup       Remove redundant rows    
     fill        Fill empty values
     fixlengths  Makes all records have same length
     flatten     Show one field per line
@@ -70,7 +71,6 @@ macro_rules! command_list {
     stats       Compute basic statistics
     table       Align CSV data into columns
     transpose   Transpose rows/columns of CSV data
-    dedup       Remove redundant rows
 "
     )
 }
@@ -81,7 +81,7 @@ mod index;
 mod select;
 mod util;
 
-static USAGE: &'static str = concat!("
+static USAGE: &str = concat!("
 Usage:
     qsv <command> [<args>...]
     qsv [options]
@@ -183,7 +183,7 @@ impl Command {
         if !argv[1].chars().all(char::is_lowercase) {
             return Err(CliError::Other(format!(
                 "qsv expects commands in lowercase. Did you mean '{}'?",
-                argv[1].to_lowercase()).to_string()));
+                argv[1].to_lowercase())));
         }
         match self {
             Command::Cat => cmd::cat::run(argv),

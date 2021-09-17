@@ -68,7 +68,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let sampled = match rconfig.indexed()? {
         Some(mut idx) => {
             if sample_size < 1.0 {
-                sample_size = sample_size * idx.count() as f64;
+                sample_size *= idx.count() as f64;
             }
             if do_random_access(sample_size as u64, idx.count()) {
                 rconfig.write_headers(&mut *idx, &mut wtr)?;

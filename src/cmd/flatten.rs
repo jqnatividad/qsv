@@ -68,7 +68,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             if rconfig.no_headers {
                 write!(&mut wtr, "{}", i)?;
             } else {
-                wtr.write_all(&header)?;
+                wtr.write_all(header)?;
             }
             wtr.write_all(b"\t")?;
             wtr.write_all(&*util::condense(

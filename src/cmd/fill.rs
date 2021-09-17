@@ -167,7 +167,7 @@ impl GroupValues {
     fn new(default: Option<ByteString>) -> Self {
         Self {
             map: HashMap::new(),
-            default: default,
+            default,
         }
     }
 }
@@ -227,8 +227,8 @@ impl Filler {
     fn new(groupby: GroupKeySelection, select: Selection) -> Self {
         Self {
             grouper: Grouper::new(),
-            groupby: groupby,
-            select: select,
+            groupby,
+            select,
             buffer: GroupBuffer::new(),
             first: false,
             backfill: false,
@@ -354,7 +354,7 @@ where
             selection_index: 0,
             index: 0,
             iterator: self,
-            predicate: predicate,
+            predicate,
         }
     }
 }

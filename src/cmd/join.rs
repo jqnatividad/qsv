@@ -416,7 +416,7 @@ fn get_row_key(
     row: &csv::ByteRecord,
     casei: bool,
 ) -> Vec<ByteString> {
-    sel.select(row).map(|v| transform(&v, casei)).collect()
+    sel.select(row).map(|v| transform(v, casei)).collect()
 }
 
 fn transform(bs: &[u8], casei: bool) -> ByteString {

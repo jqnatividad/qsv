@@ -75,10 +75,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 					new.push(all[current].clone());
 				}
 				
-			} else {
-				if iter_cmp(a, b) != cmp::Ordering::Equal {
+			} else if iter_cmp(a, b) != cmp::Ordering::Equal {
 					new.push(all[current].clone());
-				}
 			}
 			current += 1;
 		}
@@ -111,7 +109,6 @@ pub fn iter_cmp_no_case<'a, L, R>(mut a: L, mut b: R) -> cmp::Ordering
 fn next_no_case<'a, X>(xs: &mut X) -> Option<String>
         where X: Iterator<Item=&'a [u8]> {
     xs.next()
-        .and_then(|bytes| from_utf8(bytes).ok())
-        .and_then(|s| Some(s.to_lowercase()))
+        .and_then(|bytes| from_utf8(bytes).ok()).map(|s| s.to_lowercase())
 }
 
