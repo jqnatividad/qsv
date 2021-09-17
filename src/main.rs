@@ -176,7 +176,7 @@ enum Command {
 
 impl Command {
     fn run(self) -> CliResult<()> {
-        let argv: Vec<_> = env::args().map(|v| v.to_owned()).collect();
+        let argv: Vec<_> = env::args().collect();
         let argv: Vec<_> = argv.iter().map(|s| &**s).collect();
         let argv = &*argv;
 
@@ -188,6 +188,7 @@ impl Command {
         match self {
             Command::Cat => cmd::cat::run(argv),
             Command::Count => cmd::count::run(argv),
+            Command::Dedup => cmd::dedup::run(argv),
             Command::Fill => cmd::fill::run(argv),
             Command::FixLengths => cmd::fixlengths::run(argv),
             Command::Flatten => cmd::flatten::run(argv),
@@ -210,7 +211,6 @@ impl Command {
             Command::Stats => cmd::stats::run(argv),
             Command::Table => cmd::table::run(argv),
             Command::Transpose => cmd::transpose::run(argv),
-            Command::Dedup => cmd::dedup::run(argv),
         }
     }
 }
