@@ -1,6 +1,6 @@
-use workdir::Workdir;
+use crate::workdir::Workdir;
 
-use {CsvData, qcheck};
+use crate::{CsvData, qcheck};
 
 fn prop_transpose(name: &str, rows: CsvData, streaming: bool) -> bool {
     let wrk = Workdir::new(name);

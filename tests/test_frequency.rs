@@ -2,12 +2,11 @@ use std::borrow::ToOwned;
 use std::collections::hash_map::{HashMap, Entry};
 use std::process;
 
-use csv;
 use stats::Frequencies;
 
-use {Csv, CsvData, qcheck_sized};
-use workdir::Workdir;
-use serde::Deserialize;
+use crate::{Csv, CsvData, qcheck_sized};
+use crate::workdir::Workdir;
+use crate::serde::Deserialize;
 
 fn setup(name: &str) -> (Workdir, process::Command) {
     let rows = vec![
@@ -151,8 +150,8 @@ fn prop_frequency() {
 fn frequency_bom() {
     let rows = CsvData {
         data: vec![
-            ::CsvRecord(vec!["\u{FEFF}".to_string()]),
-            ::CsvRecord(vec!["".to_string()]),
+            crate::CsvRecord(vec!["\u{FEFF}".to_string()]),
+            crate::CsvRecord(vec!["".to_string()]),
         ],
     };
     assert!(param_prop_frequency("prop_frequency", rows, false))

@@ -1,11 +1,9 @@
-use csv;
+use crate::CliResult;
+use crate::config::{Config, Delimiter};
+use crate::util;
+use crate::serde::Deserialize;
 
-use CliResult;
-use config::{Config, Delimiter};
-use util;
-use serde::Deserialize;
-
-static USAGE: &'static str = "
+static USAGE: &str = "
 Formats CSV data with a custom delimiter or CRLF line endings.
 
 Generally, all commands in qsv output CSV data in a default format, which is

@@ -7,13 +7,12 @@ use std::io::{self, Read};
 use std::ops::Deref;
 use std::path::PathBuf;
 
-use csv;
-use index::Indexed;
-use serde::de::{Deserializer, Deserialize, Error};
+use crate::serde::de::{Deserializer, Deserialize, Error};
 
-use CliResult;
-use select::{SelectColumns, Selection};
-use util;
+use crate::CliResult;
+use crate::index::Indexed;
+use crate::select::{SelectColumns, Selection};
+use crate::util;
 
 
 #[derive(Clone, Copy, Debug)]
@@ -87,7 +86,7 @@ impl Config {
             }
         };
         Config {
-            path: path,
+            path,
             idx_path: None,
             select_columns: None,
             delimiter: delim,
@@ -110,7 +109,7 @@ impl Config {
     }
 
     pub fn no_headers(mut self, mut yes: bool) -> Config {
-        if env::var("QSV_TOGGLE_HEADERS").unwrap_or("0".to_owned()) == "1" {
+        if env::var("XSV_TOGGLE_HEADERS").unwrap_or_else(|_| "0".to_owned()) == "1" {
             yes = !yes;
         }
         self.no_headers = yes;

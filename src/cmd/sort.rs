@@ -1,15 +1,15 @@
 use std::cmp;
 
-use CliResult;
-use config::{Config, Delimiter};
-use select::SelectColumns;
-use util;
+use crate::CliResult;
+use crate::config::{Config, Delimiter};
+use crate::select::SelectColumns;
+use crate::util;
+use crate::serde::Deserialize;
 use std::str::from_utf8;
 
 use self::Number::{Float, Int};
-use serde::Deserialize;
 
-static USAGE: &'static str = "
+static USAGE: &str = "
 Sorts CSV data lexicographically.
 
 Note that this requires reading all of the CSV data into memory.

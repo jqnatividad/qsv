@@ -1,11 +1,9 @@
-use csv;
+use crate::CliResult;
+use crate::config::{Config, Delimiter};
+use crate::util;
+use crate::serde::Deserialize;
 
-use CliResult;
-use config::{Config, Delimiter};
-use util;
-use serde::Deserialize;
-
-static USAGE: &'static str = "
+static USAGE: &str = "
 Rename the columns of CSV data efficiently.
 
 This command lets you rename the columns in CSV data. You must specify

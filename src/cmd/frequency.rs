@@ -1,19 +1,17 @@
 use std::fs;
 use std::io;
 
-use channel;
-use csv;
 use stats::{Frequencies, merge_all};
 use threadpool::ThreadPool;
 
-use CliResult;
-use config::{Config, Delimiter};
-use index::Indexed;
-use select::{SelectColumns, Selection};
-use util;
-use serde::Deserialize;
+use crate::CliResult;
+use crate::config::{Config, Delimiter};
+use crate::index::Indexed;
+use crate::select::{SelectColumns, Selection};
+use crate::util;
+use crate::serde::Deserialize;
 
-static USAGE: &'static str = "
+static USAGE: &str = "
 Compute a frequency table on CSV data.
 
 The frequency table is formatted as CSV data:
@@ -157,11 +155,11 @@ impl Args {
                 let mut idx = args.rconfig().indexed().unwrap().unwrap();
                 idx.seek((i * chunk_size) as u64).unwrap();
                 let it = idx.byte_records().take(chunk_size);
-                send.send(args.ftables(&sel, it).unwrap());
+                send.send(args.ftables(&sel, it).unwrap()).unwrap();
             });
         }
         drop(send);
-        Ok((headers, merge_all(recv).unwrap()))
+        Ok((headers, merge_all(recv.iter()).unwrap()))
     }
 
     fn ftables<I>(&self, sel: &Selection, it: I) -> CliResult<FTables>
@@ -176,10 +174,8 @@ impl Args {
                 let field = trim(field.to_vec());
                 if !field.is_empty() {
                     tabs[i].add(field);
-                } else {
-                    if !self.flag_no_nulls {
-                        tabs[i].add(null.clone());
-                    }
+                } else if !self.flag_no_nulls {
+                    tabs[i].add(null.clone());
                 }
             }
         }

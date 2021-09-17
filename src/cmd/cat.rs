@@ -1,11 +1,9 @@
-use csv;
-
-use CliResult;
-use config::{Config, Delimiter};
-use util;
+use crate::CliResult;
+use crate::config::{Config, Delimiter};
+use crate::util;
 use serde::Deserialize;
 
-static USAGE: &'static str = "
+static USAGE: &str = "
 Concatenates CSV data by column or by row.
 
 When concatenating by column, the columns will be written in the same order as

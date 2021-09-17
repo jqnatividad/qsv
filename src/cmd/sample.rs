@@ -1,17 +1,17 @@
 use std::io;
 
 use byteorder::{ByteOrder, LittleEndian};
-use csv;
 use rand::{self, Rng, SeedableRng};
 use rand::rngs::StdRng;
+use rand::seq::SliceRandom;
 
-use CliResult;
-use config::{Config, Delimiter};
-use index::Indexed;
-use util;
-use serde::Deserialize;
+use crate::CliResult;
+use crate::config::{Config, Delimiter};
+use crate::index::Indexed;
+use crate::util;
+use crate::serde::Deserialize;
 
-static USAGE: &'static str = "
+static USAGE: &str = "
 Randomly samples CSV data uniformly using memory proportional to the size of
 the sample.
 
@@ -99,7 +99,7 @@ where R: io::Read + io::Seek, I: io::Read + io::Seek
 {
     let mut all_indices = (0..idx.count()).collect::<Vec<_>>();
     let mut rng = ::rand::thread_rng();
-    rng.shuffle(&mut *all_indices);
+    SliceRandom::shuffle(&mut *all_indices, &mut rng);
 
     let mut sampled = Vec::with_capacity(sample_size as usize);
     for i in all_indices.into_iter().take(sample_size as usize) {

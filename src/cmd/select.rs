@@ -1,12 +1,10 @@
-use csv;
+use crate::CliResult;
+use crate::config::{Config, Delimiter};
+use crate::select::SelectColumns;
+use crate::util;
+use crate::serde::Deserialize;
 
-use CliResult;
-use config::{Config, Delimiter};
-use select::SelectColumns;
-use util;
-use serde::Deserialize;
-
-static USAGE: &'static str = r#"
+static USAGE: &str = r#"
 Select columns from CSV data efficiently.
 
 This command lets you manipulate the columns in CSV data. You can re-order

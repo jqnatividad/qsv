@@ -65,7 +65,7 @@ pub type CsvVecs = Vec<Vec<String>>;
 
 pub trait Csv {
     fn to_vecs(self) -> CsvVecs;
-    fn from_vecs(vecs: CsvVecs) -> Self;
+    fn from_vecs(_: CsvVecs) -> Self;
 }
 
 impl Csv for CsvVecs {
@@ -105,7 +105,7 @@ impl Arbitrary for CsvRecord {
 
     fn shrink(&self) -> Box<dyn Iterator<Item=CsvRecord>+'static> {
         Box::new(self.clone().unwrap()
-                     .shrink().filter(|r| r.len() > 0).map(CsvRecord))
+                     .shrink().filter(|r| !r.is_empty()).map(CsvRecord))
     }
 }
 

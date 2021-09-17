@@ -1,5 +1,5 @@
-use {CsvData, qcheck};
-use workdir::Workdir;
+use crate::{CsvData, qcheck};
+use crate::workdir::Workdir;
 
 /// This tests whether `qsv count` gets the right answer.
 ///
