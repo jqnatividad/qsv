@@ -52,6 +52,7 @@ mod test_split;
 mod test_stats;
 mod test_table;
 mod test_transpose;
+mod test_dedup;
 
 fn qcheck<T: Testable>(p: T) {
     QuickCheck::new().gen(StdGen::new(thread_rng(), 5)).quickcheck(p);

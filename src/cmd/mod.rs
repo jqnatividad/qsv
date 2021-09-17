@@ -21,3 +21,4 @@ pub mod split;
 pub mod stats;
 pub mod table;
 pub mod transpose;
+pub mod dedup;

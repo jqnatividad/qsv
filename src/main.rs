@@ -70,6 +70,7 @@ macro_rules! command_list {
     stats       Compute basic statistics
     table       Align CSV data into columns
     transpose   Transpose rows/columns of CSV data
+    dedup       Remove redundant rows
 "
     )
 }
@@ -170,6 +171,7 @@ enum Command {
     Stats,
     Table,
     Transpose,
+    Dedup,
 }
 
 impl Command {
@@ -208,6 +210,7 @@ impl Command {
             Command::Stats => cmd::stats::run(argv),
             Command::Table => cmd::table::run(argv),
             Command::Transpose => cmd::transpose::run(argv),
+            Command::Dedup => cmd::dedup::run(argv),
         }
     }
 }
