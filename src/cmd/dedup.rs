@@ -1,13 +1,15 @@
 use std::cmp;
-
-use CliResult;
-use config::{Config, Delimiter};
-use select::SelectColumns;
-use util;
 use std::str::from_utf8;
-use cmd::sort::iter_cmp;
 
-static USAGE: &'static str = "
+use crate::CliResult;
+use crate::config::{Config, Delimiter};
+use crate::select::SelectColumns;
+use crate::util;
+use crate::serde::Deserialize;
+
+use crate::cmd::sort::iter_cmp;
+
+static USAGE: &str = "
 Dedups CSV rows. 
 
 Note that this requires reading all of the CSV data into memory, because the rows need to be sorted first.
@@ -31,7 +33,7 @@ Common options:
                            Must be a single character. (default: ,)
 ";
 
-#[derive(RustcDecodable)]
+#[derive(Deserialize)]
 struct Args {
     arg_input: Option<String>,
     flag_select: SelectColumns,
@@ -66,16 +68,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
 		let mut current = 0;
 		while current + 1 < all.len() {
+            let a = sel.select(&all[current]);
+            let b = sel.select(&all[current+1]);
 			if no_case {
-				let a = sel.select(&all[current]);
-				let b = sel.select(&all[current+1]);
 				if iter_cmp_no_case(a, b) != cmp::Ordering::Equal {
 					new.push(all[current].clone());
 				}
 				
 			} else {
-				let a = sel.select(&all[current]);
-				let b = sel.select(&all[current+1]);
 				if iter_cmp(a, b) != cmp::Ordering::Equal {
 					new.push(all[current].clone());
 				}
