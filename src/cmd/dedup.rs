@@ -15,11 +15,11 @@ Dedups CSV rows.
 Note that this requires reading all of the CSV data into memory, because the rows need to be sorted first.
 
 Usage:
-    xsv dedup [options] [<input>]
+    qsv dedup [options] [<input>]
 
 sort options:
     -s, --select <arg>     Select a subset of columns to dedup.
-                           See 'xsv select --help' for the format details.
+                           See 'qsv select --help' for the format details.
     -C, --no-case          Compare strings disregarding case
 
 Common options:

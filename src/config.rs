@@ -109,7 +109,7 @@ impl Config {
     }
 
     pub fn no_headers(mut self, mut yes: bool) -> Config {
-        if env::var("XSV_TOGGLE_HEADERS").unwrap_or_else(|_| "0".to_owned()) == "1" {
+        if env::var("QSV_TOGGLE_HEADERS").unwrap_or_else(|_| "0".to_owned()) == "1" {
             yes = !yes;
         }
         self.no_headers = yes;
