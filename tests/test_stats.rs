@@ -127,16 +127,19 @@ stats_tests!(stats_infer_null_int_float_unicode, "type",
 
 stats_tests!(stats_no_mean, "mean", &["a"], "");
 stats_tests!(stats_no_stddev, "stddev", &["a"], "");
+stats_tests!(stats_no_variance, "variance", &["a"], "");
 stats_tests!(stats_no_median, "median", &["a"], "");
 stats_tests!(stats_no_mode, "mode", &["a", "b"], "N/A");
 
 stats_tests!(stats_null_mean, "mean", &[""], "");
 stats_tests!(stats_null_stddev, "stddev", &[""], "");
+stats_tests!(stats_null_variance, "variance", &[""], "");
 stats_tests!(stats_null_median, "median", &[""], "");
 stats_tests!(stats_null_mode, "mode", &[""], "N/A");
 
 stats_tests!(stats_includenulls_null_mean, "mean", &[""], "", true);
 stats_tests!(stats_includenulls_null_stddev, "stddev", &[""], "", true);
+stats_tests!(stats_includenulls_null_variance, "variance", &[""], "", true);
 stats_tests!(stats_includenulls_null_median, "median", &[""], "", true);
 stats_tests!(stats_includenulls_null_mode, "mode", &[""], "N/A", true);
 
@@ -165,12 +168,18 @@ stats_tests!(stats_len_max_null, "max_length", &["a", "aa", ""], "2");
 
 stats_tests!(stats_mean, "mean", &["5", "15", "10"], "10");
 stats_tests!(stats_stddev, "stddev", &["1", "2", "3"], "0.816496580927726");
+stats_tests!(stats_variance, "variance", &["1", "2", "3", "4"], "1.25");
 stats_tests!(stats_mean_null, "mean", &["", "5", "15", "10"], "10");
 stats_tests!(stats_stddev_null, "stddev", &["1", "2", "3", ""],
              "0.816496580927726");
+stats_tests!(stats_variance_null, "variance", &["1", "2", "3", "4", ""], 
+             "1.25");
 stats_tests!(stats_mean_mix, "mean", &["5", "15.1", "9.9"], "10");
 stats_tests!(stats_stddev_mix, "stddev", &["1", "2.1", "2.9"],
              "0.7788880963698614");
+stats_tests!(stats_variance_mix, "variance", &["1.5", "2", "2.5", "3"],
+             "0.3125");
+
 
 stats_tests!(stats_cardinality, "cardinality", &["a", "b", "a"], "2");
 stats_tests!(stats_mode, "mode", &["a", "b", "a"], "a");

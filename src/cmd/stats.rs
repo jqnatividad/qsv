@@ -21,11 +21,11 @@ use self::FieldType::{TUnknown, TNull, TUnicode, TFloat, TInteger};
 static USAGE: &str = "
 Computes basic statistics on CSV data.
 
-Basic statistics includes mean, median, mode, standard deviation, sum, max and
-min values. Note that some statistics are expensive to compute, so they must
-be enabled explicitly. By default, the following statistics are reported for
-*every* column in the CSV data: mean, max, min and standard deviation. The
-default set of statistics corresponds to statistics that can be computed
+Basic statistics includes mean, median, mode, standard deviation, variance, sum,
+max and min values. Note that some statistics are expensive to compute, so they
+must be enabled explicitly. By default, the following statistics are reported for
+*every* column in the CSV data: mean, max, min, standard deviation and variance.
+The default set of statistics corresponds to statistics that can be computed
 efficiently on a stream of data (i.e., constant memory).
 
 Computing statistics on a large file can be made much faster if you create
@@ -219,7 +219,7 @@ impl Args {
     fn stat_headers(&self) -> csv::StringRecord {
         let mut fields = vec![
             "field", "type", "sum", "min", "max", "min_length", "max_length",
-            "mean", "stddev",
+            "mean", "stddev", "variance",
         ];
         let all = self.flag_everything;
         if self.flag_median || all { fields.push("median"); }
@@ -335,13 +335,16 @@ impl Stats {
 
         if !self.typ.is_number() {
             pieces.push(empty()); pieces.push(empty());
+            pieces.push(empty());
         } else {
             match self.online {
                 Some(ref v) => {
                     pieces.push(v.mean().to_string());
                     pieces.push(v.stddev().to_string());
+                    pieces.push(v.variance().to_string());
                 }
-                None => { pieces.push(empty()); pieces.push(empty()); }
+                None => { pieces.push(empty()); pieces.push(empty()); 
+                    pieces.push(empty()); }
             }
         }
         match self.median.as_mut().and_then(|v| v.median()) {
