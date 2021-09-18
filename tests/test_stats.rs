@@ -112,18 +112,23 @@ stats_tests!(stats_infer_unicode, "type", &["a"], "Unicode");
 stats_tests!(stats_infer_int, "type", &["1"], "Integer");
 stats_tests!(stats_infer_float, "type", &["1.2"], "Float");
 stats_tests!(stats_infer_null, "type", &[""], "NULL");
+stats_tests!(stats_infer_date, "type", &["1968-06-27"], "Date");
 stats_tests!(stats_infer_unicode_null, "type", &["a", ""], "Unicode");
 stats_tests!(stats_infer_int_null, "type", &["1", ""], "Integer");
 stats_tests!(stats_infer_float_null, "type", &["1.2", ""], "Float");
+stats_tests!(stats_infer_date_null, "type", &["1968-06-27", ""], "Date");
 stats_tests!(stats_infer_null_unicode, "type", &["", "a"], "Unicode");
 stats_tests!(stats_infer_null_int, "type", &["", "1"], "Integer");
 stats_tests!(stats_infer_null_float, "type", &["", "1.2"], "Float");
+stats_tests!(stats_infer_null_date, "type", &["", "1968-06-27"], "Date");
 stats_tests!(stats_infer_int_unicode, "type", &["1", "a"], "Unicode");
 stats_tests!(stats_infer_unicode_int, "type", &["a", "1"], "Unicode");
 stats_tests!(stats_infer_int_float, "type", &["1", "1.2"], "Float");
 stats_tests!(stats_infer_float_int, "type", &["1.2", "1"], "Float");
 stats_tests!(stats_infer_null_int_float_unicode, "type",
              &["", "1", "1.2", "a"], "Unicode");
+stats_tests!(stats_infer_date_unicode, "type", &["1968-06-27", "abcde"], "Unicode");
+stats_tests!(stats_infer_unicode_date, "type", &["wxyz", "1968-06-27"], "Unicode");
 
 stats_tests!(stats_no_mean, "mean", &["a"], "");
 stats_tests!(stats_no_stddev, "stddev", &["a"], "");

@@ -446,13 +446,13 @@ impl Commute for FieldType {
             (TUnknown, _) | (_, TUnknown) => TUnknown,
             // Integers can degrade to floats.
             (TFloat, TInteger) | (TInteger, TFloat) => TFloat,
-            // unixtime can degrade to int/floats.
+            // when using unixtime format can degrade to int/floats.
             (TInteger, TDate) | (TDate, TInteger) => TInteger,
             (TFloat, TDate) | (TDate, TFloat) => TFloat,
-            // Numbers can degrade to Unicode strings.
+            // Numbers/dates can degrade to Unicode strings.
             (TUnicode, TFloat) | (TFloat, TUnicode) => TUnicode,
             (TUnicode, TInteger) | (TInteger, TUnicode) => TUnicode,
-            (TUnicode, TDate) | (TDate, TUnicode) => TDate,
+            (TUnicode, TDate) | (TDate, TUnicode) => TUnicode,
         };
     }
 }
