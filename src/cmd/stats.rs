@@ -8,6 +8,7 @@ use std::str::{self, FromStr};
 
 use stats::{Commute, OnlineStats, MinMax, Unsorted, merge_all};
 use threadpool::ThreadPool;
+use crate::dateparser::DateTimeUtc;
 
 use crate::CliResult;
 use crate::config::{Config, Delimiter};
@@ -16,7 +17,7 @@ use crate::select::{SelectColumns, Selection};
 use crate::util;
 use crate::serde::Deserialize;
 
-use self::FieldType::{TUnknown, TNull, TUnicode, TFloat, TInteger};
+use self::FieldType::{TUnknown, TNull, TUnicode, TFloat, TInteger, TDate};
 
 static USAGE: &str = "
 Computes basic statistics on CSV data.
@@ -310,6 +311,7 @@ impl Stats {
                     if let Some(v) = self.online.as_mut() { v.add(n); };
                 }
             }
+            TDate => {}
         }
     }
 
@@ -404,6 +406,7 @@ enum FieldType {
     TUnicode,
     TFloat,
     TInteger,
+    TDate,
 }
 
 impl FieldType {
@@ -417,6 +420,7 @@ impl FieldType {
         };
         if string.parse::<i64>().is_ok() { return TInteger; }
         if string.parse::<f64>().is_ok() { return TFloat; }
+        if string.parse::<DateTimeUtc>().is_ok() { return TDate; }
         TUnicode
     }
 
@@ -435,15 +439,20 @@ impl Commute for FieldType {
             (TUnicode, TUnicode) => TUnicode,
             (TFloat, TFloat) => TFloat,
             (TInteger, TInteger) => TInteger,
+            (TDate, TDate) => TDate,
             // Null does not impact the type.
             (TNull, any) | (any, TNull) => any,
             // There's no way to get around an unknown.
             (TUnknown, _) | (_, TUnknown) => TUnknown,
-            // Integers can degrate to floats.
+            // Integers can degrade to floats.
             (TFloat, TInteger) | (TInteger, TFloat) => TFloat,
+            // unixtime can degrade to int/floats.
+            (TInteger, TDate) | (TDate, TInteger) => TInteger,
+            (TFloat, TDate) | (TDate, TFloat) => TFloat,
             // Numbers can degrade to Unicode strings.
             (TUnicode, TFloat) | (TFloat, TUnicode) => TUnicode,
             (TUnicode, TInteger) | (TInteger, TUnicode) => TUnicode,
+            (TUnicode, TDate) | (TDate, TUnicode) => TDate,
         };
     }
 }
@@ -463,6 +472,7 @@ impl fmt::Display for FieldType {
             TUnicode => write!(f, "Unicode"),
             TFloat => write!(f, "Float"),
             TInteger => write!(f, "Integer"),
+            TDate => write!(f, "Date"),
         }
     }
 }
@@ -506,7 +516,7 @@ impl TypedSum {
 
     fn show(&self, typ: FieldType) -> Option<String> {
         match typ {
-            TNull | TUnicode | TUnknown => None,
+            TNull | TUnicode | TUnknown | TDate => None,
             TInteger => Some(self.integer.to_string()),
             TFloat => Some(self.float.unwrap_or(0.0).to_string()),
         }
@@ -542,7 +552,7 @@ impl TypedMinMax {
         }
         self.strings.add(sample.to_vec());
         match typ {
-            TUnicode | TUnknown | TNull => {}
+            TUnicode | TUnknown | TNull | TDate => {}
             TFloat => {
                 let n = str::from_utf8(&*sample)
                             .ok()
@@ -572,7 +582,7 @@ impl TypedMinMax {
     fn show(&self, typ: FieldType) -> Option<(String, String)> {
         match typ {
             TNull => None,
-            TUnicode | TUnknown => {
+            TUnicode | TUnknown | TDate => {
                 match (self.strings.min(), self.strings.max()) {
                     (Some(min), Some(max)) => {
                         let min = String::from_utf8_lossy(&**min).to_string();

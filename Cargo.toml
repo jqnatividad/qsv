@@ -45,6 +45,7 @@ serde = { version = "1", features = ["derive"] }
 streaming-stats = "0.2"
 tabwriter = "1.2"
 threadpool = "1.8"
+dateparser = "0.1.5"
 
 [dev-dependencies]
 quickcheck = { version = "0.9", default-features = false }

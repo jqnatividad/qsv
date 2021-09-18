@@ -11,6 +11,7 @@ extern crate serde;
 extern crate stats;
 extern crate tabwriter;
 extern crate threadpool;
+extern crate dateparser;
 
 use std::borrow::ToOwned;
 use std::env;
