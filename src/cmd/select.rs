@@ -31,10 +31,6 @@ selected using regular expressions.
   $ qsv select /^a/
   $ qsv select '/^.*\d.*$/'
 
-  Select columns using a regex using '/<regex>/':
-  $ xsv select /^a/
-  $ xsv select '/^.*\d.*$/'
-
   Re-order and duplicate columns arbitrarily:
   $ qsv select 3-1,Header3-Header1,Header1,Foo[2],Header1
 
