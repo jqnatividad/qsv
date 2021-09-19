@@ -8,13 +8,13 @@ use std::str::{self, FromStr};
 
 use stats::{Commute, OnlineStats, MinMax, Unsorted, merge_all};
 use threadpool::ThreadPool;
-use crate::dateparser::DateTimeUtc;
 
 use crate::CliResult;
 use crate::config::{Config, Delimiter};
 use crate::index::Indexed;
 use crate::select::{SelectColumns, Selection};
 use crate::util;
+use crate::dateparser::DateTimeUtc;
 use crate::serde::Deserialize;
 
 use self::FieldType::{TUnknown, TNull, TUnicode, TFloat, TInteger, TDate};
@@ -542,6 +542,7 @@ struct TypedMinMax {
     str_len: MinMax<usize>,
     integers: MinMax<i64>,
     floats: MinMax<f64>,
+    dates: MinMax<String>,
 }
 
 impl TypedMinMax {
@@ -552,7 +553,7 @@ impl TypedMinMax {
         }
         self.strings.add(sample.to_vec());
         match typ {
-            TUnicode | TUnknown | TNull | TDate => {}
+            TUnicode | TUnknown | TNull => {}
             TFloat => {
                 let n = str::from_utf8(&*sample)
                             .ok()
@@ -569,6 +570,14 @@ impl TypedMinMax {
                 self.integers.add(n);
                 self.floats.add(n as f64);
             }
+            TDate => {
+                let n = str::from_utf8(&*sample)
+                            .ok()
+                            .and_then(|s| dateparser::parse(s).ok())
+                            .unwrap();
+
+                self.dates.add(n.to_string());
+            }
         }
     }
 
@@ -582,12 +591,20 @@ impl TypedMinMax {
     fn show(&self, typ: FieldType) -> Option<(String, String)> {
         match typ {
             TNull => None,
-            TUnicode | TUnknown | TDate => {
+            TUnicode | TUnknown  => {
                 match (self.strings.min(), self.strings.max()) {
                     (Some(min), Some(max)) => {
                         let min = String::from_utf8_lossy(&**min).to_string();
                         let max = String::from_utf8_lossy(&**max).to_string();
                         Some((min, max))
+                    }
+                    _ => None
+                }
+            }
+            TDate => {
+                match (self.dates.min(), self.dates.max()) {
+                    (Some(min), Some(max)) => {
+                        Some((min.to_string(), max.to_string()))
                     }
                     _ => None
                 }
@@ -619,6 +636,7 @@ impl Default for TypedMinMax {
             str_len: Default::default(),
             integers: Default::default(),
             floats: Default::default(),
+            dates: Default::default(),
         }
     }
 }
@@ -629,6 +647,7 @@ impl Commute for TypedMinMax {
         self.str_len.merge(other.str_len);
         self.integers.merge(other.integers);
         self.floats.merge(other.floats);
+        self.dates.merge(other.dates);
     }
 }
 
