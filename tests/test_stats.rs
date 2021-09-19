@@ -116,11 +116,11 @@ stats_tests!(stats_infer_date, "type", &["1968-06-27"], "Date");
 stats_tests!(stats_infer_unicode_null, "type", &["a", ""], "Unicode");
 stats_tests!(stats_infer_int_null, "type", &["1", ""], "Integer");
 stats_tests!(stats_infer_float_null, "type", &["1.2", ""], "Float");
-stats_tests!(stats_infer_date_null, "type", &["1968-06-27", ""], "Date");
+stats_tests!(stats_infer_date_null, "type", &["June 27, 1968", ""], "Date");
 stats_tests!(stats_infer_null_unicode, "type", &["", "a"], "Unicode");
 stats_tests!(stats_infer_null_int, "type", &["", "1"], "Integer");
 stats_tests!(stats_infer_null_float, "type", &["", "1.2"], "Float");
-stats_tests!(stats_infer_null_date, "type", &["", "1968-06-27"], "Date");
+stats_tests!(stats_infer_null_date, "type", &["", "September 17, 2012 at 10:09am PST"], "Date");
 stats_tests!(stats_infer_int_unicode, "type", &["1", "a"], "Unicode");
 stats_tests!(stats_infer_unicode_int, "type", &["a", "1"], "Unicode");
 stats_tests!(stats_infer_int_float, "type", &["1", "1.2"], "Float");
@@ -184,7 +184,6 @@ stats_tests!(stats_stddev_mix, "stddev", &["1", "2.1", "2.9"],
              "0.7788880963698614");
 stats_tests!(stats_variance_mix, "variance", &["1.5", "2", "2.5", "3"],
              "0.3125");
-
 
 stats_tests!(stats_cardinality, "cardinality", &["a", "b", "a"], "2");
 stats_tests!(stats_mode, "mode", &["a", "b", "a"], "a");
