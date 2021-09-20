@@ -211,6 +211,7 @@ shows rows with a population count:
 $ qsv search -s Population '[0-9]' worldcitiespop.csv \
   | qsv select Country,AccentCity,Population \
   | qsv sample 10 \
+  | tee sample.csv \
   | qsv table
 Country  AccentCity       Population
 es       Barañáin         22264
@@ -224,6 +225,9 @@ hu       Decs             4210
 bg       Sliven           94252
 gb       Leatherhead      43544
 ```
+
+> :warning: **NOTE:** The `tee` command reads from standard input and writes to both standard output and one or more files at the same time.
+We do this so we can create the `sample.csv` file we need for the next step, and pipe it to the `qsv table` command.
 
 Erk. Which country is `at`? No clue, but the Data Science Toolkit has a CSV
 file called `countrynames.csv`. Let's grab it and do a join so we can see which
