@@ -15,9 +15,9 @@ static USAGE: &str = "
 Randomly samples CSV data uniformly using memory proportional to the size of
 the sample.
 
-When an index is present, this command will use random indexing if the sample
-size is less than 10% of the total number of records. This allows for efficient
-sampling such that the entire CSV file is not parsed.
+When an index is present and a seed is not specified, this command will use 
+random indexing if the sample size is less than 10% of the total number of records.
+This allows for efficient sampling such that the entire CSV file is not parsed.
 
 When sample-size is between 0 and 1 exclusive, it is treated as a percentage
 of the CSV to sample (e.g. 0.20 is 20 percent). This requires an index.
@@ -70,7 +70,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             if sample_size < 1.0 {
                 sample_size *= idx.count() as f64;
             }
-            if do_random_access(sample_size as u64, idx.count()) {
+            if args.flag_seed.is_none() && do_random_access(sample_size as u64, idx.count()) {
                 rconfig.write_headers(&mut *idx, &mut wtr)?;
                 sample_random_access(&mut idx, sample_size as u64)?
             } else {
@@ -80,6 +80,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         }
         _ => {
+            if sample_size < 1.0 {
+                return fail!("Percentage sampling requires an index.");
+            }
             let mut rdr = rconfig.reader()?;
             rconfig.write_headers(&mut rdr, &mut wtr)?;
             sample_reservoir(&mut rdr, sample_size as u64, args.flag_seed)?
