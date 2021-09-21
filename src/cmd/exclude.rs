@@ -4,16 +4,16 @@ use std::fs;
 use std::io;
 use std::str;
 
-use byteorder::{BigEndian, WriteBytesExt};
-use csv;
+use crate::byteorder::{BigEndian, WriteBytesExt};
 
-use config::{Config, Delimiter};
-use index::Indexed;
-use select::{SelectColumns, Selection};
-use util;
-use CliResult;
+use crate::config::{Config, Delimiter};
+use crate::index::Indexed;
+use crate::select::{SelectColumns, Selection};
+use crate::util;
+use crate::CliResult;
+use crate::serde::Deserialize;
 
-static USAGE: &'static str = "
+static USAGE: &str = "
 Removes a set of CSV data from another set based on the specified columns.
 
 Also can compute the intersection of two CSV sets with the -v flag.
@@ -26,11 +26,11 @@ The columns arguments specify the columns to match for each input. Columns can
 be referenced by name or index, starting at 1. Specify multiple columns by
 separating them with a comma. Specify a range of columns with `-`. Both
 columns1 and columns2 must specify exactly the same number of columns.
-(See 'xsv select --help' for the full syntax.)
+(See 'qsv select --help' for the full syntax.)
 
 Usage:
-    xsv exclude [options] <columns1> <input1> <columns2> <input2>
-    xsv exclude --help
+    qsv exclude [options] <columns1> <input1> <columns2> <input2>
+    qsv exclude --help
 
 join options:
     --no-case              When set, matching is done case insensitively.
@@ -82,15 +82,15 @@ struct IoState<R, W: io::Write> {
 impl<R: io::Read + io::Seek, W: io::Write> IoState<R, W> {
     fn write_headers(&mut self) -> CliResult<()> {
         if !self.no_headers {
-            let mut headers = self.rdr1.byte_headers()?.clone();
+            let headers = self.rdr1.byte_headers()?.clone();
             self.wtr.write_record(&headers)?;
         }
         Ok(())
     }
 
     fn exclude(mut self, invert: bool) -> CliResult<()> {
-        let mut scratch = csv::ByteRecord::new();
-        let mut validx = ValueIndex::new(self.rdr2, &self.sel2, self.casei)?;
+        let _scratch = csv::ByteRecord::new();
+        let validx = ValueIndex::new(self.rdr2, &self.sel2, self.casei)?;
         for row in self.rdr1.byte_records() {
             let row = row?;
             let key = get_row_key(&self.sel1, &row, self.casei);
@@ -102,7 +102,7 @@ impl<R: io::Read + io::Seek, W: io::Write> IoState<R, W> {
                         continue;
                     }
                 }
-                Some(rows) => {
+                Some(_rows) => {
                     if invert {
                         self.wtr.write_record(row.iter())?;
                     } else {
@@ -116,7 +116,7 @@ impl<R: io::Read + io::Seek, W: io::Write> IoState<R, W> {
 }
 
 impl Args {
-    fn new_io_state(&self) -> CliResult<IoState<fs::File, Box<io::Write + 'static>>> {
+    fn new_io_state(&self) -> CliResult<IoState<fs::File, Box<dyn io::Write + 'static>>> {
         let rconf1 = Config::new(&Some(self.arg_input1.clone()))
             .delimiter(self.flag_delimiter)
             .no_headers(self.flag_no_headers)
@@ -131,10 +131,10 @@ impl Args {
         let (sel1, sel2) = self.get_selections(&rconf1, &mut rdr1, &rconf2, &mut rdr2)?;
         Ok(IoState {
             wtr: Config::new(&self.flag_output).writer()?,
-            rdr1: rdr1,
-            sel1: sel1,
-            rdr2: rdr2,
-            sel2: sel2,
+            rdr1,
+            sel1,
+            rdr2,
+            sel2,
             no_headers: rconf1.no_headers,
             casei: self.flag_no_case,
         })
@@ -221,7 +221,7 @@ impl<R: io::Read + io::Seek> ValueIndex<R> {
         let idx = Indexed::open(rdr, io::Cursor::new(row_idx.into_inner()))?;
         Ok(ValueIndex {
             values: val_idx,
-            idx: idx,
+            idx,
             num_rows: rowi,
         })
     }
@@ -245,7 +245,7 @@ impl<R> fmt::Debug for ValueIndex<R> {
 }
 
 fn get_row_key(sel: &Selection, row: &csv::ByteRecord, casei: bool) -> Vec<ByteString> {
-    sel.select(row).map(|v| transform(&v, casei)).collect()
+    sel.select(row).map(|v| transform(v, casei)).collect()
 }
 
 fn transform(bs: &[u8], casei: bool) -> ByteString {
