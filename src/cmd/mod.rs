@@ -1,5 +1,7 @@
 pub mod cat;
 pub mod count;
+pub mod dedup;
+pub mod exclude;
 pub mod fill;
 pub mod fixlengths;
 pub mod flatten;
@@ -21,4 +23,3 @@ pub mod split;
 pub mod stats;
 pub mod table;
 pub mod transpose;
-pub mod dedup;

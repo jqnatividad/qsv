@@ -49,7 +49,8 @@ macro_rules! command_list {
 "
     cat         Concatenate by row or column
     count       Count records
-    dedup       Remove redundant rows    
+    dedup       Remove redundant rows
+    exclude     Excludes the records in one CSV from another
     fill        Fill empty values
     fixlengths  Makes all records have same length
     flatten     Show one field per line
@@ -150,6 +151,8 @@ Please choose one of the following commands:",
 enum Command {
     Cat,
     Count,
+    Dedup,
+    Exclude,
     Fill,
     FixLengths,
     Flatten,
@@ -172,7 +175,6 @@ enum Command {
     Stats,
     Table,
     Transpose,
-    Dedup,
 }
 
 impl Command {
@@ -190,6 +192,7 @@ impl Command {
             Command::Cat => cmd::cat::run(argv),
             Command::Count => cmd::count::run(argv),
             Command::Dedup => cmd::dedup::run(argv),
+            Command::Exclude => cmd::exclude::run(argv),
             Command::Fill => cmd::fill::run(argv),
             Command::FixLengths => cmd::fixlengths::run(argv),
             Command::Flatten => cmd::flatten::run(argv),
