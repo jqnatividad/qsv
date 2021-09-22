@@ -34,6 +34,8 @@ mod workdir;
 
 mod test_cat;
 mod test_count;
+mod test_dedup;
+mod test_exclude;
 mod test_fill;
 mod test_fixlengths;
 mod test_flatten;
@@ -52,7 +54,6 @@ mod test_split;
 mod test_stats;
 mod test_table;
 mod test_transpose;
-mod test_dedup;
 
 fn qcheck<T: Testable>(p: T) {
     QuickCheck::new().gen(StdGen::new(thread_rng(), 5)).quickcheck(p);
