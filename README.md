@@ -84,14 +84,14 @@ appears in each column. The `stats` command will do this for you:
 
 ```bash
 $ qsv stats worldcitiespop.csv --everything | qsv table
-field       type     min            max            min_length  max_length  mean          stddev         median     mode         cardinality
-Country     Unicode  ad             zw             2           2                                                   cn           234
-City        Unicode   bab el ahmar  Þykkvibaer     1           91                                                  san jose     2351892
-AccentCity  Unicode   Bâb el Ahmar  ïn Bou Chella  1           91                                                  San Antonio  2375760
-Region      Unicode  00             Z9             0           2                                        13         04           397
-Population  Integer  7              31480498       0           8           47719.570634  302885.559204  10779                   28754
-Latitude    Float    -54.933333     82.483333      1           12          27.188166     21.952614      32.497222  51.15        1038349
-Longitude   Float    -179.983333    180            1           14          37.08886      63.22301       35.28      23.8         1167162
+field       type     sum                 min            max            min_length  max_length  mean                stddev              variance            median      mode         cardinality  nullcount
+Country     Unicode                      ad             zw             2           2                                                                                   cn           234          0
+City        Unicode                       bab el ahmar  Þykkvibaer     1           91                                                                                  san jose     2351892      0
+AccentCity  Unicode                       Bâb el Ahmar  ïn Bou Chella  1           91                                                                                  San Antonio  2375760      0
+Region      Unicode                      00             Z9             0           2                                                                       13          04           397          8
+Population  Integer  2289584999          7              31480498       0           8           47719.570633597126  302885.5592040396   91739661974.34377   10779                    28754        3125978
+Latitude    Float    86294096.37312101   -54.933333     82.483333      1           12          27.188165808468785  21.95261384912504   481.91725480879654  32.4972221  51.15        1038349      0
+Longitude   Float    117718483.57958724  -179.9833333   180            1           14          37.08885989656418   63.223010459241635  3997.1490515293776  35.28       23.8         1167162      0
 ```
 
 The `qsv table` command takes any CSV data and formats it into aligned columns
