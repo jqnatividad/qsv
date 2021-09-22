@@ -31,7 +31,7 @@ debug = true
 opt-level = 3
 
 [dependencies]
-mimalloc = { version = "*", default-features = false }
+mimalloc = { version = "0.1.26", default-features = false }
 byteorder = "1.4"
 crossbeam-channel = "0.5"
 csv = "1.1"
