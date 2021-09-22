@@ -13,49 +13,52 @@ a quick tour of several commands.
 
 Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org).
 
-| **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) CSV utility, merging several pending PRs since the 0.13.0 release that I found useful. It also implements [percentage sampling](https://github.com/BurntSushi/xsv/issues/257). |
-|----|
+> :warning: **NOTE: qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's release](https://github.com/BurntSushi/xsv/issues/267), along with additional features & commands for data-wrangling (_NEW/EXTENDED_ commands are marked accordingly).**
+
+----
 
 ### Available commands
 
-* **cat** - Concatenate CSV files by row or by column.
-* **count** - Count the rows in a CSV file. (Instantaneous with an index.)
-* **fill** - Fill empty values. _**([NEW](https://github.com/jqnatividad/qsv/pull/4))**_
-* **fixlengths** - Force a CSV file to have same-length records by either
+* **[cat](blob/945d9cd8091505c554201defa0dc837f1e8c455e/src/cmd/cat.rs#L7)** - Concatenate CSV files by row or by column.
+* **[count](blob/945d9cd8091505c554201defa0dc837f1e8c455e/src/cmd/count.rs#L7)** - Count the rows in a CSV file. (Instantaneous with an index.)
+* **[dedup](blob/945d9cd8091505c554201defa0dc837f1e8c455e/src/cmd/dedup.rs#L13)** - Remove redundant rows _**(NEW)**_
+* **[exclude](blob/945d9cd8091505c554201defa0dc837f1e8c455e/src/cmd/exclude.rs#L17)** - Excludes the records in one CSV from another _**(NEW)**_
+* **[fill](blob/945d9cd8091505c554201defa0dc837f1e8c455e/src/cmd/fill.rs#L13)** - Fill empty values. _**(NEW)**_
+* **[fixlengths](blob/945d9cd8091505c554201defa0dc837f1e8c455e/src/cmd/fill.rs#L13)** - Force a CSV file to have same-length records by either
   padding or truncating them.
-* **flatten** - A flattened view of CSV records. Useful for viewing one record
+* **[flatten](blob/945d9cd8091505c554201defa0dc837f1e8c455e/src/cmd/flatten.rs#L12)** - A flattened view of CSV records. Useful for viewing one record
   at a time. e.g., `qsv slice -i 5 data.csv | qsv flatten`.
-* **fmt** - Reformat CSV data with different delimiters, record terminators
-  or quoting rules. (Supports ASCII delimited data.)
-* **frequency** - Build frequency tables of each column in CSV data. (Uses
+* **[fmt](blob/945d9cd8091505c554201defa0dc837f1e8c455e/src/cmd/fmt.rs#L7)** - Reformat CSV data with different delimiters, record terminators
+  or quoting rules. (Supports ASCII delimited data.) _**(EXTENDED)**_
+* **[frequency](blob/945d9cd8091505c554201defa0dc837f1e8c455e/src/cmd/frequency.rs#L15)** - Build frequency tables of each column in CSV data. (Uses
   parallelism to go faster if an index is present.)
-* **headers** - Show the headers of CSV data. Or show the intersection of all
+* **[headers](blob/945d9cd8091505c554201defa0dc837f1e8c455e/src/cmd/headers.rs#L11)** - Show the headers of CSV data. Or show the intersection of all
   headers between many CSV files.
-* **index** - Create an index for a CSV file. This is very quick and provides
+* **[index](blob/945d9cd8091505c554201defa0dc837f1e8c455e/src/cmd/index.rs#L13)** - Create an index for a CSV file. This is very quick and provides
   constant time indexing into the CSV file.
-* **input** - Read CSV data with exotic quoting/escaping rules.
-* **join** - Inner, outer and cross joins. Uses a simple hash index to make it
+* **[input](blob/945d9cd8091505c554201defa0dc837f1e8c455e/src/cmd/input.rs#L7)** - Read CSV data with exotic quoting/escaping rules.
+* **[join](blob/945d9cd8091505c554201defa0dc837f1e8c455e/src/cmd/join.rs#L18)** - Inner, outer and cross joins. Uses a simple hash index to make it
   fast.
-* **partition** - Partition CSV data based on a column value.
-* **sample** - Randomly draw rows from CSV data using reservoir sampling (i.e.,
-  use memory proportional to the size of the sample). _**([EXTENDED](https://github.com/BurntSushi/xsv/issues/257))**_
-* **rename** -  Rename the columns of CSV data efficiently. _**([NEW](https://github.com/jqnatividad/qsv/pull/5))**_
-* **reverse** - Reverse order of rows in CSV data.
-* **search** - Run a regex over CSV data. Applies the regex to each field
+* **[partition](blob/945d9cd8091505c554201defa0dc837f1e8c455e/src/cmd/partition.rs#L16)** - Partition CSV data based on a column value.
+* **[rename](blob/945d9cd8091505c554201defa0dc837f1e8c455e/src/cmd/rename.rs#L7)** -  Rename the columns of CSV data efficiently. _**(NEW)**_
+* **[reverse](blob/945d9cd8091505c554201defa0dc837f1e8c455e/src/cmd/reverse.rs#L7)** - Reverse order of rows in CSV data. _**(NEW)**_
+* **[sample](blob/945d9cd8091505c554201defa0dc837f1e8c455e/src/cmd/sample.rs#L15)** - Randomly draw rows from CSV data using reservoir sampling (i.e.,
+  use memory proportional to the size of the sample). _**(EXTENDED)**_
+* **[search](blob/945d9cd8091505c554201defa0dc837f1e8c455e/src/cmd/search.rs#L10)** - Run a regex over CSV data. Applies the regex to each field
   individually and shows only matching rows.
-* **select** - Select or re-order columns from CSV data. _**([EXTENDED](https://github.com/jqnatividad/qsv/pull/2))**_
-* **slice** - Slice rows from any part of a CSV file. When an index is present,
+* **[select](blob/945d9cd8091505c554201defa0dc837f1e8c455e/src/cmd/select.rs#L8)** - Select or re-order columns from CSV data. _**(EXTENDED)**_
+* **[slice](blob/945d9cd8091505c554201defa0dc837f1e8c455e/src/cmd/slice.rs#L11)** - Slice rows from any part of a CSV file. When an index is present,
   this only has to parse the rows in the slice (instead of all rows leading up
   to the start of the slice).
-* **sort** - Sort CSV data.
-* **split** - Split one CSV file into many CSV files of N chunks.
-* **stats** - Show basic types and statistics of each column in the CSV file.
-  (i.e., mean, standard deviation, median, range, nullcount, etc.) _**([EXTENDED](https://github.com/jqnatividad/qsv/pull/1))**_
-* **table** - Show aligned output of any CSV data using
-  [elastic tabstops](https://github.com/BurntSushi/tabwriter).
-* **transpose** - Transpose rows/columns of CSV data. _**([NEW](https://github.com/jqnatividad/qsv/pull/3))**_
+* **[sort](blob/945d9cd8091505c554201defa0dc837f1e8c455e/src/cmd/sort.rs#L13)** - Sort CSV data.
+* **[split](blob/945d9cd8091505c554201defa0dc837f1e8c455e/src/cmd/split.rs#L14)** - Split one CSV file into many CSV files of N chunks.
+* **[stats](blob/945d9cd8091505c554201defa0dc837f1e8c455e/src/cmd/stats.rs#L23)** - Show basic types and statistics of each column in the CSV file.
+  (i.e., mean, standard deviation, variance, median, min/max, nullcount, etc.) _**(EXTENDED)**_
+* **[table](blob/945d9cd8091505c554201defa0dc837f1e8c455e/src/cmd/table.rs#L12)** - Show aligned output of any CSV data using
+  [elastic tabstops](https://github.com/BurntSushi/tabwriter). _**(EXTENDED)**_
+* **[transpose](blob/945d9cd8091505c554201defa0dc837f1e8c455e/src/cmd/transpose.rs#L9)** - Transpose rows/columns of CSV data. _**(NEW)**_
 
-
+----
 
 ### A whirlwind tour
 
