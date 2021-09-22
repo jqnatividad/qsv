@@ -61,7 +61,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut dupewtr = Config::new(&args.flag_dupes_output).writer()?;
 
     let headers = rdr.byte_headers()?.clone();
-    dupewtr.write_byte_record(&headers)?;
+    if dupes_output {
+        dupewtr.write_byte_record(&headers)?;
+    }
     let sel = rconfig.selection(&headers)?;
 
 	let mut new:Vec<_> = vec![];
