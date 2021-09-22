@@ -141,7 +141,8 @@ arbitrarily large CSV data).
 
 Switching gears a little bit, you might not always want to see every column in
 the CSV data. In this case, maybe we only care about the country, city and
-population. So let's take a look at 10 random rows:
+population. So let's take a look at 10 "random" rows. We use the `--seed` parameter
+so we get a reproducible random sample:
 
 ```bash
 $ qsv select Country,AccentCity,Population worldcitiespop.csv \
@@ -160,8 +161,7 @@ kr       Hwahungni
 fr       Pimouget
 ```
 
-Whoops! It seems some cities don't have population counts. How pervasive is
-that?
+Whoops! The sample we got don't have population counts. How pervasive is that?
 
 ```bash
 $ qsv frequency worldcitiespop.csv --limit 5
@@ -207,8 +207,8 @@ Longitude,23.1,459
 CSV data. This one only took 5 seconds.)
 
 So it seems that most cities do not have a population count associated with
-them at all. No matter—we can adjust our previous command so that it only
-shows rows with a population count:
+them at all (3,125,978 to be exact). No matter — we can adjust our previous 
+command so that it only shows rows with a population count:
 
 ```bash
 $ qsv search -s Population '[0-9]' worldcitiespop.csv \
@@ -229,85 +229,131 @@ ch       Aigle               7897
 yt       Ouangani            7273
 ```
 
-> :warning: **NOTE:** The `tee` command reads from standard input and writes to both standard output and one or more files at the same time.
-We do this so we can create the `sample.csv` file we need for the next step, and pipe it to the `qsv table` command.
+> :warning: **NOTE:** The `tee` command reads from standard input and writes 
+to both standard output and one or more files at the same time. We do this so 
+we can create the `sample.csv` file we need for the next step, and pipe the 
+same data to the `qsv table` command.
 
-Erk. Which country is `at`? No clue, but the Data Science Toolkit has a CSV
-file called `countrynames.csv`. Let's grab it and do a join so we can see which
-countries these are:
+Erk. Which country is `yt`? What continent? No clue, but [DataHub.io](https://datahub.io) 
+has a CSV file called `country-continent.csv`. Let's grab it and do a join so 
+we can see which countries and continents these are:
 
 ```bash
-curl -LO https://gist.githubusercontent.com/anonymous/063cb470e56e64e98cf1/raw/98e2589b801f6ca3ff900b01a87fbb7452eb35c7/countrynames.csv
+curl -L https://datahub.io/JohnSnowLabs/country-and-continent-codes-list/r/0.csv > country_continent.csv
 $ qsv headers countrynames.csv
-1   Abbrev
-2   Country
-$ qsv join --no-case  Country sample.csv Abbrev countrynames.csv | qsv table
-Country  AccentCity       Population  Abbrev  Country
-es       Barañáin         22264       ES      Spain
-es       Puerto Real      36946       ES      Spain
-at       Moosburg         4602        AT      Austria
-hu       Hejobaba         1949        HU      Hungary
-ru       Polyarnyye Zori  15092       RU      Russian Federation | Russia
-gr       Kandíla          1245        GR      Greece
-is       Ólafsvík         992         IS      Iceland
-hu       Decs             4210        HU      Hungary
-bg       Sliven           94252       BG      Bulgaria
-gb       Leatherhead      43544       GB      Great Britain | UK | England | Scotland | Wales | Northern Ireland | United Kingdom
+1   Continent_Name
+2   Continent_Code
+3   Country_Name
+4   Two_Letter_Country_Code
+5   Three_Letter_Country_Code
+6   Country_Number
+$ qsv join --no-case Country sample.csv Two_Letter_Country_Code country_continent.csv  | qsv table
+Country  AccentCity          Population  Continent_Name  Continent_Code  Country_Name                      Two_Letter_Country_Code  Three_Letter_Country_Code  Country_Number
+fr       Boissy-Saint-Léger  15451       Europe          EU              France, French Republic           FR                       FRA                        250
+us       Iselin              17019       North America   NA              United States of America          US                       USA                        840
+ru       Ali-Yurt            7593        Europe          EU              Russian Federation                RU                       RUS                        643
+ru       Ali-Yurt            7593        Asia            AS              Russian Federation                RU                       RUS                        643
+ro       Panaci              2308        Europe          EU              Romania                           RO                       ROU                        642
+lu       Baschleiden         185         Europe          EU              Luxembourg, Grand Duchy of        LU                       LUX                        442
+us       Mayaguez            76503       North America   NA              United States of America          US                       USA                        840
+ch       Vernier             29767       Europe          EU              Switzerland, Swiss Confederation  CH                       CHE                        756
+es       Salobreña           10725       Europe          EU              Spain, Kingdom of                 ES                       ESP                        724
+ch       Aigle               7897        Europe          EU              Switzerland, Swiss Confederation  CH                       CHE                        756
+yt       Ouangani            7273        Africa          AF              Mayotte                           YT                       MYT                        175
+
 ```
 
-Whoops, now we have two columns called `Country` and an `Abbrev` column that we
-no longer need. This is easy to fix by re-ordering columns with the `qsv
-select` command:
+Whoops, now we have the data but we have several unneeded columns, and the columns
+we do need have overly long names. Also, there are two records for Ali-Yurt - one in
+Europe and another in Asia. This is because Russia spans both continents.  
+We're primarily interested in unique cities per country for the purposes of this tour,
+so we need to filter these out.
+
+Also, apart from renaming the columns, I want to reorder them to "Country,Continent,City,
+Population".
+
+No worries. Let's use the `select` (so we only get the columns we need, in the order we want), 
+`dedup` (so we only get unique County/City combinations) and `rename` (rename the columns 
+with shorter names) commands: 
 
 ```bash
-$ qsv join --no-case  Country sample.csv Abbrev countrynames.csv \
-  | qsv select 'Country[1],AccentCity,Population' \
+$ qsv join --no-case Country sample.csv Two_Letter_Country_Code country_continent.csv \
+  | qsv select 'Country_Name,Continent_Name,AccentCity,Population' \
+  | qsv dedup -s 'Country_Name,AccentCity' \
+  | qsv rename Country,Continent,City,Population \
   | qsv table
-Country                                                                              AccentCity       Population
-Spain                                                                                Barañáin         22264
-Spain                                                                                Puerto Real      36946
-Austria                                                                              Moosburg         4602
-Hungary                                                                              Hejobaba         1949
-Russian Federation | Russia                                                          Polyarnyye Zori  15092
-Greece                                                                               Kandíla          1245
-Iceland                                                                              Ólafsvík         992
-Hungary                                                                              Decs             4210
-Bulgaria                                                                             Sliven           94252
-Great Britain | UK | England | Scotland | Wales | Northern Ireland | United Kingdom  Leatherhead      43544
+Country                           Continent      City                Population
+France, French Republic           Europe         Boissy-Saint-Léger  15451
+Luxembourg, Grand Duchy of        Europe         Baschleiden         185
+Mayotte                           Africa         Ouangani            7273
+Romania                           Europe         Panaci              2308
+Russian Federation                Asia           Ali-Yurt            7593
+Spain, Kingdom of                 Europe         Salobreña           10725
+Switzerland, Swiss Confederation  Europe         Aigle               7897
+Switzerland, Swiss Confederation  Europe         Vernier             29767
+United States of America          North America  Iselin              17019
+United States of America          North America  Mayaguez            76503
 ```
 
-Perhaps we can do this with the original CSV data? Indeed we can—because
-joins in `qsv` are fast.
+Nice! Notice the data is now sorted too! That's because `dedup` first sorts the
+CSV records (by internally calling the `qsv sort` command) to find duplicates.  
+
+Perhaps we can do this with the original CSV data? All 3.2 million rows in a 145MB file?!  
+
+Indeed we can—because `qsv` is designed for speed - written in [Rust](https://www.rust-lang.org/) with 
+[amortized memory allocations](https://blog.burntsushi.net/csv/#amortizing-allocations), using the 
+performance-focused [mimalloc](https://github.com/microsoft/mimalloc) allocator.
 
 ```bash
-$ qsv join --no-case Abbrev countrynames.csv Country worldcitiespop.csv \
-  | qsv select '!Abbrev,Country[1]' \
-  > worldcitiespop_countrynames.csv
-$ qsv sample 10 worldcitiespop_countrynames.csv | qsv table
-Country                      City                   AccentCity             Region  Population  Latitude    Longitude
-Sri Lanka                    miriswatte             Miriswatte             36                  7.2333333   79.9
-Romania                      livezile               Livezile               26      1985        44.512222   22.863333
-Indonesia                    tawainalu              Tawainalu              22                  -4.0225     121.9273
-Russian Federation | Russia  otar                   Otar                   45                  56.975278   48.305278
-France                       le breuil-bois robert  le Breuil-Bois Robert  A8                  48.945567   1.717026
-France                       lissac                 Lissac                 B1                  45.103094   1.464927
-Albania                      lumalasi               Lumalasi               46                  40.6586111  20.7363889
-China                        motzushih              Motzushih              11                  27.65       111.966667
-Russian Federation | Russia  svakino                Svakino                69                  55.60211    34.559785
-Romania                      tirgu pancesti         Tirgu Pancesti         38                  46.216667   27.1
+$ qsv join --no-case Country worldcitiespop.csv Two_Letter_Country_Code country_continent.csv \
+  | qsv select 'Country_Name,Continent_Name,AccentCity,Population,Latitude,Longitude' \
+  | qsv dedup -s 'Country_Name,AccentCity,Latitude,Longitude' --dupes-output dupe-countrycities.csv \
+  | qsv rename Country,Continent,City,Population,Latitude,Longitude \
+  > worldcitiespop_countrycontinent.csv
+$ qsv sample 10 --seed 1729 worldcitiespop_countycontinent.csv | qsv table
+Country                            Continent      City                     Population  Latitude    Longitude
+Syrian Arab Republic               Asia           Cheikh Sayad                         36.25       37.2666667
+Colombia, Republic of              South America  Tetillo                              3.160288    -76.324643
+Egypt, Arab Republic of            Africa         El-Kôm el-Ahmar                      27.0        31.4166667
+Bulgaria, Republic of              Europe         Oresha                               42.95       24.1
+Poland, Republic of                Europe         Wielka Wies                          54.568121   17.361634
+Iran, Islamic Republic of          Asia           Kolah Jub-e Chagalvandi              33.65       48.583333
+Congo, Republic of the             Africa         Ebou                                 -1.2833333  15.5869444
+Congo, Democratic Republic of the  Africa         Yambo-Engunda                        1           20.666667
+Australia, Commonwealth of         Oceania        Cessnock                 16394       -32.832111  151.356232
+Brazil, Federative Republic of     South America  Pirapora                             -8.448056   -72.821389
 ```
 
-The `!Abbrev,Country[1]` syntax means, "remove the `Abbrev` column and remove
-the second occurrence of the `Country` column." Since we joined with
-`countrynames.csv` first, the first `Country` name (fully expanded) is now
-included in the CSV data.
+We fine-tuned `dedup` by adding `Latitude` and `Longitude` as there may be 
+multiple cities with the same name in a country. We also specified the 
+`dupes-output` option so we can have a separate CSV of the duplicate records
+it removed. 
 
-This `qsv join` command takes about 7 seconds on my machine. The performance
-comes from constructing a very simple hash index of one of the CSV data files
-given. The `join` command does an inner join by default, but it also has left,
+This whole thing takes about 8 seconds on my machine. The performance of `join`,
+in particular, comes from constructing a very simple hash index of one of the CSV 
+files. The `join` command does an inner join by default, but it also has left,
 right and full outer join support too.
 
+Finally, can we create a CSV file for each country of all its cities? Yes we can, 
+with the `partition` command:
 
+```bash
+$ qsv partition Country bycountry worldcitiespop_countrycontinent.csv
+$ cd bycountry
+$ ls -1shS
+total 191M
+ 16M ChinaPeoplesRepublicof.csv
+ 12M RussianFederation.csv
+ 11M UnitedStatesofAmerica.csv
+ 11M IndonesiaRepublicof.csv
+7.5M IranIslamicRepublicof.csv
+...
+4.0K CocosKeelingIslands.csv
+4.0K PitcairnIslands.csv
+4.0K Tokelau.csv
+4.0K NorfolkIsland.csv
+```
+----
 ### Installation
 
 Binaries for Windows, Linux and macOS are available [from Github](https://github.com/jqnatividad/qsv/releases/latest).
