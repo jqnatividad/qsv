@@ -163,6 +163,7 @@ impl Args {
     }
 }
 
+#[allow(dead_code)]
 struct ValueIndex<R> {
     // This maps tuples of values to corresponding rows.
     values: HashMap<Vec<ByteString>, Vec<usize>>,
