@@ -3,7 +3,7 @@
 cache:
   - c:\cargo\registry
   - c:\cargo\git
-  - c:\projects\ripgrep\target
+  - c:\projects\qsv\target
 
 init:
   - mkdir c:\cargo
