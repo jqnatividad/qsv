@@ -19,9 +19,11 @@ Usage:
 
 sort options:
     -s, --select <arg>         Select a subset of columns to dedup.
+                               Note that the outputs will remain at the full width
+                               of the CSV.
                                See 'qsv select --help' for the format details.
     -C, --no-case              Compare strings disregarding case
-    -D, --dupes-output <file>  Send duplicates to stderr
+    -D, --dupes-output <file>  Write duplicates to <file>.
 
 Common options:
     -h, --help                 Display this message
