@@ -18,19 +18,20 @@ Usage:
     qsv dedup [options] [<input>]
 
 sort options:
-    -s, --select <arg>     Select a subset of columns to dedup.
-                           See 'qsv select --help' for the format details.
-    -C, --no-case          Compare strings disregarding case
+    -s, --select <arg>         Select a subset of columns to dedup.
+                               See 'qsv select --help' for the format details.
+    -C, --no-case              Compare strings disregarding case
+    -D, --dupes-output <file>  Send duplicates to stderr
 
 Common options:
-    -h, --help             Display this message
-    -o, --output <file>    Write output to <file> instead of stdout.
-    -n, --no-headers       When set, the first row will not be interpreted
-                           as headers. Namely, it will be sorted with the rest
-                           of the rows. Otherwise, the first row will always
-                           appear as the header row in the output.
-    -d, --delimiter <arg>  The field delimiter for reading CSV data.
-                           Must be a single character. (default: ,)
+    -h, --help                 Display this message
+    -o, --output <file>        Write output to <file> instead of stdout.
+    -n, --no-headers           When set, the first row will not be interpreted
+                               as headers. Namely, it will be sorted with the rest
+                               of the rows. Otherwise, the first row will always
+                               appear as the header row in the output.
+    -d, --delimiter <arg>      The field delimiter for reading CSV data.
+                               Must be a single character. (default: ,)
 ";
 
 #[derive(Deserialize)]
@@ -38,6 +39,7 @@ struct Args {
     arg_input: Option<String>,
     flag_select: SelectColumns,
     flag_no_case: bool,
+    flag_dupes_output: Option<String>,
     flag_output: Option<String>,
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
@@ -53,8 +55,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut rdr = rconfig.reader()?;
     let mut wtr = Config::new(&args.flag_output).writer()?;
+    let dupes_output = args.flag_dupes_output.is_some();
+    let mut dupewtr = Config::new(&args.flag_dupes_output).writer()?;
 
     let headers = rdr.byte_headers()?.clone();
+    dupewtr.write_byte_record(&headers)?;
     let sel = rconfig.selection(&headers)?;
 
 	let mut new:Vec<_> = vec![];
@@ -73,16 +78,23 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 			if no_case {
 				if iter_cmp_no_case(a, b) != cmp::Ordering::Equal {
 					new.push(all[current].clone());
-				}
+				} else if dupes_output {
+                    dupewtr.write_byte_record(&all[current])?;
+                }
 				
 			} else if iter_cmp(a, b) != cmp::Ordering::Equal {
 					new.push(all[current].clone());
-			}
+			} else {
+                if dupes_output {
+                    dupewtr.write_byte_record(&all[current])?;
+                }
+            }
 			current += 1;
 		}
 		new.push(all[current].clone());
 	}
 
+    dupewtr.flush()?;
     rconfig.write_headers(&mut rdr, &mut wtr)?;
     for r in new.into_iter() {
         wtr.write_byte_record(&r)?;
