@@ -145,19 +145,19 @@ population. So let's take a look at 10 random rows:
 
 ```bash
 $ qsv select Country,AccentCity,Population worldcitiespop.csv \
-  | qsv sample 10 \
+  | qsv sample --seed 42 10 \
   | qsv table
 Country  AccentCity       Population
-cn       Guankoushang
-za       Klipdrift
-ma       Ouled Hammou
-fr       Les Gravues
-la       Ban Phadèng
-de       Lüdenscheid      80045
-qa       Umm ash Shubrum
-bd       Panditgoan
-us       Appleton
-ua       Lukashenkivske
+vn       Khánh Tàn     
+no       Kvalvåg       
+ir       Bala Dashteh  
+af       Kam Papin     
+cn       Peipiao       
+mz       Chiquefane    
+ug       Bulukatoni    
+us       Gourdsville   
+kr       Hwahungni     
+fr       Pimouget
 ```
 
 Whoops! It seems some cities don't have population counts. How pervasive is
@@ -213,20 +213,20 @@ shows rows with a population count:
 ```bash
 $ qsv search -s Population '[0-9]' worldcitiespop.csv \
   | qsv select Country,AccentCity,Population \
-  | qsv sample 10 \
+  | qsv sample --seed 42 10 \
   | tee sample.csv \
   | qsv table
 Country  AccentCity       Population
-es       Barañáin         22264
-es       Puerto Real      36946
-at       Moosburg         4602
-hu       Hejobaba         1949
-ru       Polyarnyye Zori  15092
-gr       Kandíla          1245
-is       Ólafsvík         992
-hu       Decs             4210
-bg       Sliven           94252
-gb       Leatherhead      43544
+fr       Boissy-Saint-Léger  15451
+us       Iselin              17019
+ru       Ali-Yurt            7593
+ro       Panaci              2308
+lu       Baschleiden         185
+us       Mayaguez            76503
+ch       Vernier             29767
+es       Salobreña           10725
+ch       Aigle               7897
+yt       Ouangani            7273
 ```
 
 > :warning: **NOTE:** The `tee` command reads from standard input and writes to both standard output and one or more files at the same time.
