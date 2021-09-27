@@ -1,11 +1,11 @@
-use csv;
 use std::fs;
 use std::io::{self, BufRead, BufReader};
-use serde_json::Value;
+use crate::serde_json::Value;
 
-use CliResult;
-use config::{Config};
-use util;
+use crate::CliResult;
+use crate::config::{Config};
+use crate::util;
+use serde::Deserialize;
 
 static USAGE: &'static str = "
 Converts a newline-delimited JSON file (.ndjson or .jsonl, typically) into

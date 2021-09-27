@@ -1,11 +1,10 @@
 use std::collections::HashMap;
 
-use csv;
-
-use CliResult;
-use config::{Delimiter, Config};
-use select::SelectColumns;
-use util;
+use crate::CliResult;
+use crate::config::{Delimiter, Config};
+use crate::select::SelectColumns;
+use crate::serde::Deserialize;
+use crate::util;
 
 static USAGE: &'static str = "
 Pseudonymise the value of the given column by replacing them by an

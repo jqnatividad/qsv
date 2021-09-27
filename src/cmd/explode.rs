@@ -1,9 +1,8 @@
-use csv;
-
-use CliResult;
-use config::{Delimiter, Config};
-use select::SelectColumns;
-use util;
+use crate::CliResult;
+use crate::config::{Delimiter, Config};
+use crate::select::SelectColumns;
+use crate::util;
+use serde::Deserialize;
 
 static USAGE: &'static str = "
 Explodes a row into multiple ones by splitting a column value based on the

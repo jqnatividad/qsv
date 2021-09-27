@@ -1,10 +1,10 @@
-use csv;
-use uuid::Uuid;
+use crate::uuid::Uuid;
 
-use CliResult;
-use select::SelectColumns;
-use config::{Delimiter, Config};
-use util;
+use crate::CliResult;
+use crate::select::SelectColumns;
+use crate::config::{Delimiter, Config};
+use crate::util;
+use serde::Deserialize;
 
 static USAGE: &'static str = r#"
 Add a new column enumerating the lines of a CSV file. This can be useful to keep

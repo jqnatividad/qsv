@@ -1,12 +1,11 @@
-use csv;
+use crate::pyo3::prelude::*;
+use crate::pyo3::types::PyDict;
 
-use pyo3::prelude::*;
-use pyo3::types::PyDict;
-
-use CliResult;
-use CliError;
-use config::{Config, Delimiter};
-use util;
+use crate::CliResult;
+use crate::CliError;
+use crate::config::{Config, Delimiter};
+use crate::util;
+use serde::Deserialize;
 
 const HELPERS: &str = r#"
 def cast_as_string(value):

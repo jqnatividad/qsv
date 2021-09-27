@@ -1,10 +1,10 @@
-use csv;
-use regex::Regex;
+use crate::regex::Regex;
 
-use CliResult;
-use config::{Delimiter, Config};
-use select::SelectColumns;
-use util;
+use crate::CliResult;
+use crate::config::{Delimiter, Config};
+use crate::select::SelectColumns;
+use crate::util;
+use crate::serde::Deserialize;
 
 static USAGE: &'static str = "
 Apply a series of unary functions to a given CSV column. This can be used to

@@ -1,13 +1,12 @@
-use csv;
-
 use std::io::prelude::*;
 use std::fs::File;
 
-use CliResult;
-use CliError;
-use config::{Config, Delimiter};
-use hlua::{Lua, LuaTable, LuaError, AnyLuaValue};
-use util;
+use crate::CliResult;
+use crate::CliError;
+use crate::config::{Config, Delimiter};
+use crate::hlua::{Lua, LuaTable, LuaError, AnyLuaValue};
+use crate::util;
+use serde::Deserialize;
 
 // TODO: options for boolean return coercion
 

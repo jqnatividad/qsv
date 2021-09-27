@@ -1,11 +1,11 @@
-use csv;
-use regex::bytes::RegexBuilder;
+use crate::regex::bytes::RegexBuilder;
 use std::borrow::Cow;
 
-use CliResult;
-use config::{Config, Delimiter};
-use select::SelectColumns;
-use util;
+use crate::CliResult;
+use crate::config::{Config, Delimiter};
+use crate::select::SelectColumns;
+use crate::util;
+use serde::Deserialize;
 
 static USAGE: &'static str = "
 Replace occurrences of a pattern across a CSV file.

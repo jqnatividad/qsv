@@ -1,8 +1,7 @@
-use csv;
-
-use CliResult;
-use config::{Delimiter, Config};
-use util;
+use crate::CliResult;
+use crate::config::{Delimiter, Config};
+use crate::util;
+use serde::Deserialize;
 
 static USAGE: &'static str = "
 Drop a CSV file's header.

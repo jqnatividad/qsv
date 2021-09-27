@@ -1,14 +1,15 @@
-use csv;
-use regex::bytes::{Regex, NoExpand};
+use crate::regex::bytes::{Regex, NoExpand};
 use std::process::{Command, Stdio};
 use std::io::{BufReader};
 use std::ffi::OsStr;
+#[cfg(target_family="unix")]
 use std::os::unix::ffi::OsStrExt;
 
-use CliResult;
-use config::{Delimiter, Config};
-use select::SelectColumns;
-use util;
+use crate::CliResult;
+use crate::config::{Delimiter, Config};
+use crate::select::SelectColumns;
+use crate::util;
+use serde::Deserialize;
 
 static USAGE: &'static str = "
 Execute a bash command once per line in given CSV file.
@@ -62,6 +63,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .no_headers(args.flag_no_headers)
         .select(args.arg_column);
 
+    if cfg!(windows) {
+        panic!("foreach command does not work on Windows");
+    }
+
     let mut rdr = rconfig.reader()?;
     let mut wtr = Config::new(&None).writer()?;
 
@@ -85,6 +90,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         let mut command_pieces = splitter_pattern.find_iter(&templated_command);
 
+        #[cfg(target_family="unix")]
         let prog = OsStr::from_bytes(command_pieces.next().unwrap().as_bytes());
 
         let cmd_args: Vec<String> = command_pieces.map(|piece| {
@@ -93,6 +99,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             return String::from_utf8(clean_piece.into_owned()).expect("encoding error");
         }).collect();
 
+        #[cfg(target_family="unix")]
         if !args.flag_unify {
             let mut cmd = Command::new(prog)
                 .args(cmd_args)
