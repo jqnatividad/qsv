@@ -6,7 +6,7 @@ use crate::select::SelectColumns;
 use crate::util;
 use crate::serde::Deserialize;
 
-static USAGE: &'static str = "
+static USAGE: &str = "
 Apply a series of unary functions to a given CSV column. This can be used to
 perform typical cleaning tasks and/or harmonize some values etc.
 
@@ -51,7 +51,7 @@ Common options:
                              Must be a single character. (default: ,)
 ";
 
-static OPERATIONS: &'static [&'static str] = &[
+static OPERATIONS: &[&str] = &[
     "len",
     "lower",
     "upper",

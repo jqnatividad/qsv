@@ -6,7 +6,7 @@ use crate::select::SelectColumns;
 use crate::serde::Deserialize;
 use crate::util;
 
-static USAGE: &'static str = "
+static USAGE: &str = "
 Pseudonymise the value of the given column by replacing them by an
 incremental identifier.
 

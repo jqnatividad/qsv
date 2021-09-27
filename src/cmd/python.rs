@@ -41,7 +41,7 @@ class XSVRow(object):
 
 // TODO: options for boolean return coercion
 
-static USAGE: &'static str = r#"
+static USAGE: &str = r#"
 Create a new column, filter rows or compute aggregations by evaluating a python
 expression on every row of a CSV file.
 

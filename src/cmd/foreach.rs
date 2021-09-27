@@ -11,7 +11,7 @@ use crate::select::SelectColumns;
 use crate::util;
 use serde::Deserialize;
 
-static USAGE: &'static str = "
+static USAGE: &str = "
 Execute a bash command once per line in given CSV file.
 
 Deleting all files whose filenames are listed in a column:
@@ -81,6 +81,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut record = csv::ByteRecord::new();
     let mut output_headers_written = false;
 
+    #[cfg(target_family="unix")]
     while rdr.read_byte_record(&mut record)? {
         let current_value = &record[column_index];
 
@@ -99,7 +100,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             return String::from_utf8(clean_piece.into_owned()).expect("encoding error");
         }).collect();
 
-        #[cfg(target_family="unix")]
         if !args.flag_unify {
             let mut cmd = Command::new(prog)
                 .args(cmd_args)

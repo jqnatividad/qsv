@@ -7,7 +7,7 @@ use crate::config::{Config};
 use crate::util;
 use serde::Deserialize;
 
-static USAGE: &'static str = "
+static USAGE: &str = "
 Converts a newline-delimited JSON file (.ndjson or .jsonl, typically) into
 a CSV file.
 

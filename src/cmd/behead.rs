@@ -3,7 +3,7 @@ use crate::config::{Delimiter, Config};
 use crate::util;
 use serde::Deserialize;
 
-static USAGE: &'static str = "
+static USAGE: &str = "
 Drop a CSV file's header.
 
 Usage:

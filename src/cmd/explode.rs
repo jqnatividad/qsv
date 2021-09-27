@@ -4,7 +4,7 @@ use crate::select::SelectColumns;
 use crate::util;
 use serde::Deserialize;
 
-static USAGE: &'static str = "
+static USAGE: &str = "
 Explodes a row into multiple ones by splitting a column value based on the
 given separator.
 

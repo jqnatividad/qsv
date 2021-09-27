@@ -7,7 +7,7 @@ use crate::select::SelectColumns;
 use crate::util;
 use serde::Deserialize;
 
-static USAGE: &'static str = "
+static USAGE: &str = "
 Replace occurrences of a pattern across a CSV file.
 
 You can of course match groups using parentheses and use those in
