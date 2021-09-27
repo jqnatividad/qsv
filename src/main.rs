@@ -64,7 +64,7 @@ macro_rules! command_list {
     fixlengths  Makes all records have same length
     flatten     Show one field per line
     fmt         Format CSV output (change field delimiter)
-    foreach     Loop over a CSV file to execute bash commands
+    foreach     Loop over a CSV file to execute bash commands (*nix only)
     frequency   Show frequency tables
     headers     Show header names
     help        Show this usage message.
@@ -176,7 +176,6 @@ enum Command {
     FixLengths,
     Flatten,
     Fmt,
-    ForEach,
     Frequency,
     Headers,
     Help,
@@ -200,6 +199,8 @@ enum Command {
     Stats,
     Table,
     Transpose,
+    #[cfg(target_family="unix")]
+    ForEach,
 }
 
 impl Command {
@@ -226,7 +227,6 @@ impl Command {
             Command::FixLengths => cmd::fixlengths::run(argv),
             Command::Flatten => cmd::flatten::run(argv),
             Command::Fmt => cmd::fmt::run(argv),
-            Command::ForEach => cmd::foreach::run(argv),
             Command::Frequency => cmd::frequency::run(argv),
             Command::Headers => cmd::headers::run(argv),
             Command::Help => { wout!("{}", USAGE); Ok(()) }
@@ -250,6 +250,8 @@ impl Command {
             Command::Stats => cmd::stats::run(argv),
             Command::Table => cmd::table::run(argv),
             Command::Transpose => cmd::transpose::run(argv),
+            #[cfg(target_family="unix")]
+            Command::ForEach => cmd::foreach::run(argv),
         }
     }
 }

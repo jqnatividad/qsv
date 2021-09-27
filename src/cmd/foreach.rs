@@ -1,8 +1,8 @@
+#![cfg(target_family="unix")]
 use crate::regex::bytes::{Regex, NoExpand};
 use std::process::{Command, Stdio};
 use std::io::{BufReader};
 use std::ffi::OsStr;
-#[cfg(target_family="unix")]
 use std::os::unix::ffi::OsStrExt;
 
 use crate::CliResult;
@@ -81,7 +81,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut record = csv::ByteRecord::new();
     let mut output_headers_written = false;
 
-    #[cfg(target_family="unix")]
     while rdr.read_byte_record(&mut record)? {
         let current_value = &record[column_index];
 
@@ -91,7 +90,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         let mut command_pieces = splitter_pattern.find_iter(&templated_command);
 
-        #[cfg(target_family="unix")]
         let prog = OsStr::from_bytes(command_pieces.next().unwrap().as_bytes());
 
         let cmd_args: Vec<String> = command_pieces.map(|piece| {
