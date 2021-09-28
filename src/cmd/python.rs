@@ -16,7 +16,7 @@ def cast_as_string(value):
 def cast_as_bool(value):
     return bool(value)
 
-class XSVRow(object):
+class QSVRow(object):
     def __init__(self, headers):
         self.__data = None
         self.__headers = headers
@@ -57,23 +57,23 @@ option.
 Some usage examples:
 
   Sum numeric columns 'a' and 'b' and call new column 'c'
-  $ xsv py map c "int(a) + int(b)"
-  $ xsv py map c "int(col.a) + int(col['b'])"
-  $ xsv py map c "int(col[0]) + int(col[1])"
+  $ qsv py map c "int(a) + int(b)"
+  $ qsv py map c "int(col.a) + int(col['b'])"
+  $ qsv py map c "int(col[0]) + int(col[1])"
 
   Strip and prefix cell values
-  $ xsv py map prefixed "'clean_' + a.strip()"
+  $ qsv py map prefixed "'clean_' + a.strip()"
 
   Filter some lines based on numerical filtering
-  $ xsv py filter "int(a) > 45"
+  $ qsv py filter "int(a) > 45"
 
 Usage:
-    xsv py map [options] -n <script> [<input>]
-    xsv py map [options] <new-column> <script> [<input>]
-    xsv py filter [options] <script> [<input>]
-    xsv py map --help
-    xsv py filter --help
-    xsv py --help
+    qsv py map [options] -n <script> [<input>]
+    qsv py map [options] <new-column> <script> [<input>]
+    qsv py filter [options] <script> [<input>]
+    qsv py map --help
+    qsv py filter --help
+    qsv py --help
 
 Common options:
     -h, --help             Display this message
@@ -116,7 +116,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let gil = Python::acquire_gil();
     let py = gil.python();
 
-    let helpers = PyModule::from_code(py, HELPERS, "xsv_helpers.py", "xsv_helpers")?;
+    let helpers = PyModule::from_code(py, HELPERS, "qsv_helpers.py", "qsv_helpers")?;
     let globals = PyDict::new(py);
     let locals = PyDict::new(py);
 
@@ -131,7 +131,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let headers_len = headers.len();
 
-    let py_row = helpers.call1("XSVRow", (headers.iter().collect::<Vec<&str>>(),))?;
+    let py_row = helpers.call1("QSVRow", (headers.iter().collect::<Vec<&str>>(),))?;
     locals.set_item("row", py_row)?;
 
     if !rconfig.no_headers {
