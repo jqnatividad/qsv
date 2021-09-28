@@ -17,6 +17,7 @@ extern crate textwrap;
 extern crate threadpool;
 extern crate dateparser;
 extern crate uuid;
+extern crate mimalloc;
 
 use std::borrow::ToOwned;
 use std::env;
