@@ -1,4 +1,4 @@
-name: Rust-Windows
+name: Windows
 
 on:
   push:

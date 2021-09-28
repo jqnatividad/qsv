@@ -1,4 +1,4 @@
-name: Rust-Ubuntu
+name: Ubuntu
 
 on:
   push:
