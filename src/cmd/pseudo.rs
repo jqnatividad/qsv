@@ -11,8 +11,8 @@ Pseudonymise the value of the given column by replacing them by an
 incremental identifier.
 
 Usage:
-    xsv pseudo [options] <column> [<input>]
-    xsv pseudo --help
+    qsv pseudo [options] <column> [<input>]
+    qsv pseudo --help
 
 Common options:
     -h, --help             Display this message

@@ -16,19 +16,19 @@ Execute a bash command once per line in given CSV file.
 
 Deleting all files whose filenames are listed in a column:
 
-  $ xsv foreach filename 'rm {}' assets.csv
+  $ qsv foreach filename 'rm {}' assets.csv
 
 Executing a command that outputs CSV once per line without repeating headers:
 
-  $ xsv foreach query 'search --year 2020 {}' queries.csv > results.csv
+  $ qsv foreach query 'search --year 2020 {}' queries.csv > results.csv
 
 Same as above but with an additional column containing the current value:
 
-  $ xsv foreach query -c from_query 'search {}' queries.csv > results.csv
+  $ qsv foreach query -c from_query 'search {}' queries.csv > results.csv
 
 Usage:
-    xsv foreach [options] <column> <command> [<input>]
-    xsv foreach --help
+    qsv foreach [options] <column> <command> [<input>]
+    qsv foreach --help
 
 foreach options:
     -u, --unify              If the output of execute command is CSV, will

@@ -25,37 +25,37 @@ option.
 Some usage examples:
 
   Sum numeric columns 'a' and 'b' and call new column 'c'
-  $ xsv lua map c "a + b"
-  $ xsv lua map c "col.a + col['b']"
-  $ xsv lua map c "col[1] + col[2]"
+  $ qsv lua map c "a + b"
+  $ qsv lua map c "col.a + col['b']"
+  $ qsv lua map c "col[1] + col[2]"
 
   There is some magic in the previous example as 'a' and 'b' are passed in
   as strings (not numbers), but Lua still manages to add them up.
   A more explicit way of doing it, is by using tonumber
-  $ xsv lua map c "tonumber(a) + tonumber(b)"
+  $ qsv lua map c "tonumber(a) + tonumber(b)"
 
   Add running total column for Amount
-  $ xsv lua map Total -x "tot = (tot or 0) + Amount; return tot"
+  $ qsv lua map Total -x "tot = (tot or 0) + Amount; return tot"
 
   Add running total column for Amount when previous balance was 900
-  $ xsv lua map Total -x "tot = (tot or 900) + Amount; return tot"
+  $ qsv lua map Total -x "tot = (tot or 900) + Amount; return tot"
 
   Convert Amount to always-positive AbsAmount and Type (debit/credit) columns
-  $ xsv lua map Type -x \
+  $ qsv lua map Type -x \
         "if tonumber(Amount) < 0 then return 'debit' else return 'credit' end" | \
-    xsv lua map AbsAmount "math.abs(tonumber(Amount))"
+    qsv lua map AbsAmount "math.abs(tonumber(Amount))"
 
   Typing long scripts at command line gets tiresome rather quickly,
   so -f should be used for non-trivial scripts to read them from a file
-  $ xsv lua map Type -x -f debitcredit.lua
+  $ qsv lua map Type -x -f debitcredit.lua
 
 Usage:
-    xsv lua map [options] -n <script> [<input>]
-    xsv lua map [options] <new-column> <script> [<input>]
-    xsv lua filter [options] <script> [<input>]
-    xsv lua map --help
-    xsv lua filter --help
-    xsv lua --help
+    qsv lua map [options] -n <script> [<input>]
+    qsv lua map [options] <new-column> <script> [<input>]
+    qsv lua filter [options] <script> [<input>]
+    qsv lua map --help
+    qsv lua filter --help
+    qsv lua --help
 
 lua options:
     -x, --exec         exec[ute] Lua script, instead of the default eval[uate].

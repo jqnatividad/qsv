@@ -19,8 +19,8 @@ Also, it will fail if the JSON documents are not consistent with one another,
 as the first JSON line will be use to infer the headers of the CSV output.
 
 Usage:
-    xsv jsonl [options] [<input>]
-    xsv jsonl --help
+    qsv jsonl [options] [<input>]
+    qsv jsonl --help
 
 Common options:
     -h, --help             Display this message

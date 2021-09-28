@@ -14,24 +14,24 @@ make a copy of the contents of a column.
 The enum function can currently be used to perform the following tasks:
 
   Add an incremental identifier to each of the lines:
-    $ xsv enum file.csv
+    $ qsv enum file.csv
 
   Add a uuid v4 to each of the lines:
-    $ xsv enum --uuid file.csv
+    $ qsv enum --uuid file.csv
 
   Create a new column filled with a given value:
-    $ xsv enum --constant 0
+    $ qsv enum --constant 0
 
   Copy the contents of a column to a new one:
-    $ xsv enum --copy names
+    $ qsv enum --copy names
 
   Finally, note that you should also be able to shuffle the lines of a CSV file
   by sorting on the generated uuids:
-    $ xsv enum uuid file.csv | xsv sort -s uuid > shuffled.csv
+    $ qsv enum uuid file.csv | qsv sort -s uuid > shuffled.csv
 
 Usage:
-    xsv enum [options] [<input>]
-    xsv enum --help
+    qsv enum [options] [<input>]
+    qsv enum --help
 
 enum options:
     -c, --new-column <name>  Name of the column to create.

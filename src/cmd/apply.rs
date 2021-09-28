@@ -28,15 +28,15 @@ Currently supported operations:
 
 Example for trimming and transforming to uppercase:
 
-  $ xsv apply trim,upper surname -r uppercase_clean_surname file.csv
+  $ qsv apply trim,upper surname -r uppercase_clean_surname file.csv
 
 You can also use this command to make a copy of a column:
 
-  $ xsv apply '' col -c col_copy file.csv
+  $ qsv apply '' col -c col_copy file.csv
 
 Usage:
-    xsv apply [options] <operations> <column> [<input>]
-    xsv apply --help
+    qsv apply [options] <operations> <column> [<input>]
+    qsv apply --help
 
 apply options:
     -c, --new-column <name>  Put the transformed values in a new column instead.

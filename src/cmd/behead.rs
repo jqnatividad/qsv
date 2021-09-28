@@ -7,7 +7,7 @@ static USAGE: &str = "
 Drop a CSV file's header.
 
 Usage:
-    xsv behead [options] [<input>]
+    qsv behead [options] [<input>]
 
 Common options:
     -h, --help             Display this message

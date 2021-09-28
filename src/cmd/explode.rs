@@ -22,8 +22,8 @@ John,yellow
 Mary,red
 
 Usage:
-    xsv explode [options] <column> <separator> [<input>]
-    xsv explode --help
+    qsv explode [options] <column> <separator> [<input>]
+    qsv explode --help
 
 explode options:
     -r, --rename <name>    New name for the exploded column.
