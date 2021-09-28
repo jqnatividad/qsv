@@ -19,10 +19,14 @@ Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org).
 
 ### Available commands
 
+* **apply** - Apply series of string transformations to a CSV column.
+* **behead** - Drop headers from CSV file.
 * **[cat](/src/cmd/cat.rs#L7)** - Concatenate CSV files by row or by column.
 * **[count](/src/cmd/count.rs#L7)** - Count the rows in a CSV file. (Instantaneous with an index.)
 * **[dedup](/src/cmd/dedup.rs#L13)** - Remove redundant rows _**(NEW)**_
-* **[exclude](/src/cmd/exclude.rs#L17)** - Excludes the records in one CSV from another _**(NEW)**_
+* **enum** - Add a new column enumerating rows by adding a column of incremental or uuid identifiers. Can also be used to copy a column or fill a new column with a constant value.
+* **explode** - Explode rows into multiple ones by splitting a column value based on the
+given separator.
 * **[fill](/src/cmd/fill.rs#L13)** - Fill empty values. _**(NEW)**_
 * **[fixlengths](/src/cmd/fill.rs#L13)** - Force a CSV file to have same-length records by either
   padding or truncating them.
@@ -30,6 +34,7 @@ Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org).
   at a time. e.g., `qsv slice -i 5 data.csv | qsv flatten`.
 * **[fmt](/src/cmd/fmt.rs#L7)** - Reformat CSV data with different delimiters, record terminators
   or quoting rules. (Supports ASCII delimited data.) _**(EXTENDED)**_
+* **foreach** - Loop over a CSV file to execute bash commands.
 * **[frequency](/src/cmd/frequency.rs#L15)** - Build frequency tables of each column in CSV data. (Uses
   parallelism to go faster if an index is present.)
 * **[headers](/src/cmd/headers.rs#L11)** - Show the headers of CSV data. Or show the intersection of all
@@ -39,8 +44,13 @@ Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org).
 * **[input](/src/cmd/input.rs#L7)** - Read CSV data with exotic quoting/escaping rules.
 * **[join](/src/cmd/join.rs#L18)** - Inner, outer and cross joins. Uses a simple hash index to make it
   fast.
+* **jsonl** - Convert newline-delimited JSON to CSV.
+* **lua** - Execute a Lua script over CSV lines to transform, aggregate or filter them.
 * **[partition](/src/cmd/partition.rs#L16)** - Partition CSV data based on a column value.
+* **pseudo** - Pseudonymise the value of the given column by replacing them by an incremental identifier.
+* **py** - Evaluate a Python expression over CSV lines to transform, aggregate or filter them.
 * **[rename](/src/cmd/rename.rs#L7)** -  Rename the columns of CSV data efficiently. _**(NEW)**_
+* **replace** - Replace CSV data using a regex.
 * **[reverse](/src/cmd/reverse.rs#L7)** - Reverse order of rows in CSV data. _**(NEW)**_
 * **[sample](/src/cmd/sample.rs#L15)** - Randomly draw rows from CSV data using reservoir sampling (i.e.,
   use memory proportional to the size of the sample). _**(EXTENDED)**_

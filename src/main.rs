@@ -3,15 +3,21 @@ extern crate crossbeam_channel as channel;
 extern crate csv;
 extern crate csv_index;
 extern crate docopt;
+extern crate hlua;
 extern crate filetime;
 extern crate num_cpus;
+extern crate pyo3;
 extern crate rand;
 extern crate regex;
 extern crate serde;
+extern crate serde_json;
 extern crate stats;
 extern crate tabwriter;
+extern crate textwrap;
 extern crate threadpool;
 extern crate dateparser;
+extern crate uuid;
+extern crate mimalloc;
 
 use std::borrow::ToOwned;
 use std::env;
@@ -47,23 +53,33 @@ macro_rules! fail {
 macro_rules! command_list {
     () => (
 "
+    apply       Apply series of transformations to a column
+    behead      Drop header from CSV file
     cat         Concatenate by row or column
     count       Count records
     dedup       Remove redundant rows
     exclude     Excludes the records in one CSV from another
+    enum        Add a new column enumerating CSV lines
+    explode     Explode rows based on some column separator
     fill        Fill empty values
     fixlengths  Makes all records have same length
     flatten     Show one field per line
     fmt         Format CSV output (change field delimiter)
+    foreach     Loop over a CSV file to execute bash commands (*nix only)
     frequency   Show frequency tables
     headers     Show header names
     help        Show this usage message.
     index       Create CSV index for faster access
     input       Read CSV data with special quoting rules
     join        Join CSV files
+    jsonl       Convert newline-delimited JSON files to CSV
+    lua         Execute Lua script on CSV data
     partition   Partition CSV data based on a column value
+    pseudo      Pseudonymise the values of a column
+    py          Execute Python script on CSV data
     sample      Randomly sample CSV data
     rename      Rename the columns of CSV data efficiently
+    replace     Replace patterns in CSV data
     reverse     Reverse rows of CSV data
     search      Search CSV data with regexes
     select      Select columns from CSV
@@ -149,10 +165,14 @@ Please choose one of the following commands:",
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "lowercase")]
 enum Command {
+    Apply,
+    Behead,
     Cat,
     Count,
     Dedup,
+    Enum,
     Exclude,
+    Explode,
     Fill,
     FixLengths,
     Flatten,
@@ -163,8 +183,13 @@ enum Command {
     Index,
     Input,
     Join,
+    Jsonl,
+    Lua,
     Partition,
+    Pseudo,
+    Py,
     Rename,
+    Replace,
     Reverse,
     Sample,
     Search,
@@ -175,6 +200,8 @@ enum Command {
     Stats,
     Table,
     Transpose,
+    #[cfg(target_family="unix")]
+    ForEach,
 }
 
 impl Command {
@@ -189,10 +216,14 @@ impl Command {
                 argv[1].to_lowercase())));
         }
         match self {
+            Command::Apply => cmd::apply::run(argv),
+            Command::Behead => cmd::behead::run(argv),
             Command::Cat => cmd::cat::run(argv),
             Command::Count => cmd::count::run(argv),
             Command::Dedup => cmd::dedup::run(argv),
+            Command::Enum => cmd::enumerate::run(argv),
             Command::Exclude => cmd::exclude::run(argv),
+            Command::Explode => cmd::explode::run(argv),
             Command::Fill => cmd::fill::run(argv),
             Command::FixLengths => cmd::fixlengths::run(argv),
             Command::Flatten => cmd::flatten::run(argv),
@@ -203,8 +234,13 @@ impl Command {
             Command::Index => cmd::index::run(argv),
             Command::Input => cmd::input::run(argv),
             Command::Join => cmd::join::run(argv),
+            Command::Jsonl => cmd::jsonl::run(argv),
+            Command::Lua => cmd::lua::run(argv),
             Command::Partition => cmd::partition::run(argv),
+            Command::Pseudo => cmd::pseudo::run(argv),
+            Command::Py => cmd::python::run(argv),
             Command::Rename => cmd::rename::run(argv),
+            Command::Replace => cmd::replace::run(argv),
             Command::Reverse => cmd::reverse::run(argv),
             Command::Sample => cmd::sample::run(argv),
             Command::Search => cmd::search::run(argv),
@@ -215,6 +251,8 @@ impl Command {
             Command::Stats => cmd::stats::run(argv),
             Command::Table => cmd::table::run(argv),
             Command::Transpose => cmd::transpose::run(argv),
+            #[cfg(target_family="unix")]
+            Command::ForEach => cmd::foreach::run(argv),
         }
     }
 }

@@ -32,19 +32,29 @@ macro_rules! rassert_eq {
 
 mod workdir;
 
+mod test_apply;
+mod test_behead;
 mod test_cat;
 mod test_count;
 mod test_dedup;
 mod test_exclude;
+mod test_explode;
+mod test_enumerate;
 mod test_fill;
 mod test_fixlengths;
 mod test_flatten;
 mod test_fmt;
+#[cfg(target_family="unix")]
+mod test_foreach;
 mod test_frequency;
 mod test_headers;
 mod test_index;
 mod test_join;
+mod test_lua;
 mod test_partition;
+mod test_pseudo;
+mod test_py;
+mod test_replace;
 mod test_reverse;
 mod test_search;
 mod test_select;
