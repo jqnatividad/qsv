@@ -9,7 +9,9 @@ This README contains information on how to
 [install `qsv`](https://github.com/jqnatividad/qsv#installation), in addition to
 a quick tour of several commands.
 
-[![Windows build status](https://ci.appveyor.com/api/projects/status/github/jqnatividad/qsv?svg=true)](https://ci.appveyor.com/project/jqnatividad/qsv)
+[![Ubuntu build status](https://github.com/jqnatividad/qsv/actions/workflows/rust.yml/badge.svg)](https://github.com/jqnatividad/qsv/actions/workflows/rust.yml)
+[![Windows build status](https://github.com/jqnatividad/qsv/actions/workflows/rust-windows.yml/badge.svg)](https://github.com/jqnatividad/qsv/actions/workflows/rust-windows.yml)
+[![macOS build status](https://github.com/jqnatividad/qsv/actions/workflows/rust-macos.yml/badge.svg)](https://github.com/jqnatividad/qsv/actions/workflows/rust-macos.yml)
 
 Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org).
 
