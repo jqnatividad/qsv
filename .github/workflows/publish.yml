@@ -26,13 +26,13 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Build
-      run: cargo build --release --locked
+      run: cargo build --release
     - name: zip-files
-      run: 7z a ${{ matrix.asset_name }} target/release/${{ matrix.artifact_name }}
+      run: 7z a -tzip target/release/${{ matrix.asset_name }} target/release/${{ matrix.artifact_name }}
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: target/release/${{ matrix.artifact_name }}
+        file: target/release/${{ matrix.asset_name }}
         asset_name: ${{ matrix.asset_name }}
         tag: ${{ github.ref }}
