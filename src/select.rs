@@ -7,7 +7,7 @@ use std::slice;
 use std::str::FromStr;
 
 use regex::bytes::Regex;
-use serde::de::{Deserializer, Deserialize, Error};
+use serde::de::{Deserialize, Deserializer, Error};
 
 #[derive(Clone)]
 pub struct SelectColumns {
@@ -19,13 +19,12 @@ impl SelectColumns {
     fn parse(mut s: &str) -> Result<SelectColumns, String> {
         let is_empty = s.is_empty();
         let bytes = s.as_bytes();
-        let invert =
-            if !is_empty && bytes[0] == b'!' {
-                s = &s[1..];
-                true
-            } else {
-                false
-            };
+        let invert = if !is_empty && bytes[0] == b'!' {
+            s = &s[1..];
+            true
+        } else {
+            false
+        };
         Ok(SelectColumns {
             selectors: SelectorParser::new(s).parse()?,
             invert,
@@ -70,18 +69,18 @@ impl fmt::Debug for SelectColumns {
         if self.selectors.is_empty() {
             write!(f, "<All>")
         } else {
-            let strs: Vec<_> =
-                self.selectors
-                    .iter().map(|sel| format!("{:?}", sel)).collect();
+            let strs: Vec<_> = self
+                .selectors
+                .iter()
+                .map(|sel| format!("{:?}", sel))
+                .collect();
             write!(f, "{}", strs.join(", "))
         }
     }
 }
 
 impl<'de> Deserialize<'de> for SelectColumns {
-    fn deserialize<D: Deserializer<'de>>(
-        d: D,
-    ) -> Result<SelectColumns, D::Error> {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<SelectColumns, D::Error> {
         let raw = String::deserialize(d)?;
         SelectColumns::parse(&raw).map_err(|e| D::Error::custom(&e))
     }
@@ -94,20 +93,26 @@ struct SelectorParser {
 
 impl SelectorParser {
     fn new(s: &str) -> SelectorParser {
-        SelectorParser { chars: s.chars().collect(), pos: 0 }
+        SelectorParser {
+            chars: s.chars().collect(),
+            pos: 0,
+        }
     }
 
     fn parse(&mut self) -> Result<Vec<Selector>, String> {
         if let (Some('/'), Some('/')) = (self.chars.first(), self.chars.last()) {
             if self.chars.len() == 2 {
-                return Err(format!("Empty regex: {}", self.chars.iter().collect::<String>()))
+                return Err(format!(
+                    "Empty regex: {}",
+                    self.chars.iter().collect::<String>()
+                ));
             }
             let re: String = self.chars[1..(self.chars.len() - 1)].iter().collect();
             let regex = match Regex::new(&re) {
                 Ok(r) => r,
-                Err(_) => return Err(format!("Invalid regex: {}", re))
+                Err(_) => return Err(format!("Invalid regex: {}", re)),
             };
-            return Ok(vec![Selector::Regex(regex)])
+            return Ok(vec![Selector::Regex(regex)]);
         }
 
         let mut sels = vec![];
@@ -115,27 +120,26 @@ impl SelectorParser {
             if self.cur().is_none() {
                 break;
             }
-            let f1: OneSelector =
-                if self.cur() == Some('-') {
-                    OneSelector::Start
+            let f1: OneSelector = if self.cur() == Some('-') {
+                OneSelector::Start
+            } else {
+                self.parse_one()?
+            };
+            let f2: Option<OneSelector> = if self.cur() == Some('-') {
+                self.bump();
+                Some(if self.is_end_of_selector() {
+                    OneSelector::End
                 } else {
                     self.parse_one()?
-                };
-            let f2: Option<OneSelector> =
-                if self.cur() == Some('-') {
-                    self.bump();
-                    Some(if self.is_end_of_selector() {
-                        OneSelector::End
-                    } else {
-                        self.parse_one()?
-                    })
-                } else {
-                    None
-                };
+                })
+            } else {
+                None
+            };
             if !self.is_end_of_selector() {
                 return Err(format!(
                     "Expected end of field but got '{}' instead.",
-                    self.cur().unwrap()));
+                    self.cur().unwrap()
+                ));
             }
             sels.push(match f2 {
                 Some(end) => Selector::Range(f1, end),
@@ -147,13 +151,12 @@ impl SelectorParser {
     }
 
     fn parse_one(&mut self) -> Result<OneSelector, String> {
-        let name =
-            if self.cur() == Some('"') {
-                self.bump();
-                self.parse_quoted_name()?
-            } else {
-                self.parse_name()?
-            };
+        let name = if self.cur() == Some('"') {
+            self.bump();
+            self.parse_quoted_name()?
+        } else {
+            self.parse_name()?
+        };
         Ok(if self.cur() == Some('[') {
             let idx = self.parse_index()?;
             OneSelector::IndexedName(name, idx)
@@ -182,19 +185,22 @@ impl SelectorParser {
         loop {
             match self.cur() {
                 None => {
-                    return Err("Unclosed quote, missing closing \"."
-                               .to_owned());
+                    return Err("Unclosed quote, missing closing \".".to_owned());
                 }
                 Some('"') => {
                     self.bump();
                     if self.cur() == Some('"') {
                         self.bump();
-                        name.push('"'); name.push('"');
+                        name.push('"');
+                        name.push('"');
                         continue;
                     }
-                    break
+                    break;
                 }
-                Some(c) => { name.push(c); self.bump(); }
+                Some(c) => {
+                    name.push(c);
+                    self.bump();
+                }
             }
         }
         Ok(name)
@@ -208,16 +214,20 @@ impl SelectorParser {
         loop {
             match self.cur() {
                 None => {
-                    return Err("Unclosed index bracket, missing closing ]."
-                               .to_owned());
+                    return Err("Unclosed index bracket, missing closing ].".to_owned());
                 }
-                Some(']') => { self.bump(); break; }
-                Some(c) => { idx.push(c); self.bump(); }
+                Some(']') => {
+                    self.bump();
+                    break;
+                }
+                Some(c) => {
+                    idx.push(c);
+                    self.bump();
+                }
             }
         }
-        FromStr::from_str(&idx).map_err(|err| {
-            format!("Could not convert '{}' to an integer: {}", idx, err)
-        })
+        FromStr::from_str(&idx)
+            .map_err(|err| format!("Could not convert '{}' to an integer: {}", idx, err))
     }
 
     fn cur(&self) -> Option<char> {
@@ -233,7 +243,9 @@ impl SelectorParser {
     }
 
     fn bump(&mut self) {
-        if self.pos < self.chars.len() { self.pos += 1; }
+        if self.pos < self.chars.len() {
+            self.pos += 1;
+        }
     }
 }
 
@@ -259,14 +271,12 @@ impl Selector {
         use_names: bool,
     ) -> Result<Vec<usize>, String> {
         match *self {
-            Selector::One(ref sel) => {
-                sel.index(first_record, use_names).map(|i| vec![i])
-            }
+            Selector::One(ref sel) => sel.index(first_record, use_names).map(|i| vec![i]),
             Selector::Range(ref sel1, ref sel2) => {
                 let i1 = sel1.index(first_record, use_names)?;
                 let i2 = sel2.index(first_record, use_names)?;
                 Ok(match i1.cmp(&i2) {
-                    Ordering::Equal => vec!(i1),
+                    Ordering::Equal => vec![i1],
                     Ordering::Less => (i1..(i2 + 1)).collect(),
                     Ordering::Greater => {
                         let mut inds = vec![];
@@ -287,8 +297,11 @@ impl Selector {
                     .map(|(i, _)| i)
                     .collect();
                 if inds.is_empty() {
-                    return Err(format!("Selector regex '{}' does not match \
-                                        any columns in the CSV header.", re))
+                    return Err(format!(
+                        "Selector regex '{}' does not match \
+                                        any columns in the CSV header.",
+                        re
+                    ));
                 }
                 Ok(inds)
             }
@@ -297,34 +310,35 @@ impl Selector {
 }
 
 impl OneSelector {
-    fn index(
-        &self,
-        first_record: &csv::ByteRecord,
-        use_names: bool,
-    ) -> Result<usize, String> {
+    fn index(&self, first_record: &csv::ByteRecord, use_names: bool) -> Result<usize, String> {
         match *self {
             OneSelector::Start => Ok(0),
-            OneSelector::End => Ok(
-                if first_record.is_empty() {
-                    0
-                } else {
-                    first_record.len() - 1
-                }
-            ),
+            OneSelector::End => Ok(if first_record.is_empty() {
+                0
+            } else {
+                first_record.len() - 1
+            }),
             OneSelector::Index(i) => {
                 if i < 1 || i > first_record.len() {
-                    Err(format!("Selector index {} is out of \
+                    Err(format!(
+                        "Selector index {} is out of \
                                  bounds. Index must be >= 1 \
-                                 and <= {}.", i, first_record.len()))
+                                 and <= {}.",
+                        i,
+                        first_record.len()
+                    ))
                 } else {
                     // Indices given by user are 1-offset. Convert them here!
-                    Ok(i-1)
+                    Ok(i - 1)
                 }
             }
             OneSelector::IndexedName(ref s, sidx) => {
                 if !use_names {
-                    return Err(format!("Cannot use names ('{}') in selection \
-                                        with --no-headers set.", s));
+                    return Err(format!(
+                        "Cannot use names ('{}') in selection \
+                                        with --no-headers set.",
+                        s
+                    ));
                 }
                 let mut num_found = 0;
                 for (i, field) in first_record.iter().enumerate() {
@@ -336,13 +350,20 @@ impl OneSelector {
                     }
                 }
                 if num_found == 0 {
-                    Err(format!("Selector name '{}' does not exist \
+                    Err(format!(
+                        "Selector name '{}' does not exist \
                                  as a named header in the given CSV \
-                                 data.", s))
+                                 data.",
+                        s
+                    ))
                 } else {
-                    Err(format!("Selector index '{}' for name '{}' is \
+                    Err(format!(
+                        "Selector index '{}' for name '{}' is \
                                  out of bounds. Must be >= 0 and <= {}.",
-                                 sidx, s, num_found - 1))
+                        sidx,
+                        s,
+                        num_found - 1
+                    ))
                 }
             }
         }
@@ -353,9 +374,8 @@ impl fmt::Debug for Selector {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             Selector::One(ref sel) => sel.fmt(f),
-            Selector::Range(ref s, ref e) =>
-                write!(f, "Range({:?}, {:?})", s, e),
-            Selector::Regex(ref re) => re.fmt(f)
+            Selector::Range(ref s, ref e) => write!(f, "Range({:?}, {:?})", s, e),
+            Selector::Regex(ref re) => re.fmt(f),
         }
     }
 }
@@ -366,8 +386,7 @@ impl fmt::Debug for OneSelector {
             OneSelector::Start => write!(f, "Start"),
             OneSelector::End => write!(f, "End"),
             OneSelector::Index(idx) => write!(f, "Index({})", idx),
-            OneSelector::IndexedName(ref s, idx) =>
-                write!(f, "IndexedName({}[{}])", s, idx),
+            OneSelector::IndexedName(ref s, idx) => write!(f, "IndexedName({}[{}])", s, idx),
         }
     }
 }
@@ -375,19 +394,15 @@ impl fmt::Debug for OneSelector {
 #[derive(Clone, Debug)]
 pub struct Selection(Vec<usize>);
 
-pub type _GetField =
-    for <'c> fn(&mut &'c csv::ByteRecord, &usize) -> Option<&'c [u8]>;
+pub type _GetField = for<'c> fn(&mut &'c csv::ByteRecord, &usize) -> Option<&'c [u8]>;
 
 impl Selection {
-    pub fn select<'a, 'b>(&'a self, row: &'b csv::ByteRecord)
-                 -> iter::Scan<
-                        slice::Iter<'a, usize>,
-                        &'b csv::ByteRecord,
-                        _GetField,
-                    > {
+    pub fn select<'a, 'b>(
+        &'a self,
+        row: &'b csv::ByteRecord,
+    ) -> iter::Scan<slice::Iter<'a, usize>, &'b csv::ByteRecord, _GetField> {
         // This is horrifying.
-        fn get_field<'c>(row: &mut &'c csv::ByteRecord, idx: &usize)
-                        -> Option<&'c [u8]> {
+        fn get_field<'c>(row: &mut &'c csv::ByteRecord, idx: &usize) -> Option<&'c [u8]> {
             Some(&row[*idx])
         }
         let get_field: _GetField = get_field;
@@ -403,8 +418,7 @@ impl Selection {
         let mut normal = inds.clone();
         normal.sort_unstable();
         normal.dedup();
-        let mut set: Vec<_> =
-            repeat(false).take(normal[normal.len()-1] + 1).collect();
+        let mut set: Vec<_> = repeat(false).take(normal[normal.len() - 1] + 1).collect();
         for i in normal.into_iter() {
             set[i] = true;
         }
@@ -427,28 +441,28 @@ impl ops::Deref for Selection {
 #[derive(Clone, Debug)]
 pub struct NormalSelection(Vec<bool>);
 
-pub type _NormalScan<'a, T, I> = iter::Scan<
-    iter::Enumerate<I>,
-    &'a [bool],
-    _NormalGetField<T>,
->;
+pub type _NormalScan<'a, T, I> = iter::Scan<iter::Enumerate<I>, &'a [bool], _NormalGetField<T>>;
 
-pub type _NormalFilterMap<'a, T, I> = iter::FilterMap<
-    _NormalScan<'a, T, I>,
-    fn(Option<T>) -> Option<T>
->;
+pub type _NormalFilterMap<'a, T, I> =
+    iter::FilterMap<_NormalScan<'a, T, I>, fn(Option<T>) -> Option<T>>;
 
-pub type _NormalGetField<T> =
-    fn(&mut &[bool], (usize, T)) -> Option<Option<T>>;
+pub type _NormalGetField<T> = fn(&mut &[bool], (usize, T)) -> Option<Option<T>>;
 
 impl NormalSelection {
     pub fn select<'a, T, I>(&'a self, row: I) -> _NormalFilterMap<'a, T, I>
-             where I: Iterator<Item=T> {
-        fn filmap<T>(v: Option<T>) -> Option<T> { v }
-        fn get_field<T>(set: &mut &[bool], t: (usize, T))
-                       -> Option<Option<T>> {
+    where
+        I: Iterator<Item = T>,
+    {
+        fn filmap<T>(v: Option<T>) -> Option<T> {
+            v
+        }
+        fn get_field<T>(set: &mut &[bool], t: (usize, T)) -> Option<Option<T>> {
             let (i, v) = t;
-            if i < set.len() && set[i] { Some(Some(v)) } else { Some(None) }
+            if i < set.len() && set[i] {
+                Some(Some(v))
+            } else {
+                Some(None)
+            }
         }
         let get_field: _NormalGetField<T> = get_field;
         let filmap: fn(Option<T>) -> Option<T> = filmap;

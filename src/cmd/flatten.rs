@@ -3,10 +3,10 @@ use std::io::{self, Write};
 
 use tabwriter::TabWriter;
 
-use crate::CliResult;
 use crate::config::{Config, Delimiter};
-use crate::util;
 use crate::serde::Deserialize;
+use crate::util;
+use crate::CliResult;
 
 static USAGE: &str = "
 Prints flattened records such that fields are labeled separated by a new line.
@@ -71,8 +71,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 wtr.write_all(header)?;
             }
             wtr.write_all(b"\t")?;
-            wtr.write_all(&*util::condense(
-                Cow::Borrowed(&*field), args.flag_condense))?;
+            wtr.write_all(&*util::condense(Cow::Borrowed(&*field), args.flag_condense))?;
             wtr.write_all(b"\n")?;
         }
     }

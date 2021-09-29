@@ -3,11 +3,11 @@ use std::io;
 use std::iter;
 use std::ops;
 
-use crate::CliResult;
 use crate::config::{Config, Delimiter};
 use crate::select::{SelectColumns, Selection};
-use crate::util;
 use crate::serde::Deserialize;
+use crate::util;
+use crate::CliResult;
 
 static USAGE: &str = "
 Fill empty fields in selected columns of a CSV.
@@ -260,7 +260,8 @@ impl Filler {
 
             // Record valid fields, and fill empty fields
             let default_value = self.default_value.clone();
-            let group = self.grouper
+            let group = self
+                .grouper
                 .entry(key.clone())
                 .or_insert_with(|| GroupValues::new(default_value));
 
@@ -318,7 +319,7 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         let item = match self.iterator.next() {
             Some(item) => item,
-            None => return None
+            None => return None,
         };
         let result = match self.selection_index {
             ref mut sidx if (self.selection.get(*sidx) == Some(&self.index)) => {

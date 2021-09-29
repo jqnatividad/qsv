@@ -4,11 +4,11 @@ use std::path::Path;
 
 use threadpool::ThreadPool;
 
-use crate::CliResult;
 use crate::config::{Config, Delimiter};
 use crate::index::Indexed;
-use crate::util::{self, FilenameTemplate};
 use crate::serde::Deserialize;
+use crate::util::{self, FilenameTemplate};
+use crate::CliResult;
 
 static USAGE: &str = "
 Splits the given CSV data into chunks.
@@ -90,12 +90,8 @@ impl Args {
         Ok(())
     }
 
-    fn parallel_split(
-        &self,
-        idx: Indexed<fs::File, fs::File>,
-    ) -> CliResult<()> {
-        let nchunks = util::num_of_chunks(
-            idx.count() as usize, self.flag_size);
+    fn parallel_split(&self, idx: Indexed<fs::File, fs::File>) -> CliResult<()> {
+        let nchunks = util::num_of_chunks(idx.count() as usize, self.flag_size);
         let pool = ThreadPool::new(self.njobs());
         for i in 0..nchunks {
             let args = self.clone();
@@ -103,9 +99,7 @@ impl Args {
                 let conf = args.rconfig();
                 let mut idx = conf.indexed().unwrap().unwrap();
                 let headers = idx.byte_headers().unwrap().clone();
-                let mut wtr = args
-                    .new_writer(&headers, i * args.flag_size)
-                    .unwrap();
+                let mut wtr = args.new_writer(&headers, i * args.flag_size).unwrap();
 
                 idx.seek((i * args.flag_size) as u64).unwrap();
                 for row in idx.byte_records().take(args.flag_size) {
@@ -123,7 +117,7 @@ impl Args {
         &self,
         headers: &csv::ByteRecord,
         start: usize,
-    ) -> CliResult<csv::Writer<Box<dyn io::Write+'static>>> {
+    ) -> CliResult<csv::Writer<Box<dyn io::Write + 'static>>> {
         let dir = Path::new(&self.arg_outdir);
         let path = dir.join(self.flag_filename.filename(&format!("{}", start)));
         let spath = Some(path.display().to_string());

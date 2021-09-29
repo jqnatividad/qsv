@@ -1,7 +1,7 @@
-use crate::CliResult;
-use crate::config::{Delimiter, Config};
+use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
 use crate::util;
+use crate::CliResult;
 use serde::Deserialize;
 
 static USAGE: &str = "
@@ -48,8 +48,11 @@ struct Args {
     flag_delimiter: Option<Delimiter>,
 }
 
-pub fn replace_column_value(record: &csv::StringRecord, column_index: usize, new_value: &String)
-                           -> csv::StringRecord {
+pub fn replace_column_value(
+    record: &csv::StringRecord,
+    column_index: usize,
+    new_value: &String,
+) -> csv::StringRecord {
     record
         .into_iter()
         .enumerate()

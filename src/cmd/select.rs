@@ -1,8 +1,8 @@
-use crate::CliResult;
 use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
-use crate::util;
 use crate::serde::Deserialize;
+use crate::util;
+use crate::CliResult;
 
 static USAGE: &str = r#"
 Select columns from CSV data efficiently.

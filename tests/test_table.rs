@@ -17,11 +17,14 @@ fn table() {
     cmd.arg("in.csv");
 
     let got: String = wrk.stdout(&mut cmd);
-    assert_eq!(&*got, "\
+    assert_eq!(
+        &*got,
+        "\
 h1       h2   h3
 abcdefg  a    a
 a        abc  z\
-")
+"
+    )
 }
 
 #[test]
@@ -35,11 +38,10 @@ fn table_right_align() {
     cmd.arg("in.csv");
 
     let got: String = wrk.stdout(&mut cmd);
-    assert_eq!(&*got, concat!(
-"     h1   h2  h3\n",
-"abcdefg    a  a\n",
-"      a  abc  z",
-    ));
+    assert_eq!(
+        &*got,
+        concat!("     h1   h2  h3\n", "abcdefg    a  a\n", "      a  abc  z",)
+    );
 }
 
 #[test]
@@ -53,9 +55,8 @@ fn table_center_align() {
     cmd.arg("in.csv");
 
     let got: String = wrk.stdout(&mut cmd);
-    assert_eq!(&*got, concat!(
-"  h1     h2   h3\n",
-"abcdefg   a   a\n",
-"   a     abc  z",
-    ));
+    assert_eq!(
+        &*got,
+        concat!("  h1     h2   h3\n", "abcdefg   a   a\n", "   a     abc  z",)
+    );
 }

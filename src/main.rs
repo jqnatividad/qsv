@@ -2,9 +2,11 @@ extern crate byteorder;
 extern crate crossbeam_channel as channel;
 extern crate csv;
 extern crate csv_index;
+extern crate dateparser;
 extern crate docopt;
-extern crate hlua;
 extern crate filetime;
+extern crate hlua;
+extern crate mimalloc;
 extern crate num_cpus;
 extern crate pyo3;
 extern crate rand;
@@ -15,9 +17,7 @@ extern crate stats;
 extern crate tabwriter;
 extern crate textwrap;
 extern crate threadpool;
-extern crate dateparser;
 extern crate uuid;
-extern crate mimalloc;
 
 use std::borrow::ToOwned;
 use std::env;
@@ -47,12 +47,14 @@ macro_rules! werr {
 }
 
 macro_rules! fail {
-    ($e:expr) => (Err(::std::convert::From::from($e)));
+    ($e:expr) => {
+        Err(::std::convert::From::from($e))
+    };
 }
 
 macro_rules! command_list {
-    () => (
-"
+    () => {
+        "
     apply       Apply series of transformations to a column
     behead      Drop header from CSV file
     cat         Concatenate by row or column
@@ -90,7 +92,7 @@ macro_rules! command_list {
     table       Align CSV data into columns
     transpose   Transpose rows/columns of CSV data
 "
-    )
+    };
 }
 
 mod cmd;
@@ -99,7 +101,8 @@ mod index;
 mod select;
 mod util;
 
-static USAGE: &str = concat!("
+static USAGE: &str = concat!(
+    "
 Usage:
     qsv <command> [<args>...]
     qsv [options]
@@ -110,7 +113,9 @@ Options:
     <command> -h  Display the command help message
     --version     Print version info and exit
 
-Commands:", command_list!());
+Commands:",
+    command_list!()
+);
 
 #[derive(Deserialize)]
 struct Args {
@@ -120,10 +125,12 @@ struct Args {
 
 fn main() {
     let args: Args = Docopt::new(USAGE)
-                            .and_then(|d| d.options_first(true)
-                                           .version(Some(util::version()))
-                                           .deserialize())
-                            .unwrap_or_else(|e| e.exit());
+        .and_then(|d| {
+            d.options_first(true)
+                .version(Some(util::version()))
+                .deserialize()
+        })
+        .unwrap_or_else(|e| e.exit());
     if args.flag_list {
         wout!(concat!("Installed commands:", command_list!()));
         return;
@@ -134,31 +141,29 @@ fn main() {
                 "qsv is a suite of CSV command line utilities.
 
 Please choose one of the following commands:",
-                command_list!()));
+                command_list!()
+            ));
             process::exit(0);
         }
-        Some(cmd) => {
-            match cmd.run() {
-                Ok(()) => process::exit(0),
-                Err(CliError::Flag(err)) => err.exit(),
-                Err(CliError::Csv(err)) => {
-                    werr!("{}", err);
-                    process::exit(1);
-                }
-                Err(CliError::Io(ref err))
-                        if err.kind() == io::ErrorKind::BrokenPipe => {
-                    process::exit(0);
-                }
-                Err(CliError::Io(err)) => {
-                    werr!("{}", err);
-                    process::exit(1);
-                }
-                Err(CliError::Other(msg)) => {
-                    werr!("{}", msg);
-                    process::exit(1);
-                }
+        Some(cmd) => match cmd.run() {
+            Ok(()) => process::exit(0),
+            Err(CliError::Flag(err)) => err.exit(),
+            Err(CliError::Csv(err)) => {
+                werr!("{}", err);
+                process::exit(1);
             }
-        }
+            Err(CliError::Io(ref err)) if err.kind() == io::ErrorKind::BrokenPipe => {
+                process::exit(0);
+            }
+            Err(CliError::Io(err)) => {
+                werr!("{}", err);
+                process::exit(1);
+            }
+            Err(CliError::Other(msg)) => {
+                werr!("{}", msg);
+                process::exit(1);
+            }
+        },
     }
 }
 
@@ -200,7 +205,7 @@ enum Command {
     Stats,
     Table,
     Transpose,
-    #[cfg(target_family="unix")]
+    #[cfg(target_family = "unix")]
     ForEach,
 }
 
@@ -213,7 +218,8 @@ impl Command {
         if !argv[1].chars().all(char::is_lowercase) {
             return Err(CliError::Other(format!(
                 "qsv expects commands in lowercase. Did you mean '{}'?",
-                argv[1].to_lowercase())));
+                argv[1].to_lowercase()
+            )));
         }
         match self {
             Command::Apply => cmd::apply::run(argv),
@@ -230,7 +236,10 @@ impl Command {
             Command::Fmt => cmd::fmt::run(argv),
             Command::Frequency => cmd::frequency::run(argv),
             Command::Headers => cmd::headers::run(argv),
-            Command::Help => { wout!("{}", USAGE); Ok(()) }
+            Command::Help => {
+                wout!("{}", USAGE);
+                Ok(())
+            }
             Command::Index => cmd::index::run(argv),
             Command::Input => cmd::input::run(argv),
             Command::Join => cmd::join::run(argv),
@@ -251,7 +260,7 @@ impl Command {
             Command::Stats => cmd::stats::run(argv),
             Command::Table => cmd::table::run(argv),
             Command::Transpose => cmd::transpose::run(argv),
-            #[cfg(target_family="unix")]
+            #[cfg(target_family = "unix")]
             Command::ForEach => cmd::foreach::run(argv),
         }
     }
@@ -270,10 +279,10 @@ pub enum CliError {
 impl fmt::Display for CliError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            CliError::Flag(ref e) => { e.fmt(f) }
-            CliError::Csv(ref e) => { e.fmt(f) }
-            CliError::Io(ref e) => { e.fmt(f) }
-            CliError::Other(ref s) => { f.write_str(&**s) }
+            CliError::Flag(ref e) => e.fmt(f),
+            CliError::Csv(ref e) => e.fmt(f),
+            CliError::Io(ref e) => e.fmt(f),
+            CliError::Other(ref s) => f.write_str(&**s),
         }
     }
 }
