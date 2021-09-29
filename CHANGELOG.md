@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - changed Makefile to remove github recipe as we are now using GitHub Actions.
 
+### Fixed
+- fixed publish Github Actions workflow to zip binaries before uploading.
+
 ### Removed 
 - removed `.travis.yml` as we are now using GitHub Actions.
 - removed scripts `build-release`, `github-release` and `github-upload` as we are now
