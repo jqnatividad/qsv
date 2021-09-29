@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.16.0] - 2021-09-28
+## [0.16.1] - 2021-09-28
 ### Added
 - Added a CHANGELOG.
 - Added additional commands/options from [@Yomguithereal](https://github.com/Yomguithereal) 
