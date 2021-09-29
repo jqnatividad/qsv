@@ -5,6 +5,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- changed Makefile to remove github recipe as we are now using GitHub Actions.
+
+### Removed 
+- removed `.travis.yml` as we are now using GitHub Actions.
+- removed scripts `build-release`, `github-release` and `github-upload` as we are now
+ using GitHub Actions.
+- removed `ci` folder as we are now using GitHub Actions.
+
 
 ## [0.16.1] - 2021-09-28
 ### Added

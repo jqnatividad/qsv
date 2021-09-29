@@ -25,8 +25,3 @@ release:
 	cargo build --release
 	mkdir -p ~/bin/bin
 	cp ./target/release/qsv ~/bin/bin/qsv
-
-github:
-	./scripts/build-release
-	./scripts/github-release
-	./scripts/github-upload
