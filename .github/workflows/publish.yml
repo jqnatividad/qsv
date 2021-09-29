@@ -27,7 +27,7 @@ jobs:
     - name: Build
       run: cargo build --release --locked
     - name: zip-files
-      uses: 7z a ${{ matrix.asset_name }} target/release/${{ matrix.artifact_name }}
+      run: 7z a ${{ matrix.asset_name }} target/release/${{ matrix.artifact_name }}
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v2
       with:
