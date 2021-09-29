@@ -355,7 +355,7 @@ total 191M
 ----
 ### Installation
 
-Binaries for Windows, Linux and macOS are available [from Github](https://github.com/jqnatividad/qsv/releases/latest). :warning: TODO
+Binaries for Windows, Linux and macOS are available [from Github](https://github.com/jqnatividad/qsv/releases/latest).
 
 Alternatively, you can compile from source by
 [installing Cargo](https://crates.io/install)
