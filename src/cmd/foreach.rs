@@ -1,14 +1,14 @@
-#![cfg(target_family="unix")]
-use crate::regex::bytes::{Regex, NoExpand};
-use std::process::{Command, Stdio};
-use std::io::{BufReader};
+#![cfg(target_family = "unix")]
+use crate::regex::bytes::{NoExpand, Regex};
 use std::ffi::OsStr;
+use std::io::BufReader;
 use std::os::unix::ffi::OsStrExt;
+use std::process::{Command, Stdio};
 
-use crate::CliResult;
-use crate::config::{Delimiter, Config};
+use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
 use crate::util;
+use crate::CliResult;
 use serde::Deserialize;
 
 static USAGE: &str = "
@@ -92,11 +92,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         let prog = OsStr::from_bytes(command_pieces.next().unwrap().as_bytes());
 
-        let cmd_args: Vec<String> = command_pieces.map(|piece| {
-            let clean_piece = cleaner_pattern.replace_all(&piece.as_bytes(), NoExpand(b""));
+        let cmd_args: Vec<String> = command_pieces
+            .map(|piece| {
+                let clean_piece = cleaner_pattern.replace_all(&piece.as_bytes(), NoExpand(b""));
 
-            return String::from_utf8(clean_piece.into_owned()).expect("encoding error");
-        }).collect();
+                return String::from_utf8(clean_piece.into_owned()).expect("encoding error");
+            })
+            .collect();
 
         if !args.flag_unify {
             let mut cmd = Command::new(prog)
@@ -107,8 +109,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 .unwrap();
 
             cmd.wait().unwrap();
-        }
-        else {
+        } else {
             let mut cmd = Command::new(prog)
                 .args(cmd_args)
                 .stdout(Stdio::piped())
@@ -124,7 +125,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 let mut stdout_rdr = csv::ReaderBuilder::new()
                     .delimiter(match &args.flag_delimiter {
                         Some(delimiter) => delimiter.as_byte(),
-                        None => b','
+                        None => b',',
                     })
                     .has_headers(true)
                     .from_reader(stdout_reader);

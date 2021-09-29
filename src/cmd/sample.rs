@@ -1,15 +1,15 @@
 use std::io;
 
 use byteorder::{ByteOrder, LittleEndian};
-use rand::{self, Rng, SeedableRng};
 use rand::rngs::StdRng;
 use rand::seq::SliceRandom;
+use rand::{self, Rng, SeedableRng};
 
-use crate::CliResult;
 use crate::config::{Config, Delimiter};
 use crate::index::Indexed;
-use crate::util;
 use crate::serde::Deserialize;
+use crate::util;
+use crate::CliResult;
 
 static USAGE: &str = "
 Randomly samples CSV data uniformly using memory proportional to the size of
@@ -98,7 +98,9 @@ fn sample_random_access<R, I>(
     idx: &mut Indexed<R, I>,
     sample_size: u64,
 ) -> CliResult<Vec<csv::ByteRecord>>
-where R: io::Read + io::Seek, I: io::Read + io::Seek
+where
+    R: io::Read + io::Seek,
+    I: io::Read + io::Seek,
 {
     let mut all_indices = (0..idx.count()).collect::<Vec<_>>();
     let mut rng = ::rand::thread_rng();
@@ -115,7 +117,7 @@ where R: io::Read + io::Seek, I: io::Read + io::Seek
 fn sample_reservoir<R: io::Read>(
     rdr: &mut csv::Reader<R>,
     sample_size: u64,
-    seed: Option<usize>
+    seed: Option<usize>,
 ) -> CliResult<Vec<csv::ByteRecord>> {
     // The following algorithm has been adapted from:
     // https://en.wikipedia.org/wiki/Reservoir_sampling
@@ -127,9 +129,7 @@ fn sample_reservoir<R: io::Read>(
 
     // Seeding rng
     let mut rng: StdRng = match seed {
-        None => {
-            StdRng::from_rng(rand::thread_rng()).unwrap()
-        }
+        None => StdRng::from_rng(rand::thread_rng()).unwrap(),
         Some(seed) => {
             let mut buf = [0u8; 32];
             LittleEndian::write_u64(&mut buf, seed as u64);
@@ -139,7 +139,7 @@ fn sample_reservoir<R: io::Read>(
 
     // Now do the sampling.
     for (i, row) in records {
-        let random = rng.gen_range(0, i+1);
+        let random = rng.gen_range(0, i + 1);
         if random < sample_size as usize {
             reservoir[random] = row?;
         }

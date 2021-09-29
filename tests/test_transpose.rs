@@ -1,6 +1,6 @@
 use crate::workdir::Workdir;
 
-use crate::{CsvData, qcheck};
+use crate::{qcheck, CsvData};
 
 fn prop_transpose(name: &str, rows: CsvData, streaming: bool) -> bool {
     let wrk = Workdir::new(name);
@@ -8,14 +8,16 @@ fn prop_transpose(name: &str, rows: CsvData, streaming: bool) -> bool {
 
     let mut cmd = wrk.command("transpose");
     cmd.arg("in.csv");
-    if streaming { cmd.arg("--multipass"); }
+    if streaming {
+        cmd.arg("--multipass");
+    }
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
 
     let mut expected = vec![];
 
     let nrows = rows.len();
-    let ncols = if !rows.is_empty() {rows[0].len() } else {0};
+    let ncols = if !rows.is_empty() { rows[0].len() } else { 0 };
 
     for i in 0..ncols {
         let mut expected_row = vec![];

@@ -1,10 +1,10 @@
 use crate::regex::bytes::RegexBuilder;
 use std::borrow::Cow;
 
-use crate::CliResult;
 use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
 use crate::util;
+use crate::CliResult;
 use serde::Deserialize;
 
 static USAGE: &str = "
@@ -79,7 +79,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         record = record
             .into_iter()
             .enumerate()
-            .map(|(i, v)| if sel_indices.contains(&i) { pattern.replace_all(v, replacement) } else { Cow::Borrowed(v) })
+            .map(|(i, v)| {
+                if sel_indices.contains(&i) {
+                    pattern.replace_all(v, replacement)
+                } else {
+                    Cow::Borrowed(v)
+                }
+            })
             .collect();
 
         wtr.write_byte_record(&record)?;

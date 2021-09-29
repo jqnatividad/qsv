@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 
-use crate::CliResult;
-use crate::config::{Delimiter, Config};
+use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
 use crate::serde::Deserialize;
 use crate::util;
+use crate::CliResult;
 
 static USAGE: &str = "
 Pseudonymise the value of the given column by replacing them by an
@@ -32,8 +32,11 @@ struct Args {
     flag_delimiter: Option<Delimiter>,
 }
 
-pub fn replace_column_value(record: &csv::StringRecord, column_index: usize, new_value: &String)
-                           -> csv::StringRecord {
+pub fn replace_column_value(
+    record: &csv::StringRecord,
+    column_index: usize,
+    new_value: &String,
+) -> csv::StringRecord {
     record
         .into_iter()
         .enumerate()
@@ -69,14 +72,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let value = record[column_index].to_owned();
 
         match values.get(&value) {
-          Some(id) => {
-            record = replace_column_value(&record, column_index, &id.to_string());
-          },
-          None => {
-            values.insert(value, counter);
-            record = replace_column_value(&record, column_index, &counter.to_string());
-            counter += 1;
-          }
+            Some(id) => {
+                record = replace_column_value(&record, column_index, &id.to_string());
+            }
+            None => {
+                values.insert(value, counter);
+                record = replace_column_value(&record, column_index, &counter.to_string());
+                counter += 1;
+            }
         }
 
         wtr.write_record(&record)?;

@@ -3,14 +3,14 @@ pub mod behead;
 pub mod cat;
 pub mod count;
 pub mod dedup;
+pub mod enumerate;
 pub mod exclude;
 pub mod explode;
-pub mod enumerate;
 pub mod fill;
 pub mod fixlengths;
 pub mod flatten;
 pub mod fmt;
-#[cfg(target_family="unix")]
+#[cfg(target_family = "unix")]
 pub mod foreach;
 pub mod frequency;
 pub mod headers;

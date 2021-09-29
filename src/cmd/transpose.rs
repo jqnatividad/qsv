@@ -1,9 +1,9 @@
 use crate::config::{Config, Delimiter};
 use crate::csv::ByteRecord;
-use std::str;
+use crate::serde::Deserialize;
 use crate::util;
 use crate::CliResult;
-use crate::serde::Deserialize;
+use std::str;
 
 static USAGE: &str = "
 Transpose the rows/columns of CSV data.
@@ -46,7 +46,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         _ => false,
     };
 
-  if args.flag_multipass && !input_is_stdin {
+    if args.flag_multipass && !input_is_stdin {
         args.multipass_transpose()
     } else {
         args.in_memory_transpose()
@@ -58,11 +58,11 @@ impl Args {
         let mut rdr = self.rconfig().reader()?;
         let mut wtr = self.wconfig().writer()?;
         let nrows = rdr.byte_headers()?.len();
-        
+
         let all = rdr.byte_records().collect::<Result<Vec<_>, _>>()?;
         for i in 0..nrows {
             let mut record = ByteRecord::new();
-            
+
             for row in all.iter() {
                 record.push_field(&row[i]);
             }
@@ -84,7 +84,7 @@ impl Args {
             }
             wtr.write_byte_record(&record)?;
         }
-      Ok(wtr.flush()?)
+        Ok(wtr.flush()?)
     }
 
     fn wconfig(&self) -> Config {

@@ -1,7 +1,7 @@
-use crate::CliResult;
 use crate::config::{Config, Delimiter};
-use crate::util;
 use crate::serde::Deserialize;
+use crate::util;
+use crate::CliResult;
 
 static USAGE: &str = "
 Rename the columns of CSV data efficiently.
@@ -37,8 +37,7 @@ struct Args {
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
-    let rconfig = Config::new(&args.arg_input)
-        .delimiter(args.flag_delimiter);
+    let rconfig = Config::new(&args.arg_input).delimiter(args.flag_delimiter);
 
     let mut rdr = rconfig.reader()?;
     let mut wtr = Config::new(&args.flag_output).writer()?;

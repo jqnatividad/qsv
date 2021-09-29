@@ -1,10 +1,10 @@
 use regex::bytes::RegexBuilder;
 
-use crate::CliResult;
 use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
-use crate::util;
 use crate::serde::Deserialize;
+use crate::util;
+use crate::CliResult;
 
 static USAGE: &str = "
 Filters CSV data by whether the given regex matches a row.
@@ -84,8 +84,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         if let Some(_) = args.flag_flag {
             record.push_field(if m { b"1" } else { b"0" });
             wtr.write_byte_record(&record)?;
-        }
-        else if m {
+        } else if m {
             wtr.write_byte_record(&record)?;
         }
     }

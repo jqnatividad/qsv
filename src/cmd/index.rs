@@ -4,10 +4,10 @@ use std::path::{Path, PathBuf};
 
 use csv_index::RandomAccessSimple;
 
-use crate::CliResult;
 use crate::config::{Config, Delimiter};
-use crate::util;
 use crate::serde::Deserialize;
+use crate::util;
+use crate::CliResult;
 
 static USAGE: &str = "
 Creates an index of the given CSV data, which can make other operations like
@@ -50,8 +50,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         Some(p) => PathBuf::from(&p),
     };
 
-    let rconfig = Config::new(&Some(args.arg_input))
-                         .delimiter(args.flag_delimiter);
+    let rconfig = Config::new(&Some(args.arg_input)).delimiter(args.flag_delimiter);
     let mut rdr = rconfig.reader_file()?;
     let mut wtr = io::BufWriter::new(fs::File::create(&pidx)?);
     RandomAccessSimple::create(&mut rdr, &mut wtr)?;
