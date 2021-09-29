@@ -25,6 +25,8 @@ Currently supported operations:
   * trim: Trim (drop whitespace left & right of the string)
   * ltrim: Left trim
   * rtrim: Right trim
+  * empty0: Replace empty string with '0'
+  * emptyNA: Replace emptry string with 'NA'
 
 Example for trimming and transforming to uppercase:
 
@@ -58,7 +60,9 @@ static OPERATIONS: &[&str] = &[
     "squeeze",
     "trim",
     "rtrim",
-    "ltrim"
+    "ltrim",
+    "empty0",
+    "emptyNA",
 ];
 
 #[derive(Deserialize)]
@@ -148,6 +152,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 },
                 "rtrim" => {
                     cell = String::from(cell.trim_end());
+                },
+                "empty0" => {
+                    if cell.trim().is_empty() {
+                        cell = "0".to_string();
+                    }
+                },
+                "emptyNA" => {
+                    if cell.trim().is_empty() {
+                        cell = "NA".to_string();
+                    }
                 },
                 _ => {}
             }

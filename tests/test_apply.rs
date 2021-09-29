@@ -117,3 +117,51 @@ fn apply_new_column() {
     ];
     assert_eq!(got, expected);
 }
+
+#[test]
+fn apply_empty0() {
+    let wrk = Workdir::new("apply");
+    wrk.create("data.csv", vec![
+        svec!["name"],
+        svec!["John"],
+        svec![" "],
+        svec!["Sue"],
+        svec!["Hopkins"],
+    ]);
+    let mut cmd = wrk.command("apply");
+    cmd.arg("empty0").arg("name").arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["name"],
+        svec!["John"],
+        svec!["0"],
+        svec!["Sue"],
+        svec!["Hopkins"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn apply_empty_na() {
+    let wrk = Workdir::new("apply");
+    wrk.create("data.csv", vec![
+        svec!["name"],
+        svec!["John"],
+        svec![" "],
+        svec!["Sue"],
+        svec!["Hopkins"],
+    ]);
+    let mut cmd = wrk.command("apply");
+    cmd.arg("emptyNA").arg("name").arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["name"],
+        svec!["John"],
+        svec!["NA"],
+        svec!["Sue"],
+        svec!["Hopkins"],
+    ];
+    assert_eq!(got, expected);
+}
