@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Changed
 - changed Makefile to remove github recipe as we are now using GitHub Actions.
+- Applied rustfmt to entire project [#56](https://github.com/jqnatividad/qsv/issues/56)
 
 ### Fixed
 - fixed publish Github Actions workflow to zip binaries before uploading.
