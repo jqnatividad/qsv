@@ -15,13 +15,13 @@ jobs:
         include:
           - os: ubuntu-latest
             artifact_name: qsv
-            asset_name: qsv-linux-amd64.zip
+            asset_name: qsv-linux.zip
           - os: windows-latest
             artifact_name: qsv.exe
-            asset_name: qsv-windows-amd64.zip
+            asset_name: qsv-windows.zip
           - os: macos-latest
             artifact_name: qsv
-            asset_name: qsv-macos-amd64.zip
+            asset_name: qsv-macos.zip
 
     steps:
     - uses: actions/checkout@v2
