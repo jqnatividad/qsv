@@ -8,7 +8,6 @@ extern crate filetime;
 extern crate hlua;
 extern crate mimalloc;
 extern crate num_cpus;
-extern crate pyo3;
 extern crate rand;
 extern crate regex;
 extern crate serde;
@@ -78,7 +77,6 @@ macro_rules! command_list {
     lua         Execute Lua script on CSV data
     partition   Partition CSV data based on a column value
     pseudo      Pseudonymise the values of a column
-    py          Execute Python script on CSV data
     sample      Randomly sample CSV data
     rename      Rename the columns of CSV data efficiently
     replace     Replace patterns in CSV data
@@ -192,7 +190,6 @@ enum Command {
     Lua,
     Partition,
     Pseudo,
-    Py,
     Rename,
     Replace,
     Reverse,
@@ -247,7 +244,6 @@ impl Command {
             Command::Lua => cmd::lua::run(argv),
             Command::Partition => cmd::partition::run(argv),
             Command::Pseudo => cmd::pseudo::run(argv),
-            Command::Py => cmd::python::run(argv),
             Command::Rename => cmd::rename::run(argv),
             Command::Replace => cmd::replace::run(argv),
             Command::Reverse => cmd::reverse::run(argv),

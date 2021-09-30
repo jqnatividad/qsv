@@ -43,7 +43,6 @@ Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org).
 | **[lua](/src/cmd/lua.rs#L14)** | Execute a Lua script over CSV lines to transform, aggregate or filter them. _**(NEW)**_ |
 | **[partition](/src/cmd/partition.rs#L16)** | Partition CSV data based on a column value. |
 | **[pseudo](/src/cmd/pseudo.rs#L10)** | Pseudonymise the value of the given column by replacing them with an incremental identifier. _**(NEW)**_ |
-| **[py](/src/cmd/python.rs#L45)** | Evaluate a Python expression over CSV lines to transform, aggregate or filter them. _**(NEW)**_ |
 | **[rename](/src/cmd/rename.rs#L7)** |  Rename the columns of CSV data efficiently. _**(NEW)**_ |
 | **[replace](/src/cmd/replace.rs#L11)** | Replace CSV data using a regex. _**(NEW)**_ |
 | **[reverse](/src/cmd/reverse.rs#L7)** | Reverse order of rows in CSV data. _**(NEW)**_ |

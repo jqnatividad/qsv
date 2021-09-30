@@ -40,7 +40,6 @@ docopt = "1"
 filetime = "0.2"
 hlua = "0.4.1"
 num_cpus = "1"
-pyo3 = "0.13.2"
 rand = "0.7"
 regex = "1"
 serde = { version = "1", features = ["derive"] }

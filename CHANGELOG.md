@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - removed scripts `build-release`, `github-release` and `github-upload` as we are now
  using GitHub Actions.
 - removed `ci` folder as we are now using GitHub Actions.
+- removed `py` command. [#58](https://github.com/jqnatividad/qsv/issues/58)
 
 ## [0.16.1] - 2021-09-28
 ### Fixed
