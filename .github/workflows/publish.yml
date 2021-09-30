@@ -15,20 +15,22 @@ jobs:
         include:
           - os: ubuntu-latest
             artifact_name: qsv
-            asset_name: qsv-linux.zip
+            asset_name: qsv-${{ github.ref }}-linux.zip
           - os: windows-latest
             artifact_name: qsv.exe
-            asset_name: qsv-windows.zip
+            asset_name: qsv-${{ github.ref }}-windows.zip
           - os: macos-latest
             artifact_name: qsv
-            asset_name: qsv-macos.zip
+            asset_name: qsv-${{ github.ref }}-macos.zip
 
     steps:
     - uses: actions/checkout@v2
     - name: Build
       run: cargo build --release
     - name: zip-files
-      run: 7z a -tzip target/release/${{ matrix.asset_name }} target/release/${{ matrix.artifact_name }}
+      run: cd target/release
+      run: 7z a -tzip ${{ matrix.asset_name }} ${{ matrix.artifact_name }}
+      run: cd ../..
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v2
       with:
