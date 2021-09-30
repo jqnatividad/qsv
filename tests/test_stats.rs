@@ -254,8 +254,8 @@ stats_tests!(
 stats_tests!(
     stats_variance_null,
     "variance",
-    &["1", "2", "3", "4", ""],
-    "1.25"
+    &["3", "5", "7", "9", ""],
+    "5"
 );
 stats_tests!(stats_mean_mix, "mean", &["5", "15.1", "9.9"], "10");
 stats_tests!(
