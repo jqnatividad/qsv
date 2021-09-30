@@ -30,7 +30,7 @@ Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org).
 | **[enum](/src/cmd/enumerate.rs#L10)** | Add a new column enumerating rows by adding a column of incremental or uuid identifiers. Can also be used to copy a column or fill a new column with a constant value. _**(NEW)**_ |
 | **[explode](/src/cmd/explode.rs#L8)** | Explode rows into multiple ones by splitting a column value based on the given separator. _**(NEW)**_ |
 | **[fill](/src/cmd/fill.rs#L13)** | Fill empty values. _**(NEW)**_ |
-| **[fixlengths](/src/cmd/fill.rs#L13)** | Force a CSV file to have same-length records by either padding or truncating them. |
+| **[fixlengths](/src/cmd/fixlengths.rs#L9)** | Force a CSV file to have same-length records by either padding or truncating them. |
 | **[flatten](/src/cmd/flatten.rs#L12)** | A flattened view of CSV records. Useful for viewing one record at a time. e.g., `qsv slice -i 5 data.csv | qsv flatten`. |
 | **[fmt](/src/cmd/fmt.rs#L7)** | Reformat CSV data with different delimiters, record terminators or quoting rules. (Supports ASCII delimited data.) _**(EXTENDED)**_ |
 | **[foreach](/src/cmd/foreach.rs#L15)** | Loop over a CSV file to execute bash commands. (*nix only) _**(NEW)**_ |
@@ -49,7 +49,7 @@ Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org).
 | **[sample](/src/cmd/sample.rs#L15)** | Randomly draw rows from CSV data using reservoir sampling (i.e., use memory proportional to the size of the sample). _**(EXTENDED)**_ |
 | **[search](/src/cmd/search.rs#L10)** | Run a regex over CSV data. Applies the regex to each field individually and shows only matching rows. |
 | **[select](/src/cmd/select.rs#L8)** | Select or re-order columns from CSV data. _**(EXTENDED)**_ |
-| **[slice](/src/cmd/slice.rs#L11)** | Slice rows from any part of a CSV file. When an index is present, this only has to parse the rows in the slice (instead of all rows leading up to the start of the slice). |
+| **[slice](/src/cmd/slice.rs#L10)** | Slice rows from any part of a CSV file. When an index is present, this only has to parse the rows in the slice (instead of all rows leading up to the start of the slice). |
 | **[sort](/src/cmd/sort.rs#L13)** | Sort CSV data. |
 | **[split](/src/cmd/split.rs#L14)** | Split one CSV file into many CSV files of N chunks. |
 | **[stats](/src/cmd/stats.rs#L23)** | Show basic types and statistics of each column in the CSV file. (i.e., mean, standard deviation, variance, median, min/max, nullcount, etc.) _**(EXTENDED)**_ |

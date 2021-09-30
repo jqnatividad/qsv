@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## Fixed
+- fixed links to help text in README for `fixlengths` and `slice` cmds
 
 ## [0.16.2] - 2021-09-30
 ### Changed
