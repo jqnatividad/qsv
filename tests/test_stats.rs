@@ -243,7 +243,7 @@ stats_tests!(
     &["1", "2", "3"],
     "0.816496580927726"
 );
-stats_tests!(stats_variance, "variance", &["1", "2", "3", "4"], "1.25");
+stats_tests!(stats_variance, "variance", &["3", "5", "7", "9"], "5");
 stats_tests!(stats_mean_null, "mean", &["", "5", "15", "10"], "10");
 stats_tests!(
     stats_stddev_null,
