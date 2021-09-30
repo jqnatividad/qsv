@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - changed Makefile to remove github recipe as we are now using GitHub Actions.
 - Applied rustfmt to entire project [#56](https://github.com/jqnatividad/qsv/issues/56)
+- extended build.rs to check if Python is installed before building (py command requires python)
 
 ### Fixed
 - fixed publish Github Actions workflow to zip binaries before uploading.
@@ -18,8 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  using GitHub Actions.
 - removed `ci` folder as we are now using GitHub Actions.
 
-
 ## [0.16.1] - 2021-09-28
+### Fixed
+- Bumped qsv version to 0.16.1. Inadvertently released 0.16.0 with qsv version still at 0.15.0.
+
+## [0.16.0] - 2021-09-28
 ### Added
 - Added a CHANGELOG.
 - Added additional commands/options from [@Yomguithereal](https://github.com/Yomguithereal) 
