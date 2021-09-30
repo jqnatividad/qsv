@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - changed Makefile to remove github recipe as we are now using GitHub Actions.
 - Applied rustfmt to entire project [#56](https://github.com/jqnatividad/qsv/issues/56)
+- Changed stats variance test as it was causing false positive test failures on macOS ([details](https://github.com/jqnatividad/qsv/commit/8c45c60de7598c7dc4cedd10ce7cb281ee34db46))
+- removed `-amd64` suffix from binaries built by GitHub Actions.
 
 ### Fixed
 - fixed publish Github Actions workflow to zip binaries before uploading.
