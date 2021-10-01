@@ -26,9 +26,9 @@ Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org).
 | **[behead](/src/cmd/behead.rs#L7)** | Drop headers from CSV file. _**(NEW)**_ |
 | **[cat](/src/cmd/cat.rs#L7)** | Concatenate CSV files by row or by column. |
 | **[count](/src/cmd/count.rs#L7)**[^1] | Count the rows in a CSV file. (Instantaneous with an index.) |
-| **[dedup](/src/cmd/dedup.rs#L13)**[^2] | Remove redundant rows _**(NEW)**_ |
+| **[dedup](/src/cmd/dedup.rs#L13)**[^2] | Remove redundant rows. _**(NEW)**_ |
 | **[enum](/src/cmd/enumerate.rs#L10)** | Add a new column enumerating rows by adding a column of incremental or uuid identifiers. Can also be used to copy a column or fill a new column with a constant value. _**(NEW)**_ |
-| **[exclude](/src/cmd/exclude.rs#L17)**[^1] | Removes a set of CSV date from another set based on the specified columns. _**(NEW)**_ |
+| **[exclude](/src/cmd/exclude.rs#L17)**[^1] | Removes a set of CSV data from another set based on the specified columns. _**(NEW)**_ |
 | **[explode](/src/cmd/explode.rs#L8)** | Explode rows into multiple ones by splitting a column value based on the given separator. _**(NEW)**_ |
 | **[fill](/src/cmd/fill.rs#L13)** | Fill empty values. _**(NEW)**_ |
 | **[fixlengths](/src/cmd/fixlengths.rs#L9)** | Force a CSV file to have same-length records by either padding or truncating them. |
@@ -59,7 +59,7 @@ Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org).
 
 [^1]: uses an index when available
 [^2]: loads the entire CSV into memory. Note that `stats` and `transpose` have modes that do not load the entire CSV into memory.
-[^3]: parallelizable
+[^3]: runs parallel jobs by default (use `--jobs` option to adjust)
 
 ----
 
