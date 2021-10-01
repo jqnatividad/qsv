@@ -7,10 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - added footnotes to commands table in README.
+- added `docs` directory. For README reorg, and to add detailed examples per command in the future.
 
 ### Changed
 - changed publish workflow so it adds the version to binary zip filename
 - changed publish workflow so binary is no longer in `target/release` directory
+- reorganized README. 
+- moved whirlwind tour and benchmarks to `docs` directory
+- use zipped repo copy of worldcitiespop_mil.csv for benchmarks  
 
 ### Fixed
 - fixed links to help text in README for `fixlengths` and `slice` cmds

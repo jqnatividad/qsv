@@ -104,7 +104,7 @@ rustc --print target-cpus
 
 Benchmarks
 ----------
-Some [very rough benchmarks](https://github.com/jqnatividad/qsv/blob/master/BENCHMARKS.md) of
+Some [very rough benchmarks](docs/BENCHMARKS.md) of
 various `qsv` commands.
 
 License
