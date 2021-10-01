@@ -25,36 +25,41 @@ Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org).
 | **[apply](/src/cmd/apply.rs#L10)** | Apply series of string transformations to a CSV column. _**(NEW)**_ |
 | **[behead](/src/cmd/behead.rs#L7)** | Drop headers from CSV file. _**(NEW)**_ |
 | **[cat](/src/cmd/cat.rs#L7)** | Concatenate CSV files by row or by column. |
-| **[count](/src/cmd/count.rs#L7)** | Count the rows in a CSV file. (Instantaneous with an index.) |
-| **[dedup](/src/cmd/dedup.rs#L13)** | Remove redundant rows _**(NEW)**_ |
+| **[count](/src/cmd/count.rs#L7)**[^1] | Count the rows in a CSV file. (Instantaneous with an index.) |
+| **[dedup](/src/cmd/dedup.rs#L13)**[^2] | Remove redundant rows _**(NEW)**_ |
 | **[enum](/src/cmd/enumerate.rs#L10)** | Add a new column enumerating rows by adding a column of incremental or uuid identifiers. Can also be used to copy a column or fill a new column with a constant value. _**(NEW)**_ |
+| **[exclude](/src/cmd/exclude.rs#L17)**[^1] | Removes a set of CSV date from another set based on the specified columns. _**(NEW)**_ |
 | **[explode](/src/cmd/explode.rs#L8)** | Explode rows into multiple ones by splitting a column value based on the given separator. _**(NEW)**_ |
 | **[fill](/src/cmd/fill.rs#L13)** | Fill empty values. _**(NEW)**_ |
 | **[fixlengths](/src/cmd/fixlengths.rs#L9)** | Force a CSV file to have same-length records by either padding or truncating them. |
 | **[flatten](/src/cmd/flatten.rs#L12)** | A flattened view of CSV records. Useful for viewing one record at a time. e.g., `qsv slice -i 5 data.csv | qsv flatten`. |
 | **[fmt](/src/cmd/fmt.rs#L7)** | Reformat CSV data with different delimiters, record terminators or quoting rules. (Supports ASCII delimited data.) _**(EXTENDED)**_ |
 | **[foreach](/src/cmd/foreach.rs#L15)** | Loop over a CSV file to execute bash commands. (*nix only) _**(NEW)**_ |
-| **[frequency](/src/cmd/frequency.rs#L15)** | Build frequency tables of each column in CSV data. (Uses parallelism to go faster if an index is present.) |
+| **[frequency](/src/cmd/frequency.rs#L15)**[^1][^3] | Build frequency tables of each column in CSV data. (Uses parallelism to go faster if an index is present.) |
 | **[headers](/src/cmd/headers.rs#L11)** | Show the headers of CSV data. Or show the intersection of all headers between many CSV files. |
 | **[index](/src/cmd/index.rs#L13)** | Create an index for a CSV file. This is very quick and provides constant time indexing into the CSV file. |
 | **[input](/src/cmd/input.rs#L7)** | Read CSV data with exotic quoting/escaping rules. |
-| **[join](/src/cmd/join.rs#L18)** | Inner, outer and cross joins. Uses a simple hash index to make it fast. |
+| **[join](/src/cmd/join.rs#L18)**[^1] | Inner, outer and cross joins. Uses a simple hash index to make it fast. |
 | **[jsonl](/src/cmd/jsonl.rs#L11)** | Convert newline-delimited JSON to CSV. _**(NEW)**_
 | **[lua](/src/cmd/lua.rs#L14)** | Execute a Lua script over CSV lines to transform, aggregate or filter them. _**(NEW)**_ |
 | **[partition](/src/cmd/partition.rs#L16)** | Partition CSV data based on a column value. |
 | **[pseudo](/src/cmd/pseudo.rs#L10)** | Pseudonymise the value of the given column by replacing them with an incremental identifier. _**(NEW)**_ |
 | **[rename](/src/cmd/rename.rs#L7)** |  Rename the columns of CSV data efficiently. _**(NEW)**_ |
 | **[replace](/src/cmd/replace.rs#L11)** | Replace CSV data using a regex. _**(NEW)**_ |
-| **[reverse](/src/cmd/reverse.rs#L7)** | Reverse order of rows in CSV data. _**(NEW)**_ |
-| **[sample](/src/cmd/sample.rs#L15)** | Randomly draw rows from CSV data using reservoir sampling (i.e., use memory proportional to the size of the sample). _**(EXTENDED)**_ |
+| **[reverse](/src/cmd/reverse.rs#L7)**[^2] | Reverse order of rows in CSV data. _**(NEW)**_ |
+| **[sample](/src/cmd/sample.rs#L15)**[^1] | Randomly draw rows from CSV data using reservoir sampling (i.e., use memory proportional to the size of the sample). _**(EXTENDED)**_ |
 | **[search](/src/cmd/search.rs#L10)** | Run a regex over CSV data. Applies the regex to each field individually and shows only matching rows. |
-| **[select](/src/cmd/select.rs#L8)** | Select or re-order columns from CSV data. _**(EXTENDED)**_ |
-| **[slice](/src/cmd/slice.rs#L10)** | Slice rows from any part of a CSV file. When an index is present, this only has to parse the rows in the slice (instead of all rows leading up to the start of the slice). |
+| **[select](/src/cmd/select.rs#L8)**[^1] | Select or re-order columns from CSV data. _**(EXTENDED)**_ |
+| **[slice](/src/cmd/slice.rs#L10)**[^1][^2] | Slice rows from any part of a CSV file. When an index is present, this only has to parse the rows in the slice (instead of all rows leading up to the start of the slice). |
 | **[sort](/src/cmd/sort.rs#L13)** | Sort CSV data. |
-| **[split](/src/cmd/split.rs#L14)** | Split one CSV file into many CSV files of N chunks. |
-| **[stats](/src/cmd/stats.rs#L23)** | Show basic types and statistics of each column in the CSV file. (i.e., mean, standard deviation, variance, median, min/max, nullcount, etc.) _**(EXTENDED)**_ |
-| **[table](/src/cmd/table.rs#L12)** | Show aligned output of any CSV data using [elastic tabstops](https://github.com/BurntSushi/tabwriter). _**(EXTENDED)**_ |
-| **[transpose](/src/cmd/transpose.rs#L9)** | Transpose rows/columns of CSV data. _**(NEW)**_ |
+| **[split](/src/cmd/split.rs#L14)**[^1][^3] | Split one CSV file into many CSV files of N chunks. |
+| **[stats](/src/cmd/stats.rs#L23)**[^1][^2][^3] | Show basic types and statistics of each column in the CSV file. (i.e., mean, standard deviation, variance, median, min/max, nullcount, etc.) _**(EXTENDED)**_ |
+| **[table](/src/cmd/table.rs#L12)**[^2] | Show aligned output of any CSV data using [elastic tabstops](https://github.com/BurntSushi/tabwriter). _**(EXTENDED)**_ |
+| **[transpose](/src/cmd/transpose.rs#L9)**[^2] | Transpose rows/columns of CSV data. _**(NEW)**_ |
+
+[^1]: uses an index when available
+[^2]: loads the entire CSV into memory. Note that `stats` and `transpose` have modes that do not load the entire CSV into memory.
+[^3]: parallelizable
 
 ----
 
