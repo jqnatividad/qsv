@@ -3,38 +3,93 @@ name: Publish
 on:
   push:
     tags:
-      - '*'
+      - '[0-9]+.[0-9]+.[0-9]+'
   workflow_dispatch:
 
 jobs:
   publish:
-    name: Publish for ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+    name: Publish for ${{ matrix.job.os }}
+    runs-on: ${{ matrix.job.os }}
     strategy:
       matrix:
-        include:
+        rust: [stable]
+        job:
           - os: ubuntu-latest
+            os-name: linux
+            target: x86_64-unknown-linux-gnu
+            architecture: x86_64
             artifact_name: qsv
-            asset_name: qsv-${{ github.ref }}-linux.zip
+            asset_name: qsv-${{ github.ref }}-${{ matrix.target }}.zip
+            use-cross: false
+          - os: ubuntu-latest
+            os-name: linux
+            target: i686-unknown-linux-gnu
+            architecture: i686
+            artifact_name: qsv
+            asset_name: qsv-${{ github.ref }}-${{ matrix.target }}.zip
+            use-cross: true
           - os: windows-latest
+            os-name: windows
+            target: x86_64-pc-windows-msvc
+            architecture: x86_64
             artifact_name: qsv.exe
-            asset_name: qsv-${{ github.ref }}-windows.zip
+            asset_name: qsv-${{ github.ref }}${{ matrix.target }}.zip
+            use-cross: false
+          - os: windows-latest
+            os-name: windows
+            target: i686_64-pc-windows-msvc
+            architecture: i686
+            artifact_name: qsv.exe
+            asset_name: qsv-${{ github.ref }}-${{ matrix.target }}.zip
+            use-cross: true
+            os-name: windows
+            target: x86_64-pc-windows-gnu
+            architecture: x86_64
+            artifact_name: qsv.exe
+            asset_name: qsv-${{ github.ref }}-${{ matrix.target }}.zip
+            use-cross: false
+          - os: windows-latest
+            os-name: windows
+            target: i686_64-pc-windows-gnu
+            architecture: i686
+            artifact_name: qsv.exe
+            asset_name: qsv-${{ github.ref }}-${{ matrix.target }}.zip
+            use-cross: true
           - os: macos-latest
+            os-name: macos
+            target: x86_64-apple-darwin
+            architecture: x86_64
             artifact_name: qsv
-            asset_name: qsv-${{ github.ref }}-macos.zip
+            asset_name: qsv-${{ github.ref }}-${{ matrix.target }}.zip
+            use-cross: false
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Build
-      run: cargo build --release
-    - name: zip-files
+    - name: Installing Rust toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: ${{ matrix.rust }}
+        profile: minimal
+        override: true
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    - name: Get Latest Tag
+      id: latesttag
+      uses: actions/get-latest-tag
+    - name: Cargo build
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        use-cross: ${{ matrix.job.use-cross }}
+        toolchain: ${{ matrix.rust }}
+        args: --release --target ${{ matrix.job.target }}
+    - name: Zip up binaries
       run: cd target/release
-      run: 7z a -tzip ${{ matrix.asset_name }} ${{ matrix.artifact_name }}
+      run: 7z a -tzip ${{ matrix.job.asset_name }} ${{ matrix.job.artifact_name }}
       run: cd ../..
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: target/release/${{ matrix.asset_name }}
-        asset_name: ${{ matrix.asset_name }}
-        tag: ${{ github.ref }}
+        file: target/release/${{ matrix.job.asset_name }}
+        asset_name: ${{ matrix.job.asset_name }}
+        tag: ${{ steps.latesttag }}
