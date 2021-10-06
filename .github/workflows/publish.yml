@@ -70,6 +70,7 @@ jobs:
       with:
         toolchain: ${{ matrix.rust }}
         profile: minimal
+        target: ${{ matrix.job.target }}
         override: true
     - name: Checkout repository
       uses: actions/checkout@v2
