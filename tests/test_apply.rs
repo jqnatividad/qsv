@@ -207,7 +207,7 @@ fn apply_datefmt() {
             svec!["September 17, 2012 10:09am EST"],
             svec!["Wed, 02 Jun 2021 06:31:39 GMT"],
             svec!["2009-01-20 05:00 EST"],
-            svec!["07/04/1976 8:00 am"],
+            svec!["2021-05-01T01:17:02.604456Z"],
             svec!["This is not a date and it will not be reformatted"],
         ],
     );
@@ -220,7 +220,7 @@ fn apply_datefmt() {
         svec!["2012-09-17T15:09:00+00:00"],
         svec!["2021-06-02T06:31:39+00:00"],
         svec!["2009-01-20T10:00:00+00:00"],
-        svec!["1976-07-04T12:00:00+00:00"],
+        svec!["2021-05-01T01:17:02.604456+00:00"],
         svec!["This is not a date and it will not be reformatted"],
     ];
     assert_eq!(got, expected);
@@ -236,7 +236,7 @@ fn apply_datefmt_fmtstring() {
             svec!["September 17, 2012 10:09am EST"],
             svec!["Wed, 02 Jun 2021 06:31:39 GMT"],
             svec!["2009-01-20 05:00 EST"],
-            svec!["4/8/2014 14:13"],
+            svec!["2015-09-30 18:48:56.35272715 UTC"],
             svec!["This is not a date and it will not be reformatted"],
         ],
     );
@@ -253,7 +253,7 @@ fn apply_datefmt_fmtstring() {
         svec!["Mon Sep 17 15:09:00 2012 +0000"],
         svec!["Wed Jun  2 06:31:39 2021 +0000"],
         svec!["Tue Jan 20 10:00:00 2009 +0000"],
-        svec!["Tue Apr  8 18:13:00 2014 +0000"],
+        svec!["Wed Sep 30 18:48:56 2015 +0000"],
         svec!["This is not a date and it will not be reformatted"],
     ];
     assert_eq!(got, expected);
