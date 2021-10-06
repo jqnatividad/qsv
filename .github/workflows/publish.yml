@@ -73,6 +73,8 @@ jobs:
         override: true
     - name: Checkout repository
       uses: actions/checkout@v2
+      with:
+        fetch-depth: 20
     - name: Get Previous Tag
       id: previoustag
       uses: WyriHaximus/github-action-get-previous-tag@v1
