@@ -1,13 +1,13 @@
 [package]
 name = "qsv"
-version = "0.16.2"  #:version
+version = "0.16.3"  #:version
 authors = ["Joel Natividad <joel@datHere.com>"]
-description = "A high performance CSV command line toolkit forked from xsv."
+description = "A high performance CSV command line toolkit."
 documentation = "https://github.com/jqnatividad/qsv"
 homepage = "https://github.com/jqnatividad/qsv"
 repository = "https://github.com/jqnatividad/qsv"
 readme = "README.md"
-keywords = ["csv", "tsv", "slice", "command"]
+keywords = ["csv", "tsv", "slice", "command", "cli", "opendata"]
 license = "Unlicense/MIT"
 autotests = false
 edition = "2018"
