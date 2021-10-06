@@ -73,8 +73,8 @@ jobs:
         override: true
     - name: Checkout repository
       uses: actions/checkout@v2
-    - name: Get Latest Tag
-      id: latesttag
+    - name: Get Previous Tag
+      id: previoustag
       uses: WyriHaximus/github-action-get-previous-tag@v1
     - name: Cargo build
       uses: actions-rs/cargo@v1
@@ -95,4 +95,4 @@ jobs:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         file: target/release/${{ matrix.job.asset_name }}
         asset_name: ${{ matrix.job.asset_name }}
-        tag: ${{ steps.latesttag }}
+        tag: ${{ steps.previoustag }}
