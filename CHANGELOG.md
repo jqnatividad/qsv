@@ -5,18 +5,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.16.3] - 2021-10-06
 ### Added
-- added footnotes to commands table in README.
 - added `docs` directory. For README reorg, and to add detailed examples per command in the future.
 - added `emptyreplace` operation to `apply` command.
 - added `datefmt` operation to `apply` command.
+- added support for reading from stdin to `join` command.
+- setup GitHub wiki to host [Cookbook](https://github.com/jqnatividad/qsv/wiki#cookbook) and sundry docs to encourage collaborative editing.
+- added footnotes to commands table in README.
 
 ### Changed
-- changed publish workflow so it adds the version to binary zip filename
-- changed publish workflow so binary is no longer in `target/release` directory
-- reorganized README. 
-- moved whirlwind tour and benchmarks to `docs` directory
-- use zipped repo copy of worldcitiespop_mil.csv for benchmarks  
+- changed GitHub Actions publish workflow so it adds the version to binary zip filename.
+- changed GitHub Actions publish workflow so binary is no longer in `target/release` directory.
+- reorganized README.
+- moved whirlwind tour and benchmarks to `docs` directory.
+- use zipped repo copy of worldcitiespop_mil.csv for benchmarks.
 
 ### Fixed
 - fixed links to help text in README for `fixlengths` and `slice` cmds
@@ -130,6 +134,7 @@ by setting `target-cpu=native`.
 - used serde derive feature.
 
 ## [0.13.1] - 2020-12-27
+Initial fork from xsv.
 ### Added
 - `rename` cmd from [@Kerollmops](https://github.com/Kerollmops).
 - `fill` cmd from [@alexrudy](https://github.com/alexrudy).
