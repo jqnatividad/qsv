@@ -1,6 +1,7 @@
 use crate::regex::Regex;
 
 use crate::config::{Config, Delimiter};
+use crate::dateparser::parse;
 use crate::select::SelectColumns;
 use crate::serde::Deserialize;
 use crate::util;
@@ -25,8 +26,21 @@ Currently supported operations:
   * trim: Trim (drop whitespace left & right of the string)
   * ltrim: Left trim
   * rtrim: Right trim
-  * empty0: Replace empty string with '0'
-  * emptyNA: Replace emptry string with 'NA'
+  * emptyreplace: Replace empty string with <replacement> string
+  * datefmt: formats a recognized date column to a specified format.
+             Date recognition is powered by https://docs.rs/dateparser/
+
+Replace empty strings with 'Unknown' in column Measurement:
+
+  $ qsv apply emptyreplace --replacement Unknown Measurement file.csv
+
+Format dates in OpenDate column to ISO 8601/RFC 3339 format:
+
+  $ qsv apply datefmt OpenDate file.csv
+
+Format dates in OpenDate column using '%Y-%m-%d' format:
+
+  $ qsv apply datefmt OpenDate --formatstr %Y-%m-%d file.csv
 
 Example for trimming and transforming to uppercase:
 
@@ -41,8 +55,13 @@ Usage:
     qsv apply --help
 
 apply options:
-    -c, --new-column <name>  Put the transformed values in a new column instead.
-    -r, --rename <name>      New name for the transformed column.
+    -c, --new-column <name>     Put the transformed values in a new column instead.
+    -r, --rename <name>         New name for the transformed column.
+    -R, --replacement <string>  the string to use for emptyreplace operation.
+                                (default: 'None')
+    -f, --formatstr <string>    the date format to use when formatting dates. For formats, see
+                                https://docs.rs/chrono/0.4.19/chrono/format/strftime/index.html
+                                (default: '%+')
 
 Common options:
     -h, --help               Display this message
@@ -54,7 +73,15 @@ Common options:
 ";
 
 static OPERATIONS: &[&str] = &[
-    "len", "lower", "upper", "squeeze", "trim", "rtrim", "ltrim", "empty0", "emptyNA",
+    "len",
+    "lower",
+    "upper",
+    "squeeze",
+    "trim",
+    "rtrim",
+    "ltrim",
+    "emptyreplace",
+    "datefmt",
 ];
 
 #[derive(Deserialize)]
@@ -63,6 +90,8 @@ struct Args {
     arg_operations: String,
     arg_input: Option<String>,
     flag_rename: Option<String>,
+    flag_replacement: String,
+    flag_formatstr: String,
     flag_new_column: Option<String>,
     flag_output: Option<String>,
     flag_no_headers: bool,
@@ -98,6 +127,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut headers = rdr.headers()?.clone();
 
     let operations: Vec<&str> = args.arg_operations.split(",").collect();
+
+    let mut replacement: String = "None".to_string();
+    if !args.flag_replacement.is_empty() {
+        replacement = args.flag_replacement.to_string();
+    }
+
+    let mut formatstr: String = "%+".to_string();
+    if !args.flag_formatstr.is_empty() {
+        formatstr = args.flag_formatstr.to_string();
+    }
 
     for op in &operations {
         if !OPERATIONS.contains(&op) {
@@ -151,15 +190,19 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 "rtrim" => {
                     cell = String::from(cell.trim_end());
                 }
-                "empty0" => {
+                "emptyreplace" => {
                     if cell.trim().is_empty() {
-                        cell = "0".to_string();
+                        cell = replacement.to_string();
                     }
                 }
-                "emptyNA" => {
-                    if cell.trim().is_empty() {
-                        cell = "NA".to_string();
-                    }
+                "datefmt" => {
+                    let parsed_date = parse(&cell);
+                    match parsed_date {
+                        Ok(format_date) => {
+                            cell = format_date.format(&formatstr).to_string();
+                        }
+                        Err(_) => {}
+                    };
                 }
                 _ => {}
             }
