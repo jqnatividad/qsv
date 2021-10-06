@@ -104,6 +104,6 @@ jobs:
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: target/release/${{ matrix.job.asset_name }}
+        file: ${{ matrix.job.asset_name }}
         asset_name: ${{ matrix.job.asset_name }}
         tag: ${{ needs.analyze-tags.outputs.previous-tag }}
