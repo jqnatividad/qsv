@@ -33,6 +33,10 @@ Usage:
     qsv join [options] <columns1> <input1> <columns2> <input2>
     qsv join --help
 
+input parameters:
+    For <input1> and <input2>, specifying `-` indicates reading from stdin.
+    e.g. 'qsv frequency -s Agency nyc311.csv | qsv join value - id nycagencyinfo.csv'
+
 join options:
     --no-case              When set, joins are done case insensitively.
     --left                 Do a 'left outer' join. This returns all rows in
@@ -270,8 +274,9 @@ impl<R: io::Read + io::Seek, W: io::Write> IoState<R, W> {
 }
 
 impl Args {
-    fn new_io_state(&self)
-        -> CliResult<IoState<Box<dyn SeekRead+'static>, Box<dyn io::Write+'static>>> {
+    fn new_io_state(
+        &self,
+    ) -> CliResult<IoState<Box<dyn SeekRead + 'static>, Box<dyn io::Write + 'static>>> {
         let rconf1 = Config::new(&Some(self.arg_input1.clone()))
             .delimiter(self.flag_delimiter)
             .no_headers(self.flag_no_headers)
@@ -283,8 +288,7 @@ impl Args {
 
         let mut rdr1 = rconf1.reader_file_stdin()?;
         let mut rdr2 = rconf2.reader_file_stdin()?;
-        let (sel1, sel2) = self.get_selections(
-            &rconf1, &mut rdr1, &rconf2, &mut rdr2)?;
+        let (sel1, sel2) = self.get_selections(&rconf1, &mut rdr1, &rconf2, &mut rdr2)?;
         Ok(IoState {
             wtr: Config::new(&self.flag_output).writer()?,
             rdr1,
