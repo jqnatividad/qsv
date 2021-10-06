@@ -74,6 +74,10 @@ pub struct Config {
     quoting: bool,
 }
 
+// Empty trait as an alias for Seek and Read that avoids auto trait errors
+pub trait SeekRead: io::Seek + io::Read {}
+impl<T: io::Seek + io::Read> SeekRead for T {}
+
 impl Config {
     pub fn new(path: &Option<String>) -> Config {
         let (path, delim) = match *path {
@@ -214,7 +218,23 @@ impl Config {
         }
     }
 
-    pub fn index_files(&self) -> io::Result<Option<(csv::Reader<fs::File>, fs::File)>> {
+    pub fn reader_file_stdin(&self) -> io::Result<csv::Reader<Box<dyn SeekRead+'static>>> {
+        Ok(match self.path {
+            None => {
+                // Create a buffer in memory when stdin needs to be indexed
+                let mut buffer: Vec<u8> = Vec::new();
+                let stdin = io::stdin();
+                stdin.lock().read_to_end(&mut buffer)?;
+                self.from_reader(Box::new(io::Cursor::new(buffer)))
+            },
+            Some(ref p) => {
+                self.from_reader(Box::new(fs::File::open(p).unwrap()))
+            },
+        })
+    }
+
+    pub fn index_files(&self)
+           -> io::Result<Option<(csv::Reader<fs::File>, fs::File)>> {
         let (csv_file, idx_file) = match (&self.path, &self.idx_path) {
             (&None, &None) => return Ok(None),
             (&None, &Some(_)) => {
