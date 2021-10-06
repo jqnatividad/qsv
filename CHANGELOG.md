@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - added footnotes to commands table in README.
 - added `docs` directory. For README reorg, and to add detailed examples per command in the future.
+- added `emptyreplace` operation to `apply` command.
+- added `datefmt` operation to `apply` command.
 
 ### Changed
 - changed publish workflow so it adds the version to binary zip filename
@@ -19,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - fixed links to help text in README for `fixlengths` and `slice` cmds
 - `exclude` not listed in commands table. Added to README.
+
+### Removed
+- Removed `empty0` and `emptyNA` operations in `apply` command.
+Replaced with `emptyreplace`.
 
 ## [0.16.2] - 2021-09-30
 ### Changed
