@@ -25,7 +25,7 @@ Available commands
 ------------------
 | Command | Description |
 | --- | --- |
-| **[apply](/src/cmd/apply.rs#L10)** | Apply series of string transformations to a CSV column. _**(NEW)**_ |
+| **[apply](/src/cmd/apply.rs#L11)** | Apply series of string transformations to a CSV column. _**(NEW)**_ |
 | **[behead](/src/cmd/behead.rs#L7)** | Drop headers from CSV file. _**(NEW)**_ |
 | **[cat](/src/cmd/cat.rs#L7)** | Concatenate CSV files by row or by column. |
 | **[count](/src/cmd/count.rs#L7)**[^1] | Count the rows in a CSV file. (Instantaneous with an index.) |
@@ -42,7 +42,7 @@ Available commands
 | **[headers](/src/cmd/headers.rs#L11)** | Show the headers of CSV data. Or show the intersection of all headers between many CSV files. |
 | **[index](/src/cmd/index.rs#L13)** | Create an index for a CSV file. This is very quick and provides constant time indexing into the CSV file. |
 | **[input](/src/cmd/input.rs#L7)** | Read CSV data with exotic quoting/escaping rules. |
-| **[join](/src/cmd/join.rs#L18)**[^1] | Inner, outer and cross joins. Uses a simple hash index to make it fast. |
+| **[join](/src/cmd/join.rs#L18)**[^1] | Inner, outer and cross joins. Uses a simple hash index to make it fast. _**(EXTENDED)**_ |
 | **[jsonl](/src/cmd/jsonl.rs#L11)** | Convert newline-delimited JSON to CSV. _**(NEW)**_
 | **[lua](/src/cmd/lua.rs#L14)** | Execute a Lua script over CSV lines to transform, aggregate or filter them. _**(NEW)**_ |
 | **[partition](/src/cmd/partition.rs#L16)** | Partition CSV data based on a column value. |
@@ -51,10 +51,10 @@ Available commands
 | **[replace](/src/cmd/replace.rs#L11)** | Replace CSV data using a regex. _**(NEW)**_ |
 | **[reverse](/src/cmd/reverse.rs#L7)**[^2] | Reverse order of rows in CSV data. _**(NEW)**_ |
 | **[sample](/src/cmd/sample.rs#L15)**[^1] | Randomly draw rows from CSV data using reservoir sampling (i.e., use memory proportional to the size of the sample). _**(EXTENDED)**_ |
-| **[search](/src/cmd/search.rs#L10)** | Run a regex over CSV data. Applies the regex to each field individually and shows only matching rows. |
+| **[search](/src/cmd/search.rs#L10)** | Run a regex over CSV data. Applies the regex to each field individually and shows only matching rows. _**(EXTENDED)**_ |
 | **[select](/src/cmd/select.rs#L8)**[^1] | Select or re-order columns from CSV data. _**(EXTENDED)**_ |
 | **[slice](/src/cmd/slice.rs#L10)**[^1][^2] | Slice rows from any part of a CSV file. When an index is present, this only has to parse the rows in the slice (instead of all rows leading up to the start of the slice). |
-| **[sort](/src/cmd/sort.rs#L13)** | Sort CSV data. |
+| **[sort](/src/cmd/sort.rs#L13)** | Sort CSV data. _**(EXTENDED)**_ |
 | **[split](/src/cmd/split.rs#L14)**[^1][^3] | Split one CSV file into many CSV files of N chunks. |
 | **[stats](/src/cmd/stats.rs#L23)**[^1][^2][^3] | Show basic types and statistics of each column in the CSV file. (i.e., mean, standard deviation, variance, median, min/max, nullcount, etc.) _**(EXTENDED)**_ |
 | **[table](/src/cmd/table.rs#L12)**[^2] | Show aligned output of any CSV data using [elastic tabstops](https://github.com/BurntSushi/tabwriter). _**(EXTENDED)**_ |
