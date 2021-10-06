@@ -3,7 +3,7 @@ name: Publish
 on:
   push:
     tags:
-      - '[0-9]+.[0-9]+.[0-9]+'
+      - '*'
   workflow_dispatch:
 
 jobs:
@@ -19,48 +19,48 @@ jobs:
             target: x86_64-unknown-linux-gnu
             architecture: x86_64
             artifact_name: qsv
-            asset_name: qsv-${{ github.ref }}-${{ matrix.job.target }}.zip
+            asset_name: qsv-${{ github.ref }}-x86_64-unknown-linux-gnu.zip
             use-cross: false
           - os: ubuntu-latest
             os-name: linux
             target: i686-unknown-linux-gnu
             architecture: i686
             artifact_name: qsv
-            asset_name: qsv-${{ github.ref }}-${{ matrix.job.target }}.zip
+            asset_name: qsv-${{ github.ref }}-i686-unknown-linux-gnu.zip
             use-cross: true
           - os: windows-latest
             os-name: windows
             target: x86_64-pc-windows-msvc
             architecture: x86_64
             artifact_name: qsv.exe
-            asset_name: qsv-${{ github.ref }}${{ matrix.job.target }}.zip
+            asset_name: qsv-${{ github.ref }}-x86_64-pc-windows-msvc.zip
             use-cross: false
           - os: windows-latest
             os-name: windows
             target: i686_64-pc-windows-msvc
             architecture: i686
             artifact_name: qsv.exe
-            asset_name: qsv-${{ github.ref }}-${{ matrix.job.target }}.zip
+            asset_name: qsv-${{ github.ref }}-i686_64-pc-windows-msvc.zip
             use-cross: true
             os-name: windows
             target: x86_64-pc-windows-gnu
             architecture: x86_64
             artifact_name: qsv.exe
-            asset_name: qsv-${{ github.ref }}-${{ matrix.job.target }}.zip
+            asset_name: qsv-${{ github.ref }}-x86_64-pc-windows-gnu.zip
             use-cross: false
           - os: windows-latest
             os-name: windows
             target: i686_64-pc-windows-gnu
             architecture: i686
             artifact_name: qsv.exe
-            asset_name: qsv-${{ github.ref }}-${{ matrix.job.target }}.zip
+            asset_name: qsv-${{ github.ref }}-i686_64-pc-windows-gnu.zip
             use-cross: true
           - os: macos-latest
             os-name: macos
             target: x86_64-apple-darwin
             architecture: x86_64
             artifact_name: qsv
-            asset_name: qsv-${{ github.ref }}-${{ matrix.job.target }}.zip
+            asset_name: qsv-${{ github.ref }}-x86_64-apple-darwin.zip
             use-cross: false
 
     steps:
