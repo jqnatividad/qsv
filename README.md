@@ -14,6 +14,7 @@ and joining CSV files. Commands should be simple, fast and composable:
 * [Available Commands](#available-commands)
 * [Installation](#installation)
 * [Whirlwind Tour](docs/whirlwind_tour.md)
+* [Cookbook](https://github.com/jqnatividad/qsv/wiki)
 * [Benchmarks](#benchmarks)
 * [License](#license)
 
