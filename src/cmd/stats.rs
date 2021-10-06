@@ -29,6 +29,10 @@ must be enabled explicitly. By default, the following statistics are reported fo
 The default set of statistics corresponds to statistics that can be computed
 efficiently on a stream of data (i.e., constant memory).
 
+The data type of each column is also inferred (Unknown, NULL, Integer, Unicode,
+Float and Date). The date formats recognized can be found at
+https://docs.rs/dateparser/0.1.5/dateparser/#accepted-date-formats.
+
 Computing statistics on a large file can be made much faster if you create
 an index for it first with 'qsv index'.
 
