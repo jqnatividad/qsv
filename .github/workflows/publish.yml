@@ -99,10 +99,7 @@ jobs:
         toolchain: ${{ matrix.rust }}
         args: --release --target ${{ matrix.job.target }}
     - name: Zip up binaries
-      run: |
-        cd target/release
-        7z a -tzip ${{ matrix.job.asset_name }} ${{ matrix.job.artifact_name }}
-        cd ../..
+      run: 7z a -tzip target/release/${{ matrix.job.asset_name }} target/release/${{ matrix.job.artifact_name }}
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v2
       with:
