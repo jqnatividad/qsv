@@ -37,10 +37,10 @@ jobs:
             use-cross: false
           - os: windows-latest
             os-name: windows
-            target: i686_64-pc-windows-msvc
+            target: i686-pc-windows-msvc
             architecture: i686
             artifact_name: qsv.exe
-            asset_name: qsv-${{ github.ref }}-i686_64-pc-windows-msvc.zip
+            asset_name: qsv-${{ github.ref }}-i686-pc-windows-msvc.zip
             use-cross: true
           - os: windows-latest            
             os-name: windows
@@ -51,10 +51,10 @@ jobs:
             use-cross: false
           - os: windows-latest
             os-name: windows
-            target: i686_64-pc-windows-gnu
+            target: i686-pc-windows-gnu
             architecture: i686
             artifact_name: qsv.exe
-            asset_name: qsv-${{ github.ref }}-i686_64-pc-windows-gnu.zip
+            asset_name: qsv-${{ github.ref }}-i686-pc-windows-gnu.zip
             use-cross: true
           - os: macos-latest
             os-name: macos
