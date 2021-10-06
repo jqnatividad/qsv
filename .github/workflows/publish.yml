@@ -19,49 +19,49 @@ jobs:
             target: x86_64-unknown-linux-gnu
             architecture: x86_64
             artifact_name: qsv
-            asset_name: qsv-${{ steps.previoustag }}-${{ matrix.job.target }}.zip
+            asset_name: qsv-${{ steps.previoustag.outputs.tag }}-${{ matrix.job.target }}.zip
             use-cross: false
           - os: ubuntu-latest
             os-name: linux
             target: i686-unknown-linux-gnu
             architecture: i686
             artifact_name: qsv
-            asset_name: qsv-${{ steps.previoustag }}-${{ matrix.job.target }}.zip
+            asset_name: qsv-${{ steps.previoustag.outputs.tag }}-${{ matrix.job.target }}.zip
             use-cross: true
           - os: windows-latest
             os-name: windows
             target: x86_64-pc-windows-msvc
             architecture: x86_64
             artifact_name: qsv.exe
-            asset_name: qsv-${{ steps.previoustag }}-${{ matrix.job.target }}.zip
+            asset_name: qsv-${{ steps.previoustag.outputs.tag }}-${{ matrix.job.target }}.zip
             use-cross: false
           - os: windows-latest
             os-name: windows
             target: i686-pc-windows-msvc
             architecture: i686
             artifact_name: qsv.exe
-            asset_name: qsv-${{ steps.previoustag }}-${{ matrix.job.target }}.zip
+            asset_name: qsv-${{ steps.previoustag.outputs.tag }}-${{ matrix.job.target }}.zip
             use-cross: true
           - os: windows-latest            
             os-name: windows
             target: x86_64-pc-windows-gnu
             architecture: x86_64
             artifact_name: qsv.exe
-            asset_name: qsv-${{ steps.previoustag }}-${{ matrix.job.target }}.zip
+            asset_name: qsv-${{ steps.previoustag.outputs.tag }}-${{ matrix.job.target }}.zip
             use-cross: false
           - os: windows-latest
             os-name: windows
             target: i686-pc-windows-gnu
             architecture: i686
             artifact_name: qsv.exe
-            asset_name: qsv-${{ steps.previoustag }}-${{ matrix.job.target }}.zip
+            asset_name: qsv-${{ steps.previoustag.outputs.tag }}-${{ matrix.job.target }}.zip
             use-cross: true
           - os: macos-latest
             os-name: macos
             target: x86_64-apple-darwin
             architecture: x86_64
             artifact_name: qsv
-            asset_name: qsv-${{ steps.previoustag }}-${{ matrix.job.target }}.zip
+            asset_name: qsv-${{ steps.previoustag.outputs.tag }}-${{ matrix.job.target }}.zip
             use-cross: false
 
     steps:
@@ -97,4 +97,4 @@ jobs:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         file: target/release/${{ matrix.job.asset_name }}
         asset_name: ${{ matrix.job.asset_name }}
-        tag: ${{ steps.previoustag }}
+        tag: ${{ steps.previoustag.outputs.tag }}
