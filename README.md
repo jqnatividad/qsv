@@ -4,7 +4,7 @@ qsv: Ultra-fast, data-wrangling CLI toolkit for CSVs
 [![Windows build status](https://github.com/jqnatividad/qsv/actions/workflows/rust-windows.yml/badge.svg)](https://github.com/jqnatividad/qsv/actions/workflows/rust-windows.yml)
 [![macOS build status](https://github.com/jqnatividad/qsv/actions/workflows/rust-macos.yml/badge.svg)](https://github.com/jqnatividad/qsv/actions/workflows/rust-macos.yml)   
 qsv is a command line program for indexing, slicing, analyzing, splitting
-and joining CSV files. Commands should be simple, fast and composable:
+and joining CSV/TSV files. Commands should be simple, fast and composable:
 
 1. Simple tasks should be easy.
 2. Performance trade offs should be exposed in the CLI interface.
@@ -26,7 +26,7 @@ Available commands
 ------------------
 | Command | Description |
 | --- | --- |
-| **[apply](/src/cmd/apply.rs#L11)** | Apply series of string transformations to a CSV column. _**(NEW)**_ |
+| **[apply](/src/cmd/apply.rs#L12)** | Apply series of string, date and geocoding transformations to a CSV column. _**(NEW)**_ |
 | **[behead](/src/cmd/behead.rs#L7)** | Drop headers from CSV file. _**(NEW)**_ |
 | **[cat](/src/cmd/cat.rs#L7)** | Concatenate CSV files by row or by column. |
 | **[count](/src/cmd/count.rs#L7)**[^1] | Count the rows in a CSV file. (Instantaneous with an index.) |
