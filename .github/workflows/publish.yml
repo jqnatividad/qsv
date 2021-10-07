@@ -57,13 +57,6 @@ jobs:
             artifact_name: qsv.exe
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-i686-pc-windows-msvc.zip
             use-cross: true
-          - os: windows-latest            
-            os-name: windows
-            target: x86_64-pc-windows-gnu
-            architecture: x86_64
-            artifact_name: qsv.exe
-            asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-x86_64-pc-windows-gnu.zip
-            use-cross: false
           - os: windows-latest
             os-name: windows
             target: i686-pc-windows-gnu
