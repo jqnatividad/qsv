@@ -11,6 +11,7 @@ keywords = ["csv", "tsv", "slice", "cli", "opendata"]
 license = "Unlicense/MIT"
 autotests = false
 edition = "2018"
+exclude = ["*.zip"]
 
 [[bin]]
 name = "qsv"
