@@ -208,6 +208,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b71991ff56294aa922b450139ee08b3bfc70982c6b2c7562771375cf73542dd4"
 
 [[package]]
+name = "kdtree"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "80ee359328fc9087e9e3fc0a4567c4dd27ec69a127d6a70e8d9dd22845b8b1a2"
+dependencies = [
+ "num-traits",
+]
+
+[[package]]
 name = "lazy_static"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -331,6 +340,7 @@ dependencies = [
  "quickcheck",
  "rand",
  "regex",
+ "reverse_geocoder",
  "rustc_version",
  "serde",
  "serde_json",
@@ -339,6 +349,15 @@ dependencies = [
  "textwrap",
  "threadpool",
  "uuid",
+]
+
+[[package]]
+name = "quick-csv"
+version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "edf4b7701db7d2e4c9c010f21eebd8676a50f79223a0cf858162d24bff47338c"
+dependencies = [
+ "rustc-serialize",
 ]
 
 [[package]]
@@ -432,6 +451,25 @@ name = "regex-syntax"
 version = "0.6.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f497285884f3fcff424ffc933e56d7cbca511def0c9831a7f9b5f6153e3cc89b"
+
+[[package]]
+name = "reverse_geocoder"
+version = "2.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f4f0c838f5a03481d1faa7e5a65f41885ddee48a8afb227840a812ccf93c8b5a"
+dependencies = [
+ "kdtree",
+ "quick-csv",
+ "rustc-serialize",
+ "serde",
+ "serde_derive",
+]
+
+[[package]]
+name = "rustc-serialize"
+version = "0.3.24"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dcf128d1287d2ea9d80910b5f1120d0b8eede3fbf1abe91c40d39ea7d51e6fda"
 
 [[package]]
 name = "rustc_version"

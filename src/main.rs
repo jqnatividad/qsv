@@ -10,6 +10,7 @@ extern crate mimalloc;
 extern crate num_cpus;
 extern crate rand;
 extern crate regex;
+extern crate reverse_geocoder;
 extern crate serde;
 extern crate serde_json;
 extern crate stats;

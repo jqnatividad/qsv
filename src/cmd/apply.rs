@@ -2,6 +2,7 @@ use crate::regex::Regex;
 
 use crate::config::{Config, Delimiter};
 use crate::dateparser::parse;
+use crate::reverse_geocoder::{Locations, ReverseGeocoder};
 use crate::select::SelectColumns;
 use crate::serde::Deserialize;
 use crate::util;
@@ -29,6 +30,8 @@ Currently supported operations:
   * emptyreplace: Replace empty string with <replacement> string
   * datefmt: formats a recognized date column to a specified format.
              Date recognition is powered by https://docs.rs/dateparser/
+  * geocode: Geocodes to the nearest city given a Location column 
+             '(lat, long)' or 'lat, long'
 
 Replace empty strings with 'Unknown' in column Measurement:
 
@@ -50,6 +53,10 @@ You can also use this command to make a copy of a column:
 
   $ qsv apply '' col -c col_copy file.csv
 
+To geocode, use the --new-column option if you want to keep the Location column:
+
+  $ qsv apply geocode Location --new-column City file.csv
+
 Usage:
     qsv apply [options] <operations> <column> [<input>]
     qsv apply --help
@@ -62,6 +69,15 @@ apply options:
     -f, --formatstr <string>    the date format to use when formatting dates. For formats, see
                                 https://docs.rs/chrono/0.4.19/chrono/format/strftime/index.html
                                 (default: '%+')
+
+                                the place format to use when geocoding. The available formats are:
+                                  - 'city-state' (default) - e.g. Brooklyn, New York
+                                  - 'city-state-county' - Brooklyn, New York US
+                                  - 'city' - Brooklyn
+                                  - 'county' - Kings County
+                                  - 'county-country' - Kings County, US
+                                  - 'county-state-country' - Kings County, New York US
+                                  - 'country' - US
 
 Common options:
     -h, --help                  Display this message
@@ -82,6 +98,7 @@ static OPERATIONS: &[&str] = &[
     "ltrim",
     "emptyreplace",
     "datefmt",
+    "geocode",
 ];
 
 #[derive(Deserialize)]
@@ -160,6 +177,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         wtr.write_record(&headers)?;
     }
 
+    let loc = Locations::from_memory();
+    let geocoder = ReverseGeocoder::new(&loc);
+    // validating regex for "lat, long" or "(lat, long)"
+    let locregex = Regex::new(
+        r"^\(?\s*([-+]?[1-8]?\d\.\d+?|90\.0+?),\s*([-+]?(180\.0+?|1[0-7]\d|[1-9]?\d\.\d+?))\s*\)?$",
+    )?;
+
     let squeezer = Regex::new(r"\s+")?;
 
     let mut record = csv::StringRecord::new();
@@ -204,6 +228,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         Err(_) => {}
                     };
                 }
+                "geocode" => {
+                    geocode(&locregex, &mut cell, &geocoder, &formatstr);
+                }
                 _ => {}
             }
         }
@@ -221,4 +248,60 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     Ok(wtr.flush()?)
+}
+
+fn geocode(locregex: &Regex, cell: &mut String, geocoder: &ReverseGeocoder, formatstr: &String) {
+    let loccaps = locregex.captures(&*cell);
+    match loccaps {
+        Some(loccaps) => {
+            let lats = loccaps.get(1).map_or("", |m| m.as_str());
+            let longs = loccaps.get(2).map_or("", |m| m.as_str());
+            let coords =
+                (lats.parse::<f64>().unwrap(), longs.parse::<f64>().unwrap());
+            let search_result = geocoder.search(coords);
+            match search_result {
+                Some(locdetails) => {
+                    *cell = match formatstr.as_str() {
+                        "city-state" | "%+" => format!(
+                            "{name}, {admin1}",
+                            name = locdetails.record.name,
+                            admin1 = locdetails.record.admin1,
+                        ),
+                        "city-state-county" => format!(
+                            "{name}, {admin1} {admin3}",
+                            name = locdetails.record.name,
+                            admin1 = locdetails.record.admin1,
+                            admin3 = locdetails.record.admin3
+                        ),
+                        "city" => format!(
+                            "{name}",
+                            name = locdetails.record.name,
+                        ),
+                        "county" => format!(
+                            "{admin2}",
+                            admin2 = locdetails.record.admin2,
+                        ),
+                        "county-country" => format!(
+                            "{admin2}, {admin3}",
+                            admin2 = locdetails.record.admin2,
+                            admin3 = locdetails.record.admin3
+                        ),
+                        "county-state-country" => format!(
+                            "{admin2}, {admin1} {admin3}",
+                            admin2 = locdetails.record.admin2,
+                            admin1 = locdetails.record.admin1,
+                            admin3 = locdetails.record.admin3
+                        ),
+                        "country" => format!(
+                            "{admin3}",
+                            admin3 = locdetails.record.admin3
+                        ),
+                        _ => "Unknown place format".to_string()
+                    };
+                }
+                None => {}
+            }
+        }
+        None => {}
+    }
 }
