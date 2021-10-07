@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- added `geocode` operation to `apply` command. It does only city-level geocoding given
+a column with coordinates in Location format ('lat, long') using a static geonames lookup file.
+(see https://docs.rs/reverse_geocoder)
+- added `getquarter.lua` helper script to support `lua` example in Cookbook
+
+### Fixed
+- fixed `publish.yml` Github Action workflow to properly create platform specific binaries.
+- fixed variance test to eliminate false positives in macOS.
+
 ## [0.16.3] - 2021-10-06
 ### Added
 - added `docs` directory. For README reorg, and to add detailed examples per command in the future.
