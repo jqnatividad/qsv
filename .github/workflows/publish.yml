@@ -99,4 +99,5 @@ jobs:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         file: ${{ matrix.job.asset_name }}
         asset_name: ${{ matrix.job.asset_name }}
+        overwrite: true
         tag: ${{ needs.analyze-tags.outputs.previous-tag }}
