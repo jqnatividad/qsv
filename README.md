@@ -13,7 +13,7 @@ and joining CSV/TSV files. Commands should be simple, fast and composable:
 
 * [Available Commands](#available-commands)
 * [Installation](#installation)
-* [Whirlwind Tour](docs/whirlwind_tour.md)
+* [Whirlwind Tour](docs/whirlwind_tour.md#a-whirlwind-tour)
 * [Cookbook](https://github.com/jqnatividad/qsv/wiki)
 * [Benchmarks](#benchmarks)
 * [License](#license)
