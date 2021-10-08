@@ -7,10 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- added `geocode` operation to `apply` command. It does only city-level geocoding given
+- added `geocode` operation to `apply` command. It geocodes to the closest city given
 a column with coordinates in Location format ('lat, long') using a static geonames lookup file.
 (see https://docs.rs/reverse_geocoder)
 - added `getquarter.lua` helper script to support `lua` example in Cookbook
+- added `turnaroundtime.lua` helper script to compute turnaround time.
+- added several Date Enrichment and Geocoding recipes to Cookbook.
 
 ### Fixed
 - fixed `publish.yml` Github Action workflow to properly create platform specific binaries.
