@@ -6,13 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.4] - 2021-10-08
 ### Added
 - added `geocode` operation to `apply` command. It geocodes to the closest city given a column   
 with coordinates in Location format ('latitude, longitude') using a static geonames lookup file.   
 (see https://docs.rs/reverse_geocoder)
-- added `getquarter.lua` helper script to support `lua` example in Cookbook
+- added `currencytonum` operation to `apply` command.
+- added `getquarter.lua` helper script to support `lua` example in [Cookbook](https://github.com/jqnatividad/qsv/wiki#cookbook).
 - added `turnaroundtime.lua` helper script to compute turnaround time.
-- added several Date Enrichment and Geocoding recipes to Cookbook.
+- added `nyc311samp.csv` to provide sample data for recipes.
+- added several Date Enrichment and Geocoding recipes to [Cookbook](https://github.com/jqnatividad/qsv/wiki#cookbook).
 
 ### Fixed
 - fixed `publish.yml` Github Action workflow to properly create platform specific binaries.
