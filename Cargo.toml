@@ -51,6 +51,7 @@ textwrap = "0.14.0"
 threadpool = "1.8"
 dateparser = "0.1.5"
 reverse_geocoder = "2"
+currency = "0.4"
 uuid = { version = "0.8.1", features = ["v4"] }
 
 [build-dependencies]

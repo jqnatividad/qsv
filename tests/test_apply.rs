@@ -140,6 +140,53 @@ fn apply_new_column() {
 }
 
 #[test]
+fn apply_currencytonum() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["money"],
+            svec!["$10.00"],
+            svec!["$-10.00"],
+            svec!["$5"],
+            svec!["0"],
+            svec!["5"],
+            svec!["$0.25"],
+            svec!["$ 10.05"],
+            svec!["¥10,000,000.00"],
+            svec!["£423.56"],
+            svec!["€120.00"],
+            svec!["֏99,999.50"],
+            svec!["€300 999,55"],
+            svec!["This is not money. Leave untouched."],
+            svec!["₱1,234,567.89"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("currencytonum").arg("money").arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["money"],
+        svec!["10.00"],
+        svec!["-10.00"],
+        svec!["5.00"],
+        svec!["0"],
+        svec!["5.00"],
+        svec!["0.25"],
+        svec!["10.05"],
+        svec!["10000000.00"],
+        svec!["423.56"],
+        svec!["120.00"],
+        svec!["99999.50"],
+        svec!["300999.55"],
+        svec!["This is not money. Leave untouched."],
+        svec!["1234567.89"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn apply_emptyreplace() {
     let wrk = Workdir::new("apply");
     wrk.create(

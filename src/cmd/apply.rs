@@ -1,6 +1,7 @@
 use crate::regex::Regex;
 
 use crate::config::{Config, Delimiter};
+use crate::currency::Currency;
 use crate::dateparser::parse;
 use crate::reverse_geocoder::{Locations, ReverseGeocoder};
 use crate::select::SelectColumns;
@@ -27,6 +28,7 @@ Currently supported operations:
   * trim: Trim (drop whitespace left & right of the string)
   * ltrim: Left trim
   * rtrim: Right trim
+  * currencytonum: Gets the numeric value of a currency
   * emptyreplace: Replace empty string with <replacement> string
   * datefmt: formats a recognized date column to a specified format.
              Date recognition is powered by https://docs.rs/dateparser/
@@ -96,6 +98,7 @@ static OPERATIONS: &[&str] = &[
     "trim",
     "rtrim",
     "ltrim",
+    "currencytonum",
     "emptyreplace",
     "datefmt",
     "geocode",
@@ -214,6 +217,25 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 "rtrim" => {
                     cell = String::from(cell.trim_end());
                 }
+                "currencytonum" => {
+                    let currency_value = Currency::from_str(&cell);
+                    match currency_value {
+                        Ok(currency_value) => {
+                            // its kludgy as currency is stored as BigInt, with
+                            // 1 currency unit being 100 coins
+                            let currency_coins = currency_value.value();
+                            let coins = format!("{:03}", &currency_coins);
+                            let coinlen = coins.len();
+                            if coinlen > 2 && coins != "000" {
+                                let decpoint = coinlen - 2;
+                                let coin_num = &coins[..decpoint];
+                                let coin_frac = &coins[decpoint..];
+                                cell = format!("{}.{}", coin_num, coin_frac);
+                            }
+                        }
+                        Err(_) => {}
+                    }
+                }
                 "emptyreplace" => {
                     if cell.trim().is_empty() {
                         cell = replacement.to_string();
@@ -256,8 +278,7 @@ fn geocode(locregex: &Regex, cell: &mut String, geocoder: &ReverseGeocoder, form
         Some(loccaps) => {
             let lats = loccaps.get(1).map_or("", |m| m.as_str());
             let longs = loccaps.get(2).map_or("", |m| m.as_str());
-            let coords =
-                (lats.parse::<f64>().unwrap(), longs.parse::<f64>().unwrap());
+            let coords = (lats.parse::<f64>().unwrap(), longs.parse::<f64>().unwrap());
             let search_result = geocoder.search(coords);
             match search_result {
                 Some(locdetails) => {
@@ -273,14 +294,8 @@ fn geocode(locregex: &Regex, cell: &mut String, geocoder: &ReverseGeocoder, form
                             admin1 = locdetails.record.admin1,
                             admin3 = locdetails.record.admin3
                         ),
-                        "city" => format!(
-                            "{name}",
-                            name = locdetails.record.name,
-                        ),
-                        "county" => format!(
-                            "{admin2}",
-                            admin2 = locdetails.record.admin2,
-                        ),
+                        "city" => format!("{name}", name = locdetails.record.name,),
+                        "county" => format!("{admin2}", admin2 = locdetails.record.admin2,),
                         "county-country" => format!(
                             "{admin2}, {admin3}",
                             admin2 = locdetails.record.admin2,
@@ -292,11 +307,8 @@ fn geocode(locregex: &Regex, cell: &mut String, geocoder: &ReverseGeocoder, form
                             admin1 = locdetails.record.admin1,
                             admin3 = locdetails.record.admin3
                         ),
-                        "country" => format!(
-                            "{admin3}",
-                            admin3 = locdetails.record.admin3
-                        ),
-                        _ => "Unknown place format".to_string()
+                        "country" => format!("{admin3}", admin3 = locdetails.record.admin3),
+                        _ => "Unknown place format".to_string(),
                     };
                 }
                 None => {}
