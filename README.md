@@ -17,6 +17,7 @@ and joining CSV/TSV files. Commands should be simple, fast and composable:
 * [Cookbook](https://github.com/jqnatividad/qsv/wiki)
 * [Benchmarks](#benchmarks)
 * [License](#license)
+* [Sponsor](#sponsor)
 
 
 > :warning: **NOTE: qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's release](https://github.com/BurntSushi/xsv/issues/267), along with additional features & commands for data-wrangling (_NEW/EXTENDED_ commands are marked accordingly).**
@@ -111,3 +112,8 @@ various `qsv` commands.
 License
 -------
 Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org).
+
+Sponsor
+-------
+qsv was made possible by **[datHere](https://dathere.com) - Data Infrastructure Engineering.**   
+Standards-based, best-of-breed, open source solutions to make your **Data Useful, Usable & Used.**
