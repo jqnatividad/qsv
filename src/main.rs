@@ -83,7 +83,8 @@ macro_rules! command_list {
     rename      Rename the columns of CSV data efficiently
     replace     Replace patterns in CSV data
     reverse     Reverse rows of CSV data
-    search      Search CSV data with regexes
+    search      Search CSV data with a regex
+    searchset   Search CSV data with a regex set
     select      Select columns from CSV
     slice       Slice records from CSV
     sort        Sort CSV data
@@ -197,6 +198,7 @@ enum Command {
     Reverse,
     Sample,
     Search,
+    SearchSet,
     Select,
     Slice,
     Sort,
@@ -251,6 +253,7 @@ impl Command {
             Command::Reverse => cmd::reverse::run(argv),
             Command::Sample => cmd::sample::run(argv),
             Command::Search => cmd::search::run(argv),
+            Command::SearchSet => cmd::searchset::run(argv),
             Command::Select => cmd::select::run(argv),
             Command::Slice => cmd::slice::run(argv),
             Command::Sort => cmd::sort::run(argv),

@@ -26,6 +26,7 @@ pub mod replace;
 pub mod reverse;
 pub mod sample;
 pub mod search;
+pub mod searchset;
 pub mod select;
 pub mod slice;
 pub mod sort;
