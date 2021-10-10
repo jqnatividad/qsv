@@ -643,7 +643,7 @@ checksum = "f67ad224767faa3c7d8b6d91985b78e70a1324408abcb1cfcc2be4c06bc06043"
 
 [[package]]
 name = "streaming-stats"
-version = "0.2.3"
+version = "0.3.1"
 dependencies = [
  "num-traits",
 ]
