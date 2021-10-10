@@ -76,6 +76,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
       with:
+        submodules: recursive
         ref: ${{ needs.analyze-tags.outputs.previous-tag }}
     - name: Cargo build
       uses: actions-rs/cargo@v1
