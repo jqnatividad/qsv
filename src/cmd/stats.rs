@@ -52,6 +52,8 @@ stats options:
     --median               Show the median.
                            This requires storing all CSV data in memory.
     --nullcount            Show the number of NULLs.
+    --quartiles            Show the quartiles.
+                           This requires storing all CSV data in memory.
     --nulls                Include NULLs in the population size for computing
                            mean and standard deviation.
     -j, --jobs <arg>       The number of jobs to run in parallel.
@@ -80,6 +82,7 @@ struct Args {
     flag_mode: bool,
     flag_cardinality: bool,
     flag_median: bool,
+    flag_quartiles: bool,
     flag_nulls: bool,
     flag_nullcount: bool,
     flag_jobs: usize,
@@ -221,7 +224,8 @@ impl Args {
             dist: true,
             cardinality: self.flag_cardinality || self.flag_everything,
             nullcount: self.flag_nullcount || self.flag_everything,
-            median: self.flag_median || self.flag_everything,
+            median: self.flag_median && !self.flag_quartiles && !self.flag_everything,
+            quartiles: self.flag_quartiles || self.flag_everything,
             mode: self.flag_mode || self.flag_everything,
         }))
         .take(record_len)
@@ -242,8 +246,13 @@ impl Args {
             "variance",
         ];
         let all = self.flag_everything;
-        if self.flag_median || all {
+        if self.flag_median && !self.flag_quartiles && !all {
             fields.push("median");
+        }
+        if self.flag_quartiles || all {
+            fields.push("q1");
+            fields.push("q2");
+            fields.push("q3");
         }
         if self.flag_mode || all {
             fields.push("mode");
@@ -267,6 +276,7 @@ struct WhichStats {
     cardinality: bool,
     nullcount: bool,
     median: bool,
+    quartiles: bool,
     mode: bool,
 }
 
@@ -285,6 +295,7 @@ struct Stats {
     mode: Option<Unsorted<Vec<u8>>>,
     median: Option<Unsorted<f64>>,
     nullcount: u64,
+    quartiles: Option<Unsorted<f64>>,
     which: WhichStats,
 }
 
@@ -307,6 +318,9 @@ impl Stats {
         if which.median {
             median = Some(Default::default());
         }
+        if which.quartiles {
+            quartiles = Some(Default::default());
+        }
         Stats {
             typ: Default::default(),
             sum,
@@ -315,6 +329,7 @@ impl Stats {
             mode,
             median,
             nullcount: 0,
+            quartiles: quartiles,
             which,
         }
     }
@@ -356,12 +371,21 @@ impl Stats {
                     }
                 } else {
                     let n = from_bytes::<f64>(sample).unwrap();
-                    if let Some(v) = self.median.as_mut() {
+                    // if let Some(v) = self.median.as_mut() {
+                    //     v.add(n);
+                    // };
+                    // if let Some(v) = self.online.as_mut() {
+                    //     v.add(n);
+                    // };
+                    self.median.as_mut().map(|v| {
                         v.add(n);
-                    };
-                    if let Some(v) = self.online.as_mut() {
+                    });
+                    self.quartiles.as_mut().map(|v| {
                         v.add(n);
-                    };
+                    });
+                    self.online.as_mut().map(|v| {
+                        v.add(n);
+                    });
                 }
             }
             TDate => {}
@@ -432,6 +456,20 @@ impl Stats {
                 pieces.push(v.to_string());
             }
         }
+        match self.quartiles.as_mut().and_then(|v| v.quartiles()) {
+            None => {
+                if self.which.quartiles {
+                    pieces.push(empty());
+                    pieces.push(empty());
+                    pieces.push(empty());
+                }
+            }
+            Some((q1, q2, q3)) => {
+                pieces.push(q1.to_string());
+                pieces.push(q2.to_string());
+                pieces.push(q3.to_string());
+            }
+        }
         match self.mode.as_mut() {
             None => {
                 if self.which.mode {
@@ -468,6 +506,7 @@ impl Commute for Stats {
         self.mode.merge(other.mode);
         self.median.merge(other.median);
         self.nullcount += other.nullcount;
+        self.quartiles.merge(other.quartiles);
         self.which.merge(other.which);
     }
 }
