@@ -18,7 +18,7 @@ extern crate reverse_geocoder;
 extern crate serde;
 extern crate serde_json;
 extern crate tabwriter;
-extern crate textwrap;
+//extern crate textwrap;
 extern crate threadpool;
 extern crate uuid;
 
