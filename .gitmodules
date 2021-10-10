@@ -1,3 +1,0 @@
-[submodule "rust-stats"]
-	path = rust-stats
-	url = https://github.com/jqnatividad/rust-stats.git
