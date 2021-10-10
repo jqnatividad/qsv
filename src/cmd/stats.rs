@@ -371,12 +371,6 @@ impl Stats {
                     }
                 } else {
                     let n = from_bytes::<f64>(sample).unwrap();
-                    // if let Some(v) = self.median.as_mut() {
-                    //     v.add(n);
-                    // };
-                    // if let Some(v) = self.online.as_mut() {
-                    //     v.add(n);
-                    // };
                     self.median.as_mut().map(|v| {
                         v.add(n);
                     });
