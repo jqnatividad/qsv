@@ -2,7 +2,8 @@ use crate::regex::Regex;
 
 use crate::config::{Config, Delimiter};
 use crate::currency::Currency;
-use crate::dateparser::parse;
+use crate::chrono::prelude::*;
+use crate::dateparser::parse_with;
 use crate::reverse_geocoder::{Locations, ReverseGeocoder};
 use crate::select::SelectColumns;
 use crate::serde::Deserialize;
@@ -116,6 +117,10 @@ struct Args {
     flag_output: Option<String>,
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
+}
+
+lazy_static! {
+    static ref MIDNIGHT: chrono::NaiveTime = NaiveTime::from_hms(0, 0, 0);
 }
 
 pub fn replace_column_value(
@@ -242,10 +247,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     }
                 }
                 "datefmt" => {
-                    let parsed_date = parse(&cell);
+                    let parsed_date = parse_with(&cell, &Utc, *MIDNIGHT);
                     match parsed_date {
                         Ok(format_date) => {
-                            cell = format_date.format(&formatstr).to_string();
+                            let formatted_date = format_date.format(&formatstr).to_string();
+                            if formatted_date.ends_with("T00:00:00+00:00") {
+                                cell = formatted_date[..10].to_string();
+                            } else {
+                                cell = formatted_date;
+                            }
                         }
                         Err(_) => {}
                     };

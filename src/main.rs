@@ -3,10 +3,13 @@ extern crate crossbeam_channel as channel;
 extern crate csv;
 extern crate csv_index;
 extern crate currency;
+extern crate chrono;
 extern crate dateparser;
 extern crate docopt;
 extern crate filetime;
 extern crate hlua;
+#[macro_use]
+extern crate lazy_static;
 extern crate mimalloc;
 extern crate num_cpus;
 extern crate rand;

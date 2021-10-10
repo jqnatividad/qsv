@@ -135,9 +135,9 @@ dependencies = [
 
 [[package]]
 name = "dateparser"
-version = "0.1.5"
+version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "30b7e4a525ed9380db27c945fac1b6ca6762c533fb37c48fcf27238dbee4f6b4"
+checksum = "81dcee48ba66b79ba92dab399f218228f98c5d601ca85127fbc1ad60caf237d8"
 dependencies = [
  "anyhow",
  "chrono",
@@ -401,6 +401,7 @@ name = "qsv"
 version = "0.17.1"
 dependencies = [
  "byteorder",
+ "chrono",
  "crossbeam-channel",
  "csv",
  "csv-index",
@@ -409,6 +410,7 @@ dependencies = [
  "docopt",
  "filetime",
  "hlua",
+ "lazy_static",
  "log",
  "mimalloc",
  "num_cpus",
