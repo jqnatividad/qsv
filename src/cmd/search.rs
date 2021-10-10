@@ -24,6 +24,9 @@ search options:
     -s, --select <arg>     Select the columns to search. See 'qsv select -h'
                            for the full syntax.
     -v, --invert-match     Select only rows that did not match
+    -u, --unicode          Enable unicode support. When enabled, character classes
+                           will match all unicode word characters instead of only
+                           ASCII word characters. Decreases performance.    
 
 Common options:
     -h, --help             Display this message
@@ -47,6 +50,7 @@ struct Args {
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
     flag_invert_match: bool,
+    flag_unicode: bool,
     flag_ignore_case: bool,
     flag_flag: Option<String>,
 }
@@ -55,6 +59,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
     let pattern = RegexBuilder::new(&*args.arg_regex)
         .case_insensitive(args.flag_ignore_case)
+        .unicode(args.flag_unicode)
         .build()?;
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)

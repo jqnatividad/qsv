@@ -26,6 +26,9 @@ replace options:
                            prefixing the regex with '(?i)'.
     -s, --select <arg>     Select the columns to search. See 'qsv select -h'
                            for the full syntax.
+    -u, --unicode          Enable unicode support. When enabled, character classes
+                           will match all unicode word characters instead of only
+                           ASCII word characters. Decreases performance.                            
 
 Common options:
     -h, --help             Display this message
@@ -43,6 +46,7 @@ struct Args {
     arg_pattern: String,
     arg_replacement: String,
     flag_select: SelectColumns,
+    flag_unicode: bool,
     flag_output: Option<String>,
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
@@ -53,6 +57,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
     let pattern = RegexBuilder::new(&*args.arg_pattern)
         .case_insensitive(args.flag_ignore_case)
+        .unicode(args.flag_unicode)
         .build()?;
     let replacement = args.arg_replacement.as_bytes();
     let rconfig = Config::new(&args.arg_input)
