@@ -115,6 +115,7 @@ fn get_field_value(wrk: &Workdir, cmd: &mut process::Command, field: &str) -> St
     if field == "median" {
         cmd.arg("--median");
     }
+    if field == "quartiles" { cmd.arg("--quartiles"); }
     if field == "cardinality" {
         cmd.arg("--cardinality");
     }
@@ -124,10 +125,25 @@ fn get_field_value(wrk: &Workdir, cmd: &mut process::Command, field: &str) -> St
 
     let mut rows: Vec<Vec<String>> = wrk.read_stdout(cmd);
     let headers = rows.remove(0);
+    let mut sequence: Vec<&str> = vec![];
     for row in rows.iter() {
         for (h, val) in headers.iter().zip(row.iter()) {
-            if &**h == field {
-                return val.clone();
+            match field {
+                "quartiles" => {
+                    match &**h {
+                        "q1" | "q2" => {
+                            sequence.push(val);
+                        },
+                        "q3" => {
+                            sequence.push(val);
+                            return sequence.join(",").clone();
+                        },
+                        _ => {},
+                    }
+                },
+                _ => {
+                    if &**h == field { return val.clone(); }
+                },
             }
         }
     }
@@ -188,12 +204,14 @@ stats_tests!(stats_no_mean, "mean", &["a"], "");
 stats_tests!(stats_no_stddev, "stddev", &["a"], "");
 stats_tests!(stats_no_variance, "variance", &["a"], "");
 stats_tests!(stats_no_median, "median", &["a"], "");
+stats_tests!(stats_no_quartiles, "quartiles", &["a"], ",,");
 stats_tests!(stats_no_mode, "mode", &["a", "b"], "N/A");
 
 stats_tests!(stats_null_mean, "mean", &[""], "");
 stats_tests!(stats_null_stddev, "stddev", &[""], "");
 stats_tests!(stats_null_variance, "variance", &[""], "");
 stats_tests!(stats_null_median, "median", &[""], "");
+stats_tests!(stats_null_quartiles, "quartiles", &[""], ",,");
 stats_tests!(stats_null_mode, "mode", &[""], "N/A");
 
 stats_tests!(stats_includenulls_null_mean, "mean", &[""], "", true);
@@ -206,6 +224,7 @@ stats_tests!(
     true
 );
 stats_tests!(stats_includenulls_null_median, "median", &[""], "", true);
+stats_tests!(stats_includenulls_null_quartiles, "quartiles", &[""], ",,", true);
 stats_tests!(stats_includenulls_null_mode, "mode", &[""], "N/A", true);
 
 stats_tests!(
@@ -284,6 +303,11 @@ stats_tests!(
     "2.5"
 );
 stats_tests!(stats_median_mix, "median", &["1", "2.5", "3"], "2.5");
+stats_tests!(stats_quartiles, "quartiles", &["1", "2", "3"], "1,2,3");
+stats_tests!(stats_quartiles_null, "quartiles", &["", "1", "2", "3"], "1,2,3");
+stats_tests!(stats_quartiles_even, "quartiles", &["1", "2", "3", "4"], "1.5,2.5,3.5");
+stats_tests!(stats_quartiles_even_null, "quartiles", &["", "1", "2", "3", "4"], "1.5,2.5,3.5");
+stats_tests!(stats_quartiles_mix, "quartiles", &["1", "2.0", "3", "4"], "1.5,2.5,3.5");
 
 stats_tests!(stats_nullcount, "nullcount", &["", "1", "2"], "1");
 stats_tests!(stats_nullcount_none, "nullcount", &["a", "1", "2"], "0");
@@ -320,6 +344,11 @@ mod stats_zero_mean {
 mod stats_zero_median {
     use super::test_stats;
     stats_test_headers!(stats_zero_median, "median", &[], "");
+}
+
+mod stats_zero_quartiles {
+    use super::test_stats;
+    stats_test_headers!(stats_zero_quartiles, "quartiles", &[], ",,");
 }
 
 mod stats_header_fields {
