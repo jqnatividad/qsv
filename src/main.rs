@@ -14,12 +14,12 @@ extern crate regex;
 extern crate reverse_geocoder;
 extern crate serde;
 extern crate serde_json;
-extern crate stats;
 extern crate tabwriter;
 extern crate textwrap;
 extern crate threadpool;
 extern crate uuid;
 
+use stats;
 use std::borrow::ToOwned;
 use std::env;
 use std::fmt;
