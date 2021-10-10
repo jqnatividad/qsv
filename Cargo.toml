@@ -1,6 +1,6 @@
 [package]
 name = "qsv"
-version = "0.16.4"  #:version
+version = "0.17.1"  #:version
 authors = ["Joel Natividad <joel@datHere.com>"]
 description = "A high performance CSV command line toolkit."
 documentation = "https://github.com/jqnatividad/qsv"
@@ -50,7 +50,7 @@ rand = "0.7"
 regex = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1.0"
-streaming-stats = { path = "rust-stats"}
+streaming-stats = { version="0.3.1", path = "rust-stats"}
 tabwriter = "1.2"
 textwrap = "0.14.0"
 threadpool = "1.8"
