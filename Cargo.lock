@@ -412,6 +412,7 @@ dependencies = [
  "log",
  "mimalloc",
  "num_cpus",
+ "qsv-stats",
  "quickcheck",
  "rand 0.7.3",
  "regex",
@@ -419,11 +420,19 @@ dependencies = [
  "rustc_version",
  "serde",
  "serde_json",
- "streaming-stats",
  "tabwriter",
  "textwrap",
  "threadpool",
  "uuid",
+]
+
+[[package]]
+name = "qsv-stats"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8b6713c938d0235ee39da9069ea81f03af510bc6f44a7c098da13922a1927b4b"
+dependencies = [
+ "num-traits",
 ]
 
 [[package]]
@@ -640,13 +649,6 @@ name = "smawk"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f67ad224767faa3c7d8b6d91985b78e70a1324408abcb1cfcc2be4c06bc06043"
-
-[[package]]
-name = "streaming-stats"
-version = "0.3.1"
-dependencies = [
- "num-traits",
-]
 
 [[package]]
 name = "strsim"

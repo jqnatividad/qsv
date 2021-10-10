@@ -19,11 +19,6 @@ test = false
 bench = false
 doctest = false
 
-[workspace]
-members = [
-    "rust-stats",
-]
-
 [[test]]
 name = "tests"
 
@@ -50,7 +45,7 @@ rand = "0.7"
 regex = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1.0"
-streaming-stats = { version="0.3.1", path = "rust-stats"}
+qsv-stats = "0.3"
 tabwriter = "1.2"
 textwrap = "0.14.0"
 threadpool = "1.8"
