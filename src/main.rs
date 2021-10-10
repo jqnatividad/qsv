@@ -19,7 +19,6 @@ extern crate textwrap;
 extern crate threadpool;
 extern crate uuid;
 
-use stats;
 use std::borrow::ToOwned;
 use std::env;
 use std::fmt;
