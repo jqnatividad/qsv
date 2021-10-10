@@ -11,7 +11,13 @@ use crate::util;
 use crate::CliResult;
 
 static USAGE: &str = "
-Filters CSV data by whether the given regex set file matches a row.
+Filters CSV data by whether the given regex set matches a row.
+
+Unlike the search operation, this allows regex matching of multiple regexes 
+with a single pass.
+
+The regexset-file is a plain text file with multiple regexes, with a regex on 
+each line.
 
 The regex set is applied to each field in each row, and if any field matches,
 then the row is written to the output. The columns to search can be limited
@@ -19,7 +25,7 @@ with the '--select' flag (but the full row is still written to the output if
 there is a match).
 
 Usage:
-    qsv searchset [options] <regexset-file> [<input>]
+    qsv searchset [options] (<regexset-file>) [<input>]
     qsv searchset --help
 
 search options:
@@ -28,6 +34,9 @@ search options:
     -s, --select <arg>     Select the columns to search. See 'qsv select -h'
                            for the full syntax.
     -v, --invert-match     Select only rows that did not match
+    -u, --unicode          Enable unicode support. When enabled, character classes
+                           will match all unicode word characters instead of only
+                           ASCII word characters. Decreases performance.
 
 Common options:
     -h, --help             Display this message
@@ -51,12 +60,13 @@ struct Args {
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
     flag_invert_match: bool,
+    flag_unicode: bool,
     flag_ignore_case: bool,
     flag_flag: Option<String>,
 }
 
 fn read_regexset_file(filename: impl AsRef<Path>) -> Vec<String> {
-    let file = File::open(filename).expect("no such file");
+    let file = File::open(filename).expect("regex set file not found");
     let buf = BufReader::new(file);
     buf.lines()
         .map(|l| l.expect("Could not parse line"))
@@ -70,6 +80,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let pattern = RegexSetBuilder::new(&regexset)
         .case_insensitive(args.flag_ignore_case)
+        .unicode(args.flag_unicode)
         .build()?;
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
