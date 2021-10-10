@@ -301,8 +301,8 @@ struct Stats {
 
 impl Stats {
     fn new(which: WhichStats) -> Stats {
-        let (mut sum, mut minmax, mut online, mut mode, mut median) =
-            (None, None, None, None, None);
+        let (mut sum, mut minmax, mut online, mut mode, mut median, mut quartiles) =
+            (None, None, None, None, None, None);
         if which.sum {
             sum = Some(Default::default());
         }
