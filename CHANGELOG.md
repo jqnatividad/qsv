@@ -6,6 +6,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.0] - 2021-10-10
+### Added
+- added `searchset` command. Run **multiple regexes** over CSV data in a **single pass**.
+- added `--unicode` flag to `search`, `searchset` and `replace` commands.
+Previously, regex unicode support was on by default, which comes at the cost of performance.
+And since `qsv` optimizes for performance ("q is for quick"), it is now off by default.
+- added quartiles calculation to `stats`. Pulled in upstream
+[pending](https://github.com/BurntSushi/rust-stats/pull/15) [PRs](https://github.com/BurntSushi/xsv/pull/273) 
+from [@m15a](https://github.com/m15a) to implement
+
+### Changed
+- changed variance algorithm. For some reason, the previous variance algorithm was causing
+intermittent test failures on macOS. Pulled in [pending upstream PR](https://github.com/BurntSushi/rust-stats/pull/11)
+from [@ruppertmillard](https://github.com/ruppertmillard)
+- embedded [rust-stats fork](https://github.com/jqnatividad/rust-stats) submodule which implements 
+quartile and new variance algorithm.
+- changed GitHub Actions to pull in submodules.
+
+### Fixed
+- the project was not following semver properly, as several new features were released 
+in the 0.16.x series that should have been MINOR version bumps, not PATCH bumps.
+
 ## [0.16.4] - 2021-10-08
 ### Added
 - added `geocode` operation to `apply` command. It geocodes to the closest city given a column   
