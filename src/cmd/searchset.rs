@@ -14,7 +14,7 @@ static USAGE: &str = "
 Filters CSV data by whether the given regex set matches a row.
 
 Unlike the search operation, this allows regex matching of multiple regexes 
-with a single pass.
+in a single pass.
 
 The regexset-file is a plain text file with multiple regexes, with a regex on 
 each line.
