@@ -329,7 +329,7 @@ impl Stats {
             mode,
             median,
             nullcount: 0,
-            quartiles: quartiles,
+            quartiles,
             which,
         }
     }
