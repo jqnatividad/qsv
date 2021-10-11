@@ -18,7 +18,6 @@ extern crate reverse_geocoder;
 extern crate serde;
 extern crate serde_json;
 extern crate tabwriter;
-//extern crate textwrap;
 extern crate threadpool;
 extern crate uuid;
 
@@ -208,7 +207,7 @@ enum Command {
     Stats,
     Table,
     Transpose,
-    #[cfg(target_family = "unix")]
+//    #[cfg(target_family = "unix")]
     ForEach,
 }
 
@@ -263,7 +262,6 @@ impl Command {
             Command::Stats => cmd::stats::run(argv),
             Command::Table => cmd::table::run(argv),
             Command::Transpose => cmd::transpose::run(argv),
-            #[cfg(target_family = "unix")]
             Command::ForEach => cmd::foreach::run(argv),
         }
     }

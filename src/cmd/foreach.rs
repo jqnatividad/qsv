@@ -1,7 +1,7 @@
-#![cfg(target_family = "unix")]
 use crate::regex::bytes::{NoExpand, Regex};
 use std::ffi::OsStr;
 use std::io::BufReader;
+#[cfg(target_family = "unix")]
 use std::os::unix::ffi::OsStrExt;
 use std::process::{Command, Stdio};
 
@@ -12,7 +12,8 @@ use crate::CliResult;
 use serde::Deserialize;
 
 static USAGE: &str = "
-Execute a bash command once per line in given CSV file.
+Execute a bash command once per line in given CSV file. Works only in
+Unix-like environments.
 
 Deleting all files whose filenames are listed in a column:
 
@@ -64,7 +65,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .select(args.arg_column);
 
     if cfg!(windows) {
-        panic!("foreach command does not work on Windows");
+        println!("foreach command does not work on Windows");
+        return Ok(())
     }
 
     let mut rdr = rconfig.reader()?;
@@ -90,7 +92,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         let mut command_pieces = splitter_pattern.find_iter(&templated_command);
 
+        #[cfg(target_family = "unix")]
         let prog = OsStr::from_bytes(command_pieces.next().unwrap().as_bytes());
+        #[cfg(target_family = "windows")]
+        let prog = "dummy var so it compiles on Windows";
 
         let cmd_args: Vec<String> = command_pieces
             .map(|piece| {

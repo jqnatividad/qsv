@@ -10,7 +10,6 @@ pub mod fill;
 pub mod fixlengths;
 pub mod flatten;
 pub mod fmt;
-#[cfg(target_family = "unix")]
 pub mod foreach;
 pub mod frequency;
 pub mod headers;
