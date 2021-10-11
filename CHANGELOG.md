@@ -16,7 +16,7 @@ qsv returns "2020-07-04T00:00:00+00:00". It now returns "2020-07-04".
 ### Removed
 - removed rust-stats submodule introduced in 0.17.1. It turns out
 crates.io does not allow publishing of crates with local dependencies on submodules. 
-Published the modified rust-stats fork it as qsv-stats instead. This allows us to publish
+Published the modified rust-stats fork as qsv-stats instead. This allows us to publish
 qsv on crates.io
 - removed unused `textwrap` dependency
 ## [0.17.1] - 2021-10-10
