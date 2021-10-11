@@ -65,7 +65,7 @@ fn infer_headers(value: &Value) -> Option<Vec<Vec<String>>> {
 
     recurse_to_infer_headers(value, &mut headers, Vec::new());
 
-    return Some(headers);
+    Some(headers)
 }
 
 fn get_value_at_path(value: &Value, path: &Vec<String>) -> Option<Value> {
@@ -82,14 +82,14 @@ fn get_value_at_path(value: &Value, path: &Vec<String>) -> Option<Value> {
         }
     }
 
-    return Some(current.to_owned());
+    Some(current.to_owned())
 }
 
 fn json_line_to_csv_record(value: &Value, headers: &Vec<Vec<String>>) -> csv::StringRecord {
     let mut record = csv::StringRecord::new();
 
     for path in headers {
-        let value = get_value_at_path(&value, &path);
+        let value = get_value_at_path(value, path);
 
         if let Some(value) = value {
             record.push_field(&match value {
@@ -110,7 +110,7 @@ fn json_line_to_csv_record(value: &Value, headers: &Vec<Vec<String>>) -> csv::St
         }
     }
 
-    return record;
+    record
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
