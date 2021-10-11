@@ -1,4 +1,5 @@
 use crate::regex::bytes::{NoExpand, Regex};
+#[allow(unused_imports)]
 use std::ffi::OsStr;
 use std::io::BufReader;
 #[cfg(target_family = "unix")]
@@ -90,6 +91,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .replace_all(&args.arg_command.as_bytes(), current_value)
             .to_vec();
 
+        #[allow(unused_mut)]
         let mut command_pieces = splitter_pattern.find_iter(&templated_command);
 
         #[cfg(target_family = "unix")]
