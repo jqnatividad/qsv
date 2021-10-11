@@ -1,8 +1,8 @@
 use crate::regex::Regex;
 
+use crate::chrono::prelude::*;
 use crate::config::{Config, Delimiter};
 use crate::currency::Currency;
-use crate::chrono::prelude::*;
 use crate::dateparser::parse_with;
 use crate::reverse_geocoder::{Locations, ReverseGeocoder};
 use crate::select::SelectColumns;
@@ -126,7 +126,7 @@ lazy_static! {
 pub fn replace_column_value(
     record: &csv::StringRecord,
     column_index: usize,
-    new_value: &String,
+    new_value: &str,
 ) -> csv::StringRecord {
     record
         .into_iter()
@@ -151,7 +151,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut headers = rdr.headers()?.clone();
 
-    let operations: Vec<&str> = args.arg_operations.split(",").collect();
+    let operations: Vec<&str> = args.arg_operations.split(',').collect();
 
     let mut replacement: String = "None".to_string();
     if !args.flag_replacement.is_empty() {
@@ -164,7 +164,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     for op in &operations {
-        if !OPERATIONS.contains(&op) {
+        if !OPERATIONS.contains(op) {
             return fail!(format!(
                 "Unknown \"{}\" operations found in \"{}\"",
                 op,
@@ -224,21 +224,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 }
                 "currencytonum" => {
                     let currency_value = Currency::from_str(&cell);
-                    match currency_value {
-                        Ok(currency_value) => {
-                            // its kludgy as currency is stored as BigInt, with
-                            // 1 currency unit being 100 coins
-                            let currency_coins = currency_value.value();
-                            let coins = format!("{:03}", &currency_coins);
-                            let coinlen = coins.len();
-                            if coinlen > 2 && coins != "000" {
-                                let decpoint = coinlen - 2;
-                                let coin_num = &coins[..decpoint];
-                                let coin_frac = &coins[decpoint..];
-                                cell = format!("{}.{}", coin_num, coin_frac);
-                            }
+                    if let Ok(currency_val) = currency_value {
+                        // its kludgy as currency is stored as BigInt, with
+                        // 1 currency unit being 100 coins
+                        let currency_coins = currency_val.value();
+                        let coins = format!("{:03}", &currency_coins);
+                        let coinlen = coins.len();
+                        if coinlen > 2 && coins != "000" {
+                            let decpoint = coinlen - 2;
+                            let coin_num = &coins[..decpoint];
+                            let coin_frac = &coins[decpoint..];
+                            cell = format!("{}.{}", coin_num, coin_frac);
                         }
-                        Err(_) => {}
                     }
                 }
                 "emptyreplace" => {
@@ -248,17 +245,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 }
                 "datefmt" => {
                     let parsed_date = parse_with(&cell, &Utc, *MIDNIGHT);
-                    match parsed_date {
-                        Ok(format_date) => {
-                            let formatted_date = format_date.format(&formatstr).to_string();
-                            if formatted_date.ends_with("T00:00:00+00:00") {
-                                cell = formatted_date[..10].to_string();
-                            } else {
-                                cell = formatted_date;
-                            }
+                    if let Ok(format_date) = parsed_date {
+                        let formatted_date = format_date.format(&formatstr).to_string();
+                        if formatted_date.ends_with("T00:00:00+00:00") {
+                            cell = formatted_date[..10].to_string();
+                        } else {
+                            cell = formatted_date;
                         }
-                        Err(_) => {}
-                    };
+                    }
                 }
                 "geocode" => {
                     geocode(&locregex, &mut cell, &geocoder, &formatstr);
@@ -282,48 +276,42 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     Ok(wtr.flush()?)
 }
 
-fn geocode(locregex: &Regex, cell: &mut String, geocoder: &ReverseGeocoder, formatstr: &String) {
+fn geocode(locregex: &Regex, cell: &mut String, geocoder: &ReverseGeocoder, formatstr: &str) {
     let loccaps = locregex.captures(&*cell);
-    match loccaps {
-        Some(loccaps) => {
-            let lats = loccaps.get(1).map_or("", |m| m.as_str());
-            let longs = loccaps.get(2).map_or("", |m| m.as_str());
-            let coords = (lats.parse::<f64>().unwrap(), longs.parse::<f64>().unwrap());
-            let search_result = geocoder.search(coords);
-            match search_result {
-                Some(locdetails) => {
-                    *cell = match formatstr.as_str() {
-                        "city-state" | "%+" => format!(
-                            "{name}, {admin1}",
-                            name = locdetails.record.name,
-                            admin1 = locdetails.record.admin1,
-                        ),
-                        "city-state-county" => format!(
-                            "{name}, {admin1} {admin3}",
-                            name = locdetails.record.name,
-                            admin1 = locdetails.record.admin1,
-                            admin3 = locdetails.record.admin3
-                        ),
-                        "city" => format!("{name}", name = locdetails.record.name,),
-                        "county" => format!("{admin2}", admin2 = locdetails.record.admin2,),
-                        "county-country" => format!(
-                            "{admin2}, {admin3}",
-                            admin2 = locdetails.record.admin2,
-                            admin3 = locdetails.record.admin3
-                        ),
-                        "county-state-country" => format!(
-                            "{admin2}, {admin1} {admin3}",
-                            admin2 = locdetails.record.admin2,
-                            admin1 = locdetails.record.admin1,
-                            admin3 = locdetails.record.admin3
-                        ),
-                        "country" => format!("{admin3}", admin3 = locdetails.record.admin3),
-                        _ => "Unknown place format".to_string(),
-                    };
-                }
-                None => {}
-            }
+    if let Some(loccaps) = loccaps {
+        let lats = loccaps.get(1).map_or("", |m| m.as_str());
+        let longs = loccaps.get(2).map_or("", |m| m.as_str());
+        let coords = (lats.parse::<f64>().unwrap(), longs.parse::<f64>().unwrap());
+        let search_result = geocoder.search(coords);
+        if let Some(locdetails) = search_result {
+            *cell = match formatstr {
+                "city-state" | "%+" => format!(
+                    "{name}, {admin1}",
+                    name = locdetails.record.name,
+                    admin1 = locdetails.record.admin1,
+                ),
+                "city-state-county" => format!(
+                    "{name}, {admin1} {admin3}",
+                    name = locdetails.record.name,
+                    admin1 = locdetails.record.admin1,
+                    admin3 = locdetails.record.admin3
+                ),
+                "city" => locdetails.record.name.to_string(),
+                "county" => locdetails.record.admin2.to_string(),
+                "county-country" => format!(
+                    "{admin2}, {admin3}",
+                    admin2 = locdetails.record.admin2,
+                    admin3 = locdetails.record.admin3
+                ),
+                "county-state-country" => format!(
+                    "{admin2}, {admin1} {admin3}",
+                    admin2 = locdetails.record.admin2,
+                    admin1 = locdetails.record.admin1,
+                    admin3 = locdetails.record.admin3
+                ),
+                "country" => locdetails.record.admin3.to_string(),
+                _ => locdetails.record.name.to_string(),
+            };
         }
-        None => {}
     }
 }
