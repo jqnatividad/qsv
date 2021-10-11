@@ -6,11 +6,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.2] - 2021-10-10
+
+### Changed
+- bumped `dateparser` to 0.1.6. This now allows `apply datefmt` to properly reformat
+dates without a time component. Before, when reformatting a date like "July 4, 2020", 
+qsv returns "2020-07-04T00:00:00+00:00". It now returns "2020-07-04".
+- minor clippy refactoring
+### Removed
+- removed rust-stats submodule introduced in 0.17.1. It turns out
+crates.io does not allow publishing of crates with local dependencies on submodules. 
+Published the modified rust-stats fork it as qsv-stats instead. This allows us to publish
+qsv on crates.io
+- removed unused `textwrap` dependency
 ## [0.17.1] - 2021-10-10
 ### Fixed
-- explicitly specified embedded rust-stats version in Cargo.toml. Required to publish
-on crates.io
-
+- explicitly specified embedded modified rust-stats version in Cargo.toml. 
 ## [0.17.0] - 2021-10-10
 ### Added
 - added `searchset` command. Run **multiple regexes** over CSV data in a **single pass**.
