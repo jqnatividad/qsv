@@ -29,7 +29,7 @@ Available commands
 ------------------
 | Command | Description |
 | --- | --- |
-| **[apply](/src/cmd/apply.rs#L13)** | Apply series of string, date, currency and geocoding transformations to a CSV column. _**(NEW)**_ |
+| **[apply](/src/cmd/apply.rs#L14)** | Apply series of string, date, currency and geocoding transformations to a CSV column. _**(NEW)**_ |
 | **[behead](/src/cmd/behead.rs#L7)** | Drop headers from CSV file. _**(NEW)**_ |
 | **[cat](/src/cmd/cat.rs#L7)** | Concatenate CSV files by row or by column. |
 | **[count](/src/cmd/count.rs#L7)**[^1] | Count the rows in a CSV file. (Instantaneous with an index.) |
