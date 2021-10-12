@@ -66,8 +66,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .select(args.arg_column);
 
     if cfg!(windows) {
-        println!("foreach command does not work on Windows");
-        return Ok(())
+        return fail!("foreach command does not work on Windows.");
     }
 
     let mut rdr = rconfig.reader()?;
