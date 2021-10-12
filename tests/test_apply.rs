@@ -367,7 +367,7 @@ fn apply_geocode() {
         svec!["Manhattan, New York"],
         svec!["Edgewater, New Jersey"],
         svec!["This is not a Location and it will not be geocoded"],
-        svec!["95.213424, 190,1234565"],
+        svec!["95.213424, 190,1234565"], // invalid lat, long
     ];
     assert_eq!(got, expected);
 }
@@ -384,7 +384,7 @@ fn apply_geocode_fmtstring() {
             svec!["( 40.766672, -73.9568128 )"],
             svec!["(40.819342, -73.9532127)"],
             svec!["This is not a Location and it will not be geocoded"],
-            svec!["95.213424, 190,1234565"],
+            svec!["95.213424, 190,1234565"], // invalid lat,long
         ],
     );
     let mut cmd = wrk.command("apply");
@@ -402,7 +402,42 @@ fn apply_geocode_fmtstring() {
         svec!["New York County, US"],
         svec!["Bergen County, US"],
         svec!["This is not a Location and it will not be geocoded"],
-        svec!["95.213424, 190,1234565"],
+        svec!["95.213424, 190,1234565"], // invalid lat,long
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn apply_geocode_fmtstring_intl() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["Location"],
+            svec!["41.390205, 2.154007"],
+            svec!["52.371807, 4.896029"],
+            svec!["( 52.520008, 13.404954 )"],
+            svec!["(14.55027,121.03269)"],
+            svec!["This is not a Location and it will not be geocoded"],
+            svec!["95.213424, 190,1234565"], // invalid lat,long
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("geocode")
+        .arg("Location")
+        .arg("--formatstr")
+        .arg("city-admin1-country")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["Location"],
+        svec!["Barcelona, Catalonia ES"],
+        svec!["Amsterdam, North Holland NL"],
+        svec!["Mitte, Berlin DE"],
+        svec!["Makati City, Metro Manila PH"],
+        svec!["This is not a Location and it will not be geocoded"],
+        svec!["95.213424, 190,1234565"], // invalid lat,long
     ];
     assert_eq!(got, expected);
 }

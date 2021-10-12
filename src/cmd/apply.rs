@@ -75,11 +75,13 @@ apply options:
 
                                 the place format to use when geocoding. The available formats are:
                                   - 'city-state' (default) - e.g. Brooklyn, New York
-                                  - 'city-state-county' - Brooklyn, New York US
+                                  - 'city-country' - Brooklyn, US 
+                                  - 'city-state-county' | 'city-admin1-country' - Brooklyn, New York US
                                   - 'city' - Brooklyn
-                                  - 'county' - Kings County
-                                  - 'county-country' - Kings County, US
-                                  - 'county-state-country' - Kings County, New York US
+                                  - 'county' | 'admin2' - Kings County
+                                  - 'state' | 'admin1' - New York
+                                  - 'county-country' | 'admin2-country' - Kings County, US
+                                  - 'county-state-country' | 'admin2-admin1-country' - Kings County, New York US
                                   - 'country' - US
 
 Common options:
@@ -153,12 +155,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let operations: Vec<&str> = args.arg_operations.split(',').collect();
 
-    let mut replacement: String = "None".to_string();
+    let mut replacement = String::from("None");
     if !args.flag_replacement.is_empty() {
         replacement = args.flag_replacement.to_string();
     }
 
-    let mut formatstr: String = "%+".to_string();
+    let mut formatstr = String::from("%+");
     if !args.flag_formatstr.is_empty() {
         formatstr = args.flag_formatstr.to_string();
     }
@@ -189,7 +191,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let geocoder = ReverseGeocoder::new(&loc);
     // validating regex for "lat, long" or "(lat, long)"
     let locregex = Regex::new(
-        r"^\(?\s*([-+]?[1-8]?\d\.\d+?|90\.0+?),\s*([-+]?(180\.0+?|1[0-7]\d|[1-9]?\d\.\d+?))\s*\)?$",
+        r"([-+]?(?:[1-8]?\d(?:\.\d+)?|90(?:\.0+)?)),\s*([-+]?(?:180(?:\.0+)?|(?:(?:1[0-7]\d)|(?:[1-9]?\d))(?:\.\d+)?))\s*\)?$",
     )?;
 
     let squeezer = Regex::new(r"\s+")?;
@@ -290,20 +292,26 @@ fn geocode(locregex: &Regex, cell: &mut String, geocoder: &ReverseGeocoder, form
                     name = locdetails.record.name,
                     admin1 = locdetails.record.admin1,
                 ),
-                "city-state-county" => format!(
+                "city-country" => format!(
+                    "{name}, {admin3}",
+                    name = locdetails.record.name,
+                    admin3 = locdetails.record.admin3
+                ),
+                "city-state-county" | "city-admin1-country" => format!(
                     "{name}, {admin1} {admin3}",
                     name = locdetails.record.name,
                     admin1 = locdetails.record.admin1,
                     admin3 = locdetails.record.admin3
                 ),
                 "city" => locdetails.record.name.to_string(),
-                "county" => locdetails.record.admin2.to_string(),
-                "county-country" => format!(
+                "county" | "admin2" => locdetails.record.admin2.to_string(),
+                "state" | "admin1" => locdetails.record.admin1.to_string(),
+                "county-country" | "admin2-country" => format!(
                     "{admin2}, {admin3}",
                     admin2 = locdetails.record.admin2,
                     admin3 = locdetails.record.admin3
                 ),
-                "county-state-country" => format!(
+                "county-state-country" | "admin2-admin1-country" => format!(
                     "{admin2}, {admin1} {admin3}",
                     admin2 = locdetails.record.admin2,
                     admin1 = locdetails.record.admin1,
