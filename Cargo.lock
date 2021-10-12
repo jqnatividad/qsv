@@ -398,7 +398,7 @@ dependencies = [
 
 [[package]]
 name = "qsv"
-version = "0.17.2"
+version = "0.17.3"
 dependencies = [
  "byteorder",
  "chrono",
