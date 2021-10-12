@@ -6,6 +6,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.3] - 2021-10-12
+### Added
+- added [sample regexset file](https://github.com/jqnatividad/qsv/commit/d209436b588b88b0f92cc133ebcada726f72a2bd) for PII-screening.
+
+### Changed
+- `apply geocode --formatstr` now accepts less US-centric format selectors.
+- `searchset --flag` now shows which regexes match as a list (e.g. "[1, 3, 5]"), not just "1" or "0".
+### Fixed
+- `foreach` command now returns error message on Windows. `foreach` still doesn't work on 
+Windows (yet), but at least it returns "foreach command does not work on Windows.".
+- `apply geocode` was not accepting valid lat/longs below the equator. Fixed regex validator.
+- more robust `searchset` error handling when attempting to load regexset files.
+- `apply` link on README was off by one. 
 ## [0.17.2] - 2021-10-10
 
 ### Changed
