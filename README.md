@@ -5,8 +5,8 @@ qsv: Ultra-fast, data-wrangling CLI toolkit for CSVs
 [![macOS build status](https://github.com/jqnatividad/qsv/actions/workflows/rust-macos.yml/badge.svg)](https://github.com/jqnatividad/qsv/actions/workflows/rust-macos.yml)
 [![Crates.io](https://img.shields.io/crates/v/qsv.svg)](https://crates.io/crates/qsv)
 [![Rust](https://img.shields.io/badge/rust-1.50.0%2B-blue.svg?maxAge=3600)](https://github.com/jqnatividad/qsv)   
-qsv is a command line program for indexing, slicing, analyzing, splitting
-and joining CSV/TSV files. Commands are simple, fast and composable:
+qsv is a command line program for indexing, slicing, analyzing, splitting, enriching,
+validating and joining CSV/TSV files. Commands are simple, fast and composable:
 
 1. Simple tasks are easy.
 2. Performance trade offs are exposed in the CLI interface.
