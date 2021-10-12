@@ -184,6 +184,7 @@ enum Command {
     FixLengths,
     Flatten,
     Fmt,
+    ForEach,
     Frequency,
     Headers,
     Help,
@@ -207,8 +208,6 @@ enum Command {
     Stats,
     Table,
     Transpose,
-//    #[cfg(target_family = "unix")]
-    ForEach,
 }
 
 impl Command {
