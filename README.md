@@ -21,9 +21,7 @@ and joining CSV/TSV files. Commands are simple, fast and composable:
 * [License](#license)
 * [Sponsor](#sponsor)
 
-
-> :warning: **NOTE: qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's release](https://github.com/BurntSushi/xsv/issues/267), along with additional features & commands for data-wrangling (_NEW/EXTENDED_ commands are marked accordingly).**
-
+> **NOTE: qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's release](https://github.com/BurntSushi/xsv/issues/267), along with additional features & commands for data-wrangling (_NEW/EXTENDED_ commands are marked accordingly).**
 
 Available commands
 ------------------
@@ -61,13 +59,13 @@ Available commands
 | **[slice](/src/cmd/slice.rs#L10)**[^1][^2] | Slice rows from any part of a CSV file. When an index is present, this only has to parse the rows in the slice (instead of all rows leading up to the start of the slice). |
 | **[sort](/src/cmd/sort.rs#L13)** | Sort CSV data. _**(EXTENDED)**_ |
 | **[split](/src/cmd/split.rs#L14)**[^1][^3] | Split one CSV file into many CSV files of N chunks. |
-| **[stats](/src/cmd/stats.rs#L23)**[^1][^2][^3] | Show basic types and statistics of each column in the CSV file. (i.e., mean, standard deviation, variance, median, min/max, nullcount, etc.) _**(EXTENDED)**_ |
+| **[stats](/src/cmd/stats.rs#L23)**[^1][^2][^3] | Show basic types and statistics of each column in the CSV file. (i.e., mean, standard deviation, variance, median, min/max, nullcount, mode, quartiles, etc.) _**(EXTENDED)**_ |
 | **[table](/src/cmd/table.rs#L12)**[^2] | Show aligned output of any CSV data using [elastic tabstops](https://github.com/BurntSushi/tabwriter). _**(EXTENDED)**_ |
 | **[transpose](/src/cmd/transpose.rs#L9)**[^2] | Transpose rows/columns of CSV data. _**(NEW)**_ |
 
-[^1]: uses an index when available
-[^2]: loads the entire CSV into memory. Note that `stats` and `transpose` have modes that do not load the entire CSV into memory.
-[^3]: runs parallel jobs by default (use `--jobs` option to adjust)
+[^1]: uses an index when available   
+[^2]: loads the entire CSV into memory. Note that `stats` and `transpose` have modes that do not load the entire CSV into memory.   
+[^3]: runs parallel jobs by default (use `--jobs` option to adjust)   
 
 Installation
 ------------
