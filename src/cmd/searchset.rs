@@ -1,7 +1,7 @@
 use regex::bytes::RegexSetBuilder;
 
 use std::fs::File;
-use std::io::{prelude::*, BufReader};
+use std::io::{self, prelude::*, BufReader};
 use std::path::Path;
 
 use crate::config::{Config, Delimiter};
@@ -65,18 +65,22 @@ struct Args {
     flag_flag: Option<String>,
 }
 
-fn read_regexset_file(filename: impl AsRef<Path>) -> Vec<String> {
-    let file = File::open(filename).expect("regex set file not found");
-    let buf = BufReader::new(file);
-    buf.lines()
-        .map(|l| l.expect("Could not parse line"))
-        .collect()
+fn read_regexset(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
+    match File::open(filename) {
+        Ok(f) => BufReader::new(f).lines().collect(),
+        Err(_) => {
+            return Err(io::Error::new(
+                io::ErrorKind::NotFound,
+                "Cannot open regexset file.",
+            ))
+        }
+    }
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
-    let regexset = read_regexset_file(&*args.arg_regexset_file);
+    let regexset = read_regexset(&*args.arg_regexset_file)?;
 
     let pattern = RegexSetBuilder::new(&regexset)
         .case_insensitive(args.flag_ignore_case)
@@ -100,15 +104,37 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if !rconfig.no_headers {
         wtr.write_record(&headers)?;
     }
+
+    let mut match_list: String = String::from("");
+    let do_match_list = args.flag_flag.is_some();
+
     let mut record = csv::ByteRecord::new();
     while rdr.read_byte_record(&mut record)? {
-        let mut m = sel.select(&record).any(|f| pattern.is_match(f));
+        let mut m = sel.select(&record).any(|f| {
+            let matched = pattern.is_match(f);
+            if matched && do_match_list {
+                let mut matches: Vec<_> = pattern.matches(f).into_iter().collect();
+                for j in matches.iter_mut() {
+                    *j += 1; // so the list is human readable - i.e. not zero-based
+                }
+                match_list = format!("{:?}", matches);
+            }
+            matched
+        });
         if args.flag_invert_match {
             m = !m;
         }
 
-        if let Some(_) = args.flag_flag {
-            record.push_field(if m { b"1" } else { b"0" });
+        if do_match_list {
+            record.push_field(if m {
+                if args.flag_invert_match {
+                    b"1"
+                } else {
+                    match_list.as_bytes()
+                }
+            } else {
+                b"0"
+            });
             wtr.write_byte_record(&record)?;
         } else if m {
             wtr.write_byte_record(&record)?;

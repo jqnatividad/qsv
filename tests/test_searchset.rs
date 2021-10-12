@@ -214,8 +214,8 @@ fn searchset_flag() {
     let expected = vec![
         svec!["foobar", "barfoo", "flagged"],
         svec!["a", "b", "0"],
-        svec!["barfoo", "foobar", "1"],
-        svec!["is waldo here", "spot", "1"],
+        svec!["barfoo", "foobar", "[1, 2]"],
+        svec!["is waldo here", "spot", "[3]"],
         svec!["Ḟooƀar", "ḃarḟoo", "0"],
         svec!["bleh", "no, Waldo is there", "0"],
     ];
