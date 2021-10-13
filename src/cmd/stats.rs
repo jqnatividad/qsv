@@ -22,16 +22,16 @@ use self::FieldType::{TDate, TFloat, TInteger, TNull, TUnicode, TUnknown};
 static USAGE: &str = "
 Computes basic statistics on CSV data.
 
-Basic statistics includes mean, median, mode, standard deviation, variance, sum,
-max and min values. Note that some statistics are expensive to compute, so they
-must be enabled explicitly. By default, the following statistics are reported for
-*every* column in the CSV data: mean, max, min, standard deviation and variance.
-The default set of statistics corresponds to statistics that can be computed
-efficiently on a stream of data (i.e., constant memory).
+Basic statistics includes sum, min/max, min/max length, mean, stddev, variance,
+quartiles, median, mode, cardinality & nullcount. Note that some statistics are
+expensive to compute, so they must be enabled explicitly. By default, the following
+statistics are reported for *every* column in the CSV data: sum, min/max values,
+min/max length, mean, stddev & variance. The default set of statistics corresponds to
+statistics that can be computed efficiently on a stream of data (i.e., constant memory).
 
 The data type of each column is also inferred (Unknown, NULL, Integer, Unicode,
 Float and Date). The date formats recognized can be found at
-https://docs.rs/dateparser/0.1.5/dateparser/#accepted-date-formats.
+https://docs.rs/dateparser/0.1.6/dateparser/#accepted-date-formats.
 
 Computing statistics on a large file can be made much faster if you create
 an index for it first with 'qsv index'.
@@ -251,7 +251,7 @@ impl Args {
         }
         if self.flag_quartiles || all {
             fields.push("q1");
-            fields.push("q2");
+            fields.push("q2_median");
             fields.push("q3");
         }
         if self.flag_mode || all {

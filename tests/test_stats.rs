@@ -131,7 +131,7 @@ fn get_field_value(wrk: &Workdir, cmd: &mut process::Command, field: &str) -> St
             match field {
                 "quartiles" => {
                     match &**h {
-                        "q1" | "q2" => {
+                        "q1" | "q2_median" => {
                             sequence.push(val);
                         },
                         "q3" => {
