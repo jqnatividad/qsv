@@ -4,9 +4,10 @@ qsv: Ultra-fast, data-wrangling CLI toolkit for CSVs
 [![Windows build status](https://github.com/jqnatividad/qsv/actions/workflows/rust-windows.yml/badge.svg)](https://github.com/jqnatividad/qsv/actions/workflows/rust-windows.yml)
 [![macOS build status](https://github.com/jqnatividad/qsv/actions/workflows/rust-macos.yml/badge.svg)](https://github.com/jqnatividad/qsv/actions/workflows/rust-macos.yml)
 [![Crates.io](https://img.shields.io/crates/v/qsv.svg)](https://crates.io/crates/qsv)
-[![Rust](https://img.shields.io/badge/rust-1.50.0%2B-blue.svg?maxAge=3600)](https://github.com/jqnatividad/qsv)   
+[![Discussions](https://img.shields.io/github/discussions/jqnatividad/qsv)](https://github.com/jqnatividad/qsv/discussions)   
 qsv is a command line program for indexing, slicing, analyzing, splitting, enriching,
-validating and joining CSV/TSV files. Commands are simple, fast and composable:
+validating & joining CSV files.   
+Commands are simple, fast and composable:
 
 1. Simple tasks are easy.
 2. Performance trade offs are exposed in the CLI interface.
@@ -17,9 +18,11 @@ validating and joining CSV/TSV files. Commands are simple, fast and composable:
 * [Installation](#installation)
 * [Whirlwind Tour](docs/whirlwind_tour.md#a-whirlwind-tour)
 * [Cookbook](https://github.com/jqnatividad/qsv/wiki)
+* [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ)
 * [Benchmarks](#benchmarks)
 * [License](#license)
 * [Sponsor](#sponsor)
+* [Naming Collision](#naming-collision)
 
 > **NOTE: qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's release](https://github.com/BurntSushi/xsv/issues/267), along with additional features & commands for data-wrangling (_NEW/EXTENDED_ commands are marked accordingly).**
 
@@ -44,7 +47,7 @@ Available commands
 | **[headers](/src/cmd/headers.rs#L11)** | Show the headers of CSV data. Or show the intersection of all headers between many CSV files. |
 | **[index](/src/cmd/index.rs#L13)** | Create an index for a CSV file. This is very quick and provides constant time indexing into the CSV file. |
 | **[input](/src/cmd/input.rs#L7)** | Read CSV data with exotic quoting/escaping rules. |
-| **[join](/src/cmd/join.rs#L18)**[^1] | Inner, outer and cross joins. Uses a simple hash index to make it fast. _**(EXTENDED)**_ |
+| **[join](/src/cmd/join.rs#L17)**[^1] | Inner, outer and cross joins. Uses a simple hash index to make it fast. _**(EXTENDED)**_ |
 | **[jsonl](/src/cmd/jsonl.rs#L11)** | Convert newline-delimited JSON to CSV. _**(NEW)**_
 | **[lua](/src/cmd/lua.rs#L14)** | Execute a Lua script over CSV lines to transform, aggregate or filter them. _**(NEW)**_ |
 | **[partition](/src/cmd/partition.rs#L16)** | Partition CSV data based on a column value. |
@@ -118,3 +121,8 @@ Sponsor
 -------
 qsv was made possible by **[datHere](https://dathere.com) - Data Infrastructure Engineering.**   
 Standards-based, best-of-breed, open source solutions to make your **Data Useful, Usable & Used.**
+
+Naming Collision
+----------------
+This project is unrelated to [Intel's Quick Sync Video](https://www.intel.com/content/www/us/en/architecture-and-technology/quick-sync-video/quick-sync-video-general.html).
+
