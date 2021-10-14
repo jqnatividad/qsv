@@ -8,8 +8,7 @@ qsv: Ultra-fast, data-wrangling CLI toolkit for CSVs
 [![Discussions](https://img.shields.io/github/discussions/jqnatividad/qsv)](https://github.com/jqnatividad/qsv/discussions)
 [![Docs](https://img.shields.io/badge/wiki-docs-yellowgreen)](https://github.com/jqnatividad/qsv/wiki)   
 qsv is a command line program for indexing, slicing, analyzing, splitting, enriching,
-validating & joining CSV files.   
-Commands are simple, fast and composable:
+validating & joining CSV files. Commands are simple, fast and composable:
 
 1. Simple tasks are easy.
 2. Performance trade offs are exposed in the CLI interface.
@@ -26,7 +25,8 @@ Commands are simple, fast and composable:
 * [Sponsor](#sponsor)
 * [Naming Collision](#naming-collision)
 
-> **NOTE: qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's release](https://github.com/BurntSushi/xsv/issues/267), along with additional features & commands for data-wrangling (_NEW/EXTENDED_ commands are marked accordingly).**
+> **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's release](https://github.com/BurntSushi/xsv/issues/267), along with additional features & commands for data-wrangling. See [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ) for more details.   
+(_**NEW**_ and _**EXTENDED**_ commands are marked accordingly).
 
 Available commands
 ------------------
