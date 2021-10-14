@@ -23,10 +23,10 @@ doctest = false
 name = "tests"
 
 [profile.release]
-lto = "fat"
+lto = true
 codegen-units = 1
 opt-level = 3
-debug = true
+debug = false
 
 [profile.test]
 opt-level = 3
