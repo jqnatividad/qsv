@@ -254,6 +254,7 @@ impl Args {
             fields.push("q1");
             fields.push("q2_median");
             fields.push("q3");
+            fields.push("iqr");
         }
         if self.flag_mode || all {
             fields.push("mode");
@@ -457,12 +458,14 @@ impl Stats {
                     pieces.push(empty());
                     pieces.push(empty());
                     pieces.push(empty());
+                    pieces.push(empty());
                 }
             }
             Some((q1, q2, q3)) => {
                 pieces.push(q1.to_string());
                 pieces.push(q2.to_string());
                 pieces.push(q3.to_string());
+                pieces.push((q3-q1).to_string());
             }
         }
         match self.mode.as_mut() {
