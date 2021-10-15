@@ -53,6 +53,7 @@ dateparser = "0.1.6"
 lazy_static = "1"
 reverse_geocoder = "2"
 currency = "0.4"
+itertools = "0.10"
 uuid = { version = "0.8.1", features = ["v4"] }
 
 [build-dependencies]
@@ -61,4 +62,3 @@ rustc_version = "0.4"
 [dev-dependencies]
 quickcheck = { version = "0.9", default-features = false }
 log = "0.4"
-
