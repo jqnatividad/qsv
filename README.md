@@ -64,7 +64,7 @@ Available commands
 | **[slice](/src/cmd/slice.rs#L10)**[^1][^2] | Slice rows from any part of a CSV file. When an index is present, this only has to parse the rows in the slice (instead of all rows leading up to the start of the slice). |
 | **[sort](/src/cmd/sort.rs#L13)** | Sort CSV data. _**(EXTENDED)**_ |
 | **[split](/src/cmd/split.rs#L14)**[^1][^3] | Split one CSV file into many CSV files of N chunks. |
-| **[stats](/src/cmd/stats.rs#L23)**[^1][^2][^3] | Show basic types and statistics of each column in the CSV file. (i.e., mean, standard deviation, variance, median, min/max, nullcount, mode, quartiles, etc.) _**(EXTENDED)**_ |
+| **[stats](/src/cmd/stats.rs#L24)**[^1][^2][^3] | Show basic types and statistics of each column in the CSV file. (i.e., mean, standard deviation, variance, median, min/max, nullcount, mode, quartiles, etc.) _**(EXTENDED)**_ |
 | **[table](/src/cmd/table.rs#L12)**[^2] | Show aligned output of any CSV data using [elastic tabstops](https://github.com/BurntSushi/tabwriter). _**(EXTENDED)**_ |
 | **[transpose](/src/cmd/transpose.rs#L9)**[^2] | Transpose rows/columns of CSV data. _**(NEW)**_ |
 
