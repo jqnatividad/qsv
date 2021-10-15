@@ -44,6 +44,12 @@ join options:
                            corresponding row in the second data set. When no
                            corresponding row exists, it is padded out with
                            empty fields.
+    --left-anti            Do a 'left anti' join. This returns all rows in
+                           first CSV data set that has no match with the 
+                           second data set.
+    --left-semi            Do a 'left semi' join. This returns all rows in
+                           first CSV data set that has a match with the 
+                           second data set.
     --right                Do a 'right outer' join. This returns all rows in
                            second CSV data set, including rows with no
                            corresponding row in the first data set. When no
@@ -83,6 +89,8 @@ struct Args {
     arg_columns2: SelectColumns,
     arg_input2: String,
     flag_left: bool,
+    flag_left_anti:bool,
+    flag_left_semi:bool,
     flag_right: bool,
     flag_full: bool,
     flag_cross: bool,
@@ -98,27 +106,37 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut state = args.new_io_state()?;
     match (
         args.flag_left,
+        args.flag_left_anti,
+        args.flag_left_semi,
         args.flag_right,
         args.flag_full,
         args.flag_cross,
     ) {
-        (true, false, false, false) => {
+        (true, false, false, false, false, false) => {
             state.write_headers()?;
             state.outer_join(false)
         }
-        (false, true, false, false) => {
-            state.write_headers()?;
-            state.outer_join(true)
+        (false, true, false, false, false, false) => {
+            state.write_headers1()?;
+            state.left_join(true)
         }
-        (false, false, true, false) => {
+        (false, false, true, false, false, false) => {
+            state.write_headers1()?;
+            state.left_join(false)
+        }        
+        (false, false, false, true, false, false) => {
+            state.write_headers()?;
+            state.outer_join(true,)
+        }
+        (false, false, false, false, true, false) => {
             state.write_headers()?;
             state.full_outer_join()
         }
-        (false, false, false, true) => {
+        (false, false, false, false, false, true) => {
             state.write_headers()?;
             state.cross_join()
         }
-        (false, false, false, false) => {
+        (false, false, false, false, false, false) => {
             state.write_headers()?;
             state.inner_join()
         }
@@ -143,6 +161,14 @@ impl<R: io::Read + io::Seek, W: io::Write> IoState<R, W> {
             let mut headers = self.rdr1.byte_headers()?.clone();
             headers.extend(self.rdr2.byte_headers()?.iter());
             self.wtr.write_record(&headers)?;
+        }
+        Ok(())
+    }
+
+    fn write_headers1(&mut self) -> CliResult<()> {
+        if !self.no_headers {
+            let headers = self.rdr1.byte_headers()?;
+            self.wtr.write_record(&*headers)?;
         }
         Ok(())
     }
@@ -200,6 +226,27 @@ impl<R: io::Read + io::Seek, W: io::Write> IoState<R, W> {
                             self.wtr.write_record(row1.chain(&scratch))?;
                         }
                     }
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn left_join(mut self, anti: bool) -> CliResult<()> {
+        let validx = ValueIndex::new(self.rdr2, &self.sel2, self.casei, self.nulls)?;
+        let mut rowi: u64 = 0;
+        for row in self.rdr1.byte_records() {
+            rowi += 1;
+            let row = row?;
+            let key = get_row_key(&self.sel1, &row, self.casei);
+
+            if validx.values.get(&key).is_none() {
+                if anti {
+                    self.wtr.write_record(&row)?;
+                } 
+            } else { 
+                if !anti && rowi > 1 {  // semi_join
+                    self.wtr.write_record(&row)?;
                 }
             }
         }
