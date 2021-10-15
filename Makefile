@@ -7,7 +7,6 @@ ctags:
 docs:
 	cargo doc
 	in-dir ./target/doc fix-perms
-	rscp ./target/doc/* gopher:~/www/burntsushi.net/rustdoc/
 
 debug:
 	cargo build --verbose
