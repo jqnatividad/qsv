@@ -6,6 +6,7 @@ use std::io;
 use std::iter::{repeat, FromIterator};
 use std::str::{self, FromStr};
 
+use itertools::Itertools;
 use stats::{merge_all, Commute, MinMax, OnlineStats, Unsorted};
 use threadpool::ThreadPool;
 
@@ -45,7 +46,7 @@ stats options:
                            This is provided here because piping 'qsv select'
                            into 'qsv stats' will disable the use of indexing.
     --everything           Show all statistics available.
-    --mode                 Show the mode.
+    --mode                 Show the mode/s. Multimodal-aware.
                            This requires storing all CSV data in memory.
     --cardinality          Show the cardinality.
                            This requires storing all CSV data in memory.
@@ -475,9 +476,12 @@ impl Stats {
             }
             Some(ref mut v) => {
                 if self.which.mode {
-                    let lossy =
-                        |s: Vec<u8>| -> String { String::from_utf8_lossy(&*s).into_owned() };
-                    pieces.push(v.mode().map_or("N/A".to_owned(), lossy));
+                    pieces.push(
+                        v.modes()
+                            .iter()
+                            .map(|c| String::from_utf8_lossy(&c))
+                            .join(","),
+                    );
                 }
                 if self.which.cardinality {
                     pieces.push(v.cardinality().to_string());
