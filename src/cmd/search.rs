@@ -82,13 +82,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
     let mut record = csv::ByteRecord::new();
     let mut flag_rowi: u64 = 1;
+    let mut _matched_rows = String::from("");
     while rdr.read_byte_record(&mut record)? {
         let mut m = sel.select(&record).any(|f| pattern.is_match(f));
         if args.flag_invert_match {
             m = !m;
         }
 
-        let mut _matched_rows = String::from("");
         if args.flag_flag.is_some() {
             flag_rowi += 1;
             record.push_field(if m { 
