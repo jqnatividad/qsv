@@ -86,7 +86,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             m = !m;
         }
 
-        if let Some(_) = args.flag_flag {
+        if args.flag_flag.is_some() {
             record.push_field(if m { b"1" } else { b"0" });
             wtr.write_byte_record(&record)?;
         } else if m {
