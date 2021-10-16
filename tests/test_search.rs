@@ -5,6 +5,7 @@ fn data(headers: bool) -> Vec<Vec<String>> {
         svec!["foobar", "barfoo"],
         svec!["a", "b"],
         svec!["barfoo", "foobar"],
+        svec!["Ḟooƀar", "ḃarḟoo"],
     ];
     if headers {
         rows.insert(0, svec!["h1", "h2"]);
@@ -71,6 +72,22 @@ fn search_ignore_case() {
 }
 
 #[test]
+fn search_unicode() {
+    let wrk = Workdir::new("search");
+    wrk.create("data.csv", data(true));
+    let mut cmd = wrk.command("search");
+    cmd.arg("^Ḟoo").arg("data.csv");
+    cmd.arg("--unicode");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["h1", "h2"],
+        svec!["Ḟooƀar", "ḃarḟoo"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn search_no_headers() {
     let wrk = Workdir::new("search_no_headers");
     wrk.create("data.csv", data(false));
@@ -119,7 +136,11 @@ fn search_invert_match() {
     cmd.arg("--invert-match");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![svec!["foobar", "barfoo"], svec!["a", "b"]];
+    let expected = vec![
+        svec!["foobar", "barfoo"],
+        svec!["a", "b"],
+        svec!["Ḟooƀar", "ḃarḟoo"],
+    ];
     assert_eq!(got, expected);
 }
 
@@ -133,7 +154,7 @@ fn search_invert_match_no_headers() {
     cmd.arg("--no-headers");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![svec!["a", "b"]];
+    let expected = vec![svec!["a", "b"], svec!["Ḟooƀar", "ḃarḟoo"]];
     assert_eq!(got, expected);
 }
 
@@ -148,7 +169,8 @@ fn search_flag() {
     let expected = vec![
         svec!["foobar", "barfoo", "flagged"],
         svec!["a", "b", "0"],
-        svec!["barfoo", "foobar", "1"],
+        svec!["barfoo", "foobar", "3"],
+        svec!["Ḟooƀar", "ḃarḟoo", "0"],
     ];
     assert_eq!(got, expected);
 }
@@ -164,8 +186,9 @@ fn search_flag_invert_match() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["foobar", "barfoo", "flagged"],
-        svec!["a", "b", "1"],
+        svec!["a", "b", "2"],
         svec!["barfoo", "foobar", "0"],
+        svec!["Ḟooƀar", "ḃarḟoo", "4"],
     ];
     assert_eq!(got, expected);
 }
