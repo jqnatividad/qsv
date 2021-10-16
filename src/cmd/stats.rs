@@ -482,7 +482,7 @@ impl Stats {
                     pieces.push(
                         v.modes()
                             .iter()
-                            .map(|c| String::from_utf8_lossy(&c))
+                            .map(|c| String::from_utf8_lossy(c))
                             .join(","),
                     );
                 }
