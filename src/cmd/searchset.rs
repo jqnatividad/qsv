@@ -69,7 +69,7 @@ fn read_regexset(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
     match File::open(filename) {
         Ok(f) => BufReader::new(f).lines().collect(),
         Err(_) => {
-            return Err(io::Error::new(
+            Err(io::Error::new(
                 io::ErrorKind::NotFound,
                 "Cannot open regexset file.",
             ))
