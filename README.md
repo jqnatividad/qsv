@@ -42,7 +42,7 @@ Available commands
 | **[explode](/src/cmd/explode.rs#L8)** | Explode rows into multiple ones by splitting a column value based on the given separator. _**(NEW)**_ |
 | **[fill](/src/cmd/fill.rs#L13)** | Fill empty values. _**(NEW)**_ |
 | **[fixlengths](/src/cmd/fixlengths.rs#L9)** | Force a CSV to have same-length records by either padding or truncating them. |
-| **[flatten](/src/cmd/flatten.rs#L12)** | A flattened view of CSV records. Useful for viewing one record at a time. e.g., `qsv slice -i 5 data.csv | qsv flatten`. |
+| **[flatten](/src/cmd/flatten.rs#L12)** | A flattened view of CSV records. Useful for viewing one record at a time.<br />e.g. `qsv slice -i 5 data.csv \| qsv flatten`. |
 | **[fmt](/src/cmd/fmt.rs#L7)** | Reformat a CSV with different delimiters, record terminators or quoting rules. (Supports ASCII delimited data.) _**(EXTENDED)**_ |
 | **[foreach](/src/cmd/foreach.rs#L15)** | Loop over a CSV to execute bash commands. (*nix only) _**(NEW)**_ |
 | **[frequency](/src/cmd/frequency.rs#L15)**[^1][^3] | Build frequency tables of each column. (Uses parallelism to go faster if an index is present.) |
