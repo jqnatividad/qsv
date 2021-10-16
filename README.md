@@ -49,7 +49,7 @@ Available commands
 | **[headers](/src/cmd/headers.rs#L11)** | Show the headers of CSV data. Or show the intersection of all headers between many CSV files. |
 | **[index](/src/cmd/index.rs#L13)** | Create an index for a CSV file. This is very quick and provides constant time indexing into the CSV file. |
 | **[input](/src/cmd/input.rs#L7)** | Read CSV data with exotic quoting/escaping rules. |
-| **[join](/src/cmd/join.rs#L17)**[^1] | Inner, outer and cross joins. Uses a simple hash index to make it fast. _**(EXTENDED)**_ |
+| **[join](/src/cmd/join.rs#L17)**[^1] | Inner, outer, cross, anti and semi joins. Uses a simple hash index to make it fast. _**(EXTENDED)**_ |
 | **[jsonl](/src/cmd/jsonl.rs#L11)** | Convert newline-delimited JSON to CSV. _**(NEW)**_
 | **[lua](/src/cmd/lua.rs#L14)** | Execute a Lua script over CSV lines to transform, aggregate or filter them. _**(NEW)**_ |
 | **[partition](/src/cmd/partition.rs#L16)** | Partition CSV data based on a column value. |
@@ -68,7 +68,7 @@ Available commands
 | **[table](/src/cmd/table.rs#L12)**[^2] | Show aligned output of any CSV data using [elastic tabstops](https://github.com/BurntSushi/tabwriter). _**(EXTENDED)**_ |
 | **[transpose](/src/cmd/transpose.rs#L9)**[^2] | Transpose rows/columns of CSV data. _**(NEW)**_ |
 
-[^1]: uses an index when available   
+[^1]: uses an index when available. `join` always uses indices.   
 [^2]: loads the entire CSV into memory. Note that `stats` and `transpose` have modes that do not load the entire CSV into memory.   
 [^3]: runs parallel jobs by default (use `--jobs` option to adjust)   
 
