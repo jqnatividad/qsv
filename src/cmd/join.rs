@@ -89,8 +89,8 @@ struct Args {
     arg_columns2: SelectColumns,
     arg_input2: String,
     flag_left: bool,
-    flag_left_anti:bool,
-    flag_left_semi:bool,
+    flag_left_anti: bool,
+    flag_left_semi: bool,
     flag_right: bool,
     flag_full: bool,
     flag_cross: bool,
@@ -123,10 +123,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         (false, false, true, false, false, false) => {
             state.write_headers1()?;
             state.left_join(false)
-        }        
+        }
         (false, false, false, true, false, false) => {
             state.write_headers()?;
-            state.outer_join(true,)
+            state.outer_join(true)
         }
         (false, false, false, false, true, false) => {
             state.write_headers()?;
@@ -234,19 +234,22 @@ impl<R: io::Read + io::Seek, W: io::Write> IoState<R, W> {
 
     fn left_join(mut self, anti: bool) -> CliResult<()> {
         let validx = ValueIndex::new(self.rdr2, &self.sel2, self.casei, self.nulls)?;
-        let mut rowi: u64 = 0;
+        let mut first_row: bool = true;
         for row in self.rdr1.byte_records() {
-            rowi += 1;
             let row = row?;
             let key = get_row_key(&self.sel1, &row, self.casei);
-
             if validx.values.get(&key).is_none() {
                 if anti {
                     self.wtr.write_record(&row)?;
-                } 
-            } else { 
-                if !anti && rowi > 1 {  // semi_join
+                }
+            } else if !anti {
+                // semi_join
+                if !first_row {
+                    // since the first row in a left-semi is
+                    // the header, even if no-header is on
                     self.wtr.write_record(&row)?;
+                } else {
+                    first_row = false;
                 }
             }
         }
