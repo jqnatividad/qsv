@@ -38,7 +38,8 @@ Common options:
                            Must be a single character. (default: ,)
     -f, --flag <column>    If given, the command will not filter rows
                            but will instead flag the found rows in a new
-                           column named <column>.
+                           column named <column>, with the row numbers
+                           of the matched rows.
 ";
 
 #[derive(Deserialize)]
@@ -80,14 +81,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         wtr.write_record(&headers)?;
     }
     let mut record = csv::ByteRecord::new();
+    let mut flag_rowi: u64 = 1;
     while rdr.read_byte_record(&mut record)? {
         let mut m = sel.select(&record).any(|f| pattern.is_match(f));
         if args.flag_invert_match {
             m = !m;
         }
 
+        let mut _matched_rows = String::from("");
         if args.flag_flag.is_some() {
-            record.push_field(if m { b"1" } else { b"0" });
+            flag_rowi += 1;
+            record.push_field(if m { 
+                _matched_rows = flag_rowi.to_string();
+                _matched_rows.as_bytes()
+            } else { b"0" });
             wtr.write_byte_record(&record)?;
         } else if m {
             wtr.write_byte_record(&record)?;
