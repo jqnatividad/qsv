@@ -48,7 +48,9 @@ Common options:
                            Must be a single character. (default: ,)
     -f, --flag <column>    If given, the command will not filter rows
                            but will instead flag the found rows in a new
-                           column named <column>.
+                           column named <column>. For each found row, <column>
+                           is set to the row number of the row, followed by a
+                           semicolon, then a list of the matching regexes.
 ";
 
 #[derive(Deserialize)]
@@ -109,6 +111,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let do_match_list = args.flag_flag.is_some();
 
     let mut record = csv::ByteRecord::new();
+    let mut flag_rowi: u64 = 1;
+    let mut _matched_rows = String::from("");
+    let mut _match_list_with_row = String::from("");
     while rdr.read_byte_record(&mut record)? {
         let mut m = sel.select(&record).any(|f| {
             let matched = pattern.is_match(f);
@@ -126,11 +131,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         if do_match_list {
+            flag_rowi += 1;
             record.push_field(if m {
+                _matched_rows = flag_rowi.to_string();
                 if args.flag_invert_match {
-                    b"1"
+                    _matched_rows.as_bytes()
                 } else {
-                    match_list.as_bytes()
+                    _match_list_with_row = format!("{};{}", _matched_rows, match_list);
+                    _match_list_with_row.as_bytes()
                 }
             } else {
                 b"0"

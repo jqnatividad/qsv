@@ -214,8 +214,8 @@ fn searchset_flag() {
     let expected = vec![
         svec!["foobar", "barfoo", "flagged"],
         svec!["a", "b", "0"],
-        svec!["barfoo", "foobar", "[1, 2]"],
-        svec!["is waldo here", "spot", "[3]"],
+        svec!["barfoo", "foobar", "3;[1, 2]"],
+        svec!["is waldo here", "spot", "4;[3]"],
         svec!["Ḟooƀar", "ḃarḟoo", "0"],
         svec!["bleh", "no, Waldo is there", "0"],
     ];
@@ -236,11 +236,11 @@ fn searchset_flag_invert_match() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["foobar", "barfoo", "flagged"],
-        svec!["a", "b", "1"],
+        svec!["a", "b", "2"],
         svec!["barfoo", "foobar", "0"],
         svec!["is waldo here", "spot", "0"],
-        svec!["Ḟooƀar", "ḃarḟoo", "1"],
-        svec!["bleh", "no, Waldo is there", "1"],
+        svec!["Ḟooƀar", "ḃarḟoo", "5"],
+        svec!["bleh", "no, Waldo is there", "6"],
     ];
     assert_eq!(got, expected);
 }
