@@ -53,7 +53,8 @@ stats options:
     --median               Show the median.
                            This requires storing all CSV data in memory.
     --nullcount            Show the number of NULLs.
-    --quartiles            Show the quartiles.
+    --quartiles            Show the quartiles, the IQR, the lower/upper fences
+                           and skew.
                            This requires storing all CSV data in memory.
     --nulls                Include NULLs in the population size for computing
                            mean and standard deviation.
@@ -251,10 +252,13 @@ impl Args {
             fields.push("median");
         }
         if self.flag_quartiles || all {
+            fields.push("lower_fence");
             fields.push("q1");
             fields.push("q2_median");
             fields.push("q3");
             fields.push("iqr");
+            fields.push("upper_fence");
+            fields.push("skew");
         }
         if self.flag_mode || all {
             fields.push("mode");
@@ -294,7 +298,7 @@ struct Stats {
     sum: Option<TypedSum>,
     minmax: Option<TypedMinMax>,
     online: Option<OnlineStats>,
-    mode: Option<Unsorted<Vec<u8>>>,
+    modes: Option<Unsorted<Vec<u8>>>,
     median: Option<Unsorted<f64>>,
     nullcount: u64,
     quartiles: Option<Unsorted<f64>>,
@@ -303,7 +307,7 @@ struct Stats {
 
 impl Stats {
     fn new(which: WhichStats) -> Stats {
-        let (mut sum, mut minmax, mut online, mut mode, mut median, mut quartiles) =
+        let (mut sum, mut minmax, mut online, mut modes, mut median, mut quartiles) =
             (None, None, None, None, None, None);
         if which.sum {
             sum = Some(Default::default());
@@ -315,7 +319,7 @@ impl Stats {
             online = Some(Default::default());
         }
         if which.mode || which.cardinality {
-            mode = Some(Default::default());
+            modes = Some(Default::default());
         }
         if which.median {
             median = Some(Default::default());
@@ -328,7 +332,7 @@ impl Stats {
             sum,
             minmax,
             online,
-            mode,
+            modes,
             median,
             nullcount: 0,
             quartiles,
@@ -348,7 +352,7 @@ impl Stats {
         if let Some(v) = self.minmax.as_mut() {
             v.add(t, sample)
         };
-        if let Some(v) = self.mode.as_mut() {
+        if let Some(v) = self.modes.as_mut() {
             v.add(sample.to_vec())
         };
         if sample_type.is_null() {
@@ -459,16 +463,27 @@ impl Stats {
                     pieces.push(empty());
                     pieces.push(empty());
                     pieces.push(empty());
+                    pieces.push(empty());
+                    pieces.push(empty());
+                    pieces.push(empty());
                 }
             }
             Some((q1, q2, q3)) => {
+                let iqr = q3 - q1;
+                pieces.push((q1 - (1.5 * iqr)).to_string());
                 pieces.push(q1.to_string());
                 pieces.push(q2.to_string());
                 pieces.push(q3.to_string());
-                pieces.push((q3-q1).to_string());
+                pieces.push(iqr.to_string());
+                pieces.push((q3 + (1.5 * iqr)).to_string());
+                // calculate skewnewss using Pearson's median skewness
+                // https://en.wikipedia.org/wiki/Skewness#Pearson's_second_skewness_coefficient_(median_skewness)
+                let _mean = self.online.unwrap().mean();
+                let _stddev = self.online.unwrap().stddev();
+                pieces.push(((3.0 * (_mean - q2)) / _stddev).to_string());
             }
         }
-        match self.mode.as_mut() {
+        match self.modes.as_mut() {
             None => {
                 if self.which.mode {
                     pieces.push(empty());
@@ -504,7 +519,7 @@ impl Commute for Stats {
         self.sum.merge(other.sum);
         self.minmax.merge(other.minmax);
         self.online.merge(other.online);
-        self.mode.merge(other.mode);
+        self.modes.merge(other.modes);
         self.median.merge(other.median);
         self.nullcount += other.nullcount;
         self.quartiles.merge(other.quartiles);
