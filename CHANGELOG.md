@@ -6,6 +6,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2021-10-18
+### Added
+- `stats` `mode` is now also multi-modal -i.e. returns multiples modes when detected. 
+e.g. mode[1,1,2,2,3,4,6,6] will return [1,2,6].
+It will continue to return one mode if there is only one detected.
+- `stats` `quartile` now also computes IQR, lower/upper fences and skew ([using Pearson's median skewness](https://en.wikipedia.org/wiki/Skewness#Pearson's_second_skewness_coefficient_(median_skewness))). For code simplicity, calculated skew with quartile.
+- `join` now also support `left-semi` and `left-anti` joins, the same way [Spark does](https://spark.apache.org/docs/latest/sql-ref-syntax-qry-select-join.html#semi-join).
+- `search` `--flag` option now returns row number, not just '1'.
+- `searchset` `--flag` option now returns row number, followed by a semi-colon, and a list of matching regexes.
+- README: Added badges for Security Audit, Discussion & Docs
+- README: Added FAQ link in fork note.
+
+### Changed
+- point to https://docs.rs/crate/qsv for documentation.
+- README: `stats` and `join` section updated with new features.
+- README: wordsmithing - replaced "CSV data" and "CSV file/s" with just "CSV".
+- in `stats` changed `q2` column name to `q2_median`.
+- removed debug symbols in release build for smaller binaries.
+- minor refactoring of `search`, `searchset` & `stats`.
+
+### Fixed
+- README: fixed `flatten` example.
+
+### Removed
+- removed Rust badge.
+
 ## [0.17.3] - 2021-10-12
 ### Added
 - added [sample regexset file](https://github.com/jqnatividad/qsv/commit/d209436b588b88b0f92cc133ebcada726f72a2bd) for PII-screening.
