@@ -14,3 +14,4 @@ builds
 .vscode/launch.json
 *.xls
 *.xlsx
+.DS_store
