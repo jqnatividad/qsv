@@ -12,3 +12,5 @@ main
 *.idx
 builds
 .vscode/launch.json
+*.xls
+*.xlsx
