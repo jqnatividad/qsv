@@ -33,7 +33,7 @@ use serde::Deserialize;
 
 use docopt::Docopt;
 
-#[cfg(feature = "malloc_mimalloc")]
+#[cfg(feature = "mimalloc")]
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
