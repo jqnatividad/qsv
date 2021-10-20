@@ -32,7 +32,7 @@ debug = false
 opt-level = 3
 
 [dependencies]
-mimalloc = { version = "0.1.26", default-features = false }
+mimalloc = { version = "0.1.26", default-features = false, optional = true }
 byteorder = "1.4"
 crossbeam-channel = "0.5"
 csv = "1.1"
@@ -62,3 +62,6 @@ rustc_version = "0.4"
 [dev-dependencies]
 quickcheck = { version = "0.9", default-features = false }
 log = "0.4"
+
+[features]
+malloc_mimalloc = ["mimalloc"]

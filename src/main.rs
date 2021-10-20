@@ -11,6 +11,7 @@ extern crate hlua;
 #[macro_use]
 extern crate lazy_static;
 extern crate itertools;
+#[cfg(feature = "malloc_mimalloc")]
 extern crate mimalloc;
 extern crate num_cpus;
 extern crate rand;
@@ -32,6 +33,7 @@ use serde::Deserialize;
 
 use docopt::Docopt;
 
+#[cfg(feature = "malloc_mimalloc")]
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
