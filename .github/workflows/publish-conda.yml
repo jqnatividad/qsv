@@ -31,5 +31,5 @@ jobs:
       uses: fcakyon/conda-publish-action@v1.3
       with:
         subdir: 'conda'
-        anacondatoken: ${{ secrets.ANACONDA }}
+        anacondatoken: ${{ secrets.ANACONDA_TOKEN }}
         platforms: 'win osx linux'
