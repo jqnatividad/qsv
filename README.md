@@ -21,12 +21,9 @@ validating & joining CSV files. Commands are simple, fast and composable:
 * [Cookbook](https://github.com/jqnatividad/qsv/wiki)
 * [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ)
 * [Benchmarks](#benchmarks)
-* [License](#license)
 * [Sponsor](#sponsor)
-* [Naming Collision](#naming-collision)
 
-> **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's release](https://github.com/BurntSushi/xsv/issues/267), along with additional features & commands for data-wrangling. See [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ) for more details.   
-(_**NEW**_ and _**EXTENDED**_ commands are marked accordingly).
+> **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's release](https://github.com/BurntSushi/xsv/issues/267), along with additional features & commands for data-wrangling. See [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ) for more details. (_**NEW**_ and _**EXTENDED**_ commands are marked accordingly).
 
 Available commands
 ------------------
@@ -93,21 +90,39 @@ cd qsv
 cargo build --release
 ```
 
-The binary will end up in `./target/release/qsv`.
+The compiled binary will end up in `./target/release/qsv`.
 
-If you want to squeeze more performance from your build, set this environment
-variable before compiling:
+Performance
+-----------
+If you want more performance, set this environment variable
+**BEFORE** installing/compiling:
 
+On Linux and macOS:
 ```bash
 export CARGO_BUILD_RUSTFLAGS='-C target-cpu=native'
 ```
 
+On Windows Powershell:
+```powershell
+$env:CARGO_BUILD_RUSTFLAGS='-C target-cpu=native'
+```
+
 Do note though that the resulting binary will only run on machines with the
-same architecture as the machine you compiled from.  To find out your CPU 
-architecture and other valid values for `target-cpu`:
+same architecture as the machine you installed/compiled from.   
+To find out your CPU architecture and other valid values for `target-cpu`:
 
 ```bash
 rustc --print target-cpus
+```
+You can also get more performance by using the performance-oriented [mimalloc](https://github.com/microsoft/mimalloc)
+memory allocator. To do so, install/compile qsv with the `mimalloc` feature.
+
+```bash
+cargo install qsv --features=mimalloc
+```
+or
+```bash
+cargo build --features=mimalloc
 ```
 
 Benchmarks
