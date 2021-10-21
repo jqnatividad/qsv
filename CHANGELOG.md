@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.1] - 2021-10-20
+### Added
+- added `mimalloc` feature flag. [mimalloc](https://github.com/microsoft/mimalloc) is Microsoft's performance-oriented memory allocator.
+Earlier versions of qsv used mimalloc by default. Now it is only used when the feature is set.
+- README: Added Performance section.
+- README: Document how to enable `mimalloc` feature.
+
+### Changed
+- README: Explicitly show how to set environment variables on different platforms.
 ## [0.18.0] - 2021-10-18
 ### Added
 - `stats` `mode` is now also multi-modal -i.e. returns multiples modes when detected. 
