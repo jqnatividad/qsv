@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.2] - 2021-10-21
+## Changed
+- use docopt v1.1.0 instead of docopt v.1.1.1 for docopt to support all regex features
+
 ## [0.18.1] - 2021-10-20
 ### Added
 - added `mimalloc` feature flag. [mimalloc](https://github.com/microsoft/mimalloc) is Microsoft's performance-oriented memory allocator.
