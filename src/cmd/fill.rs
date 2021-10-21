@@ -351,7 +351,7 @@ where
         F: FnMut(B) -> B,
     {
         MapSelected {
-            selection: selector.iter().map(|&x| x).collect(),
+            selection: selector.iter().copied().collect(),
             selection_index: 0,
             index: 0,
             iterator: self,
