@@ -73,10 +73,18 @@ function run {
       t=$(benchmark_with_index "$@")
     fi
     mb_per=$(echo "scale=2; ($data_size / $t) / 2^20" | bc)
-    printf "%s\t%0.02f seconds\t%s MB/sec\n" $name $t $mb_per
+    printf -v tprint "%0.02f" $t
+    printf "$fmt" "$name" "$tprint" "$mb_per"
+    printf "%s\t%0.02f\t%s\n" $name $t $mb_per >> $benchmarkfile
   fi
 }
 
+qsvver=$(qsv --version)
+current_time=$(date "+%Y-%m-%d-%H-%M-%S")
+benchmarkfile=qsvbench-$qsvver-$current_time.tsv
+fmt="%-25s%-11s%-11s\n"
+printf "$fmt" BENCHMARK TIME_SECS MB_PER_SEC
+printf "benchmark\ttime_secs\tmb_per_sec\n" > $benchmarkfile
 run count qsv count "$data"
 run --index count_index qsv count "$data"
 run fill qsv fill -v Unknown Population "$data"
