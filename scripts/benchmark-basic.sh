@@ -17,7 +17,7 @@ data=worldcitiespop_mil.csv
 countrydata=countrynames.csv
 data_idx=worldcitiespop_mil.csv.idx
 if [ ! -r "$data" ]; then
-  curl -sS https://github.com/jqnatividad/qsv/raw/master/docs/worldcitiespop_mil.zip > "$datazip"
+  curl -sS https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/worldcitiespop_mil.zip > "$datazip"
   unzip "$datazip"
 fi
 data_size=$(stat --format '%s' "$data")
