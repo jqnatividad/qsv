@@ -309,6 +309,40 @@ fn apply_datefmt_fmtstring() {
 }
 
 #[test]
+fn apply_datefmt_fmtstring_with_literals() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["Created Date"],
+            svec!["September 17, 2012 10:09am EST"],
+            svec!["Wed, 02 Jun 2021 06:31:39 GMT"],
+            svec!["2009-01-20 05:00 EST"],
+            svec!["2015-09-30 18:48:56.35272715 UTC"],
+            svec!["This is not a date and it will not be reformatted"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("datefmt")
+        .arg("Created Date")
+        .arg("--formatstr")
+        .arg("%c is day %j, week %V of %G")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["Created Date"],
+        svec!["Mon Sep 17 15:09:00 2012 is day 261, week 38 of 2012"],
+        svec!["Wed Jun  2 06:31:39 2021 is day 153, week 22 of 2021"],
+        svec!["Tue Jan 20 10:00:00 2009 is day 020, week 04 of 2009"],
+        svec!["Wed Sep 30 18:48:56 2015 is day 273, week 40 of 2015"],
+        svec!["This is not a date and it will not be reformatted"],
+    ];
+    assert_eq!(got, expected);
+}
+
+
+#[test]
 fn apply_datefmt_fmtstring_notime() {
     let wrk = Workdir::new("apply");
     wrk.create(
