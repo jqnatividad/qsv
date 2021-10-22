@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # This script does some very basic benchmarks with 'qsv' on a city population
 # data set (which is a strict subset of the `worldcitiespop` data set). If it
@@ -12,11 +12,13 @@
 set -e
 
 pat="$1"
-data=/tmp/worldcitiespop_mil.csv
-countrydata=/tmp/countrynames.csv
-data_idx=/tmp/worldcitiespop_mil.csv.idx
+datazip=worldcitiespop_mil.zip
+data=worldcitiespop_mil.csv
+countrydata=countrynames.csv
+data_idx=worldcitiespop_mil.csv.idx
 if [ ! -r "$data" ]; then
-  curl -sS https://burntsushi.net/stuff/worldcitiespop_mil.csv > "$data"
+  curl -sS https://github.com/jqnatividad/qsv/raw/master/docs/worldcitiespop_mil.zip > "$datazip"
+  unzip "$datazip"
 fi
 data_size=$(stat --format '%s' "$data")
 if [ ! -r "$countydata" ]; then
