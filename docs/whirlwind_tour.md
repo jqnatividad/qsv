@@ -6,7 +6,8 @@ several CSV files. Maybe you're interested in the population counts of each
 city in the world. So grab the data and start examining it:
 
 ```bash
-$ curl -LO https://burntsushi.net/stuff/worldcitiespop.csv
+$ curl -LO https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/worldcitiespop_mil.zip
+$ unzip worldcitiespop_mil.zip
 $ qsv headers worldcitiespop.csv
 1   Country
 2   City
