@@ -62,3 +62,6 @@ rustc_version = "0.4"
 [dev-dependencies]
 quickcheck = { version = "0.9", default-features = false }
 log = "0.4"
+
+[features]
+default = ["mimalloc"]
