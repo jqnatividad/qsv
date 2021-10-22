@@ -68,6 +68,7 @@ function run {
   name="$1"
   shift
 
+  printf "%-25s" "$name"
   if [ -z "$pat" ] || echo "$name" | grep -E -q "^$pat$"; then
     if [ -z "$index" ]; then
       t=$(benchmark "$@")
@@ -76,7 +77,7 @@ function run {
     fi
     mb_per=$(echo "scale=2; ($data_size / $t) / 2^20" | bc)
     printf -v tprint "%0.02f" $t
-    printf "$fmt" "$name" "$tprint" "$mb_per"
+    printf "%-11s%-11s\n" "$tprint" "$mb_per"
     printf "%s\t%0.02f\t%s\n" $name $t $mb_per >> $benchmarkfile
   fi
 }
@@ -84,8 +85,7 @@ function run {
 qsvver=$(qsv --version)
 current_time=$(date "+%Y-%m-%d-%H-%M-%S")
 benchmarkfile=qsvbench-$qsvver-$current_time.tsv
-fmt="%-25s%-11s%-11s\n"
-printf "$fmt" BENCHMARK TIME_SECS MB_PER_SEC
+printf "%-25s%-11s%-11s\n" BENCHMARK TIME_SECS MB_PER_SEC
 printf "benchmark\ttime_secs\tmb_per_sec\n" > $benchmarkfile
 run count qsv count "$data"
 run --index count_index qsv count "$data"
