@@ -116,7 +116,7 @@ Options:
     --list        List all commands available.
     -h, --help    Display this message
     <command> -h  Display the command help message
-    --version     Print version info and exit
+    --version     Print version info, mem allocator, num_cpus then exit
 
 Commands:",
     command_list!()

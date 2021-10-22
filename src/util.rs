@@ -18,6 +18,10 @@ pub fn num_cpus() -> usize {
 }
 
 pub fn version() -> String {
+    #[cfg(feature = "mimalloc")]
+    let malloc_kind = "mimalloc".to_string();
+    #[cfg(not(feature = "mimalloc"))]
+    let malloc_kind = "standard".to_string();
     let (maj, min, pat, pre) = (
         option_env!("CARGO_PKG_VERSION_MAJOR"),
         option_env!("CARGO_PKG_VERSION_MINOR"),
@@ -27,9 +31,17 @@ pub fn version() -> String {
     match (maj, min, pat, pre) {
         (Some(maj), Some(min), Some(pat), Some(pre)) => {
             if pre.is_empty() {
-                return format!("{}.{}.{}", maj, min, pat);
+                return format!("{}.{}.{}-{}-{}", maj, min, pat, malloc_kind, num_cpus());
             } else {
-                return format!("{}.{}.{}-{}", maj, min, pat, pre);
+                return format!(
+                    "{}.{}.{}-{}-{}-{}",
+                    maj,
+                    min,
+                    pat,
+                    pre,
+                    malloc_kind,
+                    num_cpus()
+                );
             }
         }
         _ => "".to_owned(),
