@@ -57,7 +57,7 @@ Available commands
 | **[sample](/src/cmd/sample.rs#L15)**[^1] | Randomly draw rows from a CSV using reservoir sampling (i.e., use memory proportional to the size of the sample). _**(EXTENDED)**_ |
 | **[search](/src/cmd/search.rs#L10)** | Run a regex over a CSV. Applies the regex to each field individually & shows only matching rows. _**(EXTENDED)**_ |
 | **[searchset](/src/cmd/searchset.rs#L14)** | Run **multiple regexes** over a CSV in a **single pass**. Applies the regexes to each field individually & shows only matching rows. _**(NEW)**_ |
-| **[select](/src/cmd/select.rs#L8)**[^1] | Select or re-order columns. _**(EXTENDED)**_ |
+| **[select](/src/cmd/select.rs#L8)** | Select or re-order columns. _**(EXTENDED)**_ |
 | **[slice](/src/cmd/slice.rs#L10)**[^1][^2] | Slice rows from any part of a CSV. When an index is present, this only has to parse the rows in the slice (instead of all rows leading up to the start of the slice). |
 | **[sort](/src/cmd/sort.rs#L13)** | Sort CSV data. _**(EXTENDED)**_ |
 | **[split](/src/cmd/split.rs#L14)**[^1][^3] | Split one CSV file into many CSV files of N chunks. |
@@ -113,16 +113,6 @@ To find out your CPU architecture and other valid values for `target-cpu`:
 
 ```bash
 rustc --print target-cpus
-```
-You can also get more performance by using the performance-oriented [mimalloc](https://github.com/microsoft/mimalloc)
-memory allocator. To do so, install/compile qsv with the `mimalloc` feature.
-
-```bash
-cargo install qsv --features=mimalloc
-```
-or
-```bash
-cargo build --features=mimalloc
 ```
 
 Benchmarks
