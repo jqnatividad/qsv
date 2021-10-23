@@ -16,3 +16,4 @@ builds
 *.xlsx
 *.zip
 .DS_store
+*.txt
