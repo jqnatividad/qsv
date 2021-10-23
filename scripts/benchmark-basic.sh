@@ -16,9 +16,13 @@ datazip=worldcitiespop_mil.zip
 data=worldcitiespop_mil.csv
 countrydata=countrynames.csv
 data_idx=worldcitiespop_mil.csv.idx
+data_to_exclude=data_to_exclude.csv
+searchset_patterns=searchset_patterns.txt
 if [ ! -r "$data" ]; then
   curl -sS https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/worldcitiespop_mil.zip > "$datazip"
   unzip "$datazip"
+  qsv sample --seed 42 50000 "$data" -o "$data_to_exclude"
+  printf "santa\nfort\ncamp\n" > "$searchset_patterns"
 fi
 data_size=$(stat --format '%s' "$data")
 if [ ! -r "$countydata" ]; then
@@ -89,6 +93,11 @@ printf "%-25s%-11s%-11s\n" BENCHMARK TIME_SECS MB_PER_SEC
 printf "benchmark\ttime_secs\tmb_per_sec\n" > $benchmarkfile
 run count qsv count "$data"
 run --index count_index qsv count "$data"
+run dedup qsv dedup "$data"
+run enum qsv enum "$data"
+run exclude qsv exclude Country "$data" Country "$data_to_exclude"
+run --index exclude_index qsv exclude Country "$data" Country "$data_to_exclude"
+run explode qsv explode City "-" "$data"
 run fill qsv fill -v Unknown Population "$data"
 run fixlengths qsv fixlengths "$data"
 run flatten qsv flatten "$data"
@@ -99,6 +108,7 @@ run --index frequency_index qsv frequency "$data"
 run frequency_selregex qsv frequency -s /^R/ "$data"
 run index qsv index "$data"
 run join qsv join --no-case Country "$data" Abbrev "$countrydata"
+run luatest qsv lua map Population_empty 'tonumber(Population)==nil' "$data"
 run partition qsv partition Region /tmp/partitioned "$data"
 run rename qsv rename 'country,city,accent_city,region,population,lat,long' "$data"
 run reverse qsv reverse "$data"
@@ -110,11 +120,14 @@ run sample_100000 qsv sample 100000 "$data"
 run --index sample_100000_index qsv sample 100000 "$data"
 run --index sample_25pct_index qsv sample 0.25 "$data"
 run search qsv search -s Country "'(?i)us'" "$data"
-run select qsv select Country "$data"
+run searchset qsv searchset "$searchset_patterns" "$data"
+run select qsv select 'Country,City' "$data"
 run select_regex qsv select /^L/ "$data"
-run sort qsv sort -s AccentCity "$data"
 run slice_one_middle qsv slice -i 500000 "$data"
 run --index slice_one_middle_index qsv slice -i 500000 "$data"
+run sort qsv sort -s Country "$data"
+run split qsv split --size 50000 split_tempdir "$data"
+run --index split_index qsv split --size 50000 split_tempdir "$data"
 run stats qsv stats "$data"
 run --index stats_index qsv stats "$data"
 run stats_everything qsv stats "$data" --everything
