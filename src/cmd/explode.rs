@@ -51,7 +51,7 @@ struct Args {
 pub fn replace_column_value(
     record: &csv::StringRecord,
     column_index: usize,
-    new_value: &String,
+    new_value: &str,
 ) -> csv::StringRecord {
     record
         .into_iter()
