@@ -19,6 +19,7 @@ data_idx=worldcitiespop_mil.csv.idx
 data_to_exclude=data_to_exclude.csv
 searchset_patterns=searchset_patterns.txt
 if [ ! -r "$data" ]; then
+  printf "Downloading benchmarking data...\n"
   curl -sS https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/worldcitiespop_mil.zip > "$datazip"
   unzip "$datazip"
   qsv sample --seed 42 50000 "$data" -o "$data_to_exclude"
@@ -88,6 +89,10 @@ function run {
 
 qsvver=$(qsv --version)
 current_time=$(date "+%Y-%m-%d-%H-%M-%S")
+# printf "Scrambling benchmark data...\n"
+# qsv index "$data"
+# qsv scramble "$data" > temp.csv
+# mv -f temp.csv "$data"
 benchmarkfile=qsvbench-$qsvver-$current_time.tsv
 printf "%-25s%-11s%-11s\n" BENCHMARK TIME_SECS MB_PER_SEC
 printf "benchmark\ttime_secs\tmb_per_sec\n" > $benchmarkfile
@@ -119,6 +124,7 @@ run --index sample_1000_index qsv sample 1000 "$data"
 run sample_100000 qsv sample 100000 "$data"
 run --index sample_100000_index qsv sample 100000 "$data"
 run --index sample_25pct_index qsv sample 0.25 "$data"
+run --index scramble_index qsv scramble "$data"
 run search qsv search -s Country "'(?i)us'" "$data"
 run searchset qsv searchset "$searchset_patterns" "$data"
 run select qsv select 'Country,City' "$data"
