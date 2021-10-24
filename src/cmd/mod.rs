@@ -24,6 +24,7 @@ pub mod rename;
 pub mod replace;
 pub mod reverse;
 pub mod sample;
+pub mod scramble;
 pub mod search;
 pub mod searchset;
 pub mod select;
