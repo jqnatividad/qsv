@@ -6,6 +6,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0] - 2021-10-24
+### Added
+- new `scramble` command. Randomly scrambles a CSV's records.
+- read/write buffer capacity can now be set using environment variables
+`QSV_RDR_BUFFER_CAPACITY` and `QSV_WTR_BUFFER_CAPACITY` (in bytes).
+- added additional test for `apply datefmt`.
+
+### Changed
+- default read buffer doubled from 8k to 16k.
+- default write buffer doubled from 32k to 64k.
+- benchmark script revamped. Now produces aligned output onscreen,
+while also creating a benchmark TSV file; downloads the sample file from GitHub;
+benchmark more commands.
+- version info now also returns memory allocator being used, and number of cpus detected.
+- minor refactor of `enumerate`, `explode`, `fill` and `foreach` commands.
+
+### Removed
+- removed benchmark data from repository. Moved to GitHub wiki instead.
+
 ## [0.18.2] - 2021-10-21
 ## Changed
 - use docopt v1.1.0 instead of docopt v.1.1.1 for docopt to support all regex features
