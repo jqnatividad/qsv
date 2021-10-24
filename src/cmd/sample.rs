@@ -39,7 +39,7 @@ sample options:
 Common options:
     -h, --help             Display this message
     -o, --output <file>    Write output to <file> instead of stdout.
-    -n, --no-headers       When set, the first row will be consider as part of
+    -n, --no-headers       When set, the first row will be considered as part of
                            the population to sample from. (When not set, the
                            first row is the header row and will always appear
                            in the output.)
