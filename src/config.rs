@@ -14,6 +14,11 @@ use crate::select::{SelectColumns, Selection};
 use crate::util;
 use crate::CliResult;
 
+// rdr default is 8k in csv crate, we're doubling it
+const DEFAULT_RDR_BUFFER_CAPACITY: usize = 16 * (1 << 10);
+// previous wtr default in xsv is 32k, we're doubling it
+const DEFAULT_WTR_BUFFER_CAPACITY: usize = 64 * (1 << 10);
+
 #[derive(Clone, Copy, Debug)]
 pub struct Delimiter(pub u8);
 
@@ -291,6 +296,12 @@ impl Config {
     }
 
     pub fn from_reader<R: Read>(&self, rdr: R) -> csv::Reader<R> {
+        let rdr_capacitys = env::var("QSV_RDR_BUFFER_CAPACITY")
+            .unwrap_or_else(|_| DEFAULT_RDR_BUFFER_CAPACITY.to_string());
+        let rdr_buffer: usize = rdr_capacitys
+            .parse()
+            .unwrap_or_else(|_| DEFAULT_RDR_BUFFER_CAPACITY);
+
         csv::ReaderBuilder::new()
             .flexible(self.flexible)
             .delimiter(self.delimiter)
@@ -298,6 +309,7 @@ impl Config {
             .quote(self.quote)
             .quoting(self.quoting)
             .escape(self.escape)
+            .buffer_capacity(rdr_buffer)
             .from_reader(rdr)
     }
 
@@ -309,6 +321,12 @@ impl Config {
     }
 
     pub fn from_writer<W: io::Write>(&self, wtr: W) -> csv::Writer<W> {
+        let wtr_capacitys = env::var("QSV_WTR_BUFFER_CAPACITY")
+            .unwrap_or_else(|_| DEFAULT_WTR_BUFFER_CAPACITY.to_string());
+        let wtr_buffer: usize = wtr_capacitys
+            .parse()
+            .unwrap_or_else(|_| DEFAULT_WTR_BUFFER_CAPACITY);
+
         csv::WriterBuilder::new()
             .flexible(self.flexible)
             .delimiter(self.delimiter)
@@ -317,7 +335,7 @@ impl Config {
             .quote_style(self.quote_style)
             .double_quote(self.double_quote)
             .escape(self.escape.unwrap_or(b'\\'))
-            .buffer_capacity(32 * (1 << 10))
+            .buffer_capacity(wtr_buffer)
             .from_writer(wtr)
     }
 }
