@@ -298,9 +298,7 @@ impl Config {
     pub fn from_reader<R: Read>(&self, rdr: R) -> csv::Reader<R> {
         let rdr_capacitys = env::var("QSV_RDR_BUFFER_CAPACITY")
             .unwrap_or_else(|_| DEFAULT_RDR_BUFFER_CAPACITY.to_string());
-        let rdr_buffer: usize = rdr_capacitys
-            .parse()
-            .unwrap_or_else(|_| DEFAULT_RDR_BUFFER_CAPACITY);
+        let rdr_buffer: usize = rdr_capacitys.parse().unwrap_or(DEFAULT_RDR_BUFFER_CAPACITY);
 
         csv::ReaderBuilder::new()
             .flexible(self.flexible)
@@ -323,9 +321,7 @@ impl Config {
     pub fn from_writer<W: io::Write>(&self, wtr: W) -> csv::Writer<W> {
         let wtr_capacitys = env::var("QSV_WTR_BUFFER_CAPACITY")
             .unwrap_or_else(|_| DEFAULT_WTR_BUFFER_CAPACITY.to_string());
-        let wtr_buffer: usize = wtr_capacitys
-            .parse()
-            .unwrap_or_else(|_| DEFAULT_WTR_BUFFER_CAPACITY);
+        let wtr_buffer: usize = wtr_capacitys.parse().unwrap_or(DEFAULT_WTR_BUFFER_CAPACITY);
 
         csv::WriterBuilder::new()
             .flexible(self.flexible)
