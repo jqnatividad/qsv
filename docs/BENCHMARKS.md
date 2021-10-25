@@ -113,7 +113,7 @@ transpose                NA         NA
 
 The primary purpose of these benchmarks is to provide a rough ballpark estimate of how
 fast each command is, to catch significant performance regressions, and to help you
-[fine-tune qsv's performance](README.md#Performance_Tuning) in your environment.
+[fine-tune qsv's performance](https://github.com/jqnatividad/qsv#performance-tuning) in your environment.
 
 The `count` command can be viewed as a sort of baseline of the fastest possible
 command that parses every record in CSV data.
