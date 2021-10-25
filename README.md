@@ -55,7 +55,7 @@ Available commands
 | **[replace](/src/cmd/replace.rs#L11)** | Replace CSV data using a regex. _**(NEW)**_ |
 | **[reverse](/src/cmd/reverse.rs#L7)**[^2] | Reverse order of rows in a CSV. _**(NEW)**_ |
 | **[sample](/src/cmd/sample.rs#L15)**[^1] | Randomly draw rows from a CSV using reservoir sampling (i.e., use memory proportional to the size of the sample). _**(EXTENDED)**_ |
-| **[scramble](/src/cmd/scramble.rs#L15)**[^1] | Randomly scramble CSV records. Index required. _**(NEW)**_ |
+| **[scramble](/src/cmd/scramble.rs#L12)**[^1] | Randomly scramble CSV records. Index required. _**(NEW)**_ |
 | **[search](/src/cmd/search.rs#L10)** | Run a regex over a CSV. Applies the regex to each field individually & shows only matching rows. _**(EXTENDED)**_ |
 | **[searchset](/src/cmd/searchset.rs#L14)** | Run **multiple regexes** over a CSV in a **single pass**. Applies the regexes to each field individually & shows only matching rows. _**(NEW)**_ |
 | **[select](/src/cmd/select.rs#L8)** | Select or re-order columns. _**(EXTENDED)**_ |
