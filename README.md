@@ -20,7 +20,7 @@ validating & joining CSV files. Commands are simple, fast and composable:
 * [Whirlwind Tour](docs/whirlwind_tour.md#a-whirlwind-tour)
 * [Cookbook](https://github.com/jqnatividad/qsv/wiki)
 * [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ)
-* [Benchmarks](#benchmarks)
+* [Benchmarks](docs/BENCHMARKS.md)
 * [Sponsor](#sponsor)
 
 > **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's release](https://github.com/BurntSushi/xsv/issues/267), along with additional features & commands for data-wrangling. See [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ) for more details. (_**NEW**_ and _**EXTENDED**_ commands are marked accordingly).
@@ -55,6 +55,7 @@ Available commands
 | **[replace](/src/cmd/replace.rs#L11)** | Replace CSV data using a regex. _**(NEW)**_ |
 | **[reverse](/src/cmd/reverse.rs#L7)**[^2] | Reverse order of rows in a CSV. _**(NEW)**_ |
 | **[sample](/src/cmd/sample.rs#L15)**[^1] | Randomly draw rows from a CSV using reservoir sampling (i.e., use memory proportional to the size of the sample). _**(EXTENDED)**_ |
+| **[scramble](/src/cmd/scramble.rs#L15)**[^1] | Randomly scramble CSV records. Index required. _**(NEW)**_ |
 | **[search](/src/cmd/search.rs#L10)** | Run a regex over a CSV. Applies the regex to each field individually & shows only matching rows. _**(EXTENDED)**_ |
 | **[searchset](/src/cmd/searchset.rs#L14)** | Run **multiple regexes** over a CSV in a **single pass**. Applies the regexes to each field individually & shows only matching rows. _**(NEW)**_ |
 | **[select](/src/cmd/select.rs#L8)** | Select or re-order columns. _**(EXTENDED)**_ |
@@ -115,10 +116,15 @@ To find out your CPU architecture and other valid values for `target-cpu`:
 rustc --print target-cpus
 ```
 
-Benchmarks
-----------
-Some [very rough benchmarks](docs/BENCHMARKS.md) of
-various `qsv` commands.
+### Buffer size
+Depending on your filesystem's configuration (e.g. block size, SSD, file system type, etc.),
+you can also fine-tune qsv's read/write buffer.
+
+By default, the read buffer size is set to 16k, you can change it by setting the environment
+variable `QSV_RDR_BUFFER_CAPACITY` in bytes.
+
+The same is true with the write buffer (default: 32k) with the `QSV_WTR_BUFFER_CAPACITY` environment
+variable.
 
 License
 -------
@@ -132,4 +138,3 @@ Standards-based, best-of-breed, open source solutions to make your **Data Useful
 Naming Collision
 ----------------
 This project is unrelated to [Intel's Quick Sync Video](https://www.intel.com/content/www/us/en/architecture-and-technology/quick-sync-video/quick-sync-video-general.html).
-
