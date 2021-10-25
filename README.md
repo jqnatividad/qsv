@@ -93,10 +93,12 @@ cargo build --release
 
 The compiled binary will end up in `./target/release/qsv`.
 
-Performance
------------
-If you want more performance, set this environment variable
-**BEFORE** installing/compiling:
+Performance Tuning
+------------------
+### CPU Optimization
+Modern CPUs have various features that the Rust compiler can take advantage
+of to increase performance. If you want the compiler to take advantage of these
+CPU-specific speed-ups, set this environment variable **BEFORE** installing/compiling qsv:
 
 On Linux and macOS:
 ```bash
@@ -115,7 +117,20 @@ To find out your CPU architecture and other valid values for `target-cpu`:
 ```bash
 rustc --print target-cpus
 ```
+### Memory Allocator
+By default, qsv uses the mimalloc performance-oriented allocator from Microsoft.
+If you want to use the default allocator, use the `--no-default-features` flag
+when installing/compiling qsv, e.g.:
 
+```bash
+cargo install qsv --no-default-features
+```
+
+or 
+
+```bash
+cargo build --release --no-default-features
+```
 ### Buffer size
 Depending on your filesystem's configuration (e.g. block size, SSD, file system type, etc.),
 you can also fine-tune qsv's read/write buffer.
@@ -125,6 +140,18 @@ variable `QSV_RDR_BUFFER_CAPACITY` in bytes.
 
 The same is true with the write buffer (default: 32k) with the `QSV_WTR_BUFFER_CAPACITY` environment
 variable.
+
+### Benchmarking for Performance
+Use and fine-tune the [benchmark script](scripts/benchmark-basic.sh) when tweaking qsv's performance to your environment.
+Don't be afraid to change the benchmark data and the qsv commands to something that is more representative of your
+workloads.
+
+Use the generated TSV files to meter and compare performance across platforms. You'd be surprised how performance varies
+across environments - e.g. qsv's `join` and `scramble` operations perform abysmally on Windows's WSL running Ubuntu, with
+`join` taking 172.44 seconds and `scramble`, 237.46 seconds. On the same machine, running in a VirtualBox VM at that with
+the same Ubuntu version, `join` takes 1.34 seconds, and `scramble` 2.14 seconds - two orders of magnitude faster!
+
+However, `stats` performs two times faster on WSL vs the VirtualBox VM - 2.80 seconds vs 5.33 seconds for the `stats_index` benchmark.
 
 License
 -------
