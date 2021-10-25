@@ -9,7 +9,7 @@ use crate::util;
 use crate::CliResult;
 
 static USAGE: &str = "
-Randomly scrambles CSV data uniformly using memory proportional to the size of
+Randomly scrambles CSV records uniformly using memory proportional to the size of
 the CSV.
 
 Usage:
