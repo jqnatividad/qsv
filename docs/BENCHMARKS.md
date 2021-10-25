@@ -111,14 +111,14 @@ transpose                NA         NA
 
 ## Details
 
-The purpose of these benchmarks is to provide a rough ballpark estimate of how
-fast each command is. My hope is that they can also catch significant
-performance regressions.
+The primary purpose of these benchmarks is to provide a rough ballpark estimate of how
+fast each command is, to catch significant performance regressions, and to help you
+[fine-tune qsv's performance](README.md#Performance_Tuning) in your environment.
 
 The `count` command can be viewed as a sort of baseline of the fastest possible
 command that parses every record in CSV data.
 
 The benchmarks that end with `_index` are run with indexing enabled.
 
-Note that the `qsv stats` command is slower than `xsv` primarily because qsv computes
+Note that the `qsv stats` command is slower than `xsv stats` primarily because qsv computes
 more stats and does date type detection.
