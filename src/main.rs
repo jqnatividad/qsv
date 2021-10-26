@@ -8,10 +8,10 @@ extern crate dateparser;
 extern crate docopt;
 extern crate filetime;
 extern crate hlua;
-#[macro_use]
+// #[macro_use]
 extern crate lazy_static;
 extern crate itertools;
-#[cfg(feature = "malloc_mimalloc")]
+#[cfg(feature = "mimalloc")]
 extern crate mimalloc;
 extern crate num_cpus;
 extern crate rand;
