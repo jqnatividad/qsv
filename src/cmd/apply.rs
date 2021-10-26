@@ -5,6 +5,7 @@ use crate::chrono::prelude::*;
 use crate::config::{Config, Delimiter};
 use crate::currency::Currency;
 use crate::dateparser::parse_with;
+use crate::indicatif::{ProgressBar, ProgressStyle};
 use crate::reverse_geocoder::{Locations, ReverseGeocoder};
 use crate::select::SelectColumns;
 use crate::serde::Deserialize;
@@ -137,6 +138,7 @@ Common options:
                                 as headers.
     -d, --delimiter <arg>       The field delimiter for reading CSV data.
                                 Must be a single character. (default: ,)
+    -q, --quiet                 Don't show progress bars.
 ";
 
 static OPERATIONS: &[&str] = &[
@@ -174,6 +176,7 @@ struct Args {
     flag_output: Option<String>,
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
+    flag_quiet: bool,
 }
 
 lazy_static! {
@@ -246,9 +249,34 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     }
 
+    let mut record_count: u64 = 0;
+    if !args.flag_quiet {
+        record_count = match rconfig.indexed()? {
+            Some(idx) => idx.count(),
+            None => {
+                let mut cntrdr = rconfig.reader()?;
+                let mut count = 0u64;
+                let mut record = csv::ByteRecord::new();
+                while cntrdr.read_byte_record(&mut record)? {
+                    count += 1;
+                }
+                count
+            }
+        };
+    } 
+    let progress = ProgressBar::new(record_count);
+    progress.set_style(
+        ProgressStyle::default_bar()
+            .template("[{elapsed_precise}] [{wide_bar:.cyan/blue}] ({eta})")
+            .progress_chars("#>-"),
+    );
+
     let mut record = csv::StringRecord::new();
 
     while rdr.read_record(&mut record)? {
+        if !args.flag_quiet {
+            progress.inc(1);
+        }
         let mut cell = record[column_index].to_owned();
 
         if args.cmd_operations {
@@ -284,7 +312,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         wtr.write_record(&record)?;
     }
-
+    progress.finish();
     Ok(wtr.flush()?)
 }
 
@@ -358,6 +386,7 @@ fn apply_operations(operations: &Vec<&str>, cell: &mut String, comparand: &Strin
     true
 }
 
+#[inline(always)]
 fn geocode(cell: &mut String, geocoder: &ReverseGeocoder, formatstr: &str) {
     // validating regex for "lat, long" or "(lat, long)"
     lazy_static! {
