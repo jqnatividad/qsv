@@ -54,6 +54,7 @@ lazy_static = "1"
 reverse_geocoder = "2"
 currency = "0.4"
 itertools = "0.10"
+strsim = "0.10"
 uuid = { version = "0.8.1", features = ["v4"] }
 
 [build-dependencies]

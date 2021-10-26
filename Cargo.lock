@@ -154,7 +154,7 @@ dependencies = [
  "lazy_static",
  "regex",
  "serde",
- "strsim",
+ "strsim 0.9.3",
 ]
 
 [[package]]
@@ -438,6 +438,7 @@ dependencies = [
  "rustc_version",
  "serde",
  "serde_json",
+ "strsim 0.10.0",
  "tabwriter",
  "threadpool",
  "uuid",
@@ -666,6 +667,12 @@ name = "strsim"
 version = "0.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6446ced80d6c486436db5c078dde11a9f73d42b57fb273121e160b84f63d894c"
+
+[[package]]
+name = "strsim"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "73473c0e59e6d5812c5dfe2a064a6444949f089e20eec9a2e5506596494e4623"
 
 [[package]]
 name = "syn"
