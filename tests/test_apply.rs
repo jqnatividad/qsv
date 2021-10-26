@@ -14,7 +14,7 @@ fn apply() {
         ],
     );
     let mut cmd = wrk.command("apply");
-    cmd.arg("upper").arg("name").arg("data.csv");
+    cmd.arg("operations").arg("upper").arg("name").arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
@@ -41,7 +41,7 @@ fn apply_chain() {
         ],
     );
     let mut cmd = wrk.command("apply");
-    cmd.arg("trim,upper").arg("name").arg("data.csv");
+    cmd.arg("operations").arg("trim,upper").arg("name").arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
@@ -67,7 +67,7 @@ fn apply_no_headers() {
         ],
     );
     let mut cmd = wrk.command("apply");
-    cmd.arg("trim,upper")
+    cmd.arg("operations").arg("trim,upper")
         .arg("1")
         .arg("--no-headers")
         .arg("data.csv");
@@ -91,7 +91,8 @@ fn apply_rename() {
         ],
     );
     let mut cmd = wrk.command("apply");
-    cmd.arg("upper")
+    cmd.arg("operations")
+        .arg("upper")
         .arg("name")
         .arg("--rename")
         .arg("upper_name")
@@ -122,7 +123,8 @@ fn apply_new_column() {
         ],
     );
     let mut cmd = wrk.command("apply");
-    cmd.arg("upper")
+    cmd.arg("operations")
+        .arg("upper")
         .arg("name")
         .arg("--new-column")
         .arg("upper_name")
@@ -163,7 +165,7 @@ fn apply_currencytonum() {
         ],
     );
     let mut cmd = wrk.command("apply");
-    cmd.arg("currencytonum").arg("money").arg("data.csv");
+    cmd.arg("operations").arg("currencytonum").arg("money").arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
