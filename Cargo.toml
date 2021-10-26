@@ -55,6 +55,7 @@ reverse_geocoder = "2"
 currency = "0.4"
 itertools = "0.10"
 strsim = "0.10"
+indicatif = "0.16"
 uuid = { version = "0.8.1", features = ["v4"] }
 
 [build-dependencies]
