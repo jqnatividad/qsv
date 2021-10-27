@@ -29,7 +29,7 @@ os_type=$(echo $OSTYPE | cut -c 1-6)
 if [[ "$os_type" == "darwin" ]]; then
   data_size=$(stat -f '%z' "$data")
 else
-  data_size=$(stat -f '%s' "$data")
+  data_size=$(stat --format '%s' "$data")
 fi
 if [ ! -r "$countydata" ]; then
   curl -sS https://gist.githubusercontent.com/anonymous/063cb470e56e64e98cf1/raw/98e2589b801f6ca3ff900b01a87fbb7452eb35c7/countrynames.csv > "$countrydata"
