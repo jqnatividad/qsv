@@ -6,6 +6,7 @@ use crate::config::{Config, Delimiter};
 use crate::currency::Currency;
 use crate::dateparser::parse_with;
 use crate::indicatif::{ProgressBar, ProgressStyle};
+use crate::num_format::{SystemLocale, ToFormattedString};
 use crate::reverse_geocoder::{Locations, ReverseGeocoder};
 use crate::select::SelectColumns;
 use crate::serde::Deserialize;
@@ -27,7 +28,6 @@ The series of operations must be given separated by commas as such:
 
   trim => Trimming the cell
   trim,upper => Trimming the cell then transforming to uppercase
-  '' => No-op
 
 Currently supported operations:
 
@@ -51,7 +51,13 @@ Examples:
 Trim, then transform to uppercase the surname field and save it
 to a new column named uppercase_clean_surname.
 
-  $ qsv apply trim,upper surname -r uppercase_clean_surname file.csv
+  $ qsv apply operations trim,upper surname -r uppercase_clean_surname file.csv
+
+Compute the Normalized Damerau-Levenshtein similarity of the neighborhood column to
+the string 'Roxbury' and save it to a new column named neighborhood-dl-score.
+
+  $ qsv apply operations lower,simdln neighborhood --comparand roxbury \
+    -r dl-score boston311.csv
 
 You can also use this subcommand command to make a copy of a column:
 
@@ -63,11 +69,11 @@ If <replacement> is not specified, an empty cell is replaced with 'None'.
 Non-empty cells are not modified.
 
 Examples:
-Replace empty cells in file.csv Measurement column with None.
+Replace empty cells in file.csv Measurement column with 'None'.
 
 $ qsv apply emptyreplace Measurement file.csv
 
-Replace empty cells in file.csv Measurement column with Unknown.
+Replace empty cells in file.csv Measurement column with 'Unknown'.
 
 $ qsv apply emptyreplace --replacement Unknown Measurement file.csv
 
@@ -250,6 +256,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     let mut record_count: u64 = 0;
+    let progress = ProgressBar::new(record_count);
     if !args.flag_quiet {
         record_count = match rconfig.indexed()? {
             Some(idx) => idx.count(),
@@ -263,13 +270,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 count
             }
         };
-    } 
-    let progress = ProgressBar::new(record_count);
-    progress.set_style(
-        ProgressStyle::default_bar()
-            .template("[{elapsed_precise}] [{wide_bar:.cyan/blue}] ({eta})")
-            .progress_chars("#>-"),
-    );
+        progress.set_length(record_count);
+        progress.set_style(
+            ProgressStyle::default_bar()
+                .template("[{elapsed_precise}] [{bar:20} {percent}%{msg}] ({eta})")
+                .progress_chars("=>-"),
+        );
+        progress.set_draw_rate(1);
+        progress.set_message(format!(
+            " of {} records",
+            record_count.to_formatted_string(&SystemLocale::default().unwrap())
+        ));
+    }
 
     let mut record = csv::StringRecord::new();
 
@@ -280,14 +292,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let mut cell = record[column_index].to_owned();
 
         if args.cmd_operations {
-            if !apply_operations(&operations, &mut cell, &args.flag_comparand) {
-                return fail!(format!("Unknown operations."));
-            }
+            apply_operations(&operations, &mut cell, &args.flag_comparand);
         } else if args.cmd_emptyreplace {
             if cell.trim().is_empty() {
                 cell = replacement.to_string();
             }
-        } else if args.cmd_datefmt {
+        } else if args.cmd_datefmt && !cell.is_empty() {
             let parsed_date = parse_with(&cell, &Utc, *MIDNIGHT);
             if let Ok(format_date) = parsed_date {
                 let formatted_date = format_date.format(&formatstr).to_string();
@@ -312,11 +322,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         wtr.write_record(&record)?;
     }
-    progress.finish();
+    if !args.flag_quiet {
+        progress.finish();
+    }
     Ok(wtr.flush()?)
 }
 
-fn apply_operations(operations: &Vec<&str>, cell: &mut String, comparand: &String) -> bool {
+#[inline]
+fn apply_operations(operations: &Vec<&str>, cell: &mut String, comparand: &String) {
     lazy_static! {
         static ref SQUEEZER: Regex = Regex::new(r"\s+").unwrap();
     }
@@ -380,10 +393,9 @@ fn apply_operations(operations: &Vec<&str>, cell: &mut String, comparand: &Strin
                 }
             }
             "simod" => *cell = osa_distance(cell, comparand).to_string(),
-            "copy" | _ => {}
+            _ => {} // this also handles copy, which is a noop
         }
     }
-    true
 }
 
 #[inline(always)]
