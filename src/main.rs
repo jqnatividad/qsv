@@ -21,6 +21,7 @@ extern crate serde_json;
 extern crate tabwriter;
 extern crate threadpool;
 extern crate indicatif;
+extern crate num_format;
 extern crate uuid;
 
 use std::borrow::ToOwned;
