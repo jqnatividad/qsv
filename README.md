@@ -29,7 +29,7 @@ Available commands
 ------------------
 | Command | Description |
 | --- | --- |
-| **[apply](/src/cmd/apply.rs#L14)** | Apply series of string, date, currency & geocoding transformations to a CSV column. _**(NEW)**_ |
+| **[apply](/src/cmd/apply.rs#L21)** | Apply series of string, similarity, date, currency & geocoding transformations to a CSV column. _**(NEW)**_ |
 | **[behead](/src/cmd/behead.rs#L7)** | Drop headers from a CSV. _**(NEW)**_ |
 | **[cat](/src/cmd/cat.rs#L7)** | Concatenate CSV files by row or by column. |
 | **[count](/src/cmd/count.rs#L7)**[^1] | Count the rows in a CSV file. (Instantaneous with an index.) |
@@ -118,8 +118,9 @@ To find out your CPU architecture and other valid values for `target-cpu`:
 rustc --print target-cpus
 ```
 ### Memory Allocator
-By default, qsv uses the mimalloc performance-oriented allocator from Microsoft.
-If you want to use the default allocator, use the `--no-default-features` flag
+By default, qsv uses an alternative allocator - [mimalloc](https://github.com/microsoft/mimalloc),
+a performance-oriented allocator from Microsoft.
+If you want to use the standard allocator, use the `--no-default-features` flag
 when installing/compiling qsv, e.g.:
 
 ```bash
@@ -135,7 +136,7 @@ cargo build --release --no-default-features
 Depending on your filesystem's configuration (e.g. block size, SSD, file system type, etc.),
 you can also fine-tune qsv's read/write buffer.
 
-By default, the read buffer size is set to 16k, you can change it by setting the environment
+By default, the read buffer size is set to [16k](https://github.com/jqnatividad/qsv/blob/master/src/config.rs#L17), you can change it by setting the environment
 variable `QSV_RDR_BUFFER_CAPACITY` in bytes.
 
 The same is true with the write buffer (default: 32k) with the `QSV_WTR_BUFFER_CAPACITY` environment
