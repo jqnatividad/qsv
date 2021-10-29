@@ -1,7 +1,7 @@
 use crate::regex::Regex;
 use lazy_static::lazy_static;
 
-use crate::chrono::prelude::*;
+use crate::chrono::{NaiveTime, Utc};
 use crate::config::{Config, Delimiter};
 use crate::currency::Currency;
 use crate::dateparser::parse_with;
@@ -290,7 +290,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         progress.set_style(
             ProgressStyle::default_bar()
                 .template("[{elapsed_precise}] [{bar:20} {percent}%{msg}] ({eta})")
-                .progress_chars("=>-"),
+                .progress_chars("=>-")
         );
         progress.set_draw_rate(1);
         progress.set_message(format!(
@@ -338,13 +338,25 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         wtr.write_record(&record)?;
     }
     if !args.flag_quiet {
+        let per_sec_rate = progress.per_sec();
+
+        let finish_template = format!(
+            "[{{elapsed_precise}}] [{{bar:20}} {{percent}}%{{msg}}] ({}/sec)",
+            per_sec_rate.to_formatted_string(&SystemLocale::default().unwrap())
+        );
+
+        progress.set_style(
+            ProgressStyle::default_bar()
+                .template(&finish_template)
+                .progress_chars("=>-")
+        );
         progress.finish();
     }
     Ok(wtr.flush()?)
 }
 
 #[inline]
-fn apply_operations(operations: &Vec<&str>, cell: &mut String, comparand: &String) {
+fn apply_operations(operations: &Vec<&str>, cell: &mut String, comparand: &str) {
     lazy_static! {
         static ref SQUEEZER: Regex = Regex::new(r"\s+").unwrap();
     }
