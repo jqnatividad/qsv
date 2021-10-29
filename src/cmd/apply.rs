@@ -48,16 +48,31 @@ Currently supported operations:
   * simod: OSA Distance.
 
 Examples:
-Trim, then transform to uppercase the surname field and save it
-to a new column named uppercase_clean_surname.
+Trim, then transform to uppercase the surname field.
+
+  $ qsv apply operations trim,upper surname file.csv
+
+Trim, then transform to uppercase the surname field and
+rename the column uppercase_clean_surname.
 
   $ qsv apply operations trim,upper surname -r uppercase_clean_surname file.csv
 
-Compute the Normalized Damerau-Levenshtein similarity of the neighborhood column to
-the string 'Roxbury' and save it to a new column named neighborhood-dl-score.
+Trim, then transform to uppercase the surname field and 
+save it to a new column named uppercase_clean_surname.
+
+  $ qsv apply operations trim,upper surname -c uppercase_clean_surname file.csv
+
+Extract the numeric value of the Salary column and new
+column named Salary_num.
+
+  $ qsv apply currencytonum Salary file.csv
+
+Compute the Normalized Damerau-Levenshtein similarity of
+the neighborhood column to the string 'Roxbury' and save
+it to a new column named neighborhood-dl-score.
 
   $ qsv apply operations lower,simdln neighborhood --comparand roxbury \
-    -r dl-score boston311.csv
+    -c dl-score boston311.csv
 
 You can also use this subcommand command to make a copy of a column:
 
@@ -235,13 +250,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         if let Some(new_column) = &args.flag_new_column {
             headers.push_field(new_column);
         }
-
         wtr.write_record(&headers)?;
     }
 
     let loc = Locations::from_memory();
     let geocoder = ReverseGeocoder::new(&loc);
 
+    // validate specified operations
     let operations: Vec<&str> = args.arg_operations.split(',').collect();
     if args.cmd_operations {
         for op in &operations {
@@ -255,6 +270,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     }
 
+    // prep progress bar
     let mut record_count: u64 = 0;
     let progress = ProgressBar::new(record_count);
     if !args.flag_quiet {
@@ -284,7 +300,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     let mut record = csv::StringRecord::new();
-
     while rdr.read_record(&mut record)? {
         if !args.flag_quiet {
             progress.inc(1);
