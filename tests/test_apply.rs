@@ -14,7 +14,10 @@ fn apply() {
         ],
     );
     let mut cmd = wrk.command("apply");
-    cmd.arg("operations").arg("upper").arg("name").arg("data.csv");
+    cmd.arg("operations")
+        .arg("upper")
+        .arg("name")
+        .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
@@ -41,7 +44,10 @@ fn apply_chain() {
         ],
     );
     let mut cmd = wrk.command("apply");
-    cmd.arg("operations").arg("trim,upper").arg("name").arg("data.csv");
+    cmd.arg("operations")
+        .arg("trim,upper")
+        .arg("name")
+        .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
@@ -67,7 +73,8 @@ fn apply_no_headers() {
         ],
     );
     let mut cmd = wrk.command("apply");
-    cmd.arg("operations").arg("trim,upper")
+    cmd.arg("operations")
+        .arg("trim,upper")
         .arg("1")
         .arg("--no-headers")
         .arg("data.csv");
@@ -165,7 +172,10 @@ fn apply_currencytonum() {
         ],
     );
     let mut cmd = wrk.command("apply");
-    cmd.arg("operations").arg("currencytonum").arg("money").arg("data.csv");
+    cmd.arg("operations")
+        .arg("currencytonum")
+        .arg("money")
+        .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
@@ -216,6 +226,38 @@ fn apply_emptyreplace() {
 }
 
 #[test]
+fn apply_similarity() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["name"],
+            svec!["John"],
+            svec!["Jonathan"],
+            svec!["Edna"],
+            svec!["Larry"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("simdln")
+        .arg("name")
+        .arg("--comparand")
+        .arg("Joe")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["name"],
+        svec!["0.5"],
+        svec!["0.25"],
+        svec!["0"],
+        svec!["0"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn apply_emptyreplace_parameter() {
     let wrk = Workdir::new("apply");
     wrk.create(
@@ -256,7 +298,7 @@ fn apply_datefmt() {
             svec!["September 17, 2012 10:09am EST"],
             svec!["Wed, 02 Jun 2021 06:31:39 GMT"],
             svec!["2009-01-20 05:00 EST"],
-            svec!["July 4, 2005"],            
+            svec!["July 4, 2005"],
             svec!["2021-05-01T01:17:02.604456Z"],
             svec!["This is not a date and it will not be reformatted"],
         ],
@@ -270,7 +312,7 @@ fn apply_datefmt() {
         svec!["2012-09-17T15:09:00+00:00"],
         svec!["2021-06-02T06:31:39+00:00"],
         svec!["2009-01-20T10:00:00+00:00"],
-        svec!["2005-07-04"],            
+        svec!["2005-07-04"],
         svec!["2021-05-01T01:17:02.604456+00:00"],
         svec!["This is not a date and it will not be reformatted"],
     ];
@@ -342,7 +384,6 @@ fn apply_datefmt_fmtstring_with_literals() {
     ];
     assert_eq!(got, expected);
 }
-
 
 #[test]
 fn apply_datefmt_fmtstring_notime() {
