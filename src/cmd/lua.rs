@@ -3,6 +3,7 @@ use std::io::prelude::*;
 
 use crate::config::{Config, Delimiter};
 use crate::hlua::{AnyLuaValue, Lua, LuaError, LuaTable};
+use crate::indicatif::ProgressBar;
 use crate::util;
 use crate::CliError;
 use crate::CliResult;
@@ -77,6 +78,7 @@ Common options:
                            appear as the header row in the output.
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
+    -q, --quiet            Do not display progress bar.
 "#;
 
 #[derive(Deserialize)]
@@ -92,6 +94,7 @@ struct Args {
     flag_output: Option<String>,
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
+    flag_quiet: bool,
 }
 
 impl From<LuaError> for CliError {
@@ -145,9 +148,19 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     lua_program.push_str(&lua_script);
 
+    let mut record_count: u64 = 0;
+    let progress = ProgressBar::new(record_count);
+    if !args.flag_quiet {
+        record_count = util::count_rows(&rconfig);
+        util::prep_progress(&progress, record_count);
+    }
+
     let mut record = csv::StringRecord::new();
 
     while rdr.read_record(&mut record)? {
+        if !args.flag_quiet {
+            progress.inc(1);
+        }
         // Updating col
         {
             let mut col: LuaTable<_> = lua.get("col").unwrap();
@@ -209,6 +222,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 wtr.write_record(&record)?;
             }
         }
+    }
+    if !args.flag_quiet {
+        util::finish_progress(&progress);
     }
 
     Ok(wtr.flush()?)
