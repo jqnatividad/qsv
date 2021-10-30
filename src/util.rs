@@ -72,7 +72,6 @@ pub fn prep_progress(progress: &ProgressBar, record_count: u64) {
             .template("[{elapsed_precise}] [{bar:20} {percent}%{msg}] ({eta})")
             .progress_chars("=>-"),
     );
-    progress.set_draw_rate(1);
     progress.set_message(format!(
         " of {} records",
         record_count.to_formatted_string(&SystemLocale::default().unwrap())
