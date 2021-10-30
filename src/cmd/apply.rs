@@ -393,11 +393,10 @@ fn apply_operations(operations: &Vec<&str>, cell: &mut String, comparand: &str) 
 
 #[inline(always)]
 fn geocode(cell: &mut String, geocoder: &ReverseGeocoder, formatstr: &str) {
-    // validating regex for "lat, long" or "(lat, long)"
+    // simple regex for "lat, long" or "(lat, long)", does not validate ranges
     lazy_static! {
-            static ref LOCREGEX: Regex = Regex::new(
-            r"([-+]?(?:[1-8]?\d(?:\.\d+)?|90(?:\.0+)?)),\s*([-+]?(?:180(?:\.0+)?|(?:(?:1[0-7]\d)|(?:[1-9]?\d))(?:\.\d+)?))\s*\)?$",
-        ).unwrap();
+        static ref LOCREGEX: Regex =
+            Regex::new(r"(?-u)^\(*(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)\)?$").unwrap();
     }
 
     let loccaps = LOCREGEX.captures(&*cell);
@@ -408,7 +407,7 @@ fn geocode(cell: &mut String, geocoder: &ReverseGeocoder, formatstr: &str) {
         let search_result = geocoder.search(coords);
         if let Some(locdetails) = search_result {
             *cell = match formatstr {
-                "city-state" | "%+" => format!(
+                "%+" | "city-state" => format!(
                     "{name}, {admin1}",
                     name = locdetails.record.name,
                     admin1 = locdetails.record.admin1,
