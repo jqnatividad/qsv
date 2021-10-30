@@ -10,6 +10,8 @@ use ::num_cpus;
 use docopt::Docopt;
 use serde::de::{Deserialize, DeserializeOwned, Deserializer, Error};
 
+use crate::indicatif::{ProgressBar, ProgressStyle};
+use crate::num_format::{SystemLocale, ToFormattedString};
 use crate::config::{Config, Delimiter};
 use crate::CliResult;
 
@@ -46,6 +48,51 @@ pub fn version() -> String {
         }
         _ => "".to_owned(),
     }
+}
+
+pub fn count_rows(conf: &Config) -> u64 {
+    match conf.indexed().unwrap() {
+        Some(idx) => idx.count(),
+        None => {
+            let mut rdr = conf.reader().unwrap();
+            let mut count = 0u64;
+            let mut record = csv::ByteRecord::new();
+            while rdr.read_byte_record(&mut record).unwrap() {
+                count += 1;
+            }
+            count
+        }
+    }
+}
+
+pub fn prep_progress(progress: &ProgressBar, record_count: u64) {
+    progress.set_length(record_count);
+    progress.set_style(
+        ProgressStyle::default_bar()
+            .template("[{elapsed_precise}] [{bar:20} {percent}%{msg}] ({eta})")
+            .progress_chars("=>-"),
+    );
+    progress.set_draw_rate(1);
+    progress.set_message(format!(
+        " of {} records",
+        record_count.to_formatted_string(&SystemLocale::default().unwrap())
+    ));
+}
+
+pub fn finish_progress(progress: &ProgressBar) {
+    let per_sec_rate = progress.per_sec();
+
+    let finish_template = format!(
+        "[{{elapsed_precise}}] [{{bar:20}} {{percent}}%{{msg}}] ({}/sec)",
+        per_sec_rate.to_formatted_string(&SystemLocale::default().unwrap())
+    );
+
+    progress.set_style(
+        ProgressStyle::default_bar()
+            .template(&finish_template)
+            .progress_chars("=>-")
+    );
+    progress.finish();
 }
 
 pub fn get_args<T>(usage: &str, argv: &[&str]) -> CliResult<T>

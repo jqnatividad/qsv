@@ -5,8 +5,7 @@ use crate::chrono::{NaiveTime, Utc};
 use crate::config::{Config, Delimiter};
 use crate::currency::Currency;
 use crate::dateparser::parse_with;
-use crate::indicatif::{ProgressBar, ProgressStyle};
-use crate::num_format::{SystemLocale, ToFormattedString};
+use crate::indicatif::ProgressBar;
 use crate::reverse_geocoder::{Locations, ReverseGeocoder};
 use crate::select::SelectColumns;
 use crate::serde::Deserialize;
@@ -274,29 +273,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut record_count: u64 = 0;
     let progress = ProgressBar::new(record_count);
     if !args.flag_quiet {
-        record_count = match rconfig.indexed()? {
-            Some(idx) => idx.count(),
-            None => {
-                let mut cntrdr = rconfig.reader()?;
-                let mut count = 0u64;
-                let mut record = csv::ByteRecord::new();
-                while cntrdr.read_byte_record(&mut record)? {
-                    count += 1;
-                }
-                count
-            }
-        };
-        progress.set_length(record_count);
-        progress.set_style(
-            ProgressStyle::default_bar()
-                .template("[{elapsed_precise}] [{bar:20} {percent}%{msg}] ({eta})")
-                .progress_chars("=>-")
-        );
-        progress.set_draw_rate(1);
-        progress.set_message(format!(
-            " of {} records",
-            record_count.to_formatted_string(&SystemLocale::default().unwrap())
-        ));
+        record_count = util::count_rows(&rconfig);
+        util::prep_progress(&progress, record_count);
     }
 
     let mut record = csv::StringRecord::new();
@@ -338,19 +316,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         wtr.write_record(&record)?;
     }
     if !args.flag_quiet {
-        let per_sec_rate = progress.per_sec();
-
-        let finish_template = format!(
-            "[{{elapsed_precise}}] [{{bar:20}} {{percent}}%{{msg}}] ({}/sec)",
-            per_sec_rate.to_formatted_string(&SystemLocale::default().unwrap())
-        );
-
-        progress.set_style(
-            ProgressStyle::default_bar()
-                .template(&finish_template)
-                .progress_chars("=>-")
-        );
-        progress.finish();
+        util::finish_progress(&progress);
     }
     Ok(wtr.flush()?)
 }
