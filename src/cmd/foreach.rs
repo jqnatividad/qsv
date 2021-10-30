@@ -6,6 +6,7 @@ use std::io::BufReader;
 use std::os::unix::ffi::OsStrExt;
 use std::process::{Command, Stdio};
 
+use crate::indicatif::ProgressBar;
 use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
 use crate::util;
@@ -45,6 +46,7 @@ Common options:
                            headers.
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
+    -q, --quiet            Do not display progress bar.
 ";
 
 #[derive(Deserialize)]
@@ -56,6 +58,7 @@ struct Args {
     flag_new_column: Option<String>,
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
+    flag_quiet: bool,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -83,7 +86,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut record = csv::ByteRecord::new();
     let mut output_headers_written = false;
 
+    // prep progress bar
+    let mut record_count: u64 = 0;
+    let progress = ProgressBar::new(record_count);
+    if !args.flag_quiet {
+        record_count = util::count_rows(&rconfig);
+        util::prep_progress(&progress, record_count);
+    }
+
     while rdr.read_byte_record(&mut record)? {
+        if !args.flag_quiet {
+            progress.inc(1);
+        }
         let current_value = &record[column_index];
 
         let templated_command = template_pattern
@@ -161,6 +175,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             cmd.wait().unwrap();
         }
     }
-
+    if !args.flag_quiet {
+        util::finish_progress(&progress);
+    }
     Ok(())
 }
