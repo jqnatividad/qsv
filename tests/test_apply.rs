@@ -427,7 +427,7 @@ fn apply_geocode() {
             svec!["Location"],
             svec!["40.812126, -73.9041813"],
             svec!["40.66472342, -73.93867227"],
-            svec!["( 40.766672, -73.9568128 )"],
+            svec!["(40.766672, -73.9568128)"],
             svec!["(40.819342, -73.9532127)"],
             svec!["This is not a Location and it will not be geocoded"],
             svec!["95.213424, 190,1234565"], // invalid lat, long
@@ -458,7 +458,7 @@ fn apply_geocode_fmtstring() {
             svec!["Location"],
             svec!["40.812126, -73.9041813"],
             svec!["40.66472342, -73.93867227"],
-            svec!["( 40.766672, -73.9568128 )"],
+            svec!["(40.766672, -73.9568128)"],
             svec!["(40.819342, -73.9532127)"],
             svec!["This is not a Location and it will not be geocoded"],
             svec!["95.213424, 190,1234565"], // invalid lat,long
@@ -493,7 +493,7 @@ fn apply_geocode_fmtstring_intl() {
             svec!["Location"],
             svec!["41.390205, 2.154007"],
             svec!["52.371807, 4.896029"],
-            svec!["( 52.520008, 13.404954 )"],
+            svec!["(52.520008, 13.404954)"],
             svec!["(14.55027,121.03269)"],
             svec!["This is not a Location and it will not be geocoded"],
             svec!["95.213424, 190,1234565"], // invalid lat,long
