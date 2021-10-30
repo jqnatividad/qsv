@@ -18,12 +18,16 @@ countrydata=countrynames.csv
 data_idx=worldcitiespop_mil.csv.idx
 data_to_exclude=data_to_exclude.csv
 searchset_patterns=searchset_patterns.txt
+nyc311datazip=nyc-311-sample-100k.zip
+nyc311data=nyc-311-sample-100k.csv
 if [ ! -r "$data" ]; then
   printf "Downloading benchmarking data...\n"
   curl -sS https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/worldcitiespop_mil.zip > "$datazip"
   unzip "$datazip"
   qsv sample --seed 42 50000 "$data" -o "$data_to_exclude"
   printf "santa\nfort\ncamp\n" > "$searchset_patterns"
+  curl -sS https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/nyc-311-sample-100k.zip > "$nyc311datazip"
+  unzip "$nyc311datazip"
 fi
 os_type=$(echo $OSTYPE | cut -c 1-6)
 if [[ "$os_type" == "darwin" ]]; then
@@ -101,6 +105,11 @@ current_time=$(date "+%Y-%m-%d-%H-%M-%S")
 benchmarkfile=qsvbench-$qsvver-$current_time.tsv
 printf "%-25s%-11s%-11s\n" BENCHMARK TIME_SECS MB_PER_SEC
 printf "benchmark\ttime_secs\tmb_per_sec\n" > $benchmarkfile
+run apply_op_string qsv apply operations trim,upper Country "$data"
+run apply_op_similarity qsv apply operations simdln Country --comparand union "$data"
+run apply_datefmt qsv apply datefmt \"Created Date\" "$nyc311data"
+run apply_emptyreplace qsv apply emptyreplace \"Bridge Highway Name\" --replacement Unspecified "$nyc311data"
+run apply_geocode qsv apply geocode Location --new-column geocoded_location -q "$nyc311data"
 run count qsv count "$data"
 run --index count_index qsv count "$data"
 run dedup qsv dedup "$data"
