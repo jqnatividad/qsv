@@ -258,6 +258,40 @@ fn apply_similarity() {
 }
 
 #[test]
+fn apply_similarity_soundex() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["name"],
+            svec!["John"],
+            svec!["Jonathan"],
+            svec!["Michelle"],
+            svec!["Larry"],
+            svec!["Joel"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("lower,soundex")
+        .arg("name")
+        .arg("--comparand")
+        .arg("michael")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["name"],
+        svec!["false"],
+        svec!["false"],
+        svec!["true"],
+        svec!["false"],
+        svec!["false"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn apply_emptyreplace_parameter() {
     let wrk = Workdir::new("apply");
     wrk.create(
