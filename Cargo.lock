@@ -283,14 +283,14 @@ dependencies = [
 
 [[package]]
 name = "docopt"
-version = "1.1.0"
+version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f525a586d310c87df72ebcd98009e57f1cc030c8c268305287a476beb653969"
+checksum = "7f3f119846c823f9eafcf953a8f6ffb6ed69bf6240883261a7f13b634579a51f"
 dependencies = [
  "lazy_static",
  "regex",
  "serde",
- "strsim 0.9.3",
+ "strsim 0.10.0",
 ]
 
 [[package]]
@@ -470,9 +470,9 @@ checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 
 [[package]]
 name = "libc"
-version = "0.2.105"
+version = "0.2.106"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "869d572136620d55835903746bcb5cdc54cb2851fd0aeec53220b4bb65ef3013"
+checksum = "a60553f9a9e039a333b4e9b20573b9e9b9c0bb3a11e201ccc48ef4283456d673"
 
 [[package]]
 name = "libloading"
@@ -536,6 +536,15 @@ checksum = "a92518e98c078586bc6c934028adcca4c92a53d6a958196de835170a01d84e4b"
 dependencies = [
  "adler",
  "autocfg",
+]
+
+[[package]]
+name = "natural"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "65e6b44f8ddc659cde3555e0140d3441ad26cb03a1410774af1f9a19097c1867"
+dependencies = [
+ "rust-stemmers",
 ]
 
 [[package]]
@@ -744,6 +753,7 @@ dependencies = [
  "lazy_static",
  "log",
  "mimalloc",
+ "natural",
  "num-format",
  "num_cpus",
  "qsv-stats",
@@ -936,6 +946,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "rust-stemmers"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e46a2036019fdb888131db7a4c847a1063a7493f971ed94ea82c67eada63ca54"
+dependencies = [
+ "serde",
+ "serde_derive",
+]
+
+[[package]]
 name = "rustc-demangle"
 version = "0.1.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1016,12 +1036,6 @@ name = "strsim"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8ea5119cdb4c55b55d432abb513a0429384878c15dde60cc77b1c99de1a95a6a"
-
-[[package]]
-name = "strsim"
-version = "0.9.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6446ced80d6c486436db5c078dde11a9f73d42b57fb273121e160b84f63d894c"
 
 [[package]]
 name = "strsim"
