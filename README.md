@@ -134,7 +134,7 @@ cargo build --release --no-default-features
 ```
 ### Buffer size
 Depending on your filesystem's configuration (e.g. block size, SSD, file system type, etc.),
-you can also fine-tune qsv's read/write buffer.
+you can also fine-tune qsv's read/write buffers.
 
 By default, the read buffer size is set to [16k](https://github.com/jqnatividad/qsv/blob/master/src/config.rs#L17), you can change it by setting the environment
 variable `QSV_RDR_BUFFER_CAPACITY` in bytes.
