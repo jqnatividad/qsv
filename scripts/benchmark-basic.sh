@@ -118,7 +118,8 @@ benchmarkfile=qsvbench-$qsvver-$current_time.tsv
 printf "%-25s%-11s%-12s%-12s\n" BENCHMARK TIME_SECS MB_PER_SEC RECS_PER_SEC
 printf "benchmark\ttime_secs\tmb_per_sec\trecs_per_sec\n" > $benchmarkfile
 run apply_op_string qsv apply operations trim,upper Country "$data"
-run apply_op_similarity qsv apply operations simdln Country --comparand union "$data"
+run apply_op_similarity qsv apply operations lower,simdln Country --comparand union "$data"
+run apply_op_soundex qsv apply operations lower,soundex City --comparand boston "$data" 
 run --nyc311 apply_datefmt qsv apply datefmt \"Created Date\" "$nyc311data"
 run --nyc311 apply_emptyreplace qsv apply emptyreplace \"Bridge Highway Name\" --replacement Unspecified "$nyc311data"
 run --nyc311 apply_geocode qsv apply geocode Location --new-column geocoded_location -q "$nyc311data"
