@@ -15,6 +15,7 @@ use strsim::{
     damerau_levenshtein, hamming, jaro_winkler, normalized_damerau_levenshtein, osa_distance,
     sorensen_dice,
 };
+use crate::natural::phonetics::soundex;
 
 static USAGE: &str = "
 Apply a series of unary functions to a given CSV column. This can be used to
@@ -45,6 +46,7 @@ Currently supported operations:
   * simsd: Sørensen-Dice similarity (between 0.0 & 1.0)
   * simhm: Hamming distance. Number of positions where characters differ.
   * simod: OSA Distance.
+  * soundex: sounds like (boolean)
 
 Examples:
 Trim, then transform to uppercase the surname field.
@@ -177,6 +179,7 @@ static OPERATIONS: &[&str] = &[
     "simsd",
     "simhm",
     "simod",
+    "soundex",
 ];
 
 #[derive(Deserialize, Debug)]
@@ -261,9 +264,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         for op in &operations {
             if !OPERATIONS.contains(op) {
                 return fail!(format!(
-                    "Unknown \"{}\" operations found in \"{}\"",
-                    op,
-                    operations.join(",")
+                    "Unknown \"{}\" operation",
+                    op
                 ));
             }
         }
@@ -386,6 +388,9 @@ fn apply_operations(operations: &Vec<&str>, cell: &mut String, comparand: &str) 
                 }
             }
             "simod" => *cell = osa_distance(cell, comparand).to_string(),
+            "soundex" => {
+                *cell = format!("{}", (soundex(&*cell, comparand))); 
+            }
             _ => {} // this also handles copy, which is a noop
         }
     }
