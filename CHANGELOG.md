@@ -5,6 +5,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.20.0] - 2021-10-31
+### Added
+- added string similarity operations to `apply` command:
+  * simdl: Damerau-Levenshtein similarity
+  * simdln: Normalized Damerau-Levenshtein similarity (between 0.0 & 1.0)
+  * simjw: Jaro-Winkler similarity (between 0.0 & 1.0)
+  * simsd: Sørensen-Dice similarity (between 0.0 & 1.0)
+  * simhm: Hamming distance. Number of positions where characters differ.
+  * simod: OSA Distance.
+  * soundex: sounds like (boolean)
+- added progress bars to commands that may spawn long-running jobs - for this release,
+`apply`, `foreach`, and `lua`. Progress bars can be suppressed with `--quiet` option.
+- added progress bar helper functions to utils.rs.
+- added `apply` to benchmarks.
+- added sample NYC 311 data to benchmarks.
+- added records per second (RECS_PER_SEC) to benchmarks
+
+### Changed
+- major refactoring of `apply` command:
+  - to take advantage of docopt parsing/validation.
+  - instead of one big command, broke down apply to several subcommands:
+    - operations
+    - emptyreplace
+    - datefmt
+    - geocode
+- simplified lat/long regex validator to no longer validate range, as the underlying 
+geocoder function validates it already - 18% geocode speedup.
+- bumped docopt back up to 1.1.1.
+- improved error message when specifying an invalid apply operation.
 
 ## [0.19.0] - 2021-10-24
 ### Added
