@@ -32,8 +32,10 @@ fi
 os_type=$(echo $OSTYPE | cut -c 1-6)
 if [[ "$os_type" == "darwin" ]]; then
   data_size=$(stat -f '%z' "$data")
+  nyc311data_size=$(stat -f '%z' "$nyc311data")
 else
   data_size=$(stat --format '%s' "$data")
+  nyc311data_size=$(stat --format '%s' "$nyc311data")
 fi
 if [ ! -r "$countydata" ]; then
   curl -sS https://gist.githubusercontent.com/anonymous/063cb470e56e64e98cf1/raw/98e2589b801f6ca3ff900b01a87fbb7452eb35c7/countrynames.csv > "$countrydata"
@@ -73,9 +75,11 @@ function benchmark_with_index {
 
 function run {
   index=
+  nyc311=
   while true; do
     case "$1" in
       --index) index="yes" && shift ;;
+      --nyc311) nyc311="yes" && shift ;;
       *) break ;;
     esac
   done
@@ -89,10 +93,18 @@ function run {
     else
       t=$(benchmark_with_index "$@")
     fi
-    mb_per=$(echo "scale=2; ($data_size / $t) / 2^20" | bc)
+    if [ -z "$nyc311" ]; then
+      mb_per=$(echo "scale=2; ($data_size / $t) / 2^20" | bc)
+      recs_per=$(echo "scale=2; (1000000 / $t)" | bc)
+    else
+      mb_per=$(echo "scale=2; ($nyc311data_size / $t) / 2^20" | bc)
+      recs_per=$(echo "scale=2; (100000 / $t)" | bc)
+    fi
+    mb_per=$(printf "%0.02f" $mb_per)
+    recs_per=$(printf "%'.2f" $recs_per)
     printf -v tprint "%0.02f" $t
-    printf "%-11s%-11s\n" "$tprint" "$mb_per"
-    printf "%s\t%0.02f\t%s\n" $name $t $mb_per >> $benchmarkfile
+    printf "%-11s%-12s%-12s\n" "$tprint" "$mb_per" "$recs_per"
+    printf "%s\t%0.02f\t%s\t%s\n" $name $t $mb_per $recs_per >> $benchmarkfile
   fi
 }
 
@@ -103,13 +115,13 @@ current_time=$(date "+%Y-%m-%d-%H-%M-%S")
 # qsv scramble "$data" > temp.csv
 # mv -f temp.csv "$data"
 benchmarkfile=qsvbench-$qsvver-$current_time.tsv
-printf "%-25s%-11s%-11s\n" BENCHMARK TIME_SECS MB_PER_SEC
-printf "benchmark\ttime_secs\tmb_per_sec\n" > $benchmarkfile
+printf "%-25s%-11s%-12s%-12s\n" BENCHMARK TIME_SECS MB_PER_SEC RECS_PER_SEC
+printf "benchmark\ttime_secs\tmb_per_sec\trecs_per_sec\n" > $benchmarkfile
 run apply_op_string qsv apply operations trim,upper Country "$data"
 run apply_op_similarity qsv apply operations simdln Country --comparand union "$data"
-run apply_datefmt qsv apply datefmt \"Created Date\" "$nyc311data"
-run apply_emptyreplace qsv apply emptyreplace \"Bridge Highway Name\" --replacement Unspecified "$nyc311data"
-run apply_geocode qsv apply geocode Location --new-column geocoded_location -q "$nyc311data"
+run --nyc311 apply_datefmt qsv apply datefmt \"Created Date\" "$nyc311data"
+run --nyc311 apply_emptyreplace qsv apply emptyreplace \"Bridge Highway Name\" --replacement Unspecified "$nyc311data"
+run --nyc311 apply_geocode qsv apply geocode Location --new-column geocoded_location -q "$nyc311data"
 run count qsv count "$data"
 run --index count_index qsv count "$data"
 run dedup qsv dedup "$data"
