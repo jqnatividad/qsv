@@ -41,14 +41,14 @@ Available commands
 | **[fixlengths](/src/cmd/fixlengths.rs#L9)** | Force a CSV to have same-length records by either padding or truncating them. |
 | **[flatten](/src/cmd/flatten.rs#L12)** | A flattened view of CSV records. Useful for viewing one record at a time.<br />e.g. `qsv slice -i 5 data.csv \| qsv flatten`. |
 | **[fmt](/src/cmd/fmt.rs#L7)** | Reformat a CSV with different delimiters, record terminators or quoting rules. (Supports ASCII delimited data.) _**(EXTENDED)**_ |
-| **[foreach](/src/cmd/foreach.rs#L15)** | Loop over a CSV to execute bash commands. (*nix only) _**(NEW)**_ |
+| **[foreach](/src/cmd/foreach.rs#L17)** | Loop over a CSV to execute bash commands. (*nix only) _**(NEW)**_ |
 | **[frequency](/src/cmd/frequency.rs#L15)**[^1][^3] | Build frequency tables of each column. (Uses parallelism to go faster if an index is present.) |
 | **[headers](/src/cmd/headers.rs#L11)** | Show the headers of a CSV. Or show the intersection of all headers between many CSV files. |
 | **[index](/src/cmd/index.rs#L13)** | Create an index for a CSV. This is very quick & provides constant time indexing into the CSV file. |
 | **[input](/src/cmd/input.rs#L7)** | Read a CSV with exotic quoting/escaping rules. |
 | **[join](/src/cmd/join.rs#L17)**[^1] | Inner, outer, cross, anti & semi joins. Uses a simple hash index to make it fast. _**(EXTENDED)**_ |
 | **[jsonl](/src/cmd/jsonl.rs#L11)** | Convert newline-delimited JSON to CSV. _**(NEW)**_
-| **[lua](/src/cmd/lua.rs#L14)** | Execute a Lua script over CSV lines to transform, aggregate or filter them. _**(NEW)**_ |
+| **[lua](/src/cmd/lua.rs#L15)** | Execute a Lua script over CSV lines to transform, aggregate or filter them. _**(NEW)**_ |
 | **[partition](/src/cmd/partition.rs#L16)** | Partition a CSV based on a column value. |
 | **[pseudo](/src/cmd/pseudo.rs#L10)** | Pseudonymise the value of the given column by replacing them with an incremental identifier. _**(NEW)**_ |
 | **[rename](/src/cmd/rename.rs#L7)** |  Rename the columns of a CSV efficiently. _**(NEW)**_ |
