@@ -93,6 +93,23 @@ cargo build --release
 
 The compiled binary will end up in `./target/release/qsv`.
 
+Tab Completion
+--------------
+qsv's command-line options are quite extensive. Thankfully, since it uses [docopt](http://docopt.org/) for CLI processing,
+we can take advantage of [doctop.rs' tab completion support](https://github.com/docopt/docopt.rs#tab-completion-support) to make it
+easier to use qsv at the command-line (currently, only bash shell is supported):
+
+```bash
+# install docopt-wordlist
+cargo install docopt
+
+# IMPORTANT: run these commands from the root directory of your qsv git repository
+# to setup bash qsv tab completion
+echo "DOCOPT_WORDLIST_BIN=\"$(which docopt-wordlist)"\" >> $HOME/.bash_completion
+echo "source \"$(pwd)/scripts/docopt-wordlist.bash\"" >> $HOME/.bash_completion
+echo "complete -F _docopt_wordlist_commands qsv" >> $HOME/.bash_completion
+```
+
 Performance Tuning
 ------------------
 ### CPU Optimization

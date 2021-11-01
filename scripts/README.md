@@ -1,0 +1,1 @@
+For convenience, the [docopt-wordlist.bash from the docopt.rs project](https://github.com/docopt/docopt.rs/blob/master/completions/docopt-wordlist.bash) is bundled here to quickly install qsv tab completion support.
