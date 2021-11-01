@@ -59,7 +59,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     fs::create_dir_all(&args.arg_outdir)?;
 
     // It would be nice to support efficient parallel partitions, but doing
-    // do would involve more complicated inter-thread communication, with
+    // so would involve more complicated inter-thread communication, with
     // multiple readers and writers, and some way of passing buffers
     // between them.
     args.sequential_partition()
