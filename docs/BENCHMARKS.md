@@ -9,7 +9,7 @@ from the [Data Science Toolkit](https://github.com/petewarden/dstkdata). Select 
 ([nyc-311-sample-100k.zip](https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/nyc-311-sample-100k.zip)),
 as the worldcitiespop.csv file didn't have dates, empty fields, nor lat/long coordinates in that order.
 
-These benchmarks were run on a Virtualbox 6.1 VM on Windows 11 with a Ryzen 7 4800H,
+These benchmarks were run on a Virtualbox v6.1 Windows 11 v21H2 VM with an AMD Ryzen 7 4800H,
 32GB memory and a 1 TB SSD (VM configured with Ubuntu 20.04 LTS assigned 8 CPUs
 and 12 GB of memory).
 
