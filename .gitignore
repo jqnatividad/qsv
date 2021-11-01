@@ -17,3 +17,5 @@ builds
 *.zip
 .DS_store
 *.txt
+*.svg
+perf.data*
