@@ -767,6 +767,7 @@ dependencies = [
  "strsim 0.10.0",
  "tabwriter",
  "threadpool",
+ "titlecase",
  "uuid",
 ]
 
@@ -1108,6 +1109,16 @@ checksum = "ca8a50ef2360fbd1eeb0ecd46795a87a19024eb4b53c5dc916ca1fd95fe62438"
 dependencies = [
  "libc",
  "winapi",
+]
+
+[[package]]
+name = "titlecase"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f565e410cfc24c2f2a89960b023ca192689d7f77d3f8d4f4af50c2d8affe1117"
+dependencies = [
+ "lazy_static",
+ "regex",
 ]
 
 [[package]]
