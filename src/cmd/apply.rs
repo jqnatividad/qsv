@@ -270,23 +270,23 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 "replace" => {
                     if args.flag_comparand.is_empty() || args.flag_replacement.is_empty() {
                         return fail!(
-                            "--comparand and --replacement are required for replace operation."
+                            "--comparand (-C) and --replacement (-R) are required for replace operation."
                         );
                     }
                 }
                 "copy" => {
                     if args.flag_new_column.is_none() {
-                        return fail!("--new_column is required for copy operation.");
+                        return fail!("--new_column (-c) is required for copy operation.");
                     }
                 }
                 "mtrim" | "mltrim" | "mrtrim" => {
                     if args.flag_comparand.is_empty() {
-                        return fail!("--comparand is required for match trim operations.");
+                        return fail!("--comparand (-C) is required for match trim operations.");
                     }
                 }
                 "simdl" | "simdln" | "simjw" | "simsd" | "simhm" | "simod" | "soundex" => {
                     if args.flag_new_column.is_none() {
-                        return fail!("--new_column is required for similarity operations.");
+                        return fail!("--new_column (-c) is required for similarity operations.");
                     }
                 }
                 _ => {}
