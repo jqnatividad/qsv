@@ -16,6 +16,7 @@ use strsim::{
     damerau_levenshtein, hamming, jaro_winkler, normalized_damerau_levenshtein, osa_distance,
     sorensen_dice,
 };
+use titlecase::titlecase;
 
 static USAGE: &str = "
 Apply a series of unary functions to a given CSV column. This can be used to
@@ -181,6 +182,7 @@ static OPERATIONS: &[&str] = &[
     "mtrim",
     "mltrim",
     "mrtrim",
+    "titlecase",
     "replace",
     "currencytonum",
     "copy",
@@ -395,6 +397,9 @@ fn apply_operations(operations: &Vec<&str>, cell: &mut String, comparand: &str, 
             }
             "mrtrim" => {
                 *cell = String::from(cell.trim_end_matches(comparand));
+            }
+            "titlecase" => {
+                *cell = String::from(titlecase(cell));
             }
             "replace" => {
                 *cell = String::from(cell.replace(comparand, replacement));
