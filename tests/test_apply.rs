@@ -199,33 +199,6 @@ fn apply_currencytonum() {
 }
 
 #[test]
-fn apply_emptyreplace() {
-    let wrk = Workdir::new("apply");
-    wrk.create(
-        "data.csv",
-        vec![
-            svec!["name"],
-            svec!["John"],
-            svec![" "],
-            svec!["Sue"],
-            svec!["Hopkins"],
-        ],
-    );
-    let mut cmd = wrk.command("apply");
-    cmd.arg("emptyreplace").arg("name").arg("data.csv");
-
-    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![
-        svec!["name"],
-        svec!["John"],
-        svec!["None"],
-        svec!["Sue"],
-        svec!["Hopkins"],
-    ];
-    assert_eq!(got, expected);
-}
-
-#[test]
 fn apply_similarity() {
     let wrk = Workdir::new("apply");
     wrk.create(
@@ -244,15 +217,17 @@ fn apply_similarity() {
         .arg("name")
         .arg("--comparand")
         .arg("Joe")
+        .arg("--new-column")
+        .arg("name_sim_score")
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
-        svec!["name"],
-        svec!["0.5"],
-        svec!["0.25"],
-        svec!["0"],
-        svec!["0"],
+        svec!["name", "name_sim_score"],
+        svec!["John", "0.5"],
+        svec!["Jonathan", "0.25"],
+        svec!["Edna", "0"],
+        svec!["Larry", "0"],
     ];
     assert_eq!(got, expected);
 }
@@ -277,22 +252,24 @@ fn apply_similarity_soundex() {
         .arg("name")
         .arg("--comparand")
         .arg("michael")
+        .arg("--new-column")
+        .arg("soundex_flag")
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
-        svec!["name"],
-        svec!["false"],
-        svec!["false"],
-        svec!["true"],
-        svec!["false"],
-        svec!["false"],
+        svec!["name", "soundex_flag"],
+        svec!["John", "false"],
+        svec!["Jonathan", "false"],
+        svec!["Michelle", "true"],
+        svec!["Larry", "false"],
+        svec!["Joel", "false"],
     ];
     assert_eq!(got, expected);
 }
 
 #[test]
-fn apply_emptyreplace_parameter() {
+fn apply_emptyreplace() {
     let wrk = Workdir::new("apply");
     wrk.create(
         "data.csv",
