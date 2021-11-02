@@ -124,9 +124,10 @@ current_time=$(date "+%Y-%m-%d-%H-%M-%S")
 benchmarkfile=$bin_name-bench-$binver-$current_time.tsv
 printf "%-27s%-11s%-12s%-12s\n" BENCHMARK TIME_SECS MB_PER_SEC RECS_PER_SEC
 printf "benchmark\ttime_secs\tmb_per_sec\trecs_per_sec\n" > $benchmarkfile
-run apply_op_string "$bin_name" apply operations trim,upper Country "$data"
-run apply_op_similarity "$bin_name" apply operations lower,simdln Country --comparand union "$data"
-run apply_op_soundex "$bin_name" apply operations lower,soundex City --comparand boston "$data" 
+run apply_op_string "$bin_name" apply operations lower Country "$data"
+run apply_op_string_ascii "$bin_name" apply operations asciilower Country "$data"
+run apply_op_similarity "$bin_name" apply operations lower,simdln Country --comparand union --new-column Country_sim-union_score "$data"
+run apply_op_soundex "$bin_name" apply operations lower,soundex City --comparand boston --new-column City_boston_soundex "$data" 
 run --nyc311 apply_datefmt "$bin_name" apply datefmt \"Created Date\" "$nyc311data"
 run --nyc311 apply_emptyreplace "$bin_name" apply emptyreplace \"Bridge Highway Name\" --replacement Unspecified "$nyc311data"
 run --nyc311 apply_geocode "$bin_name" apply geocode Location --new-column geocoded_location -q "$nyc311data"
