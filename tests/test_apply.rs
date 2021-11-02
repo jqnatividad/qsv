@@ -1,7 +1,7 @@
 use crate::workdir::Workdir;
 
 #[test]
-fn apply() {
+fn apply_ops_upper() {
     let wrk = Workdir::new("apply");
     wrk.create(
         "data.csv",
@@ -31,7 +31,77 @@ fn apply() {
 }
 
 #[test]
-fn apply_chain() {
+fn apply_ops_titlecase() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["description"],
+            svec!["THE quick brown fox jumped over the lazy dog."],
+            svec!["twinkle, twinkle little star, how I wonder what you are"],
+            svec!["a simple title to capitalize: an example"],
+            svec!["new york city police department"],
+            svec!["department of human services"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("titlecase")
+        .arg("description")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["description"],
+        svec!["THE Quick Brown Fox Jumped Over the Lazy Dog."],
+        svec!["Twinkle, Twinkle Little Star, How I Wonder What You Are"],
+        svec!["A Simple Title to Capitalize: An Example"],
+        svec!["New York City Police Department"],
+        svec!["Department of Human Services"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn apply_ops_mtrim() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["description"],
+            svec!["(This is in parentheses)"],
+            svec!["(This is in parentheses, but with a period)."],
+            svec!["(Only left paren"],
+            svec!["Only right paren)"],
+            svec!["(((multiple parens)))"],
+            svec!["Embedded (((multiple parens)))"],
+            svec![")))reverse parens((("],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("mtrim")
+        .arg("description")
+        .arg("--comparand")
+        .arg("()")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["description"],
+        svec!["This is in parentheses"],
+        svec!["This is in parentheses, but with a period)."],
+        svec!["Only left paren"],
+        svec!["Only right paren"],
+        svec!["multiple parens"],
+        svec!["Embedded (((multiple parens"],
+        svec!["reverse parens"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn apply_ops_chain() {
     let wrk = Workdir::new("apply");
     wrk.create(
         "data.csv",
