@@ -6,6 +6,7 @@ use crate::config::{Config, Delimiter};
 use crate::currency::Currency;
 use crate::dateparser::parse_with;
 use crate::indicatif::ProgressBar;
+use crate::natural::phonetics::soundex;
 use crate::reverse_geocoder::{Locations, ReverseGeocoder};
 use crate::select::SelectColumns;
 use crate::serde::Deserialize;
@@ -15,7 +16,6 @@ use strsim::{
     damerau_levenshtein, hamming, jaro_winkler, normalized_damerau_levenshtein, osa_distance,
     sorensen_dice,
 };
-use crate::natural::phonetics::soundex;
 
 static USAGE: &str = "
 Apply a series of unary functions to a given CSV column. This can be used to
@@ -32,12 +32,19 @@ The series of operations must be given separated by commas as such:
 Currently supported operations:
 
   * len: Return string length
-  * lower: Transform to lowercase
-  * upper: Transform to uppercase
+  * lower: Transform to lowercase (unicode-aware)
+  * asciilower: Transform to lowecase (ascii-only) ~10% faster
+  * upper: Transform to uppercase (unicode-aware)
+  * asciiupper: Transform to uppercase (ascii-only) ~10% faster
   * squeeze: Compress consecutive whitespaces
   * trim: Trim (drop whitespace left & right of the string)
   * ltrim: Left trim
   * rtrim: Right trim
+  * mtrim: Trims --comparand matches left & right of the string
+  * mltrim: Left trim --comparand matches
+  * mrtrim: Right trim --comparand matches
+  * replace: Replace all matches of a pattern (using --comparand)
+      with a string (using --replacement).
   * currencytonum: Gets the numeric value of a currency
   * copy: Mark a column for copying
   * simdl: Damerau-Levenshtein similarity
@@ -81,13 +88,12 @@ $ qsv apply operations copy col_to_copy -c col_copy file.csv
 
 EMPTYREPLACE
 Replace empty cells with <replacement> string.
-If <replacement> is not specified, an empty cell is replaced with 'None'.
 Non-empty cells are not modified.
 
 Examples:
 Replace empty cells in file.csv Measurement column with 'None'.
 
-$ qsv apply emptyreplace Measurement file.csv
+$ qsv apply emptyreplace Measurement --replacement None file.csv
 
 Replace empty cells in file.csv Measurement column with 'Unknown'.
 
@@ -107,7 +113,7 @@ Format dates in OpenDate column using '%Y-%m-%d' format:
   $ qsv apply datefmt OpenDate --formatstr %Y-%m-%d file.csv
 
 GEOCODE
-Geocodes to the nearest city center point given a Location column
+Geocodes to the nearest city center point given a location column
 ['(lat, long)' or 'lat, long' format] against an embedded copy of
 the geonames city database.
 
@@ -127,7 +133,7 @@ $ qsv apply geocode Location --formatstr city-state --new-column City file.csv
 
 Usage:
 qsv apply operations <operations> [options] <column> [<input>]
-qsv apply emptyreplace [--replacement=<string>] [options] <column> [<input>]
+qsv apply emptyreplace --replacement=<string> [options] <column> [<input>]
 qsv apply datefmt [--formatstr=<string>] [options] <column> [<input>]
 qsv apply geocode [--formatstr=<string>] [options] <column> [<input>]
 qsv apply --help
@@ -135,12 +141,11 @@ qsv apply --help
 apply options:
     -c, --new-column <name>     Put the transformed values in a new column instead.
     -r, --rename <name>         New name for the transformed column.
-    -C, --comparand=<string>    The string to compare against for similarity operations.
-    -R, --replacement=<string>  the string to use for emptyreplace operation.
-                                (default: 'None')
+    -C, --comparand=<string>    The string to compare against for replace & similarity operations.
+    -R, --replacement=<string>  the string to use for the replace & emptyreplace operations.
     -f, --formatstr=<string>    the date format to use when formatting dates. For formats, see
                                 https://docs.rs/chrono/0.4.19/chrono/format/strftime/index.html
-                                (default: '%+')
+                                [default: %+]
 
                                 the place format to use when geocoding. The available formats are:
                                   - 'city-state' (default) - e.g. Brooklyn, New York
@@ -167,10 +172,16 @@ static OPERATIONS: &[&str] = &[
     "len",
     "lower",
     "upper",
+    "asciilower",
+    "asciiupper",
     "squeeze",
     "trim",
     "rtrim",
     "ltrim",
+    "mtrim",
+    "mltrim",
+    "mrtrim",
+    "replace",
     "currencytonum",
     "copy",
     "simdl",
@@ -234,16 +245,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut headers = rdr.headers()?.clone();
 
-    let mut replacement = String::from("None");
-    if !args.flag_replacement.is_empty() {
-        replacement = args.flag_replacement.to_string();
-    }
-
-    let mut formatstr = String::from("%+");
-    if !args.flag_formatstr.is_empty() {
-        formatstr = args.flag_formatstr.to_string();
-    }
-
     if let Some(new_name) = args.flag_rename {
         headers = replace_column_value(&headers, column_index, &new_name);
     }
@@ -263,10 +264,32 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if args.cmd_operations {
         for op in &operations {
             if !OPERATIONS.contains(op) {
-                return fail!(format!(
-                    "Unknown \"{}\" operation",
-                    op
-                ));
+                return fail!(format!("Unknown \"{}\" operation", op));
+            }
+            match op.as_ref() {
+                "replace" => {
+                    if args.flag_comparand.is_empty() || args.flag_replacement.is_empty() {
+                        return fail!(
+                            "--comparand and --replacement are required for replace operation."
+                        );
+                    }
+                }
+                "copy" => {
+                    if args.flag_new_column.is_none() {
+                        return fail!("--new_column is required for copy operation.");
+                    }
+                }
+                "mtrim" | "mltrim" | "mrtrim" => {
+                    if args.flag_comparand.is_empty() {
+                        return fail!("--comparand is required for match trim operations.");
+                    }
+                }
+                "simdl" | "simdln" | "simjw" | "simsd" | "simhm" | "simod" | "soundex" => {
+                    if args.flag_new_column.is_none() {
+                        return fail!("--new_column is required for similarity operations.");
+                    }
+                }
+                _ => {}
             }
         }
     }
@@ -287,15 +310,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let mut cell = record[column_index].to_owned();
 
         if args.cmd_operations {
-            apply_operations(&operations, &mut cell, &args.flag_comparand);
+            apply_operations(
+                &operations,
+                &mut cell,
+                &args.flag_comparand,
+                &args.flag_replacement,
+            );
         } else if args.cmd_emptyreplace {
             if cell.trim().is_empty() {
-                cell = replacement.to_string();
+                cell = args.flag_replacement.to_string();
             }
         } else if args.cmd_datefmt && !cell.is_empty() {
             let parsed_date = parse_with(&cell, &Utc, *MIDNIGHT);
             if let Ok(format_date) = parsed_date {
-                let formatted_date = format_date.format(&formatstr).to_string();
+                let formatted_date = format_date.format(&args.flag_formatstr).to_string();
                 if formatted_date.ends_with("T00:00:00+00:00") {
                     cell = formatted_date[..10].to_string();
                 } else {
@@ -303,7 +331,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 }
             }
         } else if args.cmd_geocode && !cell.is_empty() {
-            geocode(&mut cell, &geocoder, &formatstr);
+            geocode(&mut cell, &geocoder, &args.flag_formatstr);
         }
 
         match &args.flag_new_column {
@@ -324,7 +352,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 }
 
 #[inline]
-fn apply_operations(operations: &Vec<&str>, cell: &mut String, comparand: &str) {
+fn apply_operations(operations: &Vec<&str>, cell: &mut String, comparand: &str, replacement: &str) {
     lazy_static! {
         static ref SQUEEZER: Regex = Regex::new(r"\s+").unwrap();
     }
@@ -337,8 +365,14 @@ fn apply_operations(operations: &Vec<&str>, cell: &mut String, comparand: &str) 
             "lower" => {
                 *cell = cell.to_lowercase();
             }
+            "asciilower" => {
+                cell.make_ascii_lowercase();
+            }
             "upper" => {
                 *cell = cell.to_uppercase();
+            }
+            "asciiupper" => {
+                cell.make_ascii_uppercase();
             }
             "squeeze" => {
                 *cell = SQUEEZER.replace_all(cell, " ").to_string();
@@ -351,6 +385,19 @@ fn apply_operations(operations: &Vec<&str>, cell: &mut String, comparand: &str) 
             }
             "rtrim" => {
                 *cell = String::from(cell.trim_end());
+            }
+            "mtrim" => {
+                let chars_to_trim: &[char] = &comparand.chars().collect::<Vec<_>>();
+                *cell = String::from(cell.trim_matches(chars_to_trim));
+            }
+            "mltrim" => {
+                *cell = String::from(cell.trim_start_matches(comparand));
+            }
+            "mrtrim" => {
+                *cell = String::from(cell.trim_end_matches(comparand));
+            }
+            "replace" => {
+                *cell = String::from(cell.replace(comparand, replacement));
             }
             "currencytonum" => {
                 let currency_value = Currency::from_str(cell);
@@ -389,7 +436,7 @@ fn apply_operations(operations: &Vec<&str>, cell: &mut String, comparand: &str) 
             }
             "simod" => *cell = osa_distance(cell, comparand).to_string(),
             "soundex" => {
-                *cell = format!("{}", (soundex(&*cell, comparand))); 
+                *cell = format!("{}", (soundex(&*cell, comparand)));
             }
             _ => {} // this also handles copy, which is a noop
         }
