@@ -8,9 +8,9 @@ use regex::Regex;
 
 use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
-use crate::serde::Deserialize;
 use crate::util::{self, FilenameTemplate};
 use crate::CliResult;
+use serde::Deserialize;
 
 static USAGE: &str = "
 Partitions the given CSV data into chunks based on the value of a column

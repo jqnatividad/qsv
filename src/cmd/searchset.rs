@@ -6,9 +6,9 @@ use std::path::Path;
 
 use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
-use crate::serde::Deserialize;
 use crate::util;
 use crate::CliResult;
+use serde::Deserialize;
 
 static USAGE: &str = "
 Filters CSV data by whether the given regex set matches a row.
@@ -70,12 +70,10 @@ struct Args {
 fn read_regexset(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
     match File::open(filename) {
         Ok(f) => BufReader::new(f).lines().collect(),
-        Err(_) => {
-            Err(io::Error::new(
-                io::ErrorKind::NotFound,
-                "Cannot open regexset file.",
-            ))
-        }
+        Err(_) => Err(io::Error::new(
+            io::ErrorKind::NotFound,
+            "Cannot open regexset file.",
+        )),
     }
 }
 

@@ -2,9 +2,9 @@ use std::collections::HashMap;
 
 use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
-use crate::serde::Deserialize;
 use crate::util;
 use crate::CliResult;
+use serde::Deserialize;
 
 static USAGE: &str = "
 Pseudonymise the value of the given column by replacing them by an

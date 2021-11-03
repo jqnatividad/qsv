@@ -5,7 +5,7 @@ use std::ops;
 
 use crate::config::{Config, Delimiter};
 use crate::select::{SelectColumns, Selection};
-use crate::serde::Deserialize;
+use serde::Deserialize;
 use crate::util;
 use crate::CliResult;
 

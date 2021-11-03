@@ -2,9 +2,9 @@ use std::fs;
 
 use crate::config::{Config, Delimiter};
 use crate::index::Indexed;
-use crate::serde::Deserialize;
 use crate::util;
 use crate::CliResult;
+use serde::Deserialize;
 
 static USAGE: &str = "
 Returns the rows in the range specified (starting at 0, half-open interval).

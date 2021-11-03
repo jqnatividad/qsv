@@ -3,9 +3,9 @@ use std::io;
 use tabwriter::TabWriter;
 
 use crate::config::Delimiter;
-use crate::serde::Deserialize;
 use crate::util;
 use crate::CliResult;
+use serde::Deserialize;
 
 static USAGE: &str = "
 Prints the fields of the first row in the CSV data.

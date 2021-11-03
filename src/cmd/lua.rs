@@ -2,11 +2,11 @@ use std::fs::File;
 use std::io::prelude::*;
 
 use crate::config::{Config, Delimiter};
-use crate::hlua::{AnyLuaValue, Lua, LuaError, LuaTable};
-use crate::indicatif::ProgressBar;
 use crate::util;
 use crate::CliError;
 use crate::CliResult;
+use hlua::{AnyLuaValue, Lua, LuaError, LuaTable};
+use indicatif::ProgressBar;
 use serde::Deserialize;
 
 // TODO: options for boolean return coercion

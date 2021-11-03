@@ -1,4 +1,4 @@
-use crate::regex::bytes::RegexBuilder;
+use regex::bytes::RegexBuilder;
 use std::borrow::Cow;
 
 use crate::config::{Config, Delimiter};

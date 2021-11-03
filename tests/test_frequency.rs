@@ -4,7 +4,7 @@ use std::process;
 
 use stats::Frequencies;
 
-use crate::serde::Deserialize;
+use serde::Deserialize;
 use crate::workdir::Workdir;
 use crate::{qcheck_sized, Csv, CsvData};
 

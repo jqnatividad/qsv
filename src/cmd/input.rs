@@ -1,7 +1,7 @@
 use crate::config::{Config, Delimiter};
-use crate::serde::Deserialize;
 use crate::util;
 use crate::CliResult;
+use serde::Deserialize;
 
 static USAGE: &str = "
 Read CSV data with special quoting rules.

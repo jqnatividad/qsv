@@ -1,4 +1,4 @@
-use crate::uuid::Uuid;
+use uuid::Uuid;
 
 use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;

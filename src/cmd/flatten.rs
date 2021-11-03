@@ -4,7 +4,7 @@ use std::io::{self, Write};
 use tabwriter::TabWriter;
 
 use crate::config::{Config, Delimiter};
-use crate::serde::Deserialize;
+use serde::Deserialize;
 use crate::util;
 use crate::CliResult;
 

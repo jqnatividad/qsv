@@ -7,9 +7,9 @@ use rand::{self, Rng, SeedableRng};
 
 use crate::config::{Config, Delimiter};
 use crate::index::Indexed;
-use crate::serde::Deserialize;
 use crate::util;
 use crate::CliResult;
+use serde::Deserialize;
 
 static USAGE: &str = "
 Randomly samples CSV data uniformly using memory proportional to the size of

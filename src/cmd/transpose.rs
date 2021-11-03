@@ -1,8 +1,8 @@
 use crate::config::{Config, Delimiter};
-use crate::csv::ByteRecord;
-use crate::serde::Deserialize;
 use crate::util;
 use crate::CliResult;
+use csv::ByteRecord;
+use serde::Deserialize;
 use std::str;
 
 static USAGE: &str = "

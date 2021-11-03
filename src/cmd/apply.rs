@@ -1,17 +1,17 @@
-use crate::regex::Regex;
 use lazy_static::lazy_static;
+use regex::Regex;
 
-use crate::chrono::{NaiveTime, Utc};
 use crate::config::{Config, Delimiter};
-use crate::currency::Currency;
-use crate::dateparser::parse_with;
-use crate::indicatif::ProgressBar;
-use crate::natural::phonetics::soundex;
-use crate::reverse_geocoder::{Locations, ReverseGeocoder};
 use crate::select::SelectColumns;
-use crate::serde::Deserialize;
 use crate::util;
 use crate::CliResult;
+use chrono::{NaiveTime, Utc};
+use currency::Currency;
+use dateparser::parse_with;
+use indicatif::ProgressBar;
+use natural::phonetics::soundex;
+use reverse_geocoder::{Locations, ReverseGeocoder};
+use serde::Deserialize;
 use strsim::{
     damerau_levenshtein, hamming, jaro_winkler, normalized_damerau_levenshtein, osa_distance,
     sorensen_dice,

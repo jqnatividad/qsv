@@ -7,7 +7,7 @@ use std::io::{self, Read};
 use std::ops::Deref;
 use std::path::PathBuf;
 
-use crate::serde::de::{Deserialize, Deserializer, Error};
+use serde::de::{Deserialize, Deserializer, Error};
 
 use crate::index::Indexed;
 use crate::select::{SelectColumns, Selection};

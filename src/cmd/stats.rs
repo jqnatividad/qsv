@@ -11,12 +11,12 @@ use stats::{merge_all, Commute, MinMax, OnlineStats, Unsorted};
 use threadpool::ThreadPool;
 
 use crate::config::{Config, Delimiter};
-use crate::dateparser::DateTimeUtc;
 use crate::index::Indexed;
 use crate::select::{SelectColumns, Selection};
-use crate::serde::Deserialize;
 use crate::util;
 use crate::CliResult;
+use dateparser::DateTimeUtc;
+use serde::Deserialize;
 
 use self::FieldType::{TDate, TFloat, TInteger, TNull, TUnicode, TUnknown};
 

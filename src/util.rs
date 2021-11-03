@@ -10,10 +10,10 @@ use ::num_cpus;
 use docopt::Docopt;
 use serde::de::{Deserialize, DeserializeOwned, Deserializer, Error};
 
-use crate::indicatif::{ProgressBar, ProgressStyle};
-use crate::num_format::{SystemLocale, ToFormattedString};
 use crate::config::{Config, Delimiter};
 use crate::CliResult;
+use indicatif::{ProgressBar, ProgressStyle};
+use num_format::{SystemLocale, ToFormattedString};
 
 pub fn num_cpus() -> usize {
     num_cpus::get()
@@ -89,7 +89,7 @@ pub fn finish_progress(progress: &ProgressBar) {
     progress.set_style(
         ProgressStyle::default_bar()
             .template(&finish_template)
-            .progress_chars("=>-")
+            .progress_chars("=>-"),
     );
     progress.finish();
 }

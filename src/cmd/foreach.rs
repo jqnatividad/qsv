@@ -1,4 +1,4 @@
-use crate::regex::bytes::{NoExpand, Regex};
+use regex::bytes::{NoExpand, Regex};
 #[allow(unused_imports)]
 use std::ffi::OsStr;
 use std::io::BufReader;
@@ -6,11 +6,11 @@ use std::io::BufReader;
 use std::os::unix::ffi::OsStrExt;
 use std::process::{Command, Stdio};
 
-use crate::indicatif::ProgressBar;
 use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
 use crate::util;
 use crate::CliResult;
+use indicatif::ProgressBar;
 use serde::Deserialize;
 
 static USAGE: &str = "

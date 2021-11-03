@@ -4,9 +4,9 @@ use rand::seq::SliceRandom;
 
 use crate::config::{Config, Delimiter};
 use crate::index::Indexed;
-use crate::serde::Deserialize;
 use crate::util;
 use crate::CliResult;
+use serde::Deserialize;
 
 static USAGE: &str = "
 Randomly scrambles CSV records uniformly using memory proportional to the size of
@@ -58,9 +58,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     Ok(wtr.flush()?)
 }
 
-fn scramble_random_access<R, I>(
-    idx: &mut Indexed<R, I>,
-) -> CliResult<Vec<csv::ByteRecord>>
+fn scramble_random_access<R, I>(idx: &mut Indexed<R, I>) -> CliResult<Vec<csv::ByteRecord>>
 where
     R: io::Read + io::Seek,
     I: io::Read + io::Seek,

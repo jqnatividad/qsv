@@ -1,29 +1,4 @@
-extern crate byteorder;
-extern crate chrono;
 extern crate crossbeam_channel as channel;
-extern crate csv;
-extern crate csv_index;
-extern crate currency;
-extern crate dateparser;
-extern crate docopt;
-extern crate filetime;
-extern crate hlua;
-extern crate indicatif;
-extern crate itertools;
-extern crate lazy_static;
-#[cfg(feature = "mimalloc")]
-extern crate mimalloc;
-extern crate natural;
-extern crate num_cpus;
-extern crate num_format;
-extern crate rand;
-extern crate regex;
-extern crate reverse_geocoder;
-extern crate serde;
-extern crate serde_json;
-extern crate tabwriter;
-extern crate threadpool;
-extern crate uuid;
 
 use std::borrow::ToOwned;
 use std::env;

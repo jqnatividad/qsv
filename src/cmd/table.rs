@@ -4,9 +4,9 @@ use std::convert::From;
 use tabwriter::{Alignment, TabWriter};
 
 use crate::config::{Config, Delimiter};
-use crate::serde::Deserialize;
 use crate::util;
 use crate::CliResult;
+use serde::Deserialize;
 
 static USAGE: &str = "
 Outputs CSV data as a table with columns in alignment.

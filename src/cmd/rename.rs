@@ -1,7 +1,7 @@
 use crate::config::{Config, Delimiter};
-use crate::serde::Deserialize;
 use crate::util;
 use crate::CliResult;
+use serde::Deserialize;
 
 static USAGE: &str = "
 Rename the columns of CSV data efficiently.

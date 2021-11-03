@@ -5,9 +5,9 @@ use std::path::{Path, PathBuf};
 use csv_index::RandomAccessSimple;
 
 use crate::config::{Config, Delimiter};
-use crate::serde::Deserialize;
 use crate::util;
 use crate::CliResult;
+use serde::Deserialize;
 
 static USAGE: &str = "
 Creates an index of the given CSV data, which can make other operations like

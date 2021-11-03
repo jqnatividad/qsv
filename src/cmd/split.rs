@@ -6,9 +6,9 @@ use threadpool::ThreadPool;
 
 use crate::config::{Config, Delimiter};
 use crate::index::Indexed;
-use crate::serde::Deserialize;
 use crate::util::{self, FilenameTemplate};
 use crate::CliResult;
+use serde::Deserialize;
 
 static USAGE: &str = "
 Splits the given CSV data into chunks.

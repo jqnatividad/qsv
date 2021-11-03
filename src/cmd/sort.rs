@@ -2,9 +2,9 @@ use std::cmp;
 
 use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
-use crate::serde::Deserialize;
 use crate::util;
 use crate::CliResult;
+use serde::Deserialize;
 use std::str::from_utf8;
 
 use self::Number::{Float, Int};

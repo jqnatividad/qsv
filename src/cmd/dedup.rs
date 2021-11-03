@@ -3,7 +3,7 @@ use std::str::from_utf8;
 
 use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
-use crate::serde::Deserialize;
+use serde::Deserialize;
 use crate::util;
 use crate::CliResult;
 
