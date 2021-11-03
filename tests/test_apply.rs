@@ -63,6 +63,42 @@ fn apply_ops_titlecase() {
 }
 
 #[test]
+fn apply_ops_replace() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["description"],
+            svec!["THE quick brown fox jumped over the lazy dog."],
+            svec!["twinkle, twinkle brownie star, how I wonder what you are"],
+            svec!["a simple title to capitalize: an example"],
+            svec!["Mr. Brown is not pleased."],
+            svec!["this is a brownado car"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("replace")
+        .arg("description")
+        .arg("--comparand")
+        .arg("brown")
+        .arg("--replacement")
+        .arg("silver")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["description"],
+        svec!["THE quick silver fox jumped over the lazy dog."],
+        svec!["twinkle, twinkle silverie star, how I wonder what you are"],
+        svec!["a simple title to capitalize: an example"],
+        svec!["Mr. Brown is not pleased."],
+        svec!["this is a silverado car"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn apply_ops_mtrim() {
     let wrk = Workdir::new("apply");
     wrk.create(
