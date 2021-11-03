@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 #[macro_use]
 extern crate log;
 extern crate serde;
@@ -14,8 +12,7 @@ use std::fmt;
 use std::mem::transmute;
 use std::ops;
 
-use quickcheck::{Arbitrary, Gen, QuickCheck, StdGen, Testable};
-use rand::{thread_rng, Rng};
+use quickcheck::{Arbitrary, Gen, QuickCheck, Testable};
 
 macro_rules! svec[
     ($($x:expr),*) => (
@@ -70,13 +67,13 @@ mod test_transpose;
 
 fn qcheck<T: Testable>(p: T) {
     QuickCheck::new()
-        .gen(StdGen::new(thread_rng(), 5))
+        .gen(Gen::new(5))
         .quickcheck(p);
 }
 
 fn qcheck_sized<T: Testable>(p: T, size: usize) {
     QuickCheck::new()
-        .gen(StdGen::new(thread_rng(), size))
+        .gen(Gen::new(size))
         .quickcheck(p);
 }
 
@@ -127,11 +124,8 @@ impl fmt::Debug for CsvRecord {
 }
 
 impl Arbitrary for CsvRecord {
-    fn arbitrary<G: Gen>(g: &mut G) -> CsvRecord {
-        let size = {
-            let s = g.size();
-            g.gen_range(1, s)
-        };
+    fn arbitrary(g: &mut Gen) -> CsvRecord {
+        let size = g.size();
         CsvRecord((0..size).map(|_| Arbitrary::arbitrary(g)).collect())
     }
 
@@ -182,12 +176,9 @@ impl ops::Deref for CsvData {
 }
 
 impl Arbitrary for CsvData {
-    fn arbitrary<G: Gen>(g: &mut G) -> CsvData {
-        let record_len = {
-            let s = g.size();
-            g.gen_range(1, s)
-        };
-        let num_records: usize = g.gen_range(0, 100);
+    fn arbitrary(g: &mut Gen) -> CsvData {
+        let record_len = g.size();
+        let num_records: usize = 10; //  g.gen_range(0..100); // g.gen_range(0, 100);
         let mut d = CsvData {
             data: (0..num_records)
                 .map(|_| CsvRecord((0..record_len).map(|_| Arbitrary::arbitrary(g)).collect()))

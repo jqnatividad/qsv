@@ -74,7 +74,7 @@ fn fixlengths_all_maxlen_trims_at_least_1() {
 #[test]
 fn prop_fixlengths_explicit_len() {
     fn p(rows: Vec<CsvRecord>, expected_len: usize) -> TestResult {
-        if expected_len == 0 || rows.is_empty() {
+        if expected_len == 0 || rows.is_empty() || expected_len > 10 {
             return TestResult::discard();
         }
 
