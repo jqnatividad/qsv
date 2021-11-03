@@ -4,6 +4,7 @@ use rand::{rngs::StdRng, seq::SliceRandom, SeedableRng};
 
 use crate::config::{Config, Delimiter};
 use crate::index::Indexed;
+use indicatif::ProgressBar;
 use crate::util;
 use crate::CliResult;
 use serde::Deserialize;
@@ -28,6 +29,7 @@ Common options:
                            in the output.)
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
+    -q, --quiet            Don't show progress bars.
 ";
 
 #[derive(Deserialize)]
@@ -37,6 +39,7 @@ struct Args {
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
     flag_seed: Option<u64>,
+    flag_quiet: bool,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -45,25 +48,39 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers);
 
+    // prep progress bar
+    let progress = ProgressBar::new(0u64);
+
     let mut wtr = Config::new(&args.flag_output).writer()?;
     let scrambled = match rconfig.indexed()? {
         Some(mut idx) => {
+            if !args.flag_quiet {
+                util::prep_progress(&progress, idx.count());
+                progress.set_draw_rate(1);
+            }
             rconfig.write_headers(&mut *idx, &mut wtr)?;
-            scramble_random_access(&mut idx, args.flag_seed)?
+            scramble_random_access(&mut idx, &progress, args.flag_quiet, args.flag_seed)?
         }
         _ => {
             // scrambling requires an index
             return fail!("Scrambling requires an index.");
         }
     };
+
     for row in scrambled.into_iter() {
         wtr.write_byte_record(&row)?;
+    }
+    
+    if !args.flag_quiet {
+        util::finish_progress(&progress);
     }
     Ok(wtr.flush()?)
 }
 
 fn scramble_random_access<R, I>(
     idx: &mut Indexed<R, I>,
+    progress: &ProgressBar,
+    quiet: bool,
     seed: Option<u64>,
 ) -> CliResult<Vec<csv::ByteRecord>>
 where
@@ -83,6 +100,9 @@ where
 
     let mut scrambled = Vec::with_capacity(idxcount as usize);
     for i in all_indices.into_iter().take(idxcount as usize) {
+        if !quiet {
+            progress.inc(1);
+        }
         idx.seek(i)?;
         scrambled.push(idx.byte_records().next().unwrap()?);
     }
