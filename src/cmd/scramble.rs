@@ -1,6 +1,6 @@
 use std::io;
 
-use rand::seq::SliceRandom;
+use rand::{rngs::StdRng, seq::SliceRandom, SeedableRng};
 
 use crate::config::{Config, Delimiter};
 use crate::index::Indexed;
@@ -15,6 +15,9 @@ the CSV.
 Usage:
     qsv scramble [options] [<input>]
     qsv scramble --help
+
+scramble options:
+--seed <number>            RNG seed.
 
 Common options:
     -h, --help             Display this message
@@ -33,6 +36,7 @@ struct Args {
     flag_output: Option<String>,
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
+    flag_seed: Option<u64>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -45,7 +49,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let scrambled = match rconfig.indexed()? {
         Some(mut idx) => {
             rconfig.write_headers(&mut *idx, &mut wtr)?;
-            scramble_random_access(&mut idx)?
+            scramble_random_access(&mut idx, args.flag_seed)?
         }
         _ => {
             // scrambling requires an index
@@ -58,15 +62,24 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     Ok(wtr.flush()?)
 }
 
-fn scramble_random_access<R, I>(idx: &mut Indexed<R, I>) -> CliResult<Vec<csv::ByteRecord>>
+fn scramble_random_access<R, I>(
+    idx: &mut Indexed<R, I>,
+    seed: Option<u64>,
+) -> CliResult<Vec<csv::ByteRecord>>
 where
     R: io::Read + io::Seek,
     I: io::Read + io::Seek,
 {
     let idxcount = idx.count();
     let mut all_indices = (0..idxcount).collect::<Vec<_>>();
-    let mut rng = ::rand::thread_rng();
-    SliceRandom::shuffle(&mut *all_indices, &mut rng);
+
+    if let Some(val) = seed {
+        let mut rng = StdRng::seed_from_u64(val);
+        SliceRandom::shuffle(&mut *all_indices, &mut rng);
+    } else {
+        let mut rng = ::rand::thread_rng();
+        SliceRandom::shuffle(&mut *all_indices, &mut rng);
+    }
 
     let mut scrambled = Vec::with_capacity(idxcount as usize);
     for i in all_indices.into_iter().take(idxcount as usize) {
