@@ -19,8 +19,8 @@ use strsim::{
 use titlecase::titlecase;
 
 static USAGE: &str = "
-Apply a series of unary functions to a given CSV column. This can be used to
-perform typical cleaning tasks and/or harmonize some values etc.
+Apply a series of transformation functions to a given CSV column. This can be used to
+perform typical cleaning tasks and/or harmonize some values, etc.
 
 It has several subcommands:
 
@@ -29,6 +29,7 @@ The series of operations must be given separated by commas as such:
 
   trim => Trimming the cell
   trim,upper => Trimming the cell then transforming to uppercase
+  lower,simdln => Lowercase the cell, then compute the Damerau-Levenshtein similarity
 
 Currently supported operations:
 
@@ -71,10 +72,18 @@ save it to a new column named uppercase_clean_surname.
 
   $ qsv apply operations trim,upper surname -c uppercase_clean_surname file.csv
 
+Trim parentheses & brackets from the description field.
+
+  $ qsv apply operations mtrim description --comparand '()<>' file.csv
+
+Replace ' and ' with ' & ' in the description field.u64
+
+  $ qsv apply replace description --comparand ' and ' --replacement ' & ' file.csv
+
 Extract the numeric value of the Salary column and new
 column named Salary_num.
 
-  $ qsv apply currencytonum Salary file.csv
+  $ qsv apply operations currencytonum Salary file.csv
 
 Compute the Normalized Damerau-Levenshtein similarity of
 the neighborhood column to the string 'Roxbury' and save
@@ -101,8 +110,9 @@ Replace empty cells in file.csv Measurement column with 'Unknown'.
 $ qsv apply emptyreplace --replacement Unknown Measurement file.csv
 
 DATEFMT
-Formats a recognized date column to a specified format.
-Recognized date formats can be found here https://docs.rs/dateparser/
+Formats a recognized date column to a specified format. See
+https://docs.rs/chrono/0.4.19/chrono/format/strftime/index.html.
+--formatstr defaults to '%+' (ISO 8601/ RFC 3339 format) if not specified.
 
 Examples:
 Format dates in Open Date column to ISO 8601/RFC 3339 format:
@@ -111,15 +121,19 @@ Format dates in Open Date column to ISO 8601/RFC 3339 format:
 
 Format dates in OpenDate column using '%Y-%m-%d' format:
 
-  $ qsv apply datefmt OpenDate --formatstr %Y-%m-%d file.csv
+  $ qsv apply datefmt OpenDate --formatstr '%Y-%m-%d' file.csv
+
+Get the week number and store it in the week_number column:
+
+  $ qsv apply dateformat OpenDate --formatstr '%V' --new-column week_number file.csv
 
 GEOCODE
 Geocodes to the nearest city center point given a location column
 ['(lat, long)' or 'lat, long' format] against an embedded copy of
-the geonames city database.
+the geonames city database. The geocoded information is formatted 
+based on --formatstr, returning 'city-state' by default, if not specified.
 
-To geocode, use the --new-column option if you want to keep the 
-Location column:
+Use the --new-column option if you want to keep the Location column:
 
 Examples:
 Geocode file.csv Location column and set the geocoded value to a
