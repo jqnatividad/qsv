@@ -111,8 +111,8 @@ $ qsv apply emptyreplace --replacement Unknown Measurement file.csv
 
 DATEFMT
 Formats a recognized date column to a specified format. See
-https://docs.rs/chrono/0.4.19/chrono/format/strftime/index.html.
---formatstr defaults to '%+' (ISO 8601/ RFC 3339 format) if not specified.
+https://docs.rs/chrono/0.4.19/chrono/format/strftime/ for formats.
+Defaults to ISO 8601/RFC 3339 format when --formatstr is not specified.
 
 Examples:
 Format dates in Open Date column to ISO 8601/RFC 3339 format:
@@ -130,8 +130,10 @@ Get the week number and store it in the week_number column:
 GEOCODE
 Geocodes to the nearest city center point given a location column
 ['(lat, long)' or 'lat, long' format] against an embedded copy of
-the geonames city database. The geocoded information is formatted 
-based on --formatstr, returning 'city-state' by default, if not specified.
+the geonames city database. 
+
+The geocoded information is formatted based on --formatstr, returning
+it in 'city-state' format if not specified.
 
 Use the --new-column option if you want to keep the Location column:
 
@@ -157,8 +159,8 @@ apply options:
     -c, --new-column <name>     Put the transformed values in a new column instead.
     -r, --rename <name>         New name for the transformed column.
     -C, --comparand=<string>    The string to compare against for replace & similarity operations.
-    -R, --replacement=<string>  the string to use for the replace & emptyreplace operations.
-    -f, --formatstr=<string>    the date format to use when formatting dates. For formats, see
+    -R, --replacement=<string>  The string to use for the replace & emptyreplace operations.
+    -f, --formatstr=<string>    The date format to use when formatting dates. For formats, see
                                 https://docs.rs/chrono/0.4.19/chrono/format/strftime/index.html
                                 [default: %+]
 
@@ -272,9 +274,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         wtr.write_record(&headers)?;
     }
 
-    let loc = Locations::from_memory();
-    let geocoder = ReverseGeocoder::new(&loc);
-
     // validate specified operations
     let operations: Vec<&str> = args.arg_operations.split(',').collect();
     if args.cmd_operations {
@@ -347,7 +346,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 }
             }
         } else if args.cmd_geocode && !cell.is_empty() {
-            geocode(&mut cell, &geocoder, &args.flag_formatstr);
+            geocode(&mut cell, &args.flag_formatstr);
         }
 
         match &args.flag_new_column {
@@ -463,11 +462,15 @@ fn apply_operations(operations: &Vec<&str>, cell: &mut String, comparand: &str, 
 }
 
 #[inline(always)]
-fn geocode(cell: &mut String, geocoder: &ReverseGeocoder, formatstr: &str) {
+fn geocode(cell: &mut String, formatstr: &str) {
     // simple regex for "lat, long" or "(lat, long)", does not validate ranges
     lazy_static! {
         static ref LOCREGEX: Regex =
             Regex::new(r"(?-u)^\(*(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)\)?$").unwrap();
+    }
+    lazy_static! {
+        static ref LOCS: Locations = Locations::from_memory();
+        static ref GEOCODER: ReverseGeocoder<'static> = ReverseGeocoder::new(&LOCS);
     }
 
     let loccaps = LOCREGEX.captures(&*cell);
@@ -475,7 +478,7 @@ fn geocode(cell: &mut String, geocoder: &ReverseGeocoder, formatstr: &str) {
         let lats = loccaps.get(1).map_or("", |m| m.as_str());
         let longs = loccaps.get(2).map_or("", |m| m.as_str());
         let coords = (lats.parse::<f64>().unwrap(), longs.parse::<f64>().unwrap());
-        let search_result = geocoder.search(coords);
+        let search_result = GEOCODER.search(coords);
         if let Some(locdetails) = search_result {
             *cell = match formatstr {
                 "%+" | "city-state" => format!(
