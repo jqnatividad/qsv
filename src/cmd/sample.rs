@@ -139,7 +139,7 @@ fn sample_reservoir<R: io::Read>(
 
     // Now do the sampling.
     for (i, row) in records {
-        let random = rng.gen_range(0, i + 1);
+        let random = rng.gen_range(0..i + 1);
         if random < sample_size as usize {
             reservoir[random] = row?;
         }
