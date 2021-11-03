@@ -399,10 +399,10 @@ fn apply_operations(operations: &Vec<&str>, cell: &mut String, comparand: &str, 
                 *cell = String::from(cell.trim_end_matches(comparand));
             }
             "titlecase" => {
-                *cell = String::from(titlecase(cell));
+                *cell = titlecase(cell);
             }
             "replace" => {
-                *cell = String::from(cell.replace(comparand, replacement));
+                *cell = cell.replace(comparand, replacement);
             }
             "currencytonum" => {
                 let currency_value = Currency::from_str(cell);
