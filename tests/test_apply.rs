@@ -63,6 +63,82 @@ fn apply_ops_titlecase() {
 }
 
 #[test]
+fn apply_ops_censor_check() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["description"],
+            svec!["fuck"],
+            svec!["FUCK"],
+            svec!["fμ¢κ you!"],
+            svec!["F_u c_K"],
+            svec!["fuuuuuuuck"],
+            svec!["fluff truck"],
+            svec!["fukushima"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("censor_check")
+        .arg("description")
+        .arg("--new-column")
+        .arg("profanity_flag")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["description", "profanity_flag"],
+        svec!["fuck", "true"],
+        svec!["FUCK", "true"],
+        svec!["fμ¢κ you!", "true"],
+        svec!["F_u c_K", "true"],
+        svec!["fuuuuuuuck", "true"],
+        svec!["fluff truck", "false"],
+        svec!["fukushima", "false"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn apply_ops_censor() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["description"],
+            svec!["fuck"],
+            svec!["FUCK"],
+            svec!["fμ¢κ that shit, faggot!"],
+            svec!["F_u c_K that blowjoboobies"],
+            svec!["fuuuuuuuck yooooouuuu"],
+            svec!["kiss my ass!"],
+            svec!["shittitties"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("censor")
+        .arg("description")
+        .arg("--new-column")
+        .arg("censored_text")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["description", "censored_text"],
+        svec!["fuck", "****"],
+        svec!["FUCK", "****"],
+        svec!["fμ¢κ that shit, faggot!", "**** that ****, ******!"],
+        svec!["F_u c_K that blowjoboobies", "*_* *_* that *************"],
+        svec!["fuuuuuuuck yooooouuuu", "********** yooooouuuu"],
+        svec!["kiss my ass!", "kiss my ***!"],
+        svec!["shittitties", "***********"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn apply_ops_replace() {
     let wrk = Workdir::new("apply");
     wrk.create(
@@ -94,6 +170,42 @@ fn apply_ops_replace() {
         svec!["a simple title to capitalize: an example"],
         svec!["Mr. Brown is not pleased."],
         svec!["this is a silverado car"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn apply_ops_regex_replace() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["description"],
+            svec!["My SSN is 078-05-1120. Please do not share it."],
+            svec!["twinkle, twinkle brownie star, how I wonder what you are"],
+            svec!["Somebody from Nigeria called asked for my ssn - 987-65-4320."],
+            svec!["Won't fall for that scam!"],
+            svec!["Just enter 987-65-4329 when prompted"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("regex_replace")
+        .arg("description")
+        .arg("--comparand")
+        .arg("(?:\\d{3}-\\d{2}-\\d{4})")
+        .arg("--replacement")
+        .arg("SSN")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["description"],
+        svec!["My SSN is SSN. Please do not share it."],
+        svec!["twinkle, twinkle brownie star, how I wonder what you are"],
+        svec!["Somebody from Nigeria called asked for my ssn - SSN."],
+        svec!["Won't fall for that scam!"],
+        svec!["Just enter SSN when prompted"],
     ];
     assert_eq!(got, expected);
 }

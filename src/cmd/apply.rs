@@ -17,6 +17,7 @@ use strsim::{
     sorensen_dice,
 };
 use titlecase::titlecase;
+use censor::*;
 
 static USAGE: &str = "
 Apply a series of transformation functions to a given CSV column. This can be used to
@@ -47,6 +48,9 @@ Currently supported operations:
   * mrtrim: Right trim --comparand matches
   * replace: Replace all matches of a pattern (using --comparand)
       with a string (using --replacement).
+  * regex_replace: Replace the leftmost-first regex match with --replacement.
+  * censor_check: check if profanity is detected (boolean)
+  * censor: profanity filter
   * currencytonum: Gets the numeric value of a currency
   * copy: Mark a column for copying
   * simdl: Damerau-Levenshtein similarity
@@ -200,6 +204,9 @@ static OPERATIONS: &[&str] = &[
     "mrtrim",
     "titlecase",
     "replace",
+    "regex_replace",
+    "censor_check",
+    "censor",
     "currencytonum",
     "copy",
     "simdl",
@@ -275,6 +282,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     // validate specified operations
+    let mut regexpr_required: bool = false;
     let operations: Vec<&str> = args.arg_operations.split(',').collect();
     if args.cmd_operations {
         for op in &operations {
@@ -289,9 +297,22 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         );
                     }
                 }
+                "regex_replace" => {
+                    if args.flag_comparand.is_empty() || args.flag_replacement.is_empty() {
+                        return fail!(
+                            "--comparand (-C) and --replacement (-R) are required for regex_replace operation."
+                        );
+                    }
+                    regexpr_required = true;
+                }
                 "copy" => {
                     if args.flag_new_column.is_none() {
                         return fail!("--new_column (-c) is required for copy operation.");
+                    }
+                }
+                "censor" | "censor_check" => {
+                    if args.flag_new_column.is_none() {
+                        return fail!("--new_column (-c) is required for censor operations.");
                     }
                 }
                 "mtrim" | "mltrim" | "mrtrim" => {
@@ -318,6 +339,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         progress.set_draw_rate(1);
     }
 
+    // can't do lazy_static with a dynamic var, so we do this instead
+    // to minimize compilation overhead, when not running a regexreplace
+    let regexreplace = match args.flag_comparand.is_empty() || !regexpr_required {
+        true => Regex::new("").unwrap(),
+        false => Regex::new(&args.flag_comparand).unwrap(),
+    };
+
     let mut record = csv::StringRecord::new();
     while rdr.read_record(&mut record)? {
         if !args.flag_quiet {
@@ -331,6 +359,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 &mut cell,
                 &args.flag_comparand,
                 &args.flag_replacement,
+                &regexreplace,
             );
         } else if args.cmd_emptyreplace {
             if cell.trim().is_empty() {
@@ -368,9 +397,19 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 }
 
 #[inline]
-fn apply_operations(operations: &Vec<&str>, cell: &mut String, comparand: &str, replacement: &str) {
+fn apply_operations(
+    operations: &Vec<&str>,
+    cell: &mut String,
+    comparand: &str,
+    replacement: &str,
+    regexreplace: &Regex,
+) {
     lazy_static! {
         static ref SQUEEZER: Regex = Regex::new(r"\s+").unwrap();
+    }
+
+    lazy_static! {
+        static ref CENSOR: Censor = Censor::Standard + Zealous + Sex;
     }
 
     for op in operations {
@@ -417,6 +456,15 @@ fn apply_operations(operations: &Vec<&str>, cell: &mut String, comparand: &str, 
             }
             "replace" => {
                 *cell = cell.replace(comparand, replacement);
+            }
+            "regex_replace" => {
+                *cell = regexreplace.replace(cell, replacement).to_string();
+            }
+            "censor_check" => {
+                *cell = CENSOR.check(cell).to_string();
+            }
+            "censor" => {
+                *cell = CENSOR.censor(cell);
             }
             "currencytonum" => {
                 let currency_value = Currency::from_str(cell);
