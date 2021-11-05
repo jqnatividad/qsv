@@ -13,7 +13,8 @@ use serde::de::{Deserialize, DeserializeOwned, Deserializer, Error};
 use crate::config::{Config, Delimiter};
 use crate::CliResult;
 use indicatif::{ProgressBar, ProgressStyle};
-use num_format::{SystemLocale, ToFormattedString};
+//use num_format::{SystemLocale, ToFormattedString};
+use thousands::Separable;
 
 pub fn num_cpus() -> usize {
     num_cpus::get()
@@ -74,7 +75,7 @@ pub fn prep_progress(progress: &ProgressBar, record_count: u64) {
     );
     progress.set_message(format!(
         " of {} records",
-        record_count.to_formatted_string(&SystemLocale::default().unwrap())
+        record_count.separate_with_commas()
     ));
 }
 
@@ -83,7 +84,7 @@ pub fn finish_progress(progress: &ProgressBar) {
 
     let finish_template = format!(
         "[{{elapsed_precise}}] [{{bar:20}} {{percent}}%{{msg}}] ({}/sec)",
-        per_sec_rate.to_formatted_string(&SystemLocale::default().unwrap())
+        per_sec_rate.separate_with_commas()
     );
 
     progress.set_style(
