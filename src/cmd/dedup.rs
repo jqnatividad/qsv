@@ -3,9 +3,9 @@ use std::str::from_utf8;
 
 use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
-use serde::Deserialize;
 use crate::util;
 use crate::CliResult;
+use serde::Deserialize;
 
 use crate::cmd::sort::iter_cmp;
 
@@ -88,8 +88,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             } else if iter_cmp(a, b) != cmp::Ordering::Equal {
                 new.push(all[current].clone());
             } else if dupes_output {
-                    dupewtr.write_byte_record(&all[current])?;
-                }
+                dupewtr.write_byte_record(&all[current])?;
+            }
             current += 1;
         }
         new.push(all[current].clone());

@@ -5,9 +5,9 @@ use std::ops;
 
 use crate::config::{Config, Delimiter};
 use crate::select::{SelectColumns, Selection};
-use serde::Deserialize;
 use crate::util;
 use crate::CliResult;
+use serde::Deserialize;
 
 static USAGE: &str = "
 Fill empty fields in selected columns of a CSV.

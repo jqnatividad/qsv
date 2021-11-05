@@ -146,38 +146,27 @@ join_test!(
     }
 );
 
-join_test!(
-    join_left_semi,
-    |wrk: Workdir, mut cmd: process::Command, headers: bool| {
-        cmd.arg("--left-semi");
-        let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-        let expected = make_rows(
-            headers,
-            true,
-            vec![
-                svec!["Buffalo", "NY"],
-            ],
-        );
-        assert_eq!(got, expected);
-    }
-);
+join_test!(join_left_semi, |wrk: Workdir,
+                            mut cmd: process::Command,
+                            headers: bool| {
+    cmd.arg("--left-semi");
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = make_rows(headers, true, vec![svec!["Buffalo", "NY"]]);
+    assert_eq!(got, expected);
+});
 
-join_test!(
-    join_left_anti,
-    |wrk: Workdir, mut cmd: process::Command, headers: bool| {
-        cmd.arg("--left-anti");
-        let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-        let expected = make_rows(
-            headers,
-            true,
-            vec![
-                svec!["New York", "NY"],
-                svec!["San Francisco", "CA"],
-            ],
-        );
-        assert_eq!(got, expected);
-    }
-);
+join_test!(join_left_anti, |wrk: Workdir,
+                            mut cmd: process::Command,
+                            headers: bool| {
+    cmd.arg("--left-anti");
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = make_rows(
+        headers,
+        true,
+        vec![svec!["New York", "NY"], svec!["San Francisco", "CA"]],
+    );
+    assert_eq!(got, expected);
+});
 
 #[test]
 fn join_inner_issue11() {

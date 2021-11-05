@@ -4,9 +4,9 @@ use std::process;
 
 use stats::Frequencies;
 
-use serde::Deserialize;
 use crate::workdir::Workdir;
 use crate::{qcheck_sized, Csv, CsvData};
+use serde::Deserialize;
 
 fn setup(name: &str) -> (Workdir, process::Command) {
     let rows = vec![

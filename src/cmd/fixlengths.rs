@@ -1,9 +1,9 @@
 use std::cmp;
 
 use crate::config::{Config, Delimiter};
-use serde::Deserialize;
 use crate::util;
 use crate::CliResult;
+use serde::Deserialize;
 
 static USAGE: &str = "
 Transforms CSV data so that all records have the same length. The length is

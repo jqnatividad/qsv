@@ -68,15 +68,11 @@ mod test_table;
 mod test_transpose;
 
 fn qcheck<T: Testable>(p: T) {
-    QuickCheck::new()
-        .gen(Gen::new(5))
-        .quickcheck(p);
+    QuickCheck::new().gen(Gen::new(5)).quickcheck(p);
 }
 
 fn qcheck_sized<T: Testable>(p: T, size: usize) {
-    QuickCheck::new()
-        .gen(Gen::new(size))
-        .quickcheck(p);
+    QuickCheck::new().gen(Gen::new(size)).quickcheck(p);
 }
 
 pub type CsvVecs = Vec<Vec<String>>;

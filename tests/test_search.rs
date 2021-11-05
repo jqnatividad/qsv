@@ -80,10 +80,7 @@ fn search_unicode() {
     cmd.arg("--unicode");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![
-        svec!["h1", "h2"],
-        svec!["Ḟooƀar", "ḃarḟoo"],
-    ];
+    let expected = vec![svec!["h1", "h2"], svec!["Ḟooƀar", "ḃarḟoo"]];
     assert_eq!(got, expected);
 }
 

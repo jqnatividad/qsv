@@ -4,7 +4,7 @@ use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
 use crate::util;
 use crate::CliResult;
-use rand::{seq::SliceRandom, SeedableRng, rngs::StdRng};
+use rand::{rngs::StdRng, seq::SliceRandom, SeedableRng};
 use serde::Deserialize;
 use std::str::from_utf8;
 

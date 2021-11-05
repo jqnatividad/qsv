@@ -4,9 +4,9 @@ use rand::{rngs::StdRng, seq::SliceRandom, SeedableRng};
 
 use crate::config::{Config, Delimiter};
 use crate::index::Indexed;
-use indicatif::ProgressBar;
 use crate::util;
 use crate::CliResult;
+use indicatif::ProgressBar;
 use serde::Deserialize;
 
 static USAGE: &str = "
@@ -70,7 +70,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     for row in scrambled.into_iter() {
         wtr.write_byte_record(&row)?;
     }
-    
+
     if !args.flag_quiet {
         util::finish_progress(&progress);
     }

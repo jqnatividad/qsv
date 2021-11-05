@@ -13,7 +13,6 @@ use serde::de::{Deserialize, DeserializeOwned, Deserializer, Error};
 use crate::config::{Config, Delimiter};
 use crate::CliResult;
 use indicatif::{ProgressBar, ProgressStyle};
-//use num_format::{SystemLocale, ToFormattedString};
 use thousands::Separable;
 
 pub fn num_cpus() -> usize {

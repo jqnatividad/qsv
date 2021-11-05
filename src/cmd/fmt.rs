@@ -1,7 +1,7 @@
 use crate::config::{Config, Delimiter};
-use serde::Deserialize;
 use crate::util;
 use crate::CliResult;
+use serde::Deserialize;
 
 static USAGE: &str = "
 Formats CSV data with a custom delimiter or CRLF line endings.

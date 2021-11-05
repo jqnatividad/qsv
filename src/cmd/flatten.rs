@@ -4,9 +4,9 @@ use std::io::{self, Write};
 use tabwriter::TabWriter;
 
 use crate::config::{Config, Delimiter};
-use serde::Deserialize;
 use crate::util;
 use crate::CliResult;
+use serde::Deserialize;
 
 static USAGE: &str = "
 Prints flattened records such that fields are labeled separated by a new line.
