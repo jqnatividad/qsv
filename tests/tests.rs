@@ -56,6 +56,7 @@ mod test_pseudo;
 mod test_replace;
 mod test_reverse;
 mod test_sample;
+mod test_scramble;
 mod test_search;
 mod test_searchset;
 mod test_select;
