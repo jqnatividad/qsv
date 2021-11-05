@@ -5,6 +5,7 @@ use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
 use crate::util;
 use crate::CliResult;
+use censor::{Censor, Zealous, Sex};
 use chrono::{NaiveTime, Utc};
 use currency::Currency;
 use dateparser::parse_with;
@@ -17,7 +18,6 @@ use strsim::{
     sorensen_dice,
 };
 use titlecase::titlecase;
-use censor::*;
 
 static USAGE: &str = "
 Apply a series of transformation functions to a given CSV column. This can be used to
