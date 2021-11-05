@@ -61,7 +61,6 @@ macro_rules! command_list {
     partition   Partition CSV data based on a column value
     pseudo      Pseudonymise the values of a column
     sample      Randomly sample CSV data
-    scramble    Randomly scramble a CSV
     rename      Rename the columns of CSV data efficiently
     replace     Replace patterns in CSV data
     reverse     Reverse rows of CSV data
@@ -180,7 +179,6 @@ enum Command {
     Replace,
     Reverse,
     Sample,
-    Scramble,
     Search,
     SearchSet,
     Select,
@@ -234,7 +232,6 @@ impl Command {
             Command::Replace => cmd::replace::run(argv),
             Command::Reverse => cmd::reverse::run(argv),
             Command::Sample => cmd::sample::run(argv),
-            Command::Scramble => cmd::scramble::run(argv),
             Command::Search => cmd::search::run(argv),
             Command::SearchSet => cmd::searchset::run(argv),
             Command::Select => cmd::select::run(argv),
