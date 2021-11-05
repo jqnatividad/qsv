@@ -4,6 +4,7 @@ use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
 use crate::util;
 use crate::CliResult;
+use rand::{seq::SliceRandom, SeedableRng, rngs::StdRng};
 use serde::Deserialize;
 use std::str::from_utf8;
 
@@ -22,6 +23,8 @@ sort options:
                            See 'qsv select --help' for the format details.
     -N, --numeric          Compare according to string numerical value
     -R, --reverse          Reverse order
+    --random               Random order
+    --seed <number>        RNG seed
 
 Common options:
     -h, --help             Display this message
@@ -42,6 +45,8 @@ struct Args {
     flag_select: SelectColumns,
     flag_numeric: bool,
     flag_reverse: bool,
+    flag_random: bool,
+    flag_seed: Option<u64>,
     flag_output: Option<String>,
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
@@ -52,6 +57,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
     let numeric = args.flag_numeric;
     let reverse = args.flag_reverse;
+    let random = args.flag_random;
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers)
@@ -62,24 +68,37 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let headers = rdr.byte_headers()?.clone();
     let sel = rconfig.selection(&headers)?;
 
+    // Seeding rng
+    let seed = args.flag_seed;
+
     let mut all = rdr.byte_records().collect::<Result<Vec<_>, _>>()?;
-    match (numeric, reverse) {
-        (false, false) => all.sort_by(|r1, r2| {
+    match (numeric, reverse, random) {
+        (_, _, true) => {
+            //SliceRandom::shuffle(&mut all, &mut rng),
+            if let Some(val) = seed {
+                let mut rng = StdRng::seed_from_u64(val);
+                SliceRandom::shuffle(&mut *all, &mut rng);
+            } else {
+                let mut rng = ::rand::thread_rng();
+                SliceRandom::shuffle(&mut *all, &mut rng);
+            }
+        }
+        (false, false, false) => all.sort_by(|r1, r2| {
             let a = sel.select(r1);
             let b = sel.select(r2);
             iter_cmp(a, b)
         }),
-        (true, false) => all.sort_by(|r1, r2| {
+        (true, false, false) => all.sort_by(|r1, r2| {
             let a = sel.select(r1);
             let b = sel.select(r2);
             iter_cmp_num(a, b)
         }),
-        (false, true) => all.sort_by(|r1, r2| {
+        (false, true, false) => all.sort_by(|r1, r2| {
             let a = sel.select(r1);
             let b = sel.select(r2);
             iter_cmp(b, a)
         }),
-        (true, true) => all.sort_by(|r1, r2| {
+        (true, true, false) => all.sort_by(|r1, r2| {
             let a = sel.select(r1);
             let b = sel.select(r2);
             iter_cmp_num(b, a)
