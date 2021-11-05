@@ -1,9 +1,6 @@
 use std::io;
 
-use byteorder::{ByteOrder, LittleEndian};
-use rand::rngs::StdRng;
-use rand::seq::SliceRandom;
-use rand::{self, Rng, SeedableRng};
+use rand::{self, rngs::StdRng, seq::SliceRandom, Rng, SeedableRng};
 
 use crate::config::{Config, Delimiter};
 use crate::index::Indexed;
@@ -130,11 +127,7 @@ fn sample_reservoir<R: io::Read>(
     // Seeding rng
     let mut rng: StdRng = match seed {
         None => StdRng::from_rng(rand::thread_rng()).unwrap(),
-        Some(seed) => {
-            let mut buf = [0u8; 32];
-            LittleEndian::write_u64(&mut buf, seed as u64);
-            SeedableRng::from_seed(buf)
-        }
+        Some(seed) => StdRng::seed_from_u64(seed as u64),
     };
 
     // Now do the sampling.
