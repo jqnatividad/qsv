@@ -167,6 +167,38 @@ fn sort_uniq() {
     assert_eq!(got, expected);
 }
 
+#[test]
+fn sort_random() {
+    let wrk = Workdir::new("sort_random");
+    wrk.create(
+        "in.csv",
+        vec![
+            svec!["R", "S"],
+            svec!["1", "b"],
+            svec!["2", "a"],
+            svec!["3", "d"],
+            svec!["4", "c"],
+            svec!["5", "f"],
+            svec!["6", "e"],
+        ],
+    );
+
+    let mut cmd = wrk.command("sort");
+    cmd.arg("--random").args(&["--seed", "42"]).arg("in.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["R", "S"],
+        svec!["1", "b"],
+        svec!["5", "f"],
+        svec!["6", "e"],
+        svec!["3", "d"],
+        svec!["2", "a"],
+        svec!["4", "c"],
+    ];
+    assert_eq!(got, expected);
+}
+
 /// Order `a` and `b` lexicographically using `Ord`
 pub fn iter_cmp<A, L, R>(mut a: L, mut b: R) -> cmp::Ordering
 where
