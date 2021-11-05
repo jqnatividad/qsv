@@ -60,7 +60,7 @@ indicatif = "0.16"
 thousands = "0.2"
 titlecase = "1"
 censor = "0.2"
-uuid = { version = "0.8.1", features = ["v4"] }
+uuid = { version = "0.8.2", features = ["v4"] }
 
 [build-dependencies]
 rustc_version = "0.4"
