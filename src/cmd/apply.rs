@@ -501,7 +501,7 @@ fn apply_operations(
     }
 }
 
-#[cached]
+#[cached(size=1_000_000, option=true)]
 fn search_cached(lats: String, longs: String) -> Option<SearchResult<'static>> {
     lazy_static! {
         static ref LOCS: Locations = Locations::from_memory();
@@ -509,7 +509,11 @@ fn search_cached(lats: String, longs: String) -> Option<SearchResult<'static>> {
     }
     let lat = lats.parse::<f64>().unwrap();
     let long = longs.parse::<f64>().unwrap();
-    GEOCODER.search((lat, long))
+    if lat >= -90.0 && lat <= 90.0 && long >= -180.0 && long <= 180.0 {
+        GEOCODER.search((lat, long))
+    } else {
+        None
+    }
 }
 
 #[inline]
