@@ -393,13 +393,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             use thousands::Separable;
 
             let cache = SEARCH_CACHED.lock().unwrap();
+            let cache_size = cache.cache_size();
             let hits = cache.cache_hits().unwrap();
             let misses = cache.cache_misses().unwrap();
             let hit_ratio = ( hits as f64 / misses as f64 ) * 100.0;
             progress.set_message(format!(
-                " of {} records. Geocode cache hit ratio: {:.2}%",
+                " of {} records. Geocode cache hit ratio: {:.2}% - {} entries",
                 record_count.separate_with_commas(),
-                hit_ratio
+                hit_ratio,
+                cache_size.separate_with_commas(),
             ));
         }
         util::finish_progress(&progress);
