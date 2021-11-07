@@ -388,6 +388,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         wtr.write_record(&record)?;
     }
     if !args.flag_quiet {
+        if args.cmd_geocode {
+            use cached::Cached;
+            use thousands::Separable;
+
+            let cache = SEARCH_CACHED.lock().unwrap();
+            let hits = cache.cache_hits().unwrap();
+            let misses = cache.cache_misses().unwrap();
+            let hit_ratio = ( hits as f64 / misses as f64 ) * 100.0;
+            progress.set_message(format!(
+                " of {} records. Geocode cache hit ratio: {:.2}%",
+                record_count.separate_with_commas(),
+                hit_ratio
+            ));
+        }
         util::finish_progress(&progress);
     }
     Ok(wtr.flush()?)
@@ -501,7 +515,7 @@ fn apply_operations(
     }
 }
 
-#[cached(size=1_000_000, option=true)]
+#[cached(size = 1_000_000, option = true)]
 fn search_cached(lats: String, longs: String) -> Option<SearchResult<'static>> {
     lazy_static! {
         static ref LOCS: Locations = Locations::from_memory();
