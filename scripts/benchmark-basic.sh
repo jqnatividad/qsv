@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# This script does some very basic benchmarks with 'qsv' using a 520mb, 1M row sample of 
-# NYC's 311 data. If it doesn't exist on your system, it will be downloaded for you.
+# This script does some very basic benchmarks with 'qsv' using a 520mb, 41 column, 1M row 
+# sample of NYC's 311 data. If it doesn't exist on your system, it will be downloaded for you.
 #
 # These aren't meant to be overly rigorous, but they should be enough to catch
 # significant regressions.
@@ -11,7 +11,9 @@
 # issued from the root of your qsv git repo.
 #
 # This shell script has been tested on Linux, macOS and Cygwin for Windows.
-# On Cygwin, make sure to install `unzip`, `bc` and `time`.
+# It requires 7-Zip (https://www.7-zip.org/download.html) as we need the high compression ratio
+# so we don't have to deal with git-lfs to host the large compressed file on GitHub.
+# On Cygwin, you also need to install `bc` and `time`.
 
 set -e
 
@@ -27,7 +29,7 @@ searchset_patterns=searchset_patterns.txt
 if [ ! -r "$data" ]; then
   printf "Downloading benchmarking data...\n"
   curl -sS https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/NYC_311_SR_2010-2020-sample-1M.7z > "$datazip"
-  p7zip -d "$datazip"
+  7z e -y "$datazip"
   "$bin_name" sample --seed 42 1000 "$data" -o "$data_to_exclude"
   printf "homeless\npark\nnoise\n" > "$searchset_patterns"
   curl -sS https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/communityboards.csv > "$commboarddata"
@@ -105,7 +107,6 @@ benchmarkfile=$bin_name-bench-$binver-$current_time.tsv
 printf "%-27s%-11s%-12s%-12s\n" BENCHMARK TIME_SECS MB_PER_SEC RECS_PER_SEC
 printf "benchmark\ttime_secs\tmb_per_sec\trecs_per_sec\n" > $benchmarkfile
 run apply_op_string "$bin_name" apply operations lower Agency -q "$data"
-run apply_op_string_ascii "$bin_name" apply operations asciilower Agency -q "$data"
 run apply_op_similarity "$bin_name" apply operations lower,simdln Agency --comparand brooklyn --new-column Agency_sim-brooklyn_score -q "$data"
 run apply_op_soundex "$bin_name" apply operations lower,soundex Agency --comparand Queens --new-column Agency_queens_soundex -q "$data" 
 run apply_datefmt "$bin_name" apply datefmt \"Created Date\" -q "$data"
@@ -132,7 +133,7 @@ run join "$bin_name" join --no-case 'Community Board' "$data" community_board "$
 run lua "$bin_name" lua map location_empty "tonumber\(Location\)==nil" -q "$data"
 run partition "$bin_name" partition 'Community Board' /tmp/partitioned "$data"
 run pseudo "$bin_name" pseudo 'Unique Key' "$data"
-run rename "$bin_name" rename 'unique_key,created_date,closed_date,agency,agency_name,complaint_type,descriptor,loctype,zip,addr1,street,xstreet1,xstreet2,addrtype,city,landmark,facility_type,status,due_date,res_desc,res_act_date,comm_board,bbl,boro,xcoord,ycoord,opendata_type,parkname,parkboro,vehtype,taxi_boro,taxi_loc,bridge_hwy_name,bridge_hwy_dir,ramp,bridge_hwy_seg,lat,long,loc' "$data"
+run rename "$bin_name" rename 'unique_key,created_date,closed_date,agency,agency_name,complaint_type,descriptor,loctype,zip,addr1,street,xstreet1,xstreet2,inter1,inter2,addrtype,city,landmark,facility_type,status,due_date,res_desc,res_act_date,comm_board,bbl,boro,xcoord,ycoord,opendata_type,parkname,parkboro,vehtype,taxi_boro,taxi_loc,bridge_hwy_name,bridge_hwy_dir,ramp,bridge_hwy_seg,lat,long,loc' "$data"
 run reverse "$bin_name" reverse "$data"
 run sample_10 "$bin_name" sample 10 "$data"
 run --index sample_10_index "$bin_name" sample 10 "$data"
