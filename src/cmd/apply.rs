@@ -5,13 +5,14 @@ use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
 use crate::util;
 use crate::CliResult;
-use censor::{Censor, Zealous, Sex};
+use cached::proc_macro::cached;
+use censor::{Censor, Sex, Zealous};
 use chrono::{NaiveTime, Utc};
 use currency::Currency;
 use dateparser::parse_with;
 use indicatif::ProgressBar;
 use natural::phonetics::soundex;
-use reverse_geocoder::{Locations, ReverseGeocoder};
+use reverse_geocoder::{Locations, ReverseGeocoder, SearchResult};
 use serde::Deserialize;
 use strsim::{
     damerau_levenshtein, hamming, jaro_winkler, normalized_damerau_levenshtein, osa_distance,
@@ -36,9 +37,7 @@ Currently supported operations:
 
   * len: Return string length
   * lower: Transform to lowercase (unicode-aware)
-  * asciilower: Transform to lowecase (ascii-only) ~10% faster
   * upper: Transform to uppercase (unicode-aware)
-  * asciiupper: Transform to uppercase (ascii-only) ~10% faster
   * squeeze: Compress consecutive whitespaces
   * trim: Trim (drop whitespace left & right of the string)
   * ltrim: Left trim
@@ -193,8 +192,6 @@ static OPERATIONS: &[&str] = &[
     "len",
     "lower",
     "upper",
-    "asciilower",
-    "asciiupper",
     "squeeze",
     "trim",
     "rtrim",
@@ -336,11 +333,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if !args.flag_quiet {
         record_count = util::count_rows(&rconfig);
         util::prep_progress(&progress, record_count);
-        progress.set_draw_rate(1);
+        progress.set_draw_delta(record_count / 100);
     }
 
     // can't do lazy_static with a dynamic var, so we do this instead
-    // to minimize compilation overhead, when not running a regexreplace
+    // to minimize regex compilation overhead, when not running a regexreplace
     let regexreplace = match args.flag_comparand.is_empty() || !regexpr_required {
         true => Regex::new("").unwrap(),
         false => Regex::new(&args.flag_comparand).unwrap(),
@@ -420,14 +417,8 @@ fn apply_operations(
             "lower" => {
                 *cell = cell.to_lowercase();
             }
-            "asciilower" => {
-                cell.make_ascii_lowercase();
-            }
             "upper" => {
                 *cell = cell.to_uppercase();
-            }
-            "asciiupper" => {
-                cell.make_ascii_uppercase();
             }
             "squeeze" => {
                 *cell = SQUEEZER.replace_all(cell, " ").to_string();
@@ -510,24 +501,29 @@ fn apply_operations(
     }
 }
 
-#[inline(always)]
-fn geocode(cell: &mut String, formatstr: &str) {
-    // simple regex for "lat, long" or "(lat, long)", does not validate ranges
-    lazy_static! {
-        static ref LOCREGEX: Regex =
-            Regex::new(r"(?-u)^\(*(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)\)?$").unwrap();
-    }
+#[cached]
+fn search_cached(lats: String, longs: String) -> Option<SearchResult<'static>> {
     lazy_static! {
         static ref LOCS: Locations = Locations::from_memory();
         static ref GEOCODER: ReverseGeocoder<'static> = ReverseGeocoder::new(&LOCS);
     }
+    let lat = lats.parse::<f64>().unwrap();
+    let long = longs.parse::<f64>().unwrap();
+    GEOCODER.search((lat, long))
+}
+
+#[inline]
+fn geocode(cell: &mut String, formatstr: &str) {
+    // simple regex for "lat, long", does not validate ranges
+    lazy_static! {
+        static ref LOCREGEX: Regex = Regex::new(r"(?-u)([-\d.]+),\s*([-\d.]+)").unwrap();
+    }
 
     let loccaps = LOCREGEX.captures(&*cell);
     if let Some(loccaps) = loccaps {
-        let lats = loccaps.get(1).map_or("", |m| m.as_str());
-        let longs = loccaps.get(2).map_or("", |m| m.as_str());
-        let coords = (lats.parse::<f64>().unwrap(), longs.parse::<f64>().unwrap());
-        let search_result = GEOCODER.search(coords);
+        let lat = loccaps[1].to_string();
+        let long = loccaps[2].to_string();
+        let search_result = search_cached(lat, long);
         if let Some(locdetails) = search_result {
             *cell = match formatstr {
                 "%+" | "city-state" => format!(
