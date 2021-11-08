@@ -114,7 +114,7 @@ jobs:
         command: build
         use-cross: ${{ matrix.job.use-cross }}
         toolchain: ${{ matrix.rust }}
-        args: --release --target ${{ matrix.job.target }} ${{ matrix.addl-build-args }}
+        args: --release --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }}
     - name: Zip up binaries
       run: 7z a -tzip ${{ matrix.job.asset_name }} target/${{ matrix.job.target }}/release/${{ matrix.job.artifact_name }}
     - name: Upload binaries to release
