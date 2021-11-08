@@ -63,6 +63,7 @@ jobs:
             architecture: x86_64
             artifact_name: qsv.exe
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-x86_64-pc-windows-gnu.zip
+            addl-build-args: --no-default-features
             use-cross: false
           - os: macos-latest
             os-name: macos
