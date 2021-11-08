@@ -22,6 +22,7 @@ Usage:
 Common options:
     -h, --help             Display this message
     -o, --output <file>    Write output to <file> instead of stdout.
+    -n, --no-headers       When set, the header will be inserted on top.    
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
 ";
@@ -31,13 +32,16 @@ struct Args {
     arg_input: Option<String>,
     arg_headers: String,
     flag_output: Option<String>,
+    flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
-    let rconfig = Config::new(&args.arg_input).delimiter(args.flag_delimiter);
+    let rconfig = Config::new(&args.arg_input)
+        .delimiter(args.flag_delimiter)
+        .no_headers(args.flag_no_headers);
 
     let mut rdr = rconfig.reader()?;
     let mut wtr = Config::new(&args.flag_output).writer()?;
@@ -50,9 +54,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         return fail!("The length of the CSV headers is different from the provided one.");
     }
 
-    if !rconfig.no_headers {
-        wtr.write_record(new_headers)?;
-    }
+    wtr.write_record(new_headers)?;
 
     let mut record = csv::ByteRecord::new();
     while rdr.read_byte_record(&mut record)? {
