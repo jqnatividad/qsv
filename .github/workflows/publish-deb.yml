@@ -37,7 +37,7 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: /github/workspace/target/x86_64-unknown-linux-musl/debian/qsv_0.21.0_amd64.deb
+          file: ./target/x86_64-unknown-linux-musl/debian/qsv_0.21.0_amd64.deb
           asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-x86_64-unknown-linux-musl.deb
           overwrite: true
           tag: ${{ needs.analyze-tags.outputs.previous-tag }}
