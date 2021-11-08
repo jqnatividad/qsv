@@ -278,6 +278,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a357d28ed41a50f9c765dbfe56cbc04a64e53e5fc58ba79fbc34c10ef3df831f"
 
 [[package]]
+name = "eudex"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "95cb9bf0969366245682aedd5197be1491f2a044fc99c45564710b22b0e9ac87"
+
+[[package]]
 name = "event-listener"
 version = "2.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -442,15 +448,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "natural"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "65e6b44f8ddc659cde3555e0140d3441ad26cb03a1410774af1f9a19097c1867"
-dependencies = [
- "rust-stemmers",
-]
-
-[[package]]
 name = "num"
 version = "0.1.42"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -585,6 +582,7 @@ dependencies = [
  "currency",
  "dateparser",
  "docopt",
+ "eudex",
  "filetime",
  "hlua",
  "indicatif",
@@ -592,7 +590,6 @@ dependencies = [
  "lazy_static",
  "log",
  "mimalloc",
- "natural",
  "num_cpus",
  "qsv-stats",
  "quickcheck",
@@ -763,16 +760,6 @@ dependencies = [
  "kdtree",
  "quick-csv",
  "rustc-serialize",
- "serde",
- "serde_derive",
-]
-
-[[package]]
-name = "rust-stemmers"
-version = "1.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e46a2036019fdb888131db7a4c847a1063a7493f971ed94ea82c67eada63ca54"
-dependencies = [
  "serde",
  "serde_derive",
 ]
