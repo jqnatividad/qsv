@@ -85,6 +85,7 @@ jobs:
             artifact_name: qsv
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-arm-unknown-linux-gnueabihf.zip
             use-cross: true
+            addl-build-args: --no-default-features
           - os: ubuntu-latest
             os-name: linux
             target: arm-unknown-linux-musleabihf
@@ -92,6 +93,7 @@ jobs:
             artifact_name: qsv
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-arm-unknown-linux-musleabihf.zip
             use-cross: true
+            addl-build-args: --no-default-features
 
     steps:
     - name: Installing Rust toolchain
@@ -112,7 +114,7 @@ jobs:
         command: build
         use-cross: ${{ matrix.job.use-cross }}
         toolchain: ${{ matrix.rust }}
-        args: --release --target ${{ matrix.job.target }}
+        args: --release --target ${{ matrix.job.target }} ${{ matrix.addl-build-args }}
     - name: Zip up binaries
       run: 7z a -tzip ${{ matrix.job.asset_name }} target/${{ matrix.job.target }}/release/${{ matrix.job.artifact_name }}
     - name: Upload binaries to release
