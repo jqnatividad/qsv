@@ -5,7 +5,7 @@ qsv: Ultra-fast, data-wrangling CLI toolkit for CSVs
 [![macOS build status](https://github.com/jqnatividad/qsv/actions/workflows/rust-macos.yml/badge.svg)](https://github.com/jqnatividad/qsv/actions/workflows/rust-macos.yml)
 [![Security audit](https://github.com/jqnatividad/qsv/actions/workflows/security-audit.yml/badge.svg)](https://github.com/jqnatividad/qsv/actions/workflows/security-audit.yml)
 [![Crates.io](https://img.shields.io/crates/v/qsv.svg)](https://crates.io/crates/qsv)
-[![Minimum supported Rust version](https://img.shields.io/badge/rustc-1.56+-red.svg?style=for-the-badge&logo=rust)](#minimum-supported-rust-version-msrv)
+[![Minimum supported Rust version](https://img.shields.io/badge/Rust-1.56%2B-red?logo=rust)](#minimum-supported-rust-version)
 [![Discussions](https://img.shields.io/github/discussions/jqnatividad/qsv)](https://github.com/jqnatividad/qsv/discussions)
 [![Docs](https://img.shields.io/badge/wiki-docs-yellowgreen)](https://github.com/jqnatividad/qsv/wiki)   
 qsv is a command line program for indexing, slicing, analyzing, splitting, enriching,
@@ -92,6 +92,9 @@ cargo build --release
 ```
 
 The compiled binary will end up in `./target/release/qsv`.
+
+### Minimum Supported Rust Version
+Building qsv requires Rust version 1.56+.
 
 Tab Completion
 --------------
