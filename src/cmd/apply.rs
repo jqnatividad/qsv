@@ -10,8 +10,8 @@ use censor::{Censor, Sex, Zealous};
 use chrono::{NaiveTime, Utc};
 use currency::Currency;
 use dateparser::parse_with;
+use eudex::Hash;
 use indicatif::ProgressBar;
-use natural::phonetics::soundex;
 use reverse_geocoder::{Locations, ReverseGeocoder, SearchResult};
 use serde::Deserialize;
 use strsim::{
@@ -47,7 +47,7 @@ Currently supported operations:
   * mrtrim: Right trim --comparand matches
   * replace: Replace all matches of a pattern (using --comparand)
       with a string (using --replacement).
-  * regex_replace: Replace the leftmost-first regex match with --replacement.
+  * regex_replace: Replace all regex matches with --replacement.
   * titlecase - capitalizes English text using Daring Fireball titlecase style
       https://daringfireball.net/2008/05/title_case 
   * censor_check: check if profanity is detected (boolean)
@@ -60,7 +60,7 @@ Currently supported operations:
   * simsd: Sørensen-Dice similarity (between 0.0 & 1.0)
   * simhm: Hamming distance. Number of positions where characters differ.
   * simod: OSA Distance.
-  * soundex: sounds like --comparand in English (boolean)
+  * eudex: Multi-lingual sounds like --comparand (boolean)
 
 Examples:
 Trim, then transform to uppercase the surname field.
@@ -215,7 +215,7 @@ static OPERATIONS: &[&str] = &[
     "simsd",
     "simhm",
     "simod",
-    "soundex",
+    "eudex",
 ];
 
 #[derive(Deserialize, Debug)]
@@ -283,6 +283,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // validate specified operations
     let mut regexpr_required: bool = false;
+    let mut eudex_required: bool = false;
     let operations: Vec<&str> = args.arg_operations.split(',').collect();
     if args.cmd_operations {
         for op in &operations {
@@ -320,10 +321,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         return fail!("--comparand (-C) is required for match trim operations.");
                     }
                 }
-                "simdl" | "simdln" | "simjw" | "simsd" | "simhm" | "simod" | "soundex" => {
+                "simdl" | "simdln" | "simjw" | "simsd" | "simhm" | "simod" => {
                     if args.flag_new_column.is_none() {
                         return fail!("--new_column (-c) is required for similarity operations.");
                     }
+                }
+                "eudex" => {
+                    if args.flag_new_column.is_none() {
+                        return fail!("--new_column (-c) is required for eudex.");
+                    }
+                    eudex_required = true;
                 }
                 _ => {}
             }
@@ -346,6 +353,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         false => Regex::new(&args.flag_comparand).unwrap(),
     };
 
+    let eudex_comparand_hash = match eudex_required {
+        true => eudex::Hash::new(&args.flag_comparand),
+        false => eudex::Hash::new(""),
+    };
+
     let mut record = csv::StringRecord::new();
     while rdr.read_record(&mut record)? {
         if !args.flag_quiet {
@@ -360,6 +372,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 &args.flag_comparand,
                 &args.flag_replacement,
                 &regexreplace,
+                &eudex_comparand_hash,
             );
         } else if args.cmd_emptyreplace {
             if cell.trim().is_empty() {
@@ -419,6 +432,7 @@ fn apply_operations(
     comparand: &str,
     replacement: &str,
     regexreplace: &Regex,
+    eudex_comparand_hash: &eudex::Hash,
 ) {
     lazy_static! {
         static ref SQUEEZER: Regex = Regex::new(r"\s+").unwrap();
@@ -468,7 +482,7 @@ fn apply_operations(
                 *cell = cell.replace(comparand, replacement);
             }
             "regex_replace" => {
-                *cell = regexreplace.replace(cell, replacement).to_string();
+                *cell = regexreplace.replace_all(cell, replacement).to_string();
             }
             "censor_check" => {
                 *cell = CENSOR.check(cell).to_string();
@@ -512,8 +526,9 @@ fn apply_operations(
                 }
             }
             "simod" => *cell = osa_distance(cell, comparand).to_string(),
-            "soundex" => {
-                *cell = format!("{}", (soundex(&*cell, comparand)));
+            "eudex" => {
+                let cell_hash = Hash::new(cell);
+                *cell = format!("{}", (cell_hash - *eudex_comparand_hash).similar());
             }
             _ => {} // this also handles copy, which is a noop
         }

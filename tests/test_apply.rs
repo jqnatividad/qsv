@@ -185,7 +185,7 @@ fn apply_ops_regex_replace() {
             svec!["twinkle, twinkle brownie star, how I wonder what you are"],
             svec!["Somebody from Nigeria called asked for my ssn - 987-65-4320."],
             svec!["Won't fall for that scam!"],
-            svec!["Just enter 987-65-4329 when prompted"],
+            svec!["Just enter 987-65-4329 when prompted. Also try 987-65-1234 if it doesn't work."],
         ],
     );
     let mut cmd = wrk.command("apply");
@@ -205,7 +205,7 @@ fn apply_ops_regex_replace() {
         svec!["twinkle, twinkle brownie star, how I wonder what you are"],
         svec!["Somebody from Nigeria called asked for my ssn - SSN."],
         svec!["Won't fall for that scam!"],
-        svec!["Just enter SSN when prompted"],
+        svec!["Just enter SSN when prompted. Also try SSN if it doesn't work."],
     ];
     assert_eq!(got, expected);
 }
@@ -451,7 +451,7 @@ fn apply_similarity() {
 }
 
 #[test]
-fn apply_similarity_soundex() {
+fn apply_similarity_eudex() {
     let wrk = Workdir::new("apply");
     wrk.create(
         "data.csv",
@@ -466,22 +466,60 @@ fn apply_similarity_soundex() {
     );
     let mut cmd = wrk.command("apply");
     cmd.arg("operations")
-        .arg("lower,soundex")
+        .arg("lower,eudex")
         .arg("name")
         .arg("--comparand")
         .arg("michael")
         .arg("--new-column")
-        .arg("soundex_flag")
+        .arg("eudex_flag")
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
-        svec!["name", "soundex_flag"],
+        svec!["name", "eudex_flag"],
         svec!["John", "false"],
         svec!["Jonathan", "false"],
         svec!["Michelle", "true"],
         svec!["Larry", "false"],
         svec!["Joel", "false"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn apply_similarity_more_eudex() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["name"],
+            svec!["Jeuses"],
+            svec!["Josephina"],
+            svec!["Juan"],
+            svec!["Juanita"],
+            svec!["Michael"],
+            svec!["Jingjing"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("lower,eudex")
+        .arg("name")
+        .arg("--comparand")
+        .arg("Jesus")
+        .arg("--new-column")
+        .arg("eudex_flag")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["name", "eudex_flag"],
+        svec!["Jeuses", "true"],
+        svec!["Josephina", "false"],
+        svec!["Juan", "true"],
+        svec!["Juanita", "true"],
+        svec!["Michael", "false"],
+        svec!["Jingjing", "false"],
     ];
     assert_eq!(got, expected);
 }
