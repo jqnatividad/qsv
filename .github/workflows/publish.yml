@@ -57,6 +57,13 @@ jobs:
             artifact_name: qsv.exe
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-i686-pc-windows-msvc.zip
             use-cross: true
+          - os: windows-latest
+            os-name: windows
+            target: x86_64-pc-windows-gnu
+            architecture: x86_64
+            artifact_name: qsv.exe
+            asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-x86_64-pc-windows-gnu.zip
+            use-cross: false
           - os: macos-latest
             os-name: macos
             target: x86_64-apple-darwin
@@ -64,6 +71,27 @@ jobs:
             artifact_name: qsv
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-x86_64-apple-darwin.zip
             use-cross: false
+          - os: ubuntu-latest
+            os-name: linux
+            target: aarch64-unknown-linux-gnu
+            architecture: aarch64
+            artifact_name: qsv
+            asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-aarch64-unknown-linux-gnu.zip
+            use-cross: true
+          - os: ubuntu-latest
+            os-name: linux
+            target: arm-unknown-linux-gnueabihf
+            architecture: arm
+            artifact_name: qsv
+            asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-arm-unknown-linux-gnueabihf.zip
+            use-cross: true
+          - os: ubuntu-latest
+            os-name: linux
+            target: arm-unknown-linux-musleabihf
+            architecture: arm
+            artifact_name: qsv
+            asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-arm-unknown-linux-musleabihf.zip
+            use-cross: true
 
     steps:
     - name: Installing Rust toolchain
