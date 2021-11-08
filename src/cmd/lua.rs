@@ -153,7 +153,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if !args.flag_quiet {
         record_count = util::count_rows(&rconfig);
         util::prep_progress(&progress, record_count);
-        progress.set_draw_rate(1);
+        progress.set_draw_delta(record_count / 100);
     }
 
     let mut record = csv::StringRecord::new();
