@@ -36,8 +36,8 @@ The series of operations must be given separated by commas as such:
 Currently supported operations:
 
   * len: Return string length
-  * lower: Transform to lowercase (unicode-aware)
-  * upper: Transform to uppercase (unicode-aware)
+  * lower: Transform to lowercase
+  * upper: Transform to uppercase
   * squeeze: Compress consecutive whitespaces
   * trim: Trim (drop whitespace left & right of the string)
   * ltrim: Left trim
@@ -60,7 +60,7 @@ Currently supported operations:
   * simsd: Sørensen-Dice similarity (between 0.0 & 1.0)
   * simhm: Hamming distance. Number of positions where characters differ.
   * simod: OSA Distance.
-  * soundex: sounds like (boolean)
+  * soundex: sounds like --comparand in English (boolean)
 
 Examples:
 Trim, then transform to uppercase the surname field.
@@ -85,17 +85,17 @@ Replace ' and ' with ' & ' in the description field.u64
 
   $ qsv apply replace description --comparand ' and ' --replacement ' & ' file.csv
 
-Extract the numeric value of the Salary column and new
+Extract the numeric value of the Salary column in a new
 column named Salary_num.
 
-  $ qsv apply operations currencytonum Salary file.csv
+  $ qsv apply operations currencytonum Salary -c Salary_num file.csv
 
 Compute the Normalized Damerau-Levenshtein similarity of
 the neighborhood column to the string 'Roxbury' and save
-it to a new column named neighborhood-dl-score.
+it to a new column named dln_roxbury_score.
 
   $ qsv apply operations lower,simdln neighborhood --comparand roxbury \
-    -c dl-score boston311.csv
+    -c dln_roxbury_score boston311.csv
 
 You can also use this subcommand command to make a copy of a column:
 
