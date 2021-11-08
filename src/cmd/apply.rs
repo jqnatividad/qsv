@@ -48,6 +48,8 @@ Currently supported operations:
   * replace: Replace all matches of a pattern (using --comparand)
       with a string (using --replacement).
   * regex_replace: Replace the leftmost-first regex match with --replacement.
+  * titlecase - capitalizes English text using Daring Fireball titlecase style
+      https://daringfireball.net/2008/05/title_case 
   * censor_check: check if profanity is detected (boolean)
   * censor: profanity filter
   * currencytonum: Gets the numeric value of a currency
