@@ -5,6 +5,7 @@ qsv: Ultra-fast, data-wrangling CLI toolkit for CSVs
 [![macOS build status](https://github.com/jqnatividad/qsv/actions/workflows/rust-macos.yml/badge.svg)](https://github.com/jqnatividad/qsv/actions/workflows/rust-macos.yml)
 [![Security audit](https://github.com/jqnatividad/qsv/actions/workflows/security-audit.yml/badge.svg)](https://github.com/jqnatividad/qsv/actions/workflows/security-audit.yml)
 [![Crates.io](https://img.shields.io/crates/v/qsv.svg)](https://crates.io/crates/qsv)
+[![Minimum supported Rust version](https://img.shields.io/badge/rustc-1.56+-red.svg?style=for-the-badge&logo=rust)](#minimum-supported-rust-version-msrv)
 [![Discussions](https://img.shields.io/github/discussions/jqnatividad/qsv)](https://github.com/jqnatividad/qsv/discussions)
 [![Docs](https://img.shields.io/badge/wiki-docs-yellowgreen)](https://github.com/jqnatividad/qsv/wiki)   
 qsv is a command line program for indexing, slicing, analyzing, splitting, enriching,
@@ -29,7 +30,7 @@ Available commands
 ------------------
 | Command | Description |
 | --- | --- |
-| **[apply](/src/cmd/apply.rs#L23)** | Apply series of string, profanity, similarity, date, currency & geocoding transformations to a CSV column. _**(NEW)**_ |
+| **[apply](/src/cmd/apply.rs#L24)** | Apply series of string, profanity, similarity, date, currency & geocoding transformations to a CSV column. _**(NEW)**_ |
 | **[behead](/src/cmd/behead.rs#L7)** | Drop headers from a CSV. _**(NEW)**_ |
 | **[cat](/src/cmd/cat.rs#L7)** | Concatenate CSV files by row or by column. |
 | **[count](/src/cmd/count.rs#L7)**[^1] | Count the rows in a CSV file. (Instantaneous with an index.) |
@@ -54,7 +55,7 @@ Available commands
 | **[rename](/src/cmd/rename.rs#L7)** |  Rename the columns of a CSV efficiently. _**(NEW)**_ |
 | **[replace](/src/cmd/replace.rs#L11)** | Replace CSV data using a regex. _**(NEW)**_ |
 | **[reverse](/src/cmd/reverse.rs#L7)**[^2] | Reverse order of rows in a CSV. _**(NEW)**_ |
-| **[sample](/src/cmd/sample.rs#L15)**[^1] | Randomly draw rows from a CSV using reservoir sampling (i.e., use memory proportional to the size of the sample). _**(EXTENDED)**_ |
+| **[sample](/src/cmd/sample.rs#L15)**[^1] | Randomly draw rows from a CSV using [reservoir sampling](https://en.wikipedia.org/wiki/Reservoir_sampling) (i.e., use memory proportional to the size of the sample). _**(EXTENDED)**_ |
 | **[search](/src/cmd/search.rs#L10)** | Run a regex over a CSV. Applies the regex to each field individually & shows only matching rows. _**(EXTENDED)**_ |
 | **[searchset](/src/cmd/searchset.rs#L14)** | Run **multiple regexes** over a CSV in a **single pass**. Applies the regexes to each field individually & shows only matching rows. _**(NEW)**_ |
 | **[select](/src/cmd/select.rs#L8)** | Select or re-order columns. _**(EXTENDED)**_ |
@@ -95,7 +96,7 @@ The compiled binary will end up in `./target/release/qsv`.
 Tab Completion
 --------------
 qsv's command-line options are quite extensive. Thankfully, since it uses [docopt](http://docopt.org/) for CLI processing,
-we can take advantage of [doctop.rs' tab completion support](https://github.com/docopt/docopt.rs#tab-completion-support) to make it
+we can take advantage of [docopt.rs' tab completion support](https://github.com/docopt/docopt.rs#tab-completion-support) to make it
 easier to use qsv at the command-line (currently, only bash shell is supported):
 
 ```bash
@@ -164,9 +165,9 @@ Don't be afraid to change the benchmark data and the qsv commands to something t
 workloads.
 
 Use the generated TSV files to meter and compare performance across platforms. You'd be surprised how performance varies
-across environments - e.g. qsv's `join` and `scramble` operations perform abysmally on Windows's WSL running Ubuntu, with
-`join` taking 172.44 seconds and `scramble`, 237.46 seconds. On the same machine, running in a VirtualBox VM at that with
-the same Ubuntu version, `join` takes 1.34 seconds, and `scramble` 2.14 seconds - two orders of magnitude faster!
+across environments - e.g. qsv's `join` performs abysmally on Windows's WSL running Ubuntu 20.04 LTS, taking 172.44 seconds.
+On the same machine, running in a VirtualBox VM at that with the same Ubuntu version, `join` was done in 1.34 seconds - 
+two orders of magnitude faster!
 
 However, `stats` performs two times faster on WSL vs the VirtualBox VM - 2.80 seconds vs 5.33 seconds for the `stats_index` benchmark.
 
