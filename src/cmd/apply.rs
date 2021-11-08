@@ -103,7 +103,8 @@ $ qsv apply operations copy col_to_copy -c col_copy file.csv
 
 EMPTYREPLACE
 Replace empty cells with <replacement> string.
-Non-empty cells are not modified.
+Non-empty cells are not modified. See the `fill` command for more
+complex empty field operations.
 
 Examples:
 Replace empty cells in file.csv Measurement column with 'None'.
@@ -140,7 +141,7 @@ the geonames city database.
 The geocoded information is formatted based on --formatstr, returning
 it in 'city-state' format if not specified.
 
-Use the --new-column option if you want to keep the Location column:
+Use the --new-column option if you want to keep the location column:
 
 Examples:
 Geocode file.csv Location column and set the geocoded value to a
