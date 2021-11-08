@@ -5,6 +5,45 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.21.0] - 2021-11-07
+### Added
+- added `apply geocode` caching, more than doubling performance in the geocode benchmark.
+- added `--random` and `--seed` options to `sort` command from [@pjsier](https://github.com/pjsier).
+- added qsv tab completion section to README.
+- additional `apply operations` subcommands:
+  * Match Trim operations - enables trimming of more than just whitespace, but also of multiple trim characters in one pass ([Example](https://github.com/jqnatividad/qsv/blob/9569dd7c2a897e0a47b97e1abfd1c3efab920990/tests/test_apply.rs#L214)):
+    * mtrim: Trims `--comparand` matches left & right of the string ([trim_matches](https://doc.rust-lang.org/std/string/struct.String.html#method.trim_matches) wrapper)
+    * mltrim: Left trim `--comparand` matches ([trim_start_matches](https://doc.rust-lang.org/std/string/struct.String.html#method.trim_start_matches) wrapper)
+    * mrtrim: Right trim `--comparand` matches ([trim_end_matches](https://doc.rust-lang.org/std/string/struct.String.html#method.trim_end_matches) wrapper)
+  * replace: Replace all matches of a pattern (using `--comparand`)
+      with a string (using `--replacement`) (Std::String [replace](https://doc.rust-lang.org/std/string/struct.String.html#method.replace) wrapper).
+  * regex_replace: Replace the leftmost-first regex match with `--replacement` (regex [replace](https://docs.rs/regex/1.1.0/regex/struct.Regex.html#method.replace) wrapper).
+  * titlecase - capitalizes English text using Daring Fireball titlecase style
+      https://daringfireball.net/2008/05/title_case
+  * censor_check: check if profanity is detected (boolean) [Examples](https://github.com/jqnatividad/qsv/blob/9569dd7c2a897e0a47b97e1abfd1c3efab920990/tests/test_apply.rs#L66)
+  * censor: profanity filter
+- added parameter validation to `apply operations` subcommands
+- added more robust parameter validation to `apply` command by leveraging docopt
+- added more tests
+- added `rust-version` in Cargo.toml to specify MSRV of rust 1.56
+
+### Changed
+- revamped benchmark script:
+  * allow binary to be changed, so users can benchmark xsv and other xsv forks by simply replacing the $bin shell variable
+  * now uses a much larger data file - a 1M row, 512 mb, 41 column sampling of NYC's 311 data
+  * simplified and cleaned-up script now that it's just using 1 data file
+- Upgrade rand and quickcheck crates to latest releases (0.8.4 and 1.0.3 respectively), and modified code accordingly.
+- `cargo update` bumped addr2line (0.16.0->0.17.0), backtrace (0.3.62->0.3.63), gimli (0.25.0->0.26.1) and anyhow (1.0.44->1.0.45)
+
+### Removed
+- removed `scramble` command as its function is now subsumed by the `sort` command with the `--random` and `--seed` options
+- removed 
+- removed `num-format` crate which has a large dependency tree with several old crates; replaced with much smaller `thousands` crate.
+- removed 1M row, 48mb, 7 column world_cities_pop_mil.csv as its no longer used by the revamped benchmark script.
+- removed `build.rs` build dependency that was checking for MSRV of Rust >= "1.50". Instead, took advantage of new [`rust-version`](https://blog.rust-lang.org/2021/10/21/Rust-1.56.0.html#cargo-rust-version) Cargo.toml option
+introduced in Rust 1.56.
+
 ## [0.20.0] - 2021-10-31
 ### Added
 - added string similarity operations to `apply` command:
