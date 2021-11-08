@@ -7,8 +7,8 @@ assignees: ''
 
 ---
 
-If you have a Usage question, an Idea for a new feature; or a qsv story you want to share, go to [Discussions](https://github.com/jqnatividad/qsv/discussions).
-GitHub Issues should be primarily used for bug reports.
+If you have a Usage question, an Idea for a new feature; or a qsv story you want to share, go to [Discussions](https://github.com/jqnatividad/qsv/discussions).   
+GitHub Issues is primarily used for bug reports, and for tracking Ideas that have been added to the [Backlog](https://github.com/jqnatividad/qsv/projects/1) for implementation.
 ---
 **Describe the bug**
 A clear and concise description of what the bug is.
