@@ -38,7 +38,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - removed `scramble` command as its function is now subsumed by the `sort` command with the `--random` and `--seed` options
-- removed 
 - removed `num-format` crate which has a large dependency tree with several old crates; replaced with much smaller `thousands` crate.
 - removed 1M row, 48mb, 7 column world_cities_pop_mil.csv as its no longer used by the revamped benchmark script.
 - removed `build.rs` build dependency that was checking for MSRV of Rust >= "1.50". Instead, took advantage of new [`rust-version`](https://blog.rust-lang.org/2021/10/21/Rust-1.56.0.html#cargo-rust-version) Cargo.toml option
