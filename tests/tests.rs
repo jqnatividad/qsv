@@ -36,6 +36,7 @@ mod test_apply;
 mod test_behead;
 mod test_cat;
 mod test_count;
+mod test_combos;
 mod test_dedup;
 mod test_enumerate;
 mod test_exclude;
