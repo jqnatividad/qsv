@@ -554,7 +554,9 @@ fn search_cached(lats: String, longs: String) -> Option<SearchResult<'static>> {
 fn geocode(cell: &mut String, formatstr: &str) {
     // simple regex for "lat, long", does not validate ranges
     lazy_static! {
-        static ref LOCREGEX: Regex = Regex::new(r"(?-u)([-\d.]+),\s*([-\d.]+)").unwrap();
+        static ref LOCREGEX: Regex =
+            Regex::new(r"(?-u)([+-]?[0-9]+\.?[0-9]*|\.[0-9]+),\s*([+-]?[0-9]+\.?[0-9]*|\.[0-9]+)")
+                .unwrap();
     }
 
     let loccaps = LOCREGEX.captures(&*cell);
