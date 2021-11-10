@@ -695,11 +695,12 @@ fn apply_geocode() {
             svec!["40.812126, -73.9041813"],
             svec!["40.66472342, -73.93867227"],
             svec!["(40.766672, -73.9568128)"],
-            svec!["(  40.819342, -73.9532127  )"],
+            svec!["(  40.819342, -73.9532127    )"],
             svec!["< 40.819342,-73.9532127 >"],
             svec!["This is not a Location and it will not be geocoded"],
             svec!["The treasure is at these coordinates 40.66472342, -73.93867227. This should be geocoded."],
             svec!["95.213424, 190,1234565"], // invalid lat, long
+            svec!["The coordinates are 40.66472342 latitude, -73.93867227 longitudue. This should NOT be geocoded."],
         ],
     );
     let mut cmd = wrk.command("apply");
@@ -716,6 +717,7 @@ fn apply_geocode() {
         svec!["This is not a Location and it will not be geocoded"],
         svec!["Brooklyn, New York"],
         svec!["95.213424, 190,1234565"], // invalid lat, long
+        svec!["The coordinates are 40.66472342 latitude, -73.93867227 longitudue. This should NOT be geocoded."],
     ];
     assert_eq!(got, expected);
 }
