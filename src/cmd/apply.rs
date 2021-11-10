@@ -12,7 +12,7 @@ use currency::Currency;
 use dateparser::parse_with;
 use eudex::Hash;
 use indicatif::ProgressBar;
-use reverse_geocoder::{Locations, ReverseGeocoder, SearchResult};
+use reverse_geocoder::{Locations, ReverseGeocoder};
 use serde::Deserialize;
 use strsim::{
     damerau_levenshtein, hamming, jaro_winkler, normalized_damerau_levenshtein, osa_distance,
@@ -389,7 +389,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 }
             }
         } else if args.cmd_geocode && !cell.is_empty() {
-            geocode(&mut cell, &args.flag_formatstr);
+            let search_result = search_cached(&cell, &args.flag_formatstr);
+            if let Some(geocoded_result) = search_result {
+                cell = geocoded_result;
+            }
         }
 
         match &args.flag_new_column {
@@ -412,7 +415,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let cache_size = cache.cache_size();
             let hits = cache.cache_hits().unwrap();
             let misses = cache.cache_misses().unwrap();
-            let hit_ratio = (hits as f64 / misses as f64) * 100.0;
+            let hit_ratio = (hits as f64 / (hits + misses) as f64) * 100.0;
             progress.set_message(format!(
                 " of {} records. Geocode cache hit ratio: {:.2}% - {} entries",
                 record_count.separate_with_commas(),
@@ -535,23 +538,18 @@ fn apply_operations(
     }
 }
 
-#[cached(size = 1_000_000, option = true)]
-fn search_cached(lats: String, longs: String) -> Option<SearchResult<'static>> {
+#[cached(
+    key = "String",
+    convert = r#"{ format!("{}{}", cell, formatstr) }"#,
+    size = 1_000_000,
+    option = true
+)]
+fn search_cached(cell: &str, formatstr: &str) -> Option<String> {
     lazy_static! {
         static ref LOCS: Locations = Locations::from_memory();
         static ref GEOCODER: ReverseGeocoder<'static> = ReverseGeocoder::new(&LOCS);
     }
-    let lat = lats.parse::<f64>().unwrap();
-    let long = longs.parse::<f64>().unwrap();
-    if lat >= -90.0 && lat <= 90.0 && long >= -180.0 && long <= 180.0 {
-        GEOCODER.search((lat, long))
-    } else {
-        None
-    }
-}
 
-#[inline]
-fn geocode(cell: &mut String, formatstr: &str) {
     // simple regex for "lat, long", does not validate ranges
     lazy_static! {
         static ref LOCREGEX: Regex =
@@ -559,46 +557,55 @@ fn geocode(cell: &mut String, formatstr: &str) {
                 .unwrap();
     }
 
-    let loccaps = LOCREGEX.captures(&*cell);
+    let loccaps = LOCREGEX.captures(cell);
     if let Some(loccaps) = loccaps {
-        let lat = loccaps[1].to_string();
-        let long = loccaps[2].to_string();
-        let search_result = search_cached(lat, long);
-        if let Some(locdetails) = search_result {
-            *cell = match formatstr {
-                "%+" | "city-state" => format!(
-                    "{name}, {admin1}",
-                    name = locdetails.record.name,
-                    admin1 = locdetails.record.admin1,
-                ),
-                "city-country" => format!(
-                    "{name}, {admin3}",
-                    name = locdetails.record.name,
-                    admin3 = locdetails.record.admin3
-                ),
-                "city-state-county" | "city-admin1-country" => format!(
-                    "{name}, {admin1} {admin3}",
-                    name = locdetails.record.name,
-                    admin1 = locdetails.record.admin1,
-                    admin3 = locdetails.record.admin3
-                ),
-                "city" => locdetails.record.name.to_string(),
-                "county" | "admin2" => locdetails.record.admin2.to_string(),
-                "state" | "admin1" => locdetails.record.admin1.to_string(),
-                "county-country" | "admin2-country" => format!(
-                    "{admin2}, {admin3}",
-                    admin2 = locdetails.record.admin2,
-                    admin3 = locdetails.record.admin3
-                ),
-                "county-state-country" | "admin2-admin1-country" => format!(
-                    "{admin2}, {admin1} {admin3}",
-                    admin2 = locdetails.record.admin2,
-                    admin1 = locdetails.record.admin1,
-                    admin3 = locdetails.record.admin3
-                ),
-                "country" => locdetails.record.admin3.to_string(),
-                _ => locdetails.record.name.to_string(),
-            };
+        let lat = loccaps[1].to_string().parse::<f64>().unwrap_or_default();
+        let long = loccaps[2].to_string().parse::<f64>().unwrap_or_default();
+        if (-90.0..=90.00).contains(&lat) && (-180.0..=180.0).contains(&long) {
+            let search_result = GEOCODER.search((lat, long));
+            if let Some(locdetails) = search_result {
+                let geocoded_result = match formatstr {
+                    "%+" | "city-state" => format!(
+                        "{name}, {admin1}",
+                        name = locdetails.record.name,
+                        admin1 = locdetails.record.admin1,
+                    ),
+                    "city-country" => format!(
+                        "{name}, {admin3}",
+                        name = locdetails.record.name,
+                        admin3 = locdetails.record.admin3
+                    ),
+                    "city-state-county" | "city-admin1-country" => format!(
+                        "{name}, {admin1} {admin3}",
+                        name = locdetails.record.name,
+                        admin1 = locdetails.record.admin1,
+                        admin3 = locdetails.record.admin3
+                    ),
+                    "city" => locdetails.record.name.to_string(),
+                    "county" | "admin2" => locdetails.record.admin2.to_string(),
+                    "state" | "admin1" => locdetails.record.admin1.to_string(),
+                    "county-country" | "admin2-country" => format!(
+                        "{admin2}, {admin3}",
+                        admin2 = locdetails.record.admin2,
+                        admin3 = locdetails.record.admin3
+                    ),
+                    "county-state-country" | "admin2-admin1-country" => format!(
+                        "{admin2}, {admin1} {admin3}",
+                        admin2 = locdetails.record.admin2,
+                        admin1 = locdetails.record.admin1,
+                        admin3 = locdetails.record.admin3
+                    ),
+                    "country" => locdetails.record.admin3.to_string(),
+                    _ => locdetails.record.name.to_string(),
+                };
+                Some(geocoded_result)
+            } else {
+                None
+            }
+        } else {
+            None
         }
+    } else {
+        None
     }
 }
