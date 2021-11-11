@@ -1,5 +1,3 @@
-#[allow(deprecated, unused_imports)]
-use std::ascii::AsciiExt;
 use std::borrow::ToOwned;
 use std::env;
 use std::fs;
@@ -31,34 +29,41 @@ impl Delimiter {
     pub fn as_byte(self) -> u8 {
         self.0
     }
+
+    fn decode_delimiter(s: String) -> Result<Delimiter, String> {
+        if s == r"\t" {
+            return Ok(Delimiter(b'\t'));
+        }
+
+        if s.len() != 1 {
+            let msg = format!(
+                "Could not convert '{}' to a single \
+                            ASCII character.",
+                s
+            );
+            return Err(msg);
+        }
+
+        let c = s.chars().next().unwrap();
+        if c.is_ascii() {
+            Ok(Delimiter(c as u8))
+        } else {
+            let msg = format!(
+                "Could not convert '{}' \
+                            to ASCII delimiter.",
+                c
+            );
+            Err(msg)
+        }
+    }
 }
 
 impl<'de> Deserialize<'de> for Delimiter {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Delimiter, D::Error> {
-        let c = String::deserialize(d)?;
-        match &*c {
-            r"\t" => Ok(Delimiter(b'\t')),
-            s => {
-                if s.len() != 1 {
-                    let msg = format!(
-                        "Could not convert '{}' to a single \
-                                       ASCII character.",
-                        s
-                    );
-                    return Err(D::Error::custom(msg));
-                }
-                let c = s.chars().next().unwrap();
-                if c.is_ascii() {
-                    Ok(Delimiter(c as u8))
-                } else {
-                    let msg = format!(
-                        "Could not convert '{}' \
-                                       to ASCII delimiter.",
-                        c
-                    );
-                    Err(D::Error::custom(msg))
-                }
-            }
+        let s = String::deserialize(d)?;
+        match Delimiter::decode_delimiter(s) {
+            Ok(delim) => Ok(delim),
+            Err(msg) => Err(D::Error::custom(msg)),
         }
     }
 }
@@ -85,15 +90,21 @@ impl<T: io::Seek + io::Read> SeekRead for T {}
 
 impl Config {
     pub fn new(path: &Option<String>) -> Config {
+        let default_delim = match env::var("QSV_DEFAULT_DELIMITER") {
+            Ok(delim) => Delimiter::decode_delimiter(delim).unwrap().as_byte(),
+            _ => b',',
+        };
         let (path, delim) = match *path {
-            None => (None, b','),
-            Some(ref s) if s.deref() == "-" => (None, b','),
+            None => (None, default_delim),
+            Some(ref s) if s.deref() == "-" => (None, default_delim),
             Some(ref s) => {
                 let path = PathBuf::from(s);
                 let delim = if path.extension().map_or(false, |v| v == "tsv" || v == "tab") {
                     b'\t'
-                } else {
+                } else if path.extension().map_or(false, |v| v == "csv") {
                     b','
+                } else {
+                    default_delim
                 };
                 (Some(path), delim)
             }

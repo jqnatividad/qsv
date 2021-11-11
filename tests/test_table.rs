@@ -1,5 +1,11 @@
 use crate::workdir::Workdir;
 
+static EXPECTED_TABLE: &str = "\
+h1       h2   h3
+abcdefg  a    a
+a        abc  z\
+";
+
 fn data() -> Vec<Vec<String>> {
     vec![
         svec!["h1", "h2", "h3"],
@@ -14,17 +20,37 @@ fn table() {
     wrk.create("in.csv", data());
 
     let mut cmd = wrk.command("table");
+    cmd.env("QSV_DEFAULT_DELIMITER", "\t");
     cmd.arg("in.csv");
 
     let got: String = wrk.stdout(&mut cmd);
-    assert_eq!(
-        &*got,
-        "\
-h1       h2   h3
-abcdefg  a    a
-a        abc  z\
-"
-    )
+    assert_eq!(&*got, EXPECTED_TABLE)
+}
+
+#[test]
+fn table_tsv() {
+    let wrk = Workdir::new("table");
+    wrk.create_with_delim("in.tsv", data(), b'\t');
+
+    let mut cmd = wrk.command("table");
+    cmd.env("QSV_DEFAULT_DELIMITER", "\t");
+    cmd.arg("in.tsv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    assert_eq!(&*got, EXPECTED_TABLE)
+}
+
+#[test]
+fn table_default() {
+    let wrk = Workdir::new("table");
+    wrk.create_with_delim("in.file", data(), b'\t');
+
+    let mut cmd = wrk.command("table");
+    cmd.env("QSV_DEFAULT_DELIMITER", "\t");
+    cmd.arg("in.file");
+
+    let got: String = wrk.stdout(&mut cmd);
+    assert_eq!(&*got, EXPECTED_TABLE)
 }
 
 #[test]
