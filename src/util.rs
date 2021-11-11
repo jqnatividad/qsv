@@ -76,6 +76,7 @@ pub fn prep_progress(progress: &ProgressBar, record_count: u64) {
         " of {} records",
         record_count.separate_with_commas()
     ));
+    progress.set_draw_delta(record_count / 100);
 }
 
 pub fn finish_progress(progress: &ProgressBar) {
