@@ -430,7 +430,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
 #[inline]
 fn apply_operations(
-    operations: &Vec<&str>,
+    operations: &[&str],
     cell: &mut String,
     comparand: &str,
     replacement: &str,
@@ -541,7 +541,7 @@ fn apply_operations(
 #[cached(
     key = "String",
     convert = r#"{ format!("{}{}", cell, formatstr) }"#,
-    size = 1_000_000,
+    size = 500_000,
     option = true
 )]
 fn search_cached(cell: &str, formatstr: &str) -> Option<String> {
