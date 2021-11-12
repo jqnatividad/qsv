@@ -171,6 +171,9 @@ or
 ```bash
 cargo build --release --no-default-features
 ```
+
+To find out what memory allocator you're using, do `qsv --version`. After the qsv version number, the allocator used is displayed (`standard` or `mimalloc`).
+
 ### Buffer size
 Depending on your filesystem's configuration (e.g. block size, SSD, file system type, etc.),
 you can also fine-tune qsv's read/write buffers.
@@ -192,6 +195,8 @@ Parallelized jobs do increase performance - to a point. After a certain number o
 Starting with qsv 0.22.0, a heuristic of setting the maximum number of jobs to the number of logical processors divided by 4 is applied. The user can still manually override this using the `--jobs` command-line option or the `QSV_MAX_JOBS` environment variable, but testing shows negative returns start at around this point.
 
 These [observations were gathered using the benchmark script](https://github.com/jqnatividad/qsv/blob/master/docs/BENCHMARKS.md), using a relatively large file (520mb, 41 column, 1M row sample of NYC's 311 data). Performance will vary based on your environment - CPU architecture, amount of memory, operating system, I/O speed, and the number of background tasks, that's why we still have `--jobs` and `QSV_MAX_JOBS` to fine-tune performance.
+
+To find out your jobs setting, call `qsv --version`. The last number is the number of jobs qsv will use for parallelized commands.
 
 ### Benchmarking for Performance
 Use and fine-tune the [benchmark script](scripts/benchmark-basic.sh) when tweaking qsv's performance to your environment.
