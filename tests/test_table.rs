@@ -54,6 +54,31 @@ fn table_default() {
 }
 
 #[test]
+fn table_pipe_delimiter_env() {
+    let wrk = Workdir::new("table_pipe_delimiter");
+    wrk.create_with_delim("in.file", data(), b'|');
+
+    let mut cmd = wrk.command("table");
+    cmd.env("QSV_DEFAULT_DELIMITER", "|");
+    cmd.arg("in.file");
+
+    let got: String = wrk.stdout(&mut cmd);
+    assert_eq!(&*got, EXPECTED_TABLE)
+}
+
+#[test]
+fn table_pipe_delimiter() {
+    let wrk = Workdir::new("table_pipe_delimiter");
+    wrk.create_with_delim("in.file", data(), b'|');
+
+    let mut cmd = wrk.command("table");
+    cmd.arg("--delimiter").arg("|").arg("in.file");
+
+    let got: String = wrk.stdout(&mut cmd);
+    assert_eq!(&*got, EXPECTED_TABLE)
+}
+
+#[test]
 fn table_right_align() {
     let wrk = Workdir::new("table");
     wrk.create("in.csv", data());

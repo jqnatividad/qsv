@@ -31,7 +31,11 @@ pub fn max_jobs() -> usize {
         Some(x) if x <= 0 => cpus / 4,
         _ => max_jobs_env as usize,
     };
-    jobs
+    if jobs == 0 {
+        1
+    } else {
+        jobs
+    }
 }
 
 pub fn version() -> String {
