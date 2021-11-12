@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use std::env;
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
@@ -19,6 +20,20 @@ pub fn num_cpus() -> usize {
     num_cpus::get()
 }
 
+pub fn max_jobs() -> usize {
+    let cpus = num_cpus::get();
+    let max_jobs_env = match env::var("QSV_MAX_JOBS") {
+        Ok(val) => val.parse::<isize>().unwrap_or_default(),
+        Err(_) => 0,
+    };
+    let jobs: usize = match Option::Some(max_jobs_env) {
+        Some(x) if x > cpus as isize => cpus,
+        Some(x) if x <= 0 => cpus / 4,
+        _ => max_jobs_env as usize,
+    };
+    jobs
+}
+
 pub fn version() -> String {
     #[cfg(feature = "mimalloc")]
     let malloc_kind = "mimalloc".to_string();
@@ -33,7 +48,7 @@ pub fn version() -> String {
     match (maj, min, pat, pre) {
         (Some(maj), Some(min), Some(pat), Some(pre)) => {
             if pre.is_empty() {
-                return format!("{}.{}.{}-{}-{}", maj, min, pat, malloc_kind, num_cpus());
+                return format!("{}.{}.{}-{}-{}", maj, min, pat, malloc_kind, max_jobs());
             } else {
                 return format!(
                     "{}.{}.{}-{}-{}-{}",
@@ -42,7 +57,7 @@ pub fn version() -> String {
                     pat,
                     pre,
                     malloc_kind,
-                    num_cpus()
+                    max_jobs()
                 );
             }
         }

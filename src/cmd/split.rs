@@ -136,9 +136,13 @@ impl Args {
 
     fn njobs(&self) -> usize {
         if self.flag_jobs == 0 {
-            util::num_cpus()
+            util::max_jobs()
         } else {
-            self.flag_jobs
+            if self.flag_jobs > util::num_cpus() {
+                util::num_cpus()
+            } else {
+                self.flag_jobs
+            }
         }
     }
 }
