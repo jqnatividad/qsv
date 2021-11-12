@@ -69,6 +69,26 @@ fn searchset_unicode() {
 }
 
 #[test]
+fn searchset_unicode_envvar() {
+    let wrk = Workdir::new("searchset");
+    wrk.create("data.csv", data(true));
+    wrk.create("regexset_unicode.txt", regexset_unicode_file());
+    let mut cmd = wrk.command("searchset");
+    cmd.env("QSV_REGEX_UNICODE", "1");
+    cmd.arg("regexset_unicode.txt").arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["h1", "h2"],
+        svec!["foobar", "barfoo"],
+        svec!["barfoo", "foobar"],
+        svec!["is waldo here", "spot"],
+        svec!["Ḟooƀar", "ḃarḟoo"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn searchset_empty() {
     let wrk = Workdir::new("searchset");
     wrk.create("data.csv", data(true));

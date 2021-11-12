@@ -3,6 +3,7 @@ use regex::bytes::RegexSetBuilder;
 use std::fs::File;
 use std::io::{self, prelude::*, BufReader};
 use std::path::Path;
+use std::env;
 
 use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
@@ -81,10 +82,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
     let regexset = read_regexset(&*args.arg_regexset_file)?;
-
+    let regex_unicode = match env::var("QSV_REGEX_UNICODE") {
+        Ok(_) => true,
+        Err(_) => args.flag_unicode,
+    };
     let pattern = RegexSetBuilder::new(&regexset)
         .case_insensitive(args.flag_ignore_case)
-        .unicode(args.flag_unicode)
+        .unicode(regex_unicode)
         .build()?;
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
