@@ -85,6 +85,19 @@ fn search_unicode() {
 }
 
 #[test]
+fn search_unicode_envvar() {
+    let wrk = Workdir::new("search");
+    wrk.create("data.csv", data(true));
+    let mut cmd = wrk.command("search");
+    cmd.env("QSV_REGEX_UNICODE", "1");
+    cmd.arg("^Ḟoo").arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![svec!["h1", "h2"], svec!["Ḟooƀar", "ḃarḟoo"]];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn search_no_headers() {
     let wrk = Workdir::new("search_no_headers");
     wrk.create("data.csv", data(false));
