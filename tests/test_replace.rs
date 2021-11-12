@@ -28,6 +28,74 @@ fn replace() {
 }
 
 #[test]
+fn replace_unicode() {
+    let wrk = Workdir::new("replace");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["identifier", "color"],
+            svec!["164.0", "ŷellow"],
+            svec!["165.0", "yellow"],
+            svec!["166.0", "yellѳwish"],
+            svec!["167.0", "yelloψ"],
+            svec!["167.0", "belloψ"],
+            svec!["167.0", "bellowish"],
+        ],
+    );
+    let mut cmd = wrk.command("replace");
+    cmd.arg("[\\s\\S]ell[\\s\\S]w")
+        .arg("Ƀellow")
+        .arg("--unicode")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["identifier", "color"],
+        svec!["164.0", "Ƀellow"],
+        svec!["165.0", "Ƀellow"],
+        svec!["166.0", "Ƀellowish"],
+        svec!["167.0", "yelloψ"],
+        svec!["167.0", "belloψ"],
+        svec!["167.0", "Ƀellowish"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn replace_unicode_envvar() {
+    let wrk = Workdir::new("replace");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["identifier", "color"],
+            svec!["164.0", "ŷellow"],
+            svec!["165.0", "yellow"],
+            svec!["166.0", "yellѳwish"],
+            svec!["167.0", "yelloψ"],
+            svec!["167.0", "belloψ"],
+            svec!["167.0", "bellowish"],
+        ],
+    );
+    let mut cmd = wrk.command("replace");
+    cmd.env("QSV_REGEX_UNICODE", "1");
+    cmd.arg("[\\s\\S]ell[\\s\\S]w")
+        .arg("Ƀellow")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["identifier", "color"],
+        svec!["164.0", "Ƀellow"],
+        svec!["165.0", "Ƀellow"],
+        svec!["166.0", "Ƀellowish"],
+        svec!["167.0", "yelloψ"],
+        svec!["167.0", "belloψ"],
+        svec!["167.0", "Ƀellowish"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn replace_no_headers() {
     let wrk = Workdir::new("replace");
     wrk.create(
