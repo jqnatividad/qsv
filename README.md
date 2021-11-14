@@ -130,7 +130,7 @@ to number of logical processors divided by four.  See [Parallelization](#paralle
 * `QSV_REGEX_UNICODE` - if set, makes `search`, `searchset` and `replace` commands unicode-aware. For increased performance, these
 commands are not unicode-aware and will ignore unicode values when matching and will panic when unicode characters are used in the regex.
 * `QSV_RDR_BUFFER_CAPACITY` - set to change reader buffer size (bytes - default when not set: 16384)
-* `QSV_WTR_BUFFER_CAPACITY` - set to change writer buffer size (bytes - default when not set: 32768)
+* `QSV_WTR_BUFFER_CAPACITY` - set to change writer buffer size (bytes - default when not set: 65536)
 
 Performance Tuning
 ------------------
@@ -155,6 +155,15 @@ To find out your CPU architecture and other valid values for `target-cpu`:
 
 ```bash
 rustc --print target-cpus
+
+# to find out what CPU features are used by the Rust compiler WITHOUT specifying target-cpu
+rustc --print cfg | grep -i target_feature
+
+# to find out what additional CPU features will be used by the Rust compiler when you specify target-cpu=native
+rustc --print cfg -C target-cpu=native | grep -i target_feature
+
+# to get a short explanation of each CPU target-feature
+rustc --print target-features
 ```
 ### Memory Allocator
 By default, qsv uses an alternative allocator - [mimalloc](https://github.com/microsoft/mimalloc),
@@ -172,17 +181,16 @@ or
 cargo build --release --no-default-features
 ```
 
-To find out what memory allocator you're using, do `qsv --version`. After the qsv version number, the allocator used is displayed (`standard` or `mimalloc`).
+To find out what memory allocator qsv is using, do `qsv --version`. After the qsv version number, the allocator used is displayed ("`standard`" or "`mimalloc`"). Note that mimalloc is not supported on the `x86_64-pc-windows-gnu` and `arm` targets, and you'll need to use the "standard" allocator on those platforms.
 
 ### Buffer size
-Depending on your filesystem's configuration (e.g. block size, SSD, file system type, etc.),
-you can also fine-tune qsv's read/write buffers.
+Depending on your filesystem's configuration (e.g. block size, file system type, writing to remote file systems (e.g. sshfs, efs, nfs),
+SSD or rotating magnetic disks, etc.), you can also fine-tune qsv's read/write buffers.
 
-By default, the read buffer size is set to [16k](https://github.com/jqnatividad/qsv/blob/master/src/config.rs#L17), you can change it by setting the environment
+By default, the read buffer size is set to [16k](https://github.com/jqnatividad/qsv/blob/master/src/config.rs#L16), you can change it by setting the environment
 variable `QSV_RDR_BUFFER_CAPACITY` in bytes.
 
-The same is true with the write buffer (default: 32k) with the `QSV_WTR_BUFFER_CAPACITY` environment
-variable.
+The same is true with the write buffer (default: 64k) with the `QSV_WTR_BUFFER_CAPACITY` environment variable.
 
 ### Parallelization
 Several commands support parallelization - `stats`, `frequency` and `split`.
@@ -194,9 +202,9 @@ Parallelized jobs do increase performance - to a point. After a certain number o
 
 Starting with qsv 0.22.0, a heuristic of setting the maximum number of jobs to the number of logical processors divided by 4 is applied. The user can still manually override this using the `--jobs` command-line option or the `QSV_MAX_JOBS` environment variable, but testing shows negative returns start at around this point.
 
-These [observations were gathered using the benchmark script](https://github.com/jqnatividad/qsv/blob/master/docs/BENCHMARKS.md), using a relatively large file (520mb, 41 column, 1M row sample of NYC's 311 data). Performance will vary based on your environment - CPU architecture, amount of memory, operating system, I/O speed, and the number of background tasks, that's why we still have `--jobs` and `QSV_MAX_JOBS` to fine-tune performance.
+These [observations were gathered using the benchmark script](https://github.com/jqnatividad/qsv/blob/master/docs/BENCHMARKS.md), using a relatively large file (520mb, 41 column, 1M row sample of NYC's 311 data). Performance will vary based on environment - CPU architecture, amount of memory, operating system, I/O speed, and the number of background tasks, so this heuristic will not work for every situation.
 
-To find out your jobs setting, call `qsv --version`. The last number is the number of jobs qsv will use for parallelized commands.
+To find out your jobs setting, call `qsv --version`. The last number is the default number of jobs qsv will use for parallelized commands if `--jobs` and `QSV_MAX_JOBS` are not specified.
 
 ### Benchmarking for Performance
 Use and fine-tune the [benchmark script](scripts/benchmark-basic.sh) when tweaking qsv's performance to your environment.
