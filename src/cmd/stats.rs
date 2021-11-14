@@ -63,6 +63,8 @@ stats options:
                            an index already created. Note that a file handle
                            is opened for each job.
                            When set to '0', the number of jobs is set to the
+                           number of CPUs detected divided by 4.
+                           When set to '-1', the number of jobs is set to the
                            number of CPUs detected.
                            [default: 0]
 
@@ -87,7 +89,7 @@ struct Args {
     flag_quartiles: bool,
     flag_nulls: bool,
     flag_nullcount: bool,
-    flag_jobs: usize,
+    flag_jobs: isize,
     flag_output: Option<String>,
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
@@ -211,14 +213,12 @@ impl Args {
     }
 
     fn njobs(&self) -> usize {
-        if self.flag_jobs == 0 {
-            util::max_jobs()
-        } else {
-            if self.flag_jobs > util::num_cpus() {
-                util::num_cpus()
-            } else {
-                self.flag_jobs
-            }
+        let num_cpus = util::num_cpus();
+        match self.flag_jobs {
+          0 => util::max_jobs(),
+          flag_jobs if flag_jobs < 0 => num_cpus,
+          flag_jobs if flag_jobs > num_cpus as isize => num_cpus,
+          _ => self.flag_jobs as usize,
         }
     }
 

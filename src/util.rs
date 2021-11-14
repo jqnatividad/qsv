@@ -6,6 +6,7 @@ use std::path::{Path, PathBuf};
 use std::str;
 use std::thread;
 use std::time;
+use std::cmp;
 
 use ::num_cpus;
 use docopt::Docopt;
@@ -26,15 +27,10 @@ pub fn max_jobs() -> usize {
         Ok(val) => val.parse::<isize>().unwrap_or_default(),
         Err(_) => 0,
     };
-    let jobs: usize = match Option::Some(max_jobs_env) {
-        Some(x) if x > cpus as isize => cpus,
-        Some(x) if x <= 0 => cpus / 4,
+    match max_jobs_env {
+        x if x > cpus as isize => cpus,
+        x if x <= 0 => cmp::max(cpus / 4, 1),
         _ => max_jobs_env as usize,
-    };
-    if jobs == 0 {
-        1
-    } else {
-        jobs
     }
 }
 
