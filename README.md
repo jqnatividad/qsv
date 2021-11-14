@@ -117,12 +117,12 @@ Recognized file formats
 -----------------------
 qsv recognizes CSV (`.csv` file extension) and TSV files (`.tsv` and `.tab` file extensions). CSV files are assummed to have "," (comma) as a delimiter,
 and TSV files, "\t" (tab) as a delimiter. The delimiter is a single ascii character that can be set either by the `--delimiter` command-line option or
-with the `QSV_DELIMITER` environment variable.
+with the `QSV_DEFAULT_DELIMITER` environment variable.
 
 Environment Variables
 ---------------------
 
-* `QSV_DELIMITER` - single ascii character to use as delimiter.  Overrides `--delimeter` option. Defaults to "," (comma) for CSV files and "\t" (tab) for TSV files, when not set. Note that this will also set the delimiter for qsv's output.
+* `QSV_DEFAULT_DELIMITER` - single ascii character to use as delimiter.  Overrides `--delimeter` option. Defaults to "," (comma) for CSV files and "\t" (tab) for TSV files, when not set. Note that this will also set the delimiter for qsv's output.
 * `QSV_NO_HEADERS` - when set, the first row will **NOT** be interpreted as headers. Supersedes `QSV_TOGGLE_HEADERS`.
 * `QSV_TOGGLE_HEADERS` - if set to `1`, toggles header setting - i.e. inverts qsv header behavior, with no headers being the default, and setting `--no-headers` will actually mean headers will not be ignored.
 * `QSV_MAX_JOBS` - number of jobs to use for parallelized commands (currently `frequency`, `split` and `stats`). If not set, max_jobs is set
