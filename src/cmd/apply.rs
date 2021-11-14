@@ -40,8 +40,8 @@ Currently supported operations:
   * upper: Transform to uppercase
   * squeeze: Compress consecutive whitespaces
   * trim: Trim (drop whitespace left & right of the string)
-  * ltrim: Left trim
-  * rtrim: Right trim
+  * ltrim: Left trim whitespace
+  * rtrim: Right trim whitespace
   * mtrim: Trims --comparand matches left & right of the string
   * mltrim: Left trim --comparand matches
   * mrtrim: Right trim --comparand matches
@@ -54,12 +54,12 @@ Currently supported operations:
   * censor: profanity filter
   * currencytonum: Gets the numeric value of a currency
   * copy: Mark a column for copying
-  * simdl: Damerau-Levenshtein similarity
-  * simdln: Normalized Damerau-Levenshtein similarity (between 0.0 & 1.0)
-  * simjw: Jaro-Winkler similarity (between 0.0 & 1.0)
-  * simsd: Sørensen-Dice similarity (between 0.0 & 1.0)
-  * simhm: Hamming distance. Number of positions where characters differ.
-  * simod: OSA Distance.
+  * simdl: Damerau-Levenshtein similarity to --comparand
+  * simdln: Normalized Damerau-Levenshtein similarity to --comparand (between 0.0 & 1.0)
+  * simjw: Jaro-Winkler similarity to --comparand (between 0.0 & 1.0)
+  * simsd: Sørensen-Dice similarity to --comparand (between 0.0 & 1.0)
+  * simhm: Hamming distance to --comparand. Number of positions where characters differ.
+  * simod: OSA Distance to --comparand.
   * eudex: Multi-lingual sounds like --comparand (boolean)
 
 Examples:
