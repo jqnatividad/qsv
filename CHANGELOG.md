@@ -5,6 +5,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- add `--no-headers` option to `rename` command (see [discussion #81](https://github.com/jqnatividad/qsv/discussions/81#discussioncomment-1599027))
+- Auto-publish binaries for more platforms on release
+- added combo-test for sort-dedup-sort (see [discussion #80](https://github.com/jqnatividad/qsv/discussions/80#discussioncomment-1610190))
+- New environment variables galore
+  - `QSV_DEFAULT_DELIMITER` - single ascii character to use as delimiter.  Overrides `--delimeter` option. Defaults to "," (comma) for CSV files and "\t" (tab) for TSV files, when not set. Note that this will also set the delimiter for qsv's output. Adapted from [xsv PR](https://github.com/BurntSushi/xsv/pull/94) by [@camerondavison](https://github.com/camerondavison).
+  - `QSV_NO_HEADERS` - when set, the first row will **NOT** be interpreted as headers. Supersedes `QSV_TOGGLE_HEADERS`.
+  - `QSV_MAX_JOBS` - number of jobs to use for parallelized commands (currently `frequency`, `split` and `stats`). If not set, max_jobs is set
+to number of logical processors divided by four.  See [Parallelization](#parallelization) for more info.
+  - `QSV_REGEX_UNICODE` - if set, makes `search`, `searchset` and `replace` commands unicode-aware. For increased performance, these
+commands are not unicode-aware and will ignore unicode values when matching and will panic when unicode characters are used in the regex.
+- Added parallelization heuristic (num_cpus/4), in connection with `QSV_MAX_JOBS`.
+- Added more tests
+  - `apply` (test for regex_replace, eudex, and lat/long parsing)
+  - combo-test (see above) - for testing qsv command combinations
+  - tests for `QSV_NO_HEADERS` environment variable
+  - tests for `QSV_REGEX_UNICODE` environment variable in `search`, `searchset` and `replace` commands
+  - tests for `QSV_DEFAULT_DELIMITER` environment variable
+### Changed
+- MSRV of Rust 1.56
+- expanded `apply` help-text examples
+- progress bar now only updates every 1% progress by default
+- replaced English-specific soundex with multi-lingual eudex algorithm (see https://docs.rs/crate/eudex/0.1.1)
+- refactored `apply geocode` subcommand to improve cache performance
+- improved lat/long parsing - can now recognize embedded coordinates in text
+- changed `apply operations regex_replace` behavior to do all matches in a field, instead of just the left-most one, to be consistent with the behavior of `apply operations replace`
 
 ## [0.21.0] - 2021-11-07
 ### Added
