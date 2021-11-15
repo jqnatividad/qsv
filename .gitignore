@@ -19,3 +19,4 @@ builds
 *.txt
 *.svg
 perf.data*
+*.json
