@@ -12,6 +12,7 @@ pub mod flatten;
 pub mod fmt;
 pub mod foreach;
 pub mod frequency;
+pub mod generate;
 pub mod headers;
 pub mod index;
 pub mod input;
