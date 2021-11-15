@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use std::cmp;
 use std::env;
 use std::fs;
 use std::io;
@@ -6,7 +7,6 @@ use std::path::{Path, PathBuf};
 use std::str;
 use std::thread;
 use std::time;
-use std::cmp;
 
 use ::num_cpus;
 use docopt::Docopt;
