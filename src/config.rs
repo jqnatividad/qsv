@@ -136,7 +136,7 @@ impl Config {
         if env::var("QSV_TOGGLE_HEADERS").unwrap_or_else(|_| "0".to_owned()) == "1" {
             yes = !yes;
         }
-        if !env::var("QSV_NO_HEADERS").is_err() {
+        if env::var("QSV_NO_HEADERS").is_ok() {
             self.no_headers = true;
         } else {
             self.no_headers = yes;
