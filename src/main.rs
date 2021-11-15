@@ -166,6 +166,7 @@ enum Command {
     Fmt,
     ForEach,
     Frequency,
+    Generate,
     Headers,
     Help,
     Index,
@@ -216,6 +217,7 @@ impl Command {
             Command::Flatten => cmd::flatten::run(argv),
             Command::Fmt => cmd::fmt::run(argv),
             Command::Frequency => cmd::frequency::run(argv),
+            Command::Generate => cmd::generate::run(argv),
             Command::Headers => cmd::headers::run(argv),
             Command::Help => {
                 wout!("{}", USAGE);
