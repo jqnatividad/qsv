@@ -97,7 +97,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         let mut record = csv::ByteRecord::new();
         while rdr.read_byte_record(&mut record)? {
-            wtr.write_byte_record(&mut record)?;
+            wtr.write_byte_record(&record)?;
         }
         wtr.flush()?;
 
