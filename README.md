@@ -44,6 +44,7 @@ Available commands
 | **[fmt](/src/cmd/fmt.rs#L7)** | Reformat a CSV with different delimiters, record terminators or quoting rules. (Supports ASCII delimited data.) _**(EXTENDED)**_ |
 | **[foreach](/src/cmd/foreach.rs#L17)** | Loop over a CSV to execute bash commands. (*nix only) _**(NEW)**_ |
 | **[frequency](/src/cmd/frequency.rs#L15)**[^1][^3] | Build frequency tables of each column. (Uses parallelism to go faster if an index is present.) |
+| **[generate](/src/cmd/generate.rs#L12)** | Generate test data by profiling a CSV using a [Markov decision process](https://crates.io/crates/test-data-generation). _**(NEW)**_ |
 | **[headers](/src/cmd/headers.rs#L11)** | Show the headers of a CSV. Or show the intersection of all headers between many CSV files. |
 | **[index](/src/cmd/index.rs#L13)** | Create an index for a CSV. This is very quick & provides constant time indexing into the CSV file. |
 | **[input](/src/cmd/input.rs#L7)** | Read a CSV with exotic quoting/escaping rules. |
