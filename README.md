@@ -54,14 +54,14 @@ Available commands
 | **[partition](/src/cmd/partition.rs#L16)** | Partition a CSV based on a column value. |
 | **[pseudo](/src/cmd/pseudo.rs#L10)** | Pseudonymise the value of the given column by replacing them with an incremental identifier. _**(NEW)**_ |
 | **[rename](/src/cmd/rename.rs#L7)** |  Rename the columns of a CSV efficiently. _**(NEW)**_ |
-| **[replace](/src/cmd/replace.rs#L11)** | Replace CSV data using a regex. _**(NEW)**_ |
+| **[replace](/src/cmd/replace.rs#L12)** | Replace CSV data using a regex. _**(NEW)**_ |
 | **[reverse](/src/cmd/reverse.rs#L7)**[^2] | Reverse order of rows in a CSV. Unlike `sort --reverse` command, it preserves the order of rows with the same key. _**(NEW)**_ |
-| **[sample](/src/cmd/sample.rs#L15)**[^1] | Randomly draw rows from a CSV using [reservoir sampling](https://en.wikipedia.org/wiki/Reservoir_sampling) (i.e., use memory proportional to the size of the sample). _**(EXTENDED)**_ |
-| **[search](/src/cmd/search.rs#L10)** | Run a regex over a CSV. Applies the regex to each field individually & shows only matching rows. _**(EXTENDED)**_ |
-| **[searchset](/src/cmd/searchset.rs#L14)** | Run **multiple regexes** over a CSV in a **single pass**. Applies the regexes to each field individually & shows only matching rows. _**(NEW)**_ |
+| **[sample](/src/cmd/sample.rs#L12)**[^1] | Randomly draw rows from a CSV using [reservoir sampling](https://en.wikipedia.org/wiki/Reservoir_sampling) (i.e., use memory proportional to the size of the sample). _**(EXTENDED)**_ |
+| **[search](/src/cmd/search.rs#L11)** | Run a regex over a CSV. Applies the regex to each field individually & shows only matching rows. _**(EXTENDED)**_ |
+| **[searchset](/src/cmd/searchset.rs#L15)** | Run **multiple regexes** over a CSV in a **single pass**. Applies the regexes to each field individually & shows only matching rows. _**(NEW)**_ |
 | **[select](/src/cmd/select.rs#L8)** | Select or re-order columns. _**(EXTENDED)**_ |
 | **[slice](/src/cmd/slice.rs#L10)**[^1][^2] | Slice rows from any part of a CSV. When an index is present, this only has to parse the rows in the slice (instead of all rows leading up to the start of the slice). |
-| **[sort](/src/cmd/sort.rs#L13)** | Sorts CSV data alphabetically, numerically, reverse or random (with optional seed) order. _**(EXTENDED)**_ |
+| **[sort](/src/cmd/sort.rs#L14)** | Sorts CSV data alphabetically, numerically, reverse or random (with optional seed) order. _**(EXTENDED)**_ |
 | **[split](/src/cmd/split.rs#L14)**[^1][^3] | Split one CSV file into many CSV files of N chunks. |
 | **[stats](/src/cmd/stats.rs#L24)**[^1][^2][^3] | Show basic types & statistics of each column in a CSV. (i.e., sum, min/max, min/max length, mean, stddev, variance, quartiles, IQR, lower/upper fences, skew, median, mode, cardinality & nullcount) _**(EXTENDED)**_ |
 | **[table](/src/cmd/table.rs#L12)**[^2] | Show aligned output of a CSV using [elastic tabstops](https://github.com/BurntSushi/tabwriter). _**(EXTENDED)**_ |
