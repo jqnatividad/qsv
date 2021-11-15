@@ -18,8 +18,8 @@ See https://docs.rs/test-data-generation/ for more info.
 
 Examples:
 
-Generate 100 rows of test data and save it in testdata.csv
-based on prod-data.csv
+Generate 100 rows of test data based on prod-data.csv and 
+save it in testdata.csv.
 
 $  qsv generate --rows 100 prod-data.csv > testdata.csv
 
