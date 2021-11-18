@@ -42,8 +42,8 @@ macro_rules! command_list {
     cat         Concatenate by row or column
     count       Count records
     dedup       Remove redundant rows
-    exclude     Excludes the records in one CSV from another
     enum        Add a new column enumerating CSV lines
+    exclude     Excludes the records in one CSV from another
     explode     Explode rows based on some column separator
     fill        Fill empty values
     fixlengths  Makes all records have same length
@@ -51,6 +51,7 @@ macro_rules! command_list {
     fmt         Format CSV output (change field delimiter)
     foreach     Loop over a CSV file to execute bash commands (*nix only)
     frequency   Show frequency tables
+    generate    Generate test data by profiling a CSV
     headers     Show header names
     help        Show this usage message.
     index       Create CSV index for faster access
@@ -66,11 +67,11 @@ macro_rules! command_list {
     reverse     Reverse rows of CSV data
     search      Search CSV data with a regex
     searchset   Search CSV data with a regex set
-    select      Select columns from CSV
+    select      Select, re-order, duplicate or drop columns
     slice       Slice records from CSV
-    sort        Sort CSV data
+    sort        Sort CSV data in alphabetical, numerical, reverse or random order
     split       Split CSV data into many files
-    stats       Compute basic statistics
+    stats       Infer data types and compute descriptive statistics
     table       Align CSV data into columns
     transpose   Transpose rows/columns of CSV data
 "
