@@ -31,7 +31,8 @@ The series of operations must be given separated by commas as such:
 
   trim => Trimming the cell
   trim,upper => Trimming the cell then transforming to uppercase
-  lower,simdln => Lowercase the cell, then compute the Damerau-Levenshtein similarity
+  lower,simdln => Lowercase the cell, then compute the normalized 
+      Damerau-Levenshtein similarity to --comparand
 
 Currently supported operations:
 
@@ -47,7 +48,7 @@ Currently supported operations:
   * mrtrim: Right trim --comparand matches
   * replace: Replace all matches of a pattern (using --comparand)
       with a string (using --replacement).
-  * regex_replace: Replace all regex matches with --replacement.
+  * regex_replace: Replace all regex matches in --comparand with --replacement.
   * titlecase - capitalizes English text using Daring Fireball titlecase style
       https://daringfireball.net/2008/05/title_case 
   * censor_check: check if profanity is detected (boolean)
@@ -102,7 +103,7 @@ You can also use this subcommand command to make a copy of a column:
 $ qsv apply operations copy col_to_copy -c col_copy file.csv
 
 EMPTYREPLACE
-Replace empty cells with <replacement> string.
+Replace empty cells with <--replacement> string.
 Non-empty cells are not modified. See the `fill` command for more
 complex empty field operations.
 
@@ -116,8 +117,11 @@ Replace empty cells in file.csv Measurement column with 'Unknown'.
 $ qsv apply emptyreplace --replacement Unknown Measurement file.csv
 
 DATEFMT
-Formats a recognized date column to a specified format. See
-https://docs.rs/chrono/0.4.19/chrono/format/strftime/ for formats.
+Formats a recognized date column to a specified format using --formatstr. 
+See https://docs.rs/dateparser/0.1.6/dateparser/#accepted-date-formats for
+recognized date formats.
+See https://docs.rs/chrono/0.4.19/chrono/format/strftime/ for 
+accepted date formats for --formatstr.
 Defaults to ISO 8601/RFC 3339 format when --formatstr is not specified.
 
 Examples:
@@ -135,8 +139,8 @@ Get the week number and store it in the week_number column:
 
 GEOCODE
 Geocodes to the nearest city center point given a location column
-['(lat, long)' or 'lat, long' format] against an embedded copy of
-the geonames city database. 
+[i.e. a column which contains a latitude, longitude coordinate] against
+an embedded copy of the geonames city database. 
 
 The geocoded information is formatted based on --formatstr, returning
 it in 'city-state' format if not specified.
