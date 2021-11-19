@@ -53,7 +53,8 @@ Currently supported operations:
       https://daringfireball.net/2008/05/title_case 
   * censor_check: check if profanity is detected (boolean)
   * censor: profanity filter
-  * currencytonum: Gets the numeric value of a currency
+  * currencytonum: Gets the numeric value of a currency. Supports one-character currency
+    symbols only ($,¥,£,€,֏,₱,₽,₪,₩,ƒ,฿,₫). Recognizes point, comma & space separators.
   * copy: Mark a column for copying
   * simdl: Damerau-Levenshtein similarity to --comparand
   * simdln: Normalized Damerau-Levenshtein similarity to --comparand (between 0.0 & 1.0)
