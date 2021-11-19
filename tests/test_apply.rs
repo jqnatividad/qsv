@@ -375,6 +375,7 @@ fn apply_currencytonum() {
             svec!["money"],
             svec!["$10.00"],
             svec!["$-10.00"],
+            svec!["$ 12 500.00"],
             svec!["$5"],
             svec!["0"],
             svec!["5"],
@@ -387,6 +388,14 @@ fn apply_currencytonum() {
             svec!["€300 999,55"],
             svec!["This is not money. Leave untouched."],
             svec!["₱1,234,567.89"],
+            svec!["₽234,567.89"],
+            svec!["₪ 567.89"],
+            svec!["₩ 567.89"],
+            svec!["₩ 89,123.0"],
+            svec!["ƒ 123,456.00"],
+            svec!["฿ 789,123"],
+            svec!["₫ 456"],
+            svec!["123,456.00 $"],
         ],
     );
     let mut cmd = wrk.command("apply");
@@ -400,6 +409,7 @@ fn apply_currencytonum() {
         svec!["money"],
         svec!["10.00"],
         svec!["-10.00"],
+        svec!["12500.00"],
         svec!["5.00"],
         svec!["0"],
         svec!["5.00"],
@@ -412,6 +422,14 @@ fn apply_currencytonum() {
         svec!["300999.55"],
         svec!["This is not money. Leave untouched."],
         svec!["1234567.89"],
+        svec!["234567.89"],
+        svec!["567.89"],
+        svec!["567.89"],
+        svec!["89123.00"],
+        svec!["123456.00"],
+        svec!["789123.00"],
+        svec!["456.00"],
+        svec!["123456.00"],
     ];
     assert_eq!(got, expected);
 }
