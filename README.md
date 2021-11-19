@@ -126,7 +126,7 @@ Environment Variables
 * `QSV_DEFAULT_DELIMITER` - single ascii character to use as delimiter.  Overrides `--delimeter` option. Defaults to "," (comma) for CSV files and "\t" (tab) for TSV files, when not set. Note that this will also set the delimiter for qsv's output.
 * `QSV_NO_HEADERS` - when set, the first row will **NOT** be interpreted as headers. Supersedes `QSV_TOGGLE_HEADERS`.
 * `QSV_TOGGLE_HEADERS` - if set to `1`, toggles header setting - i.e. inverts qsv header behavior, with no headers being the default, and setting `--no-headers` will actually mean headers will not be ignored.
-* `QSV_MAX_JOBS` - number of jobs to use for parallelized commands (currently `frequency`, `split` and `stats`). If not set, max_jobs is set
+* `QSV_MAX_JOBS` - number of jobs to use for multi-threaded commands (currently `frequency`, `split` and `stats`). If not set, max_jobs is set
 to number of logical processors divided by four.  See [Parallelization](#parallelization) for more info.
 * `QSV_REGEX_UNICODE` - if set, makes `search`, `searchset` and `replace` commands unicode-aware. For increased performance, these
 commands are not unicode-aware and will ignore unicode values when matching and will panic when unicode characters are used in the regex.
@@ -194,7 +194,7 @@ variable `QSV_RDR_BUFFER_CAPACITY` in bytes.
 The same is true with the write buffer (default: 64k) with the `QSV_WTR_BUFFER_CAPACITY` environment variable.
 
 ### Parallelization
-Several commands support parallelization - `stats`, `frequency` and `split`.
+Several commands support parallelization/multi-threading - `stats`, `frequency` and `split`.
 
 Previously, these commands spawned several jobs equal to the number of logical processors. After extensive benchmarking, it turns out
 doing so often results in the multi-threaded runs running slower than single-threaded runs.
