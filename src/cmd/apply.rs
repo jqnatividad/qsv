@@ -1,4 +1,4 @@
-use lazy_static::lazy_static;
+use once_cell::sync::OnceCell;
 use regex::Regex;
 
 use crate::config::{Config, Delimiter};
@@ -196,6 +196,13 @@ Common options:
     -q, --quiet                 Don't show progress bars.
 ";
 
+macro_rules! regex {
+    ($re:literal $(,)?) => {{
+        static RE: once_cell::sync::OnceCell<regex::Regex> = once_cell::sync::OnceCell::new();
+        RE.get_or_init(|| regex::Regex::new($re).unwrap())
+    }};
+}
+
 static OPERATIONS: &[&str] = &[
     "len",
     "lower",
@@ -243,9 +250,10 @@ struct Args {
     flag_quiet: bool,
 }
 
-lazy_static! {
-    static ref MIDNIGHT: chrono::NaiveTime = NaiveTime::from_hms(0, 0, 0);
-}
+static MIDNIGHT: OnceCell<chrono::NaiveTime> = OnceCell::new();
+static _CENSOR: OnceCell<Censor> = OnceCell::new();
+static LOCS: OnceCell<Locations> = OnceCell::new();
+static GEOCODER: OnceCell<ReverseGeocoder> = OnceCell::new();
 
 pub fn replace_column_value(
     record: &csv::StringRecord,
@@ -350,8 +358,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         util::prep_progress(&progress, record_count);
     }
 
-    // can't do lazy_static with a dynamic var, so we do this instead
-    // to minimize regex compilation overhead, when not running a regexreplace
+    // we do this instead to minimize regex compilation overhead, when not running a regexreplace
     let regexreplace = match args.flag_comparand.is_empty() || !regexpr_required {
         true => Regex::new("").unwrap(),
         false => Regex::new(&args.flag_comparand).unwrap(),
@@ -383,7 +390,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 cell = args.flag_replacement.to_string();
             }
         } else if args.cmd_datefmt && !cell.is_empty() {
-            let parsed_date = parse_with(&cell, &Utc, *MIDNIGHT);
+            let midnight = MIDNIGHT.get_or_init(|| NaiveTime::from_hms(0, 0, 0));
+            let parsed_date = parse_with(&cell, &Utc, *midnight);
             if let Ok(format_date) = parsed_date {
                 let formatted_date = format_date.format(&args.flag_formatstr).to_string();
                 if formatted_date.ends_with("T00:00:00+00:00") {
@@ -441,13 +449,15 @@ fn apply_operations(
     regexreplace: &Regex,
     eudex_comparand_hash: &eudex::Hash,
 ) {
-    lazy_static! {
-        static ref SQUEEZER: Regex = Regex::new(r"\s+").unwrap();
-    }
+    let squeezer: &'static Regex = regex!(r"\s+");
 
-    lazy_static! {
-        static ref CENSOR: Censor = Censor::Standard + Zealous + Sex;
-    }
+    let censor = _CENSOR.get_or_init(|| {
+        let mut censored_words = Censor::Standard + Zealous + Sex;
+        for (_pos, word) in comparand.split(',').enumerate() {
+            censored_words = censored_words + word.trim();
+        }
+        censored_words
+    });
 
     for op in operations {
         match op.as_ref() {
@@ -461,7 +471,7 @@ fn apply_operations(
                 *cell = cell.to_uppercase();
             }
             "squeeze" => {
-                *cell = SQUEEZER.replace_all(cell, " ").to_string();
+                *cell = squeezer.replace_all(cell, " ").to_string();
             }
             "trim" => {
                 *cell = String::from(cell.trim());
@@ -492,10 +502,10 @@ fn apply_operations(
                 *cell = regexreplace.replace_all(cell, replacement).to_string();
             }
             "censor_check" => {
-                *cell = CENSOR.check(cell).to_string();
+                *cell = censor.check(cell).to_string();
             }
             "censor" => {
-                *cell = CENSOR.censor(cell);
+                *cell = censor.censor(cell);
             }
             "currencytonum" => {
                 let currency_value = Currency::from_str(cell);
@@ -549,24 +559,18 @@ fn apply_operations(
     option = true
 )]
 fn search_cached(cell: &str, formatstr: &str) -> Option<String> {
-    lazy_static! {
-        static ref LOCS: Locations = Locations::from_memory();
-        static ref GEOCODER: ReverseGeocoder<'static> = ReverseGeocoder::new(&LOCS);
-    }
+    let locations = LOCS.get_or_init(|| Locations::from_memory());
+    let geocoder = GEOCODER.get_or_init(|| ReverseGeocoder::new(locations));
 
-    // simple regex for "lat, long", does not validate ranges
-    lazy_static! {
-        static ref LOCREGEX: Regex =
-            Regex::new(r"(?-u)([+-]?[0-9]+\.?[0-9]*|\.[0-9]+),\s*([+-]?[0-9]+\.?[0-9]*|\.[0-9]+)")
-                .unwrap();
-    }
+    let locregex: &'static Regex =
+        regex!(r"(?-u)([+-]?[0-9]+\.?[0-9]*|\.[0-9]+),\s*([+-]?[0-9]+\.?[0-9]*|\.[0-9]+)");
 
-    let loccaps = LOCREGEX.captures(cell);
+    let loccaps = locregex.captures(cell);
     if let Some(loccaps) = loccaps {
         let lat = loccaps[1].to_string().parse::<f64>().unwrap_or_default();
         let long = loccaps[2].to_string().parse::<f64>().unwrap_or_default();
         if (-90.0..=90.00).contains(&lat) && (-180.0..=180.0).contains(&long) {
-            let search_result = GEOCODER.search((lat, long));
+            let search_result = geocoder.search((lat, long));
             if let Some(locdetails) = search_result {
                 let geocoded_result = match formatstr {
                     "%+" | "city-state" => format!(

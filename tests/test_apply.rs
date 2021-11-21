@@ -139,6 +139,98 @@ fn apply_ops_censor() {
 }
 
 #[test]
+fn apply_ops_censor_check_addlwords() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["description"],
+            svec!["fuck"],
+            svec!["FUCK"],
+            svec!["fμ¢κ you!"],
+            svec!["F_u c_K"],
+            svec!["fuuuuuuuck"],
+            svec!["fluff truck"],
+            svec!["fukushima"],
+            svec!["shlong dong ding"],
+            svec!["long john silver's shlong"],
+            svec!["Whoa! I see her cameltoe thru her athleisure!"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("censor_check")
+        .arg("description")
+        .arg("--comparand")
+        .arg("shlong,dong,cameltoe")
+        .arg("--new-column")
+        .arg("profanity_flag")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["description", "profanity_flag"],
+        svec!["fuck", "true"],
+        svec!["FUCK", "true"],
+        svec!["fμ¢κ you!", "true"],
+        svec!["F_u c_K", "true"],
+        svec!["fuuuuuuuck", "true"],
+        svec!["fluff truck", "false"],
+        svec!["fukushima", "false"],
+        svec!["shlong dong ding", "true"],
+        svec!["long john silver's shlong", "true"],
+        svec!["Whoa! I see her cameltoe thru her athleisure!", "true"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn apply_ops_censor_addlwords() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["description"],
+            svec!["fuck"],
+            svec!["FUCK"],
+            svec!["fμ¢κ that shit, faggot!"],
+            svec!["F_u c_K that blowjoboobies"],
+            svec!["fuuuuuuuck yooooouuuu"],
+            svec!["kiss my ass!"],
+            svec!["shittitties"],
+            svec!["move your shlllooooonng!!!"],
+            svec!["that cameltoe is so penistracting!"],
+            svec!["ding dong the bitch is dead!"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("censor")
+        .arg("description")
+        .arg("--comparand")
+        .arg("shlong, dong, cameltoe, bitch")
+        .arg("--new-column")
+        .arg("censored_text")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["description", "censored_text"],
+        svec!["fuck", "****"],
+        svec!["FUCK", "****"],
+        svec!["fμ¢κ that shit, faggot!", "**** that ****, ******!"],
+        svec!["F_u c_K that blowjoboobies", "*_* *_* that *************"],
+        svec!["fuuuuuuuck yooooouuuu", "********** yooooouuuu"],
+        svec!["kiss my ass!", "kiss my ***!"],
+        svec!["shittitties", "***********"],
+        svec!["move your shlllooooonng!!!", "move your *************!!!"],
+        svec!["that cameltoe is so penistracting!", "that ******** is so *****tracting!"],
+        svec!["ding dong the bitch is dead!", "ding **** the ***** is dead!"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn apply_ops_replace() {
     let wrk = Workdir::new("apply");
     wrk.create(
@@ -255,24 +347,24 @@ fn apply_ops_chain() {
         "data.csv",
         vec![
             svec!["name"],
-            svec!["John   "],
+            svec!["   John       Paul   "],
             svec!["Mary"],
-            svec!["  Sue"],
+            svec!["  Mary    Sue"],
             svec!["Hopkins"],
         ],
     );
     let mut cmd = wrk.command("apply");
     cmd.arg("operations")
-        .arg("trim,upper")
+        .arg("trim,upper,squeeze")
         .arg("name")
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["name"],
-        svec!["JOHN"],
+        svec!["JOHN PAUL"],
         svec!["MARY"],
-        svec!["SUE"],
+        svec!["MARY SUE"],
         svec!["HOPKINS"],
     ];
     assert_eq!(got, expected);
