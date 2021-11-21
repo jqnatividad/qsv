@@ -129,7 +129,7 @@ jobs:
       if: ${{ matrix.job.strip == 'true' }}
       run: strip target/${{ matrix.job.target }}/release/${{ matrix.job.artifact_name }}
     - name: Copy binary to working dir
-    - shell: bash
+      shell: bash
       run: |
         mkdir qsv-${{ needs.analyze-tags.outputs.previous-tag }}
         cp target/${{ matrix.job.target }}/release/${{ matrix.job.artifact_name }} qsv-${{ needs.analyze-tags.outputs.previous-tag }}        
