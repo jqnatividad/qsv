@@ -102,7 +102,7 @@ jobs:
             artifact_name: qsv
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-arm-unknown-linux-musleabihf.zip
             use-cross: true
-            strip: true
+            strip: false
             addl-build-args: --no-default-features
 
     steps:
