@@ -1,6 +1,3 @@
-use once_cell::sync::OnceCell;
-use regex::Regex;
-
 use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
 use crate::util;
@@ -12,6 +9,8 @@ use currency::Currency;
 use dateparser::parse_with;
 use eudex::Hash;
 use indicatif::ProgressBar;
+use once_cell::sync::OnceCell;
+use regex::Regex;
 use reverse_geocoder::{Locations, ReverseGeocoder};
 use serde::Deserialize;
 use strsim::{
@@ -48,19 +47,23 @@ Currently supported operations:
   * mrtrim: Right trim --comparand matches
   * replace: Replace all matches of a pattern (using --comparand)
       with a string (using --replacement).
-  * regex_replace: Replace all regex matches in --comparand with --replacement.
+  * regex_replace: Replace all regex matches in --comparand w/ --replacement.
   * titlecase - capitalizes English text using Daring Fireball titlecase style
       https://daringfireball.net/2008/05/title_case 
-  * censor_check: check if profanity is detected (boolean)
-  * censor: profanity filter
-  * currencytonum: Gets the numeric value of a currency. Supports one-character currency
-    symbols only ($,¥,£,€,֏,₱,₽,₪,₩,ƒ,฿,₫). Recognizes point, comma & space separators.
+  * censor_check: check if profanity is detected (boolean).
+      Add additional comma-delimited profanities with -comparand. 
+  * censor: profanity filter. Add additional comma-delimited profanities 
+      with --comparand.
+  * currencytonum: Gets the numeric value of a currency. Supports one-character
+      currency symbols only ($,¥,£,€,֏,₱,₽,₪,₩,ƒ,฿,₫). Recognizes point, comma
+      and space separators.
   * copy: Mark a column for copying
   * simdl: Damerau-Levenshtein similarity to --comparand
-  * simdln: Normalized Damerau-Levenshtein similarity to --comparand (between 0.0 & 1.0)
+  * simdln: Normalized Damerau-Levenshtein similarity to --comparand 
+     (between 0.0 & 1.0)
   * simjw: Jaro-Winkler similarity to --comparand (between 0.0 & 1.0)
   * simsd: Sørensen-Dice similarity to --comparand (between 0.0 & 1.0)
-  * simhm: Hamming distance to --comparand. Number of positions where characters differ.
+  * simhm: Hamming distance to --comparand. Num of positions characters differ.
   * simod: OSA Distance to --comparand.
   * eudex: Multi-lingual sounds like --comparand (boolean)
 
@@ -251,9 +254,11 @@ struct Args {
 }
 
 static MIDNIGHT: OnceCell<chrono::NaiveTime> = OnceCell::new();
-static _CENSOR: OnceCell<Censor> = OnceCell::new();
+static CENSOR: OnceCell<Censor> = OnceCell::new();
 static LOCS: OnceCell<Locations> = OnceCell::new();
 static GEOCODER: OnceCell<ReverseGeocoder> = OnceCell::new();
+static EUDEX_COMPARAND_HASH: OnceCell<eudex::Hash> = OnceCell::new();
+static REGEX_REPLACE: OnceCell<Regex> = OnceCell::new();
 
 pub fn replace_column_value(
     record: &csv::StringRecord,
@@ -295,8 +300,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     // validate specified operations
-    let mut regexpr_required: bool = false;
-    let mut eudex_required: bool = false;
     let operations: Vec<&str> = args.arg_operations.split(',').collect();
     if args.cmd_operations {
         for op in &operations {
@@ -317,7 +320,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             "--comparand (-C) and --replacement (-R) are required for regex_replace operation."
                         );
                     }
-                    regexpr_required = true;
                 }
                 "copy" => {
                     if args.flag_new_column.is_none() {
@@ -343,7 +345,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     if args.flag_new_column.is_none() {
                         return fail!("--new_column (-c) is required for eudex.");
                     }
-                    eudex_required = true;
                 }
                 _ => {}
             }
@@ -358,17 +359,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         util::prep_progress(&progress, record_count);
     }
 
-    // we do this instead to minimize regex compilation overhead, when not running a regexreplace
-    let regexreplace = match args.flag_comparand.is_empty() || !regexpr_required {
-        true => Regex::new("").unwrap(),
-        false => Regex::new(&args.flag_comparand).unwrap(),
-    };
-
-    let eudex_comparand_hash = match eudex_required {
-        true => eudex::Hash::new(&args.flag_comparand),
-        false => eudex::Hash::new(""),
-    };
-
     let mut record = csv::StringRecord::new();
     while rdr.read_record(&mut record)? {
         if !args.flag_quiet {
@@ -382,8 +372,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 &mut cell,
                 &args.flag_comparand,
                 &args.flag_replacement,
-                &regexreplace,
-                &eudex_comparand_hash,
             );
         } else if args.cmd_emptyreplace {
             if cell.trim().is_empty() {
@@ -441,24 +429,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 }
 
 #[inline]
-fn apply_operations(
-    operations: &[&str],
-    cell: &mut String,
-    comparand: &str,
-    replacement: &str,
-    regexreplace: &Regex,
-    eudex_comparand_hash: &eudex::Hash,
-) {
-    let squeezer: &'static Regex = regex!(r"\s+");
-
-    let censor = _CENSOR.get_or_init(|| {
-        let mut censored_words = Censor::Standard + Zealous + Sex;
-        for (_pos, word) in comparand.split(',').enumerate() {
-            censored_words = censored_words + word.trim();
-        }
-        censored_words
-    });
-
+fn apply_operations(operations: &[&str], cell: &mut String, comparand: &str, replacement: &str) {
     for op in operations {
         match op.as_ref() {
             "len" => {
@@ -471,6 +442,7 @@ fn apply_operations(
                 *cell = cell.to_uppercase();
             }
             "squeeze" => {
+                let squeezer: &'static Regex = regex!(r"\s+");
                 *cell = squeezer.replace_all(cell, " ").to_string();
             }
             "trim" => {
@@ -499,13 +471,23 @@ fn apply_operations(
                 *cell = cell.replace(comparand, replacement);
             }
             "regex_replace" => {
+                let regexreplace =
+                    REGEX_REPLACE.get_or_init(|| regex::Regex::new(&comparand).unwrap());
                 *cell = regexreplace.replace_all(cell, replacement).to_string();
             }
-            "censor_check" => {
-                *cell = censor.check(cell).to_string();
-            }
-            "censor" => {
-                *cell = censor.censor(cell);
+            "censor_check" | "censor" => {
+                let censor = CENSOR.get_or_init(|| {
+                    let mut censored_words = Censor::Standard + Zealous + Sex;
+                    for (_pos, word) in comparand.split(',').enumerate() {
+                        censored_words = censored_words + word.trim();
+                    }
+                    censored_words
+                });
+                if *op == "censor_check" {
+                    *cell = censor.check(cell).to_string();
+                } else {
+                    *cell = censor.censor(cell);
+                }
             }
             "currencytonum" => {
                 let currency_value = Currency::from_str(cell);
@@ -544,6 +526,8 @@ fn apply_operations(
             }
             "simod" => *cell = osa_distance(cell, comparand).to_string(),
             "eudex" => {
+                let eudex_comparand_hash =
+                    EUDEX_COMPARAND_HASH.get_or_init(|| eudex::Hash::new(&comparand));
                 let cell_hash = Hash::new(cell);
                 *cell = format!("{}", (cell_hash - *eudex_comparand_hash).similar());
             }
@@ -559,8 +543,8 @@ fn apply_operations(
     option = true
 )]
 fn search_cached(cell: &str, formatstr: &str) -> Option<String> {
-    let locations = LOCS.get_or_init(|| Locations::from_memory());
-    let geocoder = GEOCODER.get_or_init(|| ReverseGeocoder::new(locations));
+    let geocoder = GEOCODER
+        .get_or_init(|| ReverseGeocoder::new(LOCS.get_or_init(|| Locations::from_memory())));
 
     let locregex: &'static Regex =
         regex!(r"(?-u)([+-]?[0-9]+\.?[0-9]*|\.[0-9]+),\s*([+-]?[0-9]+\.?[0-9]*|\.[0-9]+)");
