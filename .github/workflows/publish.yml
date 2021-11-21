@@ -36,6 +36,7 @@ jobs:
             artifact_name: qsv
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-x86_64-unknown-linux-gnu.zip
             use-cross: false
+            strip: true
           - os: ubuntu-latest
             os-name: linux
             target: i686-unknown-linux-gnu
@@ -43,6 +44,7 @@ jobs:
             artifact_name: qsv
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-i686-unknown-linux-gnu.zip
             use-cross: true
+            strip: true
           - os: windows-latest
             os-name: windows
             target: x86_64-pc-windows-msvc
@@ -50,6 +52,7 @@ jobs:
             artifact_name: qsv.exe
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-x86_64-pc-windows-msvc.zip
             use-cross: false
+            strip: false
           - os: windows-latest
             os-name: windows
             target: i686-pc-windows-msvc
@@ -57,6 +60,7 @@ jobs:
             artifact_name: qsv.exe
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-i686-pc-windows-msvc.zip
             use-cross: true
+            strip: false
           - os: windows-latest
             os-name: windows
             target: x86_64-pc-windows-gnu
@@ -65,6 +69,7 @@ jobs:
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-x86_64-pc-windows-gnu.zip
             addl-build-args: --no-default-features
             use-cross: false
+            strip: false
           - os: macos-latest
             os-name: macos
             target: x86_64-apple-darwin
@@ -72,6 +77,7 @@ jobs:
             artifact_name: qsv
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-x86_64-apple-darwin.zip
             use-cross: false
+            strip: true
           - os: ubuntu-latest
             os-name: linux
             target: aarch64-unknown-linux-gnu
@@ -79,6 +85,7 @@ jobs:
             artifact_name: qsv
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-aarch64-unknown-linux-gnu.zip
             use-cross: true
+            strip: true
           - os: ubuntu-latest
             os-name: linux
             target: arm-unknown-linux-gnueabihf
@@ -86,6 +93,7 @@ jobs:
             artifact_name: qsv
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-arm-unknown-linux-gnueabihf.zip
             use-cross: true
+            strip: true
             addl-build-args: --no-default-features
           - os: ubuntu-latest
             os-name: linux
@@ -94,6 +102,7 @@ jobs:
             artifact_name: qsv
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-arm-unknown-linux-musleabihf.zip
             use-cross: true
+            strip: true
             addl-build-args: --no-default-features
 
     steps:
@@ -116,8 +125,16 @@ jobs:
         use-cross: ${{ matrix.job.use-cross }}
         toolchain: ${{ matrix.rust }}
         args: --release --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }}
-    - name: Zip up binaries
-      run: 7z a -tzip ${{ matrix.job.asset_name }} target/${{ matrix.job.target }}/release/${{ matrix.job.artifact_name }}
+    - name: strip binary on *nix environments
+      if: ${{ matrix.job.strip == 'true' }}
+      run: strip target/${{ matrix.job.target }}/release/${{ matrix.job.artifact_name }}
+    - name: Copy binary to working dir
+    - shell: bash
+      run: |
+        mkdir qsv-${{ needs.analyze-tags.outputs.previous-tag }}
+        cp target/${{ matrix.job.target }}/release/${{ matrix.job.artifact_name }} qsv-${{ needs.analyze-tags.outputs.previous-tag }}        
+    - name: Zip up binary
+      run: 7z a -tzip ${{ matrix.job.asset_name }} qsv-${{ needs.analyze-tags.outputs.previous-tag }}/${{ matrix.job.artifact_name }}
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v2
       with:
