@@ -7,8 +7,8 @@
 [![Minimum supported Rust version](https://img.shields.io/badge/Rust-1.56%2B-red?logo=rust)](#minimum-supported-rust-version)
 [![Discussions](https://img.shields.io/github/discussions/jqnatividad/qsv)](https://github.com/jqnatividad/qsv/discussions)
 [![Docs](https://img.shields.io/badge/wiki-docs-yellowgreen)](https://github.com/jqnatividad/qsv/wiki)   
-qsv is a command line program for indexing, slicing, analyzing, splitting, enriching, validating & joining CSV files.   
-Commands are simple, fast and composable.
+qsv is a command line program for indexing, slicing, analyzing, splitting, enriching, validating & joining
+CSV files. Commands are simple, fast and composable.
 
 * [Available Commands](#available-commands)
 * [Installation](#installation)
