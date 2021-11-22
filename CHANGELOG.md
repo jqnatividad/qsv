@@ -5,6 +5,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.22.1] - 2021-11-22
+### Added
+- added `lua` and `foreach` feature flags. These commands are very powerful and can be easily abused or get into "foot-shooting" scenarios.
+They are now only enabled when these features are enabled during install/build.
+- `censor` and `censor_check` now support the addition of custom profanities to screen for with the --comparand option.
+### Changed
+- removed `lazy_static` and used `once_cell` instead
+- smaller stripped binaries for `x86_64-unknown-linux-gnu`, `i686-unknown-linux-gnu`, `x86_64-apple-darwin` targets
+- expanded `apply` help text
+- added more tests (currencytonum, censor, censor_check)
+
 ## [0.22.0] - 2021-11-15
 ### Added
 - `generate` command. Generate test data by profiling a CSV using a [Markov decision process](https://docs.rs/test-data-generation).
