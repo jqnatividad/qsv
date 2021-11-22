@@ -10,6 +10,7 @@ pub mod fill;
 pub mod fixlengths;
 pub mod flatten;
 pub mod fmt;
+#[cfg(feature = "foreach")]
 pub mod foreach;
 pub mod frequency;
 pub mod generate;
@@ -18,6 +19,7 @@ pub mod index;
 pub mod input;
 pub mod join;
 pub mod jsonl;
+#[cfg(feature = "lua")]
 pub mod lua;
 pub mod partition;
 pub mod pseudo;

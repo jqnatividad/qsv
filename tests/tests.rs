@@ -51,6 +51,7 @@ mod test_frequency;
 mod test_headers;
 mod test_index;
 mod test_join;
+#[cfg(feature = "lua")]
 mod test_lua;
 mod test_partition;
 mod test_pseudo;
