@@ -1,4 +1,4 @@
-# qsv: Ultra-fast CSV data-wrangling CLI toolkit   
+## qsv: Ultra-fast CSV data-wrangling CLI toolkit   
 [![Linux build status](https://github.com/jqnatividad/qsv/actions/workflows/rust.yml/badge.svg)](https://github.com/jqnatividad/qsv/actions/workflows/rust.yml)
 [![Windows build status](https://github.com/jqnatividad/qsv/actions/workflows/rust-windows.yml/badge.svg)](https://github.com/jqnatividad/qsv/actions/workflows/rust-windows.yml)
 [![macOS build status](https://github.com/jqnatividad/qsv/actions/workflows/rust-macos.yml/badge.svg)](https://github.com/jqnatividad/qsv/actions/workflows/rust-macos.yml)
@@ -93,7 +93,7 @@ To enable optional features, use the `--features` option, e.g.:
 ```bash
 cargo install qsv --features lua,foreach
 
-# or when compiling for a local repo
+# or when compiling from a local repo
 cargo build --release --features lua,foreach
 ```
 ### Minimum Supported Rust Version
