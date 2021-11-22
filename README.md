@@ -88,6 +88,14 @@ cargo build --release
 
 The compiled binary will end up in `./target/release/qsv`.
 
+To enable optional features, use the `--features` option, e.g.:
+
+```bash
+cargo install qsv --features lua,foreach
+
+# or when compiling for a local repo
+cargo build --release --features lua,foreach
+```
 ### Minimum Supported Rust Version
 Building qsv requires Rust version 1.56+.
 
@@ -126,6 +134,13 @@ to number of logical processors divided by four.  See [Parallelization](#paralle
 commands are not unicode-aware and will ignore unicode values when matching and will panic when unicode characters are used in the regex.
 * `QSV_RDR_BUFFER_CAPACITY` - set to change reader buffer size (bytes - default when not set: 16384)
 * `QSV_WTR_BUFFER_CAPACITY` - set to change writer buffer size (bytes - default when not set: 65536)
+
+Feature Flags
+-------------
+
+* mimalloc (default) - use the mimalloc allocator.
+* lua - enable lua command.
+* foreach - enable foreach command.
 
 Performance Tuning
 ------------------
