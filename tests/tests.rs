@@ -45,7 +45,7 @@ mod test_fill;
 mod test_fixlengths;
 mod test_flatten;
 mod test_fmt;
-#[cfg(target_family = "unix")]
+#[cfg(any(feature = "foreach", target_family = "unix"))]
 mod test_foreach;
 mod test_frequency;
 mod test_headers;
