@@ -132,6 +132,7 @@ impl Config {
         self
     }
 
+    #[allow(dead_code)]
     pub fn get_delimiter(&self) -> u8 {
         self.delimiter
     }
