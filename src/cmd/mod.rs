@@ -1,3 +1,4 @@
+#[cfg(feature = "apply")]
 pub mod apply;
 pub mod behead;
 pub mod cat;
