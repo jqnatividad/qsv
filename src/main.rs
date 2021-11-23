@@ -51,7 +51,7 @@ macro_rules! command_list {
     fmt         Format CSV output (change field delimiter)
     foreach*    Loop over a CSV file to execute bash commands (*nix only)
     frequency   Show frequency tables
-    generate    Generate test data by profiling a CSV
+    generate*   Generate test data by profiling a CSV
     headers     Show header names
     help        Show this usage message.
     index       Create CSV index for faster access
@@ -170,6 +170,7 @@ enum Command {
     #[cfg(feature = "foreach")]
     ForEach,
     Frequency,
+    #[cfg(feature = "generate")]
     Generate,
     Headers,
     Help,
@@ -223,6 +224,7 @@ impl Command {
             Command::Flatten => cmd::flatten::run(argv),
             Command::Fmt => cmd::fmt::run(argv),
             Command::Frequency => cmd::frequency::run(argv),
+            #[cfg(feature = "generate")]
             Command::Generate => cmd::generate::run(argv),
             Command::Headers => cmd::headers::run(argv),
             Command::Help => {
