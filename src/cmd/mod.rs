@@ -14,6 +14,7 @@ pub mod fmt;
 #[cfg(feature = "foreach")]
 pub mod foreach;
 pub mod frequency;
+#[cfg(feature = "generate")]
 pub mod generate;
 pub mod headers;
 pub mod index;
