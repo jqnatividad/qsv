@@ -37,7 +37,7 @@ macro_rules! fail {
 macro_rules! command_list {
     () => {
         "
-    apply       Apply series of transformations to a column
+    apply*      Apply series of transformations to a column
     behead      Drop header from CSV file
     cat         Concatenate by row or column
     count       Count records
@@ -75,7 +75,7 @@ macro_rules! command_list {
     table       Align CSV data into columns
     transpose   Transpose rows/columns of CSV data
 
-    * requires foreach/lua feature
+    * optional feature
 "
     };
 }
@@ -154,6 +154,7 @@ Please choose one of the following commands:",
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "lowercase")]
 enum Command {
+    #[cfg(feature = "apply")]
     Apply,
     Behead,
     Cat,
@@ -208,8 +209,9 @@ impl Command {
             )));
         }
         match self {
-            Command::Apply => cmd::apply::run(argv),
             Command::Behead => cmd::behead::run(argv),
+            #[cfg(feature = "apply")]
+            Command::Apply => cmd::apply::run(argv),
             Command::Cat => cmd::cat::run(argv),
             Command::Count => cmd::count::run(argv),
             Command::Dedup => cmd::dedup::run(argv),

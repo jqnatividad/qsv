@@ -32,6 +32,7 @@ macro_rules! rassert_eq {
 
 mod workdir;
 
+#[cfg(feature = "apply")]
 mod test_apply;
 mod test_behead;
 mod test_cat;
