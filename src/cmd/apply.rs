@@ -539,7 +539,7 @@ fn apply_operations(operations: &[&str], cell: &mut String, comparand: &str, rep
 #[cached(
     key = "String",
     convert = r#"{ format!("{}{}", cell, formatstr) }"#,
-    size = 500_000,
+    size = 200_000,
     option = true
 )]
 fn search_cached(cell: &str, formatstr: &str) -> Option<String> {
