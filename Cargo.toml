@@ -49,19 +49,19 @@ serde_json = "1.0"
 qsv-stats = "0.3"
 tabwriter = "1.2"
 threadpool = "1.8"
-chrono = "0.4"
+chrono = { version = "0.4", optional = true }
 dateparser = "0.1.6"
-once_cell = "1.8"
-reverse_geocoder = "2"
-currency = "0.4"
+once_cell = { version = "1.8", optional = true }
+reverse_geocoder = { version = "2", optional = true }
+currency = { version = "0.4", optional = true }
 itertools = "0.10"
-strsim = "0.10"
-eudex = "0.1.1"
+strsim = { version = "0.10", optional = true }
+eudex = { version = "0.1.1", optional = true }
 indicatif = "0.16"
 thousands = "0.2"
-titlecase = "1"
-censor = "0.2"
-cached = { version = "0.26", default-features = false, features = ["proc_macro"]}
+titlecase = { version = "1", optional = true }
+censor = { version = "0.2", optional = true }
+cached = { version = "0.26", default-features = false, features = ["proc_macro"], optional = true }
 uuid = { version = "0.8.2", features = ["v4"] }
 test-data-generation = "0.3"
 
@@ -73,3 +73,4 @@ log = "0.4"
 default = ["mimalloc"]
 lua = ["hlua"]
 foreach = []
+apply = ["cached", "currency", "eudex", "titlecase", "censor", "strsim", "reverse_geocoder", "once_cell", "chrono"]
