@@ -10,7 +10,7 @@ readme = "README.md"
 keywords = ["csv", "geocode", "slice", "cli", "opendata"]
 license = "Unlicense/MIT"
 autotests = false
-edition = "2018"
+edition = "2021"
 rust-version = "1.56"
 exclude = ["*.zip"]
 
