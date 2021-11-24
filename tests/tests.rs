@@ -35,6 +35,7 @@ mod workdir;
 #[cfg(feature = "apply")]
 mod test_apply;
 mod test_behead;
+mod test_comments;
 mod test_cat;
 mod test_count;
 mod test_combos;
