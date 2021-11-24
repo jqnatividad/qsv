@@ -8,6 +8,7 @@ homepage = "https://github.com/jqnatividad/qsv"
 repository = "https://github.com/jqnatividad/qsv"
 readme = "README.md"
 keywords = ["csv", "geocode", "slice", "cli", "opendata"]
+categories = ["command-line-utilities"]
 license = "Unlicense/MIT"
 autotests = false
 edition = "2021"
@@ -33,7 +34,7 @@ debug = false
 opt-level = 3
 
 [dependencies]
-mimalloc = { version = "0.1.26", default-features = false, optional = true }
+mimalloc = { version = "0.1.27", default-features = false, optional = true }
 byteorder = "1.4"
 crossbeam-channel = "0.5"
 csv = "1.1"
