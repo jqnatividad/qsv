@@ -224,8 +224,14 @@ fn apply_ops_censor_addlwords() {
         svec!["kiss my ass!", "kiss my ***!"],
         svec!["shittitties", "***********"],
         svec!["move your shlllooooonng!!!", "move your *************!!!"],
-        svec!["that cameltoe is so penistracting!", "that ******** is so *****tracting!"],
-        svec!["ding dong the bitch is dead!", "ding **** the ***** is dead!"],
+        svec![
+            "that cameltoe is so penistracting!",
+            "that ******** is so *****tracting!"
+        ],
+        svec![
+            "ding dong the bitch is dead!",
+            "ding **** the ***** is dead!"
+        ],
     ];
     assert_eq!(got, expected);
 }

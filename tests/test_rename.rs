@@ -22,7 +22,6 @@ fn rename() {
         svec!["1", "b"],
         svec!["2", "a"],
         svec!["3", "d"],
-
     ];
     assert_eq!(got, expected);
 }
@@ -32,11 +31,7 @@ fn rename_noheaders() {
     let wrk = Workdir::new("rename_noheaders");
     wrk.create(
         "in.csv",
-        vec![
-            svec!["1", "b"],
-            svec!["2", "a"],
-            svec!["3", "d"],
-        ],
+        vec![svec!["1", "b"], svec!["2", "a"], svec!["3", "d"]],
     );
 
     let mut cmd = wrk.command("rename");

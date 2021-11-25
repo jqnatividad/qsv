@@ -202,10 +202,10 @@ impl Args {
     fn njobs(&self) -> usize {
         let num_cpus = util::num_cpus();
         match self.flag_jobs {
-          0 => util::max_jobs(),
-          flag_jobs if flag_jobs < 0 => num_cpus,
-          flag_jobs if flag_jobs > num_cpus as isize => num_cpus,
-          _ => self.flag_jobs as usize,
+            0 => util::max_jobs(),
+            flag_jobs if flag_jobs < 0 => num_cpus,
+            flag_jobs if flag_jobs > num_cpus as isize => num_cpus,
+            _ => self.flag_jobs as usize,
         }
     }
 }

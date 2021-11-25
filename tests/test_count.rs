@@ -5,7 +5,13 @@ use crate::{qcheck, CsvData};
 ///
 /// It does some simple case analysis to handle whether we want to test counts
 /// in the presence of headers and/or indexes.
-fn prop_count_len(name: &str, rows: CsvData, headers: bool, idx: bool, noheaders_env: bool) -> bool {
+fn prop_count_len(
+    name: &str,
+    rows: CsvData,
+    headers: bool,
+    idx: bool,
+    noheaders_env: bool,
+) -> bool {
     let mut expected_count = rows.len();
     if headers && expected_count > 0 {
         expected_count -= 1;
