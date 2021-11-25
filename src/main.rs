@@ -93,6 +93,7 @@ Usage:
 
 Options:
     --list        List all commands available.
+    --envlist     List all environment variables with the QSV_ prefix.
     -h, --help    Display this message
     <command> -h  Display the command help message
     --version     Print version info, mem allocator, num_cpus then exit
@@ -105,6 +106,7 @@ Commands:",
 struct Args {
     arg_command: Option<Command>,
     flag_list: bool,
+    flag_envlist: bool,
 }
 
 fn main() {
@@ -117,6 +119,9 @@ fn main() {
         .unwrap_or_else(|e| e.exit());
     if args.flag_list {
         wout!(concat!("Installed commands:", command_list!()));
+        return;
+    } else if args.flag_envlist {
+        util::show_env_vars();
         return;
     }
     match args.arg_command {

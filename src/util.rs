@@ -66,6 +66,20 @@ pub fn version() -> String {
     }
 }
 
+pub fn show_env_vars() {
+    let mut env_var_set = false;
+    for (n, v) in env::vars_os() {
+        let env_var = n.into_string().unwrap();
+        if env_var.starts_with("QSV_") {
+            env_var_set = true;
+            println!("{}: {}", env_var, v.into_string().unwrap());
+        }
+    }
+    if !env_var_set {
+        println!("No QSV_ environment variables set.");
+    }
+}
+
 pub fn count_rows(conf: &Config) -> u64 {
     match conf.indexed().unwrap() {
         Some(idx) => idx.count(),
