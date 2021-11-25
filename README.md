@@ -134,6 +134,7 @@ to number of logical processors divided by four.  See [Parallelization](#paralle
 commands are not unicode-aware and will ignore unicode values when matching and will panic when unicode characters are used in the regex.
 * `QSV_RDR_BUFFER_CAPACITY` - set to change reader buffer size (bytes - default when not set: 16384)
 * `QSV_WTR_BUFFER_CAPACITY` - set to change writer buffer size (bytes - default when not set: 65536)
+* `QSV_COMMENTS` - set to a comment character which will ignore any lines that start with this character (default is no comment lines)
 
 Feature Flags
 -------------
