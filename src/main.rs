@@ -96,7 +96,7 @@ Options:
     --envlist     List all environment variables with the QSV_ prefix.
     -h, --help    Display this message
     <command> -h  Display the command help message
-    --version     Print version info, mem allocator, num_cpus then exit
+    --version     Print version info, mem allocator, max_jobs, num_cpus then exit
 
 Commands:",
     command_list!()

@@ -49,16 +49,25 @@ pub fn version() -> String {
     match (maj, min, pat, pre) {
         (Some(maj), Some(min), Some(pat), Some(pre)) => {
             if pre.is_empty() {
-                return format!("{}.{}.{}-{}-{}", maj, min, pat, malloc_kind, max_jobs());
-            } else {
                 return format!(
                     "{}.{}.{}-{}-{}-{}",
                     maj,
                     min,
                     pat,
+                    malloc_kind,
+                    max_jobs(),
+                    num_cpus()
+                );
+            } else {
+                return format!(
+                    "{}.{}.{}-{}-{}-{}-{}",
+                    maj,
+                    min,
+                    pat,
                     pre,
                     malloc_kind,
-                    max_jobs()
+                    max_jobs(),
+                    num_cpus(),
                 );
             }
         }
