@@ -88,13 +88,17 @@ cargo build --release
 
 The compiled binary will end up in `./target/release/qsv`.
 
-To enable optional features, use the `--features` option, e.g.:
+To enable optional features, use the `--features` or `--all-features` options, e.g.:
 
 ```bash
-cargo install qsv --features lua,foreach
+cargo install qsv --features apply,generate,selfupdate,lua,foreach
+# or
+cargo install qsv --all-features
 
 # or when compiling from a local repo
-cargo build --release --features lua,foreach
+cargo build --release --features apply,generate,selfupdate,lua,foreach
+# or
+cargo build --release --all-features
 ```
 ### Minimum Supported Rust Version
 Building qsv requires Rust version 1.56+.
@@ -139,9 +143,14 @@ commands are not unicode-aware and will ignore unicode values when matching and 
 Feature Flags
 -------------
 
-* mimalloc (default) - use the mimalloc allocator.
-* lua - enable lua command.
-* foreach - enable foreach command.
+* `mimalloc` (default) - use the mimalloc allocator.
+* `apply` - enable `apply` command. This swiss-army knife of CSV transformations is very powerful, but it has a lot of dependencies that increases both compile time and binary size. 
+* `generate` - enable `generate` command. The test data generator also has a large dependency tree.
+* `selfupdate` - enables `qsv` to update itself to the latest release with the `--update` option.
+
+Both of the following commands are also very powerful that can be abused and present "foot-shooting" scenarios.
+* `lua` - enable `lua` command.
+* `foreach` - enable `foreach` command.
 
 Performance Tuning
 ------------------
