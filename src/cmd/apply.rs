@@ -8,7 +8,7 @@ use chrono::{NaiveTime, Utc};
 use currency::Currency;
 use dateparser::parse_with;
 use eudex::Hash;
-use indicatif::ProgressBar;
+use indicatif::{ProgressBar, ProgressDrawTarget};
 use once_cell::sync::OnceCell;
 use regex::Regex;
 use reverse_geocoder::{Locations, ReverseGeocoder};
@@ -28,8 +28,8 @@ It has several subcommands:
 OPERATIONS
 The series of operations must be given separated by commas as such:
 
-  trim => Trimming the cell
-  trim,upper => Trimming the cell then transforming to uppercase
+  trim => Trim the cell
+  trim,upper => Trim the cell, then transform to uppercase
   lower,simdln => Lowercase the cell, then compute the normalized 
       Damerau-Levenshtein similarity to --comparand
 
@@ -300,6 +300,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     // validate specified operations
+    let mut censor_invokes = 0_usize;
+    let mut replace_invokes = 0_usize;
+    let mut regex_replace_invokes = 0_usize;
+    let mut sim_invokes = 0_usize;
+    let mut eudex_invokes = 0_usize;
     let operations: Vec<&str> = args.arg_operations.split(',').collect();
     if args.cmd_operations {
         for op in &operations {
@@ -313,6 +318,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             "--comparand (-C) and --replacement (-R) are required for replace operation."
                         );
                     }
+                    replace_invokes += 1;
                 }
                 "regex_replace" => {
                     if args.flag_comparand.is_empty() || args.flag_replacement.is_empty() {
@@ -320,6 +326,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             "--comparand (-C) and --replacement (-R) are required for regex_replace operation."
                         );
                     }
+                    regex_replace_invokes += 1;
                 }
                 "copy" => {
                     if args.flag_new_column.is_none() {
@@ -330,6 +337,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     if args.flag_new_column.is_none() {
                         return fail!("--new_column (-c) is required for censor operations.");
                     }
+                    censor_invokes += 1;
                 }
                 "mtrim" | "mltrim" | "mrtrim" => {
                     if args.flag_comparand.is_empty() {
@@ -340,27 +348,43 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     if args.flag_new_column.is_none() {
                         return fail!("--new_column (-c) is required for similarity operations.");
                     }
+                    sim_invokes += 1;
                 }
                 "eudex" => {
                     if args.flag_new_column.is_none() {
                         return fail!("--new_column (-c) is required for eudex.");
                     }
+                    eudex_invokes += 1;
                 }
                 _ => {}
             }
         }
     }
+    if censor_invokes > 1
+        || replace_invokes > 1
+        || regex_replace_invokes > 1
+        || sim_invokes > 1
+        || eudex_invokes > 1
+    {
+        return fail!("you can only use censor, replace, regex_replace, similarity, or eudex ONCE per operation series.");
+    };
 
     // prep progress bar
-    let mut record_count: u64 = 0;
-    let progress = ProgressBar::new(record_count);
+    let mut record_count = 0_u64;
+    let progress = ProgressBar::new(0);
     if !args.flag_quiet {
         record_count = util::count_rows(&rconfig);
         util::prep_progress(&progress, record_count);
+    } else {
+        progress.set_draw_target(ProgressDrawTarget::hidden());
     }
 
+    #[allow(unused_assignments)]
     let mut record = csv::StringRecord::new();
-    while rdr.read_record(&mut record)? {
+    let records_iter = rdr.records();
+    for result in records_iter {
+        record = result?;
+
         if !args.flag_quiet {
             progress.inc(1);
         }
@@ -538,9 +562,9 @@ fn apply_operations(operations: &[&str], cell: &mut String, comparand: &str, rep
 
 #[cached(
     key = "String",
-    convert = r#"{ format!("{}{}", cell, formatstr) }"#,
-    size = 200_000,
-    option = true
+    convert = r#"{ format!("{}", cell) }"#,
+    option = true,
+    sync_writes = false
 )]
 fn search_cached(cell: &str, formatstr: &str) -> Option<String> {
     let geocoder = GEOCODER
