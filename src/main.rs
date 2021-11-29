@@ -145,7 +145,23 @@ fn qsv_update() -> Result<(), Box<dyn ::std::error::Error>> {
     Ok(())
 }
 
+use log::{error, log_enabled, Level};
+use env_logger::{Builder, Env};
+
+fn init_logger() {
+    let env = Env::default()
+        .filter_or("QSV_LOG_LEVEL", "off");
+
+    Builder::from_env(env)
+        .format_timestamp_millis()
+        .format_level(true)
+        .format_target(true)
+        .init();
+}
+
 fn main() {
+    init_logger();
+
     let args: Args = Docopt::new(USAGE)
         .and_then(|d| {
             d.options_first(true)
@@ -182,18 +198,30 @@ Please choose one of the following commands:",
             Ok(()) => process::exit(0),
             Err(CliError::Flag(err)) => err.exit(),
             Err(CliError::Csv(err)) => {
-                werr!("{}", err);
+                if log_enabled!(Level::Error) {
+                    error!("{}", err);
+                } else {
+                    werr!("{}", err);
+                }
                 process::exit(1);
             }
             Err(CliError::Io(ref err)) if err.kind() == io::ErrorKind::BrokenPipe => {
                 process::exit(0);
             }
             Err(CliError::Io(err)) => {
-                werr!("{}", err);
+                if log_enabled!(Level::Error) {
+                    error!("{}", err);
+                } else {
+                    werr!("{}", err);
+                }
                 process::exit(1);
             }
             Err(CliError::Other(msg)) => {
-                werr!("{}", msg);
+                if log_enabled!(Level::Error) {
+                    error!("{}", msg);
+                } else {
+                    werr!("{}", msg);
+                }
                 process::exit(1);
             }
         },
