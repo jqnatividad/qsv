@@ -28,8 +28,8 @@ It has several subcommands:
 OPERATIONS
 The series of operations must be given separated by commas as such:
 
-  trim => Trimming the cell
-  trim,upper => Trimming the cell then transforming to uppercase
+  trim => Trim the cell
+  trim,upper => Trim the cell, then transform to uppercase
   lower,simdln => Lowercase the cell, then compute the normalized 
       Damerau-Levenshtein similarity to --comparand
 
