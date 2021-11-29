@@ -54,9 +54,9 @@ Available commands
 | **[search](/src/cmd/search.rs#L11)** | Run a regex over a CSV. Applies the regex to each field individually & shows only matching rows. _**(EXTENDED)**_ |
 | **[searchset](/src/cmd/searchset.rs#L15)** | Run **multiple regexes** over a CSV in a **single pass**. Applies the regexes to each field individually & shows only matching rows. _**(NEW)**_ |
 | **[select](/src/cmd/select.rs#L8)** | Select, re-order, duplicate or drop columns. _**(EXTENDED)**_ |
-| **[slice](/src/cmd/slice.rs#L10)**[^1][^2] | Slice rows from any part of a CSV. When an index is present, this only has to parse the rows in the slice (instead of all rows leading up to the start of the slice). |
+| **[slice](/src/cmd/slice.rs#L10)**[^1][^2] | Slice rows from any part of a CSV. When an index is present, this only has to parse the rows in the slice (instead of all rows leading up to the start of the slice). _**(EXTENDED)**_ |
 | **[sort](/src/cmd/sort.rs#L14)** | Sorts CSV data in alphabetical, numerical, reverse or random (with optional seed) order. _**(EXTENDED)**_ |
-| **[split](/src/cmd/split.rs#L14)**[^1][^3] | Split one CSV file into many CSV files of N chunks. |
+| **[split](/src/cmd/split.rs#L14)**[^1][^3] | Split one CSV file into many CSV files of N chunks. _**(EXTENDED)**_ |
 | **[stats](/src/cmd/stats.rs#L24)**[^1][^2][^3] | Show data type & descriptive statistics of each column in a CSV. (i.e., sum, min/max, min/max length, mean, stddev, variance, quartiles, IQR, lower/upper fences, skew, median, mode, cardinality & nullcount) _**(EXTENDED)**_ |
 | **[table](/src/cmd/table.rs#L12)**[^2] | Show aligned output of a CSV using [elastic tabstops](https://github.com/BurntSushi/tabwriter). _**(EXTENDED)**_ |
 | **[transpose](/src/cmd/transpose.rs#L9)**[^2] | Transpose rows/columns of a CSV. _**(NEW)**_ |
