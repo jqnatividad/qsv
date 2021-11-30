@@ -2,6 +2,7 @@ use crate::config::{Config, Delimiter};
 use crate::util;
 use crate::CliResult;
 use serde::Deserialize;
+use log::{debug, info};
 
 static USAGE: &str = "
 Prints a count of the number of records in the CSV data.
@@ -33,8 +34,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers);
 
+    debug!("input: {:?}, no_header: {}, delimiter: {:?}", 
+            (&args.arg_input).clone().unwrap(),
+            &args.flag_no_headers,
+            &args.flag_delimiter
+        );
+
     let count = match conf.indexed()? {
-        Some(idx) => idx.count(),
+        Some(idx) => {
+            info!("index used");
+            idx.count()
+        },
         None => {
             let mut rdr = conf.reader()?;
             let mut count = 0u64;
