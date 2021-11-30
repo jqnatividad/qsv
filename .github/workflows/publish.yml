@@ -89,7 +89,7 @@ jobs:
             architecture: aarch64
             artifact_name: qsv
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-x86_64-apple-darwin.zip
-            use-cross: false
+            use-cross: true
             strip: true
             addl-build-args: --features=apply,generate,lua,foreach
           - os: ubuntu-latest
