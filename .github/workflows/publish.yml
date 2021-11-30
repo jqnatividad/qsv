@@ -88,7 +88,8 @@ jobs:
             target: aarch64-apple-darwin
             architecture: aarch64
             artifact_name: qsv
-            asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-x86_64-apple-darwin.zip
+            asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-aarch64-apple-darwin.zip
+            build-prep: true
             use-cross: true
             strip: true
             addl-build-args: --features=apply,generate,lua,foreach
@@ -133,6 +134,11 @@ jobs:
       with:
         submodules: recursive
         ref: ${{ needs.analyze-tags.outputs.previous-tag }}
+    - name: build prep for aarch64-apple-darwin
+      if: ${{ matrix.job.build-prep }}
+      run: |
+        sudo xcode-select -s "/Applications/Xcode_12.3.app"
+        sudo rm -Rf /Library/Developer/CommandLineTools/SDKs/*
     - name: Cargo build
       uses: actions-rs/cargo@v1
       with:
