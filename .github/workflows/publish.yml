@@ -83,7 +83,7 @@ jobs:
             use-cross: false
             strip: true
             addl-build-args: --features=apply,generate,lua,foreach
-            - os: macos-latest
+          - os: macos-latest
             os-name: macos
             target: aarch64-apple-darwin
             architecture: aarch64
