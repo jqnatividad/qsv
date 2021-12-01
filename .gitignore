@@ -20,3 +20,5 @@ builds
 *.svg
 perf.data*
 *.json
+*.log
+*.log.gz
