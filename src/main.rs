@@ -8,6 +8,7 @@ use std::env;
 use std::fmt;
 use std::io;
 use std::process;
+use std::time::Instant;
 
 use serde::Deserialize;
 
@@ -145,22 +146,40 @@ fn qsv_update() -> Result<(), Box<dyn ::std::error::Error>> {
     Ok(())
 }
 
-use log::{error, log_enabled, Level};
-use env_logger::{Builder, Env};
+use flexi_logger::{Cleanup, Criterion, FileSpec, Logger, Naming};
+use log::{error, info, log_enabled, Level};
 
 fn init_logger() {
-    let env = Env::default()
-        .filter_or("QSV_LOG_LEVEL", "off");
+    let qsv_log_env = env::var("QSV_LOG_LEVEL").unwrap_or_else(|_| "off".to_string());
+    let qsv_log_dir = env::var("QSV_LOG_DIR").unwrap_or_else(|_| ".".to_string());
 
-    Builder::from_env(env)
-        .format_timestamp_millis()
-        .format_level(true)
-        .format_target(true)
-        .init();
+    Logger::try_with_env_or_str(qsv_log_env)
+        .unwrap()
+        .log_to_file(
+            FileSpec::default()
+                .directory(qsv_log_dir)
+                .suppress_timestamp(),
+        )
+        .format_for_files(flexi_logger::detailed_format)
+        .o_append(true)
+        .rotate(
+            Criterion::Size(100_000),
+            Naming::Numbers,
+            Cleanup::KeepLogAndCompressedFiles(10, 100),
+        )
+        .start()
+        .unwrap();
 }
 
 fn main() {
     init_logger();
+
+    let now = Instant::now();
+
+    if log_enabled!(Level::Info) {
+        let qsv_args: String = env::args().skip(1).collect::<Vec<_>>().join(" ");
+        info!("START: {}", qsv_args);
+    }
 
     let args: Args = Docopt::new(USAGE)
         .and_then(|d| {
@@ -195,7 +214,12 @@ Please choose one of the following commands:",
             process::exit(0);
         }
         Some(cmd) => match cmd.run() {
-            Ok(()) => process::exit(0),
+            Ok(()) => {
+                if log_enabled!(Level::Info) {
+                    info!("END elapsed: {}", now.elapsed().as_secs_f32());
+                }
+                process::exit(0);
+            }
             Err(CliError::Flag(err)) => err.exit(),
             Err(CliError::Csv(err)) => {
                 if log_enabled!(Level::Error) {
