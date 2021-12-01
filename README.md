@@ -142,6 +142,8 @@ commands are not unicode-aware and will ignore unicode values when matching and 
 * `QSV_LOG_LEVEL` - set to desired level (default - off, error, warn, info, trace, debug).
 * `QSV_LOG_DIR` - when logging is enabled, the directory where the log files will be stored. If the specified directory does not exist, qsv will attempt to create it. If not set, the log files are created in the directory where qsv was started. See [Logging](docs/Logging.md) for more info.
 
+> **NOTE:** To get a list of all environment variables with the `QSV_` prefix, run `qsv --envlist`.
+
 Feature Flags
 -------------
 
