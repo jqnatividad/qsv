@@ -22,6 +22,8 @@ pub fn num_cpus() -> usize {
     num_cpus::get()
 }
 
+const MAX_JOBS_CPU_DIVISOR: usize = 3;
+
 pub fn max_jobs() -> usize {
     let cpus = num_cpus::get();
     let max_jobs_env = match env::var("QSV_MAX_JOBS") {
@@ -30,7 +32,7 @@ pub fn max_jobs() -> usize {
     };
     match max_jobs_env {
         x if x > cpus as isize => cpus,
-        x if x <= 0 => cmp::max(cpus / 4, 1),
+        x if x <= 0 => cmp::max(cpus / MAX_JOBS_CPU_DIVISOR, 1),
         _ => max_jobs_env as usize,
     }
 }
