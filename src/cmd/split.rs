@@ -37,6 +37,9 @@ split options:
                            will be replaced by a value based on the value
                            of the field, but sanitized for shell safety.
                            [default: {}.csv]
+    --pad <arg>            The zero padding width that is used in the
+                           generated filename.
+                           [default: 0] 
 
 Common options:
     -h, --help             Display this message
@@ -54,6 +57,7 @@ struct Args {
     flag_size: usize,
     flag_jobs: isize,
     flag_filename: FilenameTemplate,
+    flag_pad: usize,
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
 }
@@ -77,13 +81,13 @@ impl Args {
         let mut rdr = rconfig.reader()?;
         let headers = rdr.byte_headers()?.clone();
 
-        let mut wtr = self.new_writer(&headers, 0)?;
+        let mut wtr = self.new_writer(&headers, 0, self.flag_pad)?;
         let mut i = 0;
         let mut row = csv::ByteRecord::new();
         while rdr.read_byte_record(&mut row)? {
             if i > 0 && i % self.flag_size == 0 {
                 wtr.flush()?;
-                wtr = self.new_writer(&headers, i)?;
+                wtr = self.new_writer(&headers, i, self.flag_pad)?;
             }
             wtr.write_byte_record(&row)?;
             i += 1;
@@ -101,7 +105,9 @@ impl Args {
                 let conf = args.rconfig();
                 let mut idx = conf.indexed().unwrap().unwrap();
                 let headers = idx.byte_headers().unwrap().clone();
-                let mut wtr = args.new_writer(&headers, i * args.flag_size).unwrap();
+                let mut wtr = args
+                    .new_writer(&headers, i * args.flag_size, args.flag_pad)
+                    .unwrap();
 
                 idx.seek((i * args.flag_size) as u64).unwrap();
                 for row in idx.byte_records().take(args.flag_size) {
@@ -119,9 +125,14 @@ impl Args {
         &self,
         headers: &csv::ByteRecord,
         start: usize,
+        width: usize,
     ) -> CliResult<csv::Writer<Box<dyn io::Write + 'static>>> {
         let dir = Path::new(&self.arg_outdir);
-        let path = dir.join(self.flag_filename.filename(&format!("{}", start)));
+        let path = dir.join(self.flag_filename.filename(&format!(
+            "{:0>width$}",
+            start,
+            width = width
+        )));
         let spath = Some(path.display().to_string());
         let mut wtr = Config::new(&spath).writer()?;
         if !self.rconfig().no_headers {

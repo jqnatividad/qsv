@@ -54,9 +54,9 @@ Available commands
 | **[search](/src/cmd/search.rs#L11)** | Run a regex over a CSV. Applies the regex to each field individually & shows only matching rows. _**(EXTENDED)**_ |
 | **[searchset](/src/cmd/searchset.rs#L15)** | Run **multiple regexes** over a CSV in a **single pass**. Applies the regexes to each field individually & shows only matching rows. _**(NEW)**_ |
 | **[select](/src/cmd/select.rs#L8)** | Select, re-order, duplicate or drop columns. _**(EXTENDED)**_ |
-| **[slice](/src/cmd/slice.rs#L10)**[^1][^2] | Slice rows from any part of a CSV. When an index is present, this only has to parse the rows in the slice (instead of all rows leading up to the start of the slice). |
+| **[slice](/src/cmd/slice.rs#L10)**[^1][^2] | Slice rows from any part of a CSV. When an index is present, this only has to parse the rows in the slice (instead of all rows leading up to the start of the slice). _**(EXTENDED)**_ |
 | **[sort](/src/cmd/sort.rs#L14)** | Sorts CSV data in alphabetical, numerical, reverse or random (with optional seed) order. _**(EXTENDED)**_ |
-| **[split](/src/cmd/split.rs#L14)**[^1][^3] | Split one CSV file into many CSV files of N chunks. |
+| **[split](/src/cmd/split.rs#L14)**[^1][^3] | Split one CSV file into many CSV files of N chunks. _**(EXTENDED)**_ |
 | **[stats](/src/cmd/stats.rs#L24)**[^1][^2][^3] | Show data type & descriptive statistics of each column in a CSV. (i.e., sum, min/max, min/max length, mean, stddev, variance, quartiles, IQR, lower/upper fences, skew, median, mode, cardinality & nullcount) _**(EXTENDED)**_ |
 | **[table](/src/cmd/table.rs#L12)**[^2] | Show aligned output of a CSV using [elastic tabstops](https://github.com/BurntSushi/tabwriter). _**(EXTENDED)**_ |
 | **[transpose](/src/cmd/transpose.rs#L9)**[^2] | Transpose rows/columns of a CSV. _**(NEW)**_ |
@@ -138,7 +138,11 @@ to number of logical processors divided by four.  See [Parallelization](#paralle
 commands are not unicode-aware and will ignore unicode values when matching and will panic when unicode characters are used in the regex.
 * `QSV_RDR_BUFFER_CAPACITY` - set to change reader buffer size (bytes - default when not set: 16384)
 * `QSV_WTR_BUFFER_CAPACITY` - set to change writer buffer size (bytes - default when not set: 65536)
-* `QSV_COMMENTS` - set to a comment character which will ignore any lines (including the header) that start with this character (default: comments disabled)
+* `QSV_COMMENTS` - set to a comment character which will ignore any lines (including the header) that start with this character (default: comments disabled).
+* `QSV_LOG_LEVEL` - set to desired level (default - off, error, warn, info, trace, debug).
+* `QSV_LOG_DIR` - when logging is enabled, the directory where the log files will be stored. If the specified directory does not exist, qsv will attempt to create it. If not set, the log files are created in the directory where qsv was started. See [Logging](docs/Logging.md) for more info.
+
+> **NOTE:** To get a list of all environment variables with the `QSV_` prefix, run `qsv --envlist`.
 
 Feature Flags
 -------------
@@ -224,7 +228,7 @@ Starting with qsv 0.22.0, a heuristic of setting the maximum number of jobs to t
 
 These [observations were gathered using the benchmark script](https://github.com/jqnatividad/qsv/blob/master/docs/BENCHMARKS.md), using a relatively large file (520mb, 41 column, 1M row sample of NYC's 311 data). Performance will vary based on environment - CPU architecture, amount of memory, operating system, I/O speed, and the number of background tasks, so this heuristic will not work for every situation.
 
-To find out your jobs setting, call `qsv --version`. The last number is the default number of jobs qsv will use for parallelized commands if `--jobs` and `QSV_MAX_JOBS` are not specified.
+To find out your jobs setting, call `qsv --version`. The second to the last number is the number of jobs qsv will use for multi-threaded commands. The last number is the number of logical processors detected by qsv.
 
 ### Benchmarking for Performance
 Use and fine-tune the [benchmark script](scripts/benchmark-basic.sh) when tweaking qsv's performance to your environment.

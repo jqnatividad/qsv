@@ -5,6 +5,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.23.0] - 2021-11-29
+### Added
+- added `--update` option. This allows qsv to check and update itself if there are new release binaries published on GitHub.
+- added `--envlist` option to show all environment variables with the `QSV_` prefix.
+- `apply`, `generate`, `lua`, `foreach` and `selfupdate` are now optional features. `apply` and `generate` are marked optional since they have
+large dependency trees; `lua` and `foreach` are very powerful commands that can be abused to issue system commands. Users now have the option exclude these features from their local builds.  Published binaries on GitHub still have `-all-features` enabled.
+- added `QSV_COMMENTS` environment variable (contributed by [@jbertovic](https://github.com/jbertovic)). This allows qsv to ignore lines in the CSV (including headers) that start with the set character. [EXAMPLES](https://github.com/jqnatividad/qsv/blob/feae8cf5750530318b83c4b3c7bf0f72d2332079/tests/test_comments.rs#L3)
+- catch input empty condition when qsv's input is empty when using `select`.   
+(e.g. `cat /dev/null | qsv select 1` will now show the error "Input is empty." instead of "Selector index 1 is out of bounds. Index must be >= 1 and <= 0.")
+- added `--pad <arg>` option to `split` command to zero-pad the generated filename by the number of `<arg>` places. [EXAMPLES](https://github.com/jqnatividad/qsv/blob/feae8cf5750530318b83c4b3c7bf0f72d2332079/tests/test_split.rs#L81)
+- tests for `QSV_COMMENTS`, `split --pad`, `select` input empty condition, 
+### Changed
+- set Cargo.toml to Rust 2021 edition
+- added "command-line-utilities" category to crates.io metadata
+- cargo update bumped `mimalloc`, `serde_json`, `syn`, `anyhow` and `ryu`.
+- GitHub Actions CI tests runs with `--all-features` enabled.
+- published binaries on GitHub have `--all-features` enabled by default.
+- made geocode caching a tad faster by making the transitional cache unbounded, and simplifying the key.
+- `--version` now also shows the number of logical CPUs detected.
+- project-wide rustfmt
+- documentation for features, `QSV_COMMENTS` and `apply`
+### Removed
+- removed greetings.yml workflow from GitHub Actions.
+
 ## [0.22.1] - 2021-11-22
 ### Added
 - added `lua` and `foreach` feature flags. These commands are very powerful and can be easily abused or get into "foot-shooting" scenarios.

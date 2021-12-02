@@ -78,6 +78,49 @@ k,l
 }
 
 #[test]
+fn split_padding() {
+    let wrk = Workdir::new("split");
+    wrk.create("in.csv", data(true));
+
+    let mut cmd = wrk.command("split");
+    cmd.args(&["--size", "2"])
+        .arg("--pad")
+        .arg("4")
+        .arg(&wrk.path("."))
+        .arg("in.csv");
+    wrk.run(&mut cmd);
+
+    split_eq!(
+        wrk,
+        "0000.csv",
+        "\
+h1,h2
+a,b
+c,d
+"
+    );
+    split_eq!(
+        wrk,
+        "0002.csv",
+        "\
+h1,h2
+e,f
+g,h
+"
+    );
+    split_eq!(
+        wrk,
+        "0004.csv",
+        "\
+h1,h2
+i,j
+k,l
+"
+    );
+    assert!(!wrk.path("0006.csv").exists());
+}
+
+#[test]
 fn split_idx() {
     let wrk = Workdir::new("split_idx");
     wrk.create_indexed("in.csv", data(true));
@@ -385,4 +428,23 @@ fn split_custom_filename() {
     assert!(wrk.path("prefix-0.csv").exists());
     assert!(wrk.path("prefix-2.csv").exists());
     assert!(wrk.path("prefix-4.csv").exists());
+}
+
+#[test]
+fn split_custom_filename_padded() {
+    let wrk = Workdir::new("split");
+    wrk.create("in.csv", data(true));
+
+    let mut cmd = wrk.command("split");
+    cmd.args(&["--size", "2"])
+        .arg("--pad")
+        .arg("3")
+        .args(&["--filename", "prefix-{}.csv"])
+        .arg(&wrk.path("."))
+        .arg("in.csv");
+    wrk.run(&mut cmd);
+
+    assert!(wrk.path("prefix-000.csv").exists());
+    assert!(wrk.path("prefix-002.csv").exists());
+    assert!(wrk.path("prefix-004.csv").exists());
 }
