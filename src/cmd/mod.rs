@@ -7,6 +7,7 @@ pub mod dedup;
 pub mod enumerate;
 pub mod exclude;
 pub mod explode;
+pub mod fetch;
 pub mod fill;
 pub mod fixlengths;
 pub mod flatten;
@@ -38,3 +39,4 @@ pub mod split;
 pub mod stats;
 pub mod table;
 pub mod transpose;
+
