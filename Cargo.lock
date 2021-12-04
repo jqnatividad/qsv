@@ -1196,6 +1196,7 @@ dependencies = [
  "quickcheck",
  "rand 0.8.4",
  "regex",
+ "reqwest",
  "reverse_geocoder",
  "self_update",
  "serde",

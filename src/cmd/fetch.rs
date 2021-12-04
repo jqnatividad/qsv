@@ -58,6 +58,8 @@ struct Args {
     arg_input: Option<String>
 }
 
+
+
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
@@ -94,7 +96,24 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .no_headers(args.flag_no_headers)
         .select(args.arg_column);
 
+    let mut rdr = rconfig.reader()?;
+    let headers = rdr.byte_headers()?.clone();
+    let sel = rconfig.selection(&headers)?;
+    let _column_index = *sel.iter().next().unwrap();    
 
+    use reqwest::blocking::Client;
+    let client = Client::new();
+
+    for row in rdr.byte_records() {
+        let row = row?;
+        for (_i, field) in sel.select(&row).enumerate() {
+            let url = String::from_utf8_lossy(field).to_string();
+            debug!("Fetching URL: {:?}", url);
+            let resp = client.get(url).send().unwrap();
+            let value = resp.text().unwrap().replace(",",";");
+            println!("{}", value);
+        }
+    }
 
     Ok(())
 }
