@@ -8,17 +8,26 @@ use serde::Deserialize;
 use log::{debug, info};
 
 static USAGE: &str = "
-Create a new column or fetch values from an URL column.
+Fetch values via an URL column, and optionally store them in a new column.
 
-This command fetches HTML/data from web pages or web services for every row in the URL column.
+This command fetches HTML/data from web pages or web services for every row in the URL column, 
+and optionally stores them in a new column.
 
 URL column must contain full and valid URL path, which can be constructed via the 'lua' command.
 
+To set proxy, please set env var HTTP_PROXY and HTTPS_PROXY (eg export HTTPS_PROXY=socks5://127.0.0.1:1086)
+
 Usage:
-    qsv fetch [options] <column> [<input>]
+    qsv fetch [options] [<column>] [<input>]
 
 fetch options:
-    -c, --new-column <name>    Put the fetched values in a new column instead.
+    --new-column=<name>        Put the fetched values in a new column instead.
+    --threads=<value>          Number of threads for concurrent requests.                 
+    --throttle-delay=<ms>      Set delay between requests in milliseconds. Recommend 1000 ms or greater (default: 5000 ms).
+    --http-header-file=<file>  File containing additional HTTP Request Headers. Useful for setting Authorization or overriding User Agent.
+    --cache-responses          Cache HTTP Responses to increase throughput.
+    --on-error-store-error     On error, store HTTP error instead of blank value.
+    --store-and-send-cookies   Automatically store and send cookies. Useful for authenticated sessions.
 
 Common options:
     -h, --help                 Display this message
@@ -35,25 +44,49 @@ Common options:
 #[derive(Deserialize, Debug)]
 struct Args {
     flag_new_column: Option<String>,
+    flag_threads: Option<u8>,
+    flag_throttle_delay: Option<usize>,
+    flag_http_header_file: Option<String>,
+    flag_cache_responses: bool,
+    flag_on_error_store_error: bool,
+    flag_store_and_send_cookies: bool,
     flag_output: Option<String>,
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
     flag_quiet: bool,
     arg_column: SelectColumns,
-    arg_input: Option<String>,
+    arg_input: Option<String>
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
-    debug!("url column: {:?}, input: {:?}, new column: {:?}, output: {:?}, no_header: {:?}, delimiter: {:?}, quiet: {:?}", 
-        (&args.arg_column).clone(),
-        (&args.arg_input).clone().unwrap(),
-        &args.flag_new_column,
-        &args.flag_output,
-        &args.flag_no_headers,
-        &args.flag_delimiter,
-        &args.flag_quiet
+    debug!("url column: {:?}, 
+            input: {:?}, 
+            new column: {:?}, 
+            threads: {:?},
+            throttle delay: {:?},
+            http header file: {:?},
+            cache response: {:?},
+            store error: {:?},
+            store cookie: {:?},
+            output: {:?}, 
+            no_header: {:?}, 
+            delimiter: {:?}, 
+            quiet: {:?}", 
+            (&args.arg_column).clone(),
+            (&args.arg_input).clone().unwrap(),
+            &args.flag_new_column,
+            &args.flag_threads,
+            &args.flag_throttle_delay,
+            &args.flag_http_header_file,
+            &args.flag_cache_responses,
+            &args.flag_on_error_store_error,
+            &args.flag_store_and_send_cookies,
+            &args.flag_output,
+            &args.flag_no_headers,
+            &args.flag_delimiter,
+            &args.flag_quiet
     );
 
     let rconfig = Config::new(&args.arg_input)
