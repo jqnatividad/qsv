@@ -641,6 +641,40 @@ fn apply_similarity_more_eudex() {
 }
 
 #[test]
+fn apply_sentiment() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["customer comment"],
+            svec!["This is ridiculous! I will never buy from this company again!"],
+            svec!["Josephina was awesome! She was very helpful and patient. I wish more customer service folks are like her!"],
+            svec!["I can't believe that garbage is still out there. That is so false!"],
+            svec!["5 stars! Highly recommended!"],
+            svec!["What were they thinking!?!"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("sentiment")
+        .arg("customer comment")
+        .arg("--new-column")
+        .arg("sentiment_score")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["customer comment", "sentiment_score"],
+        svec!["This is ridiculous! I will never buy from this company again!", "-0.47384376462380107"],
+        svec!["Josephina was awesome! She was very helpful and patient. I wish more customer service folks are like her!", "0.9227060290926788"],
+        svec!["I can't believe that garbage is still out there. That is so false!", "-0.07518070500292766"],
+        svec!["5 stars! Highly recommended!", "0.3973495344831422"],
+        svec!["What were they thinking!?!", "-0.19353437967075598"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn apply_emptyreplace() {
     let wrk = Workdir::new("apply");
     wrk.create(
