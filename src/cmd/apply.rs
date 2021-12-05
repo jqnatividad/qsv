@@ -18,6 +18,7 @@ use strsim::{
     sorensen_dice,
 };
 use titlecase::titlecase;
+use vader_sentiment::{self, SentimentIntensityAnalyzer};
 
 static USAGE: &str = "
 Apply a series of transformation functions to a given CSV column. This can be used to
@@ -66,6 +67,7 @@ Currently supported operations:
   * simhm: Hamming distance to --comparand. Num of positions characters differ.
   * simod: OSA Distance to --comparand.
   * eudex: Multi-lingual sounds like --comparand (boolean)
+  * sentiment: Normalized VADER sentiment score (between -1.0 to 1.0).
 
 Examples:
 Trim, then transform to uppercase the surname field.
@@ -231,6 +233,7 @@ static OPERATIONS: &[&str] = &[
     "simhm",
     "simod",
     "eudex",
+    "sentiment",
 ];
 
 #[derive(Deserialize, Debug)]
@@ -259,6 +262,7 @@ static LOCS: OnceCell<Locations> = OnceCell::new();
 static GEOCODER: OnceCell<ReverseGeocoder> = OnceCell::new();
 static EUDEX_COMPARAND_HASH: OnceCell<eudex::Hash> = OnceCell::new();
 static REGEX_REPLACE: OnceCell<Regex> = OnceCell::new();
+static SENTIMENT_ANALYZER: OnceCell<SentimentIntensityAnalyzer> = OnceCell::new();
 
 pub fn replace_column_value(
     record: &csv::StringRecord,
@@ -305,6 +309,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut regex_replace_invokes = 0_usize;
     let mut sim_invokes = 0_usize;
     let mut eudex_invokes = 0_usize;
+    let mut sentiment_invokes = 0_usize;
     let operations: Vec<&str> = args.arg_operations.split(',').collect();
     if args.cmd_operations {
         for op in &operations {
@@ -356,6 +361,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     }
                     eudex_invokes += 1;
                 }
+                "sentiment" => {
+                    if args.flag_new_column.is_none() {
+                        return fail!("--new_column (-c) is required for sentiment operation.");
+                    }
+                    sentiment_invokes += 1;
+                }
                 _ => {}
             }
         }
@@ -365,8 +376,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         || regex_replace_invokes > 1
         || sim_invokes > 1
         || eudex_invokes > 1
+        || sentiment_invokes > 1
     {
-        return fail!("you can only use censor, replace, regex_replace, similarity, or eudex ONCE per operation series.");
+        return fail!("you can only use censor, replace, regex_replace, similarity, eudex or sentiment ONCE per operation series.");
     };
 
     // prep progress bar
@@ -554,6 +566,12 @@ fn apply_operations(operations: &[&str], cell: &mut String, comparand: &str, rep
                     EUDEX_COMPARAND_HASH.get_or_init(|| eudex::Hash::new(&comparand));
                 let cell_hash = Hash::new(cell);
                 *cell = format!("{}", (cell_hash - *eudex_comparand_hash).similar());
+            }
+            "sentiment" => {
+                let sentiment_analyzer = SENTIMENT_ANALYZER
+                    .get_or_init(|| vader_sentiment::SentimentIntensityAnalyzer::new());
+                let sentiment_scores = sentiment_analyzer.polarity_scores(cell);
+                *cell = sentiment_scores.get("compound").unwrap().to_string();
             }
             _ => {} // this also handles copy, which is a noop
         }
