@@ -163,7 +163,7 @@ fn init_logger() {
         .format_for_files(flexi_logger::detailed_format)
         .o_append(true)
         .rotate(
-            Criterion::Size(100_000),
+            Criterion::Size(1_000_000),
             Naming::Numbers,
             Cleanup::KeepLogAndCompressedFiles(10, 100),
         )
