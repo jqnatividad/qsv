@@ -68,6 +68,7 @@ test-data-generation = { version = "0.3", optional = true }
 self_update = { version = "0.27", features = ["archive-zip", "rustls"], optional = true }
 log = "0.4.14"
 flexi_logger = { version = "0.20", features = ["compress"] }
+vader_sentiment = { version = "0.1.1", optional = true }
 
 [dev-dependencies]
 quickcheck = { version = "1", default-features = false }
@@ -77,6 +78,7 @@ log = "0.4"
 default = ["mimalloc"]
 lua = ["hlua"]
 foreach = []
-apply = ["cached", "currency", "eudex", "titlecase", "censor", "strsim", "reverse_geocoder", "once_cell", "chrono"]
+apply = ["cached", "currency", "eudex", "titlecase", "censor", "strsim", 
+         "reverse_geocoder", "once_cell", "chrono", "vader_sentiment"]
 generate = ["test-data-generation"]
 selfupdate = ["self_update"]
