@@ -42,11 +42,11 @@ Currently supported operations:
   * trim: Trim (drop whitespace left & right of the string)
   * ltrim: Left trim whitespace
   * rtrim: Right trim whitespace
-  * mtrim: Trims --comparand matches left & right of the string
-  * mltrim: Left trim --comparand matches
-  * mrtrim: Right trim --comparand matches
+  * mtrim: Trims --comparand matches left & right of the string (Rust trim_matches)
+  * mltrim: Left trim --comparand matches (Rust trim_start_matches)
+  * mrtrim: Right trim --comparand matches (Rust trim_end_matches)
   * replace: Replace all matches of a pattern (using --comparand)
-      with a string (using --replacement).
+      with a string (using --replacement) (Rust replace)
   * regex_replace: Replace all regex matches in --comparand w/ --replacement.
   * titlecase - capitalizes English text using Daring Fireball titlecase style
       https://daringfireball.net/2008/05/title_case 
