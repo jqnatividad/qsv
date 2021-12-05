@@ -1,15 +1,9 @@
 These are some very basic and unscientific benchmarks of various commands
 provided by the latest release of `qsv`. Please see below for more information.
 
-These benchmarks were primaly run with
-[worldcitiespop_mil.csv](https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/worldcitiespop_mil.zip),
-which is a 48mb, random 1,000,000 row subset of the world city population dataset
-from the [Data Science Toolkit](https://github.com/petewarden/dstkdata). Select benchmarks
-(`apply_datefmt`, `apply_empty_replace` and `apply_geocode`) were run with a 47mb, 100,000 row sample of NYC's 311 data
-([nyc-311-sample-100k.zip](https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/nyc-311-sample-100k.zip)),
-as the worldcitiespop.csv file didn't have dates, empty fields, nor lat/long coordinates in that order.
-
-These benchmarks were run on a Virtualbox v6.1 Windows 11 v21H2 VM with an AMD Ryzen 7 4800H,
+These benchmarks were compiled against a 1M row, 512 mb, 41 column [sample of NYC's 311 data]
+(https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/NYC_311_SR_2010-2020-sample-1M.7z)
+on a Virtualbox v6.1 Windows 11 v21H2 VM with an AMD Ryzen 7 4800H,
 32GB memory and a 1 TB SSD (VM configured with Ubuntu 20.04 LTS assigned 8 CPUs
 and 12 GB of memory).
 
