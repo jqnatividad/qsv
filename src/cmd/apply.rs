@@ -18,7 +18,7 @@ use strsim::{
     sorensen_dice,
 };
 use titlecase::titlecase;
-use vader_sentiment::{self, SentimentIntensityAnalyzer};
+use vader_sentiment::SentimentIntensityAnalyzer;
 use whatlang::detect;
 
 static USAGE: &str = "
@@ -476,10 +476,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
 #[inline]
 fn apply_operations(operations: &[&str], cell: &mut String, comparand: &str, replacement: &str) {
-    if cell.is_empty() {
-        *cell = "".to_string();
-        return;
-    }
     for op in operations {
         match op.as_ref() {
             "len" => {
@@ -591,9 +587,9 @@ fn apply_operations(operations: &[&str], cell: &mut String, comparand: &str, rep
                 let lang_info = detect(cell);
                 if let Some(lang_info) = lang_info {
                     if lang_info.is_reliable() && lang_info.confidence() >= 0.5 {
-                        *cell = format!("{}", lang_info.lang());
+                        *cell = format!("{:?}", lang_info.lang());
                     } else {
-                        *cell = format!("{}?", lang_info.lang());
+                        *cell = format!("{:?}?", lang_info.lang());
                     }
                 }
             }
@@ -609,8 +605,8 @@ fn apply_operations(operations: &[&str], cell: &mut String, comparand: &str, rep
     sync_writes = false
 )]
 fn search_cached(cell: &str, formatstr: &str) -> Option<String> {
-    let geocoder = GEOCODER
-        .get_or_init(|| ReverseGeocoder::new(LOCS.get_or_init(Locations::from_memory)));
+    let geocoder =
+        GEOCODER.get_or_init(|| ReverseGeocoder::new(LOCS.get_or_init(Locations::from_memory)));
 
     let locregex: &'static Regex =
         regex!(r"(?-u)([+-]?[0-9]+\.?[0-9]*|\.[0-9]+),\s*([+-]?[0-9]+\.?[0-9]*|\.[0-9]+)");
