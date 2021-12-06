@@ -675,6 +675,47 @@ fn apply_sentiment() {
 }
 
 #[test]
+fn apply_whatlang() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+       vec![
+            svec!["description"],
+            svec!["Y así mismo, aunque no son tan ágiles en el suelo como el vampiro común, son muy competentes al escalar por las ramas."],
+            svec!["See notes."],
+            svec!["Aquest és l’honor més gran que he rebut a la meva vida. La pau ha estat sempre la meva més gran preocupació."],
+            svec![""],
+            svec!["Showing that even in the modern warfare of the 1930s and 1940s, the dilapidated fortifications still had defensive usefulness."],
+            svec!["民國卅八年（ 1949年 ）， 從南京經 廣州 、 香港返回 香日德。 1950年6月 ，受十世班禪派遣， 前往西安代表班禪向彭德懷投誠 。"],
+            svec!["Rust（ラスト）は並列かつマルチパラダイムのプログラミング言語である"],
+            svec!["Мой дядя самых честных правил, Когда не в шутку занемог, Он уважать себя заставил И лучше выдумать не мог."],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("whatlang")
+        .arg("description")
+        .arg("--new-column")
+        .arg("language")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["description", "language"],
+        svec!["Y así mismo, aunque no son tan ágiles en el suelo como el vampiro común, son muy competentes al escalar por las ramas.", "Español"],
+        svec!["See notes.", "Català?"],
+        svec!["Aquest és l’honor més gran que he rebut a la meva vida. La pau ha estat sempre la meva més gran preocupació.", "Català"],
+        svec!["", ""],
+        svec!["Showing that even in the modern warfare of the 1930s and 1940s, the dilapidated fortifications still had defensive usefulness.", "English"],
+        svec!["民國卅八年（ 1949年 ）， 從南京經 廣州 、 香港返回 香日德。 1950年6月 ，受十世班禪派遣， 前往西安代表班禪向彭德懷投誠 。", "普通话"],
+        svec!["Rust（ラスト）は並列かつマルチパラダイムのプログラミング言語である", "日本語"],
+        svec!["Мой дядя самых честных правил, Когда не в шутку занемог, Он уважать себя заставил И лучше выдумать не мог.", "Русский"],
+
+  ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn apply_emptyreplace() {
     let wrk = Workdir::new("apply");
     wrk.create(
