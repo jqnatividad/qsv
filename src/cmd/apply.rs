@@ -68,8 +68,9 @@ Currently supported operations:
   * simhm: Hamming distance to --comparand. Num of positions characters differ.
   * simod: OSA Distance to --comparand.
   * eudex: Multi-lingual sounds like --comparand (boolean)
-  * sentiment: Normalized VADER sentiment score (between -1.0 to 1.0).
-  * whatlang: Language Detection.
+  * sentiment: Normalized VADER sentiment score (English only - between -1.0 to 1.0).
+  * whatlang: Language Detection. For 87 supported languages, see
+       https://github.com/greyblake/whatlang-rs/blob/master/SUPPORTED_LANGUAGES.md
 
 Examples:
 Trim, then transform to uppercase the surname field.
@@ -589,6 +590,8 @@ fn apply_operations(operations: &[&str], cell: &mut String, comparand: &str, rep
                     if lang_info.is_reliable() && lang_info.confidence() >= 0.5 {
                         *cell = format!("{:?}", lang_info.lang());
                     } else {
+                        // if confidence < 0.5 and !is_reliable(),
+                        // do best-guessed language and add a question mark
                         *cell = format!("{:?}?", lang_info.lang());
                     }
                 }
