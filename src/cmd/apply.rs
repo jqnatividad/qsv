@@ -18,7 +18,8 @@ use strsim::{
     sorensen_dice,
 };
 use titlecase::titlecase;
-use vader_sentiment::{self, SentimentIntensityAnalyzer};
+use vader_sentiment::SentimentIntensityAnalyzer;
+use whatlang::detect;
 
 static USAGE: &str = "
 Apply a series of transformation functions to a given CSV column. This can be used to
@@ -68,6 +69,7 @@ Currently supported operations:
   * simod: OSA Distance to --comparand.
   * eudex: Multi-lingual sounds like --comparand (boolean)
   * sentiment: Normalized VADER sentiment score (between -1.0 to 1.0).
+  * whatlang: Language Detection.
 
 Examples:
 Trim, then transform to uppercase the surname field.
@@ -234,6 +236,7 @@ static OPERATIONS: &[&str] = &[
     "simod",
     "eudex",
     "sentiment",
+    "whatlang",
 ];
 
 #[derive(Deserialize, Debug)]
@@ -366,6 +369,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         return fail!("--new_column (-c) is required for sentiment operation.");
                     }
                     sentiment_invokes += 1;
+                }
+                "whatlang" => {
+                    if args.flag_new_column.is_none() {
+                        return fail!(
+                            "--new_column (-c) is required for whatlang language detection."
+                        );
+                    }
                 }
                 _ => {}
             }
@@ -508,14 +518,14 @@ fn apply_operations(operations: &[&str], cell: &mut String, comparand: &str, rep
             }
             "regex_replace" => {
                 let regexreplace =
-                    REGEX_REPLACE.get_or_init(|| regex::Regex::new(&comparand).unwrap());
+                    REGEX_REPLACE.get_or_init(|| regex::Regex::new(comparand).unwrap());
                 *cell = regexreplace.replace_all(cell, replacement).to_string();
             }
             "censor_check" | "censor" => {
                 let censor = CENSOR.get_or_init(|| {
                     let mut censored_words = Censor::Standard + Zealous + Sex;
                     for (_pos, word) in comparand.split(',').enumerate() {
-                        censored_words = censored_words + word.trim();
+                        censored_words += word.trim();
                     }
                     censored_words
                 });
@@ -563,15 +573,25 @@ fn apply_operations(operations: &[&str], cell: &mut String, comparand: &str, rep
             "simod" => *cell = osa_distance(cell, comparand).to_string(),
             "eudex" => {
                 let eudex_comparand_hash =
-                    EUDEX_COMPARAND_HASH.get_or_init(|| eudex::Hash::new(&comparand));
+                    EUDEX_COMPARAND_HASH.get_or_init(|| eudex::Hash::new(comparand));
                 let cell_hash = Hash::new(cell);
                 *cell = format!("{}", (cell_hash - *eudex_comparand_hash).similar());
             }
             "sentiment" => {
                 let sentiment_analyzer = SENTIMENT_ANALYZER
-                    .get_or_init(|| vader_sentiment::SentimentIntensityAnalyzer::new());
+                    .get_or_init(vader_sentiment::SentimentIntensityAnalyzer::new);
                 let sentiment_scores = sentiment_analyzer.polarity_scores(cell);
                 *cell = sentiment_scores.get("compound").unwrap().to_string();
+            }
+            "whatlang" => {
+                let lang_info = detect(cell);
+                if let Some(lang_info) = lang_info {
+                    if lang_info.is_reliable() && lang_info.confidence() >= 0.5 {
+                        *cell = format!("{:?}", lang_info.lang());
+                    } else {
+                        *cell = format!("{:?}?", lang_info.lang());
+                    }
+                }
             }
             _ => {} // this also handles copy, which is a noop
         }
@@ -585,8 +605,8 @@ fn apply_operations(operations: &[&str], cell: &mut String, comparand: &str, rep
     sync_writes = false
 )]
 fn search_cached(cell: &str, formatstr: &str) -> Option<String> {
-    let geocoder = GEOCODER
-        .get_or_init(|| ReverseGeocoder::new(LOCS.get_or_init(|| Locations::from_memory())));
+    let geocoder =
+        GEOCODER.get_or_init(|| ReverseGeocoder::new(LOCS.get_or_init(Locations::from_memory)));
 
     let locregex: &'static Regex =
         regex!(r"(?-u)([+-]?[0-9]+\.?[0-9]*|\.[0-9]+),\s*([+-]?[0-9]+\.?[0-9]*|\.[0-9]+)");
