@@ -19,6 +19,7 @@ use strsim::{
 };
 use titlecase::titlecase;
 use vader_sentiment::{self, SentimentIntensityAnalyzer};
+use whatlang::detect;
 
 static USAGE: &str = "
 Apply a series of transformation functions to a given CSV column. This can be used to
@@ -68,6 +69,7 @@ Currently supported operations:
   * simod: OSA Distance to --comparand.
   * eudex: Multi-lingual sounds like --comparand (boolean)
   * sentiment: Normalized VADER sentiment score (between -1.0 to 1.0).
+  * whatlang: Language Detection.
 
 Examples:
 Trim, then transform to uppercase the surname field.
@@ -234,6 +236,7 @@ static OPERATIONS: &[&str] = &[
     "simod",
     "eudex",
     "sentiment",
+    "whatlang",
 ];
 
 #[derive(Deserialize, Debug)]
@@ -367,6 +370,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     }
                     sentiment_invokes += 1;
                 }
+                "whatlang" => {
+                    if args.flag_new_column.is_none() {
+                        return fail!(
+                            "--new_column (-c) is required for whatlang language detection."
+                        );
+                    }
+                }
                 _ => {}
             }
         }
@@ -466,6 +476,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
 #[inline]
 fn apply_operations(operations: &[&str], cell: &mut String, comparand: &str, replacement: &str) {
+    if cell.is_empty() {
+        *cell = "".to_string();
+        return;
+    }
     for op in operations {
         match op.as_ref() {
             "len" => {
@@ -572,6 +586,16 @@ fn apply_operations(operations: &[&str], cell: &mut String, comparand: &str, rep
                     .get_or_init(|| vader_sentiment::SentimentIntensityAnalyzer::new());
                 let sentiment_scores = sentiment_analyzer.polarity_scores(cell);
                 *cell = sentiment_scores.get("compound").unwrap().to_string();
+            }
+            "whatlang" => {
+                let lang_info = detect(cell);
+                if let Some(lang_info) = lang_info {
+                    if lang_info.is_reliable() && lang_info.confidence() >= 0.5 {
+                        *cell = format!("{}", lang_info.lang());
+                    } else {
+                        *cell = format!("{}?", lang_info.lang());
+                    }
+                }
             }
             _ => {} // this also handles copy, which is a noop
         }
