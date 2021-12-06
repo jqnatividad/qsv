@@ -31,6 +31,36 @@ fn apply_ops_upper() {
 }
 
 #[test]
+fn apply_ops_empty_shortcircuit() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["name"],
+            svec!["John"],
+            svec![""],
+            svec![""],
+            svec!["Hopkins"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("len")
+        .arg("name")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["name"],
+        svec!["4"],
+        svec!["0"],
+        svec!["0"],
+        svec!["7"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn apply_ops_titlecase() {
     let wrk = Workdir::new("apply");
     wrk.create(
@@ -465,7 +495,7 @@ fn apply_new_column() {
 }
 
 #[test]
-fn apply_currencytonum() {
+fn apply_ops_currencytonum() {
     let wrk = Workdir::new("apply");
     wrk.create(
         "data.csv",
@@ -533,7 +563,7 @@ fn apply_currencytonum() {
 }
 
 #[test]
-fn apply_similarity() {
+fn apply_ops_similarity() {
     let wrk = Workdir::new("apply");
     wrk.create(
         "data.csv",
@@ -567,7 +597,7 @@ fn apply_similarity() {
 }
 
 #[test]
-fn apply_similarity_eudex() {
+fn apply_ops_similarity_eudex() {
     let wrk = Workdir::new("apply");
     wrk.create(
         "data.csv",
@@ -603,7 +633,7 @@ fn apply_similarity_eudex() {
 }
 
 #[test]
-fn apply_similarity_more_eudex() {
+fn apply_ops_similarity_more_eudex() {
     let wrk = Workdir::new("apply");
     wrk.create(
         "data.csv",
@@ -641,7 +671,7 @@ fn apply_similarity_more_eudex() {
 }
 
 #[test]
-fn apply_sentiment() {
+fn apply_ops_sentiment() {
     let wrk = Workdir::new("apply");
     wrk.create(
         "data.csv",
@@ -675,7 +705,7 @@ fn apply_sentiment() {
 }
 
 #[test]
-fn apply_whatlang() {
+fn apply_ops_whatlang() {
     let wrk = Workdir::new("apply");
     wrk.create(
         "data.csv",
@@ -702,14 +732,14 @@ fn apply_whatlang() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["description", "language"],
-        svec!["Y así mismo, aunque no son tan ágiles en el suelo como el vampiro común, son muy competentes al escalar por las ramas.", "Español"],
-        svec!["See notes.", "Català?"],
-        svec!["Aquest és l’honor més gran que he rebut a la meva vida. La pau ha estat sempre la meva més gran preocupació.", "Català"],
+        svec!["Y así mismo, aunque no son tan ágiles en el suelo como el vampiro común, son muy competentes al escalar por las ramas.", "Spa"],
+        svec!["See notes.", "Cat?"],
+        svec!["Aquest és l’honor més gran que he rebut a la meva vida. La pau ha estat sempre la meva més gran preocupació.", "Cat"],
         svec!["", ""],
-        svec!["Showing that even in the modern warfare of the 1930s and 1940s, the dilapidated fortifications still had defensive usefulness.", "English"],
-        svec!["民國卅八年（ 1949年 ）， 從南京經 廣州 、 香港返回 香日德。 1950年6月 ，受十世班禪派遣， 前往西安代表班禪向彭德懷投誠 。", "普通话"],
-        svec!["Rust（ラスト）は並列かつマルチパラダイムのプログラミング言語である", "日本語"],
-        svec!["Мой дядя самых честных правил, Когда не в шутку занемог, Он уважать себя заставил И лучше выдумать не мог.", "Русский"],
+        svec!["Showing that even in the modern warfare of the 1930s and 1940s, the dilapidated fortifications still had defensive usefulness.", "Eng"],
+        svec!["民國卅八年（ 1949年 ）， 從南京經 廣州 、 香港返回 香日德。 1950年6月 ，受十世班禪派遣， 前往西安代表班禪向彭德懷投誠 。", "Cmn"],
+        svec!["Rust（ラスト）は並列かつマルチパラダイムのプログラミング言語である", "Jpn"],
+        svec!["Мой дядя самых честных правил, Когда не в шутку занемог, Он уважать себя заставил И лучше выдумать не мог.", "Rus"],
 
   ];
     assert_eq!(got, expected);
