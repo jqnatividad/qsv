@@ -6,7 +6,8 @@
 [![Crates.io](https://img.shields.io/crates/v/qsv.svg)](https://crates.io/crates/qsv)
 [![Minimum supported Rust version](https://img.shields.io/badge/Rust-1.56%2B-red?logo=rust)](#minimum-supported-rust-version)
 [![Discussions](https://img.shields.io/github/discussions/jqnatividad/qsv)](https://github.com/jqnatividad/qsv/discussions)
-[![Docs](https://img.shields.io/badge/wiki-docs-yellowgreen)](https://github.com/jqnatividad/qsv/wiki)   
+[![Docs](https://img.shields.io/badge/wiki-docs-yellowgreen)](https://github.com/jqnatividad/qsv/wiki)
+[![Downloads](https://img.shields.io/github/downloads/jqnatividad/qsv/total)](https://github.com/jqnatividad/qsv/releases/latest)   
 qsv is a command line program for indexing, slicing, analyzing, splitting, enriching, validating & joining
 CSV files. Commands are simple, fast and composable.
 
