@@ -140,7 +140,7 @@ commands are not unicode-aware and will ignore unicode values when matching and 
 * `QSV_WTR_BUFFER_CAPACITY` - set to change writer buffer size (bytes - default when not set: 65536)
 * `QSV_COMMENTS` - set to a comment character which will ignore any lines (including the header) that start with this character (default: comments disabled).
 * `QSV_LOG_LEVEL` - set to desired level (default - off, error, warn, info, trace, debug).
-* `QSV_LOG_DIR` - when logging is enabled, the directory where the log files will be stored. If the specified directory does not exist, qsv will attempt to create it. If not set, the log files are created in the directory where qsv was started. See [Logging](docs/Logging.md) for more info.
+* `QSV_LOG_DIR` - when logging is enabled, the directory where the log files will be stored. If the specified directory does not exist, qsv will attempt to create it. If not set, the log files are created in the directory where qsv was started. See [Logging](docs/Logging.md#logging) for more info.
 
 > **NOTE:** To get a list of all environment variables with the `QSV_` prefix, run `qsv --envlist`.
 
@@ -150,7 +150,6 @@ Feature Flags
 * `mimalloc` (default) - use the mimalloc allocator.
 * `apply` - enable `apply` command. This swiss-army knife of CSV transformations is very powerful, but it has a lot of dependencies that increases both compile time and binary size. 
 * `generate` - enable `generate` command. The test data generator also has a large dependency tree.
-* `selfupdate` - enables `qsv` to update itself to the latest release with the `--update` option.
 
 Both of the following commands are also very powerful that can be abused and present "foot-shooting" scenarios.
 * `lua` - enable `lua` command.
