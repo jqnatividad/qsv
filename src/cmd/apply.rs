@@ -522,14 +522,14 @@ fn apply_operations(operations: &[&str], cell: &mut String, comparand: &str, rep
             }
             "regex_replace" => {
                 let regexreplace =
-                    REGEX_REPLACE.get_or_init(|| regex::Regex::new(&comparand).unwrap());
+                    REGEX_REPLACE.get_or_init(|| regex::Regex::new(comparand).unwrap());
                 *cell = regexreplace.replace_all(cell, replacement).to_string();
             }
             "censor_check" | "censor" => {
                 let censor = CENSOR.get_or_init(|| {
                     let mut censored_words = Censor::Standard + Zealous + Sex;
                     for (_pos, word) in comparand.split(',').enumerate() {
-                        censored_words = censored_words + word.trim();
+                        censored_words += word.trim();
                     }
                     censored_words
                 });
@@ -577,13 +577,13 @@ fn apply_operations(operations: &[&str], cell: &mut String, comparand: &str, rep
             "simod" => *cell = osa_distance(cell, comparand).to_string(),
             "eudex" => {
                 let eudex_comparand_hash =
-                    EUDEX_COMPARAND_HASH.get_or_init(|| eudex::Hash::new(&comparand));
+                    EUDEX_COMPARAND_HASH.get_or_init(|| eudex::Hash::new(comparand));
                 let cell_hash = Hash::new(cell);
                 *cell = format!("{}", (cell_hash - *eudex_comparand_hash).similar());
             }
             "sentiment" => {
                 let sentiment_analyzer = SENTIMENT_ANALYZER
-                    .get_or_init(|| vader_sentiment::SentimentIntensityAnalyzer::new());
+                    .get_or_init(vader_sentiment::SentimentIntensityAnalyzer::new);
                 let sentiment_scores = sentiment_analyzer.polarity_scores(cell);
                 *cell = sentiment_scores.get("compound").unwrap().to_string();
             }
@@ -610,7 +610,7 @@ fn apply_operations(operations: &[&str], cell: &mut String, comparand: &str, rep
 )]
 fn search_cached(cell: &str, formatstr: &str) -> Option<String> {
     let geocoder = GEOCODER
-        .get_or_init(|| ReverseGeocoder::new(LOCS.get_or_init(|| Locations::from_memory())));
+        .get_or_init(|| ReverseGeocoder::new(LOCS.get_or_init(Locations::from_memory)));
 
     let locregex: &'static Regex =
         regex!(r"(?-u)([+-]?[0-9]+\.?[0-9]*|\.[0-9]+),\s*([+-]?[0-9]+\.?[0-9]*|\.[0-9]+)");
