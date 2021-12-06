@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.24.1] - 2021-12-06
+### Changed
+- changed selfupdate dependency to use pure Rust TLS implementation as cross no longer bundles OpenSSL, causing some binary builds using cross to fail.
 ## [0.24.0] - 2021-12-06
 ### Added
 * Add logging by @mhuang74 in https://github.com/jqnatividad/qsv/pull/116
