@@ -5,6 +5,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.24.0] - 2021-12-06
+### Added
+* Add logging by @mhuang74 in https://github.com/jqnatividad/qsv/pull/116
+* Environment variables for logging - `QSV_LOG_LEVEL` and `QSV_LOG_DIR` - see [Logging](https://github.com/jqnatividad/qsv/blob/master/docs/Logging.md#logging) for more details.
+* `sentiment` analysis `apply` operation by @jqnatividad in https://github.com/jqnatividad/qsv/pull/121
+* `whatlang` language detection `apply` operation by @jqnatividad in https://github.com/jqnatividad/qsv/pull/122
+* aarch64-apple-darwin prebuilt binary (Apple Silicon AKA M1)
+* `--envlist` convenience option to list all environment variables with the `QSV_` prefix
+
+### Changed
+* changed `MAX_JOBS` heuristic logical processor divisor from 4 to 3
+* `selfupdate` is no longer an optional feature
+
+## New Contributors
+* @mhuang74 made their first contribution in https://github.com/jqnatividad/qsv/pull/116
 ## [0.23.0] - 2021-11-29
 ### Added
 - added `--update` option. This allows qsv to check and update itself if there are new release binaries published on GitHub.
