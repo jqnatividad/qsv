@@ -24,7 +24,7 @@ Available commands
 ------------------
 | Command | Description |
 | --- | --- |
-| **[apply](/src/cmd/apply.rs#L23)** | Apply series of string, profanity, similarity, date, currency & geocoding transformations to a CSV column. _**(NEW)**_ |
+| **[apply](/src/cmd/apply.rs#L25)** | Apply series of string, date, currency & geocoding transformations to a CSV column. It also has some basic NLP functions (similarity, sentiment analysis, profanity, eudex & language detection). _**(NEW)**_ |
 | **[behead](/src/cmd/behead.rs#L7)** | Drop headers from a CSV. _**(NEW)**_ |
 | **[cat](/src/cmd/cat.rs#L7)** | Concatenate CSV files by row or by column. |
 | **[count](/src/cmd/count.rs#L7)**[^1] | Count the rows in a CSV file. (Instantaneous with an index.) |
