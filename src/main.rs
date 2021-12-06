@@ -1,5 +1,4 @@
 extern crate crossbeam_channel as channel;
-#[cfg(feature = "selfupdate")]
 #[macro_use]
 extern crate self_update;
 
@@ -98,7 +97,7 @@ Usage:
 Options:
     --list        List all commands available.
     --envlist     List all environment variables with the QSV_ prefix.
-    --update      Update qsv to the latest release (requires selfupdate feature).
+    --update      Update qsv to the latest release from GitHub.
     -h, --help    Display this message
     <command> -h  Display the command help message
     --version     Print version info, mem allocator, max_jobs, num_cpus then exit
@@ -116,7 +115,6 @@ struct Args {
     flag_update: bool,
 }
 
-#[cfg(feature = "selfupdate")]
 fn get_exec_name() -> Option<String> {
     std::env::current_exe()
         .ok()
@@ -124,7 +122,6 @@ fn get_exec_name() -> Option<String> {
         .and_then(|s| s.into_string().ok())
 }
 
-#[cfg(feature = "selfupdate")]
 fn qsv_update() -> Result<(), Box<dyn ::std::error::Error>> {
     let exec_name = get_exec_name().unwrap();
     let status = self_update::backends::github::Update::configure()
@@ -195,7 +192,6 @@ fn main() {
         util::show_env_vars();
         return;
     }
-    #[cfg(feature = "selfupdate")]
     if args.flag_update {
         if let Err(err) = qsv_update() {
             werr!("{}", err);
