@@ -164,3 +164,23 @@ jobs:
         asset_name: ${{ matrix.job.asset_name }}
         overwrite: true
         tag: ${{ needs.analyze-tags.outputs.previous-tag }}
+
+generate-hashes:
+    name: Generate release hashes for pre-built binaries
+    needs: [analyze-tags, publish]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: MCJack123/ghaction-generate-release-hashes@v1
+        with:
+          hash-type: sha256
+          file-name: hashes.txt
+      - name: Upload hashes to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: hashes.txt
+          asset_name: hashes.txt
+          overwrite: true
+          tag: ${{ needs.analyze-tags.outputs.previous-tag }}          
+ 
