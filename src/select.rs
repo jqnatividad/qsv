@@ -319,7 +319,7 @@ impl OneSelector {
                 first_record.len() - 1
             }),
             OneSelector::Index(i) => {
-                if first_record.len() == 0 {
+                if first_record.is_empty() {
                     return Err("Input is empty.".to_string());
                 }
                 if i < 1 || i > first_record.len() {

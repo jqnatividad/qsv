@@ -320,6 +320,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             if !OPERATIONS.contains(op) {
                 return fail!(format!("Unknown \"{}\" operation", op));
             }
+            #[allow(clippy::useless_asref)]
             match op.as_ref() {
                 "replace" => {
                     if args.flag_comparand.is_empty() || args.flag_replacement.is_empty() {
@@ -478,6 +479,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 #[inline]
 fn apply_operations(operations: &[&str], cell: &mut String, comparand: &str, replacement: &str) {
     for op in operations {
+        #[allow(clippy::useless_asref)]
         match op.as_ref() {
             "len" => {
                 *cell = cell.len().to_string();
