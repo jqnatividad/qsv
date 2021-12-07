@@ -165,7 +165,7 @@ jobs:
         overwrite: true
         tag: ${{ needs.analyze-tags.outputs.previous-tag }}
 
-generate-hashes:
+  generate-hashes:
     name: Generate release hashes for pre-built binaries
     needs: [analyze-tags, publish]
     runs-on: ubuntu-latest
