@@ -10,7 +10,7 @@ use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
 use crate::util;
 use crate::CliResult;
-use indicatif::ProgressBar;
+use indicatif::{ProgressBar, ProgressDrawTarget};
 use serde::Deserialize;
 
 static USAGE: &str = "
@@ -92,6 +92,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if !args.flag_quiet {
         record_count = util::count_rows(&rconfig);
         util::prep_progress(&progress, record_count);
+    } else {
+        progress.set_draw_target(ProgressDrawTarget::hidden());
     }
 
     while rdr.read_byte_record(&mut record)? {

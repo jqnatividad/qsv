@@ -6,7 +6,7 @@ use crate::util;
 use crate::CliError;
 use crate::CliResult;
 use hlua::{AnyLuaValue, Lua, LuaError, LuaTable};
-use indicatif::ProgressBar;
+use indicatif::{ProgressBar, ProgressDrawTarget};
 use serde::Deserialize;
 
 // TODO: options for boolean return coercion
@@ -153,6 +153,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if !args.flag_quiet {
         record_count = util::count_rows(&rconfig);
         util::prep_progress(&progress, record_count);
+    } else {
+        progress.set_draw_target(ProgressDrawTarget::hidden());
     }
 
     let mut record = csv::StringRecord::new();
