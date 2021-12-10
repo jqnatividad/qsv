@@ -76,7 +76,14 @@ Alternatively, you can compile from source by
 and installing `qsv` using Cargo:
 
 ```bash
-cargo install qsv
+cargo install qsv --path .
+```
+
+If you encounter compilation errors, ensure you're using the exact
+version of the dependencies qsv was built with by issuing:
+
+```bash
+cargo install qsv --path . --frozen
 ```
 
 Compiling from this repository also works similarly:
@@ -85,6 +92,8 @@ Compiling from this repository also works similarly:
 git clone git://github.com/jqnatividad/qsv
 cd qsv
 cargo build --release
+# or if you encounter compilation errors
+cargo build --release --frozen
 ```
 
 The compiled binary will end up in `./target/release/qsv`.
@@ -134,7 +143,7 @@ Environment Variables
 * `QSV_NO_HEADERS` - when set, the first row will **NOT** be interpreted as headers. Supersedes `QSV_TOGGLE_HEADERS`.
 * `QSV_TOGGLE_HEADERS` - if set to `1`, toggles header setting - i.e. inverts qsv header behavior, with no headers being the default, and setting `--no-headers` will actually mean headers will not be ignored.
 * `QSV_MAX_JOBS` - number of jobs to use for multi-threaded commands (currently `frequency`, `split` and `stats`). If not set, max_jobs is set
-to number of logical processors divided by four.  See [Parallelization](#parallelization) for more info.
+to number of logical processors divided by three.  See [Parallelization](#parallelization) for more info.
 * `QSV_REGEX_UNICODE` - if set, makes `search`, `searchset` and `replace` commands unicode-aware. For increased performance, these
 commands are not unicode-aware and will ignore unicode values when matching and will panic when unicode characters are used in the regex.
 * `QSV_RDR_BUFFER_CAPACITY` - set to change reader buffer size (bytes - default when not set: 16384)
@@ -196,7 +205,7 @@ If you want to use the standard allocator, use the `--no-default-features` flag
 when installing/compiling qsv, e.g.:
 
 ```bash
-cargo install qsv --no-default-features
+cargo install qsv --path . --no-default-features
 ```
 
 or 
@@ -205,7 +214,7 @@ or
 cargo build --release --no-default-features
 ```
 
-To find out what memory allocator qsv is using, do `qsv --version`. After the qsv version number, the allocator used is displayed ("`standard`" or "`mimalloc`"). Note that mimalloc is not supported on the `x86_64-pc-windows-gnu` and `arm` targets, and you'll need to use the "standard" allocator on those platforms.
+To find out what memory allocator qsv is using, run `qsv --version`. After the qsv version number, the allocator used is displayed ("`standard`" or "`mimalloc`"). Note that mimalloc is not supported on the `x86_64-pc-windows-gnu` and `arm` targets, and you'll need to use the "standard" allocator on those platforms.
 
 ### Buffer size
 Depending on your filesystem's configuration (e.g. block size, file system type, writing to remote file systems (e.g. sshfs, efs, nfs),
@@ -235,7 +244,7 @@ Use and fine-tune the [benchmark script](scripts/benchmark-basic.sh) when tweaki
 Don't be afraid to change the benchmark data and the qsv commands to something that is more representative of your
 workloads.
 
-Use the generated TSV files to meter and compare performance across platforms. You'd be surprised how performance varies
+Use the generated benchmark TSV files to meter and compare performance across platforms. You'd be surprised how performance varies
 across environments - e.g. qsv's `join` performs abysmally on Windows's WSL running Ubuntu 20.04 LTS, taking 172.44 seconds.
 On the same machine, running in a VirtualBox VM at that with the same Ubuntu version, `join` was done in 1.34 seconds - 
 two orders of magnitude faster!
