@@ -44,10 +44,7 @@ fn apply_ops_empty_shortcircuit() {
         ],
     );
     let mut cmd = wrk.command("apply");
-    cmd.arg("operations")
-        .arg("len")
-        .arg("name")
-        .arg("data.csv");
+    cmd.arg("operations").arg("len").arg("name").arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
