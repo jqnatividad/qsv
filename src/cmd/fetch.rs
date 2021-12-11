@@ -22,10 +22,10 @@ Usage:
 
 fetch options:
     --new-column=<name>        Put the fetched values in a new column instead.
-    --threads=<value>          Number of threads for concurrent requests.                 
-    --throttle-delay=<ms>      Set delay between requests in milliseconds. Recommend 1000 ms or greater (default: 5000 ms).
-    --http-header-file=<file>  File containing additional HTTP Request Headers. Useful for setting Authorization or overriding User Agent.
-    --cache-responses          Cache HTTP Responses to increase throughput.
+    --jobs=<value>             Number of concurrent requests.
+    --throttle=<ms>            Set throttle delay between requests in milliseconds. Recommend 1000 ms or greater (default: 5000 ms).
+    --header=<file>            File containing additional HTTP Request Headers. Useful for setting Authorization or overriding User Agent.
+    --cache                    Cache HTTP Responses to increase throughput.
     --on-error-store-error     On error, store HTTP error instead of blank value.
     --store-and-send-cookies   Automatically store and send cookies. Useful for authenticated sessions.
 
@@ -44,10 +44,10 @@ Common options:
 #[derive(Deserialize, Debug)]
 struct Args {
     flag_new_column: Option<String>,
-    flag_threads: Option<u8>,
-    flag_throttle_delay: Option<usize>,
-    flag_http_header_file: Option<String>,
-    flag_cache_responses: bool,
+    flag_jobs: Option<u8>,
+    flag_throttle: Option<usize>,
+    flag_header: Option<String>,
+    flag_cache: bool,
     flag_on_error_store_error: bool,
     flag_store_and_send_cookies: bool,
     flag_output: Option<String>,
@@ -79,10 +79,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             (&args.arg_column).clone(),
             (&args.arg_input).clone().unwrap(),
             &args.flag_new_column,
-            &args.flag_threads,
-            &args.flag_throttle_delay,
-            &args.flag_http_header_file,
-            &args.flag_cache_responses,
+            &args.flag_jobs,
+            &args.flag_throttle,
+            &args.flag_header,
+            &args.flag_cache,
             &args.flag_on_error_store_error,
             &args.flag_store_and_send_cookies,
             &args.flag_output,
@@ -97,23 +97,57 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .select(args.arg_column);
 
     let mut rdr = rconfig.reader()?;
-    let headers = rdr.byte_headers()?.clone();
+    let mut wtr = Config::new(&None).writer()?;
+
+    let mut headers = rdr.byte_headers()?.clone();
     let sel = rconfig.selection(&headers)?;
     let _column_index = *sel.iter().next().unwrap();    
+
+    assert!(sel.len() == 1, "Only one single URL column may be selected.");
 
     use reqwest::blocking::Client;
     let client = Client::new();
 
-    for row in rdr.byte_records() {
-        let row = row?;
-        for (_i, field) in sel.select(&row).enumerate() {
-            let url = String::from_utf8_lossy(field).to_string();
-            debug!("Fetching URL: {:?}", url);
-            let resp = client.get(url).send().unwrap();
-            let value = resp.text().unwrap().replace(",",";");
-            println!("{}", value);
+    if let Some(name) = &args.flag_new_column {
+
+        // write header with new column 
+        headers.push_field(name.as_bytes());
+        wtr.write_byte_record(&headers)?;
+
+        for row in rdr.byte_records() {
+            let mut record = row?;
+            for (_i, field) in sel.select(&record.clone()).enumerate() {
+                let url = String::from_utf8_lossy(field).to_string();
+                debug!("Fetching URL: {:?}", &url);
+                let resp = client.get(url).send().unwrap();
+                debug!("response: {:?}", &resp);
+                let value = resp.text().unwrap();
+                debug!("value: {:?}", &value);
+                let safe_value = value.replace("\"","'");
+                record.push_field(value.as_bytes());
+            }
+
+            wtr.write_byte_record(&record)?;
         }
-    }
+
+    } else {
+
+        // no valid new column name; only output fetched values 
+        for row in rdr.byte_records() {
+            let row = row?;
+            for (_i, field) in sel.select(&row).enumerate() {
+                let url = String::from_utf8_lossy(field).to_string();
+                debug!("Fetching URL: {:?}", &url);
+                let resp = client.get(url).send().unwrap();
+                debug!("response: {:?}", &resp);
+                let value = resp.text().unwrap();
+                debug!("value: {:?}", &value);
+                println!("\"{}\"", value.replace("\"","'"));
+            }
+        }
+
+    } 
+
 
     Ok(())
 }
