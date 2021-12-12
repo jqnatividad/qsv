@@ -5,7 +5,7 @@ use crate::util;
 use crate::CliResult;
 use crate::select::SelectColumns;
 use serde::Deserialize;
-use log::{debug, info};
+use log::{debug, error};
 
 static USAGE: &str = "
 Fetch values via an URL column, and optionally store them in a new column.
@@ -21,13 +21,14 @@ Usage:
     qsv fetch [options] [<column>] [<input>]
 
 fetch options:
-    --new-column=<name>        Put the fetched values in a new column instead.
-    --jobs=<value>             Number of concurrent requests.
-    --throttle=<ms>            Set throttle delay between requests in milliseconds. Recommend 1000 ms or greater (default: 5000 ms).
-    --header=<file>            File containing additional HTTP Request Headers. Useful for setting Authorization or overriding User Agent.
+    --new-column <name>        Put the fetched values in a new column instead.
+    --jql <selector>           Apply jql selector to API returned JSON value.
+    --jobs <value>             Number of concurrent requests.
+    --throttle <ms>            Set throttle delay between requests in milliseconds. Recommend 1000 ms or greater (default: 5000 ms).
+    --header <file>            File containing additional HTTP Request Headers. Useful for setting Authorization or overriding User Agent.
     --cache                    Cache HTTP Responses to increase throughput.
-    --on-error-store-error     On error, store HTTP error instead of blank value.
-    --store-and-send-cookies   Automatically store and send cookies. Useful for authenticated sessions.
+    --store-error              On error, store HTTP error instead of blank value.
+    --cookies                  Automatically store and send cookies. Useful for authenticated sessions.
 
 Common options:
     -h, --help                 Display this message
@@ -44,12 +45,13 @@ Common options:
 #[derive(Deserialize, Debug)]
 struct Args {
     flag_new_column: Option<String>,
+    flag_jql: Option<String>,
     flag_jobs: Option<u8>,
     flag_throttle: Option<usize>,
     flag_header: Option<String>,
     flag_cache: bool,
-    flag_on_error_store_error: bool,
-    flag_store_and_send_cookies: bool,
+    flag_store_error: bool,
+    flag_cookies: bool,
     flag_output: Option<String>,
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
@@ -66,6 +68,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     debug!("url column: {:?}, 
             input: {:?}, 
             new column: {:?}, 
+            jql: {:?},
             threads: {:?},
             throttle delay: {:?},
             http header file: {:?},
@@ -79,12 +82,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             (&args.arg_column).clone(),
             (&args.arg_input).clone().unwrap(),
             &args.flag_new_column,
+            &args.flag_jql,
             &args.flag_jobs,
             &args.flag_throttle,
             &args.flag_header,
             &args.flag_cache,
-            &args.flag_on_error_store_error,
-            &args.flag_store_and_send_cookies,
+            &args.flag_store_error,
+            &args.flag_cookies,
             &args.flag_output,
             &args.flag_no_headers,
             &args.flag_delimiter,
@@ -101,52 +105,80 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut headers = rdr.byte_headers()?.clone();
     let sel = rconfig.selection(&headers)?;
-    let _column_index = *sel.iter().next().unwrap();    
+    let column_index = *sel.iter().next().unwrap();
 
     assert!(sel.len() == 1, "Only one single URL column may be selected.");
 
     use reqwest::blocking::Client;
     let client = Client::new();
 
+    let mut include_existing_columns = false;
+
     if let Some(name) = &args.flag_new_column {
+        include_existing_columns = true;
 
         // write header with new column 
         headers.push_field(name.as_bytes());
         wtr.write_byte_record(&headers)?;
+    }
 
-        for row in rdr.byte_records() {
-            let mut record = row?;
-            for (_i, field) in sel.select(&record.clone()).enumerate() {
-                let url = String::from_utf8_lossy(field).to_string();
-                debug!("Fetching URL: {:?}", &url);
-                let resp = client.get(url).send().unwrap();
-                debug!("response: {:?}", &resp);
-                let value = resp.text().unwrap();
-                debug!("value: {:?}", &value);
-                let safe_value = value.replace("\"","'");
-                record.push_field(value.as_bytes());
-            }
 
+
+    for row in rdr.byte_records() {
+        let mut record = row?;
+        let selected_col_value = record[column_index].to_owned();
+
+        let url = String::from_utf8_lossy(&selected_col_value).to_string();
+        debug!("Fetching URL: {:?}", &url);
+
+        let resp = client.get(url).send().unwrap();
+        debug!("response: {:?}", &resp);
+
+        let api_value = resp.text().unwrap();
+        debug!("api value: {:?}", &api_value);
+
+        let mut final_value: String = (&api_value).clone();
+
+        // apply jql selector
+        if let Some(selectors) = &args.flag_jql {
+            use jql::walker;
+            use serde_json::{Deserializer, Value};
+
+            // TODO: check if api returns JSON
+            Deserializer::from_str(&api_value)
+            .into_iter::<Value>()
+            .for_each(|value| match value {
+                Ok(valid_json) => {
+                    // Walk through the JSON content with the provided selectors as
+                    // input.
+                    match walker(&valid_json, Some(selectors)) {
+                        Ok(selection) => {
+                                final_value = String::from(selection.as_str().unwrap_or_default());
+                                debug!("jql selected value: {:?}", &final_value);
+                        },
+                        Err(error) => {
+                            error!("Error selecting from JSON: {}", error);
+                        }
+                    }
+                }
+                Err(_) => {
+                    error!("Invalid JSON file or content");
+                }
+            });
+        }
+
+        
+
+        if include_existing_columns {
+            record.push_field(final_value.as_bytes());
             wtr.write_byte_record(&record)?;
+        } else {
+            let mut output_record = csv::ByteRecord::new();
+            output_record.push_field(final_value.as_bytes());
+            wtr.write_byte_record(&output_record)?;
         }
+    }
 
-    } else {
-
-        // no valid new column name; only output fetched values 
-        for row in rdr.byte_records() {
-            let row = row?;
-            for (_i, field) in sel.select(&row).enumerate() {
-                let url = String::from_utf8_lossy(field).to_string();
-                debug!("Fetching URL: {:?}", &url);
-                let resp = client.get(url).send().unwrap();
-                debug!("response: {:?}", &resp);
-                let value = resp.text().unwrap();
-                debug!("value: {:?}", &value);
-                println!("\"{}\"", value.replace("\"","'"));
-            }
-        }
-
-    } 
 
 
     Ok(())

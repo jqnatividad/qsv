@@ -69,6 +69,7 @@ self_update = { version = "0.27", features = ["archive-zip", "rustls"], optional
 log = "0.4.14"
 flexi_logger = { version = "0.20", features = ["compress"] }
 reqwest = { version = "0.11", features = ["blocking", "json"] }
+jql = "3.0.5"
 
 [dev-dependencies]
 quickcheck = { version = "1", default-features = false }
