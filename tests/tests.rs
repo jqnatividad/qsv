@@ -43,6 +43,7 @@ mod test_dedup;
 mod test_enumerate;
 mod test_exclude;
 mod test_explode;
+mod test_fetch;
 mod test_fill;
 mod test_fixlengths;
 mod test_flatten;
