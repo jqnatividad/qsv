@@ -2,6 +2,7 @@ use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
 use crate::util;
 use crate::CliResult;
+use cached::proc_macro::cached;
 use log::{debug, error};
 use serde::Deserialize;
 
@@ -127,45 +128,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     for row in rdr.byte_records() {
         record = row?;
         let selected_col_value = record[column_index].to_owned();
-
         let url = String::from_utf8_lossy(&selected_col_value).to_string();
         debug!("Fetching URL: {:?}", &url);
 
-        let resp = client.get(url).send().unwrap();
-        debug!("response: {:?}", &resp);
-
-        let api_value = resp.text().unwrap();
-        debug!("api value: {:?}", &api_value);
-
-        let mut final_value: String = (&api_value).clone();
-
-        // apply jql selector
-        if let Some(selectors) = &args.flag_jql {
-            use jql::walker;
-            use serde_json::{Deserializer, Value};
-
-            // TODO: check if api returns JSON
-            Deserializer::from_str(&api_value)
-                .into_iter::<Value>()
-                .for_each(|value| match value {
-                    Ok(valid_json) => {
-                        // Walk through the JSON content with the provided selectors as
-                        // input.
-                        match walker(&valid_json, Some(selectors)) {
-                            Ok(selection) => {
-                                final_value = String::from(selection.as_str().unwrap_or_default());
-                                debug!("jql selected value: {:?}", &final_value);
-                            }
-                            Err(error) => {
-                                error!("Error selecting from JSON: {}", error);
-                            }
-                        }
-                    }
-                    Err(_) => {
-                        error!("Invalid JSON file or content");
-                    }
-                });
-        }
+        let final_value = get_cached_response(&url, &client, &args.flag_jql);
 
         if include_existing_columns {
             record.push_field(final_value.as_bytes());
@@ -178,4 +144,44 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     Ok(())
+}
+
+#[cached(
+    key = "String",
+    convert = r#"{ format!("{}", url) }"#,
+    sync_writes = false
+)]
+fn get_cached_response(url: &String, client: &reqwest::blocking::Client, flag_jql: &Option<String>) -> String {
+    let resp = client.get(url).send().unwrap();
+    debug!("response: {:?}", &resp);
+    let api_value = resp.text().unwrap();
+    debug!("api value: {:?}", &api_value);
+    let mut final_value: String = (&api_value).clone();
+    if let Some(selectors) = flag_jql {
+        use jql::walker;
+        use serde_json::{Deserializer, Value};
+
+        // TODO: check if api returns JSON
+        Deserializer::from_str(&api_value)
+            .into_iter::<Value>()
+            .for_each(|value| match value {
+                Ok(valid_json) => {
+                    // Walk through the JSON content with the provided selectors as
+                    // input.
+                    match walker(&valid_json, Some(selectors)) {
+                        Ok(selection) => {
+                            final_value = String::from(selection.as_str().unwrap_or_default());
+                            debug!("jql selected value: {:?}", &final_value);
+                        }
+                        Err(error) => {
+                            error!("Error selecting from JSON: {}", error);
+                        }
+                    }
+                }
+                Err(_) => {
+                    error!("Invalid JSON file or content");
+                }
+            });
+    }
+    final_value
 }
