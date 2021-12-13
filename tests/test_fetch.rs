@@ -13,14 +13,13 @@ fn fetch_simple() {
         ],
     );
     let mut cmd = wrk.command("fetch");
-    cmd.arg("URL")
-        .arg("data.csv");
+    cmd.arg("URL").arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
-        svec![r#"{"post code": "90210"; "country": "United States"; "country abbreviation": "US"; "places": [{"place name": "Beverly Hills"; "longitude": "-118.4065"; "state": "California"; "state abbreviation": "CA"; "latitude": "34.0901"}]}"#],
-        svec![r#"{"post code": "94105"; "country": "United States"; "country abbreviation": "US"; "places": [{"place name": "San Francisco"; "longitude": "-122.3892"; "state": "California"; "state abbreviation": "CA"; "latitude": "37.7864"}]}"#],
-        svec![r#"{"post code": "92802"; "country": "United States"; "country abbreviation": "US"; "places": [{"place name": "Anaheim"; "longitude": "-117.9228"; "state": "California"; "state abbreviation": "CA"; "latitude": "33.8085"}]}"#],
+        svec!["{\"post code\": \"90210\", \"country\": \"United States\", \"country abbreviation\": \"US\", \"places\": [{\"place name\": \"Beverly Hills\", \"longitude\": \"-118.4065\", \"state\": \"California\", \"state abbreviation\": \"CA\", \"latitude\": \"34.0901\"}]}"],
+        svec!["{\"post code\": \"94105\", \"country\": \"United States\", \"country abbreviation\": \"US\", \"places\": [{\"place name\": \"San Francisco\", \"longitude\": \"-122.3892\", \"state\": \"California\", \"state abbreviation\": \"CA\", \"latitude\": \"37.7864\"}]}"],
+        svec!["{\"post code\": \"92802\", \"country\": \"United States\", \"country abbreviation\": \"US\", \"places\": [{\"place name\": \"Anaheim\", \"longitude\": \"-117.9228\", \"state\": \"California\", \"state abbreviation\": \"CA\", \"latitude\": \"33.8085\"}]}"],
     ];
     assert_eq!(got, expected);
 }
