@@ -122,8 +122,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         wtr.write_byte_record(&headers)?;
     }
 
+    #[allow(unused_assignments)]
+    let mut record = csv::ByteRecord::new();
     for row in rdr.byte_records() {
-        let mut record = row?;
+        record = row?;
         let selected_col_value = record[column_index].to_owned();
 
         let url = String::from_utf8_lossy(&selected_col_value).to_string();
