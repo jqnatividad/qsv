@@ -67,9 +67,11 @@ uuid = { version = "0.8.2", features = ["v4"] }
 test-data-generation = { version = "0.3", optional = true }
 self_update = { version = "0.27", features = ["archive-zip", "rustls"], default-features = false }
 log = "0.4.14"
-flexi_logger = { version = "0.20", features = ["compress"] }
+flexi_logger = { version = "0.21", features = ["compress"] }
 vader_sentiment = { version = "0.1.1", optional = true }
 whatlang = { version = "0.12.0", optional = true }
+reqwest = { version = "0.11", features = ["blocking", "json"] }
+jql = "3.0.5"
 
 [dev-dependencies]
 quickcheck = { version = "1", default-features = false }
