@@ -1,11 +1,9 @@
-use std::str::from_utf8;
-
 use crate::config::{Config, Delimiter};
+use crate::select::SelectColumns;
 use crate::util;
 use crate::CliResult;
-use crate::select::SelectColumns;
-use serde::Deserialize;
 use log::{debug, error};
+use serde::Deserialize;
 
 static USAGE: &str = "
 Fetch values via an URL column, and optionally store them in a new column.
@@ -57,15 +55,14 @@ struct Args {
     flag_delimiter: Option<Delimiter>,
     flag_quiet: bool,
     arg_column: SelectColumns,
-    arg_input: Option<String>
+    arg_input: Option<String>,
 }
-
-
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
-    debug!("url column: {:?}, 
+    debug!(
+        "url column: {:?}, 
             input: {:?}, 
             new column: {:?}, 
             jql: {:?},
@@ -78,21 +75,21 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             output: {:?}, 
             no_header: {:?}, 
             delimiter: {:?}, 
-            quiet: {:?}", 
-            (&args.arg_column).clone(),
-            (&args.arg_input).clone().unwrap(),
-            &args.flag_new_column,
-            &args.flag_jql,
-            &args.flag_jobs,
-            &args.flag_throttle,
-            &args.flag_header,
-            &args.flag_cache,
-            &args.flag_store_error,
-            &args.flag_cookies,
-            &args.flag_output,
-            &args.flag_no_headers,
-            &args.flag_delimiter,
-            &args.flag_quiet
+            quiet: {:?}",
+        (&args.arg_column).clone(),
+        (&args.arg_input).clone().unwrap(),
+        &args.flag_new_column,
+        &args.flag_jql,
+        &args.flag_jobs,
+        &args.flag_throttle,
+        &args.flag_header,
+        &args.flag_cache,
+        &args.flag_store_error,
+        &args.flag_cookies,
+        &args.flag_output,
+        &args.flag_no_headers,
+        &args.flag_delimiter,
+        &args.flag_quiet
     );
 
     let rconfig = Config::new(&args.arg_input)
@@ -107,7 +104,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let sel = rconfig.selection(&headers)?;
     let column_index = *sel.iter().next().unwrap();
 
-    assert!(sel.len() == 1, "Only one single URL column may be selected.");
+    assert!(
+        sel.len() == 1,
+        "Only one single URL column may be selected."
+    );
 
     use reqwest::blocking::Client;
     let client = Client::new();
@@ -117,12 +117,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if let Some(name) = &args.flag_new_column {
         include_existing_columns = true;
 
-        // write header with new column 
+        // write header with new column
         headers.push_field(name.as_bytes());
         wtr.write_byte_record(&headers)?;
     }
-
-
 
     for row in rdr.byte_records() {
         let mut record = row?;
@@ -146,28 +144,26 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
             // TODO: check if api returns JSON
             Deserializer::from_str(&api_value)
-            .into_iter::<Value>()
-            .for_each(|value| match value {
-                Ok(valid_json) => {
-                    // Walk through the JSON content with the provided selectors as
-                    // input.
-                    match walker(&valid_json, Some(selectors)) {
-                        Ok(selection) => {
+                .into_iter::<Value>()
+                .for_each(|value| match value {
+                    Ok(valid_json) => {
+                        // Walk through the JSON content with the provided selectors as
+                        // input.
+                        match walker(&valid_json, Some(selectors)) {
+                            Ok(selection) => {
                                 final_value = String::from(selection.as_str().unwrap_or_default());
                                 debug!("jql selected value: {:?}", &final_value);
-                        },
-                        Err(error) => {
-                            error!("Error selecting from JSON: {}", error);
+                            }
+                            Err(error) => {
+                                error!("Error selecting from JSON: {}", error);
+                            }
                         }
                     }
-                }
-                Err(_) => {
-                    error!("Invalid JSON file or content");
-                }
-            });
+                    Err(_) => {
+                        error!("Invalid JSON file or content");
+                    }
+                });
         }
-
-        
 
         if include_existing_columns {
             record.push_field(final_value.as_bytes());
@@ -178,8 +174,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             wtr.write_byte_record(&output_record)?;
         }
     }
-
-
 
     Ok(())
 }
