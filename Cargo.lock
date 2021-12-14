@@ -1615,7 +1615,7 @@ dependencies = [
 
 [[package]]
 name = "qsv"
-version = "0.24.1"
+version = "0.25.0-beta"
 dependencies = [
  "byteorder",
  "cached",
