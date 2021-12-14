@@ -70,7 +70,7 @@ log = "0.4.14"
 flexi_logger = { version = "0.21", features = ["compress"] }
 vader_sentiment = { version = "0.1.1", optional = true }
 whatlang = { version = "0.12.0", optional = true }
-reqwest = { version = "0.11", features = ["blocking", "json"] }
+reqwest = { version = "0.11", features = ["blocking", "json", "rustls-tls"], default-features = false }
 jql = "3.0.5"
 
 [dev-dependencies]
