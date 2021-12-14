@@ -8,8 +8,9 @@ fn fetch_simple() {
         vec![
             svec!["URL"],
             svec!["http://api.zippopotam.us/us/90210"],
-            svec!["http://api.zippopotam.us/us/94105"],
+            svec!["https://api.zippopotam.us/us/94105"],
             svec!["http://api.zippopotam.us/us/92802"],
+            svec!["https://query.wikidata.org/sparql?query=SELECT%20?dob%20WHERE%20{wd:Q42%20wdt:P569%20?dob.}&format=json"],
         ],
     );
     let mut cmd = wrk.command("fetch");
@@ -26,6 +27,22 @@ fn fetch_simple() {
         svec![
             r#"{"post code": "92802", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Anaheim", "longitude": "-117.9228", "state": "California", "state abbreviation": "CA", "latitude": "33.8085"}]}"#
         ],
+        svec![
+            r#"{
+  "head" : {
+    "vars" : [ "dob" ]
+  },
+  "results" : {
+    "bindings" : [ {
+      "dob" : {
+        "datatype" : "http://www.w3.org/2001/XMLSchema#dateTime",
+        "type" : "literal",
+        "value" : "1952-03-11T00:00:00Z"
+      }
+    } ]
+  }
+}"#     
+        ],
     ];
     assert_eq!(got, expected);
 }
@@ -39,7 +56,7 @@ fn fetch_jql() {
             svec!["URL"],
             svec!["http://api.zippopotam.us/us/90210"],
             svec!["http://api.zippopotam.us/us/94105"],
-            svec!["http://api.zippopotam.us/us/92802"],
+            svec!["https://api.zippopotam.us/us/92802"],
         ],
     );
     let mut cmd = wrk.command("fetch");
@@ -55,7 +72,7 @@ fn fetch_jql() {
         svec!["URL", "City"],
         svec!["http://api.zippopotam.us/us/90210", "Beverly Hills"],
         svec!["http://api.zippopotam.us/us/94105", "San Francisco"],
-        svec!["http://api.zippopotam.us/us/92802", "Anaheim"],
+        svec!["https://api.zippopotam.us/us/92802", "Anaheim"],
     ];
     assert_eq!(got, expected);
 }
