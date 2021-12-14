@@ -5,11 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-## [0.25.1-beta] - 2021-12-13
-## Changed
-- configure reqwest dependency to not use OpenSSL as cross compile for pre-built binaries will not work as cross no longer bundles OpenSSL
 
-## [0.25.0-beta] - 2021-12-13
+## [0.25.2-beta] - 2021-12-13
 ## Added
 * `fetch` command by [@mhuang74](https://github.com/mhuang74). Note that the command is functional but still WIP, that's why this is a beta release.
 * Download badge for GitHub pre-built binaries
