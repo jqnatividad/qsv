@@ -116,19 +116,11 @@ struct Args {
     flag_update: bool,
 }
 
-fn get_exec_name() -> Option<String> {
-    std::env::current_exe()
-        .ok()
-        .and_then(|pb| pb.file_name().map(|s| s.to_os_string()))
-        .and_then(|s| s.into_string().ok())
-}
-
 fn qsv_update() -> Result<(), Box<dyn ::std::error::Error>> {
-    let exec_name = get_exec_name().unwrap();
     let status = self_update::backends::github::Update::configure()
         .repo_owner("jqnatividad")
         .repo_name("qsv")
-        .bin_name(&exec_name)
+        .bin_name("qsv")
         .show_download_progress(true)
         .show_output(true)
         .no_confirm(false)
