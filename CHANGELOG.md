@@ -5,6 +5,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.25.0-beta] - 2021-12-13
+## Added
+* `fetch` command by [@mhuang74](https://github.com/mhuang74). Note that the command is functional but still WIP, that's why this is a beta release.
+* Download badge for GitHub pre-built binaries
+* Compute hashes for pre-built binaries for verification
+
+## Changed
+* Additional helptext for `apply` NLP functions
+* standardized on canonical way to suppress progress bars with `--quiet` option
+* README: Mentioned `--frozen` option when installing/building qsv; wordsmithing
+* rustfmt; clippy
+
+## Deleted
+* remove obsolete Makefile and .gitsubmodules
 ## [0.24.1] - 2021-12-06
 ### Changed
 - changed selfupdate dependency to use pure Rust TLS implementation as cross no longer bundles OpenSSL, causing some binary builds using cross to fail.
