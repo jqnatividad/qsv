@@ -59,6 +59,13 @@ struct Args {
     arg_input: Option<String>,
 }
 
+static DEFAULT_USER_AGENT: &str = concat!(
+    env!("CARGO_PKG_NAME"),
+    "/",
+    env!("CARGO_PKG_VERSION"),
+    " (https://github.com/jqnatividad/qsv)",
+);
+
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
@@ -111,7 +118,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     );
 
     use reqwest::blocking::Client;
-    let client = Client::new();
+    let client = Client::builder()
+        .user_agent(DEFAULT_USER_AGENT)
+        .build()
+        .unwrap();
 
     let mut include_existing_columns = false;
 
