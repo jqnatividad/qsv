@@ -1520,7 +1520,7 @@ dependencies = [
 
 [[package]]
 name = "qsv"
-version = "0.25.0-beta"
+version = "0.25.1-beta"
 dependencies = [
  "byteorder",
  "cached",
