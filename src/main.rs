@@ -48,7 +48,7 @@ macro_rules! command_list {
     enum        Add a new column enumerating CSV lines
     exclude     Excludes the records in one CSV from another
     explode     Explode rows based on some column separator
-    fetch       Create a new column or fetch values from an URL column.
+    fetch       Create a new column or fetch values from a URL column
     fill        Fill empty values
     fixlengths  Makes all records have same length
     flatten     Show one field per line
