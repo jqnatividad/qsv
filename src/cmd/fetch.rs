@@ -3,6 +3,7 @@ use crate::select::SelectColumns;
 use crate::util;
 use crate::CliResult;
 use cached::proc_macro::cached;
+use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::{debug, error};
 use serde::Deserialize;
 
@@ -20,12 +21,11 @@ Usage:
     qsv fetch [options] [<column>] [<input>]
 
 fetch options:
-    --new-column <name>        Put the fetched values in a new column instead.
+    -c, --new-column <name>    Put the fetched values in a new column instead.
     --jql <selector>           Apply jql selector to API returned JSON value.
-    --jobs <value>             Number of concurrent requests.
+    -j, --jobs <value>         Number of concurrent requests.
     --throttle <ms>            Set throttle delay between requests in milliseconds. Recommend 1000 ms or greater (default: 5000 ms).
     --header <file>            File containing additional HTTP Request Headers. Useful for setting Authorization or overriding User Agent.
-    --cache                    Cache HTTP Responses to increase throughput.
     --store-error              On error, store HTTP error instead of blank value.
     --cookies                  Automatically store and send cookies. Useful for authenticated sessions.
 
@@ -48,7 +48,6 @@ struct Args {
     flag_jobs: Option<u8>,
     flag_throttle: Option<usize>,
     flag_header: Option<String>,
-    flag_cache: bool,
     flag_store_error: bool,
     flag_cookies: bool,
     flag_output: Option<String>,
@@ -77,7 +76,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             threads: {:?},
             throttle delay: {:?},
             http header file: {:?},
-            cache response: {:?},
             store error: {:?},
             store cookie: {:?},
             output: {:?}, 
@@ -91,7 +89,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         &args.flag_jobs,
         &args.flag_throttle,
         &args.flag_header,
-        &args.flag_cache,
         &args.flag_store_error,
         &args.flag_cookies,
         &args.flag_output,
@@ -133,10 +130,25 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         wtr.write_byte_record(&headers)?;
     }
 
+    // prep progress bar
+    let mut record_count = 0_u64;
+    let progress = ProgressBar::new(0);
+    if !args.flag_quiet {
+        record_count = util::count_rows(&rconfig);
+        util::prep_progress(&progress, record_count);
+    } else {
+        progress.set_draw_target(ProgressDrawTarget::hidden());
+    }
+
     #[allow(unused_assignments)]
     let mut record = csv::ByteRecord::new();
     for row in rdr.byte_records() {
         record = row?;
+
+        if !args.flag_quiet {
+            progress.inc(1);
+        }
+
         let selected_col_value = record[column_index].to_owned();
         let url = String::from_utf8_lossy(&selected_col_value).to_string();
         debug!("Fetching URL: {:?}", &url);
@@ -153,6 +165,24 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     }
 
+    if !args.flag_quiet {
+        use cached::Cached;
+        use thousands::Separable;
+
+        let cache = GET_CACHED_RESPONSE.lock().unwrap();
+        let cache_size = cache.cache_size();
+        let hits = cache.cache_hits().unwrap();
+        let misses = cache.cache_misses().unwrap();
+        let hit_ratio = (hits as f64 / (hits + misses) as f64) * 100.0;
+        progress.set_message(format!(
+            " of {} records. Cache hit ratio: {:.2}% - {} entries",
+            record_count.separate_with_commas(),
+            hit_ratio,
+            cache_size.separate_with_commas(),
+        ));
+        util::finish_progress(&progress);
+    }
+
     Ok(())
 }
 
@@ -161,7 +191,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     convert = r#"{ format!("{}", url) }"#,
     sync_writes = false
 )]
-fn get_cached_response(url: &String, client: &reqwest::blocking::Client, flag_jql: &Option<String>) -> String {
+fn get_cached_response(
+    url: &str,
+    client: &reqwest::blocking::Client,
+    flag_jql: &Option<String>,
+) -> String {
     let resp = client.get(url).send().unwrap();
     debug!("response: {:?}", &resp);
     let api_value = resp.text().unwrap();
