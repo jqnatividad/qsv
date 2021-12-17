@@ -148,10 +148,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     lua_program.push_str(&lua_script);
 
-    let mut record_count: u64 = 0;
-    let progress = ProgressBar::new(record_count);
+    let progress = ProgressBar::new(0);
     if !args.flag_quiet {
-        record_count = util::count_rows(&rconfig);
+        let record_count = util::count_rows(&rconfig);
         util::prep_progress(&progress, record_count);
     } else {
         progress.set_draw_target(ProgressDrawTarget::hidden());

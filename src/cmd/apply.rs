@@ -394,10 +394,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     // prep progress bar
-    let mut record_count = 0_u64;
     let progress = ProgressBar::new(0);
     if !args.flag_quiet {
-        record_count = util::count_rows(&rconfig);
+        let record_count = util::count_rows(&rconfig);
         util::prep_progress(&progress, record_count);
     } else {
         progress.set_draw_target(ProgressDrawTarget::hidden());
@@ -466,7 +465,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let hit_ratio = (hits as f64 / (hits + misses) as f64) * 100.0;
             progress.set_message(format!(
                 " of {} records. Geocode cache hit ratio: {:.2}% - {} entries",
-                record_count.separate_with_commas(),
+                progress.length().separate_with_commas(),
                 hit_ratio,
                 cache_size.separate_with_commas(),
             ));
