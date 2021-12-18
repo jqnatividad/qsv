@@ -52,7 +52,7 @@ tabwriter = "1.2"
 threadpool = "1.8"
 chrono = { version = "0.4", optional = true }
 dateparser = "0.1.6"
-once_cell = { version = "1.8", optional = true }
+once_cell = { version = "1.9", optional = true }
 reverse_geocoder = { version = "2", optional = true }
 currency = { version = "0.4", optional = true }
 itertools = "0.10"
@@ -67,7 +67,7 @@ uuid = { version = "0.8.2", features = ["v4"] }
 test-data-generation = { version = "0.3", optional = true }
 self_update = { version = "0.28", features = ["archive-zip", "rustls"], default-features = false }
 log = "0.4.14"
-flexi_logger = { version = "0.21", features = ["compress"] }
+flexi_logger = { version = "0.22", features = ["compress"] }
 vader_sentiment = { version = "0.1.1", optional = true }
 whatlang = { version = "0.12.0", optional = true }
 reqwest = { version = "0.11", features = ["blocking", "json", "rustls-tls"], default-features = false }
@@ -75,7 +75,6 @@ jql = { version = "3.0.6", default-features = false }
 
 [dev-dependencies]
 quickcheck = { version = "1", default-features = false }
-log = "0.4"
 
 [features]
 default = ["mimalloc"]
