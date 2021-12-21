@@ -6,6 +6,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.0] - 2021-12-21
+### Changed
+* `fetch` refinements. Still WIP, but usable (See [#77](https://github.com/jqnatividad/qsv/issues/77))
+  - add default user agent
+  - `fetch` progress bar
+  - `--jobs`, `--throttle`, `--header`, `--store-error` and `cookies` options still not functional.
+* cargo update bump several crates to their latest releases. Of note are `test-data-generation`, 
+`self_update` and `jql` where we worked with the crate maintainers directly with the update.
+
+### Fixed
+* `--update` bug fixed. It was not finding the binary to self update properly.
+
+
 ## [0.25.2-beta] - 2021-12-13
 ## Added
 * `fetch` command by [@mhuang74](https://github.com/mhuang74). Note that the command is functional but still WIP, that's why this is a beta release.
