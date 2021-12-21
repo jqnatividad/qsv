@@ -155,7 +155,7 @@ jobs:
         mkdir qsv-${{ needs.analyze-tags.outputs.previous-tag }}
         cp target/${{ matrix.job.target }}/release/${{ matrix.job.artifact_name }} qsv-${{ needs.analyze-tags.outputs.previous-tag }}        
     - name: Zip up binary
-      run: 7z a -tzip ${{ matrix.job.asset_name }} qsv-${{ needs.analyze-tags.outputs.previous-tag }}/${{ matrix.job.artifact_name }}
+      run: 7z a -tzip ${{ matrix.job.asset_name }} ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/${{ matrix.job.artifact_name }}
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v2
       with:
