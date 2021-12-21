@@ -2398,6 +2398,7 @@ checksum = "93ab48844d61251bb3835145c521d88aa4031d7139e8485990f60ca911fa0815"
 dependencies = [
  "byteorder",
  "crc32fast",
+ "flate2",
  "thiserror",
  "time 0.1.43",
 ]
