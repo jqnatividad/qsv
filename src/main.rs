@@ -1,6 +1,5 @@
 extern crate crossbeam_channel as channel;
-#[macro_use]
-extern crate self_update;
+use self_update::cargo_crate_version;
 
 use std::borrow::ToOwned;
 use std::env;
@@ -96,12 +95,13 @@ Usage:
     qsv [options]
 
 Options:
-    --list        List all commands available.
-    --envlist     List all environment variables with the QSV_ prefix.
-    --update      Update qsv to the latest release from GitHub.
-    -h, --help    Display this message
-    <command> -h  Display the command help message
-    --version     Print version info, mem allocator, max_jobs, num_cpus then exit
+    --list               List all commands available.
+    --envlist            List all environment variables with the QSV_ prefix.
+    -u, --update         Update qsv to the latest release from GitHub.
+    --skip-update-check  Skip automatic update check.
+    -h, --help           Display this message
+    <command> -h         Display the command help message
+    -v, --version        Print version info, mem allocator, max_jobs, num_cpus then exit
 
 Commands:",
     command_list!()
@@ -112,27 +112,46 @@ struct Args {
     arg_command: Option<Command>,
     flag_list: bool,
     flag_envlist: bool,
-    #[allow(dead_code)]
     flag_update: bool,
+    flag_skip_update_check: bool,
 }
 
-fn qsv_update() -> Result<(), Box<dyn ::std::error::Error>> {
-    let status = self_update::backends::github::Update::configure()
+fn qsv_update(verbose: bool) -> Result<(), Box<dyn ::std::error::Error>> {
+    if env::var("QSV_NO_UPDATE").is_ok() {
+        return Ok(());
+    }
+
+    let curr_version = cargo_crate_version!();
+    let releases = self_update::backends::github::ReleaseList::configure()
         .repo_owner("jqnatividad")
         .repo_name("qsv")
-        .bin_name("qsv")
-        .show_download_progress(true)
-        .show_output(true)
-        .no_confirm(false)
-        .current_version(cargo_crate_version!())
         .build()?
-        .update()?;
-    let exe_full_path = format!("{:?}", std::env::current_exe().unwrap());
-    println!(
-        "Update status for {}: `{}`!",
-        exe_full_path,
-        status.version()
-    );
+        .fetch()?;
+    let latest_release = &releases[0].version;
+    if latest_release > &curr_version.to_string() {
+        println!(
+            "Update {} available. Current version is {}.",
+            latest_release, curr_version
+        );
+        let status = self_update::backends::github::Update::configure()
+            .repo_owner("jqnatividad")
+            .repo_name("qsv")
+            .bin_name("qsv")
+            .show_download_progress(true)
+            .show_output(verbose)
+            .no_confirm(false)
+            .current_version(curr_version)
+            .build()?
+            .update()?;
+        let exe_full_path = format!("{:?}", std::env::current_exe().unwrap());
+        if verbose {
+            println!(
+                "Update successful for {}: `{}`!",
+                exe_full_path,
+                status.version()
+            );
+        }
+    }
     Ok(())
 }
 
@@ -186,7 +205,7 @@ fn main() {
         return;
     }
     if args.flag_update {
-        if let Err(err) = qsv_update() {
+        if let Err(err) = qsv_update(true) {
             werr!("{}", err);
             ::std::process::exit(1);
         }
@@ -200,7 +219,16 @@ fn main() {
 Please choose one of the following commands:",
                 command_list!()
             ));
-            process::exit(0);
+            if !args.flag_skip_update_check {
+                if let Err(err) = qsv_update(false) {
+                    werr!("{}", err);
+                    ::std::process::exit(1);
+                } else {
+                    ::std::process::exit(0);
+                }
+            } else {
+                ::std::process::exit(0);
+            }
         }
         Some(cmd) => match cmd.run() {
             Ok(()) => {
