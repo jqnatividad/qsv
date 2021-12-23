@@ -167,8 +167,9 @@ jobs:
         version: latest
         files: |
           ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/*
+        args: --lzma
     - name: Zip up binary
-      run: 7z a -tzip ${{ matrix.job.asset_name }} ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/${{ matrix.job.artifact_name }} -mx=9 -mmt=on -mpass=7
+      run: 7z a -tzip ${{ matrix.job.asset_name }} ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/${{ matrix.job.artifact_name }} -mx=0
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v2
       with:
