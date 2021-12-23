@@ -160,6 +160,13 @@ jobs:
         brew install upx
         cd qsv-${{ needs.analyze-tags.outputs.previous-tag }}
         upx qsv
+    - name: compress binaries with upx on windows/linux
+      if: ${{ matrix.job.os-name != 'macos' }}
+      uses: crazy-max/ghaction-upx@v1
+      with:
+        version: latest
+        files: |
+          ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/qsv*.*
     - name: Zip up binary
       run: 7z a -tzip ${{ matrix.job.asset_name }} ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/${{ matrix.job.artifact_name }} -mx=9 -mmt=on -mpass=7
     - name: Upload binaries to release
