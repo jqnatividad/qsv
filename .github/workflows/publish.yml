@@ -178,11 +178,11 @@ jobs:
         files: |
           ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/*
         args: --lzma
-    - name: if upx, zip store binary
+    - name: if upx zip store binary
       if: ${{ matrix.job.upx }}
       run: 7z a -tzip ${{ matrix.job.asset_name }} ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/${{ matrix.job.artifact_name }} -mx=0
-    - name: else, zip compress binary
-      if: ${{ !matrix.job.upx }}    
+    - name: otherwise zip compress binary
+      if: ${{ matrix.job.upx == false }}    
       run: 7z a -tzip ${{ matrix.job.asset_name }} ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/${{ matrix.job.artifact_name }} -mx=9 -mmt=on -mpass=7
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v2
