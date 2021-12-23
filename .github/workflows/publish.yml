@@ -137,7 +137,7 @@ jobs:
     - name: build prep for aarch64-apple-darwin
       if: ${{ matrix.job.build-prep }}
       run: |
-        sudo xcode-select -s "/Applications/Xcode_12.4.app"
+        sudo xcode-select -s "/Applications/Xcode_12.5.1.app"
         sudo rm -Rf /Library/Developer/CommandLineTools/SDKs/*
     - name: Cargo build
       uses: actions-rs/cargo@v1
