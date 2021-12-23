@@ -1,6 +1,8 @@
 use std::env;
 use std::fmt;
 use std::fs;
+use std::fs::File;
+use std::io::Write;
 use std::io::{self, Read};
 use std::path::{Path, PathBuf};
 use std::process;
@@ -72,6 +74,14 @@ impl Workdir {
         let mut cmd = self.command("index");
         cmd.arg(name);
         self.run(&mut cmd);
+    }
+
+    pub fn create_from_string(&self, name: &str, data: &str) {
+        let filename = &self.path(name);
+        println!("{:?}", filename);
+        let mut file = File::create(filename).unwrap();
+        file.write_all(data.as_bytes()).unwrap();
+        file.flush().unwrap();
     }
 
     pub fn read_stdout<T: Csv>(&self, cmd: &mut process::Command) -> T {
