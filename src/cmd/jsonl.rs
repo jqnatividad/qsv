@@ -38,7 +38,11 @@ fn recurse_to_infer_headers(value: &Value, headers: &mut Vec<Vec<String>>, path:
         Value::Object(map) => {
             for (key, value) in map.iter() {
                 match value {
-                    Value::Null | Value::Bool(_) | Value::Number(_) | Value::String(_) => {
+                    Value::Null
+                    | Value::Bool(_)
+                    | Value::Number(_)
+                    | Value::String(_)
+                    | Value::Array(_) => {
                         let mut full_path = path.clone();
                         full_path.push(key.to_string());
 
@@ -103,6 +107,11 @@ fn json_line_to_csv_record(value: &Value, headers: &Vec<Vec<String>>) -> csv::St
                 }
                 Value::Number(v) => v.to_string(),
                 Value::String(v) => v,
+                Value::Array(v) => v
+                    .iter()
+                    .map(|x| x.to_string())
+                    .collect::<Vec<_>>()
+                    .join(","),
                 _ => String::new(),
             });
         } else {
