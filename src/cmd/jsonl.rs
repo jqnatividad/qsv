@@ -54,6 +54,7 @@ fn recurse_to_infer_headers(value: &Value, headers: &mut Vec<Vec<String>>, path:
 
                         recurse_to_infer_headers(value, headers, new_path);
                     }
+                    #[allow(unreachable_patterns)]
                     _ => {}
                 }
             }
