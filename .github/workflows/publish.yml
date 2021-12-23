@@ -109,7 +109,6 @@ jobs:
             use-cross: true
             strip: false
             addl-build-args: --features=apply,generate,lua,foreach
-            strip: true
             upx: false
           - os: ubuntu-latest
             os-name: linux
