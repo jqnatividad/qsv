@@ -35,7 +35,6 @@ impl Workdir {
             .join(QSV_INTEGRATION_TEST_DIR)
             .join(name)
             .join(&format!("test-{}", id));
-        // println!("{:?}", dir);
         if let Err(err) = create_dir_all(&dir) {
             panic!("Could not create '{:?}': {}", dir, err);
         }
