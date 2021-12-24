@@ -156,9 +156,9 @@ jobs:
         use-cross: ${{ matrix.job.use-cross }}
         toolchain: ${{ matrix.rust }}
         args: --release --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }}
-    - name: strip binary on *nix environments
-      if: ${{ matrix.job.strip }}
-      run: strip target/${{ matrix.job.target }}/release/${{ matrix.job.artifact_name }}
+#    - name: strip binary on *nix environments
+#      if: ${{ matrix.job.strip }}
+#      run: strip target/${{ matrix.job.target }}/release/${{ matrix.job.artifact_name }}
     - name: Copy binary to working dir
       shell: bash
       run: |
