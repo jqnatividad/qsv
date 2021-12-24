@@ -48,7 +48,7 @@ jobs:
             use-cross: true
             strip: true
             addl-build-args: --features=apply,generate,lua,foreach
-            upx: true
+            upx: false
           - os: windows-latest
             os-name: windows
             target: x86_64-pc-windows-msvc
