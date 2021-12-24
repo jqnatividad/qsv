@@ -177,7 +177,7 @@ jobs:
         version: latest
         files: |
           ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/*
-        args: --lzma
+        args: --lzma --force --verbose
     - name: if upx zip store binary
       if: ${{ matrix.job.upx }}
       run: 7z a -tzip ${{ matrix.job.asset_name }} ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/${{ matrix.job.artifact_name }} -mx=0
