@@ -73,7 +73,7 @@ fn infer_headers(value: &Value) -> Option<Vec<Vec<String>>> {
     Some(headers)
 }
 
-fn get_value_at_path(value: &Value, path: &Vec<String>) -> Option<Value> {
+fn get_value_at_path(value: &Value, path: &[String]) -> Option<Value> {
     let mut current = value;
 
     for key in path.iter() {
@@ -90,7 +90,7 @@ fn get_value_at_path(value: &Value, path: &Vec<String>) -> Option<Value> {
     Some(current.to_owned())
 }
 
-fn json_line_to_csv_record(value: &Value, headers: &Vec<Vec<String>>) -> csv::StringRecord {
+fn json_line_to_csv_record(value: &Value, headers: &[Vec<String>]) -> csv::StringRecord {
     let mut record = csv::StringRecord::new();
 
     for path in headers {
