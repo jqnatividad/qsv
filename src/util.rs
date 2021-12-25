@@ -38,6 +38,17 @@ pub fn max_jobs() -> usize {
 }
 
 pub fn version() -> String {
+    #[allow(unused_mut)]
+    let mut enabled_features = "".to_string();
+    #[cfg(feature = "apply")]
+    enabled_features.push_str("apply;");
+    #[cfg(feature = "foreach")]
+    enabled_features.push_str("foreach;");
+    #[cfg(feature = "generate")]
+    enabled_features.push_str("generate;");
+    #[cfg(feature = "lua")]
+    enabled_features.push_str("lua;");
+
     #[cfg(feature = "mimalloc")]
     let malloc_kind = "mimalloc".to_string();
     #[cfg(not(feature = "mimalloc"))]
@@ -52,22 +63,24 @@ pub fn version() -> String {
         (Some(maj), Some(min), Some(pat), Some(pre)) => {
             if pre.is_empty() {
                 return format!(
-                    "{}.{}.{}-{}-{}-{}",
+                    "{}.{}.{}-{}-{}-{}-{}",
                     maj,
                     min,
                     pat,
                     malloc_kind,
+                    enabled_features,
                     max_jobs(),
                     num_cpus()
                 );
             } else {
                 return format!(
-                    "{}.{}.{}-{}-{}-{}-{}",
+                    "{}.{}.{}-{}-{}-{}-{}-{}",
                     maj,
                     min,
                     pat,
                     pre,
                     malloc_kind,
+                    enabled_features,
                     max_jobs(),
                     num_cpus(),
                 );
