@@ -5,19 +5,19 @@ fn jsonl_simple() {
     let wrk = Workdir::new("jsonl");
     wrk.create_from_string(
         "data.jsonl",
-        r#"{"id":1,"father":"Mark","mother":"Charlotte","oldest_child":"Tom"}
-{"id":2,"father":"John","mother":"Ann","oldest_child":"Jessika"}
-{"id":3,"father":"Bob","mother":"Monika","oldest_child":"Jerry"}"#,
+        r#"{"id":1,"father":"Mark","mother":"Charlotte","oldest_child":"Tom","boy":true}
+{"id":2,"father":"John","mother":"Ann","oldest_child":"Jessika","boy":false}
+{"id":3,"father":"Bob","mother":"Monika","oldest_child":"Jerry","boy":true}"#,
     );
     let mut cmd = wrk.command("jsonl");
     cmd.arg("data.jsonl");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
-        svec!["id", "father", "mother", "oldest_child"],
-        svec!["1", "Mark", "Charlotte", "Tom"],
-        svec!["2", "John", "Ann", "Jessika"],
-        svec!["3", "Bob", "Monika", "Jerry"],
+        svec!["id", "father", "mother", "oldest_child", "boy"],
+        svec!["1", "Mark", "Charlotte", "Tom", "true"],
+        svec!["2", "John", "Ann", "Jessika", "false"],
+        svec!["3", "Bob", "Monika", "Jerry", "true"],
     ];
     assert_eq!(got, expected);
 }
