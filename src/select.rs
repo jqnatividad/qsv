@@ -452,6 +452,7 @@ pub type _NormalFilterMap<'a, T, I> =
 pub type _NormalGetField<T> = fn(&mut &[bool], (usize, T)) -> Option<Option<T>>;
 
 impl NormalSelection {
+    #[allow(clippy::needless_lifetimes)]
     pub fn select<'a, T, I>(&'a self, row: I) -> _NormalFilterMap<'a, T, I>
     where
         I: Iterator<Item = T>,
