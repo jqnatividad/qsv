@@ -38,7 +38,6 @@ pub fn max_jobs() -> usize {
 }
 
 pub fn version() -> String {
-    #[allow(unused_mut)]
     let mut enabled_features = "".to_string();
     if let Some(qsv_type) = option_env!("CARGO_BIN_NAME") {
         if qsv_type != "qsvlite" {
@@ -50,6 +49,8 @@ pub fn version() -> String {
             enabled_features.push_str("generate;");
             #[cfg(feature = "lua")]
             enabled_features.push_str("lua;");
+
+            enabled_features.push_str("-");
         }
     }
 
@@ -57,17 +58,19 @@ pub fn version() -> String {
     let malloc_kind = "mimalloc".to_string();
     #[cfg(not(feature = "mimalloc"))]
     let malloc_kind = "standard".to_string();
-    let (maj, min, pat, pre) = (
+    let (qsvtype, maj, min, pat, pre) = (
+        option_env!("CARGO_BIN_NAME"),
         option_env!("CARGO_PKG_VERSION_MAJOR"),
         option_env!("CARGO_PKG_VERSION_MINOR"),
         option_env!("CARGO_PKG_VERSION_PATCH"),
         option_env!("CARGO_PKG_VERSION_PRE"),
     );
-    match (maj, min, pat, pre) {
-        (Some(maj), Some(min), Some(pat), Some(pre)) => {
+    match (qsvtype, maj, min, pat, pre) {
+        (Some(qsvtype), Some(maj), Some(min), Some(pat), Some(pre)) => {
             if pre.is_empty() {
                 return format!(
-                    "{}.{}.{}-{}-{}-{}-{}",
+                    "{} {}.{}.{}-{}-{}{}-{}",
+                    qsvtype,
                     maj,
                     min,
                     pat,
@@ -78,7 +81,8 @@ pub fn version() -> String {
                 );
             } else {
                 return format!(
-                    "{}.{}.{}-{}-{}-{}-{}-{}",
+                    "{} {}.{}.{}-{}-{}-{}{}-{}",
+                    qsvtype,
                     maj,
                     min,
                     pat,
