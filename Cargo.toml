@@ -13,13 +13,21 @@ license = "MIT OR Unlicense"
 autotests = false
 edition = "2021"
 rust-version = "1.56"
-exclude = ["*.zip"]
+autobins = false
 
 [[bin]]
 name = "qsv"
 test = false
 bench = false
 doctest = false
+path = "src/main.rs"
+
+[[bin]]
+name = "qsvlite"
+test = false
+bench = false
+doctest = false
+path = "src/mainlite.rs"
 
 [[test]]
 name = "tests"
