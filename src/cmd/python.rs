@@ -131,7 +131,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let headers_len = headers.len();
 
-    let py_row = helpers.call1("QSVRow", (headers.iter().collect::<Vec<&str>>(),))?;
+    let py_row = helpers
+        .getattr("QSVRow")?
+        .call1((headers.iter().collect::<Vec<&str>>(),))?;
+
     locals.set_item("row", py_row)?;
 
     if !rconfig.no_headers {
@@ -174,13 +177,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             })?;
 
         if args.cmd_map {
-            let result = helpers.call1("cast_as_string", (result,))?;
+            let result = helpers.getattr("cast_as_string")?.call1((result,))?;
             let value: String = result.extract()?;
 
             record.push_field(&value);
             wtr.write_record(&record)?;
         } else if args.cmd_filter {
-            let result = helpers.call1("cast_as_bool", (result,))?;
+            let result = helpers.getattr("cast_as_bool")?.call1((result,))?;
             let value: bool = result.extract()?;
 
             if value {
