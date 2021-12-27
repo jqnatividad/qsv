@@ -80,6 +80,7 @@ vader_sentiment = { version = "0.1.1", optional = true }
 whatlang = { version = "0.12.0", optional = true }
 reqwest = { version = "0.11", features = ["blocking", "json", "rustls-tls"], default-features = false }
 jql = { version = "3.0.6", default-features = false }
+pyo3 = { version = "0.13.2", optional = true }
 
 [dev-dependencies]
 quickcheck = { version = "1", default-features = false }
@@ -91,3 +92,4 @@ foreach = []
 apply = ["currency", "eudex", "titlecase", "censor", "strsim", 
          "reverse_geocoder", "once_cell", "chrono", "vader_sentiment", "whatlang"]
 generate = ["test-data-generation"]
+python = ["pyo3"]

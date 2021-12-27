@@ -59,6 +59,8 @@ mod test_jsonl;
 mod test_lua;
 mod test_partition;
 mod test_pseudo;
+#[cfg(feature = "python")]
+mod test_py;
 mod test_rename;
 mod test_replace;
 mod test_reverse;

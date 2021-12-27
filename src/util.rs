@@ -49,6 +49,8 @@ pub fn version() -> String {
             enabled_features.push_str("generate;");
             #[cfg(feature = "lua")]
             enabled_features.push_str("lua;");
+            #[cfg(feature = "python")]
+            enabled_features.push_str("python;");
 
             enabled_features.push_str("-");
         }
