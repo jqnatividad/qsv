@@ -69,7 +69,10 @@ Available commands
 
 Installation
 ------------
-Binaries for Windows, Linux and macOS are available [from Github](https://github.com/jqnatividad/qsv/releases/latest).
+Pre-built binaries for Windows, Linux and macOS are available [from GitHub](https://github.com/jqnatividad/qsv/releases/latest).
+
+There are two versions of qsv. `qsvlite` has all features disabled. `qsv` supports all enabled features, with the pre-built binaries
+enabling all features (see [Feature Flags](#feature_flags) for more info).
 
 Alternatively, you can compile from source by
 [installing Cargo](https://crates.io/install)
@@ -158,14 +161,17 @@ commands are not unicode-aware and will ignore unicode values when matching and 
 
 Feature Flags
 -------------
+`qsv` has several features:
 
-* `mimalloc` (default) - use the mimalloc allocator.
+* `mimalloc` (default) - use the mimalloc allocator (see [Memory Allocator](#memory_allocator) for more info).
 * `apply` - enable `apply` command. This swiss-army knife of CSV transformations is very powerful, but it has a lot of dependencies that increases both compile time and binary size. 
 * `generate` - enable `generate` command. The test data generator also has a large dependency tree.
 
 Both of the following commands are also very powerful that can be abused and present "foot-shooting" scenarios.
 * `lua` - enable `lua` command.
 * `foreach` - enable `foreach` command.
+
+`qsvlite` always has **non-default features disabled**. `qsv` can be built with any combination of these features using the cargo `--features`, `--all-features` and `--no-default-features` flags.
 
 Performance Tuning
 ------------------
