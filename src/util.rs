@@ -52,7 +52,7 @@ pub fn version() -> String {
             #[cfg(feature = "python")]
             enabled_features.push_str("python;");
 
-            enabled_features.push_str("-");
+            enabled_features.push('-');
         }
     }
 
