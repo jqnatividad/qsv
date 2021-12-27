@@ -55,7 +55,7 @@ macro_rules! command_list {
     fmt         Format CSV output (change field delimiter)
     frequency   Show frequency tables
     headers     Show header names
-    help        Show this usage message.
+    help        Show this usage message
     index       Create CSV index for faster access
     input       Read CSV data with special quoting rules
     join        Join CSV files
@@ -75,6 +75,8 @@ macro_rules! command_list {
     stats       Infer data types and compute descriptive statistics
     table       Align CSV data into columns
     transpose   Transpose rows/columns of CSV data
+
+    sponsored by datHere - Data Infrastructure Engineering
 "
     };
 }

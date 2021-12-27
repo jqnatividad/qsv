@@ -56,7 +56,7 @@ macro_rules! command_list {
     frequency   Show frequency tables
     generate*   Generate test data by profiling a CSV
     headers     Show header names
-    help        Show this usage message.
+    help        Show this usage message
     index       Create CSV index for faster access
     input       Read CSV data with special quoting rules
     join        Join CSV files
@@ -79,6 +79,8 @@ macro_rules! command_list {
     transpose   Transpose rows/columns of CSV data
 
     * optional feature
+
+    sponsored by datHere - Data Infrastructure Engineering
 "
     };
 }
