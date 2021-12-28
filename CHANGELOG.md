@@ -5,6 +5,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.27.0] - 2021-12-28
+## Changed
+* changed publish workflow for apple targets to use Xcode 12.5.1 from 12.4
+* `jsonl` command now recognize and process JSON arrays
+* `--version` option now shows binary name and enabled features
+* Use upgraded [`qsv_currency`](https://crates.io/crates/qsv_currency) fork to power `apply currencytonum` operation. Now supports currency strings
+  (e.g. USD, EUR, JPY, etc) in addition to currency symbols (e.g. $, €, ¥, etc)
+* renamed `QSV_COMMENTS` environment variable to `QSV_COMMENT_CHAR` to make it clear that it clear that we're expecting
+  a single character, not a boolean as the old name implies.
+
+## Added
+* added `create_from_string` helper function in workdir.rs
+* compress select pre-built binaries with [UPX](https://upx.github.io/)
+* `qsvlite` binary target, with all features disabled.
+* `py` command. Evaluates a Python expression over CSV lines to transform, aggregate or filter them.
+
+## Deleted
+* removed Debian package publishing workflow, as the GH action for it
+  does not support Rust 2021 edition
+
 ## [0.26.2] - 2021-12-21
 ## Added
 * automatic self-update version check when the `--list` option is invoked.
