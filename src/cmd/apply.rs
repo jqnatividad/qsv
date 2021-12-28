@@ -56,9 +56,9 @@ Currently supported operations:
       Add additional comma-delimited profanities with -comparand. 
   * censor: profanity filter. Add additional comma-delimited profanities 
       with --comparand.
-  * currencytonum: Gets the numeric value of a currency. Supports one-character
-      currency symbols only ($,¥,£,€,֏,₱,₽,₪,₩,ƒ,฿,₫). Recognizes point, comma
-      and space separators.
+  * currencytonum: Gets the numeric value of a currency. Supports currency symbols
+      (e.g. $,¥,£,€,֏,₱,₽,₪,₩,ƒ,฿,₫) and strings (e.g. USD, EUR, RMB, JPY, etc.). 
+      Recognizes point, comma and space separators.
   * copy: Mark a column for copying
   * simdl: Damerau-Levenshtein similarity to --comparand
   * simdln: Normalized Damerau-Levenshtein similarity to --comparand 
