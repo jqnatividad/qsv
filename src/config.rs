@@ -320,7 +320,7 @@ impl Config {
             .unwrap_or_else(|_| DEFAULT_RDR_BUFFER_CAPACITY.to_string());
         let rdr_buffer: usize = rdr_capacitys.parse().unwrap_or(DEFAULT_RDR_BUFFER_CAPACITY);
 
-        let rdr_comment: Option<u8> = env::var("QSV_COMMENTS")
+        let rdr_comment: Option<u8> = env::var("QSV_COMMENT_CHAR")
             .ok()
             .map(|s| s.as_bytes().first().unwrap().to_owned());
 
