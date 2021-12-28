@@ -64,7 +64,7 @@ macro_rules! command_list {
     lua*        Execute Lua script on CSV data
     partition   Partition CSV data based on a column value
     pseudo      Pseudonymise the values of a column
-    py*         Execute Python script on CSV data
+    py*         Evaluate a Python expression on CSV data
     sample      Randomly sample CSV data
     rename      Rename the columns of CSV data efficiently
     replace     Replace patterns in CSV data
