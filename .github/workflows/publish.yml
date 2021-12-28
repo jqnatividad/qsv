@@ -33,7 +33,7 @@ jobs:
             os-name: linux
             target: x86_64-unknown-linux-gnu
             architecture: x86_64
-            artifact_name: qsv
+            artifact_name: qsv*
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-x86_64-unknown-linux-gnu.zip
             use-cross: false
             strip: true
@@ -43,7 +43,7 @@ jobs:
             os-name: linux
             target: i686-unknown-linux-gnu
             architecture: i686
-            artifact_name: qsv
+            artifact_name: qsv*
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-i686-unknown-linux-gnu.zip
             use-cross: true
             strip: true
@@ -53,7 +53,7 @@ jobs:
             os-name: windows
             target: x86_64-pc-windows-msvc
             architecture: x86_64
-            artifact_name: qsv.exe
+            artifact_name: qsv*.exe
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-x86_64-pc-windows-msvc.zip
             use-cross: false
             strip: false
@@ -63,7 +63,7 @@ jobs:
             os-name: windows
             target: i686-pc-windows-msvc
             architecture: i686
-            artifact_name: qsv.exe
+            artifact_name: qsv*.exe
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-i686-pc-windows-msvc.zip
             use-cross: true
             strip: false
@@ -73,17 +73,17 @@ jobs:
             os-name: windows
             target: x86_64-pc-windows-gnu
             architecture: x86_64
-            artifact_name: qsv.exe
+            artifact_name: qsv*.exe
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-x86_64-pc-windows-gnu.zip
             use-cross: false
             strip: false
             addl-build-args: --no-default-features --features=apply,generate,lua
-            upx: true
+            upx: false
           - os: macos-latest
             os-name: macos
             target: x86_64-apple-darwin
             architecture: x86_64
-            artifact_name: qsv
+            artifact_name: qsv*
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-x86_64-apple-darwin.zip
             use-cross: false
             strip: true
@@ -93,7 +93,7 @@ jobs:
             os-name: macos
             target: aarch64-apple-darwin
             architecture: aarch64
-            artifact_name: qsv
+            artifact_name: qsv*
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-aarch64-apple-darwin.zip
             build-prep: true
             use-cross: true
@@ -104,7 +104,7 @@ jobs:
             os-name: linux
             target: aarch64-unknown-linux-gnu
             architecture: aarch64
-            artifact_name: qsv
+            artifact_name: qsv*
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-aarch64-unknown-linux-gnu.zip
             use-cross: true
             strip: false
@@ -114,7 +114,7 @@ jobs:
             os-name: linux
             target: arm-unknown-linux-gnueabihf
             architecture: arm
-            artifact_name: qsv
+            artifact_name: qsv*
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-arm-unknown-linux-gnueabihf.zip
             use-cross: true
             strip: false
@@ -124,7 +124,7 @@ jobs:
             os-name: linux
             target: arm-unknown-linux-musleabihf
             architecture: arm
-            artifact_name: qsv
+            artifact_name: qsv*
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-arm-unknown-linux-musleabihf.zip
             use-cross: true
             strip: false
@@ -159,7 +159,7 @@ jobs:
 #    - name: strip binary on *nix environments
 #      if: ${{ matrix.job.strip }}
 #      run: strip target/${{ matrix.job.target }}/release/${{ matrix.job.artifact_name }}
-    - name: Copy binary to working dir
+    - name: Copy binaries to working dir
       shell: bash
       run: |
         mkdir qsv-${{ needs.analyze-tags.outputs.previous-tag }}
@@ -170,6 +170,7 @@ jobs:
         brew install upx
         cd qsv-${{ needs.analyze-tags.outputs.previous-tag }}
         upx --verbose qsv
+        upx --verbose qsvlite
     - name: compress binaries with GHA upx on windows/linux
       if: ${{ matrix.job.os-name != 'macos' && matrix.job.upx }}
       uses: crazy-max/ghaction-upx@v1
