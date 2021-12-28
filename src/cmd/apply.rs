@@ -5,7 +5,7 @@ use crate::CliResult;
 use cached::proc_macro::cached;
 use censor::{Censor, Sex, Zealous};
 use chrono::{NaiveTime, Utc};
-use currency::Currency;
+use qsv_currency::Currency;
 use dateparser::parse_with;
 use eudex::Hash;
 use indicatif::{ProgressBar, ProgressDrawTarget};
