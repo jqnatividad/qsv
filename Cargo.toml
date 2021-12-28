@@ -62,7 +62,7 @@ chrono = { version = "0.4", optional = true }
 dateparser = "0.1.6"
 once_cell = { version = "1.9", optional = true }
 reverse_geocoder = { version = "2", optional = true }
-currency = { version = "0.4", optional = true }
+qsv_currency = { version = "0.5", optional = true }
 itertools = "0.10"
 strsim = { version = "0.10", optional = true }
 eudex = { version = "0.1.1", optional = true }
@@ -89,7 +89,7 @@ quickcheck = { version = "1", default-features = false }
 default = ["mimalloc"]
 lua = ["hlua"]
 foreach = []
-apply = ["currency", "eudex", "titlecase", "censor", "strsim", 
+apply = ["qsv_currency", "eudex", "titlecase", "censor", "strsim", 
          "reverse_geocoder", "once_cell", "chrono", "vader_sentiment", "whatlang"]
 generate = ["test-data-generation"]
 python = ["pyo3"]
