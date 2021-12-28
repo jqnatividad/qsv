@@ -1,6 +1,6 @@
 [package]
 name = "qsv"
-version = "0.27.0"  #:version
+version = "0.27.1"  #:version
 authors = ["Joel Natividad <joel@datHere.com>"]
 description = "A high performance CSV command line toolkit."
 documentation = "https://docs.rs/crate/qsv"
