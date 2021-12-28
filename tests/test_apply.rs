@@ -521,6 +521,10 @@ fn apply_ops_currencytonum() {
             svec!["฿ 789,123"],
             svec!["₫ 456"],
             svec!["123,456.00 $"],
+            svec!["USD 10,000"],
+            svec!["EUR 1234.50"],
+            svec!["JPY 9,999,999.99"],
+            svec!["RMB 6543.21"],
         ],
     );
     let mut cmd = wrk.command("apply");
@@ -555,6 +559,10 @@ fn apply_ops_currencytonum() {
         svec!["789123.00"],
         svec!["456.00"],
         svec!["123456.00"],
+        svec!["10000.00"],
+        svec!["1234.50"],
+        svec!["9999999.99"],
+        svec!["6543.21"],
     ];
     assert_eq!(got, expected);
 }
