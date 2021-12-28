@@ -49,6 +49,7 @@ Available commands
 | **[lua](/src/cmd/lua.rs#L15)** | Execute a [Lua](https://www.lua.org/about.html) script over CSV lines to transform, aggregate or filter them. _**(NEW)**_ |
 | **[partition](/src/cmd/partition.rs#L16)** | Partition a CSV based on a column value. |
 | **[pseudo](/src/cmd/pseudo.rs#L10)** | Pseudonymise the value of the given column by replacing them with an incremental identifier. _**(NEW)**_ |
+| **[py](/src/cmd/python.rs#L45)** | Evaluate a Python expression over CSV lines to transform, aggregate or filter them. _**(NEW)**_ |
 | **[rename](/src/cmd/rename.rs#L7)** |  Rename the columns of a CSV efficiently. _**(NEW)**_ |
 | **[replace](/src/cmd/replace.rs#L12)** | Replace CSV data using a regex. _**(NEW)**_ |
 | **[reverse](/src/cmd/reverse.rs#L7)**[^2] | Reverse order of rows in a CSV. Unlike the `sort --reverse` command, it preserves the order of rows with the same key. _**(NEW)**_ |
@@ -72,7 +73,7 @@ Installation
 Pre-built binaries for Windows, Linux and macOS are available [from GitHub](https://github.com/jqnatividad/qsv/releases/latest).
 
 There are two versions of qsv. `qsvlite` has all features disabled. `qsv` supports all enabled features, with the pre-built binaries
-enabling all features (see [Feature Flags](#feature_flags) for more info).
+enabling all features (see [Feature Flags](#feature-flags) for more info if you're compiling/installing a custom build of qsv).
 
 Alternatively, you can compile from source by
 [installing Cargo](https://crates.io/install)
@@ -105,12 +106,12 @@ The compiled binary will end up in `./target/release/qsv`.
 To enable optional features, use the `--features` or `--all-features` options, e.g.:
 
 ```bash
-cargo install qsv --features apply,generate,selfupdate,lua,foreach
+cargo install qsv --features apply,generate,selfupdate,lua,foreach,python
 # or
 cargo install qsv --all-features
 
 # or when compiling from a local repo
-cargo build --release --features apply,generate,selfupdate,lua,foreach
+cargo build --release --features apply,generate,selfupdate,lua,foreach,python
 # or
 cargo build --release --all-features
 ```
