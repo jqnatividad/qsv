@@ -25,7 +25,7 @@ Available commands
 ------------------
 | Command | Description |
 | --- | --- |
-| **[apply](/src/cmd/apply.rs#L25)** | Apply series of string, date, currency & geocoding transformations to a CSV column. It also has some basic NLP functions ([similarity](https://crates.io/crates/strsim), [sentiment analysis](https://crates.io/crates/vader_sentiment), [profanity](https://docs.rs/censor/latest/censor/), [eudex](https://github.com/ticki/eudex#eudex-a-blazingly-fast-phonetic-reductionhashing-algorithm) & [language detection](https://crates.io/crates/whatlang)). _**(NEW)**_ |
+| **[apply](/src/cmd/apply.rs#L25)**[^4] | Apply series of string, date, currency & geocoding transformations to a CSV column. It also has some basic NLP functions ([similarity](https://crates.io/crates/strsim), [sentiment analysis](https://crates.io/crates/vader_sentiment), [profanity](https://docs.rs/censor/latest/censor/), [eudex](https://github.com/ticki/eudex#eudex-a-blazingly-fast-phonetic-reductionhashing-algorithm) & [language detection](https://crates.io/crates/whatlang)). _**(NEW)**_ |
 | **[behead](/src/cmd/behead.rs#L7)** | Drop headers from a CSV. _**(NEW)**_ |
 | **[cat](/src/cmd/cat.rs#L7)** | Concatenate CSV files by row or by column. |
 | **[count](/src/cmd/count.rs#L7)**[^1] | Count the rows in a CSV file. (Instantaneous with an index.) |
@@ -38,18 +38,18 @@ Available commands
 | **[fixlengths](/src/cmd/fixlengths.rs#L9)** | Force a CSV to have same-length records by either padding or truncating them. |
 | **[flatten](/src/cmd/flatten.rs#L12)** | A flattened view of CSV records. Useful for viewing one record at a time.<br />e.g. `qsv slice -i 5 data.csv \| qsv flatten`. |
 | **[fmt](/src/cmd/fmt.rs#L7)** | Reformat a CSV with different delimiters, record terminators or quoting rules. (Supports ASCII delimited data.) _**(EXTENDED)**_ |
-| **[foreach](/src/cmd/foreach.rs#L17)** | Loop over a CSV to execute bash commands. (*nix only) _**(NEW)**_ |
+| **[foreach](/src/cmd/foreach.rs#L17)**[^4] | Loop over a CSV to execute bash commands. (*nix only) _**(NEW)**_ |
 | **[frequency](/src/cmd/frequency.rs#L15)**[^1][^3] | Build frequency tables of each column. (Uses parallelism to go faster if an index is present.) |
-| **[generate](/src/cmd/generate.rs#L12)** | Generate test data by profiling a CSV using [Markov decision process](https://crates.io/crates/test-data-generation) machine learning. _**(NEW)**_ |
+| **[generate](/src/cmd/generate.rs#L12)**[^4] | Generate test data by profiling a CSV using [Markov decision process](https://crates.io/crates/test-data-generation) machine learning. _**(NEW)**_ |
 | **[headers](/src/cmd/headers.rs#L11)** | Show the headers of a CSV. Or show the intersection of all headers between many CSV files. |
 | **[index](/src/cmd/index.rs#L13)** | Create an index for a CSV. This is very quick & provides constant time indexing into the CSV file. |
 | **[input](/src/cmd/input.rs#L7)** | Read a CSV with exotic quoting/escaping rules. |
 | **[join](/src/cmd/join.rs#L17)**[^1] | Inner, outer, cross, anti & semi joins. Uses a simple hash index to make it fast. _**(EXTENDED)**_ |
 | **[jsonl](/src/cmd/jsonl.rs#L11)** | Convert newline-delimited JSON to CSV. _**(NEW)**_
-| **[lua](/src/cmd/lua.rs#L15)** | Execute a [Lua](https://www.lua.org/about.html) script over CSV lines to transform, aggregate or filter them. _**(NEW)**_ |
+| **[lua](/src/cmd/lua.rs#L15)**[^4] | Execute a [Lua](https://www.lua.org/about.html) script over CSV lines to transform, aggregate or filter them. _**(NEW)**_ |
 | **[partition](/src/cmd/partition.rs#L16)** | Partition a CSV based on a column value. |
 | **[pseudo](/src/cmd/pseudo.rs#L10)** | Pseudonymise the value of the given column by replacing them with an incremental identifier. _**(NEW)**_ |
-| **[py](/src/cmd/python.rs#L45)** | Evaluate a Python expression over CSV lines to transform, aggregate or filter them. _**(NEW)**_ |
+| **[py](/src/cmd/python.rs#L45)**[^4] | Evaluate a Python expression over CSV lines to transform, aggregate or filter them. _**(NEW)**_ |
 | **[rename](/src/cmd/rename.rs#L7)** |  Rename the columns of a CSV efficiently. _**(NEW)**_ |
 | **[replace](/src/cmd/replace.rs#L12)** | Replace CSV data using a regex. _**(NEW)**_ |
 | **[reverse](/src/cmd/reverse.rs#L7)**[^2] | Reverse order of rows in a CSV. Unlike the `sort --reverse` command, it preserves the order of rows with the same key. _**(NEW)**_ |
@@ -66,7 +66,8 @@ Available commands
 
 [^1]: uses an index when available. `join` always uses indices.   
 [^2]: loads the entire CSV into memory. Note that `stats` & `transpose` have modes that do not load the entire CSV into memory.   
-[^3]: runs parallel jobs by default (use `--jobs` option to adjust)   
+[^3]: runs parallel jobs by default (use `--jobs` option to adjust).   
+[^4]: enabled by optional feature flag. Not available on `qsvlite`.   
 
 Installation
 ------------
@@ -168,11 +169,12 @@ Feature Flags
 * `apply` - enable `apply` command. This swiss-army knife of CSV transformations is very powerful, but it has a lot of dependencies that increases both compile time and binary size. 
 * `generate` - enable `generate` command. The test data generator also has a large dependency tree.
 
-Both of the following commands are also very powerful that can be abused and present "foot-shooting" scenarios.
+The following "power-user" commands can be abused and present "foot-shooting" scenarios.
 * `lua` - enable `lua` command.
 * `foreach` - enable `foreach` command.
+* `python` - enable `py` command.
 
-`qsvlite` always has **non-default features disabled**. `qsv` can be built with any combination of these features using the cargo `--features`, `--all-features` and `--no-default-features` flags.
+> **NOTE:** `qsvlite` always has **non-default features disabled**. `qsv` can be built with any combination of these features using the cargo `--features`, `--all-features` and `--no-default-features` flags. The pre-built `qsv` binary has **all features enabled**.
 
 Performance Tuning
 ------------------
