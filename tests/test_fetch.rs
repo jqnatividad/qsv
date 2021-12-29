@@ -1,3 +1,4 @@
+
 use crate::workdir::Workdir;
 
 #[test]
@@ -76,3 +77,165 @@ fn fetch_jql() {
     ];
     assert_eq!(got, expected);
 }
+
+use std::{
+    thread,
+    sync::mpsc
+};
+
+use actix_web::{
+        dev::Server,
+        middleware,
+        rt,
+        web,
+        App,
+        HttpRequest,
+        HttpServer,
+        Responder,
+        Result,
+};
+
+use serde::Serialize;
+#[derive(Serialize)]
+struct MyObj {
+    fullname: String,
+}
+
+async fn index() -> impl Responder {
+    "Hello world!"
+}
+
+/// handler with path parameters like `/user/{name}/`
+/// returns Smurf fullname
+async fn get_fullname(
+    req: HttpRequest,
+    web::Path((name,)): web::Path<(String,)>,
+) -> Result<impl Responder> {
+    println!("{:?}", req);
+
+    let obj = MyObj {
+        fullname: format!("{} Smurf", name),
+    };
+
+    Ok(web::Json(obj))
+
+}
+
+/// start an Actix Webserver with Rate Limiting via Governor 
+fn run_webserver(tx: mpsc::Sender<Server>) -> std::io::Result<()> {
+    let mut sys = rt::System::new("test");
+
+    use actix_governor::{
+        Governor,
+        GovernorConfigBuilder, 
+        GovernorConfig
+    };
+
+    // Allow bursts with up to five requests per IP address
+    // and replenishes one element every two seconds
+    let governor_conf:GovernorConfig = GovernorConfigBuilder::default()
+        .per_second(2)
+        .burst_size(5)
+        .finish()
+        .unwrap();
+
+    // srv is server controller type, `dev::Server`
+    let srv = HttpServer::new(move || {
+        App::new()
+            // enable logger
+            .wrap(middleware::Logger::default())
+            .wrap(Governor::new(&governor_conf))
+            .service(web::resource("/user/{name}").route(web::get().to(get_fullname)))
+            .service(web::resource("/").to(index))
+    })
+    .bind("127.0.0.1:8080")?
+    .run();
+
+    // send server controller to main thread
+    let _ = tx.send(srv.clone());
+
+    // run future
+    sys.block_on(srv)
+}
+
+#[test]
+fn fetch_ratelimit() {
+
+    // start webserver with rate limiting
+    let (tx, rx) = mpsc::channel();
+
+    println!("START Webserver ");
+    thread::spawn(move || {
+        let _ = run_webserver(tx);
+    });
+
+    let srv = rx.recv().unwrap();
+
+    // proceed with usual unit test
+    let wrk = Workdir::new("fetch");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["URL"],
+            svec!["http://localhost:8080/user/Smurfette"],
+            svec!["http://localhost:8080/user/Papa"],
+            svec!["http://localhost:8080/user/Clumsy"],
+            svec!["http://localhost:8080/user/Brainy"],
+            svec!["http://localhost:8080/user/Grouchy"],
+            svec!["http://localhost:8080/user/Hefty"],
+            svec!["http://localhost:8080/user/Greedy"],
+            svec!["http://localhost:8080/user/Jokey"],
+            svec!["http://localhost:8080/user/Chef"],
+            svec!["http://localhost:8080/user/Vanity"],
+            svec!["http://localhost:8080/user/Handy"],
+            svec!["http://localhost:8080/user/Scaredy"],
+            svec!["http://localhost:8080/user/Tracker"],
+            svec!["http://localhost:8080/user/Sloppy"],
+            svec!["http://localhost:8080/user/Harmony"],
+            svec!["http://localhost:8080/user/Painter"],
+            svec!["http://localhost:8080/user/Poet"],
+            svec!["http://localhost:8080/user/Farmer"],
+            svec!["http://localhost:8080/user/Natural"],
+            svec!["http://localhost:8080/user/Snappy"],
+        ],
+    );
+    let mut cmd = wrk.command("fetch");
+    cmd.arg("URL")
+        .arg("--new-column")
+        .arg("Fullname")
+        .arg("--jql")
+        .arg(r#"."fullname""#)
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["URL", "Fullname"],
+        svec!["http://localhost:8080/user/Smurfette", "Smurfette Smurf"],
+        svec!["http://localhost:8080/user/Papa", "Papa Smurf"],
+        svec!["http://localhost:8080/user/Clumsy", "Clumsy Smurf"],
+        svec!["http://localhost:8080/user/Brainy", "Brainy Smurf"],
+        svec!["http://localhost:8080/user/Grouchy", "Grouchy Smurf"],
+        svec!["http://localhost:8080/user/Hefty", "Hefty Smurf"],
+        svec!["http://localhost:8080/user/Greedy", "Greedy Smurf"],
+        svec!["http://localhost:8080/user/Jokey", "Jokey Smurf"],
+        svec!["http://localhost:8080/user/Chef", "Chef Smurf"],
+        svec!["http://localhost:8080/user/Vanity", "Vanity Smurf"],
+        svec!["http://localhost:8080/user/Handy", "Handy Smurf"],
+        svec!["http://localhost:8080/user/Scaredy", "Scaredy Smurf"],
+        svec!["http://localhost:8080/user/Tracker", "Tracker Smurf"],
+        svec!["http://localhost:8080/user/Sloppy", "Sloppy Smurf"],
+        svec!["http://localhost:8080/user/Harmony", "Harmony Smurf"],
+        svec!["http://localhost:8080/user/Painter", "Painter Smurf"],
+        svec!["http://localhost:8080/user/Poet", "Poet Smurf"],
+        svec!["http://localhost:8080/user/Farmer", "Farmer Smurf"],
+        svec!["http://localhost:8080/user/Natural", "Natural Smurf"],
+        svec!["http://localhost:8080/user/Snappy", "Snappy Smurf"],
+    ];
+    assert_eq!(got, expected);
+
+    // init stop webserver and wait until server gracefully exit
+    println!("STOPPING Webserver");
+    rt::System::new("").block_on(srv.stop(true));
+
+}
+

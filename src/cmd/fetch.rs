@@ -120,6 +120,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .build()
         .unwrap();
 
+    use governor::{
+        RateLimiter,
+        Quota
+    };
+
+    use nonzero_ext::nonzero;
+    let limiter = RateLimiter::direct(Quota::per_second(nonzero!(3u32)));
+
     let mut include_existing_columns = false;
 
     if let Some(name) = &args.flag_new_column {
@@ -152,7 +160,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let url = String::from_utf8_lossy(&selected_col_value).to_string();
         debug!("Fetching URL: {:?}", &url);
 
-        let final_value = get_cached_response(&url, &client, &args.flag_jql);
+        let final_value = get_cached_response(&url, &client, &limiter, &args.flag_jql);
 
         if include_existing_columns {
             record.push_field(final_value.as_bytes());
@@ -185,6 +193,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     Ok(())
 }
 
+use governor::{
+    state::direct::NotKeyed,
+    state::InMemoryState,
+    clock::DefaultClock,
+    middleware::NoOpMiddleware
+};
+
+use std::{
+    thread,
+    time,
+};
+
 #[cached(
     key = "String",
     convert = r#"{ format!("{}", url) }"#,
@@ -193,8 +213,23 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 fn get_cached_response(
     url: &str,
     client: &reqwest::blocking::Client,
+    limiter: &governor::RateLimiter<NotKeyed, InMemoryState, DefaultClock, NoOpMiddleware>,
     flag_jql: &Option<String>,
 ) -> String {
+
+    loop {
+        match limiter.check() {
+            Ok(()) => {
+                debug!("going ahead");
+                break;
+            },
+            _ => {
+                debug!("sleeping for 10 ms");
+                thread::sleep(time::Duration::from_millis(10));
+            }
+        }
+    };
+
     let resp = client.get(url).send().unwrap();
     debug!("response: {:?}", &resp);
     let api_value = resp.text().unwrap();
