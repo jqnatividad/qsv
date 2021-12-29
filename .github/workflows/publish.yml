@@ -148,6 +148,7 @@ jobs:
       if: ${{ matrix.job.os-name == 'linux' }}
       env:
         PYO3_PYTHON: /usr/bin/python3
+        PYO3_PRINT_CONFIG: 1
       run: |
         echo $PYO3_PYTHON
         which python3
