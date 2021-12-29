@@ -178,12 +178,14 @@ jobs:
         file: |
           ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/qsv
         args: --verbose
+        strip: false
     - name: compress qsvlite binary with GHA upx on linux
       uses: svenstaro/upx-action@v2
       with:
         file: |
           ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/qsvlite
         args: --verbose
+        strip: false
     - name: compress qsv.exe binary with GHA upx on windows
       if: ${{ matrix.job.os-name == 'windows' && matrix.job.upx }}
       uses: svenstaro/upx-action@v2
@@ -191,12 +193,14 @@ jobs:
         file: |
           ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/qsv.exe
         args: --verbose
+        strip: false
     - name: compress qsvlite.exe binary with GHA upx on windows
       uses: svenstaro/upx-action@v2
       with:
         file: |
           ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/qsvlite.exe
-        args: --verbose        
+        args: --verbose
+        strip: false
     - name: if upx zip store binary
       if: ${{ matrix.job.upx }}
       run: 7z a -tzip ${{ matrix.job.asset_name }} ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/${{ matrix.job.artifact_name }} -mx=0
