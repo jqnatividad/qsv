@@ -147,6 +147,8 @@ jobs:
     - name: Setup Python
       env:
         PYO3_PATH: /usr/bin/python
+      run: |
+        echo PYO3_PATH
     - name: build prep for aarch64-apple-darwin
       if: ${{ matrix.job.build-prep }}
       run: |
