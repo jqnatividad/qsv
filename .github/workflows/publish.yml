@@ -58,7 +58,7 @@ jobs:
             use-cross: false
             strip: false
             addl-build-args: --features=apply,generate,lua
-            upx: true
+            upx: false
           - os: windows-latest
             os-name: windows
             target: i686-pc-windows-msvc
@@ -68,7 +68,7 @@ jobs:
             use-cross: true
             strip: false
             addl-build-args: --features=apply,generate,lua
-            upx: true
+            upx: false
           - os: windows-latest
             os-name: windows
             target: x86_64-pc-windows-gnu
@@ -171,14 +171,30 @@ jobs:
         cd qsv-${{ needs.analyze-tags.outputs.previous-tag }}
         upx --verbose qsv
         upx --verbose qsvlite
-    - name: compress binaries with GHA upx on windows/linux
-      if: ${{ matrix.job.os-name != 'macos' && matrix.job.upx }}
-      uses: crazy-max/ghaction-upx@v1
+    - name: compress binaries with GHA upx on linux
+      if: ${{ matrix.job.os-name == 'linux' && matrix.job.upx }}
+      uses: svenstaro/upx-action@v2
       with:
-        version: latest
-        files: |
-          ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/*
+        file: |
+          ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/qsv
         args: --verbose
+      uses: svenstaro/upx-action@v2
+      with:
+        file: |
+          ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/qsvlite
+        args: --verbose
+    - name: compress binaries with GHA upx on windows
+      if: ${{ matrix.job.os-name == 'windows' && matrix.job.upx }}
+      uses: svenstaro/upx-action@v2
+      with:
+        file: |
+          ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/qsv.exe
+        args: --verbose
+      uses: svenstaro/upx-action@v2
+      with:
+        file: |
+          ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/qsvlite.exe
+        args: --verbose        
     - name: if upx zip store binary
       if: ${{ matrix.job.upx }}
       run: 7z a -tzip ${{ matrix.job.asset_name }} ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/${{ matrix.job.artifact_name }} -mx=0
