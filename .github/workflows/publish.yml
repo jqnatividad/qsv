@@ -147,10 +147,11 @@ jobs:
     - name: Setup Python dev for linux
       if: ${{ matrix.job.os-name == 'linux' }}
       env:
-        PYO3_PYTHON: /usr/bin/python
+        PYO3_PYTHON: /usr/bin/python3
       run: |
         echo $PYO3_PYTHON
-        sudo apt install python3-dev
+        which python3
+        which python
     - name: build prep for aarch64-apple-darwin
       if: ${{ matrix.job.build-prep }}
       run: |
