@@ -38,7 +38,6 @@ jobs:
             use-cross: false
             strip: true
             addl-build-args: --features=apply,generate,lua,foreach,python
-            upx: false
           - os: ubuntu-latest
             os-name: linux
             target: i686-unknown-linux-gnu
@@ -47,8 +46,7 @@ jobs:
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-i686-unknown-linux-gnu.zip
             use-cross: true
             strip: true
-            addl-build-args: --features=apply,generate,lua,foreach,python
-            upx: false
+            addl-build-args: --features=apply,generate,lua,foreach
           - os: windows-latest
             os-name: windows
             target: x86_64-pc-windows-msvc
@@ -58,7 +56,6 @@ jobs:
             use-cross: false
             strip: false
             addl-build-args: --features=apply,generate,lua
-            upx: false
           - os: windows-latest
             os-name: windows
             target: i686-pc-windows-msvc
@@ -67,8 +64,7 @@ jobs:
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-i686-pc-windows-msvc.zip
             use-cross: true
             strip: false
-            addl-build-args: --features=apply,generate,lua
-            upx: false
+            addl-build-args: --features=apply,generate,lua,python
           - os: windows-latest
             os-name: windows
             target: x86_64-pc-windows-gnu
@@ -77,8 +73,7 @@ jobs:
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-x86_64-pc-windows-gnu.zip
             use-cross: false
             strip: false
-            addl-build-args: --no-default-features --features=apply,generate,lua
-            upx: false
+            addl-build-args: --no-default-features --features=apply,generate,lua,python
           - os: macos-latest
             os-name: macos
             target: x86_64-apple-darwin
@@ -88,7 +83,6 @@ jobs:
             use-cross: false
             strip: true
             addl-build-args: --features=apply,generate,lua,foreach,python
-            upx: true
           - os: macos-latest
             os-name: macos
             target: aarch64-apple-darwin
@@ -98,8 +92,7 @@ jobs:
             build-prep: true
             use-cross: true
             strip: true
-            addl-build-args: --features=apply,generate,lua,foreach,python
-            upx: true
+            addl-build-args: --features=apply,generate,lua,foreach
           - os: ubuntu-latest
             os-name: linux
             target: aarch64-unknown-linux-gnu
@@ -108,8 +101,7 @@ jobs:
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-aarch64-unknown-linux-gnu.zip
             use-cross: true
             strip: false
-            addl-build-args: --features=apply,generate,lua,foreach,python
-            upx: false
+            addl-build-args: --features=apply,generate,lua,foreach
           - os: ubuntu-latest
             os-name: linux
             target: arm-unknown-linux-gnueabihf
@@ -118,8 +110,7 @@ jobs:
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-arm-unknown-linux-gnueabihf.zip
             use-cross: true
             strip: false
-            addl-build-args: --no-default-features --features=apply,generate,lua,foreach,python
-            upx: false
+            addl-build-args: --no-default-features --features=apply,generate,lua,foreach
           - os: ubuntu-latest
             os-name: linux
             target: arm-unknown-linux-musleabihf
@@ -128,8 +119,7 @@ jobs:
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-arm-unknown-linux-musleabihf.zip
             use-cross: true
             strip: false
-            addl-build-args: --no-default-features --features=apply,generate,lua,foreach,python
-            upx: false
+            addl-build-args: --no-default-features --features=apply,generate,lua,foreach
 
     steps:
     - name: Installing Rust toolchain
@@ -144,7 +134,7 @@ jobs:
       with:
         submodules: recursive
         ref: ${{ needs.analyze-tags.outputs.previous-tag }}
-    - name: Setup Python dev for linux
+    - name: DEBUG - Setup Python dev for linux
       if: ${{ matrix.job.os-name == 'linux' }}
       env:
         PYO3_PYTHON: /usr/bin/python3
@@ -165,57 +155,15 @@ jobs:
         use-cross: ${{ matrix.job.use-cross }}
         toolchain: ${{ matrix.rust }}
         args: --release --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }}
-#    - name: strip binary on *nix environments
-#      if: ${{ matrix.job.strip }}
-#      run: strip target/${{ matrix.job.target }}/release/${{ matrix.job.artifact_name }}
+    - name: strip binary on *nix environments
+      if: ${{ matrix.job.strip }}
+      run: strip target/${{ matrix.job.target }}/release/${{ matrix.job.artifact_name }}
     - name: Copy binaries to working dir
       shell: bash
       run: |
         mkdir qsv-${{ needs.analyze-tags.outputs.previous-tag }}
         cp target/${{ matrix.job.target }}/release/${{ matrix.job.artifact_name }} qsv-${{ needs.analyze-tags.outputs.previous-tag }}        
-    - name: compress binaries with upx using brew on macos
-      if: ${{ matrix.job.os-name == 'macos' }}
-      run: |
-        brew install upx
-        cd qsv-${{ needs.analyze-tags.outputs.previous-tag }}
-        upx --verbose qsv
-        upx --verbose qsvlite
-    - name: compress qsv binary with GHA upx on linux
-      if: ${{ matrix.job.os-name == 'linux' && matrix.job.upx }}
-      uses: svenstaro/upx-action@v2
-      with:
-        file: |
-          ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/qsv
-        args: --verbose
-        strip: false
-    - name: compress qsvlite binary with GHA upx on linux
-      if: ${{ matrix.job.os-name == 'linux' && matrix.job.upx }}
-      uses: svenstaro/upx-action@v2
-      with:
-        file: |
-          ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/qsvlite
-        args: --verbose
-        strip: false
-    - name: compress qsv.exe binary with GHA upx on windows
-      if: ${{ matrix.job.os-name == 'windows' && matrix.job.upx }}
-      uses: svenstaro/upx-action@v2
-      with:
-        file: |
-          ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/qsv.exe
-        args: --verbose
-        strip: false
-    - name: compress qsvlite.exe binary with GHA upx on windows
-      if: ${{ matrix.job.os-name == 'windows' && matrix.job.upx }}
-      uses: svenstaro/upx-action@v2
-      with:
-        file: |
-          ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/qsvlite.exe
-        args: --verbose
-        strip: false
-    - name: if upx zip store binary
-      if: ${{ matrix.job.upx }}
-      run: 7z a -tzip ${{ matrix.job.asset_name }} ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/${{ matrix.job.artifact_name }} -mx=0
-    - name: otherwise zip compress binary
+    - name: zip compress binary
       if: ${{ matrix.job.upx == false }}    
       run: 7z a -tzip ${{ matrix.job.asset_name }} ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/${{ matrix.job.artifact_name }} -mx=9 -mmt=on -mpass=7
     - name: Upload binaries to release
