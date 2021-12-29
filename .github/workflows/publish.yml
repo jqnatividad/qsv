@@ -144,11 +144,12 @@ jobs:
       with:
         submodules: recursive
         ref: ${{ needs.analyze-tags.outputs.previous-tag }}
-    - name: Setup Python
+    - name: Setup Python dev
       env:
         PYO3_PYTHON: /usr/bin/python
       run: |
         echo $PYO3_PYTHON
+        sudo apt install python3-dev
     - name: build prep for aarch64-apple-darwin
       if: ${{ matrix.job.build-prep }}
       run: |
