@@ -146,9 +146,9 @@ jobs:
         ref: ${{ needs.analyze-tags.outputs.previous-tag }}
     - name: Setup Python
       env:
-        PYO3_PATH: /usr/bin/python
+        PYO3_PYTHON: /usr/bin/python
       run: |
-        echo PYO3_PATH
+        echo $PYO3_PYTHON
     - name: build prep for aarch64-apple-darwin
       if: ${{ matrix.job.build-prep }}
       run: |
