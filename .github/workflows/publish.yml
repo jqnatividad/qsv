@@ -144,6 +144,13 @@ jobs:
       with:
         submodules: recursive
         ref: ${{ needs.analyze-tags.outputs.previous-tag }}
+    - name: Setup Python
+      uses: actions/setup-python@v2
+        with:
+          # Semantic version range syntax or exact version of a Python version
+          python-version: '3.x'
+          # Optional - x64 or x86 architecture, defaults to x64
+          architecture: ${{ matrix.job.architecture }}
     - name: build prep for aarch64-apple-darwin
       if: ${{ matrix.job.build-prep }}
       run: |
