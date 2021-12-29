@@ -180,6 +180,7 @@ jobs:
         args: --verbose
         strip: false
     - name: compress qsvlite binary with GHA upx on linux
+      if: ${{ matrix.job.os-name == 'linux' && matrix.job.upx }}
       uses: svenstaro/upx-action@v2
       with:
         file: |
@@ -195,6 +196,7 @@ jobs:
         args: --verbose
         strip: false
     - name: compress qsvlite.exe binary with GHA upx on windows
+      if: ${{ matrix.job.os-name == 'windows' && matrix.job.upx }}
       uses: svenstaro/upx-action@v2
       with:
         file: |
