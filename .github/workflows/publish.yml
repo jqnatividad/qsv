@@ -37,7 +37,7 @@ jobs:
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-x86_64-unknown-linux-gnu.zip
             use-cross: false
             strip: true
-            addl-build-args: --features=apply,generate,lua,foreach
+            addl-build-args: --features=apply,generate,lua,foreach,python
             upx: false
           - os: ubuntu-latest
             os-name: linux
@@ -47,7 +47,7 @@ jobs:
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-i686-unknown-linux-gnu.zip
             use-cross: true
             strip: true
-            addl-build-args: --features=apply,generate,lua,foreach
+            addl-build-args: --features=apply,generate,lua,foreach,python
             upx: false
           - os: windows-latest
             os-name: windows
@@ -57,7 +57,7 @@ jobs:
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-x86_64-pc-windows-msvc.zip
             use-cross: false
             strip: false
-            addl-build-args: --features=apply,generate,lua
+            addl-build-args: --features=apply,generate,lua,python
             upx: false
           - os: windows-latest
             os-name: windows
@@ -67,7 +67,7 @@ jobs:
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-i686-pc-windows-msvc.zip
             use-cross: true
             strip: false
-            addl-build-args: --features=apply,generate,lua
+            addl-build-args: --features=apply,generate,lua,python
             upx: false
           - os: windows-latest
             os-name: windows
@@ -77,7 +77,7 @@ jobs:
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-x86_64-pc-windows-gnu.zip
             use-cross: false
             strip: false
-            addl-build-args: --no-default-features --features=apply,generate,lua
+            addl-build-args: --no-default-features --features=apply,generate,lua,python
             upx: false
           - os: macos-latest
             os-name: macos
@@ -87,7 +87,7 @@ jobs:
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-x86_64-apple-darwin.zip
             use-cross: false
             strip: true
-            addl-build-args: --features=apply,generate,lua,foreach
+            addl-build-args: --features=apply,generate,lua,foreach,python
             upx: true
           - os: macos-latest
             os-name: macos
@@ -98,7 +98,7 @@ jobs:
             build-prep: true
             use-cross: true
             strip: true
-            addl-build-args: --features=apply,generate,lua,foreach
+            addl-build-args: --features=apply,generate,lua,foreach,python
             upx: true
           - os: ubuntu-latest
             os-name: linux
@@ -108,7 +108,7 @@ jobs:
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-aarch64-unknown-linux-gnu.zip
             use-cross: true
             strip: false
-            addl-build-args: --features=apply,generate,lua,foreach
+            addl-build-args: --features=apply,generate,lua,foreach,python
             upx: false
           - os: ubuntu-latest
             os-name: linux
@@ -118,7 +118,7 @@ jobs:
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-arm-unknown-linux-gnueabihf.zip
             use-cross: true
             strip: false
-            addl-build-args: --no-default-features --features=apply,generate,lua,foreach
+            addl-build-args: --no-default-features --features=apply,generate,lua,foreach,python
             upx: false
           - os: ubuntu-latest
             os-name: linux
@@ -128,7 +128,7 @@ jobs:
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-arm-unknown-linux-musleabihf.zip
             use-cross: true
             strip: false
-            addl-build-args: --no-default-features --features=apply,generate,lua,foreach
+            addl-build-args: --no-default-features --features=apply,generate,lua,foreach,python
             upx: false
 
     steps:
