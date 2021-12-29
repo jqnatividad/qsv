@@ -171,25 +171,27 @@ jobs:
         cd qsv-${{ needs.analyze-tags.outputs.previous-tag }}
         upx --verbose qsv
         upx --verbose qsvlite
-    - name: compress binaries with GHA upx on linux
+    - name: compress qsv binary with GHA upx on linux
       if: ${{ matrix.job.os-name == 'linux' && matrix.job.upx }}
       uses: svenstaro/upx-action@v2
       with:
         file: |
           ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/qsv
         args: --verbose
+    - name: compress qsvlite binary with GHA upx on linux
       uses: svenstaro/upx-action@v2
       with:
         file: |
           ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/qsvlite
         args: --verbose
-    - name: compress binaries with GHA upx on windows
+    - name: compress qsv.exe binary with GHA upx on windows
       if: ${{ matrix.job.os-name == 'windows' && matrix.job.upx }}
       uses: svenstaro/upx-action@v2
       with:
         file: |
           ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/qsv.exe
         args: --verbose
+    - name: compress qsvlite.exe binary with GHA upx on windows
       uses: svenstaro/upx-action@v2
       with:
         file: |
