@@ -145,10 +145,8 @@ jobs:
         submodules: recursive
         ref: ${{ needs.analyze-tags.outputs.previous-tag }}
     - name: Setup Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.10.1
-        architecture: ${{ matrix.job.architecture }}
+      env:
+        PYO3_PATH: /usr/bin/python
     - name: build prep for aarch64-apple-darwin
       if: ${{ matrix.job.build-prep }}
       run: |
