@@ -157,7 +157,9 @@ jobs:
         args: --release --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }}
     - name: strip binary on *nix environments
       if: ${{ matrix.job.strip }}
-      run: strip target/${{ matrix.job.target }}/release/${{ matrix.job.artifact_name }}
+      run: |
+        rm target/${{ matrix.job.target }}/release/*.d
+        strip target/${{ matrix.job.target }}/release/${{ matrix.job.artifact_name }}
     - name: Copy binaries to working dir
       shell: bash
       run: |
