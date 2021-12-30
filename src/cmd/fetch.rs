@@ -24,7 +24,7 @@ fetch options:
     -c, --new-column <name>    Put the fetched values in a new column instead.
     --jql <selector>           Apply jql selector to API returned JSON value.
     -j, --jobs <value>         Number of concurrent requests.
-    --throttle <ms>            Set throttle delay between requests in milliseconds. Recommend 1000 ms or greater (default: 5000 ms).
+    --rate-limit <qps>         Rate Limit in Queries Per Second. [default: 5]
     --header <file>            File containing additional HTTP Request Headers. Useful for setting Authorization or overriding User Agent.
     --store-error              On error, store HTTP error instead of blank value.
     --cookies                  Automatically store and send cookies. Useful for authenticated sessions.
@@ -46,7 +46,7 @@ struct Args {
     flag_new_column: Option<String>,
     flag_jql: Option<String>,
     flag_jobs: Option<u8>,
-    flag_throttle: Option<usize>,
+    flag_rate_limit: Option<u32>,
     flag_header: Option<String>,
     flag_store_error: bool,
     flag_cookies: bool,
@@ -74,7 +74,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             new column: {:?}, 
             jql: {:?},
             threads: {:?},
-            throttle delay: {:?},
+            rate limit: {:?},
             http header file: {:?},
             store error: {:?},
             store cookie: {:?},
@@ -87,7 +87,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         &args.flag_new_column,
         &args.flag_jql,
         &args.flag_jobs,
-        &args.flag_throttle,
+        &args.flag_rate_limit,
         &args.flag_header,
         &args.flag_store_error,
         &args.flag_cookies,
@@ -114,11 +114,31 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         "Only one single URL column may be selected."
     );
 
+    use std::num::NonZeroU32;
+    // default rate limit is actually set via docopt, so below init is just to satisfy compiler
+    let mut rate_limit: NonZeroU32 = NonZeroU32::new(5).unwrap();
+    if let Some(qps) = args.flag_rate_limit {
+        assert!(
+            qps <= 30 && qps > 0,
+            "Rate Limit should be between 1 to 30 queries per second."
+        );
+        rate_limit = NonZeroU32::new(qps).unwrap();
+    }
+
+
     use reqwest::blocking::Client;
     let client = Client::builder()
         .user_agent(DEFAULT_USER_AGENT)
         .build()
         .unwrap();
+
+    use governor::{
+        RateLimiter,
+        Quota
+    };
+
+
+    let limiter = RateLimiter::direct(Quota::per_second(rate_limit));
 
     let mut include_existing_columns = false;
 
@@ -152,7 +172,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let url = String::from_utf8_lossy(&selected_col_value).to_string();
         debug!("Fetching URL: {:?}", &url);
 
-        let final_value = get_cached_response(&url, &client, &args.flag_jql);
+        let final_value = get_cached_response(&url, &client, &limiter, &args.flag_jql);
 
         if include_existing_columns {
             record.push_field(final_value.as_bytes());
@@ -185,6 +205,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     Ok(())
 }
 
+use governor::{
+    state::direct::NotKeyed,
+    state::InMemoryState,
+    clock::DefaultClock,
+    middleware::NoOpMiddleware
+};
+
+use std::{
+    thread,
+    time,
+};
+
 #[cached(
     key = "String",
     convert = r#"{ format!("{}", url) }"#,
@@ -193,8 +225,23 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 fn get_cached_response(
     url: &str,
     client: &reqwest::blocking::Client,
+    limiter: &governor::RateLimiter<NotKeyed, InMemoryState, DefaultClock, NoOpMiddleware>,
     flag_jql: &Option<String>,
 ) -> String {
+
+    loop {
+        match limiter.check() {
+            Ok(()) => {
+                // debug!("going ahead");
+                break;
+            },
+            _ => {
+                // debug!("sleeping for 10 ms");
+                thread::sleep(time::Duration::from_millis(10));
+            }
+        }
+    };
+
     let resp = client.get(url).send().unwrap();
     debug!("response: {:?}", &resp);
     let api_value = resp.text().unwrap();
