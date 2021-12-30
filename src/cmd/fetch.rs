@@ -115,7 +115,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     );
 
     use std::num::NonZeroU32;
-    // default rate limit is 3 qps
+    // default rate limit is actually set via docopt, so below init is just to satisfy compiler
     let mut rate_limit: NonZeroU32 = NonZeroU32::new(5).unwrap();
     if let Some(qps) = args.flag_rate_limit {
         assert!(
