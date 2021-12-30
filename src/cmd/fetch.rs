@@ -125,18 +125,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         rate_limit = NonZeroU32::new(qps).unwrap();
     }
 
-
     use reqwest::blocking::Client;
     let client = Client::builder()
         .user_agent(DEFAULT_USER_AGENT)
         .build()
         .unwrap();
 
-    use governor::{
-        RateLimiter,
-        Quota
-    };
-
+    use governor::{Quota, RateLimiter};
 
     let limiter = RateLimiter::direct(Quota::per_second(rate_limit));
 
@@ -206,16 +201,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 }
 
 use governor::{
-    state::direct::NotKeyed,
-    state::InMemoryState,
-    clock::DefaultClock,
-    middleware::NoOpMiddleware
+    clock::DefaultClock, middleware::NoOpMiddleware, state::direct::NotKeyed, state::InMemoryState,
 };
 
-use std::{
-    thread,
-    time,
-};
+use std::{thread, time};
 
 #[cached(
     key = "String",
@@ -228,19 +217,18 @@ fn get_cached_response(
     limiter: &governor::RateLimiter<NotKeyed, InMemoryState, DefaultClock, NoOpMiddleware>,
     flag_jql: &Option<String>,
 ) -> String {
-
     loop {
         match limiter.check() {
             Ok(()) => {
                 // debug!("going ahead");
                 break;
-            },
+            }
             _ => {
                 // debug!("sleeping for 10 ms");
                 thread::sleep(time::Duration::from_millis(10));
             }
         }
-    };
+    }
 
     let resp = client.get(url).send().unwrap();
     debug!("response: {:?}", &resp);

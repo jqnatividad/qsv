@@ -1,4 +1,3 @@
-
 use crate::workdir::Workdir;
 
 #[test]
@@ -15,8 +14,7 @@ fn fetch_simple() {
         ],
     );
     let mut cmd = wrk.command("fetch");
-    cmd.arg("URL")
-        .arg("data.csv");
+    cmd.arg("URL").arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
@@ -79,21 +77,10 @@ fn fetch_jql() {
     assert_eq!(got, expected);
 }
 
-use std::{
-    thread,
-    sync::mpsc
-};
+use std::{sync::mpsc, thread};
 
 use actix_web::{
-        dev::Server,
-        middleware,
-        rt,
-        web,
-        App,
-        HttpRequest,
-        HttpServer,
-        Responder,
-        Result,
+    dev::Server, middleware, rt, web, App, HttpRequest, HttpServer, Responder, Result,
 };
 
 use serde::Serialize;
@@ -119,22 +106,17 @@ async fn get_fullname(
     };
 
     Ok(web::Json(obj))
-
 }
 
-/// start an Actix Webserver with Rate Limiting via Governor 
+/// start an Actix Webserver with Rate Limiting via Governor
 fn run_webserver(tx: mpsc::Sender<Server>) -> std::io::Result<()> {
     let mut sys = rt::System::new("test");
 
-    use actix_governor::{
-        Governor,
-        GovernorConfigBuilder, 
-        GovernorConfig
-    };
+    use actix_governor::{Governor, GovernorConfig, GovernorConfigBuilder};
 
     // Allow bursts with up to five requests per IP address
     // and replenishes one element every 500 ms (2 qps)
-    let governor_conf:GovernorConfig = GovernorConfigBuilder::default()
+    let governor_conf: GovernorConfig = GovernorConfigBuilder::default()
         .per_millisecond(500)
         .burst_size(5)
         .finish()
@@ -161,7 +143,6 @@ fn run_webserver(tx: mpsc::Sender<Server>) -> std::io::Result<()> {
 
 #[test]
 fn fetch_ratelimit() {
-
     // start webserver with rate limiting
     let (tx, rx) = mpsc::channel();
 
@@ -239,6 +220,4 @@ fn fetch_ratelimit() {
     // init stop webserver and wait until server gracefully exit
     println!("STOPPING Webserver");
     rt::System::new("").block_on(srv.stop(true));
-
 }
-

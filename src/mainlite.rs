@@ -1,4 +1,4 @@
-#![allow(dead_code)] 
+#![allow(dead_code)]
 
 extern crate crossbeam_channel as channel;
 use self_update::cargo_crate_version;
