@@ -38,36 +38,59 @@ pub fn max_jobs() -> usize {
 }
 
 pub fn version() -> String {
+    let mut enabled_features = "".to_string();
+    if let Some(qsv_type) = option_env!("CARGO_BIN_NAME") {
+        if qsv_type != "qsvlite" {
+            #[cfg(feature = "apply")]
+            enabled_features.push_str("apply;");
+            #[cfg(feature = "foreach")]
+            enabled_features.push_str("foreach;");
+            #[cfg(feature = "generate")]
+            enabled_features.push_str("generate;");
+            #[cfg(feature = "lua")]
+            enabled_features.push_str("lua;");
+            #[cfg(feature = "python")]
+            enabled_features.push_str("python;");
+
+            enabled_features.push('-');
+        }
+    }
+
     #[cfg(feature = "mimalloc")]
     let malloc_kind = "mimalloc".to_string();
     #[cfg(not(feature = "mimalloc"))]
     let malloc_kind = "standard".to_string();
-    let (maj, min, pat, pre) = (
+    let (qsvtype, maj, min, pat, pre) = (
+        option_env!("CARGO_BIN_NAME"),
         option_env!("CARGO_PKG_VERSION_MAJOR"),
         option_env!("CARGO_PKG_VERSION_MINOR"),
         option_env!("CARGO_PKG_VERSION_PATCH"),
         option_env!("CARGO_PKG_VERSION_PRE"),
     );
-    match (maj, min, pat, pre) {
-        (Some(maj), Some(min), Some(pat), Some(pre)) => {
+    match (qsvtype, maj, min, pat, pre) {
+        (Some(qsvtype), Some(maj), Some(min), Some(pat), Some(pre)) => {
             if pre.is_empty() {
                 return format!(
-                    "{}.{}.{}-{}-{}-{}",
+                    "{} {}.{}.{}-{}-{}{}-{}",
+                    qsvtype,
                     maj,
                     min,
                     pat,
                     malloc_kind,
+                    enabled_features,
                     max_jobs(),
                     num_cpus()
                 );
             } else {
                 return format!(
-                    "{}.{}.{}-{}-{}-{}-{}",
+                    "{} {}.{}.{}-{}-{}-{}{}-{}",
+                    qsvtype,
                     maj,
                     min,
                     pat,
                     pre,
                     malloc_kind,
+                    enabled_features,
                     max_jobs(),
                     num_cpus(),
                 );

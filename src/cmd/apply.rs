@@ -5,7 +5,7 @@ use crate::CliResult;
 use cached::proc_macro::cached;
 use censor::{Censor, Sex, Zealous};
 use chrono::{NaiveTime, Utc};
-use currency::Currency;
+use qsv_currency::Currency;
 use dateparser::parse_with;
 use eudex::Hash;
 use indicatif::{ProgressBar, ProgressDrawTarget};
@@ -56,9 +56,9 @@ Currently supported operations:
       Add additional comma-delimited profanities with -comparand. 
   * censor: profanity filter. Add additional comma-delimited profanities 
       with --comparand.
-  * currencytonum: Gets the numeric value of a currency. Supports one-character
-      currency symbols only ($,¥,£,€,֏,₱,₽,₪,₩,ƒ,฿,₫). Recognizes point, comma
-      and space separators.
+  * currencytonum: Gets the numeric value of a currency. Supports currency symbols
+      (e.g. $,¥,£,€,֏,₱,₽,₪,₩,ƒ,฿,₫) and strings (e.g. USD, EUR, RMB, JPY, etc.). 
+      Recognizes point, comma and space separators.
   * copy: Mark a column for copying
   * simdl: Damerau-Levenshtein similarity to --comparand
   * simdln: Normalized Damerau-Levenshtein similarity to --comparand 

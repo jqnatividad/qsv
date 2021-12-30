@@ -26,6 +26,8 @@ pub mod jsonl;
 pub mod lua;
 pub mod partition;
 pub mod pseudo;
+#[cfg(feature = "python")]
+pub mod python;
 pub mod rename;
 pub mod replace;
 pub mod reverse;

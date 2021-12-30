@@ -20,7 +20,7 @@ fn comments() {
         ],
     );
     let mut cmd = wrk.command("input");
-    cmd.env("QSV_COMMENTS", "#");
+    cmd.env("QSV_COMMENT_CHAR", "#");
     cmd.arg("comments.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
@@ -53,7 +53,7 @@ fn comments_long() {
         ],
     );
     let mut cmd = wrk.command("input");
-    cmd.env("QSV_COMMENTS", "# is the comment character");
+    cmd.env("QSV_COMMENT_CHAR", "# is the comment character");
     cmd.arg("comments.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
@@ -81,7 +81,7 @@ fn comments_unicode_supported() {
         ],
     );
     let mut cmd = wrk.command("input");
-    cmd.env("QSV_COMMENTS", "Ǽ");
+    cmd.env("QSV_COMMENT_CHAR", "Ǽ");
     cmd.arg("comments.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
@@ -108,7 +108,7 @@ fn comments_count() {
         ],
     );
     let mut cmd = wrk.command("count");
-    cmd.env("QSV_COMMENTS", "Ǽ");
+    cmd.env("QSV_COMMENT_CHAR", "Ǽ");
     cmd.arg("comments.csv");
 
     let got_count: usize = wrk.stdout(&mut cmd);
@@ -131,7 +131,7 @@ fn comments_headers() {
         ],
     );
     let mut cmd = wrk.command("headers");
-    cmd.env("QSV_COMMENTS", "/");
+    cmd.env("QSV_COMMENT_CHAR", "/");
     cmd.arg("comments.csv");
 
     let got: String = wrk.stdout(&mut cmd);

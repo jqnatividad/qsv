@@ -38,7 +38,11 @@ fn recurse_to_infer_headers(value: &Value, headers: &mut Vec<Vec<String>>, path:
         Value::Object(map) => {
             for (key, value) in map.iter() {
                 match value {
-                    Value::Null | Value::Bool(_) | Value::Number(_) | Value::String(_) => {
+                    Value::Null
+                    | Value::Bool(_)
+                    | Value::Number(_)
+                    | Value::String(_)
+                    | Value::Array(_) => {
                         let mut full_path = path.clone();
                         full_path.push(key.to_string());
 
@@ -50,6 +54,7 @@ fn recurse_to_infer_headers(value: &Value, headers: &mut Vec<Vec<String>>, path:
 
                         recurse_to_infer_headers(value, headers, new_path);
                     }
+                    #[allow(unreachable_patterns)]
                     _ => {}
                 }
             }
@@ -68,7 +73,7 @@ fn infer_headers(value: &Value) -> Option<Vec<Vec<String>>> {
     Some(headers)
 }
 
-fn get_value_at_path(value: &Value, path: &Vec<String>) -> Option<Value> {
+fn get_value_at_path(value: &Value, path: &[String]) -> Option<Value> {
     let mut current = value;
 
     for key in path.iter() {
@@ -85,7 +90,7 @@ fn get_value_at_path(value: &Value, path: &Vec<String>) -> Option<Value> {
     Some(current.to_owned())
 }
 
-fn json_line_to_csv_record(value: &Value, headers: &Vec<Vec<String>>) -> csv::StringRecord {
+fn json_line_to_csv_record(value: &Value, headers: &[Vec<String>]) -> csv::StringRecord {
     let mut record = csv::StringRecord::new();
 
     for path in headers {
@@ -103,6 +108,11 @@ fn json_line_to_csv_record(value: &Value, headers: &Vec<Vec<String>>) -> csv::St
                 }
                 Value::Number(v) => v.to_string(),
                 Value::String(v) => v,
+                Value::Array(v) => v
+                    .iter()
+                    .map(|x| x.to_string())
+                    .collect::<Vec<_>>()
+                    .join(","),
                 _ => String::new(),
             });
         } else {

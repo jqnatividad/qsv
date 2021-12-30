@@ -1,3 +1,5 @@
+#![allow(dead_code)] 
+
 extern crate crossbeam_channel as channel;
 use self_update::cargo_crate_version;
 
@@ -39,7 +41,6 @@ macro_rules! fail {
 macro_rules! command_list {
     () => {
         "
-    apply*      Apply series of transformations to a column
     behead      Drop header from CSV file
     cat         Concatenate by row or column
     count       Count records
@@ -52,19 +53,15 @@ macro_rules! command_list {
     fixlengths  Makes all records have same length
     flatten     Show one field per line
     fmt         Format CSV output (change field delimiter)
-    foreach*    Loop over a CSV file to execute bash commands (*nix only)
     frequency   Show frequency tables
-    generate*   Generate test data by profiling a CSV
     headers     Show header names
     help        Show this usage message
     index       Create CSV index for faster access
     input       Read CSV data with special quoting rules
     join        Join CSV files
     jsonl       Convert newline-delimited JSON files to CSV
-    lua*        Execute Lua script on CSV data
     partition   Partition CSV data based on a column value
     pseudo      Pseudonymise the values of a column
-    py*         Evaluate a Python expression on CSV data
     sample      Randomly sample CSV data
     rename      Rename the columns of CSV data efficiently
     replace     Replace patterns in CSV data
@@ -78,8 +75,6 @@ macro_rules! command_list {
     stats       Infer data types and compute descriptive statistics
     table       Align CSV data into columns
     transpose   Transpose rows/columns of CSV data
-
-    * optional feature
 
     sponsored by datHere - Data Infrastructure Engineering
 "
@@ -139,7 +134,7 @@ fn qsv_update(verbose: bool) -> Result<(), Box<dyn ::std::error::Error>> {
         let status = self_update::backends::github::Update::configure()
             .repo_owner("jqnatividad")
             .repo_name("qsv")
-            .bin_name("qsv")
+            .bin_name("qsvlite")
             .show_download_progress(true)
             .show_output(verbose)
             .no_confirm(false)
@@ -275,8 +270,6 @@ Please choose one of the following commands:",
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "lowercase")]
 enum Command {
-    #[cfg(feature = "apply")]
-    Apply,
     Behead,
     Cat,
     Count,
@@ -289,23 +282,15 @@ enum Command {
     FixLengths,
     Flatten,
     Fmt,
-    #[cfg(feature = "foreach")]
-    ForEach,
     Frequency,
-    #[cfg(feature = "generate")]
-    Generate,
     Headers,
     Help,
     Index,
     Input,
     Join,
     Jsonl,
-    #[cfg(feature = "lua")]
-    Lua,
     Partition,
     Pseudo,
-    #[cfg(feature = "python")]
-    Py,
     Rename,
     Replace,
     Reverse,
@@ -329,14 +314,12 @@ impl Command {
 
         if !argv[1].chars().all(char::is_lowercase) {
             return Err(CliError::Other(format!(
-                "qsv expects commands in lowercase. Did you mean '{}'?",
+                "qsvlite expects commands in lowercase. Did you mean '{}'?",
                 argv[1].to_lowercase()
             )));
         }
         match self {
             Command::Behead => cmd::behead::run(argv),
-            #[cfg(feature = "apply")]
-            Command::Apply => cmd::apply::run(argv),
             Command::Cat => cmd::cat::run(argv),
             Command::Count => cmd::count::run(argv),
             Command::Dedup => cmd::dedup::run(argv),
@@ -349,8 +332,6 @@ impl Command {
             Command::Flatten => cmd::flatten::run(argv),
             Command::Fmt => cmd::fmt::run(argv),
             Command::Frequency => cmd::frequency::run(argv),
-            #[cfg(feature = "generate")]
-            Command::Generate => cmd::generate::run(argv),
             Command::Headers => cmd::headers::run(argv),
             Command::Help => {
                 wout!("{}", USAGE);
@@ -360,12 +341,8 @@ impl Command {
             Command::Input => cmd::input::run(argv),
             Command::Join => cmd::join::run(argv),
             Command::Jsonl => cmd::jsonl::run(argv),
-            #[cfg(feature = "lua")]
-            Command::Lua => cmd::lua::run(argv),
             Command::Partition => cmd::partition::run(argv),
             Command::Pseudo => cmd::pseudo::run(argv),
-            #[cfg(feature = "python")]
-            Command::Py => cmd::python::run(argv),
             Command::Rename => cmd::rename::run(argv),
             Command::Replace => cmd::replace::run(argv),
             Command::Reverse => cmd::reverse::run(argv),
@@ -379,8 +356,6 @@ impl Command {
             Command::Stats => cmd::stats::run(argv),
             Command::Table => cmd::table::run(argv),
             Command::Transpose => cmd::transpose::run(argv),
-            #[cfg(feature = "foreach")]
-            Command::ForEach => cmd::foreach::run(argv),
         }
     }
 }

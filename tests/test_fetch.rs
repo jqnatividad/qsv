@@ -43,7 +43,7 @@ fn fetch_simple() {
       }
     } ]
   }
-}"#     
+}"#
         ],
     ];
     assert_eq!(got, expected);

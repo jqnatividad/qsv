@@ -5,6 +5,47 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.27.1] - 2021-12-28
+## Changed
+* changed publish workflow for apple targets to use Xcode 12.5.1 from 12.4
+* `jsonl` command now recognize and process JSON arrays
+* `--version` option now shows binary name and enabled features
+* Use upgraded [`qsv_currency`](https://crates.io/crates/qsv_currency) fork to power `apply currencytonum` operation. Now supports currency strings
+  (e.g. USD, EUR, JPY, etc) in addition to currency symbols (e.g. $, €, ¥, etc)
+* renamed `QSV_COMMENTS` environment variable to `QSV_COMMENT_CHAR` to make it clear that it clear that we're expecting
+  a single character, not a boolean as the old name implies.
+
+## Added
+* added `create_from_string` helper function in workdir.rs
+* compress select pre-built binaries with [UPX](https://upx.github.io/)
+* `qsvlite` binary target, with all features disabled.
+* `py` command. Evaluates a Python expression over CSV lines to transform, aggregate or filter them.
+
+## Deleted
+* removed Debian package publishing workflow, as the GH action for it
+  does not support Rust 2021 edition
+
+## [0.26.2] - 2021-12-21
+## Added
+* automatic self-update version check when the `--list` option is invoked.
+* `QSV_NO_UPDATE` environment variable to prohibit self-update checks.
+### Fixed
+* explicitly include `deflate` compression method for self_update. Otherwise, `--update` unzipping doesn't work.
+## [0.26.1] - 2021-12-21
+### Fixed
+* explicitly include `deflate` compression method for self_update. Otherwise, `--update` unzipping doesn't work.
+## [0.26.0] - 2021-12-21
+### Changed
+* `fetch` refinements. Still WIP, but usable (See [#77](https://github.com/jqnatividad/qsv/issues/77))
+  - add default user agent
+  - `fetch` progress bar
+  - `--jobs`, `--throttle`, `--header`, `--store-error` and `cookies` options still not functional.
+* cargo update bump several crates to their latest releases. Of note are `test-data-generation`, 
+`self_update` and `jql` where we worked with the crate maintainers directly with the update.
+
+### Fixed
+* `--update` bug fixed. It was not finding the binary to self update properly.
+
 
 ## [0.25.2-beta] - 2021-12-13
 ## Added
