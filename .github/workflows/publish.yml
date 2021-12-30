@@ -55,7 +55,7 @@ jobs:
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-x86_64-pc-windows-msvc.zip
             use-cross: false
             strip: false
-            addl-build-args: --features=apply,generate,lua,python
+            addl-build-args: --features=apply,generate,lua
           - os: windows-latest
             os-name: windows
             target: i686-pc-windows-msvc
@@ -73,7 +73,7 @@ jobs:
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-x86_64-pc-windows-gnu.zip
             use-cross: false
             strip: false
-            addl-build-args: --no-default-features --features=apply,generate,lua,python
+            addl-build-args: --no-default-features --features=apply,generate,lua
           - os: macos-latest
             os-name: macos
             target: x86_64-apple-darwin
@@ -134,15 +134,6 @@ jobs:
       with:
         submodules: recursive
         ref: ${{ needs.analyze-tags.outputs.previous-tag }}
-    - name: DEBUG - Setup Python dev for linux
-      if: ${{ matrix.job.os-name == 'linux' }}
-      env:
-        PYO3_PYTHON: /usr/bin/python3
-        PYO3_PRINT_CONFIG: 1
-      run: |
-        echo $PYO3_PYTHON
-        which python3
-        which python
     - name: build prep for aarch64-apple-darwin
       if: ${{ matrix.job.build-prep }}
       run: |
