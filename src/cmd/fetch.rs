@@ -24,7 +24,7 @@ fetch options:
     -c, --new-column <name>    Put the fetched values in a new column instead.
     --jql <selector>           Apply jql selector to API returned JSON value.
     -j, --jobs <value>         Number of concurrent requests.
-    --throttle <ms>            Set throttle delay between requests in milliseconds. Recommend 1000 ms or greater (default: 5000 ms).
+    --rate-limit <qps>         Rate Limit in Queries Per Second. [default: 5]
     --header <file>            File containing additional HTTP Request Headers. Useful for setting Authorization or overriding User Agent.
     --store-error              On error, store HTTP error instead of blank value.
     --cookies                  Automatically store and send cookies. Useful for authenticated sessions.
@@ -46,7 +46,7 @@ struct Args {
     flag_new_column: Option<String>,
     flag_jql: Option<String>,
     flag_jobs: Option<u8>,
-    flag_throttle: Option<usize>,
+    flag_rate_limit: Option<u32>,
     flag_header: Option<String>,
     flag_store_error: bool,
     flag_cookies: bool,
@@ -74,7 +74,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             new column: {:?}, 
             jql: {:?},
             threads: {:?},
-            throttle delay: {:?},
+            rate limit: {:?},
             http header file: {:?},
             store error: {:?},
             store cookie: {:?},
@@ -87,7 +87,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         &args.flag_new_column,
         &args.flag_jql,
         &args.flag_jobs,
-        &args.flag_throttle,
+        &args.flag_rate_limit,
         &args.flag_header,
         &args.flag_store_error,
         &args.flag_cookies,
@@ -114,6 +114,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         "Only one single URL column may be selected."
     );
 
+    use std::num::NonZeroU32;
+    // default rate limit is 3 qps
+    let mut rate_limit: NonZeroU32 = NonZeroU32::new(5).unwrap();
+    if let Some(qps) = args.flag_rate_limit {
+        assert!(
+            qps <= 30 && qps > 0,
+            "Rate Limit should be between 1 to 30 queries per second."
+        );
+        rate_limit = NonZeroU32::new(qps).unwrap();
+    }
+
+
     use reqwest::blocking::Client;
     let client = Client::builder()
         .user_agent(DEFAULT_USER_AGENT)
@@ -125,8 +137,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         Quota
     };
 
-    use nonzero_ext::nonzero;
-    let limiter = RateLimiter::direct(Quota::per_second(nonzero!(3u32)));
+
+    let limiter = RateLimiter::direct(Quota::per_second(rate_limit));
 
     let mut include_existing_columns = false;
 
@@ -220,11 +232,11 @@ fn get_cached_response(
     loop {
         match limiter.check() {
             Ok(()) => {
-                debug!("going ahead");
+                // debug!("going ahead");
                 break;
             },
             _ => {
-                debug!("sleeping for 10 ms");
+                // debug!("sleeping for 10 ms");
                 thread::sleep(time::Duration::from_millis(10));
             }
         }

@@ -15,7 +15,8 @@ fn fetch_simple() {
         ],
     );
     let mut cmd = wrk.command("fetch");
-    cmd.arg("URL").arg("data.csv");
+    cmd.arg("URL")
+        .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
@@ -132,9 +133,9 @@ fn run_webserver(tx: mpsc::Sender<Server>) -> std::io::Result<()> {
     };
 
     // Allow bursts with up to five requests per IP address
-    // and replenishes one element every two seconds
+    // and replenishes one element every 500 ms (2 qps)
     let governor_conf:GovernorConfig = GovernorConfigBuilder::default()
-        .per_second(2)
+        .per_millisecond(500)
         .burst_size(5)
         .finish()
         .unwrap();
@@ -205,6 +206,8 @@ fn fetch_ratelimit() {
         .arg("Fullname")
         .arg("--jql")
         .arg(r#"."fullname""#)
+        .arg("--rate-limit")
+        .arg("2")
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
