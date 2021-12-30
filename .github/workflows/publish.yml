@@ -55,7 +55,7 @@ jobs:
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-x86_64-pc-windows-msvc.zip
             use-cross: false
             strip: false
-            addl-build-args: --features=apply,generate,lua
+            addl-build-args: --features=apply,generate,lua,python
           - os: windows-latest
             os-name: windows
             target: i686-pc-windows-msvc
@@ -64,7 +64,7 @@ jobs:
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-i686-pc-windows-msvc.zip
             use-cross: true
             strip: false
-            addl-build-args: --features=apply,generate,lua,python
+            addl-build-args: --features=apply,generate,lua
           - os: windows-latest
             os-name: windows
             target: x86_64-pc-windows-gnu
