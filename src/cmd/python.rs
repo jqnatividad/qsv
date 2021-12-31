@@ -170,7 +170,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         py_row.call_method1("_update_underlying_data", (row_data,))?;
 
         let result = py
-            .eval(&args.arg_script, Some(&globals), Some(&locals))
+            .eval(&args.arg_script, Some(globals), Some(locals))
             .map_err(|e| {
                 e.print_and_set_sys_last_vars(py);
                 "Evaluation of given expression failed with the above error!"
