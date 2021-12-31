@@ -1,7 +1,6 @@
 .*.swp
 doc
 tags
-examples/data/ss10pusa.csv
 build
 target
 ctags.rust
@@ -23,3 +22,4 @@ perf.data*
 *.log
 *.log.gz
 *.jsonl
+*.bak
