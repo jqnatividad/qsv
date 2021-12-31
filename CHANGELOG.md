@@ -5,8 +5,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.28.0] - 2021-12-31
+### Changed
+* Fetch: support rate limiting by @mhuang74 in https://github.com/jqnatividad/qsv/pull/133
+* Runtime minimum version check for Python 3.7 if `python` feature is enabled by @jqnatividad in https://github.com/jqnatividad/qsv/pull/138
+* Fine-tuned GitHub Actions publish workflow for pre-built binaries
+   * removed upx compression, as it was creating invalid binaries on certain platforms
+   * enabled `python` feature on x86_64 platforms as we have access to the Python interpreter on GitHub's Action runners
+   * include both `qsv` and `qsvlite` in the distribution zip file
+* Formatted Cargo.toml with Even Better TOML VS code extension
+* changed Cargo.toml categories and keywords
+* removed patch version number from Cargo.toml dependencies. Let cargo do its semver dependency magic, and we include the Cargo.lock file anyway.
+
+### Added
+* added example of Python f-string formatting to `py` help text
+* added Python f-string formatting test
+* Added note in README about enabled features in pre-built binaries
+
+### Deleted
+* Removed _**NEW**_ and _**EXTENDED**_ indicators in README
+
 ## [0.27.1] - 2021-12-28
-## Changed
+### Changed
 * changed publish workflow for apple targets to use Xcode 12.5.1 from 12.4
 * `jsonl` command now recognize and process JSON arrays
 * `--version` option now shows binary name and enabled features
@@ -15,13 +35,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * renamed `QSV_COMMENTS` environment variable to `QSV_COMMENT_CHAR` to make it clear that it clear that we're expecting
   a single character, not a boolean as the old name implies.
 
-## Added
+### Added
 * added `create_from_string` helper function in workdir.rs
 * compress select pre-built binaries with [UPX](https://upx.github.io/)
 * `qsvlite` binary target, with all features disabled.
 * `py` command. Evaluates a Python expression over CSV lines to transform, aggregate or filter them.
 
-## Deleted
+### Deleted
 * removed Debian package publishing workflow, as the GH action for it
   does not support Rust 2021 edition
 
