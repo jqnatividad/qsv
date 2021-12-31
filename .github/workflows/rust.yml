@@ -19,6 +19,6 @@ jobs:
       with:
         submodules: recursive
     - name: Build
-      run: PYO3_PRINT_CONFIG=1 cargo build --verbose --all-features
+      run: cargo build --verbose --all-features
     - name: Run tests
-      run: PYO3_PRINT_CONFIG=1 cargo test --verbose --all-features
+      run: cargo test --verbose --all-features
