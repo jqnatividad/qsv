@@ -12,6 +12,9 @@ use serde::Deserialize;
 
 use docopt::Docopt;
 
+#[cfg(feature = "python")]
+use pyo3::Python;
+
 #[cfg(feature = "mimalloc")]
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -183,8 +186,23 @@ fn init_logger() {
         .unwrap();
 }
 
+#[cfg(feature = "python")]
+fn check_python() -> bool {
+    Python::with_gil(|py| py.version_info() >= (3, 7))
+}
+
 fn main() {
     init_logger();
+
+    #[cfg(feature = "python")]
+    if !check_python() {
+        if log_enabled!(Level::Error) {
+            error!("Python 3.7+ required.");
+        } else {
+            werr!("Python 3.7+ required.");
+        }
+        ::std::process::exit(1);
+    }
 
     let now = Instant::now();
 
