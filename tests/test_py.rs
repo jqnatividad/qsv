@@ -262,3 +262,31 @@ fn py_filter() {
     ];
     assert_eq!(got, expected);
 }
+
+#[test]
+fn py_format() {
+    let wrk = Workdir::new("py");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["qty", "fruit", "unitcost"],
+            svec!["20.5", "mangoes", "5"],
+            svec!["10", "bananas", "20"],
+            svec!["3", "strawberries", "3.50"],
+        ],
+    );
+    let mut cmd = wrk.command("py");
+    cmd.arg("map")
+        .arg("formatted")
+        .arg("f'{qty} {fruit} cost ${(float(unitcost) * float(qty)):.2f}'")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["qty", "fruit", "unitcost", "formatted"],
+        svec!["20.5", "mangoes", "5", "20.5 mangoes cost $102.50"],
+        svec!["10", "bananas", "20", "10 bananas cost $200.00"],
+        svec!["3", "strawberries", "3.50", "3 strawberries cost $10.50"],
+    ];
+    assert_eq!(got, expected);
+}
