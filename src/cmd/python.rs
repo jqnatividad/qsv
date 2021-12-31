@@ -61,6 +61,10 @@ Some usage examples:
   $ qsv py map c "int(col.a) + int(col['b'])"
   $ qsv py map c "int(col[0]) + int(col[1])"
 
+  Use Python f-strings to calculate using multiple columns (qty, fruit & unitcost) 
+    and format into a new column 'formatted'
+  $ qsv py map formatted "f'{qty} {fruit} cost ${(float(unitcost) * float(qty)):.2f}'"
+
   Strip and prefix cell values
   $ qsv py map prefixed "'clean_' + a.strip()"
 
