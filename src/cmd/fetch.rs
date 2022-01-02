@@ -4,7 +4,7 @@ use crate::util;
 use crate::CliResult;
 use cached::proc_macro::cached;
 use indicatif::{ProgressBar, ProgressDrawTarget};
-use log::{debug, error};
+use log::{debug, warn, error};
 use serde::Deserialize;
 
 static USAGE: &str = "
@@ -234,32 +234,73 @@ fn get_cached_response(
     debug!("response: {:?}", &resp);
     let api_value = resp.text().unwrap();
     debug!("api value: {:?}", &api_value);
-    let mut final_value: String = (&api_value).clone();
+
+    let mut final_value: String = String::default();
+
+    // apply JQL selector if provided
     if let Some(selectors) = flag_jql {
         use jql::walker;
         use serde_json::{Deserializer, Value};
 
-        // TODO: check if api returns JSON
+        // panic here since api did not return valid JSON and cannot apply JQL selector
+        if let Err(error) = serde_json::from_str::<Value>(&api_value) {
+            error!("API response is not valid JSON, cannot apply jql selector. error={:?}, api response={:?}.", &error, &api_value);
+            panic!("API response is not valid JSON, cannot apply jql selector. error={:?}, api response={:?}.", &error, &api_value);
+        }
+        
+
         Deserializer::from_str(&api_value)
             .into_iter::<Value>()
             .for_each(|value| match value {
                 Ok(valid_json) => {
+                    dbg!(&valid_json);
+                    dbg!(&selectors);
+                    
                     // Walk through the JSON content with the provided selectors as
                     // input.
                     match walker(&valid_json, Some(selectors)) {
                         Ok(selection) => {
-                            final_value = String::from(selection.as_str().unwrap_or_default());
-                            debug!("jql selected value: {:?}", &final_value);
+                            dbg!(&selection);
+
+                            match &selection {
+                                Value::Null => {
+                                    final_value = "null".to_string();
+                                },
+                                Value::Bool(bool) => {
+                                    final_value = bool.to_string();
+                                },
+                                Value::Number(number) => {
+                                    final_value = number.to_string();
+                                },
+                                Value::String(string) => {
+                                    // put string value in quotes
+                                    final_value = string.to_string();
+                                },
+                                Value::Array(array) => {
+                                    panic!("JSON Array not yet supported! {:?}", array);
+                                },
+                                Value::Object(object) => {
+                                    panic!("JSON Object not supported! {:?}", object);
+                                }
+                            }
+
+                            
+                            debug!("final value: {:?}", &final_value);
                         }
                         Err(error) => {
-                            error!("Error selecting from JSON: {}", error);
+                            warn!("JQL error: {}", &error);
+                            final_value = error;
                         }
                     }
                 }
-                Err(_) => {
-                    error!("Invalid JSON file or content");
+                Err(error) => {
+                    error!("API response is not valid JSON, cannot apply jql selector. error={:?}, api response={:?}.", &error, &api_value);
+                    panic!("API response is not valid JSON, cannot apply jql selector. error={:?}, api response={:?}.", &error, &api_value);
                 }
             });
+    } else {
+        final_value = api_value;
     }
+
     final_value
 }
