@@ -185,10 +185,10 @@ Feature Flags
 
 The following "power-user" commands can be abused and present "foot-shooting" scenarios.
 * `lua` - enable `lua` command.
-* `foreach` - enable `foreach` command.
-* `python` - enable `py` command.
+* `foreach` - enable `foreach` command (not valid for Windows).
+* `python` - enable `py` command (requires access to Python 3.7+ when installing/compiling).
 
-> **NOTE:** `qsvlite` always has **non-default features disabled**. `qsv` can be built with any combination of these features using the cargo `--features`, `--all-features` and `--no-default-features` flags. The pre-built `qsv` binary has **all features enabled**.
+> **NOTE:** `qsvlite`, as the name implies, always has **non-default features disabled**. `qsv` can be built with any combination of the above features  using the cargo `--features`, `--all-features` & `--no-default-features` flags. The pre-built `qsv` binaries has **all applicable features enabled for the target platform**[^5].
 
 Performance Tuning
 ------------------
