@@ -160,9 +160,18 @@ commands are not unicode-aware and will ignore unicode values when matching and 
 * `QSV_COMMENT_CHAR` - set to a comment character which will ignore any lines (including the header) that start with this character (default: comments disabled).
 * `QSV_LOG_LEVEL` - set to desired level (default - off, error, warn, info, trace, debug).
 * `QSV_LOG_DIR` - when logging is enabled, the directory where the log files will be stored. If the specified directory does not exist, qsv will attempt to create it. If not set, the log files are created in the directory where qsv was started. See [Logging](docs/Logging.md#logging) for more info.
-* `QSV_NO_UPDATE` - prohibit self-update version check of the latest qsv release published on GitHub.
+* `QSV_NO_UPDATE` - prohibit self-update version check for the latest qsv release published on GitHub.
 
-> **NOTE:** To get a list of all environment variables with the `QSV_` prefix, run `qsv --envlist`.
+Several dependencies also have environment variables that influence qsv's performance & behavior:
+
+* Memory Management ([mimalloc](https://docs.rs/mimalloc/latest/mimalloc/))   
+  When incorporating qsv into a data pipeline that runs in batch mode, particularly with very large CSV files using qsv commands that load entire CSV files into memory, you can 
+  [fine-tune Mimalloc's behavior using its environment variables](https://github.com/microsoft/mimalloc#environment-options).
+* Network Access ([reqwest](https://docs.rs/reqwest/latest/reqwest/))   
+  qsv uses reqwest for its `fetch` and `--update` functions and will honor [proxy settings](https://docs.rs/reqwest/latest/reqwest/index.html#proxies) set through `HTTP_PROXY`, `HTTPS_PROXY` and `NO_PROXY`.
+  
+
+> **NOTE:** To get a list of all qsv-relevant environment variables, run `qsv --envlist`.
 
 Feature Flags
 -------------

@@ -94,7 +94,7 @@ Usage:
 
 Options:
     --list               List all commands available.
-    --envlist            List all environment variables with the QSV_ prefix.
+    --envlist            List all qsv-relevant environment variables.
     -u, --update         Update qsv to the latest release from GitHub.
     --skip-update-check  Skip automatic update check.
     -h, --help           Display this message
