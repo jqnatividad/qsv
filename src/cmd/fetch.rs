@@ -8,12 +8,14 @@ use log::{debug, warn, error};
 use serde::Deserialize;
 
 static USAGE: &str = "
-Fetch values via an URL column, and optionally store them in a new column.
+Fetch data via a URL column, and optionally store them in a new column.
 
-This command fetches HTML/data from web pages or web services for every row in the URL column, 
+This command fetches data from web api for every row in the URL column, 
 and optionally stores them in a new column.
 
-URL column must contain full and valid URL path, which can be constructed via the 'lua' command.
+Fetch is integrated with `jql` to directly parse out values from api JSON response.
+
+URL column must contain full and valid URL path, which can be constructed via the `lua` command.
 
 To set proxy, please set env var HTTP_PROXY and HTTPS_PROXY (eg export HTTPS_PROXY=socks5://127.0.0.1:1086)
 
@@ -23,8 +25,8 @@ Usage:
 fetch options:
     -c, --new-column <name>    Put the fetched values in a new column instead.
     --jql <selector>           Apply jql selector to API returned JSON value.
-    -j, --jobs <value>         Number of concurrent requests.
     --rate-limit <qps>         Rate Limit in Queries Per Second. [default: 5]
+    -j, --jobs <value>         Number of concurrent requests.
     --header <file>            File containing additional HTTP Request Headers. Useful for setting Authorization or overriding User Agent.
     --store-error              On error, store HTTP error instead of blank value.
     --cookies                  Automatically store and send cookies. Useful for authenticated sessions.
@@ -97,6 +99,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         &args.flag_quiet
     );
 
+    if let Some(_jobs) = args.flag_jobs {
+        panic!("Param not yet supported: jobs")
+    }
+
+    if let Some(_header) = args.flag_header {
+        panic!("Param not yet supported: header")
+    }
+
+    if args.flag_cookies {
+        panic!("Param not yet supported: cookies")
+    }
+
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers)
@@ -119,8 +133,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut rate_limit: NonZeroU32 = NonZeroU32::new(5).unwrap();
     if let Some(qps) = args.flag_rate_limit {
         assert!(
-            qps <= 30 && qps > 0,
-            "Rate Limit should be between 1 to 30 queries per second."
+            // on my laptop, no more sleep traces with qps > 24, so use round number of 20 as single-thread qps limit
+            qps <= 20 && qps > 0,
+            "Rate Limit should be between 1 to 20 queries per second."
         );
         rate_limit = NonZeroU32::new(qps).unwrap();
     }
@@ -200,10 +215,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     Ok(())
 }
 
+
 use governor::{
     clock::DefaultClock, middleware::NoOpMiddleware, state::direct::NotKeyed, state::InMemoryState,
 };
-
 use std::{thread, time};
 
 #[cached(
@@ -217,90 +232,163 @@ fn get_cached_response(
     limiter: &governor::RateLimiter<NotKeyed, InMemoryState, DefaultClock, NoOpMiddleware>,
     flag_jql: &Option<String>,
 ) -> String {
-    loop {
-        match limiter.check() {
-            Ok(()) => {
-                // debug!("going ahead");
-                break;
-            }
-            _ => {
-                // debug!("sleeping for 10 ms");
-                thread::sleep(time::Duration::from_millis(10));
-            }
-        }
-    }
+
+    // wait until RateLimiter gives Okay
+    while limiter.check().is_err() {
+        thread::sleep(time::Duration::from_millis(10));
+    };
 
     let resp = client.get(url).send().unwrap();
     debug!("response: {:?}", &resp);
     let api_value = resp.text().unwrap();
     debug!("api value: {:?}", &api_value);
 
-    let mut final_value: String = String::default();
+    let final_value;
 
     // apply JQL selector if provided
     if let Some(selectors) = flag_jql {
-        use jql::walker;
-        use serde_json::{Deserializer, Value};
-
-        // panic here since api did not return valid JSON and cannot apply JQL selector
-        if let Err(error) = serde_json::from_str::<Value>(&api_value) {
-            error!("API response is not valid JSON, cannot apply jql selector. error={:?}, api response={:?}.", &error, &api_value);
-            panic!("API response is not valid JSON, cannot apply jql selector. error={:?}, api response={:?}.", &error, &api_value);
-        }
+        final_value = apply_jql(&api_value, selectors);
         
-
-        Deserializer::from_str(&api_value)
-            .into_iter::<Value>()
-            .for_each(|value| match value {
-                Ok(valid_json) => {
-                    dbg!(&valid_json);
-                    dbg!(&selectors);
-                    
-                    // Walk through the JSON content with the provided selectors as
-                    // input.
-                    match walker(&valid_json, Some(selectors)) {
-                        Ok(selection) => {
-                            dbg!(&selection);
-
-                            match &selection {
-                                Value::Null => {
-                                    final_value = "null".to_string();
-                                },
-                                Value::Bool(bool) => {
-                                    final_value = bool.to_string();
-                                },
-                                Value::Number(number) => {
-                                    final_value = number.to_string();
-                                },
-                                Value::String(string) => {
-                                    // put string value in quotes
-                                    final_value = string.to_string();
-                                },
-                                Value::Array(array) => {
-                                    panic!("JSON Array not yet supported! {:?}", array);
-                                },
-                                Value::Object(object) => {
-                                    panic!("JSON Object not supported! {:?}", object);
-                                }
-                            }
-
-                            
-                            debug!("final value: {:?}", &final_value);
-                        }
-                        Err(error) => {
-                            warn!("JQL error: {}", &error);
-                            final_value = error;
-                        }
-                    }
-                }
-                Err(error) => {
-                    error!("API response is not valid JSON, cannot apply jql selector. error={:?}, api response={:?}.", &error, &api_value);
-                    panic!("API response is not valid JSON, cannot apply jql selector. error={:?}, api response={:?}.", &error, &api_value);
-                }
-            });
     } else {
         final_value = api_value;
     }
+    
+    debug!("final value: {:?}", &final_value);
 
     final_value
 }
+
+use jql::walker;
+use serde_json::{Deserializer, Value};
+
+fn apply_jql(json: &str, selectors: &str) -> String {
+    let mut return_val: String = String::default();
+
+    // panic here since api did not return valid JSON and cannot apply JQL selector
+    if let Err(error) = serde_json::from_str::<Value>(json) {
+        error!("API response is not valid JSON, cannot apply jql selector. error={:?}, api response={:?}.", &error, json);
+        panic!("API response is not valid JSON, cannot apply jql selector. error={:?}, api response={:?}.", &error, json);
+    }
+
+    Deserializer::from_str(json)
+        .into_iter::<Value>()
+        .for_each(|value| match value {
+            Ok(valid_json) => {
+                
+                // Walk through the JSON content with the provided selectors as
+                // input.
+                match walker(&valid_json, Some(selectors)) {
+                    Ok(selection) => {
+
+                        fn get_value_string(v:&Value) -> String {
+                            if v.is_null() {
+                                "null".to_string()
+                            } else if v.is_boolean() {
+                                v.as_bool().unwrap().to_string()
+                            } else if v.is_f64() {
+                                v.as_f64().unwrap().to_string()
+                            } else if v.is_i64() {
+                                v.as_i64().unwrap().to_string()
+                            } else if v.is_u64() {
+                                v.as_u64().unwrap().to_string()
+                            } else if v.is_string() {
+                                v.as_str().unwrap().to_string()
+                            } else {
+                                v.to_string()
+                            }
+                        }
+
+                        match &selection {
+
+                            Value::Array(array) => {
+                                let mut concat_string = String::new();
+
+                                let mut values = array.iter();
+
+                                if let Some(v) = values.next() {
+                                    let str_val = get_value_string(v);
+                                    concat_string.push_str(&str_val);
+                                }
+
+                                for v in values {
+                                    let str_val = get_value_string(v);
+                                    concat_string.push_str(", ");
+                                    concat_string.push_str(&str_val);
+                                }
+
+                                return_val = concat_string;
+                            },
+                            Value::Object(object) => {
+                                panic!("Unsupported jql result type: OBJECT {:?}", object);
+                            },
+                            _ => {
+                                return_val = get_value_string(&selection);
+                            }
+                        }
+
+                    }
+                    Err(error) => {
+                        warn!("JQL error: {}", &error);
+                        return_val = error;
+                    }
+                }
+            },
+            Err(error) => {
+                error!("API response is not valid JSON, cannot apply jql selector. error={:?}, api response={:?}.", &error, &json);
+                panic!("API response is not valid JSON, cannot apply jql selector. error={:?}, api response={:?}.", &error, &json);
+            }
+        });
+
+    return_val
+}
+
+#[test]
+fn test_apply_jql_string() {
+    let json = r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": "-118.4065", "state": "California", "state abbreviation": "CA", "latitude": "34.0901"}]}"#;
+    let selectors = r#"."places"[0]."place name""#;
+
+    let value: String = apply_jql(json, selectors);
+
+    assert_eq!("Beverly Hills", value);
+}
+
+#[test]
+fn test_apply_jql_number() {
+    let json = r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": -118.4065, "state": "California", "state abbreviation": "CA", "latitude": 34.0901}]}"#;
+    let selectors = r#"."places"[0]."longitude""#;
+
+    let value: String = apply_jql(json, selectors);
+
+    assert_eq!("-118.4065", value);
+}
+
+#[test]
+fn test_apply_jql_bool() {
+    let json = r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": -118.4065, "state": "California", "state abbreviation": "CA", "latitude": 34.0901, "expensive": true}]}"#;
+    let selectors = r#"."places"[0]."expensive""#;
+
+    let value: String = apply_jql(json, selectors);
+
+    assert_eq!(true.to_string(), value);
+}
+
+#[test]
+fn test_apply_jql_null() {
+    let json = r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": -118.4065, "state": "California", "state abbreviation": "CA", "latitude": 34.0901, "university":null}]}"#;
+    let selectors = r#"."places"[0]."university""#;
+
+    let value: String = apply_jql(json, selectors);
+
+    assert_eq!("null".to_string(), value);
+}
+
+#[test]
+fn test_apply_jql_array() {
+    let json = r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": -118.4065, "state": "California", "state abbreviation": "CA", "latitude": 34.0901}]}"#;
+    let selectors = r#"."places"[0]."longitude",."places"[0]."latitude""#;
+
+    let value: String = apply_jql(json, selectors);
+
+    assert_eq!("-118.4065, 34.0901".to_string(), value);
+}
+

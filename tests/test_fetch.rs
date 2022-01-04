@@ -100,9 +100,9 @@ fn fetch_jql_multiple() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["URL", "CityState"],
-        svec!["http://api.zippopotam.us/us/90210", "\"Beverly Hills, CA\""],
-        svec!["http://api.zippopotam.us/us/94105", "\"San Francisco, CA\""],
-        svec!["https://api.zippopotam.us/us/92802", "\"Anaheim, CA\""],
+        svec!["http://api.zippopotam.us/us/90210", "Beverly Hills, CA"],
+        svec!["http://api.zippopotam.us/us/94105", "San Francisco, CA"],
+        svec!["https://api.zippopotam.us/us/92802", "Anaheim, CA"],
     ];
     assert_eq!(got, expected);
 }
