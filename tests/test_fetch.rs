@@ -48,7 +48,7 @@ fn fetch_simple() {
 }
 
 #[test]
-fn fetch_jql() {
+fn fetch_jql_single() {
     let wrk = Workdir::new("fetch");
     wrk.create(
         "data.csv",
@@ -73,6 +73,36 @@ fn fetch_jql() {
         svec!["http://api.zippopotam.us/us/90210", "Beverly Hills"],
         svec!["http://api.zippopotam.us/us/94105", "San Francisco"],
         svec!["https://api.zippopotam.us/us/92802", "Anaheim"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn fetch_jql_multiple() {
+    let wrk = Workdir::new("fetch");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["URL"],
+            svec!["http://api.zippopotam.us/us/90210"],
+            svec!["http://api.zippopotam.us/us/94105"],
+            svec!["https://api.zippopotam.us/us/92802"],
+        ],
+    );
+    let mut cmd = wrk.command("fetch");
+    cmd.arg("URL")
+        .arg("--new-column")
+        .arg("CityState")
+        .arg("--jql")
+        .arg(r#""places"[0]."place name","places"[0]."state abbreviation""#)
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["URL", "CityState"],
+        svec!["http://api.zippopotam.us/us/90210", "Beverly Hills, CA"],
+        svec!["http://api.zippopotam.us/us/94105", "San Francisco, CA"],
+        svec!["https://api.zippopotam.us/us/92802", "Anaheim, CA"],
     ];
     assert_eq!(got, expected);
 }
