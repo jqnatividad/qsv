@@ -724,6 +724,7 @@ fn apply_ops_whatlang() {
             svec!["民國卅八年（ 1949年 ）， 從南京經 廣州 、 香港返回 香日德。 1950年6月 ，受十世班禪派遣， 前往西安代表班禪向彭德懷投誠 。"],
             svec!["Rust（ラスト）は並列かつマルチパラダイムのプログラミング言語である"],
             svec!["Мой дядя самых честных правил, Когда не в шутку занемог, Он уважать себя заставил И лучше выдумать не мог."],
+            svec!["Kamusta na, pare!?! Matagal na tayong di nagkita! Ilang taon na since high school?!"],
         ],
     );
     let mut cmd = wrk.command("apply");
@@ -745,7 +746,7 @@ fn apply_ops_whatlang() {
         svec!["民國卅八年（ 1949年 ）， 從南京經 廣州 、 香港返回 香日德。 1950年6月 ，受十世班禪派遣， 前往西安代表班禪向彭德懷投誠 。", "Cmn"],
         svec!["Rust（ラスト）は並列かつマルチパラダイムのプログラミング言語である", "Jpn"],
         svec!["Мой дядя самых честных правил, Когда не в шутку занемог, Он уважать себя заставил И лучше выдумать не мог.", "Rus"],
-
+        svec!["Kamusta na, pare!?! Matagal na tayong di nagkita! Ilang taon na since high school?!", "Tgl"],
   ];
     assert_eq!(got, expected);
 }
