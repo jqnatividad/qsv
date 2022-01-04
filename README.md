@@ -145,6 +145,8 @@ qsv recognizes CSV (`.csv` file extension) and TSV files (`.tsv` and `.tab` file
 and TSV files, "\t" (tab) as a delimiter. The delimiter is a single ascii character that can be set either by the `--delimiter` command-line option or
 with the `QSV_DEFAULT_DELIMITER` environment variable.
 
+[JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/) files are also recognized and converted to CSV with the [`jsonl`](/src/cmd/jsonl.rs#L11) command.
+
 Environment Variables
 ---------------------
 
