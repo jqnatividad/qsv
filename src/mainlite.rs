@@ -1,7 +1,5 @@
 #![allow(dead_code)]
-
 extern crate crossbeam_channel as channel;
-use self_update::cargo_crate_version;
 
 use std::borrow::ToOwned;
 use std::env;
@@ -10,9 +8,9 @@ use std::io;
 use std::process;
 use std::time::Instant;
 
-use serde::Deserialize;
-
 use docopt::Docopt;
+use log::{error, info, log_enabled, Level};
+use serde::Deserialize;
 
 #[cfg(feature = "mimalloc")]
 #[global_allocator]
@@ -114,72 +112,8 @@ struct Args {
     flag_skip_update_check: bool,
 }
 
-fn qsv_update(verbose: bool) -> Result<(), Box<dyn ::std::error::Error>> {
-    if env::var("QSV_NO_UPDATE").is_ok() {
-        return Ok(());
-    }
-
-    let curr_version = cargo_crate_version!();
-    let releases = self_update::backends::github::ReleaseList::configure()
-        .repo_owner("jqnatividad")
-        .repo_name("qsv")
-        .build()?
-        .fetch()?;
-    let latest_release = &releases[0].version;
-    if latest_release > &curr_version.to_string() {
-        println!(
-            "Update {} available. Current version is {}.",
-            latest_release, curr_version
-        );
-        let status = self_update::backends::github::Update::configure()
-            .repo_owner("jqnatividad")
-            .repo_name("qsv")
-            .bin_name("qsvlite")
-            .show_download_progress(true)
-            .show_output(verbose)
-            .no_confirm(false)
-            .current_version(curr_version)
-            .build()?
-            .update()?;
-        let exe_full_path = format!("{:?}", std::env::current_exe().unwrap());
-        if verbose {
-            println!(
-                "Update successful for {}: `{}`!",
-                exe_full_path,
-                status.version()
-            );
-        }
-    }
-    Ok(())
-}
-
-use flexi_logger::{Cleanup, Criterion, FileSpec, Logger, Naming};
-use log::{error, info, log_enabled, Level};
-
-fn init_logger() {
-    let qsv_log_env = env::var("QSV_LOG_LEVEL").unwrap_or_else(|_| "off".to_string());
-    let qsv_log_dir = env::var("QSV_LOG_DIR").unwrap_or_else(|_| ".".to_string());
-
-    Logger::try_with_env_or_str(qsv_log_env)
-        .unwrap()
-        .log_to_file(
-            FileSpec::default()
-                .directory(qsv_log_dir)
-                .suppress_timestamp(),
-        )
-        .format_for_files(flexi_logger::detailed_format)
-        .o_append(true)
-        .rotate(
-            Criterion::Size(1_000_000),
-            Naming::Numbers,
-            Cleanup::KeepLogAndCompressedFiles(10, 100),
-        )
-        .start()
-        .unwrap();
-}
-
 fn main() {
-    init_logger();
+    util::init_logger();
 
     let now = Instant::now();
 
@@ -203,7 +137,7 @@ fn main() {
         return;
     }
     if args.flag_update {
-        if let Err(err) = qsv_update(true) {
+        if let Err(err) = util::qsv_update(true) {
             werr!("{}", err);
             ::std::process::exit(1);
         }
@@ -218,7 +152,7 @@ Please choose one of the following commands:",
                 command_list!()
             ));
             if !args.flag_skip_update_check {
-                if let Err(err) = qsv_update(false) {
+                if let Err(err) = util::qsv_update(false) {
                     werr!("{}", err);
                     ::std::process::exit(1);
                 } else {
