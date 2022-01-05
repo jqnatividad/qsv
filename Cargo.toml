@@ -97,9 +97,6 @@ uuid = { version = "0.8", features = ["v4"] }
 vader_sentiment = { version = "0.1", optional = true }
 whatlang = { version = "0.13.0", optional = true }
 
-
-
-
 [dev-dependencies]
 actix-governor = "0.2"
 actix-web      = "3.3"
