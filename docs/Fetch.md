@@ -39,15 +39,17 @@ Anaheim
 
 ### Fetch data via `URL` column of `test.csv`, apply JQL selector, and put results into new column named City
 
-Notice that on error, instead of blank values, error messages can be stored via `--store-error` flag.
+Notice that on error, instead of blank value, error message can be stored via `--store-error` flag.
 
 ```
-$ qsv fetch URL test.csv --jql '"places"[0]."place name"' --store-error
-[00:00:01] [==================== 100% of 4 records. Cache hit ratio: 0.00% - 4 entries] (6/sec)
-HTTP 404 - Not Found
-Beverly Hills
-San Francisco
-Anaheim
+$ qsv fetch URL test.csv --jql '"places"[0]."place name"' -c City --store-error
+[00:00:00] [==================== 100% of 4 records. Cache hit ratio: 0.00% - 4 entries] (6/sec)
+Country,ZipCode,URL,City
+US,99999,http://api.zippopotam.us/us/99999,HTTP 404 - Not Found
+US,90210,http://api.zippopotam.us/us/90210,Beverly Hills
+US,94105,http://api.zippopotam.us/us/94105,San Francisco
+US,92802,http://api.zippopotam.us/us/92802,Anaheim
+
 
 ```
 
@@ -68,7 +70,7 @@ US,92802,http://api.zippopotam.us/us/92802,"Anaheim, CA"
 ### Fetch data via `URL` column of `test.csv`, with invalid jql selector
 
 ```
-$ qsv fetch URL test.csv --jql '"place"[0]."place name"' 
+$ qsv fetch URL test.csv --jql '"place"[0]."place name"'
 [00:00:01] [==================== 100% of 4 records. Cache hit ratio: 0.00% - 4 entries] (4/sec)
 ""
 ""
@@ -84,7 +86,7 @@ HTTP 404 - Not Found
 
 ```
 
-### Fetch with explicit rate limit set, and pipe output to a new csv
+### Fetch with explicit rate limit, and pipe output to a new csv
 
 ```
 $ qsv fetch URL test.csv --rate-limit 3 --jql '"places"[0]."longitude","places"[0]."latitude"' -c Coordinates > new.csv
