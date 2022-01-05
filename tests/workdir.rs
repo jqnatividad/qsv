@@ -102,7 +102,11 @@ impl Workdir {
 
     pub fn command(&self, sub_command: &str) -> process::Command {
         let mut cmd = process::Command::new(&self.qsv_bin());
-        cmd.current_dir(&self.dir).arg(sub_command);
+        if sub_command.is_empty() {
+            cmd.current_dir(&self.dir);
+        } else {
+            cmd.current_dir(&self.dir).arg(sub_command);
+        }
         cmd
     }
 

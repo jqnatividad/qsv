@@ -140,3 +140,23 @@ fn comments_headers() {
 2   column2";
     assert_eq!(got, expected);
 }
+
+#[test]
+fn envlist() {
+    let wrk = Workdir::new("comments");
+    let mut cmd = wrk.command("");
+    cmd.env("QSV_ENVVAR", "#");
+    cmd.env("MIMALLOC_ENVVAR", "1");
+    cmd.arg("--envlist");
+
+    let got_envlist: String = wrk.stdout(&mut cmd);
+    assert_eq!(
+        got_envlist,
+        r#"MIMALLOC_ENVVAR: 1
+QSV_ENVVAR: #"#
+    );
+    // unset it so we don't have side effects outside tests
+    // as these env vars persists
+    cmd.env("QSV_ENVVAR", "");
+    cmd.env("MIMALLOC_ENVVAR", "");
+}

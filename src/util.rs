@@ -100,17 +100,22 @@ pub fn version() -> String {
     }
 }
 
+const OTHER_ENV_VARS: &[&str] = &["no_proxy", "http_proxy", "https_proxy"];
+
 pub fn show_env_vars() {
     let mut env_var_set = false;
     for (n, v) in env::vars_os() {
         let env_var = n.into_string().unwrap();
-        if env_var.starts_with("QSV_") {
+        if env_var.starts_with("QSV_")
+            || env_var.starts_with("MIMALLOC_")
+            || OTHER_ENV_VARS.contains(&env_var.to_lowercase().as_str())
+        {
             env_var_set = true;
             println!("{}: {}", env_var, v.into_string().unwrap());
         }
     }
     if !env_var_set {
-        println!("No QSV_ environment variables set.");
+        println!("No qsv-relevant environment variables set.");
     }
 }
 
