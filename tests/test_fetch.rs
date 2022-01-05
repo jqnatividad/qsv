@@ -124,7 +124,7 @@ async fn index() -> impl Responder {
 }
 
 /// handler with path parameters like `/user/{name}/`
-/// returns Smurf fullname
+/// returns Smurf fullname in JSON format
 async fn get_fullname(
     req: HttpRequest,
     web::Path((name,)): web::Path<(String,)>,
@@ -145,9 +145,9 @@ fn run_webserver(tx: mpsc::Sender<Server>) -> std::io::Result<()> {
     use actix_governor::{Governor, GovernorConfig, GovernorConfigBuilder};
 
     // Allow bursts with up to five requests per IP address
-    // and replenishes one element every 500 ms (2 qps)
+    // and replenishes one element every 250 ms (4 qps)
     let governor_conf: GovernorConfig = GovernorConfigBuilder::default()
-        .per_millisecond(500)
+        .per_millisecond(250)
         .burst_size(5)
         .finish()
         .unwrap();
@@ -218,7 +218,7 @@ fn fetch_ratelimit() {
         .arg("--jql")
         .arg(r#"."fullname""#)
         .arg("--rate-limit")
-        .arg("2")
+        .arg("4")
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
