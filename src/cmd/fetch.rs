@@ -4,7 +4,7 @@ use crate::util;
 use crate::CliResult;
 use cached::proc_macro::cached;
 use indicatif::{ProgressBar, ProgressDrawTarget};
-use log::{debug, warn, error};
+use log::{debug, error};
 use serde::Deserialize;
 
 static USAGE: &str = "
@@ -253,6 +253,9 @@ fn get_cached_response(
     let final_value: String;
 
     if api_status.is_client_error() || api_status.is_server_error() {
+
+        error!("HTTP error. url: {:?}, error: {:?}", url, api_status.canonical_reason().unwrap_or("unknown error"));
+
         if flag_store_error {
             final_value = format!("HTTP {} - {}", 
                                     api_status.as_str(), 
@@ -269,6 +272,9 @@ fn get_cached_response(
                     final_value = s;
                 },
                 Err(e) => {
+
+                    error!("jql error. json: {:?}, selectors: {:?}, error: {:?}", &api_value, selectors, e.to_string());
+
                     if flag_store_error {
                         final_value = e.to_string();
                     } else {
@@ -295,8 +301,7 @@ fn apply_jql(json: &str, selectors: &str) -> Result<String> {
 
     // check if api returned valid JSON before applying JQL selector
     if let Err(error) = serde_json::from_str::<Value>(json) {
-        warn!("API response is not valid JSON, cannot apply jql selector. error={:?}, api response={:?}.", &error, json);
-        return Err(anyhow!("Cannot apply jql to invalid json"));
+        return Err(anyhow!("Invalid json: {:?}", error));
     }
 
     let mut result: Result<String> = Ok(String::default());
@@ -348,8 +353,7 @@ fn apply_jql(json: &str, selectors: &str) -> Result<String> {
 
                                 result = Ok(concat_string);
                             },
-                            Value::Object(object) => {
-                                warn!("Unsupported jql result type: OBJECT {:?}", object);
+                            Value::Object(_object) => {
                                 result = Err(anyhow!("Unsupported jql result type: OBJECT"));
                             },
                             _ => {
@@ -359,15 +363,13 @@ fn apply_jql(json: &str, selectors: &str) -> Result<String> {
 
                     }
                     Err(error) => {
-                        warn!("JQL error: {}", &error);
                         result = Err(anyhow!(error));
                     }
                 }
             },
             Err(error) => {
                 // shouldn't happen, but do same thing earlier when checking for invalid json
-                warn!("API response is not valid JSON, cannot apply jql selector. error={:?}, api response={:?}.", &error, json);
-                result = Err(anyhow!("Cannot apply jql to invalid json"));
+                result = Err(anyhow!("Invalid json: {:?}", error));
             }
         });
 
@@ -381,7 +383,7 @@ fn test_apply_jql_invalid_json() {
 
     let value: String = apply_jql(json, selectors).unwrap_err().to_string();
 
-    assert_eq!("Cannot apply jql to invalid json", value);
+    assert_eq!("Invalid json: Error(\"expected value\", line: 1, column: 1)", value);
 }
 
 #[test]
