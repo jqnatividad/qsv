@@ -11,6 +11,7 @@ use std::time;
 
 use ::num_cpus;
 use docopt::Docopt;
+use log::{info, log_enabled, Level};
 use serde::de::{Deserialize, DeserializeOwned, Deserializer, Error};
 
 use crate::config::{Config, Delimiter};
@@ -146,6 +147,13 @@ pub fn prep_progress(progress: &ProgressBar, record_count: u64) {
         record_count.separate_with_commas()
     ));
     progress.set_draw_delta(record_count / 100);
+
+    if log_enabled!(Level::Info) {
+        info!(
+            "Progress started... {} records",
+            record_count
+        );
+    }
 }
 
 pub fn finish_progress(progress: &ProgressBar) {
@@ -162,6 +170,13 @@ pub fn finish_progress(progress: &ProgressBar) {
             .progress_chars("=>-"),
     );
     progress.finish();
+
+    if log_enabled!(Level::Info) {
+        info!(
+            "Progress done... {} records/sec",
+            per_sec_rate
+        );
+    }
 }
 
 pub fn get_args<T>(usage: &str, argv: &[&str]) -> CliResult<T>
@@ -372,4 +387,81 @@ impl<'de> Deserialize<'de> for FilenameTemplate {
             ))
         }
     }
+}
+
+pub fn init_logger() {
+    use flexi_logger::{Cleanup, Criterion, FileSpec, Logger, Naming};
+
+    let qsv_log_env = env::var("QSV_LOG_LEVEL").unwrap_or_else(|_| "off".to_string());
+    let qsv_log_dir = env::var("QSV_LOG_DIR").unwrap_or_else(|_| ".".to_string());
+
+    Logger::try_with_env_or_str(qsv_log_env)
+        .unwrap()
+        .log_to_file(
+            FileSpec::default()
+                .directory(qsv_log_dir)
+                .suppress_timestamp(),
+        )
+        .format_for_files(flexi_logger::detailed_format)
+        .o_append(true)
+        .rotate(
+            Criterion::Size(1_000_000),
+            Naming::Numbers,
+            Cleanup::KeepLogAndCompressedFiles(10, 100),
+        )
+        .start()
+        .unwrap();
+}
+
+pub fn qsv_update(verbose: bool) -> Result<(), Box<dyn ::std::error::Error>> {
+    use self_update::cargo_crate_version;
+
+    if env::var("QSV_NO_UPDATE").is_ok() {
+        return Ok(());
+    }
+
+    let curr_version = cargo_crate_version!();
+    let releases = self_update::backends::github::ReleaseList::configure()
+        .repo_owner("jqnatividad")
+        .repo_name("qsv")
+        .build()?
+        .fetch()?;
+    let latest_release = &releases[0].version;
+
+    if log_enabled!(Level::Info) {
+        info!(
+            "Current version: {} Latest Release: {}",
+            curr_version, latest_release
+        );
+    }
+
+    if latest_release > &curr_version.to_string() {
+        println!(
+            "Update {} available. Current version is {}.",
+            latest_release, curr_version
+        );
+        let status = self_update::backends::github::Update::configure()
+            .repo_owner("jqnatividad")
+            .repo_name("qsv")
+            .bin_name("qsvlite")
+            .show_download_progress(true)
+            .show_output(verbose)
+            .no_confirm(false)
+            .current_version(curr_version)
+            .build()?
+            .update()?;
+        let exe_full_path = format!("{:?}", std::env::current_exe().unwrap());
+        let update_status = format!(
+            "Update successful for {}: `{}`!",
+            exe_full_path,
+            status.version()
+        );
+        if verbose {
+            println!("{}", update_status);
+        }
+        if log_enabled!(Level::Info) {
+            info!("{}", update_status);
+        }
+    }
+    Ok(())
 }
