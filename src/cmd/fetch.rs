@@ -385,6 +385,16 @@ fn test_apply_jql_invalid_json() {
 }
 
 #[test]
+fn test_apply_jql_invalid_selector() {
+    let json = r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": "-118.4065", "state": "California", "state abbreviation": "CA", "latitude": "34.0901"}]}"#;
+    let selectors = r#"."place"[0]."place name""#;
+
+    let value = apply_jql(json, selectors).unwrap_err().to_string();
+
+    assert_eq!("Node \"place\" not found on the parent element", value);
+}
+
+#[test]
 fn test_apply_jql_string() {
     let json = r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": "-118.4065", "state": "California", "state abbreviation": "CA", "latitude": "34.0901"}]}"#;
     let selectors = r#"."places"[0]."place name""#;

@@ -7,6 +7,7 @@ fn fetch_simple() {
         "data.csv",
         vec![
             svec!["URL"],
+            svec!["https://api.zippopotam.us/us/99999"],
             svec!["http://api.zippopotam.us/us/90210"],
             svec!["https://api.zippopotam.us/us/94105"],
             svec!["http://api.zippopotam.us/us/92802"],
@@ -14,10 +15,15 @@ fn fetch_simple() {
         ],
     );
     let mut cmd = wrk.command("fetch");
-    cmd.arg("URL").arg("data.csv");
+    cmd.arg("URL")
+        .arg("data.csv")
+        .arg("--store-error");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
+        svec![
+            r#"HTTP 404 - Not Found"#
+        ],
         svec![
             r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": "-118.4065", "state": "California", "state abbreviation": "CA", "latitude": "34.0901"}]}"#
         ],
