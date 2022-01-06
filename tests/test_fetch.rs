@@ -15,15 +15,11 @@ fn fetch_simple() {
         ],
     );
     let mut cmd = wrk.command("fetch");
-    cmd.arg("URL")
-        .arg("data.csv")
-        .arg("--store-error");
+    cmd.arg("URL").arg("data.csv").arg("--store-error");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
-        svec![
-            r#"HTTP 404 - Not Found"#
-        ],
+        svec![r#"HTTP 404 - Not Found"#],
         svec![
             r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": "-118.4065", "state": "California", "state abbreviation": "CA", "latitude": "34.0901"}]}"#
         ],
@@ -144,6 +140,19 @@ async fn get_fullname(
     Ok(web::Json(obj))
 }
 
+// convenience macros for changing test ip/port to use
+macro_rules! test_server {
+    () => {
+        "127.0.0.1:8081"
+    };
+}
+
+macro_rules! test_url {
+    ($api_parm:expr) => {
+        concat!("http://", test_server!(), "/", $api_parm)
+    };
+}
+
 /// start an Actix Webserver with Rate Limiting via Governor
 fn run_webserver(tx: mpsc::Sender<Server>) -> std::io::Result<()> {
     let mut sys = rt::System::new("test");
@@ -167,7 +176,7 @@ fn run_webserver(tx: mpsc::Sender<Server>) -> std::io::Result<()> {
             .service(web::resource("/user/{name}").route(web::get().to(get_fullname)))
             .service(web::resource("/").to(index))
     })
-    .bind("127.0.0.1:8080")?
+    .bind(test_server!())?
     .run();
 
     // send server controller to main thread
@@ -195,26 +204,26 @@ fn fetch_ratelimit() {
         "data.csv",
         vec![
             svec!["URL"],
-            svec!["http://localhost:8080/user/Smurfette"],
-            svec!["http://localhost:8080/user/Papa"],
-            svec!["http://localhost:8080/user/Clumsy"],
-            svec!["http://localhost:8080/user/Brainy"],
-            svec!["http://localhost:8080/user/Grouchy"],
-            svec!["http://localhost:8080/user/Hefty"],
-            svec!["http://localhost:8080/user/Greedy"],
-            svec!["http://localhost:8080/user/Jokey"],
-            svec!["http://localhost:8080/user/Chef"],
-            svec!["http://localhost:8080/user/Vanity"],
-            svec!["http://localhost:8080/user/Handy"],
-            svec!["http://localhost:8080/user/Scaredy"],
-            svec!["http://localhost:8080/user/Tracker"],
-            svec!["http://localhost:8080/user/Sloppy"],
-            svec!["http://localhost:8080/user/Harmony"],
-            svec!["http://localhost:8080/user/Painter"],
-            svec!["http://localhost:8080/user/Poet"],
-            svec!["http://localhost:8080/user/Farmer"],
-            svec!["http://localhost:8080/user/Natural"],
-            svec!["http://localhost:8080/user/Snappy"],
+            svec![test_url!("user/Smurfette")],
+            svec![test_url!("user/Papa")],
+            svec![test_url!("user/Clumsy")],
+            svec![test_url!("user/Brainy")],
+            svec![test_url!("user/Grouchy")],
+            svec![test_url!("user/Hefty")],
+            svec![test_url!("user/Greedy")],
+            svec![test_url!("user/Jokey")],
+            svec![test_url!("user/Chef")],
+            svec![test_url!("user/Vanity")],
+            svec![test_url!("user/Handy")],
+            svec![test_url!("user/Scaredy")],
+            svec![test_url!("user/Tracker")],
+            svec![test_url!("user/Sloppy")],
+            svec![test_url!("user/Harmony")],
+            svec![test_url!("user/Painter")],
+            svec![test_url!("user/Poet")],
+            svec![test_url!("user/Farmer")],
+            svec![test_url!("user/Natural")],
+            svec![test_url!("user/Snappy")],
         ],
     );
     let mut cmd = wrk.command("fetch");
@@ -230,26 +239,26 @@ fn fetch_ratelimit() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["URL", "Fullname"],
-        svec!["http://localhost:8080/user/Smurfette", "Smurfette Smurf"],
-        svec!["http://localhost:8080/user/Papa", "Papa Smurf"],
-        svec!["http://localhost:8080/user/Clumsy", "Clumsy Smurf"],
-        svec!["http://localhost:8080/user/Brainy", "Brainy Smurf"],
-        svec!["http://localhost:8080/user/Grouchy", "Grouchy Smurf"],
-        svec!["http://localhost:8080/user/Hefty", "Hefty Smurf"],
-        svec!["http://localhost:8080/user/Greedy", "Greedy Smurf"],
-        svec!["http://localhost:8080/user/Jokey", "Jokey Smurf"],
-        svec!["http://localhost:8080/user/Chef", "Chef Smurf"],
-        svec!["http://localhost:8080/user/Vanity", "Vanity Smurf"],
-        svec!["http://localhost:8080/user/Handy", "Handy Smurf"],
-        svec!["http://localhost:8080/user/Scaredy", "Scaredy Smurf"],
-        svec!["http://localhost:8080/user/Tracker", "Tracker Smurf"],
-        svec!["http://localhost:8080/user/Sloppy", "Sloppy Smurf"],
-        svec!["http://localhost:8080/user/Harmony", "Harmony Smurf"],
-        svec!["http://localhost:8080/user/Painter", "Painter Smurf"],
-        svec!["http://localhost:8080/user/Poet", "Poet Smurf"],
-        svec!["http://localhost:8080/user/Farmer", "Farmer Smurf"],
-        svec!["http://localhost:8080/user/Natural", "Natural Smurf"],
-        svec!["http://localhost:8080/user/Snappy", "Snappy Smurf"],
+        svec![test_url!("user/Smurfette"), "Smurfette Smurf"],
+        svec![test_url!("user/Papa"), "Papa Smurf"],
+        svec![test_url!("user/Clumsy"), "Clumsy Smurf"],
+        svec![test_url!("user/Brainy"), "Brainy Smurf"],
+        svec![test_url!("user/Grouchy"), "Grouchy Smurf"],
+        svec![test_url!("user/Hefty"), "Hefty Smurf"],
+        svec![test_url!("user/Greedy"), "Greedy Smurf"],
+        svec![test_url!("user/Jokey"), "Jokey Smurf"],
+        svec![test_url!("user/Chef"), "Chef Smurf"],
+        svec![test_url!("user/Vanity"), "Vanity Smurf"],
+        svec![test_url!("user/Handy"), "Handy Smurf"],
+        svec![test_url!("user/Scaredy"), "Scaredy Smurf"],
+        svec![test_url!("user/Tracker"), "Tracker Smurf"],
+        svec![test_url!("user/Sloppy"), "Sloppy Smurf"],
+        svec![test_url!("user/Harmony"), "Harmony Smurf"],
+        svec![test_url!("user/Painter"), "Painter Smurf"],
+        svec![test_url!("user/Poet"), "Poet Smurf"],
+        svec![test_url!("user/Farmer"), "Farmer Smurf"],
+        svec![test_url!("user/Natural"), "Natural Smurf"],
+        svec![test_url!("user/Snappy"), "Snappy Smurf"],
     ];
     assert_eq!(got, expected);
 
