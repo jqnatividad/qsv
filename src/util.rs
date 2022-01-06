@@ -149,10 +149,7 @@ pub fn prep_progress(progress: &ProgressBar, record_count: u64) {
     progress.set_draw_delta(record_count / 100);
 
     if log_enabled!(Level::Info) {
-        info!(
-            "Progress started... {} records",
-            record_count
-        );
+        info!("Progress started... {} records", record_count);
     }
 }
 
@@ -172,10 +169,7 @@ pub fn finish_progress(progress: &ProgressBar) {
     progress.finish();
 
     if log_enabled!(Level::Info) {
-        info!(
-            "Progress done... {} records/sec",
-            per_sec_rate
-        );
+        info!("Progress done... {} records/sec", per_sec_rate);
     }
 }
 

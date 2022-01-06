@@ -171,7 +171,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let url = String::from_utf8_lossy(&selected_col_value).to_string();
         debug!("Fetching URL: {:?}", &url);
 
-        let final_value = get_cached_response(&url, &client, &limiter, &args.flag_jql, args.flag_store_error);
+        let final_value = get_cached_response(
+            &url,
+            &client,
+            &limiter,
+            &args.flag_jql,
+            args.flag_store_error,
+        );
 
         if include_existing_columns {
             record.push_field(final_value.as_bytes());
@@ -204,7 +210,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     Ok(())
 }
 
-
 use governor::{
     clock::DefaultClock, middleware::NoOpMiddleware, state::direct::NotKeyed, state::InMemoryState,
 };
@@ -222,18 +227,17 @@ fn get_cached_response(
     flag_jql: &Option<String>,
     flag_store_error: bool,
 ) -> String {
-
     // wait until RateLimiter gives Okay
     while limiter.check().is_err() {
         thread::sleep(time::Duration::from_millis(10));
-    };
+    }
 
     let resp: reqwest::blocking::Response;
 
     match client.get(url).send() {
         Ok(response) => {
             resp = response;
-        },
+        }
         Err(error) => {
             error!("Cannot fetch url: {:?}, error: {:?}", url, error);
             if flag_store_error {
@@ -245,7 +249,6 @@ fn get_cached_response(
     }
     debug!("response: {:?}", &resp);
 
-
     let api_status = resp.status();
     let api_value: String = resp.text().unwrap();
     debug!("api value: {}", &api_value);
@@ -253,14 +256,18 @@ fn get_cached_response(
     let final_value: String;
 
     if api_status.is_client_error() || api_status.is_server_error() {
-
-        error!("HTTP error. url: {:?}, error: {:?}", url, api_status.canonical_reason().unwrap_or("unknown error"));
+        error!(
+            "HTTP error. url: {:?}, error: {:?}",
+            url,
+            api_status.canonical_reason().unwrap_or("unknown error")
+        );
 
         if flag_store_error {
-            final_value = format!("HTTP {} - {}", 
-                                    api_status.as_str(), 
-                                    api_status.canonical_reason().unwrap_or("unknown error")
-                                );
+            final_value = format!(
+                "HTTP {} - {}",
+                api_status.as_str(),
+                api_status.canonical_reason().unwrap_or("unknown error")
+            );
         } else {
             final_value = String::default();
         }
@@ -270,10 +277,14 @@ fn get_cached_response(
             match apply_jql(&api_value, selectors) {
                 Ok(s) => {
                     final_value = s;
-                },
+                }
                 Err(e) => {
-
-                    error!("jql error. json: {:?}, selectors: {:?}, error: {:?}", &api_value, selectors, e.to_string());
+                    error!(
+                        "jql error. json: {:?}, selectors: {:?}, error: {:?}",
+                        &api_value,
+                        selectors,
+                        e.to_string()
+                    );
 
                     if flag_store_error {
                         final_value = e.to_string();
@@ -295,10 +306,9 @@ fn get_cached_response(
 use jql::walker;
 use serde_json::{Deserializer, Value};
 
-use anyhow::{Result,anyhow};
+use anyhow::{anyhow, Result};
 
 fn apply_jql(json: &str, selectors: &str) -> Result<String> {
-
     // check if api returned valid JSON before applying JQL selector
     if let Err(error) = serde_json::from_str::<Value>(json) {
         return Err(anyhow!("Invalid json: {:?}", error));
@@ -310,13 +320,11 @@ fn apply_jql(json: &str, selectors: &str) -> Result<String> {
         .into_iter::<Value>()
         .for_each(|value| match value {
             Ok(valid_json) => {
-
                 // Walk through the JSON content with the provided selectors as
                 // input.
                 match walker(&valid_json, Some(selectors)) {
                     Ok(selection) => {
-
-                        fn get_value_string(v:&Value) -> String {
+                        fn get_value_string(v: &Value) -> String {
                             if v.is_null() {
                                 "null".to_string()
                             } else if v.is_boolean() {
@@ -352,21 +360,20 @@ fn apply_jql(json: &str, selectors: &str) -> Result<String> {
                                 }
 
                                 result = Ok(concat_string);
-                            },
+                            }
                             Value::Object(_object) => {
                                 result = Err(anyhow!("Unsupported jql result type: OBJECT"));
-                            },
+                            }
                             _ => {
                                 result = Ok(get_value_string(&selection));
                             }
                         }
-
                     }
                     Err(error) => {
                         result = Err(anyhow!(error));
                     }
                 }
-            },
+            }
             Err(error) => {
                 // shouldn't happen, but do same thing earlier when checking for invalid json
                 result = Err(anyhow!("Invalid json: {:?}", error));
@@ -378,12 +385,16 @@ fn apply_jql(json: &str, selectors: &str) -> Result<String> {
 
 #[test]
 fn test_apply_jql_invalid_json() {
-    let json = r#"<!doctype html><html lang="en"><meta charset=utf-8><title>shortest html5</title>"#;
+    let json =
+        r#"<!doctype html><html lang="en"><meta charset=utf-8><title>shortest html5</title>"#;
     let selectors = r#"."places"[0]."place name""#;
 
     let value: String = apply_jql(json, selectors).unwrap_err().to_string();
 
-    assert_eq!("Invalid json: Error(\"expected value\", line: 1, column: 1)", value);
+    assert_eq!(
+        "Invalid json: Error(\"expected value\", line: 1, column: 1)",
+        value
+    );
 }
 
 #[test]
@@ -445,4 +456,3 @@ fn test_apply_jql_array() {
 
     assert_eq!("-118.4065, 34.0901".to_string(), value);
 }
-
