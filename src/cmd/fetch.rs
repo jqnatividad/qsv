@@ -4,7 +4,7 @@ use crate::util;
 use crate::CliResult;
 use cached::proc_macro::cached;
 use indicatif::{ProgressBar, ProgressDrawTarget};
-use log::{debug, warn, error};
+use log::{debug, error};
 use serde::Deserialize;
 
 static USAGE: &str = "
@@ -26,10 +26,9 @@ fetch options:
     -c, --new-column <name>    Put the fetched values in a new column instead.
     --jql <selector>           Apply jql selector to API returned JSON value.
     --rate-limit <qps>         Rate Limit in Queries Per Second. [default: 5]
-    -j, --jobs <value>         Number of concurrent requests.
     --header <file>            File containing additional HTTP Request Headers. Useful for setting Authorization or overriding User Agent.
-    --store-error              On error, store HTTP error instead of blank value.
-    --cookies                  Automatically store and send cookies. Useful for authenticated sessions.
+    --store-error              On error, store error code/message instead of blank value.
+    --cookies                  Allow cookies.
 
 Common options:
     -h, --help                 Display this message
@@ -47,7 +46,6 @@ Common options:
 struct Args {
     flag_new_column: Option<String>,
     flag_jql: Option<String>,
-    flag_jobs: Option<u8>,
     flag_rate_limit: Option<u32>,
     flag_header: Option<String>,
     flag_store_error: bool,
@@ -75,11 +73,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             input: {:?}, 
             new column: {:?}, 
             jql: {:?},
-            threads: {:?},
             rate limit: {:?},
             http header file: {:?},
             store error: {:?},
-            store cookie: {:?},
+            cookies: {:?},
             output: {:?}, 
             no_header: {:?}, 
             delimiter: {:?}, 
@@ -88,7 +85,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         (&args.arg_input).clone().unwrap(),
         &args.flag_new_column,
         &args.flag_jql,
-        &args.flag_jobs,
         &args.flag_rate_limit,
         &args.flag_header,
         &args.flag_store_error,
@@ -99,16 +95,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         &args.flag_quiet
     );
 
-    if let Some(_jobs) = args.flag_jobs {
-        panic!("Param not yet supported: jobs")
-    }
-
-    if let Some(_header) = args.flag_header {
+    if let Some(_header) = &args.flag_header {
         panic!("Param not yet supported: header")
-    }
-
-    if args.flag_cookies {
-        panic!("Param not yet supported: cookies")
     }
 
     let rconfig = Config::new(&args.arg_input)
@@ -143,6 +131,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     use reqwest::blocking::Client;
     let client = Client::builder()
         .user_agent(DEFAULT_USER_AGENT)
+        .cookie_store(args.flag_cookies)
         .build()
         .unwrap();
 
@@ -152,7 +141,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut include_existing_columns = false;
 
-    if let Some(name) = &args.flag_new_column {
+    if let Some(name) = args.flag_new_column {
         include_existing_columns = true;
 
         // write header with new column
@@ -182,7 +171,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let url = String::from_utf8_lossy(&selected_col_value).to_string();
         debug!("Fetching URL: {:?}", &url);
 
-        let final_value = get_cached_response(&url, &client, &limiter, &args.flag_jql);
+        let final_value = get_cached_response(&url, &client, &limiter, &args.flag_jql, args.flag_store_error);
 
         if include_existing_columns {
             record.push_field(final_value.as_bytes());
@@ -231,6 +220,7 @@ fn get_cached_response(
     client: &reqwest::blocking::Client,
     limiter: &governor::RateLimiter<NotKeyed, InMemoryState, DefaultClock, NoOpMiddleware>,
     flag_jql: &Option<String>,
+    flag_store_error: bool,
 ) -> String {
 
     // wait until RateLimiter gives Okay
@@ -238,22 +228,66 @@ fn get_cached_response(
         thread::sleep(time::Duration::from_millis(10));
     };
 
-    let resp = client.get(url).send().unwrap();
-    debug!("response: {:?}", &resp);
-    let api_value = resp.text().unwrap();
-    debug!("api value: {:?}", &api_value);
+    let resp: reqwest::blocking::Response;
 
-    let final_value;
-
-    // apply JQL selector if provided
-    if let Some(selectors) = flag_jql {
-        final_value = apply_jql(&api_value, selectors);
-        
-    } else {
-        final_value = api_value;
+    match client.get(url).send() {
+        Ok(response) => {
+            resp = response;
+        },
+        Err(error) => {
+            error!("Cannot fetch url: {:?}, error: {:?}", url, error);
+            if flag_store_error {
+                return error.to_string();
+            } else {
+                return String::default();
+            }
+        }
     }
-    
-    debug!("final value: {:?}", &final_value);
+    debug!("response: {:?}", &resp);
+
+
+    let api_status = resp.status();
+    let api_value: String = resp.text().unwrap();
+    debug!("api value: {}", &api_value);
+
+    let final_value: String;
+
+    if api_status.is_client_error() || api_status.is_server_error() {
+
+        error!("HTTP error. url: {:?}, error: {:?}", url, api_status.canonical_reason().unwrap_or("unknown error"));
+
+        if flag_store_error {
+            final_value = format!("HTTP {} - {}", 
+                                    api_status.as_str(), 
+                                    api_status.canonical_reason().unwrap_or("unknown error")
+                                );
+        } else {
+            final_value = String::default();
+        }
+    } else {
+        // apply JQL selector if provided
+        if let Some(selectors) = flag_jql {
+            match apply_jql(&api_value, selectors) {
+                Ok(s) => {
+                    final_value = s;
+                },
+                Err(e) => {
+
+                    error!("jql error. json: {:?}, selectors: {:?}, error: {:?}", &api_value, selectors, e.to_string());
+
+                    if flag_store_error {
+                        final_value = e.to_string();
+                    } else {
+                        final_value = String::default();
+                    }
+                }
+            }
+        } else {
+            final_value = api_value;
+        }
+    }
+
+    debug!("final value: {}", &final_value);
 
     final_value
 }
@@ -261,20 +295,22 @@ fn get_cached_response(
 use jql::walker;
 use serde_json::{Deserializer, Value};
 
-fn apply_jql(json: &str, selectors: &str) -> String {
-    let mut return_val: String = String::default();
+use anyhow::{Result,anyhow};
 
-    // panic here since api did not return valid JSON and cannot apply JQL selector
+fn apply_jql(json: &str, selectors: &str) -> Result<String> {
+
+    // check if api returned valid JSON before applying JQL selector
     if let Err(error) = serde_json::from_str::<Value>(json) {
-        error!("API response is not valid JSON, cannot apply jql selector. error={:?}, api response={:?}.", &error, json);
-        panic!("API response is not valid JSON, cannot apply jql selector. error={:?}, api response={:?}.", &error, json);
+        return Err(anyhow!("Invalid json: {:?}", error));
     }
+
+    let mut result: Result<String> = Ok(String::default());
 
     Deserializer::from_str(json)
         .into_iter::<Value>()
         .for_each(|value| match value {
             Ok(valid_json) => {
-                
+
                 // Walk through the JSON content with the provided selectors as
                 // input.
                 match walker(&valid_json, Some(selectors)) {
@@ -299,7 +335,6 @@ fn apply_jql(json: &str, selectors: &str) -> String {
                         }
 
                         match &selection {
-
                             Value::Array(array) => {
                                 let mut concat_string = String::new();
 
@@ -316,30 +351,49 @@ fn apply_jql(json: &str, selectors: &str) -> String {
                                     concat_string.push_str(&str_val);
                                 }
 
-                                return_val = concat_string;
+                                result = Ok(concat_string);
                             },
-                            Value::Object(object) => {
-                                panic!("Unsupported jql result type: OBJECT {:?}", object);
+                            Value::Object(_object) => {
+                                result = Err(anyhow!("Unsupported jql result type: OBJECT"));
                             },
                             _ => {
-                                return_val = get_value_string(&selection);
+                                result = Ok(get_value_string(&selection));
                             }
                         }
 
                     }
                     Err(error) => {
-                        warn!("JQL error: {}", &error);
-                        return_val = error;
+                        result = Err(anyhow!(error));
                     }
                 }
             },
             Err(error) => {
-                error!("API response is not valid JSON, cannot apply jql selector. error={:?}, api response={:?}.", &error, &json);
-                panic!("API response is not valid JSON, cannot apply jql selector. error={:?}, api response={:?}.", &error, &json);
+                // shouldn't happen, but do same thing earlier when checking for invalid json
+                result = Err(anyhow!("Invalid json: {:?}", error));
             }
         });
 
-    return_val
+    result
+}
+
+#[test]
+fn test_apply_jql_invalid_json() {
+    let json = r#"<!doctype html><html lang="en"><meta charset=utf-8><title>shortest html5</title>"#;
+    let selectors = r#"."places"[0]."place name""#;
+
+    let value: String = apply_jql(json, selectors).unwrap_err().to_string();
+
+    assert_eq!("Invalid json: Error(\"expected value\", line: 1, column: 1)", value);
+}
+
+#[test]
+fn test_apply_jql_invalid_selector() {
+    let json = r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": "-118.4065", "state": "California", "state abbreviation": "CA", "latitude": "34.0901"}]}"#;
+    let selectors = r#"."place"[0]."place name""#;
+
+    let value = apply_jql(json, selectors).unwrap_err().to_string();
+
+    assert_eq!("Node \"place\" not found on the parent element", value);
 }
 
 #[test]
@@ -347,7 +401,7 @@ fn test_apply_jql_string() {
     let json = r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": "-118.4065", "state": "California", "state abbreviation": "CA", "latitude": "34.0901"}]}"#;
     let selectors = r#"."places"[0]."place name""#;
 
-    let value: String = apply_jql(json, selectors);
+    let value: String = apply_jql(json, selectors).unwrap();
 
     assert_eq!("Beverly Hills", value);
 }
@@ -357,7 +411,7 @@ fn test_apply_jql_number() {
     let json = r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": -118.4065, "state": "California", "state abbreviation": "CA", "latitude": 34.0901}]}"#;
     let selectors = r#"."places"[0]."longitude""#;
 
-    let value: String = apply_jql(json, selectors);
+    let value: String = apply_jql(json, selectors).unwrap();
 
     assert_eq!("-118.4065", value);
 }
@@ -367,7 +421,7 @@ fn test_apply_jql_bool() {
     let json = r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": -118.4065, "state": "California", "state abbreviation": "CA", "latitude": 34.0901, "expensive": true}]}"#;
     let selectors = r#"."places"[0]."expensive""#;
 
-    let value: String = apply_jql(json, selectors);
+    let value: String = apply_jql(json, selectors).unwrap();
 
     assert_eq!(true.to_string(), value);
 }
@@ -377,7 +431,7 @@ fn test_apply_jql_null() {
     let json = r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": -118.4065, "state": "California", "state abbreviation": "CA", "latitude": 34.0901, "university":null}]}"#;
     let selectors = r#"."places"[0]."university""#;
 
-    let value: String = apply_jql(json, selectors);
+    let value: String = apply_jql(json, selectors).unwrap();
 
     assert_eq!("null".to_string(), value);
 }
@@ -387,7 +441,7 @@ fn test_apply_jql_array() {
     let json = r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": -118.4065, "state": "California", "state abbreviation": "CA", "latitude": 34.0901}]}"#;
     let selectors = r#"."places"[0]."longitude",."places"[0]."latitude""#;
 
-    let value: String = apply_jql(json, selectors);
+    let value: String = apply_jql(json, selectors).unwrap();
 
     assert_eq!("-118.4065, 34.0901".to_string(), value);
 }

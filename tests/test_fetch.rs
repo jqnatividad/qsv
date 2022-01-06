@@ -7,6 +7,7 @@ fn fetch_simple() {
         "data.csv",
         vec![
             svec!["URL"],
+            svec!["https://api.zippopotam.us/us/99999"],
             svec!["http://api.zippopotam.us/us/90210"],
             svec!["https://api.zippopotam.us/us/94105"],
             svec!["http://api.zippopotam.us/us/92802"],
@@ -14,10 +15,15 @@ fn fetch_simple() {
         ],
     );
     let mut cmd = wrk.command("fetch");
-    cmd.arg("URL").arg("data.csv");
+    cmd.arg("URL")
+        .arg("data.csv")
+        .arg("--store-error");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
+        svec![
+            r#"HTTP 404 - Not Found"#
+        ],
         svec![
             r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": "-118.4065", "state": "California", "state abbreviation": "CA", "latitude": "34.0901"}]}"#
         ],
@@ -124,7 +130,7 @@ async fn index() -> impl Responder {
 }
 
 /// handler with path parameters like `/user/{name}/`
-/// returns Smurf fullname
+/// returns Smurf fullname in JSON format
 async fn get_fullname(
     req: HttpRequest,
     web::Path((name,)): web::Path<(String,)>,
@@ -145,10 +151,10 @@ fn run_webserver(tx: mpsc::Sender<Server>) -> std::io::Result<()> {
     use actix_governor::{Governor, GovernorConfig, GovernorConfigBuilder};
 
     // Allow bursts with up to five requests per IP address
-    // and replenishes one element every 500 ms (2 qps)
+    // and replenishes one element every 250 ms (4 qps)
     let governor_conf: GovernorConfig = GovernorConfigBuilder::default()
-        .per_millisecond(500)
-        .burst_size(5)
+        .per_millisecond(250)
+        .burst_size(7)
         .finish()
         .unwrap();
 
@@ -218,7 +224,7 @@ fn fetch_ratelimit() {
         .arg("--jql")
         .arg(r#"."fullname""#)
         .arg("--rate-limit")
-        .arg("2")
+        .arg("4")
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
