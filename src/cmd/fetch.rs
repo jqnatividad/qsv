@@ -168,7 +168,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         let selected_col_value = record[column_index].to_owned();
-        let url = String::from_utf8_lossy(&selected_col_value).to_string();
+        let url = String::from_utf8_lossy(&selected_col_value).trim().to_string();
         debug!("Fetching URL: {:?}", &url);
 
         let final_value = get_cached_response(&url, &client, &limiter, &args.flag_jql, args.flag_store_error);

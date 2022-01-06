@@ -86,6 +86,28 @@ HTTP 404 - Not Found
 
 ```
 
+### Fetch with debug trace enabled to see problem with extra whitespace in URL column
+
+Note: if URL is quoted, then there cannot be extra whitespace before quotes
+
+```
+$ cat test4.csv 
+City,URL
+Beverley Hills, http://geodb-free-service.wirefreethought.com/v1/geo/locations/+34.0901-118.4065/nearbyCities
+San Francisco, "http://geodb-free-service.wirefreethought.com/v1/geo/locations/+37.7864-122.3892/nearbyCities"
+Anaheim," http://geodb-free-service.wirefreethought.com/v1/geo/locations/+33.8085-117.9228/nearbyCities"
+
+$ QSV_LOG_LEVEL=debug qsv fetch URL test4.csv  --store-error --jql '"data".[0]."name","data".[1]."name","data".[2]."name"' 
+[00:00:01] [==================== 100% of 3 records. Cache hit ratio: 0.00% - 3 entries] (7/sec)
+"Universal City, Hollywood, Sherman Oaks"
+builder error: relative URL without a base
+"Anaheim, Garden Grove, Fullerton"
+
+$ grep ERROR qsv_rCURRENT.log | tail -1
+[2022-01-06 20:55:49.814944 +08:00] ERROR [qsv::cmd::fetch] src/cmd/fetch.rs:238: Cannot fetch url: "\"http://geodb-free-service.wirefreethought.com/v1/geo/locations/+37.7864-122.3892/nearbyCities\"", error: reqwest::Error { kind: Builder, source: RelativeUrlWithoutBase }
+
+```
+
 ### Fetch with explicit rate limit, and pipe output to a new csv
 
 ```
