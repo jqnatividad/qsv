@@ -247,7 +247,7 @@ fn get_cached_response(
 
 
     let api_status = resp.status();
-    let api_value: String = resp.text().unwrap().to_string();
+    let api_value: String = resp.text().unwrap();
     debug!("api value: {}", &api_value);
 
     let final_value: String;

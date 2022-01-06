@@ -76,8 +76,8 @@ rand = "0.8"
 regex = "1"
 reqwest = { version = "0.11", features = [
     "blocking",
-    "rustls-tls",
     "cookies",
+    "rustls-tls",
 ], default-features = false }
 reverse_geocoder = { version = "2", optional = true }
 self_update = { version = "0.28", features = [

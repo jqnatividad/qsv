@@ -154,7 +154,7 @@ fn run_webserver(tx: mpsc::Sender<Server>) -> std::io::Result<()> {
     // and replenishes one element every 250 ms (4 qps)
     let governor_conf: GovernorConfig = GovernorConfigBuilder::default()
         .per_millisecond(250)
-        .burst_size(5)
+        .burst_size(7)
         .finish()
         .unwrap();
 
