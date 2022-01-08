@@ -33,7 +33,7 @@ Available commands
 | **[enum](/src/cmd/enumerate.rs#L10)** | Add a new column enumerating rows by adding a column of incremental or uuid identifiers. Can also be used to copy a column or fill a new column with a constant value.  |
 | **[exclude](/src/cmd/exclude.rs#L17)**[^2] | Removes a set of CSV data from another set based on the specified columns.  |
 | **[explode](/src/cmd/explode.rs#L8)** | Explode rows into multiple ones by splitting a column value based on the given separator.  |
-| **[fetch](/src/cmd/fetch.rs#L10)** | Fetches HTML/data from web pages or web services for every row in a URL column. _**(WIP)**_ |
+| **[fetch](/src/cmd/fetch.rs#L10)** | Fetches HTML/data from web pages or web services for every row in a URL column. |
 | **[fill](/src/cmd/fill.rs#L13)** | Fill empty values.  |
 | **[fixlengths](/src/cmd/fixlengths.rs#L9)** | Force a CSV to have same-length records by either padding or truncating them. |
 | **[flatten](/src/cmd/flatten.rs#L12)** | A flattened view of CSV records. Useful for viewing one record at a time.<br />e.g. `qsv slice -i 5 data.csv \| qsv flatten`. |
