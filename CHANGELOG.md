@@ -5,6 +5,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.29.0] - 2022-01-08
+### Changed
+* `fetch`: enable cookies and storing error messages by @mhuang74 in https://github.com/jqnatividad/qsv/pull/141
+* `fetch`: improve jql integration by @mhuang74 in https://github.com/jqnatividad/qsv/pull/139
+* `--envlist` option now returns all qsv-relevant environment variables in https://github.com/jqnatividad/qsv/pull/140
+* Move logging and update utility functions to util.rs in https://github.com/jqnatividad/qsv/pull/142
+* `fetch`: support custom http headers by @mhuang74 in https://github.com/jqnatividad/qsv/pull/143
+* bumped whatlang to 13.0 which supports Tagalog detection
+* improved documentation of feature flags, environment variables & `stats` command
+
+### Added
+* added JSONL/NDJSON to Recognized File Formats (thru `jsonl` command)
+* added CODE_OF_CONDUCT.md
+
+### Deleted
+* removed WIP indicator from `fetch` in README
+
 ## [0.28.0] - 2021-12-31
 ### Changed
 * Fetch: support rate limiting by @mhuang74 in https://github.com/jqnatividad/qsv/pull/133
