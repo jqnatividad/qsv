@@ -86,6 +86,28 @@ HTTP 404 - Not Found
 
 ```
 
+### Fetch with debug trace enabled to see problem with extra whitespace in URL column
+
+Note: if URL is quoted, then there cannot be extra whitespace before quotes
+
+```
+$ cat test4.csv 
+City,URL
+Beverley Hills, http://geodb-free-service.wirefreethought.com/v1/geo/locations/+34.0901-118.4065/nearbyCities
+San Francisco, "http://geodb-free-service.wirefreethought.com/v1/geo/locations/+37.7864-122.3892/nearbyCities"
+Anaheim," http://geodb-free-service.wirefreethought.com/v1/geo/locations/+33.8085-117.9228/nearbyCities"
+
+$ QSV_LOG_LEVEL=debug qsv fetch URL test4.csv  --store-error --jql '"data".[0]."name","data".[1]."name","data".[2]."name"' 
+[00:00:01] [==================== 100% of 3 records. Cache hit ratio: 0.00% - 3 entries] (7/sec)
+"Universal City, Hollywood, Sherman Oaks"
+builder error: relative URL without a base
+"Anaheim, Garden Grove, Fullerton"
+
+$ grep ERROR qsv_rCURRENT.log | tail -1
+[2022-01-06 20:55:49.814944 +08:00] ERROR [qsv::cmd::fetch] src/cmd/fetch.rs:238: Cannot fetch url: "\"http://geodb-free-service.wirefreethought.com/v1/geo/locations/+37.7864-122.3892/nearbyCities\"", error: reqwest::Error { kind: Builder, source: RelativeUrlWithoutBase }
+
+```
+
 ### Fetch with explicit rate limit, and pipe output to a new csv
 
 ```
@@ -99,3 +121,31 @@ US,94105,http://api.zippopotam.us/us/94105,"-122.3892, 37.7864"
 US,92802,http://api.zippopotam.us/us/92802,"-117.9228, 33.8085"
 ```
 
+### Fetch using custom headers for api key
+
+```
+$ cat test5.csv
+URL
+http://httpbin.org/get
+
+$ qsv fetch URL test5.csv --jql '"headers"."X-Api-Key","headers"."X-Api-Secret"' --store-error --http-header "X-Api-Key:mykey" --http-header "X-Api-Secret  : nottelling"
+[00:00:00] [==================== 100% of 1 records. Cache hit ratio: 0.00% - 1 entries] (1,151/sec)
+"mykey, nottelling"
+
+$ qsv fetch URL test5.csv --store-error --http-header "X-Api-Key:mykey" --http-header "X-Api-Secret  : nottelling"
+[00:00:00] [==================== 100% of 1 records. Cache hit ratio: 0.00% - 1 entries] (1,105/sec)
+"{
+  ""args"": {}, 
+  ""headers"": {
+    ""Accept"": ""*/*"", 
+    ""Host"": ""httpbin.org"", 
+    ""User-Agent"": ""qsv/0.28.0 (https://github.com/jqnatividad/qsv)"", 
+    ""X-Amzn-Trace-Id"": ""Root=1-61d8d957-054da2374e304c7c7395cacc"", 
+    ""X-Api-Key"": ""mykey"", 
+    ""X-Api-Secret"": ""nottelling""
+  }, 
+  ""origin"": ""1.163.34.120"", 
+  ""url"": ""http://httpbin.org/get""
+}
+"
+```

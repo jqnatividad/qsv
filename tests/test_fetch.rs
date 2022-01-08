@@ -8,7 +8,7 @@ fn fetch_simple() {
         vec![
             svec!["URL"],
             svec!["https://api.zippopotam.us/us/99999"],
-            svec!["http://api.zippopotam.us/us/90210"],
+            svec!["  http://api.zippopotam.us/us/90210"],
             svec!["https://api.zippopotam.us/us/94105"],
             svec!["http://api.zippopotam.us/us/92802"],
             svec!["https://query.wikidata.org/sparql?query=SELECT%20?dob%20WHERE%20{wd:Q42%20wdt:P569%20?dob.}&format=json"],
@@ -105,6 +105,33 @@ fn fetch_jql_multiple() {
         svec!["http://api.zippopotam.us/us/90210", "Beverly Hills, CA"],
         svec!["http://api.zippopotam.us/us/94105", "San Francisco, CA"],
         svec!["https://api.zippopotam.us/us/92802", "Anaheim, CA"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn fetch_custom_header() {
+    let wrk = Workdir::new("fetch");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["URL"],
+            svec!["http://httpbin.org/get"],
+        ],
+    );
+    let mut cmd = wrk.command("fetch");
+    cmd.arg("URL")
+        .arg("--http-header")
+        .arg(" X-Api-Key :  DEMO_KEY")
+        .arg("--http-header")
+        .arg("X-Api-Secret :ABC123XYZ")
+        .arg("--jql")
+        .arg(r#""headers"."X-Api-Key","headers"."X-Api-Secret""#)
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["DEMO_KEY, ABC123XYZ"],
     ];
     assert_eq!(got, expected);
 }
