@@ -20,13 +20,13 @@ URL column must contain full and valid URL path, which can be constructed via th
 To set proxy, please set env var HTTP_PROXY and HTTPS_PROXY (eg export HTTPS_PROXY=socks5://127.0.0.1:1086)
 
 Usage:
-    qsv fetch [options] [<column>] [<input>]
+    qsv fetch [options] [--http-header <k:v>...] [<column>] [<input>]
 
 fetch options:
     -c, --new-column <name>    Put the fetched values in a new column instead.
     --jql <selector>           Apply jql selector to API returned JSON value.
     --rate-limit <qps>         Rate Limit in Queries Per Second. [default: 5]
-    --header <file>            File containing additional HTTP Request Headers. Useful for setting Authorization or overriding User Agent.
+    --http-header <k:v>        Pass custom header(s) to the server.
     --store-error              On error, store error code/message instead of blank value.
     --cookies                  Allow cookies.
 
@@ -47,7 +47,7 @@ struct Args {
     flag_new_column: Option<String>,
     flag_jql: Option<String>,
     flag_rate_limit: Option<u32>,
-    flag_header: Option<String>,
+    flag_http_header: Vec<String>,
     flag_store_error: bool,
     flag_cookies: bool,
     flag_output: Option<String>,
@@ -74,7 +74,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             new column: {:?}, 
             jql: {:?},
             rate limit: {:?},
-            http header file: {:?},
+            http headers: {:?},
             store error: {:?},
             cookies: {:?},
             output: {:?}, 
@@ -86,7 +86,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         &args.flag_new_column,
         &args.flag_jql,
         &args.flag_rate_limit,
-        &args.flag_header,
+        &args.flag_http_header,
         &args.flag_store_error,
         &args.flag_cookies,
         &args.flag_output,
@@ -94,10 +94,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         &args.flag_delimiter,
         &args.flag_quiet
     );
-
-    if let Some(_header) = &args.flag_header {
-        panic!("Param not yet supported: header")
-    }
 
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
@@ -128,9 +124,31 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         rate_limit = NonZeroU32::new(qps).unwrap();
     }
 
+    use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
+
+    let http_headers: HeaderMap = {
+        let mut map = HeaderMap::new();
+        for header in args.flag_http_header {
+            let vals: Vec<&str> = header.split(':').collect();
+
+            // allocate new String for header key to put into map
+            let k: String = String::from(vals[0].trim());
+            let header_name: HeaderName = HeaderName::from_lowercase(k.to_lowercase().as_bytes()).unwrap();
+
+            // allocate new String for header value to put into map
+            let v: String = String::from(vals[1].trim());
+            let header_val: HeaderValue = HeaderValue::from_str(v.as_str()).unwrap();
+
+            map.append(header_name,header_val);
+        }
+
+        map
+    };
+
     use reqwest::blocking::Client;
     let client = Client::builder()
         .user_agent(DEFAULT_USER_AGENT)
+        .default_headers(http_headers)
         .cookie_store(args.flag_cookies)
         .build()
         .unwrap();

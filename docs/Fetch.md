@@ -121,3 +121,31 @@ US,94105,http://api.zippopotam.us/us/94105,"-122.3892, 37.7864"
 US,92802,http://api.zippopotam.us/us/92802,"-117.9228, 33.8085"
 ```
 
+### Fetch using custom headers for api key
+
+```
+$ cat test5.csv
+URL
+http://httpbin.org/get
+
+$ qsv fetch URL test5.csv --jql '"headers"."X-Api-Key","headers"."X-Api-Secret"' --store-error --http-header "X-Api-Key:mykey" --http-header "X-Api-Secret  : nottelling"
+[00:00:00] [==================== 100% of 1 records. Cache hit ratio: 0.00% - 1 entries] (1,151/sec)
+"mykey, nottelling"
+
+$ qsv fetch URL test5.csv --store-error --http-header "X-Api-Key:mykey" --http-header "X-Api-Secret  : nottelling"
+[00:00:00] [==================== 100% of 1 records. Cache hit ratio: 0.00% - 1 entries] (1,105/sec)
+"{
+  ""args"": {}, 
+  ""headers"": {
+    ""Accept"": ""*/*"", 
+    ""Host"": ""httpbin.org"", 
+    ""User-Agent"": ""qsv/0.28.0 (https://github.com/jqnatividad/qsv)"", 
+    ""X-Amzn-Trace-Id"": ""Root=1-61d8d957-054da2374e304c7c7395cacc"", 
+    ""X-Api-Key"": ""mykey"", 
+    ""X-Api-Secret"": ""nottelling""
+  }, 
+  ""origin"": ""1.163.34.120"", 
+  ""url"": ""http://httpbin.org/get""
+}
+"
+```
