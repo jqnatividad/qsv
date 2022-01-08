@@ -133,13 +133,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
             // allocate new String for header key to put into map
             let k: String = String::from(vals[0].trim());
-            let header_name: HeaderName = HeaderName::from_lowercase(k.to_lowercase().as_bytes()).unwrap();
+            let header_name: HeaderName =
+                HeaderName::from_lowercase(k.to_lowercase().as_bytes()).unwrap();
 
             // allocate new String for header value to put into map
             let v: String = String::from(vals[1].trim());
             let header_val: HeaderValue = HeaderValue::from_str(v.as_str()).unwrap();
 
-            map.append(header_name,header_val);
+            map.append(header_name, header_val);
         }
 
         map
@@ -186,7 +187,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         let selected_col_value = record[column_index].to_owned();
-        let url = String::from_utf8_lossy(&selected_col_value).trim().to_string();
+        let url = String::from_utf8_lossy(&selected_col_value)
+            .trim()
+            .to_string();
         debug!("Fetching URL: {:?}", &url);
 
         let final_value = get_cached_response(

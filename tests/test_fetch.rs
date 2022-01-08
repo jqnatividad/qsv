@@ -114,10 +114,7 @@ fn fetch_custom_header() {
     let wrk = Workdir::new("fetch");
     wrk.create(
         "data.csv",
-        vec![
-            svec!["URL"],
-            svec!["http://httpbin.org/get"],
-        ],
+        vec![svec!["URL"], svec!["http://httpbin.org/get"]],
     );
     let mut cmd = wrk.command("fetch");
     cmd.arg("URL")
@@ -130,9 +127,7 @@ fn fetch_custom_header() {
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![
-        svec!["DEMO_KEY, ABC123XYZ"],
-    ];
+    let expected = vec![svec!["DEMO_KEY, ABC123XYZ"]];
     assert_eq!(got, expected);
 }
 
