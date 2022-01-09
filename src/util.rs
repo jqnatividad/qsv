@@ -407,55 +407,56 @@ pub fn init_logger() {
         .unwrap();
 }
 
-pub fn qsv_update(verbose: bool) -> Result<(), Box<dyn ::std::error::Error>> {
+pub fn qsv_check_for_update() {
     use self_update::cargo_crate_version;
 
     if env::var("QSV_NO_UPDATE").is_ok() {
-        return Ok(());
+        return;
     }
+
+    eprintln!("Checking GitHub for updates...");
+    info!("Checking GitHub for updates...");
 
     let curr_version = cargo_crate_version!();
     let releases = self_update::backends::github::ReleaseList::configure()
         .repo_owner("jqnatividad")
         .repo_name("qsv")
-        .build()?
-        .fetch()?;
+        .build().unwrap()
+        .fetch().unwrap();
     let latest_release = &releases[0].version;
 
-    if log_enabled!(Level::Info) {
-        info!(
-            "Current version: {} Latest Release: {}",
-            curr_version, latest_release
-        );
-    }
+    info!(
+        "Current version: {} Latest Release: {}",
+        curr_version, latest_release
+    );
 
     if latest_release > &curr_version.to_string() {
-        println!(
+        eprintln!(
             "Update {} available. Current version is {}.",
             latest_release, curr_version
         );
-        let status = self_update::backends::github::Update::configure()
+        let bin_full_path = format!("{:?}", std::env::current_exe().unwrap());
+        let update_job = self_update::backends::github::Update::configure()
             .repo_owner("jqnatividad")
             .repo_name("qsv")
-            .bin_name("qsvlite")
+            .bin_name(&bin_full_path)
             .show_download_progress(true)
-            .show_output(verbose)
+            .show_output(false)
             .no_confirm(false)
             .current_version(curr_version)
-            .build()?
-            .update()?;
-        let exe_full_path = format!("{:?}", std::env::current_exe().unwrap());
-        let update_status = format!(
-            "Update successful for {}: `{}`!",
-            exe_full_path,
-            status.version()
-        );
-        if verbose {
-            println!("{}", update_status);
-        }
-        if log_enabled!(Level::Info) {
+            .build().unwrap();
+
+        let update_result = update_job.update();
+        if let Ok(status) = update_result {
+            let update_status = format!(
+                "Update successful for {}: `{}`!",
+                bin_full_path,
+                status.version()
+            );
+            eprintln!("{}", update_status);
             info!("{}", update_status);
-        }
+        } else {
+            info!("Up to date... no self-update required.");
+        };
     }
-    Ok(())
 }
