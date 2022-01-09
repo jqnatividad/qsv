@@ -78,7 +78,6 @@ impl Workdir {
 
     pub fn create_from_string(&self, name: &str, data: &str) {
         let filename = &self.path(name);
-        println!("{:?}", filename);
         let mut file = File::create(filename).unwrap();
         file.write_all(data.as_bytes()).unwrap();
         file.flush().unwrap();
