@@ -94,7 +94,6 @@ Options:
     --list               List all commands available.
     --envlist            List all qsv-relevant environment variables.
     -u, --update         Update qsv to the latest release from GitHub.
-    --skip-update-check  Skip automatic update check.
     -h, --help           Display this message
     <command> -h         Display the command help message
     -v, --version        Print version info, mem allocator, max_jobs, num_cpus then exit
@@ -109,7 +108,6 @@ struct Args {
     flag_list: bool,
     flag_envlist: bool,
     flag_update: bool,
-    flag_skip_update_check: bool,
 }
 
 fn main() {
@@ -137,10 +135,7 @@ fn main() {
         return;
     }
     if args.flag_update {
-        if let Err(err) = util::qsv_update(true) {
-            werr!("{}", err);
-            ::std::process::exit(1);
-        }
+        util::qsv_check_for_update();
         return;
     }
     match args.arg_command {
@@ -151,16 +146,8 @@ fn main() {
 Please choose one of the following commands:",
                 command_list!()
             ));
-            if !args.flag_skip_update_check {
-                if let Err(err) = util::qsv_update(false) {
-                    werr!("{}", err);
-                    ::std::process::exit(1);
-                } else {
-                    ::std::process::exit(0);
-                }
-            } else {
-                ::std::process::exit(0);
-            }
+            util::qsv_check_for_update();
+            ::std::process::exit(0);
         }
         Some(cmd) => match cmd.run() {
             Ok(()) => {
@@ -269,6 +256,7 @@ impl Command {
             Command::Headers => cmd::headers::run(argv),
             Command::Help => {
                 wout!("{}", USAGE);
+                util::qsv_check_for_update();
                 Ok(())
             }
             Command::Index => cmd::index::run(argv),
