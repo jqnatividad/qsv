@@ -25,44 +25,44 @@ Available commands
 ------------------
 | Command | Description |
 | --- | --- |
-| **[apply](/src/cmd/apply.rs#L25)**[^1] | Apply series of string, date, currency & geocoding transformations to a CSV column. It also has some basic NLP functions ([similarity](https://crates.io/crates/strsim), [sentiment analysis](https://crates.io/crates/vader_sentiment), [profanity](https://docs.rs/censor/latest/censor/), [eudex](https://github.com/ticki/eudex#eudex-a-blazingly-fast-phonetic-reductionhashing-algorithm) & [language detection](https://crates.io/crates/whatlang)).  |
-| **[behead](/src/cmd/behead.rs#L7)** | Drop headers from a CSV.  |
-| **[cat](/src/cmd/cat.rs#L7)** | Concatenate CSV files by row or by column. |
-| **[count](/src/cmd/count.rs#L7)**[^2] | Count the rows in a CSV file. (Instantaneous with an index.) |
-| **[dedup](/src/cmd/dedup.rs#L13)**[^3] | Remove redundant rows.  |
-| **[enum](/src/cmd/enumerate.rs#L10)** | Add a new column enumerating rows by adding a column of incremental or uuid identifiers. Can also be used to copy a column or fill a new column with a constant value.  |
-| **[exclude](/src/cmd/exclude.rs#L17)**[^2] | Removes a set of CSV data from another set based on the specified columns.  |
-| **[explode](/src/cmd/explode.rs#L8)** | Explode rows into multiple ones by splitting a column value based on the given separator.  |
-| **[fetch](/src/cmd/fetch.rs#L10)** | Fetches HTML/data from web pages or web services for every row in a URL column. |
-| **[fill](/src/cmd/fill.rs#L13)** | Fill empty values.  |
-| **[fixlengths](/src/cmd/fixlengths.rs#L9)** | Force a CSV to have same-length records by either padding or truncating them. |
-| **[flatten](/src/cmd/flatten.rs#L12)** | A flattened view of CSV records. Useful for viewing one record at a time.<br />e.g. `qsv slice -i 5 data.csv \| qsv flatten`. |
-| **[fmt](/src/cmd/fmt.rs#L7)** | Reformat a CSV with different delimiters, record terminators or quoting rules. (Supports ASCII delimited data.)  |
-| **[foreach](/src/cmd/foreach.rs#L17)**[^1] | Loop over a CSV to execute bash commands. (*nix only)  |
-| **[frequency](/src/cmd/frequency.rs#L15)**[^2][^4] | Build frequency tables of each column. (Uses parallelism to go faster if an index is present.) |
-| **[generate](/src/cmd/generate.rs#L12)**[^1] | Generate test data by profiling a CSV using [Markov decision process](https://crates.io/crates/test-data-generation) machine learning.  |
-| **[headers](/src/cmd/headers.rs#L11)** | Show the headers of a CSV. Or show the intersection of all headers between many CSV files. |
-| **[index](/src/cmd/index.rs#L13)** | Create an index for a CSV. This is very quick & provides constant time indexing into the CSV file. |
-| **[input](/src/cmd/input.rs#L7)** | Read a CSV with exotic quoting/escaping rules. |
-| **[join](/src/cmd/join.rs#L17)**[^2] | Inner, outer, cross, anti & semi joins. Uses a simple hash index to make it fast.  |
-| **[jsonl](/src/cmd/jsonl.rs#L11)** | Convert newline-delimited JSON to CSV. 
-| **[lua](/src/cmd/lua.rs#L15)**[^1] | Execute a [Lua](https://www.lua.org/about.html) script over CSV lines to transform, aggregate or filter them.  |
-| **[partition](/src/cmd/partition.rs#L16)** | Partition a CSV based on a column value. |
-| **[pseudo](/src/cmd/pseudo.rs#L10)** | Pseudonymise the value of the given column by replacing them with an incremental identifier.  |
-| **[py](/src/cmd/python.rs#L45)**[^1] | Evaluate a Python expression over CSV lines to transform, aggregate or filter them (Python 3.7+ rqd).  |
-| **[rename](/src/cmd/rename.rs#L7)** |  Rename the columns of a CSV efficiently.  |
-| **[replace](/src/cmd/replace.rs#L12)** | Replace CSV data using a regex.  |
-| **[reverse](/src/cmd/reverse.rs#L7)**[^3] | Reverse order of rows in a CSV. Unlike the `sort --reverse` command, it preserves the order of rows with the same key.  |
-| **[sample](/src/cmd/sample.rs#L12)**[^2] | Randomly draw rows (with optional seed) from a CSV using [reservoir sampling](https://en.wikipedia.org/wiki/Reservoir_sampling) (i.e., use memory proportional to the size of the sample).  |
-| **[search](/src/cmd/search.rs#L11)** | Run a regex over a CSV. Applies the regex to each field individually & shows only matching rows.  |
-| **[searchset](/src/cmd/searchset.rs#L15)** | Run **multiple regexes** over a CSV in a **single pass**. Applies the regexes to each field individually & shows only matching rows.  |
-| **[select](/src/cmd/select.rs#L8)** | Select, re-order, duplicate or drop columns.  |
-| **[slice](/src/cmd/slice.rs#L10)**[^2][^3] | Slice rows from any part of a CSV. When an index is present, this only has to parse the rows in the slice (instead of all rows leading up to the start of the slice).  |
-| **[sort](/src/cmd/sort.rs#L14)** | Sorts CSV data in alphabetical, numerical, reverse or random (with optional seed) order.  |
-| **[split](/src/cmd/split.rs#L14)**[^2][^4] | Split one CSV file into many CSV files of N chunks.  |
-| **[stats](/src/cmd/stats.rs#L24)**[^2][^3][^4] | Infer data type & compute descriptive statistics for each column in a CSV (sum, min/max, min/max length, mean, stddev, variance, quartiles, IQR, lower/upper fences, skew, median, mode, cardinality & nullcount)  |
-| **[table](/src/cmd/table.rs#L12)**[^3] | Show aligned output of a CSV using [elastic tabstops](https://github.com/BurntSushi/tabwriter).  |
-| **[transpose](/src/cmd/transpose.rs#L9)**[^3] | Transpose rows/columns of a CSV.  |
+| [apply](/src/cmd/apply.rs#L25)[^1] | Apply series of string, date, currency & geocoding transformations to a CSV column. It also has some basic NLP functions ([similarity](https://crates.io/crates/strsim), [sentiment analysis](https://crates.io/crates/vader_sentiment), [profanity](https://docs.rs/censor/latest/censor/), [eudex](https://github.com/ticki/eudex#eudex-a-blazingly-fast-phonetic-reductionhashing-algorithm) & [language detection](https://crates.io/crates/whatlang)).  |
+| [behead](/src/cmd/behead.rs#L7) | Drop headers from a CSV.  |
+| [cat](/src/cmd/cat.rs#L7) | Concatenate CSV files by row or by column. |
+| [count](/src/cmd/count.rs#L7)[^2] | Count the rows in a CSV file. (Instantaneous with an index.) |
+| [dedup](/src/cmd/dedup.rs#L13)[^3] | Remove redundant rows.  |
+| [enum](/src/cmd/enumerate.rs#L10) | Add a new column enumerating rows by adding a column of incremental or uuid identifiers. Can also be used to copy a column or fill a new column with a constant value.  |
+| [exclude](/src/cmd/exclude.rs#L17)[^2] | Removes a set of CSV data from another set based on the specified columns.  |
+| [explode](/src/cmd/explode.rs#L8) | Explode rows into multiple ones by splitting a column value based on the given separator.  |
+| [fetch](/src/cmd/fetch.rs#L10) | Fetches HTML/data from web pages or web services for every row in a URL column. |
+| [fill](/src/cmd/fill.rs#L13) | Fill empty values.  |
+| [fixlengths](/src/cmd/fixlengths.rs#L9) | Force a CSV to have same-length records by either padding or truncating them. Can also be used to inspect if a CSV is well-formed. |
+| [flatten](/src/cmd/flatten.rs#L12) | A flattened view of CSV records. Useful for viewing one record at a time.<br />e.g. `qsv slice -i 5 data.csv \| qsv flatten`. |
+| [fmt](/src/cmd/fmt.rs#L7) | Reformat a CSV with different delimiters, record terminators or quoting rules. (Supports ASCII delimited data.)  |
+| [foreach](/src/cmd/foreach.rs#L17)[^1] | Loop over a CSV to execute bash commands. (not available on Windows)  |
+| [frequency](/src/cmd/frequency.rs#L15)[^2][^4] | Build frequency tables of each column. (Uses parallelism to go faster if an index is present.) |
+| [generate](/src/cmd/generate.rs#L12)[^1] | Generate test data by profiling a CSV using [Markov decision process](https://crates.io/crates/test-data-generation) machine learning.  |
+| [headers](/src/cmd/headers.rs#L11) | Show the headers of a CSV. Or show the intersection of all headers between many CSV files. |
+| [index](/src/cmd/index.rs#L13) | Create an index for a CSV. This is very quick & provides constant time indexing into the CSV file. |
+| [input](/src/cmd/input.rs#L7) | Read a CSV with exotic quoting/escaping rules. |
+| [join](/src/cmd/join.rs#L17)[^2] | Inner, outer, cross, anti & semi joins. Uses a simple hash index to make it fast.  |
+| [jsonl](/src/cmd/jsonl.rs#L11) | Convert newline-delimited JSON ([JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/)) to CSV. 
+| [lua](/src/cmd/lua.rs#L15)[^1] | Execute a [Lua](https://www.lua.org/about.html) script over CSV lines to transform, aggregate or filter them.  |
+| [partition](/src/cmd/partition.rs#L16) | Partition a CSV based on a column value. |
+| [pseudo](/src/cmd/pseudo.rs#L10) | Pseudonymise the value of the given column by replacing them with an incremental identifier.  |
+| [py](/src/cmd/python.rs#L45)[^1] | Evaluate a Python expression over CSV lines to transform, aggregate or filter them. Python's [f-strings](https://www.freecodecamp.org/news/python-f-strings-tutorial-how-to-use-f-strings-for-string-formatting/) is particularly useful for extended formatting (Python 3.7+ required).  |
+| [rename](/src/cmd/rename.rs#L7) |  Rename the columns of a CSV efficiently.  |
+| [replace](/src/cmd/replace.rs#L12) | Replace CSV data using a regex.  |
+| [reverse](/src/cmd/reverse.rs#L7)[^3] | Reverse order of rows in a CSV. Unlike the `sort --reverse` command, it preserves the order of rows with the same key.  |
+| [sample](/src/cmd/sample.rs#L12)[^2] | Randomly draw rows (with optional seed) from a CSV using [reservoir sampling](https://en.wikipedia.org/wiki/Reservoir_sampling) (i.e., use memory proportional to the size of the sample).  |
+| [search](/src/cmd/search.rs#L11) | Run a regex over a CSV. Applies the regex to each field individually & shows only matching rows.  |
+| [searchset](/src/cmd/searchset.rs#L15) | Run multiple regexes over a CSV in a single pass. Applies the regexes to each field individually & shows only matching rows.  |
+| [select](/src/cmd/select.rs#L8) | Select, re-order, duplicate or drop columns.  |
+| [slice](/src/cmd/slice.rs#L10)[^2][^3] | Slice rows from any part of a CSV. When an index is present, this only has to parse the rows in the slice (instead of all rows leading up to the start of the slice).  |
+| [sort](/src/cmd/sort.rs#L14) | Sorts CSV data in alphabetical, numerical, reverse or random (with optional seed) order.  |
+| [split](/src/cmd/split.rs#L14)[^2][^4] | Split one CSV file into many CSV files of N chunks.  |
+| [stats](/src/cmd/stats.rs#L24)[^2][^3][^4] | Infer data type & compute descriptive statistics for each column in a CSV (sum, min/max, min/max length, mean, stddev, variance, quartiles, IQR, lower/upper fences, skew, median, mode, cardinality & nullcount)  |
+| [table](/src/cmd/table.rs#L12)[^3] | Show aligned output of a CSV using [elastic tabstops](https://github.com/BurntSushi/tabwriter).  |
+| [transpose](/src/cmd/transpose.rs#L9)[^3] | Transpose rows/columns of a CSV.  |
 
 [^1]: enabled by optional feature flag. Not available on `qsvlite`.   
 [^2]: uses an index when available. `join` always uses indices.   
@@ -77,7 +77,7 @@ There are two versions of qsv. `qsvlite` has all features disabled. `qsv` suppor
 enabling all valid platform features[^5] (see [Feature Flags](#feature-flags) for more info if you're compiling/installing a custom build of qsv).
 
 [^5]: The `foreach` feature is not available on Windows. The `python` feature is not enabled on cross-compiled pre-built binaries as we don't have
-access to a native python interpreter for those platforms (aarch64, i686, and arm targets). Compile natively on those platforms if you want to enable the `python` feature.
+access to a native python interpreter for those platforms (aarch64, i686, and arm targets) on GitHub's action runners. Compile natively on those platforms with Python 3.7+ installed, if you want to enable the `python` feature.
 
 Alternatively, you can compile from source by
 [installing Cargo](https://crates.io/install)
