@@ -80,6 +80,7 @@ macro_rules! command_list {
     stats       Infer data types and compute descriptive statistics
     table       Align CSV data into columns
     transpose   Transpose rows/columns of CSV data
+    validate    Validate CSV data with JSON Schema
 
     * optional feature
 
@@ -272,6 +273,7 @@ enum Command {
     Stats,
     Table,
     Transpose,
+    Validate
 }
 
 impl Command {
@@ -334,6 +336,7 @@ impl Command {
             Command::Transpose => cmd::transpose::run(argv),
             #[cfg(feature = "foreach")]
             Command::ForEach => cmd::foreach::run(argv),
+            Command::Validate => cmd::validate::run(argv),
         }
     }
 }
