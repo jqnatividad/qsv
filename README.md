@@ -74,10 +74,7 @@ Installation
 Pre-built binaries for Windows, Linux and macOS are available [from GitHub](https://github.com/jqnatividad/qsv/releases/latest).
 
 There are two versions of qsv. `qsvlite` has all features disabled. `qsv` supports features, with the pre-built binaries
-enabling all valid platform features[^5] (see [Feature Flags](#feature-flags) for more info if you're compiling/installing a custom build of qsv).
-
-[^5]: The `foreach` feature is not available on Windows. The `python` feature is not enabled on cross-compiled pre-built binaries as we don't have
-access to a native python interpreter for those platforms (aarch64, i686, and arm targets) on GitHub's action runners. Compile natively on those platforms with Python 3.7+ installed, if you want to enable the `python` feature.
+enabling all valid platform features[^5].
 
 Alternatively, you can compile from source by
 [installing Cargo](https://crates.io/install)
@@ -107,7 +104,7 @@ cargo build --release --frozen
 
 The compiled binary will end up in `./target/release/qsv`.
 
-To enable optional features, use the `--features` or `--all-features` options, e.g.:
+To enable optional features, use the `--features` or `--all-features` options (see [Feature Flags](#feature-flags) for more info if you're compiling/installing a custom build of qsv):
 
 ```bash
 cargo install qsv --features apply,generate,lua,foreach,python
@@ -119,6 +116,9 @@ cargo build --release --features apply,generate,lua,foreach,python
 # or
 cargo build --release --all-features
 ```
+
+[^5]: The `foreach` feature is not available on Windows. The `python` feature is not enabled on cross-compiled pre-built binaries as we don't have
+access to a native python interpreter for those platforms (aarch64, i686, and arm) on GitHub's action runners. Compile natively on those platforms with Python 3.7+ installed, if you want to enable the `python` feature.
 ### Minimum Supported Rust Version
 Building qsv requires Rust version 1.56+.
 
