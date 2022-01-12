@@ -39,7 +39,7 @@ Available commands
 | [flatten](/src/cmd/flatten.rs#L12) | A flattened view of CSV records. Useful for viewing one record at a time.<br />e.g. `qsv slice -i 5 data.csv \| qsv flatten`. |
 | [fmt](/src/cmd/fmt.rs#L7) | Reformat a CSV with different delimiters, record terminators or quoting rules. (Supports ASCII delimited data.)  |
 | [foreach](/src/cmd/foreach.rs#L17)[^1] | Loop over a CSV to execute bash commands. (not available on Windows)  |
-| [frequency](/src/cmd/frequency.rs#L15)[^2][^4] | Build frequency tables of each column. (Uses parallelism to go faster if an index is present.) |
+| [frequency](/src/cmd/frequency.rs#L15)[^2][^4] | Build frequency tables of each column. (Uses multithreading to go faster if an index is present.) |
 | [generate](/src/cmd/generate.rs#L12)[^1] | Generate test data by profiling a CSV using [Markov decision process](https://crates.io/crates/test-data-generation) machine learning.  |
 | [headers](/src/cmd/headers.rs#L11) | Show the headers of a CSV. Or show the intersection of all headers between many CSV files. |
 | [index](/src/cmd/index.rs#L13) | Create an index for a CSV. This is very quick & provides constant time indexing into the CSV file. |
@@ -67,7 +67,7 @@ Available commands
 [^1]: enabled by optional feature flag. Not available on `qsvlite`.   
 [^2]: uses an index when available. `join` always uses indices.   
 [^3]: loads the entire CSV into memory. Note that `stats` & `transpose` have modes that do not load the entire CSV into memory.   
-[^4]: runs parallel jobs by default (use `--jobs` option to adjust).   
+[^4]: multithreaded by default (use `--jobs` option to adjust).   
 
 Installation
 ------------
@@ -154,7 +154,7 @@ Environment Variables
 * `QSV_NO_HEADERS` - when set, the first row will **NOT** be interpreted as headers. Supersedes `QSV_TOGGLE_HEADERS`.
 * `QSV_TOGGLE_HEADERS` - if set to `1`, toggles header setting - i.e. inverts qsv header behavior, with no headers being the default, and setting `--no-headers` will actually mean headers will not be ignored.
 * `QSV_MAX_JOBS` - number of jobs to use for multi-threaded commands (currently `frequency`, `split` and `stats`). If not set, max_jobs is set
-to number of logical processors divided by three.  See [Parallelization](#parallelization) for more info.
+to number of logical processors divided by three.  See [Multithreading](#multithreading) for more info.
 * `QSV_REGEX_UNICODE` - if set, makes `search`, `searchset` and `replace` commands unicode-aware. For increased performance, these
 commands are not unicode-aware and will ignore unicode values when matching and will panic when unicode characters are used in the regex.
 * `QSV_RDR_BUFFER_CAPACITY` - set to change reader buffer size (bytes - default when not set: 16384)
@@ -250,13 +250,13 @@ variable `QSV_RDR_BUFFER_CAPACITY` in bytes.
 
 The same is true with the write buffer (default: 64k) with the `QSV_WTR_BUFFER_CAPACITY` environment variable.
 
-### Parallelization
-Several commands support parallelization/multi-threading - `stats`, `frequency` and `split`.
+### Multithreading
+Several commands support multithreading - `stats`, `frequency` and `split`.
 
 Previously, these commands spawned several jobs equal to the number of logical processors. After extensive benchmarking, it turns out
-doing so often results in the multi-threaded runs running slower than single-threaded runs.
+doing so often results in the multithreaded runs running slower than single-threaded runs.
 
-Parallelized jobs do increase performance - to a point. After a certain number of threads, there are not only diminishing returns, the parallelization overhead actually results in slower runs.
+Multithreaded jobs do increase performance - to a point. After a certain number of threads, there are not only diminishing returns, the multithreading overhead actually results in slower runs.
 
 Starting with qsv 0.22.0, a heuristic of setting the maximum number of jobs to the number of logical processors divided by 3 is applied. The user can still manually override this using the `--jobs` command-line option or the `QSV_MAX_JOBS` environment variable, but testing shows negative returns start at around this point.
 
