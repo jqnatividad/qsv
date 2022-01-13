@@ -68,40 +68,13 @@ static DEFAULT_USER_AGENT: &str = concat!(
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
-    debug!(
-        "url column: {:?}, 
-            input: {:?}, 
-            new column: {:?}, 
-            jql: {:?},
-            rate limit: {:?},
-            http headers: {:?},
-            store error: {:?},
-            cookies: {:?},
-            output: {:?}, 
-            no_header: {:?}, 
-            delimiter: {:?}, 
-            quiet: {:?}",
-        (&args.arg_column).clone(),
-        (&args.arg_input).clone().unwrap(),
-        &args.flag_new_column,
-        &args.flag_jql,
-        &args.flag_rate_limit,
-        &args.flag_http_header,
-        &args.flag_store_error,
-        &args.flag_cookies,
-        &args.flag_output,
-        &args.flag_no_headers,
-        &args.flag_delimiter,
-        &args.flag_quiet
-    );
-
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers)
         .select(args.arg_column);
 
     let mut rdr = rconfig.reader()?;
-    let mut wtr = Config::new(&None).writer()?;
+    let mut wtr = Config::new(&args.flag_output).writer()?;
 
     let mut headers = rdr.byte_headers()?.clone();
     let sel = rconfig.selection(&headers)?;
