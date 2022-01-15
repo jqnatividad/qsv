@@ -455,20 +455,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
     if !args.flag_quiet {
         if args.cmd_geocode {
-            use cached::Cached;
-            use thousands::Separable;
-
-            let cache = SEARCH_CACHED.lock().unwrap();
-            let cache_size = cache.cache_size();
-            let hits = cache.cache_hits().unwrap();
-            let misses = cache.cache_misses().unwrap();
-            let hit_ratio = (hits as f64 / (hits + misses) as f64) * 100.0;
-            progress.set_message(format!(
-                " of {} records. Geocode cache hit ratio: {:.2}% - {} entries",
-                progress.length().separate_with_commas(),
-                hit_ratio,
-                cache_size.separate_with_commas(),
-            ));
+            util::update_cache_info!(progress, SEARCH_CACHED);
         }
         util::finish_progress(&progress);
     }
