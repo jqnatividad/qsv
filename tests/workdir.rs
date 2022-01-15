@@ -145,6 +145,17 @@ impl Workdir {
             .unwrap_or_else(|| panic!("Could not convert from string: '{}'", stdout))
     }
 
+    pub fn output_stderr(&self, cmd: &mut process::Command) -> String {
+        debug!("[{}]: {:?}", self.dir.display(), cmd);
+        println!("[{}]: {:?}", self.dir.display(), cmd);
+        let o = cmd.output().unwrap();
+        if !o.status.success() {
+            String::from_utf8_lossy(&o.stderr).to_string()
+        } else {
+            "No error".to_string()
+        }
+    }
+
     pub fn assert_err(&self, cmd: &mut process::Command) {
         let o = cmd.output().unwrap();
         if o.status.success() {
