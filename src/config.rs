@@ -36,24 +36,16 @@ impl Delimiter {
         }
 
         if s.len() != 1 {
-            let msg = format!(
-                "Could not convert '{}' to a single \
-                            ASCII character.",
-                s
-            );
-            return Err(msg);
+            return Err(format!(
+                "Could not convert '{s}' to a single ASCII character."
+            ));
         }
 
         let c = s.chars().next().unwrap();
         if c.is_ascii() {
             Ok(Delimiter(c as u8))
         } else {
-            let msg = format!(
-                "Could not convert '{}' \
-                            to ASCII delimiter.",
-                c
-            );
-            Err(msg)
+            Err(format!("Could not convert '{c}' to ASCII delimiter."))
         }
     }
 }

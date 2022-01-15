@@ -72,28 +72,15 @@ pub fn version() -> String {
         (Some(qsvtype), Some(maj), Some(min), Some(pat), Some(pre)) => {
             if pre.is_empty() {
                 return format!(
-                    "{} {}.{}.{}-{}-{}{}-{}",
-                    qsvtype,
-                    maj,
-                    min,
-                    pat,
-                    malloc_kind,
-                    enabled_features,
-                    max_jobs(),
-                    num_cpus()
+                    "{qsvtype} {maj}.{min}.{pat}-{malloc_kind}-{enabled_features}{maxjobs}-{numcpus}",
+                    maxjobs = max_jobs(),
+                    numcpus = num_cpus()
                 );
             } else {
                 return format!(
-                    "{} {}.{}.{}-{}-{}-{}{}-{}",
-                    qsvtype,
-                    maj,
-                    min,
-                    pat,
-                    pre,
-                    malloc_kind,
-                    enabled_features,
-                    max_jobs(),
-                    num_cpus(),
+                    "{qsvtype} {maj}.{min}.{pat}-{pre}-{malloc_kind}-{enabled_features}{maxjobs}-{numcpus}",
+                    maxjobs = max_jobs(),
+                    numcpus = num_cpus(),
                 );
             }
         }
@@ -149,7 +136,7 @@ pub fn prep_progress(progress: &ProgressBar, record_count: u64) {
     progress.set_draw_delta(record_count / 100);
 
     if log_enabled!(Level::Info) {
-        info!("Progress started... {} records", record_count);
+        info!("Progress started... {record_count} records");
     }
 }
 
@@ -169,7 +156,7 @@ pub fn finish_progress(progress: &ProgressBar) {
     progress.finish();
 
     if log_enabled!(Level::Info) {
-        info!("Progress done... {} records/sec", per_sec_rate);
+        info!("Progress done... {per_sec_rate} records/sec");
     }
 }
 
@@ -318,9 +305,8 @@ pub fn range(start: Idx, end: Idx, len: Idx, index: Idx) -> Result<(usize, usize
             let s = start.unwrap_or(0);
             if s > e {
                 Err(format!(
-                    "The end of the range ({}) must be greater than or\n\
-                             equal to the start of the range ({}).",
-                    e, s
+                    "The end of the range ({e}) must be greater than or\n\
+                             equal to the start of the range ({s})."
                 ))
             } else {
                 Ok((s, e))
@@ -455,16 +441,10 @@ pub fn qsv_check_for_update() {
         .unwrap();
     let latest_release = &releases[0].version;
 
-    info!(
-        "Current version: {} Latest Release: {}",
-        curr_version, latest_release
-    );
+    info!("Current version: {curr_version} Latest Release: {latest_release}");
 
     if latest_release > &curr_version.to_string() {
-        eprintln!(
-            "Update {} available. Current version is {}.",
-            latest_release, curr_version
-        );
+        eprintln!("Update {latest_release} available. Current version is {curr_version}.",);
         let bin_full_path = format!("{:?}", std::env::current_exe().unwrap());
         let update_job = self_update::backends::github::Update::configure()
             .repo_owner("jqnatividad")
@@ -484,10 +464,11 @@ pub fn qsv_check_for_update() {
                 bin_full_path,
                 status.version()
             );
-            eprintln!("{}", update_status);
-            info!("{}", update_status);
-        } else {
-            info!("Up to date... no self-update required.");
+            eprintln!("{update_status}");
+            info!("{update_status}");
         };
-    }
+    } else {
+        eprintln!("Up to date... no self-update required.");
+        info!("Up to date... no self-update required.");
+    };
 }

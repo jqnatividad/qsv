@@ -117,7 +117,7 @@ fn main() {
 
     if log_enabled!(Level::Info) {
         let qsv_args: String = env::args().skip(1).collect::<Vec<_>>().join(" ");
-        info!("START: {}", qsv_args);
+        info!("START: {qsv_args}");
     }
 
     let args: Args = Docopt::new(USAGE)
@@ -159,9 +159,9 @@ Please choose one of the following commands:",
             Err(CliError::Flag(err)) => err.exit(),
             Err(CliError::Csv(err)) => {
                 if log_enabled!(Level::Error) {
-                    error!("{}", err);
+                    error!("{err}");
                 } else {
-                    werr!("{}", err);
+                    werr!("{err}");
                 }
                 process::exit(1);
             }
@@ -170,17 +170,17 @@ Please choose one of the following commands:",
             }
             Err(CliError::Io(err)) => {
                 if log_enabled!(Level::Error) {
-                    error!("{}", err);
+                    error!("{err}");
                 } else {
-                    werr!("{}", err);
+                    werr!("{err}");
                 }
                 process::exit(1);
             }
             Err(CliError::Other(msg)) => {
                 if log_enabled!(Level::Error) {
-                    error!("{}", msg);
+                    error!("{msg}");
                 } else {
-                    werr!("{}", msg);
+                    werr!("{msg}");
                 }
                 process::exit(1);
             }
@@ -255,7 +255,7 @@ impl Command {
             Command::Frequency => cmd::frequency::run(argv),
             Command::Headers => cmd::headers::run(argv),
             Command::Help => {
-                wout!("{}", USAGE);
+                wout!("{USAGE}");
                 util::qsv_check_for_update();
                 Ok(())
             }
@@ -341,6 +341,6 @@ impl<'a> From<&'a str> for CliError {
 
 impl From<regex::Error> for CliError {
     fn from(err: regex::Error) -> CliError {
-        CliError::Other(format!("{:?}", err))
+        CliError::Other(format!("{err:?}"))
     }
 }
