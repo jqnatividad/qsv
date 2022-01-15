@@ -173,6 +173,34 @@ pub fn finish_progress(progress: &ProgressBar) {
     }
 }
 
+macro_rules! update_cache_info {
+    ($progress:expr, $cache_instance:expr) => {
+        use cached::Cached;
+        use thousands::Separable;
+
+        let cache_instance = $cache_instance.lock();
+        match cache_instance {
+            Ok(cache) => {
+                let cache_size = cache.cache_size();
+                if cache_size > 0 {
+                    let hits = cache.cache_hits().expect("Cache hits required");
+                    let misses = cache.cache_misses().expect("Cache misses required");
+                    let hit_ratio = (hits as f64 / (hits + misses) as f64) * 100.0;
+                    $progress.set_message(format!(
+                        " of {} records. Geocode cache hit ratio: {:.2}% - {} entries",
+                        $progress.length().separate_with_commas(),
+                        hit_ratio,
+                        cache_size.separate_with_commas(),
+                    ));
+                }
+            }
+            _ => {}
+        }
+    };
+}
+
+pub(crate) use update_cache_info;
+
 pub fn get_args<T>(usage: &str, argv: &[&str]) -> CliResult<T>
 where
     T: DeserializeOwned,
@@ -421,8 +449,10 @@ pub fn qsv_check_for_update() {
     let releases = self_update::backends::github::ReleaseList::configure()
         .repo_owner("jqnatividad")
         .repo_name("qsv")
-        .build().unwrap()
-        .fetch().unwrap();
+        .build()
+        .unwrap()
+        .fetch()
+        .unwrap();
     let latest_release = &releases[0].version;
 
     info!(
@@ -444,7 +474,8 @@ pub fn qsv_check_for_update() {
             .show_output(false)
             .no_confirm(false)
             .current_version(curr_version)
-            .build().unwrap();
+            .build()
+            .unwrap();
 
         let update_result = update_job.update();
         if let Ok(status) = update_result {
