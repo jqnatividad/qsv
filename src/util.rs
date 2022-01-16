@@ -405,6 +405,7 @@ pub fn init_logger() {
 
     Logger::try_with_env_or_str(qsv_log_env)
         .unwrap()
+        .use_utc()
         .log_to_file(
             FileSpec::default()
                 .directory(qsv_log_dir)
