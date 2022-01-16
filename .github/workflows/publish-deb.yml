@@ -1,0 +1,45 @@
+name: Publish-deb
+
+on:
+  push:
+    tags:
+      - '*'
+  workflow_dispatch:
+
+jobs:
+  analyze-tags:
+    runs-on: ubuntu-latest
+    outputs:
+      previous-tag: ${{ steps.previoustag.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v2.3.3
+        with:
+          fetch-depth: 0
+      #▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼#
+      - name: Get previous tag
+        id: previoustag
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+      #▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲#
+
+  publish-deb:
+      name: Publish Debian package
+      needs: analyze-tags
+      runs-on: ubuntu-latest
+      steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+          ref: ${{ needs.analyze-tags.outputs.previous-tag }}
+      - name: Update Rust
+        run: rustup update
+      - name: Deb Build
+        uses: matclab/cargo-deb-amd64-ubuntu@1.2
+      - name: Upload deb pkg to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./target/x86_64-unknown-linux-musl/debian/qsv_${{ needs.analyze-tags.outputs.previous-tag }}_amd64.deb
+          asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-x86_64-unknown-linux-musl.deb
+          overwrite: true
+          tag: ${{ needs.analyze-tags.outputs.previous-tag }}
