@@ -63,7 +63,7 @@ stats options:
                            an index already created. Note that a file handle
                            is opened for each job.
                            When set to '0', the number of jobs is set to the
-                           number of CPUs detected divided by 4.
+                           number of CPUs detected divided by 3.
                            When set to '-1', the number of jobs is set to the
                            number of CPUs detected.
                            [default: 0]
