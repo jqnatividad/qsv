@@ -111,7 +111,6 @@ impl Workdir {
 
     pub fn output(&self, cmd: &mut process::Command) -> process::Output {
         debug!("[{}]: {:?}", self.dir.display(), cmd);
-        println!("[{}]: {:?}", self.dir.display(), cmd);
         let o = cmd.output().unwrap();
         if !o.status.success() {
             panic!(
@@ -147,7 +146,11 @@ impl Workdir {
 
     pub fn output_stderr(&self, cmd: &mut process::Command) -> String {
         debug!("[{}]: {:?}", self.dir.display(), cmd);
-        println!("[{}]: {:?}", self.dir.display(), cmd);
+        // ensures stderr has been flushed before we run our cmd
+        {
+            let mut _stderr = io::stderr();
+            _stderr.flush().unwrap();
+        }
         let o = cmd.output().unwrap();
         if !o.status.success() {
             String::from_utf8_lossy(&o.stderr).to_string()
