@@ -318,7 +318,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if args.cmd_operations {
         for op in &operations {
             if !OPERATIONS.contains(op) {
-                return fail!(format!("Unknown \"{}\" operation", op));
+                return fail!(format!("Unknown '{op}' operation"));
             }
             #[allow(clippy::useless_asref)]
             match op.as_ref() {
@@ -536,7 +536,7 @@ fn apply_operations(operations: &[&str], cell: &mut String, comparand: &str, rep
                         let decpoint = coinlen - 2;
                         let coin_num = &coins[..decpoint];
                         let coin_frac = &coins[decpoint..];
-                        *cell = format!("{}.{}", coin_num, coin_frac);
+                        *cell = format!("{coin_num}.{coin_frac}");
                     }
                 }
             }
