@@ -5,6 +5,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.29.1] - 2022-01-17
+### Changed
+* refactored `--update` to give update progress messages; run on `--help` as well
+* updated README
+  - remove bold formatting of commands
+  - expanded descriptions of
+      - fixlengths
+      - foreach
+      - jsonl
+      - py
+    - searchset
+  - added reason why pre-built binaries on some platforms do not have the python feature installed.
+  - drop use of "parallelism", just say "multithreading"
+  - expanded Feature Flag section
+* bump cached from 0.26 to 0.29
+* added `update_cache_info!` macro to util.rs, replacing redundant code for progress indicators with cache info
+* bump MSRV to Rust 1.58
+* use new Rust 1.58 captured identifiers for format strings
+* added `output_stderr` test helper to test for expected errors in CI
+* added tests for invalid delimiter length; truncated comment char and unknown apply operators
+* pointed documentation to Github README instead of doc.rs
+* added `rustup update` to Github Actions publish workflow as Github's runners are still on Rust 1.57
+* added Debian package build to publish workflow for `x86_64-unknown-linux-musl`
+
+### Fixed
+* corrected help text on job divisor is 3 not 4 for multithreaded commands (`frequency`, `split` and `stats`)
+* corrected `stats` help text to state that multithreading requires an index
+
 ## [0.29.0] - 2022-01-08
 ### Changed
 * `fetch`: enable cookies and storing error messages by @mhuang74 in https://github.com/jqnatividad/qsv/pull/141
