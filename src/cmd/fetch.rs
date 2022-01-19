@@ -159,19 +159,22 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             progress.inc(1);
         }
 
-        let selected_col_value = record[column_index].to_owned();
-        let url = String::from_utf8_lossy(&selected_col_value)
-            .trim()
-            .to_string();
-        debug!("Fetching URL: {:?}", &url);
+        let mut final_value = String::default();
 
-        let final_value = get_cached_response(
-            &url,
-            &client,
-            &limiter,
-            &args.flag_jql,
-            args.flag_store_error,
-        );
+        if let Ok(s) = std::str::from_utf8(&record[column_index]) {
+            let url = s.trim().to_string();
+            debug!("Fetching URL: {:?}", &url);
+
+            final_value = get_cached_response(
+                &url,
+                &client,
+                &limiter,
+                &args.flag_jql,
+                args.flag_store_error,
+            );
+        } else {
+            final_value = "Invalid URL".to_string();
+        }
 
         if include_existing_columns {
             record.push_field(final_value.as_bytes());
