@@ -199,7 +199,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // just read csv file and let csv reader report problems
         let mut record = csv::ByteRecord::new();
         while rdr.read_byte_record(&mut record)? {
-            // no-op
+            // this loop is for csv::reader to do basic csv validation on read
         }
     }
 

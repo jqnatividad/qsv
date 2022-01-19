@@ -1,38 +1,54 @@
 # Validate command
 
+Validates CSV against [JSON Schema](https://json-schema.org/), or just against [RFC 4180](https://www.loc.gov/preservation/digital/formats/fdd/fdd000323.shtml).
+## example usage
 
-## Usecases
+people_schema.json
+```
+{
+    "$id": "https://example.com/person.schema.json",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Person",
+    "type": "object",
+    "properties": {
+      "firstName": {
+        "type": "string",
+        "description": "The person's first name."
+      },
+      "lastName": {
+        "type": "string",
+        "description": "The person's last name.",
+        "minLength": 2
+      },
+      "age": {
+        "description": "Age in years which must be equal to or greater than 18.",
+        "type": "integer",
+        "minimum": 18
+      }
+    }
+}
+```
 
-* validate according to json schema
-* validate according to [RFC 4180](https://www.loc.gov/preservation/digital/formats/fdd/fdd000323.shtml)
+people.csv
+```
+firstName,lastName,age
+John,Doe,21
+Mickey,Mouse,10
+Little,A,16
+```
 
-## Notes
-
-* json validator: https://github.com/Stranger6667/jsonschema-rs
-* schema generator from code: didn't find existing rust library
-  ** https://json-schema.org/implementations.html#from-data
-* example validator https://github.com/Data-Liberation-Front/csvlint.io
-* reference ruby project: https://github.com/Data-Liberation-Front/csvlint.rb/pull/38/files
-* example schemas: 
-  ** https://json-schema.org/learn/examples/geographical-location.schema.json
-  ** https://json-schema.org/learn/miscellaneous-examples.html
-### validate with existing jsonschema
-
-[X] write docopt for command
-[X] POC using jsonschema
-  [X] construct JSONSchema from URL
-  [X] convert CSV record into JSON
-    [X] Need support non-String types. Currently everything converted to JSON String, which fails with Schema requries Integer.
-  [X] validate JSON via JSONSchema
-  [X] generate output files
-  [ ] write integrate test for valid and invalid cases
-  [ ] put jsonschema-rs output into error report
-
-
-
-
-
-
-
+Example run
+```
+$ qsv validate people.csv people_schema.json  --quiet
+$ ls people.csv*
+people.csv  people.csv.invalid  people.csv.valid
+$ cat people.csv.invalid 
+firstName,lastName,age
+Mickey,Mouse,10
+Little,A,16
+$ cat people.csv.valid
+firstName,lastName,age
+John,Doe,21
+```
 
 
