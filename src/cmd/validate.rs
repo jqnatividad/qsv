@@ -63,7 +63,7 @@ struct Args {
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
-    dbg!(&args);
+    // dbg!(&args);
 
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
@@ -114,7 +114,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 return Err(CliError::Other(format!("Unable to retrieve json from: {}", json_schema_uri)));
             }
         };
-        dbg!(&schema_compiled);
+        //dbg!(&schema_compiled);
 
         let mut valid_file_empty: bool = true;
         let mut invalid_file_empty: bool = true;
@@ -229,7 +229,7 @@ fn to_json_instance(headers:&ByteRecord, record: &ByteRecord, schema: &Value) ->
             // get json type from schema
             let json_type = &schema_map[&header_string]["type"].as_str();
 
-            dbg!(i, &header_string, &value_string, &json_type);
+            // dbg!(i, &header_string, &value_string, &json_type);
 
             match json_type {
                 Some("string") => {
@@ -280,7 +280,7 @@ fn to_json_instance(headers:&ByteRecord, record: &ByteRecord, schema: &Value) ->
             }
         }
 
-        dbg!(&json_object_map);
+        // dbg!(&json_object_map);
 
         Ok(Value::Object(json_object_map))
 
@@ -403,7 +403,7 @@ fn test_validate_json_instance() {
 
         let result = validate_json_instance(&instance, &schema);
 
-        dbg!(result);
+        // dbg!(result);
 
     }
 

@@ -74,6 +74,7 @@ mod test_split;
 mod test_stats;
 mod test_table;
 mod test_transpose;
+mod test_validate;
 
 fn qcheck<T: Testable>(p: T) {
     QuickCheck::new().gen(Gen::new(5)).quickcheck(p);
