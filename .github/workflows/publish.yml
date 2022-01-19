@@ -139,6 +139,9 @@ jobs:
       run: |
         sudo xcode-select -s "/Applications/Xcode_12.5.1.app"
         sudo rm -Rf /Library/Developer/CommandLineTools/SDKs/*
+    - name: Set rust strip environment variable
+      run: |
+        echo "CARGO_BUILD_RUSTFLAG='-C strip'" >> $GITHUB_ENV
     - name: Cargo build
       uses: actions-rs/cargo@v1
       with:

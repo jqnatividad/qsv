@@ -72,28 +72,15 @@ pub fn version() -> String {
         (Some(qsvtype), Some(maj), Some(min), Some(pat), Some(pre)) => {
             if pre.is_empty() {
                 return format!(
-                    "{} {}.{}.{}-{}-{}{}-{}",
-                    qsvtype,
-                    maj,
-                    min,
-                    pat,
-                    malloc_kind,
-                    enabled_features,
-                    max_jobs(),
-                    num_cpus()
+                    "{qsvtype} {maj}.{min}.{pat}-{malloc_kind}-{enabled_features}{maxjobs}-{numcpus}",
+                    maxjobs = max_jobs(),
+                    numcpus = num_cpus()
                 );
             } else {
                 return format!(
-                    "{} {}.{}.{}-{}-{}-{}{}-{}",
-                    qsvtype,
-                    maj,
-                    min,
-                    pat,
-                    pre,
-                    malloc_kind,
-                    enabled_features,
-                    max_jobs(),
-                    num_cpus(),
+                    "{qsvtype} {maj}.{min}.{pat}-{pre}-{malloc_kind}-{enabled_features}{maxjobs}-{numcpus}",
+                    maxjobs = max_jobs(),
+                    numcpus = num_cpus(),
                 );
             }
         }
@@ -149,7 +136,7 @@ pub fn prep_progress(progress: &ProgressBar, record_count: u64) {
     progress.set_draw_delta(record_count / 100);
 
     if log_enabled!(Level::Info) {
-        info!("Progress started... {} records", record_count);
+        info!("Progress started... {record_count} records");
     }
 }
 
@@ -169,9 +156,37 @@ pub fn finish_progress(progress: &ProgressBar) {
     progress.finish();
 
     if log_enabled!(Level::Info) {
-        info!("Progress done... {} records/sec", per_sec_rate);
+        info!("Progress done... {per_sec_rate} records/sec");
     }
 }
+
+macro_rules! update_cache_info {
+    ($progress:expr, $cache_instance:expr) => {
+        use cached::Cached;
+        use thousands::Separable;
+
+        let cache_instance = $cache_instance.lock();
+        match cache_instance {
+            Ok(cache) => {
+                let cache_size = cache.cache_size();
+                if cache_size > 0 {
+                    let hits = cache.cache_hits().expect("Cache hits required");
+                    let misses = cache.cache_misses().expect("Cache misses required");
+                    let hit_ratio = (hits as f64 / (hits + misses) as f64) * 100.0;
+                    $progress.set_message(format!(
+                        " of {} records. Geocode cache hit ratio: {:.2}% - {} entries",
+                        $progress.length().separate_with_commas(),
+                        hit_ratio,
+                        cache_size.separate_with_commas(),
+                    ));
+                }
+            }
+            _ => {}
+        }
+    };
+}
+
+pub(crate) use update_cache_info;
 
 pub fn get_args<T>(usage: &str, argv: &[&str]) -> CliResult<T>
 where
@@ -290,9 +305,8 @@ pub fn range(start: Idx, end: Idx, len: Idx, index: Idx) -> Result<(usize, usize
             let s = start.unwrap_or(0);
             if s > e {
                 Err(format!(
-                    "The end of the range ({}) must be greater than or\n\
-                             equal to the start of the range ({}).",
-                    e, s
+                    "The end of the range ({e}) must be greater than or\n\
+                             equal to the start of the range ({s})."
                 ))
             } else {
                 Ok((s, e))
@@ -391,6 +405,7 @@ pub fn init_logger() {
 
     Logger::try_with_env_or_str(qsv_log_env)
         .unwrap()
+        .use_utc()
         .log_to_file(
             FileSpec::default()
                 .directory(qsv_log_dir)
@@ -407,55 +422,54 @@ pub fn init_logger() {
         .unwrap();
 }
 
-pub fn qsv_update(verbose: bool) -> Result<(), Box<dyn ::std::error::Error>> {
+pub fn qsv_check_for_update() {
     use self_update::cargo_crate_version;
 
     if env::var("QSV_NO_UPDATE").is_ok() {
-        return Ok(());
+        return;
     }
+
+    eprintln!("Checking GitHub for updates...");
+    info!("Checking GitHub for updates...");
 
     let curr_version = cargo_crate_version!();
     let releases = self_update::backends::github::ReleaseList::configure()
         .repo_owner("jqnatividad")
         .repo_name("qsv")
-        .build()?
-        .fetch()?;
+        .build()
+        .unwrap()
+        .fetch()
+        .unwrap();
     let latest_release = &releases[0].version;
 
-    if log_enabled!(Level::Info) {
-        info!(
-            "Current version: {} Latest Release: {}",
-            curr_version, latest_release
-        );
-    }
+    info!("Current version: {curr_version} Latest Release: {latest_release}");
 
     if latest_release > &curr_version.to_string() {
-        println!(
-            "Update {} available. Current version is {}.",
-            latest_release, curr_version
-        );
-        let status = self_update::backends::github::Update::configure()
+        eprintln!("Update {latest_release} available. Current version is {curr_version}.",);
+        let bin_full_path = format!("{:?}", std::env::current_exe().unwrap());
+        let update_job = self_update::backends::github::Update::configure()
             .repo_owner("jqnatividad")
             .repo_name("qsv")
-            .bin_name("qsvlite")
+            .bin_name(&bin_full_path)
             .show_download_progress(true)
-            .show_output(verbose)
+            .show_output(false)
             .no_confirm(false)
             .current_version(curr_version)
-            .build()?
-            .update()?;
-        let exe_full_path = format!("{:?}", std::env::current_exe().unwrap());
-        let update_status = format!(
-            "Update successful for {}: `{}`!",
-            exe_full_path,
-            status.version()
-        );
-        if verbose {
-            println!("{}", update_status);
-        }
-        if log_enabled!(Level::Info) {
-            info!("{}", update_status);
-        }
-    }
-    Ok(())
+            .build()
+            .unwrap();
+
+        let update_result = update_job.update();
+        if let Ok(status) = update_result {
+            let update_status = format!(
+                "Update successful for {}: `{}`!",
+                bin_full_path,
+                status.version()
+            );
+            eprintln!("{update_status}");
+            info!("{update_status}");
+        };
+    } else {
+        eprintln!("Up to date... no self-update required.");
+        info!("Up to date... no self-update required.");
+    };
 }

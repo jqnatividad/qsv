@@ -1,9 +1,9 @@
 [package]
 name          = "qsv"
-version       = "0.29.0"                                                  #:version
+version       = "0.29.1"                                                  #:version
 authors       = ["Joel Natividad <joel@datHere.com>"]
 description   = "A high performance CSV command line toolkit."
-documentation = "https://docs.rs/crate/qsv"
+documentation = "https://github.com/jqnatividad/qsv"
 homepage      = "https://github.com/jqnatividad/qsv"
 repository    = "https://github.com/jqnatividad/qsv"
 readme        = "README.md"
@@ -12,7 +12,7 @@ categories    = ["command-line-utilities", "parser-implementations"]
 license       = "MIT OR Unlicense"
 autotests     = false
 edition       = "2021"
-rust-version  = "1.56"
+rust-version  = "1.58"
 autobins      = false
 
 [[bin]]
@@ -44,7 +44,7 @@ opt-level = 3
 [dependencies]
 anyhow = "1.0"
 byteorder = "1.4"
-cached = { version = "0.26", default-features = false, features = [
+cached = { version = "0.29", default-features = false, features = [
     "proc_macro",
 ] }
 censor = { version = "0.2", optional = true }

@@ -79,6 +79,21 @@ fn table_pipe_delimiter() {
 }
 
 #[test]
+fn invalid_delimiter_len() {
+    let wrk = Workdir::new("invalid_delimiter_len");
+    wrk.create_with_delim("in.file", data(), b'|');
+
+    let mut cmd = wrk.command("table");
+    cmd.arg("--delimiter").arg("||").arg("in.file");
+
+    let got: String = wrk.output_stderr(&mut cmd);
+    assert_eq!(
+        &*got,
+        "Could not convert '||' to a single ASCII character.\n"
+    )
+}
+
+#[test]
 fn table_right_align() {
     let wrk = Workdir::new("table");
     wrk.create("in.csv", data());

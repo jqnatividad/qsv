@@ -116,6 +116,29 @@ fn comments_count() {
 }
 
 #[test]
+fn truncate_comment_char() {
+    let wrk = Workdir::new("comments");
+    wrk.create(
+        "comments.csv",
+        vec![
+            svec!["Ǽ test file to see how comments work", ""],
+            svec!["Ǽ yet another comment", ""],
+            svec!["column1", "column2"],
+            svec!["a", "1"],
+            svec!["Ǽb", "2"],
+            svec!["c", "3"],
+        ],
+    );
+    let mut cmd = wrk.command("count");
+    cmd.env("QSV_COMMENT_CHAR", "comment");
+    cmd.arg("comments.csv");
+
+    let got_count: usize = wrk.stdout(&mut cmd);
+    // we only process the first character passed, so we used 'c' as the comment_char
+    rassert_eq!(got_count, 3);
+}
+
+#[test]
 fn comments_headers() {
     let wrk = Workdir::new("comments");
     wrk.create(

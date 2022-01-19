@@ -35,7 +35,7 @@ Float and Date). The date formats recognized can be found at
 https://docs.rs/dateparser/0.1.6/dateparser/#accepted-date-formats.
 
 Computing statistics on a large file can be made much faster if you create
-an index for it first with 'qsv index'.
+an index for it first with 'qsv index' as enables multithreading.
 
 Usage:
     qsv stats [options] [<input>]
@@ -59,11 +59,10 @@ stats options:
     --nulls                Include NULLs in the population size for computing
                            mean and standard deviation.
     -j, --jobs <arg>       The number of jobs to run in parallel.
-                           This works better when the given CSV data has
-                           an index already created. Note that a file handle
-                           is opened for each job.
+                           This works only when the given CSV has an index.
+                           Note that a file handle is opened for each job.
                            When set to '0', the number of jobs is set to the
-                           number of CPUs detected divided by 4.
+                           number of CPUs detected divided by 3.
                            When set to '-1', the number of jobs is set to the
                            number of CPUs detected.
                            [default: 0]

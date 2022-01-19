@@ -318,7 +318,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if args.cmd_operations {
         for op in &operations {
             if !OPERATIONS.contains(op) {
-                return fail!(format!("Unknown \"{}\" operation", op));
+                return fail!(format!("Unknown '{op}' operation"));
             }
             #[allow(clippy::useless_asref)]
             match op.as_ref() {
@@ -455,20 +455,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
     if !args.flag_quiet {
         if args.cmd_geocode {
-            use cached::Cached;
-            use thousands::Separable;
-
-            let cache = SEARCH_CACHED.lock().unwrap();
-            let cache_size = cache.cache_size();
-            let hits = cache.cache_hits().unwrap();
-            let misses = cache.cache_misses().unwrap();
-            let hit_ratio = (hits as f64 / (hits + misses) as f64) * 100.0;
-            progress.set_message(format!(
-                " of {} records. Geocode cache hit ratio: {:.2}% - {} entries",
-                progress.length().separate_with_commas(),
-                hit_ratio,
-                cache_size.separate_with_commas(),
-            ));
+            util::update_cache_info!(progress, SEARCH_CACHED);
         }
         util::finish_progress(&progress);
     }
@@ -549,7 +536,7 @@ fn apply_operations(operations: &[&str], cell: &mut String, comparand: &str, rep
                         let decpoint = coinlen - 2;
                         let coin_num = &coins[..decpoint];
                         let coin_frac = &coins[decpoint..];
-                        *cell = format!("{}.{}", coin_num, coin_frac);
+                        *cell = format!("{coin_num}.{coin_frac}");
                     }
                 }
             }

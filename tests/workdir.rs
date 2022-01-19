@@ -78,7 +78,6 @@ impl Workdir {
 
     pub fn create_from_string(&self, name: &str, data: &str) {
         let filename = &self.path(name);
-        println!("{:?}", filename);
         let mut file = File::create(filename).unwrap();
         file.write_all(data.as_bytes()).unwrap();
         file.flush().unwrap();
@@ -112,7 +111,6 @@ impl Workdir {
 
     pub fn output(&self, cmd: &mut process::Command) -> process::Output {
         debug!("[{}]: {:?}", self.dir.display(), cmd);
-        println!("[{}]: {:?}", self.dir.display(), cmd);
         let o = cmd.output().unwrap();
         if !o.status.success() {
             panic!(
@@ -144,6 +142,21 @@ impl Workdir {
             .parse()
             .ok()
             .unwrap_or_else(|| panic!("Could not convert from string: '{}'", stdout))
+    }
+
+    pub fn output_stderr(&self, cmd: &mut process::Command) -> String {
+        debug!("[{}]: {:?}", self.dir.display(), cmd);
+        // ensures stderr has been flushed before we run our cmd
+        {
+            let mut _stderr = io::stderr();
+            _stderr.flush().unwrap();
+        }
+        let o = cmd.output().unwrap();
+        if !o.status.success() {
+            String::from_utf8_lossy(&o.stderr).to_string()
+        } else {
+            "No error".to_string()
+        }
     }
 
     pub fn assert_err(&self, cmd: &mut process::Command) {

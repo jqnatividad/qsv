@@ -18,6 +18,8 @@ jobs:
     - uses: actions/checkout@v2
       with:
         submodules: recursive
+    - name: Update Rust
+      run: rustup update
     - name: Build
       run: cargo build --verbose --all-features
     - name: Run tests

@@ -1,6 +1,23 @@
 use crate::workdir::Workdir;
 
 #[test]
+fn apply_ops_unknown_operation() {
+    let wrk = Workdir::new("unknown_op");
+    wrk.create(
+        "data.csv",
+        vec![svec!["letter", "number"], svec!["a", "1"], svec!["b", "2"]],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("obfuscate")
+        .arg("letter")
+        .arg("data.csv");
+
+    let got: String = wrk.output_stderr(&mut cmd);
+    assert_eq!(&*got, "Unknown 'obfuscate' operation\n")
+}
+
+#[test]
 fn apply_ops_upper() {
     let wrk = Workdir::new("apply");
     wrk.create(
