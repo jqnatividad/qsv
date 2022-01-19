@@ -12,14 +12,19 @@
 * schema generator from code: didn't find existing rust library
   ** https://json-schema.org/implementations.html#from-data
 * example validator https://github.com/Data-Liberation-Front/csvlint.io
-## TODO
-
 ### validate with existing jsonschema
 
-[ ] write docopt for command
+[X] write docopt for command
+[ ] POC using jsonschema
+  [X] construct JSONSchema from URL
+  [X] convert CSV record into JSON
+    [X] Need support non-String types. Currently everything converted to JSON String, which fails with Schema requries Integer.
+  [X] validate JSON via JSONSchema
 [ ] write integrate test for valid and invalid cases
   * reference ruby project: https://github.com/Data-Liberation-Front/csvlint.rb/pull/38/files
-  * example schema: https://json-schema.org/learn/examples/geographical-location.schema.json
+  * example schemas: 
+    ** https://json-schema.org/learn/examples/geographical-location.schema.json
+    ** https://json-schema.org/learn/miscellaneous-examples.html
 [ ] adopt jasonschema-rs to work for CSV data
 
 
