@@ -85,7 +85,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // prep progress bar
     let progress = ProgressBar::new(0);
     if !args.flag_quiet {
-        let record_count = util::count_rows(&rconfig);
+        let record_count = util::count_rows(&rconfig.flexible(true));
         util::prep_progress(&progress, record_count);
     } else {
         progress.set_draw_target(ProgressDrawTarget::hidden());
@@ -114,7 +114,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 return Err(CliError::Other(format!("Unable to retrieve json from: {}", json_schema_uri)));
             }
         };
-        //dbg!(&schema_compiled);
+        // dbg!(&schema_compiled);
 
         let mut valid_file_empty: bool = true;
         let mut invalid_file_empty: bool = true;
@@ -414,15 +414,19 @@ fn load_json(uri: &String) -> Result<String> {
 
     let json_string = match uri {
         url if url.starts_with("http") => {
+	    // dbg!(&url);
             let response = reqwest::blocking::get(url)?;
             response.text()?
         },
         path => {
+	    // dbg!(&path);
             let mut buffer = String::new();
             BufReader::new(File::open(uri)?).read_to_string(&mut buffer);
             buffer
         }
     };
+
+    // dbg!(&json_string);
 
 
     Ok(json_string)
