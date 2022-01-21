@@ -159,6 +159,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             progress.inc(1);
         }
 
+        #[allow(unused_assignments)]
         let mut final_value = String::default();
 
         if let Ok(s) = std::str::from_utf8(&record[column_index]) {
