@@ -260,7 +260,7 @@ enum Command {
     Stats,
     Table,
     Transpose,
-    Validate
+    Validate,
 }
 
 impl Command {
@@ -322,9 +322,9 @@ impl Command {
             Command::Stats => cmd::stats::run(argv),
             Command::Table => cmd::table::run(argv),
             Command::Transpose => cmd::transpose::run(argv),
+            Command::Validate => cmd::validate::run(argv),
             #[cfg(feature = "foreach")]
             Command::ForEach => cmd::foreach::run(argv),
-            Command::Validate => cmd::validate::run(argv),
         }
     }
 }

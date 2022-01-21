@@ -73,6 +73,7 @@ macro_rules! command_list {
     stats       Infer data types and compute descriptive statistics
     table       Align CSV data into columns
     transpose   Transpose rows/columns of CSV data
+    validate    Validate CSV data with JSON Schema
 
     sponsored by datHere - Data Infrastructure Engineering
 "
@@ -225,6 +226,7 @@ enum Command {
     Stats,
     Table,
     Transpose,
+    Validate,
 }
 
 impl Command {
@@ -278,6 +280,7 @@ impl Command {
             Command::Stats => cmd::stats::run(argv),
             Command::Table => cmd::table::run(argv),
             Command::Transpose => cmd::transpose::run(argv),
+            Command::Validate => cmd::validate::run(argv),
         }
     }
 }
