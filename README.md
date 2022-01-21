@@ -4,7 +4,7 @@
 [![macOS build status](https://github.com/jqnatividad/qsv/actions/workflows/rust-macos.yml/badge.svg)](https://github.com/jqnatividad/qsv/actions/workflows/rust-macos.yml)
 [![Security audit](https://github.com/jqnatividad/qsv/actions/workflows/security-audit.yml/badge.svg)](https://github.com/jqnatividad/qsv/actions/workflows/security-audit.yml)
 [![Crates.io](https://img.shields.io/crates/v/qsv.svg)](https://crates.io/crates/qsv)
-[![Minimum supported Rust version](https://img.shields.io/badge/Rust-1.58%2B-red?logo=rust)](#minimum-supported-rust-version)
+[![Minimum supported Rust version](https://img.shields.io/badge/Rust-1.58.1%2B-red?logo=rust)](#minimum-supported-rust-version)
 [![Discussions](https://img.shields.io/github/discussions/jqnatividad/qsv)](https://github.com/jqnatividad/qsv/discussions)
 [![Docs](https://img.shields.io/badge/wiki-docs-yellowgreen)](https://github.com/jqnatividad/qsv/wiki)
 [![Downloads](https://img.shields.io/github/downloads/jqnatividad/qsv/total)](https://github.com/jqnatividad/qsv/releases/latest)   
@@ -120,7 +120,7 @@ cargo build --release --all-features
 [^5]: The `foreach` feature is not available on Windows. The `python` feature is not enabled on cross-compiled pre-built binaries as we don't have
 access to a native python interpreter for those platforms (aarch64, i686, and arm) on GitHub's action runners. Compile natively on those platforms with Python 3.7+ installed, if you want to enable the `python` feature.
 ### Minimum Supported Rust Version
-Building qsv requires Rust version 1.58+.
+Building qsv requires Rust version 1.58.1+.
 
 Tab Completion
 --------------
