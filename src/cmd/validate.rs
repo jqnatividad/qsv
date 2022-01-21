@@ -227,52 +227,52 @@ fn to_json_instance(headers:&ByteRecord, record: &ByteRecord, schema: &Value) ->
             // convert csv value to string; trim whitespace
             let value_string = std::str::from_utf8(&record[i])?.trim().to_string();
             // get json type from schema
-            let json_type = &schema_map[&header_string]["type"].as_str();
+            let json_type = schema_map[&header_string]["type"].as_str().unwrap_or("unknown");
 
             // dbg!(i, &header_string, &value_string, &json_type);
 
             match json_type {
-                Some("string") => {
+                "string" => {
                     json_object_map.insert(header_string, Value::String(value_string));
                 },
-                Some("number") => {
+                "number" => {
                     if let Ok(float) = value_string.parse::<f64>() {
                         json_object_map.insert(header_string, Value::Number(Number::from_f64(float).expect("not a valid f64 float")));
                     } else {
-                        return Err(anyhow!("Can't cast into Float. header: {:?}, value: {:?}, json type: {:?}",
+                        return Err(anyhow!("Can't cast into Float. header: {}, value: {}, json type: {}",
                                 &header_string,
                                 &value_string,
                                 &json_type));
                     }
                 },
-                Some("integer") => {
+                "integer" => {
                     if let Ok(int) = value_string.parse::<i64>() {
                         json_object_map.insert(header_string, Value::Number(Number::from(int)));
                     } else {
-                        return Err(anyhow!("Can't cast into Integer. header: {:?}, value: {:?}, json type: {:?}",
+                        return Err(anyhow!("Can't cast into Integer. header: {}, value: {}, json type: {}",
                                 &header_string,
                                 &value_string,
                                 &json_type));
                     }
                 },
-                Some("boolean") => {
+                "boolean" => {
                     if let Ok(boolean) = value_string.parse::<bool>() {
                         json_object_map.insert(header_string, Value::Bool(boolean));
                     } else {
-                        return Err(anyhow!("Can't cast into Boolean. header: {:?}, value: {:?}, json type: {:?}",
+                        return Err(anyhow!("Can't cast into Boolean. header: {}, value: {}, json type: {}",
                                 &header_string,
                                 &value_string,
                                 &json_type));
                     }
                 },
-                None => {
-                    return Err(anyhow!("Missing JSON type in schema. header: {:?}, value: {:?}, json type: {:?}",
+                "unknown" => {
+                    return Err(anyhow!("Cannot infer type from schema. header: {}, value: {}, json type: {}",
                                 &header_string,
                                 &value_string,
                                 &json_type));
                 },
                 _ => {
-                    return Err(anyhow!("Unsupported JSON type. header: {:?}, value: {:?}, json type: {:?}",
+                    return Err(anyhow!("Unsupported JSON type. header: {}, value: {}, json type: {}",
                                 &header_string,
                                 &value_string,
                                 &json_type));
@@ -286,60 +286,89 @@ fn to_json_instance(headers:&ByteRecord, record: &ByteRecord, schema: &Value) ->
 
     } else {
         // can't use schema to determine field type...abort
-        Err(anyhow!("Unable to get Type info from JSON schema."))
+        Err(anyhow!("JSON schema missing 'properties' object"))
     }
 
 }
 
-#[test]
-fn test_to_json_instance() {
+#[cfg(test)]
+mod tests_for_csv_to_json_conversion {
 
-    // from https://json-schema.org/learn/miscellaneous-examples.html
-    let schema_json = serde_json::json!({
-        "$id": "https://example.com/person.schema.json",
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "title": "Person",
-        "type": "object",
-        "properties": {
-          "firstName": {
-            "type": "string",
-            "description": "The person's first name."
-          },
-          "lastName": {
-            "type": "string",
-            "description": "The person's last name.",
-            "minLength": 2
-          },
-          "age": {
-            "description": "Age in years which must be equal to or greater than 18.",
-            "type": "integer",
-            "minimum": 18
-          }
-        }
-      });
+    use serde_json::json;
+    use super::*;
 
-    let csv = 
-      "firstName,lastName,age
-      John,Doe,21";
+    /// get schema used for unit tests
+    fn schema_json() -> Value {
+        // from https://json-schema.org/learn/miscellaneous-examples.html
+        serde_json::json!({
+            "$id": "https://example.com/test.schema.json",
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "title": "test",
+            "type": "object",
+            "properties": {
+                "A": {
+                "type": "string",
+                },
+                "B": {
+                "type": "number",
+                },
+                "C": {
+                "type": "integer",
+                },
+                "D": {
+                "type": "boolean",
+                }
+            }
+        })
+    }
 
-    let mut rdr = csv::Reader::from_reader(csv.as_bytes());
-    let headers = rdr.byte_headers().unwrap().clone();
+    #[test]
+    fn test_to_json_instance() {
 
-    if let Some(r) = rdr.byte_records().next() {
-        let record = r.unwrap();
+        let csv = 
+        "A,B,C,D
+        Professor X,3.1415,60,true";
 
-        let instance = to_json_instance(&headers, &record, &schema_json).unwrap();
+        let mut rdr = csv::Reader::from_reader(csv.as_bytes());
+        let headers = rdr.byte_headers().unwrap().clone();
 
         assert_eq!(
-            instance,
+            to_json_instance(&headers, 
+                             &rdr.byte_records().next().unwrap().unwrap(), 
+                             &schema_json()
+                            ).expect("can convert csv to json instance"),
             json!({
-                "firstName": "John",
-                "lastName": "Doe",
-                "age": 21
+                "A": "Professor X",
+                "B": 3.1415,
+                "C": 60,
+                "D": true
             })
         );
     }
 
+    #[test]
+    fn test_to_json_instance_cast_integer_error() {
+
+        let csv = 
+        "A,B,C,D
+         Xaviers,31415,60.1,sure
+        ";
+
+        let mut rdr = csv::Reader::from_reader(csv.as_bytes());
+        let headers = rdr.byte_headers().unwrap().clone();
+
+        let result = to_json_instance(&headers, 
+                                                  &rdr.byte_records().next().unwrap().unwrap(), 
+                                                  &schema_json()
+                                                       );
+        assert!(&result.is_err());
+        let error = result.err().unwrap();
+        assert_eq!(
+            "Can't cast into Integer. header: C, value: 60.1, json type: integer", 
+            error.to_string()
+        );
+
+    }
 }
 
 /// Validate JSON instance against compiled JSON schema
@@ -355,60 +384,84 @@ fn validate_json_instance(instance: &Value, schema_compiled: &JSONSchema) -> Res
     }
 }
 
-#[test]
-fn test_validate_json_instance() {
+#[cfg(test)]
+mod tests_for_schema_validation {
+    use super::*;
 
-    // from https://json-schema.org/learn/miscellaneous-examples.html
-    let schema_json = serde_json::json!({
-        "$id": "https://example.com/person.schema.json",
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "title": "Person",
-        "type": "object",
-        "properties": {
-          "firstName": {
-            "type": "string",
-            "description": "The person's first name."
-          },
-          "lastName": {
-            "type": "string",
-            "description": "The person's last name.",
-            "minLength": 2
-          },
-          "age": {
-            "description": "Age in years which must be equal to or greater than 18.",
-            "type": "integer",
-            "minimum": 18
-          }
-        }
-      });
-
-      let schema = JSONSchema::options()
-      .compile(&schema_json)
-      .expect("A valid schema");
-
-
-    let csv = 
-      "firstName,lastName,age
-      John,Doe,21
-      Mickey,Mouse,10
-      Little,A,16";
-
-    let mut rdr = csv::Reader::from_reader(csv.as_bytes());
-    let headers = rdr.byte_headers().unwrap().clone();
-
-    for r in rdr.byte_records() {
-        let record = r.unwrap();
-
-        let instance = to_json_instance(&headers, &record, &schema_json).unwrap();
-
-        let result = validate_json_instance(&instance, &schema);
-
-        // dbg!(result);
-
+    fn schema_json() -> Value {
+        // from https://json-schema.org/learn/miscellaneous-examples.html
+        serde_json::json!({
+            "$id": "https://example.com/person.schema.json",
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "title": "Person",
+            "type": "object",
+            "properties": {
+            "firstName": {
+                "type": "string",
+                "description": "The person's first name."
+            },
+            "lastName": {
+                "type": "string",
+                "description": "The person's last name.",
+                "minLength": 2
+            },
+            "age": {
+                "description": "Age in years which must be equal to or greater than 18.",
+                "type": "integer",
+                "minimum": 18
+            }
+            }
+        })
     }
 
-}
+    fn compiled_schema() -> JSONSchema {
+        JSONSchema::options()
+                .compile(&schema_json())
+                .expect("A valid schema")
+    }
 
+
+    #[test]
+    fn test_validate_with_no_errors() {
+
+        let csv = 
+        "firstName,lastName,age
+        Professor,Xaviers,60";
+
+        let mut rdr = csv::Reader::from_reader(csv.as_bytes());
+        let headers = rdr.byte_headers().unwrap().clone();
+
+        let record = &rdr.byte_records().next().unwrap().unwrap();
+
+        let instance = to_json_instance(&headers, &record, &schema_json()).unwrap();
+
+        let result = validate_json_instance(&instance, &compiled_schema()).unwrap();
+
+        assert_eq!(true, result["valid"].as_bool().unwrap());
+
+     }
+
+    #[test]
+     fn test_validate_with_error() {
+
+        let csv = 
+        "firstName,lastName,age
+        Professor,X,60";
+
+        let mut rdr = csv::Reader::from_reader(csv.as_bytes());
+        let headers = rdr.byte_headers().unwrap().clone();
+
+        let record = &rdr.byte_records().next().unwrap().unwrap();
+
+        let instance = to_json_instance(&headers, &record, &schema_json()).unwrap();
+
+        let result = validate_json_instance(&instance, &compiled_schema()).unwrap();
+
+        assert_eq!(false, result["valid"].as_bool().unwrap());
+
+     }
+
+}
 
 fn load_json(uri: &String) -> Result<String> {
 
