@@ -4,8 +4,8 @@ tags
 build
 target
 ctags.rust
-*.csv
-*.tsv
+*.csv*
+*.tsv*
 *.lua
 main
 *.idx
