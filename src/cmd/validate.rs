@@ -86,7 +86,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut invalid_wtr =
         Config::new(&Some(input_path.to_owned() + "." + invalid_suffix)).writer()?;
 
-    let mut error_report_file = File::create(input_path.to_owned() + ".error-report")
+    let mut error_report_file = File::create(input_path.to_owned() + ".error-report.json")
         .expect("unable to create error report file");
 
     // prep progress bar
