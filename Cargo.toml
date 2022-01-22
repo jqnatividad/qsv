@@ -61,6 +61,7 @@ governor = "0.4"
 hlua = { version = "0.4", optional = true }
 indicatif = "0.16"
 itertools = "0.10"
+jsonschema = "0.13"
 jql = { version = "3", default-features = false }
 log = "0.4"
 mimalloc = { version = "0.1", default-features = false, optional = true }
