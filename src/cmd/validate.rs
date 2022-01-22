@@ -153,14 +153,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 Ok(validation_result) => {
                     let results = &validation_result["valid"];
 
-                    debug!("validation[{}]: {:?}", &row_index, &results);
+                    debug!("validation[{row_index}]: {results:?}");
 
                     let valid_flag = match results.as_bool().to_owned() {
                         Some(b) => b,
                         None => {
                             return fail!(format!(
-                                "Unexpected validation result. row: {row_index}, result: {}",
-                                &results
+                                "Unexpected validation result. row: {row_index}, result: {results:?}"
                             ));
                         }
                     };
@@ -178,8 +177,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             invalid_count = invalid_count.add(1);
 
                             debug!(
-                                "schema violation. row: {row_index}, violation: {:?}",
-                                &validation_result
+                                "schema violation. row: {row_index}, violation: {validation_result:?}"
                             );
                             // dbg!(&validation_result, &record);
 
@@ -209,8 +207,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
                             // for fail-fast, just break out of loop
                             if args.flag_fail_fast {
-                                info!("fail-fast enabled. stopping after first invalid record.");
-                                println!("fail-fast enabled. stopping after first invalid record.");
+                                let msg = format!(
+                                    "fail-fast enabled. stopping after first invalid record at row {row_index}"
+                                );
+                                info!("{msg}");
+                                println!("{msg}");
                                 break;
                             }
                         }
@@ -226,19 +227,23 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         }
 
-        if !args.flag_quiet {
-            use thousands::Separable;
+        use thousands::Separable;
 
+        if !args.flag_quiet {
             progress.set_message(format!(
-                " Validating {} records.",
+                " validated {} records.",
                 progress.length().separate_with_commas()
             ));
             util::finish_progress(&progress);
         }
 
-        let msg = format!("{invalid_count} out of {row_index} records invalid.");
-        info!("{}", &msg);
-        println!("{}", &msg);
+        let msg = format!(
+            "{} out of {} records invalid.",
+            invalid_count.separate_with_commas(),
+            row_index.separate_with_commas()
+        );
+        info!("{msg}");
+        println!("{msg}");
 
         error_report_file.flush().unwrap();
     } else {
@@ -249,8 +254,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         let msg = "Can't validate without schema, but csv looks good.".to_string();
-        info!("{}", &msg);
-        println!("{}", &msg);
+        info!("{msg}");
+        println!("{msg}");
     }
 
     Ok(())
@@ -296,10 +301,7 @@ fn to_json_instance(headers: &ByteRecord, record: &ByteRecord, schema: &Value) -
                         );
                     } else {
                         return Err(anyhow!(
-                            "Can't cast into Float. header: {}, value: {}, json type: {}",
-                            &header_string,
-                            &value_string,
-                            &json_type
+                            "Can't cast into Float. header: {header_string}, value: {value_string}, json type: {json_type}"
                         ));
                     }
                 }
@@ -308,10 +310,7 @@ fn to_json_instance(headers: &ByteRecord, record: &ByteRecord, schema: &Value) -
                         json_object_map.insert(header_string, Value::Number(Number::from(int)));
                     } else {
                         return Err(anyhow!(
-                            "Can't cast into Integer. header: {}, value: {}, json type: {}",
-                            &header_string,
-                            &value_string,
-                            &json_type
+                            "Can't cast into Integer. header: {header_string}, value: {value_string}, json type: {json_type}"
                         ));
                     }
                 }
@@ -320,19 +319,13 @@ fn to_json_instance(headers: &ByteRecord, record: &ByteRecord, schema: &Value) -
                         json_object_map.insert(header_string, Value::Bool(boolean));
                     } else {
                         return Err(anyhow!(
-                            "Can't cast into Boolean. header: {}, value: {}, json type: {}",
-                            &header_string,
-                            &value_string,
-                            &json_type
+                            "Can't cast into Boolean. header: {header_string}, value: {value_string}, json type: {json_type}"
                         ));
                     }
                 }
                 _ => {
                     return Err(anyhow!(
-                        "Unsupported JSON type. header: {}, value: {}, json type: {}",
-                        &header_string,
-                        &value_string,
-                        &json_type
+                        "Unsupported JSON type. header: {header_string}, value: {value_string}, json type: {json_type}"
                     ));
                 }
             }
