@@ -6,10 +6,10 @@ fn validate_good_csv() {
     wrk.create(
         "data.csv",
         vec![
-            svec!["firstName", "lastName", "age"],
-            svec!["Mickey", "Mouse", "10"],
-            svec!["Donald", "Duck", "8"],
-            svec!["Minie", "Mouse", "9"],
+            svec!["title", "name", "age"],
+            svec!["Professor", "Xaviers", "60"],
+            svec!["Prisoner", "Magneto", "90"],
+            svec!["First Class Student", "Iceman", "14"],
             ],
     );
     let mut cmd = wrk.command("validate");
@@ -24,10 +24,10 @@ fn validate_bad_csv() {
     wrk.create(
         "data.csv",
         vec![
-            svec!["firstName", "lastName", "age"],
-            svec!["Mickey", "Mouse", "10"],
-            svec!["Donald", "Duck"],
-            svec!["Minie", "Mouse", "9"],
+            svec!["title", "name", "age"],
+            svec!["Professor", "Xaviers", "60"],
+            svec!["Magneto", "90",],
+            svec!["First Class Student", "Iceman", "14"],
             ],
     );
     let mut cmd = wrk.command("validate");
@@ -45,7 +45,7 @@ fn validate_with_json_schema() {
     // https://github.com/esd-org-uk/schemas/blob/master/PublicToilets/PublicToilets.json
     let schema = r#"
     {
-        "$schema": "https://json-schema.org/draft/Draft-07",
+        "$schema": "https://json-schema.org/draft-07/schema",
         "$id": "https://example.com/public_toilets.schema.json",
         "title": "Public Toilets",
         "description": "List of Public Toilets",

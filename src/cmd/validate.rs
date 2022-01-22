@@ -2,15 +2,20 @@ use crate::config::{Config, Delimiter};
 use crate::util;
 use crate::CliResult;
 use crate::CliError;
-use cached::proc_macro::cached;
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use csv::ByteRecord;
-use serde_json::{Deserializer, Value, Map, value::Number};
+use serde_json::{Value, Map, value::Number};
 use jsonschema::{JSONSchema, output::BasicOutput};
 use serde::Deserialize;
 use anyhow::{Result, anyhow};
-use log::{debug, warn, error};
-use std::{fs::File, io::BufReader, io::Read, path::Path, net::TcpStream, collections::HashMap};
+use log::{debug, info};
+use std::{fs::File, io::BufReader, io::Read, io::Write, ops::Add};
+
+macro_rules! fail {
+    ($mesg:expr) => {
+        Err(CliError::Other($mesg))
+    };
+}
 
 static USAGE: &str = "
 Validate CSV data with JSON Schema, and put invalid records into separate file.
@@ -81,6 +86,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let invalid_suffix: &str = &args.flag_invalid.unwrap_or("invalid".to_string());
     let mut invalid_wtr = Config::new(&Some(input_path.to_owned() + "." + invalid_suffix)).writer()?;
 
+    let mut error_report_file = File::create(input_path.to_owned() + ".error-report").expect("unable to create error report file");
 
     // prep progress bar
     let progress = ProgressBar::new(0);
@@ -103,21 +109,21 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         match JSONSchema::options().compile(&json) {
                             Ok(schema) => (json, schema),
                             Err(e) => {
-                                return Err(CliError::Other(format!("Cannot compile schema json. error: {}", e.to_string())))
+                                return fail!(format!("Cannot compile schema json. error: {}", e.to_string()));
                             }
                         }
                     },
                     Err(e)=> {
                         //error!("Unable to parse schema json. error: {}", e);
-                        return Err(CliError::Other(format!("Unable to parse schema json. error: {}", e.to_string())))
+                        return fail!(format!("Unable to parse schema json. error: {}", e.to_string()));
                     }
                 }
             }
             Err(e) => {
-                return Err(CliError::Other(format!("Unable to retrieve json. error: {}", e.to_string())));
+                return fail!(format!("Unable to retrieve json. error: {}", e.to_string()));
             }
         };
-        dbg!(&schema_compiled);
+        debug!("compiled schema: {:?}", &schema_compiled);
 
         let mut valid_file_empty: bool = true;
         let mut invalid_file_empty: bool = true;
@@ -126,17 +132,21 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         #[allow(unused_assignments)]
         let mut record = csv::ByteRecord::new();
     
+        let mut row_index: u32 = 0;
+        let mut invalid_count: u32 = 0;
+
         while rdr.read_byte_record(&mut record)? {
 
-    
+            row_index = row_index.add(1);
+
             let instance: Value = match to_json_instance(&headers, &record, &schema_json) {
                 Ok(obj) => obj,
                 Err(e) => {
-                    return Err(CliError::Other(format!("Unable to convert CSV to json. error: {}", e.to_string())));
+                    return fail!(format!("Unable to convert CSV to json. row: {}, error: {}", row_index, e.to_string()));
                 }
             };
 
-            // dbg!(&instance);
+            debug!("instance[{}]: {:?}", &row_index, &instance);
 
             match validate_json_instance(&instance, &schema_compiled) {
 
@@ -144,11 +154,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
                     let results = &validation_result["valid"];
 
+                    debug!("validation[{}]: {:?}", &row_index, &results);
+
                     let valid_flag = match results.as_bool().to_owned() {
                         Some(b) => b,
                         None => {
-                            return Err(CliError::Other(format!("Unexpected validation result. {:?}", 
-                                                    &results)));
+                            return fail!(format!("Unexpected validation result. row: {}, result: {}", row_index, &results));
                         }
                     };
 
@@ -162,11 +173,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             valid_wtr.write_byte_record(&record)?;
                         },
                         false => {
-                            debug!("schema violation: {:?}, record: {:?}", 
-                                        &validation_result,
-                                        &record
+                            invalid_count = invalid_count.add(1);
+
+                            debug!("schema violation. row: {}, violation: {:?}",
+                                        row_index,
+                                        &validation_result
                                     );
-                            dbg!(&validation_result, &record);
+                            // dbg!(&validation_result, &record);
+
+                            // write to invalid file
 
                             if invalid_file_empty {
                                 invalid_wtr.write_byte_record(&headers)?;
@@ -174,11 +189,25 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             }
 
                             invalid_wtr.write_byte_record(&record)?;
+
+                            // write to error report
+                            let mut enriched_results_map = validation_result.as_object().expect("get validation as map").clone();
+                            let _ = enriched_results_map.insert("row_index".to_string(), Value::Number(Number::from(row_index)));
+                            let enriched_results: Value = Value::Object(enriched_results_map);
+
+                            error_report_file.write_all(enriched_results.to_string().as_bytes()).expect("unable to write to error report");
+
+                            // for fail-fast, just break out of loop
+                            if args.flag_fail_fast {
+                                info!("fail-fast enabled. stopping after first invalid record.");
+                                println!("fail-fast enabled. stopping after first invalid record.");
+                                break;
+                            }
                         },
                     }
                 },
                 Err(e) => {
-                    return Err(CliError::Other(format!("Unable to validate. error: {:?}", e)));
+                    return fail!(format!("Unable to validate. row: {}, error: {}", row_index, e.to_string()));
                 }
 
             }
@@ -187,36 +216,36 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 progress.inc(1);
             }
             if !args.flag_quiet {
-                use cached::Cached;
                 use thousands::Separable;
-        
-                let cache = GET_CACHED_RESPONSE.lock().unwrap();
-                let cache_size = cache.cache_size();
-                let hits = cache.cache_hits().unwrap();
-                let misses = cache.cache_misses().unwrap();
-                let hit_ratio = (hits as f64 / (hits + misses) as f64) * 100.0;
+
                 progress.set_message(format!(
-                    " of {} records. Cache hit ratio: {:.2}% - {} entries",
-                    progress.length().separate_with_commas(),
-                    hit_ratio,
-                    cache_size.separate_with_commas(),
+                    " Validating {} records.",
+                    progress.length().separate_with_commas()
                 ));
                 util::finish_progress(&progress);
             }
         }
+
+        let msg = format!("{} out of {} records invalid.", invalid_count, row_index);
+        info!("{}", &msg);
+        println!("{}", &msg);
+
+        error_report_file.flush().unwrap();
+
     } else {
         // just read csv file and let csv reader report problems
         let mut record = csv::ByteRecord::new();
         while rdr.read_byte_record(&mut record)? {
             // this loop is for csv::reader to do basic csv validation on read
         }
-    }
 
+        let msg = format!("Can't validate without schema, but csv looks good.");
+        info!("{}", &msg);
+        println!("{}", &msg);
+    }
 
     Ok(())
 }
-
-use serde_json::json;
 
 /// convert CSV Record into JSON instance by referencing Type from Schema
 fn to_json_instance(headers:&ByteRecord, record: &ByteRecord, schema: &Value) -> Result<Value> {
@@ -316,17 +345,29 @@ mod tests_for_csv_to_json_conversion {
             "type": "object",
             "properties": {
                 "A": {
-                "type": "string",
+                    "type": "string",
                 },
                 "B": {
-                "type": "number",
+                    "type": "number",
                 },
                 "C": {
-                "type": "integer",
+                    "type": "integer",
                 },
                 "D": {
-                "type": "boolean",
-                }
+                    "type": "boolean",
+                },
+                "E": {
+                    "type": ["string", "null"],
+                },
+                "F": {
+                    "type": ["number", "null"],
+                },
+                "G": {
+                    "type": ["integer", "null"],
+                },
+                "H": {
+                    "type": ["boolean", "null"],
+                },
             }
         })
     }
@@ -335,8 +376,8 @@ mod tests_for_csv_to_json_conversion {
     fn test_to_json_instance() {
 
         let csv = 
-        "A,B,C,D
-        Professor X,3.1415,60,true";
+        "A,B,C,D,E,F,G,H
+        hello,3.1415,300000000,true,,,,";
 
         let mut rdr = csv::Reader::from_reader(csv.as_bytes());
         let headers = rdr.byte_headers().unwrap().clone();
@@ -347,10 +388,14 @@ mod tests_for_csv_to_json_conversion {
                              &schema_json()
                             ).expect("can convert csv to json instance"),
             json!({
-                "A": "Professor X",
+                "A": "hello",
                 "B": 3.1415,
-                "C": 60,
-                "D": true
+                "C": 300000000,
+                "D": true,
+                "E": null,
+                "F": null,
+                "G": null,
+                "H": null,
             })
         );
     }
@@ -359,9 +404,8 @@ mod tests_for_csv_to_json_conversion {
     fn test_to_json_instance_cast_integer_error() {
 
         let csv = 
-        "A,B,C,D
-         Xaviers,31415,60.1,sure
-        ";
+        "A,B,C,D,E,F,G,H
+        hello,3.1415,3.0e8,true,,,,";
 
         let mut rdr = csv::Reader::from_reader(csv.as_bytes());
         let headers = rdr.byte_headers().unwrap().clone();
@@ -373,7 +417,7 @@ mod tests_for_csv_to_json_conversion {
         assert!(&result.is_err());
         let error = result.err().unwrap();
         assert_eq!(
-            "Can't cast into Integer. header: C, value: 60.1, json type: integer", 
+            "Can't cast into Integer. header: C, value: 3.0e8, json type: integer", 
             error.to_string()
         );
 
@@ -405,20 +449,21 @@ mod tests_for_schema_validation {
             "title": "Person",
             "type": "object",
             "properties": {
-            "firstName": {
-                "type": "string",
-                "description": "The person's first name."
-            },
-            "lastName": {
-                "type": "string",
-                "description": "The person's last name.",
-                "minLength": 2
-            },
-            "age": {
-                "description": "Age in years which must be equal to or greater than 18.",
-                "type": "integer",
-                "minimum": 18
-            }
+                "title": {
+                    "type": "string",
+                    "description": "The person's title.",
+                    "minLength": 2
+                },
+                "name": {
+                    "type": "string",
+                    "description": "The person's name.",
+                    "minLength": 2
+                },
+                "age": {
+                    "description": "Age in years which must be equal to or greater than 18.",
+                    "type": "integer",
+                    "minimum": 18
+                }
             }
         })
     }
@@ -434,7 +479,7 @@ mod tests_for_schema_validation {
     fn test_validate_with_no_errors() {
 
         let csv = 
-        "firstName,lastName,age
+        "title,name,age
         Professor,Xaviers,60";
 
         let mut rdr = csv::Reader::from_reader(csv.as_bytes());
@@ -454,7 +499,7 @@ mod tests_for_schema_validation {
      fn test_validate_with_error() {
 
         let csv = 
-        "firstName,lastName,age
+        "title,name,age
         Professor,X,60";
 
         let mut rdr = csv::Reader::from_reader(csv.as_bytes());
@@ -481,15 +526,14 @@ fn load_json(uri: &String) -> Result<String> {
             response.text()?
         },
         path => {
-	    // dbg!(&path);
+	    // dbg!(&_path);
             let mut buffer = String::new();
-            BufReader::new(File::open(uri)?).read_to_string(&mut buffer);
+            BufReader::new(File::open(path)?).read_to_string(&mut buffer)?;
             buffer
         }
     };
 
     // dbg!(&json_string);
-
 
     Ok(json_string)
 }
@@ -503,13 +547,5 @@ fn test_load_json_via_url() {
     assert!(&json_result.is_ok());
 }
 
-#[cached(
-    key = "String",
-    convert = r#"{ format!("{}", field) }"#,
-    sync_writes = false
-)]
-fn get_cached_response(field: String) -> String {
 
-    String::default()
-}
 
