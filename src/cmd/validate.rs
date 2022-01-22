@@ -96,25 +96,28 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         let (schema_json, schema_compiled):(Value, JSONSchema) = match load_json(json_schema_uri) {
             Ok(s) =>  {
+                // parse JSON string
                 match serde_json::from_str(&s) {
                     Ok(json) => {
+                        // compile JSON Schema
                         match JSONSchema::options().compile(&json) {
                             Ok(schema) => (json, schema),
                             Err(e) => {
-                                return Err(CliError::Other(format!("Not a valid JSONSchema: {}", json_schema_uri)))
+                                return Err(CliError::Other(format!("Cannot compile schema json. error: {}", e.to_string())))
                             }
                         }
                     },
                     Err(e)=> {
-                        return Err(CliError::Other(format!("Unable to parse json from: {}", json_schema_uri)))
+                        //error!("Unable to parse schema json. error: {}", e);
+                        return Err(CliError::Other(format!("Unable to parse schema json. error: {}", e.to_string())))
                     }
                 }
             }
             Err(e) => {
-                return Err(CliError::Other(format!("Unable to retrieve json from: {}", json_schema_uri)));
+                return Err(CliError::Other(format!("Unable to retrieve json. error: {}", e.to_string())));
             }
         };
-        // dbg!(&schema_compiled);
+        dbg!(&schema_compiled);
 
         let mut valid_file_empty: bool = true;
         let mut invalid_file_empty: bool = true;
@@ -129,11 +132,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let instance: Value = match to_json_instance(&headers, &record, &schema_json) {
                 Ok(obj) => obj,
                 Err(e) => {
-                    return Err(CliError::Other(format!("Unable to convert CSV to json. record: {:?}, schema: {:?}", 
-                                                    &record, 
-                                                    &schema_json)));
+                    return Err(CliError::Other(format!("Unable to convert CSV to json. error: {}", e.to_string())));
                 }
             };
+
+            // dbg!(&instance);
 
             match validate_json_instance(&instance, &schema_compiled) {
 
@@ -141,11 +144,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
                     let results = &validation_result["valid"];
 
-                    let valid_flag = match results.as_bool() {
+                    let valid_flag = match results.as_bool().to_owned() {
                         Some(b) => b,
                         None => {
                             return Err(CliError::Other(format!("Unexpected validation result. {:?}", 
-                                                    results)));
+                                                    &results)));
                         }
                     };
 
@@ -159,6 +162,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             valid_wtr.write_byte_record(&record)?;
                         },
                         false => {
+                            debug!("schema violation: {:?}, record: {:?}", 
+                                        &validation_result,
+                                        &record
+                                    );
+                            dbg!(&validation_result, &record);
+
                             if invalid_file_empty {
                                 invalid_wtr.write_byte_record(&headers)?;
                                 invalid_file_empty = false;
@@ -226,10 +235,16 @@ fn to_json_instance(headers:&ByteRecord, record: &ByteRecord, schema: &Value) ->
             let header_string = std::str::from_utf8(header)?.to_string();
             // convert csv value to string; trim whitespace
             let value_string = std::str::from_utf8(&record[i])?.trim().to_string();
-            // get json type from schema
-            let json_type = schema_map[&header_string]["type"].as_str().unwrap_or("unknown");
+            // get json type from schema; defaults to STRING if not specified
+            let json_type = schema_map[&header_string]["type"].as_str().unwrap_or("string");
 
             // dbg!(i, &header_string, &value_string, &json_type);
+
+            // if value_string is empty, then just put an empty JSON String
+            if value_string.is_empty() {
+                json_object_map.insert(header_string, Value::Null);
+                continue;
+            }
 
             match json_type {
                 "string" => {
@@ -264,12 +279,6 @@ fn to_json_instance(headers:&ByteRecord, record: &ByteRecord, schema: &Value) ->
                                 &value_string,
                                 &json_type));
                     }
-                },
-                "unknown" => {
-                    return Err(anyhow!("Cannot infer type from schema. header: {}, value: {}, json type: {}",
-                                &header_string,
-                                &value_string,
-                                &json_type));
                 },
                 _ => {
                     return Err(anyhow!("Unsupported JSON type. header: {}, value: {}, json type: {}",
