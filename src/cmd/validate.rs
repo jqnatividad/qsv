@@ -224,15 +224,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             if !args.flag_quiet {
                 progress.inc(1);
             }
-            if !args.flag_quiet {
-                use thousands::Separable;
+        }
 
-                progress.set_message(format!(
-                    " Validating {} records.",
-                    progress.length().separate_with_commas()
-                ));
-                util::finish_progress(&progress);
-            }
+        if !args.flag_quiet {
+            use thousands::Separable;
+
+            progress.set_message(format!(
+                " Validating {} records.",
+                progress.length().separate_with_commas()
+            ));
+            util::finish_progress(&progress);
         }
 
         let msg = format!("{} out of {} records invalid.", invalid_count, row_index);
