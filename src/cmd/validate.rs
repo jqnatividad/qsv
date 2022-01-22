@@ -78,12 +78,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let headers = rdr.byte_headers()?.clone();
 
-    let input_path: &str = &args.arg_input.unwrap_or("stdin.csv".to_string());
+    let input_path: &str = &args.arg_input.unwrap_or_else(|| "stdin.csv".to_string());
 
-    let valid_suffix: &str = &args.flag_valid.unwrap_or("valid".to_string());
+    let valid_suffix: &str = &args.flag_valid.unwrap_or_else(|| "valid".to_string());
     let mut valid_wtr = Config::new(&Some(input_path.to_owned() + "." + valid_suffix)).writer()?;
 
-    let invalid_suffix: &str = &args.flag_invalid.unwrap_or("invalid".to_string());
+    let invalid_suffix: &str = &args.flag_invalid.unwrap_or_else(|| "invalid".to_string());
     let mut invalid_wtr = Config::new(&Some(input_path.to_owned() + "." + invalid_suffix)).writer()?;
 
     let mut error_report_file = File::create(input_path.to_owned() + ".error-report").expect("unable to create error report file");
@@ -109,18 +109,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         match JSONSchema::options().compile(&json) {
                             Ok(schema) => (json, schema),
                             Err(e) => {
-                                return fail!(format!("Cannot compile schema json. error: {}", e.to_string()));
+                                return fail!(format!("Cannot compile schema json. error: {e}"));
                             }
                         }
                     },
                     Err(e)=> {
                         //error!("Unable to parse schema json. error: {}", e);
-                        return fail!(format!("Unable to parse schema json. error: {}", e.to_string()));
+                        return fail!(format!("Unable to parse schema json. error: {e}"));
                     }
                 }
             }
             Err(e) => {
-                return fail!(format!("Unable to retrieve json. error: {}", e.to_string()));
+                return fail!(format!("Unable to retrieve json. error: {e}"));
             }
         };
         debug!("compiled schema: {:?}", &schema_compiled);
@@ -142,7 +142,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let instance: Value = match to_json_instance(&headers, &record, &schema_json) {
                 Ok(obj) => obj,
                 Err(e) => {
-                    return fail!(format!("Unable to convert CSV to json. row: {}, error: {}", row_index, e.to_string()));
+                    return fail!(format!("Unable to convert CSV to json. row: {row_index}, error: {e}"));
                 }
             };
 
@@ -159,7 +159,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     let valid_flag = match results.as_bool().to_owned() {
                         Some(b) => b,
                         None => {
-                            return fail!(format!("Unexpected validation result. row: {}, result: {}", row_index, &results));
+                            return fail!(format!("Unexpected validation result. row: {row_index}, result: {}", &results));
                         }
                     };
 
@@ -207,7 +207,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     }
                 },
                 Err(e) => {
-                    return fail!(format!("Unable to validate. row: {}, error: {}", row_index, e.to_string()));
+                    return fail!(format!("Unable to validate. row: {row_index}, error: {e}"));
                 }
 
             }
@@ -239,7 +239,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             // this loop is for csv::reader to do basic csv validation on read
         }
 
-        let msg = format!("Can't validate without schema, but csv looks good.");
+        let msg = "Can't validate without schema, but csv looks good.".to_string();
         info!("{}", &msg);
         println!("{}", &msg);
     }
@@ -257,9 +257,9 @@ fn to_json_instance(headers:&ByteRecord, record: &ByteRecord, schema: &Value) ->
         let mut json_object_map: Map<String,Value> = Map::new();
 
         // iterate over each CSV field and convert to JSON type
-        let mut headers_iter = headers.iter().enumerate();
+        let headers_iter = headers.iter().enumerate();
 
-        while let Some((i, header)) = headers_iter.next() {
+        for (i, header) in headers_iter {
             // convert csv header to string
             let header_string = std::str::from_utf8(header)?.to_string();
             // convert csv value to string; trim whitespace
@@ -517,7 +517,7 @@ mod tests_for_schema_validation {
 
 }
 
-fn load_json(uri: &String) -> Result<String> {
+fn load_json(uri: &str) -> Result<String> {
 
     let json_string = match uri {
         url if url.starts_with("http") => {
