@@ -178,8 +178,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             invalid_count = invalid_count.add(1);
 
                             debug!(
-                                "schema violation. row: {}, violation: {:?}",
-                                row_index, &validation_result
+                                "schema violation. row: {row_index}, violation: {:?}",
+                                &validation_result
                             );
                             // dbg!(&validation_result, &record);
 
@@ -236,7 +236,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             util::finish_progress(&progress);
         }
 
-        let msg = format!("{} out of {} records invalid.", invalid_count, row_index);
+        let msg = format!("{invalid_count} out of {row_index} records invalid.");
         info!("{}", &msg);
         println!("{}", &msg);
 
@@ -447,8 +447,7 @@ fn validate_json_instance(instance: &Value, schema_compiled: &JSONSchema) -> Res
     match serde_json::to_value(output) {
         Ok(json) => Ok(json),
         Err(e) => Err(anyhow!(
-            "Cannot convert schema validation output to json: {}",
-            e
+            "Cannot convert schema validation output to json: {e}"
         )),
     }
 }
