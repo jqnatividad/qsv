@@ -422,7 +422,7 @@ pub fn init_logger() {
         .unwrap();
 }
 
-pub fn qsv_check_for_update() {
+pub fn qsv_check_for_update(bin_name: &str) {
     use self_update::cargo_crate_version;
 
     if env::var("QSV_NO_UPDATE").is_ok() {
@@ -446,11 +446,10 @@ pub fn qsv_check_for_update() {
 
     if latest_release > &curr_version.to_string() {
         eprintln!("Update {latest_release} available. Current version is {curr_version}.",);
-        let bin_full_path = format!("{:?}", std::env::current_exe().unwrap());
         let update_job = self_update::backends::github::Update::configure()
             .repo_owner("jqnatividad")
             .repo_name("qsv")
-            .bin_name(&bin_full_path)
+            .bin_name(bin_name)
             .show_download_progress(true)
             .show_output(false)
             .no_confirm(false)
@@ -462,7 +461,7 @@ pub fn qsv_check_for_update() {
         if let Ok(status) = update_result {
             let update_status = format!(
                 "Update successful for {}: `{}`!",
-                bin_full_path,
+                bin_name,
                 status.version()
             );
             eprintln!("{update_status}");
