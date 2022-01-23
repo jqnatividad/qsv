@@ -15,7 +15,7 @@ use crate::CliResult;
 // rdr default is 8k in csv crate, we're doubling it
 const DEFAULT_RDR_BUFFER_CAPACITY: usize = 16 * (1 << 10);
 // previous wtr default in xsv is 32k, we're doubling it
-const DEFAULT_WTR_BUFFER_CAPACITY: usize = 64 * (1 << 10);
+pub const DEFAULT_WTR_BUFFER_CAPACITY: usize = 64 * (1 << 10);
 
 #[derive(Clone, Copy, Debug)]
 pub struct Delimiter(pub u8);
