@@ -19,7 +19,7 @@ CSV files. Commands are simple, fast and composable.
 * [Benchmarks](docs/BENCHMARKS.md)
 * [Sponsor](#sponsor)
 
-> **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's release](https://github.com/BurntSushi/xsv/issues/267), along with additional features & commands for data-wrangling. See [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ) for more details.
+> **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's release](https://github.com/BurntSushi/xsv/issues/267). It has numerous new features & 19 additional commands (for a total of 39). See [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ) for more details.
 
 Available commands
 ------------------
