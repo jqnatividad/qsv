@@ -1,4 +1,4 @@
-use crate::config::{Config, Delimiter};
+use crate::config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY};
 use crate::util;
 use crate::CliError;
 use crate::CliResult;
@@ -9,7 +9,7 @@ use jsonschema::{output::BasicOutput, JSONSchema};
 use log::{debug, info};
 use serde::Deserialize;
 use serde_json::{value::Number, Map, Value};
-use std::{fs::File, io::BufReader, io::Read, io::Write, ops::Add};
+use std::{env, fs::File, io::BufReader, io::BufWriter, io::Read, io::Write, ops::Add};
 
 macro_rules! fail {
     ($mesg:expr) => {
@@ -24,7 +24,7 @@ Example output files from `mydata.csv`. If piped from stdin, then filename is `s
 
 * mydata.csv.valid
 * mydata.csv.invalid
-* mydata.csv.validation-report
+* mydata.csv.validation-report.jsonl
 
 JSON Schema can be a local file or a URL. 
 
@@ -86,8 +86,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut invalid_wtr =
         Config::new(&Some(input_path.to_owned() + "." + invalid_suffix)).writer()?;
 
-    let mut error_report_file = File::create(input_path.to_owned() + ".error-report.json")
-        .expect("unable to create error report file");
+    let wtr_capacitys = env::var("QSV_WTR_BUFFER_CAPACITY")
+        .unwrap_or_else(|_| DEFAULT_WTR_BUFFER_CAPACITY.to_string());
+    let wtr_buffer: usize = wtr_capacitys.parse().unwrap_or(DEFAULT_WTR_BUFFER_CAPACITY);
+
+    let mut error_report_file = BufWriter::with_capacity(
+        wtr_buffer,
+        File::create(input_path.to_owned() + ".error-report.jsonl")
+            .expect("unable to create error report file"),
+    );
 
     // prep progress bar
     let progress = ProgressBar::new(0);
@@ -202,7 +209,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             let enriched_results: Value = Value::Object(enriched_results_map);
 
                             error_report_file
-                                .write_all(enriched_results.to_string().as_bytes())
+                                .write_all(format!("{enriched_results}\n").as_bytes())
                                 .expect("unable to write to error report");
 
                             // for fail-fast, just break out of loop
