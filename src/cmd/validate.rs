@@ -209,7 +209,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             let enriched_results: Value = Value::Object(enriched_results_map);
 
                             error_report_file
-                                .write(format!("{enriched_results}\n").as_bytes())
+                                .write_all(format!("{enriched_results}\n").as_bytes())
                                 .expect("unable to write to error report");
 
                             // for fail-fast, just break out of loop
