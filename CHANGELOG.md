@@ -5,6 +5,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.30.0] - 2022-01-22
+### Added
+* `validate` command by @mhuang74 in https://github.com/jqnatividad/qsv/pull/145
+* README: additional information on xsv fork differences
+
+### Changed
+* bumped MSRV to 1.58.1
+* `validate` tweaks in https://github.com/jqnatividad/qsv/pull/148
+* `validate` buffered jsonl error report in https://github.com/jqnatividad/qsv/pull/149
+
+### Fixed
+* fix `fetch` bugs by @mhuang74 in https://github.com/jqnatividad/qsv/pull/146
+* README: added missing `--path` option in `cargo install`
+
 ## [0.29.1] - 2022-01-17
 ### Changed
 * refactored `--update` to give update progress messages; run on `--help` as well
