@@ -23,3 +23,5 @@ perf.data*
 *.log.gz
 *.jsonl
 *.bak
+*.code-workspace
+tmp/*
