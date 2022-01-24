@@ -278,81 +278,91 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
 /// convert CSV Record into JSON instance by referencing Type from Schema
 fn to_json_instance(headers: &ByteRecord, record: &ByteRecord, schema: &Value) -> Result<Value> {
-    // grab Type from Schema, and convert CSV field accordingly
-    if let Some(schema_map) = schema["properties"].as_object() {
-        // map holds individual CSV fields converted as serde_json::Value
-        let mut json_object_map: Map<String, Value> = Map::new();
+    // make sure schema has expected structure
+    let schema_properties = schema
+            .get("properties")
+            .expect("JSON Schema missing 'properties' object");
 
-        // iterate over each CSV field and convert to JSON type
-        let headers_iter = headers.iter().enumerate();
+    // map holds individual CSV fields converted as serde_json::Value
+    let mut json_object_map: Map<String, Value> = Map::new();
 
-        for (i, header) in headers_iter {
-            // convert csv header to string
-            let header_string = std::str::from_utf8(header)?.to_string();
-            // convert csv value to string; trim whitespace
-            let value_string = std::str::from_utf8(&record[i])?.trim().to_string();
-            // get json type from schema; defaults to STRING if not specified
-            let json_type = schema_map[&header_string]["type"]
-                .as_str()
-                .unwrap_or("string");
+    // iterate over each CSV field and convert to JSON type
+    let headers_iter = headers.iter().enumerate();
 
-            // dbg!(i, &header_string, &value_string, &json_type);
+    for (i, header) in headers_iter {
+        // convert csv header to string
+        let header_string = std::str::from_utf8(header)?.to_string();
+        // convert csv value to string; trim whitespace
+        let value_string = std::str::from_utf8(&record[i])?.trim().to_string();
 
-            // if value_string is empty, then just put an empty JSON String
-            if value_string.is_empty() {
-                json_object_map.insert(header_string, Value::Null);
-                continue;
+        // get json type from schema; defaults to STRING if not specified
+        let field_def = schema_properties
+                                    .get(&header_string)
+                                    .unwrap_or_else(|| &Value::Null);
+
+        let field_type_def = field_def
+                                    .get("type")
+                                    .unwrap_or_else(|| &Value::Null);
+
+        let json_type = field_type_def
+                                    .as_str()
+                                    .unwrap_or_else(|| "string");
+
+
+        // dbg!(i, &header_string, &value_string, &json_type);
+
+        // if value_string is empty, then just put an empty JSON String
+        if value_string.is_empty() {
+            json_object_map.insert(header_string, Value::Null);
+            continue;
+        }
+
+        match json_type {
+            "string" => {
+                json_object_map.insert(header_string, Value::String(value_string));
             }
-
-            match json_type {
-                "string" => {
-                    json_object_map.insert(header_string, Value::String(value_string));
-                }
-                "number" => {
-                    if let Ok(float) = value_string.parse::<f64>() {
-                        json_object_map.insert(
-                            header_string,
-                            Value::Number(Number::from_f64(float).expect("not a valid f64 float")),
-                        );
-                    } else {
-                        return Err(anyhow!(
-                            "Can't cast into Float. header: {header_string}, value: {value_string}, json type: {json_type}"
-                        ));
-                    }
-                }
-                "integer" => {
-                    if let Ok(int) = value_string.parse::<i64>() {
-                        json_object_map.insert(header_string, Value::Number(Number::from(int)));
-                    } else {
-                        return Err(anyhow!(
-                            "Can't cast into Integer. header: {header_string}, value: {value_string}, json type: {json_type}"
-                        ));
-                    }
-                }
-                "boolean" => {
-                    if let Ok(boolean) = value_string.parse::<bool>() {
-                        json_object_map.insert(header_string, Value::Bool(boolean));
-                    } else {
-                        return Err(anyhow!(
-                            "Can't cast into Boolean. header: {header_string}, value: {value_string}, json type: {json_type}"
-                        ));
-                    }
-                }
-                _ => {
+            "number" => {
+                if let Ok(float) = value_string.parse::<f64>() {
+                    json_object_map.insert(
+                        header_string,
+                        Value::Number(Number::from_f64(float).expect("not a valid f64 float")),
+                    );
+                } else {
                     return Err(anyhow!(
-                        "Unsupported JSON type. header: {header_string}, value: {value_string}, json type: {json_type}"
+                        "Can't cast into Float. header: {header_string}, value: {value_string}, json type: {json_type}"
                     ));
                 }
             }
+            "integer" => {
+                if let Ok(int) = value_string.parse::<i64>() {
+                    json_object_map.insert(header_string, Value::Number(Number::from(int)));
+                } else {
+                    return Err(anyhow!(
+                        "Can't cast into Integer. header: {header_string}, value: {value_string}, json type: {json_type}"
+                    ));
+                }
+            }
+            "boolean" => {
+                if let Ok(boolean) = value_string.parse::<bool>() {
+                    json_object_map.insert(header_string, Value::Bool(boolean));
+                } else {
+                    return Err(anyhow!(
+                        "Can't cast into Boolean. header: {header_string}, value: {value_string}, json type: {json_type}"
+                    ));
+                }
+            }
+            _ => {
+                return Err(anyhow!(
+                    "Unsupported JSON type. header: {header_string}, value: {value_string}, json type: {json_type}"
+                ));
+            }
         }
-
-        // dbg!(&json_object_map);
-
-        Ok(Value::Object(json_object_map))
-    } else {
-        // can't use schema to determine field type...abort
-        Err(anyhow!("JSON schema missing 'properties' object"))
     }
+
+    // dbg!(&json_object_map);
+
+    Ok(Value::Object(json_object_map))
+
 }
 
 #[cfg(test)]
