@@ -24,7 +24,7 @@ Example output files from `mydata.csv`. If piped from stdin, then filename is `s
 
 * mydata.csv.valid
 * mydata.csv.invalid
-* mydata.csv.validation-report.jsonl
+* mydata.csv.validation-errors.jsonl
 
 JSON Schema can be a local file or a URL. 
 
@@ -37,8 +37,8 @@ Usage:
 
 fetch options:
     --fail-fast                Stops on first error.
-    --valid <suffix>           Valid record output file suffix [default: valid]
-    --invalid <suffix>         Invalid record output file suffix [default: invalid]
+    --valid <suffix>           Valid record output file suffix. [default: valid]
+    --invalid <suffix>         Invalid record output file suffix. [default: invalid]
 
 
 Common options:
@@ -48,7 +48,7 @@ Common options:
                                of the rows. Otherwise, the first row will always
                                appear as the header row in the output.
     -d, --delimiter <arg>      The field delimiter for reading CSV data.
-                               Must be a single character. (default: ,)
+                               Must be a single character. [default: ,]
     -q, --quiet                Don't show progress bars.
 ";
 
@@ -92,7 +92,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut error_report_file = BufWriter::with_capacity(
         wtr_buffer,
-        File::create(input_path.to_owned() + ".error-report.jsonl")
+        File::create(input_path.to_owned() + ".validation-errors.jsonl")
             .expect("unable to create error report file"),
     );
 
@@ -200,7 +200,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             // write to error report
                             let mut enriched_results_map = validation_result
                                 .as_object()
-                                .expect("get validation as map")
+                                .expect("get validation results as map")
                                 .clone();
                             let _ = enriched_results_map.insert(
                                 "row_index".to_string(),
@@ -210,15 +210,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
                             error_report_file
                                 .write_all(format!("{enriched_results}\n").as_bytes())
-                                .expect("unable to write to error report");
+                                .expect("unable to write to validation error report");
 
                             // for fail-fast, just break out of loop
                             if args.flag_fail_fast {
-                                let msg = format!(
-                                    "fail-fast enabled. stopping after first invalid record at row {row_index}"
-                                );
-                                info!("{msg}");
-                                println!("{msg}");
                                 break;
                             }
                         }
@@ -232,7 +227,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             if !args.flag_quiet {
                 progress.inc(1);
             }
-        }
+        } // end main while loop over csv records
+
+        // flush error report; file gets closed automagically when out-of-scope
+        error_report_file.flush().unwrap();
+
 
         use thousands::Separable;
 
@@ -244,15 +243,24 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             util::finish_progress(&progress);
         }
 
-        let msg = format!(
-            "{} out of {} records invalid.",
-            invalid_count.separate_with_commas(),
-            row_index.separate_with_commas()
-        );
-        info!("{msg}");
-        println!("{msg}");
+        // done with validation; print output
+        if args.flag_fail_fast {
+            let msg = format!(
+                "fail-fast enabled. stopping after first invalid record at row {}",
+                row_index.separate_with_commas()
+            );
+            info!("{msg}");
+            println!("{msg}");
+        } else {
+            let msg = format!(
+                "{} out of {} records invalid.",
+                invalid_count.separate_with_commas(),
+                row_index.separate_with_commas()
+            );
+            info!("{msg}");
+            println!("{msg}");
+        }
 
-        error_report_file.flush().unwrap();
     } else {
         // just read csv file and let csv reader report problems
         let mut record = csv::ByteRecord::new();
