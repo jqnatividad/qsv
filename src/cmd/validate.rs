@@ -24,7 +24,7 @@ Example output files from `mydata.csv`. If piped from stdin, then filename is `s
 
 * mydata.csv.valid
 * mydata.csv.invalid
-* mydata.csv.validation-report.jsonl
+* mydata.csv.validation-errors.jsonl
 
 JSON Schema can be a local file or a URL. 
 
@@ -37,8 +37,8 @@ Usage:
 
 fetch options:
     --fail-fast                Stops on first error.
-    --valid <suffix>           Valid record output file suffix [default: valid]
-    --invalid <suffix>         Invalid record output file suffix [default: invalid]
+    --valid <suffix>           Valid record output file suffix. [default: valid]
+    --invalid <suffix>         Invalid record output file suffix. [default: invalid]
 
 
 Common options:
@@ -48,7 +48,7 @@ Common options:
                                of the rows. Otherwise, the first row will always
                                appear as the header row in the output.
     -d, --delimiter <arg>      The field delimiter for reading CSV data.
-                               Must be a single character. (default: ,)
+                               Must be a single character. [default: ,]
     -q, --quiet                Don't show progress bars.
 ";
 
@@ -92,7 +92,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut error_report_file = BufWriter::with_capacity(
         wtr_buffer,
-        File::create(input_path.to_owned() + ".error-report.jsonl")
+        File::create(input_path.to_owned() + ".validation-errors.jsonl")
             .expect("unable to create error report file"),
     );
 
@@ -200,7 +200,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             // write to error report
                             let mut enriched_results_map = validation_result
                                 .as_object()
-                                .expect("get validation as map")
+                                .expect("get validation results as map")
                                 .clone();
                             let _ = enriched_results_map.insert(
                                 "row_index".to_string(),
@@ -210,15 +210,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
                             error_report_file
                                 .write_all(format!("{enriched_results}\n").as_bytes())
-                                .expect("unable to write to error report");
+                                .expect("unable to write to validation error report");
 
                             // for fail-fast, just break out of loop
                             if args.flag_fail_fast {
-                                let msg = format!(
-                                    "fail-fast enabled. stopping after first invalid record at row {row_index}"
-                                );
-                                info!("{msg}");
-                                println!("{msg}");
                                 break;
                             }
                         }
@@ -232,7 +227,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             if !args.flag_quiet {
                 progress.inc(1);
             }
-        }
+        } // end main while loop over csv records
+
+        // flush error report; file gets closed automagically when out-of-scope
+        error_report_file.flush().unwrap();
+
 
         use thousands::Separable;
 
@@ -244,15 +243,24 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             util::finish_progress(&progress);
         }
 
-        let msg = format!(
-            "{} out of {} records invalid.",
-            invalid_count.separate_with_commas(),
-            row_index.separate_with_commas()
-        );
-        info!("{msg}");
-        println!("{msg}");
+        // done with validation; print output
+        if args.flag_fail_fast {
+            let msg = format!(
+                "fail-fast enabled. stopping after first invalid record at row {}",
+                row_index.separate_with_commas()
+            );
+            info!("{msg}");
+            println!("{msg}");
+        } else {
+            let msg = format!(
+                "{} out of {} records invalid.",
+                invalid_count.separate_with_commas(),
+                row_index.separate_with_commas()
+            );
+            info!("{msg}");
+            println!("{msg}");
+        }
 
-        error_report_file.flush().unwrap();
     } else {
         // just read csv file and let csv reader report problems
         let mut record = csv::ByteRecord::new();
@@ -270,81 +278,91 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
 /// convert CSV Record into JSON instance by referencing Type from Schema
 fn to_json_instance(headers: &ByteRecord, record: &ByteRecord, schema: &Value) -> Result<Value> {
-    // grab Type from Schema, and convert CSV field accordingly
-    if let Some(schema_map) = schema["properties"].as_object() {
-        // map holds individual CSV fields converted as serde_json::Value
-        let mut json_object_map: Map<String, Value> = Map::new();
+    // make sure schema has expected structure
+    let schema_properties = schema
+            .get("properties")
+            .expect("JSON Schema missing 'properties' object");
 
-        // iterate over each CSV field and convert to JSON type
-        let headers_iter = headers.iter().enumerate();
+    // map holds individual CSV fields converted as serde_json::Value
+    let mut json_object_map: Map<String, Value> = Map::new();
 
-        for (i, header) in headers_iter {
-            // convert csv header to string
-            let header_string = std::str::from_utf8(header)?.to_string();
-            // convert csv value to string; trim whitespace
-            let value_string = std::str::from_utf8(&record[i])?.trim().to_string();
-            // get json type from schema; defaults to STRING if not specified
-            let json_type = schema_map[&header_string]["type"]
-                .as_str()
-                .unwrap_or("string");
+    // iterate over each CSV field and convert to JSON type
+    let headers_iter = headers.iter().enumerate();
 
-            // dbg!(i, &header_string, &value_string, &json_type);
+    for (i, header) in headers_iter {
+        // convert csv header to string
+        let header_string = std::str::from_utf8(header)?.to_string();
+        // convert csv value to string; trim whitespace
+        let value_string = std::str::from_utf8(&record[i])?.trim().to_string();
 
-            // if value_string is empty, then just put an empty JSON String
-            if value_string.is_empty() {
-                json_object_map.insert(header_string, Value::Null);
-                continue;
+        // get json type from schema; defaults to STRING if not specified
+        let field_def = schema_properties
+                                    .get(&header_string)
+                                    .unwrap_or_else(|| &Value::Null);
+
+        let field_type_def = field_def
+                                    .get("type")
+                                    .unwrap_or_else(|| &Value::Null);
+
+        let json_type = field_type_def
+                                    .as_str()
+                                    .unwrap_or_else(|| "string");
+
+
+        // dbg!(i, &header_string, &value_string, &json_type);
+
+        // if value_string is empty, then just put an empty JSON String
+        if value_string.is_empty() {
+            json_object_map.insert(header_string, Value::Null);
+            continue;
+        }
+
+        match json_type {
+            "string" => {
+                json_object_map.insert(header_string, Value::String(value_string));
             }
-
-            match json_type {
-                "string" => {
-                    json_object_map.insert(header_string, Value::String(value_string));
-                }
-                "number" => {
-                    if let Ok(float) = value_string.parse::<f64>() {
-                        json_object_map.insert(
-                            header_string,
-                            Value::Number(Number::from_f64(float).expect("not a valid f64 float")),
-                        );
-                    } else {
-                        return Err(anyhow!(
-                            "Can't cast into Float. header: {header_string}, value: {value_string}, json type: {json_type}"
-                        ));
-                    }
-                }
-                "integer" => {
-                    if let Ok(int) = value_string.parse::<i64>() {
-                        json_object_map.insert(header_string, Value::Number(Number::from(int)));
-                    } else {
-                        return Err(anyhow!(
-                            "Can't cast into Integer. header: {header_string}, value: {value_string}, json type: {json_type}"
-                        ));
-                    }
-                }
-                "boolean" => {
-                    if let Ok(boolean) = value_string.parse::<bool>() {
-                        json_object_map.insert(header_string, Value::Bool(boolean));
-                    } else {
-                        return Err(anyhow!(
-                            "Can't cast into Boolean. header: {header_string}, value: {value_string}, json type: {json_type}"
-                        ));
-                    }
-                }
-                _ => {
+            "number" => {
+                if let Ok(float) = value_string.parse::<f64>() {
+                    json_object_map.insert(
+                        header_string,
+                        Value::Number(Number::from_f64(float).expect("not a valid f64 float")),
+                    );
+                } else {
                     return Err(anyhow!(
-                        "Unsupported JSON type. header: {header_string}, value: {value_string}, json type: {json_type}"
+                        "Can't cast into Float. header: {header_string}, value: {value_string}, json type: {json_type}"
                     ));
                 }
             }
+            "integer" => {
+                if let Ok(int) = value_string.parse::<i64>() {
+                    json_object_map.insert(header_string, Value::Number(Number::from(int)));
+                } else {
+                    return Err(anyhow!(
+                        "Can't cast into Integer. header: {header_string}, value: {value_string}, json type: {json_type}"
+                    ));
+                }
+            }
+            "boolean" => {
+                if let Ok(boolean) = value_string.parse::<bool>() {
+                    json_object_map.insert(header_string, Value::Bool(boolean));
+                } else {
+                    return Err(anyhow!(
+                        "Can't cast into Boolean. header: {header_string}, value: {value_string}, json type: {json_type}"
+                    ));
+                }
+            }
+            _ => {
+                return Err(anyhow!(
+                    "Unsupported JSON type. header: {header_string}, value: {value_string}, json type: {json_type}"
+                ));
+            }
         }
-
-        // dbg!(&json_object_map);
-
-        Ok(Value::Object(json_object_map))
-    } else {
-        // can't use schema to determine field type...abort
-        Err(anyhow!("JSON schema missing 'properties' object"))
     }
+
+    // dbg!(&json_object_map);
+
+    Ok(Value::Object(json_object_map))
+
 }
 
 #[cfg(test)]
