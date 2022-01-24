@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.1] - 2022-01-23
+### Changed
+* convert more format strings to use captured identifiers
+* bump jsonschema to 0.14.0. This will allow cross-compilation to work again as 
+  we can explicitly use rustls for reqwest. This is required as cross no longer bundles openssl.
+
+### Fixed
+* fixed broken self-update ([#150](https://github.com/jqnatividad/qsv/issues/150))
+
 ## [0.30.0] - 2022-01-22
 ### Added
 * `validate` command by @mhuang74 in https://github.com/jqnatividad/qsv/pull/145
