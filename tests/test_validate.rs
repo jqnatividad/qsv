@@ -236,7 +236,7 @@ fn validate_adur_public_toilets_dataset_with_json_schema() {
 "#;
 
     // invalid records with index from original csv
-    // row 1: missing values for ExtactDate and OrganisationLabel
+    // row 1: missing values for ExtractDate and OrganisationLabel
     // row 3: wrong value for CoordinateReferenceSystem and Category
     // note: removed unnecessary quotes for string column "OpeningHours"
     let invalid_expected = r#"ExtractDate,OrganisationURI,OrganisationLabel,ServiceTypeURI,ServiceTypeLabel,LocationText,CoordinateReferenceSystem,GeoX,GeoY,GeoPointLicensingURL,Category,AccessibleCategory,RADARKeyNeeded,BabyChange,FamilyToilet,ChangingPlace,AutomaticPublicConvenience,FullTimeStaffing,PartOfCommunityScheme,CommunitySchemeName,ChargeAmount,InfoURL,OpeningHours,ManagedBy,ReportEmail,ReportTel,Notes,UPRN,Postcode,StreetAddress,GeoAreaURI,GeoAreaLabel
