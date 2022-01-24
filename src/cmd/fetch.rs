@@ -164,7 +164,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         if let Ok(s) = std::str::from_utf8(&record[column_index]) {
             let url = s.trim().to_string();
-            debug!("Fetching URL: {:?}", &url);
+            debug!("Fetching URL: {url:?}");
 
             final_value = get_cached_response(
                 &url,
@@ -224,7 +224,7 @@ fn get_cached_response(
             resp = response;
         }
         Err(error) => {
-            error!("Cannot fetch url: {:?}, error: {:?}", url, error);
+            error!("Cannot fetch url: {url:?}, error: {error:?}");
             if flag_store_error {
                 return error.to_string();
             } else {
@@ -265,10 +265,7 @@ fn get_cached_response(
                 }
                 Err(e) => {
                     error!(
-                        "jql error. json: {:?}, selectors: {:?}, error: {:?}",
-                        &api_value,
-                        selectors,
-                        e.to_string()
+                        "jql error. json: {api_value:?}, selectors: {selectors:?}, error: {e:?}"
                     );
 
                     if flag_store_error {
@@ -283,7 +280,7 @@ fn get_cached_response(
         }
     }
 
-    debug!("final value: {}", &final_value);
+    debug!("final value: {final_value}");
 
     final_value
 }
@@ -296,7 +293,7 @@ use anyhow::{anyhow, Result};
 fn apply_jql(json: &str, selectors: &str) -> Result<String> {
     // check if api returned valid JSON before applying JQL selector
     if let Err(error) = serde_json::from_str::<Value>(json) {
-        return Err(anyhow!("Invalid json: {:?}", error));
+        return Err(anyhow!("Invalid json: {error:?}"));
     }
 
     let mut result: Result<String> = Ok(String::default());
@@ -361,7 +358,7 @@ fn apply_jql(json: &str, selectors: &str) -> Result<String> {
             }
             Err(error) => {
                 // shouldn't happen, but do same thing earlier when checking for invalid json
-                result = Err(anyhow!("Invalid json: {:?}", error));
+                result = Err(anyhow!("Invalid json: {error:?}"));
             }
         });
 
