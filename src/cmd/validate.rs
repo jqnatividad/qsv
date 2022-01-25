@@ -296,11 +296,11 @@ fn to_json_instance(headers: &ByteRecord, record: &ByteRecord, schema: &Value) -
         // get json type from schema; defaults to STRING if not specified
         let field_def = schema_properties
             .get(&header_string)
-            .unwrap_or_else(|| &Value::Null);
+            .unwrap_or(&Value::Null);
 
-        let field_type_def = field_def.get("type").unwrap_or_else(|| &Value::Null);
+        let field_type_def = field_def.get("type").unwrap_or(&Value::Null);
 
-        let json_type = field_type_def.as_str().unwrap_or_else(|| "string");
+        let json_type = field_type_def.as_str().unwrap_or("string");
 
         // dbg!(i, &header_string, &value_string, &json_type);
 
