@@ -13,6 +13,7 @@ use std::mem::transmute;
 use std::ops;
 
 use quickcheck::{Arbitrary, Gen, QuickCheck, Testable};
+use rand::{thread_rng, Rng};
 
 macro_rules! svec[
     ($($x:expr),*) => (
@@ -185,7 +186,9 @@ impl ops::Deref for CsvData {
 impl Arbitrary for CsvData {
     fn arbitrary(g: &mut Gen) -> CsvData {
         let record_len = g.size();
-        let num_records: usize = 10; //  g.gen_range(0..100); // g.gen_range(0, 100);
+        let mut rng = thread_rng();
+
+        let num_records: usize = rng.gen_range(0..100);
         let mut d = CsvData {
             data: (0..num_records)
                 .map(|_| CsvRecord((0..record_len).map(|_| Arbitrary::arbitrary(g)).collect()))
