@@ -232,7 +232,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // flush error report; file gets closed automagically when out-of-scope
         error_report_file.flush().unwrap();
 
-
         use thousands::Separable;
 
         if !args.flag_quiet {
@@ -260,7 +259,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             info!("{msg}");
             println!("{msg}");
         }
-
     } else {
         // just read csv file and let csv reader report problems
         let mut record = csv::ByteRecord::new();
@@ -280,8 +278,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 fn to_json_instance(headers: &ByteRecord, record: &ByteRecord, schema: &Value) -> Result<Value> {
     // make sure schema has expected structure
     let schema_properties = schema
-            .get("properties")
-            .expect("JSON Schema missing 'properties' object");
+        .get("properties")
+        .expect("JSON Schema missing 'properties' object");
 
     // map holds individual CSV fields converted as serde_json::Value
     let mut json_object_map: Map<String, Value> = Map::new();
@@ -296,18 +294,13 @@ fn to_json_instance(headers: &ByteRecord, record: &ByteRecord, schema: &Value) -
         let value_string = std::str::from_utf8(&record[i])?.trim().to_string();
 
         // get json type from schema; defaults to STRING if not specified
-        let field_def = schema_properties
-                                    .get(&header_string)
-                                    .unwrap_or_else(|| &Value::Null);
+        let field_def: &Value = schema_properties
+            .get(&header_string)
+            .unwrap_or(&Value::Null);
 
-        let field_type_def = field_def
-                                    .get("type")
-                                    .unwrap_or_else(|| &Value::Null);
+        let field_type_def: &Value = field_def.get("type").unwrap_or(&Value::Null);
 
-        let json_type = field_type_def
-                                    .as_str()
-                                    .unwrap_or_else(|| "string");
-
+        let json_type: &str = field_type_def.as_str().unwrap_or("string");
 
         // dbg!(i, &header_string, &value_string, &json_type);
 
@@ -362,7 +355,6 @@ fn to_json_instance(headers: &ByteRecord, record: &ByteRecord, schema: &Value) -
     // dbg!(&json_object_map);
 
     Ok(Value::Object(json_object_map))
-
 }
 
 #[cfg(test)]
