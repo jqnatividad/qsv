@@ -14,6 +14,7 @@ autotests     = false
 edition       = "2021"
 rust-version  = "1.58.1"
 autobins      = false
+include = ["src/**/*", "LICENSE-MIT", "README.md", "CHANGELOG.md"]
 
 [[bin]]
 name    = "qsv"
