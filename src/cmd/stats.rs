@@ -530,8 +530,8 @@ impl Commute for Stats {
     }
 }
 
-#[derive(Clone, Copy, PartialEq)]
-enum FieldType {
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+pub enum FieldType {
     TUnknown,
     TNull,
     TUnicode,
@@ -541,7 +541,7 @@ enum FieldType {
 }
 
 impl FieldType {
-    fn from_sample(sample: &[u8]) -> FieldType {
+    pub fn from_sample(sample: &[u8]) -> FieldType {
         if sample.is_empty() {
             return TNull;
         }
@@ -604,6 +604,19 @@ impl Default for FieldType {
 }
 
 impl fmt::Display for FieldType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            TUnknown => write!(f, "Unknown"),
+            TNull => write!(f, "NULL"),
+            TUnicode => write!(f, "Unicode"),
+            TFloat => write!(f, "Float"),
+            TInteger => write!(f, "Integer"),
+            TDate => write!(f, "Date"),
+        }
+    }
+}
+
+impl fmt::Debug for FieldType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             TUnknown => write!(f, "Unknown"),
