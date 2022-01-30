@@ -151,7 +151,7 @@ jobs:
         command: build
         use-cross: ${{ matrix.job.use-cross }}
         toolchain: ${{ matrix.rust }}
-        args: --release --frozen --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }}
+        args: --release --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }}
     - name: strip binary on *nix environments
       if: ${{ matrix.job.strip }}
       run: |
