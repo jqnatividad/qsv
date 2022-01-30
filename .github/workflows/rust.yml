@@ -24,6 +24,6 @@ jobs:
     - name: Update Rust
       run: rustup update
     - name: Build
-      run: cargo build --verbose --all-features
+      run: cargo build --frozen --verbose --all-features
     - name: Run tests
-      run: cargo test --verbose --all-features
+      run: cargo test --frozen --verbose --all-features
