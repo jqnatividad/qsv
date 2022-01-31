@@ -16,6 +16,7 @@ CSV files. Commands are simple, fast and composable.
 * [Whirlwind Tour](docs/whirlwind_tour.md#a-whirlwind-tour)
 * [Cookbook](https://github.com/jqnatividad/qsv/wiki)
 * [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ)
+* [Changelog](https://github.com/jqnatividad/qsv/blob/master/CHANGELOG.md#changelog)
 * [Benchmarks](docs/BENCHMARKS.md)
 * [Sponsor](#sponsor)
 
