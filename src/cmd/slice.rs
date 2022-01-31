@@ -26,6 +26,7 @@ Usage:
 
 slice options:
     -s, --start <arg>      The index of the record to slice from.
+                           If negative, starts from the last record.
     -e, --end <arg>        The index of the record to slice to.
     -l, --len <arg>        The length of the slice (can be used instead
                            of --end).
@@ -44,7 +45,7 @@ Common options:
 #[derive(Deserialize)]
 struct Args {
     arg_input: Option<String>,
-    flag_start: Option<usize>,
+    flag_start: Option<isize>,
     flag_end: Option<usize>,
     flag_len: Option<usize>,
     flag_index: Option<usize>,
@@ -91,12 +92,15 @@ impl Args {
     }
 
     fn range(&self) -> Result<(usize, usize), String> {
-        util::range(
-            self.flag_start,
-            self.flag_end,
-            self.flag_len,
-            self.flag_index,
-        )
+        let mut start = None;
+        if let Some(start_arg) = self.flag_start {
+            if start_arg < 0 {
+                start = Some(util::count_rows(&self.rconfig()) as usize - start_arg.abs() as usize);
+            } else {
+                start = Some(start_arg as usize);
+            }
+        }
+        util::range(start, self.flag_end, self.flag_len, self.flag_index)
     }
 
     fn rconfig(&self) -> Config {
