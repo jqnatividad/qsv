@@ -62,9 +62,9 @@ governor = "0.4"
 hlua = { version = "0.4", optional = true }
 indicatif = "0.16"
 itertools = "0.10"
-jsonschema = { version = "0.14", features = [
-    "reqwest",
-    "reqwest-rustls-tls",
+jsonschema = { version = "0.15", features = [
+    "resolve-file",
+    "resolve-http",
 ], default-features = false }
 jql = { version = "3", default-features = false }
 log = "0.4"
