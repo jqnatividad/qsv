@@ -32,6 +32,7 @@ path    = "src/mainlite.rs"
 
 [[test]]
 name = "tests"
+path = "tests/tests.rs"
 
 [profile.release]
 codegen-units = 1
