@@ -91,7 +91,7 @@ If you encounter compilation errors, ensure you're using the exact
 version of the dependencies qsv was built with by issuing:
 
 ```bash
-cargo install qsv --path . --frozen
+cargo install qsv --path . --locked
 ```
 
 Compiling from this repository also works similarly:
@@ -101,7 +101,7 @@ git clone git://github.com/jqnatividad/qsv
 cd qsv
 cargo build --release
 # or if you encounter compilation errors
-cargo build --release --frozen
+cargo build --release --locked
 ```
 
 The compiled binary will end up in `./target/release/qsv`.
