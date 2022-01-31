@@ -7,8 +7,8 @@ use crate::config::{Config, Delimiter};
 use crate::util;
 use crate::CliError;
 use crate::CliResult;
-use serde::Deserialize;
 use indicatif::{ProgressBar, ProgressDrawTarget};
+use serde::Deserialize;
 
 const HELPERS: &str = r#"
 def cast_as_string(value):
