@@ -8,6 +8,7 @@ use crate::util;
 use crate::CliError;
 use crate::CliResult;
 use serde::Deserialize;
+use indicatif::{ProgressBar, ProgressDrawTarget};
 
 const HELPERS: &str = r#"
 def cast_as_string(value):
@@ -98,6 +99,7 @@ Common options:
                            appear as the header row in the output.
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
+    -q, --quiet            Do not display progress bar.
 "#;
 
 #[derive(Deserialize)]
@@ -111,6 +113,7 @@ struct Args {
     flag_output: Option<String>,
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
+    flag_quiet: bool,
 }
 
 impl From<PyErr> for CliError {
@@ -177,9 +180,21 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     }
 
+    let progress = ProgressBar::new(0);
+    if !args.flag_quiet {
+        let record_count = util::count_rows(&rconfig);
+        util::prep_progress(&progress, record_count);
+    } else {
+        progress.set_draw_target(ProgressDrawTarget::hidden());
+    }
+
     let mut record = csv::StringRecord::new();
 
     while rdr.read_record(&mut record)? {
+        if !args.flag_quiet {
+            progress.inc(1);
+        }
+
         // Initializing locals
         let mut row_data: Vec<&str> = Vec::with_capacity(headers_len);
 
@@ -212,6 +227,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 wtr.write_record(&record)?;
             }
         }
+    }
+    if !args.flag_quiet {
+        util::finish_progress(&progress);
     }
 
     Ok(wtr.flush()?)
