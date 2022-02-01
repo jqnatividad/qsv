@@ -9,7 +9,7 @@ use indicatif::{ProgressBar, ProgressDrawTarget};
 use jsonschema::{output::BasicOutput, JSONSchema};
 use log::{debug, info};
 use serde::Deserialize;
-use serde_json::{value::Number, Map, Value};
+use serde_json::{value::Number, Map, Value, json};
 use stats::Frequencies;
 use std::{env, fs::File, io::BufReader, io::BufWriter, io::Read, io::Write, ops::Add};
 
@@ -83,15 +83,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     #[allow(unused_assignments)]
     let mut record = csv::ByteRecord::new();
 
-    let mut row_index: u32 = 0;
-    let mut invalid_count: u32 = 0;
+    let mut row_index: u64 = 0;
 
-    // array of frequency tables
+    // array of frequency tables to track non-NULL type occurrences
     let mut frequency_tables: Vec<_> = (0..(headers.len() as u32)).map(|_| Frequencies::<FieldType>::new()).collect();
+    // array of boolean to track if column in NULLABLE
+    let mut nullable_flags: Vec<bool> = vec![false; headers.len()];
 
     // iterate over each CSV field and determine type
     let headers_iter = headers.iter().enumerate();
-    
+
     while rdr.read_byte_record(&mut record)? {
         row_index = row_index.add(1);
 
@@ -114,7 +115,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         // skip
                         debug!("Skipped: {}[{}]", &header_string, &row_index);
                     } else {
-                        frequency_tables[i].add(FieldType::TNull);
+                        // only count NULL once, so it dominate frequency table when value is optional
+                        if nullable_flags[i] == false {
+                            frequency_tables[i].add(FieldType::TNull);
+                        }
+                        nullable_flags[i] = true;
                     }
                 }
                 FieldType::TUnknown => {
@@ -133,18 +138,84 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     } // end main while loop over csv records
 
-    // dbg!(&frequency_tables);
+    debug!("freq tables: {:?}", &frequency_tables);
+
+    // map holds "properties" object of json schema
+    let mut properties_map: Map<String, Value> = Map::new();
 
     // get most frequent type for each header column
     for (i, header) in headers_iter {
         let most_frequent = frequency_tables[i].most_frequent();
-        let inferred_type = match most_frequent.get(0) {
-            Some(tuple) => tuple,
-            None => &(&FieldType::TNull, 0)
+        let (inferred_type, count) = match most_frequent.get(0) {
+            Some(tuple) => *tuple,
+            None => (&FieldType::TNull, 0)
         };
+        dbg!(&inferred_type, count, row_index);
+
         let header_string = std::str::from_utf8(header).unwrap().to_string();
-        print!("{:?}: {:?}\n", header_string, inferred_type);
-    }
+        let required: bool = if *inferred_type != FieldType::TNull && 
+                                *inferred_type != FieldType::TUnknown && 
+                                count >= row_index {
+                                    true
+                                } else {
+                                    false
+                                };
+        debug!("{}: {:?} {}\n", header_string, inferred_type, required);
+
+        let mut type_list: Vec<Value> = Vec::new();
+        
+        match inferred_type {
+            FieldType::TUnicode => {
+                type_list.push(Value::String("string".to_string()));
+            },
+            FieldType::TDate => {
+                type_list.push(Value::String("string".to_string()));
+            },
+            FieldType::TInteger => {
+                type_list.push(Value::String("integer".to_string()));
+            },
+            FieldType::TFloat => {
+                type_list.push(Value::String("number".to_string()));
+            },
+            FieldType::TNull => {
+                type_list.push(Value::String("null".to_string()));
+            },
+            _ => {
+                // defaults to JSON String
+                type_list.push(Value::String("string".to_string()));
+            },
+        }
+
+        // "null" type denotes optinal value
+        // to be compatible with "validate" command, has to come after the real type, and only if type is not NULL
+        if !required && *inferred_type != FieldType::TNull { 
+            type_list.push(Value::String("null".to_string()));
+        }
+
+        let mut field_map: Map<String, Value> = Map::new();
+        field_map.insert("type".to_string(), Value::Array(type_list));
+        properties_map.insert(header_string, Value::Object(field_map));
+    } // end for loop over headers
+
+    print!("\n");
+
+    let properties = Value::Object(properties_map);
+
+    let schema = json!({
+        "$schema": "https://json-schema.org/draft-07/schema",
+        "title": format!("JSON Schema for {}", input_path),
+        "description": "Inferred JSON Schema from QSV schema command",
+        "type": "object",
+        "properties": properties
+    });
+
+    let schema_pretty = serde_json::to_string_pretty(&schema).expect("prettify schema json");
+
+    println!("{}\n", &schema_pretty);
+
+    schema_output_file
+        .write_all(schema_pretty.as_bytes())
+        .expect("unable to write schema file");
 
     // flush error report; file gets closed automagically when out-of-scope
     schema_output_file.flush().unwrap();
