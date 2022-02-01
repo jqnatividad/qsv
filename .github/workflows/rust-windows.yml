@@ -23,6 +23,8 @@ jobs:
         python-version: '3.8'
     - name: Update Rust
       run: rustup update
+    - name: Setup Rust-cache
+      uses: Swatinem/rust-cache@v1
     - name: Build
       run: cargo build --verbose --locked --all-features
     - name: Run tests
