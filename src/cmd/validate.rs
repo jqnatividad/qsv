@@ -139,8 +139,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         #[allow(unused_assignments)]
         let mut record = csv::ByteRecord::new();
 
-        let mut row_index: u32 = 0;
-        let mut invalid_count: u32 = 0;
+        let mut row_index: u64 = 0;
+        let mut invalid_count: u64 = 0;
 
         while rdr.read_byte_record(&mut record)? {
             row_index = row_index.add(1);
@@ -287,6 +287,8 @@ fn to_json_instance(headers: &ByteRecord, record: &ByteRecord, schema: &Value) -
     // iterate over each CSV field and convert to JSON type
     let headers_iter = headers.iter().enumerate();
 
+    let null_type: Value = Value::String("null".to_string());
+
     for (i, header) in headers_iter {
         // convert csv header to string
         let header_string = std::str::from_utf8(header)?.to_string();
@@ -300,7 +302,32 @@ fn to_json_instance(headers: &ByteRecord, record: &ByteRecord, schema: &Value) -
 
         let field_type_def: &Value = field_def.get("type").unwrap_or(&Value::Null);
 
-        let json_type: &str = field_type_def.as_str().unwrap_or("string");
+        let json_type = match field_type_def {
+            Value::String(s) => {
+                s
+            },
+            Value::Array(vec) => {
+                // if can't find usable type info, defaults to "string"
+                let mut return_val = "string";
+
+                // grab the first entry that's not a "null", since it just means value is optional
+                for val in vec {
+                    if *val != null_type {
+                        return_val = val.as_str().expect("type info should be a JSON string");
+                    } else {
+                        // keep looking
+                        continue;
+                    }
+                };
+
+                return_val
+                
+            },
+            _ => {
+                // default to JSON String
+                "string"
+            }
+        };
 
         // dbg!(i, &header_string, &value_string, &json_type);
 
@@ -396,14 +423,26 @@ mod tests_for_csv_to_json_conversion {
                 "H": {
                     "type": ["boolean", "null"],
                 },
+                "I": {
+                    "type": ["string", "null"],
+                },
+                "J": {
+                    "type": ["number", "null"],
+                },
+                "K": {
+                    "type": ["null", "integer"],
+                },
+                "L": {
+                    "type": ["boolean", "null"],
+                },
             }
         })
     }
 
     #[test]
     fn test_to_json_instance() {
-        let csv = "A,B,C,D,E,F,G,H
-        hello,3.1415,300000000,true,,,,";
+        let csv = "A,B,C,D,E,F,G,H,I,J,K,L
+        hello,3.1415,300000000,true,,,,,hello,3.1415,300000000,true";
 
         let mut rdr = csv::Reader::from_reader(csv.as_bytes());
         let headers = rdr.byte_headers().unwrap().clone();
@@ -424,6 +463,10 @@ mod tests_for_csv_to_json_conversion {
                 "F": null,
                 "G": null,
                 "H": null,
+                "I": "hello",
+                "J": 3.1415,
+                "K": 300000000,
+                "L": true,
             })
         );
     }
