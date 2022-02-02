@@ -139,8 +139,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         #[allow(unused_assignments)]
         let mut record = csv::ByteRecord::new();
 
-        let mut row_index: u64 = 0;
-        let mut invalid_count: u64 = 0;
+        let mut row_index: u32 = 0;
+        let mut invalid_count: u32 = 0;
 
         while rdr.read_byte_record(&mut record)? {
             row_index = row_index.add(1);
@@ -321,7 +321,7 @@ fn to_json_instance(headers: &ByteRecord, record: &ByteRecord, schema: &Value) -
                 };
 
                 return_val
-                
+
             },
             _ => {
                 // default to JSON String
