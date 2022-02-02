@@ -109,7 +109,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             match inferred_type {
                 FieldType::TNull => {
                     // only count NULL once, so it won't dominate frequency table when value is optional
-                    if nullable_flags[col_index] == false {
+                    if !nullable_flags[col_index] {
                         frequency_tables[col_index].add(FieldType::TNull);
                     }
                     nullable_flags[col_index] = true;
@@ -167,14 +167,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         };
 
-        let required: bool = if *inferred_type != FieldType::TNull
+        let required: bool = *inferred_type != FieldType::TNull
             && *inferred_type != FieldType::TUnknown
-            && count as u32 >= row_index
-        {
-            true
-        } else {
-            false
-        };
+            && count as u32 >= row_index;
 
         debug!("{header_string} has most frequent type of {inferred_type:?}, required={required}");
 
