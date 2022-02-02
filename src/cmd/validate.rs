@@ -303,9 +303,7 @@ fn to_json_instance(headers: &ByteRecord, record: &ByteRecord, schema: &Value) -
         let field_type_def: &Value = field_def.get("type").unwrap_or(&Value::Null);
 
         let json_type = match field_type_def {
-            Value::String(s) => {
-                s
-            },
+            Value::String(s) => s,
             Value::Array(vec) => {
                 // if can't find usable type info, defaults to "string"
                 let mut return_val = "string";
@@ -318,11 +316,10 @@ fn to_json_instance(headers: &ByteRecord, record: &ByteRecord, schema: &Value) -
                         // keep looking
                         continue;
                     }
-                };
+                }
 
                 return_val
-
-            },
+            }
             _ => {
                 // default to JSON String
                 "string"

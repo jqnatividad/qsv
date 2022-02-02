@@ -1,13 +1,13 @@
+use crate::cmd::stats::FieldType;
 use crate::config::{Config, Delimiter};
 use crate::util;
 use crate::CliError;
 use crate::CliResult;
-use crate::cmd::stats::{FieldType};
 use csv::ByteRecord;
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::{debug, error};
 use serde::Deserialize;
-use serde_json::{Map, Value, json};
+use serde_json::{json, Map, Value};
 use stats::Frequencies;
 use std::{fs::File, io::Write, ops::Add};
 
@@ -65,7 +65,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let input_path: &str = &args.arg_input.unwrap_or_else(|| "stdin.csv".to_string());
 
     let mut schema_output_file = File::create(input_path.to_owned() + ".schema.json")
-            .expect("unable to create schema output file");
+        .expect("unable to create schema output file");
 
     // prep progress bar
     let progress = ProgressBar::new(0);
@@ -83,7 +83,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut row_index: u32 = 0;
 
     // array of frequency tables to track non-NULL type occurrences
-    let mut frequency_tables: Vec<_> = (0..(headers.len() as u32)).map(|_| Frequencies::<FieldType>::new()).collect();
+    let mut frequency_tables: Vec<_> = (0..(headers.len() as u32))
+        .map(|_| Frequencies::<FieldType>::new())
+        .collect();
     // array of boolean to track if column is NULLABLE
     let mut nullable_flags: Vec<bool> = vec![false; headers.len()];
 
@@ -96,7 +98,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // dbg!(&record);
 
         for col_index in 0..headers.len() {
-
             // since from_sample() parses byte slice to string, no need to do it here
             let value_slice: &[u8] = &record[col_index];
 
@@ -107,13 +108,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             // update frequency table for this column
             match inferred_type {
                 FieldType::TNull => {
-
                     // only count NULL once, so it won't dominate frequency table when value is optional
                     if nullable_flags[col_index] == false {
                         frequency_tables[col_index].add(FieldType::TNull);
                     }
                     nullable_flags[col_index] = true;
-
                 }
                 FieldType::TUnknown => {
                     // default to String
@@ -123,7 +122,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     frequency_tables[col_index].add(x);
                 }
             }
-
         }
 
         if !args.flag_quiet {
@@ -160,10 +158,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         };
 
         // convert csv header to string
-        let header_string: String = match std::str::from_utf8(header){
-            Ok(s) => {
-                s.to_string()
-            },
+        let header_string: String = match std::str::from_utf8(header) {
+            Ok(s) => s.to_string(),
             Err(e) => {
                 let msg = format!("Can't read header from column {i} as utf8: {e}");
                 error!("{msg}");
@@ -171,51 +167,51 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         };
 
-        let required: bool = if *inferred_type != FieldType::TNull && 
-                                *inferred_type != FieldType::TUnknown && 
-                                count as u32 >= row_index {
-                                    true
-                                } else {
-                                    false
-                                };
+        let required: bool = if *inferred_type != FieldType::TNull
+            && *inferred_type != FieldType::TUnknown
+            && count as u32 >= row_index
+        {
+            true
+        } else {
+            false
+        };
 
         debug!("{header_string} has most frequent type of {inferred_type:?}, required={required}");
 
         // use list since optional columns get appended a "null" type
         let mut type_list: Vec<Value> = Vec::new();
-        
+
         match inferred_type {
             FieldType::TUnicode => {
                 type_list.push(Value::String("string".to_string()));
-            },
+            }
             FieldType::TDate => {
                 type_list.push(Value::String("string".to_string()));
-            },
+            }
             FieldType::TInteger => {
                 type_list.push(Value::String("integer".to_string()));
-            },
+            }
             FieldType::TFloat => {
                 type_list.push(Value::String("number".to_string()));
-            },
+            }
             FieldType::TNull => {
                 type_list.push(Value::String("null".to_string()));
-            },
+            }
             _ => {
                 // defaults to JSON String
                 type_list.push(Value::String("string".to_string()));
-            },
+            }
         }
 
         // "null" type denotes optinal value
         // to be compatible with "validate" command, has to come after the real type, and only if type is not already JSON Null
-        if !required && *inferred_type != FieldType::TNull { 
+        if !required && *inferred_type != FieldType::TNull {
             type_list.push(Value::String("null".to_string()));
         }
 
         let mut field_map: Map<String, Value> = Map::new();
         field_map.insert("type".to_string(), Value::Array(type_list));
         properties_map.insert(header_string, Value::Object(field_map));
-
     } // end for loop over all columns
 
     // create final JSON object for output
@@ -238,5 +234,3 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     Ok(())
 }
-
-
