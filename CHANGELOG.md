@@ -6,6 +6,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.0] - 2022-01-31
+### Changed
+* Validate: bug fixes by @mhuang74 in https://github.com/jqnatividad/qsv/pull/151
+* Python 3.8 (current stable version) is now required for the `py` command. Changed from Python 3.7.
+* bumped jsonschema dependency to to 0.15.
+* always build/publish with `--locked` flag in CI/CD.
+* enclose environment variable values with double quotes when using `--envlist` option
+* use more captured identifiers in format strings.
+
+### Added
+* added `--helper` option to `py` command. This allows users to load a python user helper script as a module named `qsv_uh`. [Example](https://github.com/jqnatividad/qsv/blob/78046d922e9a530c0887f18065fc325049b58687/tests/test_py.rs#L93) 
+* added support for last N records in `slice` command by allowing negative values for the `slice --start` option.
+* added progress bar to `py` command.
+
 ## [0.30.1] - 2022-01-23
 ### Changed
 * convert more format strings to use captured identifiers

@@ -99,7 +99,7 @@ pub fn show_env_vars() {
             || OTHER_ENV_VARS.contains(&env_var.to_lowercase().as_str())
         {
             env_var_set = true;
-            println!("{}: {}", env_var, v.into_string().unwrap());
+            println!("{env_var}: {v:?}");
         }
     }
     if !env_var_set {
@@ -174,9 +174,8 @@ macro_rules! update_cache_info {
                     let misses = cache.cache_misses().expect("Cache misses required");
                     let hit_ratio = (hits as f64 / (hits + misses) as f64) * 100.0;
                     $progress.set_message(format!(
-                        " of {} records. Geocode cache hit ratio: {:.2}% - {} entries",
+                        " of {} records. Geocode cache hit ratio: {hit_ratio:.2}% - {} entries",
                         $progress.length().separate_with_commas(),
-                        hit_ratio,
                         cache_size.separate_with_commas(),
                     ));
                 }
@@ -352,7 +351,7 @@ impl FilenameTemplate {
     /// Generate a new filename using `unique_value` to replace the `"{}"`
     /// in the template.
     pub fn filename(&self, unique_value: &str) -> String {
-        format!("{}{}{}", &self.prefix, unique_value, &self.suffix)
+        format!("{}{unique_value}{}", &self.prefix, &self.suffix)
     }
 
     /// Create a new, writable file in directory `path` with a filename
@@ -468,7 +467,7 @@ pub fn qsv_check_for_update(bin_name: &str) {
             info!("{update_status}");
         };
     } else {
-        eprintln!("Up to date... no self-update required.");
-        info!("Up to date... no self-update required.");
+        eprintln!("Up to date ({curr_version})... no update required.");
+        info!("Up to date ({curr_version})... no update required.");
     };
 }

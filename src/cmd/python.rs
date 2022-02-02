@@ -1,3 +1,5 @@
+use std::fs;
+
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 
@@ -5,6 +7,7 @@ use crate::config::{Config, Delimiter};
 use crate::util;
 use crate::CliError;
 use crate::CliResult;
+use indicatif::{ProgressBar, ProgressDrawTarget};
 use serde::Deserialize;
 
 const HELPERS: &str = r#"
@@ -71,13 +74,21 @@ Some usage examples:
   Filter some lines based on numerical filtering
   $ qsv py filter "int(a) > 45"
 
+  Load a helper file with function to compute the Fibonacci sequence of the column "num_col"
+  $ qsv py map --helper-file fibonacci.py fib qsv_uh.fibonacci(num_col) data.csv
+
 Usage:
     qsv py map [options] -n <script> [<input>]
     qsv py map [options] <new-column> <script> [<input>]
+    qsv py map --helper <file> [options] <new-column> <script> [<input>]
     qsv py filter [options] <script> [<input>]
     qsv py map --help
     qsv py filter --help
     qsv py --help
+
+py options:
+    -f, --helper <file>    File containing Python code that's loaded
+                           into the qsv_uh Python module.
 
 Common options:
     -h, --help             Display this message
@@ -88,6 +99,7 @@ Common options:
                            appear as the header row in the output.
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
+    -q, --quiet            Do not display progress bar.
 "#;
 
 #[derive(Deserialize)]
@@ -96,10 +108,12 @@ struct Args {
     cmd_filter: bool,
     arg_new_column: Option<String>,
     arg_script: String,
+    flag_helper: Option<String>,
     arg_input: Option<String>,
     flag_output: Option<String>,
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
+    flag_quiet: bool,
 }
 
 impl From<PyErr> for CliError {
@@ -123,6 +137,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let helpers = PyModule::from_code(py, HELPERS, "qsv_helpers.py", "qsv_helpers")?;
     let globals = PyDict::new(py);
     let locals = PyDict::new(py);
+
+    let mut helper_text = String::new();
+    if let Some(helper_file) = args.flag_helper {
+        helper_text = fs::read_to_string(helper_file)?;
+    }
+    let user_helpers = PyModule::from_code(py, &helper_text, "qsv_user_helpers.py", "qsv_uh")?;
+    globals.set_item("qsv_uh", user_helpers)?;
 
     // Global imports
     let builtins = PyModule::import(py, "builtins")?;
@@ -159,9 +180,21 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     }
 
+    let progress = ProgressBar::new(0);
+    if !args.flag_quiet {
+        let record_count = util::count_rows(&rconfig);
+        util::prep_progress(&progress, record_count);
+    } else {
+        progress.set_draw_target(ProgressDrawTarget::hidden());
+    }
+
     let mut record = csv::StringRecord::new();
 
     while rdr.read_record(&mut record)? {
+        if !args.flag_quiet {
+            progress.inc(1);
+        }
+
         // Initializing locals
         let mut row_data: Vec<&str> = Vec::with_capacity(headers_len);
 
@@ -194,6 +227,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 wtr.write_record(&record)?;
             }
         }
+    }
+    if !args.flag_quiet {
+        util::finish_progress(&progress);
     }
 
     Ok(wtr.flush()?)

@@ -1,6 +1,6 @@
 [package]
 name          = "qsv"
-version       = "0.30.1"                                                  #:version
+version       = "0.31.0"                                                  #:version
 authors       = ["Joel Natividad <joel@datHere.com>"]
 description   = "A high performance CSV command line toolkit."
 documentation = "https://github.com/jqnatividad/qsv"
@@ -14,6 +14,7 @@ autotests     = false
 edition       = "2021"
 rust-version  = "1.58.1"
 autobins      = false
+include = ["src/**/*", "LICENSE-MIT", "README.md", "CHANGELOG.md"]
 
 [[bin]]
 name    = "qsv"
@@ -31,6 +32,7 @@ path    = "src/mainlite.rs"
 
 [[test]]
 name = "tests"
+path = "tests/tests.rs"
 
 [profile.release]
 codegen-units = 1
@@ -61,9 +63,9 @@ governor = "0.4"
 hlua = { version = "0.4", optional = true }
 indicatif = "0.16"
 itertools = "0.10"
-jsonschema = { version = "0.14", features = [
-    "reqwest",
-    "reqwest-rustls-tls",
+jsonschema = { version = "0.15", features = [
+    "resolve-file",
+    "resolve-http",
 ], default-features = false }
 jql = { version = "3", default-features = false }
 log = "0.4"
