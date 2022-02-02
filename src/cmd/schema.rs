@@ -9,7 +9,7 @@ use log::{debug, error};
 use serde::Deserialize;
 use serde_json::{Map, Value, json};
 use stats::Frequencies;
-use std::{fs::File, io::Write, ops::Add};
+use std::{fs::File, path::Path, io::Write, ops::Add};
 
 macro_rules! fail {
     ($mesg:expr) => {
@@ -62,7 +62,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let headers = rdr.byte_headers()?.clone();
 
-    let input_path: &str = &args.arg_input.unwrap_or_else(|| "stdin.csv".to_string());
+    let input_path = match &args.arg_input {
+        Some(path) => path,
+        None => "stdin.csv"
+    };
+    let input_filename: &str = match &args.arg_input {
+        Some(path) => Path::new(path).file_name().unwrap().to_str().unwrap(),
+        None => "stdin.csv"
+    };
 
     let mut schema_output_file = File::create(input_path.to_owned() + ".schema.json")
             .expect("unable to create schema output file");
@@ -214,6 +221,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         let mut field_map: Map<String, Value> = Map::new();
         field_map.insert("type".to_string(), Value::Array(type_list));
+        let desc = format!("{header_string} column from {input_filename}");
+        field_map.insert("description".to_string(), Value::String(desc));
         properties_map.insert(header_string, Value::Object(field_map));
 
     } // end for loop over all columns
@@ -221,7 +230,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // create final JSON object for output
     let schema = json!({
         "$schema": "https://json-schema.org/draft-07/schema",
-        "title": format!("JSON Schema for {input_path}"),
+        "title": format!("JSON Schema for {input_filename}"),
         "description": "Inferred JSON Schema from QSV schema command",
         "type": "object",
         "properties": Value::Object(properties_map)
