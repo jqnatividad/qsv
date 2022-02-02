@@ -55,7 +55,7 @@ Available commands
 | [replace](/src/cmd/replace.rs#L12) | Replace CSV data using a regex.  |
 | [reverse](/src/cmd/reverse.rs#L7)[^3] | Reverse order of rows in a CSV. Unlike the `sort --reverse` command, it preserves the order of rows with the same key.  |
 | [sample](/src/cmd/sample.rs#L12)[^2] | Randomly draw rows (with optional seed) from a CSV using [reservoir sampling](https://en.wikipedia.org/wiki/Reservoir_sampling) (i.e., use memory proportional to the size of the sample).  |
-| [schema](/src/cmd/schema.rs#L21)[^2] | Infer schema from CSV data and output in JSON Schema format.  See `validate` command. **(WIP)** |
+| [schema](/src/cmd/schema.rs#L21) | Infer schema from CSV data and output in JSON Schema format.  See `validate` command. **(WIP)** |
 | [search](/src/cmd/search.rs#L11) | Run a regex over a CSV. Applies the regex to each field individually & shows only matching rows.  |
 | [searchset](/src/cmd/searchset.rs#L15) | Run multiple regexes over a CSV in a single pass. Applies the regexes to each field individually & shows only matching rows.  |
 | [select](/src/cmd/select.rs#L8) | Select, re-order, duplicate or drop columns.  |
