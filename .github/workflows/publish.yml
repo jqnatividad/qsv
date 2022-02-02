@@ -134,6 +134,9 @@ jobs:
       with:
         submodules: recursive
         ref: ${{ needs.analyze-tags.outputs.previous-tag }}
+    - uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
     - name: build prep for aarch64-apple-darwin
       if: ${{ matrix.job.build-prep }}
       run: |
@@ -148,7 +151,7 @@ jobs:
         command: build
         use-cross: ${{ matrix.job.use-cross }}
         toolchain: ${{ matrix.rust }}
-        args: --release --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }}
+        args: --release --locked --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }}
     - name: strip binary on *nix environments
       if: ${{ matrix.job.strip }}
       run: |

@@ -175,8 +175,8 @@ fn envlist() {
     let got_envlist: String = wrk.stdout(&mut cmd);
     assert_eq!(
         got_envlist,
-        r#"MIMALLOC_ENVVAR: 1
-QSV_ENVVAR: #"#
+        r##"MIMALLOC_ENVVAR: "1"
+QSV_ENVVAR: "#""##
     );
     // unset it so we don't have side effects outside tests
     // as these env vars persists

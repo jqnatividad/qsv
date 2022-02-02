@@ -79,7 +79,7 @@ fn setup(name: &str, headers: bool, use_index: bool) -> (Workdir, process::Comma
 
 fn test_slice(
     name: &str,
-    start: Option<usize>,
+    start: Option<isize>,
     end: Option<usize>,
     expected: &[&str],
     headers: bool,
@@ -93,7 +93,12 @@ fn test_slice(
     if let Some(end) = end {
         if as_len {
             let start = start.unwrap_or(0);
-            cmd.arg("--len").arg(&(end - start).to_string());
+            if start < 0 {
+                cmd.arg("--len").arg(&end.to_string());
+            } else {
+                cmd.arg("--len")
+                    .arg(&(end - start.abs() as usize).to_string());
+            }
         } else {
             cmd.arg("--end").arg(&end.to_string());
         }
@@ -133,6 +138,38 @@ slice_tests!(slice_simple_2, Some(1), Some(3), &["b", "c"]);
 slice_tests!(slice_no_start, None, Some(1), &["a"]);
 slice_tests!(slice_no_end, Some(3), None, &["d", "e"]);
 slice_tests!(slice_all, None, None, &["a", "b", "c", "d", "e"]);
+slice_tests!(slice_negative_start, Some(-2), None, &["d", "e"]);
+
+#[test]
+fn slice_negative_with_len() {
+    test_slice(
+        "slice_negative_start_headers_index_len",
+        Some(-4),
+        Some(2),
+        &["b", "c"],
+        true,
+        true,
+        true,
+    );
+    test_slice(
+        "slice_negative_start_no_headers_index_len",
+        Some(-4),
+        Some(2),
+        &["b", "c"],
+        false,
+        true,
+        true,
+    );
+    test_slice(
+        "slice_negative_start_headers_no_index_len",
+        Some(-4),
+        Some(2),
+        &["b", "c"],
+        true,
+        false,
+        true,
+    );
+}
 
 #[test]
 fn slice_index() {

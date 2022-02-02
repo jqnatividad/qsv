@@ -16,6 +16,7 @@ CSV files. Commands are simple, fast and composable.
 * [Whirlwind Tour](docs/whirlwind_tour.md#a-whirlwind-tour)
 * [Cookbook](https://github.com/jqnatividad/qsv/wiki)
 * [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ)
+* [Changelog](https://github.com/jqnatividad/qsv/blob/master/CHANGELOG.md#changelog)
 * [Benchmarks](docs/BENCHMARKS.md)
 * [Sponsor](#sponsor)
 
@@ -49,7 +50,7 @@ Available commands
 | [lua](/src/cmd/lua.rs#L15)[^1] | Execute a [Lua](https://www.lua.org/about.html) script over CSV lines to transform, aggregate or filter them.  |
 | [partition](/src/cmd/partition.rs#L16) | Partition a CSV based on a column value. |
 | [pseudo](/src/cmd/pseudo.rs#L10) | Pseudonymise the value of the given column by replacing them with an incremental identifier.  |
-| [py](/src/cmd/python.rs#L45)[^1] | Evaluate a Python expression over CSV lines to transform, aggregate or filter them. Python's [f-strings](https://www.freecodecamp.org/news/python-f-strings-tutorial-how-to-use-f-strings-for-string-formatting/) is particularly useful for extended formatting (Python 3.7+ required).  |
+| [py](/src/cmd/python.rs#L45)[^1] | Evaluate a Python expression over CSV lines to transform, aggregate or filter them. Python's [f-strings](https://www.freecodecamp.org/news/python-f-strings-tutorial-how-to-use-f-strings-for-string-formatting/) is particularly useful for extended formatting (Python 3.8+ required).  |
 | [rename](/src/cmd/rename.rs#L7) |  Rename the columns of a CSV efficiently.  |
 | [replace](/src/cmd/replace.rs#L12) | Replace CSV data using a regex.  |
 | [reverse](/src/cmd/reverse.rs#L7)[^3] | Reverse order of rows in a CSV. Unlike the `sort --reverse` command, it preserves the order of rows with the same key.  |
@@ -90,7 +91,7 @@ If you encounter compilation errors, ensure you're using the exact
 version of the dependencies qsv was built with by issuing:
 
 ```bash
-cargo install qsv --path . --frozen
+cargo install qsv --path . --locked
 ```
 
 Compiling from this repository also works similarly:
@@ -100,7 +101,7 @@ git clone git://github.com/jqnatividad/qsv
 cd qsv
 cargo build --release
 # or if you encounter compilation errors
-cargo build --release --frozen
+cargo build --release --locked
 ```
 
 The compiled binary will end up in `./target/release/qsv`.
@@ -119,7 +120,7 @@ cargo build --release --all-features
 ```
 
 [^5]: The `foreach` feature is not available on Windows. The `python` feature is not enabled on cross-compiled pre-built binaries as we don't have
-access to a native python interpreter for those platforms (aarch64, i686, and arm) on GitHub's action runners. Compile natively on those platforms with Python 3.7+ installed, if you want to enable the `python` feature.
+access to a native python interpreter for those platforms (aarch64, i686, and arm) on GitHub's action runners. Compile natively on those platforms with Python 3.8+ installed, if you want to enable the `python` feature.
 
 ### Minimum Supported Rust Version
 Building qsv requires Rust version 1.58.1.
@@ -188,7 +189,7 @@ Feature Flags
 The following "power-user" commands can be abused and present "foot-shooting" scenarios.
 * `lua` - enable `lua` command.
 * `foreach` - enable `foreach` command (not valid for Windows).
-* `python` - enable `py` command (requires Python 3.7+). Note that qsv will automatically use the currently activated python version when run in a virtual environment.
+* `python` - enable `py` command (requires Python 3.8+). Note that qsv will automatically use the currently activated python version when run in a virtual environment.
 
 > **NOTE:** `qsvlite`, as the name implies, always has **non-default features disabled**. `qsv` can be built with any combination of the above features  using the cargo `--features`, `--all-features` & `--no-default-features` flags. The pre-built `qsv` binaries has **all applicable features enabled for the target platform**[^5].
 

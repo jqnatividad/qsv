@@ -99,7 +99,7 @@ pub fn show_env_vars() {
             || OTHER_ENV_VARS.contains(&env_var.to_lowercase().as_str())
         {
             env_var_set = true;
-            println!("{}: {}", env_var, v.into_string().unwrap());
+            println!("{env_var}: {v:?}");
         }
     }
     if !env_var_set {
@@ -174,9 +174,8 @@ macro_rules! update_cache_info {
                     let misses = cache.cache_misses().expect("Cache misses required");
                     let hit_ratio = (hits as f64 / (hits + misses) as f64) * 100.0;
                     $progress.set_message(format!(
-                        " of {} records. Geocode cache hit ratio: {:.2}% - {} entries",
+                        " of {} records. Geocode cache hit ratio: {hit_ratio:.2}% - {} entries",
                         $progress.length().separate_with_commas(),
-                        hit_ratio,
                         cache_size.separate_with_commas(),
                     ));
                 }
@@ -352,7 +351,7 @@ impl FilenameTemplate {
     /// Generate a new filename using `unique_value` to replace the `"{}"`
     /// in the template.
     pub fn filename(&self, unique_value: &str) -> String {
-        format!("{}{}{}", &self.prefix, unique_value, &self.suffix)
+        format!("{}{unique_value}{}", &self.prefix, &self.suffix)
     }
 
     /// Create a new, writable file in directory `path` with a filename
@@ -422,7 +421,7 @@ pub fn init_logger() {
         .unwrap();
 }
 
-pub fn qsv_check_for_update() {
+pub fn qsv_check_for_update(bin_name: &str) {
     use self_update::cargo_crate_version;
 
     if env::var("QSV_NO_UPDATE").is_ok() {
@@ -446,11 +445,10 @@ pub fn qsv_check_for_update() {
 
     if latest_release > &curr_version.to_string() {
         eprintln!("Update {latest_release} available. Current version is {curr_version}.",);
-        let bin_full_path = format!("{:?}", std::env::current_exe().unwrap());
         let update_job = self_update::backends::github::Update::configure()
             .repo_owner("jqnatividad")
             .repo_name("qsv")
-            .bin_name(&bin_full_path)
+            .bin_name(bin_name)
             .show_download_progress(true)
             .show_output(false)
             .no_confirm(false)
@@ -462,14 +460,14 @@ pub fn qsv_check_for_update() {
         if let Ok(status) = update_result {
             let update_status = format!(
                 "Update successful for {}: `{}`!",
-                bin_full_path,
+                bin_name,
                 status.version()
             );
             eprintln!("{update_status}");
             info!("{update_status}");
         };
     } else {
-        eprintln!("Up to date... no self-update required.");
-        info!("Up to date... no self-update required.");
+        eprintln!("Up to date ({curr_version})... no update required.");
+        info!("Up to date ({curr_version})... no update required.");
     };
 }

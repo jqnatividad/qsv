@@ -72,7 +72,7 @@ impl fmt::Debug for SelectColumns {
             let strs: Vec<_> = self
                 .selectors
                 .iter()
-                .map(|sel| format!("{:?}", sel))
+                .map(|sel| format!("{sel:?}"))
                 .collect();
             write!(f, "{}", strs.join(", "))
         }
@@ -110,7 +110,7 @@ impl SelectorParser {
             let re: String = self.chars[1..(self.chars.len() - 1)].iter().collect();
             let regex = match Regex::new(&re) {
                 Ok(r) => r,
-                Err(_) => return Err(format!("Invalid regex: {}", re)),
+                Err(_) => return Err(format!("Invalid regex: {re}")),
             };
             return Ok(vec![Selector::Regex(regex)]);
         }
@@ -227,7 +227,7 @@ impl SelectorParser {
             }
         }
         FromStr::from_str(&idx)
-            .map_err(|err| format!("Could not convert '{}' to an integer: {}", idx, err))
+            .map_err(|err| format!("Could not convert '{idx}' to an integer: {err}"))
     }
 
     fn cur(&self) -> Option<char> {
@@ -298,9 +298,8 @@ impl Selector {
                     .collect();
                 if inds.is_empty() {
                     return Err(format!(
-                        "Selector regex '{}' does not match \
-                                        any columns in the CSV header.",
-                        re
+                        "Selector regex '{re}' does not match \
+                                        any columns in the CSV header."
                     ));
                 }
                 Ok(inds)
@@ -324,10 +323,9 @@ impl OneSelector {
                 }
                 if i < 1 || i > first_record.len() {
                     Err(format!(
-                        "Selector index {} is out of \
+                        "Selector index {i} is out of \
                                  bounds. Index must be >= 1 \
                                  and <= {}.",
-                        i,
                         first_record.len()
                     ))
                 } else {
@@ -338,9 +336,8 @@ impl OneSelector {
             OneSelector::IndexedName(ref s, sidx) => {
                 if !use_names {
                     return Err(format!(
-                        "Cannot use names ('{}') in selection \
-                                        with --no-headers set.",
-                        s
+                        "Cannot use names ('{s}') in selection \
+                                        with --no-headers set."
                     ));
                 }
                 let mut num_found = 0;
@@ -354,17 +351,14 @@ impl OneSelector {
                 }
                 if num_found == 0 {
                     Err(format!(
-                        "Selector name '{}' does not exist \
+                        "Selector name '{s}' does not exist \
                                  as a named header in the given CSV \
-                                 data.",
-                        s
+                                 data."
                     ))
                 } else {
                     Err(format!(
-                        "Selector index '{}' for name '{}' is \
+                        "Selector index '{sidx}' for name '{s}' is \
                                  out of bounds. Must be >= 0 and <= {}.",
-                        sidx,
-                        s,
                         num_found - 1
                     ))
                 }
@@ -377,7 +371,7 @@ impl fmt::Debug for Selector {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             Selector::One(ref sel) => sel.fmt(f),
-            Selector::Range(ref s, ref e) => write!(f, "Range({:?}, {:?})", s, e),
+            Selector::Range(ref s, ref e) => write!(f, "Range({s:?}, {e:?})"),
             Selector::Regex(ref re) => re.fmt(f),
         }
     }
@@ -388,8 +382,8 @@ impl fmt::Debug for OneSelector {
         match *self {
             OneSelector::Start => write!(f, "Start"),
             OneSelector::End => write!(f, "End"),
-            OneSelector::Index(idx) => write!(f, "Index({})", idx),
-            OneSelector::IndexedName(ref s, idx) => write!(f, "IndexedName({}[{}])", s, idx),
+            OneSelector::Index(idx) => write!(f, "Index({idx})"),
+            OneSelector::IndexedName(ref s, idx) => write!(f, "IndexedName({s}[{idx}])"),
         }
     }
 }
