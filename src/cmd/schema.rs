@@ -18,7 +18,7 @@ macro_rules! fail {
 }
 
 static USAGE: &str = "
-Infer schmea from CSV data and output in JSON Schema format.
+Infer schema from CSV data and output in JSON Schema format.
 
 Example output file from `mydata.csv`. If piped from stdin, then filename is `stdin.csv`.
 
