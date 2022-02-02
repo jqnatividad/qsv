@@ -20,7 +20,7 @@ CSV files. Commands are simple, fast and composable.
 * [Benchmarks](docs/BENCHMARKS.md)
 * [Sponsor](#sponsor)
 
-> **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's release](https://github.com/BurntSushi/xsv/issues/267). It has numerous new features & 19 additional commands (for a total of 39). See [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ) for more details.
+> **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's release](https://github.com/BurntSushi/xsv/issues/267). It has numerous new features & 20 additional commands (for a total of 40). See [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ) for more details.
 
 Available commands
 ------------------
@@ -55,6 +55,7 @@ Available commands
 | [replace](/src/cmd/replace.rs#L12) | Replace CSV data using a regex.  |
 | [reverse](/src/cmd/reverse.rs#L7)[^3] | Reverse order of rows in a CSV. Unlike the `sort --reverse` command, it preserves the order of rows with the same key.  |
 | [sample](/src/cmd/sample.rs#L12)[^2] | Randomly draw rows (with optional seed) from a CSV using [reservoir sampling](https://en.wikipedia.org/wiki/Reservoir_sampling) (i.e., use memory proportional to the size of the sample).  |
+| [schema](/src/cmd/schema.rs#L21)[^2] | Infer schema from CSV data and output in JSON Schema format.  See `validate` command. **(WIP)** |
 | [search](/src/cmd/search.rs#L11) | Run a regex over a CSV. Applies the regex to each field individually & shows only matching rows.  |
 | [searchset](/src/cmd/searchset.rs#L15) | Run multiple regexes over a CSV in a single pass. Applies the regexes to each field individually & shows only matching rows.  |
 | [select](/src/cmd/select.rs#L8) | Select, re-order, duplicate or drop columns.  |
@@ -64,7 +65,7 @@ Available commands
 | [stats](/src/cmd/stats.rs#L24)[^2][^3][^4] | Infer data type & compute descriptive statistics for each column in a CSV (sum, min/max, min/max length, mean, stddev, variance, quartiles, IQR, lower/upper fences, skew, median, mode, cardinality & nullcount)  |
 | [table](/src/cmd/table.rs#L12)[^3] | Show aligned output of a CSV using [elastic tabstops](https://github.com/BurntSushi/tabwriter).  |
 | [transpose](/src/cmd/transpose.rs#L9)[^3] | Transpose rows/columns of a CSV.  |
-| [validate](/src/cmd/validate.rs#L21) | Validate CSV data with JSON Schema. |
+| [validate](/src/cmd/validate.rs#L21) | Validate CSV data with JSON Schema. See `schema` command. |
 
 [^1]: enabled by optional feature flag. Not available on `qsvlite`.   
 [^2]: uses an index when available. `join` always uses indices.   
