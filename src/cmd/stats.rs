@@ -18,7 +18,7 @@ use crate::CliResult;
 use dateparser::DateTimeUtc;
 use serde::Deserialize;
 
-use self::FieldType::{TDate, TFloat, TInteger, TNull, TUnicode, TUnknown};
+use self::FieldType::{TDate, TFloat, TInteger, TNull, TString, TUnknown};
 
 static USAGE: &str = "
 Computes basic statistics on CSV data.
@@ -30,7 +30,7 @@ statistics are reported for *every* column in the CSV data: sum, min/max values,
 min/max length, mean, stddev & variance. The default set of statistics corresponds to
 statistics that can be computed efficiently on a stream of data (i.e., constant memory).
 
-The data type of each column is also inferred (Unknown, NULL, Integer, Unicode,
+The data type of each column is also inferred (Unknown, NULL, Integer, String,
 Float and Date). The date formats recognized can be found at
 https://docs.rs/dateparser/0.1.6/dateparser/#accepted-date-formats.
 
@@ -370,7 +370,7 @@ impl Stats {
                     };
                 }
             }
-            TUnicode => {}
+            TString => {}
             TFloat | TInteger => {
                 if sample_type.is_null() {
                     if self.which.include_nulls {
@@ -534,7 +534,7 @@ impl Commute for Stats {
 pub enum FieldType {
     TUnknown,
     TNull,
-    TUnicode,
+    TString,
     TFloat,
     TInteger,
     TDate,
@@ -558,7 +558,7 @@ impl FieldType {
         if string.parse::<DateTimeUtc>().is_ok() {
             return TDate;
         }
-        TUnicode
+        TString
     }
 
     fn is_number(&self) -> bool {
@@ -573,7 +573,7 @@ impl FieldType {
 impl Commute for FieldType {
     fn merge(&mut self, other: FieldType) {
         *self = match (*self, other) {
-            (TUnicode, TUnicode) => TUnicode,
+            (TString, TString) => TString,
             (TFloat, TFloat) => TFloat,
             (TInteger, TInteger) => TInteger,
             (TDate, TDate) => TDate,
@@ -586,10 +586,10 @@ impl Commute for FieldType {
             // when using unixtime format can degrade to int/floats.
             (TInteger, TDate) | (TDate, TInteger) => TInteger,
             (TFloat, TDate) | (TDate, TFloat) => TFloat,
-            // Numbers/dates can degrade to Unicode strings.
-            (TUnicode, TFloat) | (TFloat, TUnicode) => TUnicode,
-            (TUnicode, TInteger) | (TInteger, TUnicode) => TUnicode,
-            (TUnicode, TDate) | (TDate, TUnicode) => TUnicode,
+            // Numbers/dates can degrade to unicode Strings.
+            (TString, TFloat) | (TFloat, TString) => TString,
+            (TString, TInteger) | (TInteger, TString) => TString,
+            (TString, TDate) | (TDate, TString) => TString,
         };
     }
 }
@@ -608,7 +608,7 @@ impl fmt::Display for FieldType {
         match *self {
             TUnknown => write!(f, "Unknown"),
             TNull => write!(f, "NULL"),
-            TUnicode => write!(f, "Unicode"),
+            TString => write!(f, "String"),
             TFloat => write!(f, "Float"),
             TInteger => write!(f, "Integer"),
             TDate => write!(f, "Date"),
@@ -621,7 +621,7 @@ impl fmt::Debug for FieldType {
         match *self {
             TUnknown => write!(f, "Unknown"),
             TNull => write!(f, "NULL"),
-            TUnicode => write!(f, "Unicode"),
+            TString => write!(f, "String"),
             TFloat => write!(f, "Float"),
             TInteger => write!(f, "Integer"),
             TDate => write!(f, "Date"),
@@ -668,7 +668,7 @@ impl TypedSum {
 
     fn show(&self, typ: FieldType) -> Option<String> {
         match typ {
-            TNull | TUnicode | TUnknown | TDate => None,
+            TNull | TString | TUnknown | TDate => None,
             TInteger => Some(self.integer.to_string()),
             TFloat => Some(self.float.unwrap_or(0.0).to_string()),
         }
@@ -705,7 +705,7 @@ impl TypedMinMax {
         }
         self.strings.add(sample.to_vec());
         match typ {
-            TUnicode | TUnknown | TNull => {}
+            TString | TUnknown | TNull => {}
             TFloat => {
                 let n = str::from_utf8(&*sample)
                     .ok()
@@ -743,7 +743,7 @@ impl TypedMinMax {
     fn show(&self, typ: FieldType) -> Option<(String, String)> {
         match typ {
             TNull => None,
-            TUnicode | TUnknown => match (self.strings.min(), self.strings.max()) {
+            TString | TUnknown => match (self.strings.min(), self.strings.max()) {
                 (Some(min), Some(max)) => {
                     let min = String::from_utf8_lossy(&**min).to_string();
                     let max = String::from_utf8_lossy(&**max).to_string();

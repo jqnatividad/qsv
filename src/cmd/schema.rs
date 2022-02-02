@@ -116,7 +116,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 }
                 FieldType::TUnknown => {
                     // default to String
-                    frequency_tables[col_index].add(FieldType::TUnicode);
+                    frequency_tables[col_index].add(FieldType::TString);
                 }
                 x => {
                     frequency_tables[col_index].add(x);
@@ -177,7 +177,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let mut type_list: Vec<Value> = Vec::new();
 
         match inferred_type {
-            FieldType::TUnicode => {
+            FieldType::TString => {
                 type_list.push(Value::String("string".to_string()));
             }
             FieldType::TDate => {
