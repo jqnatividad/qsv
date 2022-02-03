@@ -4,7 +4,6 @@ use crate::CliError;
 use crate::CliResult;
 use crate::cmd::stats::{FieldType};
 use csv::ByteRecord;
-use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::{debug, error};
 use serde::Deserialize;
 use serde_json::{Map, Value, json};
@@ -27,8 +26,8 @@ Example output file from `mydata.csv`. If piped from stdin, then filename is `st
 Usage:
     qsv schema [options] [<input>]
 
-schema options:
-
+Schema options:
+    --add-constraints-from-stats   Include constraints based on CSV stats (min/max/cardinality, etc)
 
 Common options:
     -h, --help                 Display this message
@@ -38,14 +37,13 @@ Common options:
                                appear as the header row in the output.
     -d, --delimiter <arg>      The field delimiter for reading CSV data.
                                Must be a single character. [default: ,]
-    -q, --quiet                Don't show progress bars.
 ";
 
 #[derive(Deserialize, Debug)]
 struct Args {
+    flag_add_constraints_from_stats: bool,
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
-    flag_quiet: bool,
     arg_input: Option<String>,
 }
 
@@ -57,6 +55,37 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers);
+
+    if args.flag_add_constraints_from_stats {
+
+        let stats_args = crate::cmd::stats::Args {
+            arg_input: args.arg_input.clone(),
+            flag_select: crate::select::SelectColumns::parse("").unwrap(),
+            flag_everything: false,
+            flag_mode: false,
+            flag_cardinality: true,
+            flag_median: false,
+            flag_quartiles: false,
+            flag_nulls: false,
+            flag_nullcount: false,
+            flag_jobs: 2,
+            flag_output: None,
+            flag_no_headers: args.flag_no_headers,
+            flag_delimiter: args.flag_delimiter
+        };
+
+        let (stats_headers, stats) = match stats_args.rconfig().indexed()? {
+            None => stats_args.sequential_stats(),
+            Some(idx) => {
+                stats_args.parallel_stats(idx)
+            }
+        }?;
+
+        dbg!(stats_headers);
+        for mut stat in stats {
+            dbg!(stat.to_record());
+        };
+    }
 
     let mut rdr = rconfig.reader()?;
 
@@ -71,17 +100,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         None => "stdin.csv"
     };
 
-    let mut schema_output_file = File::create(input_path.to_owned() + ".schema.json")
+    let schema_output_filename = input_path.to_owned() + ".schema.json";
+    let mut schema_output_file = File::create(&schema_output_filename)
             .expect("unable to create schema output file");
-
-    // prep progress bar
-    let progress = ProgressBar::new(0);
-    if !args.flag_quiet {
-        let record_count = util::count_rows(&rconfig.flexible(true));
-        util::prep_progress(&progress, record_count);
-    } else {
-        progress.set_draw_target(ProgressDrawTarget::hidden());
-    }
 
     // amortize memory allocation by reusing record
     #[allow(unused_assignments)]
@@ -133,20 +154,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         }
 
-        if !args.flag_quiet {
-            progress.inc(1);
-        }
     } // end main while loop over csv records
-
-    use thousands::Separable;
-
-    if !args.flag_quiet {
-        progress.set_message(format!(
-            " processed {} records.",
-            progress.length().separate_with_commas()
-        ));
-        util::finish_progress(&progress);
-    }
 
     debug!("freq tables: {frequency_tables:?}");
 
@@ -244,6 +252,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // flush error report; file gets closed automagically when out-of-scope
     schema_output_file.flush().unwrap();
+
+    println!("Schema written to {schema_output_filename}");
 
     Ok(())
 }
