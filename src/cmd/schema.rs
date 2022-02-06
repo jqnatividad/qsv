@@ -223,7 +223,7 @@ fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<S
         let mut type_list: Vec<Value> = Vec::new();
 
         match col_type {
-            "Unicode" => {
+            "String" => {
                 type_list.push(Value::String("string".to_string()));
 
                 if let Some(min_length_str) = stats_record.get(stats_col_index_min_length) {
@@ -269,6 +269,7 @@ fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<S
                 type_list.push(Value::String("null".to_string()));
             },
             _ => {
+                warn!("Stats gave unexpected column type '{col_type}', default to JSON String.");
                 // defaults to JSON String
                 type_list.push(Value::String("string".to_string()));
             },
