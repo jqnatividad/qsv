@@ -29,7 +29,7 @@ Usage:
     qsv schema [options] [<input>]
 
 Schema options:
-    --value-constraints        Add value constraints based on CSV data (enum, min, max, minLength, MaxLength, multipleOf)
+    --value-constraints        Add value constraints based on CSV data (enum, min, max, minLength, MaxLength)
     --enum-threshold NUM       Cardinality threshold for adding enum constraints [default: 30]
     --pattern-columns <args>   Select columns to add pattern constraints [default: none]
 
