@@ -16,7 +16,7 @@ pub struct SelectColumns {
 }
 
 impl SelectColumns {
-    fn parse(mut s: &str) -> Result<SelectColumns, String> {
+    pub fn parse(mut s: &str) -> Result<SelectColumns, String> {
         let is_empty = s.is_empty();
         let bytes = s.as_bytes();
         let invert = if !is_empty && bytes[0] == b'!' {

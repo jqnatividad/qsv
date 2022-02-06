@@ -66,6 +66,7 @@ mod test_rename;
 mod test_replace;
 mod test_reverse;
 mod test_sample;
+mod test_schema;
 mod test_search;
 mod test_searchset;
 mod test_select;
