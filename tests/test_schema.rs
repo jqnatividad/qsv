@@ -1,11 +1,10 @@
+use crate::test_validate::ADUR_CSV;
 use crate::workdir::Workdir;
 use assert_json_diff::assert_json_eq;
 use serde_json::Value;
-use crate::test_validate::ADUR_CSV;
 
 #[test]
 fn generate_schema_no_value_constraints() {
-
     let csv = ADUR_CSV;
 
     let expected_schema = r#"
@@ -264,22 +263,18 @@ fn generate_schema_no_value_constraints() {
     assert!(output_schema_string.len() > 0);
     let output_schema_json: Value = serde_json::from_str(&output_schema_string).unwrap();
 
-    // make sure it's a valid JSON Schema by compiling with jsonschema library 
-    jsonschema::JSONSchema::options().compile(&output_schema_json).expect("valid JSON Schema");
+    // make sure it's a valid JSON Schema by compiling with jsonschema library
+    jsonschema::JSONSchema::options()
+        .compile(&output_schema_json)
+        .expect("valid JSON Schema");
 
     // diff output json with expected json
     let expected_schema_json: Value = serde_json::from_str(&expected_schema.to_string()).unwrap();
-    assert_json_eq!(
-        expected_schema_json,
-        output_schema_json
-    );
-
-
+    assert_json_eq!(expected_schema_json, output_schema_json);
 }
 
 #[test]
 fn generate_schema_with_value_constraints_then_feed_into_validate() {
-
     let csv = ADUR_CSV;
     let expected_schema = r#"
     {
@@ -587,17 +582,17 @@ fn generate_schema_with_value_constraints_then_feed_into_validate() {
     // load output schema file
     let output_schema_string: String =
         wrk.from_str(&wrk.path("adur-public-toilets.csv.schema.json"));
-    let output_schema_json = serde_json::from_str(&output_schema_string).expect("parse schema json");
+    let output_schema_json =
+        serde_json::from_str(&output_schema_string).expect("parse schema json");
 
-    // make sure it's a valid JSON Schema by compiling with jsonschema library 
-    jsonschema::JSONSchema::options().compile(&output_schema_json).expect("valid JSON Schema");
+    // make sure it's a valid JSON Schema by compiling with jsonschema library
+    jsonschema::JSONSchema::options()
+        .compile(&output_schema_json)
+        .expect("valid JSON Schema");
 
     // diff output json with expected json
     let expected_schema_json: Value = serde_json::from_str(&expected_schema.to_string()).unwrap();
-    assert_json_eq!(
-        expected_schema_json,
-        output_schema_json
-    );
+    assert_json_eq!(expected_schema_json, output_schema_json);
 
     // invoke validate command from schema created above
     let mut cmd2 = wrk.command("validate");
@@ -606,8 +601,7 @@ fn generate_schema_with_value_constraints_then_feed_into_validate() {
     wrk.output(&mut cmd2);
 
     // validation report
-    let validation_errors_expected = 
-r#"{"valid":false,"errors":[{"keywordLocation":"/properties/ExtractDate/type","instanceLocation":"/ExtractDate","error":"null is not of type \"string\""}],"row_index":1}
+    let validation_errors_expected = r#"{"valid":false,"errors":[{"keywordLocation":"/properties/ExtractDate/type","instanceLocation":"/ExtractDate","error":"null is not of type \"string\""}],"row_index":1}
 "#;
 
     // check validation error output

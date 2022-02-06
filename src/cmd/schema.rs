@@ -1,16 +1,16 @@
 use crate::cmd::stats::FieldType;
 use crate::config::{Config, Delimiter};
-use crate::select::{SelectColumns};
+use crate::select::SelectColumns;
 use crate::util;
 use crate::CliError;
 use crate::CliResult;
 use anyhow::{anyhow, Result};
 use csv::ByteRecord;
-use log::{debug, info, warn, error};
+use log::{debug, error, info, warn};
 use serde::Deserialize;
-use serde_json::{Map, Value, json, value::Number};
+use serde_json::{json, value::Number, Map, Value};
 use stats::Frequencies;
-use std::{fs::File, path::Path, io::Write, ops::Add};
+use std::{fs::File, io::Write, ops::Add, path::Path};
 
 macro_rules! fail {
     ($mesg:expr) => {
@@ -60,41 +60,40 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let input_path = match &args.arg_input {
         Some(path) => path,
-        None => "stdin.csv"
+        None => "stdin.csv",
     };
     let input_filename: &str = match &args.arg_input {
         Some(path) => Path::new(path).file_name().unwrap().to_str().unwrap(),
-        None => "stdin.csv"
+        None => "stdin.csv",
     };
 
     let schema_output_filename = input_path.to_owned() + ".schema.json";
-    let mut schema_output_file = File::create(&schema_output_filename)
-            .expect("unable to create schema output file");
+    let mut schema_output_file =
+        File::create(&schema_output_filename).expect("unable to create schema output file");
 
-    let properties_map: Map<String, Value> = 
-        if args.flag_value_constraints {
-            match infer_schema_from_stats(&args, input_filename) {
-                Ok(map) => map,
-                Err(e) => {
-                    let msg = format!("Failed to infer schema by running 'stats' command: {e}");
-                    fail!(msg);
-                }
+    let properties_map: Map<String, Value> = if args.flag_value_constraints {
+        match infer_schema_from_stats(&args, input_filename) {
+            Ok(map) => map,
+            Err(e) => {
+                let msg = format!("Failed to infer schema by running 'stats' command: {e}");
+                fail!(msg);
             }
-        } else {
-            match infer_schema_simple_frequency(&args, input_filename) {
-                Ok(map) => map,
-                Err(e) => {
-                    let msg = format!("Failed to infer schema via simple frequency: {e}");
-                    error!("{msg}");
-                    fail!(msg);
-                }
+        }
+    } else {
+        match infer_schema_simple_frequency(&args, input_filename) {
+            Ok(map) => map,
+            Err(e) => {
+                let msg = format!("Failed to infer schema via simple frequency: {e}");
+                error!("{msg}");
+                fail!(msg);
             }
-        };
+        }
+    };
 
     let mut fields: Vec<Value> = Vec::new();
     for key in properties_map.keys() {
         fields.push(Value::String(key.clone()));
-    };
+    }
 
     // create final JSON object for output
     let schema = json!({
@@ -134,26 +133,24 @@ fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<S
         flag_jobs: 3,
         flag_output: None,
         flag_no_headers: args.flag_no_headers,
-        flag_delimiter: args.flag_delimiter
+        flag_delimiter: args.flag_delimiter,
     };
 
     let (csv_headers, csv_stats) = match stats_args.rconfig().indexed() {
-        Ok(o) => 
-            match o {
-                None => {
-                    info!("no index, triggering sequential stats");
-                    stats_args.sequential_stats()
-                },
-                Some(idx) => {
-                    info!("has index, triggering parallel stats");
-                    stats_args.parallel_stats(idx)
-                }
-            },
+        Ok(o) => match o {
+            None => {
+                info!("no index, triggering sequential stats");
+                stats_args.sequential_stats()
+            }
+            Some(idx) => {
+                info!("has index, triggering parallel stats");
+                stats_args.parallel_stats(idx)
+            }
+        },
         Err(e) => {
             warn!("error determining if indexed, triggering sequential stats: {e}");
             stats_args.sequential_stats()
         }
-
     }?;
     // map holds "properties" object of json schema
     let mut properties_map: Map<String, Value> = Map::new();
@@ -161,25 +158,50 @@ fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<S
     // get index of stats columns via stats headers (offset by one since "field" column is only in headers)
     let stats_headers = stats_args.stat_headers();
     debug!("stats headers: {stats_headers:?}");
-    let stats_col_index_type = stats_headers.iter().position(|x| x=="type").expect("stats results column: type") - 1;
-    let stats_col_index_min = stats_headers.iter().position(|x| x=="min").expect("stats results column: min") - 1;
-    let stats_col_index_max = stats_headers.iter().position(|x| x=="max").expect("stats results column: max") - 1;
-    let stats_col_index_min_length = stats_headers.iter().position(|x| x=="min_length").expect("stats results column: min_length") - 1;
-    let stats_col_index_max_length = stats_headers.iter().position(|x| x=="max_length").expect("stats results column: max_length") - 1;
-    let stats_col_index_cardinality = stats_headers.iter().position(|x| x=="cardinality").expect("stats results column: cardinality") - 1;
-    let stats_col_index_nullcount = stats_headers.iter().position(|x| x=="nullcount").expect("stats results column: nullcount") - 1;
+    let stats_col_index_type = stats_headers
+        .iter()
+        .position(|x| x == "type")
+        .expect("stats results column: type")
+        - 1;
+    let stats_col_index_min = stats_headers
+        .iter()
+        .position(|x| x == "min")
+        .expect("stats results column: min")
+        - 1;
+    let stats_col_index_max = stats_headers
+        .iter()
+        .position(|x| x == "max")
+        .expect("stats results column: max")
+        - 1;
+    let stats_col_index_min_length = stats_headers
+        .iter()
+        .position(|x| x == "min_length")
+        .expect("stats results column: min_length")
+        - 1;
+    let stats_col_index_max_length = stats_headers
+        .iter()
+        .position(|x| x == "max_length")
+        .expect("stats results column: max_length")
+        - 1;
+    let stats_col_index_cardinality = stats_headers
+        .iter()
+        .position(|x| x == "cardinality")
+        .expect("stats results column: cardinality")
+        - 1;
+    let stats_col_index_nullcount = stats_headers
+        .iter()
+        .position(|x| x == "nullcount")
+        .expect("stats results column: nullcount")
+        - 1;
 
     debug!("type col idx: {stats_col_index_type}");
 
     // generate schema for each CSV header
     for i in 0..csv_headers.len() {
-
         let header = csv_headers.get(i).unwrap();
         // convert csv header to string
-        let header_string: String = match std::str::from_utf8(header){
-            Ok(s) => {
-                s.to_string()
-            },
+        let header_string: String = match std::str::from_utf8(header) {
+            Ok(s) => s.to_string(),
             Err(e) => {
                 fail!(format!("Can't read header from column {i} as utf8: {e}"));
             }
@@ -194,25 +216,19 @@ fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<S
         let col_type = stats_record.get(stats_col_index_type).unwrap();
         // get NullCount from 11th column
         let col_null_count = match stats_record.get(stats_col_index_nullcount) {
-            Some(s) => {
-                s.parse::<u32>().unwrap_or(0_u32)
-            },
-            None => {
-                0_u32
-            }
+            Some(s) => s.parse::<u32>().unwrap_or(0_u32),
+            None => 0_u32,
         };
         // get Cardinality from 10th column
         let col_cardinality = match stats_record.get(stats_col_index_cardinality) {
-            Some(s) => {
-                s.parse::<u32>().unwrap_or(0_u32)
-            },
-            None => {
-                0_u32
-            }
+            Some(s) => s.parse::<u32>().unwrap_or(0_u32),
+            None => 0_u32,
         };
 
-
-        debug!("{header_string}: type={col_type}, cardinality={col_cardinality}, optional={}", col_null_count>0);
+        debug!(
+            "{header_string}: type={col_type}, cardinality={col_cardinality}, optional={}",
+            col_null_count > 0
+        );
 
         // map for holding field definition
         let mut field_map: Map<String, Value> = Map::new();
@@ -228,17 +244,23 @@ fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<S
 
                 if let Some(min_length_str) = stats_record.get(stats_col_index_min_length) {
                     let min_length = min_length_str.parse::<u32>().unwrap();
-                    field_map.insert("minLength".to_string(), Value::Number(Number::from(min_length)));
+                    field_map.insert(
+                        "minLength".to_string(),
+                        Value::Number(Number::from(min_length)),
+                    );
                 };
 
                 if let Some(max_length_str) = stats_record.get(stats_col_index_max_length) {
                     let max_length = max_length_str.parse::<u32>().unwrap();
-                    field_map.insert("maxLength".to_string(), Value::Number(Number::from(max_length)));
+                    field_map.insert(
+                        "maxLength".to_string(),
+                        Value::Number(Number::from(max_length)),
+                    );
                 };
-            },
+            }
             "Date" => {
                 type_list.push(Value::String("string".to_string()));
-            },
+            }
             "Integer" => {
                 type_list.push(Value::String("integer".to_string()));
 
@@ -251,49 +273,53 @@ fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<S
                     let max = max_str.parse::<i64>().unwrap();
                     field_map.insert("maximum".to_string(), Value::Number(Number::from(max)));
                 };
-            },
+            }
             "Float" => {
                 type_list.push(Value::String("number".to_string()));
 
                 if let Some(min_str) = stats_record.get(stats_col_index_min) {
                     let min = min_str.parse::<f64>().unwrap();
-                    field_map.insert("minimum".to_string(), Value::Number(Number::from_f64(min).unwrap()));
+                    field_map.insert(
+                        "minimum".to_string(),
+                        Value::Number(Number::from_f64(min).unwrap()),
+                    );
                 };
 
                 if let Some(max_str) = stats_record.get(stats_col_index_max) {
                     let max = max_str.parse::<f64>().unwrap();
-                    field_map.insert("maximum".to_string(), Value::Number(Number::from_f64(max).unwrap()));
+                    field_map.insert(
+                        "maximum".to_string(),
+                        Value::Number(Number::from_f64(max).unwrap()),
+                    );
                 };
-            },
+            }
             "NULL" => {
                 type_list.push(Value::String("null".to_string()));
-            },
+            }
             _ => {
                 warn!("Stats gave unexpected column type '{col_type}', default to JSON String.");
                 // defaults to JSON String
                 type_list.push(Value::String("string".to_string()));
-            },
+            }
         }
 
         // "null" type denotes optinal value
         // to be compatible with "validate" command, has to come after the real type, and only once
-        if col_null_count>0 && !type_list.contains(&Value::String("null".to_string())) { 
+        if col_null_count > 0 && !type_list.contains(&Value::String("null".to_string())) {
             type_list.push(Value::String("null".to_string()));
         }
 
         field_map.insert("type".to_string(), Value::Array(type_list));
         properties_map.insert(header_string, Value::Object(field_map));
-
     }
 
     Ok(properties_map)
 }
 
 fn infer_schema_simple_frequency(args: &Args, input_filename: &str) -> Result<Map<String, Value>> {
-
     let rconfig = Config::new(&args.arg_input)
-    .delimiter(args.flag_delimiter)
-    .no_headers(args.flag_no_headers);
+        .delimiter(args.flag_delimiter)
+        .no_headers(args.flag_no_headers);
 
     let mut rdr = rconfig.reader()?;
     let headers = rdr.byte_headers()?.clone();
@@ -345,7 +371,6 @@ fn infer_schema_simple_frequency(args: &Args, input_filename: &str) -> Result<Ma
                 }
             }
         }
-
     } // end main while loop over csv records
 
     debug!("freq tables: {frequency_tables:?}");
@@ -372,7 +397,10 @@ fn infer_schema_simple_frequency(args: &Args, input_filename: &str) -> Result<Ma
             }
         };
 
-        debug!("{header_string} has most frequent type of {inferred_type:?}, optional={}", nullable_flags[i]);
+        debug!(
+            "{header_string} has most frequent type of {inferred_type:?}, optional={}",
+            nullable_flags[i]
+        );
 
         // use list since optional columns get appended a "null" type
         let mut type_list: Vec<Value> = Vec::new();
@@ -401,7 +429,7 @@ fn infer_schema_simple_frequency(args: &Args, input_filename: &str) -> Result<Ma
 
         // "null" type denotes optinal value
         // to be compatible with "validate" command, has to come after the real type, and only once
-        if nullable_flags[i] && !type_list.contains(&Value::String("null".to_string())) { 
+        if nullable_flags[i] && !type_list.contains(&Value::String("null".to_string())) {
             type_list.push(Value::String("null".to_string()));
         }
 
