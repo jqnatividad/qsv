@@ -237,7 +237,7 @@ impl Args {
         .collect()
     }
 
-    fn stat_headers(&self) -> csv::StringRecord {
+    pub fn stat_headers(&self) -> csv::StringRecord {
         let mut fields = vec![
             "field",
             "type",
