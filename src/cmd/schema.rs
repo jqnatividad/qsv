@@ -19,7 +19,11 @@ macro_rules! fail {
 }
 
 static USAGE: &str = "
-Infer schema from CSV data and output in JSON Schema format.
+Generate JSON Schema from CSV data.
+
+This command generates reference JSON Schema (Draft 7) from CSV data, 
+including simple validation rules based on data statistics.
+Please verify and adjust the Type, Value Constraints, and Required Fields as appropriate.
 
 Example output file from `mydata.csv`. If piped from stdin, then filename is `stdin.csv`.
 
