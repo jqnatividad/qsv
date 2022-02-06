@@ -64,7 +64,7 @@ macro_rules! command_list {
     replace     Replace patterns in CSV data
     reverse     Reverse rows of CSV data
     sample      Randomly sample CSV data
-    schema      Infer schema from CSV data
+    schema      Generate JSON Schema from CSV data
     search      Search CSV data with a regex
     searchset   Search CSV data with a regex set
     select      Select, re-order, duplicate or drop columns
