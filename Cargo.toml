@@ -14,7 +14,7 @@ autotests     = false
 edition       = "2021"
 rust-version  = "1.58.1"
 autobins      = false
-include = ["src/**/*", "LICENSE-MIT", "README.md", "CHANGELOG.md"]
+include       = ["src/**/*", "LICENSE-MIT", "README.md", "CHANGELOG.md"]
 
 [[bin]]
 name    = "qsv"
@@ -67,7 +67,7 @@ jsonschema = { version = "0.15", features = [
     "resolve-file",
     "resolve-http",
 ], default-features = false }
-jql = { version = "3", default-features = false }
+jql = { version = "~3.0.9", default-features = false }
 log = "0.4"
 mimalloc = { version = "0.1", default-features = false, optional = true }
 num_cpus = "1"
@@ -104,10 +104,10 @@ vader_sentiment = { version = "0.1", optional = true }
 whatlang = { version = "0.13", optional = true }
 
 [dev-dependencies]
-actix-governor = "0.2"
-actix-web      = "3.3"
-quickcheck     = { version = "1", default-features = false }
+actix-governor   = "0.2"
+actix-web        = "3.3"
 assert-json-diff = "2.0"
+quickcheck       = { version = "1", default-features = false }
 
 [features]
 default = ["mimalloc"]
