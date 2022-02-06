@@ -123,7 +123,7 @@ struct Args {
 
 #[cfg(feature = "python")]
 fn check_python() -> bool {
-    Python::with_gil(|py| py.version_info() >= (3, 7))
+    Python::with_gil(|py| py.version_info() >= (3, 8))
 }
 
 fn main() {
@@ -132,9 +132,9 @@ fn main() {
     #[cfg(feature = "python")]
     if !check_python() {
         if log_enabled!(Level::Error) {
-            error!("Python 3.7+ required.");
+            error!("Python 3.8+ required.");
         } else {
-            werr!("Python 3.7+ required.");
+            werr!("Python 3.8+ required.");
         }
         ::std::process::exit(1);
     }

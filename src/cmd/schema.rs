@@ -1,9 +1,9 @@
+use crate::cmd::stats::FieldType;
 use crate::config::{Config, Delimiter};
+use crate::select::{SelectColumns};
 use crate::util;
 use crate::CliError;
 use crate::CliResult;
-use crate::select::{SelectColumns};
-use crate::cmd::stats::{FieldType};
 use anyhow::{anyhow, Result};
 use csv::ByteRecord;
 use log::{debug, info, warn, error};
@@ -19,7 +19,7 @@ macro_rules! fail {
 }
 
 static USAGE: &str = "
-Infer schmea from CSV data and output in JSON Schema format.
+Infer schema from CSV data and output in JSON Schema format.
 
 Example output file from `mydata.csv`. If piped from stdin, then filename is `stdin.csv`.
 
@@ -304,7 +304,9 @@ fn infer_schema_simple_frequency(args: &Args, input_filename: &str) -> Result<Ma
     let mut row_index: u32 = 0;
 
     // array of frequency tables to track non-NULL type occurrences
-    let mut frequency_tables: Vec<_> = (0..(headers.len() as u32)).map(|_| Frequencies::<FieldType>::new()).collect();
+    let mut frequency_tables: Vec<_> = (0..(headers.len() as u32))
+        .map(|_| Frequencies::<FieldType>::new())
+        .collect();
     // array of boolean to track if column is NULLABLE
     let mut nullable_flags: Vec<bool> = vec![false; headers.len()];
 
@@ -317,7 +319,6 @@ fn infer_schema_simple_frequency(args: &Args, input_filename: &str) -> Result<Ma
         // dbg!(&record);
 
         for col_index in 0..headers.len() {
-
             // since from_sample() parses byte slice to string, no need to do it here
             let value_slice: &[u8] = &record[col_index];
 
@@ -328,23 +329,20 @@ fn infer_schema_simple_frequency(args: &Args, input_filename: &str) -> Result<Ma
             // update frequency table for this column
             match inferred_type {
                 FieldType::TNull => {
-
                     // only count NULL once, so it won't dominate frequency table when value is optional
-                    if nullable_flags[col_index] == false {
+                    if !nullable_flags[col_index] {
                         frequency_tables[col_index].add(FieldType::TNull);
                     }
                     nullable_flags[col_index] = true;
-
                 }
                 FieldType::TUnknown => {
                     // default to String
-                    frequency_tables[col_index].add(FieldType::TUnicode);
+                    frequency_tables[col_index].add(FieldType::TString);
                 }
                 x => {
                     frequency_tables[col_index].add(x);
                 }
             }
-
         }
 
     } // end main while loop over csv records
@@ -366,10 +364,8 @@ fn infer_schema_simple_frequency(args: &Args, input_filename: &str) -> Result<Ma
         };
 
         // convert csv header to string
-        let header_string: String = match std::str::from_utf8(header){
-            Ok(s) => {
-                s.to_string()
-            },
+        let header_string: String = match std::str::from_utf8(header) {
+            Ok(s) => s.to_string(),
             Err(e) => {
                 return Err(anyhow!("Can't read header from column {i} as utf8: {e}"));
             }
@@ -379,27 +375,27 @@ fn infer_schema_simple_frequency(args: &Args, input_filename: &str) -> Result<Ma
 
         // use list since optional columns get appended a "null" type
         let mut type_list: Vec<Value> = Vec::new();
-        
+
         match inferred_type {
-            FieldType::TUnicode => {
+            FieldType::TString => {
                 type_list.push(Value::String("string".to_string()));
-            },
+            }
             FieldType::TDate => {
                 type_list.push(Value::String("string".to_string()));
-            },
+            }
             FieldType::TInteger => {
                 type_list.push(Value::String("integer".to_string()));
-            },
+            }
             FieldType::TFloat => {
                 type_list.push(Value::String("number".to_string()));
-            },
+            }
             FieldType::TNull => {
                 type_list.push(Value::String("null".to_string()));
-            },
+            }
             _ => {
                 // defaults to JSON String
                 type_list.push(Value::String("string".to_string()));
-            },
+            }
         }
 
         // "null" type denotes optinal value
@@ -413,7 +409,6 @@ fn infer_schema_simple_frequency(args: &Args, input_filename: &str) -> Result<Ma
         let desc = format!("{header_string} column from {input_filename}");
         field_map.insert("description".to_string(), Value::String(desc));
         properties_map.insert(header_string, Value::Object(field_map));
-
     } // end for loop over all columns
 
     Ok(properties_map)

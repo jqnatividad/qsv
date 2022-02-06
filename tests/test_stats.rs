@@ -156,12 +156,12 @@ fn get_field_value(wrk: &Workdir, cmd: &mut process::Command, field: &str) -> St
     );
 }
 
-stats_tests!(stats_infer_unicode, "type", &["a"], "Unicode");
+stats_tests!(stats_infer_string, "type", &["a"], "String");
 stats_tests!(stats_infer_int, "type", &["1"], "Integer");
 stats_tests!(stats_infer_float, "type", &["1.2"], "Float");
 stats_tests!(stats_infer_null, "type", &[""], "NULL");
 stats_tests!(stats_infer_date, "type", &["1968-06-27"], "Date");
-stats_tests!(stats_infer_unicode_null, "type", &["a", ""], "Unicode");
+stats_tests!(stats_infer_string_null, "type", &["a", ""], "String");
 stats_tests!(stats_infer_int_null, "type", &["1", ""], "Integer");
 stats_tests!(stats_infer_float_null, "type", &["1.2", ""], "Float");
 stats_tests!(
@@ -170,7 +170,7 @@ stats_tests!(
     &["June 27, 1968", ""],
     "Date"
 );
-stats_tests!(stats_infer_null_unicode, "type", &["", "a"], "Unicode");
+stats_tests!(stats_infer_null_string, "type", &["", "a"], "String");
 stats_tests!(stats_infer_null_int, "type", &["", "1"], "Integer");
 stats_tests!(stats_infer_null_float, "type", &["", "1.2"], "Float");
 stats_tests!(
@@ -179,27 +179,27 @@ stats_tests!(
     &["", "September 17, 2012 at 10:09am PST"],
     "Date"
 );
-stats_tests!(stats_infer_int_unicode, "type", &["1", "a"], "Unicode");
-stats_tests!(stats_infer_unicode_int, "type", &["a", "1"], "Unicode");
+stats_tests!(stats_infer_int_string, "type", &["1", "a"], "String");
+stats_tests!(stats_infer_string_int, "type", &["a", "1"], "String");
 stats_tests!(stats_infer_int_float, "type", &["1", "1.2"], "Float");
 stats_tests!(stats_infer_float_int, "type", &["1.2", "1"], "Float");
 stats_tests!(
-    stats_infer_null_int_float_unicode,
+    stats_infer_null_int_float_string,
     "type",
     &["", "1", "1.2", "a"],
-    "Unicode"
+    "String"
 );
 stats_tests!(
-    stats_infer_date_unicode,
+    stats_infer_date_string,
     "type",
     &["1968-06-27", "abcde"],
-    "Unicode"
+    "String"
 );
 stats_tests!(
-    stats_infer_unicode_date,
+    stats_infer_string_date,
     "type",
     &["wxyz", "1968-06-27"],
-    "Unicode"
+    "String"
 );
 
 stats_tests!(stats_no_mean, "mean", &["a"], "");
