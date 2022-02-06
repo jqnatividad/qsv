@@ -2,13 +2,13 @@ use crate::config::{Config, Delimiter};
 use crate::util;
 use crate::CliError;
 use crate::CliResult;
-use crate::select::{SelectColumns, Selection};
+use crate::select::{SelectColumns};
 use crate::cmd::stats::{FieldType};
 use anyhow::{anyhow, Result};
 use csv::ByteRecord;
 use log::{debug, info, warn, error};
 use serde::Deserialize;
-use serde_json::{Map, Value, json};
+use serde_json::{Map, Value, json, value::Number};
 use stats::Frequencies;
 use std::{fs::File, path::Path, io::Write, ops::Add};
 
@@ -137,7 +137,7 @@ fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<S
         flag_delimiter: args.flag_delimiter
     };
 
-    let (stats_headers, stats_list) = match stats_args.rconfig().indexed() {
+    let (csv_headers, csv_stats) = match stats_args.rconfig().indexed() {
         Ok(o) => 
             match o {
                 None => {
@@ -155,18 +155,26 @@ fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<S
         }
 
     }?;
-
-    debug!("stat headers: {stats_headers:?}");
-
-    for stat in &stats_list {
-        debug!("stat rec: {:?}", stat.clone().to_record());
-    };
-
     // map holds "properties" object of json schema
     let mut properties_map: Map<String, Value> = Map::new();
 
-    for i in 0..stats_headers.len() {
-        let header = stats_headers.get(i).unwrap();
+    // get index of stats columns via stats headers (offset by one since "field" column is only in headers)
+    let stats_headers = stats_args.stat_headers();
+    debug!("stats headers: {stats_headers:?}");
+    let stats_col_index_type = stats_headers.iter().position(|x| x=="type").expect("stats results column: type") - 1;
+    let stats_col_index_min = stats_headers.iter().position(|x| x=="min").expect("stats results column: min") - 1;
+    let stats_col_index_max = stats_headers.iter().position(|x| x=="max").expect("stats results column: max") - 1;
+    let stats_col_index_min_length = stats_headers.iter().position(|x| x=="min_length").expect("stats results column: min_length") - 1;
+    let stats_col_index_max_length = stats_headers.iter().position(|x| x=="max_length").expect("stats results column: max_length") - 1;
+    let stats_col_index_cardinality = stats_headers.iter().position(|x| x=="cardinality").expect("stats results column: cardinality") - 1;
+    let stats_col_index_nullcount = stats_headers.iter().position(|x| x=="nullcount").expect("stats results column: nullcount") - 1;
+
+    debug!("type col idx: {stats_col_index_type}");
+
+    // generate schema for each CSV header
+    for i in 0..csv_headers.len() {
+
+        let header = csv_headers.get(i).unwrap();
         // convert csv header to string
         let header_string: String = match std::str::from_utf8(header){
             Ok(s) => {
@@ -178,13 +186,15 @@ fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<S
         };
 
         // grab stats record for current column
-        let col_stats_record = stats_list.get(i).unwrap().clone().to_record();
+        let stats_record = csv_stats.get(i).unwrap().clone().to_record();
+
+        debug!("stats[{header_string}]: {stats_record:?}");
+
         // get Type from 1st column of stats record
-        let col_type = col_stats_record.get(0).unwrap();
+        let col_type = stats_record.get(stats_col_index_type).unwrap();
         // get NullCount from 11th column
-        let col_null_count = match col_stats_record.get(10) {
+        let col_null_count = match stats_record.get(stats_col_index_nullcount) {
             Some(s) => {
-                debug!("null count: {s}");
                 s.parse::<u32>().unwrap_or(0_u32)
             },
             None => {
@@ -192,9 +202,8 @@ fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<S
             }
         };
         // get Cardinality from 10th column
-        let col_cardinality = match col_stats_record.get(9) {
+        let col_cardinality = match stats_record.get(stats_col_index_cardinality) {
             Some(s) => {
-                debug!("cardinality: {s}");
                 s.parse::<u32>().unwrap_or(0_u32)
             },
             None => {
@@ -203,23 +212,58 @@ fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<S
         };
 
 
-        debug!("{header_string} has most frequent type of {col_type}, cardinality={col_cardinality}, optional={}", col_null_count>0);
+        debug!("{header_string}: type={col_type}, cardinality={col_cardinality}, optional={}", col_null_count>0);
 
-        // use list since optional columns get appended a "null" type
+        // map for holding field definition
+        let mut field_map: Map<String, Value> = Map::new();
+        let desc = format!("{header_string} column from {input_filename}");
+        field_map.insert("description".to_string(), Value::String(desc));
+
+        // use list to hold types, since optional columns get appended a "null" type
         let mut type_list: Vec<Value> = Vec::new();
-        
+
         match col_type {
             "Unicode" => {
                 type_list.push(Value::String("string".to_string()));
+
+                if let Some(min_length_str) = stats_record.get(stats_col_index_min_length) {
+                    let min_length = min_length_str.parse::<u32>().unwrap();
+                    field_map.insert("minLength".to_string(), Value::Number(Number::from(min_length)));
+                };
+
+                if let Some(max_length_str) = stats_record.get(stats_col_index_max_length) {
+                    let max_length = max_length_str.parse::<u32>().unwrap();
+                    field_map.insert("maxLength".to_string(), Value::Number(Number::from(max_length)));
+                };
             },
             "Date" => {
                 type_list.push(Value::String("string".to_string()));
             },
             "Integer" => {
                 type_list.push(Value::String("integer".to_string()));
+
+                if let Some(min_str) = stats_record.get(stats_col_index_min) {
+                    let min = min_str.parse::<i64>().unwrap();
+                    field_map.insert("minimum".to_string(), Value::Number(Number::from(min)));
+                };
+
+                if let Some(max_str) = stats_record.get(stats_col_index_max) {
+                    let max = max_str.parse::<i64>().unwrap();
+                    field_map.insert("maximum".to_string(), Value::Number(Number::from(max)));
+                };
             },
             "Float" => {
                 type_list.push(Value::String("number".to_string()));
+
+                if let Some(min_str) = stats_record.get(stats_col_index_min) {
+                    let min = min_str.parse::<f64>().unwrap();
+                    field_map.insert("minimum".to_string(), Value::Number(Number::from_f64(min).unwrap()));
+                };
+
+                if let Some(max_str) = stats_record.get(stats_col_index_max) {
+                    let max = max_str.parse::<f64>().unwrap();
+                    field_map.insert("maximum".to_string(), Value::Number(Number::from_f64(max).unwrap()));
+                };
             },
             "NULL" => {
                 type_list.push(Value::String("null".to_string()));
@@ -236,14 +280,9 @@ fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<S
             type_list.push(Value::String("null".to_string()));
         }
 
-        let mut field_map: Map<String, Value> = Map::new();
         field_map.insert("type".to_string(), Value::Array(type_list));
-        let desc = format!("{header_string} column from {input_filename}");
-        field_map.insert("description".to_string(), Value::String(desc));
-
-
-
         properties_map.insert(header_string, Value::Object(field_map));
+
     }
 
     Ok(properties_map)
