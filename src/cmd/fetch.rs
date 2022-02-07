@@ -22,7 +22,7 @@ To set proxy, please set env var HTTP_PROXY and HTTPS_PROXY (eg export HTTPS_PRO
 Usage:
     qsv fetch [options] [--http-header <k:v>...] [<column>] [<input>]
 
-fetch options:
+Fetch options:
     -c, --new-column <name>    Put the fetched values in a new column instead.
     --jql <selector>           Apply jql selector to API returned JSON value.
     --rate-limit <qps>         Rate Limit in Queries Per Second. [default: 5]

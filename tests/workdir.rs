@@ -178,6 +178,16 @@ impl Workdir {
         }
     }
 
+    pub fn load_test_resource(&self, filename: &str) -> String {
+        // locate resources/test relative to crate base dir
+        let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        path.push("resources/test/");
+        path.push(filename);
+
+
+        self.from_str::<String>(path.as_path())
+    }
+
     pub fn from_str<T: FromStr>(&self, name: &Path) -> T {
         let mut o = String::new();
         fs::File::open(name)

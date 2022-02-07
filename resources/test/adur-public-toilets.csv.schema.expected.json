@@ -1,0 +1,238 @@
+{
+    "$schema": "https://json-schema.org/draft-07/schema",
+    "title": "JSON Schema for adur-public-toilets.csv",
+    "description": "Inferred JSON Schema from QSV schema command",
+    "type": "object",
+    "properties": {
+      "ExtractDate": {
+        "type": [
+          "string"
+        ],
+        "description": "ExtractDate column from adur-public-toilets.csv"
+      },
+      "OrganisationURI": {
+        "type": [
+          "string"
+        ],
+        "description": "OrganisationURI column from adur-public-toilets.csv"
+      },
+      "OrganisationLabel": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "OrganisationLabel column from adur-public-toilets.csv"
+      },
+      "ServiceTypeURI": {
+        "type": [
+          "string"
+        ],
+        "description": "ServiceTypeURI column from adur-public-toilets.csv"
+      },
+      "ServiceTypeLabel": {
+        "type": [
+          "string"
+        ],
+        "description": "ServiceTypeLabel column from adur-public-toilets.csv"
+      },
+      "LocationText": {
+        "type": [
+          "string"
+        ],
+        "description": "LocationText column from adur-public-toilets.csv"
+      },
+      "CoordinateReferenceSystem": {
+        "type": [
+          "string"
+        ],
+        "description": "CoordinateReferenceSystem column from adur-public-toilets.csv"
+      },
+      "GeoX": {
+        "type": [
+          "integer"
+        ],
+        "description": "GeoX column from adur-public-toilets.csv"
+      },
+      "GeoY": {
+        "type": [
+          "integer"
+        ],
+        "description": "GeoY column from adur-public-toilets.csv"
+      },
+      "GeoPointLicensingURL": {
+        "type": [
+          "string"
+        ],
+        "description": "GeoPointLicensingURL column from adur-public-toilets.csv"
+      },
+      "Category": {
+        "type": [
+          "string"
+        ],
+        "description": "Category column from adur-public-toilets.csv"
+      },
+      "AccessibleCategory": {
+        "type": [
+          "string"
+        ],
+        "description": "AccessibleCategory column from adur-public-toilets.csv"
+      },
+      "RADARKeyNeeded": {
+        "type": [
+          "string"
+        ],
+        "description": "RADARKeyNeeded column from adur-public-toilets.csv"
+      },
+      "BabyChange": {
+        "type": [
+          "string"
+        ],
+        "description": "BabyChange column from adur-public-toilets.csv"
+      },
+      "FamilyToilet": {
+        "type": [
+          "string"
+        ],
+        "description": "FamilyToilet column from adur-public-toilets.csv"
+      },
+      "ChangingPlace": {
+        "type": [
+          "string"
+        ],
+        "description": "ChangingPlace column from adur-public-toilets.csv"
+      },
+      "AutomaticPublicConvenience": {
+        "type": [
+          "string"
+        ],
+        "description": "AutomaticPublicConvenience column from adur-public-toilets.csv"
+      },
+      "FullTimeStaffing": {
+        "type": [
+          "string"
+        ],
+        "description": "FullTimeStaffing column from adur-public-toilets.csv"
+      },
+      "PartOfCommunityScheme": {
+        "type": [
+          "string"
+        ],
+        "description": "PartOfCommunityScheme column from adur-public-toilets.csv"
+      },
+      "CommunitySchemeName": {
+        "type": [
+          "null"
+        ],
+        "description": "CommunitySchemeName column from adur-public-toilets.csv"
+      },
+      "ChargeAmount": {
+        "type": [
+          "null"
+        ],
+        "description": "ChargeAmount column from adur-public-toilets.csv"
+      },
+      "InfoURL": {
+        "type": [
+          "string"
+        ],
+        "description": "InfoURL column from adur-public-toilets.csv"
+      },
+      "OpeningHours": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "OpeningHours column from adur-public-toilets.csv"
+      },
+      "ManagedBy": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "ManagedBy column from adur-public-toilets.csv"
+      },
+      "ReportEmail": {
+        "type": [
+          "string"
+        ],
+        "description": "ReportEmail column from adur-public-toilets.csv"
+      },
+      "ReportTel": {
+        "type": [
+          "string"
+        ],
+        "description": "ReportTel column from adur-public-toilets.csv"
+      },
+      "Notes": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Notes column from adur-public-toilets.csv"
+      },
+      "UPRN": {
+        "type": [
+          "integer"
+        ],
+        "description": "UPRN column from adur-public-toilets.csv"
+      },
+      "Postcode": {
+        "type": [
+          "null"
+        ],
+        "description": "Postcode column from adur-public-toilets.csv"
+      },
+      "StreetAddress": {
+        "type": [
+          "string"
+        ],
+        "description": "StreetAddress column from adur-public-toilets.csv"
+      },
+      "GeoAreaURI": {
+        "type": [
+          "null"
+        ],
+        "description": "GeoAreaURI column from adur-public-toilets.csv"
+      },
+      "GeoAreaLabel": {
+        "type": [
+          "null"
+        ],
+        "description": "GeoAreaLabel column from adur-public-toilets.csv"
+      }
+    },
+    "required": [
+      "ExtractDate",
+      "OrganisationURI",
+      "OrganisationLabel",
+      "ServiceTypeURI",
+      "ServiceTypeLabel",
+      "LocationText",
+      "CoordinateReferenceSystem",
+      "GeoX",
+      "GeoY",
+      "GeoPointLicensingURL",
+      "Category",
+      "AccessibleCategory",
+      "RADARKeyNeeded",
+      "BabyChange",
+      "FamilyToilet",
+      "ChangingPlace",
+      "AutomaticPublicConvenience",
+      "FullTimeStaffing",
+      "PartOfCommunityScheme",
+      "CommunitySchemeName",
+      "ChargeAmount",
+      "InfoURL",
+      "OpeningHours",
+      "ManagedBy",
+      "ReportEmail",
+      "ReportTel",
+      "Notes",
+      "UPRN",
+      "Postcode",
+      "StreetAddress",
+      "GeoAreaURI",
+      "GeoAreaLabel"
+    ]
+}

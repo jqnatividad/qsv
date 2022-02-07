@@ -35,7 +35,7 @@ When run without JSON Schema, only a simple CSV check (RFC 4180) is performed, w
 Usage:
     qsv validate [options] [<input>] [<json-schema>]
 
-fetch options:
+Validate options:
     --fail-fast                Stops on first error.
     --valid <suffix>           Valid record output file suffix. [default: valid]
     --invalid <suffix>         Invalid record output file suffix. [default: invalid]
