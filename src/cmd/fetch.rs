@@ -304,7 +304,7 @@ fn apply_jql(json: &str, selectors: &str) -> Result<String> {
             Ok(valid_json) => {
                 // Walk through the JSON content with the provided selectors as
                 // input.
-                match walker(&valid_json, Some(selectors)) {
+                match walker(&valid_json, selectors) {
                     Ok(selection) => {
                         fn get_value_string(v: &Value) -> String {
                             if v.is_null() {
