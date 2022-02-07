@@ -60,10 +60,11 @@ macro_rules! command_list {
     jsonl       Convert newline-delimited JSON files to CSV
     partition   Partition CSV data based on a column value
     pseudo      Pseudonymise the values of a column
-    sample      Randomly sample CSV data
     rename      Rename the columns of CSV data efficiently
     replace     Replace patterns in CSV data
     reverse     Reverse rows of CSV data
+    sample      Randomly sample CSV data
+    schema      Generate JSON Schema from CSV data
     search      Search CSV data with a regex
     searchset   Search CSV data with a regex set
     select      Select, re-order, duplicate or drop columns
@@ -217,6 +218,7 @@ enum Command {
     Replace,
     Reverse,
     Sample,
+    Schema,
     Search,
     SearchSet,
     Select,
@@ -271,6 +273,7 @@ impl Command {
             Command::Replace => cmd::replace::run(argv),
             Command::Reverse => cmd::reverse::run(argv),
             Command::Sample => cmd::sample::run(argv),
+            Command::Schema => cmd::schema::run(argv),
             Command::Search => cmd::search::run(argv),
             Command::SearchSet => cmd::searchset::run(argv),
             Command::Select => cmd::select::run(argv),

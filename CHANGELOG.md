@@ -6,6 +6,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.32.0] - 2022-02-06
+### Added
+* `schema` POC by @mhuang74 in https://github.com/jqnatividad/qsv/pull/155
+* `schema`: add value constraints via stats  by @mhuang74 in https://github.com/jqnatividad/qsv/pull/158
+* `schema`: update command description by @mhuang74 in https://github.com/jqnatividad/qsv/pull/159
+
+### Changed
+* `stats` data type inference changed to more straightforward "String" from "Unicode"
+* changed CI/CD to use rust-cache GitHub Actions making it ~3x faster.
+* always build and test with `--locked` flag. This allows us to use rust-cache and guarantee that
+  builds are using the exact dependency versions qsv requires.
+* bumped `qsv-stats` to 0.3.5 for `stats` performance tweaks  
+
+### Fixed
+* Validate: bug fixes by @mhuang74 in https://github.com/jqnatividad/qsv/pull/154
+
 ## [0.31.0] - 2022-01-31
 ### Changed
 * Validate: bug fixes by @mhuang74 in https://github.com/jqnatividad/qsv/pull/151

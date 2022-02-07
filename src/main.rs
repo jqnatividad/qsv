@@ -67,10 +67,11 @@ macro_rules! command_list {
     partition   Partition CSV data based on a column value
     pseudo      Pseudonymise the values of a column
     py*         Evaluate a Python expression on CSV data
-    sample      Randomly sample CSV data
     rename      Rename the columns of CSV data efficiently
     replace     Replace patterns in CSV data
     reverse     Reverse rows of CSV data
+    sample      Randomly sample CSV data
+    schema      Generate JSON Schema from CSV data
     search      Search CSV data with a regex
     searchset   Search CSV data with a regex set
     select      Select, re-order, duplicate or drop columns
@@ -122,7 +123,7 @@ struct Args {
 
 #[cfg(feature = "python")]
 fn check_python() -> bool {
-    Python::with_gil(|py| py.version_info() >= (3, 7))
+    Python::with_gil(|py| py.version_info() >= (3, 8))
 }
 
 fn main() {
@@ -131,9 +132,9 @@ fn main() {
     #[cfg(feature = "python")]
     if !check_python() {
         if log_enabled!(Level::Error) {
-            error!("Python 3.7+ required.");
+            error!("Python 3.8+ required.");
         } else {
-            werr!("Python 3.7+ required.");
+            werr!("Python 3.8+ required.");
         }
         ::std::process::exit(1);
     }
@@ -251,6 +252,7 @@ enum Command {
     Replace,
     Reverse,
     Sample,
+    Schema,
     Search,
     SearchSet,
     Select,
@@ -313,6 +315,7 @@ impl Command {
             Command::Replace => cmd::replace::run(argv),
             Command::Reverse => cmd::reverse::run(argv),
             Command::Sample => cmd::sample::run(argv),
+            Command::Schema => cmd::schema::run(argv),
             Command::Search => cmd::search::run(argv),
             Command::SearchSet => cmd::searchset::run(argv),
             Command::Select => cmd::select::run(argv),

@@ -18,7 +18,7 @@ use crate::CliResult;
 use dateparser::DateTimeUtc;
 use serde::Deserialize;
 
-use self::FieldType::{TDate, TFloat, TInteger, TNull, TUnicode, TUnknown};
+use self::FieldType::{TDate, TFloat, TInteger, TNull, TString, TUnknown};
 
 static USAGE: &str = "
 Computes basic statistics on CSV data.
@@ -30,7 +30,7 @@ statistics are reported for *every* column in the CSV data: sum, min/max values,
 min/max length, mean, stddev & variance. The default set of statistics corresponds to
 statistics that can be computed efficiently on a stream of data (i.e., constant memory).
 
-The data type of each column is also inferred (Unknown, NULL, Integer, Unicode,
+The data type of each column is also inferred (Unknown, NULL, Integer, String,
 Float and Date). The date formats recognized can be found at
 https://docs.rs/dateparser/0.1.6/dateparser/#accepted-date-formats.
 
@@ -78,20 +78,20 @@ Common options:
 ";
 
 #[derive(Clone, Deserialize)]
-struct Args {
-    arg_input: Option<String>,
-    flag_select: SelectColumns,
-    flag_everything: bool,
-    flag_mode: bool,
-    flag_cardinality: bool,
-    flag_median: bool,
-    flag_quartiles: bool,
-    flag_nulls: bool,
-    flag_nullcount: bool,
-    flag_jobs: isize,
-    flag_output: Option<String>,
-    flag_no_headers: bool,
-    flag_delimiter: Option<Delimiter>,
+pub struct Args {
+    pub arg_input: Option<String>,
+    pub flag_select: SelectColumns,
+    pub flag_everything: bool,
+    pub flag_mode: bool,
+    pub flag_cardinality: bool,
+    pub flag_median: bool,
+    pub flag_quartiles: bool,
+    pub flag_nulls: bool,
+    pub flag_nullcount: bool,
+    pub flag_jobs: isize,
+    pub flag_output: Option<String>,
+    pub flag_no_headers: bool,
+    pub flag_delimiter: Option<Delimiter>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -126,14 +126,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 }
 
 impl Args {
-    fn sequential_stats(&self) -> CliResult<(csv::ByteRecord, Vec<Stats>)> {
+    pub fn sequential_stats(&self) -> CliResult<(csv::ByteRecord, Vec<Stats>)> {
         let mut rdr = self.rconfig().reader()?;
         let (headers, sel) = self.sel_headers(&mut rdr)?;
         let stats = self.compute(&sel, rdr.byte_records())?;
         Ok((headers, stats))
     }
 
-    fn parallel_stats(
+    pub fn parallel_stats(
         &self,
         idx: Indexed<fs::File, fs::File>,
     ) -> CliResult<(csv::ByteRecord, Vec<Stats>)> {
@@ -164,7 +164,7 @@ impl Args {
         Ok((headers, merge_all(recv.iter()).unwrap_or_else(Vec::new)))
     }
 
-    fn stats_to_records(&self, stats: Vec<Stats>) -> Vec<csv::StringRecord> {
+    pub fn stats_to_records(&self, stats: Vec<Stats>) -> Vec<csv::StringRecord> {
         let mut records: Vec<_> = repeat(csv::StringRecord::new()).take(stats.len()).collect();
         let pool = ThreadPool::new(self.njobs());
         let mut results = vec![];
@@ -204,7 +204,7 @@ impl Args {
         Ok((csv::ByteRecord::from_iter(sel.select(&headers)), sel))
     }
 
-    fn rconfig(&self) -> Config {
+    pub fn rconfig(&self) -> Config {
         Config::new(&self.arg_input)
             .delimiter(self.flag_delimiter)
             .no_headers(self.flag_no_headers)
@@ -237,7 +237,7 @@ impl Args {
         .collect()
     }
 
-    fn stat_headers(&self) -> csv::StringRecord {
+    pub fn stat_headers(&self) -> csv::StringRecord {
         let mut fields = vec![
             "field",
             "type",
@@ -296,7 +296,7 @@ impl Commute for WhichStats {
 }
 
 #[derive(Clone)]
-struct Stats {
+pub struct Stats {
     typ: FieldType,
     sum: Option<TypedSum>,
     minmax: Option<TypedMinMax>,
@@ -370,7 +370,7 @@ impl Stats {
                     };
                 }
             }
-            TUnicode => {}
+            TString => {}
             TFloat | TInteger => {
                 if sample_type.is_null() {
                     if self.which.include_nulls {
@@ -396,7 +396,7 @@ impl Stats {
     }
 
     #[allow(clippy::wrong_self_convention)]
-    fn to_record(&mut self) -> csv::StringRecord {
+    pub fn to_record(&mut self) -> csv::StringRecord {
         let typ = self.typ;
         let mut pieces = vec![];
         let empty = || "".to_owned();
@@ -530,18 +530,18 @@ impl Commute for Stats {
     }
 }
 
-#[derive(Clone, Copy, PartialEq)]
-enum FieldType {
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+pub enum FieldType {
     TUnknown,
     TNull,
-    TUnicode,
+    TString,
     TFloat,
     TInteger,
     TDate,
 }
 
 impl FieldType {
-    fn from_sample(sample: &[u8]) -> FieldType {
+    pub fn from_sample(sample: &[u8]) -> FieldType {
         if sample.is_empty() {
             return TNull;
         }
@@ -558,7 +558,7 @@ impl FieldType {
         if string.parse::<DateTimeUtc>().is_ok() {
             return TDate;
         }
-        TUnicode
+        TString
     }
 
     fn is_number(&self) -> bool {
@@ -573,7 +573,7 @@ impl FieldType {
 impl Commute for FieldType {
     fn merge(&mut self, other: FieldType) {
         *self = match (*self, other) {
-            (TUnicode, TUnicode) => TUnicode,
+            (TString, TString) => TString,
             (TFloat, TFloat) => TFloat,
             (TInteger, TInteger) => TInteger,
             (TDate, TDate) => TDate,
@@ -586,10 +586,10 @@ impl Commute for FieldType {
             // when using unixtime format can degrade to int/floats.
             (TInteger, TDate) | (TDate, TInteger) => TInteger,
             (TFloat, TDate) | (TDate, TFloat) => TFloat,
-            // Numbers/dates can degrade to Unicode strings.
-            (TUnicode, TFloat) | (TFloat, TUnicode) => TUnicode,
-            (TUnicode, TInteger) | (TInteger, TUnicode) => TUnicode,
-            (TUnicode, TDate) | (TDate, TUnicode) => TUnicode,
+            // Numbers/dates can degrade to unicode Strings.
+            (TString, TFloat) | (TFloat, TString) => TString,
+            (TString, TInteger) | (TInteger, TString) => TString,
+            (TString, TDate) | (TDate, TString) => TString,
         };
     }
 }
@@ -608,7 +608,20 @@ impl fmt::Display for FieldType {
         match *self {
             TUnknown => write!(f, "Unknown"),
             TNull => write!(f, "NULL"),
-            TUnicode => write!(f, "Unicode"),
+            TString => write!(f, "String"),
+            TFloat => write!(f, "Float"),
+            TInteger => write!(f, "Integer"),
+            TDate => write!(f, "Date"),
+        }
+    }
+}
+
+impl fmt::Debug for FieldType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            TUnknown => write!(f, "Unknown"),
+            TNull => write!(f, "NULL"),
+            TString => write!(f, "String"),
             TFloat => write!(f, "Float"),
             TInteger => write!(f, "Integer"),
             TDate => write!(f, "Date"),
@@ -655,7 +668,7 @@ impl TypedSum {
 
     fn show(&self, typ: FieldType) -> Option<String> {
         match typ {
-            TNull | TUnicode | TUnknown | TDate => None,
+            TNull | TString | TUnknown | TDate => None,
             TInteger => Some(self.integer.to_string()),
             TFloat => Some(self.float.unwrap_or(0.0).to_string()),
         }
@@ -692,7 +705,7 @@ impl TypedMinMax {
         }
         self.strings.add(sample.to_vec());
         match typ {
-            TUnicode | TUnknown | TNull => {}
+            TString | TUnknown | TNull => {}
             TFloat => {
                 let n = str::from_utf8(&*sample)
                     .ok()
@@ -730,7 +743,7 @@ impl TypedMinMax {
     fn show(&self, typ: FieldType) -> Option<(String, String)> {
         match typ {
             TNull => None,
-            TUnicode | TUnknown => match (self.strings.min(), self.strings.max()) {
+            TString | TUnknown => match (self.strings.min(), self.strings.max()) {
                 (Some(min), Some(max)) => {
                     let min = String::from_utf8_lossy(&**min).to_string();
                     let max = String::from_utf8_lossy(&**max).to_string();
