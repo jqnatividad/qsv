@@ -1,0 +1,173 @@
+{
+    "$schema": "https://json-schema.org/draft-07/schema",
+    "$id": "https://example.com/public_toilets_schema.json",
+    "title": "Public Toilets",
+    "description": "Manually converted from JSON Table Schema at https://github.com/esd-org-uk/schemas/blob/master/PublicToilets/PublicToilets.json",
+    "type": "object",
+    "properties": {
+        "ExtractDate":
+        {
+        "description": "The date that the data was last extracted from its source database or manually updated",
+        "type": ["string"],
+        "pattern": "(^([0-2]\\d|[3][0-1])\\/([0]\\d|[1][0-2])\\/[1-2]\\d{3}((\\s([0-1]\\d|[2][0-3]):[0-5]\\d(:[0-5]\\d)?)?)|)$"
+        },
+        "OrganisationURI":
+        {
+        "description": "URI from ODC of publishing organisation",
+        "type": ["string", "null"]
+        },
+        "OrganisationLabel":
+        {
+        "description": "Label of publishing organisation. If empty uses this will be the same as the publishing organisation",
+        "type": ["string"]
+        },
+        "ServiceTypeURI":
+        {
+        "description": "Service URI from http://id.esd.org.uk/list/services",
+        "type": ["string", "null"]
+        },
+        "ServiceTypeLabel":
+        {
+        "description": "Label of the Service Type URI",
+        "type": ["string"]
+        },
+        "LocationText":
+        {
+        "description": "Name of building, street, park etc.",
+        "type": ["string"]
+        },
+        "CoordinateReferenceSystem":
+        {
+        "description": "‘WGS84’ (http://en.wikipedia.org/wiki/WGS84) or ‘OSGB36’ (http://en.wikipedia.org/wiki/Ordnance_Survey_National_Grid). WGS84 is the default.",
+        "type": ["string", "null"],
+        "pattern": "(WGS84|OSGB36)"
+        },
+        "GeoX":
+        {
+        "description": "Longitude or east grid reference for centroid of application boundary",
+        "type": "number"
+        },
+        "GeoY":
+        {
+        "description": "Latitude or north grid reference for centroid of application boundary",
+        "type": "number"
+        },
+        "GeoPointLicensingURL":
+        {
+        "description": "URL of any page that describes any licensing restrictions on using the northing and easting.",
+        "type": ["string", "null"]
+        },
+        "Category":
+        {
+        "description": "Use `None` if only accessible",
+        "type": ["string", "null"],
+        "pattern": "(Female|Male|Female and Male|Unisex|Male urinal|Children only|None)"
+        },
+        "AccessibleCategory":
+        {
+        "description": "Use `None` if not accessible",
+        "type": ["string", "null"]
+        },
+        "RADARKeyNeeded":
+        {
+        "description": "Flag to show whether a RADAR Key is needed",
+        "type": ["string", "null"]
+        },
+        "BabyChange":
+        {
+        "description": "Flag to show whether there are baby changing facilities",
+        "type": ["string", "null"]
+        },
+        "FamilyToilet":
+        {
+        "description": "Flag to show whether there is a family toilet",
+        "type": ["string", "null"]
+        },
+        "ChangingPlace":
+        {
+        "description": "Flag to indicate whether the toilet includes changing facilities for people with profound and multiple learning disabilities and their carers, as well as many other disabled people. See http://www.changing-places.org/",
+        "type": ["string", "null"]
+        },
+        "AutomaticPublicConvenience":
+        {
+        "description": "Flag to indicate whether this is an automatic public convenience (aka superloo)",
+        "type": ["string", "null"]
+        },
+        "FullTimeStaffing":
+        {
+        "description": "Flag to indicate whether there is full time staffing",
+        "type": ["string", "null"]
+        },
+        "PartOfCommunityScheme":
+        {
+        "description": "Flag to indicate whether it is part of a community scheme",
+        "type": ["string", "null"]
+        },
+        "CommunitySchemeName":
+        {
+        "description": "The name of the community scheme",
+        "type": ["string", "null"]
+        },
+        "ChargeAmount":
+        {
+        "description": "Charge amount in GBP to two decimal places. Omit the currency symbol",
+        "type": ["number", "null"]
+        },
+        "InfoURL":
+        {
+        "description": "URL of web page describing the facilities",
+        "type": ["string", "null"]
+        },
+        "OpeningHours":
+        {
+        "description": "Opening Hours",
+        "type": ["string", "null"]
+        },
+        "ManagedBy":
+        {
+        "description": "Name of organisation managing the toilet",
+        "type": ["string", "null"]
+        },
+        "ReportEmail":
+        {
+        "description": "Email address for reporting problems",
+        "type": ["string", "null"]
+        },
+        "ReportTel":
+        {
+        "description": "Telephone number for reporting problems",
+        "type": ["string", "null"]
+        },
+        "Notes":
+        {
+        "description": "Notes on reporting, accesibility, hours or anything else",
+        "type": ["string", "null"]
+        },
+        "UPRN":
+        {
+        "description": "Unique Property Reference Number of the toilet",
+        "type": ["string", "null"]
+        },
+        "Postcode":
+        {
+        "description": "Postcode of the toilet",
+        "type": ["string", "null"]
+        },
+        "StreetAddress":
+        {
+        "description": "Street address of the toilet",
+        "type": ["string", "null"]
+        },
+        "GeoAreaURI":
+        {
+        "description": "A predefined spatial area that the application is contained in.  Note that these can be derived from X/Y co-ordinates. Comma delimit in spreadsheet where there is more than one",
+        "type": ["string", "null"]
+        },
+        "GeoAreaLabel":
+        {
+        "description": "Labels of the Geo Area URI. Comma delimit in spreadsheet where there is more than one",
+        "type": ["string", "null"]
+        }
+    },
+    "required": [ "ExtractDate", "OrganisationLabel", "ServiceTypeLabel", "LocationText", "GeoX", "GeoY" ]
+}
