@@ -62,16 +62,16 @@ Common options:
 ";
 
 #[derive(Clone, Deserialize)]
-struct Args {
-    arg_input: Option<String>,
-    flag_select: SelectColumns,
-    flag_limit: usize,
-    flag_asc: bool,
-    flag_no_nulls: bool,
-    flag_jobs: isize,
-    flag_output: Option<String>,
-    flag_no_headers: bool,
-    flag_delimiter: Option<Delimiter>,
+pub struct Args {
+    pub arg_input: Option<String>,
+    pub flag_select: SelectColumns,
+    pub flag_limit: usize,
+    pub flag_asc: bool,
+    pub flag_no_nulls: bool,
+    pub flag_jobs: isize,
+    pub flag_output: Option<String>,
+    pub flag_no_headers: bool,
+    pub flag_delimiter: Option<Delimiter>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -106,7 +106,7 @@ type FTable = Frequencies<Vec<u8>>;
 type FTables = Vec<Frequencies<Vec<u8>>>;
 
 impl Args {
-    fn rconfig(&self) -> Config {
+    pub fn rconfig(&self) -> Config {
         Config::new(&self.arg_input)
             .delimiter(self.flag_delimiter)
             .no_headers(self.flag_no_headers)
@@ -134,13 +134,13 @@ impl Args {
             .collect()
     }
 
-    fn sequential_ftables(&self) -> CliResult<(Headers, FTables)> {
+    pub fn sequential_ftables(&self) -> CliResult<(Headers, FTables)> {
         let mut rdr = self.rconfig().reader()?;
         let (headers, sel) = self.sel_headers(&mut rdr)?;
         Ok((headers, self.ftables(&sel, rdr.byte_records())?))
     }
 
-    fn parallel_ftables(
+    pub fn parallel_ftables(
         &self,
         idx: &mut Indexed<fs::File, fs::File>,
     ) -> CliResult<(Headers, FTables)> {

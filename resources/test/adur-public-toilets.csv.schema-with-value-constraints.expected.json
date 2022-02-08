@@ -1,261 +1,373 @@
 {
-    "$schema": "https://json-schema.org/draft-07/schema",
-    "title": "JSON Schema for adur-public-toilets.csv",
-    "description": "Inferred JSON Schema from QSV schema command",
-    "type": "object",
-    "properties": {
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "title": "JSON Schema for adur-public-toilets.csv",
+  "description": "Inferred JSON Schema from QSV schema command",
+  "type": "object",
+  "properties": {
     "ExtractDate": {
-        "description": "ExtractDate column from adur-public-toilets.csv",
-        "minLength": 2,
-        "maxLength": 16,
-        "type": [
+      "description": "ExtractDate column from adur-public-toilets.csv",
+      "minLength": 2,
+      "maxLength": 16,
+      "type": [
         "string"
-        ]
+      ],
+      "enum": [
+        "07/07/2014 00:00",
+        "2014-07-07 00:00"
+      ]
     },
     "OrganisationURI": {
-        "description": "OrganisationURI column from adur-public-toilets.csv",
-        "minLength": 55,
-        "maxLength": 55,
-        "type": [
+      "description": "OrganisationURI column from adur-public-toilets.csv",
+      "minLength": 55,
+      "maxLength": 55,
+      "type": [
         "string"
-        ]
+      ],
+      "enum": [
+        "http://opendatacommunities.org/id/district-council/adur"
+      ]
     },
     "OrganisationLabel": {
-        "description": "OrganisationLabel column from adur-public-toilets.csv",
-        "minLength": 0,
-        "maxLength": 4,
-        "type": [
+      "description": "OrganisationLabel column from adur-public-toilets.csv",
+      "minLength": 0,
+      "maxLength": 4,
+      "type": [
         "string",
         "null"
-        ]
+      ],
+      "enum": [
+        "Adur",
+        null
+      ]
     },
     "ServiceTypeURI": {
-        "description": "ServiceTypeURI column from adur-public-toilets.csv",
-        "minLength": 32,
-        "maxLength": 32,
-        "type": [
+      "description": "ServiceTypeURI column from adur-public-toilets.csv",
+      "minLength": 32,
+      "maxLength": 32,
+      "type": [
         "string"
-        ]
+      ],
+      "enum": [
+        "http://id.esd.org.uk/service/579"
+      ]
     },
     "ServiceTypeLabel": {
-        "description": "ServiceTypeLabel column from adur-public-toilets.csv",
-        "minLength": 14,
-        "maxLength": 14,
-        "type": [
+      "description": "ServiceTypeLabel column from adur-public-toilets.csv",
+      "minLength": 14,
+      "maxLength": 14,
+      "type": [
         "string"
-        ]
+      ],
+      "enum": [
+        "Public toilets"
+      ]
     },
     "LocationText": {
-        "description": "LocationText column from adur-public-toilets.csv",
-        "minLength": 40,
-        "maxLength": 86,
-        "type": [
+      "description": "LocationText column from adur-public-toilets.csv",
+      "minLength": 40,
+      "maxLength": 86,
+      "type": [
         "string"
-        ]
+      ],
+      "enum": [
+        "BEACH GREEN PUBLIC CONVENIENCES BRIGHTON ROAD LANCING",
+        "BEACH TOILETS BASIN ROAD SOUTH SOUTHWICK",
+        "PUBLIC CONVENIENCE NORTH PAVILION BUCKINGHAM PARK UPPER SHOREHAM ROAD SHOREHAM-BY-SEA",
+        "PUBLIC CONVENIENCE SOUTHWICK STREET SOUTHWICK",
+        "PUBLIC CONVENIENCES ADUR RECREATION GROUND BRIGHTON ROAD SHOREHAM-BY-SEA",
+        "PUBLIC CONVENIENCES BEACH GREEN SHOREHAM-BY-SEA",
+        "PUBLIC CONVENIENCES CEMETERY MILL LANE SHOREHAM-BY-SEA",
+        "PUBLIC CONVENIENCES CIVIC CENTRE HAM ROAD SHOREHAM-BY-SEA",
+        "PUBLIC CONVENIENCES FORTHAVEN SHOREHAM-BY-SEA",
+        "PUBLIC CONVENIENCES MIDDLE STREET SHOREHAM-BY-SEA",
+        "PUBLIC CONVENIENCES MONKS RECREATION GROUND CRABTREE LANE LANCING",
+        "PUBLIC CONVENIENCES SHOPSDAM ROAD LANCING",
+        "PUBLIC CONVENIENCES SOUTH PAVILION BUCKINGHAM PARK UPPER SHOREHAM ROAD SHOREHAM-BY-SEA",
+        "PUBLIC CONVENIENCES YEW TREE CLOSE LANCING",
+        "WEST BEACH PUBLIC CONVENIENCES WEST BEACH ROAD LANCING"
+      ]
     },
     "CoordinateReferenceSystem": {
-        "description": "CoordinateReferenceSystem column from adur-public-toilets.csv",
-        "minLength": 5,
-        "maxLength": 6,
-        "type": [
+      "description": "CoordinateReferenceSystem column from adur-public-toilets.csv",
+      "minLength": 5,
+      "maxLength": 6,
+      "type": [
         "string"
-        ]
+      ],
+      "enum": [
+        "OSGB3",
+        "OSGB36"
+      ]
     },
     "GeoX": {
-        "description": "GeoX column from adur-public-toilets.csv",
-        "minimum": 518072,
-        "maximum": 524401,
-        "type": [
+      "description": "GeoX column from adur-public-toilets.csv",
+      "minimum": 518072,
+      "maximum": 524401,
+      "type": [
         "integer"
-        ]
+      ]
     },
     "GeoY": {
-        "description": "GeoY column from adur-public-toilets.csv",
-        "minimum": 103649,
-        "maximum": 106062,
-        "type": [
+      "description": "GeoY column from adur-public-toilets.csv",
+      "minimum": 103649,
+      "maximum": 106062,
+      "type": [
         "integer"
-        ]
+      ]
     },
     "GeoPointLicensingURL": {
-        "description": "GeoPointLicensingURL column from adur-public-toilets.csv",
-        "minLength": 124,
-        "maxLength": 124,
-        "type": [
+      "description": "GeoPointLicensingURL column from adur-public-toilets.csv",
+      "minLength": 124,
+      "maxLength": 124,
+      "type": [
         "string"
-        ]
+      ],
+      "enum": [
+        "http://www.ordnancesurvey.co.uk/business-and-government/help-and-support/public-sector/guidance/derived-data-exemptions.html"
+      ]
     },
     "Category": {
-        "description": "Category column from adur-public-toilets.csv",
-        "minLength": 4,
-        "maxLength": 15,
-        "type": [
+      "description": "Category column from adur-public-toilets.csv",
+      "minLength": 4,
+      "maxLength": 15,
+      "type": [
         "string"
-        ]
+      ],
+      "enum": [
+        "Female and male",
+        "Mens"
+      ]
     },
     "AccessibleCategory": {
-        "description": "AccessibleCategory column from adur-public-toilets.csv",
-        "minLength": 4,
-        "maxLength": 6,
-        "type": [
+      "description": "AccessibleCategory column from adur-public-toilets.csv",
+      "minLength": 4,
+      "maxLength": 6,
+      "type": [
         "string"
-        ]
+      ],
+      "enum": [
+        "None",
+        "Unisex"
+      ]
     },
     "RADARKeyNeeded": {
-        "description": "RADARKeyNeeded column from adur-public-toilets.csv",
-        "minLength": 2,
-        "maxLength": 3,
-        "type": [
+      "description": "RADARKeyNeeded column from adur-public-toilets.csv",
+      "minLength": 2,
+      "maxLength": 3,
+      "type": [
         "string"
-        ]
+      ],
+      "enum": [
+        "No",
+        "Yes"
+      ]
     },
     "BabyChange": {
-        "description": "BabyChange column from adur-public-toilets.csv",
-        "minLength": 2,
-        "maxLength": 2,
-        "type": [
+      "description": "BabyChange column from adur-public-toilets.csv",
+      "minLength": 2,
+      "maxLength": 2,
+      "type": [
         "string"
-        ]
+      ],
+      "enum": [
+        "No"
+      ]
     },
     "FamilyToilet": {
-        "description": "FamilyToilet column from adur-public-toilets.csv",
-        "minLength": 2,
-        "maxLength": 2,
-        "type": [
+      "description": "FamilyToilet column from adur-public-toilets.csv",
+      "minLength": 2,
+      "maxLength": 2,
+      "type": [
         "string"
-        ]
+      ],
+      "enum": [
+        "No"
+      ]
     },
     "ChangingPlace": {
-        "description": "ChangingPlace column from adur-public-toilets.csv",
-        "minLength": 2,
-        "maxLength": 2,
-        "type": [
+      "description": "ChangingPlace column from adur-public-toilets.csv",
+      "minLength": 2,
+      "maxLength": 2,
+      "type": [
         "string"
-        ]
+      ],
+      "enum": [
+        "No"
+      ]
     },
     "AutomaticPublicConvenience": {
-        "description": "AutomaticPublicConvenience column from adur-public-toilets.csv",
-        "minLength": 2,
-        "maxLength": 2,
-        "type": [
+      "description": "AutomaticPublicConvenience column from adur-public-toilets.csv",
+      "minLength": 2,
+      "maxLength": 2,
+      "type": [
         "string"
-        ]
+      ],
+      "enum": [
+        "No"
+      ]
     },
     "FullTimeStaffing": {
-        "description": "FullTimeStaffing column from adur-public-toilets.csv",
-        "minLength": 2,
-        "maxLength": 2,
-        "type": [
+      "description": "FullTimeStaffing column from adur-public-toilets.csv",
+      "minLength": 2,
+      "maxLength": 2,
+      "type": [
         "string"
-        ]
+      ],
+      "enum": [
+        "No"
+      ]
     },
     "PartOfCommunityScheme": {
-        "description": "PartOfCommunityScheme column from adur-public-toilets.csv",
-        "minLength": 2,
-        "maxLength": 2,
-        "type": [
+      "description": "PartOfCommunityScheme column from adur-public-toilets.csv",
+      "minLength": 2,
+      "maxLength": 2,
+      "type": [
         "string"
-        ]
+      ],
+      "enum": [
+        "No"
+      ]
     },
     "CommunitySchemeName": {
-        "description": "CommunitySchemeName column from adur-public-toilets.csv",
-        "type": [
+      "description": "CommunitySchemeName column from adur-public-toilets.csv",
+      "type": [
         "null"
-        ]
+      ]
     },
     "ChargeAmount": {
-        "description": "ChargeAmount column from adur-public-toilets.csv",
-        "type": [
+      "description": "ChargeAmount column from adur-public-toilets.csv",
+      "type": [
         "null"
-        ]
+      ]
     },
     "InfoURL": {
-        "description": "InfoURL column from adur-public-toilets.csv",
-        "minLength": 66,
-        "maxLength": 66,
-        "type": [
+      "description": "InfoURL column from adur-public-toilets.csv",
+      "minLength": 66,
+      "maxLength": 66,
+      "type": [
         "string"
-        ]
+      ],
+      "enum": [
+        "http://www.adur-worthing.gov.uk/streets-and-travel/public-toilets/"
+      ]
     },
     "OpeningHours": {
-        "description": "OpeningHours column from adur-public-toilets.csv",
-        "minLength": 0,
-        "maxLength": 36,
-        "type": [
+      "description": "OpeningHours column from adur-public-toilets.csv",
+      "minLength": 0,
+      "maxLength": 36,
+      "type": [
         "string",
         "null"
-        ]
+      ],
+      "enum": [
+        "09.00 - 17.00",
+        "S = 08:00 - 21:00 W = 08:00 - 17:00",
+        "S = 09:00 - 15:00 W = 09:00 - 15:00",
+        "S = 09:00 - 21:00 W = 09:00 - 17:00",
+        null
+      ]
     },
     "ManagedBy": {
-        "description": "ManagedBy column from adur-public-toilets.csv",
-        "minLength": 0,
-        "maxLength": 3,
-        "type": [
+      "description": "ManagedBy column from adur-public-toilets.csv",
+      "minLength": 0,
+      "maxLength": 3,
+      "type": [
         "string",
         "null"
-        ]
+      ],
+      "enum": [
+        "ADC",
+        null
+      ]
     },
     "ReportEmail": {
-        "description": "ReportEmail column from adur-public-toilets.csv",
-        "minLength": 30,
-        "maxLength": 30,
-        "type": [
+      "description": "ReportEmail column from adur-public-toilets.csv",
+      "minLength": 30,
+      "maxLength": 30,
+      "type": [
         "string"
-        ]
+      ],
+      "enum": [
+        "surveyors@adur-worthing.gov.uk"
+      ]
     },
     "ReportTel": {
-        "description": "ReportTel column from adur-public-toilets.csv",
-        "minLength": 12,
-        "maxLength": 12,
-        "type": [
+      "description": "ReportTel column from adur-public-toilets.csv",
+      "minLength": 12,
+      "maxLength": 12,
+      "type": [
         "string"
-        ]
+      ],
+      "enum": [
+        "01903 221471"
+      ]
     },
     "Notes": {
-        "description": "Notes column from adur-public-toilets.csv",
-        "minLength": 0,
-        "maxLength": 29,
-        "type": [
+      "description": "Notes column from adur-public-toilets.csv",
+      "minLength": 0,
+      "maxLength": 29,
+      "type": [
         "string",
         "null"
-        ]
+      ],
+      "enum": [
+        "Grounds staff only not public",
+        null
+      ]
     },
     "UPRN": {
-        "description": "UPRN column from adur-public-toilets.csv",
-        "minimum": 60001449,
-        "maximum": 60034215,
-        "type": [
+      "description": "UPRN column from adur-public-toilets.csv",
+      "minimum": 60001449,
+      "maximum": 60034215,
+      "type": [
         "integer"
-        ]
+      ]
     },
     "Postcode": {
-        "description": "Postcode column from adur-public-toilets.csv",
-        "type": [
+      "description": "Postcode column from adur-public-toilets.csv",
+      "type": [
         "null"
-        ]
+      ]
     },
     "StreetAddress": {
-        "description": "StreetAddress column from adur-public-toilets.csv",
-        "minLength": 40,
-        "maxLength": 86,
-        "type": [
+      "description": "StreetAddress column from adur-public-toilets.csv",
+      "minLength": 40,
+      "maxLength": 86,
+      "type": [
         "string"
-        ]
+      ],
+      "enum": [
+        "BEACH GREEN PUBLIC CONVENIENCES BRIGHTON ROAD LANCING",
+        "BEACH TOILETS BASIN ROAD SOUTH SOUTHWICK",
+        "PUBLIC CONVENIENCE NORTH PAVILION BUCKINGHAM PARK UPPER SHOREHAM ROAD SHOREHAM-BY-SEA",
+        "PUBLIC CONVENIENCE SOUTHWICK STREET SOUTHWICK",
+        "PUBLIC CONVENIENCES ADUR RECREATION GROUND BRIGHTON ROAD SHOREHAM-BY-SEA",
+        "PUBLIC CONVENIENCES BEACH GREEN SHOREHAM-BY-SEA",
+        "PUBLIC CONVENIENCES CEMETERY MILL LANE SHOREHAM-BY-SEA",
+        "PUBLIC CONVENIENCES CIVIC CENTRE HAM ROAD SHOREHAM-BY-SEA",
+        "PUBLIC CONVENIENCES FORTHAVEN SHOREHAM-BY-SEA",
+        "PUBLIC CONVENIENCES MIDDLE STREET SHOREHAM-BY-SEA",
+        "PUBLIC CONVENIENCES MONKS RECREATION GROUND CRABTREE LANE LANCING",
+        "PUBLIC CONVENIENCES SHOPSDAM ROAD LANCING",
+        "PUBLIC CONVENIENCES SOUTH PAVILION BUCKINGHAM PARK UPPER SHOREHAM ROAD SHOREHAM-BY-SEA",
+        "PUBLIC CONVENIENCES YEW TREE CLOSE LANCING",
+        "WEST BEACH PUBLIC CONVENIENCES WEST BEACH ROAD LANCING"
+      ]
     },
     "GeoAreaURI": {
-        "description": "GeoAreaURI column from adur-public-toilets.csv",
-        "type": [
+      "description": "GeoAreaURI column from adur-public-toilets.csv",
+      "type": [
         "null"
-        ]
+      ]
     },
     "GeoAreaLabel": {
-        "description": "GeoAreaLabel column from adur-public-toilets.csv",
-        "type": [
+      "description": "GeoAreaLabel column from adur-public-toilets.csv",
+      "type": [
         "null"
-        ]
+      ]
     }
-    },
-    "required": [
+  },
+  "required": [
     "ExtractDate",
     "OrganisationURI",
     "OrganisationLabel",
@@ -288,5 +400,5 @@
     "StreetAddress",
     "GeoAreaURI",
     "GeoAreaLabel"
-    ]
+  ]
 }
