@@ -51,7 +51,6 @@ Common options:
 struct Args {
     flag_value_constraints: bool,
     flag_enum_threshold: usize,
-    #[allow(dead_code)]
     flag_pattern_columns: SelectColumns,
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
@@ -181,15 +180,14 @@ fn get_stats_records(args: &Args) ->
 
 /// get frequency tables from cmd::stats
 /// returns tuple (csv_fields, csv_stats, stats_col_index_map)
-fn get_frequency_tables(args: &Args, columns: Vec<usize>) -> 
+fn get_frequency_tables(args: &Args, column_select_arg: &str) -> 
     CliResult<(ByteRecord, Vec<Frequencies<Vec<u8>>>)> 
 {
-    use itertools::Itertools;
-    let columns_str: String = columns.iter().map(ToString::to_string).join(",");
+
 
     let freq_args = crate::cmd::frequency::Args {
         arg_input: args.arg_input.clone(),
-        flag_select: crate::select::SelectColumns::parse(&columns_str).unwrap(),
+        flag_select: crate::select::SelectColumns::parse(column_select_arg).unwrap(),
         flag_limit: args.flag_enum_threshold,
         flag_asc: false,
         flag_no_nulls: true,
@@ -207,12 +205,14 @@ fn get_frequency_tables(args: &Args, columns: Vec<usize>) ->
     Ok((headers, ftables))
 }
 
-fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<String, Value>> {
+// get column selector arg for low cardinality columns
+fn build_low_cardinality_column_selector_arg(
+    enum_cardinality_threshold: usize,
+    csv_fields: &ByteRecord,
+    csv_stats: &Vec<Stats>,
+    stats_col_index_map: &HashMap<String,usize>
+) -> String {
 
-    // invoke cmd::stats
-    let (csv_fields, csv_stats, stats_col_index_map) = get_stats_records(args)?;
-
-    // track low cardinality columns to invoke cmd::frequency with
     let mut low_cardinality_column_indices = Vec::new();
 
     // identify low cardinality columns
@@ -227,7 +227,7 @@ fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<S
         };
         // debug!("column_{i}: cardinality={col_cardinality}");
 
-        if col_cardinality <= args.flag_enum_threshold {
+        if col_cardinality <= enum_cardinality_threshold {
             // column selector uses 1-based index
             low_cardinality_column_indices.push(i+1);
         };
@@ -235,8 +235,31 @@ fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<S
 
     debug!("low cardinality columns: {low_cardinality_column_indices:?}");
 
+    use itertools::Itertools;
+    let column_select_arg: String = 
+        low_cardinality_column_indices
+            .iter()
+            .map(ToString::to_string)
+            .join(",");
+
+    column_select_arg
+}
+
+fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<String, Value>> {
+
+    // invoke cmd::stats
+    let (csv_fields, csv_stats, stats_col_index_map) = get_stats_records(args)?;
+
+    // build column selector arg to invoke cmd::frequency with
+    let column_select_arg: String = build_low_cardinality_column_selector_arg(
+        args.flag_enum_threshold,
+        &csv_fields,
+        &csv_stats,
+        &stats_col_index_map
+    );
+
     // invoke cmd::frequency
-    let (freq_csv_fields, frequency_tables) = get_frequency_tables(args, low_cardinality_column_indices)?;
+    let (freq_csv_fields, frequency_tables) = get_frequency_tables(args, &column_select_arg)?;
 
     let mut unique_values_map: HashMap<String, Vec<String>> = HashMap::new();
 
