@@ -174,7 +174,7 @@ Several dependencies also have environment variables that influence qsv's perfor
   When incorporating qsv into a data pipeline that runs in batch mode, particularly with very large CSV files using qsv commands that load entire CSV files into memory, you can 
   [fine-tune Mimalloc's behavior using its environment variables](https://github.com/microsoft/mimalloc#environment-options).
 * Network Access ([reqwest](https://docs.rs/reqwest/latest/reqwest/))   
-  qsv uses reqwest for its `fetch` and `--update` functions and will honor [proxy settings](https://docs.rs/reqwest/latest/reqwest/index.html#proxies) set through `HTTP_PROXY`, `HTTPS_PROXY` and `NO_PROXY`.
+  qsv uses reqwest for its `fetch`, `validate` and `--update` functions and will honor [proxy settings](https://docs.rs/reqwest/latest/reqwest/index.html#proxies) set through `HTTP_PROXY`, `HTTPS_PROXY` and `NO_PROXY`.
   
 
 > **NOTE:** To get a list of all qsv-relevant environment variables, run `qsv --envlist`.
