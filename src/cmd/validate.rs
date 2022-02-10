@@ -29,7 +29,7 @@ Example output files from `mydata.csv`. If piped from stdin, then filename is `s
 JSON Schema can be a local file or a URL. 
 
 When run without JSON Schema, only a simple CSV check (RFC 4180) is performed, with the caveat that 
- on non-Windows machines, each record is delimited by a LF (\n) instead of CRLF (\r\n).
+ on non-Windows machines, each record is delimited by a LF (\\n) instead of CRLF (\\r\\n).
 
 
 Usage:
