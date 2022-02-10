@@ -53,7 +53,7 @@ fn generate_schema_with_value_constraints_then_feed_into_validate() {
     cmd.arg("adur-public-toilets.csv");
     cmd.arg("--value-constraints");
     cmd.arg("--enum-threshold");
-    cmd.arg("20");
+    cmd.arg("13");
     wrk.output(&mut cmd);
 
     // load output schema file

@@ -419,10 +419,14 @@ fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<S
 
 
         if col_null_count > 0 && !type_list.contains(&Value::String("null".to_string())) {
-            // for fields that are not mandatory:
-            // JSON String "null" is required in Type list
+            // for fields that are not mandatory,
+            // having JSON String "null" in Type lists indicates that value can be missing
             type_list.push(Value::String("null".to_string()));
-            // and JSON NULL is required in Enum list
+        }
+
+        if col_null_count > 0 && enum_list.len() > 0 {
+            // for fields that are not mandatory and actualy have enum list generated,
+            // having JSON NULL indicates that missing value is allowed 
             enum_list.push(Value::Null);
         }
 
