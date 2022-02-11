@@ -16,8 +16,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-      with:
-        submodules: recursive
     - uses: actions/setup-python@v2
       with:
         python-version: '3.8'
@@ -29,3 +27,13 @@ jobs:
       run: cargo build --verbose --locked --all-features
     - name: Run tests
       run: cargo test --verbose --locked --all-features
+    - name: Check formatting
+      uses: actions-rs/cargo@v1
+      with:
+        command: fmt
+        args: -- --check
+    - name: Clippy Check
+      uses: actions-rs/cargo@v1
+      with:
+        command: clippy
+        args: -- -D warnings
