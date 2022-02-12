@@ -181,6 +181,7 @@ impl Args {
         records
     }
 
+    #[inline]
     fn compute<I>(&self, sel: &Selection, it: I) -> CliResult<Vec<Stats>>
     where
         I: Iterator<Item = csv::Result<csv::ByteRecord>>,
@@ -189,7 +190,11 @@ impl Args {
         for row in it {
             let row = row?;
             for (i, field) in sel.select(&row).enumerate() {
-                stats[i].add(field);
+                unsafe {
+                    // we use unsafe here so we skip unnecessary
+                    // bounds checking for this hot loop
+                    stats.get_unchecked_mut(i).add(field);
+                }
             }
         }
         Ok(stats)
@@ -221,6 +226,7 @@ impl Args {
         }
     }
 
+    #[inline]
     fn new_stats(&self, record_len: usize) -> Vec<Stats> {
         repeat(Stats::new(WhichStats {
             include_nulls: self.flag_nulls,
@@ -344,6 +350,7 @@ impl Stats {
     }
 
     #[allow(clippy::option_map_unit_fn)]
+    #[inline]
     fn add(&mut self, sample: &[u8]) {
         let sample_type = FieldType::from_sample(sample);
         self.typ.merge(sample_type);
@@ -639,6 +646,7 @@ struct TypedSum {
 }
 
 impl TypedSum {
+    #[inline]
     fn add(&mut self, typ: FieldType, sample: &[u8]) {
         if sample.is_empty() {
             return;
@@ -698,6 +706,7 @@ struct TypedMinMax {
 }
 
 impl TypedMinMax {
+    #[inline]
     fn add(&mut self, typ: FieldType, sample: &[u8]) {
         self.str_len.add(sample.len());
         if sample.is_empty() {
@@ -777,6 +786,7 @@ impl Commute for TypedMinMax {
     }
 }
 
+#[inline]
 fn from_bytes<T: FromStr>(bytes: &[u8]) -> Option<T> {
     str::from_utf8(bytes).ok().and_then(|s| s.parse().ok())
 }
