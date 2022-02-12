@@ -148,7 +148,7 @@ Get the week number and store it in the week_number column:
 
 GEOCODE
 Geocodes to the nearest city center point given a location column
-[i.e. a column which contains a latitude, longitude coordinate] against
+[i.e. a column which contains a latitude, longitude WGS84 coordinate] against
 an embedded copy of the geonames city database. 
 
 The geocoded information is formatted based on --formatstr, returning
