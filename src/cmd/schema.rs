@@ -47,6 +47,7 @@ Common options:
                                Must be a single character. [default: ,]
 ";
 
+#[allow(dead_code)]
 #[derive(Deserialize, Debug)]
 struct Args {
     flag_enum_threshold: usize,
@@ -192,7 +193,7 @@ fn get_frequency_tables(
 fn build_low_cardinality_column_selector_arg(
     enum_cardinality_threshold: usize,
     csv_fields: &ByteRecord,
-    csv_stats: &Vec<Stats>,
+    csv_stats: &[Stats],
     stats_col_index_map: &HashMap<String, usize>,
 ) -> String {
     let mut low_cardinality_column_indices = Vec::new();
@@ -226,6 +227,7 @@ fn build_low_cardinality_column_selector_arg(
     column_select_arg
 }
 
+#[allow(clippy::len_zero)]
 fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<String, Value>> {
     // invoke cmd::stats
     let (csv_fields, csv_stats, stats_col_index_map) = get_stats_records(args)?;
