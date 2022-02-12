@@ -4,7 +4,6 @@ use serde_json::Value;
 
 #[test]
 fn generate_schema_with_value_constraints_then_feed_into_validate() {
-
     // create worksapce and invoke schema command with value constraints flag
     let wrk = Workdir::new("schema").flexible(true);
 
@@ -31,7 +30,8 @@ fn generate_schema_with_value_constraints_then_feed_into_validate() {
         .expect("valid JSON Schema");
 
     // diff output json with expected json
-    let expected_schema: String = wrk.load_test_resource("adur-public-toilets.csv.schema-with-value-constraints.expected.json");
+    let expected_schema: String = wrk
+        .load_test_resource("adur-public-toilets.csv.schema-with-value-constraints.expected.json");
     let expected_schema_json: Value = serde_json::from_str(&expected_schema.to_string()).unwrap();
     assert_json_eq!(expected_schema_json, output_schema_json);
 

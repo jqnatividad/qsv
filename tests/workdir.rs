@@ -184,7 +184,6 @@ impl Workdir {
         path.push("resources/test/");
         path.push(filename);
 
-
         self.from_str::<String>(path.as_path())
     }
 

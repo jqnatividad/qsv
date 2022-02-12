@@ -1,15 +1,15 @@
-use crate::cmd::stats::{Stats};
-use crate::config::{Delimiter};
+use crate::cmd::stats::Stats;
+use crate::config::Delimiter;
 use crate::select::SelectColumns;
 use crate::util;
 use crate::CliError;
 use crate::CliResult;
-use csv::{ByteRecord};
+use csv::ByteRecord;
 use log::{debug, error, info, warn};
 use serde::Deserialize;
 use serde_json::{json, value::Number, Map, Value};
 use stats::Frequencies;
-use std::{fs::File, io::Write, path::Path, collections::hash_map::HashMap};
+use std::{collections::hash_map::HashMap, fs::File, io::Write, path::Path};
 
 macro_rules! fail {
     ($mesg:expr) => {
@@ -74,14 +74,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut schema_output_file =
         File::create(&schema_output_filename).expect("unable to create schema output file");
 
-    let properties_map: Map<String, Value> = 
-        match infer_schema_from_stats(&args, input_filename) {
-            Ok(map) => map,
-            Err(e) => {
-                let msg = format!("Failed to infer schema via stats and frequency: {e}");
-                fail!(msg);
-            }
-        };
+    let properties_map: Map<String, Value> = match infer_schema_from_stats(&args, input_filename) {
+        Ok(map) => map,
+        Err(e) => {
+            let msg = format!("Failed to infer schema via stats and frequency: {e}");
+            fail!(msg);
+        }
+    };
 
     let mut fields: Vec<Value> = Vec::new();
     for key in properties_map.keys() {
@@ -114,10 +113,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
 /// get stats records from cmd::stats
 /// returns tuple (csv_fields, csv_stats, stats_col_index_map)
-fn get_stats_records(args: &Args) -> 
-    CliResult<(ByteRecord, Vec<Stats>, HashMap<String, usize>)> 
-{
-
+fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, HashMap<String, usize>)> {
     let stats_args = crate::cmd::stats::Args {
         arg_input: args.arg_input.clone(),
         flag_select: crate::select::SelectColumns::parse("").unwrap(),
@@ -157,10 +153,9 @@ fn get_stats_records(args: &Args) ->
     let mut stats_col_index_map = HashMap::new();
 
     for (i, col) in stats_columns.iter().enumerate() {
-
         if col != "field" {
             // need offset by 1 due to extra "field" column in headers that's not in stats records
-            stats_col_index_map.insert(col.to_owned(), i-1);
+            stats_col_index_map.insert(col.to_owned(), i - 1);
         }
     }
 
@@ -169,11 +164,10 @@ fn get_stats_records(args: &Args) ->
 
 /// get frequency tables from cmd::stats
 /// returns tuple (csv_fields, csv_stats, stats_col_index_map)
-fn get_frequency_tables(args: &Args, column_select_arg: &str) -> 
-    CliResult<(ByteRecord, Vec<Frequencies<Vec<u8>>>)> 
-{
-
-
+fn get_frequency_tables(
+    args: &Args,
+    column_select_arg: &str,
+) -> CliResult<(ByteRecord, Vec<Frequencies<Vec<u8>>>)> {
     let freq_args = crate::cmd::frequency::Args {
         arg_input: args.arg_input.clone(),
         flag_select: crate::select::SelectColumns::parse(column_select_arg).unwrap(),
@@ -199,9 +193,8 @@ fn build_low_cardinality_column_selector_arg(
     enum_cardinality_threshold: usize,
     csv_fields: &ByteRecord,
     csv_stats: &Vec<Stats>,
-    stats_col_index_map: &HashMap<String,usize>
+    stats_col_index_map: &HashMap<String, usize>,
 ) -> String {
-
     let mut low_cardinality_column_indices = Vec::new();
 
     // identify low cardinality columns
@@ -209,7 +202,7 @@ fn build_low_cardinality_column_selector_arg(
         // grab stats record for current column
         let stats_record = csv_stats.get(i).unwrap().clone().to_record();
 
-        // get Cardinality 
+        // get Cardinality
         let col_cardinality = match stats_record.get(stats_col_index_map["cardinality"]) {
             Some(s) => s.parse::<usize>().unwrap_or(0_usize),
             None => 0_usize,
@@ -218,24 +211,22 @@ fn build_low_cardinality_column_selector_arg(
 
         if col_cardinality <= enum_cardinality_threshold {
             // column selector uses 1-based index
-            low_cardinality_column_indices.push(i+1);
+            low_cardinality_column_indices.push(i + 1);
         };
     }
 
     debug!("low cardinality columns: {low_cardinality_column_indices:?}");
 
     use itertools::Itertools;
-    let column_select_arg: String = 
-        low_cardinality_column_indices
-            .iter()
-            .map(ToString::to_string)
-            .join(",");
+    let column_select_arg: String = low_cardinality_column_indices
+        .iter()
+        .map(ToString::to_string)
+        .join(",");
 
     column_select_arg
 }
 
 fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<String, Value>> {
-
     // invoke cmd::stats
     let (csv_fields, csv_stats, stats_col_index_map) = get_stats_records(args)?;
 
@@ -244,7 +235,7 @@ fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<S
         args.flag_enum_threshold,
         &csv_fields,
         &csv_stats,
-        &stats_col_index_map
+        &stats_col_index_map,
     );
 
     // invoke cmd::frequency
@@ -260,7 +251,7 @@ fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<S
             match std::str::from_utf8(val_byte_vec) {
                 Ok(s) => {
                     unique_values.push(s.to_string());
-                },
+                }
                 Err(e) => {
                     let msg = format!("Can't read value from column {i} as utf8: {e}");
                     error!("{msg}");
@@ -282,9 +273,12 @@ fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<S
         // sort the values so enum list so schema can be diff'ed between runs
         unique_values.sort();
 
-        debug!("enum[{header_string}]: len={}, val={:?}", unique_values.len(), unique_values);
+        debug!(
+            "enum[{header_string}]: len={}, val={:?}",
+            unique_values.len(),
+            unique_values
+        );
         unique_values_map.insert(header_string, unique_values);
-
     }
 
     // dbg!(&unique_values_map);
@@ -310,12 +304,11 @@ fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<S
 
         // get Type from stats record
         let col_type = stats_record.get(stats_col_index_map["type"]).unwrap();
-        // get NullCount 
+        // get NullCount
         let col_null_count = match stats_record.get(stats_col_index_map["nullcount"]) {
             Some(s) => s.parse::<usize>().unwrap_or(0_usize),
             None => 0_usize,
         };
-
 
         // debug!(
         //     "{header_string}: type={col_type}, optional={}",
@@ -405,8 +398,6 @@ fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<S
             }
         }
 
-
-
         if col_null_count > 0 && !type_list.contains(&Value::String("null".to_string())) {
             // for fields that are not mandatory,
             // having JSON String "null" in Type lists indicates that value can be missing
@@ -415,7 +406,7 @@ fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<S
 
         if col_null_count > 0 && enum_list.len() > 0 {
             // for fields that are not mandatory and actualy have enum list generated,
-            // having JSON NULL indicates that missing value is allowed 
+            // having JSON NULL indicates that missing value is allowed
             enum_list.push(Value::Null);
         }
 
@@ -433,4 +424,3 @@ fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<S
 
     Ok(properties_map)
 }
-
