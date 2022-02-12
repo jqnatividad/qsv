@@ -2,42 +2,6 @@ use crate::workdir::Workdir;
 use assert_json_diff::assert_json_eq;
 use serde_json::Value;
 
-
-#[test]
-fn generate_schema_no_value_constraints() {
-
-    let wrk = Workdir::new("schema").flexible(true);
-
-    // copy csv file to workdir
-    let csv: String = wrk.load_test_resource("adur-public-toilets.csv");
-    wrk.create_from_string("adur-public-toilets.csv", &csv);
-
-    // run schema command without value constraints
-    let mut cmd = wrk.command("schema");
-    cmd.arg("adur-public-toilets.csv");
-
-    wrk.output(&mut cmd);
-
-    // load output schema file
-    let output_schema_string: String =
-        wrk.from_str(&wrk.path("adur-public-toilets.csv.schema.json"));
-    assert!(output_schema_string.len() > 0);
-    let output_schema_json: Value = serde_json::from_str(&output_schema_string).unwrap();
-
-    // make sure it's a valid JSON Schema by compiling with jsonschema library
-    jsonschema::JSONSchema::options()
-        .compile(&output_schema_json)
-        .expect("valid JSON Schema");
-
-    // diff output json with expected json
-
-    // load expected schema file
-    let expected_schema: String = wrk.load_test_resource("adur-public-toilets.csv.schema.expected.json");
-
-    let expected_schema_json: Value = serde_json::from_str(&expected_schema.to_string()).unwrap();
-    assert_json_eq!(expected_schema_json, output_schema_json);
-}
-
 #[test]
 fn generate_schema_with_value_constraints_then_feed_into_validate() {
 
@@ -51,7 +15,6 @@ fn generate_schema_with_value_constraints_then_feed_into_validate() {
     // run schema command with value constraints option
     let mut cmd = wrk.command("schema");
     cmd.arg("adur-public-toilets.csv");
-    cmd.arg("--value-constraints");
     cmd.arg("--enum-threshold");
     cmd.arg("13");
     wrk.output(&mut cmd);
