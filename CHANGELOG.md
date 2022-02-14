@@ -5,6 +5,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.32.1] - 2022-02-06
+### Changed
+* `fetch`: upgrade to jql 3.1.0 by @mhuang74 in https://github.com/jqnatividad/qsv/pull/160
+* `schema`: refactor tests by @mhuang74 in https://github.com/jqnatividad/qsv/pull/161
+* `schema`: support Enum constraint by @mhuang74 in https://github.com/jqnatividad/qsv/pull/162
+* `schema`: default to include value constraints  by @mhuang74 in https://github.com/jqnatividad/qsv/pull/166
+* bumped `qsv-stats` to 0.3.6 for `stats` & `frequency` performance tweaks
+* specify that `apply geocode` expects WGS84 coordinate system
+* cargo update bump several dependencies
+* changed CI to run clippy and rustfmt automatically
+
+### Fixed
+* `schema`: Fix bug with enum by @mhuang74 in https://github.com/jqnatividad/qsv/pull/163
 
 ## [0.32.0] - 2022-02-06
 ### Added
