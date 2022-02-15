@@ -157,7 +157,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             debug!("instance[{}]: {:?}", &row_index, &instance);
 
             match validate_json_instance(&instance, &schema_compiled) {
-                Ok(validation_result) => {
+                Ok(mut validation_result) => {
                     let results = &validation_result["valid"];
 
                     debug!("validation[{row_index}]: {results:?}");
@@ -198,18 +198,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             invalid_wtr.write_byte_record(&record)?;
 
                             // write to error report
-                            let mut enriched_results_map = validation_result
-                                .as_object()
-                                .expect("get validation results as map")
-                                .clone();
-                            let _ = enriched_results_map.insert(
+                            validation_result.as_object_mut().unwrap().insert(
                                 "row_index".to_string(),
                                 Value::Number(Number::from(row_index)),
                             );
-                            let enriched_results: Value = Value::Object(enriched_results_map);
 
                             error_report_file
-                                .write_all(format!("{enriched_results}\n").as_bytes())
+                                .write_all(format!("{validation_result}\n").as_bytes())
                                 .expect("unable to write to validation error report");
 
                             // for fail-fast, just break out of loop
