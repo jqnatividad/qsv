@@ -280,14 +280,12 @@
     },
     "ReportEmail": {
       "description": "ReportEmail column from adur-public-toilets.csv",
-      "minLength": 30,
-      "maxLength": 30,
+      "minLength": 31,
+      "maxLength": 32,
       "type": [
         "string"
       ],
-      "enum": [
-        "surveyors@adur-worthing.gov.uk"
-      ]
+      "pattern": "^\\w{9}\\d(?:\\d)?@\\w{4}\\-\\w{8}\\.\\w{3}\\.\\w\\w$"
     },
     "ReportTel": {
       "description": "ReportTel column from adur-public-toilets.csv",

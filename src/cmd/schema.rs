@@ -5,6 +5,7 @@ use crate::util;
 use crate::CliError;
 use crate::CliResult;
 use csv::ByteRecord;
+use grex::RegExpBuilder;
 use log::{debug, error, info, warn};
 use serde::Deserialize;
 use serde_json::{json, value::Number, Map, Value};
@@ -34,8 +35,8 @@ Usage:
     qsv schema [options] [<input>]
 
 Schema options:
-    --enum-threshold NUM       Cardinality threshold for adding enum constraints [default: 12]
-    --pattern-columns <args>   Select columns to add pattern constraints [default: none]
+    --enum-threshold NUM       Cardinality threshold for adding enum constraints [default: 50]
+    --pattern-columns <args>   Select columns to add pattern constraints
 
 Common options:
     -h, --help                 Display this message
@@ -47,7 +48,6 @@ Common options:
                                Must be a single character. [default: ,]
 ";
 
-#[allow(dead_code)]
 #[derive(Deserialize, Debug)]
 struct Args {
     flag_enum_threshold: usize,
@@ -76,17 +76,29 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         File::create(&schema_output_filename).expect("unable to create schema output file");
 
     // build schema for each field by their inferred type, min/max value/length, and unique values
-    let properties_map: Map<String, Value> = match infer_schema_from_stats(&args, input_filename) {
-        Ok(map) => map,
-        Err(e) => {
-            let msg = format!("Failed to infer schema via stats and frequency: {e}");
-            fail!(msg);
+    let mut properties_map: Map<String, Value> =
+        match infer_schema_from_stats(&args, input_filename) {
+            Ok(map) => map,
+            Err(e) => {
+                let msg = format!("Failed to infer schema via stats and frequency: {e}");
+                fail!(msg);
+            }
+        };
+
+    // generate regex patternfor selected String columns
+    let pattern_map = generate_string_patterns(&args, &properties_map)?;
+
+    // enrich properties map with pattern constraint for String fields
+    for (field_name, field_def) in properties_map.iter_mut() {
+        // dbg!(&field_name, &field_def);
+        if pattern_map.contains_key(field_name) && should_emit_pattern_constraint(field_def) {
+            let field_def_map = field_def.as_object_mut().unwrap();
+            let pattern = Value::String(pattern_map[field_name].clone());
+            field_def_map.insert("pattern".to_string(), pattern);
         }
-    };
+    }
 
-    // generate regex patterns for selected columns
-    let pattern_map: HashMap<String, String> = get_pattern_map(&args)?;
-
+    // generated list of required fields
     let required_fields = get_required_fields(&properties_map);
 
     // create final JSON object for output
@@ -112,7 +124,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     Ok(())
 }
-
 
 /// Builds JSON MAP object that corresponds to the "properties" object of JSON Schema (Draft 7) by looking at CSV value stats
 /// Supported JSON Schema validation vocabularies:
@@ -275,7 +286,6 @@ fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<S
     Ok(properties_map)
 }
 
-
 /// get stats records from cmd::stats
 /// returns tuple (csv_fields, csv_stats, stats_col_index_map)
 fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, HashMap<String, usize>)> {
@@ -327,7 +337,6 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, HashMap<
     Ok((csv_fields, csv_stats, stats_col_index_map))
 }
 
-
 /// get column selector argument string for low cardinality columns
 fn build_low_cardinality_column_selector_arg(
     enum_cardinality_threshold: usize,
@@ -366,14 +375,12 @@ fn build_low_cardinality_column_selector_arg(
     column_select_arg
 }
 
-
 /// get frequency tables from cmd::stats
 /// returns map of unique valules keyed by header
 fn get_unique_values(
     args: &Args,
     column_select_arg: &str,
 ) -> CliResult<HashMap<String, Vec<String>>> {
-
     // prepare arg for invoking cmd::frequency
     let freq_args = crate::cmd::frequency::Args {
         arg_input: args.arg_input.clone(),
@@ -399,10 +406,9 @@ fn get_unique_values(
 
 /// construct map of unique values keyed by header
 fn construct_map_of_unique_values(
-    freq_csv_fields: ByteRecord, 
-    frequency_tables:Vec<Frequencies<Vec<u8>>>
+    freq_csv_fields: ByteRecord,
+    frequency_tables: Vec<Frequencies<Vec<u8>>>,
 ) -> CliResult<HashMap<String, Vec<String>>> {
-
     let mut unique_values_map: HashMap<String, Vec<String>> = HashMap::new();
 
     // iterate through fields and gather unique values for each field
@@ -410,10 +416,8 @@ fn construct_map_of_unique_values(
         let mut unique_values = Vec::new();
 
         for (val_byte_vec, _count) in frequency_tables[i].most_frequent() {
-
             let val_string = convert_to_string(val_byte_vec.as_slice())?;
             unique_values.push(val_string);
-
         }
 
         let header_string = convert_to_string(header_byte_slice)?;
@@ -440,7 +444,8 @@ fn convert_to_string(byte_slice: &[u8]) -> CliResult<String> {
     let string: String = match std::str::from_utf8(byte_slice) {
         Ok(s) => s.to_string(),
         Err(e) => {
-            let msg = format!("Can't convert byte slice to utf8 string. slice={byte_slice:?}, error={e}");
+            let msg =
+                format!("Can't convert byte slice to utf8 string. slice={byte_slice:?}, error={e}");
             error!("{msg}");
             fail!(msg);
         }
@@ -461,9 +466,12 @@ fn get_required_fields(properties_map: &Map<String, Value>) -> Vec<Value> {
     fields
 }
 
-fn get_pattern_map(args: &Args) -> CliResult<HashMap<String, String>> {
-
-    let mut patterns_map: HashMap<String, String> = HashMap::new();
+/// generate map of regex patterns from selected String column of CSV
+fn generate_string_patterns(
+    args: &Args,
+    properties_map: &Map<String, Value>,
+) -> CliResult<HashMap<String, String>> {
+    // standard boiler-plate for reading CSV
 
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
@@ -475,44 +483,69 @@ fn get_pattern_map(args: &Args) -> CliResult<HashMap<String, String>> {
     let headers = rdr.byte_headers()?.clone();
     let sel = rconfig.selection(&headers)?;
 
-    dbg!(&sel);
+    let mut pattern_map: HashMap<String, String> = HashMap::new();
 
+    // return empty pattern map when:
+    //  * no columns are selected
+    //  * all columns are selected (by default, all columns are selected when no columns are explicitly specified)
+    if sel.len() == 0 || sel.len() == headers.len() {
+        debug!("no pattern columns selected");
+        return Ok(pattern_map);
+    }
+
+    // Map each Header to its unique Set of values
     let mut unique_values_map: HashMap<String, HashSet<String>> = HashMap::new();
 
     #[allow(unused_assignments)]
     let mut record = csv::ByteRecord::new();
     while rdr.read_byte_record(&mut record)? {
-
-        for (i, field) in sel.select(&record).enumerate() {
+        for (i, value_byte_slice) in sel.select(&record).enumerate() {
             // get header based on column index in Selection array
-            let header_byte_slice = headers.get(sel[i]).unwrap();
-            let header_string = convert_to_string(header_byte_slice)?;
-            let value = convert_to_string(field)?;
+            let header_byte_slice: &[u8] = headers.get(sel[i]).unwrap();
 
-            if unique_values_map.contains_key(&header_string) {
-                unique_values_map.get_mut(&header_string).unwrap().insert(value);
-            } else {
-                let mut set: HashSet<String> = HashSet::new();
-                set.insert(value);
+            // convert header and value byte arrays to UTF8 strings
+            let header_string: String = convert_to_string(header_byte_slice)?;
 
-                unique_values_map.insert(header_string, set);
+            // pattern validation only applies to String type, so skip if not String
+            if !should_emit_pattern_constraint(&properties_map[&header_string]) {
+                continue;
             }
+
+            let value_string: String = convert_to_string(value_byte_slice)?;
+
+            let set = unique_values_map
+                .entry(header_string)
+                .or_insert_with(HashSet::<String>::new);
+            set.insert(value_string);
         }
     }
 
-    dbg!(&unique_values_map);
-
-    use grex::RegExpBuilder;
+    debug!("unique values for eligible pattern columns: {unique_values_map:?}");
 
     for (header, value_set) in unique_values_map.iter() {
+        // Convert Set to Vector
         let values: Vec<&String> = Vec::from_iter(value_set);
-        let regexp = RegExpBuilder::from(&values).build();
 
-        dbg!(&header, &regexp);
+        // build regex based on unique values
+        let regexp: String = RegExpBuilder::from(&values)
+            .with_conversion_of_digits()
+            .with_conversion_of_words()
+            .with_conversion_of_repetitions()
+            .with_minimum_repetitions(2)
+            .build();
 
-        patterns_map.insert(&header, &regexp);
+        pattern_map.insert(header.to_owned(), regexp);
     }
 
-    Ok(patterns_map)
+    debug!("pattern map: {pattern_map:?}");
 
+    Ok(pattern_map)
+}
+
+// only emit "pattern" constraint for String fields without enum constraint
+fn should_emit_pattern_constraint(field_def: &Value) -> bool {
+    let type_list = field_def[&"type"].as_array().unwrap();
+    let has_enum = field_def.get(&"enum").is_some();
+
+    type_list.contains(&Value::String("string".to_string())) && !has_enum
 }
