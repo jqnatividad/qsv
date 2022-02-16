@@ -133,6 +133,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let gil = Python::acquire_gil();
     let py = gil.python();
+    pyo3::prepare_freethreaded_python();
 
     let helpers = PyModule::from_code(py, HELPERS, "qsv_helpers.py", "qsv_helpers")?;
     let globals = PyDict::new(py);
