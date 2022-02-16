@@ -152,9 +152,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     #[allow(unused_assignments)]
     let mut record = csv::ByteRecord::new();
-    for row in rdr.byte_records() {
-        record = row?;
-
+    while rdr.read_byte_record(&mut record)? {
         if !args.flag_quiet {
             progress.inc(1);
         }
