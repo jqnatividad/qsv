@@ -82,7 +82,7 @@ jobs:
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}
             use-cross: false
             strip: false
-            addl-build-args: --no-default-features --features=apply,generate,lua,python
+            addl-build-args: --features=apply,generate,lua,python
           - os: macos-latest
             os-name: macos
             target: x86_64-apple-darwin
@@ -119,7 +119,7 @@ jobs:
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}
             use-cross: true
             strip: false
-            addl-build-args: --no-default-features --features=apply,generate,lua,foreach
+            addl-build-args: --features=apply,generate,lua,foreach
           - os: ubuntu-latest
             os-name: linux
             target: arm-unknown-linux-musleabihf
@@ -128,7 +128,7 @@ jobs:
             asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}
             use-cross: true
             strip: false
-            addl-build-args: --no-default-features --features=apply,generate,lua,foreach
+            addl-build-args: --features=apply,generate,lua,foreach
 
     steps:
     - name: Installing Rust toolchain
