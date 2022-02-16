@@ -34,16 +34,25 @@ jobs:
             target: x86_64-unknown-linux-gnu
             architecture: x86_64
             artifact_name: qsv*
-            asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-x86_64-unknown-linux-gnu.zip
+            asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}
             use-cross: false
             strip: true
             addl-build-args: --features=apply,generate,lua,foreach,python
           - os: ubuntu-latest
             os-name: linux
+            target: x86_64-unknown-linux-musl
+            architecture: x86_64
+            artifact_name: qsv*
+            asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}
+            use-cross: false
+            strip: true
+            addl-build-args: --features=apply,generate,lua,foreach,python            
+          - os: ubuntu-latest
+            os-name: linux
             target: i686-unknown-linux-gnu
             architecture: i686
             artifact_name: qsv*
-            asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-i686-unknown-linux-gnu.zip
+            asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}
             use-cross: true
             strip: true
             addl-build-args: --features=apply,generate,lua,foreach
@@ -52,7 +61,7 @@ jobs:
             target: x86_64-pc-windows-msvc
             architecture: x86_64
             artifact_name: qsv*.exe
-            asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-x86_64-pc-windows-msvc.zip
+            asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}
             use-cross: false
             strip: false
             addl-build-args: --features=apply,generate,lua,python
@@ -61,7 +70,7 @@ jobs:
             target: i686-pc-windows-msvc
             architecture: i686
             artifact_name: qsv*.exe
-            asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-i686-pc-windows-msvc.zip
+            asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}
             use-cross: true
             strip: false
             addl-build-args: --features=apply,generate,lua
@@ -70,7 +79,7 @@ jobs:
             target: x86_64-pc-windows-gnu
             architecture: x86_64
             artifact_name: qsv*.exe
-            asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-x86_64-pc-windows-gnu.zip
+            asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}
             use-cross: false
             strip: false
             addl-build-args: --no-default-features --features=apply,generate,lua,python
@@ -79,7 +88,7 @@ jobs:
             target: x86_64-apple-darwin
             architecture: x86_64
             artifact_name: qsv*
-            asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-x86_64-apple-darwin.zip
+            asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}
             use-cross: false
             strip: true
             addl-build-args: --features=apply,generate,lua,foreach,python
@@ -88,7 +97,7 @@ jobs:
             target: aarch64-apple-darwin
             architecture: aarch64
             artifact_name: qsv*
-            asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-aarch64-apple-darwin.zip
+            asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}
             build-prep: true
             use-cross: true
             strip: true
@@ -98,7 +107,7 @@ jobs:
             target: aarch64-unknown-linux-gnu
             architecture: aarch64
             artifact_name: qsv*
-            asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-aarch64-unknown-linux-gnu.zip
+            asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}
             use-cross: true
             strip: false
             addl-build-args: --features=apply,generate,lua,foreach
@@ -107,7 +116,7 @@ jobs:
             target: arm-unknown-linux-gnueabihf
             architecture: arm
             artifact_name: qsv*
-            asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-arm-unknown-linux-gnueabihf.zip
+            asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}
             use-cross: true
             strip: false
             addl-build-args: --no-default-features --features=apply,generate,lua,foreach
@@ -116,7 +125,7 @@ jobs:
             target: arm-unknown-linux-musleabihf
             architecture: arm
             artifact_name: qsv*
-            asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-arm-unknown-linux-musleabihf.zip
+            asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}
             use-cross: true
             strip: false
             addl-build-args: --no-default-features --features=apply,generate,lua,foreach
@@ -163,13 +172,13 @@ jobs:
         mkdir qsv-${{ needs.analyze-tags.outputs.previous-tag }}
         cp target/${{ matrix.job.target }}/release/${{ matrix.job.artifact_name }} qsv-${{ needs.analyze-tags.outputs.previous-tag }}        
     - name: zip up binaries
-      run: 7z a -tzip ${{ matrix.job.asset_name }} ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/${{ matrix.job.artifact_name }} -mx=9 -mmt=on -mpass=7
+      run: 7z a -tzip ${{ matrix.job.asset_name }}-${{ matrix.job.target }}.zip ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/${{ matrix.job.artifact_name }} -mx=9 -mmt=on -mpass=7
     - name: Upload zipped binaries to release
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         file: ${{ matrix.job.asset_name }}
-        asset_name: ${{ matrix.job.asset_name }}
+        asset_name: ${{ matrix.job.asset_name }}-${{ matrix.job.target }}.zip
         overwrite: true
         tag: ${{ needs.analyze-tags.outputs.previous-tag }}    
  
