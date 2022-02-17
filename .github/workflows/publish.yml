@@ -123,7 +123,7 @@ jobs:
     - name: Set binary zip file name
       env:
         binary_zip: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip
-      run: echo "binary zip: ${{ env.binary_zip }}"
+      run: echo "binary zip: ${{ binary_zip }}"
     - name: Installing Rust toolchain
       uses: actions-rs/toolchain@v1
       with:
@@ -165,13 +165,13 @@ jobs:
         mkdir qsv-${{ needs.analyze-tags.outputs.previous-tag }}
         cp target/${{ matrix.job.target }}/release/${{ matrix.job.artifact_name }} qsv-${{ needs.analyze-tags.outputs.previous-tag }}        
     - name: zip up binaries
-      run: 7z a -tzip ${{ env.binary_zip }} ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/${{ matrix.job.artifact_name }} -mx=9 -mmt=on -mpass=7
+      run: 7z a -tzip ${{ binary_zip }} ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/${{ matrix.job.artifact_name }} -mx=9 -mmt=on -mpass=7
     - name: Upload zipped binaries to release
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ${{ env.binary_zip }}
-        asset_name: ${{ env.binary_zip }}
+        file: ${{ binary_zip }}
+        asset_name: ${{ binary_zip }}
         overwrite: true
         tag: ${{ needs.analyze-tags.outputs.previous-tag }}    
  
