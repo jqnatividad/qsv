@@ -121,7 +121,8 @@ jobs:
 
     steps:
     - name: Set binary zip file name
-      binary_zip: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip
+      env:
+        binary_zip: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip
     - name: Installing Rust toolchain
       uses: actions-rs/toolchain@v1
       with:
