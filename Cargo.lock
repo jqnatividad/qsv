@@ -2671,6 +2671,7 @@ dependencies = [
  "qsv_currency",
  "quickcheck",
  "rand 0.8.5",
+ "rayon",
  "regex",
  "reqwest",
  "reverse_geocoder",

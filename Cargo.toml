@@ -80,6 +80,7 @@ pyo3 = { version = "0.15", features = [
 qsv-stats = "0.3"
 qsv_currency = { version = "0.5", optional = true }
 rand = "0.8"
+rayon = "1.5.1"
 regex = "1"
 reqwest = { version = "0.11", features = [
     "blocking",
