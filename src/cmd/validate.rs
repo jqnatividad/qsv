@@ -7,15 +7,18 @@ use csv::ByteRecord;
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use jsonschema::{output::BasicOutput, JSONSchema};
 use log::{debug, info};
+use rayon::prelude::*;
 use serde::Deserialize;
 use serde_json::{value::Number, Map, Value};
-use std::{env, fs::File, io::BufReader, io::BufWriter, io::Read, io::Write, ops::Add};
+use std::{env, fs::File, io::BufReader, io::BufWriter, io::Read, io::Write, str};
 
 macro_rules! fail {
     ($mesg:expr) => {
         Err(CliError::Other($mesg))
     };
 }
+
+const BATCH_SIZE: usize = 16000;
 
 static USAGE: &str = "
 Validate CSV data with JSON Schema, and put invalid records into separate file.
@@ -75,16 +78,37 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut rdr = rconfig.reader()?;
 
+    // if no json schema supplied, only let csv reader validate csv file 
+    if args.arg_json_schema.is_none() {
+
+        // just read csv file and let csv reader report problems
+        let mut record = csv::ByteRecord::new();
+        while rdr.read_byte_record(&mut record)? {
+            // this loop is for csv::reader to do basic csv validation on read
+        }
+
+        let msg = "Can't validate without schema, but csv looks good.".to_string();
+        info!("{msg}");
+        println!("{msg}");
+
+        return Ok(())
+    }
+
+
+
     let headers = rdr.byte_headers()?.clone();
 
     let input_path: &str = &args.arg_input.unwrap_or_else(|| "stdin.csv".to_string());
 
-    let valid_suffix: &str = &args.flag_valid.unwrap_or_else(|| "valid".to_string());
-    let mut valid_wtr = Config::new(&Some(input_path.to_owned() + "." + valid_suffix)).writer()?;
+    // let valid_suffix: &str = &args.flag_valid.unwrap_or_else(|| "valid".to_string());
+    // let mut valid_wtr = Config::new(&Some(input_path.to_owned() + "." + valid_suffix)).writer()?;
 
-    let invalid_suffix: &str = &args.flag_invalid.unwrap_or_else(|| "invalid".to_string());
-    let mut invalid_wtr =
-        Config::new(&Some(input_path.to_owned() + "." + invalid_suffix)).writer()?;
+    // let invalid_suffix: &str = &args.flag_invalid.unwrap_or_else(|| "invalid".to_string());
+    // let mut invalid_wtr =
+    //     Config::new(&Some(input_path.to_owned() + "." + invalid_suffix)).writer()?;
+
+    // let mut valid_file_empty: bool = true;
+    // let mut invalid_file_empty: bool = true;
 
     let wtr_capacitys = env::var("QSV_WTR_BUFFER_CAPACITY")
         .unwrap_or_else(|_| DEFAULT_WTR_BUFFER_CAPACITY.to_string());
@@ -105,9 +129,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         progress.set_draw_target(ProgressDrawTarget::hidden());
     }
 
-    // check if need to validate via json schema, or just let csv reader validate csv file
-    if let Some(json_schema_uri) = &args.arg_json_schema {
-        let (schema_json, schema_compiled): (Value, JSONSchema) = match load_json(json_schema_uri) {
+    // parse and compile supplied JSON Schema
+    let (schema_json, schema_compiled): (Value, JSONSchema) = 
+        match load_json(&args.arg_json_schema.unwrap()) {
             Ok(s) => {
                 // parse JSON string
                 match serde_json::from_str(&s) {
@@ -130,143 +154,219 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 return fail!(format!("Unable to retrieve json. error: {e}"));
             }
         };
-        debug!("compiled schema: {:?}", &schema_compiled);
 
-        let mut valid_file_empty: bool = true;
-        let mut invalid_file_empty: bool = true;
+    debug!("compiled schema: {:?}", &schema_compiled);
 
-        // amortize memory allocation by reusing record
-        #[allow(unused_assignments)]
-        let mut record = csv::ByteRecord::new();
+    // keep track of where we are
+    let mut row_index: usize = 0;
+    let mut invalid_count: usize = 0;
 
-        let mut row_index: u32 = 0;
-        let mut invalid_count: u32 = 0;
+    // amortize memory allocation by reusing record
+    #[allow(unused_assignments)]
+    let mut record = csv::ByteRecord::new();
+    // reuse batch buffer
+    let mut batch = Vec::with_capacity(BATCH_SIZE);
 
-        while rdr.read_byte_record(&mut record)? {
-            row_index = row_index.add(1);
+    // main loop to read CSV and construct batches for parallel processing.
+    // each batch is processed via Rayon parallel iterator.
+    // loop exists when batch is empty.
+    loop {
 
-            let instance: Value = match to_json_instance(&headers, &record, &schema_json) {
-                Ok(obj) => obj,
-                Err(e) => {
-                    return fail!(format!(
-                        "Unable to convert CSV to json. row: {row_index}, error: {e}"
-                    ));
-                }
-            };
+        for _ in 0..BATCH_SIZE {
+            row_index += 1;
 
-            debug!("instance[{}]: {:?}", &row_index, &instance);
-
-            match validate_json_instance(&instance, &schema_compiled) {
-                Ok(mut validation_result) => {
-                    let results = &validation_result["valid"];
-
-                    debug!("validation[{row_index}]: {results:?}");
-
-                    let valid_flag = match results.as_bool().to_owned() {
-                        Some(b) => b,
-                        None => {
-                            return fail!(format!(
-                                "Unexpected validation result. row: {row_index}, result: {results:?}"
-                            ));
-                        }
-                    };
-
-                    match valid_flag {
-                        true => {
-                            if valid_file_empty {
-                                valid_wtr.write_byte_record(&headers)?;
-                                valid_file_empty = false;
-                            }
-
-                            valid_wtr.write_byte_record(&record)?;
-                        }
-                        false => {
-                            invalid_count = invalid_count.add(1);
-
-                            debug!(
-                                "schema violation. row: {row_index}, violation: {validation_result:?}"
-                            );
-                            // dbg!(&validation_result, &record);
-
-                            // write to invalid file
-
-                            if invalid_file_empty {
-                                invalid_wtr.write_byte_record(&headers)?;
-                                invalid_file_empty = false;
-                            }
-
-                            invalid_wtr.write_byte_record(&record)?;
-
-                            // write to error report
-                            validation_result.as_object_mut().unwrap().insert(
-                                "row_index".to_string(),
-                                Value::Number(Number::from(row_index)),
-                            );
-
-                            error_report_file
-                                .write_all(format!("{validation_result}\n").as_bytes())
-                                .expect("unable to write to validation error report");
-
-                            // for fail-fast, just break out of loop
-                            if args.flag_fail_fast {
-                                break;
-                            }
-                        }
+            match rdr.read_byte_record(&mut record) {
+                Ok(success) => {
+                    if success {
+                        record.push_field(row_index.to_string().as_bytes());
+                        batch.push(record.to_owned());
+                    } else {
+                        // nothing to read
+                        break;
                     }
                 }
                 Err(e) => {
-                    return fail!(format!("Unable to validate. row: {row_index}, error: {e}"));
+                    return Err(CliError::Other(format!("Error reading row: {row_index}: {e}")));
                 }
             }
+        }
+        if batch.is_empty() {
+            break;
+        }
 
-            if !args.flag_quiet {
-                progress.inc(1);
+        let batch_size = batch.len();
+
+        // do actual validation via Rayon parallel iterator
+        let validation_errors: Vec<Option<Value>> = 
+            batch
+            .par_iter()
+            .map(|record| {
+                match do_json_validation(&headers, &record, &schema_json, &schema_compiled) {
+                    Ok(o) => o,
+                    Err(e) => {
+                        panic!("Error with validation: {e:?}");
+                    }
+                }
+            })
+            .collect();
+
+        batch.clear();
+
+        // write to validation error report, but keep Vec<bool> to gen valid/invalid files later
+        for error in validation_errors {
+            match error {
+                Some(validation_error) => {
+                    invalid_count += 1;
+                    
+                    error_report_file
+                        .write_all(format!("{validation_error}\n").as_bytes())
+                        .expect("unable to write to validation error report");
+                
+                    // for fail-fast, just break out of loop after first error
+                    if args.flag_fail_fast {
+                        break;
+                    }
+                }
+                None => {
+                     // do nothing 
+                } 
             }
-        } // end main while loop over csv records
+        }
 
-        // flush error report; file gets closed automagically when out-of-scope
-        error_report_file.flush().unwrap();
 
-        use thousands::Separable;
 
         if !args.flag_quiet {
-            progress.set_message(format!(
-                " validated {} records.",
-                progress.length().separate_with_commas()
-            ));
-            util::finish_progress(&progress);
+            progress.inc(batch_size as u64);
         }
+    } // end loop
+    
 
-        // done with validation; print output
-        if args.flag_fail_fast {
-            let msg = format!(
-                "fail-fast enabled. stopping after first invalid record at row {}",
-                row_index.separate_with_commas()
-            );
-            info!("{msg}");
-            println!("{msg}");
-        } else {
-            let msg = format!(
-                "{} out of {} records invalid.",
-                invalid_count.separate_with_commas(),
-                row_index.separate_with_commas()
-            );
-            info!("{msg}");
-            println!("{msg}");
-        }
+
+    // flush error report; file gets closed automagically when out-of-scope
+    error_report_file.flush().unwrap();
+
+    use thousands::Separable;
+
+    if !args.flag_quiet {
+        progress.set_message(format!(
+            " validated {} records.",
+            progress.length().separate_with_commas()
+        ));
+        util::finish_progress(&progress);
+    }
+
+    // done with validation; print output
+    if args.flag_fail_fast {
+        let msg = format!(
+            "fail-fast enabled. stopping after first invalid record at row {}",
+            row_index.separate_with_commas()
+        );
+        info!("{msg}");
+        println!("{msg}");
     } else {
-        // just read csv file and let csv reader report problems
-        let mut record = csv::ByteRecord::new();
-        while rdr.read_byte_record(&mut record)? {
-            // this loop is for csv::reader to do basic csv validation on read
-        }
-
-        let msg = "Can't validate without schema, but csv looks good.".to_string();
+        let msg = format!(
+            "{} out of {} records invalid.",
+            invalid_count.separate_with_commas(),
+            row_index.separate_with_commas()
+        );
         info!("{msg}");
         println!("{msg}");
     }
 
     Ok(())
+}
+
+fn do_json_validation(
+    headers: &ByteRecord, 
+    record: &ByteRecord, 
+    schema_json: &Value, 
+    schema_compiled: &JSONSchema
+) -> CliResult<Option<Value>> {
+
+    // row index was added as last column
+    let row_index_string = str::from_utf8(record.get(headers.len()).unwrap()).unwrap();
+    let row_index: usize = row_index_string.parse::<usize>().unwrap();
+
+    let instance: Value = match to_json_instance(headers, record, schema_json) {
+        Ok(obj) => obj,
+        Err(e) => {
+            return fail!(format!(
+                "Unable to convert CSV to json. row: {row_index}, error: {e}"
+            ));
+        }
+    };
+
+    debug!("instance[{row_index}]: {instance:?}");
+
+    match validate_json_instance(&instance, &schema_compiled) {
+        Ok(mut validation_result) => {
+            
+            let is_valid = validation_result.get("valid").unwrap().as_bool().unwrap();
+
+            if is_valid {
+                Ok(None)
+            } else {
+                debug!("row[{row_index}] is invalid");
+
+                // insert row index and return validation error
+                validation_result.as_object_mut().unwrap().insert(
+                    "row_index".to_string(),
+                    Value::Number(Number::from(row_index)),
+                );
+
+                Ok(Some(validation_result))
+            }
+
+            // debug!("validation[{row_index}]: {results:?}");
+
+            // let valid_flag = match results.as_bool() {
+            //     Some(b) => b,
+            //     None => {
+            //         return fail!(format!(
+            //             "Unexpected validation result. row: {row_index}, result: {results:?}"
+            //         ));
+            //     }
+            // };
+
+            // match valid_flag {
+            //     true => {
+            //         if valid_file_empty {
+            //             valid_wtr.write_byte_record(&headers)?;
+            //             valid_file_empty = false;
+            //         }
+
+            //         valid_wtr.write_byte_record(&record)?;
+            //     }
+            //     false => {
+            //         invalid_count = invalid_count.add(1);
+
+            //         debug!(
+            //             "schema violation. row: {row_index}, violation: {validation_result:?}"
+            //         );
+            //         // dbg!(&validation_result, &record);
+
+            //         // write to invalid file
+
+            //         if invalid_file_empty {
+            //             invalid_wtr.write_byte_record(&headers)?;
+            //             invalid_file_empty = false;
+            //         }
+
+            //         invalid_wtr.write_byte_record(&record)?;
+
+
+
+
+
+
+            //     }
+            // }
+        }
+        Err(e) => {
+            return fail!(format!("Unable to validate. row: {row_index}, error: {e}"));
+        }
+    }
+
 }
 
 /// convert CSV Record into JSON instance by referencing Type from Schema
