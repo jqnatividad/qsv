@@ -72,7 +72,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // dbg!(&args);
 
-    let rconfig = Config::new(&args.arg_input.clone())
+    let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers);
 
@@ -80,7 +80,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // if no json schema supplied, only let csv reader validate csv file
     if args.arg_json_schema.is_none() {
-
         // just read csv file and let csv reader report problems
         let mut record = csv::ByteRecord::new();
         while rdr.read_byte_record(&mut record)? {
@@ -91,16 +90,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         info!("{msg}");
         println!("{msg}");
 
-        return Ok(())
+        return Ok(());
     }
-
-
 
     let headers = rdr.byte_headers()?.clone();
 
-    let input_path = args.arg_input.clone().unwrap_or_else(|| "stdin.csv".to_string());
-
-
+    let input_path = args
+        .arg_input
+        .clone()
+        .unwrap_or_else(|| "stdin.csv".to_string());
 
     let wtr_capacitys = env::var("QSV_WTR_BUFFER_CAPACITY")
         .unwrap_or_else(|_| DEFAULT_WTR_BUFFER_CAPACITY.to_string());
@@ -165,7 +163,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // each batch is processed via Rayon parallel iterator.
     // loop exists when batch is empty.
     loop {
-
         for _ in 0..BATCH_SIZE {
             match rdr.read_byte_record(&mut record) {
                 Ok(has_data) => {
@@ -179,7 +176,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     }
                 }
                 Err(e) => {
-                    return Err(CliError::Other(format!("Error reading row: {row_number}: {e}")));
+                    return Err(CliError::Other(format!(
+                        "Error reading row: {row_number}: {e}"
+                    )));
                 }
             }
         }
@@ -192,11 +191,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let batch_size = batch.len();
 
         // do actual validation via Rayon parallel iterator
-        let validation_results: Vec<Option<Value>> =
-            batch
+        let validation_results: Vec<Option<Value>> = batch
             .par_iter()
             .map(|record| {
-                match do_json_validation(&headers, &record, &schema_json, &schema_compiled) {
+                match do_json_validation(&headers, record, &schema_json, &schema_compiled) {
                     Ok(o) => o,
                     Err(e) => {
                         panic!("Unrecoverable error: {e:?}");
@@ -225,12 +223,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     }
                 }
                 None => {
-                     valid_flags.push(true);
+                    valid_flags.push(true);
                 }
             }
         }
-
-
 
         if !args.flag_quiet {
             progress.inc(batch_size as u64);
@@ -249,16 +245,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         // prepare output files
         let valid_suffix: &str = &args.flag_valid.unwrap_or_else(|| "valid".to_string());
-        let mut valid_wtr = Config::new(&Some(input_path.to_owned() + "." + valid_suffix)).writer()?;
+        let mut valid_wtr =
+            Config::new(&Some(input_path.to_owned() + "." + valid_suffix)).writer()?;
         valid_wtr.write_byte_record(&headers)?;
 
         let invalid_suffix: &str = &args.flag_invalid.unwrap_or_else(|| "invalid".to_string());
-        let mut invalid_wtr =
-            Config::new(&Some(input_path.to_owned() + "." + invalid_suffix)).writer()?;
+        let mut invalid_wtr = Config::new(&Some(input_path + "." + invalid_suffix)).writer()?;
         invalid_wtr.write_byte_record(&headers)?;
 
         // get another reader to split into valid/invalid files
-        let rconfig = Config::new(&args.arg_input.clone())
+        let rconfig = Config::new(&args.arg_input)
             .delimiter(args.flag_delimiter)
             .no_headers(args.flag_no_headers);
         let rdr = &mut rconfig.reader()?;
@@ -268,16 +264,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             row_num += 1;
 
             // vector is 0-based, row_num is 1-based
-            let is_valid = valid_flags[row_num-1];
+            let is_valid = valid_flags[row_num - 1];
 
             debug!("row[{row_num}]: valid={is_valid}");
 
-            if is_valid{
+            if is_valid {
                 valid_wtr.write_byte_record(&record)?;
             } else {
                 invalid_wtr.write_byte_record(&record)?;
             }
-
         }
 
         valid_wtr.flush().unwrap();
@@ -320,9 +315,8 @@ fn do_json_validation(
     headers: &ByteRecord,
     record: &ByteRecord,
     schema_json: &Value,
-    schema_compiled: &JSONSchema
+    schema_compiled: &JSONSchema,
 ) -> CliResult<Option<Value>> {
-
     // row number was added as last column
     let row_number_string = str::from_utf8(record.get(headers.len()).unwrap()).unwrap();
     let row_number: usize = row_number_string.parse::<usize>().unwrap();
@@ -338,9 +332,8 @@ fn do_json_validation(
 
     debug!("instance[{row_number}]: {instance:?}");
 
-    match validate_json_instance(&instance, &schema_compiled) {
+    match validate_json_instance(&instance, schema_compiled) {
         Ok(mut validation_result) => {
-
             let is_valid = validation_result.get("valid").unwrap().as_bool().unwrap();
 
             if is_valid {
@@ -356,57 +349,11 @@ fn do_json_validation(
 
                 Ok(Some(validation_result))
             }
-
-            // debug!("validation[{row_number}]: {results:?}");
-
-            // let valid_flag = match results.as_bool() {
-            //     Some(b) => b,
-            //     None => {
-            //         return fail!(format!(
-            //             "Unexpected validation result. row: {row_number}, result: {results:?}"
-            //         ));
-            //     }
-            // };
-
-            // match valid_flag {
-            //     true => {
-            //         if valid_file_empty {
-            //             valid_wtr.write_byte_record(&headers)?;
-            //             valid_file_empty = false;
-            //         }
-
-            //         valid_wtr.write_byte_record(&record)?;
-            //     }
-            //     false => {
-            //         invalid_count = invalid_count.add(1);
-
-            //         debug!(
-            //             "schema violation. row: {row_number}, violation: {validation_result:?}"
-            //         );
-            //         // dbg!(&validation_result, &record);
-
-            //         // write to invalid file
-
-            //         if invalid_file_empty {
-            //             invalid_wtr.write_byte_record(&headers)?;
-            //             invalid_file_empty = false;
-            //         }
-
-            //         invalid_wtr.write_byte_record(&record)?;
-
-
-
-
-
-
-            //     }
-            // }
         }
         Err(e) => {
             return fail!(format!("Unable to validate. row: {row_number}, error: {e}"));
         }
     }
-
 }
 
 /// convert CSV Record into JSON instance by referencing Type from Schema
