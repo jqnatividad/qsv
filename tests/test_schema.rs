@@ -44,7 +44,7 @@ fn generate_schema_with_value_constraints_then_feed_into_validate() {
     wrk.output(&mut cmd2);
 
     // validation report
-    let validation_errors_expected = r#"{"valid":false,"errors":[{"keywordLocation":"/properties/ExtractDate/type","instanceLocation":"/ExtractDate","error":"null is not of type \"string\""},{"keywordLocation":"/properties/ExtractDate/enum","instanceLocation":"/ExtractDate","error":"null is not one of [\"07/07/2014 00:00\",\"2014-07-07 00:00\"]"}],"row_index":1}
+    let validation_errors_expected = r#"{"valid":false,"errors":[{"keywordLocation":"/properties/ExtractDate/type","instanceLocation":"/ExtractDate","error":"null is not of type \"string\""},{"keywordLocation":"/properties/ExtractDate/enum","instanceLocation":"/ExtractDate","error":"null is not one of [\"07/07/2014 00:00\",\"2014-07-07 00:00\"]"}],"row_number":1}
 "#;
 
     // check validation error output
