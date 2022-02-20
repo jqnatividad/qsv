@@ -65,12 +65,12 @@ Available commands
 | [stats](/src/cmd/stats.rs#L24)[^2][^3][^4] | Infer data type & compute descriptive statistics for each column in a CSV (sum, min/max, min/max length, mean, stddev, variance, quartiles, IQR, lower/upper fences, skew, median, mode, cardinality & nullcount)  |
 | [table](/src/cmd/table.rs#L12)[^3] | Show aligned output of a CSV using [elastic tabstops](https://github.com/BurntSushi/tabwriter).  |
 | [transpose](/src/cmd/transpose.rs#L9)[^3] | Transpose rows/columns of a CSV.  |
-| [validate](/src/cmd/validate.rs#L21) | Validate CSV data with JSON Schema. See `schema` command. |
+| [validate](/src/cmd/validate.rs#L21)[^4] | Validate CSV data with JSON Schema. See `schema` command. |
 
 [^1]: enabled by optional feature flag. Not available on `qsvlite`.   
 [^2]: uses an index when available. `join` always uses indices.   
 [^3]: loads the entire CSV into memory. Note that `stats` & `transpose` have modes that do not load the entire CSV into memory.   
-[^4]: multithreaded by default (use `--jobs` option to adjust).   
+[^4]: multithreaded by default (use `--jobs` option to adjust, when applicable).   
 
 Installation
 ------------
