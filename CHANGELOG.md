@@ -11,8 +11,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `validate`: improve performance by @mhuang74 in https://github.com/jqnatividad/qsv/pull/170
 * `fetch`: Spell out k:v -> key:value in docopt usage text
 * cargo update bump several dependencies
-* refactored GH Actions publish binaries workflow - added x86_64-unknown-linux-musl target and 
-  enabling mimalloc on arm and windows-gnu
 
 ### Fixed
 * `validate`: bug fix and refactor by @mhuang74 in https://github.com/jqnatividad/qsv/pull/171
