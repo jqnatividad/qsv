@@ -183,7 +183,7 @@ Feature Flags
 -------------
 `qsv` has several features:
 
-* `mimalloc` (default) - use the mimalloc allocator (see [Memory Allocator](#memory_allocator) for more info).
+* `mimalloc` (default) - use the mimalloc allocator (see [Memory Allocator](#memory-allocator) for more info).
 * `apply` - enable `apply` command. This swiss-army knife of CSV transformations is very powerful, but it has a lot of dependencies that increases both compile time and binary size. 
 * `generate` - enable `generate` command. The test data generator also has a large dependency tree.
 
