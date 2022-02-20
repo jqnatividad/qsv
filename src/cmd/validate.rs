@@ -6,6 +6,7 @@ use anyhow::{anyhow, Result};
 use csv::ByteRecord;
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use jsonschema::{output::BasicOutput, JSONSchema};
+#[allow(unused_imports)]
 use log::{debug, info};
 use rayon::prelude::*;
 use serde::Deserialize;
@@ -56,7 +57,7 @@ Common options:
     -q, --quiet                Don't show progress bars.
 ";
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize)]
 struct Args {
     flag_fail_fast: bool,
     flag_valid: Option<String>,
@@ -70,8 +71,6 @@ struct Args {
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
-
-    // dbg!(&args);
 
     let mut rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
@@ -375,7 +374,7 @@ fn do_json_validation(
             if is_valid {
                 Ok(None)
             } else {
-                debug!("row[{row_number}] is invalid");
+                // debug!("row[{row_number}] is invalid");
 
                 // insert row index and return validation error
                 validation_result.as_object_mut().unwrap().insert(
