@@ -255,9 +255,9 @@ variable `QSV_RDR_BUFFER_CAPACITY` in bytes.
 The same is true with the write buffer (default: 64k) with the `QSV_WTR_BUFFER_CAPACITY` environment variable.
 
 ### Multithreading
-Several commands support multithreading - `stats`, `frequency` and `split`.
+Several commands support multithreading - `stats`, `frequency`, `split` (using [threadpool](https://docs.rs/threadpool/latest/threadpool/)) and `validate` (using [rayon](https://docs.rs/rayon/latest/rayon/)).
 
-Previously, these commands spawned several jobs equal to the number of logical processors. After extensive benchmarking, it turns out
+Previously, the threadpool commands spawned several jobs equal to the number of logical processors. After extensive benchmarking, it turns out
 doing so often results in the multithreaded runs running slower than single-threaded runs.
 
 Multithreaded jobs do increase performance - to a point. After a certain number of threads, there are not only diminishing returns, the multithreading overhead actually results in slower runs.
@@ -267,6 +267,8 @@ Starting with qsv 0.22.0, a heuristic of setting the maximum number of jobs to t
 These [observations were gathered using the benchmark script](https://github.com/jqnatividad/qsv/blob/master/docs/BENCHMARKS.md), using a relatively large file (520mb, 41 column, 1M row sample of NYC's 311 data). Performance will vary based on environment - CPU architecture, amount of memory, operating system, I/O speed, and the number of background tasks, so this heuristic will not work for every situation.
 
 To find out your jobs setting, call `qsv --version`. The second to the last number is the number of jobs qsv will use for multi-threaded commands. The last number is the number of logical processors detected by qsv.
+
+> **NOTE:** Going forward, all multithreaded commands will eventually be migrated to rayon.
 
 ### Benchmarking for Performance
 Use and fine-tune the [benchmark script](scripts/benchmark-basic.sh) when tweaking qsv's performance to your environment.
