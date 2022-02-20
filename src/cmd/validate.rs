@@ -6,6 +6,7 @@ use anyhow::{anyhow, Result};
 use csv::ByteRecord;
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use jsonschema::{output::BasicOutput, JSONSchema};
+#[allow(unused_imports)]
 use log::{debug, info};
 use rayon::prelude::*;
 use serde::Deserialize;
@@ -18,6 +19,7 @@ macro_rules! fail {
     };
 }
 
+// number of CSV rows to process in a batch
 const BATCH_SIZE: usize = 16000;
 
 static USAGE: &str = "
@@ -55,7 +57,7 @@ Common options:
     -q, --quiet                Don't show progress bars.
 ";
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize)]
 struct Args {
     flag_fail_fast: bool,
     flag_valid: Option<String>,
@@ -70,13 +72,11 @@ struct Args {
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
-    // dbg!(&args);
-
-    let rconfig = Config::new(&args.arg_input)
+    let mut rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers);
 
-    let rdr = &mut rconfig.reader()?;
+    let mut rdr = rconfig.reader()?;
 
     // if no json schema supplied, only let csv reader validate csv file
     if args.arg_json_schema.is_none() {
@@ -95,24 +95,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let headers = rdr.byte_headers()?.clone();
 
-    let input_path = args
-        .arg_input
-        .clone()
-        .unwrap_or_else(|| "stdin.csv".to_string());
-
-    let wtr_capacitys = env::var("QSV_WTR_BUFFER_CAPACITY")
-        .unwrap_or_else(|_| DEFAULT_WTR_BUFFER_CAPACITY.to_string());
-    let wtr_buffer: usize = wtr_capacitys.parse().unwrap_or(DEFAULT_WTR_BUFFER_CAPACITY);
-
-    let mut error_report_file = BufWriter::with_capacity(
-        wtr_buffer,
-        File::create(input_path.to_owned() + ".validation-errors.jsonl")
-            .expect("unable to create error report file"),
-    );
-
     // prep progress bar
     let progress = ProgressBar::new(0);
-    let record_count = util::count_rows(&rconfig.flexible(true));
+    // for purpose of full file row count, prevent CSV reader to abort on incosistent column count
+    rconfig = rconfig.flexible(true);
+    let record_count = util::count_rows(&rconfig);
+    rconfig = rconfig.flexible(false);
 
     if !args.flag_quiet {
         util::prep_progress(&progress, record_count);
@@ -136,7 +124,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         }
                     }
                     Err(e) => {
-                        //error!("Unable to parse schema json. error: {}", e);
                         return fail!(format!("Unable to parse schema json. error: {e}"));
                     }
                 }
@@ -146,10 +133,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         };
 
-    debug!("compiled schema: {:?}", &schema_compiled);
+    // debug!("compiled schema: {:?}", &schema_compiled);
 
-    // keep track of where we are
+    // how many rows read and processed as batches
     let mut row_number: usize = 0;
+    // how many invalid rows found
     let mut invalid_count: usize = 0;
 
     // amortize memory allocation by reusing record
@@ -158,6 +146,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // reuse batch buffer
     let mut batch = Vec::with_capacity(BATCH_SIZE);
     let mut valid_flags: Vec<bool> = Vec::with_capacity(record_count as usize);
+    let mut validation_error_messages: Vec<String> = Vec::new();
 
     // main loop to read CSV and construct batches for parallel processing.
     // each batch is processed via Rayon parallel iterator.
@@ -191,7 +180,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let batch_size = batch.len();
 
         // do actual validation via Rayon parallel iterator
-        let validation_results: Vec<Option<Value>> = batch
+        let validation_results: Vec<Option<String>> = batch
             .par_iter()
             .map(|record| {
                 match do_json_validation(&headers, record, &schema_json, &schema_compiled) {
@@ -206,21 +195,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         batch.clear();
 
         // write to validation error report, but keep Vec<bool> to gen valid/invalid files later
-        // because Rayon collect() guaranteeds original order, can just update valid_flags vector sequentially
+        // because Rayon collect() guaranteeds original order, can sequentially append results to vector with each batch
         for result in validation_results {
             match result {
-                Some(validation_error) => {
+                Some(validation_error_msg) => {
                     invalid_count += 1;
                     valid_flags.push(false);
 
-                    error_report_file
-                        .write_all(format!("{validation_error}\n").as_bytes())
-                        .expect("unable to write to validation error report");
-
-                    // for fail-fast, just break out of loop after first error
-                    if args.flag_fail_fast {
-                        break;
-                    }
+                    validation_error_messages.push(validation_error_msg);
                 }
                 None => {
                     valid_flags.push(true);
@@ -231,52 +213,34 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         if !args.flag_quiet {
             progress.inc(batch_size as u64);
         }
+
+        // for fail-fast, exit loop if batch has any error
+        if args.flag_fail_fast && invalid_count > 0 {
+            break;
+        }
     } // end infinite loop
 
-    debug!("valid flags: {valid_flags:?}");
-    debug!("invalid count: {invalid_count}");
-
-    // flush error report; file gets closed automagically when out-of-scope
-    error_report_file.flush().unwrap();
-
-    // only write out invalid/valid output files if there are actually invalid records
+    // only write out invalid/valid/errors output files if there are actually invalid records.
+    // if 100% invalid, then valid file is not needed. but this is rare so live with creating empty file.
     if invalid_count > 0 {
-        let mut row_num: usize = 0;
+        let input_path = args
+            .arg_input
+            .clone()
+            .unwrap_or_else(|| "stdin.csv".to_string());
 
-        // prepare output files
-        let valid_suffix: &str = &args.flag_valid.unwrap_or_else(|| "valid".to_string());
-        let mut valid_wtr =
-            Config::new(&Some(input_path.to_owned() + "." + valid_suffix)).writer()?;
-        valid_wtr.write_byte_record(&headers)?;
+        write_error_report(&input_path, validation_error_messages)?;
 
-        let invalid_suffix: &str = &args.flag_invalid.unwrap_or_else(|| "invalid".to_string());
-        let mut invalid_wtr = Config::new(&Some(input_path + "." + invalid_suffix)).writer()?;
-        invalid_wtr.write_byte_record(&headers)?;
+        let valid_suffix = args.flag_valid.unwrap_or_else(|| "valid".to_string());
+        let invalid_suffix = args.flag_invalid.unwrap_or_else(|| "invalid".to_string());
 
-        // get another reader to split into valid/invalid files
-        let rconfig = Config::new(&args.arg_input)
-            .delimiter(args.flag_delimiter)
-            .no_headers(args.flag_no_headers);
-        let rdr = &mut rconfig.reader()?;
-
-        let mut record = csv::ByteRecord::new();
-        while rdr.read_byte_record(&mut record)? {
-            row_num += 1;
-
-            // vector is 0-based, row_num is 1-based
-            let is_valid = valid_flags[row_num - 1];
-
-            debug!("row[{row_num}]: valid={is_valid}");
-
-            if is_valid {
-                valid_wtr.write_byte_record(&record)?;
-            } else {
-                invalid_wtr.write_byte_record(&record)?;
-            }
-        }
-
-        valid_wtr.flush().unwrap();
-        invalid_wtr.flush().unwrap();
+        split_invalid_records(
+            &rconfig,
+            &valid_flags[..],
+            &headers,
+            &input_path,
+            &valid_suffix,
+            &invalid_suffix,
+        )?;
     }
 
     use thousands::Separable;
@@ -292,7 +256,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // done with validation; print output
     if args.flag_fail_fast {
         let msg = format!(
-            "fail-fast enabled. stopping after first invalid record at row {}",
+            "fail-fast enabled. stopped after row {}.\n{} out of {} records invalid.",
+            row_number.separate_with_commas(),
+            invalid_count.separate_with_commas(),
             row_number.separate_with_commas()
         );
         info!("{msg}");
@@ -310,13 +276,82 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     Ok(())
 }
 
+fn split_invalid_records(
+    rconfig: &Config,
+    valid_flags: &[bool],
+    headers: &ByteRecord,
+    input_path: &str,
+    valid_suffix: &str,
+    invalid_suffix: &str,
+) -> CliResult<()> {
+    // track how many rows read for splitting into valid/invalid
+    // should not exceed row_number when aborted early due to fail-fast
+    let mut split_row_num: usize = 0;
+
+    // prepare output writers
+    let mut valid_wtr = Config::new(&Some(input_path.to_owned() + "." + valid_suffix)).writer()?;
+    valid_wtr.write_byte_record(headers)?;
+
+    let mut invalid_wtr =
+        Config::new(&Some(input_path.to_owned() + "." + invalid_suffix)).writer()?;
+    invalid_wtr.write_byte_record(headers)?;
+
+    let mut rdr = rconfig.reader()?;
+
+    let mut record = csv::ByteRecord::new();
+    while rdr.read_byte_record(&mut record)? {
+        split_row_num += 1;
+
+        // length of valid_flags is max number of rows we can split
+        if split_row_num > valid_flags.len() {
+            break;
+        }
+
+        // vector is 0-based, row_num is 1-based
+        let is_valid = valid_flags[split_row_num - 1];
+
+        if is_valid {
+            valid_wtr.write_byte_record(&record)?;
+        } else {
+            invalid_wtr.write_byte_record(&record)?;
+        }
+    }
+
+    valid_wtr.flush()?;
+    invalid_wtr.flush()?;
+
+    Ok(())
+}
+
+fn write_error_report(input_path: &str, validation_error_messages: Vec<String>) -> CliResult<()> {
+    let wtr_capacitys = env::var("QSV_WTR_BUFFER_CAPACITY")
+        .unwrap_or_else(|_| DEFAULT_WTR_BUFFER_CAPACITY.to_string());
+    let wtr_buffer_size: usize = wtr_capacitys.parse().unwrap_or(DEFAULT_WTR_BUFFER_CAPACITY);
+
+    let output_file = File::create(input_path.to_owned() + ".validation-errors.jsonl")?;
+
+    let mut output_writer = BufWriter::with_capacity(wtr_buffer_size, output_file);
+
+    // write out error report
+    for error_msg in validation_error_messages {
+        output_writer.write_all(error_msg.as_bytes())?;
+        // since writer is buffered, it's more efficient to do additional write than append Newline to message
+        output_writer.write_all(&[b'\n'])?;
+    }
+
+    // flush error report; file gets closed automagically when out-of-scope
+    output_writer.flush()?;
+
+    Ok(())
+}
+
 /// if given record is valid, CliResult would hold None, otherwise, Some(Value)
 fn do_json_validation(
     headers: &ByteRecord,
     record: &ByteRecord,
     schema_json: &Value,
     schema_compiled: &JSONSchema,
-) -> CliResult<Option<Value>> {
+) -> CliResult<Option<String>> {
     // row number was added as last column
     let row_number_string = str::from_utf8(record.get(headers.len()).unwrap()).unwrap();
     let row_number: usize = row_number_string.parse::<usize>().unwrap();
@@ -330,7 +365,7 @@ fn do_json_validation(
         }
     };
 
-    debug!("instance[{row_number}]: {instance:?}");
+    // debug!("instance[{row_number}]: {instance:?}");
 
     match validate_json_instance(&instance, schema_compiled) {
         Ok(mut validation_result) => {
@@ -339,7 +374,7 @@ fn do_json_validation(
             if is_valid {
                 Ok(None)
             } else {
-                debug!("row[{row_number}] is invalid");
+                // debug!("row[{row_number}] is invalid");
 
                 // insert row index and return validation error
                 validation_result.as_object_mut().unwrap().insert(
@@ -347,7 +382,7 @@ fn do_json_validation(
                     Value::Number(Number::from(row_number)),
                 );
 
-                Ok(Some(validation_result))
+                Ok(Some(validation_result.to_string()))
             }
         }
         Err(e) => {
