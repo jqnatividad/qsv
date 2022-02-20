@@ -21,7 +21,7 @@ macro_rules! fail {
 const BATCH_SIZE: usize = 16000;
 
 static USAGE: &str = "
-Validate CSV data with JSON Schema, and put invalid records into separate file.
+Validate CSV data with JSON Schema, and put invalid records into a separate file.
 
 Example output files from `mydata.csv`. If piped from stdin, then filename is `stdin.csv`.
 
@@ -161,7 +161,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // main loop to read CSV and construct batches for parallel processing.
     // each batch is processed via Rayon parallel iterator.
-    // loop exists when batch is empty.
+    // loop exits when batch is empty.
     loop {
         for _ in 0..BATCH_SIZE {
             match rdr.read_byte_record(&mut record) {
