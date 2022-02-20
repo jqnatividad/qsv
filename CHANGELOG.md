@@ -5,7 +5,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-## [0.32.1] - 2022-02-06
+## [0.32.2] - 2022-02-20
+### Changed
+* `schema` (#60): pattern constraint for string types by @mhuang74 in https://github.com/jqnatividad/qsv/pull/168
+* `validate`: improve performance by @mhuang74 in https://github.com/jqnatividad/qsv/pull/170
+* `fetch`: Spell out k:v -> key:value in docopt usage text
+* cargo update bump several dependencies
+* refactored GH Actions publish binaries workflow - added x86_64-unknown-linux-musl target and 
+  enabling mimalloc on arm and windows-gnu
+
+### Fixed
+* `validate`: bug fix and refactor by @mhuang74 in https://github.com/jqnatividad/qsv/pull/171
+
+## [0.32.1] - 2022-02-14
 ### Changed
 * `fetch`: upgrade to jql 3.1.0 by @mhuang74 in https://github.com/jqnatividad/qsv/pull/160
 * `schema`: refactor tests by @mhuang74 in https://github.com/jqnatividad/qsv/pull/161
