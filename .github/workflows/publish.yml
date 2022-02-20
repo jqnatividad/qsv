@@ -101,7 +101,7 @@ jobs:
             artifact_name: qsv*
             use-cross: true
             strip: false
-            addl-build-args: --features=apply,generate,lua,foreach
+            addl-build-args: --no-default-features --features=apply,generate,lua,foreach
           - os: ubuntu-latest
             os-name: linux
             target: arm-unknown-linux-musleabihf
@@ -109,7 +109,7 @@ jobs:
             artifact_name: qsv*
             use-cross: true
             strip: false
-            addl-build-args: --features=apply,generate,lua,foreach
+            addl-build-args: --no-default-features --features=apply,generate,lua,foreach
 
     steps:
     - name: Installing Rust toolchain
