@@ -36,15 +36,7 @@ jobs:
             artifact_name: qsv*
             use-cross: false
             strip: true
-            addl-build-args: --features=apply,generate,lua,foreach,python
-          - os: ubuntu-latest
-            os-name: linux
-            target: x86_64-unknown-linux-musl
-            architecture: x86_64
-            artifact_name: qsv*
-            use-cross: false
-            strip: true
-            addl-build-args: --features=apply,generate,lua,foreach,python            
+            addl-build-args: --features=apply,generate,lua,foreach,python          
           - os: ubuntu-latest
             os-name: linux
             target: i686-unknown-linux-gnu
