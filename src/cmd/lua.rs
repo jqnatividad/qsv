@@ -9,8 +9,6 @@ use hlua::{AnyLuaValue, Lua, LuaError, LuaTable};
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use serde::Deserialize;
 
-// TODO: options for boolean return coercion
-
 static USAGE: &str = r#"
 Create a new column, filter rows or compute aggregations by executing a Lua
 script of every line of a CSV file.
