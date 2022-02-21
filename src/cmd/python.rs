@@ -38,12 +38,6 @@ class QSVRow(object):
         return self.__data[self.__mapping[key]]
 "#;
 
-// fn template_execution(statements: &str) -> String {
-//     format!("def __run__():\n{}\n__return_value__ = __run__()", textwrap::indent(statements, "  "))
-// }
-
-// TODO: options for boolean return coercion
-
 static USAGE: &str = r#"
 Create a new column, filter rows or compute aggregations by evaluating a python
 expression on every row of a CSV file.
@@ -131,7 +125,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut rdr = rconfig.reader()?;
     let mut wtr = Config::new(&args.flag_output).writer()?;
 
-    pyo3::prepare_freethreaded_python();
     let gil = Python::acquire_gil();
     let py = gil.python();
 
