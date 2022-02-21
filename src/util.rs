@@ -133,6 +133,7 @@ pub fn prep_progress(progress: &ProgressBar, record_count: u64) {
         " of {} records",
         record_count.separate_with_commas()
     ));
+    // redraw every 1% of progress
     progress.set_draw_delta(record_count / 100);
 
     if log_enabled!(Level::Info) {
@@ -174,7 +175,7 @@ macro_rules! update_cache_info {
                     let misses = cache.cache_misses().expect("Cache misses required");
                     let hit_ratio = (hits as f64 / (hits + misses) as f64) * 100.0;
                     $progress.set_message(format!(
-                        " of {} records. Geocode cache hit ratio: {hit_ratio:.2}% - {} entries",
+                        " of {} records. Cache hit ratio: {hit_ratio:.2}% - {} entries",
                         $progress.length().separate_with_commas(),
                         cache_size.separate_with_commas(),
                     ));
