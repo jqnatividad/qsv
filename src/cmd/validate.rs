@@ -373,7 +373,6 @@ fn do_json_validation(
 
     match validate_json_instance(&instance, schema_compiled) {
         Some(validation_errors) => {
-
             use itertools::Itertools;
             // squash multiple errors into one long String with linebreaks
             let combined_errors: String = validation_errors
@@ -381,15 +380,12 @@ fn do_json_validation(
                 .map(|tuple| {
                     // validation error file format: row_number, field, error
                     format!("{}\t{}\t{}", row_number_string, tuple.0, tuple.1)
-                }) 
+                })
                 .join("\n");
- 
+
             Ok(Some(combined_errors))
-            
         }
-        None => {
-            Ok(None)
-        }
+        None => Ok(None),
     }
 }
 
@@ -611,25 +607,29 @@ mod tests_for_csv_to_json_conversion {
 
 /// Validate JSON instance against compiled JSON schema
 /// If invalid, returns Some(Vec<(String,String)>) holding the error messages
-fn validate_json_instance(instance: &Value, schema_compiled: &JSONSchema) -> Option<Vec<(String,String)>> {
-    let output = schema_compiled.apply(instance);
+fn validate_json_instance(
+    instance: &Value,
+    schema_compiled: &JSONSchema,
+) -> Option<Vec<(String, String)>> {
+    let validation_output = schema_compiled.apply(instance);
 
-    if output.flag() != true {
+    // If validation output is Invalid, then grab field names and errors
+    if !validation_output.flag() {
         // get validation errors as String
-        let validation_errors: Vec<(String,String)> = match output.basic() {
-            BasicOutput::Invalid(errors) => {
-
-                errors
-                    .iter()
-                    .map(move |e| {
-                        if let Some(PathChunk::Property(box_str)) = e.instance_location().last() {
-                            (box_str.to_string(), e.error_description().to_string())
-                        } else {
-                            (e.instance_location().to_string(), e.error_description().to_string())
-                        }
-                    })
-                    .collect()
-            },
+        let validation_errors: Vec<(String, String)> = match validation_output.basic() {
+            BasicOutput::Invalid(errors) => errors
+                .iter()
+                .map(|e| {
+                    if let Some(PathChunk::Property(box_str)) = e.instance_location().last() {
+                        (box_str.to_string(), e.error_description().to_string())
+                    } else {
+                        (
+                            e.instance_location().to_string(),
+                            e.error_description().to_string(),
+                        )
+                    }
+                })
+                .collect(),
             BasicOutput::Valid(_annotations) => {
                 // shouln't happen
                 panic!("Unexpected error.");
@@ -640,7 +640,6 @@ fn validate_json_instance(instance: &Value, schema_compiled: &JSONSchema) -> Opt
     } else {
         None
     }
-    
 }
 
 #[cfg(test)]
@@ -713,7 +712,13 @@ mod tests_for_schema_validation {
 
         assert!(result.is_some());
 
-        assert_eq!(vec![("name".to_string(), "\"X\" is shorter than 2 characters".to_string())], result.unwrap());
+        assert_eq!(
+            vec![(
+                "name".to_string(),
+                "\"X\" is shorter than 2 characters".to_string()
+            )],
+            result.unwrap()
+        );
     }
 }
 
