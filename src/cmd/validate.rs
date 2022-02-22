@@ -147,7 +147,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // reuse batch buffer
     let mut batch = Vec::with_capacity(BATCH_SIZE);
     let mut valid_flags: Vec<bool> = Vec::with_capacity(record_count as usize);
-    let mut validation_error_messages: Vec<String> = Vec::new();
+    let mut validation_error_messages: Vec<String> = Vec::with_capacity(50);
 
     // main loop to read CSV and construct batches for parallel processing.
     // each batch is processed via Rayon parallel iterator.
@@ -222,9 +222,22 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     } // end infinite loop
 
+    use thousands::Separable;
+
+    if !args.flag_quiet {
+        progress.set_message(format!(
+            " validated {} records.",
+            progress.length().separate_with_commas()
+        ));
+        util::prep_finish_progress(&progress);
+    }
+
     // only write out invalid/valid/errors output files if there are actually invalid records.
     // if 100% invalid, then valid file is not needed. but this is rare so live with creating empty file.
     if invalid_count > 0 {
+        if !args.flag_quiet {
+            progress.println("Writing invalid/valid/error files...");
+        }
         let input_path = args
             .arg_input
             .clone()
@@ -245,14 +258,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         )?;
     }
 
-    use thousands::Separable;
-
     if !args.flag_quiet {
-        progress.set_message(format!(
-            " validated {} records.",
-            progress.length().separate_with_commas()
-        ));
-        util::finish_progress(&progress);
+        util::flush_progress(&progress);
     }
 
     // done with validation; print output
@@ -356,8 +363,9 @@ fn do_json_validation(
     schema_json: &Value,
     schema_compiled: &JSONSchema,
 ) -> CliResult<Option<String>> {
-    // row number was added as last column
-    let row_number_string = str::from_utf8(record.get(headers.len()).unwrap()).unwrap();
+    // row number was added as last column. We use unsafe from_utf8_unchecked to 
+    // skip UTF8 validation since we know its safe as we added it earlier
+    let row_number_string = unsafe { str::from_utf8_unchecked(record.get(headers.len()).unwrap()) };
     let row_number: usize = row_number_string.parse::<usize>().unwrap();
 
     let instance: Value = match to_json_instance(headers, record, schema_json) {
@@ -397,7 +405,8 @@ fn to_json_instance(headers: &ByteRecord, record: &ByteRecord, schema: &Value) -
         .expect("JSON Schema missing 'properties' object");
 
     // map holds individual CSV fields converted as serde_json::Value
-    let mut json_object_map: Map<String, Value> = Map::new();
+    // we use with_capacity to minimize allocs
+    let mut json_object_map: Map<String, Value> = Map::with_capacity(50);
 
     // iterate over each CSV field and convert to JSON type
     let headers_iter = headers.iter().enumerate();
