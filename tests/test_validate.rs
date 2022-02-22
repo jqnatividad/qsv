@@ -36,6 +36,14 @@ fn validate_bad_csv() {
     wrk.assert_err(&mut cmd);
 }
 
+fn adur_errors() -> &'static str {
+    "row_number\tfield\terror\n\
+    1\tExtractDate\tnull is not of type \"string\"\n\
+    1\tOrganisationLabel\tnull is not of type \"string\"\n\
+    3\tCoordinateReferenceSystem\t\"OSGB3\" does not match \"(WGS84|OSGB36)\"\n\
+    3\tCategory\t\"Mens\" does not match \"(Female|Male|Female and Male|Unisex|Male urinal|Children only|None)\"\n"
+}
+
 #[test]
 fn validate_adur_public_toilets_dataset_with_json_schema() {
     let wrk = Workdir::new("validate").flexible(true);
@@ -69,15 +77,8 @@ fn validate_adur_public_toilets_dataset_with_json_schema() {
 
     // check validation error output
 
-    let validation_errors_expected = r#"{"valid":false,"errors":[{"keywordLocation":"/properties/ExtractDate/type","instanceLocation":"/ExtractDate","absoluteKeywordLocation":"https://example.com/properties/ExtractDate/type","error":"null is not of type \"string\""},{"keywordLocation":"/properties/OrganisationLabel/type","instanceLocation":"/OrganisationLabel","absoluteKeywordLocation":"https://example.com/properties/OrganisationLabel/type","error":"null is not of type \"string\""}],"row_number":1}
-{"valid":false,"errors":[{"keywordLocation":"/properties/CoordinateReferenceSystem/pattern","instanceLocation":"/CoordinateReferenceSystem","absoluteKeywordLocation":"https://example.com/properties/CoordinateReferenceSystem/pattern","error":"\"OSGB3\" does not match \"(WGS84|OSGB36)\""},{"keywordLocation":"/properties/Category/pattern","instanceLocation":"/Category","absoluteKeywordLocation":"https://example.com/properties/Category/pattern","error":"\"Mens\" does not match \"(Female|Male|Female and Male|Unisex|Male urinal|Children only|None)\""}],"row_number":3}
-"#;
-    let validation_error_output: String =
-        wrk.from_str(&wrk.path("data.csv.validation-errors.jsonl"));
-    assert_eq!(
-        validation_errors_expected.to_string(),
-        validation_error_output
-    );
+    let validation_error_output: String = wrk.from_str(&wrk.path("data.csv.validation-errors.tsv"));
+    assert_eq!(adur_errors(), validation_error_output);
 }
 
 #[test]
@@ -103,13 +104,6 @@ fn validate_adur_public_toilets_dataset_with_json_schema_url() {
 
     // check validation error output
 
-    let validation_errors_expected = r#"{"valid":false,"errors":[{"keywordLocation":"/properties/ExtractDate/type","instanceLocation":"/ExtractDate","absoluteKeywordLocation":"https://example.com/properties/ExtractDate/type","error":"null is not of type \"string\""},{"keywordLocation":"/properties/OrganisationLabel/type","instanceLocation":"/OrganisationLabel","absoluteKeywordLocation":"https://example.com/properties/OrganisationLabel/type","error":"null is not of type \"string\""}],"row_number":1}
-{"valid":false,"errors":[{"keywordLocation":"/properties/CoordinateReferenceSystem/pattern","instanceLocation":"/CoordinateReferenceSystem","absoluteKeywordLocation":"https://example.com/properties/CoordinateReferenceSystem/pattern","error":"\"OSGB3\" does not match \"(WGS84|OSGB36)\""},{"keywordLocation":"/properties/Category/pattern","instanceLocation":"/Category","absoluteKeywordLocation":"https://example.com/properties/Category/pattern","error":"\"Mens\" does not match \"(Female|Male|Female and Male|Unisex|Male urinal|Children only|None)\""}],"row_number":3}
-"#;
-    let validation_error_output: String =
-        wrk.from_str(&wrk.path("data.csv.validation-errors.jsonl"));
-    assert_eq!(
-        validation_errors_expected.to_string(),
-        validation_error_output
-    );
+    let validation_error_output: String = wrk.from_str(&wrk.path("data.csv.validation-errors.tsv"));
+    assert_eq!(adur_errors(), validation_error_output);
 }

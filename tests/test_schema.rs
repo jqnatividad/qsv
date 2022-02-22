@@ -44,12 +44,13 @@ fn generate_schema_with_value_constraints_then_feed_into_validate() {
     wrk.output(&mut cmd2);
 
     // validation report
-    let validation_errors_expected = r#"{"valid":false,"errors":[{"keywordLocation":"/properties/ExtractDate/type","instanceLocation":"/ExtractDate","error":"null is not of type \"string\""},{"keywordLocation":"/properties/ExtractDate/enum","instanceLocation":"/ExtractDate","error":"null is not one of [\"07/07/2014 00:00\",\"2014-07-07 00:00\"]"}],"row_number":1}
-"#;
+    let validation_errors_expected = "row_number\tfield\terror\n\
+                                           1\tExtractDate\tnull is not of type \"string\"\n\
+                                           1\tExtractDate\tnull is not one of [\"07/07/2014 00:00\",\"2014-07-07 00:00\"]\n";
 
     // check validation error output
     let validation_error_output: String =
-        wrk.from_str(&wrk.path("adur-public-toilets.csv.validation-errors.jsonl"));
+        wrk.from_str(&wrk.path("adur-public-toilets.csv.validation-errors.tsv"));
 
     assert!(validation_error_output.len() > 0);
 

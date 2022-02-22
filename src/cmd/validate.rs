@@ -5,6 +5,7 @@ use crate::CliResult;
 use anyhow::{anyhow, Result};
 use csv::ByteRecord;
 use indicatif::{ProgressBar, ProgressDrawTarget};
+use jsonschema::paths::PathChunk;
 use jsonschema::{output::BasicOutput, JSONSchema};
 #[allow(unused_imports)]
 use log::{debug, info};
@@ -29,7 +30,7 @@ Example output files from `mydata.csv`. If piped from stdin, then filename is `s
 
 * mydata.csv.valid
 * mydata.csv.invalid
-* mydata.csv.validation-errors.jsonl
+* mydata.csv.validation-errors.tsv
 
 JSON Schema can be a local file or a URL.
 
@@ -180,6 +181,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let batch_size = batch.len();
 
         // do actual validation via Rayon parallel iterator
+        // validation_results vector should have same row count and in same order as input CSV
         let validation_results: Vec<Option<String>> = batch
             .par_iter()
             .map(|record| {
@@ -328,9 +330,11 @@ fn write_error_report(input_path: &str, validation_error_messages: Vec<String>) 
         .unwrap_or_else(|_| DEFAULT_WTR_BUFFER_CAPACITY.to_string());
     let wtr_buffer_size: usize = wtr_capacitys.parse().unwrap_or(DEFAULT_WTR_BUFFER_CAPACITY);
 
-    let output_file = File::create(input_path.to_owned() + ".validation-errors.jsonl")?;
+    let output_file = File::create(input_path.to_owned() + ".validation-errors.tsv")?;
 
     let mut output_writer = BufWriter::with_capacity(wtr_buffer_size, output_file);
+
+    output_writer.write_all("row_number\tfield\terror\n".as_bytes())?;
 
     // write out error report
     for error_msg in validation_error_messages {
@@ -368,26 +372,20 @@ fn do_json_validation(
     // debug!("instance[{row_number}]: {instance:?}");
 
     match validate_json_instance(&instance, schema_compiled) {
-        Ok(mut validation_result) => {
-            let is_valid = validation_result.get("valid").unwrap().as_bool().unwrap();
+        Some(validation_errors) => {
+            use itertools::Itertools;
+            // squash multiple errors into one long String with linebreaks
+            let combined_errors: String = validation_errors
+                .iter()
+                .map(|tuple| {
+                    // validation error file format: row_number, field, error
+                    format!("{}\t{}\t{}", row_number_string, tuple.0, tuple.1)
+                })
+                .join("\n");
 
-            if is_valid {
-                Ok(None)
-            } else {
-                // debug!("row[{row_number}] is invalid");
-
-                // insert row index and return validation error
-                validation_result.as_object_mut().unwrap().insert(
-                    "row_number".to_string(),
-                    Value::Number(Number::from(row_number)),
-                );
-
-                Ok(Some(validation_result.to_string()))
-            }
+            Ok(Some(combined_errors))
         }
-        Err(e) => {
-            return fail!(format!("Unable to validate. row: {row_number}, error: {e}"));
-        }
+        None => Ok(None),
     }
 }
 
@@ -608,14 +606,39 @@ mod tests_for_csv_to_json_conversion {
 }
 
 /// Validate JSON instance against compiled JSON schema
-fn validate_json_instance(instance: &Value, schema_compiled: &JSONSchema) -> Result<Value> {
-    let output: BasicOutput = schema_compiled.apply(instance).basic();
+/// If invalid, returns Some(Vec<(String,String)>) holding the error messages
+fn validate_json_instance(
+    instance: &Value,
+    schema_compiled: &JSONSchema,
+) -> Option<Vec<(String, String)>> {
+    let validation_output = schema_compiled.apply(instance);
 
-    match serde_json::to_value(output) {
-        Ok(json) => Ok(json),
-        Err(e) => Err(anyhow!(
-            "Cannot convert schema validation output to json: {e}"
-        )),
+    // If validation output is Invalid, then grab field names and errors
+    if !validation_output.flag() {
+        // get validation errors as String
+        let validation_errors: Vec<(String, String)> = match validation_output.basic() {
+            BasicOutput::Invalid(errors) => errors
+                .iter()
+                .map(|e| {
+                    if let Some(PathChunk::Property(box_str)) = e.instance_location().last() {
+                        (box_str.to_string(), e.error_description().to_string())
+                    } else {
+                        (
+                            e.instance_location().to_string(),
+                            e.error_description().to_string(),
+                        )
+                    }
+                })
+                .collect(),
+            BasicOutput::Valid(_annotations) => {
+                // shouln't happen
+                panic!("Unexpected error.");
+            }
+        };
+
+        Some(validation_errors)
+    } else {
+        None
     }
 }
 
@@ -668,9 +691,9 @@ mod tests_for_schema_validation {
 
         let instance = to_json_instance(&headers, &record, &schema_json()).unwrap();
 
-        let result = validate_json_instance(&instance, &compiled_schema()).unwrap();
+        let result = validate_json_instance(&instance, &compiled_schema());
 
-        assert_eq!(true, result["valid"].as_bool().unwrap());
+        assert!(result.is_none());
     }
 
     #[test]
@@ -685,9 +708,17 @@ mod tests_for_schema_validation {
 
         let instance = to_json_instance(&headers, &record, &schema_json()).unwrap();
 
-        let result = validate_json_instance(&instance, &compiled_schema()).unwrap();
+        let result = validate_json_instance(&instance, &compiled_schema());
 
-        assert_eq!(false, result["valid"].as_bool().unwrap());
+        assert!(result.is_some());
+
+        assert_eq!(
+            vec![(
+                "name".to_string(),
+                "\"X\" is shorter than 2 characters".to_string()
+            )],
+            result.unwrap()
+        );
     }
 }
 
