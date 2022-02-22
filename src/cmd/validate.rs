@@ -363,7 +363,7 @@ fn do_json_validation(
     schema_json: &Value,
     schema_compiled: &JSONSchema,
 ) -> CliResult<Option<String>> {
-    // row number was added as last column. We use unsafe from_utf8_unchecked to 
+    // row number was added as last column. We use unsafe from_utf8_unchecked to
     // skip UTF8 validation since we know its safe as we added it earlier
     let row_number_string = unsafe { str::from_utf8_unchecked(record.get(headers.len()).unwrap()) };
     let row_number: usize = row_number_string.parse::<usize>().unwrap();
