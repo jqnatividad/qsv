@@ -161,7 +161,7 @@ impl Args {
             });
         }
         drop(send);
-        Ok((headers, merge_all(recv.iter()).unwrap_or_else(Vec::new)))
+        Ok((headers, merge_all(recv.iter()).unwrap_or_default()))
     }
 
     pub fn stats_to_records(&self, stats: Vec<Stats>) -> Vec<csv::StringRecord> {
@@ -537,6 +537,7 @@ impl Commute for Stats {
     }
 }
 
+#[allow(clippy::enum_variant_names)]
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub enum FieldType {
     TUnknown,
