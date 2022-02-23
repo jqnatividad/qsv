@@ -88,7 +88,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     while rdr.read_record(&mut record)? {
         for val in record[column_index].split(&args.arg_separator) {
-            let new_record = replace_column_value(&record, column_index, &val.to_owned());
+            let new_record = replace_column_value(&record, column_index, val);
             wtr.write_record(&new_record)?;
         }
     }
