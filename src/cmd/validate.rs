@@ -229,15 +229,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             " validated {} records.",
             progress.length().separate_with_commas()
         ));
-        util::prep_finish_progress(&progress);
+        util::finish_progress(&progress);
     }
 
     // only write out invalid/valid/errors output files if there are actually invalid records.
     // if 100% invalid, then valid file is not needed. but this is rare so live with creating empty file.
     if invalid_count > 0 {
-        if !args.flag_quiet {
-            progress.println("Writing invalid/valid/error files...");
-        }
+        let msg = "Writing invalid/valid/error files...";
+        info!("{msg}");
+        println!("{msg}");
+
         let input_path = args
             .arg_input
             .clone()
@@ -256,10 +257,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             &valid_suffix,
             &invalid_suffix,
         )?;
-    }
-
-    if !args.flag_quiet {
-        util::flush_progress(&progress);
     }
 
     // done with validation; print output

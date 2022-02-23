@@ -161,30 +161,6 @@ pub fn finish_progress(progress: &ProgressBar) {
     }
 }
 
-pub fn prep_finish_progress(progress: &ProgressBar) {
-    let per_sec_rate = progress.per_sec();
-
-    let finish_template = format!(
-        "[{{elapsed_precise}}] [{{bar:20}} {{percent}}%{{msg}}] ({}/sec)",
-        per_sec_rate.separate_with_commas()
-    );
-
-    progress.set_style(
-        ProgressStyle::default_bar()
-            .template(&finish_template)
-            .progress_chars("=>-"),
-    );
-}
-
-pub fn flush_progress(progress: &ProgressBar) {
-    progress.abandon();
-
-    let per_sec_rate = progress.per_sec();
-    if log_enabled!(Level::Info) {
-        info!("Progress done... {per_sec_rate} records/sec");
-    }
-}
-
 macro_rules! update_cache_info {
     ($progress:expr, $cache_instance:expr) => {
         use cached::Cached;
