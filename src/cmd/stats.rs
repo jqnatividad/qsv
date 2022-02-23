@@ -405,7 +405,7 @@ impl Stats {
     #[allow(clippy::wrong_self_convention)]
     pub fn to_record(&mut self) -> csv::StringRecord {
         let typ = self.typ;
-        let mut pieces = vec![];
+        let mut pieces = Vec::with_capacity(20);
         let empty = || "".to_owned();
 
         pieces.push(self.typ.to_string());
