@@ -22,6 +22,8 @@ jobs:
     - name: Update Rust Nightly
       run: |
         rustup default nightly
+        rustup component add rustfmt
+        rustup component add clippy
         rustup update
     - name: Setup Rust-cache
       uses: Swatinem/rust-cache@v1
