@@ -9,7 +9,6 @@ use std::str;
 use std::thread;
 use std::time;
 
-use ::num_cpus;
 use docopt::Docopt;
 use log::{info, log_enabled, Level};
 use serde::de::{Deserialize, DeserializeOwned, Deserializer, Error};
@@ -20,13 +19,13 @@ use indicatif::{ProgressBar, ProgressStyle};
 use thousands::Separable;
 
 pub fn num_cpus() -> usize {
-    num_cpus::get()
+    thread::available_parallelism().unwrap().get()
 }
 
 const MAX_JOBS_CPU_DIVISOR: usize = 3;
 
 pub fn max_jobs() -> usize {
-    let cpus = num_cpus::get();
+    let cpus = num_cpus();
     let max_jobs_env = match env::var("QSV_MAX_JOBS") {
         Ok(val) => val.parse::<isize>().unwrap_or_default(),
         Err(_) => 0,
