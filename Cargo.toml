@@ -12,7 +12,7 @@ categories    = ["command-line-utilities", "parser-implementations"]
 license       = "MIT OR Unlicense"
 autotests     = false
 edition       = "2021"
-rust-version  = "1.58.1"
+rust-version  = "1.59.0"
 autobins      = false
 include       = ["src/**/*", "LICENSE-MIT", "README.md", "CHANGELOG.md"]
 
@@ -39,6 +39,7 @@ codegen-units = 1
 debug         = false
 lto           = true
 opt-level     = 3
+strip         = true
 
 [profile.test]
 opt-level = 3
@@ -71,7 +72,6 @@ jsonschema = { version = "0.15", features = [
 jql = { version = "3.1", default-features = false }
 log = "0.4"
 mimalloc = { version = "0.1", default-features = false, optional = true }
-num_cpus = "1"
 once_cell = { version = "1.9", optional = true }
 pyo3 = { version = "0.15", features = [
     "abi3-py38",
