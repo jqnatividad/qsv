@@ -363,14 +363,11 @@ fn do_json_validation(
     // row number was added as last column. We use unsafe from_utf8_unchecked to
     // skip UTF8 validation since we know its safe as we added it earlier
     let row_number_string = unsafe { str::from_utf8_unchecked(record.get(headers.len()).unwrap()) };
-    let row_number: usize = row_number_string.parse::<usize>().unwrap();
 
     let instance: Value = match to_json_instance(headers, record, schema_json) {
         Ok(obj) => obj,
         Err(e) => {
-            return fail!(format!(
-                "Unable to convert CSV to json. row: {row_number}, error: {e}"
-            ));
+            return Ok(Some(format!("{row_number_string}\t<RECORD>\t{e}")));
         }
     };
 
@@ -384,7 +381,7 @@ fn do_json_validation(
                 .iter()
                 .map(|tuple| {
                     // validation error file format: row_number, field, error
-                    format!("{}\t{}\t{}", row_number_string, tuple.0, tuple.1)
+                    format!("{row_number_string}\t{}\t{}", tuple.0, tuple.1)
                 })
                 .join("\n");
 
