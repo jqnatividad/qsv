@@ -444,8 +444,9 @@ fn convert_to_string(byte_slice: &[u8]) -> CliResult<String> {
     let string: String = match std::str::from_utf8(byte_slice) {
         Ok(s) => s.to_string(),
         Err(e) => {
+            let lossy_string = String::from_utf8_lossy(byte_slice);
             let msg =
-                format!("Can't convert byte slice to utf8 string. slice={byte_slice:?}, error={e}");
+                format!("Can't convert byte slice to utf8 string. slice={byte_slice:?}, error={e}: {lossy_string}");
             error!("{msg}");
             fail!(msg);
         }
