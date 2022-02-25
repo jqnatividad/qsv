@@ -184,14 +184,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // validation_results vector should have same row count and in same order as input CSV
         let validation_results: Vec<Option<String>> = batch
             .par_iter()
-            .map(|record| {
-                match do_json_validation(&headers, record, &schema_json, &schema_compiled) {
-                    Ok(o) => o,
-                    Err(e) => {
-                        panic!("Unrecoverable error: {e:?}");
-                    }
-                }
-            })
+            .map(|record| do_json_validation(&headers, record, &schema_json, &schema_compiled))
             .collect();
 
         batch.clear();
@@ -353,13 +346,13 @@ fn write_error_report(input_path: &str, validation_error_messages: Vec<String>) 
     Ok(())
 }
 
-/// if given record is valid, CliResult would hold None, otherwise, Some(Value)
+/// if given record is valid, return None, otherwise, error file entry string
 fn do_json_validation(
     headers: &ByteRecord,
     record: &ByteRecord,
     schema_json: &Value,
     schema_compiled: &JSONSchema,
-) -> CliResult<Option<String>> {
+) -> Option<String> {
     // row number was added as last column. We use unsafe from_utf8_unchecked to
     // skip UTF8 validation since we know its safe as we added it earlier
     let row_number_string = unsafe { str::from_utf8_unchecked(record.get(headers.len()).unwrap()) };
@@ -367,7 +360,7 @@ fn do_json_validation(
     let instance: Value = match to_json_instance(headers, record, schema_json) {
         Ok(obj) => obj,
         Err(e) => {
-            return Ok(Some(format!("{row_number_string}\t<RECORD>\t{e}")));
+            return Some(format!("{row_number_string}\t<RECORD>\t{e}"));
         }
     };
 
@@ -385,9 +378,9 @@ fn do_json_validation(
                 })
                 .join("\n");
 
-            Ok(Some(combined_errors))
+            Some(combined_errors)
         }
-        None => Ok(None),
+        None => None,
     }
 }
 
@@ -635,7 +628,7 @@ fn validate_json_instance(
                 .collect(),
             BasicOutput::Valid(_annotations) => {
                 // shouln't happen
-                panic!("Unexpected error.");
+                unreachable!("Unexpected error.");
             }
         };
 
