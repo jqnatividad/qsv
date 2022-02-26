@@ -2,7 +2,7 @@ use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
 use crate::util;
 use crate::CliResult;
-use cached::proc_macro::cached;
+use cached::proc_macro::{cached, io_cached};
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::{debug, error};
 use serde::Deserialize;
@@ -64,6 +64,12 @@ static DEFAULT_USER_AGENT: &str = concat!(
     env!("CARGO_PKG_VERSION"),
     " (https://github.com/jqnatividad/qsv)",
 );
+
+#[derive(Error, Debug, PartialEq, Clone)]
+enum FetchRedisError {
+    #[error("error with redis cache `{0}`")]
+    RedisError(String),
+}
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
@@ -204,6 +210,45 @@ use std::{thread, time};
     sync_writes = false
 )]
 fn get_cached_response(
+    url: &str,
+    client: &reqwest::blocking::Client,
+    limiter: &governor::RateLimiter<NotKeyed, InMemoryState, DefaultClock, NoOpMiddleware>,
+    flag_jql: &Option<String>,
+    flag_store_error: bool,
+) -> String {
+    get_response(
+        &url,
+        &client,
+        &limiter,
+        &flag_jql,
+        flag_store_error,
+    )
+}
+
+#[io_cached(
+    redis = true,
+    time = 600,
+    key = "String",
+    convert = r#"{ format!("{}", url) }"#,
+    map_error = r##"|e| FetchRedisError::RedisError(format!("{:?}", e))"##
+)]
+fn get_redis_response(
+    url: &str,
+    client: &reqwest::blocking::Client,
+    limiter: &governor::RateLimiter<NotKeyed, InMemoryState, DefaultClock, NoOpMiddleware>,
+    flag_jql: &Option<String>,
+    flag_store_error: bool,
+) -> Result<String, FetchRedisError> {
+    Ok(get_response(
+        &url,
+        &client,
+        &limiter,
+        &flag_jql,
+        flag_store_error,
+    ))
+}
+
+fn get_response(
     url: &str,
     client: &reqwest::blocking::Client,
     limiter: &governor::RateLimiter<NotKeyed, InMemoryState, DefaultClock, NoOpMiddleware>,
