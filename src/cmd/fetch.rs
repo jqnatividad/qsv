@@ -3,9 +3,11 @@ use crate::select::SelectColumns;
 use crate::util;
 use crate::CliResult;
 use cached::proc_macro::{cached, io_cached};
+use cached::RedisCache;
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::{debug, error};
 use serde::Deserialize;
+use thiserror::Error;
 
 static USAGE: &str = "
 Fetch data via a URL column, and optionally store them in a new column.
