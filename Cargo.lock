@@ -2699,6 +2699,7 @@ dependencies = [
  "quickcheck",
  "rand 0.8.5",
  "rayon",
+ "redis",
  "regex",
  "reqwest",
  "reverse_geocoder",
