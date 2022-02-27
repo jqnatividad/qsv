@@ -6,6 +6,7 @@ use cached::proc_macro::{cached, io_cached};
 use cached::RedisCache;
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::{debug, error};
+use once_cell::sync::Lazy;
 use serde::Deserialize;
 use thiserror::Error;
 
@@ -25,12 +26,16 @@ Usage:
     qsv fetch [options] [--http-header <k:v>...] [<column>] [<input>]
 
 Fetch options:
+    --url-template <template>  URL template to use. The character '^'
+                               will be replaced by <column> value, but
+                               sanitized for shell safety.
     -c, --new-column <name>    Put the fetched values in a new column instead.
     --jql <selector>           Apply jql selector to API returned JSON value.
     --rate-limit <qps>         Rate Limit in Queries Per Second. [default: 5]
     --http-header <key:value>  Pass custom header(s) to the server.
     --store-error              On error, store error code/message instead of blank value.
     --cookies                  Allow cookies.
+    --redis                    Use Redis to cache responses.
 
 Common options:
     -h, --help                 Display this message
@@ -46,12 +51,14 @@ Common options:
 
 #[derive(Deserialize, Debug)]
 struct Args {
+    flag_url_template: Option<String>,
     flag_new_column: Option<String>,
     flag_jql: Option<String>,
     flag_rate_limit: Option<u32>,
     flag_http_header: Vec<String>,
     flag_store_error: bool,
     flag_cookies: bool,
+    flag_redis: bool,
     flag_output: Option<String>,
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
@@ -60,12 +67,36 @@ struct Args {
     arg_input: Option<String>,
 }
 
+static DEFAULT_REDIS_CONN_STR: &str = "redis://127.0.0.1:6379";
+static DEFAULT_REDIS_TTL_SECONDS: u64 = 60 * 60 * 24 * 28; // 28 days in seconds
+
 static DEFAULT_USER_AGENT: &str = concat!(
     env!("CARGO_PKG_NAME"),
     "/",
     env!("CARGO_PKG_VERSION"),
     " (https://github.com/jqnatividad/qsv)",
 );
+
+struct RedisConfig {
+    conn_str: String,
+    ttl_secs: u64,
+    ttl_refresh: bool,
+}
+impl RedisConfig {
+    fn load() -> Self {
+        Self {
+            conn_str: std::env::var("QSV_REDIS_CONNECTION_STRING")
+                .unwrap_or_else(|_| DEFAULT_REDIS_CONN_STR.to_string()),
+            ttl_secs: std::env::var("QSV_REDIS_TTL_SECS")
+                .unwrap_or_else(|_| DEFAULT_REDIS_TTL_SECONDS.to_string())
+                .parse()
+                .unwrap(),
+            ttl_refresh: std::env::var("QSV_REDIS_TTL_REFRESH").is_ok(),
+        }
+    }
+}
+
+static REDISCONFIG: Lazy<RedisConfig> = Lazy::new(RedisConfig::load);
 
 #[derive(Error, Debug, PartialEq, Clone)]
 enum FetchRedisError {
@@ -160,6 +191,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     #[allow(unused_assignments)]
     let mut record = csv::ByteRecord::new();
+    #[allow(unused_assignments)]
+    let mut url = String::new();
     while rdr.read_byte_record(&mut record)? {
         if !args.flag_quiet {
             progress.inc(1);
@@ -169,16 +202,33 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let mut final_value = String::default();
 
         if let Ok(s) = std::str::from_utf8(&record[column_index]) {
-            let url = s.trim().to_string();
+            match args.flag_url_template {
+                Some(ref url_template) => {
+                    url = url_template.replace('^', s.trim());
+                }
+                _ => url = s.trim().to_string(),
+            }
+
             debug!("Fetching URL: {url:?}");
 
-            final_value = get_cached_response(
-                &url,
-                &client,
-                &limiter,
-                &args.flag_jql,
-                args.flag_store_error,
-            );
+            if args.flag_redis {
+                final_value = get_redis_response(
+                    &url,
+                    &client,
+                    &limiter,
+                    &args.flag_jql,
+                    args.flag_store_error,
+                )
+                .unwrap();
+            } else {
+                final_value = get_cached_response(
+                    &url,
+                    &client,
+                    &limiter,
+                    &args.flag_jql,
+                    args.flag_store_error,
+                );
+            }
         } else {
             final_value = "Invalid URL".to_string();
         }
@@ -194,7 +244,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     if !args.flag_quiet {
-        util::update_cache_info!(progress, GET_CACHED_RESPONSE);
+        // currently, we can't get cache_info from a RedisCache store
+        if !args.flag_redis {
+            util::update_cache_info!(progress, GET_CACHED_RESPONSE);
+        }
         util::finish_progress(&progress);
     }
 
@@ -218,20 +271,20 @@ fn get_cached_response(
     flag_jql: &Option<String>,
     flag_store_error: bool,
 ) -> String {
-    get_response(
-        &url,
-        &client,
-        &limiter,
-        &flag_jql,
-        flag_store_error,
-    )
+    get_response(url, client, limiter, flag_jql, flag_store_error)
 }
 
 #[io_cached(
-    redis = true,
-    time = 600,
+    type = "cached::RedisCache<String, String>",
     key = "String",
     convert = r#"{ format!("{}", url) }"#,
+    create = r##" {
+        RedisCache::new("qf", REDISCONFIG.ttl_secs)
+            .set_refresh(REDISCONFIG.ttl_refresh)
+            .set_connection_string(&REDISCONFIG.conn_str)
+            .build()
+            .expect("error building redis cache")
+    } "##,
     map_error = r##"|e| FetchRedisError::RedisError(format!("{:?}", e))"##
 )]
 fn get_redis_response(
@@ -242,10 +295,10 @@ fn get_redis_response(
     flag_store_error: bool,
 ) -> Result<String, FetchRedisError> {
     Ok(get_response(
-        &url,
-        &client,
-        &limiter,
-        &flag_jql,
+        url,
+        client,
+        limiter,
+        flag_jql,
         flag_store_error,
     ))
 }
