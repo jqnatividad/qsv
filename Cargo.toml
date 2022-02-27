@@ -47,9 +47,7 @@ opt-level = 3
 [dependencies]
 anyhow = "1.0"
 byteorder = "1.4"
-cached = { version = "0.30", default-features = false, features = [
-    "proc_macro",
-] }
+cached = { version = "0.32", features = ["redis_store"] }
 censor = { version = "0.2", optional = true }
 chrono = { version = "0.4", optional = true }
 crossbeam-channel = "0.5"
@@ -72,7 +70,7 @@ jsonschema = { version = "0.15", features = [
 jql = { version = "3.1", default-features = false }
 log = "0.4"
 mimalloc = { version = "0.1", default-features = false, optional = true }
-once_cell = { version = "1.9", optional = true }
+once_cell = "1.9"
 pyo3 = { version = "0.15", features = [
     "abi3-py38",
     "auto-initialize",
@@ -98,6 +96,7 @@ serde_json = "1.0"
 strsim = { version = "0.10", optional = true }
 tabwriter = "1.2"
 test-data-generation = { version = "0.3", optional = true }
+thiserror = "1.0"
 thousands = "0.2"
 threadpool = "1.8"
 titlecase = { version = "1", optional = true }
@@ -110,6 +109,7 @@ actix-governor   = "0.2"
 actix-web        = "3.3"
 assert-json-diff = "2.0"
 quickcheck       = { version = "1", default-features = false }
+redis            = "0.21"
 
 [features]
 default = ["mimalloc"]
@@ -117,7 +117,6 @@ apply = [
     "censor",
     "chrono",
     "eudex",
-    "once_cell",
     "qsv_currency",
     "reverse_geocoder",
     "strsim",
