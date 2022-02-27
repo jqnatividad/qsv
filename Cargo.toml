@@ -96,6 +96,7 @@ serde_json = "1.0"
 strsim = { version = "0.10", optional = true }
 tabwriter = "1.2"
 test-data-generation = { version = "0.3", optional = true }
+thiserror = "1.0"
 thousands = "0.2"
 threadpool = "1.8"
 titlecase = { version = "1", optional = true }

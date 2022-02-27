@@ -719,9 +719,9 @@ checksum = "c1db59621ec70f09c5e9b597b220c7a2b43611f4710dc03ceb8748637775692c"
 
 [[package]]
 name = "cached"
-version = "0.32.0"
+version = "0.32.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d512eceb8e40aeb03ac59aa242f652572e935d66fce998aedb6699c127adffb2"
+checksum = "a8c2f17f7be6adf37bd51e543537b0a9e51d865e94c11a421a5a3c8aafac41af"
 dependencies = [
  "async-mutex",
  "async-rwlock",
@@ -817,11 +817,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "50b727aacc797f9fc28e355d21f34709ac4fc9adecfe470ad07b8f4464f53062"
 dependencies = [
  "bytes 1.1.0",
- "futures-core",
  "memchr",
- "pin-project-lite 0.2.8",
- "tokio 1.17.0",
- "tokio-util 0.6.9",
 ]
 
 [[package]]
@@ -2712,6 +2708,7 @@ dependencies = [
  "strsim 0.10.0",
  "tabwriter",
  "test-data-generation",
+ "thiserror",
  "thousands",
  "threadpool",
  "titlecase",
@@ -2927,17 +2924,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1a80b5f38d7f5a020856a0e16e40a9cfabf88ae8f0e4c2dcd8a3114c1e470852"
 dependencies = [
  "async-trait",
- "bytes 1.1.0",
  "combine",
  "dtoa",
- "futures-util",
  "itoa 0.4.8",
  "percent-encoding",
- "pin-project-lite 0.2.8",
  "r2d2",
  "sha1",
- "tokio 1.17.0",
- "tokio-util 0.6.9",
  "url",
 ]
 
