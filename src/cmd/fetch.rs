@@ -12,7 +12,7 @@ use serde::Deserialize;
 use thiserror::Error;
 
 static USAGE: &str = "
-This command fetches data from web API for every row in the URL column, 
+This command fetches data from a web API for every row in the URL column, 
 and optionally stores them in a new column.
 
 Fetch is integrated with `jql` to directly parse out values from API JSON response.
@@ -20,11 +20,15 @@ Fetch is integrated with `jql` to directly parse out values from API JSON respon
 URL column can either be a fully qualified URL path, or if not, can be used with
 the --url-template option to create one.
 
-To use a proxy, please set env var HTTP_PROXY and HTTPS_PROXY (eg export HTTPS_PROXY=socks5://127.0.0.1:1086).
+To use a proxy, please set env vars HTTP_PROXY and HTTPS_PROXY
+(e.g. export HTTPS_PROXY=socks5://127.0.0.1:1086).
 
-Set the --redis flag to use Redis. By default, it will connect to a local Redis instance at redis://127.0.0.1:6379,
-with a cache expiry TTL of 2,419,200 seconds (28 days), with cache hits NOT refreshing the TTL of cached values.
-Set the env vars QSV_REDIS_CONNECTION_STRING, QSV_REDIS_TTL_SECONDS and QSV_REDIS_TTL_REFRESH to change default settings.
+Set the --redis flag to use Redis. By default, it will connect to a local Redis instance 
+at redis://127.0.0.1:6379, with a cache expiry TTL of 2,419,200 seconds (28 days), and
+cache hits NOT refreshing the TTL of cached values.
+
+Set the env vars QSV_REDIS_CONNECTION_STRING, QSV_REDIS_TTL_SECONDS and 
+QSV_REDIS_TTL_REFRESH to change default settings.
 
 Usage:
     qsv fetch [options] [--http-header <k:v>...] [<column>] [<input>]
@@ -35,7 +39,7 @@ Fetch options:
                                sanitized for shell safety.
     -c, --new-column <name>    Put the fetched values in a new column instead.
     --jql <selector>           Apply jql selector to API returned JSON value.
-    --rate-limit <qps>         Rate Limit in Queries Per Second. [default: 5]
+    --rate-limit <qps>         Rate Limit in Queries Per Second. [default: 10]
     --http-header <key:value>  Pass custom header(s) to the server.
     --store-error              On error, store error code/message instead of blank value.
     --cookies                  Allow cookies.
@@ -130,7 +134,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     use std::num::NonZeroU32;
     // default rate limit is actually set via docopt, so below init is just to satisfy compiler
-    let mut rate_limit: NonZeroU32 = NonZeroU32::new(5).unwrap();
+    let mut rate_limit: NonZeroU32 = NonZeroU32::new(10).unwrap();
     if let Some(qps) = args.flag_rate_limit {
         assert!(
             // on my laptop, no more sleep traces with qps > 24, so use round number of 20 as single-thread qps limit
@@ -254,7 +258,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     if !args.flag_quiet {
-        // currently, we can't get cache_info from a RedisCache store
         if args.flag_redis {
             util::update_cache_info!(progress, redis_cache_hits, record_count);
         } else {
