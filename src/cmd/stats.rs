@@ -31,7 +31,7 @@ min/max length, mean, stddev & variance. The default set of statistics correspon
 statistics that can be computed efficiently on a stream of data (i.e., constant memory).
 
 The data type of each column is also inferred (Unknown, NULL, Integer, String,
-Float and Date). The date formats recognized can be found at
+Float, Date and DateTime). The date formats recognized can be found at
 https://docs.rs/dateparser/0.1.6/dateparser/#accepted-date-formats.
 
 Computing statistics on a large file can be made much faster if you create
