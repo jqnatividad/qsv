@@ -25,7 +25,5 @@ jobs:
       uses: Swatinem/rust-cache@v1
       with:
         key: qsv-cache
-    - name: Build
-      run: cargo build --verbose --locked --all-features
     - name: Run tests
       run: cargo test --verbose --locked --all-features
