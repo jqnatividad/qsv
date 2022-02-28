@@ -57,12 +57,12 @@ Available commands
 | [sample](/src/cmd/sample.rs#L12)[^2] | Randomly draw rows (with optional seed) from a CSV using [reservoir sampling](https://en.wikipedia.org/wiki/Reservoir_sampling) (i.e., use memory proportional to the size of the sample).  |
 | [schema](/src/cmd/schema.rs#L22) | Infer schema from CSV data and output in JSON Schema format.  See `validate` command. |
 | [search](/src/cmd/search.rs#L11) | Run a regex over a CSV. Applies the regex to each field individually & shows only matching rows.  |
-| [searchset](/src/cmd/searchset.rs#L15) | Run multiple regexes over a CSV in a single pass. Applies the regexes to each field individually & shows only matching rows.  |
+| [searchset](/src/cmd/searchset.rs#L15) | **Run multiple regexes over a CSV in a single pass.** Applies the regexes to each field individually & shows only matching rows.  |
 | [select](/src/cmd/select.rs#L8) | Select, re-order, duplicate or drop columns.  |
 | [slice](/src/cmd/slice.rs#L10)[^2][^3] | Slice rows from any part of a CSV. When an index is present, this only has to parse the rows in the slice (instead of all rows leading up to the start of the slice).  |
 | [sort](/src/cmd/sort.rs#L14) | Sorts CSV data in alphabetical, numerical, reverse or random (with optional seed) order.  |
-| [split](/src/cmd/split.rs#L14)[^2][^4] | Split one CSV file into many CSV files of N chunks.  |
-| [stats](/src/cmd/stats.rs#L24)[^2][^3][^4] | Infer data type & compute descriptive statistics for each column in a CSV (sum, min/max, min/max length, mean, stddev, variance, quartiles, IQR, lower/upper fences, skew, median, mode, cardinality & nullcount)  |
+| [split](/src/cmd/split.rs#L14)[^2][^4] | Split one CSV file into many CSV files of N chunks. (Uses multithreading to go faster if an index is present.) |
+| [stats](/src/cmd/stats.rs#L24)[^2][^3][^4] | Infer data type & compute descriptive statistics for each column in a CSV (sum, min/max, min/max length, mean, stddev, variance, quartiles, IQR, lower/upper fences, skew, median, mode, cardinality & nullcount). Uses multithreading to go faster if an index is present. |
 | [table](/src/cmd/table.rs#L12)[^3] | Show aligned output of a CSV using [elastic tabstops](https://github.com/BurntSushi/tabwriter).  |
 | [transpose](/src/cmd/transpose.rs#L9)[^3] | Transpose rows/columns of a CSV.  |
 | [validate](/src/cmd/validate.rs#L27)[^5] | Validate CSV data with JSON Schema. See `schema` command. |
