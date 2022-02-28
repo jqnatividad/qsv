@@ -4,6 +4,7 @@ use crate::util;
 use crate::CliResult;
 use cached::proc_macro::{cached, io_cached};
 use cached::RedisCache;
+use cached::Return;
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::{debug, error};
 use once_cell::sync::Lazy;
@@ -185,8 +186,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // prep progress bar
     let progress = ProgressBar::new(0);
+    let mut record_count = 0;
     if !args.flag_quiet {
-        let record_count = util::count_rows(&rconfig);
+        record_count = util::count_rows(&rconfig);
         util::prep_progress(&progress, record_count);
     } else {
         progress.set_draw_target(ProgressDrawTarget::hidden());
@@ -196,6 +198,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut record = csv::ByteRecord::new();
     #[allow(unused_assignments)]
     let mut url = String::new();
+    let mut redis_cache_hits: u64 = 0;
     while rdr.read_byte_record(&mut record)? {
         if !args.flag_quiet {
             progress.inc(1);
@@ -215,7 +218,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             debug!("Fetching URL: {url:?}");
 
             if args.flag_redis {
-                final_value = get_redis_response(
+                let intermediate_value = get_redis_response(
                     &url,
                     &client,
                     &limiter,
@@ -223,6 +226,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     args.flag_store_error,
                 )
                 .unwrap();
+                final_value = intermediate_value.to_string();
+                if intermediate_value.was_cached {
+                    redis_cache_hits += 1;
+                }
             } else {
                 final_value = get_cached_response(
                     &url,
@@ -248,7 +255,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     if !args.flag_quiet {
         // currently, we can't get cache_info from a RedisCache store
-        if !args.flag_redis {
+        if args.flag_redis {
+            util::update_cache_info!(progress, redis_cache_hits, record_count);
+        } else {
             util::update_cache_info!(progress, GET_CACHED_RESPONSE);
         }
         util::finish_progress(&progress);
@@ -288,7 +297,8 @@ fn get_cached_response(
             .build()
             .expect("error building redis cache")
     } "##,
-    map_error = r##"|e| FetchRedisError::RedisError(format!("{:?}", e))"##
+    map_error = r##"|e| FetchRedisError::RedisError(format!("{:?}", e))"##,
+    with_cached_flag = true
 )]
 fn get_redis_response(
     url: &str,
@@ -296,14 +306,14 @@ fn get_redis_response(
     limiter: &governor::RateLimiter<NotKeyed, InMemoryState, DefaultClock, NoOpMiddleware>,
     flag_jql: &Option<String>,
     flag_store_error: bool,
-) -> Result<String, FetchRedisError> {
-    Ok(get_response(
+) -> Result<cached::Return<String>, FetchRedisError> {
+    Ok(Return::new(get_response(
         url,
         client,
         limiter,
         flag_jql,
         flag_store_error,
-    ))
+    )))
 }
 
 fn get_response(
