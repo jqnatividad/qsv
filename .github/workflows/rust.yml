@@ -25,10 +25,6 @@ jobs:
       uses: Swatinem/rust-cache@v1
       with:
         key: qsv-cache
-    - name: Build
-      run: cargo build --verbose --locked --all-features
-    - name: Run tests
-      run: cargo test --verbose --locked --all-features
     - name: Check formatting
       uses: actions-rs/cargo@v1
       with:
@@ -38,4 +34,6 @@ jobs:
       uses: actions-rs/cargo@v1
       with:
         command: clippy
-        args: -- -D warnings
+        args: -- -D warnings        
+    - name: Run tests
+      run: cargo test --verbose --locked --all-features
