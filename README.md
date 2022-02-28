@@ -167,6 +167,9 @@ commands are not unicode-aware and will ignore unicode values when matching and 
 * `QSV_LOG_LEVEL` - set to desired level (default - off, error, warn, info, trace, debug).
 * `QSV_LOG_DIR` - when logging is enabled, the directory where the log files will be stored. If the specified directory does not exist, qsv will attempt to create it. If not set, the log files are created in the directory where qsv was started. See [Logging](docs/Logging.md#logging) for more info.
 * `QSV_NO_UPDATE` - prohibit self-update version check for the latest qsv release published on GitHub.
+* `QSV_REDIS_CONNECTION_STRING` - the `fetch` command can use Redis to cache responses. By default it connects to `redis:127.0.0.1:6379`. Set to connect to another Redis instance.
+* `QSV_REDIS_TTL_SECONDS` - by default, Redis cached values have a time-to-live of 2,419,200 seconds (28 days).
+* `QSV_REDIS_TTL_REFRESH`- set to enable cache hits to refresh TTL of cached values.
 
 Several dependencies also have environment variables that influence qsv's performance & behavior:
 
