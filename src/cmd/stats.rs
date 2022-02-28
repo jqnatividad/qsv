@@ -35,7 +35,7 @@ Float, Date and DateTime). The date formats recognized can be found at
 https://docs.rs/dateparser/0.1.6/dateparser/#accepted-date-formats.
 
 Computing statistics on a large file can be made much faster if you create
-an index for it first with 'qsv index' as enables multithreading.
+an index for it first with 'qsv index' to enable multithreading.
 
 Usage:
     qsv stats [options] [<input>]
