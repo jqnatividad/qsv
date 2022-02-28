@@ -161,6 +161,12 @@ stats_tests!(stats_infer_int, "type", &["1"], "Integer");
 stats_tests!(stats_infer_float, "type", &["1.2"], "Float");
 stats_tests!(stats_infer_null, "type", &[""], "NULL");
 stats_tests!(stats_infer_date, "type", &["1968-06-27"], "Date");
+stats_tests!(
+    stats_infer_datetime,
+    "type",
+    &["1968-06-27 12:30:01"],
+    "DateTime"
+);
 stats_tests!(stats_infer_string_null, "type", &["a", ""], "String");
 stats_tests!(stats_infer_int_null, "type", &["1", ""], "Integer");
 stats_tests!(stats_infer_float_null, "type", &["1.2", ""], "Float");
@@ -170,6 +176,12 @@ stats_tests!(
     &["June 27, 1968", ""],
     "Date"
 );
+stats_tests!(
+    stats_infer_datetime_null,
+    "type",
+    &["June 27, 1968 12:30:00 UTC", ""],
+    "DateTime"
+);
 stats_tests!(stats_infer_null_string, "type", &["", "a"], "String");
 stats_tests!(stats_infer_null_int, "type", &["", "1"], "Integer");
 stats_tests!(stats_infer_null_float, "type", &["", "1.2"], "Float");
@@ -178,6 +190,12 @@ stats_tests!(
     "type",
     &["", "September 17, 2012 at 10:09am PST"],
     "Date"
+);
+stats_tests!(
+    stats_infer_date_datetime,
+    "type",
+    &["September 11, 2001", "September 17, 2012 at 10:09am PST"],
+    "DateTime"
 );
 stats_tests!(stats_infer_int_string, "type", &["1", "a"], "String");
 stats_tests!(stats_infer_string_int, "type", &["a", "1"], "String");

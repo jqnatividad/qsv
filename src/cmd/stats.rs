@@ -18,7 +18,7 @@ use crate::CliResult;
 use dateparser::DateTimeUtc;
 use serde::Deserialize;
 
-use self::FieldType::{TDate, TFloat, TInteger, TNull, TString, TUnknown};
+use self::FieldType::{TDate, TDateTime, TFloat, TInteger, TNull, TString, TUnknown};
 
 static USAGE: &str = "
 Computes basic statistics on CSV data.
@@ -398,7 +398,7 @@ impl Stats {
                     });
                 }
             }
-            TDate => {}
+            _ => {}
         }
     }
 
@@ -546,6 +546,7 @@ pub enum FieldType {
     TFloat,
     TInteger,
     TDate,
+    TDateTime,
 }
 
 impl FieldType {
@@ -563,8 +564,15 @@ impl FieldType {
         if string.parse::<f64>().is_ok() {
             return TFloat;
         }
-        if string.parse::<DateTimeUtc>().is_ok() {
-            return TDate;
+        if let Ok(parsed_date) = string.parse::<DateTimeUtc>() {
+            let rfc3339_date_str = parsed_date.0.to_string();
+            let datelen = rfc3339_date_str.len();
+
+            if datelen >= 17 {
+                return TDateTime;
+            } else {
+                return TDate;
+            }
         }
         TString
     }
@@ -585,19 +593,25 @@ impl Commute for FieldType {
             (TFloat, TFloat) => TFloat,
             (TInteger, TInteger) => TInteger,
             (TDate, TDate) => TDate,
+            (TDateTime, TDateTime) => TDateTime,
             // Null does not impact the type.
             (TNull, any) | (any, TNull) => any,
             // There's no way to get around an unknown.
             (TUnknown, _) | (_, TUnknown) => TUnknown,
+            // date data types
+            (TDate, TDateTime) | (TDateTime, TDate) => TDateTime,
             // Integers can degrade to floats.
             (TFloat, TInteger) | (TInteger, TFloat) => TFloat,
             // when using unixtime format can degrade to int/floats.
             (TInteger, TDate) | (TDate, TInteger) => TInteger,
             (TFloat, TDate) | (TDate, TFloat) => TFloat,
+            (TInteger, TDateTime) | (TDateTime, TInteger) => TInteger,
+            (TFloat, TDateTime) | (TDateTime, TFloat) => TFloat,
             // Numbers/dates can degrade to unicode Strings.
             (TString, TFloat) | (TFloat, TString) => TString,
             (TString, TInteger) | (TInteger, TString) => TString,
             (TString, TDate) | (TDate, TString) => TString,
+            (TString, TDateTime) | (TDateTime, TString) => TString,
         };
     }
 }
@@ -620,6 +634,7 @@ impl fmt::Display for FieldType {
             TFloat => write!(f, "Float"),
             TInteger => write!(f, "Integer"),
             TDate => write!(f, "Date"),
+            TDateTime => write!(f, "DateTime"),
         }
     }
 }
@@ -633,6 +648,7 @@ impl fmt::Debug for FieldType {
             TFloat => write!(f, "Float"),
             TInteger => write!(f, "Integer"),
             TDate => write!(f, "Date"),
+            TDateTime => write!(f, "DateTime"),
         }
     }
 }
@@ -677,7 +693,7 @@ impl TypedSum {
 
     fn show(&self, typ: FieldType) -> Option<String> {
         match typ {
-            TNull | TString | TUnknown | TDate => None,
+            TNull | TString | TUnknown | TDate | TDateTime => None,
             TInteger => Some(self.integer.to_string()),
             TFloat => Some(self.float.unwrap_or(0.0).to_string()),
         }
@@ -732,7 +748,7 @@ impl TypedMinMax {
                 self.integers.add(n);
                 self.floats.add(n as f64);
             }
-            TDate => {
+            TDate | TDateTime => {
                 let n = str::from_utf8(&*sample)
                     .ok()
                     .and_then(|s| dateparser::parse(s).ok())
@@ -761,7 +777,7 @@ impl TypedMinMax {
                 }
                 _ => None,
             },
-            TDate => match (self.dates.min(), self.dates.max()) {
+            TDate | TDateTime => match (self.dates.min(), self.dates.max()) {
                 (Some(min), Some(max)) => Some((min.to_string(), max.to_string())),
                 _ => None,
             },
