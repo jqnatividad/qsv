@@ -5,6 +5,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.33.0] - 2022.02-27
+### Added
+* `fetch`: add `--url-template` and `--redis` options in https://github.com/jqnatividad/qsv/pull/175
+* `stats`: add `DateTime` data type (RFC3339 format) in https://github.com/jqnatividad/qsv/pull/176
+* added Rust Beta to Github Actions CI
+
+### Changed
+* `validate`: improve performance and simplify error report format by @mhuang74 in https://github.com/jqnatividad/qsv/pull/172
+* Addl `validate` performance tweaks in https://github.com/jqnatividad/qsv/pull/173
+* changed MSRV to latest Rust stable - 1.59.0
+* removed `num_cpus` crate and use new `std::thread::available_parallelism` stabilized in Rust 1.59.0
+* use new cargo.toml `strip` option to strip binaries
+* refactored GitHub Actions CI to make it faster
+
 ## [0.32.2] - 2022-02-20
 ### Changed
 * `schema` (#60): pattern constraint for string types by @mhuang74 in https://github.com/jqnatividad/qsv/pull/168
