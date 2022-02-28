@@ -183,6 +183,15 @@ macro_rules! update_cache_info {
             _ => {}
         }
     };
+    ($progress:expr, $cache_hits:expr, $num_rows:expr) => {
+        use thousands::Separable;
+
+        let hit_ratio = ($cache_hits as f64 / $num_rows as f64) * 100.0;
+        $progress.set_message(format!(
+            " of {} records. Redis cache hit ratio: {hit_ratio:.2}%",
+            $progress.length().separate_with_commas(),
+        ));
+    };
 }
 
 pub(crate) use update_cache_info;
