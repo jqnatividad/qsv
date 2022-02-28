@@ -55,7 +55,7 @@ Available commands
 | [replace](/src/cmd/replace.rs#L12) | Replace CSV data using a regex.  |
 | [reverse](/src/cmd/reverse.rs#L7)[^3] | Reverse order of rows in a CSV. Unlike the `sort --reverse` command, it preserves the order of rows with the same key.  |
 | [sample](/src/cmd/sample.rs#L12)[^2] | Randomly draw rows (with optional seed) from a CSV using [reservoir sampling](https://en.wikipedia.org/wiki/Reservoir_sampling) (i.e., use memory proportional to the size of the sample).  |
-| [schema](/src/cmd/schema.rs#L22) | Infer schema from CSV data and output in JSON Schema format.  See `validate` command. |
+| [schema](/src/cmd/schema.rs#L22)[^4] | Infer schema from CSV data and output in JSON Schema format. Uses multithreading to go faster if an index is present. See `validate` command. |
 | [search](/src/cmd/search.rs#L11) | Run a regex over a CSV. Applies the regex to each field individually & shows only matching rows.  |
 | [searchset](/src/cmd/searchset.rs#L15) | **Run multiple regexes over a CSV in a single pass.** Applies the regexes to each field individually & shows only matching rows.  |
 | [select](/src/cmd/select.rs#L8) | Select, re-order, duplicate or drop columns.  |
@@ -259,7 +259,7 @@ variable `QSV_RDR_BUFFER_CAPACITY` in bytes.
 The same is true with the write buffer (default: 64k) with the `QSV_WTR_BUFFER_CAPACITY` environment variable.
 
 ### Multithreading
-Several commands support multithreading - `stats`, `frequency`, `split` (when an index is available, using [threadpool](https://docs.rs/threadpool/latest/threadpool/)) and `validate` (no index required, using [rayon](https://docs.rs/rayon/latest/rayon/)).
+Several commands support multithreading - `stats`, `frequency`, `schema`, `split` (when an index is available, using [threadpool](https://docs.rs/threadpool/latest/threadpool/)) and `validate` (no index required, using [rayon](https://docs.rs/rayon/latest/rayon/)).
 
 Previously, the threadpool commands spawned several jobs equal to the number of logical processors. After extensive benchmarking, it turns out
 doing so often results in the multithreaded runs running slower than single-threaded runs.
