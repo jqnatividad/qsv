@@ -43,7 +43,7 @@ Available commands
 | [frequency](/src/cmd/frequency.rs#L15)[^2][^4] | Build frequency tables of each column. (Uses multithreading to go faster if an index is present.) |
 | [generate](/src/cmd/generate.rs#L12)[^1] | Generate test data by profiling a CSV using [Markov decision process](https://crates.io/crates/test-data-generation) machine learning.  |
 | [headers](/src/cmd/headers.rs#L11) | Show the headers of a CSV. Or show the intersection of all headers between many CSV files. |
-| [index](/src/cmd/index.rs#L13) | Create an index for a CSV. This is very quick & provides constant time indexing into the CSV file. |
+| [index](/src/cmd/index.rs#L13) | Create an index for a CSV. This is very quick & provides constant time indexing into the CSV file. Enables multithreading for `frequency`, `split` and `stats` commands. |
 | [input](/src/cmd/input.rs#L7) | Read a CSV with exotic quoting/escaping rules. |
 | [join](/src/cmd/join.rs#L17)[^2] | Inner, outer, cross, anti & semi joins. Uses a simple hash index to make it fast.  |
 | [jsonl](/src/cmd/jsonl.rs#L11) | Convert newline-delimited JSON ([JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/)) to CSV. 
@@ -70,7 +70,7 @@ Available commands
 [^1]: enabled by optional feature flag. Not available on `qsvlite`.   
 [^2]: uses an index when available. `join` always uses indices.   
 [^3]: loads the entire CSV into memory. Note that `stats` & `transpose` have modes that do not load the entire CSV into memory.   
-[^4]: multithreaded when an index is available (use `--jobs` option to adjust).
+[^4]: multithreaded when an index is available (use `--jobs` option to adjust).   
 [^5]: multithreaded   
 
 Installation
