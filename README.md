@@ -34,7 +34,7 @@ Available commands
 | [enum](/src/cmd/enumerate.rs#L10) | Add a new column enumerating rows by adding a column of incremental or uuid identifiers. Can also be used to copy a column or fill a new column with a constant value.  |
 | [exclude](/src/cmd/exclude.rs#L17)[^2] | Removes a set of CSV data from another set based on the specified columns.  |
 | [explode](/src/cmd/explode.rs#L8) | Explode rows into multiple ones by splitting a column value based on the given separator.  |
-| [fetch](/src/cmd/fetch.rs#L14) | Fetches HTML/data from web pages or web services for every row in a URL column with optional Redis response caching. |
+| [fetch](/src/cmd/fetch.rs#L15) | Fetches HTML/data from web pages or web services for every row in a URL column with optional Redis response caching. |
 | [fill](/src/cmd/fill.rs#L13) | Fill empty values.  |
 | [fixlengths](/src/cmd/fixlengths.rs#L9) | Force a CSV to have same-length records by either padding or truncating them. Can also be used to inspect if a CSV is well-formed. |
 | [flatten](/src/cmd/flatten.rs#L12) | A flattened view of CSV records. Useful for viewing one record at a time.<br />e.g. `qsv slice -i 5 data.csv \| qsv flatten`. |
@@ -65,12 +65,13 @@ Available commands
 | [stats](/src/cmd/stats.rs#L24)[^2][^3][^4] | Infer data type & compute descriptive statistics for each column in a CSV (sum, min/max, min/max length, mean, stddev, variance, quartiles, IQR, lower/upper fences, skew, median, mode, cardinality & nullcount)  |
 | [table](/src/cmd/table.rs#L12)[^3] | Show aligned output of a CSV using [elastic tabstops](https://github.com/BurntSushi/tabwriter).  |
 | [transpose](/src/cmd/transpose.rs#L9)[^3] | Transpose rows/columns of a CSV.  |
-| [validate](/src/cmd/validate.rs#L27)[^4] | Validate CSV data with JSON Schema. See `schema` command. |
+| [validate](/src/cmd/validate.rs#L27)[^5] | Validate CSV data with JSON Schema. See `schema` command. |
 
 [^1]: enabled by optional feature flag. Not available on `qsvlite`.   
 [^2]: uses an index when available. `join` always uses indices.   
 [^3]: loads the entire CSV into memory. Note that `stats` & `transpose` have modes that do not load the entire CSV into memory.   
-[^4]: multithreaded by default (use `--jobs` option to adjust, when applicable).   
+[^4]: multithreaded when an index is available (use `--jobs` option to adjust).
+[^5]: multithreaded   
 
 Installation
 ------------
@@ -258,7 +259,7 @@ variable `QSV_RDR_BUFFER_CAPACITY` in bytes.
 The same is true with the write buffer (default: 64k) with the `QSV_WTR_BUFFER_CAPACITY` environment variable.
 
 ### Multithreading
-Several commands support multithreading - `stats`, `frequency`, `split` (using [threadpool](https://docs.rs/threadpool/latest/threadpool/)) and `validate` (using [rayon](https://docs.rs/rayon/latest/rayon/)).
+Several commands support multithreading - `stats`, `frequency`, `split` (when an index is available, using [threadpool](https://docs.rs/threadpool/latest/threadpool/)) and `validate` (no index required, using [rayon](https://docs.rs/rayon/latest/rayon/)).
 
 Previously, the threadpool commands spawned several jobs equal to the number of logical processors. After extensive benchmarking, it turns out
 doing so often results in the multithreaded runs running slower than single-threaded runs.
