@@ -1,3 +1,4 @@
+@@ -0,0 +1,541 @@
 use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
 use crate::util;
@@ -11,16 +12,19 @@ use serde::Deserialize;
 use thiserror::Error;
 
 static USAGE: &str = "
-Fetch data via a URL column, and optionally store them in a new column.
-
-This command fetches data from web api for every row in the URL column, 
+This command fetches data from web API for every row in the URL column, 
 and optionally stores them in a new column.
 
-Fetch is integrated with `jql` to directly parse out values from api JSON response.
+Fetch is integrated with `jql` to directly parse out values from API JSON response.
 
-URL column must contain full and valid URL path, which can be constructed via the `lua` command.
+URL column can either be a fully qualified URL path, or if not, can be used with
+the --url-template option to create one.
 
-To set proxy, please set env var HTTP_PROXY and HTTPS_PROXY (eg export HTTPS_PROXY=socks5://127.0.0.1:1086)
+To use a proxy, please set env var HTTP_PROXY and HTTPS_PROXY (eg export HTTPS_PROXY=socks5://127.0.0.1:1086).
+
+Set the --redis flag to use Redis. By default, it will connect to a local Redis instance at redis://127.0.0.1:6379,
+with a cache expiry TTL of 2,419,200 seconds (28 days), with cache hits NOT refreshing the TTL of cached values.
+Set the env vars QSV_REDIS_CONNECTION_STRING, QSV_REDIS_TTL_SECONDS and QSV_REDIS_TTL_REFRESH to change default settings.
 
 Usage:
     qsv fetch [options] [--http-header <k:v>...] [<column>] [<input>]
