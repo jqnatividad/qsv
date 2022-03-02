@@ -186,7 +186,7 @@ apply options:
                                 the place format to use when geocoding. The available formats are:
                                   - 'city-state' (default) - e.g. Brooklyn, New York
                                   - 'city-country' - Brooklyn, US 
-                                  - 'city-state-county' | 'city-admin1-country' - Brooklyn, New York US
+                                  - 'city-state-country' | 'city-admin1-country' - Brooklyn, New York US
                                   - 'city' - Brooklyn
                                   - 'county' | 'admin2' - Kings County
                                   - 'state' | 'admin1' - New York
@@ -616,31 +616,31 @@ fn search_cached(cell: &str, formatstr: &str) -> Option<String> {
                         admin1 = locdetails.record.admin1,
                     ),
                     "city-country" => format!(
-                        "{name}, {admin3}",
+                        "{name}, {cc}",
                         name = locdetails.record.name,
-                        admin3 = locdetails.record.admin3
+                        cc = locdetails.record.cc
                     ),
-                    "city-state-county" | "city-admin1-country" => format!(
-                        "{name}, {admin1} {admin3}",
+                    "city-state-country" | "city-admin1-country" => format!(
+                        "{name}, {admin1} {cc}",
                         name = locdetails.record.name,
                         admin1 = locdetails.record.admin1,
-                        admin3 = locdetails.record.admin3
+                        cc = locdetails.record.cc
                     ),
                     "city" => locdetails.record.name.to_string(),
                     "county" | "admin2" => locdetails.record.admin2.to_string(),
                     "state" | "admin1" => locdetails.record.admin1.to_string(),
                     "county-country" | "admin2-country" => format!(
-                        "{admin2}, {admin3}",
+                        "{admin2}, {cc}",
                         admin2 = locdetails.record.admin2,
-                        admin3 = locdetails.record.admin3
+                        cc = locdetails.record.cc
                     ),
                     "county-state-country" | "admin2-admin1-country" => format!(
-                        "{admin2}, {admin1} {admin3}",
+                        "{admin2}, {admin1} {cc}",
                         admin2 = locdetails.record.admin2,
                         admin1 = locdetails.record.admin1,
-                        admin3 = locdetails.record.admin3
+                        cc = locdetails.record.cc
                     ),
-                    "country" => locdetails.record.admin3.to_string(),
+                    "country" => locdetails.record.cc.to_string(),
                     _ => locdetails.record.name.to_string(),
                 };
                 Some(geocoded_result)
