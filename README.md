@@ -36,14 +36,14 @@ Available commands
 | [explode](/src/cmd/explode.rs#L8) | Explode rows into multiple ones by splitting a column value based on the given separator.  |
 | [fetch](/src/cmd/fetch.rs#L15) | Fetches HTML/data from web pages or web services for every row in a URL column with optional Redis response caching. |
 | [fill](/src/cmd/fill.rs#L13) | Fill empty values.  |
-| [fixlengths](/src/cmd/fixlengths.rs#L9) | Force a CSV to have same-length records by either padding or truncating them. Can also be used to inspect if a CSV is well-formed. |
+| [fixlengths](/src/cmd/fixlengths.rs#L9) | Force a CSV to have same-length records by either padding or truncating them. |
 | [flatten](/src/cmd/flatten.rs#L12) | A flattened view of CSV records. Useful for viewing one record at a time.<br />e.g. `qsv slice -i 5 data.csv \| qsv flatten`. |
 | [fmt](/src/cmd/fmt.rs#L7) | Reformat a CSV with different delimiters, record terminators or quoting rules. (Supports ASCII delimited data.)  |
 | [foreach](/src/cmd/foreach.rs#L17)[^1] | Loop over a CSV to execute bash commands. (not available on Windows)  |
 | [frequency](/src/cmd/frequency.rs#L15)[^2][^4] | Build frequency tables of each column. (Uses multithreading to go faster if an index is present.) |
 | [generate](/src/cmd/generate.rs#L12)[^1] | Generate test data by profiling a CSV using [Markov decision process](https://crates.io/crates/test-data-generation) machine learning.  |
 | [headers](/src/cmd/headers.rs#L11) | Show the headers of a CSV. Or show the intersection of all headers between many CSV files. |
-| [index](/src/cmd/index.rs#L13) | Create an index for a CSV. This is very quick & provides constant time indexing into the CSV file. Enables multithreading for `frequency`, `split` and `stats` commands. |
+| [index](/src/cmd/index.rs#L13) | Create an index for a CSV. This is very quick & provides constant time indexing into the CSV file. Enables multithreading for `frequency`, `split`, `stats` and `schema` commands. |
 | [input](/src/cmd/input.rs#L7) | Read a CSV with exotic quoting/escaping rules. |
 | [join](/src/cmd/join.rs#L17)[^2] | Inner, outer, cross, anti & semi joins. Uses a simple hash index to make it fast.  |
 | [jsonl](/src/cmd/jsonl.rs#L11) | Convert newline-delimited JSON ([JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/)) to CSV. 
@@ -65,7 +65,7 @@ Available commands
 | [stats](/src/cmd/stats.rs#L24)[^2][^3][^4] | Infer data type & compute descriptive statistics for each column in a CSV (sum, min/max, min/max length, mean, stddev, variance, quartiles, IQR, lower/upper fences, skew, median, mode, cardinality & nullcount). Uses multithreading to go faster if an index is present. |
 | [table](/src/cmd/table.rs#L12)[^3] | Show aligned output of a CSV using [elastic tabstops](https://github.com/BurntSushi/tabwriter).  |
 | [transpose](/src/cmd/transpose.rs#L9)[^3] | Transpose rows/columns of a CSV.  |
-| [validate](/src/cmd/validate.rs#L27)[^5] | Validate CSV data with JSON Schema. See `schema` command. |
+| [validate](/src/cmd/validate.rs#L27)[^5] | Validate CSV data with JSON Schema (See `schema` command). If no jsonschema file is provided, validates if a CSV conforms to the [RFC 4180 standard](https://datatracker.ietf.org/doc/html/rfc4180). |
 
 [^1]: enabled by optional feature flag. Not available on `qsvlite`.   
 [^2]: uses an index when available. `join` always uses indices.   
