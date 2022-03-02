@@ -34,8 +34,7 @@ Example output files from `mydata.csv`. If piped from stdin, then filename is `s
 
 JSON Schema can be a local file or a URL.
 
-When run without JSON Schema, only a simple CSV check (RFC 4180) is performed, with the caveat that
- on non-Windows machines, each record is delimited by a LF (\\n) instead of CRLF (\\r\\n).
+When run without JSON Schema, only a simple CSV check (RFC 4180) is performed.
 
 
 Usage:
@@ -82,12 +81,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // if no json schema supplied, only let csv reader validate csv file
     if args.arg_json_schema.is_none() {
         // just read csv file and let csv reader report problems
-        let mut record = csv::ByteRecord::new();
-        while rdr.read_byte_record(&mut record)? {
-            // this loop is for csv::reader to do basic csv validation on read
+        for result in rdr.records() {
+            if let Err(error) = result {
+                return fail!(format!(
+                    r#"There's a problem with your CSV's format ({error}).\nTry "qsv fixlengths" or "qsv fmt" to fix it."#
+                ));
+            }
         }
 
-        let msg = "Can't validate without schema, but csv looks good.".to_string();
+        let msg = "Can't validate data without schema, but CSV looks good.";
         info!("{msg}");
         println!("{msg}");
 
