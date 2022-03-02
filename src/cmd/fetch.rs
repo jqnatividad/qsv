@@ -294,7 +294,8 @@ fn get_cached_response(
     key = "String",
     convert = r#"{ format!("{}", url) }"#,
     create = r##" {
-        RedisCache::new("qf", REDISCONFIG.ttl_secs)
+        RedisCache::new("f", REDISCONFIG.ttl_secs)
+            .set_namespace("q")
             .set_refresh(REDISCONFIG.ttl_refresh)
             .set_connection_string(&REDISCONFIG.conn_str)
             .build()
