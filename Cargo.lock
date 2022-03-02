@@ -385,9 +385,9 @@ dependencies = [
 
 [[package]]
 name = "async-global-executor"
-version = "2.0.2"
+version = "2.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9586ec52317f36de58453159d48351bc244bc24ced3effc1fce22f3d48664af6"
+checksum = "c026b7e44f1316b567ee750fea85103f87fcb80792b860e979f221259796ca0a"
 dependencies = [
  "async-channel",
  "async-executor",
@@ -2739,15 +2739,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "quick-csv"
-version = "0.1.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "edf4b7701db7d2e4c9c010f21eebd8676a50f79223a0cf858162d24bff47338c"
-dependencies = [
- "rustc-serialize",
-]
-
-[[package]]
 name = "quick-error"
 version = "1.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3012,13 +3003,12 @@ dependencies = [
 
 [[package]]
 name = "reverse_geocoder"
-version = "2.0.1"
+version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f4f0c838f5a03481d1faa7e5a65f41885ddee48a8afb227840a812ccf93c8b5a"
+checksum = "7e2c7983a04230d15e83a3079765d370628e04a2474d585b712d7c46e17e9ab0"
 dependencies = [
+ "csv",
  "kdtree",
- "quick-csv",
- "rustc-serialize",
  "serde",
  "serde_derive",
 ]
@@ -3037,12 +3027,6 @@ dependencies = [
  "web-sys",
  "winapi 0.3.9",
 ]
-
-[[package]]
-name = "rustc-serialize"
-version = "0.3.24"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dcf128d1287d2ea9d80910b5f1120d0b8eede3fbf1abe91c40d39ea7d51e6fda"
 
 [[package]]
 name = "rustc_version"

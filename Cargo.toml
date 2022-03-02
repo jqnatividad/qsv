@@ -85,7 +85,7 @@ reqwest = { version = "0.11", features = [
     "cookies",
     "rustls-tls",
 ], default-features = false }
-reverse_geocoder = { version = "2", optional = true }
+reverse_geocoder = { version = "3", optional = true }
 self_update = { version = "0.28", features = [
     "archive-zip",
     "compression-zip-deflate",
