@@ -13,6 +13,7 @@ use rayon::prelude::*;
 use serde::Deserialize;
 use serde_json::{value::Number, Map, Value};
 use std::{env, fs::File, io::BufReader, io::BufWriter, io::Read, io::Write, str};
+use thousands::Separable;
 
 macro_rules! fail {
     ($mesg:expr) => {
@@ -81,15 +82,34 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // if no json schema supplied, only let csv reader validate csv file
     if args.arg_json_schema.is_none() {
         // just read csv file and let csv reader report problems
-        for result in rdr.records() {
-            if let Err(error) = result {
-                return fail!(format!(
-                    r#"There's a problem with your CSV's format ({error}).\nTry "qsv fixlengths" or "qsv fmt" to fix it."#
-                ));
+
+        let mut header_msg = String::new();
+        if !args.flag_no_headers {
+            let header_results = rdr.headers();
+            match header_results {
+                Ok(header) => {
+                    let header_len = header.len();
+                    header_msg = format!("{} columns and ", header_len.separate_with_commas());
+                }
+                Err(e) => return fail!(format!("Cannot read header ({e}).")),
             }
         }
 
-        let msg = "Can't validate data without schema, but CSV looks good.";
+        let mut record_count: u64 = 0;
+        for result in rdr.records() {
+            if let Err(e) = result {
+                return fail!(format!(
+                    r#"There's a problem with your CSV's format ({e}).\nTry "qsv fixlengths" or "qsv fmt" to fix it."#
+                ));
+            }
+            record_count += 1;
+        }
+
+        let msg = format!(
+            "{header_msg}{} records detected. Can't validate data without schema, but CSV looks good!",
+            record_count.separate_with_commas()
+        );
+
         info!("{msg}");
         println!("{msg}");
 
@@ -216,8 +236,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             break;
         }
     } // end infinite loop
-
-    use thousands::Separable;
 
     if !args.flag_quiet {
         progress.set_message(format!(
