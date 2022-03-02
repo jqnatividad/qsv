@@ -272,8 +272,6 @@ These [observations were gathered using the benchmark script](https://github.com
 
 To find out your jobs setting, call `qsv --version`. The second to the last number is the number of jobs qsv will use for multi-threaded commands. The last number is the number of logical processors detected by qsv.
 
-> **NOTE:** Going forward, all multithreaded commands will eventually be migrated to rayon.
-
 ### Benchmarking for Performance
 Use and fine-tune the [benchmark script](scripts/benchmark-basic.sh) when tweaking qsv's performance to your environment.
 Don't be afraid to change the benchmark data and the qsv commands to something that is more representative of your
