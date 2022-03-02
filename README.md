@@ -86,14 +86,14 @@ Alternatively, you can compile from source by
 and installing `qsv` using Cargo:
 
 ```bash
-cargo install qsv --path .
+cargo install qsv
 ```
 
 If you encounter compilation errors, ensure you're using the exact
 version of the dependencies qsv was built with by issuing:
 
 ```bash
-cargo install qsv --path . --locked
+cargo install qsv --locked
 ```
 
 Compiling from this repository also works similarly:
@@ -111,9 +111,9 @@ The compiled binary will end up in `./target/release/qsv`.
 To enable optional features, use cargo `--features` or `--all-features` (see [Feature Flags](#feature-flags) for more info):
 
 ```bash
-cargo install qsv --path . --features apply,generate,lua,foreach,python
+cargo install qsv --features apply,generate,lua,foreach,python
 # or
-cargo install qsv --path . --all-features
+cargo install qsv --all-features
 
 # or when compiling from a local repo
 cargo build --release --features apply,generate,lua,foreach,python
