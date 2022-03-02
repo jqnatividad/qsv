@@ -47,7 +47,7 @@ opt-level = 3
 [dependencies]
 anyhow = "1.0"
 byteorder = "1.4"
-cached = { version = "0.32", features = ["redis_store"] }
+cached = { version = "0.33", features = ["redis_store"] }
 censor = { version = "0.2", optional = true }
 chrono = { version = "0.4", optional = true }
 crossbeam-channel = "0.5"
