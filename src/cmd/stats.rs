@@ -296,6 +296,7 @@ struct WhichStats {
 }
 
 impl Commute for WhichStats {
+    #[inline]
     fn merge(&mut self, other: WhichStats) {
         assert_eq!(*self, other);
     }
@@ -524,6 +525,7 @@ impl Stats {
 }
 
 impl Commute for Stats {
+    #[inline]
     fn merge(&mut self, other: Stats) {
         self.typ.merge(other.typ);
         self.sum.merge(other.sum);
@@ -550,6 +552,7 @@ pub enum FieldType {
 }
 
 impl FieldType {
+    #[inline]
     pub fn from_sample(sample: &[u8]) -> FieldType {
         if sample.is_empty() {
             return TNull;
@@ -587,6 +590,7 @@ impl FieldType {
 }
 
 impl Commute for FieldType {
+    #[inline]
     fn merge(&mut self, other: FieldType) {
         *self = match (*self, other) {
             (TString, TString) => TString,
@@ -691,6 +695,7 @@ impl TypedSum {
         }
     }
 
+    #[inline]
     fn show(&self, typ: FieldType) -> Option<String> {
         match typ {
             TNull | TString | TUnknown | TDate | TDateTime => None,
@@ -701,6 +706,7 @@ impl TypedSum {
 }
 
 impl Commute for TypedSum {
+    #[inline]
     fn merge(&mut self, other: TypedSum) {
         match (self.float, other.float) {
             (Some(f1), Some(f2)) => self.float = Some(f1 + f2),
@@ -759,6 +765,7 @@ impl TypedMinMax {
         }
     }
 
+    #[inline]
     fn len_range(&self) -> Option<(String, String)> {
         match (self.str_len.min(), self.str_len.max()) {
             (Some(min), Some(max)) => Some((min.to_string(), max.to_string())),
@@ -766,6 +773,7 @@ impl TypedMinMax {
         }
     }
 
+    #[inline]
     fn show(&self, typ: FieldType) -> Option<(String, String)> {
         match typ {
             TNull => None,
@@ -794,6 +802,7 @@ impl TypedMinMax {
 }
 
 impl Commute for TypedMinMax {
+    #[inline]
     fn merge(&mut self, other: TypedMinMax) {
         self.strings.merge(other.strings);
         self.str_len.merge(other.str_len);
