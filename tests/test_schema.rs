@@ -1,9 +1,56 @@
 use crate::workdir::Workdir;
 use assert_json_diff::assert_json_eq;
 use serde_json::Value;
+use std::path::Path;
 
 #[test]
-fn generate_schema_with_value_constraints_then_feed_into_validate() {
+#[should_panic]
+fn generate_schema_with_defaults_and_validate_with_no_errors() {
+    // create worksapce and invoke schema command with value constraints flag
+    let wrk = Workdir::new("schema").flexible(true);
+
+    // copy csv file to workdir
+    let csv = wrk.load_test_resource("adur-public-toilets.csv");
+    wrk.create_from_string("adur-public-toilets.csv", &csv);
+
+    // run schema command with value constraints option
+    let mut cmd = wrk.command("schema");
+    cmd.arg("adur-public-toilets.csv");
+    wrk.output(&mut cmd);
+
+    // load output schema file
+    let output_schema_string: String =
+        wrk.from_str(&wrk.path("adur-public-toilets.csv.schema.json"));
+    let output_schema_json =
+        serde_json::from_str(&output_schema_string).expect("parse schema json");
+
+    // make sure it's a valid JSON Schema by compiling with jsonschema library
+    jsonschema::JSONSchema::options()
+        .compile(&output_schema_json)
+        .expect("valid JSON Schema");
+
+    // diff output json with expected json
+    let expected_schema: String =
+        wrk.load_test_resource("adur-public-toilets.csv.schema-default.expected.json");
+    let expected_schema_json: Value = serde_json::from_str(&expected_schema.to_string()).unwrap();
+    assert_json_eq!(expected_schema_json, output_schema_json);
+
+    // invoke validate command from schema created above
+    let mut cmd2 = wrk.command("validate");
+    cmd2.arg("adur-public-toilets.csv");
+    cmd2.arg("adur-public-toilets.csv.schema.json");
+    wrk.output(&mut cmd2);
+
+    // not expecting any invalid rows, so confirm there are NO output files generated
+    assert!(
+        Path::new(&wrk.path("adur-public-toilets.csv.validation-errors.tsv")).exists() == false
+    );
+    assert!(Path::new(&wrk.path("adur-public-toilets.csv.valid")).exists() == false);
+    assert!(Path::new(&wrk.path("adur-public-toilets.csv.invalid")).exists() == false);
+}
+
+#[test]
+fn generate_schema_with_optinal_flags_and_validate_with_errors() {
     // create worksapce and invoke schema command with value constraints flag
     let wrk = Workdir::new("schema").flexible(true);
 
@@ -33,8 +80,8 @@ fn generate_schema_with_value_constraints_then_feed_into_validate() {
         .expect("valid JSON Schema");
 
     // diff output json with expected json
-    let expected_schema: String = wrk
-        .load_test_resource("adur-public-toilets.csv.schema-with-value-constraints.expected.json");
+    let expected_schema: String =
+        wrk.load_test_resource("adur-public-toilets.csv.schema-strict.expected.json");
     let expected_schema_json: Value = serde_json::from_str(&expected_schema.to_string()).unwrap();
     assert_json_eq!(expected_schema_json, output_schema_json);
 
@@ -62,6 +109,10 @@ fn generate_schema_with_value_constraints_then_feed_into_validate() {
 15	ExtractDate	"07/07/2014 00:00" is not a "date-time"
 "#;
 
+    // expecting invalid rows, so confirm there ARE output files generated
+    assert!(Path::new(&wrk.path("adur-public-toilets.csv.validation-errors.tsv")).exists() == true);
+    assert!(Path::new(&wrk.path("adur-public-toilets.csv.valid")).exists() == true);
+    assert!(Path::new(&wrk.path("adur-public-toilets.csv.invalid")).exists() == true);
 
     // check validation error output
     let validation_error_output: String =
