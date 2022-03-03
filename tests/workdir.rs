@@ -203,6 +203,14 @@ impl Workdir {
     pub fn qsv_bin(&self) -> PathBuf {
         self.root.join("qsv")
     }
+
+    // clear all files in directory
+    pub fn clear_contents(&self) -> io::Result<()> {
+        for entry in fs::read_dir(&self.dir)? {
+            fs::remove_file(entry?.path())?;
+        }
+        Ok(())
+    }
 }
 
 impl fmt::Debug for Workdir {

@@ -36,6 +36,7 @@ Usage:
 
 Schema options:
     --enum-threshold NUM       Cardinality threshold for adding enum constraints [default: 50]
+    --strict-dates             Enforce Internet Datetime format (RFC-3339) for detected datetime columns
     --pattern-columns <args>   Select columns to add pattern constraints
 
 Common options:
@@ -51,6 +52,7 @@ Common options:
 #[derive(Deserialize, Debug)]
 struct Args {
     flag_enum_threshold: usize,
+    flag_strict_dates: bool,
     flag_pattern_columns: SelectColumns,
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
@@ -216,6 +218,17 @@ fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<S
             }
             "Date" => {
                 type_list.push(Value::String("string".to_string()));
+
+                if args.flag_strict_dates {
+                    field_map.insert("format".to_string(), Value::String("date".to_string()));
+                }
+            }
+            "DateTime" => {
+                type_list.push(Value::String("string".to_string()));
+
+                if args.flag_strict_dates {
+                    field_map.insert("format".to_string(), Value::String("date-time".to_string()));
+                }
             }
             "Integer" => {
                 type_list.push(Value::String("integer".to_string()));

@@ -6,14 +6,9 @@
   "properties": {
     "ExtractDate": {
       "description": "ExtractDate column from adur-public-toilets.csv",
-      "minLength": 2,
-      "maxLength": 16,
       "type": [
-        "string"
-      ],
-      "enum": [
-        "07/07/2014 00:00",
-        "2014-07-07 00:00"
+        "string",
+        "null"
       ]
     },
     "OrganisationURI": {
@@ -285,7 +280,23 @@
       "type": [
         "string"
       ],
-      "pattern": "^\\w{9}\\d(?:\\d)?@\\w{4}\\-\\w{8}\\.\\w{3}\\.\\w\\w$"
+      "enum": [
+        "surveyor_10@adur-worthing.gov.uk",
+        "surveyor_11@adur-worthing.gov.uk",
+        "surveyor_12@adur-worthing.gov.uk",
+        "surveyor_13@adur-worthing.gov.uk",
+        "surveyor_14@adur-worthing.gov.uk",
+        "surveyor_15@adur-worthing.gov.uk",
+        "surveyor_1@adur-worthing.gov.uk",
+        "surveyor_2@adur-worthing.gov.uk",
+        "surveyor_3@adur-worthing.gov.uk",
+        "surveyor_4@adur-worthing.gov.uk",
+        "surveyor_5@adur-worthing.gov.uk",
+        "surveyor_6@adur-worthing.gov.uk",
+        "surveyor_7@adur-worthing.gov.uk",
+        "surveyor_8@adur-worthing.gov.uk",
+        "surveyor_9@adur-worthing.gov.uk"
+      ]
     },
     "ReportTel": {
       "description": "ReportTel column from adur-public-toilets.csv",
@@ -332,6 +343,23 @@
       "type": [
         "string",
         "null"
+      ],
+      "enum": [
+        "BEACH GREEN PUBLIC CONVENIENCES BRIGHTON ROAD LANCING",
+        "BEACH TOILETS BASIN ROAD SOUTH SOUTHWICK",
+        "PUBLIC CONVENIENCE NORTH PAVILION BUCKINGHAM PARK UPPER SHOREHAM ROAD SHOREHAM-BY-SEA",
+        "PUBLIC CONVENIENCE SOUTHWICK STREET SOUTHWICK",
+        "PUBLIC CONVENIENCES ADUR RECREATION GROUND BRIGHTON ROAD SHOREHAM-BY-SEA",
+        "PUBLIC CONVENIENCES BEACH GREEN SHOREHAM-BY-SEA",
+        "PUBLIC CONVENIENCES CEMETERY MILL LANE SHOREHAM-BY-SEA",
+        "PUBLIC CONVENIENCES CIVIC CENTRE HAM ROAD SHOREHAM-BY-SEA",
+        "PUBLIC CONVENIENCES FORTHAVEN SHOREHAM-BY-SEA",
+        "PUBLIC CONVENIENCES MIDDLE STREET SHOREHAM-BY-SEA",
+        "PUBLIC CONVENIENCES MONKS RECREATION GROUND CRABTREE LANE LANCING",
+        "PUBLIC CONVENIENCES SOUTH PAVILION BUCKINGHAM PARK UPPER SHOREHAM ROAD SHOREHAM-BY-SEA",
+        "PUBLIC CONVENIENCES YEW TREE CLOSE LANCING",
+        "WEST BEACH PUBLIC CONVENIENCES WEST BEACH ROAD LANCING",
+        null
       ]
     },
     "GeoAreaURI": {
