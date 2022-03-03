@@ -4,7 +4,6 @@ use serde_json::Value;
 use std::path::Path;
 
 #[test]
-#[should_panic]
 fn generate_schema_with_defaults_and_validate_with_no_errors() {
     // create worksapce and invoke schema command with value constraints flag
     let wrk = Workdir::new("schema").flexible(true);
