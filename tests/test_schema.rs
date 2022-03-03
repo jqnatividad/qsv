@@ -18,6 +18,7 @@ fn generate_schema_with_value_constraints_then_feed_into_validate() {
     cmd.arg("13");
     cmd.arg("--pattern-columns");
     cmd.arg("ReportEmail,OpeningHours");
+    cmd.arg("--strict-dates");
     wrk.output(&mut cmd);
 
     // load output schema file
@@ -44,9 +45,23 @@ fn generate_schema_with_value_constraints_then_feed_into_validate() {
     wrk.output(&mut cmd2);
 
     // validation report
-    let validation_errors_expected = "row_number\tfield\terror\n\
-                                           1\tExtractDate\tnull is not of type \"string\"\n\
-                                           1\tExtractDate\tnull is not one of [\"07/07/2014 00:00\",\"2014-07-07 00:00\"]\n";
+    let validation_errors_expected = r#"row_number	field	error
+2	ExtractDate	"07/07/2014 00:00" is not a "date-time"
+3	ExtractDate	"2014-07-07 00:00" is not a "date-time"
+4	ExtractDate	"07/07/2014 00:00" is not a "date-time"
+5	ExtractDate	"07/07/2014 00:00" is not a "date-time"
+6	ExtractDate	"07/07/2014 00:00" is not a "date-time"
+7	ExtractDate	"07/07/2014 00:00" is not a "date-time"
+8	ExtractDate	"07/07/2014 00:00" is not a "date-time"
+9	ExtractDate	"07/07/2014 00:00" is not a "date-time"
+10	ExtractDate	"07/07/2014 00:00" is not a "date-time"
+11	ExtractDate	"07/07/2014 00:00" is not a "date-time"
+12	ExtractDate	"07/07/2014 00:00" is not a "date-time"
+13	ExtractDate	"07/07/2014 00:00" is not a "date-time"
+14	ExtractDate	"07/07/2014 00:00" is not a "date-time"
+15	ExtractDate	"07/07/2014 00:00" is not a "date-time"
+"#;
+
 
     // check validation error output
     let validation_error_output: String =
