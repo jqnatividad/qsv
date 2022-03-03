@@ -7,6 +7,7 @@ use std::path::Path;
 fn generate_schema_with_defaults_and_validate_with_no_errors() {
     // create worksapce and invoke schema command with value constraints flag
     let wrk = Workdir::new("schema").flexible(true);
+    wrk.clear_contents().unwrap();
 
     // copy csv file to workdir
     let csv = wrk.load_test_resource("adur-public-toilets.csv");
@@ -41,17 +42,18 @@ fn generate_schema_with_defaults_and_validate_with_no_errors() {
     wrk.output(&mut cmd2);
 
     // not expecting any invalid rows, so confirm there are NO output files generated
-    assert!(
-        Path::new(&wrk.path("adur-public-toilets.csv.validation-errors.tsv")).exists() == false
-    );
+    let validation_error_path = &wrk.path("adur-public-toilets.csv.validation-errors.tsv");
+    println!("not expecting validation error file at: {validation_error_path:?}");
+    assert!(Path::new(validation_error_path).exists() == false);
     assert!(Path::new(&wrk.path("adur-public-toilets.csv.valid")).exists() == false);
     assert!(Path::new(&wrk.path("adur-public-toilets.csv.invalid")).exists() == false);
 }
 
 #[test]
-fn generate_schema_with_optinal_flags_and_validate_with_errors() {
+fn generate_schema_with_optional_flags_and_validate_with_errors() {
     // create worksapce and invoke schema command with value constraints flag
     let wrk = Workdir::new("schema").flexible(true);
+    wrk.clear_contents().unwrap();
 
     // copy csv file to workdir
     let csv = wrk.load_test_resource("adur-public-toilets.csv");
@@ -109,7 +111,10 @@ fn generate_schema_with_optinal_flags_and_validate_with_errors() {
 "#;
 
     // expecting invalid rows, so confirm there ARE output files generated
-    assert!(Path::new(&wrk.path("adur-public-toilets.csv.validation-errors.tsv")).exists() == true);
+    let validation_error_path = &wrk.path("adur-public-toilets.csv.validation-errors.tsv");
+    println!("expecting validation error file at: {validation_error_path:?}");
+
+    assert!(Path::new(validation_error_path).exists() == true);
     assert!(Path::new(&wrk.path("adur-public-toilets.csv.valid")).exists() == true);
     assert!(Path::new(&wrk.path("adur-public-toilets.csv.invalid")).exists() == true);
 
