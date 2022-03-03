@@ -8,17 +8,14 @@
 [![Discussions](https://img.shields.io/github/discussions/jqnatividad/qsv)](https://github.com/jqnatividad/qsv/discussions)
 [![Docs](https://img.shields.io/badge/wiki-docs-yellowgreen)](https://github.com/jqnatividad/qsv/wiki)
 [![Downloads](https://img.shields.io/github/downloads/jqnatividad/qsv/total)](https://github.com/jqnatividad/qsv/releases/latest)   
-qsv is a command line program for indexing, slicing, analyzing, splitting, enriching, validating & joining
-CSV files. Commands are simple, fast and composable.
 
-* [Available Commands](#available-commands)
-* [Installation](#installation)
-* [Whirlwind Tour](docs/whirlwind_tour.md#a-whirlwind-tour)
-* [Cookbook](https://github.com/jqnatividad/qsv/wiki)
-* [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ)
-* [Changelog](https://github.com/jqnatividad/qsv/blob/master/CHANGELOG.md#changelog)
-* [Benchmarks](docs/BENCHMARKS.md)
-* [Sponsor](#sponsor)
+<p align="center">
+
+ &nbsp;          |  Table of Contents
+:-------------------------:|:-------------------------
+![](docs/images/qsv-logo.png)  | qsv is a command line program for indexing, slicing, analyzing, splitting, enriching,<br>validating & joining CSV files. Commands are simple, fast and composable.<br><br>* [Available Commands](#available-commands)<br>* [Installation](#installation)<br> * [Whirlwind Tour](docs/whirlwind_tour.md#a-whirlwind-tour)<br>* [Cookbook](https://github.com/jqnatividad/qsv/wiki)<br>* [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ)<br>* [Changelog](https://github.com/jqnatividad/qsv/blob/master/CHANGELOG.md#changelog)<br>* [Benchmarks](docs/BENCHMARKS.md)<br>* [Sponsor](#sponsor)
+
+</p>
 
 > **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's release](https://github.com/BurntSushi/xsv/issues/267). It has numerous new features & 20 additional commands (for a total of 40). See [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ) for more details.
 
