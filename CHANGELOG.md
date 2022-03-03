@@ -5,6 +5,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.34.0] - 2022.03-03
+### Added
+* added intentionally kitschy qsv logo :grin:
+* `stats`: added `datetime` data type inferencing
+* `fetch`: added optional Redis response caching
+* `schema`: added `--strict-dates` option by @mhuang74 in https://github.com/jqnatividad/qsv/pull/177 
+* `validate`: added more robust [RFC 4180](https://datatracker.ietf.org/doc/html/rfc4180)-compliance checking when no jsonschema is provided
+* added Redis to CI
+
+### Changed
+* bumped reverse-geocoder crate from 2.0.1 to 3.0.0 to modernize geonames reverse geocoder
+* bumped cached crate from 0.30.0 to 0.33.0 to enable Redis response caching
+* bumped various other dependencies to latest release
+
+### Fixed
+* removed invalid `--path` cargo install option in README
+* `workdir.rs` was not properly cleaning up test files
+
 ## [0.33.0] - 2022.02-27
 ### Added
 * `fetch`: add `--url-template` and `--redis` options in https://github.com/jqnatividad/qsv/pull/175
