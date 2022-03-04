@@ -312,6 +312,7 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, HashMap<
         flag_quartiles: false,
         flag_nulls: false,
         flag_nullcount: true,
+        flag_dates: true,
         flag_jobs: util::max_jobs() as isize,
         flag_output: None,
         flag_no_headers: args.flag_no_headers,

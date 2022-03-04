@@ -58,6 +58,9 @@ stats options:
                            This requires storing all CSV data in memory.
     --nulls                Include NULLs in the population size for computing
                            mean and standard deviation.
+    --dates                Infer date/datetime datatypes. This is a very expensive
+                           option and should only be used when you know there
+                           date/datetime fields.
     -j, --jobs <arg>       The number of jobs to run in parallel.
                            This works only when the given CSV has an index.
                            Note that a file handle is opened for each job.
@@ -87,6 +90,7 @@ pub struct Args {
     pub flag_median: bool,
     pub flag_quartiles: bool,
     pub flag_nulls: bool,
+    pub flag_dates: bool,
     pub flag_nullcount: bool,
     pub flag_jobs: isize,
     pub flag_output: Option<String>,
@@ -238,6 +242,7 @@ impl Args {
             median: self.flag_median && !self.flag_quartiles && !self.flag_everything,
             quartiles: self.flag_quartiles || self.flag_everything,
             mode: self.flag_mode || self.flag_everything,
+            dates: self.flag_dates,
         }))
         .take(record_len)
         .collect()
@@ -293,6 +298,7 @@ struct WhichStats {
     median: bool,
     quartiles: bool,
     mode: bool,
+    dates: bool,
 }
 
 impl Commute for WhichStats {
@@ -353,7 +359,7 @@ impl Stats {
     #[allow(clippy::option_map_unit_fn)]
     #[inline]
     fn add(&mut self, sample: &[u8]) {
-        let sample_type = FieldType::from_sample(sample);
+        let sample_type = FieldType::from_sample(&self.which.dates, sample);
         self.typ.merge(sample_type);
 
         let t = self.typ;
@@ -553,7 +559,7 @@ pub enum FieldType {
 
 impl FieldType {
     #[inline]
-    pub fn from_sample(sample: &[u8]) -> FieldType {
+    pub fn from_sample(dates: &bool, sample: &[u8]) -> FieldType {
         if sample.is_empty() {
             return TNull;
         }
@@ -567,16 +573,19 @@ impl FieldType {
         if string.parse::<f64>().is_ok() {
             return TFloat;
         }
-        if let Ok(parsed_date) = string.parse::<DateTimeUtc>() {
-            let rfc3339_date_str = parsed_date.0.to_string();
-            let datelen = rfc3339_date_str.len();
+        if *dates {
+            if let Ok(parsed_date) = string.parse::<DateTimeUtc>() {
+                let rfc3339_date_str = parsed_date.0.to_string();
+                let datelen = rfc3339_date_str.len();
 
-            if datelen >= 17 {
-                return TDateTime;
-            } else {
-                return TDate;
+                if datelen >= 17 {
+                    return TDateTime;
+                } else {
+                    return TDate;
+                }
             }
         }
+
         TString
     }
 
