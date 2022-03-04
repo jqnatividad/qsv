@@ -60,7 +60,7 @@ stats options:
                            mean and standard deviation.
     --dates                Infer date/datetime datatypes. This is a very expensive
                            option and should only be used when you know there
-                           date/datetime fields.
+                           are date/datetime fields.
     -j, --jobs <arg>       The number of jobs to run in parallel.
                            This works only when the given CSV has an index.
                            Note that a file handle is opened for each job.
