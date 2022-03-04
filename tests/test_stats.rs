@@ -6,52 +6,66 @@ use crate::workdir::Workdir;
 
 macro_rules! stats_tests {
     ($name:ident, $field:expr, $rows:expr, $expect:expr) => {
-        stats_tests!($name, $field, $rows, $expect, false);
+        stats_tests!($name, $field, $rows, $expect, false, true);
     };
-    ($name:ident, $field:expr, $rows:expr, $expect:expr, $nulls:expr) => {
+    ($name:ident, $field:expr, $rows:expr, $expect:expr, $nulls:expr, $dates:expr) => {
         mod $name {
             use super::test_stats;
 
-            stats_test_headers!($name, $field, $rows, $expect, $nulls);
-            stats_test_no_headers!($name, $field, $rows, $expect, $nulls);
+            stats_test_headers!($name, $field, $rows, $expect, $nulls, $dates);
+            stats_test_no_headers!($name, $field, $rows, $expect, $nulls, $dates);
+        }
+    };
+}
+
+macro_rules! stats_nodates_tests {
+    ($name:ident, $field:expr, $rows:expr, $expect:expr) => {
+        stats_tests!($name, $field, $rows, $expect, false, false);
+    };
+    ($name:ident, $field:expr, $rows:expr, $expect:expr, $nulls:expr, $dates:expr) => {
+        mod $name {
+            use super::test_stats;
+
+            stats_test_headers!($name, $field, $rows, $expect, $nulls, $dates);
+            stats_test_no_headers!($name, $field, $rows, $expect, $nulls, $dates);
         }
     };
 }
 
 macro_rules! stats_test_headers {
     ($name:ident, $field:expr, $rows:expr, $expect:expr) => {
-        stats_test_headers!($name, $field, $rows, $expect, false);
+        stats_test_headers!($name, $field, $rows, $expect, false, true);
     };
-    ($name:ident, $field:expr, $rows:expr, $expect:expr, $nulls:expr) => {
+    ($name:ident, $field:expr, $rows:expr, $expect:expr, $nulls:expr, $dates:expr) => {
         #[test]
         fn headers_no_index() {
             let name = concat!(stringify!($name), "_headers_no_index");
-            test_stats(name, $field, $rows, $expect, true, false, $nulls);
+            test_stats(name, $field, $rows, $expect, true, false, $nulls, $dates);
         }
 
         #[test]
         fn headers_index() {
             let name = concat!(stringify!($name), "_headers_index");
-            test_stats(name, $field, $rows, $expect, true, true, $nulls);
+            test_stats(name, $field, $rows, $expect, true, true, $nulls, $dates);
         }
     };
 }
 
 macro_rules! stats_test_no_headers {
     ($name:ident, $field:expr, $rows:expr, $expect:expr) => {
-        stats_test_no_headers!($name, $field, $rows, $expect, false);
+        stats_test_no_headers!($name, $field, $rows, $expect, false, true);
     };
-    ($name:ident, $field:expr, $rows:expr, $expect:expr, $nulls:expr) => {
+    ($name:ident, $field:expr, $rows:expr, $expect:expr, $nulls:expr, $dates:expr) => {
         #[test]
         fn no_headers_no_index() {
             let name = concat!(stringify!($name), "_no_headers_no_index");
-            test_stats(name, $field, $rows, $expect, false, false, $nulls);
+            test_stats(name, $field, $rows, $expect, false, false, $nulls, $dates);
         }
 
         #[test]
         fn no_headers_index() {
             let name = concat!(stringify!($name), "_no_headers_index");
-            test_stats(name, $field, $rows, $expect, false, true, $nulls);
+            test_stats(name, $field, $rows, $expect, false, true, $nulls, $dates);
         }
     };
 }
@@ -64,10 +78,11 @@ fn test_stats<S>(
     headers: bool,
     use_index: bool,
     nulls: bool,
+    dates: bool,
 ) where
     S: ::std::ops::Deref<Target = str>,
 {
-    let (wrk, mut cmd) = setup(name, rows, headers, use_index, nulls);
+    let (wrk, mut cmd) = setup(name, rows, headers, use_index, nulls, dates);
     let field_val = get_field_value(&wrk, &mut cmd, field);
     // Only compare the first few bytes since floating point arithmetic
     // can mess with exact comparisons.
@@ -81,6 +96,7 @@ fn setup<S>(
     headers: bool,
     use_index: bool,
     nulls: bool,
+    dates: bool,
 ) -> (Workdir, process::Command)
 where
     S: ::std::ops::Deref<Target = str>,
@@ -104,6 +120,9 @@ where
     if nulls {
         cmd.arg("--nulls");
     }
+    if dates {
+        cmd.arg("--dates");
+    }
 
     (wrk, cmd)
 }
@@ -123,6 +142,9 @@ fn get_field_value(wrk: &Workdir, cmd: &mut process::Command, field: &str) -> St
     }
     if field == "mode" {
         cmd.arg("--mode");
+    }
+    if field == "dates" {
+        cmd.arg("--dates");
     }
 
     let mut rows: Vec<Vec<String>> = wrk.read_stdout(cmd);
@@ -161,11 +183,18 @@ stats_tests!(stats_infer_int, "type", &["1"], "Integer");
 stats_tests!(stats_infer_float, "type", &["1.2"], "Float");
 stats_tests!(stats_infer_null, "type", &[""], "NULL");
 stats_tests!(stats_infer_date, "type", &["1968-06-27"], "Date");
+stats_nodates_tests!(stats_infer_nodate, "type", &["1968-06-27"], "String");
 stats_tests!(
     stats_infer_datetime,
     "type",
     &["1968-06-27 12:30:01"],
     "DateTime"
+);
+stats_nodates_tests!(
+    stats_infer_nodatetime,
+    "type",
+    &["1968-06-27 12:30:01"],
+    "String"
 );
 stats_tests!(stats_infer_string_null, "type", &["a", ""], "String");
 stats_tests!(stats_infer_int_null, "type", &["1", ""], "Integer");
@@ -176,11 +205,23 @@ stats_tests!(
     &["June 27, 1968", ""],
     "Date"
 );
+stats_nodates_tests!(
+    stats_infer_nodates_null,
+    "type",
+    &["June 27, 1968", ""],
+    "String"
+);
 stats_tests!(
     stats_infer_datetime_null,
     "type",
     &["June 27, 1968 12:30:00 UTC", ""],
     "DateTime"
+);
+stats_nodates_tests!(
+    stats_infer_nodatetime_null,
+    "type",
+    &["June 27, 1968 12:30:00 UTC", ""],
+    "String"
 );
 stats_tests!(stats_infer_null_string, "type", &["", "a"], "String");
 stats_tests!(stats_infer_null_int, "type", &["", "1"], "Integer");
@@ -191,11 +232,23 @@ stats_tests!(
     &["", "September 17, 2012 at 10:09am PST"],
     "Date"
 );
+stats_nodates_tests!(
+    stats_infer_null_nodate,
+    "type",
+    &["", "September 17, 2012 at 10:09am PST"],
+    "String"
+);
 stats_tests!(
     stats_infer_date_datetime,
     "type",
     &["September 11, 2001", "September 17, 2012 at 10:09am PST"],
     "DateTime"
+);
+stats_nodates_tests!(
+    stats_infer_nodate_nodatetime,
+    "type",
+    &["September 11, 2001", "September 17, 2012 at 10:09am PST"],
+    "String"
 );
 stats_tests!(stats_infer_int_string, "type", &["1", "a"], "String");
 stats_tests!(stats_infer_string_int, "type", &["a", "1"], "String");
@@ -246,31 +299,55 @@ stats_tests!(stats_null_median, "median", &[""], "");
 stats_tests!(stats_null_quartiles, "quartiles", &[""], ",,,,,");
 stats_tests!(stats_null_mode, "mode", &[""], "N/A");
 
-stats_tests!(stats_includenulls_null_mean, "mean", &[""], "", true);
-stats_tests!(stats_includenulls_null_stddev, "stddev", &[""], "", true);
+stats_tests!(stats_includenulls_null_mean, "mean", &[""], "", true, false);
+stats_tests!(
+    stats_includenulls_null_stddev,
+    "stddev",
+    &[""],
+    "",
+    true,
+    false
+);
 stats_tests!(
     stats_includenulls_null_variance,
     "variance",
     &[""],
     "",
-    true
+    true,
+    false
 );
-stats_tests!(stats_includenulls_null_median, "median", &[""], "", true);
+stats_tests!(
+    stats_includenulls_null_median,
+    "median",
+    &[""],
+    "",
+    true,
+    false
+);
 stats_tests!(
     stats_includenulls_null_quartiles,
     "quartiles",
     &[""],
     ",,,,,",
-    true
+    true,
+    false
 );
-stats_tests!(stats_includenulls_null_mode, "mode", &[""], "N/A", true);
+stats_tests!(
+    stats_includenulls_null_mode,
+    "mode",
+    &[""],
+    "N/A",
+    true,
+    false
+);
 
 stats_tests!(
     stats_includenulls_mean,
     "mean",
     &["5", "", "15", "10"],
     "7.5",
-    true
+    true,
+    false
 );
 
 stats_tests!(stats_sum_integers, "sum", &["1", "2"], "3");
