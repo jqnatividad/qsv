@@ -276,7 +276,7 @@ use std::{thread, time};
 
 #[cached(
     key = "String",
-    convert = r#"{ format!("{}", url) }"#,
+    convert = r#"{ format!("{}{:?}", url, flag_jql) }"#,
     sync_writes = false
 )]
 fn get_cached_response(
@@ -292,7 +292,7 @@ fn get_cached_response(
 #[io_cached(
     type = "cached::RedisCache<String, String>",
     key = "String",
-    convert = r#"{ format!("{}", url) }"#,
+    convert = r#"{ format!("{}{:?}", url, flag_jql) }"#,
     create = r##" {
         RedisCache::new("f", REDISCONFIG.ttl_secs)
             .set_namespace("q")
