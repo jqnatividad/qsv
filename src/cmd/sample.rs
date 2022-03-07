@@ -6,6 +6,7 @@ use crate::config::{Config, Delimiter};
 use crate::index::Indexed;
 use crate::util;
 use crate::CliResult;
+use log::debug;
 use serde::Deserialize;
 
 static USAGE: &str = "
@@ -77,6 +78,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         }
         _ => {
+            debug!("no index");
             if sample_size < 1.0 {
                 return fail!("Percentage sampling requires an index.");
             }
@@ -99,6 +101,7 @@ where
     R: io::Read + io::Seek,
     I: io::Read + io::Seek,
 {
+    debug!("doing sample_random_access");
     let mut all_indices = (0..idx.count()).collect::<Vec<_>>();
     let mut rng = ::rand::thread_rng();
     SliceRandom::shuffle(&mut *all_indices, &mut rng);
@@ -116,6 +119,7 @@ fn sample_reservoir<R: io::Read>(
     sample_size: u64,
     seed: Option<usize>,
 ) -> CliResult<Vec<csv::ByteRecord>> {
+    debug!("doing sample_reservoir");
     // The following algorithm has been adapted from:
     // https://en.wikipedia.org/wiki/Reservoir_sampling
     let mut reservoir = Vec::with_capacity(sample_size as usize);
@@ -141,5 +145,7 @@ fn sample_reservoir<R: io::Read>(
 }
 
 fn do_random_access(sample_size: u64, total: u64) -> bool {
-    sample_size <= (total / 10)
+    let raflag = sample_size <= (total / 10) as u64;
+    debug!("sample_size: {sample_size}, total: {total}, raflag: {raflag}");
+    raflag
 }
