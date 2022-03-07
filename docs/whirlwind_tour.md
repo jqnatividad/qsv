@@ -6,9 +6,14 @@ several CSV files. Maybe you're interested in the population counts of each
 city in the world. So grab the data and start examining it:
 
 ```bash
-$ curl -LO https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/worldcitiespop_mil.zip
-$ unzip worldcitiespop_mil.zip
-$ qsv headers worldcitiespop.csv
+$ curl -LO https://raw.githubusercontent.com/petewarden/dstkdata/master/worldcitiespop.csv
+# there are no headers in the file, so let's get the headers
+$ curl -LO https://raw.githubusercontent.com/jqnatividad/qsv/master/resources/whirlwind_tour/worldcitiespop-header.csv
+# and preppend the header, on Linux and macOS do
+$ cat worldcitiespop-header.csv + worldcitiespop.csv > wcp.csv
+# on Windows Powershell
+$ Get-Content worldcitiespop-header.csv, worldcitiespop.csv | Out-File wcp.csv -Encoding utf8
+$ qsv headers wcp.csv
 1   Country
 2   City
 3   AccentCity
@@ -22,45 +27,44 @@ The next thing you might want to do is get an overview of the kind of data that
 appears in each column. The `stats` command will do this for you:
 
 ```bash
-$ qsv stats worldcitiespop.csv --everything | qsv table
-field       type     sum                 min            max            min_length  max_length  mean                stddev              variance            median      mode         cardinality  nullcount
-Country     Unicode                      ad             zw             2           2                                                                                   cn           234          0
-City        Unicode                       bab el ahmar  Þykkvibaer     1           91                                                                                  san jose     2351892      0
-AccentCity  Unicode                       Bâb el Ahmar  ïn Bou Chella  1           91                                                                                  San Antonio  2375760      0
-Region      Unicode                      00             Z9             0           2                                                                       13          04           397          8
-Population  Integer  2289584999          7              31480498       0           8           47719.570633597126  302885.5592040396   91739661974.34377   10779                    28754        3125978
-Latitude    Float    86294096.37312101   -54.933333     82.483333      1           12          27.188165808468785  21.95261384912504   481.91725480879654  32.4972221  51.15        1038349      0
-Longitude   Float    117718483.57958724  -179.9833333   180            1           14          37.08885989656418   63.223010459241635  3997.1490515293776  35.28       23.8         1167162      0
+$ qsv stats worldcitiespop_mil.csv --everything | qsv table
+field       type     sum                min           max         min_length  max_length  mean                stddev              variance            lower_fence         q1          q2_median   q3          iqr                upper_fence         skew                  mode         cardinality  nullcount
+Country     String                      ad            zw          2           2                                                                                                                                                                                            ru           231          0
+City        String                       al lusayli   Þykkvibaer  1           87                                                                                                                                                                                           san jose     2008182      0
+AccentCity  String                       Al Lusayli   özlüce      1           87                                                                                                                                                                                           San Antonio  2031214      0
+Region      String                      00            Z4          0           2                                                                       -29.5               5           11          28          23                 62.5                1.3036035769599401    04           392          4
+Population  Integer  2290536125         7             31480498    0           8           48730.66387966977   308414.0418510231   95119221210.88461   -33018              3730.5      10879       28229.5     24499              64978               0.36819008290764255                28460        2652350
+Latitude    Float    76585211.19776328  -54.9333333   82.483333   1           12          28.371681223643343  21.938373536960917  481.292233447227    -35.9076389         12.9552778  33.8666667  45.5305556  32.5752778         94.3934723          -0.7514210842155992   50.8         255133       0
+Longitude   Float    75976506.66429423  -179.9833333  180         1           14          28.14618114715278   62.472858625866486  3902.8580648875004  -98.49166745000002  2.383333    26.8802778  69.6333333  67.25000030000001  170.50833375000002  0.060789759344963286  23.1         407568       0
 ```
 
 The `qsv table` command takes any CSV data and formats it into aligned columns
 using [elastic tabstops](https://github.com/BurntSushi/tabwriter). You'll
 notice that it even gets alignment right with respect to Unicode characters.
 
-So, this command takes about 12 seconds to run on my machine, but we can speed
+So, this command took 4.73 seconds to run on my machine, but we can speed
 it up by creating an index and re-running the command:
 
 ```bash
-$ qsv index worldcitiespop.csv
-$ qsv stats worldcitiespop.csv --everything | qsv table
-...
+$ qsv index wcp.csv
+$ qsv stats wcp.csv --everything | qsv table
 ```
 
-Which cuts it down to about 8 seconds on my machine. (And creating the index
-takes less than 2 seconds.)
+Which cuts it down to 1.99 seconds on my machine. (And creating the index
+took 0.26 seconds.)
 
 Notably, the same type of "statistics" command in another
 [CSV command line toolkit](https://csvkit.readthedocs.io/)
-takes about 2 minutes to produce similar statistics on the same data set.
+takes about 8 minutes to produce similar statistics on the same data set.
 
 Creating an index gives us more than just faster statistics gathering. It also
 makes slice operations extremely fast because *only the sliced portion* has to
 be parsed. For example, let's say you wanted to grab the last 10 records:
 
 ```bash
-$ qsv count worldcitiespop.csv
-3173958
-$ qsv slice worldcitiespop.csv -s 3173948 | qsv table
+$ qsv count wcp.csv
+2699354
+$ qsv slice wcp.csv --start -10 | qsv table
 Country  City               AccentCity         Region  Population  Latitude     Longitude
 zw       zibalonkwe         Zibalonkwe         06                  -19.8333333  27.4666667
 zw       zibunkululu        Zibunkululu        06                  -19.6666667  27.6166667
@@ -78,94 +82,80 @@ These commands are *instantaneous* because they run in time and memory
 proportional to the size of the slice (which means they will scale to
 arbitrarily large CSV data).
 
-Switching gears a little bit, you might not always want to see every column in
-the CSV data. In this case, maybe we only care about the country, city and
-population. So let's take a look at 10 "random" rows. We use the `--seed` parameter
-so we get a reproducible random sample:
+Hmmmm... the Population column has a lot of null values. How pervasive is that?
+First, let's take a look at 10 "random" rows with `sample`. We use the `--seed` parameter
+so we get a reproducible random sample. And then, let's display only the Country,
+AccentCity and Population columns with the `select` command.
 
 ```bash
-$ qsv select Country,AccentCity,Population worldcitiespop.csv \
-  | qsv sample --seed 42 10 \
+$ qsv sample --seed 42 10 wcp.csv \
+  | qsv select Country,AccentCity,Population \
   | qsv table
-Country  AccentCity       Population
-vn       Khánh Tàn     
-no       Kvalvåg       
-ir       Bala Dashteh  
-af       Kam Papin     
-cn       Peipiao       
-mz       Chiquefane    
-ug       Bulukatoni    
-us       Gourdsville   
-kr       Hwahungni     
-fr       Pimouget
+Country  AccentCity            Population
+ar       Colonia Santa Teresa  
+ro       Piscu Scoartei        
+gr       Liáskovo              
+de       Buntenbeck            
+tr       Mehmetçelebi Köyü     
+pl       Trzeciewiec           
+ar       Colonias Unidas       
+at       Koglhof               
+bg       Nadezhda              
+ru       Rabog                 
 ```
 
 Whoops! The sample we got don't have population counts. How pervasive is that?
 
 ```bash
-$ qsv frequency worldcitiespop.csv --limit 5
+$ qsv frequency wcp.csv --limit 3
 field,value,count
-Country,cn,238985
-Country,ru,215938
-Country,id,176546
+Country,ru,176934
 Country,us,141989
-Country,ir,123872
-City,san jose,328
-City,san antonio,320
-City,santa rosa,296
-City,santa cruz,282
-City,san juan,255
-AccentCity,San Antonio,317
-AccentCity,Santa Rosa,296
-AccentCity,Santa Cruz,281
-AccentCity,San Juan,254
-AccentCity,San Miguel,254
-Region,04,159916
-Region,02,142158
-Region,07,126867
-Region,03,122161
-Region,05,118441
-Population,(NULL),3125978
+Country,cn,117508
+City,san jose,313
+City,san antonio,310
+City,santa rosa,288
+AccentCity,San Antonio,307
+AccentCity,Santa Rosa,288
+AccentCity,Santa Cruz,268
+Region,04,143900
+Region,02,127736
+Region,03,105455
+Population,(NULL),2652350
 Population,2310,12
-Population,3097,11
-Population,983,11
-Population,2684,11
-Latitude,51.15,777
-Latitude,51.083333,772
-Latitude,50.933333,769
-Latitude,51.116667,769
-Latitude,51.133333,767
-Longitude,23.8,484
-Longitude,23.2,477
-Longitude,23.05,476
-Longitude,25.3,474
-Longitude,23.1,459
+Population,2230,11
+Latitude,50.8,1128
+Latitude,50.95,1076
+Latitude,50.6,1043
+Longitude,23.1,590
+Longitude,23.2,586
+Longitude,23.05,575
 ```
 
 (The `qsv frequency` command builds a frequency table for each column in the
-CSV data. This one only took 5 seconds.)
+CSV data. This one only took 1.8 seconds.)
 
 So it seems that most cities do not have a population count associated with
-them at all (3,125,978 to be exact). No matter — we can adjust our previous 
+them at all (2,652,350 to be exact). No matter — we can adjust our previous 
 command so that it only shows rows with a population count:
 
 ```bash
-$ qsv search -s Population '[0-9]' worldcitiespop.csv \
-  | qsv select Country,AccentCity,Population \
+$ qsv search --select Population '[0-9]' wcp.csv \
   | qsv sample --seed 42 10 \
+  | qsv select Country,AccentCity,Population \
   | tee sample.csv \
   | qsv table
-Country  AccentCity       Population
-fr       Boissy-Saint-Léger  15451
-us       Iselin              17019
-ru       Ali-Yurt            7593
-ro       Panaci              2308
-lu       Baschleiden         185
-us       Mayaguez            76503
-ch       Vernier             29767
-es       Salobreña           10725
-ch       Aigle               7897
-yt       Ouangani            7273
+Country  AccentCity         Population
+it       Isernia            21409
+lt       Ramygala           1637
+ro       Band               7599
+in       Nagapattinam       94247
+hn       El Negrito         9304
+us       North Druid Hills  21320
+gb       Ellesmere Port     67768
+bd       Parbatipur         48026
+sv       Apastepeque        5785
+ge       Lajanurhesi        95
 ```
 
 > :warning: **NOTE:** The `tee` command reads from standard input and writes 
@@ -173,38 +163,51 @@ to both standard output and one or more files at the same time. We do this so
 we can create the `sample.csv` file we need for the next step, and pipe the 
 same data to the `qsv table` command.
 
-Erk. Which country is `yt`? What continent? No clue, but [DataHub.io](https://datahub.io) 
-has a CSV file called `country-continent.csv`. Let's grab it and do a join so 
-we can see which countries and continents these are:
+Erk. Which country is `sv`? What continent? No clue, but [datawookie](https://github.com/datawookie) 
+has a CSV file called `country-continent.csv`.
 
 ```bash
-curl -L https://datahub.io/JohnSnowLabs/country-and-continent-codes-list/r/0.csv > country_continent.csv
-$ qsv headers countrynames.csv
-1   Continent_Name
-2   Continent_Code
-3   Country_Name
-4   Two_Letter_Country_Code
-5   Three_Letter_Country_Code
-6   Country_Number
-$ qsv join --no-case Country sample.csv Two_Letter_Country_Code country_continent.csv  | qsv table
-Country  AccentCity          Population  Continent_Name  Continent_Code  Country_Name                      Two_Letter_Country_Code  Three_Letter_Country_Code  Country_Number
-fr       Boissy-Saint-Léger  15451       Europe          EU              France, French Republic           FR                       FRA                        250
-us       Iselin              17019       North America   NA              United States of America          US                       USA                        840
-ru       Ali-Yurt            7593        Europe          EU              Russian Federation                RU                       RUS                        643
-ru       Ali-Yurt            7593        Asia            AS              Russian Federation                RU                       RUS                        643
-ro       Panaci              2308        Europe          EU              Romania                           RO                       ROU                        642
-lu       Baschleiden         185         Europe          EU              Luxembourg, Grand Duchy of        LU                       LUX                        442
-us       Mayaguez            76503       North America   NA              United States of America          US                       USA                        840
-ch       Vernier             29767       Europe          EU              Switzerland, Swiss Confederation  CH                       CHE                        756
-es       Salobreña           10725       Europe          EU              Spain, Kingdom of                 ES                       ESP                        724
-ch       Aigle               7897        Europe          EU              Switzerland, Swiss Confederation  CH                       CHE                        756
-yt       Ouangani            7273        Africa          AF              Mayotte                           YT                       MYT                        175
+curl -L https://raw.githubusercontent.com/datawookie/data-diaspora/master/spatial/country-continent-codes.csv > country_continent.csv
+$ qsv headers country_continent.csv
+1 # https://datahub.io/JohnSnowLabs/country-and-continent-codes-list
+```
+
+Huh!?! That's not what we we were expecting. But if you look at the `country-continent.csv` file, it starts with a comment starting
+with the `#` character. No worries, qsv got us covered with its `QSV_COMMENT_CHAR` environment variable.
+
+```bash
+$ export QSV_COMMENT_CHAR='#'
+# on Windows Powershell
+$ $env:QSV_COMMENT_CHAR='#'
+$ qsv headers
+1   continent
+2   code
+3   country
+4   iso2
+5   iso3
+6   number
+```
+That's more like it. We can now do a join to see which countries and continents these are:
+
+$ qsv join --no-case Country sample.csv iso2 country_continent.csv  | qsv table
+Country  AccentCity         Population  continent      code  country                                             iso2  iso3  number
+it       Isernia            21409       Europe         EU    Italy, Italian Republic                             IT    ITA   380
+lt       Ramygala           1637        Europe         EU    Lithuania, Republic of                              LT    LTU   440
+ro       Band               7599        Europe         EU    Romania                                             RO    ROU   642
+in       Nagapattinam       94247       Asia           AS    India, Republic of                                  IN    IND   356
+hn       El Negrito         9304        North America  NA    Honduras, Republic of                               HN    HND   340
+us       North Druid Hills  21320       North America  NA    United States of America                            US    USA   840
+gb       Ellesmere Port     67768       Europe         EU    United Kingdom of Great Britain & Northern Ireland  GB    GBR   826
+bd       Parbatipur         48026       Asia           AS    Bangladesh, People's Republic of                    BD    BGD   50
+sv       Apastepeque        5785        North America  NA    El Salvador, Republic of                            SV    SLV   222
+ge       Lajanurhesi        95          Europe         EU    Georgia                                             GE    GEO   268
+ge       Lajanurhesi        95          Asia           AS    Georgia                                             GE    GEO   268
 
 ```
 
-Whoops, now we have the data but we have several unneeded columns, and the columns
-we do need have overly long names. Also, there are two records for Ali-Yurt - one in
-Europe and another in Asia. This is because Russia spans both continents.  
+Whoops, now we have the data but we have several unneeded columns, and the column names
+case formats are not consistent. Also, there are two records for Lajanurhesi - one in
+Europe and another in Asia. This is because Georgia spans both continents.  
 We're primarily interested in unique cities per country for the purposes of this tour,
 so we need to filter these out.
 
@@ -216,25 +219,25 @@ No worries. Let's use the `select` (so we only get the columns we need, in the o
 with shorter names) commands: 
 
 ```bash
-$ qsv join --no-case Country sample.csv Two_Letter_Country_Code country_continent.csv \
-  | qsv select 'Country_Name,Continent_Name,AccentCity,Population' \
-  | qsv dedup -s 'Country_Name,AccentCity' \
-  | qsv rename Country,Continent,City,Population \
+$ qsv join --no-case Country sample.csv iso2 country_continent.csv \
+  | qsv select 'AccentCity,Population,country,continent' \
+  | qsv dedup --select 'country,AccentCity' \
+  | qsv rename City,Population,Country,Continent \
   | qsv table
-Country                           Continent      City                Population
-France, French Republic           Europe         Boissy-Saint-Léger  15451
-Luxembourg, Grand Duchy of        Europe         Baschleiden         185
-Mayotte                           Africa         Ouangani            7273
-Romania                           Europe         Panaci              2308
-Russian Federation                Asia           Ali-Yurt            7593
-Spain, Kingdom of                 Europe         Salobreña           10725
-Switzerland, Swiss Confederation  Europe         Aigle               7897
-Switzerland, Swiss Confederation  Europe         Vernier             29767
-United States of America          North America  Iselin              17019
-United States of America          North America  Mayaguez            76503
+City               Population  Country                                             Continent
+Parbatipur         48026       Bangladesh, People's Republic of                    Asia
+Apastepeque        5785        El Salvador, Republic of                            North America
+Lajanurhesi        95          Georgia                                             Asia
+El Negrito         9304        Honduras, Republic of                               North America
+Nagapattinam       94247       India, Republic of                                  Asia
+Isernia            21409       Italy, Italian Republic                             Europe
+Ramygala           1637        Lithuania, Republic of                              Europe
+Band               7599        Romania                                             Europe
+Ellesmere Port     67768       United Kingdom of Great Britain & Northern Ireland  Europe
+North Druid Hills  21320       United States of America                            North America
 ```
 
-Nice! Notice the data is now sorted too! That's because `dedup` first sorts the
+Nice! Notice the data is now sorted by Country,City too! That's because `dedup` first sorts the
 CSV records (by internally calling the `qsv sort` command) to find duplicates.  
 
 Perhaps we can do this with the original CSV data? All 3.2 million rows in a 145MB file?!  
@@ -244,12 +247,13 @@ Indeed we can—because `qsv` is designed for speed - written in [Rust](https://
 performance-focused [mimalloc](https://github.com/microsoft/mimalloc) allocator.
 
 ```bash
-$ qsv join --no-case Country worldcitiespop.csv Two_Letter_Country_Code country_continent.csv \
-  | qsv select 'Country_Name,Continent_Name,AccentCity,Population,Latitude,Longitude' \
-  | qsv dedup -s 'Country_Name,AccentCity,Latitude,Longitude' --dupes-output dupe-countrycities.csv \
-  | qsv rename Country,Continent,City,Population,Latitude,Longitude \
-  > worldcitiespop_countrycontinent.csv
-$ qsv sample 10 --seed 1729 worldcitiespop_countycontinent.csv | qsv table
+$ qsv join --no-case Country wcp.csv iso2 country_continent.csv \
+  | qsv select 'AccentCity,Population,country,continent,Latitude,Longitude' \
+  | qsv dedup --select 'country,AccentCity,Latitude,Longitude' \
+  | qsv rename City,Population,Country,Continent,Latitude,Longitude --output wcp_countrycontinent.csv
+
+
+$ qsv sample 10 --seed 1729 wcp_countycontinent.csv | qsv table
 Country                            Continent      City                     Population  Latitude    Longitude
 Syrian Arab Republic               Asia           Cheikh Sayad                         36.25       37.2666667
 Colombia, Republic of              South America  Tetillo                              3.160288    -76.324643
