@@ -216,7 +216,7 @@ Also, apart from renaming the columns, I want to reorder them to "City, Populati
 Continent".
 
 No worries. Let's use the `select` (so we only get the columns we need, in the order we want), 
-`dedup` (so we only get unique County/City combinations) and `rename` (rename the columns) commands: 
+`dedup` (so we only get unique County/City combinations) and `rename` (columns in titlecase) commands: 
 
 ```bash
 $ qsv join --no-case Country sample.csv iso2 country_continent.csv \
@@ -248,49 +248,79 @@ performance-focused [mimalloc](https://github.com/microsoft/mimalloc) allocator.
 
 ```bash
 $ qsv join --no-case Country wcp.csv iso2 country_continent.csv \
+  | qsv search --select Population '[0-9]' \
   | qsv select 'AccentCity,Population,country,continent,Latitude,Longitude' \
-  | qsv dedup --select 'country,AccentCity,Latitude,Longitude' \
+  | qsv dedup --select 'country,AccentCity,Latitude,Longitude' --dupes-output wcp_dupes.csv \
   | qsv rename City,Population,Country,Continent,Latitude,Longitude --output wcp_countrycontinent.csv
 
-$ qsv sample 10 --seed 1729 wcp_countycontinent.csv | qsv table
-Country                            Continent      City                     Population  Latitude    Longitude
-Syrian Arab Republic               Asia           Cheikh Sayad                         36.25       37.2666667
-Colombia, Republic of              South America  Tetillo                              3.160288    -76.324643
-Egypt, Arab Republic of            Africa         El-Kôm el-Ahmar                      27.0        31.4166667
-Bulgaria, Republic of              Europe         Oresha                               42.95       24.1
-Poland, Republic of                Europe         Wielka Wies                          54.568121   17.361634
-Iran, Islamic Republic of          Asia           Kolah Jub-e Chagalvandi              33.65       48.583333
-Congo, Republic of the             Africa         Ebou                                 -1.2833333  15.5869444
-Congo, Democratic Republic of the  Africa         Yambo-Engunda                        1           20.666667
-Australia, Commonwealth of         Oceania        Cessnock                 16394       -32.832111  151.356232
-Brazil, Federative Republic of     South America  Pirapora                             -8.448056   -72.821389
+$ qsv sample 10 --seed 33 wcp_countrycontinent.csv | qsv table
+City            Population  Country                       Continent      Latitude    Longitude
+Santa Catalina  2727        Philippines, Republic of the  Asia           16.0822222  120.6097222
+Azacualpa       1258        Honduras, Republic of         North America  14.7166667  -88.1
+Solana          2984        Philippines, Republic of the  Asia           8.6230556   124.7705556
+Sungai Besar    26939       Malaysia                      Asia           3.6666667   100.9833333
+Bad Nenndorf    10323       Germany, Federal Republic of  Europe         52.3333333  9.3666667
+Dalwangan       4906        Philippines, Republic of the  Asia           8.2030556   125.0416667
+Sharonville     13250       United States of America      North America  39.2680556  -84.4133333
+El Calvario     557         Colombia, Republic of         South America  4.3547222   -73.7091667
+Kunoy           70          Faroe Islands                 Europe         62.2833333  -6.6666667
+Lufkin          33667       United States of America      North America  31.3380556  -94.7288889
+
+$ qsv count wcp_countrycontinent.csv
+47004
+$ qsv count wcp-dupes.csv
+5155
 ```
 
 We fine-tuned `dedup` by adding `Latitude` and `Longitude` as there may be 
 multiple cities with the same name in a country. We also specified the 
 `dupes-output` option so we can have a separate CSV of the duplicate records
-it removed. 
+it removed.
+
+We're also just interested in cities with population counts. So we used `search`
+with the regular expression `[0-9]`. This cuts down the file to 47,004 rows.
 
 This whole thing takes about 5 seconds on my machine. The performance of `join`,
 in particular, comes from constructing a very simple hash index of one of the CSV 
 files. The `join` command does an inner join by default, but it also has left,
-right and full outer, cross, anti and semi join support too.
+right and full outer, cross, anti and semi join support too. All from the command line,
+without having to load the files into a database, index them, to do a SQL join.
 
 Finally, can we create a CSV file for each country of all its cities? Yes we can, with
-the `partition` command (and it took just 0.73 seconds to create all 230 country-city files!):
+the `partition` command (and it took just 0.04 seconds to create all 211 country-city files!):
 
 ```bash
 $ qsv partition Country bycountry wcp_countrycontinent.csv
 $ cd bycountry
 $ ls -1shS
 total 164M
- 11M UnitedStatesofAmerica.csv
-9.5M RussianFederation.csv
-7.5M ChinaPeoplesRepublicof.csv
-6.8M IranIslamicRepublicof.csv
+320K UnitedStatesofAmerica.csv
+264K PhilippinesRepublicofthe.csv
+256K RussianFederation.csv
+172K IndiaRepublicof.csv
 ...
-4.0K CocosKeelingIslands.csv
-4.0K PitcairnIslands.csv
-4.0K Tokelau.csv
-4.0K NorfolkIsland.csv
+4.0K DjiboutiRepublicof.csv
+4.0K Aruba.csv
+4.0K Anguilla.csv
+4.0K Gibraltar.csv
+4.0K Ukraine.csv
 ```
+Examining the USA csv file:
+
+```
+$ qsv stats --everything UnitedStatesofAmerica.csv | qsv table --output usa-cities-stats.csv
+$ less -S usa-cities-stats.csv
+field       type     sum                 min                       max                       min_length  max_length  mean                stddev              variance           lower_fence         q1           q2_median    q3           iqr                upper_fence          skew                 mode                                                          cardinality  nullcount
+City        String                       Abbeville                 Zionsville                3           26                                                                                                                                                                                             Springfield                                                   3439         0
+Population  Integer  179123400           216                       8107916                   3           7           42903.80838323359   167752.88891786628  28141031740.28998  -24217.5            12081        19235        36280        24199              72578.5              0.4232798946578281   10576,10945,11971,12115,13219,13250,8771,9944                 3981         0
+Country     String                       United States of America  United States of America  24          24                                                                                                                                                                                             United States of America                                      1            0
+Continent   String                       North America             North America             13          13                                                                                                                                                                                             North America                                                 1            0
+Latitude    Float    158455.7901657997   17.9677778                71.2905556                10          10          37.95348267444306   6.0032154906925355  36.03859622769082  22.244444449999992  34.0552778   39.4694444   41.9291667   7.873888900000004  53.740000050000006   -0.7575748669562047  42.0333333                                                    4010         0
+Longitude   Float    -377616.7797696997  -165.4063889              -65.3013889               11          12          -90.44713287897018  17.2089567990395    296.1481941112077  -128.2138889        -97.4863889  -86.0341667  -77.0013889  20.485             -46.273888899999996  -0.769302793394743   -118.3516667,-71.0666667,-71.3972222,-71.4166667,-83.1500000  4074         0
+```
+Hhhmmm... clearly the worldcitiespop.csv file from the Data Science Toolkit does not have 
+comprehensive coverage of City populations.
+
+The US population is more than 179,123,400 (Population sum) and 3,439 cities (City cardinality).
+Perhaps we can get population info elsewhere with the `fetch` command...
+But that's another tour by itself! 😄
