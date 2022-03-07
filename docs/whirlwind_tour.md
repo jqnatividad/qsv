@@ -3,14 +3,14 @@
 Let's say you're playing with some of the data from the
 [Data Science Toolkit](https://github.com/petewarden/dstkdata), which contains
 several CSV files. Maybe you're interested in the population counts of each
-city in the world. So grab the data and start examining it:
+city in the world. So grab the 124MB, 2.7M row CSV file and start examining it:
 
 ```bash
 $ curl -LO https://raw.githubusercontent.com/petewarden/dstkdata/master/worldcitiespop.csv
 # there are no headers in the file, so let's get the headers
 $ curl -LO https://raw.githubusercontent.com/jqnatividad/qsv/master/resources/whirlwind_tour/worldcitiespop-header.csv
-# and preppend the header, on Linux and macOS do
-$ cat worldcitiespop-header.csv + worldcitiespop.csv > wcp.csv
+# and preppend the header. On Linux and macOS do
+$ cat worldcitiespop-header.csv worldcitiespop.csv > wcp.csv
 # on Windows Powershell
 $ Get-Content worldcitiespop-header.csv, worldcitiespop.csv | Out-File wcp.csv -Encoding utf8
 $ qsv headers wcp.csv
@@ -107,29 +107,29 @@ ru       Rabog
 Whoops! The sample we got don't have population counts. How pervasive is that?
 
 ```bash
-$ qsv frequency wcp.csv --limit 3
-field,value,count
-Country,ru,176934
-Country,us,141989
-Country,cn,117508
-City,san jose,313
-City,san antonio,310
-City,santa rosa,288
-AccentCity,San Antonio,307
-AccentCity,Santa Rosa,288
-AccentCity,Santa Cruz,268
-Region,04,143900
-Region,02,127736
-Region,03,105455
-Population,(NULL),2652350
-Population,2310,12
-Population,2230,11
-Latitude,50.8,1128
-Latitude,50.95,1076
-Latitude,50.6,1043
-Longitude,23.1,590
-Longitude,23.2,586
-Longitude,23.05,575
+$ qsv frequency wcp.csv --limit 3 | qsv table
+field       value        count
+Country     ru           176934
+Country     us           141989
+Country     cn           117508
+City        san jose     313
+City        san antonio  310
+City        santa rosa   288
+AccentCity  San Antonio  307
+AccentCity  Santa Rosa   288
+AccentCity  Santa Cruz   268
+Region      04           143900
+Region      02           127736
+Region      03           105455
+Population  (NULL)       2652350
+Population  2310         12
+Population  2137         11
+Latitude    50.8         1128
+Latitude    50.95        1076
+Latitude    50.6         1043
+Longitude   23.1         590
+Longitude   23.2         586
+Longitude   23.05        575
 ```
 
 (The `qsv frequency` command builds a frequency table for each column in the
@@ -206,18 +206,17 @@ ge       Lajanurhesi        95          Asia           AS    Georgia            
 
 ```
 
-Whoops, now we have the data but we have several unneeded columns, and the column names
-case formats are not consistent. Also, there are two records for Lajanurhesi - one in
-Europe and another in Asia. This is because Georgia spans both continents.  
+`sv` is El Salvador - never would have guessed that. Thing is, now we have several unneeded
+columns, and the column names case formats are not consistent. Also, there are two records
+for Lajanurhesi - for both Europe and Asia. This is because Georgia spans both continents.  
 We're primarily interested in unique cities per country for the purposes of this tour,
 so we need to filter these out.
 
-Also, apart from renaming the columns, I want to reorder them to "Country,Continent,City,
-Population".
+Also, apart from renaming the columns, I want to reorder them to "City, Population, Country,
+Continent".
 
 No worries. Let's use the `select` (so we only get the columns we need, in the order we want), 
-`dedup` (so we only get unique County/City combinations) and `rename` (rename the columns 
-with shorter names) commands: 
+`dedup` (so we only get unique County/City combinations) and `rename` (rename the columns) commands: 
 
 ```bash
 $ qsv join --no-case Country sample.csv iso2 country_continent.csv \
@@ -275,10 +274,10 @@ it removed.
 This whole thing takes about 5 seconds on my machine. The performance of `join`,
 in particular, comes from constructing a very simple hash index of one of the CSV 
 files. The `join` command does an inner join by default, but it also has left,
-right and full outer join support too.
+right and full outer, cross, anti and semi join support too.
 
-Finally, can we create a CSV file for each country of all its cities? Yes we can, 
-with the `partition` command (and it took just 0.73 seconds to create all 230 country-city files!):
+Finally, can we create a CSV file for each country of all its cities? Yes we can, with
+the `partition` command (and it took just 0.73 seconds to create all 230 country-city files!):
 
 ```bash
 $ qsv partition Country bycountry wcp_countrycontinent.csv
