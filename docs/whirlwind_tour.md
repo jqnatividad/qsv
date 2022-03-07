@@ -5,7 +5,7 @@ Let's say you're playing with some of the data from the
 several CSV files. Maybe you're interested in the population counts of each
 city in the world. So grab the 124MB, 2.7M row CSV file and start examining it:
 
-```bash
+```
 $ curl -LO https://raw.githubusercontent.com/petewarden/dstkdata/master/worldcitiespop.csv
 # there are no headers in the file, so let's get the headers
 $ curl -LO https://raw.githubusercontent.com/jqnatividad/qsv/master/resources/whirlwind_tour/worldcitiespop-header.csv
@@ -26,7 +26,7 @@ $ qsv headers wcp.csv
 The next thing you might want to do is get an overview of the kind of data that
 appears in each column. The `stats` command will do this for you:
 
-```bash
+```
 $ qsv stats wcp.csv --everything | qsv table
 field       type     sum                min           max         min_length  max_length  mean                stddev              variance            lower_fence         q1          q2_median   q3          iqr                upper_fence         skew                  mode         cardinality  nullcount
 Country     String                      ad            zw          2           2                                                                                                                                                                                            ru           231          0
@@ -45,7 +45,7 @@ notice that it even gets alignment right with respect to Unicode characters.
 So, this command took 4.73 seconds to run on my machine, but we can speed
 it up by creating an index and re-running the command:
 
-```bash
+```
 $ qsv index wcp.csv
 $ qsv stats wcp.csv --everything | qsv table
 ```
@@ -61,7 +61,7 @@ Creating an index gives us more than just faster statistics gathering. It also
 makes slice operations extremely fast because *only the sliced portion* has to
 be parsed. For example, let's say you wanted to grab the last 10 records:
 
-```bash
+```
 $ qsv count wcp.csv
 2699354
 $ qsv slice wcp.csv --start -10 | qsv table
@@ -87,7 +87,7 @@ First, let's take a look at 10 "random" rows with `sample`. We use the `--seed` 
 so we get a reproducible random sample. And then, let's display only the Country,
 AccentCity and Population columns with the `select` command.
 
-```bash
+```
 $ qsv sample --seed 42 10 wcp.csv \
   | qsv select Country,AccentCity,Population \
   | qsv table
@@ -106,7 +106,7 @@ ru       Rabog
 
 Whoops! The sample we got don't have population counts. How pervasive is that?
 
-```bash
+```
 $ qsv frequency wcp.csv --limit 3 | qsv table
 field       value        count
 Country     ru           176934
@@ -139,7 +139,7 @@ So it seems that most cities do not have a population count associated with
 them at all (2,652,350 to be exact). No matter — we can adjust our previous 
 command so that it only shows rows with a population count:
 
-```bash
+```
 $ qsv search --select Population '[0-9]' wcp.csv \
   | qsv sample --seed 42 10 \
   | qsv select Country,AccentCity,Population \
@@ -166,7 +166,7 @@ same data to the `qsv table` command.
 Erk. Which country is `sv`? What continent? No clue, but [datawookie](https://github.com/datawookie) 
 has a CSV file called `country-continent.csv`.
 
-```bash
+```
 $ curl -L https://raw.githubusercontent.com/datawookie/data-diaspora/master/spatial/country-continent-codes.csv > country_continent.csv
 $ qsv headers country_continent.csv
 1 # https://datahub.io/JohnSnowLabs/country-and-continent-codes-list
@@ -175,7 +175,7 @@ $ qsv headers country_continent.csv
 Huh!?! That's not what we we were expecting. But if you look at the `country-continent.csv` file, it starts with a comment starting
 with the `#` character. No worries, qsv got us covered with its `QSV_COMMENT_CHAR` environment variable.
 
-```bash
+```
 $ export QSV_COMMENT_CHAR='#'
 # on Windows Powershell
 $ $env:QSV_COMMENT_CHAR='#'
@@ -189,7 +189,7 @@ $ qsv headers country_continent.csv
 ```
 That's more like it. We can now do a join to see which countries and continents these are:
 
-```bash
+```
 $ qsv join --no-case Country sample.csv iso2 country_continent.csv  | qsv table
 Country  AccentCity         Population  continent      code  country                                             iso2  iso3  number
 it       Isernia            21409       Europe         EU    Italy, Italian Republic                             IT    ITA   380
@@ -218,7 +218,7 @@ Continent".
 No worries. Let's use the `select` (so we only get the columns we need, in the order we want), 
 `dedup` (so we only get unique County/City combinations) and `rename` (columns in titlecase) commands: 
 
-```bash
+```
 $ qsv join --no-case Country sample.csv iso2 country_continent.csv \
   | qsv select 'AccentCity,Population,country,continent' \
   | qsv dedup --select 'country,AccentCity' \
@@ -246,7 +246,7 @@ Indeed we can—because `qsv` is designed for speed - written in [Rust](https://
 [amortized memory allocations](https://blog.burntsushi.net/csv/#amortizing-allocations), using the 
 performance-focused [mimalloc](https://github.com/microsoft/mimalloc) allocator.
 
-```bash
+```
 $ qsv join --no-case Country wcp.csv iso2 country_continent.csv \
   | qsv search --select Population '[0-9]' \
   | qsv select 'AccentCity,Population,country,continent,Latitude,Longitude' \
@@ -289,7 +289,7 @@ without having to load the files into a database, index them, to do a SQL join.
 Finally, can we create a CSV file for each country of all its cities? Yes we can, with
 the `partition` command (and it took just 0.04 seconds to create all 211 country-city files!):
 
-```bash
+```
 $ qsv partition Country bycountry wcp_countrycontinent.csv
 $ cd bycountry
 $ ls -1shS
