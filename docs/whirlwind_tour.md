@@ -189,6 +189,7 @@ $ qsv headers country_continent.csv
 ```
 That's more like it. We can now do a join to see which countries and continents these are:
 
+```bash
 $ qsv join --no-case Country sample.csv iso2 country_continent.csv  | qsv table
 Country  AccentCity         Population  continent      code  country                                             iso2  iso3  number
 it       Isernia            21409       Europe         EU    Italy, Italian Republic                             IT    ITA   380
