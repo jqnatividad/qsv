@@ -13,7 +13,7 @@
 
  &nbsp;          |  Table of Contents
 :-------------------------:|:-------------------------
-![](docs/images/qsv-logo.png)  | qsv is a command line program for indexing, slicing, analyzing,<br>splitting, enriching, validating & joining CSV files.<br>Commands are simple, fast and composable.<br><br>* [Available Commands](#available-commands)<br>* [Installation](#installation)<br> * [Whirlwind Tour](docs/whirlwind_tour.md#a-whirlwind-tour)<br>* [Cookbook](https://github.com/jqnatividad/qsv/wiki)<br>* [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ)<br>* [Changelog](https://github.com/jqnatividad/qsv/blob/master/CHANGELOG.md#changelog)<br>* [Benchmarks](docs/BENCHMARKS.md)<br>* [Sponsor](#sponsor)
+![](docs/images/qsv-logo.png)  | qsv is a command line program for indexing, slicing, analyzing,<br>splitting, enriching, validating & joining CSV files.<br>Commands are simple, fast and composable.<br><br>* [Available Commands](#available-commands)<br>* [Installation](#installation)<br> * [Whirlwind Tour](docs/whirlwind_tour.md#a-whirlwind-tour)<br>* [Cookbook](https://github.com/jqnatividad/qsv/wiki)<br>* [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ)<br>* [Changelog](https://github.com/jqnatividad/qsv/blob/master/CHANGELOG.md#changelog)<br>* [Benchmarks](docs/BENCHMARKS.md)<br>* [NYC School of Data 2022 presentation](https://docs.google.com/presentation/d/e/2PACX-1vQ12ndZL--gkz0HLQRaxqsNOwzddkv1iUKB3sq661yA77OPlAsmHJHpjaqt9s9QEf73VqMfb0cv4jHU/pub?start=false&loop=false&delayms=3000)<br>* [Sponsor](#sponsor)
 
 </p>
 
