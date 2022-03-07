@@ -27,7 +27,7 @@ The next thing you might want to do is get an overview of the kind of data that
 appears in each column. The `stats` command will do this for you:
 
 ```bash
-$ qsv stats worldcitiespop_mil.csv --everything | qsv table
+$ qsv stats wcp.csv --everything | qsv table
 field       type     sum                min           max         min_length  max_length  mean                stddev              variance            lower_fence         q1          q2_median   q3          iqr                upper_fence         skew                  mode         cardinality  nullcount
 Country     String                      ad            zw          2           2                                                                                                                                                                                            ru           231          0
 City        String                       al lusayli   Þykkvibaer  1           87                                                                                                                                                                                           san jose     2008182      0
@@ -167,7 +167,7 @@ Erk. Which country is `sv`? What continent? No clue, but [datawookie](https://gi
 has a CSV file called `country-continent.csv`.
 
 ```bash
-curl -L https://raw.githubusercontent.com/datawookie/data-diaspora/master/spatial/country-continent-codes.csv > country_continent.csv
+$ curl -L https://raw.githubusercontent.com/datawookie/data-diaspora/master/spatial/country-continent-codes.csv > country_continent.csv
 $ qsv headers country_continent.csv
 1 # https://datahub.io/JohnSnowLabs/country-and-continent-codes-list
 ```
@@ -179,7 +179,7 @@ with the `#` character. No worries, qsv got us covered with its `QSV_COMMENT_CHA
 $ export QSV_COMMENT_CHAR='#'
 # on Windows Powershell
 $ $env:QSV_COMMENT_CHAR='#'
-$ qsv headers
+$ qsv headers country_continent.csv
 1   continent
 2   code
 3   country
@@ -240,7 +240,7 @@ North Druid Hills  21320       United States of America                         
 Nice! Notice the data is now sorted by Country,City too! That's because `dedup` first sorts the
 CSV records (by internally calling the `qsv sort` command) to find duplicates.  
 
-Perhaps we can do this with the original CSV data? All 3.2 million rows in a 145MB file?!  
+Perhaps we can do this with the original CSV data? All 2.7 million rows in a 124MB file?!  
 
 Indeed we can—because `qsv` is designed for speed - written in [Rust](https://www.rust-lang.org/) with 
 [amortized memory allocations](https://blog.burntsushi.net/csv/#amortizing-allocations), using the 
@@ -251,7 +251,6 @@ $ qsv join --no-case Country wcp.csv iso2 country_continent.csv \
   | qsv select 'AccentCity,Population,country,continent,Latitude,Longitude' \
   | qsv dedup --select 'country,AccentCity,Latitude,Longitude' \
   | qsv rename City,Population,Country,Continent,Latitude,Longitude --output wcp_countrycontinent.csv
-
 
 $ qsv sample 10 --seed 1729 wcp_countycontinent.csv | qsv table
 Country                            Continent      City                     Population  Latitude    Longitude
@@ -272,24 +271,23 @@ multiple cities with the same name in a country. We also specified the
 `dupes-output` option so we can have a separate CSV of the duplicate records
 it removed. 
 
-This whole thing takes about 8 seconds on my machine. The performance of `join`,
+This whole thing takes about 5 seconds on my machine. The performance of `join`,
 in particular, comes from constructing a very simple hash index of one of the CSV 
 files. The `join` command does an inner join by default, but it also has left,
 right and full outer join support too.
 
 Finally, can we create a CSV file for each country of all its cities? Yes we can, 
-with the `partition` command:
+with the `partition` command (and it took just 0.73 seconds to create all 230 country-city files!):
 
 ```bash
-$ qsv partition Country bycountry worldcitiespop_countrycontinent.csv
+$ qsv partition Country bycountry wcp_countrycontinent.csv
 $ cd bycountry
 $ ls -1shS
-total 191M
- 16M ChinaPeoplesRepublicof.csv
- 12M RussianFederation.csv
+total 164M
  11M UnitedStatesofAmerica.csv
- 11M IndonesiaRepublicof.csv
-7.5M IranIslamicRepublicof.csv
+9.5M RussianFederation.csv
+7.5M ChinaPeoplesRepublicof.csv
+6.8M IranIslamicRepublicof.csv
 ...
 4.0K CocosKeelingIslands.csv
 4.0K PitcairnIslands.csv
