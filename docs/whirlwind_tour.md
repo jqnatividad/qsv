@@ -55,7 +55,7 @@ took 0.26 seconds.)
 
 Notably, the same type of "statistics" command in another
 [CSV command line toolkit](https://csvkit.readthedocs.io/)
-takes about 8 minutes to produce similar statistics on the same data set.
+takes about 10 seconds to produce similar statistics on the same data set.
 
 Creating an index gives us more than just faster statistics gathering. It also
 makes slice operations extremely fast because *only the sliced portion* has to
