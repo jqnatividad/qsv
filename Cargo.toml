@@ -1,6 +1,6 @@
 [package]
 name          = "qsv"
-version       = "0.34.1"                                                  #:version
+version       = "0.35.0"                                                  #:version
 authors       = ["Joel Natividad <joel@datHere.com>"]
 description   = "A high performance CSV command line toolkit."
 documentation = "https://github.com/jqnatividad/qsv"
