@@ -172,13 +172,25 @@ $ qsv headers country_continent.csv
 1 # https://datahub.io/JohnSnowLabs/country-and-continent-codes-list
 ```
 
-Huh!?! That's not what we we were expecting. But if you look at the `country-continent.csv` file, it starts with a comment starting
-with the `#` character. No worries, qsv got us covered with its `QSV_COMMENT_CHAR` environment variable.
+Huh!?! That's not what we we were expecting. But if you look at the `country-continent.csv` file, it starts with a comment
+with the `#` character. 
+
+```
+$ head -5 country_continent.csv
+# https://datahub.io/JohnSnowLabs/country-and-continent-codes-list
+continent,code,country,iso2,iso3,number
+Asia,AS,"Afghanistan, Islamic Republic of",AF,AFG,4
+Europe,EU,"Albania, Republic of",AL,ALB,8
+Antarctica,AN,Antarctica (the territory South of 60 deg S),AQ,ATA,10
+```
+
+No worries, qsv got us covered with its `QSV_COMMENT_CHAR` environment variable.
 
 ```
 $ export QSV_COMMENT_CHAR='#'
 # on Windows Powershell
 $ $env:QSV_COMMENT_CHAR='#'
+
 $ qsv headers country_continent.csv
 1   continent
 2   code
