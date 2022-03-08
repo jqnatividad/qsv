@@ -5,6 +5,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.35.0] - 2022-03-08
+### Added
+* `count`: `--human-readable` option in https://github.com/jqnatividad/qsv/pull/184
+* Automatic utf8 transcoding by in https://github.com/jqnatividad/qsv/pull/187
+* Added NYC School of Data 2022 presentation
+* Added ahash 0.7 and encoding_rs_io 0.1 dependencies
+
+### Changed
+* Use ahash::AHashMap instead of std::collections::HashMap for performance in https://github.com/jqnatividad/qsv/pull/186
+* Revamped Whirlwind Tour
+* bumped several dependencies 
+  * anyhow 1.0.55 to 1.0.56
+  * ipnet 2.3.1 to 2.4.0
+  * pyo3 0.16.0 to 0.16.1
+
+### Fixed
+* `py`: convert spaces to underscores for valid python variable names when Column names have embedded spaces in https://github.com/jqnatividad/qsv/pull/183
+* docs: CSV Kit got a 10x improvement by @jpmckinney in https://github.com/jqnatividad/qsv/pull/180
+* `fetch`: added jql selector to cache key
+* Corrected README mixup re `join` hashmap indices and qsv indices
+
+## New Contributors
+* @jpmckinney made their first contribution in https://github.com/jqnatividad/qsv/pull/180
+
 ## [0.34.1] - 2022.03-04
 ### Added
 * `stats`: added `--dates` option. This option turns on date/datetime data type inferencing, which is 
