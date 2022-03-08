@@ -147,7 +147,22 @@ qsv recognizes CSV (`.csv` file extension) and TSV files (`.tsv` and `.tab` file
 and TSV files, "\t" (tab) as a delimiter. The delimiter is a single ascii character that can be set either by the `--delimiter` command-line option or
 with the `QSV_DEFAULT_DELIMITER` environment variable.
 
+When using the `--output` option, note that qsv will UTF-8 encode the file and automatically change the delimiter used in the generated file based on the file extension - i.e. comma for `.csv`, 
+tab for `.tsv` and `.tab` files.
+
 [JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/) files are also recognized and converted to CSV with the [`jsonl`](/src/cmd/jsonl.rs#L11) command.
+
+### **Windows Usage Note:**   
+Unlike other modern operating systems, Windows' [default text encoding is UTF16-LE](https://stackoverflow.com/questions/66072117/why-does-windows-use-utf-16le).   
+This will cause problems when redirecting qsv's output to a CSV file and trying to open it with applications
+like Excel:   
+```
+qsv stats --everything wcp.csv > wcpstats.csv
+```   
+Which is weird, since you would think [Microsoft would allow Excel to properly recognize UTF16-LE encoded CSV files](https://answers.microsoft.com/en-us/msoffice/forum/all/opening-csv-file-with-utf16-encoding-in-excel-2010/ed522cb9-e88d-4b82-b88e-a2d4bd99f874?auth=1). Regardless, to create a properly UTF-8 encoded file, use the `--output` option instead: 
+```
+qsv stats --everything wcp.csv --output wcpstats.csv
+```
 
 Environment Variables
 ---------------------
