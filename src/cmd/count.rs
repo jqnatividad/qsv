@@ -13,6 +13,9 @@ given).
 Usage:
     qsv count [options] [<input>]
 
+count options:
+    -H, --human-readable   comma separate row count.
+
 Common options:
     -h, --help             Display this message
     -n, --no-headers       When set, the first row will be included in
@@ -24,6 +27,7 @@ Common options:
 #[derive(Deserialize)]
 struct Args {
     arg_input: Option<String>,
+    flag_human_readable: bool,
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
 }
@@ -56,6 +60,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             count
         }
     };
-    println!("{count}");
+
+    if args.flag_human_readable {
+        use thousands::Separable;
+
+        println!("{}", count.separate_with_commas());
+    } else {
+        println!("{count}");
+    }
+
     Ok(())
 }
