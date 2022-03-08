@@ -5,6 +5,7 @@ use std::io::{self, Read};
 use std::ops::Deref;
 use std::path::PathBuf;
 
+use encoding_rs_io::DecodeReaderBytes;
 use serde::de::{Deserialize, Deserializer, Error};
 
 use crate::index::Indexed;
@@ -298,7 +299,10 @@ impl Config {
         Ok(match self.path {
             None => Box::new(io::stdin()),
             Some(ref p) => match fs::File::open(p) {
-                Ok(x) => Box::new(x),
+                Ok(x) => {
+                    let transcoded = DecodeReaderBytes::new(x);
+                    Box::new(transcoded)
+                }
                 Err(err) => {
                     let msg = format!("failed to open {}: {}", p.display(), err);
                     return Err(io::Error::new(io::ErrorKind::NotFound, msg));
