@@ -1,6 +1,6 @@
+use ahash::AHashMap;
 use std::borrow::ToOwned;
 use std::collections::hash_map::Entry;
-use ahash::AHashMap;
 use std::process;
 
 use stats::Frequencies;

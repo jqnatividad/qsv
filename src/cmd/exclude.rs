@@ -1,5 +1,5 @@
-use std::collections::hash_map::Entry;
 use ahash::AHashMap;
+use std::collections::hash_map::Entry;
 use std::fmt;
 use std::fs;
 use std::io;

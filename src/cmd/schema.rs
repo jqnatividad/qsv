@@ -4,13 +4,13 @@ use crate::select::SelectColumns;
 use crate::util;
 use crate::CliError;
 use crate::CliResult;
+use ahash::AHashMap;
 use csv::ByteRecord;
 use grex::RegExpBuilder;
 use log::{debug, error, info, warn};
 use serde::Deserialize;
 use serde_json::{json, value::Number, Map, Value};
 use stats::Frequencies;
-use ahash::AHashMap;
 use std::{collections::HashSet, fs::File, io::Write, path::Path};
 
 macro_rules! fail {

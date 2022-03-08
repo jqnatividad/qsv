@@ -1,6 +1,6 @@
+use ahash::AHashMap;
 use std::collections::hash_map::Entry;
 use std::collections::HashSet;
-use ahash::AHashMap;
 use std::fs;
 use std::io;
 use std::path::Path;
