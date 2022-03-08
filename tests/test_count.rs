@@ -11,6 +11,7 @@ fn prop_count_len(
     headers: bool,
     idx: bool,
     noheaders_env: bool,
+    human_readable: bool,
 ) -> bool {
     let mut expected_count = rows.len();
     if headers && expected_count > 0 {
@@ -31,16 +32,36 @@ fn prop_count_len(
     if noheaders_env {
         cmd.env("QSV_NO_HEADERS", "1");
     }
+    if human_readable {
+        cmd.arg("--human-readable");
+    }
     cmd.arg("in.csv");
 
-    let got_count: usize = wrk.stdout(&mut cmd);
-    rassert_eq!(got_count, expected_count)
+    if human_readable {
+        use thousands::Separable;
+
+        let got_count: String = wrk.stdout(&mut cmd);
+        let expected_count_commas = expected_count.separate_with_commas();
+
+        rassert_eq!(got_count, expected_count_commas)
+    } else {
+        let got_count: usize = wrk.stdout(&mut cmd);
+        rassert_eq!(got_count, expected_count)
+    }
 }
 
 #[test]
 fn prop_count() {
     fn p(rows: CsvData) -> bool {
-        prop_count_len("prop_count", rows, false, false, false)
+        prop_count_len("prop_count", rows, false, false, false, false)
+    }
+    qcheck(p as fn(CsvData) -> bool);
+}
+
+#[test]
+fn prop_count_human_readable() {
+    fn p(rows: CsvData) -> bool {
+        prop_count_len("prop_count", rows, false, false, false, true)
     }
     qcheck(p as fn(CsvData) -> bool);
 }
@@ -48,7 +69,15 @@ fn prop_count() {
 #[test]
 fn prop_count_headers() {
     fn p(rows: CsvData) -> bool {
-        prop_count_len("prop_count_headers", rows, true, false, false)
+        prop_count_len("prop_count_headers", rows, true, false, false, false)
+    }
+    qcheck(p as fn(CsvData) -> bool);
+}
+
+#[test]
+fn prop_count_headers_human_readable() {
+    fn p(rows: CsvData) -> bool {
+        prop_count_len("prop_count_headers", rows, true, false, false, true)
     }
     qcheck(p as fn(CsvData) -> bool);
 }
@@ -56,7 +85,7 @@ fn prop_count_headers() {
 #[test]
 fn prop_count_indexed() {
     fn p(rows: CsvData) -> bool {
-        prop_count_len("prop_count_indexed", rows, false, true, false)
+        prop_count_len("prop_count_indexed", rows, false, true, false, false)
     }
     qcheck(p as fn(CsvData) -> bool);
 }
@@ -64,7 +93,7 @@ fn prop_count_indexed() {
 #[test]
 fn prop_count_indexed_headers() {
     fn p(rows: CsvData) -> bool {
-        prop_count_len("prop_count_indexed_headers", rows, true, true, false)
+        prop_count_len("prop_count_indexed_headers", rows, true, true, false, false)
     }
     qcheck(p as fn(CsvData) -> bool);
 }
@@ -72,7 +101,7 @@ fn prop_count_indexed_headers() {
 #[test]
 fn prop_count_noheaders_env() {
     fn p(rows: CsvData) -> bool {
-        prop_count_len("prop_count_noheaders_env", rows, false, false, true)
+        prop_count_len("prop_count_noheaders_env", rows, false, false, true, false)
     }
     qcheck(p as fn(CsvData) -> bool);
 }
@@ -80,7 +109,14 @@ fn prop_count_noheaders_env() {
 #[test]
 fn prop_count_noheaders_indexed_env() {
     fn p(rows: CsvData) -> bool {
-        prop_count_len("prop_count_noheaders_indexed_env", rows, false, true, true)
+        prop_count_len(
+            "prop_count_noheaders_indexed_env",
+            rows,
+            false,
+            true,
+            true,
+            false,
+        )
     }
     qcheck(p as fn(CsvData) -> bool);
 }
