@@ -4,13 +4,14 @@ use crate::select::SelectColumns;
 use crate::util;
 use crate::CliError;
 use crate::CliResult;
+use ahash::AHashMap;
 use csv::ByteRecord;
 use grex::RegExpBuilder;
 use log::{debug, error, info, warn};
 use serde::Deserialize;
 use serde_json::{json, value::Number, Map, Value};
 use stats::Frequencies;
-use std::{collections::hash_map::HashMap, collections::HashSet, fs::File, io::Write, path::Path};
+use std::{collections::HashSet, fs::File, io::Write, path::Path};
 
 macro_rules! fail {
     ($mesg:expr) => {
@@ -301,7 +302,7 @@ fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<S
 
 /// get stats records from cmd::stats
 /// returns tuple (csv_fields, csv_stats, stats_col_index_map)
-fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, HashMap<String, usize>)> {
+fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap<String, usize>)> {
     let stats_args = crate::cmd::stats::Args {
         arg_input: args.arg_input.clone(),
         flag_select: crate::select::SelectColumns::parse("").unwrap(),
@@ -339,7 +340,7 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, HashMap<
     let stats_columns = stats_args.stat_headers();
     debug!("stats columns: {stats_columns:?}");
 
-    let mut stats_col_index_map = HashMap::new();
+    let mut stats_col_index_map = AHashMap::new();
 
     for (i, col) in stats_columns.iter().enumerate() {
         if col != "field" {
@@ -356,7 +357,7 @@ fn build_low_cardinality_column_selector_arg(
     enum_cardinality_threshold: usize,
     csv_fields: &ByteRecord,
     csv_stats: &[Stats],
-    stats_col_index_map: &HashMap<String, usize>,
+    stats_col_index_map: &AHashMap<String, usize>,
 ) -> String {
     let mut low_cardinality_column_indices = Vec::new();
 
@@ -394,7 +395,7 @@ fn build_low_cardinality_column_selector_arg(
 fn get_unique_values(
     args: &Args,
     column_select_arg: &str,
-) -> CliResult<HashMap<String, Vec<String>>> {
+) -> CliResult<AHashMap<String, Vec<String>>> {
     // prepare arg for invoking cmd::frequency
     let freq_args = crate::cmd::frequency::Args {
         arg_input: args.arg_input.clone(),
@@ -422,8 +423,8 @@ fn get_unique_values(
 fn construct_map_of_unique_values(
     freq_csv_fields: ByteRecord,
     frequency_tables: Vec<Frequencies<Vec<u8>>>,
-) -> CliResult<HashMap<String, Vec<String>>> {
-    let mut unique_values_map: HashMap<String, Vec<String>> = HashMap::new();
+) -> CliResult<AHashMap<String, Vec<String>>> {
+    let mut unique_values_map: AHashMap<String, Vec<String>> = AHashMap::new();
 
     // iterate through fields and gather unique values for each field
     for (i, header_byte_slice) in freq_csv_fields.iter().enumerate() {
@@ -485,7 +486,7 @@ fn get_required_fields(properties_map: &Map<String, Value>) -> Vec<Value> {
 fn generate_string_patterns(
     args: &Args,
     properties_map: &Map<String, Value>,
-) -> CliResult<HashMap<String, String>> {
+) -> CliResult<AHashMap<String, String>> {
     // standard boiler-plate for reading CSV
 
     let rconfig = Config::new(&args.arg_input)
@@ -498,7 +499,7 @@ fn generate_string_patterns(
     let headers = rdr.byte_headers()?.clone();
     let sel = rconfig.selection(&headers)?;
 
-    let mut pattern_map: HashMap<String, String> = HashMap::new();
+    let mut pattern_map: AHashMap<String, String> = AHashMap::new();
 
     // return empty pattern map when:
     //  * no columns are selected
@@ -509,7 +510,7 @@ fn generate_string_patterns(
     }
 
     // Map each Header to its unique Set of values
-    let mut unique_values_map: HashMap<String, HashSet<String>> = HashMap::new();
+    let mut unique_values_map: AHashMap<String, HashSet<String>> = AHashMap::new();
 
     #[allow(unused_assignments)]
     let mut record = csv::ByteRecord::new();

@@ -1,5 +1,6 @@
+use ahash::AHashMap;
 use std::collections::hash_map::Entry;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::fs;
 use std::io;
 use std::path::Path;
@@ -92,7 +93,7 @@ impl Args {
         let key_col = self.key_column(&rconfig, &headers)?;
         let mut gen = WriterGenerator::new(self.flag_filename.clone());
 
-        let mut writers: HashMap<Vec<u8>, BoxedWriter> = HashMap::new();
+        let mut writers: AHashMap<Vec<u8>, BoxedWriter> = AHashMap::new();
         let mut row = csv::ByteRecord::new();
         while rdr.read_byte_record(&mut row)? {
             // Decide what file to put this in.
