@@ -43,7 +43,8 @@ Create a new column, filter rows or compute aggregations by evaluating a python
 expression on every row of a CSV file.
 
 The executed Python has 4 ways to reference cell values (as strings):
-  1. Directly by using column name (e.g. amount) as a local variable
+  1. Directly by using column name (e.g. amount) as a local variable. If a column
+     name has spaces, they are replaced with underscores (e.g. "unit cost" -> unit_cost)
   2. Indexing cell value by column name as an attribute: row.amount
   3. Indexing cell value by column name as a key: row["amount"]
   4. Indexing cell value by column position: row[0]
@@ -58,9 +59,9 @@ Some usage examples:
   $ qsv py map c "int(col.a) + int(col['b'])"
   $ qsv py map c "int(col[0]) + int(col[1])"
 
-  Use Python f-strings to calculate using multiple columns (qty, fruit & unitcost) 
+  Use Python f-strings to calculate using multiple columns (qty, fruit & "unit cost") 
     and format into a new column 'formatted'
-  $ qsv py map formatted "f'{qty} {fruit} cost ${(float(unitcost) * float(qty)):.2f}'"
+  $ qsv py map formatted "f'{qty} {fruit} cost ${(float(unit_cost) * float(qty)):.2f}'"
 
   Strip and prefix cell values
   $ qsv py map prefixed "'clean_' + a.strip()"
@@ -194,7 +195,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         for (i, h) in headers.iter().take(headers_len).enumerate() {
             let cell_value = record.get(i).unwrap();
-            locals.set_item(h, cell_value)?;
+            locals.set_item(h.replace(" ", "_"), cell_value)?;
             row_data.push(cell_value);
         }
 
