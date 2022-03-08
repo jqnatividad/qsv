@@ -65,7 +65,7 @@ Available commands
 | [validate](/src/cmd/validate.rs#L27)[^5] | Validate CSV data with JSON Schema (See `schema` command). If no jsonschema file is provided, validates if a CSV conforms to the [RFC 4180 standard](https://datatracker.ietf.org/doc/html/rfc4180). |
 
 [^1]: enabled by optional feature flag. Not available on `qsvlite`.   
-[^2]: uses an index when available. `join` always uses indices.   
+[^2]: uses an index when available.   
 [^3]: loads the entire CSV into memory. Note that `stats` & `transpose` have modes that do not load the entire CSV into memory.   
 [^4]: multithreaded when an index is available (use `--jobs` option to adjust).   
 [^5]: multithreaded   
