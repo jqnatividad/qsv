@@ -1161,6 +1161,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "encoding_rs_io"
+version = "0.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1cc3c5651fb62ab8aa3103998dade57efdd028544bd300516baa31840c252a83"
+dependencies = [
+ "encoding_rs",
+]
+
+[[package]]
 name = "enum-as-inner"
 version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2665,6 +2674,7 @@ dependencies = [
  "csv-index",
  "dateparser",
  "docopt",
+ "encoding_rs_io",
  "eudex",
  "filetime",
  "flexi_logger",
