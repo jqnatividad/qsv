@@ -5,6 +5,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.35.1] - 2022-03-08
+
+### Changed
+- README: note about `--output` option changing delimiter automatically based on file extension and UTF-8 encoding the file
+- README: Windows usage note about UTF16-LE encoding and `--output` workaround
+### Fixed
+* upgraded regex to 1.5.5 which resolves the [GHSA-m5pq-gvj9-9vr8 security advisory](https://github.com/rust-lang/regex/security/advisories/GHSA-m5pq-gvj9-9vr8)
+
 ## [0.35.0] - 2022-03-08
 ### Added
 * `count`: `--human-readable` option in https://github.com/jqnatividad/qsv/pull/184
