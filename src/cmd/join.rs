@@ -1,9 +1,10 @@
-use std::collections::hash_map::{Entry, HashMap};
+use std::collections::hash_map::Entry;
 use std::fmt;
 use std::io;
 use std::iter::repeat;
 use std::str;
 
+use ahash::AHashMap;
 use byteorder::{BigEndian, WriteBytesExt};
 
 use crate::config::{Config, Delimiter, SeekRead};
@@ -376,7 +377,7 @@ impl Args {
 
 struct ValueIndex<R> {
     // This maps tuples of values to corresponding rows.
-    values: HashMap<Vec<ByteString>, Vec<usize>>,
+    values: AHashMap<Vec<ByteString>, Vec<usize>>,
     idx: Indexed<R, io::Cursor<Vec<u8>>>,
     num_rows: usize,
 }
@@ -388,7 +389,7 @@ impl<R: io::Read + io::Seek> ValueIndex<R> {
         casei: bool,
         nulls: bool,
     ) -> CliResult<ValueIndex<R>> {
-        let mut val_idx = HashMap::with_capacity(10000);
+        let mut val_idx = AHashMap::with_capacity(10000);
         let mut row_idx = io::Cursor::new(Vec::with_capacity(8 * 10000));
         let (mut rowi, mut count) = (0usize, 0usize);
 

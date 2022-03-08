@@ -45,6 +45,7 @@ strip         = true
 opt-level = 3
 
 [dependencies]
+ahash = "0.7"
 anyhow = "1.0"
 byteorder = "1.4"
 cached = { version = "0.33", features = ["redis_store"] }

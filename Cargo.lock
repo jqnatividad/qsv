@@ -2653,6 +2653,7 @@ version = "0.34.1"
 dependencies = [
  "actix-governor",
  "actix-web",
+ "ahash 0.7.6",
  "anyhow",
  "assert-json-diff",
  "byteorder",
