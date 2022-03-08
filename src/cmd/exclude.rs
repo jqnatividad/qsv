@@ -1,4 +1,5 @@
-use std::collections::hash_map::{Entry, HashMap};
+use std::collections::hash_map::Entry;
+use ahash::AHashMap;
 use std::fmt;
 use std::fs;
 use std::io;
@@ -166,14 +167,14 @@ impl Args {
 #[allow(dead_code)]
 struct ValueIndex<R> {
     // This maps tuples of values to corresponding rows.
-    values: HashMap<Vec<ByteString>, Vec<usize>>,
+    values: AHashMap<Vec<ByteString>, Vec<usize>>,
     idx: Indexed<R, io::Cursor<Vec<u8>>>,
     num_rows: usize,
 }
 
 impl<R: io::Read + io::Seek> ValueIndex<R> {
     fn new(mut rdr: csv::Reader<R>, sel: &Selection, casei: bool) -> CliResult<ValueIndex<R>> {
-        let mut val_idx = HashMap::with_capacity(10000);
+        let mut val_idx = AHashMap::with_capacity(10000);
         let mut row_idx = io::Cursor::new(Vec::with_capacity(8 * 10000));
         let (mut rowi, mut count) = (0usize, 0usize);
 

@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use ahash::AHashMap;
 
 use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
@@ -44,7 +44,7 @@ pub fn replace_column_value(
         .collect()
 }
 
-type Values = HashMap<String, u64>;
+type Values = AHashMap<String, u64>;
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;

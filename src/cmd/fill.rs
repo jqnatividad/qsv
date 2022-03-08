@@ -1,4 +1,4 @@
-use std::collections::hash_map::HashMap;
+use ahash::AHashMap;
 use std::io;
 use std::iter;
 use std::ops;
@@ -140,8 +140,8 @@ impl ops::Deref for ByteRecord {
 }
 
 type GroupKey = Option<ByteRecord>;
-type GroupBuffer = HashMap<GroupKey, Vec<ByteRecord>>;
-type Grouper = HashMap<GroupKey, GroupValues>;
+type GroupBuffer = AHashMap<GroupKey, Vec<ByteRecord>>;
+type Grouper = AHashMap<GroupKey, GroupValues>;
 type GroupKeySelection = Option<Selection>;
 
 trait GroupKeyConstructor {
@@ -159,14 +159,14 @@ impl GroupKeyConstructor for GroupKeySelection {
 
 #[derive(Debug)]
 struct GroupValues {
-    map: HashMap<usize, ByteString>,
+    map: AHashMap<usize, ByteString>,
     default: Option<ByteString>,
 }
 
 impl GroupValues {
     fn new(default: Option<ByteString>) -> Self {
         Self {
-            map: HashMap::new(),
+            map: AHashMap::new(),
             default,
         }
     }
