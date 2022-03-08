@@ -56,6 +56,7 @@ csv = "1.1"
 csv-index = "0.1"
 dateparser = "0.1"
 docopt = "1"
+encoding_rs_io = "0.1"
 eudex = { version = "0.1", optional = true }
 filetime = "0.2"
 flexi_logger = { version = "0.22", features = ["compress"] }
