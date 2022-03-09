@@ -379,12 +379,12 @@ fn py_format() {
 }
 
 #[test]
-fn py_format_header_with_spaces() {
+fn py_format_header_with_invalid_chars() {
     let wrk = Workdir::new("py");
     wrk.create(
         "data.csv",
         vec![
-            svec!["qty", "fruit", "unit cost usd"],
+            svec!["qty-fruit/day", "1fruit", "unit cost usd"],
             svec!["20.5", "mangoes", "5"],
             svec!["10", "bananas", "20"],
             svec!["3", "strawberries", "3.50"],
@@ -393,12 +393,14 @@ fn py_format_header_with_spaces() {
     let mut cmd = wrk.command("py");
     cmd.arg("map")
         .arg("formatted")
-        .arg("f'{qty} {fruit} cost ${(float(unit_cost_usd) * float(qty)):.2f}'")
+        .arg(
+            "f'{qty_fruit_day} {_fruit} cost ${(float(unit_cost_usd) * float(qty_fruit_day)):.2f}'",
+        )
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
-        svec!["qty", "fruit", "unit cost usd", "formatted"],
+        svec!["qty-fruit/day", "1fruit", "unit cost usd", "formatted"],
         svec!["20.5", "mangoes", "5", "20.5 mangoes cost $102.50"],
         svec!["10", "bananas", "20", "10 bananas cost $200.00"],
         svec!["3", "strawberries", "3.50", "3 strawberries cost $10.50"],
