@@ -167,7 +167,7 @@ qsv stats --everything wcp.csv --output wcpstats.csv
 Environment Variables
 ---------------------
 
-* `QSV_DEFAULT_DELIMITER` - single ascii character to use as delimiter.  Overrides `--delimeter` option. Defaults to "," (comma) for CSV files and "\t" (tab) for TSV files, when not set. Note that this will also set the delimiter for qsv's output.
+* `QSV_DEFAULT_DELIMITER` - single ascii character to use as delimiter.  Overrides `--delimeter` option. Defaults to "," (comma) for CSV files and "\t" (tab) for TSV files, when not set. Note that this will also set the delimiter for qsv's output to stdout. However, using the `--output` option, regardless of this environment variable, will automatically change the delimiter used in the generated file based on the file extension - i.e. comma for `.csv`, tab for `.tsv` and `.tab` files.
 * `QSV_NO_HEADERS` - when set, the first row will **NOT** be interpreted as headers. Supersedes `QSV_TOGGLE_HEADERS`.
 * `QSV_TOGGLE_HEADERS` - if set to `1`, toggles header setting - i.e. inverts qsv header behavior, with no headers being the default, and setting `--no-headers` will actually mean headers will not be ignored.
 * `QSV_MAX_JOBS` - number of jobs to use for multi-threaded commands (currently `frequency`, `split`, `schema` and `stats`). If not set, max_jobs is set
@@ -302,8 +302,10 @@ Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org).
 
 Sponsor
 -------
-qsv was made possible by **[datHere](https://dathere.com) - Data Infrastructure Engineering.**   
-Standards-based, best-of-breed, open source solutions to make your **Data Useful, Usable & Used.**
+|qsv was made possible by|
+:-------------------------:|
+|[![](docs/images/datHere-logo-withtagline.png)](https://datHere.com)<br>|
+|Standards-based, best-of-breed, open source solutions<br>to make your **Data Useful, Usable & Used.**   |
 
 Naming Collision
 ----------------
