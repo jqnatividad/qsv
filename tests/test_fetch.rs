@@ -228,7 +228,7 @@ fn fetch_custom_header() {
 use std::{sync::mpsc, thread};
 
 use actix_web::{
-    dev::Server, middleware, rt, web, App, HttpRequest, HttpServer, Responder, Result,
+    dev::ServerHandle, middleware, rt, web, App, HttpRequest, HttpServer, Responder, Result,
 };
 
 use serde::Serialize;
@@ -243,10 +243,7 @@ async fn index() -> impl Responder {
 
 /// handler with path parameters like `/user/{name}/`
 /// returns Smurf fullname in JSON format
-async fn get_fullname(
-    req: HttpRequest,
-    web::Path((name,)): web::Path<(String,)>,
-) -> Result<impl Responder> {
+async fn get_fullname(req: HttpRequest, name: web::Path<String>) -> Result<impl Responder> {
     println!("{:?}", req);
 
     let obj = MyObj {
@@ -270,21 +267,19 @@ macro_rules! test_url {
 }
 
 /// start an Actix Webserver with Rate Limiting via Governor
-fn run_webserver(tx: mpsc::Sender<Server>) -> std::io::Result<()> {
-    let mut sys = rt::System::new("test");
-
-    use actix_governor::{Governor, GovernorConfig, GovernorConfigBuilder};
+async fn run_webserver(tx: mpsc::Sender<ServerHandle>) -> std::io::Result<()> {
+    use actix_governor::{Governor, GovernorConfigBuilder};
 
     // Allow bursts with up to five requests per IP address
     // and replenishes one element every 250 ms (4 qps)
-    let governor_conf: GovernorConfig = GovernorConfigBuilder::default()
+    let governor_conf = GovernorConfigBuilder::default()
         .per_millisecond(250)
         .burst_size(7)
         .finish()
         .unwrap();
 
-    // srv is server controller type, `dev::Server`
-    let srv = HttpServer::new(move || {
+    // server is server controller type, `dev::ServerHandle`
+    let server = HttpServer::new(move || {
         App::new()
             // enable logger
             .wrap(middleware::Logger::default())
@@ -296,10 +291,10 @@ fn run_webserver(tx: mpsc::Sender<Server>) -> std::io::Result<()> {
     .run();
 
     // send server controller to main thread
-    let _ = tx.send(srv.clone());
+    let _ = tx.send(server.handle());
 
     // run future
-    sys.block_on(srv)
+    server.await
 }
 
 #[test]
@@ -307,12 +302,13 @@ fn fetch_ratelimit() {
     // start webserver with rate limiting
     let (tx, rx) = mpsc::channel();
 
-    println!("START Webserver ");
+    // println!("START Webserver ");
     thread::spawn(move || {
-        let _ = run_webserver(tx);
+        let server_future = run_webserver(tx);
+        rt::System::new().block_on(server_future)
     });
 
-    let srv = rx.recv().unwrap();
+    let server_handle = rx.recv().unwrap();
 
     // proceed with usual unit test
     let wrk = Workdir::new("fetch");
@@ -379,6 +375,7 @@ fn fetch_ratelimit() {
     assert_eq!(got, expected);
 
     // init stop webserver and wait until server gracefully exit
-    println!("STOPPING Webserver");
-    rt::System::new("").block_on(srv.stop(true));
+    // println!("STOPPING Webserver");
+    // rt::System::new().block_on(srv.stop(true));
+    rt::System::new().block_on(server_handle.stop(true));
 }
