@@ -107,8 +107,8 @@ vader_sentiment = { version = "0.1", optional = true }
 whatlang = { version = "0.13", optional = true }
 
 [dev-dependencies]
-actix-governor   = "0.2"
-actix-web        = "3.3"
+actix-governor   = "0.3"
+actix-web        = "4.0"
 assert-json-diff = "2.0"
 quickcheck       = { version = "1", default-features = false }
 redis            = "0.21"
