@@ -58,6 +58,36 @@ fn lua_map_math() {
 }
 
 #[test]
+fn lua_map_header_with_nonalphanumeric_chars() {
+    let wrk = Workdir::new("lua");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["letter-column", "number column"],
+            svec!["a", "13"],
+            svec!["b", "24"],
+            svec!["c", "72"],
+            svec!["d", "7"],
+        ],
+    );
+    let mut cmd = wrk.command("lua");
+    cmd.arg("map")
+        .arg(r#"div/column"#)
+        .arg(r#"col["letter-column"] .. math.floor(col["number column"] / 2)"#)
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["letter-column", "number column", "div/column"],
+        svec!["a", "13", "a6"],
+        svec!["b", "24", "b12"],
+        svec!["c", "72", "c36"],
+        svec!["d", "7", "d3"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn lua_map_no_headers() {
     let wrk = Workdir::new("lua");
     wrk.create(
