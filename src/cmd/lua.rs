@@ -5,8 +5,9 @@ use crate::config::{Config, Delimiter};
 use crate::util;
 use crate::CliError;
 use crate::CliResult;
-use hlua::{AnyLuaValue, Lua, LuaError, LuaTable};
 use indicatif::{ProgressBar, ProgressDrawTarget};
+use log::debug;
+use mlua::Lua;
 use serde::Deserialize;
 
 static USAGE: &str = r#"
@@ -95,8 +96,8 @@ struct Args {
     flag_quiet: bool,
 }
 
-impl From<LuaError> for CliError {
-    fn from(err: LuaError) -> CliError {
+impl From<mlua::Error> for CliError {
+    fn from(err: mlua::Error) -> CliError {
         CliError::Other(err.to_string())
     }
 }
@@ -124,9 +125,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         wtr.write_record(&headers)?;
     }
 
-    let mut lua = Lua::new();
-    lua.openlibs();
-    lua.execute("col = {}")?;
+    let lua = Lua::new();
+    let globals = lua.globals();
+    globals.set("cols", "{}")?;
 
     let lua_script = if args.flag_script_file {
         let mut file = File::open(&args.arg_script)?;
@@ -145,6 +146,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     lua_program.push_str(&lua_script);
+    debug!("lua program: {:?}", lua_program);
 
     let progress = ProgressBar::new(0);
     if !args.flag_quiet {
@@ -160,60 +162,59 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         if !args.flag_quiet {
             progress.inc(1);
         }
+
         // Updating col
         {
-            let mut col: LuaTable<_> = lua.get("col").unwrap();
+            let col = lua.create_table()?;
 
             for (i, v) in record.iter().enumerate() {
-                // TODO: drop this `as`
-                col.set((i as u16) + 1, v);
+                col.set(i + 1, v)?;
             }
             if !rconfig.no_headers {
                 for (h, v) in headers.iter().zip(record.iter()) {
-                    col.set(h, v);
+                    col.set(h, v)?;
                 }
             }
+            globals.set("col", col)?;
         }
 
         // Updating global
-        if !args.flag_no_globals {
-            let mut globals = lua.globals_table();
-
-            if !rconfig.no_headers {
-                for (h, v) in headers.iter().zip(record.iter()) {
-                    globals.set(h, v);
-                }
+        if !args.flag_no_globals && !rconfig.no_headers {
+            for (h, v) in headers.iter().zip(record.iter()) {
+                globals.set(h, v)?;
             }
         }
 
-        let computed_value: AnyLuaValue = lua.execute(&lua_program)?;
+        let computed_value: mlua::Value = lua.load(&lua_program).eval()?;
 
         if args.cmd_map {
             match computed_value {
-                AnyLuaValue::LuaString(string) => {
-                    record.push_field(&string);
+                mlua::Value::String(string) => {
+                    record.push_field(&string.to_string_lossy());
                 }
-                AnyLuaValue::LuaNumber(number) => {
+                mlua::Value::Number(number) => {
                     record.push_field(&number.to_string());
                 }
-                AnyLuaValue::LuaBoolean(boolean) => {
+                mlua::Value::Integer(number) => {
+                    record.push_field(&number.to_string());
+                }
+                mlua::Value::Boolean(boolean) => {
                     record.push_field(if boolean { "true" } else { "false" });
                 }
-                AnyLuaValue::LuaNil => {
+                mlua::Value::Nil => {
                     record.push_field("");
                 }
                 _ => {
-                    return fail!("Unexpected value type returned by provided Lua expression.");
+                    return fail!("Unexpected value type returned by provided Lua expression. {computed_value}");
                 }
             }
 
             wtr.write_record(&record)?;
         } else if args.cmd_filter {
-            let must_keep_line = match computed_value {
-                AnyLuaValue::LuaString(string) => !string.is_empty(),
-                AnyLuaValue::LuaNumber(_) => true,
-                AnyLuaValue::LuaBoolean(boolean) => boolean,
-                AnyLuaValue::LuaNil => false,
+            let must_keep_line: bool = match computed_value {
+                mlua::Value::String(strval) => !strval.to_string_lossy().is_empty(),
+                mlua::Value::Boolean(boolean) => boolean,
+                mlua::Value::Nil => false,
                 _ => true,
             };
 

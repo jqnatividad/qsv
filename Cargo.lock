@@ -1429,16 +1429,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "hlua"
-version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ed9db71fff2e55b83d24bbbdd9ad13f0d1ff79bc265f544370f39ee0825d54e4"
-dependencies = [
- "libc",
- "lua52-sys",
-]
-
-[[package]]
 name = "http"
 version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1758,14 +1748,21 @@ dependencies = [
 ]
 
 [[package]]
-name = "lua52-sys"
-version = "0.1.2"
+name = "lua-src"
+version = "544.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d451db153c94e455dc817d388f9674f6232425c28db3509e90251c55b8df2f94"
+checksum = "7341ba039a781c4982ca20761c55f44e07bfefd496a45b1e929763d88f5fc68b"
 dependencies = [
  "cc",
- "libc",
- "pkg-config",
+]
+
+[[package]]
+name = "luajit-src"
+version = "210.3.3+resty673aaad"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3201eae65820ee1f1eddc22de04f5c834bce36db20c2672d39d47826b317768e"
+dependencies = [
+ "cc",
 ]
 
 [[package]]
@@ -1864,6 +1861,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b9f1c5b025cda876f66ef43a113f91ebc9f4ccef34843000e0adf6ebbab84e21"
 dependencies = [
  "winapi",
+]
+
+[[package]]
+name = "mlua"
+version = "0.7.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "29e2194305aa8301d5da9c1c98640047f4219f6b95c190f6860338ab9872b686"
+dependencies = [
+ "bstr",
+ "cc",
+ "lua-src",
+ "luajit-src",
+ "num-traits",
+ "once_cell",
+ "pkg-config",
+ "rustc-hash",
 ]
 
 [[package]]
@@ -2373,13 +2386,13 @@ dependencies = [
  "flexi_logger",
  "governor",
  "grex",
- "hlua",
  "indicatif",
  "itertools",
  "jql",
  "jsonschema",
  "log",
  "mimalloc",
+ "mlua",
  "once_cell",
  "pyo3",
  "qsv-stats",
@@ -2674,6 +2687,12 @@ dependencies = [
  "web-sys",
  "winapi",
 ]
+
+[[package]]
+name = "rustc-hash"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "08d43f7aa6b08d49f382cde6a7982047c3426db949b1424bc4b7ec9ae12c6ce2"
 
 [[package]]
 name = "rustc_version"
