@@ -17,6 +17,7 @@ use crate::util;
 use crate::CliResult;
 use dateparser::DateTimeUtc;
 use serde::Deserialize;
+use smartstring;
 
 use self::FieldType::{TDate, TDateTime, TFloat, TInteger, TNull, TString, TUnknown};
 
@@ -24,14 +25,17 @@ static USAGE: &str = "
 Computes basic statistics on CSV data.
 
 Basic statistics includes sum, min/max, min/max length, mean, stddev, variance,
-quartiles, median, mode, cardinality & nullcount. Note that some statistics are
-expensive to compute, so they must be enabled explicitly. By default, the following
-statistics are reported for *every* column in the CSV data: sum, min/max values,
-min/max length, mean, stddev & variance. The default set of statistics corresponds to
-statistics that can be computed efficiently on a stream of data (i.e., constant memory).
+quartiles, median, modes, cardinality & nullcount. Note that some statistics are
+expensive to compute and requires loading the entire file into memory,
+so they must be enabled explicitly. 
+
+By default, the following statistics are reported for *every* column in the CSV data:
+sum, min/max values, min/max length, mean, stddev & variance. The default set of statistics 
+corresponds to statistics that can be computed efficiently on a stream of data (i.e., constant memory).
 
 The data type of each column is also inferred (Unknown, NULL, Integer, String,
-Float, Date and DateTime). The date formats recognized can be found at
+Float, Date and DateTime). Note that the Date and DateTime data types are only inferred with
+the --dates option as its an expensive operation. The date formats recognized can be found at
 https://docs.rs/dateparser/0.1.6/dateparser/#accepted-date-formats.
 
 Computing statistics on a large file can be made much faster if you create
@@ -412,13 +416,13 @@ impl Stats {
     #[allow(clippy::wrong_self_convention)]
     pub fn to_record(&mut self) -> csv::StringRecord {
         let typ = self.typ;
-        let mut pieces = Vec::with_capacity(20);
-        let empty = || "".to_owned();
+        let mut pieces: Vec<smartstring::alias::String> = Vec::with_capacity(20);
+        let empty = || "".to_owned().into();
 
-        pieces.push(self.typ.to_string());
+        pieces.push(self.typ.to_string().into());
         match self.sum.as_ref().and_then(|sum| sum.show(typ)) {
             Some(sum) => {
-                pieces.push(sum);
+                pieces.push(sum.into());
             }
             None => {
                 pieces.push(empty());
@@ -426,8 +430,8 @@ impl Stats {
         }
         match self.minmax.as_ref().and_then(|mm| mm.show(typ)) {
             Some(mm) => {
-                pieces.push(mm.0);
-                pieces.push(mm.1);
+                pieces.push((mm.0).into());
+                pieces.push((mm.1).into());
             }
             None => {
                 pieces.push(empty());
@@ -436,8 +440,8 @@ impl Stats {
         }
         match self.minmax.as_ref().and_then(|mm| mm.len_range()) {
             Some(mm) => {
-                pieces.push(mm.0);
-                pieces.push(mm.1);
+                pieces.push((mm.0).into());
+                pieces.push((mm.1).into());
             }
             None => {
                 pieces.push(empty());
@@ -452,9 +456,9 @@ impl Stats {
         } else {
             match self.online {
                 Some(ref v) => {
-                    pieces.push(v.mean().to_string());
-                    pieces.push(v.stddev().to_string());
-                    pieces.push(v.variance().to_string());
+                    pieces.push(v.mean().to_string().into());
+                    pieces.push(v.stddev().to_string().into());
+                    pieces.push(v.variance().to_string().into());
                 }
                 None => {
                     pieces.push(empty());
@@ -463,17 +467,23 @@ impl Stats {
                 }
             }
         }
-        match self.median.as_mut().and_then(|v| v.median()) {
+        match self.median.as_mut().and_then(|v| match self.typ {
+            TInteger | TFloat => v.median(),
+            _ => None,
+        }) {
             None => {
                 if self.which.median {
                     pieces.push(empty());
                 }
             }
             Some(v) => {
-                pieces.push(v.to_string());
+                pieces.push(v.to_string().into());
             }
         }
-        match self.quartiles.as_mut().and_then(|v| v.quartiles()) {
+        match self.quartiles.as_mut().and_then(|v| match self.typ {
+            TInteger | TFloat => v.quartiles(),
+            _ => None,
+        }) {
             None => {
                 if self.which.quartiles {
                     pieces.push(empty());
@@ -487,17 +497,17 @@ impl Stats {
             }
             Some((q1, q2, q3)) => {
                 let iqr = q3 - q1;
-                pieces.push((q1 - (1.5 * iqr)).to_string());
-                pieces.push(q1.to_string());
-                pieces.push(q2.to_string());
-                pieces.push(q3.to_string());
-                pieces.push(iqr.to_string());
-                pieces.push((q3 + (1.5 * iqr)).to_string());
+                pieces.push((q1 - (1.5 * iqr)).to_string().into());
+                pieces.push(q1.to_string().into());
+                pieces.push(q2.to_string().into());
+                pieces.push(q3.to_string().into());
+                pieces.push(iqr.to_string().into());
+                pieces.push((q3 + (1.5 * iqr)).to_string().into());
                 // calculate skewnewss using Pearson's median skewness
                 // https://en.wikipedia.org/wiki/Skewness#Pearson's_second_skewness_coefficient_(median_skewness)
                 let _mean = self.online.unwrap().mean();
                 let _stddev = self.online.unwrap().stddev();
-                pieces.push(((3.0 * (_mean - q2)) / _stddev).to_string());
+                pieces.push(((3.0 * (_mean - q2)) / _stddev).to_string().into());
             }
         }
         match self.modes.as_mut() {
@@ -514,17 +524,18 @@ impl Stats {
                     pieces.push(
                         v.modes()
                             .iter()
-                            .map(|c| String::from_utf8_lossy(c))
-                            .join(","),
+                            .map(|c| unsafe { String::from_utf8_unchecked(c.to_vec()) })
+                            .join(",")
+                            .into(),
                     );
                 }
                 if self.which.cardinality {
-                    pieces.push(v.cardinality().to_string());
+                    pieces.push(v.cardinality().to_string().into());
                 }
             }
         }
         if self.which.nullcount {
-            pieces.push(self.nullcount.to_string());
+            pieces.push(self.nullcount.to_string().into());
         }
         csv::StringRecord::from(pieces)
     }
@@ -575,7 +586,7 @@ impl FieldType {
         }
         if *dates {
             if let Ok(parsed_date) = string.parse::<DateTimeUtc>() {
-                let rfc3339_date_str = parsed_date.0.to_string();
+                let rfc3339_date_str: smartstring::alias::String = parsed_date.0.to_string().into();
                 let datelen = rfc3339_date_str.len();
 
                 if datelen >= 17 {
@@ -734,7 +745,7 @@ struct TypedMinMax {
     str_len: MinMax<usize>,
     integers: MinMax<i64>,
     floats: MinMax<f64>,
-    dates: MinMax<String>,
+    dates: MinMax<smartstring::alias::String>,
 }
 
 impl TypedMinMax {
@@ -747,30 +758,29 @@ impl TypedMinMax {
         self.strings.add(sample.to_vec());
         match typ {
             TString | TUnknown | TNull => {}
-            TFloat => {
-                let n = str::from_utf8(&*sample)
+            TFloat => unsafe {
+                let n = str::from_utf8_unchecked(&*sample)
+                    .parse::<f64>()
                     .ok()
-                    .and_then(|s| s.parse::<f64>().ok())
                     .unwrap();
+
                 self.floats.add(n);
                 self.integers.add(n as i64);
-            }
-            TInteger => {
-                let n = str::from_utf8(&*sample)
+            },
+            TInteger => unsafe {
+                let n = str::from_utf8_unchecked(&*sample)
+                    .parse::<i64>()
                     .ok()
-                    .and_then(|s| s.parse::<i64>().ok())
                     .unwrap();
                 self.integers.add(n);
                 self.floats.add(n as f64);
-            }
-            TDate | TDateTime => {
-                let n = str::from_utf8(&*sample)
-                    .ok()
-                    .and_then(|s| dateparser::parse(s).ok())
-                    .unwrap();
+            },
+            TDate | TDateTime => unsafe {
+                let tempstr = str::from_utf8_unchecked(&*sample);
+                let n = dateparser::parse(tempstr).ok().unwrap();
 
-                self.dates.add(n.to_string());
-            }
+                self.dates.add(n.to_string().into());
+            },
         }
     }
 
@@ -787,11 +797,11 @@ impl TypedMinMax {
         match typ {
             TNull => None,
             TString | TUnknown => match (self.strings.min(), self.strings.max()) {
-                (Some(min), Some(max)) => {
-                    let min = String::from_utf8_lossy(&**min).to_string();
-                    let max = String::from_utf8_lossy(&**max).to_string();
+                (Some(min), Some(max)) => unsafe {
+                    let min = String::from_utf8_unchecked((&**min).to_vec());
+                    let max = String::from_utf8_unchecked((&**max).to_vec());
                     Some((min, max))
-                }
+                },
                 _ => None,
             },
             TDate | TDateTime => match (self.dates.min(), self.dates.max()) {
@@ -823,5 +833,7 @@ impl Commute for TypedMinMax {
 
 #[inline]
 fn from_bytes<T: FromStr>(bytes: &[u8]) -> Option<T> {
-    str::from_utf8(bytes).ok().and_then(|s| s.parse().ok())
+    // we don't need to do UTF-8 validation as we automatically
+    // transcode to UTF-8 the input
+    unsafe { str::from_utf8_unchecked(bytes).parse().ok() }
 }
