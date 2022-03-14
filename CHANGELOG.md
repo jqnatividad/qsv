@@ -5,6 +5,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.35.2] - 2022-03-13
+### Added
+* README: Added datHere logo
+### Changed
+* `py`: ensure valid python variable names https://github.com/jqnatividad/qsv/pull/192
+* `fetch`: dev-dependency actix upgrade (actix-governor from 0.2->0.3; actix-web from 3.3->4.0) https://github.com/jqnatividad/qsv/pull/193
+* `lua`: replace hlua with mlua  https://github.com/jqnatividad/qsv/pull/194
+* `stats`: refactor for performance - skip from_utf8 check as input is utf8 transcoded as necessary; smartstring https://github.com/jqnatividad/qsv/pull/195
+* Whirlwind Tour: show country-continent.csv file with comment handling
+* cargo bump update several dependencies
+
+### Fixed
+* `stats`: only compute quartiles/median for int/float fields - https://github.com/jqnatividad/qsv/pull/195
+
 ## [0.35.1] - 2022-03-08
 
 ### Changed
