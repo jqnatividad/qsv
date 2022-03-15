@@ -35,8 +35,7 @@ Usage:
 
 Fetch options:
     --url-template <template>  URL template to use. The character '^'
-                               will be replaced by <column> value, but
-                               sanitized for shell safety.
+                               will be replaced by <column> value.
     -c, --new-column <name>    Put the fetched values in a new column instead.
     --jql <selector>           Apply jql selector to API returned JSON value.
     --rate-limit <qps>         Rate Limit in Queries Per Second. [default: 10]
@@ -377,7 +376,7 @@ fn get_response(
         // apply JQL selector if provided
         if let Some(selectors) = flag_jql {
             // instead of repeatedly parsing the jql selector,
-            // we do it compile it only once and cache it for performance using once_cell
+            // we compile it only once and cache it for performance using once_cell
             let jql_groups = JQL_GROUPS.get_or_init(|| jql::selectors_parser(selectors).unwrap());
             match apply_jql(&api_value, jql_groups) {
                 Ok(s) => {
@@ -541,7 +540,7 @@ fn test_apply_jql_bool() {
     let jql_groups = jql::selectors_parser(selectors).unwrap();
     let value: String = apply_jql(json, &jql_groups).unwrap();
 
-    assert_eq!(true.to_string(), value);
+    assert_eq!("true", value);
 }
 
 #[test]
@@ -552,7 +551,7 @@ fn test_apply_jql_null() {
     let jql_groups = jql::selectors_parser(selectors).unwrap();
     let value: String = apply_jql(json, &jql_groups).unwrap();
 
-    assert_eq!("null".to_string(), value);
+    assert_eq!("null", value);
 }
 
 #[test]
@@ -563,7 +562,7 @@ fn test_apply_jql_array() {
     let jql_groups = jql::selectors_parser(selectors).unwrap();
     let value: String = apply_jql(json, &jql_groups).unwrap();
 
-    assert_eq!("-118.4065, 34.0901".to_string(), value);
+    assert_eq!("-118.4065, 34.0901", value);
 }
 
 #[test]
@@ -574,10 +573,10 @@ fn test_root_out_of_bounds() {
     let selectors = r#"[2].[0]."incomeLevel"."value"'"#;
 
     let jql_groups = jql::selectors_parser(selectors).unwrap();
-    let value = apply_jql(json, &jql_groups);
+    let value = apply_jql(json, &jql_groups).unwrap_err().to_string();
 
     assert_eq!(
-        "Err(Index [2] is out of bound, root element has a length of 2)".to_string(),
-        format!("{value:?}")
+        "Index [2] is out of bound, root element has a length of 2",
+        value
     );
 }
