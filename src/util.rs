@@ -1,21 +1,15 @@
 #![allow(dead_code)]
 use std::borrow::Cow;
-use std::cmp;
-use std::env;
-use std::fs;
-use std::io;
 use std::path::{Path, PathBuf};
-use std::str;
-use std::thread;
-use std::time;
-
-use docopt::Docopt;
-use log::{info, log_enabled, Level};
-use serde::de::{Deserialize, DeserializeOwned, Deserializer, Error};
+use std::{cmp, env, fs, io, str, thread, time};
 
 use crate::config::{Config, Delimiter};
 use crate::CliResult;
+use docopt::Docopt;
 use indicatif::{ProgressBar, ProgressStyle};
+use log::{debug, info, log_enabled, Level};
+use regex::Regex;
+use serde::de::{Deserialize, DeserializeOwned, Deserializer, Error};
 use thousands::Separable;
 
 pub fn num_cpus() -> usize {
@@ -479,4 +473,21 @@ pub fn qsv_check_for_update(bin_name: &str) {
         eprintln!("Up to date ({curr_version})... no update required.");
         info!("Up to date ({curr_version})... no update required.");
     };
+}
+
+pub fn safe_header_names(headers: csv::StringRecord) -> Vec<String> {
+    // Create "safe" var/key names
+    // Replace whitespace/invalid chars with _.
+    // If name starts with a number, replace it with an _ as well
+    let re = Regex::new(r"[^A-Za-z0-9]").unwrap();
+    let mut header_vec: Vec<String> = Vec::with_capacity(headers.len());
+    for (_i, h) in headers.iter().take(headers.len()).enumerate() {
+        let mut python_var_name = re.replace_all(h, "_").to_string();
+        if python_var_name.as_bytes()[0].is_ascii_digit() {
+            python_var_name.replace_range(0..1, "_");
+        }
+        header_vec.push(python_var_name);
+    }
+    debug!("safe header names: {header_vec:?}");
+    header_vec
 }

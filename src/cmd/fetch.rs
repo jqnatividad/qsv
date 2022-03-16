@@ -4,13 +4,14 @@ use crate::util;
 use crate::CliResult;
 use cached::proc_macro::{cached, io_cached};
 use cached::{RedisCache, Return};
+use dynfmt::{Format, SimpleCurlyFormat};
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::{debug, error};
 use once_cell::sync::{Lazy, OnceCell};
 use serde::Deserialize;
 use thiserror::Error;
 
-static USAGE: &str = r#"
+static USAGE: &str = "
 This command fetches data from a web API for every row in the URL column, 
 and optionally stores them in a new column.
 
@@ -29,12 +30,47 @@ of 2,419,200 seconds (28 days), and cache hits NOT refreshing the TTL of cached 
 Set the env vars QSV_REDIS_CONNECTION_STRING, QSV_REDIS_TTL_SECONDS and 
 QSV_REDIS_TTL_REFRESH to change default Redis settings.
 
+Examples:
+Use the URL column and fetch the jql-parsed JSON response into a new column named CityState
+
+data.csv
+  URL
+  http://api.zippopotam.us/us/90210
+  http://api.zippopotam.us/us/94105
+  https://api.zippopotam.us/us/92802
+
+  $ qsv fetch 1 --new-column CityState \
+    --jql '\"\"\"places\"\"\"[0].\"\"\"place name\"\"\",\"\"\"places\"\"\"[0].\"\"\"state abbreviation\"\"\"' \
+    data.csv > datatest.csv
+
+data_with_CityState.csv
+  URL, CityState,
+  http://api.zippopotam.us/us/90210, \"Beverly Hills, CA\"
+  http://api.zippopotam.us/us/94105, \"San Francisco, CA\"
+  https://api.zippopotam.us/us/92802, \"Anaheim, CA\"
+
+Geocode addresses in addr_data.csv, pass the latitude and longitude fields and store the
+response in a new column called response into enriched_addr_data.csv. Since we're using --url-template,
+let's just specify 1 for the column parameter as its required.
+
+  $ qsv fetch 1 --url-template \"https://geocode.test/api/lookup.json?lat={latitude}&long={longitude}\" \
+       addr_data.csv -c response > enriched_addr_data.csv
+
+Geocode addresses in addr_data.csv, pass the \"street address\" and \"zip-code\" fields and store the
+response in a new column called response into enriched_addr_data.csv. Note how the non-alphanumeric
+characters in the field names were replace with _.
+
+  $ qsv fetch 1 --url-template \"https://geocode.test/api/addr.json?addr={street_address}&zip={zip_code}\" \
+       addr_data.csv -c response > enriched_addr_data.csv
+
 Usage:
     qsv fetch [options] [--http-header <k:v>...] [<column>] [<input>]
 
 Fetch options:
-    --url-template <template>  URL template to use. The character '^'
-                               will be replaced by <column> value.
+    --url-template <template>  URL template to use. Use column names enclosed with
+                               curly braces to insert the CSV data for a record.
+                               When using this option, the column option is ignored
+                               but still required.
     -c, --new-column <name>    Put the fetched values in a new column instead.
     --jql <selector>           Apply jql selector to API returned JSON value.
     --rate-limit <qps>         Rate Limit in Queries Per Second. [default: 10]
@@ -53,7 +89,7 @@ Common options:
     -d, --delimiter <arg>      The field delimiter for reading CSV data.
                                Must be a single character. (default: ,)
     -q, --quiet                Don't show progress bars.
-"#;
+";
 
 #[derive(Deserialize, Debug)]
 struct Args {
@@ -124,6 +160,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut wtr = Config::new(&args.flag_output).writer()?;
 
     let mut headers = rdr.byte_headers()?.clone();
+
     let sel = rconfig.selection(&headers)?;
     let column_index = *sel.iter().next().unwrap();
 
@@ -186,6 +223,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         wtr.write_byte_record(&headers)?;
     }
 
+    let str_headers = rdr.headers()?.clone();
+    let safe_headers = util::safe_header_names(str_headers);
+
     // prep progress bar
     let progress = ProgressBar::new(0);
     let mut record_count = 0;
@@ -199,24 +239,32 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     #[allow(unused_assignments)]
     let mut record = csv::ByteRecord::new();
     #[allow(unused_assignments)]
-    let mut url = String::new();
+    let mut url = String::default();
     let mut redis_cache_hits: u64 = 0;
+    #[allow(unused_assignments)]
+    let mut final_value = String::default();
+
     while rdr.read_byte_record(&mut record)? {
         if !args.flag_quiet {
             progress.inc(1);
         }
 
-        #[allow(unused_assignments)]
-        let mut final_value = String::default();
-
         if let Ok(s) = std::str::from_utf8(&record[column_index]) {
-            match args.flag_url_template {
-                Some(ref url_template) => {
-                    url = url_template.replace('^', s.trim());
-                }
-                _ => url = s.trim().to_string(),
-            }
+            if let Some(ref url_template) = args.flag_url_template {
+                let mut record_map = std::collections::BTreeMap::new();
 
+                for (i, field) in record.iter().enumerate() {
+                    let k = safe_headers[i].to_string();
+                    let str_value =
+                        unsafe { std::str::from_utf8_unchecked(field).trim().to_string() };
+                    record_map.insert(k, str_value);
+                }
+                if let Ok(formatted_url) = SimpleCurlyFormat.format(url_template, record_map) {
+                    url = formatted_url.to_string();
+                }
+            } else {
+                url = s.trim().to_string()
+            }
             debug!("Fetching URL: {url:?}");
 
             if args.flag_redis {
