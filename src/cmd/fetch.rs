@@ -3,19 +3,18 @@ use crate::select::SelectColumns;
 use crate::util;
 use crate::CliResult;
 use cached::proc_macro::{cached, io_cached};
-use cached::RedisCache;
-use cached::Return;
+use cached::{RedisCache, Return};
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::{debug, error};
 use once_cell::sync::{Lazy, OnceCell};
 use serde::Deserialize;
 use thiserror::Error;
 
-static USAGE: &str = "
+static USAGE: &str = r#"
 This command fetches data from a web API for every row in the URL column, 
 and optionally stores them in a new column.
 
-Fetch is integrated with `jql` to directly parse out values from API JSON response.
+Fetch is integrated with `jql` to directly parse out values from an API JSON response.
 
 URL column can either be a fully qualified URL path, or if not, can be used with
 the --url-template option to create one.
@@ -23,12 +22,12 @@ the --url-template option to create one.
 To use a proxy, please set env vars HTTP_PROXY and HTTPS_PROXY
 (e.g. export HTTPS_PROXY=socks5://127.0.0.1:1086).
 
-Set the --redis flag to use Redis. By default, it will connect to a local Redis instance 
-at redis://127.0.0.1:6379, with a cache expiry TTL of 2,419,200 seconds (28 days), and
-cache hits NOT refreshing the TTL of cached values.
+To use Redis for response caching, set the --redis flag. By default, it will connect to
+a local Redis instance at redis://127.0.0.1:6379, with a cache expiry Time-to-Live (TTL)
+of 2,419,200 seconds (28 days), and cache hits NOT refreshing the TTL of cached values.
 
 Set the env vars QSV_REDIS_CONNECTION_STRING, QSV_REDIS_TTL_SECONDS and 
-QSV_REDIS_TTL_REFRESH to change default settings.
+QSV_REDIS_TTL_REFRESH to change default Redis settings.
 
 Usage:
     qsv fetch [options] [--http-header <k:v>...] [<column>] [<input>]
@@ -54,7 +53,7 @@ Common options:
     -d, --delimiter <arg>      The field delimiter for reading CSV data.
                                Must be a single character. (default: ,)
     -q, --quiet                Don't show progress bars.
-";
+"#;
 
 #[derive(Deserialize, Debug)]
 struct Args {
@@ -128,20 +127,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let sel = rconfig.selection(&headers)?;
     let column_index = *sel.iter().next().unwrap();
 
-    assert!(
-        sel.len() == 1,
-        "Only one single URL column may be selected."
-    );
+    if sel.len() != 1 {
+        return fail!("Only one single URL column may be selected.");
+    }
 
     use std::num::NonZeroU32;
     // default rate limit is actually set via docopt, so below init is just to satisfy compiler
     let mut rate_limit: NonZeroU32 = NonZeroU32::new(10).unwrap();
     if let Some(qps) = args.flag_rate_limit {
-        assert!(
-            // on my laptop, no more sleep traces with qps > 24, so use round number of 20 as single-thread qps limit
-            qps <= 20 && qps > 0,
-            "Rate Limit should be between 1 to 20 queries per second."
-        );
+        // on my laptop, no more sleep traces with qps > 24, so use round number of 20 as single-thread qps limit
+        if !(qps <= 20 && qps > 0) {
+            return fail!("Rate Limit should be between 1 to 20 queries per second.");
+        }
         rate_limit = NonZeroU32::new(qps).unwrap();
     }
 
