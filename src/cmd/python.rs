@@ -8,8 +8,6 @@ use crate::util;
 use crate::CliError;
 use crate::CliResult;
 use indicatif::{ProgressBar, ProgressDrawTarget};
-use log::debug;
-use regex::Regex;
 use serde::Deserialize;
 
 const HELPERS: &str = r#"
@@ -185,19 +183,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         progress.set_draw_target(ProgressDrawTarget::hidden());
     }
 
-    // initialize valid local python variable names from header column names
-    // replace invalid chars with _. If name starts with a number,
-    // replace it with an _ as well
-    let re = Regex::new(r"[^A-Za-z0-9]").unwrap();
-    let mut header_vec: Vec<String> = Vec::with_capacity(headers_len);
-    for (_i, h) in headers.iter().take(headers_len).enumerate() {
-        let mut python_var_name = re.replace_all(h, "_").to_string();
-        if python_var_name.as_bytes()[0].is_ascii_digit() {
-            python_var_name.replace_range(0..1, "_");
-        }
-        header_vec.push(python_var_name);
-    }
-    debug!("python local var names: {header_vec:?}");
+    let header_vec = util::safe_header_names(headers);
 
     let mut record = csv::StringRecord::new();
     while rdr.read_record(&mut record)? {
