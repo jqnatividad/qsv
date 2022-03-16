@@ -55,7 +55,7 @@ fn fetch_url_template() {
     wrk.create(
         "data.csv",
         vec![
-            svec!["zipcode"],
+            svec!["zip code"],
             svec!["99999"],
             svec!["  90210   "],
             svec!["94105  "],
@@ -63,11 +63,11 @@ fn fetch_url_template() {
         ],
     );
     let mut cmd = wrk.command("fetch");
-    cmd.arg("zipcode")
+    cmd.arg("1")
         .arg("data.csv")
         .arg("--store-error")
         .arg("--url-template")
-        .arg("https://api.zippopotam.us/us/^");
+        .arg("https://api.zippopotam.us/us/{zip_code}");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
@@ -302,7 +302,7 @@ fn fetch_ratelimit() {
     // start webserver with rate limiting
     let (tx, rx) = mpsc::channel();
 
-    // println!("START Webserver ");
+    println!("START Webserver ");
     thread::spawn(move || {
         let server_future = run_webserver(tx);
         rt::System::new().block_on(server_future)
@@ -375,7 +375,6 @@ fn fetch_ratelimit() {
     assert_eq!(got, expected);
 
     // init stop webserver and wait until server gracefully exit
-    // println!("STOPPING Webserver");
-    // rt::System::new().block_on(srv.stop(true));
+    println!("STOPPING Webserver");
     rt::System::new().block_on(server_handle.stop(true));
 }
