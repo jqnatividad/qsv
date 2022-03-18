@@ -44,7 +44,8 @@ Given the data.csv above, fetch the JSON response.
 
   $ qsv fetch URL data.csv 
 
-Note the output will just be the newline-delimited raw JSON response.
+Note the output will just be a newline-delimited, minified JSON response (JSONL),
+not a CSV file.
 
 Now, if we want to generate a CSV file with the parsed City and State, we use the 
 new-column and jql options.
@@ -62,19 +63,20 @@ data_with_CityState.csv
 
 USING THE --URL-TEMPLATE OPTION:
 
-Geocode addresses in addr_data.csv, pass the latitude and longitude fields and store the
-response in a new column called response into enriched_addr_data.csv. Since we're using --url-template,
-let's just specify 1 for the column parameter as its required.
+Geocode addresses in addr_data.csv, pass the latitude and longitude fields and store
+the response in a new column called response into enriched_addr_data.csv. Since we're
+using --url-template, let's just specify 1 for the column parameter as its required.
 
   $ qsv fetch 1 --url-template \"https://geocode.test/api/lookup.json?lat={latitude}&long={longitude}\" \
        addr_data.csv -c response > enriched_addr_data.csv
 
-Geocode addresses in addr_data.csv, pass the \"street address\" and \"zip-code\" fields and store the
-response in a new column called response into enriched_addr_data.csv. Note how the non-alphanumeric
-characters in the field names were replace with _.
+Geocode addresses in addr_data.csv, pass the \"street address\" and \"zip-code\" fields
+and use jql to parse CityState from the JSON response into a new column in enriched.csv.
+Note how field name non-alphanumeric characters in the url-template were replace with _.
 
   $ qsv fetch 1 --url-template \"https://geocode.test/api/addr.json?addr={street_address}&zip={zip_code}\" \
-       addr_data.csv -c response > enriched_addr_data.csv
+       --jql '\"\"\"places\"\"\"[0].\"\"\"place name\"\"\",\"\"\"places\"\"\"[0].\"\"\"state abbreviation\"\"\"' \
+       addr_data.csv -c CityState > enriched.csv
 
 Usage:
     qsv fetch [options] [--http-header <k:v>...] [<column>] [<input>]
@@ -87,6 +89,8 @@ Fetch options:
                                when using url-template.
     -c, --new-column <name>    Put the fetched values in a new column instead.
     --jql <selector>           Apply jql selector to API returned JSON value.
+    --pretty                   Prettify JSON responses. Otherwise, they're minified.
+                               If the response is not in JSON format, it's passed through.
     --rate-limit <qps>         Rate Limit in Queries Per Second. [default: 10]
     --http-header <key:value>  Pass custom header(s) to the server.
     --store-error              On error, store error code/message instead of blank value.
@@ -110,6 +114,7 @@ struct Args {
     flag_url_template: Option<String>,
     flag_new_column: Option<String>,
     flag_jql: Option<String>,
+    flag_pretty: bool,
     flag_rate_limit: Option<u32>,
     flag_http_header: Vec<String>,
     flag_store_error: bool,
@@ -291,6 +296,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     &limiter,
                     &args.flag_jql,
                     args.flag_store_error,
+                    args.flag_pretty,
                 )
                 .unwrap();
                 final_value = intermediate_value.to_string();
@@ -304,6 +310,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     &limiter,
                     &args.flag_jql,
                     args.flag_store_error,
+                    args.flag_pretty,
                 );
             }
         } else {
@@ -348,8 +355,16 @@ fn get_cached_response(
     limiter: &governor::RateLimiter<NotKeyed, InMemoryState, DefaultClock, NoOpMiddleware>,
     flag_jql: &Option<String>,
     flag_store_error: bool,
+    flag_pretty: bool,
 ) -> String {
-    get_response(url, client, limiter, flag_jql, flag_store_error)
+    get_response(
+        url,
+        client,
+        limiter,
+        flag_jql,
+        flag_store_error,
+        flag_pretty,
+    )
 }
 
 #[io_cached(
@@ -373,6 +388,7 @@ fn get_redis_response(
     limiter: &governor::RateLimiter<NotKeyed, InMemoryState, DefaultClock, NoOpMiddleware>,
     flag_jql: &Option<String>,
     flag_store_error: bool,
+    flag_pretty: bool,
 ) -> Result<cached::Return<String>, FetchRedisError> {
     Ok(Return::new(get_response(
         url,
@@ -380,6 +396,7 @@ fn get_redis_response(
         limiter,
         flag_jql,
         flag_store_error,
+        flag_pretty,
     )))
 }
 
@@ -389,6 +406,7 @@ fn get_response(
     limiter: &governor::RateLimiter<NotKeyed, InMemoryState, DefaultClock, NoOpMiddleware>,
     flag_jql: &Option<String>,
     flag_store_error: bool,
+    flag_pretty: bool,
 ) -> String {
     // wait until RateLimiter gives Okay
     while limiter.check().is_err() {
@@ -456,6 +474,14 @@ fn get_response(
                     }
                 }
             }
+        } else if flag_pretty {
+            if let Ok(pretty_json) = jsonxf::pretty_print(&api_value) {
+                final_value = pretty_json;
+            } else {
+                final_value = api_value;
+            }
+        } else if let Ok(minimized_json) = jsonxf::minimize(&api_value) {
+            final_value = minimized_json;
         } else {
             final_value = api_value;
         }

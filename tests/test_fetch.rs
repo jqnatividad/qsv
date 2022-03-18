@@ -21,36 +21,23 @@ fn fetch_simple() {
     let expected = vec![
         svec![r#"HTTP 404 - Not Found"#],
         svec![
-            r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": "-118.4065", "state": "California", "state abbreviation": "CA", "latitude": "34.0901"}]}"#
+            r#"{"post code":"90210","country":"United States","country abbreviation":"US","places":[{"place name":"Beverly Hills","longitude":"-118.4065","state":"California","state abbreviation":"CA","latitude":"34.0901"}]}"#
         ],
         svec![
-            r#"{"post code": "94105", "country": "United States", "country abbreviation": "US", "places": [{"place name": "San Francisco", "longitude": "-122.3892", "state": "California", "state abbreviation": "CA", "latitude": "37.7864"}]}"#
+            r#"{"post code":"94105","country":"United States","country abbreviation":"US","places":[{"place name":"San Francisco","longitude":"-122.3892","state":"California","state abbreviation":"CA","latitude":"37.7864"}]}"#
         ],
         svec![
-            r#"{"post code": "92802", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Anaheim", "longitude": "-117.9228", "state": "California", "state abbreviation": "CA", "latitude": "33.8085"}]}"#
+            r#"{"post code":"92802","country":"United States","country abbreviation":"US","places":[{"place name":"Anaheim","longitude":"-117.9228","state":"California","state abbreviation":"CA","latitude":"33.8085"}]}"#
         ],
         svec![
-            r#"{
-  "head" : {
-    "vars" : [ "dob" ]
-  },
-  "results" : {
-    "bindings" : [ {
-      "dob" : {
-        "datatype" : "http://www.w3.org/2001/XMLSchema#dateTime",
-        "type" : "literal",
-        "value" : "1952-03-11T00:00:00Z"
-      }
-    } ]
-  }
-}"#
+            r#"{"head":{"vars":["dob"]},"results":{"bindings":[{"dob":{"datatype":"http://www.w3.org/2001/XMLSchema#dateTime","type":"literal","value":"1952-03-11T00:00:00Z"}}]}}"#
         ],
     ];
     assert_eq!(got, expected);
 }
 
 #[test]
-fn fetch_url_template() {
+fn fetch_simple_url_template() {
     let wrk = Workdir::new("fetch");
     wrk.create(
         "data.csv",
@@ -73,13 +60,13 @@ fn fetch_url_template() {
     let expected = vec![
         svec![r#"HTTP 404 - Not Found"#],
         svec![
-            r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": "-118.4065", "state": "California", "state abbreviation": "CA", "latitude": "34.0901"}]}"#
+            r#"{"post code":"90210","country":"United States","country abbreviation":"US","places":[{"place name":"Beverly Hills","longitude":"-118.4065","state":"California","state abbreviation":"CA","latitude":"34.0901"}]}"#
         ],
         svec![
-            r#"{"post code": "94105", "country": "United States", "country abbreviation": "US", "places": [{"place name": "San Francisco", "longitude": "-122.3892", "state": "California", "state abbreviation": "CA", "latitude": "37.7864"}]}"#
+            r#"{"post code":"94105","country":"United States","country abbreviation":"US","places":[{"place name":"San Francisco","longitude":"-122.3892","state":"California","state abbreviation":"CA","latitude":"37.7864"}]}"#
         ],
         svec![
-            r#"{"post code": "92802", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Anaheim", "longitude": "-117.9228", "state": "California", "state abbreviation": "CA", "latitude": "33.8085"}]}"#
+            r#"{"post code":"92802","country":"United States","country abbreviation":"US","places":[{"place name":"Anaheim","longitude":"-117.9228","state":"California","state abbreviation":"CA","latitude":"33.8085"}]}"#
         ],
     ];
     assert_eq!(got, expected);
@@ -115,29 +102,16 @@ fn fetch_simple_redis() {
     let expected = vec![
         svec![r#"HTTP 404 - Not Found"#],
         svec![
-            r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": "-118.4065", "state": "California", "state abbreviation": "CA", "latitude": "34.0901"}]}"#
+            r#"{"post code":"90210","country":"United States","country abbreviation":"US","places":[{"place name":"Beverly Hills","longitude":"-118.4065","state":"California","state abbreviation":"CA","latitude":"34.0901"}]}"#
         ],
         svec![
-            r#"{"post code": "94105", "country": "United States", "country abbreviation": "US", "places": [{"place name": "San Francisco", "longitude": "-122.3892", "state": "California", "state abbreviation": "CA", "latitude": "37.7864"}]}"#
+            r#"{"post code":"94105","country":"United States","country abbreviation":"US","places":[{"place name":"San Francisco","longitude":"-122.3892","state":"California","state abbreviation":"CA","latitude":"37.7864"}]}"#
         ],
         svec![
-            r#"{"post code": "92802", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Anaheim", "longitude": "-117.9228", "state": "California", "state abbreviation": "CA", "latitude": "33.8085"}]}"#
+            r#"{"post code":"92802","country":"United States","country abbreviation":"US","places":[{"place name":"Anaheim","longitude":"-117.9228","state":"California","state abbreviation":"CA","latitude":"33.8085"}]}"#
         ],
         svec![
-            r#"{
-  "head" : {
-    "vars" : [ "dob" ]
-  },
-  "results" : {
-    "bindings" : [ {
-      "dob" : {
-        "datatype" : "http://www.w3.org/2001/XMLSchema#dateTime",
-        "type" : "literal",
-        "value" : "1952-03-11T00:00:00Z"
-      }
-    } ]
-  }
-}"#
+            r#"{"head":{"vars":["dob"]},"results":{"bindings":[{"dob":{"datatype":"http://www.w3.org/2001/XMLSchema#dateTime","type":"literal","value":"1952-03-11T00:00:00Z"}}]}}"#
         ],
     ];
     assert_eq!(got, expected);
