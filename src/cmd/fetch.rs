@@ -17,8 +17,8 @@ and optionally stores them in a new column.
 
 Fetch is integrated with `jql` to directly parse out values from an API JSON response.
 
-URL column can either be a fully qualified URL path, or if not, can be used with
-the --url-template option to create one.
+The URL column needs to be a fully qualified URL path. Alternatively, you can dynamically
+construct URLs for each CSV record with the --url-template option (see Examples below).
 
 To use a proxy, please set env vars HTTP_PROXY and HTTPS_PROXY
 (e.g. export HTTPS_PROXY=socks5://127.0.0.1:1086).
@@ -30,9 +30,7 @@ of 2,419,200 seconds (28 days), and cache hits NOT refreshing the TTL of cached 
 Set the env vars QSV_REDIS_CONNECTION_STRING, QSV_REDIS_TTL_SECONDS and 
 QSV_REDIS_TTL_REFRESH to change default Redis settings.
 
-Examples:
-
-USING THE COLUMN ARGUMENT:
+EXAMPLES USING THE COLUMN ARGUMENT:
 
 data.csv
   URL
@@ -61,7 +59,7 @@ data_with_CityState.csv
   https://api.zippopotam.us/us/92802, \"Anaheim, CA\"
 
 
-USING THE --URL-TEMPLATE OPTION:
+EXAMPLES USING THE --URL-TEMPLATE OPTION:
 
 Geocode addresses in addr_data.csv, pass the latitude and longitude fields and store
 the response in a new column called response into enriched_addr_data.csv. Since we're
