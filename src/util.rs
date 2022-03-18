@@ -475,7 +475,7 @@ pub fn qsv_check_for_update(bin_name: &str) {
     };
 }
 
-pub fn safe_header_names(headers: csv::StringRecord, check_first_char: bool ) -> Vec<String> {
+pub fn safe_header_names(headers: csv::StringRecord, check_first_char: bool) -> Vec<String> {
     // Create "safe" var/key names
     // Replace whitespace/invalid chars with _.
     // If name starts with a number, replace it with an _ as well
