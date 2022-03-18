@@ -475,7 +475,7 @@ pub fn qsv_check_for_update(bin_name: &str) {
     };
 }
 
-pub fn safe_header_names(headers: csv::StringRecord) -> Vec<String> {
+pub fn safe_header_names(headers: csv::StringRecord, check_first_char: bool) -> Vec<String> {
     // Create "safe" var/key names
     // Replace whitespace/invalid chars with _.
     // If name starts with a number, replace it with an _ as well
@@ -483,7 +483,7 @@ pub fn safe_header_names(headers: csv::StringRecord) -> Vec<String> {
     let mut header_vec: Vec<String> = Vec::with_capacity(headers.len());
     for (_i, h) in headers.iter().take(headers.len()).enumerate() {
         let mut python_var_name = re.replace_all(h, "_").to_string();
-        if python_var_name.as_bytes()[0].is_ascii_digit() {
+        if check_first_char && python_var_name.as_bytes()[0].is_ascii_digit() {
             python_var_name.replace_range(0..1, "_");
         }
         header_vec.push(python_var_name);

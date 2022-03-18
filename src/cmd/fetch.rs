@@ -31,7 +31,8 @@ Set the env vars QSV_REDIS_CONNECTION_STRING, QSV_REDIS_TTL_SECONDS and
 QSV_REDIS_TTL_REFRESH to change default Redis settings.
 
 Examples:
-Use the URL column and fetch the jql-parsed JSON response into a new column named CityState
+
+USING THE COLUMN ARGUMENT:
 
 data.csv
   URL
@@ -39,7 +40,16 @@ data.csv
   http://api.zippopotam.us/us/94105
   https://api.zippopotam.us/us/92802
 
-  $ qsv fetch 1 --new-column CityState \
+Given the data.csv above, fetch the JSON response.
+
+  $ qsv fetch URL data.csv 
+
+Note the output will just be the newline-delimited raw JSON response.
+
+Now, if we want to generate a CSV file with the parsed City and State, we use the 
+new-column and jql options.
+
+  $ qsv fetch URL --new-column CityState \
     --jql '\"\"\"places\"\"\"[0].\"\"\"place name\"\"\",\"\"\"places\"\"\"[0].\"\"\"state abbreviation\"\"\"' \
     data.csv > datatest.csv
 
@@ -48,6 +58,9 @@ data_with_CityState.csv
   http://api.zippopotam.us/us/90210, \"Beverly Hills, CA\"
   http://api.zippopotam.us/us/94105, \"San Francisco, CA\"
   https://api.zippopotam.us/us/92802, \"Anaheim, CA\"
+
+
+USING THE --URL-TEMPLATE OPTION:
 
 Geocode addresses in addr_data.csv, pass the latitude and longitude fields and store the
 response in a new column called response into enriched_addr_data.csv. Since we're using --url-template,
@@ -69,8 +82,9 @@ Usage:
 Fetch options:
     --url-template <template>  URL template to use. Use column names enclosed with
                                curly braces to insert the CSV data for a record.
-                               When using this option, the column option is ignored
-                               but still required.
+                               When using this option, the column argument is ignored
+                               but still required. Just use the value '1' for column
+                               when using url-template.
     -c, --new-column <name>    Put the fetched values in a new column instead.
     --jql <selector>           Apply jql selector to API returned JSON value.
     --rate-limit <qps>         Rate Limit in Queries Per Second. [default: 10]
@@ -168,6 +182,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         return fail!("Only one single URL column may be selected.");
     }
 
+    if args.flag_no_headers && args.flag_url_template.is_some() {
+        return fail!("--url-template option requires headers.");
+    }
+
+    let str_headers = rdr.headers()?.clone();
+    let safe_headers = util::safe_header_names(str_headers, false);
+
     use std::num::NonZeroU32;
     // default rate limit is actually set via docopt, so below init is just to satisfy compiler
     let mut rate_limit: NonZeroU32 = NonZeroU32::new(10).unwrap();
@@ -223,9 +244,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         wtr.write_byte_record(&headers)?;
     }
 
-    let str_headers = rdr.headers()?.clone();
-    let safe_headers = util::safe_header_names(str_headers);
-
     // prep progress bar
     let progress = ProgressBar::new(0);
     let mut record_count = 0;
@@ -254,10 +272,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 let mut record_map = std::collections::BTreeMap::new();
 
                 for (i, field) in record.iter().enumerate() {
-                    let k = safe_headers[i].to_string();
                     let str_value =
                         unsafe { std::str::from_utf8_unchecked(field).trim().to_string() };
-                    record_map.insert(k, str_value);
+                    record_map.insert(safe_headers[i].to_owned(), str_value);
                 }
                 if let Ok(formatted_url) = SimpleCurlyFormat.format(url_template, record_map) {
                     url = formatted_url.to_string();

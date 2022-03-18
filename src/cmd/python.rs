@@ -183,7 +183,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         progress.set_draw_target(ProgressDrawTarget::hidden());
     }
 
-    let header_vec = util::safe_header_names(headers);
+    let header_vec = util::safe_header_names(headers, true);
 
     let mut record = csv::StringRecord::new();
     while rdr.read_record(&mut record)? {
