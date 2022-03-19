@@ -49,7 +49,7 @@ macro_rules! command_list {
     enum        Add a new column enumerating CSV lines
     exclude     Excludes the records in one CSV from another
     explode     Explode rows based on some column separator
-    fetch       Create a new column or fetch values from a URL column
+    fetch*      Create a new column or fetch values from a URL column/template
     fill        Fill empty values
     fixlengths  Makes all records have same length
     flatten     Show one field per line
@@ -226,6 +226,7 @@ enum Command {
     Enum,
     Exclude,
     Explode,
+    #[cfg(feature = "fetch")]
     Fetch,
     Fill,
     FixLengths,
@@ -287,6 +288,7 @@ impl Command {
             Command::Enum => cmd::enumerate::run(argv),
             Command::Exclude => cmd::exclude::run(argv),
             Command::Explode => cmd::explode::run(argv),
+            #[cfg(feature = "fetch")]
             Command::Fetch => cmd::fetch::run(argv),
             Command::Fill => cmd::fill::run(argv),
             Command::FixLengths => cmd::fixlengths::run(argv),

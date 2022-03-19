@@ -201,7 +201,8 @@ Feature Flags
 
 * `mimalloc` (default) - use the mimalloc allocator (see [Memory Allocator](#memory-allocator) for more info).
 * `apply` - enable `apply` command. This swiss-army knife of CSV transformations is very powerful, but it has a lot of dependencies that increases both compile time and binary size. 
-* `generate` - enable `generate` command. The test data generator also has a large dependency tree.
+* `fetch` - enable `fetch` command.
+* `generate` - enable `generate` command.
 
 The following "power-user" commands can be abused and present "foot-shooting" scenarios.
 * `lua` - enable `lua` command.

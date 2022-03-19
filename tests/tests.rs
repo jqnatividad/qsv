@@ -44,6 +44,7 @@ mod test_dedup;
 mod test_enumerate;
 mod test_exclude;
 mod test_explode;
+#[cfg(feature = "fetch")]
 mod test_fetch;
 mod test_fill;
 mod test_fixlengths;
