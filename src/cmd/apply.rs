@@ -6,8 +6,10 @@ use cached::proc_macro::cached;
 use censor::{Censor, Sex, Zealous};
 use chrono::{NaiveTime, Utc};
 use dateparser::parse_with;
+use dynfmt::Format;
 use eudex::Hash;
 use indicatif::{ProgressBar, ProgressDrawTarget};
+use log::debug;
 use once_cell::sync::OnceCell;
 use qsv_currency::Currency;
 use regex::Regex;
@@ -146,6 +148,20 @@ Get the week number and store it in the week_number column:
 
   $ qsv apply dateformat OpenDate --formatstr '%V' --new-column week_number file.csv
 
+DYNFMT
+Dynamically constructs a new column from other columns using the --formatstr template.
+The template can contain arbitrary characters. To insert a column value, enclose the
+column name in curly braces, replacing all non-alphanumeric characters with underscores.
+
+Examples:
+Create a new column 'mailing address' from 'house number', 'street', 'city' and 'zip-code' columns:
+
+  $ qsv apply dynfmt --formatstr '{house_number} {street}, {city} {zip_code} USA' -c 'mailing address' file.csv
+
+Create a new column 'FullName' from 'FirstName', 'MI', and 'LastName' columns:
+
+  $ qsv apply dynfmt --formatstr 'Sir/Madam {FirstName} {MI}. {LastName}' -c 'FullName' file.csv
+
 GEOCODE
 Geocodes to the nearest city center point given a location column
 [i.e. a column which contains a latitude, longitude WGS84 coordinate] against
@@ -171,6 +187,7 @@ Usage:
 qsv apply operations <operations> [options] <column> [<input>]
 qsv apply emptyreplace --replacement=<string> [options] <column> [<input>]
 qsv apply datefmt [--formatstr=<string>] [options] <column> [<input>]
+qsv apply dynfmt --formatstr=<string> [options] --new-column=<name> [<input>]
 qsv apply geocode [--formatstr=<string>] [options] <column> [<input>]
 qsv apply --help
 
@@ -179,11 +196,13 @@ apply options:
     -r, --rename <name>         New name for the transformed column.
     -C, --comparand=<string>    The string to compare against for replace & similarity operations.
     -R, --replacement=<string>  The string to use for the replace & emptyreplace operations.
-    -f, --formatstr=<string>    The date format to use when formatting dates. For formats, see
+    -f, --formatstr=<string>    The date format to use with the datefmt subcommand. For formats, see
                                 https://docs.rs/chrono/0.4.19/chrono/format/strftime/index.html
                                 [default: %+]
 
-                                the place format to use when geocoding. The available formats are:
+                                the template to use with the dynfmt subcommand.
+
+                                the place format to use with the geocode subcommand. The available formats are:
                                   - 'city-state' (default) - e.g. Brooklyn, New York
                                   - 'city-country' - Brooklyn, US 
                                   - 'city-state-country' | 'city-admin1-country' - Brooklyn, New York US
@@ -246,6 +265,7 @@ struct Args {
     cmd_operations: bool,
     arg_operations: String,
     cmd_datefmt: bool,
+    cmd_dynfmt: bool,
     cmd_emptyreplace: bool,
     cmd_geocode: bool,
     arg_input: Option<String>,
@@ -393,6 +413,26 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         return fail!("you can only use censor, replace, regex_replace, similarity, eudex or sentiment ONCE per operation series.");
     };
 
+    // for dynfmt, safe_headers are the "safe" version of colnames - alphanumeric, everything
+    // else replace with underscore
+    // dynfmt_fields are the columns used in the dynfmt --formatstr option
+    // we prep ir so we only populate the hashmap with these columns and not the
+    // whole record to save allocs and to increase performance
+    let mut safe_headers: Vec<String> = Vec::with_capacity(headers.len());
+    let mut dynfmt_fields = Vec::with_capacity(5);
+    if args.cmd_dynfmt {
+        if args.flag_no_headers {
+            return fail!("dynfmt operation requires headers.");
+        } else {
+            safe_headers = util::safe_header_names(headers, false);
+            let formatstr_re: &'static Regex = regex!(r"\{(?P<key>\w+)?\}");
+            for format_fields in formatstr_re.captures_iter(&args.flag_formatstr) {
+                dynfmt_fields.push(format_fields.name("key").unwrap().as_str());
+            }
+            debug!("dynfmt_fields: {dynfmt_fields:?}");
+        }
+    }
+
     // prep progress bar
     let progress = ProgressBar::new(0);
     if !args.flag_quiet {
@@ -439,6 +479,24 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let search_result = search_cached(&cell, &args.flag_formatstr);
             if let Some(geocoded_result) = search_result {
                 cell = geocoded_result;
+            }
+        } else if args.cmd_dynfmt {
+            let mut record_map = std::collections::HashMap::with_capacity(dynfmt_fields.len());
+
+            for (i, field) in record.into_iter().enumerate() {
+                if dynfmt_fields.contains(&safe_headers[i].as_str()) {
+                    let str_value = unsafe {
+                        std::str::from_utf8_unchecked(field.as_bytes())
+                            .trim()
+                            .to_string()
+                    };
+                    record_map.insert(safe_headers[i].to_owned(), str_value);
+                }
+            }
+            if let Ok(formatted) =
+                dynfmt::SimpleCurlyFormat.format(&args.flag_formatstr, record_map)
+            {
+                cell = formatted.to_string();
             }
         }
 
