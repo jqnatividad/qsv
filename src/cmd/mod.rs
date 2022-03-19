@@ -7,6 +7,7 @@ pub mod dedup;
 pub mod enumerate;
 pub mod exclude;
 pub mod explode;
+#[cfg(feature = "fetch")]
 pub mod fetch;
 pub mod fill;
 pub mod fixlengths;
