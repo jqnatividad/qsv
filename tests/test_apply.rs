@@ -48,6 +48,70 @@ fn apply_ops_upper() {
 }
 
 #[test]
+fn apply_dynfmt() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec![
+                "qty-fruit/day",
+                "1fruit",
+                "another col",
+                "unit cost usd",
+                "and another one"
+            ],
+            svec!["20.5", "mangoes", "a", "5", "z"],
+            svec!["10", "bananas", "b", "20", "y"],
+            svec!["3", "strawberries", "c", "3.50", "x"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("dynfmt")
+        .arg("--formatstr")
+        .arg("{qty_fruit_day} helpings of {1fruit} is good for you, even if it costs ${unit_cost_usd} each")
+        .arg("--new-column")
+        .arg("saying")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec![
+            "qty-fruit/day",
+            "1fruit",
+            "another col",
+            "unit cost usd",
+            "and another one",
+            "saying"
+        ],
+        svec![
+            "20.5",
+            "mangoes",
+            "a",
+            "5",
+            "z",
+            "20.5 helpings of mangoes is good for you, even if it costs $5 each"
+        ],
+        svec![
+            "10",
+            "bananas",
+            "b",
+            "20",
+            "y",
+            "10 helpings of bananas is good for you, even if it costs $20 each"
+        ],
+        svec![
+            "3",
+            "strawberries",
+            "c",
+            "3.50",
+            "x",
+            "3 helpings of strawberries is good for you, even if it costs $3.50 each"
+        ],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn apply_ops_empty_shortcircuit() {
     let wrk = Workdir::new("apply");
     wrk.create(
