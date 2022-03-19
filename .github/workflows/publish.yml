@@ -35,42 +35,42 @@ jobs:
             architecture: x86_64
             artifact_name: qsv*
             use-cross: false
-            addl-build-args: --features=apply,generate,lua,foreach,python          
+            addl-build-args: --all-features          
           - os: ubuntu-latest
             os-name: linux
             target: i686-unknown-linux-gnu
             architecture: i686
             artifact_name: qsv*
             use-cross: true
-            addl-build-args: --features=apply,generate,lua,foreach
+            addl-build-args: --features=apply,generate,lua,fetch,foreach
           - os: windows-latest
             os-name: windows
             target: x86_64-pc-windows-msvc
             architecture: x86_64
             artifact_name: qsv*.exe
             use-cross: false
-            addl-build-args: --features=apply,generate,lua,python
+            addl-build-args: --features=apply,generate,lua,fetch,python
           - os: windows-latest
             os-name: windows
             target: i686-pc-windows-msvc
             architecture: i686
             artifact_name: qsv*.exe
             use-cross: true
-            addl-build-args: --features=apply,generate,lua
+            addl-build-args: --features=apply,generate,lua,fetch
           - os: windows-latest
             os-name: windows
             target: x86_64-pc-windows-gnu
             architecture: x86_64
             artifact_name: qsv*.exe
             use-cross: false
-            addl-build-args: --no-default-features --features=apply,generate,lua,python
+            addl-build-args: --no-default-features --features=apply,generate,lua,fetch,python
           - os: macos-latest
             os-name: macos
             target: x86_64-apple-darwin
             architecture: x86_64
             artifact_name: qsv*
             use-cross: false
-            addl-build-args: --features=apply,generate,lua,foreach,python
+            addl-build-args: --all-features
           - os: macos-latest
             os-name: macos
             target: aarch64-apple-darwin
@@ -78,28 +78,28 @@ jobs:
             artifact_name: qsv*
             build-prep: true
             use-cross: true
-            addl-build-args: --features=apply,generate,lua,foreach
+            addl-build-args: --features=apply,generate,lua,fetch,foreach
           - os: ubuntu-latest
             os-name: linux
             target: aarch64-unknown-linux-gnu
             architecture: aarch64
             artifact_name: qsv*
             use-cross: true
-            addl-build-args: --features=apply,generate,lua,foreach
+            addl-build-args: --features=apply,generate,lua,fetch,foreach
           - os: ubuntu-latest
             os-name: linux
             target: arm-unknown-linux-gnueabihf
             architecture: arm
             artifact_name: qsv*
             use-cross: true
-            addl-build-args: --no-default-features --features=apply,generate,lua,foreach
+            addl-build-args: --no-default-features --features=apply,generate,lua,fetch,foreach
           - os: ubuntu-latest
             os-name: linux
             target: arm-unknown-linux-musleabihf
             architecture: arm
             artifact_name: qsv*
             use-cross: true
-            addl-build-args: --no-default-features --features=apply,generate,lua,foreach
+            addl-build-args: --no-default-features --features=apply,generate,lua,fetch,foreach
 
     steps:
     - name: Installing Rust toolchain
