@@ -5,6 +5,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.36.0] - 2022-03-20
+### Added
+* `sniff`: new command to quickly detect CSV metadata in https://github.com/jqnatividad/qsv/pull/202
+* auto-delimiter setting with `QSV_SNIFF_DELIMITER` environment variable in https://github.com/jqnatividad/qsv/pull/203
+* `apply`: new `dynfmt` multi-column, dynamic formatting subcommand in https://github.com/jqnatividad/qsv/pull/200
+* `fetch`: new multi-column dynamic formatting with --url-template option in https://github.com/jqnatividad/qsv/pull/196
+### Changed
+* `fetch`: --url-template safety tweaks in https://github.com/jqnatividad/qsv/pull/197
+* `fetch`: automatically minify JSON responses. JSON can still be pretty-printed with --pretty option in https://github.com/jqnatividad/qsv/pull/198
+* `fetch` is now an optional feature in https://github.com/jqnatividad/qsv/pull/201
+* `sniff`: improved display in https://github.com/jqnatividad/qsv/pull/204
+* slim down dev-dependencies
+### Fixed:
+* `py`: now checks if first character of a column is a digit, and replaces it with an underscore
+
 ## [0.35.2] - 2022-03-13
 ### Added
 * README: Added datHere logo
@@ -30,7 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.35.0] - 2022-03-08
 ### Added
 * `count`: `--human-readable` option in https://github.com/jqnatividad/qsv/pull/184
-* Automatic utf8 transcoding by in https://github.com/jqnatividad/qsv/pull/187
+* Automatic utf8 transcoding in https://github.com/jqnatividad/qsv/pull/187
 * Added NYC School of Data 2022 presentation
 * Added ahash 0.7 and encoding_rs_io 0.1 dependencies
 
