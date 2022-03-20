@@ -38,6 +38,7 @@ pub mod search;
 pub mod searchset;
 pub mod select;
 pub mod slice;
+pub mod sniff;
 pub mod sort;
 pub mod split;
 pub mod stats;
