@@ -33,7 +33,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .sniff_path(path)
         {
             Ok(metadata) => {
-                println!("{metadata}");
+                let full_metadata = format!("{}", metadata);
+                // show otherwise invisible tab character as "tab"
+                let mut disp = full_metadata.replace("\tDelimiter: \t", "\tDelimiter: tab");
+                // remove Dialect header
+                disp = disp.replace("Dialect:\n", "");
+                println!("{disp}");
             }
             Err(e) => {
                 return fail!(format!("sniff error: {e}"));
