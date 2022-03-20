@@ -818,9 +818,9 @@ dependencies = [
 
 [[package]]
 name = "csv-sniffer"
-version = "0.2.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0d5f6cb5cd8188758d302117c0450c836cb22a0d3799c766817a1c6773392c5a"
+checksum = "a1e32aa93b952410d55c1ae03048cc22a6cc62a323711b8e9245ef4b5578051c"
 dependencies = [
  "bitflags",
  "csv",
