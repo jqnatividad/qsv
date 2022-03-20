@@ -108,10 +108,11 @@ Options:
     -u, --update         Update qsv to the latest release from GitHub.
     -h, --help           Display this message
     <command> -h         Display the command help message
-    -v, --version        Print version info, mem allocator, max_jobs, num_cpus then exit
+    -v, --version        Print version info, mem allocator, features installed, 
+                         max_jobs, num_cpus then exit
 
-Commands:",
-    command_list!()
+* sponsored by datHere - Data Infrastructure Engineering
+"
 );
 
 #[derive(Deserialize)]
