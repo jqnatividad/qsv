@@ -5,7 +5,9 @@ use std::io::{self, Read};
 use std::ops::Deref;
 use std::path::PathBuf;
 
+use csv_sniffer::{SampleSize, Sniffer};
 use encoding_rs_io::DecodeReaderBytes;
+use log::debug;
 use serde::de::{Deserialize, Deserializer, Error};
 
 use crate::index::Indexed;
@@ -17,6 +19,8 @@ use crate::CliResult;
 const DEFAULT_RDR_BUFFER_CAPACITY: usize = 16 * (1 << 10);
 // previous wtr default in xsv is 32k, we're doubling it
 pub const DEFAULT_WTR_BUFFER_CAPACITY: usize = 64 * (1 << 10);
+// number of rows for csv_sniffer to sample
+const DEFAULT_SNIFFER_SAMPLE: usize = 200;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Delimiter(pub u8);
@@ -87,7 +91,7 @@ impl Config {
             Ok(delim) => Delimiter::decode_delimiter(delim).unwrap().as_byte(),
             _ => b',',
         };
-        let (path, delim) = match *path {
+        let (path, mut delim) = match *path {
             None => (None, default_delim),
             Some(ref s) if s.deref() == "-" => (None, default_delim),
             Some(ref s) => {
@@ -102,6 +106,27 @@ impl Config {
                 (Some(path), delim)
             }
         };
+        let sniff_delimiter = env::var("QSV_SNIFF_DELIMITER").is_ok();
+        if sniff_delimiter && path.is_some() {
+            let sniff_path = path.as_ref().unwrap().to_str().unwrap();
+
+            match Sniffer::new()
+                .sample_size(SampleSize::Records(DEFAULT_SNIFFER_SAMPLE))
+                .sniff_path(sniff_path)
+            {
+                Ok(metadata) => {
+                    debug!("sniffed metadata: {metadata:?}");
+                    if sniff_delimiter {
+                        delim = metadata.dialect.delimiter;
+                        debug!("use sniffed delimiter");
+                    }
+                }
+                Err(e) => {
+                    debug!("sniff error: {e}");
+                }
+            }
+        }
+
         Config {
             path,
             idx_path: None,
