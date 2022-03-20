@@ -159,7 +159,7 @@ fn get_field_value(wrk: &Workdir, cmd: &mut process::Command, field: &str) -> St
                     }
                     "upper_fence" => {
                         sequence.push(val);
-                        return sequence.join(",").clone();
+                        return sequence.join(",");
                     }
                     _ => {}
                 },
