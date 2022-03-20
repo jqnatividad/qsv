@@ -156,7 +156,7 @@ pub fn finish_progress(progress: &ProgressBar) {
     }
 }
 
-#[allow(unused_macros)]
+#[cfg(any(feature = "apply", feature = "fetch"))]
 macro_rules! update_cache_info {
     ($progress:expr, $cache_instance:expr) => {
         use cached::Cached;
@@ -191,7 +191,7 @@ macro_rules! update_cache_info {
     };
 }
 
-#[allow(unused_imports)]
+#[cfg(any(feature = "apply", feature = "fetch"))]
 pub(crate) use update_cache_info;
 
 pub fn get_args<T>(usage: &str, argv: &[&str]) -> CliResult<T>

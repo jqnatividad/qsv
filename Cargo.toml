@@ -51,7 +51,7 @@ byteorder = "1.4"
 cached = { version = "0.34", default-features = false, features = [
     "proc_macro",
     "redis_store",
-] }
+], optional = true }
 censor = { version = "0.2", optional = true }
 chrono = { version = "0.4", optional = true }
 crossbeam-channel = "0.5"
@@ -59,7 +59,9 @@ csv = "1.1"
 csv-index = "0.1"
 dateparser = "0.1"
 docopt = "1"
-dynfmt = { version = "0.1", features = ["curly"], optional = true }
+dynfmt = { version = "0.1", default-features = false, features = [
+    "curly",
+], optional = true }
 encoding_rs_io = "0.1"
 eudex = { version = "0.1", optional = true }
 filetime = "0.2"
@@ -99,7 +101,7 @@ self_update = { version = "0.28", features = [
     "rustls",
 ], default-features = false }
 serde = { version = "1", features = ["derive"] }
-serde_json = "1.0"
+serde_json = { version = "1.0", features = ["preserve_order"] }
 smartstring = "1"
 strsim = { version = "0.10", optional = true }
 tabwriter = "1.2"
@@ -122,6 +124,7 @@ redis            = "0.21"
 [features]
 default = ["mimalloc"]
 apply = [
+    "cached",
     "censor",
     "chrono",
     "dynfmt",
@@ -133,7 +136,7 @@ apply = [
     "vader_sentiment",
     "whatlang",
 ]
-fetch = ["dynfmt", "governor", "jql", "jsonxf"]
+fetch = ["cached", "dynfmt", "governor", "jql", "jsonxf"]
 foreach = []
 generate = ["test-data-generation"]
 lua = ["mlua"]
