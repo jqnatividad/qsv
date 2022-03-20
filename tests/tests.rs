@@ -72,6 +72,7 @@ mod test_search;
 mod test_searchset;
 mod test_select;
 mod test_slice;
+mod test_sniff;
 mod test_sort;
 mod test_split;
 mod test_stats;
@@ -199,7 +200,7 @@ impl Arbitrary for CsvData {
         // If the CSV data starts with a BOM, strip it, because it wreaks havoc
         // with tests that weren't designed to handle it.
         if !d.data.is_empty() && !d.data[0].is_empty() {
-            if let Some(stripped) = d.data[0][0].strip_prefix("\u{FEFF}") {
+            if let Some(stripped) = d.data[0][0].strip_prefix('\u{FEFF}') {
                 d.data[0][0] = stripped.to_string();
             }
         }
