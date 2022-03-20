@@ -194,9 +194,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // Initializing locals
         let mut row_data: Vec<&str> = Vec::with_capacity(headers_len);
 
-        for i in 0..headers_len {
+        for (i, key) in header_vec.iter().enumerate().take(headers_len) {
             let cell_value = record.get(i).unwrap();
-            locals.set_item(&header_vec[i], cell_value)?;
+            locals.set_item(key, cell_value)?;
             row_data.push(cell_value);
         }
 
