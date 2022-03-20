@@ -895,6 +895,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "csv-sniffer"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0d5f6cb5cd8188758d302117c0450c836cb22a0d3799c766817a1c6773392c5a"
+dependencies = [
+ "bitflags",
+ "csv",
+ "csv-core",
+ "memchr",
+ "regex",
+]
+
+[[package]]
 name = "ctor"
 version = "0.1.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2408,6 +2421,7 @@ dependencies = [
  "crossbeam-channel",
  "csv",
  "csv-index",
+ "csv-sniffer",
  "dateparser",
  "docopt",
  "dynfmt",

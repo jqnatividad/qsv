@@ -68,6 +68,7 @@ macro_rules! command_list {
     searchset   Search CSV data with a regex set
     select      Select, re-order, duplicate or drop columns
     slice       Slice records from CSV
+    sniff       Quickly sniff CSV metadata
     sort        Sort CSV data in alphabetical, numerical, reverse or random order
     split       Split CSV data into many files
     stats       Infer data types and compute descriptive statistics
@@ -221,6 +222,7 @@ enum Command {
     SearchSet,
     Select,
     Slice,
+    Sniff,
     Sort,
     Split,
     Stats,
@@ -275,6 +277,7 @@ impl Command {
             Command::SearchSet => cmd::searchset::run(argv),
             Command::Select => cmd::select::run(argv),
             Command::Slice => cmd::slice::run(argv),
+            Command::Sniff => cmd::sniff::run(argv),
             Command::Sort => cmd::sort::run(argv),
             Command::Split => cmd::split::run(argv),
             Command::Stats => cmd::stats::run(argv),

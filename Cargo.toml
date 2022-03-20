@@ -57,6 +57,7 @@ chrono = { version = "0.4", optional = true }
 crossbeam-channel = "0.5"
 csv = "1.1"
 csv-index = "0.1"
+csv-sniffer = "0.2"
 dateparser = "0.1"
 docopt = "1"
 dynfmt = { version = "0.1", default-features = false, features = [
