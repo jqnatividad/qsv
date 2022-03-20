@@ -46,3 +46,56 @@ Types:
 
     assert_eq!(got, expected);
 }
+
+static EXPECTED_TABLE: &str = "\
+h1       h2   h3
+abcdefg  a    a
+a        abc  z\
+";
+
+fn data() -> Vec<Vec<String>> {
+    vec![
+        svec!["h1", "h2", "h3"],
+        svec!["abcdefg", "a", "a"],
+        svec!["a", "abc", "z"],
+    ]
+}
+
+#[test]
+fn qsv_sniff_pipe_delimiter_env() {
+    let wrk = Workdir::new("qsv_sniff_pipe_delimiter_env");
+    wrk.create_with_delim("in.file", data(), b'|');
+
+    let mut cmd = wrk.command("table");
+    cmd.env("QSV_SNIFF_DELIMITER", "1");
+    cmd.arg("in.file");
+
+    let got: String = wrk.stdout(&mut cmd);
+    assert_eq!(&*got, EXPECTED_TABLE)
+}
+
+#[test]
+fn qsv_sniff_semicolon_delimiter_env() {
+    let wrk = Workdir::new("qsv_sniff_semicolon_delimiter_env");
+    wrk.create_with_delim("in.file", data(), b';');
+
+    let mut cmd = wrk.command("table");
+    cmd.env("QSV_SNIFF_DELIMITER", "1");
+    cmd.arg("in.file");
+
+    let got: String = wrk.stdout(&mut cmd);
+    assert_eq!(&*got, EXPECTED_TABLE)
+}
+
+#[test]
+fn qsv_sniff_tab_delimiter_env() {
+    let wrk = Workdir::new("qsv_sniff_tab_delimiter_env");
+    wrk.create_with_delim("in.file", data(), b'\t');
+
+    let mut cmd = wrk.command("table");
+    cmd.env("QSV_SNIFF_DELIMITER", "1");
+    cmd.arg("in.file");
+
+    let got: String = wrk.stdout(&mut cmd);
+    assert_eq!(&*got, EXPECTED_TABLE)
+}
