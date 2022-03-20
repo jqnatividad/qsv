@@ -117,10 +117,10 @@ whatlang = { version = "0.13", optional = true }
 
 [dev-dependencies]
 actix-governor   = "0.3"
-actix-web        = "4.0"
+actix-web        = { version = "4.0", default-features = false }
 assert-json-diff = "2.0"
 quickcheck       = { version = "1", default-features = false }
-redis            = "0.21"
+redis            = { version = "0.21", default-features = false }
 
 [features]
 default = ["mimalloc"]
