@@ -17,7 +17,7 @@
 
 </p>
 
-> **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's release](https://github.com/BurntSushi/xsv/issues/267). It has numerous new features & 25 additional commands/subcommands (for a total of 45). See [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ) for more details.
+> **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's release](https://github.com/BurntSushi/xsv/issues/267). It also has numerous new features & 25 additional commands/subcommands (for a total of 45). See [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ) for more details.
 
 Available commands
 ------------------
