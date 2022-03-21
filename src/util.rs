@@ -17,6 +17,12 @@ pub fn num_cpus() -> usize {
 }
 
 const MAX_JOBS_CPU_DIVISOR: usize = 3;
+pub static DEFAULT_USER_AGENT: &str = concat!(
+    env!("CARGO_PKG_NAME"),
+    "/",
+    env!("CARGO_PKG_VERSION"),
+    " (https://github.com/jqnatividad/qsv)",
+);
 
 pub fn max_jobs() -> usize {
     let cpus = num_cpus();

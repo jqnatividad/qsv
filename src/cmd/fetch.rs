@@ -129,13 +129,6 @@ struct Args {
 static DEFAULT_REDIS_CONN_STR: &str = "redis://127.0.0.1:6379";
 static DEFAULT_REDIS_TTL_SECONDS: u64 = 60 * 60 * 24 * 28; // 28 days in seconds
 
-static DEFAULT_USER_AGENT: &str = concat!(
-    env!("CARGO_PKG_NAME"),
-    "/",
-    env!("CARGO_PKG_VERSION"),
-    " (https://github.com/jqnatividad/qsv)",
-);
-
 struct RedisConfig {
     conn_str: String,
     ttl_secs: u64,
@@ -227,7 +220,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     use reqwest::blocking::Client;
     let client = Client::builder()
-        .user_agent(DEFAULT_USER_AGENT)
+        .user_agent(util::DEFAULT_USER_AGENT)
         .default_headers(http_headers)
         .cookie_store(args.flag_cookies)
         .brotli(true)
