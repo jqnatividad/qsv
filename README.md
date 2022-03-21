@@ -97,7 +97,7 @@ cargo install qsv --locked
 Compiling from this repository also works similarly:
 
 ```bash
-git clone git://github.com/jqnatividad/qsv
+git clone git@github.com:jqnatividad/qsv.git
 cd qsv
 cargo build --release
 # or if you encounter compilation errors
