@@ -230,6 +230,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .user_agent(DEFAULT_USER_AGENT)
         .default_headers(http_headers)
         .cookie_store(args.flag_cookies)
+        .brotli(true)
+        .gzip(true)
         .build()
         .unwrap();
 
