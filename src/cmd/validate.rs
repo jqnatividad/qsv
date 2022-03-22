@@ -742,7 +742,15 @@ fn load_json(uri: &str) -> Result<String> {
     let json_string = match uri {
         url if url.starts_with("http") => {
             // dbg!(&url);
-            let response = reqwest::blocking::get(url)?;
+            use reqwest::blocking::Client;
+            let client = Client::builder()
+                .user_agent(util::DEFAULT_USER_AGENT)
+                .brotli(true)
+                .gzip(true)
+                .build()
+                .unwrap();
+
+            let response = client.get(url).send()?;
             response.text()?
         }
         path => {
