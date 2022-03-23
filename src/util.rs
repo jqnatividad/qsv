@@ -39,24 +39,21 @@ pub fn max_jobs() -> usize {
 
 pub fn version() -> String {
     let mut enabled_features = "".to_string();
-    if let Some(qsv_type) = option_env!("CARGO_BIN_NAME") {
-        if qsv_type != "qsvlite" {
-            #[cfg(feature = "apply")]
-            enabled_features.push_str("apply;");
-            #[cfg(feature = "fetch")]
-            enabled_features.push_str("fetch;");
-            #[cfg(feature = "foreach")]
-            enabled_features.push_str("foreach;");
-            #[cfg(feature = "generate")]
-            enabled_features.push_str("generate;");
-            #[cfg(feature = "lua")]
-            enabled_features.push_str("lua;");
-            #[cfg(feature = "python")]
-            enabled_features.push_str("python;");
 
-            enabled_features.push('-');
-        }
-    }
+    #[cfg(all(feature = "apply", feature = "notlite"))]
+    enabled_features.push_str("apply;");
+    #[cfg(all(feature = "fetch", feature = "notlite"))]
+    enabled_features.push_str("fetch;");
+    #[cfg(all(feature = "foreach", feature = "notlite"))]
+    enabled_features.push_str("foreach;");
+    #[cfg(all(feature = "generate", feature = "notlite"))]
+    enabled_features.push_str("generate;");
+    #[cfg(all(feature = "lua", feature = "notlite"))]
+    enabled_features.push_str("lua;");
+    #[cfg(all(feature = "python", feature = "notlite"))]
+    enabled_features.push_str("python;");
+
+    enabled_features.push('-');
 
     #[cfg(feature = "mimalloc")]
     let malloc_kind = "mimalloc".to_string();
