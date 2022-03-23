@@ -32,6 +32,7 @@ fn sniff() {
 	Quote character: none
 	Flexible: false
 
+Number of records: 2
 Number of fields: 3
 Types:
 	0: Text
@@ -59,6 +60,7 @@ fn sniff_tab() {
 	Quote character: none
 	Flexible: false
 
+Number of records: 2
 Number of fields: 3
 Types:
 	0: Text
