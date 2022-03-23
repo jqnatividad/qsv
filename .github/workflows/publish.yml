@@ -35,42 +35,48 @@ jobs:
             architecture: x86_64
             artifact_name: qsv*
             use-cross: false
-            addl-build-args: --all-features          
+            addl-build-args: --features=apply,generate,lua,fetch,foreach,python,notlite
+            default-features:
           - os: ubuntu-latest
             os-name: linux
             target: i686-unknown-linux-gnu
             architecture: i686
             artifact_name: qsv*
             use-cross: true
-            addl-build-args: --features=apply,generate,lua,fetch,foreach
+            addl-build-args: --features=apply,generate,lua,fetch,foreach,notlite
+            default-features:
           - os: windows-latest
             os-name: windows
             target: x86_64-pc-windows-msvc
             architecture: x86_64
             artifact_name: qsv*.exe
             use-cross: false
-            addl-build-args: --features=apply,generate,lua,fetch,python
+            addl-build-args: --features=apply,generate,lua,fetch,python,notlite
+            default-features:
           - os: windows-latest
             os-name: windows
             target: i686-pc-windows-msvc
             architecture: i686
             artifact_name: qsv*.exe
             use-cross: true
-            addl-build-args: --features=apply,generate,lua,fetch
+            addl-build-args: --features=apply,generate,lua,fetch,notlite
+            default-features:
           - os: windows-latest
             os-name: windows
             target: x86_64-pc-windows-gnu
             architecture: x86_64
             artifact_name: qsv*.exe
             use-cross: false
-            addl-build-args: --no-default-features --features=apply,generate,lua,fetch,python
+            addl-build-args: --features=apply,generate,lua,fetch,python,notlite
+            default-features:
           - os: macos-latest
             os-name: macos
             target: x86_64-apple-darwin
             architecture: x86_64
             artifact_name: qsv*
             use-cross: false
-            addl-build-args: --all-features
+            addl-build-args: --features=apply,generate,lua,fetch,foreach,python,notlite
+            default-features: --no-default-features 
           - os: macos-latest
             os-name: macos
             target: aarch64-apple-darwin
@@ -78,28 +84,32 @@ jobs:
             artifact_name: qsv*
             build-prep: true
             use-cross: true
-            addl-build-args: --features=apply,generate,lua,fetch,foreach
+            addl-build-args: --features=apply,generate,lua,fetch,foreach,notlite
+            default-features: --no-default-features
           - os: ubuntu-latest
             os-name: linux
             target: aarch64-unknown-linux-gnu
             architecture: aarch64
             artifact_name: qsv*
             use-cross: true
-            addl-build-args: --features=apply,generate,lua,fetch,foreach
+            addl-build-args: --features=apply,generate,lua,fetch,foreach,notlite
+            default-features:
           - os: ubuntu-latest
             os-name: linux
             target: arm-unknown-linux-gnueabihf
             architecture: arm
             artifact_name: qsv*
             use-cross: true
-            addl-build-args: --no-default-features --features=apply,generate,lua,fetch,foreach
+            addl-build-args: --features=apply,generate,lua,fetch,foreach,notlite
+            default-features: --no-default-features
           - os: ubuntu-latest
             os-name: linux
             target: arm-unknown-linux-musleabihf
             architecture: arm
             artifact_name: qsv*
             use-cross: true
-            addl-build-args: --no-default-features --features=apply,generate,lua,fetch,foreach
+            addl-build-args: --features=apply,generate,lua,fetch,foreach,notlite
+            default-features: --no-default-features
 
     steps:
     - name: Installing Rust toolchain
@@ -122,13 +132,20 @@ jobs:
       run: |
         sudo xcode-select -s "/Applications/Xcode_12.5.1.app"
         sudo rm -Rf /Library/Developer/CommandLineTools/SDKs/*
-    - name: Cargo build
+    - name: Build qsv
       uses: actions-rs/cargo@v1
       with:
         command: build
         use-cross: ${{ matrix.job.use-cross }}
         toolchain: ${{ matrix.rust }}
-        args: --release --locked --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }}
+        args: --release --locked --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }} ${{ matrix.job.default-features }}
+    - name: Build qsvlite
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        use-cross: ${{ matrix.job.use-cross }}
+        toolchain: ${{ matrix.rust }}
+        args: --release --locked --target ${{ matrix.job.target }} features=lite
     - name: Copy binaries to working dir
       shell: bash
       run: |
