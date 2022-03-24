@@ -104,9 +104,9 @@ cargo build --release
 cargo build --release --locked
 ```
 
-The compiled binary will end up in `./target/release/qsv`.
+The compiled binary will end up in `./target/release/`.
 
-To enable optional features, use cargo `--features` or `--all-features` (see [Feature Flags](#feature-flags) for more info):
+To enable optional features, use cargo `--features` (see [Feature Flags](#feature-flags) for more info):
 
 ```bash
 cargo install qsv --features apply,generate,lua,fetch,foreach,python
@@ -205,13 +205,14 @@ Feature Flags
 * `apply` - enable `apply` command. This swiss-army knife of CSV transformations is very powerful, but it has a lot of dependencies that increases both compile time and binary size. 
 * `fetch` - enable `fetch` command.
 * `generate` - enable `generate` command.
+* `lite` - enable to build qsvlite.
 
 The following "power-user" commands can be abused and present "foot-shooting" scenarios.
 * `lua` - enable `lua` command.
 * `foreach` - enable `foreach` command (not valid for Windows).
 * `python` - enable `py` command (requires Python 3.8+). Note that qsv will automatically use the currently activated python version when run in a virtual environment.
 
-> **NOTE:** `qsvlite`, as the name implies, always has **non-default features disabled**. `qsv` can be built with any combination of the above features  using the cargo `--features`, `--all-features` & `--no-default-features` flags. The pre-built `qsv` binaries has **all applicable features enabled for the target platform**[^5].
+> **NOTE:** `qsvlite`, as the name implies, always has **non-default features disabled**. `qsv` can be built with any combination of the above features  using the cargo `--features` & `--no-default-features` flags. The pre-built `qsv` binaries has **all applicable features enabled for the target platform**[^5].
 
 Performance Tuning
 ------------------

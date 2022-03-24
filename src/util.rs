@@ -40,17 +40,17 @@ pub fn max_jobs() -> usize {
 pub fn version() -> String {
     let mut enabled_features = "".to_string();
 
-    #[cfg(all(feature = "apply", feature = "notlite"))]
+    #[cfg(all(feature = "apply", not(feature = "lite")))]
     enabled_features.push_str("apply;");
-    #[cfg(all(feature = "fetch", feature = "notlite"))]
+    #[cfg(all(feature = "fetch", not(feature = "lite")))]
     enabled_features.push_str("fetch;");
-    #[cfg(all(feature = "foreach", feature = "notlite"))]
+    #[cfg(all(feature = "foreach", not(feature = "lite")))]
     enabled_features.push_str("foreach;");
-    #[cfg(all(feature = "generate", feature = "notlite"))]
+    #[cfg(all(feature = "generate", not(feature = "lite")))]
     enabled_features.push_str("generate;");
-    #[cfg(all(feature = "lua", feature = "notlite"))]
+    #[cfg(all(feature = "lua", not(feature = "lite")))]
     enabled_features.push_str("lua;");
-    #[cfg(all(feature = "python", feature = "notlite"))]
+    #[cfg(all(feature = "python", not(feature = "lite")))]
     enabled_features.push_str("python;");
 
     enabled_features.push('-');
