@@ -17,7 +17,6 @@ use crate::util;
 use crate::CliResult;
 use dateparser::DateTimeUtc;
 use serde::Deserialize;
-use smartstring;
 
 use self::FieldType::{TDate, TDateTime, TFloat, TInteger, TNull, TString, TUnknown};
 
@@ -416,13 +415,13 @@ impl Stats {
     #[allow(clippy::wrong_self_convention)]
     pub fn to_record(&mut self) -> csv::StringRecord {
         let typ = self.typ;
-        let mut pieces: Vec<smartstring::alias::String> = Vec::with_capacity(20);
-        let empty = || "".to_owned().into();
+        let mut pieces = Vec::with_capacity(20);
+        let empty = || "".to_owned();
 
-        pieces.push(self.typ.to_string().into());
+        pieces.push(self.typ.to_string());
         match self.sum.as_ref().and_then(|sum| sum.show(typ)) {
             Some(sum) => {
-                pieces.push(sum.into());
+                pieces.push(sum);
             }
             None => {
                 pieces.push(empty());
@@ -430,8 +429,8 @@ impl Stats {
         }
         match self.minmax.as_ref().and_then(|mm| mm.show(typ)) {
             Some(mm) => {
-                pieces.push((mm.0).into());
-                pieces.push((mm.1).into());
+                pieces.push(mm.0);
+                pieces.push(mm.1);
             }
             None => {
                 pieces.push(empty());
@@ -440,8 +439,8 @@ impl Stats {
         }
         match self.minmax.as_ref().and_then(|mm| mm.len_range()) {
             Some(mm) => {
-                pieces.push((mm.0).into());
-                pieces.push((mm.1).into());
+                pieces.push(mm.0);
+                pieces.push(mm.1);
             }
             None => {
                 pieces.push(empty());
@@ -456,9 +455,9 @@ impl Stats {
         } else {
             match self.online {
                 Some(ref v) => {
-                    pieces.push(v.mean().to_string().into());
-                    pieces.push(v.stddev().to_string().into());
-                    pieces.push(v.variance().to_string().into());
+                    pieces.push(v.mean().to_string());
+                    pieces.push(v.stddev().to_string());
+                    pieces.push(v.variance().to_string());
                 }
                 None => {
                     pieces.push(empty());
@@ -477,7 +476,7 @@ impl Stats {
                 }
             }
             Some(v) => {
-                pieces.push(v.to_string().into());
+                pieces.push(v.to_string());
             }
         }
         match self.quartiles.as_mut().and_then(|v| match self.typ {
@@ -497,17 +496,17 @@ impl Stats {
             }
             Some((q1, q2, q3)) => {
                 let iqr = q3 - q1;
-                pieces.push((q1 - (1.5 * iqr)).to_string().into());
-                pieces.push(q1.to_string().into());
-                pieces.push(q2.to_string().into());
-                pieces.push(q3.to_string().into());
-                pieces.push(iqr.to_string().into());
-                pieces.push((q3 + (1.5 * iqr)).to_string().into());
+                pieces.push((q1 - (1.5 * iqr)).to_string());
+                pieces.push(q1.to_string());
+                pieces.push(q2.to_string());
+                pieces.push(q3.to_string());
+                pieces.push(iqr.to_string());
+                pieces.push((q3 + (1.5 * iqr)).to_string());
                 // calculate skewnewss using Pearson's median skewness
                 // https://en.wikipedia.org/wiki/Skewness#Pearson's_second_skewness_coefficient_(median_skewness)
                 let _mean = self.online.unwrap().mean();
                 let _stddev = self.online.unwrap().stddev();
-                pieces.push(((3.0 * (_mean - q2)) / _stddev).to_string().into());
+                pieces.push(((3.0 * (_mean - q2)) / _stddev).to_string());
             }
         }
         match self.modes.as_mut() {
@@ -525,17 +524,16 @@ impl Stats {
                         v.modes()
                             .iter()
                             .map(|c| unsafe { String::from_utf8_unchecked(c.to_vec()) })
-                            .join(",")
-                            .into(),
+                            .join(","),
                     );
                 }
                 if self.which.cardinality {
-                    pieces.push(v.cardinality().to_string().into());
+                    pieces.push(v.cardinality().to_string());
                 }
             }
         }
         if self.which.nullcount {
-            pieces.push(self.nullcount.to_string().into());
+            pieces.push(self.nullcount.to_string());
         }
         csv::StringRecord::from(pieces)
     }
@@ -586,7 +584,7 @@ impl FieldType {
         }
         if *dates {
             if let Ok(parsed_date) = string.parse::<DateTimeUtc>() {
-                let rfc3339_date_str: smartstring::alias::String = parsed_date.0.to_string().into();
+                let rfc3339_date_str = parsed_date.0.to_string();
                 let datelen = rfc3339_date_str.len();
 
                 if datelen >= 17 {
@@ -745,7 +743,7 @@ struct TypedMinMax {
     str_len: MinMax<usize>,
     integers: MinMax<i64>,
     floats: MinMax<f64>,
-    dates: MinMax<smartstring::alias::String>,
+    dates: MinMax<String>,
 }
 
 impl TypedMinMax {
@@ -779,7 +777,7 @@ impl TypedMinMax {
                 let tempstr = str::from_utf8_unchecked(&*sample);
                 let n = dateparser::parse(tempstr).ok().unwrap();
 
-                self.dates.add(n.to_string().into());
+                self.dates.add(n.to_string());
             },
         }
     }
