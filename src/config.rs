@@ -7,7 +7,7 @@ use std::path::PathBuf;
 
 use csv_sniffer::{SampleSize, Sniffer};
 use encoding_rs_io::DecodeReaderBytes;
-use log::debug;
+use log::{debug, error};
 use serde::de::{Deserialize, Deserializer, Error};
 
 use crate::index::Indexed;
@@ -288,9 +288,10 @@ impl Config {
                 // We generally don't want to report an error here, since we're
                 // passively trying to find an index.
                 let idx_file = match fs::File::open(&util::idx_path(p)) {
-                    // TODO: Maybe we should report an error if the file exists
-                    // but is not readable.
-                    Err(_) => return Ok(None),
+                    Err(e) => {
+                        error!("Cannot read index file - {p:?}: {e}");
+                        return Ok(None);
+                    }
                     Ok(f) => f,
                 };
                 (fs::File::open(p)?, idx_file)
