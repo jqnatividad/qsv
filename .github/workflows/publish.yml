@@ -35,7 +35,7 @@ jobs:
             architecture: x86_64
             artifact_name: qsv*
             use-cross: false
-            addl-build-args: --features=apply,generate,lua,fetch,foreach,python,notlite
+            addl-build-args: --features=apply,generate,lua,fetch,foreach,python
             default-features:
           - os: ubuntu-latest
             os-name: linux
@@ -43,7 +43,7 @@ jobs:
             architecture: i686
             artifact_name: qsv*
             use-cross: true
-            addl-build-args: --features=apply,generate,lua,fetch,foreach,notlite
+            addl-build-args: --features=apply,generate,lua,fetch,foreach
             default-features:
           - os: windows-latest
             os-name: windows
@@ -51,7 +51,7 @@ jobs:
             architecture: x86_64
             artifact_name: qsv*.exe
             use-cross: false
-            addl-build-args: --features=apply,generate,lua,fetch,python,notlite
+            addl-build-args: --features=apply,generate,lua,fetch,python
             default-features:
           - os: windows-latest
             os-name: windows
@@ -59,7 +59,7 @@ jobs:
             architecture: i686
             artifact_name: qsv*.exe
             use-cross: true
-            addl-build-args: --features=apply,generate,lua,fetch,notlite
+            addl-build-args: --features=apply,generate,lua,fetch
             default-features:
           - os: windows-latest
             os-name: windows
@@ -67,7 +67,7 @@ jobs:
             architecture: x86_64
             artifact_name: qsv*.exe
             use-cross: false
-            addl-build-args: --features=apply,generate,lua,fetch,python,notlite
+            addl-build-args: --features=apply,generate,lua,fetch,python
             default-features:
           - os: macos-latest
             os-name: macos
@@ -75,7 +75,7 @@ jobs:
             architecture: x86_64
             artifact_name: qsv*
             use-cross: false
-            addl-build-args: --features=apply,generate,lua,fetch,foreach,python,notlite
+            addl-build-args: --features=apply,generate,lua,fetch,foreach,python
             default-features: --no-default-features 
           - os: macos-latest
             os-name: macos
@@ -84,7 +84,7 @@ jobs:
             artifact_name: qsv*
             build-prep: true
             use-cross: true
-            addl-build-args: --features=apply,generate,lua,fetch,foreach,notlite
+            addl-build-args: --features=apply,generate,lua,fetch,foreach
             default-features: --no-default-features
           - os: ubuntu-latest
             os-name: linux
@@ -92,7 +92,7 @@ jobs:
             architecture: aarch64
             artifact_name: qsv*
             use-cross: true
-            addl-build-args: --features=apply,generate,lua,fetch,foreach,notlite
+            addl-build-args: --features=apply,generate,lua,fetch,foreach
             default-features:
           - os: ubuntu-latest
             os-name: linux
@@ -100,7 +100,7 @@ jobs:
             architecture: arm
             artifact_name: qsv*
             use-cross: true
-            addl-build-args: --features=apply,generate,lua,fetch,foreach,notlite
+            addl-build-args: --features=apply,generate,lua,fetch,foreach
             default-features: --no-default-features
           - os: ubuntu-latest
             os-name: linux
@@ -108,7 +108,7 @@ jobs:
             architecture: arm
             artifact_name: qsv*
             use-cross: true
-            addl-build-args: --features=apply,generate,lua,fetch,foreach,notlite
+            addl-build-args: --features=apply,generate,lua,fetch,foreach
             default-features: --no-default-features
 
     steps:
