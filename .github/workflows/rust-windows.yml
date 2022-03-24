@@ -26,4 +26,4 @@ jobs:
       with:
         key: qsv-cache
     - name: Run tests
-      run: cargo test --verbose --locked --all-features
+      run: cargo test --verbose --locked --features=apply,fetch,foreach,generate,lua,python
