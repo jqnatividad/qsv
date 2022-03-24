@@ -17,13 +17,11 @@ autobins      = false
 include       = ["src/**/*", "LICENSE-MIT", "README.md", "CHANGELOG.md"]
 
 [[bin]]
-name              = "qsv"
-test              = false
-bench             = false
-doctest           = false
-path              = "src/main.rs"
-required-features = ["notlite"]
-
+name    = "qsv"
+test    = false
+bench   = false
+doctest = false
+path    = "src/main.rs"
 
 [[bin]]
 name              = "qsvlite"
@@ -146,6 +144,5 @@ fetch = ["cached", "dynfmt", "governor", "jql", "jsonxf"]
 foreach = []
 generate = ["test-data-generation"]
 lite = []
-notlite = []
 lua = ["mlua"]
 python = ["pyo3"]
