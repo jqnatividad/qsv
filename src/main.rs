@@ -219,7 +219,7 @@ Please choose one of the following commands:",
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "lowercase")]
 enum Command {
-    #[cfg(feature = "apply")]
+    #[cfg(all(feature = "apply", not(feature = "lite")))]
     Apply,
     Behead,
     Cat,
@@ -228,16 +228,16 @@ enum Command {
     Enum,
     Exclude,
     Explode,
-    #[cfg(feature = "fetch")]
+    #[cfg(all(feature = "fetch", not(feature = "lite")))]
     Fetch,
     Fill,
     FixLengths,
     Flatten,
     Fmt,
-    #[cfg(feature = "foreach")]
+    #[cfg(all(feature = "foreach", not(feature = "lite")))]
     ForEach,
     Frequency,
-    #[cfg(feature = "generate")]
+    #[cfg(all(feature = "generate", not(feature = "lite")))]
     Generate,
     Headers,
     Help,
@@ -245,11 +245,11 @@ enum Command {
     Input,
     Join,
     Jsonl,
-    #[cfg(feature = "lua")]
+    #[cfg(all(feature = "lua", not(feature = "lite")))]
     Lua,
     Partition,
     Pseudo,
-    #[cfg(feature = "python")]
+    #[cfg(all(feature = "python", not(feature = "lite")))]
     Py,
     Rename,
     Replace,
@@ -283,7 +283,7 @@ impl Command {
         }
         match self {
             Command::Behead => cmd::behead::run(argv),
-            #[cfg(feature = "apply")]
+            #[cfg(all(feature = "apply", not(feature = "lite")))]
             Command::Apply => cmd::apply::run(argv),
             Command::Cat => cmd::cat::run(argv),
             Command::Count => cmd::count::run(argv),
@@ -291,14 +291,14 @@ impl Command {
             Command::Enum => cmd::enumerate::run(argv),
             Command::Exclude => cmd::exclude::run(argv),
             Command::Explode => cmd::explode::run(argv),
-            #[cfg(feature = "fetch")]
+            #[cfg(all(feature = "fetch", not(feature = "lite")))]
             Command::Fetch => cmd::fetch::run(argv),
             Command::Fill => cmd::fill::run(argv),
             Command::FixLengths => cmd::fixlengths::run(argv),
             Command::Flatten => cmd::flatten::run(argv),
             Command::Fmt => cmd::fmt::run(argv),
             Command::Frequency => cmd::frequency::run(argv),
-            #[cfg(feature = "generate")]
+            #[cfg(all(feature = "generate", not(feature = "lite")))]
             Command::Generate => cmd::generate::run(argv),
             Command::Headers => cmd::headers::run(argv),
             Command::Help => {
@@ -310,11 +310,11 @@ impl Command {
             Command::Input => cmd::input::run(argv),
             Command::Join => cmd::join::run(argv),
             Command::Jsonl => cmd::jsonl::run(argv),
-            #[cfg(feature = "lua")]
+            #[cfg(all(feature = "lua", not(feature = "lite")))]
             Command::Lua => cmd::lua::run(argv),
             Command::Partition => cmd::partition::run(argv),
             Command::Pseudo => cmd::pseudo::run(argv),
-            #[cfg(feature = "python")]
+            #[cfg(all(feature = "python", not(feature = "lite")))]
             Command::Py => cmd::python::run(argv),
             Command::Rename => cmd::rename::run(argv),
             Command::Replace => cmd::replace::run(argv),
@@ -332,7 +332,7 @@ impl Command {
             Command::Table => cmd::table::run(argv),
             Command::Transpose => cmd::transpose::run(argv),
             Command::Validate => cmd::validate::run(argv),
-            #[cfg(feature = "foreach")]
+            #[cfg(all(feature = "foreach", not(feature = "lite")))]
             Command::ForEach => cmd::foreach::run(argv),
         }
     }
