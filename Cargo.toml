@@ -106,7 +106,6 @@ self_update = { version = "0.29", features = [
 ], default-features = false }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1.0", features = ["preserve_order"] }
-smartstring = "1"
 strsim = { version = "0.10", optional = true }
 tabwriter = "1.2"
 test-data-generation = { version = "0.3", optional = true }
