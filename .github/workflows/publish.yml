@@ -68,7 +68,7 @@ jobs:
             artifact_name: qsv*.exe
             use-cross: false
             addl-build-args: --features=apply,generate,lua,fetch,python
-            default-features:
+            default-features: --no-default-features 
           - os: macos-latest
             os-name: macos
             target: x86_64-apple-darwin
