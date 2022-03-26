@@ -231,7 +231,7 @@ impl SelectorParser {
     }
 
     fn cur(&self) -> Option<char> {
-        self.chars.get(self.pos).cloned()
+        self.chars.get(self.pos).copied()
     }
 
     fn is_end_of_field(&self) -> bool {
@@ -416,7 +416,7 @@ impl Selection {
         normal.sort_unstable();
         normal.dedup();
         let mut set: Vec<_> = repeat(false).take(normal[normal.len() - 1] + 1).collect();
-        for i in normal.into_iter() {
+        for i in normal {
             set[i] = true;
         }
         NormalSelection(set)
