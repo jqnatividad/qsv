@@ -597,7 +597,7 @@ impl FieldType {
 
         TString
     }
-    
+
     #[inline]
     fn is_number(self) -> bool {
         self == TFloat || self == TInteger
