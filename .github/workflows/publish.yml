@@ -145,7 +145,7 @@ jobs:
         command: build
         use-cross: ${{ matrix.job.use-cross }}
         toolchain: ${{ matrix.rust }}
-        args: --release --locked --target ${{ matrix.job.target }} --features=lite
+        args: --release --locked --target ${{ matrix.job.target }} ${{ matrix.job.default-features }} --features=lite
     - name: Copy binaries to working dir
       shell: bash
       run: |
