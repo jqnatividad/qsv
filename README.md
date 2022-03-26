@@ -153,6 +153,8 @@ tab for `.tsv` and `.tab` files.
 
 [JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/) files are also recognized and converted to CSV with the [`jsonl`](/src/cmd/jsonl.rs#L11) command.
 
+The `fetch` command also produces JSONL files when its invoked without the `--new-column` option.
+
 ### **Windows Usage Note:**   
 Unlike other modern operating systems, Windows' [default text encoding is UTF16-LE](https://stackoverflow.com/questions/66072117/why-does-windows-use-utf-16le).   
 This will cause problems when redirecting qsv's output to a CSV file and trying to open it with applications
