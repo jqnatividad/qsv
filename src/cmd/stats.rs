@@ -175,7 +175,7 @@ impl Args {
         let mut records: Vec<_> = repeat(csv::StringRecord::new()).take(stats.len()).collect();
         let pool = ThreadPool::new(self.njobs());
         let mut results = vec![];
-        for mut stat in stats.into_iter() {
+        for mut stat in stats {
             let (send, recv) = channel::bounded(0);
             results.push(recv);
             pool.execute(move || {
@@ -362,7 +362,7 @@ impl Stats {
     #[allow(clippy::option_map_unit_fn)]
     #[inline]
     fn add(&mut self, sample: &[u8]) {
-        let sample_type = FieldType::from_sample(&self.which.dates, sample);
+        let sample_type = FieldType::from_sample(self.which.dates, sample);
         self.typ.merge(sample_type);
 
         let t = self.typ;
@@ -568,7 +568,7 @@ pub enum FieldType {
 
 impl FieldType {
     #[inline]
-    pub fn from_sample(dates: &bool, sample: &[u8]) -> FieldType {
+    pub fn from_sample(dates: bool, sample: &[u8]) -> FieldType {
         if sample.is_empty() {
             return TNull;
         }
@@ -582,7 +582,7 @@ impl FieldType {
         if string.parse::<f64>().is_ok() {
             return TFloat;
         }
-        if *dates {
+        if dates {
             if let Ok(parsed_date) = string.parse::<DateTimeUtc>() {
                 let rfc3339_date_str = parsed_date.0.to_string();
                 let datelen = rfc3339_date_str.len();
@@ -597,13 +597,15 @@ impl FieldType {
 
         TString
     }
-
-    fn is_number(&self) -> bool {
-        *self == TFloat || *self == TInteger
+    
+    #[inline]
+    fn is_number(self) -> bool {
+        self == TFloat || self == TInteger
     }
 
-    fn is_null(&self) -> bool {
-        *self == TNull
+    #[inline]
+    fn is_null(self) -> bool {
+        self == TNull
     }
 }
 
