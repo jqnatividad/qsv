@@ -76,7 +76,7 @@ Installation
 Pre-built binaries for Windows, Linux and macOS are available [from GitHub](https://github.com/jqnatividad/qsv/releases/latest).
 
 There are two versions of qsv. `qsvlite` has all features disabled. `qsv` supports features, with the pre-built binaries
-enabling all valid platform features[^5].
+enabling all valid platform features[^6].
 
 Alternatively, you can compile from source by
 [installing Cargo](https://crates.io/install)
@@ -119,7 +119,7 @@ cargo build --release --features apply,generate,lua,fetch,foreach,python
 cargo build --release --features lite
 ```
 
-[^5]: The `foreach` feature is not available on Windows. The `python` feature is not enabled on cross-compiled pre-built binaries as we don't have
+[^6]: The `foreach` feature is not available on Windows. The `python` feature is not enabled on cross-compiled pre-built binaries as we don't have
 access to a native python interpreter for those platforms (aarch64, i686, and arm) on GitHub's action runners. Compile natively on those platforms with Python 3.8+ installed, if you want to enable the `python` feature.
 
 ### Minimum Supported Rust Version
@@ -212,7 +212,7 @@ The following "power-user" commands can be abused and present "foot-shooting" sc
 * `foreach` - enable `foreach` command (not valid for Windows).
 * `python` - enable `py` command (requires Python 3.8+). Note that qsv will automatically use the currently activated python version when run in a virtual environment.
 
-> **NOTE:** `qsvlite`, as the name implies, always has **non-default features disabled**. `qsv` can be built with any combination of the above features  using the cargo `--features` & `--no-default-features` flags. The pre-built `qsv` binaries has **all applicable features enabled for the target platform**[^5].
+> **NOTE:** `qsvlite`, as the name implies, always has **non-default features disabled**. `qsv` can be built with any combination of the above features  using the cargo `--features` & `--no-default-features` flags. The pre-built `qsv` binaries has **all applicable features enabled for the target platform**[^6].
 
 Performance Tuning
 ------------------
