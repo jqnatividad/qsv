@@ -151,7 +151,10 @@ jobs:
       run: |
         mkdir qsv-${{ needs.analyze-tags.outputs.previous-tag }}
         cp target/${{ matrix.job.target }}/release/${{ matrix.job.artifact_name }} qsv-${{ needs.analyze-tags.outputs.previous-tag }}
-        rm qsv-${{ needs.analyze-tags.outputs.previous-tag }}/*.d
+    - name: Delete .d files
+        if: matrix.os != 'windows-latest'
+        run: |
+          rm *.d
     - name: zip up binaries
       run: 7z a -tzip qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/${{ matrix.job.artifact_name }} -mx=7 -mmt=on
     - name: Upload zipped binaries to release
