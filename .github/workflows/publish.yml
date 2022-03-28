@@ -152,7 +152,7 @@ jobs:
         mkdir qsv-${{ needs.analyze-tags.outputs.previous-tag }}
         cp target/${{ matrix.job.target }}/release/${{ matrix.job.artifact_name }} qsv-${{ needs.analyze-tags.outputs.previous-tag }}
     - name: Delete .d files
-        if: matrix.os != 'windows-latest'
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
         run: |
           rm *.d
     - name: zip up binaries
