@@ -148,6 +148,68 @@ fn fetch_jql_single() {
 }
 
 #[test]
+fn fetch_jql_single_file() {
+    let wrk = Workdir::new("fetch");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["URL"],
+            svec!["http://api.zippopotam.us/us/90210"],
+            svec!["http://api.zippopotam.us/us/94105"],
+            svec!["https://api.zippopotam.us/us/92802"],
+        ],
+    );
+    let mut cmd = wrk.command("fetch");
+    cmd.arg("URL")
+        .arg("--new-column")
+        .arg("City")
+        .arg("--jqlfile")
+        .arg(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/resources/test/fetch_jql_single.jql"
+        ))
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["URL", "City"],
+        svec!["http://api.zippopotam.us/us/90210", "Beverly Hills"],
+        svec!["http://api.zippopotam.us/us/94105", "San Francisco"],
+        svec!["https://api.zippopotam.us/us/92802", "Anaheim"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn fetch_jql_jqlfile_error() {
+    let wrk = Workdir::new("fetch");
+    wrk.create(
+        "data.csv",
+        vec![svec!["URL"], svec!["http://api.zippopotam.us/us/90210"]],
+    );
+    let mut cmd = wrk.command("fetch");
+    cmd.arg("URL")
+        .arg("--jqlfile")
+        .arg(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/resources/test/fetch_jql_single.jql"
+        ))
+        .arg("--jql")
+        .arg(r#"."places"[0]."place name""#)
+        .arg("data.csv");
+
+    let got: String = wrk.output_stderr(&mut cmd);
+    assert_eq!(
+        &*got,
+        r#"Invalid arguments.
+
+Usage:
+    qsv fetch [options] [--jql <selector> | --jqlfile <file> ] [--http-header <k:v>...] [<column>] [<input>]
+"#
+    )
+}
+
+#[test]
 fn fetch_jql_multiple() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -165,6 +227,39 @@ fn fetch_jql_multiple() {
         .arg("CityState")
         .arg("--jql")
         .arg(r#""places"[0]."place name","places"[0]."state abbreviation""#)
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["URL", "CityState"],
+        svec!["http://api.zippopotam.us/us/90210", "Beverly Hills, CA"],
+        svec!["http://api.zippopotam.us/us/94105", "San Francisco, CA"],
+        svec!["https://api.zippopotam.us/us/92802", "Anaheim, CA"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn fetch_jql_multiple_file() {
+    let wrk = Workdir::new("fetch");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["URL"],
+            svec!["http://api.zippopotam.us/us/90210"],
+            svec!["http://api.zippopotam.us/us/94105"],
+            svec!["https://api.zippopotam.us/us/92802"],
+        ],
+    );
+    let mut cmd = wrk.command("fetch");
+    cmd.arg("URL")
+        .arg("--new-column")
+        .arg("CityState")
+        .arg("--jqlfile")
+        .arg(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/resources/test/fetch_jql_multiple.jql"
+        ))
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
