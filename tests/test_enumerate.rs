@@ -82,6 +82,33 @@ fn enumerate_constant() {
 }
 
 #[test]
+fn enumerate_constant_null() {
+    let wrk = Workdir::new("enum");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["letter", "number"],
+            svec!["a", "13"],
+            svec!["b", "24"],
+            svec!["c", "72"],
+            svec!["d", "7"],
+        ],
+    );
+    let mut cmd = wrk.command("enum");
+    cmd.arg("--constant").arg("<NULL>").arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["letter", "number", "constant"],
+        svec!["a", "13", ""],
+        svec!["b", "24", ""],
+        svec!["c", "72", ""],
+        svec!["d", "7", ""],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn enumerate_copy() {
     let wrk = Workdir::new("enum");
     wrk.create(

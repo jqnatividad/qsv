@@ -42,7 +42,7 @@ Given the data.csv above, fetch the JSON response.
 
   $ qsv fetch URL data.csv 
 
-Note the output will just be a JSONL file - with a minified JSON response per line,
+Note the output will be a JSONL file - with a minified JSON response per line,
 not a CSV file.
 
 Now, if we want to generate a CSV file with the parsed City and State, we use the 

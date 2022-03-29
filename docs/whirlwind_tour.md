@@ -104,7 +104,8 @@ bg       Nadezhda
 ru       Rabog                 
 ```
 
-Whoops! The sample we got don't have population counts. How pervasive is that?
+Whoops! The sample we got don't have population counts. It's quite pervasive.
+Exactly how many cities have empty (NULL) population counts?
 
 ```
 $ qsv frequency wcp.csv --limit 3 | qsv table
