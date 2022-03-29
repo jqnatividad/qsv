@@ -38,6 +38,7 @@ enum options:
                              Will default to "index".
     --constant <value>       Fill a new column with the given value.
                              Changes the default column name to "constant".
+                             To specify a null value, pass the literal "<NULL>".
     --copy <column>          Name of a column to copy.
                              Changes the default column name to "{column}_copy".
     --uuid                   When set, the column will be populated with
@@ -52,6 +53,8 @@ Common options:
     -d, --delimiter <arg>    The field delimiter for reading CSV data.
                              Must be a single character. (default: ,)
 "#;
+
+const NULL_VALUE: &str = "<NULL>";
 
 #[derive(Deserialize)]
 struct Args {
@@ -109,7 +112,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     while rdr.read_byte_record(&mut record)? {
         if let Some(constant_value) = &args.flag_constant {
-            record.push_field(constant_value.as_bytes());
+            if constant_value == NULL_VALUE {
+                record.push_field(b"")
+            } else {
+                record.push_field(constant_value.as_bytes());
+            }
         } else if copy_operation {
             record.push_field(&record[copy_index].to_vec());
         } else if args.flag_uuid {
