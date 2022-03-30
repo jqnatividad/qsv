@@ -163,7 +163,9 @@ ge       Lajanurhesi        95
 > :warning: **NOTE:** The `tee` command reads from standard input and writes 
 to both standard output and one or more files at the same time. We do this so 
 we can create the `sample.csv` file we need for the next step, and pipe the 
-same data to the `qsv table` command.
+same data to the `qsv table` command.<br/>Why create `sample.csv`? Even though qsv is blazing-fast, we're just doing an 
+initial investigation and a small 10-row sample is all we need to try out and
+compose the different CLI commands needed to wrangle the data.
 
 Erk. Which country is `sv`? What continent? No clue, but [datawookie](https://github.com/datawookie) 
 has a CSV file called `country-continent.csv`.
@@ -256,9 +258,10 @@ North Druid Hills  21320       United States of America                         
 Nice! Notice the data is now sorted by Country,City too! That's because `dedup` first sorts the
 CSV records (by internally calling the `qsv sort` command) to find duplicates.  
 
-Perhaps we can do this with the original CSV data? All 2.7 million rows in a 124MB file?!  
+Now that we've composed all the commands we need, perhaps we can do this with the original CSV data? 
+Not the tiny 10-row sample.csv file, but all 2.7 million rows in the 124MB `wcp.csv` file?!  
 
-Indeed we can—because `qsv` is designed for speed - written in [Rust](https://www.rust-lang.org/) with 
+Indeed we can — because `qsv` is designed for speed - written in [Rust](https://www.rust-lang.org/) with 
 [amortized memory allocations](https://blog.burntsushi.net/csv/#amortizing-allocations), using the 
 performance-focused [mimalloc](https://github.com/microsoft/mimalloc) allocator.
 
@@ -296,7 +299,7 @@ it removed.
 We're also just interested in cities with population counts. So we used `search`
 with the regular expression `[0-9]`. This cuts down the file to 47,004 rows.
 
-This whole thing takes about 5 seconds on my machine. The performance of `join`,
+**The whole thing took ~5 seconds on my machine.** The performance of `join`,
 in particular, comes from constructing a [SIMD](https://www.sciencedirect.com/topics/computer-science/single-instruction-multiple-data)-accelerated hash index of one of the CSV 
 files. The `join` command does an inner join by default, but it also has left,
 right and full outer, cross, anti and semi join support too. All from the command line,
