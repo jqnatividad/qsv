@@ -57,9 +57,10 @@ Notably, the same type of "statistics" command in another
 [CSV command line toolkit](https://csvkit.readthedocs.io/)
 takes about 10 seconds to produce similar statistics on the same data set.
 
-Creating an index gives us more than just faster statistics gathering. It also
-makes slice operations extremely fast because *only the sliced portion* has to
-be parsed. For example, let's say you wanted to grab the last 10 records:
+Creating an index gives us more than just faster statistics gathering. It 
+enables multithreading on several other commands - `frequency`, `split` & `schema`. 
+It also makes slice operations extremely fast because *only the sliced portion* 
+has to be parsed. For example, let's say you wanted to grab the last 10 records:
 
 ```
 $ qsv count wcp.csv
@@ -173,8 +174,8 @@ $ qsv headers country_continent.csv
 1 # https://datahub.io/JohnSnowLabs/country-and-continent-codes-list
 ```
 
-Huh!?! That's not what we we were expecting. But if you look at the `country-continent.csv` file, it starts with a comment
-with the `#` character. 
+Huh!?! That's not what we we were expecting. But if you look at the `country-continent.csv`
+file, it starts with a comment with the `#` character. 
 
 ```
 $ head -5 country_continent.csv
@@ -185,7 +186,9 @@ Europe,EU,"Albania, Republic of",AL,ALB,8
 Antarctica,AN,Antarctica (the territory South of 60 deg S),AQ,ATA,10
 ```
 
-No worries, qsv got us covered with its `QSV_COMMENT_CHAR` environment variable.
+No worries, qsv got us covered with its `QSV_COMMENT_CHAR` environment variable. Setting it
+to `#` tells qsv to ignore any lines in the CSV - may it be before the header, or even in the data
+part of the CSV, that **starts with the character** we set it to.
 
 ```
 $ export QSV_COMMENT_CHAR='#'
@@ -294,7 +297,7 @@ We're also just interested in cities with population counts. So we used `search`
 with the regular expression `[0-9]`. This cuts down the file to 47,004 rows.
 
 This whole thing takes about 5 seconds on my machine. The performance of `join`,
-in particular, comes from constructing a very simple hash index of one of the CSV 
+in particular, comes from constructing a [SIMD](https://www.sciencedirect.com/topics/computer-science/single-instruction-multiple-data)-accelerated hash index of one of the CSV 
 files. The `join` command does an inner join by default, but it also has left,
 right and full outer, cross, anti and semi join support too. All from the command line,
 without having to load the files into a database, index them, to do a SQL join.
@@ -334,6 +337,6 @@ Longitude   Float    -377616.7797696997  -165.4063889              -65.3013889  
 Hhhmmm... clearly the worldcitiespop.csv file from the Data Science Toolkit does not have 
 comprehensive coverage of City populations.
 
-The US population is more than 179,123,400 (Population sum) and 3,439 cities (City cardinality).
+The US population is far more than 179,123,400 (Population sum) and 3,439 cities (City cardinality).
 Perhaps we can get population info elsewhere with the `fetch` command...
 But that's another tour by itself! 😄
