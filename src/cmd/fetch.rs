@@ -9,6 +9,7 @@ use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::{debug, error};
 use once_cell::sync::{Lazy, OnceCell};
 use serde::Deserialize;
+use std::fs;
 use thiserror::Error;
 
 static USAGE: &str = "
@@ -58,6 +59,12 @@ data_with_CityState.csv
   http://api.zippopotam.us/us/94105, \"San Francisco, CA\"
   https://api.zippopotam.us/us/92802, \"Anaheim, CA\"
 
+As you can see, entering jql selectors can quickly become cumbersome, more so because
+of the need to escape quotes on the command line. Alternatively, the jql selector
+can be saved and loaded from a file using the --jqlfile option. As an added bonus, there is
+no need to escape quotes in the file, making for a more readable jql.
+
+  $ qsv fetch URL --new-column CityState --jqlfile places.jql data.csv > datatest.csv
 
 EXAMPLES USING THE --URL-TEMPLATE OPTION:
 
@@ -77,7 +84,7 @@ Note how field name non-alphanumeric characters in the url-template were replace
        addr_data.csv -c CityState > enriched.csv
 
 Usage:
-    qsv fetch [options] [--http-header <k:v>...] [<column>] [<input>]
+    qsv fetch [options] [--jql <selector> | --jqlfile <file> ] [--http-header <k:v>...] [<column>] [<input>]
 
 Fetch options:
     --url-template <template>  URL template to use. Use column names enclosed with
@@ -87,6 +94,7 @@ Fetch options:
                                when using url-template.
     -c, --new-column <name>    Put the fetched values in a new column instead.
     --jql <selector>           Apply jql selector to API returned JSON value.
+    --jqlfile <file>           Load jql selector from file instead.
     --pretty                   Prettify JSON responses. Otherwise, they're minified.
                                If the response is not in JSON format, it's passed through.
     --rate-limit <qps>         Rate Limit in Queries Per Second. [default: 10]
@@ -112,6 +120,7 @@ struct Args {
     flag_url_template: Option<String>,
     flag_new_column: Option<String>,
     flag_jql: Option<String>,
+    flag_jqlfile: Option<String>,
     flag_pretty: bool,
     flag_rate_limit: Option<u32>,
     flag_http_header: Vec<String>,
@@ -260,6 +269,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     #[allow(unused_assignments)]
     let mut final_value = String::default();
 
+    let mut jql_selector: Option<String> = None;
+    if let Some(jql_file) = args.flag_jqlfile {
+        jql_selector = Some(fs::read_to_string(jql_file)?);
+    } else if let Some(ref jql) = args.flag_jql {
+        jql_selector = Some(jql.to_string());
+    }
+
     while rdr.read_byte_record(&mut record)? {
         if !args.flag_quiet {
             progress.inc(1);
@@ -287,7 +303,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     &url,
                     &client,
                     &limiter,
-                    &args.flag_jql,
+                    &jql_selector,
                     args.flag_store_error,
                     args.flag_pretty,
                 )
@@ -301,7 +317,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     &url,
                     &client,
                     &limiter,
-                    &args.flag_jql,
+                    &jql_selector,
                     args.flag_store_error,
                     args.flag_pretty,
                 );
