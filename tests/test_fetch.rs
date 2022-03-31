@@ -352,6 +352,7 @@ async fn run_webserver(tx: mpsc::Sender<ServerHandle>) -> std::io::Result<()> {
         App::new()
             // enable logger
             .wrap(middleware::Logger::default())
+            .wrap(middleware::Compress::default())
             .wrap(Governor::new(&governor_conf))
             .service(web::resource("/user/{name}").route(web::get().to(get_fullname)))
             .service(web::resource("/").to(index))
@@ -405,6 +406,9 @@ fn fetch_ratelimit() {
             svec![test_url!("user/Farmer")],
             svec![test_url!("user/Natural")],
             svec![test_url!("user/Snappy")],
+            svec![test_url!(
+                "user/The quick brown fox jumped over the lazy dog by the zigzag quarry site"
+            )],
         ],
     );
     let mut cmd = wrk.command("fetch");
@@ -440,6 +444,12 @@ fn fetch_ratelimit() {
         svec![test_url!("user/Farmer"), "Farmer Smurf"],
         svec![test_url!("user/Natural"), "Natural Smurf"],
         svec![test_url!("user/Snappy"), "Snappy Smurf"],
+        svec![
+            test_url!(
+                "user/The quick brown fox jumped over the lazy dog by the zigzag quarry site"
+            ),
+            "The quick brown fox jumped over the lazy dog by the zigzag quarry site Smurf"
+        ],
     ];
     assert_eq!(got, expected);
 

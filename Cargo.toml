@@ -69,7 +69,7 @@ eudex = { version = "0.1", optional = true }
 filetime = "0.2"
 flexi_logger = { version = "0.22", features = ["compress"] }
 governor = { version = "0.4", optional = true }
-grex = "1.3.0"
+grex = "1.3"
 indicatif = "0.16"
 itertools = "0.10"
 jsonschema = { version = "0.15", features = [
@@ -118,11 +118,14 @@ vader_sentiment = { version = "0.1", optional = true }
 whatlang = { version = "0.13", optional = true }
 
 [dev-dependencies]
-actix-governor   = "0.3"
-actix-web        = { version = "4.0", default-features = false }
+actix-governor = "0.3"
+actix-web = { version = "4.0", default-features = false, features = [
+    "compress-brotli",
+    "compress-gzip",
+] }
 assert-json-diff = "2.0"
-quickcheck       = { version = "1", default-features = false }
-redis            = { version = "0.21", default-features = false }
+quickcheck = { version = "1", default-features = false }
+redis = { version = "0.21", default-features = false }
 
 [features]
 default = ["mimalloc"]
