@@ -277,7 +277,7 @@ impl Selector {
                 let i2 = sel2.index(first_record, use_names)?;
                 Ok(match i1.cmp(&i2) {
                     Ordering::Equal => vec![i1],
-                    Ordering::Less => (i1..(i2 + 1)).collect(),
+                    Ordering::Less => (i1..=i2).collect(),
                     Ordering::Greater => {
                         let mut inds = vec![];
                         let mut i = i1 + 1;
