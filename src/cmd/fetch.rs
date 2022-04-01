@@ -69,29 +69,25 @@ no need to escape quotes in the file, making for a more readable jql.
 EXAMPLES USING THE --URL-TEMPLATE OPTION:
 
 Geocode addresses in addr_data.csv, pass the latitude and longitude fields and store
-the response in a new column called response into enriched_addr_data.csv. Since we're
-using --url-template, let's just specify 1 for the column parameter as its required.
+the response in a new column called response into enriched_addr_data.csv.
 
-  $ qsv fetch 1 --url-template \"https://geocode.test/api/lookup.json?lat={latitude}&long={longitude}\" \
+  $ qsv fetch --url-template \"https://geocode.test/api/lookup.json?lat={latitude}&long={longitude}\" \
        addr_data.csv -c response > enriched_addr_data.csv
 
 Geocode addresses in addr_data.csv, pass the \"street address\" and \"zip-code\" fields
 and use jql to parse CityState from the JSON response into a new column in enriched.csv.
 Note how field name non-alphanumeric characters in the url-template were replace with _.
 
-  $ qsv fetch 1 --url-template \"https://geocode.test/api/addr.json?addr={street_address}&zip={zip_code}\" \
+  $ qsv fetch --url-template \"https://geocode.test/api/addr.json?addr={street_address}&zip={zip_code}\" \
        --jql '\"\"\"places\"\"\"[0].\"\"\"place name\"\"\",\"\"\"places\"\"\"[0].\"\"\"state abbreviation\"\"\"' \
        addr_data.csv -c CityState > enriched.csv
 
 Usage:
-    qsv fetch [options] [--jql <selector> | --jqlfile <file> ] [--http-header <k:v>...] [<column>] [<input>]
+    qsv fetch (<column> | --url-template <template>) [--jql <selector> | --jqlfile <file>] [--http-header <k:v>...] [options] [<input>]
 
 Fetch options:
     --url-template <template>  URL template to use. Use column names enclosed with
                                curly braces to insert the CSV data for a record.
-                               When using this option, the column argument is ignored
-                               but still required. Just use the value '1' for column
-                               when using url-template.
     -c, --new-column <name>    Put the fetched values in a new column instead.
     --jql <selector>           Apply jql selector to API returned JSON value.
     --jqlfile <file>           Load jql selector from file instead.
@@ -170,21 +166,23 @@ enum FetchRedisError {
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
-    let rconfig = Config::new(&args.arg_input)
+    let mut rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
-        .no_headers(args.flag_no_headers)
-        .select(args.arg_column);
+        .no_headers(args.flag_no_headers);
 
     let mut rdr = rconfig.reader()?;
     let mut wtr = Config::new(&args.flag_output).writer()?;
 
     let mut headers = rdr.byte_headers()?.clone();
 
-    let sel = rconfig.selection(&headers)?;
-    let column_index = *sel.iter().next().unwrap();
-
-    if sel.len() != 1 {
-        return fail!("Only one single URL column may be selected.");
+    let mut column_index = 0_usize;
+    if args.flag_url_template.is_none() {
+        rconfig = rconfig.select(args.arg_column);
+        let sel = rconfig.selection(&headers)?;
+        column_index = *sel.iter().next().unwrap();
+        if sel.len() != 1 {
+            return fail!("Only one single URL column may be selected.");
+        }
     }
 
     if args.flag_no_headers && args.flag_url_template.is_some() {
@@ -281,23 +279,25 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             progress.inc(1);
         }
 
-        if let Ok(s) = std::str::from_utf8(&record[column_index]) {
-            if let Some(ref url_template) = args.flag_url_template {
-                let mut record_map = std::collections::BTreeMap::new();
+        url.clear();
+        if let Some(ref url_template) = args.flag_url_template {
+            let mut record_map = std::collections::BTreeMap::new();
 
-                for (i, field) in record.iter().enumerate() {
-                    let str_value =
-                        unsafe { std::str::from_utf8_unchecked(field).trim().to_string() };
-                    record_map.insert(safe_headers[i].to_owned(), str_value);
-                }
-                if let Ok(formatted_url) = SimpleCurlyFormat.format(url_template, record_map) {
-                    url = formatted_url.to_string();
-                }
-            } else {
-                url = s.trim().to_string()
+            for (i, field) in record.iter().enumerate() {
+                let str_value = unsafe { std::str::from_utf8_unchecked(field).trim().to_string() };
+                record_map.insert(safe_headers[i].to_owned(), str_value);
             }
-            debug!("Fetching URL: {url:?}");
+            if let Ok(formatted_url) = SimpleCurlyFormat.format(url_template, record_map) {
+                url = formatted_url.to_string();
+            }
+        } else if let Ok(s) = std::str::from_utf8(&record[column_index]) {
+            url = s.trim().to_string();
+        } else {
+            final_value = "Invalid URL".to_string();
+        }
 
+        debug!("Fetching URL: {url:?}");
+        if !url.is_empty() {
             if args.flag_redis {
                 let intermediate_value = get_redis_response(
                     &url,
@@ -322,8 +322,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     args.flag_pretty,
                 );
             }
-        } else {
-            final_value = "Invalid URL".to_string();
         }
 
         if include_existing_columns {

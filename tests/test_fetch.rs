@@ -50,11 +50,10 @@ fn fetch_simple_url_template() {
         ],
     );
     let mut cmd = wrk.command("fetch");
-    cmd.arg("1")
-        .arg("data.csv")
+    cmd.arg("--url-template")
+        .arg("https://api.zippopotam.us/us/{zip_code}")
         .arg("--store-error")
-        .arg("--url-template")
-        .arg("https://api.zippopotam.us/us/{zip_code}");
+        .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
@@ -199,14 +198,7 @@ fn fetch_jql_jqlfile_error() {
         .arg("data.csv");
 
     let got: String = wrk.output_stderr(&mut cmd);
-    assert_eq!(
-        &*got,
-        r#"Invalid arguments.
-
-Usage:
-    qsv fetch [options] [--jql <selector> | --jqlfile <file> ] [--http-header <k:v>...] [<column>] [<input>]
-"#
-    )
+    assert!(got.starts_with("Invalid arguments."));
 }
 
 #[test]
