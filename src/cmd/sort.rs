@@ -107,7 +107,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut wtr = Config::new(&args.flag_output).writer()?;
     let mut prev: Option<csv::ByteRecord> = None;
     rconfig.write_headers(&mut rdr, &mut wtr)?;
-    for r in all.into_iter() {
+    for r in all {
         if args.flag_uniq {
             match prev {
                 Some(other_r) => match iter_cmp(sel.select(&r), sel.select(&other_r)) {

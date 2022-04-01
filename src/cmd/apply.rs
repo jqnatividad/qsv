@@ -424,7 +424,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         if args.flag_no_headers {
             return fail!("dynfmt operation requires headers.");
         } else {
-            safe_headers = util::safe_header_names(headers, false);
+            safe_headers = util::safe_header_names(&headers, false);
             let formatstr_re: &'static Regex = regex!(r"\{(?P<key>\w+)?\}");
             for format_fields in formatstr_re.captures_iter(&args.flag_formatstr) {
                 dynfmt_fields.push(format_fields.name("key").unwrap().as_str());

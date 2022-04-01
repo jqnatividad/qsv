@@ -128,5 +128,5 @@ where
 {
     xs.next()
         .and_then(|bytes| from_utf8(bytes).ok())
-        .map(|s| s.to_lowercase())
+        .map(str::to_lowercase)
 }

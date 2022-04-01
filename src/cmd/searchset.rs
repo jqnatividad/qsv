@@ -121,7 +121,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let matched = pattern.is_match(f);
             if matched && do_match_list {
                 let mut matches: Vec<_> = pattern.matches(f).into_iter().collect();
-                for j in matches.iter_mut() {
+                for j in &mut matches {
                     *j += 1; // so the list is human readable - i.e. not zero-based
                 }
                 match_list = format!("{:?}", matches);

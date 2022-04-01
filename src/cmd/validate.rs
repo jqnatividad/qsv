@@ -351,7 +351,7 @@ fn write_error_report(input_path: &str, validation_error_messages: Vec<String>) 
 
     let mut output_writer = BufWriter::with_capacity(wtr_buffer_size, output_file);
 
-    output_writer.write_all("row_number\tfield\terror\n".as_bytes())?;
+    output_writer.write_all(b"row_number\tfield\terror\n")?;
 
     // write out error report
     for error_msg in validation_error_messages {

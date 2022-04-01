@@ -190,7 +190,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     let str_headers = rdr.headers()?.clone();
-    let safe_headers = util::safe_header_names(str_headers, false);
+    let safe_headers = util::safe_header_names(&str_headers, false);
 
     use std::num::NonZeroU32;
     // default rate limit is actually set via docopt, so below init is just to satisfy compiler
