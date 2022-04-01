@@ -3,7 +3,7 @@ use std::default::Default;
 use std::fmt;
 use std::fs;
 use std::io;
-use std::iter::{repeat, FromIterator};
+use std::iter::repeat;
 use std::str::{self, FromStr};
 
 use itertools::Itertools;
@@ -18,7 +18,7 @@ use crate::CliResult;
 use dateparser::DateTimeUtc;
 use serde::Deserialize;
 
-use self::FieldType::{TDate, TDateTime, TFloat, TInteger, TNull, TString, TUnknown};
+use self::FieldType::{TDate, TDateTime, TFloat, TInteger, TNull, TString};
 
 static USAGE: &str = "
 Computes basic statistics on CSV data.
@@ -125,7 +125,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         } else {
             header.to_vec()
         };
-        let stat = stat.iter().map(|f| f.as_bytes());
+        let stat = stat.iter().map(str::as_bytes);
         wtr.write_record(vec![&*header].into_iter().chain(stat))?;
     }
     wtr.flush()?;
@@ -213,7 +213,7 @@ impl Args {
     ) -> CliResult<(csv::ByteRecord, Selection)> {
         let headers = rdr.byte_headers()?.clone();
         let sel = self.rconfig().selection(&headers)?;
-        Ok((csv::ByteRecord::from_iter(sel.select(&headers)), sel))
+        Ok((sel.select(&headers).collect(), sel))
     }
 
     pub fn rconfig(&self) -> Config {
@@ -367,19 +367,18 @@ impl Stats {
 
         let t = self.typ;
         if let Some(v) = self.sum.as_mut() {
-            v.add(t, sample)
+            v.add(t, sample);
         };
         if let Some(v) = self.minmax.as_mut() {
-            v.add(t, sample)
+            v.add(t, sample);
         };
         if let Some(v) = self.modes.as_mut() {
-            v.add(sample.to_vec())
+            v.add(sample.to_vec());
         };
         if sample_type.is_null() {
             self.nullcount += 1;
         }
         match self.typ {
-            TUnknown => {}
             TNull => {
                 if self.which.include_nulls {
                     if let Some(v) = self.online.as_mut() {
@@ -455,9 +454,10 @@ impl Stats {
         } else {
             match self.online {
                 Some(ref v) => {
-                    pieces.push(v.mean().to_string());
-                    pieces.push(v.stddev().to_string());
-                    pieces.push(v.variance().to_string());
+                    let mut buffer = ryu::Buffer::new();
+                    pieces.push(buffer.format(v.mean()).to_owned());
+                    pieces.push(buffer.format(v.stddev()).to_owned());
+                    pieces.push(buffer.format(v.variance()).to_owned());
                 }
                 None => {
                     pieces.push(empty());
@@ -476,7 +476,8 @@ impl Stats {
                 }
             }
             Some(v) => {
-                pieces.push(v.to_string());
+                let mut buffer = ryu::Buffer::new();
+                pieces.push(buffer.format(v).to_owned());
             }
         }
         match self.quartiles.as_mut().and_then(|v| match self.typ {
@@ -496,17 +497,18 @@ impl Stats {
             }
             Some((q1, q2, q3)) => {
                 let iqr = q3 - q1;
-                pieces.push((q1 - (1.5 * iqr)).to_string());
-                pieces.push(q1.to_string());
-                pieces.push(q2.to_string());
-                pieces.push(q3.to_string());
-                pieces.push(iqr.to_string());
-                pieces.push((q3 + (1.5 * iqr)).to_string());
+                let mut buffer = ryu::Buffer::new();
+                pieces.push(buffer.format(q1 - (1.5 * iqr)).to_owned());
+                pieces.push(buffer.format(q1).to_owned());
+                pieces.push(buffer.format(q2).to_owned());
+                pieces.push(buffer.format(q3).to_owned());
+                pieces.push(buffer.format(iqr).to_owned());
+                pieces.push(buffer.format(1.5f64.mul_add(iqr, q3)).to_owned());
                 // calculate skewnewss using Pearson's median skewness
                 // https://en.wikipedia.org/wiki/Skewness#Pearson's_second_skewness_coefficient_(median_skewness)
                 let _mean = self.online.unwrap().mean();
                 let _stddev = self.online.unwrap().stddev();
-                pieces.push(((3.0 * (_mean - q2)) / _stddev).to_string());
+                pieces.push(buffer.format((3.0 * (_mean - q2)) / _stddev).to_owned());
             }
         }
         match self.modes.as_mut() {
@@ -523,17 +525,19 @@ impl Stats {
                     pieces.push(
                         v.modes()
                             .iter()
-                            .map(|c| unsafe { String::from_utf8_unchecked(c.to_vec()) })
+                            .map(|c| unsafe { String::from_utf8_unchecked(c.clone()) })
                             .join(","),
                     );
                 }
                 if self.which.cardinality {
-                    pieces.push(v.cardinality().to_string());
+                    let mut buffer = itoa::Buffer::new();
+                    pieces.push(buffer.format(v.cardinality()).to_owned());
                 }
             }
         }
         if self.which.nullcount {
-            pieces.push(self.nullcount.to_string());
+            let mut buffer = itoa::Buffer::new();
+            pieces.push(buffer.format(self.nullcount).to_owned());
         }
         csv::StringRecord::from(pieces)
     }
@@ -557,7 +561,6 @@ impl Commute for Stats {
 #[allow(clippy::enum_variant_names)]
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub enum FieldType {
-    TUnknown,
     TNull,
     TString,
     TFloat,
@@ -572,10 +575,8 @@ impl FieldType {
         if sample.is_empty() {
             return TNull;
         }
-        let string = match str::from_utf8(sample) {
-            Err(_) => return TUnknown,
-            Ok(s) => s,
-        };
+        // we can skip utf8 validation since we transcode input to utf8
+        let string = unsafe { str::from_utf8_unchecked(sample) };
         if string.parse::<i64>().is_ok() {
             return TInteger;
         }
@@ -585,13 +586,11 @@ impl FieldType {
         if dates {
             if let Ok(parsed_date) = string.parse::<DateTimeUtc>() {
                 let rfc3339_date_str = parsed_date.0.to_string();
-                let datelen = rfc3339_date_str.len();
 
-                if datelen >= 17 {
+                if rfc3339_date_str.len() >= 17 {
                     return TDateTime;
-                } else {
-                    return TDate;
                 }
+                return TDate;
             }
         }
 
@@ -617,13 +616,10 @@ impl Commute for FieldType {
             (TFloat, TFloat) => TFloat,
             (TInteger, TInteger) => TInteger,
             (TDate, TDate) => TDate,
-            (TDateTime, TDateTime) => TDateTime,
+            // date data types
+            (TDateTime, TDateTime) | (TDate, TDateTime) | (TDateTime, TDate) => TDateTime,
             // Null does not impact the type.
             (TNull, any) | (any, TNull) => any,
-            // There's no way to get around an unknown.
-            (TUnknown, _) | (_, TUnknown) => TUnknown,
-            // date data types
-            (TDate, TDateTime) | (TDateTime, TDate) => TDateTime,
             // Integers can degrade to floats.
             (TFloat, TInteger) | (TInteger, TFloat) => TFloat,
             // when using unixtime format can degrade to int/floats.
@@ -631,11 +627,8 @@ impl Commute for FieldType {
             (TFloat, TDate) | (TDate, TFloat) => TFloat,
             (TInteger, TDateTime) | (TDateTime, TInteger) => TInteger,
             (TFloat, TDateTime) | (TDateTime, TFloat) => TFloat,
-            // Numbers/dates can degrade to unicode Strings.
-            (TString, TFloat) | (TFloat, TString) => TString,
-            (TString, TInteger) | (TInteger, TString) => TString,
-            (TString, TDate) | (TDate, TString) => TString,
-            (TString, TDateTime) | (TDateTime, TString) => TString,
+            // anything else is a String
+            (_, _) => TString,
         };
     }
 }
@@ -652,7 +645,6 @@ impl Default for FieldType {
 impl fmt::Display for FieldType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            TUnknown => write!(f, "Unknown"),
             TNull => write!(f, "NULL"),
             TString => write!(f, "String"),
             TFloat => write!(f, "Float"),
@@ -666,7 +658,6 @@ impl fmt::Display for FieldType {
 impl fmt::Debug for FieldType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            TUnknown => write!(f, "Unknown"),
             TNull => write!(f, "NULL"),
             TString => write!(f, "String"),
             TFloat => write!(f, "Float"),
@@ -718,9 +709,15 @@ impl TypedSum {
     #[inline]
     fn show(&self, typ: FieldType) -> Option<String> {
         match typ {
-            TNull | TString | TUnknown | TDate | TDateTime => None,
-            TInteger => Some(self.integer.to_string()),
-            TFloat => Some(self.float.unwrap_or(0.0).to_string()),
+            TNull | TString | TDate | TDateTime => None,
+            TInteger => {
+                let mut buffer = itoa::Buffer::new();
+                Some(buffer.format(self.integer).to_owned())
+            }
+            TFloat => {
+                let mut buffer = ryu::Buffer::new();
+                Some(buffer.format(self.float.unwrap_or(0.0)).to_owned())
+            }
         }
     }
 }
@@ -757,7 +754,7 @@ impl TypedMinMax {
         }
         self.strings.add(sample.to_vec());
         match typ {
-            TString | TUnknown | TNull => {}
+            TString | TNull => {}
             TFloat => unsafe {
                 let n = str::from_utf8_unchecked(&*sample)
                     .parse::<f64>()
@@ -787,7 +784,13 @@ impl TypedMinMax {
     #[inline]
     fn len_range(&self) -> Option<(String, String)> {
         match (self.str_len.min(), self.str_len.max()) {
-            (Some(min), Some(max)) => Some((min.to_string(), max.to_string())),
+            (Some(min), Some(max)) => {
+                let mut buffer = itoa::Buffer::new();
+                Some((
+                    buffer.format(*min).to_owned(),
+                    buffer.format(*max).to_owned(),
+                ))
+            }
             _ => None,
         }
     }
@@ -796,7 +799,7 @@ impl TypedMinMax {
     fn show(&self, typ: FieldType) -> Option<(String, String)> {
         match typ {
             TNull => None,
-            TString | TUnknown => match (self.strings.min(), self.strings.max()) {
+            TString => match (self.strings.min(), self.strings.max()) {
                 (Some(min), Some(max)) => unsafe {
                     let min = String::from_utf8_unchecked((&**min).to_vec());
                     let max = String::from_utf8_unchecked((&**max).to_vec());
@@ -809,11 +812,23 @@ impl TypedMinMax {
                 _ => None,
             },
             TInteger => match (self.integers.min(), self.integers.max()) {
-                (Some(min), Some(max)) => Some((min.to_string(), max.to_string())),
+                (Some(min), Some(max)) => {
+                    let mut buffer = itoa::Buffer::new();
+                    Some((
+                        buffer.format(*min).to_owned(),
+                        buffer.format(*max).to_owned(),
+                    ))
+                }
                 _ => None,
             },
             TFloat => match (self.floats.min(), self.floats.max()) {
-                (Some(min), Some(max)) => Some((min.to_string(), max.to_string())),
+                (Some(min), Some(max)) => {
+                    let mut buffer = ryu::Buffer::new();
+                    Some((
+                        buffer.format(*min).to_owned(),
+                        buffer.format(*max).to_owned(),
+                    ))
+                }
                 _ => None,
             },
         }
