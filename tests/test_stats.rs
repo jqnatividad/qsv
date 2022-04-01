@@ -422,13 +422,13 @@ stats_tests!(
     stats_quartiles,
     "quartiles",
     &["1", "2", "3"],
-    "-2,1,2,3,2,4"
+    "-2.0,1.0,2.0,3.0,2.0,4.0"
 );
 stats_tests!(
     stats_quartiles_null,
     "quartiles",
     &["", "1", "2", "3"],
-    "-2,1,2,3,2,4"
+    "-2.0,1.0,2.0,3.0,2.0,4.0"
 );
 stats_tests!(
     stats_quartiles_even,
