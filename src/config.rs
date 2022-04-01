@@ -35,7 +35,7 @@ impl Delimiter {
         self.0
     }
 
-    fn decode_delimiter(s: String) -> Result<Delimiter, String> {
+    fn decode_delimiter(s: &str) -> Result<Delimiter, String> {
         if s == r"\t" {
             return Ok(Delimiter(b'\t'));
         }
@@ -58,7 +58,7 @@ impl Delimiter {
 impl<'de> Deserialize<'de> for Delimiter {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Delimiter, D::Error> {
         let s = String::deserialize(d)?;
-        match Delimiter::decode_delimiter(s) {
+        match Delimiter::decode_delimiter(&s) {
             Ok(delim) => Ok(delim),
             Err(msg) => Err(D::Error::custom(msg)),
         }
@@ -88,7 +88,7 @@ impl<T: io::Seek + io::Read> SeekRead for T {}
 impl Config {
     pub fn new(path: &Option<String>) -> Config {
         let default_delim = match env::var("QSV_DEFAULT_DELIMITER") {
-            Ok(delim) => Delimiter::decode_delimiter(delim).unwrap().as_byte(),
+            Ok(delim) => Delimiter::decode_delimiter(&delim).unwrap().as_byte(),
             _ => b',',
         };
         let (path, mut delim) = match *path {
