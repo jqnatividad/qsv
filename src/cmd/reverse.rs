@@ -46,7 +46,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut wtr = Config::new(&args.flag_output).writer()?;
     rconfig.write_headers(&mut rdr, &mut wtr)?;
-    for r in all.into_iter() {
+    for r in all {
         wtr.write_byte_record(&r)?;
     }
     Ok(wtr.flush()?)

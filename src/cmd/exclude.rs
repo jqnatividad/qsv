@@ -203,7 +203,7 @@ impl<R: io::Read + io::Seek> ValueIndex<R> {
             row_idx.write_u64::<BigEndian>(row.position().unwrap().byte())?;
 
             let fields: Vec<_> = sel.select(&row).map(|v| transform(v, casei)).collect();
-            if !fields.iter().any(|f| f.is_empty()) {
+            if !fields.iter().any(std::vec::Vec::is_empty) {
                 match val_idx.entry(fields) {
                     Entry::Vacant(v) => {
                         let mut rows = Vec::with_capacity(4);
@@ -234,13 +234,13 @@ impl<R> fmt::Debug for ValueIndex<R> {
         // Sort the values by order of first appearance.
         let mut kvs = self.values.iter().collect::<Vec<_>>();
         kvs.sort_by(|&(_, v1), &(_, v2)| v1[0].cmp(&v2[0]));
-        for (keys, rows) in kvs.into_iter() {
+        for (keys, rows) in kvs {
             // This is just for debugging, so assume Unicode for now.
             let keys = keys
                 .iter()
-                .map(|k| String::from_utf8(k.to_vec()).unwrap())
+                .map(|k| String::from_utf8(k.clone()).unwrap())
                 .collect::<Vec<_>>();
-            writeln!(f, "({}) => {:?}", keys.join(", "), rows)?
+            writeln!(f, "({}) => {:?}", keys.join(", "), rows)?;
         }
         Ok(())
     }

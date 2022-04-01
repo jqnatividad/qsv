@@ -63,7 +63,7 @@ impl Args {
         for i in 0..nrows {
             let mut record = ByteRecord::new();
 
-            for row in all.iter() {
+            for row in &all {
                 record.push_field(&row[i]);
             }
             wtr.write_byte_record(&record)?;

@@ -97,7 +97,7 @@ impl Args {
 
         let mut iters = rdrs
             .iter_mut()
-            .map(|rdr| rdr.byte_records())
+            .map(csv::Reader::byte_records)
             .collect::<Vec<_>>();
         'OUTER: loop {
             let mut record = csv::ByteRecord::new();

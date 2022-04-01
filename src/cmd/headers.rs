@@ -46,7 +46,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let num_inputs = configs.len();
     let mut headers: Vec<Vec<u8>> = vec![];
-    for conf in configs.into_iter() {
+    for conf in configs {
         let mut rdr = conf.reader()?;
         for header in rdr.byte_headers()?.iter() {
             if !args.flag_intersect || !headers.iter().any(|h| &**h == header) {

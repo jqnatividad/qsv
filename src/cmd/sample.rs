@@ -87,7 +87,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             sample_reservoir(&mut rdr, sample_size as u64, args.flag_seed)?
         }
     };
-    for row in sampled.into_iter() {
+    for row in sampled {
         wtr.write_byte_record(&row)?;
     }
     Ok(wtr.flush()?)

@@ -110,7 +110,7 @@ fn json_line_to_csv_record(value: &Value, headers: &[Vec<String>]) -> csv::Strin
                 Value::String(v) => v,
                 Value::Array(v) => v
                     .iter()
-                    .map(|x| x.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<_>>()
                     .join(","),
                 _ => String::new(),

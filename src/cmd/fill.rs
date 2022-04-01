@@ -202,7 +202,7 @@ impl GroupMemorizer for GroupValues {
                         self.default
                             .clone()
                             .or_else(|| self.map.get(&col).cloned())
-                            .unwrap_or_else(|| field.to_vec())
+                            .unwrap_or_else(|| field.clone())
                     } else {
                         field
                     },

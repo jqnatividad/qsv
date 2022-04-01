@@ -87,11 +87,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     wtr.write_record(vec!["field", "value", "count"])?;
     let head_ftables = headers.into_iter().zip(tables.into_iter());
     for (i, (header, ftab)) in head_ftables.enumerate() {
-        let mut header = header.to_vec();
-        if rconfig.no_headers {
-            header = (i + 1).to_string().into_bytes();
-        }
-        for (value, count) in args.counts(&ftab).into_iter() {
+        let header = if rconfig.no_headers {
+            (i + 1).to_string().into_bytes()
+        } else {
+            header.to_vec()
+        };
+        for (value, count) in args.counts(&ftab) {
             let count = count.to_string();
             let row = vec![&*header, &*value, count.as_bytes()];
             wtr.write_record(row)?;
