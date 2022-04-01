@@ -72,6 +72,7 @@ governor = { version = "0.4", optional = true }
 grex = "1.3"
 indicatif = "0.16"
 itertools = "0.10"
+itoa = "1"
 jsonschema = { version = "0.15", features = [
     "resolve-file",
     "resolve-http",
@@ -99,6 +100,7 @@ reqwest = { version = "0.11", features = [
     "rustls-tls",
 ], default-features = false }
 reverse_geocoder = { version = "3", optional = true }
+ryu = "1"
 self_update = { version = "0.29", features = [
     "archive-zip",
     "compression-zip-deflate",
