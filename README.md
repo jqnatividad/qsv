@@ -44,7 +44,7 @@ Available commands
 | [input](/src/cmd/input.rs#L7) | Read a CSV with exotic quoting/escaping rules. |
 | [join](/src/cmd/join.rs#L18)[^2] | Inner, outer, cross, anti & semi joins. Uses a simple hash index to make it fast.  |
 | [jsonl](/src/cmd/jsonl.rs#L11) | Convert newline-delimited JSON ([JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/)) to CSV. 
-| [lua](/src/cmd/lua.rs#L14)[^1] | Execute a [Lua](https://www.lua.org/about.html) script over CSV lines to transform, aggregate or filter them. Bundles [lua 5.4.4](https://www.lua.org/manual/5.4/manual.html).  |
+| [lua](/src/cmd/lua.rs#L14)[^1] | Execute a [Lua](https://www.lua.org/about.html) script over CSV lines to transform, aggregate or filter them. Bundles [Lua 5.4.4](https://www.lua.org/manual/5.4/manual.html).  |
 | [partition](/src/cmd/partition.rs#L17) | Partition a CSV based on a column value. |
 | [pseudo](/src/cmd/pseudo.rs#L10) | Pseudonymise the value of the given column by replacing them with an incremental identifier.  |
 | [py](/src/cmd/python.rs#L42)[^1] | Evaluate a Python expression over CSV lines to transform, aggregate or filter them. Python's [f-strings](https://www.freecodecamp.org/news/python-f-strings-tutorial-how-to-use-f-strings-for-string-formatting/) is particularly useful for extended formatting (Python 3.8+ required).  |
