@@ -55,7 +55,7 @@ struct Args {
     arg_input: Option<String>,
     arg_outdir: String,
     flag_size: usize,
-    flag_jobs: isize,
+    flag_jobs: usize,
     flag_filename: FilenameTemplate,
     flag_pad: usize,
     flag_no_headers: bool,
@@ -148,12 +148,10 @@ impl Args {
     }
 
     fn njobs(&self) -> usize {
-        let num_cpus = util::num_cpus();
-        match self.flag_jobs {
-            0 => util::max_jobs(),
-            flag_jobs if flag_jobs < 0 => num_cpus,
-            flag_jobs if flag_jobs > num_cpus as isize => num_cpus,
-            _ => self.flag_jobs as usize,
+        if self.flag_jobs == 0 {
+            util::num_cpus()
+        } else {
+            self.flag_jobs
         }
     }
 }
