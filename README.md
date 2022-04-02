@@ -174,8 +174,8 @@ Environment Variables
 * `QSV_SNIFF_DELIMITER` - when set, the delimiter is automatically detected. Overrides `QSV_DEFAULT_DELIMITER` and `--delimiter` option.
 * `QSV_NO_HEADERS` - when set, the first row will **NOT** be interpreted as headers. Supersedes `QSV_TOGGLE_HEADERS`.
 * `QSV_TOGGLE_HEADERS` - if set to `1`, toggles header setting - i.e. inverts qsv header behavior, with no headers being the default, and setting `--no-headers` will actually mean headers will not be ignored.
-* `QSV_MAX_JOBS` - number of jobs to use for multi-threaded commands (currently `frequency`, `split`, `schema` and `stats`). If not set, max_jobs is set
-to number of logical processors divided by three.  See [Multithreading](#multithreading) for more info.
+* `QSV_MAX_JOBS` - number of jobs to use for multithreaded commands (currently `frequency`, `split`, `schema` and `stats`). If not set, max_jobs is set
+to the detected number of logical processors.  See [Multithreading](#multithreading) for more info.
 * `QSV_REGEX_UNICODE` - if set, makes `search`, `searchset` and `replace` commands unicode-aware. For increased performance, these
 commands are not unicode-aware and will ignore unicode values when matching and will panic when unicode characters are used in the regex.
 * `QSV_RDR_BUFFER_CAPACITY` - set to change reader buffer size (bytes - default when not set: 16384)
@@ -279,16 +279,9 @@ The same is true with the write buffer (default: 64k) with the `QSV_WTR_BUFFER_C
 ### Multithreading
 Several commands support multithreading - `stats`, `frequency`, `schema`, `split` (when an index is available, using [threadpool](https://docs.rs/threadpool/latest/threadpool/)) and `validate` (no index required, using [rayon](https://docs.rs/rayon/latest/rayon/)).
 
-Previously, the threadpool commands spawned several jobs equal to the number of logical processors. After extensive benchmarking, it turns out
-doing so often results in the multithreaded runs running slower than single-threaded runs.
+qsv will automatically spawn parallel jobs equal to the detected number of logical processors. Should you want to manually override this, use the `--jobs` command-line option or the `QSV_MAX_JOBS` environment variable.
 
-Multithreaded jobs do increase performance - to a point. After a certain number of threads, there are not only diminishing returns, the multithreading overhead actually results in slower runs.
-
-Starting with qsv 0.22.0, a heuristic of setting the maximum number of jobs to the number of logical processors divided by 3 is applied. The user can still manually override this using the `--jobs` command-line option or the `QSV_MAX_JOBS` environment variable, but testing shows negative returns start at around this point.
-
-These [observations were gathered using the benchmark script](https://github.com/jqnatividad/qsv/blob/master/docs/BENCHMARKS.md), using a relatively large file (520mb, 41 column, 1M row sample of NYC's 311 data). Performance will vary based on environment - CPU architecture, amount of memory, operating system, I/O speed, and the number of background tasks, so this heuristic will not work for every situation.
-
-To find out your jobs setting, call `qsv --version`. The second to the last number is the number of jobs qsv will use for multi-threaded commands. The last number is the number of logical processors detected by qsv.
+To find out your jobs setting, call `qsv --version`. The second to the last number is the number of jobs qsv will use for multithreaded commands. The last number is the number of logical processors detected by qsv.
 
 ### Benchmarking for Performance
 Use and fine-tune the [benchmark script](scripts/benchmark-basic.sh) when tweaking qsv's performance to your environment.

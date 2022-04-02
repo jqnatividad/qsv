@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 use std::borrow::Cow;
 use std::path::{Path, PathBuf};
-use std::{cmp, env, fs, io, str, thread, time};
+use std::{env, fs, io, str, thread, time};
 
 use crate::config::{Config, Delimiter};
 use crate::CliResult;
@@ -12,11 +12,11 @@ use regex::Regex;
 use serde::de::{Deserialize, DeserializeOwned, Deserializer, Error};
 use thousands::Separable;
 
+#[inline]
 pub fn num_cpus() -> usize {
     thread::available_parallelism().unwrap().get()
 }
 
-const MAX_JOBS_CPU_DIVISOR: usize = 3;
 pub static DEFAULT_USER_AGENT: &str = concat!(
     env!("CARGO_PKG_NAME"),
     "/",
@@ -25,15 +25,15 @@ pub static DEFAULT_USER_AGENT: &str = concat!(
 );
 
 pub fn max_jobs() -> usize {
-    let cpus = num_cpus();
-    let max_jobs_env = match env::var("QSV_MAX_JOBS") {
-        Ok(val) => val.parse::<isize>().unwrap_or_default(),
-        Err(_) => 0,
+    let num_cpus = num_cpus();
+    let max_jobs = match env::var("QSV_MAX_JOBS") {
+        Ok(val) => val.parse::<usize>().unwrap_or(1_usize),
+        Err(_) => num_cpus,
     };
-    match max_jobs_env {
-        x if x > cpus as isize => cpus,
-        x if x <= 0 => cmp::max(cpus / MAX_JOBS_CPU_DIVISOR, 1),
-        _ => max_jobs_env as usize,
+    if (1..=num_cpus).contains(&max_jobs) {
+        max_jobs
+    } else {
+        num_cpus
     }
 }
 

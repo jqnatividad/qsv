@@ -68,7 +68,7 @@ pub struct Args {
     pub flag_limit: usize,
     pub flag_asc: bool,
     pub flag_no_nulls: bool,
-    pub flag_jobs: isize,
+    pub flag_jobs: usize,
     pub flag_output: Option<String>,
     pub flag_no_headers: bool,
     pub flag_delimiter: Option<Delimiter>,
@@ -201,12 +201,10 @@ impl Args {
     }
 
     fn njobs(&self) -> usize {
-        let num_cpus = util::num_cpus();
-        match self.flag_jobs {
-            0 => util::max_jobs(),
-            flag_jobs if flag_jobs < 0 => num_cpus,
-            flag_jobs if flag_jobs > num_cpus as isize => num_cpus,
-            _ => self.flag_jobs as usize,
+        if self.flag_jobs == 0 {
+            util::num_cpus()
+        } else {
+            self.flag_jobs
         }
     }
 }
