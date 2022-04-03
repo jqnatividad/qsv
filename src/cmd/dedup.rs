@@ -97,7 +97,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     dupewtr.flush()?;
     rconfig.write_headers(&mut rdr, &mut wtr)?;
-    for r in new.into_iter() {
+    for r in new {
         wtr.write_byte_record(&r)?;
     }
     Ok(wtr.flush()?)
