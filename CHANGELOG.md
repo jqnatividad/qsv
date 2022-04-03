@@ -5,6 +5,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.37.0] - 2022-04-02
+### Added
+* `enumerate`: added `--constant` <NULL> sentinel value in https://github.com/jqnatividad/qsv/pull/219
+* `fetch`: added `--jqlfile` option in https://github.com/jqnatividad/qsv/pull/220
+* `stats`: more perf tweaks by @jqnatividad in https://github.com/jqnatividad/qsv/pull/223
+
+### Changed
+* `fetch`: argument parsing refactor, removing need for dummy argument in https://github.com/jqnatividad/qsv/pull/222
+* applied select pedantic clippy recommendations in https://github.com/jqnatividad/qsv/pull/224
+* simplified multithreading - removed jobs div by three heuristic in https://github.com/jqnatividad/qsv/pull/225
+* use qsv-dateparser fork of dateparser for incresed performance of `stats`, `schema` and `apply` in https://github.com/jqnatividad/qsv/pull/230
+* Bump actions/checkout from 2.3.3 to 3 by @dependabot in https://github.com/jqnatividad/qsv/pull/228
+* Bump actions/stale from 3 to 5 by @dependabot in https://github.com/jqnatividad/qsv/pull/227
+* Bump actions/setup-python from 2 to 3.1.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/226
+
 ## [0.36.1] - 2022-03-26
 ### Changed
 * `validate`: use user agent & compression settings when fetching jsonschema from a URL in https://github.com/jqnatividad/qsv/pull/207
