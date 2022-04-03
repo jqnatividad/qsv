@@ -1,13 +1,14 @@
 use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
-use crate::util;
 use crate::CliResult;
+use crate::{regex_once_cell, util};
 use cached::proc_macro::{cached, io_cached};
 use cached::{RedisCache, Return};
-use dynfmt::{Format, SimpleCurlyFormat};
+use dynfmt::Format;
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::{debug, error};
 use once_cell::sync::{Lazy, OnceCell};
+use regex::Regex;
 use serde::Deserialize;
 use std::fs;
 use thiserror::Error;
@@ -185,12 +186,35 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     }
 
-    if args.flag_no_headers && args.flag_url_template.is_some() {
-        return fail!("--url-template option requires headers.");
-    }
-
     let str_headers = rdr.headers()?.clone();
-    let safe_headers = util::safe_header_names(&str_headers, false);
+
+    let mut dynfmt_fields = Vec::with_capacity(10); // 10 is a reasonable default to save allocs
+    let mut dynfmt_url_template = String::from("");
+    if let Some(ref url_template) = args.flag_url_template {
+        if args.flag_no_headers {
+            return fail!("--url-template option requires headers.");
+        } else {
+            dynfmt_url_template = url_template.to_string();
+            // first, get the fields used in the url template
+            let safe_headers = util::safe_header_names(&str_headers, false);
+            let formatstr_re: &'static Regex = regex_once_cell!(r"\{(?P<key>\w+)?\}");
+            for format_fields in formatstr_re.captures_iter(&url_template) {
+                dynfmt_fields.push(format_fields.name("key").unwrap().as_str());
+            }
+            // we sort the fields so we can do binary_search
+            dynfmt_fields.sort_unstable();
+            // now, get the indices of the columns for the lookup vec
+            for (i, field) in safe_headers.into_iter().enumerate() {
+                if dynfmt_fields.binary_search(&field.as_str()).is_ok() {
+                    let field_with_curly = format!("{{{field}}}");
+                    let field_index = format!("{{{i}}}");
+                    dynfmt_url_template =
+                        dynfmt_url_template.replace(&field_with_curly, &field_index);
+                }
+            }
+            debug!("dynfmt_fields: {dynfmt_fields:?}  url_template: {dynfmt_url_template}");
+        }
+    }
 
     use std::num::NonZeroU32;
     // default rate limit is actually set via docopt, so below init is just to satisfy compiler
@@ -280,15 +304,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         url.clear();
-        if let Some(ref url_template) = args.flag_url_template {
-            let mut record_map = std::collections::BTreeMap::new();
-
-            for (i, field) in record.iter().enumerate() {
+        if args.flag_url_template.is_some() {
+            let mut record_vec: Vec<String> = Vec::with_capacity(record.len());
+            for field in record.into_iter() {
                 let str_value = unsafe { std::str::from_utf8_unchecked(field).trim().to_string() };
-                record_map.insert(safe_headers[i].to_owned(), str_value);
+                record_vec.push(str_value);
             }
-            if let Ok(formatted_url) = SimpleCurlyFormat.format(url_template, record_map) {
-                url = formatted_url.to_string();
+            if let Ok(formatted) =
+                dynfmt::SimpleCurlyFormat.format(&dynfmt_url_template, record_vec)
+            {
+                url = formatted.to_string();
             }
         } else if let Ok(s) = std::str::from_utf8(&record[column_index]) {
             url = s.trim().to_string();
