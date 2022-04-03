@@ -45,20 +45,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         &args.flag_delimiter
     );
 
-    let count = match conf.indexed()? {
-        Some(idx) => {
-            info!("index used");
-            idx.count()
+    let count = if let Some(idx) = conf.indexed()? {
+        info!("index used");
+        idx.count()
+    } else {
+        let mut rdr = conf.reader()?;
+        let mut count = 0u64;
+        let mut record = csv::ByteRecord::new();
+        while rdr.read_byte_record(&mut record)? {
+            count += 1;
         }
-        None => {
-            let mut rdr = conf.reader()?;
-            let mut count = 0u64;
-            let mut record = csv::ByteRecord::new();
-            while rdr.read_byte_record(&mut record)? {
-                count += 1;
-            }
-            count
-        }
+        count
     };
 
     if args.flag_human_readable {
@@ -68,6 +65,5 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } else {
         println!("{count}");
     }
-
     Ok(())
 }
