@@ -15,7 +15,7 @@ use crate::index::Indexed;
 use crate::select::{SelectColumns, Selection};
 use crate::util;
 use crate::CliResult;
-use dateparser::DateTimeUtc;
+use qsv_dateparser::DateTimeUtc;
 use serde::Deserialize;
 
 use self::FieldType::{TDate, TDateTime, TFloat, TInteger, TNull, TString};
@@ -772,7 +772,7 @@ impl TypedMinMax {
             },
             TDate | TDateTime => unsafe {
                 let tempstr = str::from_utf8_unchecked(&*sample);
-                let n = dateparser::parse(tempstr).ok().unwrap();
+                let n = qsv_dateparser::parse(tempstr).ok().unwrap();
 
                 self.dates.add(n.to_string());
             },
