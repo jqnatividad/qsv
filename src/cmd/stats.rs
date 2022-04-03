@@ -442,18 +442,17 @@ impl Stats {
             pieces.push(empty());
             pieces.push(empty());
             pieces.push(empty());
+        } else if let Some(ref v) = self.online {
+            let mut buffer = ryu::Buffer::new();
+            pieces.push(buffer.format(v.mean()).to_owned());
+            pieces.push(buffer.format(v.stddev()).to_owned());
+            pieces.push(buffer.format(v.variance()).to_owned());
         } else {
-            if let Some(ref v) = self.online {
-                let mut buffer = ryu::Buffer::new();
-                pieces.push(buffer.format(v.mean()).to_owned());
-                pieces.push(buffer.format(v.stddev()).to_owned());
-                pieces.push(buffer.format(v.variance()).to_owned());
-            } else {
-                pieces.push(empty());
-                pieces.push(empty());
-                pieces.push(empty());
-            }
+            pieces.push(empty());
+            pieces.push(empty());
+            pieces.push(empty());
         }
+
         match self.median.as_mut().and_then(|v| match self.typ {
             TInteger | TFloat => v.median(),
             _ => None,
@@ -656,7 +655,6 @@ impl fmt::Debug for FieldType {
 }
 
 /// TypedSum keeps a rolling sum of the data seen.
-///
 /// It sums integers until it sees a float, at which point it sums floats.
 #[derive(Clone, Default)]
 struct TypedSum {
