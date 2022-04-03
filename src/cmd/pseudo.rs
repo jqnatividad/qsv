@@ -71,19 +71,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     while rdr.read_record(&mut record)? {
         let value = record[column_index].to_owned();
 
-        match values.get(&value) {
-            Some(id) => {
-                record = replace_column_value(&record, column_index, &id.to_string());
-            }
-            None => {
-                values.insert(value, counter);
-                record = replace_column_value(&record, column_index, &counter.to_string());
-                counter += 1;
-            }
+        if let Some(id) = values.get(&value) {
+            record = replace_column_value(&record, column_index, &id.to_string());
+        } else {
+            values.insert(value, counter);
+            record = replace_column_value(&record, column_index, &counter.to_string());
+            counter += 1;
         }
-
         wtr.write_record(&record)?;
     }
-
     Ok(wtr.flush()?)
 }
