@@ -68,7 +68,7 @@ fn apply_dynfmt() {
     let mut cmd = wrk.command("apply");
     cmd.arg("dynfmt")
         .arg("--formatstr")
-        .arg("{qty_fruit_day} helpings of {1fruit} is good for you, even if it costs ${unit_cost_usd} each")
+        .arg("{qty_fruit_day} helpings of {1fruit} is good for you, even if it costs ${unit_cost_usd} each. {1fruit}, all {qty_fruit_day} - is just worth it!")
         .arg("--new-column")
         .arg("saying")
         .arg("data.csv");
@@ -89,7 +89,7 @@ fn apply_dynfmt() {
             "a",
             "5",
             "z",
-            "20.5 helpings of mangoes is good for you, even if it costs $5 each"
+            "20.5 helpings of mangoes is good for you, even if it costs $5 each. mangoes, all 20.5 - is just worth it!"
         ],
         svec![
             "10",
@@ -97,7 +97,7 @@ fn apply_dynfmt() {
             "b",
             "20",
             "y",
-            "10 helpings of bananas is good for you, even if it costs $20 each"
+            "10 helpings of bananas is good for you, even if it costs $20 each. bananas, all 10 - is just worth it!"
         ],
         svec![
             "3",
@@ -105,7 +105,7 @@ fn apply_dynfmt() {
             "c",
             "3.50",
             "x",
-            "3 helpings of strawberries is good for you, even if it costs $3.50 each"
+            "3 helpings of strawberries is good for you, even if it costs $3.50 each. strawberries, all 3 - is just worth it!"
         ],
     ];
     assert_eq!(got, expected);

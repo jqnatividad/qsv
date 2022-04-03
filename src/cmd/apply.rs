@@ -1,7 +1,7 @@
 use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
-use crate::util;
 use crate::CliResult;
+use crate::{regex_once_cell, util};
 use cached::proc_macro::cached;
 use censor::{Censor, Sex, Zealous};
 use chrono::{NaiveTime, Utc};
@@ -223,12 +223,12 @@ Common options:
     -q, --quiet                 Don't show progress bars.
 ";
 
-macro_rules! regex {
-    ($re:literal $(,)?) => {{
-        static RE: once_cell::sync::OnceCell<regex::Regex> = once_cell::sync::OnceCell::new();
-        RE.get_or_init(|| regex::Regex::new($re).unwrap())
-    }};
-}
+// macro_rules! regex {
+//     ($re:literal $(,)?) => {{
+//         static RE: once_cell::sync::OnceCell<regex::Regex> = once_cell::sync::OnceCell::new();
+//         RE.get_or_init(|| regex::Regex::new($re).unwrap())
+//     }};
+// }
 
 static OPERATIONS: &[&str] = &[
     "len",
@@ -413,23 +413,34 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         return fail!("you can only use censor, replace, regex_replace, similarity, eudex or sentiment ONCE per operation series.");
     };
 
-    // for dynfmt, safe_headers are the "safe" version of colnames - alphanumeric, everything
-    // else replace with underscore
+    // for dynfmt, safe_headers are the "safe" version of colnames - alphanumeric only,
+    // all other chars replaced with underscore
     // dynfmt_fields are the columns used in the dynfmt --formatstr option
-    // we prep ir so we only populate the hashmap with these columns and not the
-    // whole record to save allocs and to increase performance
-    let mut safe_headers: Vec<String> = Vec::with_capacity(headers.len());
-    let mut dynfmt_fields = Vec::with_capacity(5);
+    // we prep it so we only populate the lookup vec with the index of these columns
+    // so SimpleCurlyFormat is performant
+    let mut dynfmt_fields = Vec::with_capacity(10); // 10 is a reasonable default to save allocs
+    let mut dynfmt_template = args.flag_formatstr.to_owned();
     if args.cmd_dynfmt {
         if args.flag_no_headers {
             return fail!("dynfmt operation requires headers.");
         } else {
-            safe_headers = util::safe_header_names(&headers, false);
-            let formatstr_re: &'static Regex = regex!(r"\{(?P<key>\w+)?\}");
+            // first, get the fields used in the dynfmt template
+            let safe_headers = util::safe_header_names(&headers, false);
+            let formatstr_re: &'static Regex = crate::regex_once_cell!(r"\{(?P<key>\w+)?\}");
             for format_fields in formatstr_re.captures_iter(&args.flag_formatstr) {
                 dynfmt_fields.push(format_fields.name("key").unwrap().as_str());
             }
-            debug!("dynfmt_fields: {dynfmt_fields:?}");
+            // we sort the fields so we can do binary_search
+            dynfmt_fields.sort_unstable();
+            // now, get the indices of the columns for the lookup vec
+            for (i, field) in safe_headers.into_iter().enumerate() {
+                if dynfmt_fields.binary_search(&field.as_str()).is_ok() {
+                    let field_with_curly = format!("{{{field}}}");
+                    let field_index = format!("{{{i}}}");
+                    dynfmt_template = dynfmt_template.replace(&field_with_curly, &field_index);
+                }
+            }
+            debug!("dynfmt_fields: {dynfmt_fields:?}  dynfmt_template: {dynfmt_template}");
         }
     }
 
@@ -481,21 +492,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 cell = geocoded_result;
             }
         } else if args.cmd_dynfmt {
-            let mut record_map = std::collections::HashMap::with_capacity(dynfmt_fields.len());
-
-            for (i, field) in record.into_iter().enumerate() {
-                if dynfmt_fields.contains(&safe_headers[i].as_str()) {
-                    let str_value = unsafe {
-                        std::str::from_utf8_unchecked(field.as_bytes())
-                            .trim()
-                            .to_string()
-                    };
-                    record_map.insert(safe_headers[i].to_owned(), str_value);
-                }
+            let mut record_vec: Vec<String> = Vec::with_capacity(record.len());
+            for field in record.into_iter() {
+                record_vec.push(field.to_string());
             }
-            if let Ok(formatted) =
-                dynfmt::SimpleCurlyFormat.format(&args.flag_formatstr, record_map)
-            {
+            if let Ok(formatted) = dynfmt::SimpleCurlyFormat.format(&dynfmt_template, record_vec) {
                 cell = formatted.to_string();
             }
         }
@@ -535,7 +536,7 @@ fn apply_operations(operations: &[&str], cell: &mut String, comparand: &str, rep
                 *cell = cell.to_uppercase();
             }
             "squeeze" => {
-                let squeezer: &'static Regex = regex!(r"\s+");
+                let squeezer: &'static Regex = regex_once_cell!(r"\s+");
                 *cell = squeezer.replace_all(cell, " ").to_string();
             }
             "trim" => {
@@ -571,7 +572,7 @@ fn apply_operations(operations: &[&str], cell: &mut String, comparand: &str, rep
             "censor_check" | "censor" => {
                 let censor = CENSOR.get_or_init(|| {
                     let mut censored_words = Censor::Standard + Zealous + Sex;
-                    for (_pos, word) in comparand.split(',').enumerate() {
+                    for word in comparand.split(',') {
                         censored_words += word.trim();
                     }
                     censored_words
@@ -657,8 +658,9 @@ fn search_cached(cell: &str, formatstr: &str) -> Option<String> {
     let geocoder =
         GEOCODER.get_or_init(|| ReverseGeocoder::new(LOCS.get_or_init(Locations::from_memory)));
 
-    let locregex: &'static Regex =
-        regex!(r"(?-u)([+-]?[0-9]+\.?[0-9]*|\.[0-9]+),\s*([+-]?[0-9]+\.?[0-9]*|\.[0-9]+)");
+    let locregex: &'static Regex = regex_once_cell!(
+        r"(?-u)([+-]?[0-9]+\.?[0-9]*|\.[0-9]+),\s*([+-]?[0-9]+\.?[0-9]*|\.[0-9]+)"
+    );
 
     let loccaps = locregex.captures(cell);
     if let Some(loccaps) = loccaps {

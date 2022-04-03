@@ -1,4 +1,5 @@
 use crate::workdir::Workdir;
+use serial_test::serial;
 
 #[test]
 fn fetch_simple() {
@@ -360,6 +361,7 @@ async fn run_webserver(tx: mpsc::Sender<ServerHandle>) -> std::io::Result<()> {
 }
 
 #[test]
+#[serial]
 fn fetch_ratelimit() {
     // start webserver with rate limiting
     let (tx, rx) = mpsc::channel();
@@ -443,6 +445,95 @@ fn fetch_ratelimit() {
             "The quick brown fox jumped over the lazy dog by the zigzag quarry site Smurf"
         ],
     ];
+    assert_eq!(got, expected);
+
+    // init stop webserver and wait until server gracefully exit
+    println!("STOPPING Webserver");
+    rt::System::new().block_on(server_handle.stop(true));
+}
+
+#[test]
+#[serial]
+fn fetch_complex_url_template() {
+    // start webserver with rate limiting
+    let (tx, rx) = mpsc::channel();
+
+    println!("START Webserver ");
+    thread::spawn(move || {
+        let server_future = run_webserver(tx);
+        rt::System::new().block_on(server_future)
+    });
+
+    let server_handle = rx.recv().unwrap();
+
+    // proceed with usual unit test
+    let wrk = Workdir::new("fetch_complex_template");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["first name", "color"],
+            svec!["Smurfette", "blue"],
+            svec!["Papa", "blue"],
+            svec!["Clumsy", "blue"],
+            svec!["Brainy", "blue"],
+            svec!["Grouchy", "blue"],
+            svec!["Hefty", "blue"],
+            svec!["Greedy", "green"],
+            svec!["Jokey", "blue"],
+            svec!["Chef", "blue"],
+            svec!["Vanity", "blue"],
+            svec!["Handy", "blue"],
+            svec!["Scaredy", "black"],
+            svec!["Tracker", "blue"],
+            svec!["Sloppy", "blue"],
+            svec!["Harmony", "blue"],
+            svec!["Painter", "multicolor"],
+            svec!["Poet", "blue"],
+            svec!["Farmer", "blue"],
+            svec!["Natural", "blue"],
+            svec!["Snappy", "blue"],
+        ],
+    );
+    let mut cmd = wrk.command("fetch");
+    cmd.arg("--url-template")
+        .arg(concat!(
+            "http://",
+            test_server!(),
+            "/user/{first_name}%20{color}"
+        ))
+        .arg("--new-column")
+        .arg("Fullname")
+        .arg("--jql")
+        .arg(r#"."fullname""#)
+        .arg("--rate-limit")
+        .arg("4")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["first name", "color", "Fullname"],
+        svec!["Smurfette", "blue", "Smurfette blue Smurf"],
+        svec!["Papa", "blue", "Papa blue Smurf"],
+        svec!["Clumsy", "blue", "Clumsy blue Smurf"],
+        svec!["Brainy", "blue", "Brainy blue Smurf"],
+        svec!["Grouchy", "blue", "Grouchy blue Smurf"],
+        svec!["Hefty", "blue", "Hefty blue Smurf"],
+        svec!["Greedy", "green", "Greedy green Smurf"],
+        svec!["Jokey", "blue", "Jokey blue Smurf"],
+        svec!["Chef", "blue", "Chef blue Smurf"],
+        svec!["Vanity", "blue", "Vanity blue Smurf"],
+        svec!["Handy", "blue", "Handy blue Smurf"],
+        svec!["Scaredy", "black", "Scaredy black Smurf"],
+        svec!["Tracker", "blue", "Tracker blue Smurf"],
+        svec!["Sloppy", "blue", "Sloppy blue Smurf"],
+        svec!["Harmony", "blue", "Harmony blue Smurf"],
+        svec!["Painter", "multicolor", "Painter multicolor Smurf"],
+        svec!["Poet", "blue", "Poet blue Smurf"],
+        svec!["Farmer", "blue", "Farmer blue Smurf"],
+        svec!["Natural", "blue", "Natural blue Smurf"],
+        svec!["Snappy", "blue", "Snappy blue Smurf"],
+    ];
+
     assert_eq!(got, expected);
 
     // init stop webserver and wait until server gracefully exit

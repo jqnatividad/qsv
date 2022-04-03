@@ -12,6 +12,14 @@ use regex::Regex;
 use serde::de::{Deserialize, DeserializeOwned, Deserializer, Error};
 use thousands::Separable;
 
+#[macro_export]
+macro_rules! regex_once_cell {
+    ($re:literal $(,)?) => {{
+        static RE: once_cell::sync::OnceCell<regex::Regex> = once_cell::sync::OnceCell::new();
+        RE.get_or_init(|| regex::Regex::new($re).unwrap())
+    }};
+}
+
 #[inline]
 pub fn num_cpus() -> usize {
     thread::available_parallelism().unwrap().get()
@@ -488,7 +496,7 @@ pub fn safe_header_names(headers: &csv::StringRecord, check_first_char: bool) ->
     // If name starts with a number, replace it with an _ as well
     let re = Regex::new(r"[^A-Za-z0-9]").unwrap();
     let mut header_vec: Vec<String> = Vec::with_capacity(headers.len());
-    for (_i, h) in headers.iter().take(headers.len()).enumerate() {
+    for h in headers.iter() {
         let mut python_var_name = re.replace_all(h, "_").to_string();
         if check_first_char && python_var_name.as_bytes()[0].is_ascii_digit() {
             python_var_name.replace_range(0..1, "_");
