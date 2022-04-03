@@ -753,18 +753,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dateparser"
-version = "0.1.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "81dcee48ba66b79ba92dab399f218228f98c5d601ca85127fbc1ad60caf237d8"
-dependencies = [
- "anyhow",
- "chrono",
- "lazy_static",
- "regex",
-]
-
-[[package]]
 name = "derive_more"
 version = "0.99.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2140,7 +2128,6 @@ dependencies = [
  "csv",
  "csv-index",
  "csv-sniffer",
- "dateparser",
  "docopt",
  "dynfmt",
  "encoding_rs_io",
@@ -2160,6 +2147,7 @@ dependencies = [
  "mlua",
  "once_cell",
  "pyo3",
+ "qsv-dateparser",
  "qsv-stats",
  "qsv_currency",
  "quickcheck",
@@ -2183,6 +2171,18 @@ dependencies = [
  "uuid",
  "vader_sentiment",
  "whatlang",
+]
+
+[[package]]
+name = "qsv-dateparser"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ed66e9101d54ffec4976b6debca42a08957aa396add787a329ae76831166aaa3"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "once_cell",
+ "regex",
 ]
 
 [[package]]
@@ -2700,9 +2700,9 @@ dependencies = [
 
 [[package]]
 name = "slab"
-version = "0.4.5"
+version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9def91fd1e018fe007022791f865d0ccc9b3a0d5001e01aabb8b40e46000afb5"
+checksum = "eb703cfe953bccee95685111adeedb76fabe4e97549a58d16f03ea7b9367bb32"
 
 [[package]]
 name = "smallvec"
