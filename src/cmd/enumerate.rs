@@ -113,7 +113,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     while rdr.read_byte_record(&mut record)? {
         if let Some(constant_value) = &args.flag_constant {
             if constant_value == NULL_VALUE {
-                record.push_field(b"")
+                record.push_field(b"");
             } else {
                 record.push_field(constant_value.as_bytes());
             }
@@ -132,6 +132,5 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
         wtr.write_byte_record(&record)?;
     }
-
     Ok(wtr.flush()?)
 }
