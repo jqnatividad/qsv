@@ -416,33 +416,26 @@ impl Stats {
         let empty = || "".to_owned();
 
         pieces.push(self.typ.to_string());
-        match self.sum.as_ref().and_then(|sum| sum.show(typ)) {
-            Some(sum) => {
-                pieces.push(sum);
-            }
-            None => {
-                pieces.push(empty());
-            }
+        if let Some(sum) = self.sum.as_ref().and_then(|sum| sum.show(typ)) {
+            pieces.push(sum);
+        } else {
+            pieces.push(empty());
         }
-        match self.minmax.as_ref().and_then(|mm| mm.show(typ)) {
-            Some(mm) => {
-                pieces.push(mm.0);
-                pieces.push(mm.1);
-            }
-            None => {
-                pieces.push(empty());
-                pieces.push(empty());
-            }
+
+        if let Some(mm) = self.minmax.as_ref().and_then(|mm| mm.show(typ)) {
+            pieces.push(mm.0);
+            pieces.push(mm.1);
+        } else {
+            pieces.push(empty());
+            pieces.push(empty());
         }
-        match self.minmax.as_ref().and_then(|mm| mm.len_range()) {
-            Some(mm) => {
-                pieces.push(mm.0);
-                pieces.push(mm.1);
-            }
-            None => {
-                pieces.push(empty());
-                pieces.push(empty());
-            }
+
+        if let Some(mm) = self.minmax.as_ref().and_then(TypedMinMax::len_range) {
+            pieces.push(mm.0);
+            pieces.push(mm.1);
+        } else {
+            pieces.push(empty());
+            pieces.push(empty());
         }
 
         if !self.typ.is_number() {
@@ -450,18 +443,15 @@ impl Stats {
             pieces.push(empty());
             pieces.push(empty());
         } else {
-            match self.online {
-                Some(ref v) => {
-                    let mut buffer = ryu::Buffer::new();
-                    pieces.push(buffer.format(v.mean()).to_owned());
-                    pieces.push(buffer.format(v.stddev()).to_owned());
-                    pieces.push(buffer.format(v.variance()).to_owned());
-                }
-                None => {
-                    pieces.push(empty());
-                    pieces.push(empty());
-                    pieces.push(empty());
-                }
+            if let Some(ref v) = self.online {
+                let mut buffer = ryu::Buffer::new();
+                pieces.push(buffer.format(v.mean()).to_owned());
+                pieces.push(buffer.format(v.stddev()).to_owned());
+                pieces.push(buffer.format(v.variance()).to_owned());
+            } else {
+                pieces.push(empty());
+                pieces.push(empty());
+                pieces.push(empty());
             }
         }
         match self.median.as_mut().and_then(|v| match self.typ {
@@ -591,7 +581,6 @@ impl FieldType {
                 return TDate;
             }
         }
-
         TString
     }
 
@@ -615,7 +604,7 @@ impl Commute for FieldType {
             (TInteger, TInteger) => TInteger,
             (TDate, TDate) => TDate,
             // date data types
-            (TDateTime, TDateTime) | (TDate, TDateTime) | (TDateTime, TDate) => TDateTime,
+            (TDateTime | TDate, TDateTime) | (TDateTime, TDate) => TDateTime,
             // Null does not impact the type.
             (TNull, any) | (any, TNull) => any,
             // Integers can degrade to floats.
