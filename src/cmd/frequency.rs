@@ -44,9 +44,8 @@ frequency options:
                            This works better when the given CSV data has
                            an index already created. Note that a file handle
                            is opened for each job.
-                           When set to '0', the number of jobs is set to the
+                           When not set, the number of jobs is set to the
                            number of CPUs detected.
-                           [default: 0]
 
 Common options:
     -h, --help             Display this message
@@ -66,7 +65,7 @@ pub struct Args {
     pub flag_limit: usize,
     pub flag_asc: bool,
     pub flag_no_nulls: bool,
-    pub flag_jobs: usize,
+    pub flag_jobs: Option<usize>,
     pub flag_output: Option<String>,
     pub flag_no_headers: bool,
     pub flag_delimiter: Option<Delimiter>,
@@ -78,7 +77,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut wtr = Config::new(&args.flag_output).writer()?;
     let (headers, tables) = match args.rconfig().indexed()? {
-        Some(ref mut idx) if args.njobs() > 1 => args.parallel_ftables(idx),
+        Some(ref mut idx) if util::njobs(args.flag_jobs) > 1 => args.parallel_ftables(idx),
         _ => args.sequential_ftables(),
     }?;
 
@@ -150,10 +149,10 @@ impl Args {
             return Ok((headers, vec![]));
         }
 
-        let chunk_size = util::chunk_size(idx.count() as usize, self.njobs());
+        let chunk_size = util::chunk_size(idx.count() as usize, util::njobs(self.flag_jobs));
         let nchunks = util::num_of_chunks(idx.count() as usize, chunk_size);
 
-        let pool = ThreadPool::new(self.njobs());
+        let pool = ThreadPool::new(util::njobs(self.flag_jobs));
         let (send, recv) = channel::bounded(0);
         for i in 0..nchunks {
             let (send, args, sel) = (send.clone(), self.clone(), sel.clone());
@@ -196,15 +195,6 @@ impl Args {
         let headers = rdr.byte_headers()?;
         let sel = self.rconfig().selection(headers)?;
         Ok((sel.select(headers).map(|h| h.to_vec()).collect(), sel))
-    }
-
-    fn njobs(&self) -> usize {
-        let num_cpus = util::num_cpus();
-        if self.flag_jobs == 0 || self.flag_jobs > num_cpus {
-            num_cpus
-        } else {
-            self.flag_jobs
-        }
     }
 }
 
