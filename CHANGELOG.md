@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.37.2] - 2022-04-03
+### Fixed
+* Handle/log self-update errors in https://github.com/jqnatividad/qsv/pull/233
+
 ## [0.37.1] - 2022-04-03
 ### Changed
 * `fetch` and `apply`: use cheaper, faster lookup tables for dynamic formatting in https://github.com/jqnatividad/qsv/pull/231
