@@ -7,7 +7,7 @@ use crate::config::{Config, Delimiter};
 use crate::CliResult;
 use docopt::Docopt;
 use indicatif::{ProgressBar, ProgressStyle};
-use log::{debug, info, log_enabled, Level};
+use log::{debug, error, info, log_enabled, Level};
 use regex::Regex;
 use serde::de::{Deserialize, DeserializeOwned, Deserializer, Error};
 use thousands::Separable;
@@ -462,7 +462,7 @@ pub fn qsv_check_for_update(bin_name: &str) {
 
     if latest_release > &curr_version.to_string() {
         eprintln!("Update {latest_release} available. Current version is {curr_version}.",);
-        let update_job = self_update::backends::github::Update::configure()
+        match self_update::backends::github::Update::configure()
             .repo_owner("jqnatividad")
             .repo_name("qsv")
             .bin_name(bin_name)
@@ -471,17 +471,26 @@ pub fn qsv_check_for_update(bin_name: &str) {
             .no_confirm(false)
             .current_version(curr_version)
             .build()
-            .unwrap();
-
-        let update_result = update_job.update();
-        if let Ok(status) = update_result {
-            let update_status = format!(
-                "Update successful for {}: `{}`!",
-                bin_name,
-                status.version()
-            );
-            eprintln!("{update_status}");
-            info!("{update_status}");
+        {
+            Ok(update_job) => match update_job.update() {
+                Ok(status) => {
+                    let update_status = format!(
+                        "Update successful for {}: `{}`!",
+                        bin_name,
+                        status.version()
+                    );
+                    eprintln!("{update_status}");
+                    info!("{update_status}");
+                }
+                Err(e) => {
+                    eprintln!("Self update update job error: {e}");
+                    error!("Self update update job error: {e}");
+                }
+            },
+            Err(e) => {
+                eprintln!("Self update builder error: {e}");
+                error!("Self update builder error: {e}");
+            }
         };
     } else {
         eprintln!("Up to date ({curr_version})... no update required.");
@@ -495,7 +504,7 @@ pub fn safe_header_names(headers: &csv::StringRecord, check_first_char: bool) ->
     // If name starts with a number, replace it with an _ as well
     let re = Regex::new(r"[^A-Za-z0-9]").unwrap();
     let mut header_vec: Vec<String> = Vec::with_capacity(headers.len());
-    for h in headers.iter() {
+    for h in headers {
         let mut python_var_name = re.replace_all(h, "_").to_string();
         if check_first_char && python_var_name.as_bytes()[0].is_ascii_digit() {
             python_var_name.replace_range(0..1, "_");
