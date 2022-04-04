@@ -301,10 +301,14 @@ Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org).
 
 Sponsor
 -------
+<div align="center">
+
 |qsv was made possible by|
 :-------------------------:|
 |[![](docs/images/datHere-logo-withtagline.png)](https://datHere.com)<br>|
 |Standards-based, best-of-breed, open source solutions<br>to make your **Data Useful, Usable & Used.**   |
+
+</div>
 
 Naming Collision
 ----------------
