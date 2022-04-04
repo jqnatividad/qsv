@@ -27,9 +27,8 @@ split options:
                            This only works when the given CSV data has
                            an index already created. Note that a file handle
                            is opened for each job.
-                           When set to '0', the number of jobs is set to the
+                           When not set, the number of jobs is set to the
                            number of CPUs detected.
-                           [default: 0]
     --filename <filename>  A filename template to use when constructing
                            the names of the output files.  The string '{}'
                            will be replaced by a value based on the value
@@ -53,7 +52,7 @@ struct Args {
     arg_input: Option<String>,
     arg_outdir: String,
     flag_size: usize,
-    flag_jobs: usize,
+    flag_jobs: Option<usize>,
     flag_filename: FilenameTemplate,
     flag_pad: usize,
     flag_no_headers: bool,
@@ -96,7 +95,7 @@ impl Args {
 
     fn parallel_split(&self, idx: Indexed<fs::File, fs::File>) -> CliResult<()> {
         let nchunks = util::num_of_chunks(idx.count() as usize, self.flag_size);
-        let pool = ThreadPool::new(self.njobs());
+        let pool = ThreadPool::new(util::njobs(self.flag_jobs));
         for i in 0..nchunks {
             let args = self.clone();
             pool.execute(move || {
@@ -143,14 +142,5 @@ impl Args {
         Config::new(&self.arg_input)
             .delimiter(self.flag_delimiter)
             .no_headers(self.flag_no_headers)
-    }
-
-    fn njobs(&self) -> usize {
-        let num_cpus = util::num_cpus();
-        if self.flag_jobs == 0 || self.flag_jobs > num_cpus {
-            num_cpus
-        } else {
-            self.flag_jobs
-        }
     }
 }

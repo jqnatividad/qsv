@@ -67,9 +67,8 @@ stats options:
     -j, --jobs <arg>       The number of jobs to run in parallel.
                            This works only when the given CSV has an index.
                            Note that a file handle is opened for each job.
-                           When set to '0', the number of jobs is set to the
+                           When not set, the number of jobs is set to the
                            number of CPUs detected.
-                           [default: 0]
 
 Common options:
     -h, --help             Display this message
@@ -93,7 +92,7 @@ pub struct Args {
     pub flag_nulls: bool,
     pub flag_dates: bool,
     pub flag_nullcount: bool,
-    pub flag_jobs: usize,
+    pub flag_jobs: Option<usize>,
     pub flag_output: Option<String>,
     pub flag_no_headers: bool,
     pub flag_delimiter: Option<Delimiter>,
@@ -106,8 +105,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let (headers, stats) = match args.rconfig().indexed()? {
         None => args.sequential_stats(),
         Some(idx) => {
-            if args.flag_jobs == 1 {
-                args.sequential_stats()
+            if let Some(num_jobs) = args.flag_jobs {
+                if num_jobs == 1 {
+                    args.sequential_stats()
+                } else {
+                    args.parallel_stats(idx)
+                }
             } else {
                 args.parallel_stats(idx)
             }
@@ -151,10 +154,10 @@ impl Args {
         let mut rdr = self.rconfig().reader()?;
         let (headers, sel) = self.sel_headers(&mut rdr)?;
 
-        let chunk_size = util::chunk_size(idx.count() as usize, self.njobs());
+        let chunk_size = util::chunk_size(idx.count() as usize, util::njobs(self.flag_jobs));
         let nchunks = util::num_of_chunks(idx.count() as usize, chunk_size);
 
-        let pool = ThreadPool::new(self.njobs());
+        let pool = ThreadPool::new(util::njobs(self.flag_jobs));
         let (send, recv) = channel::bounded(0);
         for i in 0..nchunks {
             let (send, args, sel) = (send.clone(), self.clone(), sel.clone());
@@ -171,7 +174,7 @@ impl Args {
 
     pub fn stats_to_records(&self, stats: Vec<Stats>) -> Vec<csv::StringRecord> {
         let mut records: Vec<_> = repeat(csv::StringRecord::new()).take(stats.len()).collect();
-        let pool = ThreadPool::new(self.njobs());
+        let pool = ThreadPool::new(util::njobs(self.flag_jobs));
         let mut results = vec![];
         for mut stat in stats {
             let (send, recv) = channel::bounded(0);
@@ -219,15 +222,6 @@ impl Args {
             .delimiter(self.flag_delimiter)
             .no_headers(self.flag_no_headers)
             .select(self.flag_select.clone())
-    }
-
-    fn njobs(&self) -> usize {
-        let num_cpus = util::num_cpus();
-        if self.flag_jobs == 0 || self.flag_jobs > num_cpus {
-            num_cpus
-        } else {
-            self.flag_jobs
-        }
     }
 
     #[inline]
