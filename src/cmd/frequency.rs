@@ -45,8 +45,6 @@ frequency options:
                            an index already created. Note that a file handle
                            is opened for each job.
                            When set to '0', the number of jobs is set to the
-                           number of CPUs detected divided by 3.
-                           When set to '-1', the number of jobs is set to the
                            number of CPUs detected.
                            [default: 0]
 
@@ -201,8 +199,9 @@ impl Args {
     }
 
     fn njobs(&self) -> usize {
-        if self.flag_jobs == 0 {
-            util::num_cpus()
+        let num_cpus = util::num_cpus();
+        if self.flag_jobs == 0 || self.flag_jobs > num_cpus {
+            num_cpus
         } else {
             self.flag_jobs
         }
