@@ -56,7 +56,8 @@ took 0.27 seconds.)
 Notably, the same type of "statistics" command in another
 [CSV command line toolkit](https://csvkit.readthedocs.io/)
 takes about 10 seconds to produce similar statistics on the same data set. [Visidata](https://visidata.org)
-takes ~1.5 minutes to calculate a subset of these statistics with its Describe sheet.
+takes ~1.5 minutes to calculate a subset of these statistics with its Describe sheet. Even python [pandas'](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.describe.html) 
+`describe(include="all"))` took 12 seconds to calculate a subset of qsv's statistics.
 
 Creating an index gives us more than just faster statistics gathering. It 
 enables multithreading on several other commands - `frequency`, `split` & `schema`. 
