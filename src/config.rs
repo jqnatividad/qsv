@@ -6,7 +6,6 @@ use std::ops::Deref;
 use std::path::PathBuf;
 
 use csv_sniffer::{SampleSize, Sniffer};
-use encoding_rs_io::DecodeReaderBytes;
 use log::{debug, warn};
 use serde::de::{Deserialize, Deserializer, Error};
 
@@ -325,10 +324,7 @@ impl Config {
         Ok(match self.path {
             None => Box::new(io::stdin()),
             Some(ref p) => match fs::File::open(p) {
-                Ok(x) => {
-                    let transcoded = DecodeReaderBytes::new(x);
-                    Box::new(transcoded)
-                }
+                Ok(x) => Box::new(x),
                 Err(err) => {
                     let msg = format!("failed to open {}: {}", p.display(), err);
                     return Err(io::Error::new(io::ErrorKind::NotFound, msg));
