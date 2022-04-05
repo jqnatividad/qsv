@@ -75,7 +75,7 @@ Installation
 ------------
 Pre-built binaries for Windows, Linux and macOS are available [from GitHub](https://github.com/jqnatividad/qsv/releases/latest).
 
-There are two versions of qsv. `qsvlite` has all features disabled. `qsv` supports features, with the pre-built binaries
+There are two versions of qsv. `qsvlite` has all [features](#feature-flags) disabled. `qsv` supports features, with the pre-built binaries
 enabling all valid platform features[^6].
 
 Alternatively, you can compile from source by
