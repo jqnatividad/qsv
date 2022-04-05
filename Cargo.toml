@@ -72,7 +72,7 @@ grex = "1.3"
 indicatif = "0.16"
 itertools = "0.10"
 itoa = "1"
-jsonschema = { version = "=0.15.0", features = [
+jsonschema = { version = "=0.15.1", features = [
     "resolve-file",
     "resolve-http",
 ], default-features = false }
