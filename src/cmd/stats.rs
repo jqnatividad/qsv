@@ -21,9 +21,9 @@ use serde::Deserialize;
 use self::FieldType::{TDate, TDateTime, TFloat, TInteger, TNull, TString};
 
 static USAGE: &str = "
-Computes basic statistics on CSV data.
+Computes descriptive statistics on CSV data.
 
-Basic statistics includes sum, min/max, min/max length, mean, stddev, variance,
+Descriptive statistics includes sum, min/max, min/max length, mean, stddev, variance,
 quartiles, median, modes, cardinality & nullcount. Note that some statistics are
 expensive to compute and requires loading the entire file into memory,
 so they must be enabled explicitly. 
@@ -35,7 +35,7 @@ corresponds to statistics that can be computed efficiently on a stream of data (
 The data type of each column is also inferred (Unknown, NULL, Integer, String,
 Float, Date and DateTime). Note that the Date and DateTime data types are only inferred with
 the --dates option as its an expensive operation. The date formats recognized can be found at
-https://docs.rs/dateparser/0.1.6/dateparser/#accepted-date-formats.
+https://github.com/jqnatividad/belt/tree/main/dateparser#accepted-date-formats.
 
 Computing statistics on a large file can be made much faster if you create
 an index for it first with 'qsv index' to enable multithreading.
