@@ -1,14 +1,12 @@
 use std::cmp;
 
+use self::Number::{Float, Int};
 use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
 use crate::util;
 use crate::CliResult;
 use rand::{rngs::StdRng, seq::SliceRandom, SeedableRng};
 use serde::Deserialize;
-use std::str::from_utf8;
-
-use self::Number::{Float, Int};
 
 static USAGE: &str = "
 Sorts CSV data lexicographically.
@@ -192,7 +190,7 @@ where
     X: Iterator<Item = &'a [u8]>,
 {
     xs.next()
-        .and_then(|bytes| from_utf8(bytes).ok())
+        .and_then(|bytes| unsafe { Some(std::str::from_utf8_unchecked(bytes)) })
         .and_then(|s| {
             if let Ok(i) = s.parse::<i64>() {
                 Some(Number::Int(i))
