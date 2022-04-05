@@ -144,7 +144,7 @@ echo "complete -F _docopt_wordlist_commands qsv" >> $HOME/.bash_completion
 
 Recognized file formats
 -----------------------
-qsv recognizes CSV (`.csv` file extension) and TSV files (`.tsv` and `.tab` file extensions). CSV files are assummed to have "," (comma) as a delimiter,
+qsv recognizes UTF-8 encoded, CSV (`.csv` file extension) and TSV files (`.tsv` and `.tab` file extensions). CSV files are assummed to have "," (comma) as a delimiter,
 and TSV files, "\t" (tab) as a delimiter. The delimiter is a single ascii character that can be set either by the `--delimiter` command-line option or
 with the `QSV_DEFAULT_DELIMITER` environment variable.
 
@@ -155,8 +155,11 @@ tab for `.tsv` and `.tab` files.
 
 The `fetch` command also produces JSONL files when its invoked without the `--new-column` option.
 
+### **UTF-8 Encoding**   
+qsv requires UTF-8 encoded (of which ASCII is a subset) input files. On Linux and macOS, UTF-8 encoding is the default. Should you need to reencode CSV/TSV files, there are several utilities you can use to do so on (Linux/macOS)[https://stackoverflow.com/questions/805418/how-can-i-find-encoding-of-a-file-via-a-script-on-linux] and [Windows](https://superuser.com/questions/1163753/converting-text-file-to-utf-8-on-windows-command-prompt).
+
 ### **Windows Usage Note:**   
-Unlike other modern operating systems, Windows' [default text encoding is UTF16-LE](https://stackoverflow.com/questions/66072117/why-does-windows-use-utf-16le).   
+Unlike other modern operating systems, Windows' [default encoding is UTF16-LE](https://stackoverflow.com/questions/66072117/why-does-windows-use-utf-16le).   
 This will cause problems when redirecting qsv's output to a CSV file and trying to open it with applications
 like Excel:   
 ```
