@@ -1,5 +1,4 @@
 use std::cmp;
-use std::str::from_utf8;
 
 use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
@@ -122,11 +121,12 @@ where
     }
 }
 
+#[inline]
 fn next_no_case<'a, X>(xs: &mut X) -> Option<String>
 where
     X: Iterator<Item = &'a [u8]>,
 {
     xs.next()
-        .and_then(|bytes| from_utf8(bytes).ok())
+        .map(|bytes| unsafe { std::str::from_utf8_unchecked(bytes) })
         .map(str::to_lowercase)
 }

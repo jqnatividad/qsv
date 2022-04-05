@@ -461,24 +461,22 @@ impl<R> fmt::Debug for ValueIndex<R> {
     }
 }
 
+#[inline]
 fn get_row_key(sel: &Selection, row: &csv::ByteRecord, casei: bool) -> Vec<ByteString> {
     sel.select(row).map(|v| transform(v, casei)).collect()
 }
 
+#[inline]
 fn transform(bs: &[u8], casei: bool) -> ByteString {
-    match str::from_utf8(bs) {
-        Err(_) => bs.to_vec(),
-        Ok(s) => {
-            if casei {
-                let norm: String = s
-                    .trim()
-                    .chars()
-                    .map(|c| c.to_lowercase().next().unwrap())
-                    .collect();
-                norm.into_bytes()
-            } else {
-                s.trim().as_bytes().to_vec()
-            }
-        }
+    let s = unsafe { str::from_utf8_unchecked(bs) };
+    if casei {
+        let norm: String = s
+            .trim()
+            .chars()
+            .map(|c| c.to_lowercase().next().unwrap())
+            .collect();
+        norm.into_bytes()
+    } else {
+        s.trim().as_bytes().to_vec()
     }
 }

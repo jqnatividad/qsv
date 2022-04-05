@@ -198,9 +198,8 @@ impl Args {
     }
 }
 
+#[inline]
 fn trim(bs: ByteString) -> ByteString {
-    match String::from_utf8(bs) {
-        Ok(s) => s.trim().as_bytes().to_vec(),
-        Err(bs) => bs.into_bytes(),
-    }
+    let s = unsafe { String::from_utf8_unchecked(bs) };
+    s.trim().as_bytes().to_vec()
 }
