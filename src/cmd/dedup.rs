@@ -127,6 +127,6 @@ where
     X: Iterator<Item = &'a [u8]>,
 {
     xs.next()
-        .and_then(|bytes| unsafe { Some(std::str::from_utf8_unchecked(bytes)) })
+        .map(|bytes| unsafe { std::str::from_utf8_unchecked(bytes) })
         .map(str::to_lowercase)
 }

@@ -190,7 +190,7 @@ where
     X: Iterator<Item = &'a [u8]>,
 {
     xs.next()
-        .and_then(|bytes| unsafe { Some(std::str::from_utf8_unchecked(bytes)) })
+        .map(|bytes| unsafe { std::str::from_utf8_unchecked(bytes) })
         .and_then(|s| {
             if let Ok(i) = s.parse::<i64>() {
                 Some(Number::Int(i))
