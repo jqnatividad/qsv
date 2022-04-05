@@ -47,15 +47,13 @@ pub fn max_jobs() -> usize {
 
 pub fn njobs(flag_jobs: Option<usize>) -> usize {
     let num_cpus = num_cpus();
-    if let Some(jobs) = flag_jobs {
+    flag_jobs.map_or(num_cpus, |jobs| {
         if jobs == 0 || jobs > num_cpus {
             num_cpus
         } else {
             jobs
         }
-    } else {
-        num_cpus
-    }
+    })
 }
 
 pub fn version() -> String {
