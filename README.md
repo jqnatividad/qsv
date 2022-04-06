@@ -40,7 +40,7 @@ Available commands
 | [frequency](/src/cmd/frequency.rs#L15)[^2][^4] | Build [frequency tables](https://statisticsbyjim.com/basics/frequency-table/) of each column. (Uses multithreading to go faster if an index is present.) |
 | [generate](/src/cmd/generate.rs#L12-L13)[^1] | Generate test data by profiling a CSV using [Markov decision process](https://crates.io/crates/test-data-generation) machine learning.  |
 | [headers](/src/cmd/headers.rs#L11) | Show the headers of a CSV. Or show the intersection of all headers between many CSV files. |
-| [index](/src/cmd/index.rs#L13-L14) | Create an index for a CSV. This is very quick & provides constant time indexing into the CSV file. Enables multithreading for `frequency`, `split`, `stats` and `schema` commands. |
+| [index](/src/cmd/index.rs#L13-L14) | Create an index for a CSV. This is very quick & provides constant time indexing into the CSV file. Also enables multithreading for `frequency`, `split`, `stats` and `schema` commands. |
 | [input](/src/cmd/input.rs#L7) | Read a CSV with exotic quoting/escaping rules. |
 | [join](/src/cmd/join.rs#L18)[^2] | Inner, outer, cross, anti & semi joins. Uses a simple hash index to make it fast.  |
 | [jsonl](/src/cmd/jsonl.rs#L11-L12) | Convert newline-delimited JSON ([JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/)) to CSV. 
@@ -69,7 +69,7 @@ Available commands
 [^2]: uses an index when available.   
 [^3]: loads the entire CSV into memory. Note that `stats` & `transpose` have modes that do not load the entire CSV into memory.   
 [^4]: multithreaded when an index is available (use `--jobs` option to adjust).   
-[^5]: multithreaded   
+[^5]: multithreaded even without an index.   
 
 Installation
 ------------
@@ -177,6 +177,7 @@ Environment Variables
 * `QSV_SNIFF_DELIMITER` - when set, the delimiter is automatically detected. Overrides `QSV_DEFAULT_DELIMITER` and `--delimiter` option.
 * `QSV_NO_HEADERS` - when set, the first row will **NOT** be interpreted as headers. Supersedes `QSV_TOGGLE_HEADERS`.
 * `QSV_TOGGLE_HEADERS` - if set to `1`, toggles header setting - i.e. inverts qsv header behavior, with no headers being the default, and setting `--no-headers` will actually mean headers will not be ignored.
+* `QSV_AUTOINDEX` - when set, automatically create an index when none is detected. Also automatically updates stale indices.
 * `QSV_MAX_JOBS` - number of jobs to use for multithreaded commands (currently `frequency`, `split`, `schema` and `stats`). If not set, max_jobs is set
 to the detected number of logical processors.  See [Multithreading](#multithreading) for more info.
 * `QSV_REGEX_UNICODE` - if set, makes `search`, `searchset` and `replace` commands unicode-aware. For increased performance, these

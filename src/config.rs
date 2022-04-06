@@ -78,6 +78,7 @@ pub struct Config {
     double_quote: bool,
     escape: Option<u8>,
     quoting: bool,
+    autoindex: bool,
 }
 
 // Empty trait as an alias for Seek and Read that avoids auto trait errors
@@ -139,6 +140,7 @@ impl Config {
             double_quote: true,
             escape: None,
             quoting: true,
+            autoindex: env::var("QSV_AUTOINDEX").is_ok(),
         }
     }
 
@@ -273,6 +275,17 @@ impl Config {
         })
     }
 
+    fn autoindex_file(&self) {
+        let mut path_str = String::new();
+        if let Some(path_buf) = &self.path {
+            let path_clone = path_buf.clone();
+            path_str = path_clone.into_os_string().into_string().unwrap();
+        }
+        let index_argv: Vec<&str> = vec!["", "index", &path_str];
+        crate::cmd::index::run(&*index_argv).unwrap();
+        debug!("autoindex for {path_str} created");
+    }
+
     pub fn index_files(&self) -> io::Result<Option<(csv::Reader<fs::File>, fs::File)>> {
         let (csv_file, idx_file) = match (&self.path, &self.idx_path) {
             (&None, &None) => return Ok(None),
@@ -280,15 +293,18 @@ impl Config {
                 return Err(io::Error::new(
                     io::ErrorKind::Other,
                     "Cannot use <stdin> with indexes",
-                    // Some(format!("index file: {}", p.display()))
                 ));
             }
             (&Some(ref p), &None) => {
                 // We generally don't want to report an error here, since we're
-                // passively trying to find an index.
+                // passively trying to find an index, so we just log the warning...
                 let idx_file = match fs::File::open(&util::idx_path(p)) {
                     Err(e) => {
-                        warn!("No index file found - {p:?}: {e}");
+                        if self.autoindex {
+                            self.autoindex_file();
+                        } else {
+                            warn!("No index file found - {p:?}: {e}");
+                        }
                         return Ok(None);
                     }
                     Ok(f) => f,
@@ -303,11 +319,16 @@ impl Config {
         let data_modified = util::last_modified(&csv_file.metadata()?);
         let idx_modified = util::last_modified(&idx_file.metadata()?);
         if data_modified > idx_modified {
-            return Err(io::Error::new(
-                io::ErrorKind::Other,
-                "The CSV file was modified after the index file. \
+            if self.autoindex {
+                debug!("index stale... autoindexing...");
+                self.autoindex_file();
+            } else {
+                return Err(io::Error::new(
+                    io::ErrorKind::Other,
+                    "The CSV file was modified after the index file. \
                  Please re-create the index.",
-            ));
+                ));
+            }
         }
         let csv_rdr = self.from_reader(csv_file);
         Ok(Some((csv_rdr, idx_file)))
