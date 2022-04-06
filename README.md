@@ -69,7 +69,7 @@ Available commands
 [^2]: uses an index when available.   
 [^3]: loads the entire CSV into memory. Note that `stats` & `transpose` have modes that do not load the entire CSV into memory.   
 [^4]: multithreaded when an index is available (use `--jobs` option to adjust).   
-[^5]: multithreaded even without an index   
+[^5]: multithreaded even without an index.   
 
 Installation
 ------------

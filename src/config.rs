@@ -275,7 +275,7 @@ impl Config {
         })
     }
 
-    pub fn autoindex_file(&self) {
+    fn autoindex_file(&self) {
         let mut path_str = String::new();
         if let Some(path_buf) = &self.path {
             let path_clone = path_buf.clone();
