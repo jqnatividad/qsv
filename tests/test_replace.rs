@@ -28,6 +28,33 @@ fn replace() {
 }
 
 #[test]
+fn replace_null() {
+    let wrk = Workdir::new("replace_null");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["identifier", "color"],
+            svec!["164.0", "yellow"],
+            svec!["165.0", "yellow"],
+            svec!["166.0", "yellow"],
+            svec!["167.0", "yellow.0"],
+        ],
+    );
+    let mut cmd = wrk.command("replace");
+    cmd.arg("\\.0$").arg("<NULL>").arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["identifier", "color"],
+        svec!["164", "yellow"],
+        svec!["165", "yellow"],
+        svec!["166", "yellow"],
+        svec!["167", "yellow"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn replace_unicode() {
     let wrk = Workdir::new("replace");
     wrk.create(
