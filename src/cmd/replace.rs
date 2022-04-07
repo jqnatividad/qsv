@@ -22,6 +22,10 @@ Usage:
     qsv replace [options] <pattern> <replacement> [<input>]
     qsv replace --help
 
+replace arguments:
+    <pattern>              Regular expression to match.
+    <replacement>          Replacement string. Set to '<NULL>' if you want to
+                           replace matches with ''.
 replace options:
     -i, --ignore-case      Case insensitive search. This is equivalent to
                            prefixing the regex with '(?i)'.
@@ -54,6 +58,8 @@ struct Args {
     flag_ignore_case: bool,
 }
 
+const NULL_VALUE: &str = "<NULL>";
+
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
     let regex_unicode = match env::var("QSV_REGEX_UNICODE") {
@@ -64,7 +70,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .case_insensitive(args.flag_ignore_case)
         .unicode(regex_unicode)
         .build()?;
-    let replacement = args.arg_replacement.as_bytes();
+    let mut replacement = args.arg_replacement.as_bytes();
+    if args.arg_replacement == NULL_VALUE {
+        replacement = "".as_bytes();
+    }
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers)
