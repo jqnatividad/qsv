@@ -276,14 +276,13 @@ impl Config {
     }
 
     fn autoindex_file(&self) {
-        let mut path_str = String::new();
         if let Some(path_buf) = &self.path {
             let path_clone = path_buf.clone();
-            path_str = path_clone.into_os_string().into_string().unwrap();
-        }
+            let path_str = path_clone.into_os_string().into_string().unwrap();
         let index_argv: Vec<&str> = vec!["", "index", &path_str];
         crate::cmd::index::run(&*index_argv).unwrap();
         debug!("autoindex for {path_str} created");
+        }
     }
 
     pub fn index_files(&self) -> io::Result<Option<(csv::Reader<fs::File>, fs::File)>> {
