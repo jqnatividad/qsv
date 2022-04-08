@@ -20,6 +20,8 @@ const DEFAULT_RDR_BUFFER_CAPACITY: usize = 16 * (1 << 10);
 pub const DEFAULT_WTR_BUFFER_CAPACITY: usize = 64 * (1 << 10);
 // number of rows for csv_sniffer to sample
 const DEFAULT_SNIFFER_SAMPLE: usize = 200;
+// number of bytes to check for UTF8 encoding
+const DEFAULT_UTF8_CHECK_BUFFER_LEN: usize = 8192;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Delimiter(pub u8);
@@ -79,6 +81,7 @@ pub struct Config {
     escape: Option<u8>,
     quoting: bool,
     autoindex: bool,
+    checkutf8: bool,
 }
 
 // Empty trait as an alias for Seek and Read that avoids auto trait errors
@@ -141,6 +144,7 @@ impl Config {
             escape: None,
             quoting: true,
             autoindex: env::var("QSV_AUTOINDEX").is_ok(),
+            checkutf8: env::var("QSV_SKIPUTF8_CHECK").is_err(),
         }
     }
 
@@ -258,7 +262,15 @@ impl Config {
                 io::ErrorKind::Other,
                 "Cannot use <stdin> here",
             )),
-            Some(ref p) => fs::File::open(p).map(|f| self.from_reader(f)),
+            Some(ref p) => {
+                if !self.is_utf8_encoded() {
+                    return Err(io::Error::new(
+                        io::ErrorKind::Other,
+                        format!("{p:?} is not UTF8 encoded."),
+                    ));
+                }
+                fs::File::open(p).map(|f| self.from_reader(f))
+            }
         }
     }
 
@@ -269,21 +281,63 @@ impl Config {
                 let mut buffer: Vec<u8> = Vec::new();
                 let stdin = io::stdin();
                 stdin.lock().read_to_end(&mut buffer)?;
+                // check if its utf8-encoded
+                if self.checkutf8 {
+                    let s = String::from_utf8_lossy(&buffer);
+                    debug!("checking stdin encoding...");
+                    if s.contains(std::char::REPLACEMENT_CHARACTER) {
+                        return Err(io::Error::new(
+                            io::ErrorKind::Other,
+                            "<stdin> is not UTF8 encoded.",
+                        ));
+                    }
+                }
                 self.from_reader(Box::new(io::Cursor::new(buffer)))
             }
-            Some(ref p) => self.from_reader(Box::new(fs::File::open(p).unwrap())),
+            Some(ref p) => {
+                if !self.is_utf8_encoded() {
+                    return Err(io::Error::new(
+                        io::ErrorKind::Other,
+                        format!("{p:?} is not UTF8 encoded."),
+                    ));
+                }
+                self.from_reader(Box::new(fs::File::open(p).unwrap()))
+            }
         })
     }
 
+    // qsv only works safely with utf8 encoded files
+    // check first DEFAULT_UTF8_CHECK_BUFFER_LEN bytes
+    // of file to quickly check if its utf8
+    fn is_utf8_encoded(&self) -> bool {
+        if !self.checkutf8 {
+            return true;
+        }
+        if let Some(path_buf) = &self.path {
+            debug!("checking encoding...");
+            let mut f = fs::File::open(path_buf).unwrap();
+            let fsize = f.metadata().unwrap().len() as usize;
+            let mut buffer_size = DEFAULT_UTF8_CHECK_BUFFER_LEN;
+            if fsize < buffer_size {
+                buffer_size = fsize;
+            }
+            let mut buffer = vec![0; buffer_size];
+            if f.read_exact(&mut buffer).is_ok() {
+                let s = String::from_utf8_lossy(&buffer);
+                return !s.contains(std::char::REPLACEMENT_CHARACTER);
+            }
+        }
+        false
+    }
+
     fn autoindex_file(&self) {
-        let mut path_str = String::new();
         if let Some(path_buf) = &self.path {
             let path_clone = path_buf.clone();
-            path_str = path_clone.into_os_string().into_string().unwrap();
+            let path_str = path_clone.into_os_string().into_string().unwrap();
+            let index_argv: Vec<&str> = vec!["", "index", &path_str];
+            crate::cmd::index::run(&*index_argv).unwrap();
+            debug!("autoindex for {path_str} created");
         }
-        let index_argv: Vec<&str> = vec!["", "index", &path_str];
-        crate::cmd::index::run(&*index_argv).unwrap();
-        debug!("autoindex for {path_str} created");
     }
 
     pub fn index_files(&self) -> io::Result<Option<(csv::Reader<fs::File>, fs::File)>> {
@@ -343,14 +397,40 @@ impl Config {
 
     pub fn io_reader(&self) -> io::Result<Box<dyn io::Read + 'static>> {
         Ok(match self.path {
-            None => Box::new(io::stdin()),
-            Some(ref p) => match fs::File::open(p) {
-                Ok(x) => Box::new(x),
-                Err(err) => {
-                    let msg = format!("failed to open {}: {}", p.display(), err);
-                    return Err(io::Error::new(io::ErrorKind::NotFound, msg));
+            None => {
+                if self.checkutf8 {
+                    let stdin_reader = io::stdin();
+                    let mut buffer: Vec<u8> = Vec::new();
+                    stdin_reader.lock().read_to_end(&mut buffer)?;
+                    // check if its utf8-encoded
+                    let s = String::from_utf8_lossy(&buffer);
+                    debug!("checking stdin encoding...");
+                    if s.contains(std::char::REPLACEMENT_CHARACTER) {
+                        return Err(io::Error::new(
+                            io::ErrorKind::Other,
+                            "<stdin> is not UTF8 encoded.",
+                        ));
+                    }
+                    Box::new(io::Cursor::new(buffer))
+                } else {
+                    Box::new(io::stdin())
                 }
-            },
+            }
+            Some(ref p) => {
+                if !self.is_utf8_encoded() {
+                    return Err(io::Error::new(
+                        io::ErrorKind::Other,
+                        format!("{p:?} is not UTF8 encoded."),
+                    ));
+                }
+                match fs::File::open(p) {
+                    Ok(x) => Box::new(x),
+                    Err(err) => {
+                        let msg = format!("failed to open {}: {}", p.display(), err);
+                        return Err(io::Error::new(io::ErrorKind::NotFound, msg));
+                    }
+                }
+            }
         })
     }
 
