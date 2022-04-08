@@ -8,6 +8,7 @@ extern crate quickcheck;
 extern crate rand;
 extern crate stats;
 
+use std::env;
 use std::fmt;
 use std::mem::transmute;
 use std::ops;
@@ -81,11 +82,15 @@ mod test_transpose;
 mod test_validate;
 
 fn qcheck<T: Testable>(p: T) {
+    env::set_var("QSV_SKIPUTF8_CHECK", "1");
     QuickCheck::new().gen(Gen::new(5)).quickcheck(p);
+    env::set_var("QSV_SKIPUTF8_CHECK", "");
 }
 
 fn qcheck_sized<T: Testable>(p: T, size: usize) {
+    env::set_var("QSV_SKIPUTF8_CHECK", "1");
     QuickCheck::new().gen(Gen::new(size)).quickcheck(p);
+    env::set_var("QSV_SKIPUTF8_CHECK", "");
 }
 
 pub type CsvVecs = Vec<Vec<String>>;
