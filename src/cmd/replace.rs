@@ -70,10 +70,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .case_insensitive(args.flag_ignore_case)
         .unicode(regex_unicode)
         .build()?;
-    let mut replacement = args.arg_replacement.as_bytes();
-    if args.arg_replacement == NULL_VALUE {
-        replacement = "".as_bytes();
-    }
+    let replacement = if args.arg_replacement == NULL_VALUE {
+        "".as_bytes()
+    } else {
+        args.arg_replacement.as_bytes()
+    };
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers)
