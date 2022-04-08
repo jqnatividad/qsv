@@ -449,7 +449,7 @@ impl<R> fmt::Debug for ValueIndex<R> {
         // Sort the values by order of first appearance.
         let mut kvs = self.values.iter().collect::<Vec<_>>();
         kvs.sort_by(|&(_, v1), &(_, v2)| v1[0].cmp(&v2[0]));
-        for (keys, rows) in kvs.into_iter() {
+        for (keys, rows) in kvs {
             // This is just for debugging, so assume Unicode for now.
             let keys = keys
                 .iter()
