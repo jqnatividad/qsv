@@ -178,6 +178,7 @@ Environment Variables
 * `QSV_NO_HEADERS` - when set, the first row will **NOT** be interpreted as headers. Supersedes `QSV_TOGGLE_HEADERS`.
 * `QSV_TOGGLE_HEADERS` - if set to `1`, toggles header setting - i.e. inverts qsv header behavior, with no headers being the default, and setting `--no-headers` will actually mean headers will not be ignored.
 * `QSV_AUTOINDEX` - when set, automatically create an index when none is detected. Also automatically updates stale indices.
+* `QSV_SKIPUTF8_CHECK` - when set, do not check if input is UTF-8 encoded.
 * `QSV_MAX_JOBS` - number of jobs to use for multithreaded commands (currently `frequency`, `split`, `schema` and `stats`). If not set, max_jobs is set
 to the detected number of logical processors.  See [Multithreading](#multithreading) for more info.
 * `QSV_REGEX_UNICODE` - if set, makes `search`, `searchset` and `replace` commands unicode-aware. For increased performance, these
