@@ -88,5 +88,5 @@ fn utf8_check() {
     cmd.arg(nonutf8_file);
 
     let got: String = wrk.output_stderr(&mut cmd);
-    assert!(got.ends_with("is not UTF8 encoded.\n"));
+    assert!(got.contains("is not UTF8 encoded."));
 }
