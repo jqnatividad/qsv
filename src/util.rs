@@ -93,13 +93,12 @@ pub fn version() -> String {
                     maxjobs = max_jobs(),
                     numcpus = num_cpus()
                 );
-            } else {
-                return format!(
+            }
+            return format!(
                     "{qsvtype} {maj}.{min}.{pat}-{pre}-{malloc_kind}-{enabled_features}{maxjobs}-{numcpus}",
                     maxjobs = max_jobs(),
                     numcpus = num_cpus(),
                 );
-            }
         }
         _ => "".to_owned(),
     }
@@ -494,13 +493,13 @@ pub fn qsv_check_for_update(bin_name: &str) {
                     info!("{update_status}");
                 }
                 Err(e) => {
-                    eprintln!("Self update update job error: {e}");
-                    error!("Self update update job error: {e}");
+                    eprintln!("Update job error: {e}");
+                    error!("Update job error: {e}");
                 }
             },
             Err(e) => {
-                eprintln!("Self update builder error: {e}");
-                error!("Self update builder error: {e}");
+                eprintln!("Update builder error: {e}");
+                error!("Update builder error: {e}");
             }
         };
     } else {
@@ -510,18 +509,18 @@ pub fn qsv_check_for_update(bin_name: &str) {
 }
 
 pub fn safe_header_names(headers: &csv::StringRecord, check_first_char: bool) -> Vec<String> {
-    // Create "safe" var/key names
+    // Create "safe" var/key names - to support dynfmt/url-template and valid python vars
     // Replace whitespace/invalid chars with _.
-    // If name starts with a number, replace it with an _ as well
+    // If name starts with a number, replace it with an _ as well (for python vars)
     let re = Regex::new(r"[^A-Za-z0-9]").unwrap();
-    let mut header_vec: Vec<String> = Vec::with_capacity(headers.len());
+    let mut name_vec: Vec<String> = Vec::with_capacity(headers.len());
     for h in headers {
-        let mut python_var_name = re.replace_all(h, "_").to_string();
-        if check_first_char && python_var_name.as_bytes()[0].is_ascii_digit() {
-            python_var_name.replace_range(0..1, "_");
+        let mut safe_name = re.replace_all(h, "_").to_string();
+        if check_first_char && safe_name.as_bytes()[0].is_ascii_digit() {
+            safe_name.replace_range(0..1, "_");
         }
-        header_vec.push(python_var_name);
+        name_vec.push(safe_name);
     }
-    debug!("safe header names: {header_vec:?}");
-    header_vec
+    debug!("safe header names: {name_vec:?}");
+    name_vec
 }
