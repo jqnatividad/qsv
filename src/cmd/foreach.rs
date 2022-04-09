@@ -100,7 +100,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .replace_all(args.arg_command.as_bytes(), current_value)
             .to_vec();
 
-        let command_pieces = splitter_pattern.find_iter(&templated_command);
+        #[allow(unused_mut)]
+        let mut command_pieces = splitter_pattern.find_iter(&templated_command);
         let prog = OsStr::from_bytes(command_pieces.next().unwrap().as_bytes());
 
         let cmd_args: Vec<String> = command_pieces
