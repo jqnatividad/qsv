@@ -13,7 +13,7 @@ pub mod fill;
 pub mod fixlengths;
 pub mod flatten;
 pub mod fmt;
-#[cfg(all(feature = "foreach", not(feature = "lite")))]
+#[cfg(all(feature = "foreach", target_family = "unix", not(feature = "lite")))]
 pub mod foreach;
 pub mod frequency;
 #[cfg(all(feature = "generate", not(feature = "lite")))]

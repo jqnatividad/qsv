@@ -3,7 +3,7 @@ use crate::workdir::Workdir;
 
 #[test]
 fn foreach() {
-    let wrk = Workdir::new("apply");
+    let wrk = Workdir::new("foreach");
     wrk.create(
         "data.csv",
         vec![svec!["name"], svec!["John"], svec!["Mary"]],
@@ -18,7 +18,7 @@ fn foreach() {
 
 #[test]
 fn foreach_unify() {
-    let wrk = Workdir::new("apply");
+    let wrk = Workdir::new("foreach_unify");
     wrk.create(
         "data.csv",
         vec![svec!["name"], svec!["John"], svec!["Mary"]],
@@ -40,7 +40,7 @@ fn foreach_unify() {
 
 #[test]
 fn foreach_new_column() {
-    let wrk = Workdir::new("apply");
+    let wrk = Workdir::new("foreach_nc");
     wrk.create(
         "data.csv",
         vec![svec!["name"], svec!["John"], svec!["Mary"]],

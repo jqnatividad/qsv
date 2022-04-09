@@ -234,7 +234,7 @@ enum Command {
     FixLengths,
     Flatten,
     Fmt,
-    #[cfg(all(feature = "foreach", not(feature = "lite")))]
+    #[cfg(all(feature = "foreach", target_family = "unix", not(feature = "lite")))]
     ForEach,
     Frequency,
     #[cfg(all(feature = "generate", not(feature = "lite")))]
@@ -293,6 +293,8 @@ impl Command {
             Command::Explode => cmd::explode::run(argv),
             #[cfg(all(feature = "fetch", not(feature = "lite")))]
             Command::Fetch => cmd::fetch::run(argv),
+            #[cfg(all(feature = "foreach", target_family = "unix", not(feature = "lite")))]
+            Command::ForEach => cmd::foreach::run(argv),
             Command::Fill => cmd::fill::run(argv),
             Command::FixLengths => cmd::fixlengths::run(argv),
             Command::Flatten => cmd::flatten::run(argv),
@@ -332,8 +334,6 @@ impl Command {
             Command::Table => cmd::table::run(argv),
             Command::Transpose => cmd::transpose::run(argv),
             Command::Validate => cmd::validate::run(argv),
-            #[cfg(all(feature = "foreach", not(feature = "lite")))]
-            Command::ForEach => cmd::foreach::run(argv),
         }
     }
 }
