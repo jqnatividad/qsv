@@ -33,7 +33,7 @@ Usage:
     qsv exclude [options] <columns1> <input1> <columns2> <input2>
     qsv exclude --help
 
-join options:
+exclude options:
     --no-case              When set, matching is done case insensitively.
     -v                     When set, matching rows will be the only ones included,
                            forming set intersection, instead of the ones discarded.
