@@ -1,8 +1,7 @@
+#![cfg(target_family = "unix")]
 use regex::bytes::{NoExpand, Regex};
-#[allow(unused_imports)]
 use std::ffi::OsStr;
 use std::io::BufReader;
-#[cfg(target_family = "unix")]
 use std::os::unix::ffi::OsStrExt;
 use std::process::{Command, Stdio};
 
@@ -68,10 +67,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .no_headers(args.flag_no_headers)
         .select(args.arg_column);
 
-    if cfg!(windows) {
-        return fail!("foreach command does not work on Windows.");
-    }
-
     let mut rdr = rconfig.reader()?;
     let mut wtr = Config::new(&None).writer()?;
 
@@ -105,13 +100,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .replace_all(args.arg_command.as_bytes(), current_value)
             .to_vec();
 
-        #[allow(unused_mut)]
-        let mut command_pieces = splitter_pattern.find_iter(&templated_command);
-
-        #[cfg(target_family = "unix")]
+        let command_pieces = splitter_pattern.find_iter(&templated_command);
         let prog = OsStr::from_bytes(command_pieces.next().unwrap().as_bytes());
-        #[cfg(target_family = "windows")]
-        let prog = "dummy var so it compiles on Windows";
 
         let cmd_args: Vec<String> = command_pieces
             .map(|piece| {
