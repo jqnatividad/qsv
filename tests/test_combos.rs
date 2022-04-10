@@ -79,8 +79,8 @@ fn combo_sort_dedup() {
 }
 
 #[test]
-fn utf8_check() {
-    let wrk = Workdir::new("utf8_check");
+fn utf8_check_invalid() {
+    let wrk = Workdir::new("utf8_check_invalid");
 
     let nonutf8_file = wrk.load_test_file("test-windows1252.csv");
 
