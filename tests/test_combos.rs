@@ -77,3 +77,33 @@ fn combo_sort_dedup() {
     ];
     assert_eq!(got3, expected3);
 }
+
+#[test]
+#[ignore]
+fn utf8_check_invalid() {
+    // this test runs properly locally, but the github action runners
+    // don't run it properly, as the test files are not encoded properly by GitHub
+    // so we're ignoring it for CI to work.
+    let wrk = Workdir::new("utf8_check_invalid");
+
+    let nonutf8_file = wrk.load_test_file("test-windows1252.csv");
+
+    let mut cmd = wrk.command("headers");
+    cmd.arg(nonutf8_file);
+
+    let got: String = wrk.output_stderr(&mut cmd);
+    assert!(got.contains("is not UTF8 encoded"));
+}
+
+#[test]
+fn utf8_check_valid() {
+    let wrk = Workdir::new("utf8_check_valid");
+
+    let valid_file = wrk.load_test_file("adur-public-toilets.csv");
+
+    let mut cmd = wrk.command("headers");
+    cmd.arg(valid_file);
+
+    let got: String = wrk.output_stderr(&mut cmd);
+    assert!(got.contains("No error"));
+}
