@@ -1,2 +1,3 @@
 * text=auto
 *.sh text eol=lf
+test-nonutf8.csv encoding=cp1252
