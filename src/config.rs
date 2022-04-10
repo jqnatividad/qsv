@@ -259,13 +259,13 @@ impl Config {
     pub fn reader_file(&self) -> io::Result<csv::Reader<fs::File>> {
         match self.path {
             None => Err(io::Error::new(
-                io::ErrorKind::Other,
+                io::ErrorKind::InvalidInput,
                 "Cannot use <stdin> here",
             )),
             Some(ref p) => {
                 if !self.is_utf8_encoded() {
                     return Err(io::Error::new(
-                        io::ErrorKind::Other,
+                        io::ErrorKind::InvalidData,
                         format!("{p:?} is not UTF8 encoded."),
                     ));
                 }
@@ -287,7 +287,7 @@ impl Config {
                     debug!("checking stdin encoding...");
                     if s.contains(std::char::REPLACEMENT_CHARACTER) {
                         return Err(io::Error::new(
-                            io::ErrorKind::Other,
+                            io::ErrorKind::InvalidData,
                             "<stdin> is not UTF8 encoded.",
                         ));
                     }
@@ -297,7 +297,7 @@ impl Config {
             Some(ref p) => {
                 if !self.is_utf8_encoded() {
                     return Err(io::Error::new(
-                        io::ErrorKind::Other,
+                        io::ErrorKind::InvalidData,
                         format!("{p:?} is not UTF8 encoded."),
                     ));
                 }
@@ -345,7 +345,7 @@ impl Config {
             (&None, &None) => return Ok(None),
             (&None, &Some(_)) => {
                 return Err(io::Error::new(
-                    io::ErrorKind::Other,
+                    io::ErrorKind::InvalidInput,
                     "Cannot use <stdin> with indexes",
                 ));
             }
@@ -407,7 +407,7 @@ impl Config {
                     debug!("checking stdin encoding...");
                     if s.contains(std::char::REPLACEMENT_CHARACTER) {
                         return Err(io::Error::new(
-                            io::ErrorKind::Other,
+                            io::ErrorKind::InvalidData,
                             "<stdin> is not UTF8 encoded.",
                         ));
                     }
@@ -419,7 +419,7 @@ impl Config {
             Some(ref p) => {
                 if !self.is_utf8_encoded() {
                     return Err(io::Error::new(
-                        io::ErrorKind::Other,
+                        io::ErrorKind::InvalidData,
                         format!("{p:?} is not UTF8 encoded."),
                     ));
                 }
