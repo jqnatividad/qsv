@@ -82,7 +82,7 @@ fn combo_sort_dedup() {
 fn utf8_check() {
     let wrk = Workdir::new("utf8_check");
 
-    let nonutf8_file = wrk.load_test_file("test-nonutf8.csv");
+    let nonutf8_file = wrk.load_test_file("test-windows1252.csv");
 
     let mut cmd = wrk.command("headers");
     cmd.arg(nonutf8_file);
