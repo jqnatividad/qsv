@@ -5,6 +5,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.39.0] - 2022-04-10
+### Added
+* `QSV_AUTOINDEX` environment variable. When set, autoindexes csv files, autoupdates stale indices 
+* `replace`: \<NULL\> `--replacement` option (https://github.com/jqnatividad/qsv/pull/244)
+* qsv now automatically screens files for utf-8 encoding. Set `QSV_SKIPUTF8_CHECK` env var to skip encoding check. (https://github.com/jqnatividad/qsv/pull/245 and https://github.com/jqnatividad/qsv/pull/248)
+
+### Changed
+* `foreach`: refactored. (https://github.com/jqnatividad/qsv/pull/247)
+* Bump jql from 3.2.3 to 3.3.0
+* Bump actions/setup-python from 3.1.0 to 3.1.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/246
+* use grex fork to remove unneeded CLI dependencies
+
 ## [0.38.0] - 2022-04-05
 ### Changed
 * qsv **requires** UTF-8/ASCII encoded files. Doing so allows us to squeeze more performance by removing UTF-8 validation in https://github.com/jqnatividad/qsv/pull/239 and https://github.com/jqnatividad/qsv/pull/240
