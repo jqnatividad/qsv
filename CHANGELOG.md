@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.39.1] - 2022-04-11
+### Fixed
+* added version to grex dependency as its required by crates.io, though we're still using the grex fork without the CLI components.
+
 ## [0.39.0] - 2022-04-10
 ### Added
 * `QSV_AUTOINDEX` environment variable. When set, autoindexes csv files, autoupdates stale indices 

@@ -1,6 +1,6 @@
 [package]
 name          = "qsv"
-version       = "0.39.0"                                                  #:version
+version       = "0.39.1"                                                  #:version
 authors       = ["Joel Natividad <joel@datHere.com>"]
 description   = "A high performance CSV command line toolkit."
 documentation = "https://github.com/jqnatividad/qsv"
@@ -74,7 +74,7 @@ itoa = "1"
 jsonschema = { version = "0.15", features = [
     "resolve-file",
     "reqwest",
-    "rustls"
+    "rustls",
 ], default-features = false }
 jsonxf = { version = "1", optional = true }
 jql = { version = "3.3", default-features = false, optional = true }
