@@ -1,6 +1,6 @@
 [package]
 name          = "qsv"
-version       = "0.38.0"                                                  #:version
+version       = "0.39.0"                                                  #:version
 authors       = ["Joel Natividad <joel@datHere.com>"]
 description   = "A high performance CSV command line toolkit."
 documentation = "https://github.com/jqnatividad/qsv"
@@ -67,7 +67,7 @@ eudex = { version = "0.1", optional = true }
 filetime = "0.2"
 flexi_logger = { version = "0.22", features = ["compress"] }
 governor = { version = "0.4", optional = true }
-grex = { git = "https://github.com/jqnatividad/grex", default-features = false }
+grex = { git = "https://github.com/jqnatividad/grex", branch = "qsv-nocli", default-features = false }
 indicatif = "0.16"
 itertools = "0.10"
 itoa = "1"
