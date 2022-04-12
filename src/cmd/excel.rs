@@ -8,16 +8,21 @@ use std::cmp;
 use std::path::PathBuf;
 
 static USAGE: &str = "
-Exports a specified Excel sheet to a CSV file.
+Exports a specified Excel/ODS sheet to a CSV file.
 
 Usage:
     qsv excel [options] [<input>]
 
 Excel options:
     -s, --sheet <name/index>   Name or zero-based index of sheet to export.
-                               Negative indices start from the end (e.g. -1 is the last sheet). 
+                               Negative indices start from the end (-1 = last sheet). 
                                If the sheet cannot be found, qsv will read the first sheet.
                                [default: 0]
+    --flexible                 Continue even if the number of fields is different 
+                               from the previous record
+    --trim                     Trim all fields of records so that leading and trailing
+                               whitespaces (Unicode definition) are removed.
+                               Also removes embedded linebreaks.
 
 Common options:
     -h, --help                 Display this message
@@ -28,6 +33,8 @@ Common options:
 struct Args {
     arg_input: Option<String>,
     flag_sheet: String,
+    flag_flexible: bool,
+    flag_trim: bool,
     flag_output: Option<String>,
 }
 
@@ -55,7 +62,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let sheet_names = workbook.sheet_names();
     let num_sheets = sheet_names.len();
 
-    // if --sheet was passed (default: Sheet1), see if its a valid sheet.
+    // if --sheet was passed (default: 0), see if its a valid sheet.
     let sheet = if sheet_names.contains(&args.flag_sheet) {
         args.flag_sheet
     } else {
@@ -84,8 +91,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
     let range = workbook.worksheet_range(&sheet).unwrap().unwrap();
 
-    let mut wtr = Config::new(&args.flag_output).writer()?;
+    let mut wtr = Config::new(&args.flag_output)
+        .flexible(args.flag_flexible)
+        .writer()?;
     let mut record = csv::StringRecord::new();
+    let mut trimmed_record = csv::StringRecord::new();
     for row in range.rows() {
         for cell in row {
             match *cell {
@@ -99,7 +109,21 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 DataType::Bool(ref b) => record.push_field(&b.to_string()),
             };
         }
-        wtr.write_record(&record).unwrap();
+        if args.flag_trim {
+            record.trim();
+            trimmed_record.clear();
+            for field in record.iter() {
+                if field.contains('\n') {
+                    let no_newlines = field.to_string().replace('\n', " ");
+                    trimmed_record.push_field(&no_newlines);
+                } else {
+                    trimmed_record.push_field(field);
+                }
+            }
+            wtr.write_record(&trimmed_record).unwrap();
+        } else {
+            wtr.write_record(&record).unwrap();
+        }
         record.clear();
     }
     Ok(())
