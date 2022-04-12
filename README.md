@@ -29,7 +29,7 @@ Available commands
 | [count](/src/cmd/count.rs#L8)[^2] | Count the rows in a CSV file. (Instantaneous with an index.) |
 | [dedup](/src/cmd/dedup.rs#L12)[^3] | Remove redundant rows.  |
 | [enum](/src/cmd/enumerate.rs#L10-L12) | Add a new column enumerating rows by adding a column of incremental or uuid identifiers. Can also be used to copy a column or fill a new column with a constant value.  |
-| [excel](/src/cmd/excel.rs#L7) | Exports a specified Excel/ODS sheet to a CSV file. |
+| [excel](/src/cmd/excel.rs#L11) | Exports a specified Excel/ODS sheet to a CSV file. |
 | [exclude](/src/cmd/exclude.rs#L18)[^2] | Removes a set of CSV data from another set based on the specified columns.  |
 | [explode](/src/cmd/explode.rs#L8-L9) | Explode rows into multiple ones by splitting a column value based on the given separator.  |
 | [fetch](/src/cmd/fetch.rs#L17-L18) | Fetches HTML/data from web pages or web services for every row in a URL column with optional Redis response caching. |
