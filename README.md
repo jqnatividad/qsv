@@ -17,7 +17,7 @@
 
 </div>
 
-> **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's release](https://github.com/BurntSushi/xsv/issues/267). It also has numerous new features & 25 additional commands/subcommands (for a total of 45). See [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ) for more details.
+> **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's release](https://github.com/BurntSushi/xsv/issues/267). It also has numerous new features & 52 additional commands/subcommands/operations (for a total of 72). See [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ) for more details.
 
 Available commands
 ------------------
@@ -29,6 +29,7 @@ Available commands
 | [count](/src/cmd/count.rs#L8)[^2] | Count the rows in a CSV file. (Instantaneous with an index.) |
 | [dedup](/src/cmd/dedup.rs#L12)[^3] | Remove redundant rows.  |
 | [enum](/src/cmd/enumerate.rs#L10-L12) | Add a new column enumerating rows by adding a column of incremental or uuid identifiers. Can also be used to copy a column or fill a new column with a constant value.  |
+| [excel](/src/cmd/excel.rs#L7) | Exports a specified Excel/ODS sheet to a CSV file. |
 | [exclude](/src/cmd/exclude.rs#L18)[^2] | Removes a set of CSV data from another set based on the specified columns.  |
 | [explode](/src/cmd/explode.rs#L8-L9) | Explode rows into multiple ones by splitting a column value based on the given separator.  |
 | [fetch](/src/cmd/fetch.rs#L17-L18) | Fetches HTML/data from web pages or web services for every row in a URL column with optional Redis response caching. |
@@ -154,6 +155,8 @@ tab for `.tsv` and `.tab` files.
 [JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/) files are also recognized and converted to CSV with the [`jsonl`](/src/cmd/jsonl.rs#L11) command.
 
 The `fetch` command also produces JSONL files when its invoked without the `--new-column` option.
+
+The `excel` command recognizes Excel and Open Document Spreadsheet(ODS) files (`.xls`, `.xlsx`, `.xlsm`, `.xlsb` and `.ods` files).
 
 ### **Encoding**   
 qsv requires UTF-8 encoded (of which ASCII is a subset) input files. On Linux and macOS, UTF-8 encoding is the default. Should you need to reencode CSV/TSV files, there are several utilities you can use to do so on [Linux/macOS](https://stackoverflow.com/questions/805418/how-can-i-find-encoding-of-a-file-via-a-script-on-linux) and [Windows](https://superuser.com/questions/1163753/converting-text-file-to-utf-8-on-windows-command-prompt).
