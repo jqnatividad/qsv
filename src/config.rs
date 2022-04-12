@@ -274,6 +274,24 @@ impl Config {
         }
     }
 
+    // pub fn get_file_path(&self) -> String {
+    //     match self.path {
+    //         None => Err(io::Error::new(
+    //             io::ErrorKind::InvalidInput,
+    //             "Cannot use <stdin> here",
+    //         )),
+    //         Some(ref p) => {
+    //             if !self.is_utf8_encoded() {
+    //                 return Err(io::Error::new(
+    //                     io::ErrorKind::InvalidData,
+    //                     format!("{p:?} is not UTF8 encoded."),
+    //                 ));
+    //             }
+    //             fs::File::open(p).map(|f| self.from_reader(f))
+    //         }
+    //     }
+    // }
+
     pub fn reader_file_stdin(&self) -> io::Result<csv::Reader<Box<dyn SeekRead + 'static>>> {
         Ok(match self.path {
             None => {
