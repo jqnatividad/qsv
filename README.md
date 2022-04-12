@@ -17,7 +17,8 @@
 
 </div>
 
-> **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's release](https://github.com/BurntSushi/xsv/issues/267). It also has numerous new features & 52 additional commands/subcommands/operations (for a total of 72). See [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ) for more details.
+> **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's release](https://github.com/BurntSushi/xsv/issues/267). It also has numerous new features & 52 additional commands/subcommands/operations (for a total of 72).   
+See [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ) for more details.
 
 Available commands
 ------------------
@@ -32,7 +33,7 @@ Available commands
 | [excel](/src/cmd/excel.rs#L11) | Exports a specified Excel/ODS sheet to a CSV file. |
 | [exclude](/src/cmd/exclude.rs#L18)[^2] | Removes a set of CSV data from another set based on the specified columns.  |
 | [explode](/src/cmd/explode.rs#L8-L9) | Explode rows into multiple ones by splitting a column value based on the given separator.  |
-| [fetch](/src/cmd/fetch.rs#L17-L18) | Fetches HTML/data from web pages or web services for every row in a URL column with optional Redis response caching. |
+| [fetch](/src/cmd/fetch.rs#L17-L18) | Fetches HTML/data from web pages or web services for every row in a URL column. Comes with [jql](https://github.com/yamafaktory/jql#%EF%B8%8F-usage) JSON query language support and optional Redis response caching. |
 | [fill](/src/cmd/fill.rs#L13) | Fill empty values.  |
 | [fixlengths](/src/cmd/fixlengths.rs#L9-L11) | Force a CSV to have same-length records by either padding or truncating them. |
 | [flatten](/src/cmd/flatten.rs#L12-L15) | A flattened view of CSV records. Useful for viewing one record at a time.<br />e.g. `qsv slice -i 5 data.csv \| qsv flatten`. |
