@@ -5,6 +5,7 @@ pub mod cat;
 pub mod count;
 pub mod dedup;
 pub mod enumerate;
+pub mod excel;
 pub mod exclude;
 pub mod explode;
 #[cfg(all(feature = "fetch", not(feature = "lite")))]

@@ -53,6 +53,7 @@ cached = { version = "0.34", default-features = false, features = [
     "proc_macro",
     "redis_store",
 ], optional = true }
+calamine = "0.18"
 censor = { version = "0.2", optional = true }
 chrono = { version = "0.4", optional = true }
 crossbeam-channel = "0.5"
@@ -65,7 +66,7 @@ dynfmt = { version = "0.1", default-features = false, features = [
 ], optional = true }
 eudex = { version = "0.1", optional = true }
 filetime = "0.2"
-flexi_logger = { version = "0.22", features = ["compress"] }
+flexi_logger = { version = "0.22", features = ["compress"], default-features = false }
 governor = { version = "0.4", optional = true }
 grex = { version = "1.3", git = "https://github.com/jqnatividad/grex", branch = "qsv-nocli", default-features = false }
 indicatif = "0.16"
