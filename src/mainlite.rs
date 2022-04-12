@@ -44,6 +44,7 @@ macro_rules! command_list {
     count       Count records
     dedup       Remove redundant rows
     enum        Add a new column enumerating CSV lines
+    excel       Exports an Excel sheet to a CSV
     exclude     Excludes the records in one CSV from another
     explode     Explode rows based on some column separator
     fill        Fill empty values
@@ -199,6 +200,7 @@ enum Command {
     Count,
     Dedup,
     Enum,
+    Excel,
     Exclude,
     Explode,
     Fill,
@@ -250,6 +252,7 @@ impl Command {
             Command::Count => cmd::count::run(argv),
             Command::Dedup => cmd::dedup::run(argv),
             Command::Enum => cmd::enumerate::run(argv),
+            Command::Excel => cmd::excel::run(argv),
             Command::Exclude => cmd::exclude::run(argv),
             Command::Explode => cmd::explode::run(argv),
             Command::Fill => cmd::fill::run(argv),
