@@ -43,6 +43,7 @@ mod test_comments;
 mod test_count;
 mod test_dedup;
 mod test_enumerate;
+mod test_excel;
 mod test_exclude;
 mod test_explode;
 #[cfg(feature = "fetch")]
