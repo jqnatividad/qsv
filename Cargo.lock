@@ -2110,6 +2110,7 @@ dependencies = [
  "chrono",
  "crossbeam-channel",
  "csv 1.1.6 (git+https://github.com/jqnatividad/rust-csv)",
+ "csv-core 0.1.10 (git+https://github.com/jqnatividad/rust-csv)",
  "csv-index",
  "csv-sniffer",
  "docopt",
