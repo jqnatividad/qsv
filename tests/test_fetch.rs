@@ -76,7 +76,7 @@ fn fetch_simple_url_template() {
 fn fetch_simple_redis() {
     // if there is no local redis server, skip fetch_simple_redis test
     let redis_client = redis::Client::open("redis://127.0.0.1:6379").unwrap();
-    if let Err(_) = redis_client.get_connection() {
+    if redis_client.get_connection().is_err() {
         return;
     }
 
