@@ -657,8 +657,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "22813a6dc45b335f9bade10bf7271dc477e81113e89eb251a0bc2a8a81c536e1"
 dependencies = [
  "bstr",
- "csv-core",
+ "csv-core 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "itoa 0.4.8",
+ "ryu",
+ "serde",
+]
+
+[[package]]
+name = "csv"
+version = "1.1.6"
+source = "git+https://github.com/jqnatividad/rust-csv#eb138d8a06fbcf4cc38b6b03d50ebd1e8b95932c"
+dependencies = [
+ "bstr",
+ "csv-core 0.1.10 (git+https://github.com/jqnatividad/rust-csv)",
+ "itoa 1.0.1",
  "ryu",
  "serde",
 ]
@@ -673,13 +685,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "csv-core"
+version = "0.1.10"
+source = "git+https://github.com/jqnatividad/rust-csv#eb138d8a06fbcf4cc38b6b03d50ebd1e8b95932c"
+dependencies = [
+ "memchr",
+]
+
+[[package]]
 name = "csv-index"
 version = "0.1.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f274135fcb98bd7e6e47a9e0b44639ec53b3e5d6c1930e2a9e6a014f90470404"
+source = "git+https://github.com/jqnatividad/rust-csv#eb138d8a06fbcf4cc38b6b03d50ebd1e8b95932c"
 dependencies = [
  "byteorder",
- "csv",
+ "csv 1.1.6 (git+https://github.com/jqnatividad/rust-csv)",
 ]
 
 [[package]]
@@ -689,8 +708,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a1e32aa93b952410d55c1ae03048cc22a6cc62a323711b8e9245ef4b5578051c"
 dependencies = [
  "bitflags",
- "csv",
- "csv-core",
+ "csv 1.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "csv-core 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "memchr",
  "regex",
 ]
@@ -1424,9 +1443,9 @@ checksum = "db13adb97ab515a3691f56e4dbab09283d0b86cb45abd991d8634a9d6f501760"
 
 [[package]]
 name = "libc"
-version = "0.2.122"
+version = "0.2.123"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ec647867e2bf0772e28c8bcde4f0d19a9216916e890543b5a03ed8ef27b8f259"
+checksum = "cb691a747a7ab48abc15c5b42066eaafde10dc427e3b6ee2a1cf43db04c763bd"
 
 [[package]]
 name = "libmimalloc-sys"
@@ -2090,7 +2109,7 @@ dependencies = [
  "censor",
  "chrono",
  "crossbeam-channel",
- "csv",
+ "csv 1.1.6 (git+https://github.com/jqnatividad/rust-csv)",
  "csv-index",
  "csv-sniffer",
  "docopt",
@@ -2410,7 +2429,7 @@ version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7e2c7983a04230d15e83a3079765d370628e04a2474d585b712d7c46e17e9ab0"
 dependencies = [
- "csv",
+ "csv 1.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "kdtree",
  "serde",
  "serde_derive",
@@ -2846,7 +2865,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "640e18df4252c8ccb6c1c3abd1e48c9f2c674a61eb3136936811b79b9b7f58d6"
 dependencies = [
  "crossbeam",
- "csv",
+ "csv 1.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "indexmap",
  "levenshtein",
  "log",
@@ -3088,9 +3107,9 @@ dependencies = [
 
 [[package]]
 name = "tracing-core"
-version = "0.1.24"
+version = "0.1.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "90442985ee2f57c9e1b548ee72ae842f4a9a20e3f417cc38dbc5dc684d9bb4ee"
+checksum = "6dfce9f3241b150f36e8e54bb561a742d5daa1a47b5dd9a5ce369fd4a4db2210"
 dependencies = [
  "lazy_static",
 ]
