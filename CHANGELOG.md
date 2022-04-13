@@ -5,6 +5,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.40.1] - 2022-04-13
+### Changed
+* use performance tweaked forks of csv crate
+* Made `this_error` dependency optional with `fetch` feature 
+* Made `once_cell` dependency optional  with `apply` and `fetch` features
+
+### Fixed
+* Fixed qsv binary publishing. qsv binary was not built properly, it was built using a qsvlite profile
+
 ## [0.40.0] - 2022-04-12
 ### Added
 * `excel` command in https://github.com/jqnatividad/qsv/pull/249 and https://github.com/jqnatividad/qsv/pull/252
