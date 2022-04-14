@@ -1355,9 +1355,9 @@ checksum = "1aab8fc367588b89dcee83ab0fd66b72b50b72fa1904d7095045ace2b0c81c35"
 
 [[package]]
 name = "jql"
-version = "4.0.0"
+version = "4.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c4e39bfe83b2cf2acc1e1a44ca11c18bf4d4f83b2c70d815c8c97ee06a8362f4"
+checksum = "1d12af7dd34ced971044a39c17dc440207a1629307d1a3553883685d841a7bbd"
 dependencies = [
  "anyhow",
  "pest",
@@ -2095,7 +2095,7 @@ dependencies = [
 
 [[package]]
 name = "qsv"
-version = "0.40.1"
+version = "0.40.2"
 dependencies = [
  "actix-governor",
  "actix-web",
