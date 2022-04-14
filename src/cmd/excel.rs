@@ -62,7 +62,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let sheet_names = workbook.sheet_names();
     let num_sheets = sheet_names.len();
 
-    // if --sheet was passed (default: 0), see if its a valid sheet.
+    // if --sheet name was passed, see if its a valid sheet name.
     let sheet = if sheet_names.contains(&args.flag_sheet) {
         args.flag_sheet
     } else {
@@ -126,5 +126,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
         record.clear();
     }
+    wtr.flush()?;
+
     Ok(())
 }
