@@ -46,7 +46,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         None => return fail!("Cannot use <stdin> with excel command."),
     };
 
-    let sce = PathBuf::from(path.clone().to_ascii_lowercase());
+    let sce = PathBuf::from(path.to_ascii_lowercase());
     match sce.extension().and_then(|s| s.to_str()) {
         Some("xlsx") | Some("xlsm") | Some("xlsb") | Some("xls") | Some("ods") => (),
         _ => {
