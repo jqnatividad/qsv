@@ -5,6 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.40.3] - 2022-04-14
+### Changed
+* Bump pyo3 from 0.16.3 to 0.16.4
+* `stats`: renamed `--dates` option to `--infer-dates`
+### Fixed
+* `stats`: fixed panic caused by wrong type inference when `--infer-dates` option is on in https://github.com/jqnatividad/qsv/pull/256
+
 ## [0.40.2] - 2022-04-14
 ### Changed
 * Datapusher tweaks, primarily to help with datapusher error-handling in https://github.com/jqnatividad/qsv/pull/255
