@@ -53,7 +53,7 @@ cached = { version = "0.34", default-features = false, features = [
     "proc_macro",
     "redis_store",
 ], optional = true }
-calamine = "0.18"
+calamine = { version = "0.18", git = "https://github.com/jqnatividad/calamine" }
 censor = { version = "0.2", optional = true }
 chrono = { version = "0.4", optional = true }
 crossbeam-channel = "0.5"
