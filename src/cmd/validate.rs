@@ -99,14 +99,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         for result in rdr.records() {
             if let Err(e) = result {
                 return fail!(format!(
-                    r#"There's a problem with your CSV's format ({e}).\nTry "qsv fixlengths" or "qsv fmt" to fix it."#
+                    r#"Validation error: {e}. Try "qsv fixlengths" or "qsv fmt" to fix it."#
                 ));
             }
             record_count += 1;
         }
 
         let msg = format!(
-            "{header_msg}{} records detected. Can't validate data without schema, but CSV looks good!",
+            "Valid: {header_msg}{} records detected. Can't validate data without schema, but CSV looks good!",
             record_count.separate_with_commas()
         );
 
