@@ -5,6 +5,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.40.2] - 2022-04-14
+### Changed
+* Datapusher tweaks, primarily to help with datapusher error-handling in https://github.com/jqnatividad/qsv/pull/255
+* `excel`: exported count with `--human-readable` option
+* use calamine fork to bump dependencies, and reduce binary size
+* Bump rayon from 1.5.1 to 1.5.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/254
+* Bump jql from 4.0.0 to 4.0.1
+
+### Fixed
+* removed unnecessary *.d dependency files from published binaries zip
+
 ## [0.40.1] - 2022-04-13
 ### Changed
 * use performance tweaked forks of csv crate
