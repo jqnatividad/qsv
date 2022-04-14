@@ -3,19 +3,19 @@ use crate::util;
 use crate::CliResult;
 use serde::Deserialize;
 
-static USAGE: &str = "
+static USAGE: &str = r#"
 Read CSV data with special quoting rules.
 
 Generally, all qsv commands support basic options like specifying the delimiter
 used in CSV data. This does not cover all possible types of CSV data. For
-example, some CSV files don't use '\"' for quotes or use different escaping
+example, some CSV files don't use '"' for quotes or use different escaping
 styles.
 
 Usage:
     qsv input [options] [<input>]
 
 input options:
-    --quote <arg>          The quote character to use. [default: \"]
+    --quote <arg>          The quote character to use. [default: "]
     --escape <arg>         The escape character to use. When not specified,
                            quotes are escaped by doubling them.
     --no-quoting           Disable quoting completely.
@@ -25,7 +25,7 @@ Common options:
     -o, --output <file>    Write output to <file> instead of stdout.
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
-";
+"#;
 
 #[derive(Deserialize)]
 struct Args {
