@@ -42,7 +42,7 @@ The `qsv table` command takes any CSV data and formats it into aligned columns
 using [elastic tabstops](https://github.com/BurntSushi/tabwriter). You'll
 notice that it even gets alignment right with respect to Unicode characters.
 
-So, this command took 3.49 seconds to run on my machine, but we can speed
+So, this command took 3.22 seconds to run on my machine, but we can speed
 it up by creating an index and re-running the command:
 
 ```
@@ -50,7 +50,7 @@ $ qsv index wcp.csv
 $ qsv stats wcp.csv --everything | qsv table
 ```
 
-Which cuts it down to 2.07 seconds on my machine. (And creating the index
+Which cuts it down to 1.95 seconds on my machine. (And creating the index
 took 0.27 seconds.)
 
 Notably, the same type of "statistics" command in another
