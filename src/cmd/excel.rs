@@ -19,10 +19,11 @@ Excel options:
                                If the sheet cannot be found, qsv will read the first sheet.
                                [default: 0]
     --flexible                 Continue even if the number of fields is different 
-                               from the previous record
+                               from the previous record.
     --trim                     Trim all fields of records so that leading and trailing
                                whitespaces (Unicode definition) are removed.
                                Also removes embedded linebreaks.
+    -H, --human-readable       Comma separate row count.
 
 Common options:
     -h, --help                 Display this message
@@ -34,6 +35,7 @@ struct Args {
     arg_input: Option<String>,
     flag_sheet: String,
     flag_flexible: bool,
+    flag_human_readable: bool,
     flag_trim: bool,
     flag_output: Option<String>,
 }
@@ -96,6 +98,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .writer()?;
     let mut record = csv::StringRecord::new();
     let mut trimmed_record = csv::StringRecord::new();
+    let mut count = 0_u32; // Excel can only hold 1m rows anyways, ODS - only 32k
     for row in range.rows() {
         for cell in row {
             match *cell {
@@ -125,8 +128,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             wtr.write_record(&record).unwrap();
         }
         record.clear();
+        count += 1;
     }
     wtr.flush()?;
 
+    if args.flag_human_readable {
+        use thousands::Separable;
+
+        eprintln!("{} rows exported.", count.separate_with_commas());
+    } else {
+        eprintln!("{count} rows exported.");
+    }
     Ok(())
 }
