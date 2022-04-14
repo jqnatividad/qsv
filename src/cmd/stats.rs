@@ -34,7 +34,7 @@ corresponds to statistics that can be computed efficiently on a stream of data (
 
 The data type of each column is also inferred (Unknown, NULL, Integer, String,
 Float, Date and DateTime). Note that the Date and DateTime data types are only inferred with
-the --dates option as its an expensive operation. The date formats recognized can be found at
+the --infer-dates option as its an expensive operation. The date formats recognized can be found at
 https://github.com/jqnatividad/belt/tree/main/dateparser#accepted-date-formats.
 
 Computing statistics on a large file can be made much faster if you create
@@ -61,7 +61,7 @@ stats options:
                            This requires storing all CSV data in memory.
     --nulls                Include NULLs in the population size for computing
                            mean and standard deviation.
-    --dates                Infer date/datetime datatypes. This is a very expensive
+    --infer-dates          Infer date/datetime datatypes. This is a very expensive
                            option and should only be used when you know there
                            are date/datetime fields.
     -j, --jobs <arg>       The number of jobs to run in parallel.
@@ -90,7 +90,7 @@ pub struct Args {
     pub flag_median: bool,
     pub flag_quartiles: bool,
     pub flag_nulls: bool,
-    pub flag_dates: bool,
+    pub flag_infer_dates: bool,
     pub flag_nullcount: bool,
     pub flag_jobs: Option<usize>,
     pub flag_output: Option<String>,
@@ -236,7 +236,7 @@ impl Args {
             median: self.flag_median && !self.flag_quartiles && !self.flag_everything,
             quartiles: self.flag_quartiles || self.flag_everything,
             mode: self.flag_mode || self.flag_everything,
-            dates: self.flag_dates,
+            infer_dates: self.flag_infer_dates,
         }))
         .take(record_len)
         .collect()
@@ -292,7 +292,7 @@ struct WhichStats {
     median: bool,
     quartiles: bool,
     mode: bool,
-    dates: bool,
+    infer_dates: bool,
 }
 
 impl Commute for WhichStats {
@@ -353,7 +353,7 @@ impl Stats {
     #[allow(clippy::option_map_unit_fn)]
     #[inline]
     fn add(&mut self, sample: &[u8]) {
-        let sample_type = FieldType::from_sample(self.which.dates, sample);
+        let sample_type = FieldType::from_sample(self.which.infer_dates, sample);
         self.typ.merge(sample_type);
 
         let t = self.typ;
@@ -551,11 +551,11 @@ pub enum FieldType {
 
 impl FieldType {
     #[inline]
-    pub fn from_sample(dates: bool, sample: &[u8]) -> FieldType {
+    pub fn from_sample(infer_dates: bool, sample: &[u8]) -> FieldType {
         if sample.is_empty() {
             return TNull;
         }
-        // we can skip utf8 validation since we transcode input to utf8
+        // we skip utf8 validation since we say we only work with utf8
         let string = unsafe { str::from_utf8_unchecked(sample) };
         if string.parse::<i64>().is_ok() {
             return TInteger;
@@ -563,7 +563,7 @@ impl FieldType {
         if string.parse::<f64>().is_ok() {
             return TFloat;
         }
-        if dates {
+        if infer_dates {
             if let Ok(parsed_date) = string.parse::<DateTimeUtc>() {
                 let rfc3339_date_str = parsed_date.0.to_string();
 
@@ -594,18 +594,13 @@ impl Commute for FieldType {
             (TString, TString) => TString,
             (TFloat, TFloat) => TFloat,
             (TInteger, TInteger) => TInteger,
-            (TDate, TDate) => TDate,
             // date data types
+            (TDate, TDate) => TDate,
             (TDateTime | TDate, TDateTime) | (TDateTime, TDate) => TDateTime,
             // Null does not impact the type.
             (TNull, any) | (any, TNull) => any,
             // Integers can degrade to floats.
             (TFloat, TInteger) | (TInteger, TFloat) => TFloat,
-            // when using unixtime format can degrade to int/floats.
-            (TInteger, TDate) | (TDate, TInteger) => TInteger,
-            (TFloat, TDate) | (TDate, TFloat) => TFloat,
-            (TInteger, TDateTime) | (TDateTime, TInteger) => TInteger,
-            (TFloat, TDateTime) | (TDateTime, TFloat) => TFloat,
             // anything else is a String
             (_, _) => TString,
         };

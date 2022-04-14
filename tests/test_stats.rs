@@ -8,26 +8,26 @@ macro_rules! stats_tests {
     ($name:ident, $field:expr, $rows:expr, $expect:expr) => {
         stats_tests!($name, $field, $rows, $expect, false, true);
     };
-    ($name:ident, $field:expr, $rows:expr, $expect:expr, $nulls:expr, $dates:expr) => {
+    ($name:ident, $field:expr, $rows:expr, $expect:expr, $nulls:expr, $infer_dates:expr) => {
         mod $name {
             use super::test_stats;
 
-            stats_test_headers!($name, $field, $rows, $expect, $nulls, $dates);
-            stats_test_no_headers!($name, $field, $rows, $expect, $nulls, $dates);
+            stats_test_headers!($name, $field, $rows, $expect, $nulls, $infer_dates);
+            stats_test_no_headers!($name, $field, $rows, $expect, $nulls, $infer_dates);
         }
     };
 }
 
-macro_rules! stats_nodates_tests {
+macro_rules! stats_no_infer_dates_tests {
     ($name:ident, $field:expr, $rows:expr, $expect:expr) => {
         stats_tests!($name, $field, $rows, $expect, false, false);
     };
-    ($name:ident, $field:expr, $rows:expr, $expect:expr, $nulls:expr, $dates:expr) => {
+    ($name:ident, $field:expr, $rows:expr, $expect:expr, $nulls:expr, $infer_dates:expr) => {
         mod $name {
             use super::test_stats;
 
-            stats_test_headers!($name, $field, $rows, $expect, $nulls, $dates);
-            stats_test_no_headers!($name, $field, $rows, $expect, $nulls, $dates);
+            stats_test_headers!($name, $field, $rows, $expect, $nulls, $infer_dates);
+            stats_test_no_headers!($name, $field, $rows, $expect, $nulls, $infer_dates);
         }
     };
 }
@@ -36,17 +36,35 @@ macro_rules! stats_test_headers {
     ($name:ident, $field:expr, $rows:expr, $expect:expr) => {
         stats_test_headers!($name, $field, $rows, $expect, false, true);
     };
-    ($name:ident, $field:expr, $rows:expr, $expect:expr, $nulls:expr, $dates:expr) => {
+    ($name:ident, $field:expr, $rows:expr, $expect:expr, $nulls:expr, $infer_dates:expr) => {
         #[test]
         fn headers_no_index() {
             let name = concat!(stringify!($name), "_headers_no_index");
-            test_stats(name, $field, $rows, $expect, true, false, $nulls, $dates);
+            test_stats(
+                name,
+                $field,
+                $rows,
+                $expect,
+                true,
+                false,
+                $nulls,
+                $infer_dates,
+            );
         }
 
         #[test]
         fn headers_index() {
             let name = concat!(stringify!($name), "_headers_index");
-            test_stats(name, $field, $rows, $expect, true, true, $nulls, $dates);
+            test_stats(
+                name,
+                $field,
+                $rows,
+                $expect,
+                true,
+                true,
+                $nulls,
+                $infer_dates,
+            );
         }
     };
 }
@@ -55,17 +73,35 @@ macro_rules! stats_test_no_headers {
     ($name:ident, $field:expr, $rows:expr, $expect:expr) => {
         stats_test_no_headers!($name, $field, $rows, $expect, false, true);
     };
-    ($name:ident, $field:expr, $rows:expr, $expect:expr, $nulls:expr, $dates:expr) => {
+    ($name:ident, $field:expr, $rows:expr, $expect:expr, $nulls:expr, $infer_dates:expr) => {
         #[test]
         fn no_headers_no_index() {
             let name = concat!(stringify!($name), "_no_headers_no_index");
-            test_stats(name, $field, $rows, $expect, false, false, $nulls, $dates);
+            test_stats(
+                name,
+                $field,
+                $rows,
+                $expect,
+                false,
+                false,
+                $nulls,
+                $infer_dates,
+            );
         }
 
         #[test]
         fn no_headers_index() {
             let name = concat!(stringify!($name), "_no_headers_index");
-            test_stats(name, $field, $rows, $expect, false, true, $nulls, $dates);
+            test_stats(
+                name,
+                $field,
+                $rows,
+                $expect,
+                false,
+                true,
+                $nulls,
+                $infer_dates,
+            );
         }
     };
 }
@@ -78,11 +114,11 @@ fn test_stats<S>(
     headers: bool,
     use_index: bool,
     nulls: bool,
-    dates: bool,
+    infer_dates: bool,
 ) where
     S: ::std::ops::Deref<Target = str>,
 {
-    let (wrk, mut cmd) = setup(name, rows, headers, use_index, nulls, dates);
+    let (wrk, mut cmd) = setup(name, rows, headers, use_index, nulls, infer_dates);
     let field_val = get_field_value(&wrk, &mut cmd, field);
     // Only compare the first few bytes since floating point arithmetic
     // can mess with exact comparisons.
@@ -96,7 +132,7 @@ fn setup<S>(
     headers: bool,
     use_index: bool,
     nulls: bool,
-    dates: bool,
+    infer_dates: bool,
 ) -> (Workdir, process::Command)
 where
     S: ::std::ops::Deref<Target = str>,
@@ -120,8 +156,8 @@ where
     if nulls {
         cmd.arg("--nulls");
     }
-    if dates {
-        cmd.arg("--dates");
+    if infer_dates {
+        cmd.arg("--infer-dates");
     }
 
     (wrk, cmd)
@@ -143,8 +179,8 @@ fn get_field_value(wrk: &Workdir, cmd: &mut process::Command, field: &str) -> St
     if field == "mode" {
         cmd.arg("--mode");
     }
-    if field == "dates" {
-        cmd.arg("--dates");
+    if field == "infer_dates" {
+        cmd.arg("--infer-dates");
     }
 
     let mut rows: Vec<Vec<String>> = wrk.read_stdout(cmd);
@@ -183,14 +219,14 @@ stats_tests!(stats_infer_int, "type", &["1"], "Integer");
 stats_tests!(stats_infer_float, "type", &["1.2"], "Float");
 stats_tests!(stats_infer_null, "type", &[""], "NULL");
 stats_tests!(stats_infer_date, "type", &["1968-06-27"], "Date");
-stats_nodates_tests!(stats_infer_nodate, "type", &["1968-06-27"], "String");
+stats_no_infer_dates_tests!(stats_infer_nodate, "type", &["1968-06-27"], "String");
 stats_tests!(
     stats_infer_datetime,
     "type",
     &["1968-06-27 12:30:01"],
     "DateTime"
 );
-stats_nodates_tests!(
+stats_no_infer_dates_tests!(
     stats_infer_nodatetime,
     "type",
     &["1968-06-27 12:30:01"],
@@ -205,8 +241,8 @@ stats_tests!(
     &["June 27, 1968", ""],
     "Date"
 );
-stats_nodates_tests!(
-    stats_infer_nodates_null,
+stats_no_infer_dates_tests!(
+    stats_infer_no_infer_dates_null,
     "type",
     &["June 27, 1968", ""],
     "String"
@@ -217,7 +253,7 @@ stats_tests!(
     &["June 27, 1968 12:30:00 UTC", ""],
     "DateTime"
 );
-stats_nodates_tests!(
+stats_no_infer_dates_tests!(
     stats_infer_nodatetime_null,
     "type",
     &["June 27, 1968 12:30:00 UTC", ""],
@@ -232,7 +268,7 @@ stats_tests!(
     &["", "September 17, 2012 at 10:09am PST"],
     "Date"
 );
-stats_nodates_tests!(
+stats_no_infer_dates_tests!(
     stats_infer_null_nodate,
     "type",
     &["", "September 17, 2012 at 10:09am PST"],
@@ -244,7 +280,7 @@ stats_tests!(
     &["September 11, 2001", "September 17, 2012 at 10:09am PST"],
     "DateTime"
 );
-stats_nodates_tests!(
+stats_no_infer_dates_tests!(
     stats_infer_nodate_nodatetime,
     "type",
     &["September 11, 2001", "September 17, 2012 at 10:09am PST"],
