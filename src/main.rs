@@ -143,9 +143,8 @@ fn main() {
     }
 
     let now = Instant::now();
-
+    let mut qsv_args: String = env::args().skip(1).collect::<Vec<_>>().join(" ");
     if log_enabled!(Level::Info) {
-        let qsv_args: String = env::args().skip(1).collect::<Vec<_>>().join(" ");
         info!("START: {qsv_args}");
     }
 
@@ -181,7 +180,16 @@ Please choose one of the following commands:",
         Some(cmd) => match cmd.run() {
             Ok(()) => {
                 if log_enabled!(Level::Info) {
-                    info!("END elapsed: {}", now.elapsed().as_secs_f32());
+                    let ellipsis = if qsv_args.len() > 15 {
+                        qsv_args.truncate(15);
+                        "..."
+                    } else {
+                        ""
+                    };
+                    info!(
+                        "END \"{qsv_args}{ellipsis}\" elapsed: {}",
+                        now.elapsed().as_secs_f32()
+                    );
                 }
                 process::exit(0);
             }
