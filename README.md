@@ -146,12 +146,11 @@ echo "complete -F _docopt_wordlist_commands qsv" >> $HOME/.bash_completion
 
 Recognized file formats
 -----------------------
-qsv recognizes UTF-8/ASCII encoded, CSV (`.csv` file extension) and TSV files (`.tsv` and `.tab` file extensions). CSV files are assummed to have "," (comma) as a delimiter,
+qsv recognizes UTF-8/ASCII encoded, CSV (`.csv`) and TSV files (`.tsv` and `.tab`). CSV files are assummed to have "," (comma) as a delimiter,
 and TSV files, "\t" (tab) as a delimiter. The delimiter is a single ascii character that can be set either by the `--delimiter` command-line option or
-with the `QSV_DEFAULT_DELIMITER` environment variable.
+with the `QSV_DEFAULT_DELIMITER` environment variable or automatically detected when `QSV_SNIFF_DELIMITER` is set.
 
-When using the `--output` option, note that qsv will UTF-8 encode the file and automatically change the delimiter used in the generated file based on the file extension - i.e. comma for `.csv`, 
-tab for `.tsv` and `.tab` files.
+When using the `--output` option, note that qsv will UTF-8 encode the file and automatically change the delimiter used in the generated file based on the file extension - i.e. comma for `.csv`, tab for `.tsv` and `.tab` files.
 
 [JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/) files are also recognized and converted to CSV with the [`jsonl`](/src/cmd/jsonl.rs#L11) command.
 
