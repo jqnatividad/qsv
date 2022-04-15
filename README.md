@@ -159,18 +159,16 @@ The `fetch` command also produces JSONL files when its invoked without the `--ne
 The `excel` command recognizes Excel and Open Document Spreadsheet(ODS) files (`.xls`, `.xlsx`, `.xlsm`, `.xlsb` and `.ods` files).
 
 ### **Encoding**   
-qsv requires UTF-8 encoded (of which ASCII is a subset) input files. On startup, it scans the input if it's UTF-8 encoded, and will abort if its not. On Linux and macOS, UTF-8 encoding is the default. Should you need to reencode CSV/TSV files, there are several utilities you can use to do so on [Linux/macOS](https://stackoverflow.com/questions/805418/how-can-i-find-encoding-of-a-file-via-a-script-on-linux) and [Windows](https://superuser.com/questions/1163753/converting-text-file-to-utf-8-on-windows-command-prompt).
+qsv requires UTF-8 encoded (of which ASCII is a subset) input files. On startup, it scans the input if it's UTF-8 encoded, and will abort if its not unless `QSV_SKIPUTF8_CHECK` is set. On Linux and macOS, UTF-8 encoding is the default. Should you need to reencode CSV/TSV files, there are several utilities you can use to do so on [Linux/macOS](https://stackoverflow.com/questions/805418/how-can-i-find-encoding-of-a-file-via-a-script-on-linux) and [Windows](https://superuser.com/questions/1163753/converting-text-file-to-utf-8-on-windows-command-prompt).
 
 ### **Windows Usage Note**   
-Unlike other modern operating systems, Windows' [default encoding is UTF16-LE](https://stackoverflow.com/questions/66072117/why-does-windows-use-utf-16le).   
-This will cause problems when redirecting qsv's output to a CSV file and trying to open it with applications
-like Excel:   
+Unlike other modern operating systems, Windows' [default encoding is UTF16-LE](https://stackoverflow.com/questions/66072117/why-does-windows-use-utf-16le). This will cause problems when redirecting qsv's output to a CSV file and trying to open it with Excel (which ignores the comma delimiter, with everything in the first column):   
 ```
-qsv stats --everything wcp.csv > wcpstats.csv
+qsv stats wcp.csv > wcpstats.csv
 ```   
-Which is weird, since you would think [Microsoft would allow Excel to properly recognize UTF16-LE encoded CSV files](https://answers.microsoft.com/en-us/msoffice/forum/all/opening-csv-file-with-utf16-encoding-in-excel-2010/ed522cb9-e88d-4b82-b88e-a2d4bd99f874?auth=1). Regardless, to create a properly UTF-8 encoded file, use the `--output` option instead: 
+Which is weird, since you would think [Microsoft Excel should properly recognize UTF16-LE encoded CSV files](https://answers.microsoft.com/en-us/msoffice/forum/all/opening-csv-file-with-utf16-encoding-in-excel-2010/ed522cb9-e88d-4b82-b88e-a2d4bd99f874?auth=1). Regardless, to create a properly UTF-8 encoded file, use the `--output` option instead: 
 ```
-qsv stats --everything wcp.csv --output wcpstats.csv
+qsv stats wcp.csv --output wcpstats.csv
 ```
 
 Environment Variables
