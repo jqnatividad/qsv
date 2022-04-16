@@ -198,7 +198,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             // first, get the fields used in the url template
             let safe_headers = util::safe_header_names(&str_headers, false);
             let formatstr_re: &'static Regex = regex_once_cell!(r"\{(?P<key>\w+)?\}");
-            for format_fields in formatstr_re.captures_iter(&url_template) {
+            for format_fields in formatstr_re.captures_iter(url_template) {
                 dynfmt_fields.push(format_fields.name("key").unwrap().as_str());
             }
             // we sort the fields so we can do binary_search
