@@ -122,7 +122,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         } else if args.flag_uuid {
             let id = Uuid::new_v4();
             record.push_field(
-                id.to_hyphenated()
+                id.as_hyphenated()
                     .encode_lower(&mut Uuid::encode_buffer())
                     .as_bytes(),
             );
