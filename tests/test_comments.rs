@@ -184,3 +184,84 @@ fn envlist() {
     cmd.env("QSV_ENVVAR", "");
     cmd.env("MIMALLOC_ENVVAR", "");
 }
+
+#[test]
+fn test_input_skiplines() {
+    let wrk = Workdir::new("input_skiplines");
+    wrk.create(
+        "preamble.csv",
+        vec![
+            svec!["# test file to see how skiplines work", ""],
+            svec!["! this is another comment before the header", ""],
+            svec!["# DATA DICTIONARY", ""],
+            svec!["! column1 - alphabetic; id of the column", ""],
+            svec!["% column2 - numeric; just a number", ""],
+            svec!["column1", "column2"],
+            svec!["a", "1"],
+            svec!["c", "3"],
+            svec!["e", "5"],
+        ],
+    );
+    let mut cmd = wrk.command("input");
+    cmd.arg("--skip-lines").arg("5").arg("preamble.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["column1", "column2"],
+        svec!["a", "1"],
+        svec!["c", "3"],
+        svec!["e", "5"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn test_input_skip_one_line() {
+    let wrk = Workdir::new("input_skip_one_line");
+    wrk.create(
+        "preamble.csv",
+        vec![
+            svec!["# test file to see how skiplines work", ""],
+            svec!["column1", "column2"],
+            svec!["a", "1"],
+            svec!["c", "3"],
+            svec!["e", "5"],
+        ],
+    );
+    let mut cmd = wrk.command("input");
+    cmd.arg("--skip-lines").arg("1").arg("preamble.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["column1", "column2"],
+        svec!["a", "1"],
+        svec!["c", "3"],
+        svec!["e", "5"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn test_input_skip_no_line() {
+    let wrk = Workdir::new("input_skip_no_line");
+    wrk.create(
+        "preamble.csv",
+        vec![
+            svec!["column1", "column2"],
+            svec!["a", "1"],
+            svec!["c", "3"],
+            svec!["e", "5"],
+        ],
+    );
+    let mut cmd = wrk.command("input");
+    cmd.arg("--skip-lines").arg("0").arg("preamble.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["column1", "column2"],
+        svec!["a", "1"],
+        svec!["c", "3"],
+        svec!["e", "5"],
+    ];
+    assert_eq!(got, expected);
+}
