@@ -19,6 +19,7 @@ input options:
     --escape <arg>         The escape character to use. When not specified,
                            quotes are escaped by doubling them.
     --no-quoting           Disable quoting completely.
+    --skip-lines <arg>     The number of lines to skip.
 
 Common options:
     -h, --help             Display this message
@@ -35,6 +36,7 @@ struct Args {
     flag_quote: Delimiter,
     flag_escape: Option<Delimiter>,
     flag_no_quoting: bool,
+    flag_skip_lines: Option<usize>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -55,6 +57,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut rdr = rconfig.reader()?;
     let mut wtr = wconfig.writer()?;
     let mut row = csv::ByteRecord::new();
+    if let Some(skip_lines) = args.flag_skip_lines {
+        for _i in 1..=skip_lines {
+            rdr.read_byte_record(&mut row)?;
+        }
+    }
     while rdr.read_byte_record(&mut row)? {
         wtr.write_record(&row)?;
     }
