@@ -5,6 +5,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.41.0] - 2022-04-21
+### Added
+* `input`: add `--skip-lines` option in https://github.com/jqnatividad/qsv/pull/266
+
+### Changed
+* More verbose, matching START/END logging messages when `QSV_LOG_LEVEL` is enabled.
+* Bump whatlang from 0.13.0 to 0.14.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/264
+* Bump filetime from 0.2.15 to 0.2.16 by @dependabot in https://github.com/jqnatividad/qsv/pull/263
+* Bump uuid from 0.8 to 1 in https://github.com/jqnatividad/qsv/pull/267
+* Minor documentation improvements
+* `cargo update` bumped several other second-level dependencies
+
 ## [0.40.3] - 2022-04-14
 ### Changed
 * Bump pyo3 from 0.16.3 to 0.16.4
