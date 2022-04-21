@@ -4,12 +4,15 @@ use crate::CliResult;
 use serde::Deserialize;
 
 static USAGE: &str = r#"
-Read CSV data with special quoting rules.
+Read CSV data with special quoting and line-skipping rules.
 
 Generally, all qsv commands support basic options like specifying the delimiter
 used in CSV data. This does not cover all possible types of CSV data. For
 example, some CSV files don't use '"' for quotes or use different escaping
 styles.
+
+Also, CSVs that are technically malformed with preamble lines can be converted
+into a format qsv can handle with the --skip-lines option.
 
 Usage:
     qsv input [options] [<input>]
