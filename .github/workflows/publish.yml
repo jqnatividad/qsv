@@ -38,6 +38,13 @@ jobs:
             default-features:
           - os: ubuntu-latest
             os-name: linux
+            target: x86_64-unknown-linux-musl
+            architecture: x86_64
+            use-cross: false
+            addl-build-args: --features=apply,generate,lua,fetch,foreach,python
+            default-features:            
+          - os: ubuntu-latest
+            os-name: linux
             target: i686-unknown-linux-gnu
             architecture: i686
             use-cross: true
