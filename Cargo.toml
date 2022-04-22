@@ -75,10 +75,9 @@ grex = { version = "1.3", git = "https://github.com/jqnatividad/grex", branch = 
 indicatif = "0.16"
 itertools = "0.10"
 itoa = "1"
-jsonschema = { version = "0.15", features = [
+jsonschema = { version = "0.16", features = [
     "resolve-file",
-    "reqwest",
-    "rustls",
+    "resolve-http",
 ], default-features = false }
 jsonxf = { version = "1", optional = true }
 jql = { version = "4.0", default-features = false, optional = true }
