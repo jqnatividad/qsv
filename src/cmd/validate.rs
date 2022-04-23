@@ -422,9 +422,9 @@ fn to_json_instance(headers: &ByteRecord, record: &ByteRecord, schema: &Value) -
 
     for (i, header) in headers_iter {
         // convert csv header to string
-        let header_string = std::str::from_utf8(header)?.to_string();
+        let header_string = unsafe { std::str::from_utf8_unchecked(header).to_string() };
         // convert csv value to string; trim whitespace
-        let value_string = std::str::from_utf8(&record[i])?.trim().to_string();
+        let value_string = unsafe { std::str::from_utf8_unchecked(&record[i]).trim().to_string() };
 
         // get json type from schema; defaults to STRING if not specified
         let field_def: &Value = schema_properties
