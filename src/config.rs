@@ -80,6 +80,7 @@ pub struct Config {
     double_quote: bool,
     escape: Option<u8>,
     quoting: bool,
+    trim: csv::Trim,
     autoindex: bool,
     checkutf8: bool,
 }
@@ -143,6 +144,7 @@ impl Config {
             double_quote: true,
             escape: None,
             quoting: true,
+            trim: csv::Trim::None,
             autoindex: env::var("QSV_AUTOINDEX").is_ok(),
             checkutf8: env::var("QSV_SKIPUTF8_CHECK").is_err(),
         }
@@ -213,6 +215,11 @@ impl Config {
 
     pub fn quoting(mut self, yes: bool) -> Config {
         self.quoting = yes;
+        self
+    }
+
+    pub fn trim(mut self, trim_type: csv::Trim) -> Config {
+        self.trim = trim_type;
         self
     }
 
@@ -453,6 +460,7 @@ impl Config {
             .escape(self.escape)
             .buffer_capacity(rdr_buffer)
             .comment(rdr_comment)
+            .trim(self.trim)
             .from_reader(rdr)
     }
 

@@ -1,0 +1,13 @@
+# test file to see how skiplines work"
+! this is another comment before the header"
+# DATA DICTIONARY"
+! column1 - alphabetic; id of the column"
+% column2 - numeric; just a number"
+column1,column2
+a,1
+b,2
+c,3
+d,4
+e,5
+// this is an epilog line
+# and another one
