@@ -95,7 +95,7 @@ qsv_currency = { version = "0.5", optional = true }
 rand = "0.8"
 rayon = "1.5"
 regex = "1"
-reqwest = { version = "0.11", features = [
+reqwest = { version = "0.11", git = "https://github.com/jqnatividad/reqwest", features = [
     "blocking",
     "brotli",
     "cookies",
