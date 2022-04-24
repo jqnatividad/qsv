@@ -5,6 +5,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.42.0] - 2022-04-24
+### Added
+* `input` refactor. Added trimming and epilog skiplines option. https://github.com/jqnatividad/qsv/pull/270
+* `sniff`: added note about sniff limitations
+* also publish x86_64-unknown-linux-musl binary
+
+### Changed
+* Bump anyhow from 1.0.56 to 1.0.57 by @dependabot in https://github.com/jqnatividad/qsv/pull/268
+* Bump jsonschema from 0.15.2 to 0.16.0
+* use optimized fork of rust-csv, with non-allocating, in-place trimming and various perf tweaks
+* use optimized fork of docopt.rs, with various perf & memory allocation tweaks
+* use reqwest fork with unreleased changes that remove unneeded crates
+* `validate`: use `from_utf8_unchecked` in creating json instances for performance
+
+### Fixed
+* `input`: Fixed line-skipping logic so CSV parsing is flexible - i.e. column count can change between records
+
 ## [0.41.0] - 2022-04-21
 ### Added
 * `input`: add `--skip-lines` option in https://github.com/jqnatividad/qsv/pull/266
