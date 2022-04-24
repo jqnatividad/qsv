@@ -647,10 +647,10 @@ dependencies = [
 [[package]]
 name = "csv"
 version = "1.1.6"
-source = "git+https://github.com/jqnatividad/rust-csv#96296170e5f6d6a77ea4ebf12adba14730890e93"
+source = "git+https://github.com/jqnatividad/rust-csv?branch=perf-tweaks#330427998aa332ae555b63c08ca591a1785ba16c"
 dependencies = [
  "bstr",
- "csv-core 0.1.10 (git+https://github.com/jqnatividad/rust-csv)",
+ "csv-core 0.1.10 (git+https://github.com/jqnatividad/rust-csv?branch=perf-tweaks)",
  "itoa 1.0.1",
  "ryu",
  "serde",
@@ -668,7 +668,7 @@ dependencies = [
 [[package]]
 name = "csv-core"
 version = "0.1.10"
-source = "git+https://github.com/jqnatividad/rust-csv#96296170e5f6d6a77ea4ebf12adba14730890e93"
+source = "git+https://github.com/jqnatividad/rust-csv?branch=perf-tweaks#330427998aa332ae555b63c08ca591a1785ba16c"
 dependencies = [
  "memchr",
 ]
@@ -676,10 +676,10 @@ dependencies = [
 [[package]]
 name = "csv-index"
 version = "0.1.6"
-source = "git+https://github.com/jqnatividad/rust-csv#96296170e5f6d6a77ea4ebf12adba14730890e93"
+source = "git+https://github.com/jqnatividad/rust-csv?branch=perf-tweaks#330427998aa332ae555b63c08ca591a1785ba16c"
 dependencies = [
  "byteorder",
- "csv 1.1.6 (git+https://github.com/jqnatividad/rust-csv)",
+ "csv 1.1.6 (git+https://github.com/jqnatividad/rust-csv?branch=perf-tweaks)",
 ]
 
 [[package]]
@@ -2077,8 +2077,8 @@ dependencies = [
  "censor",
  "chrono",
  "crossbeam-channel",
- "csv 1.1.6 (git+https://github.com/jqnatividad/rust-csv)",
- "csv-core 0.1.10 (git+https://github.com/jqnatividad/rust-csv)",
+ "csv 1.1.6 (git+https://github.com/jqnatividad/rust-csv?branch=perf-tweaks)",
+ "csv-core 0.1.10 (git+https://github.com/jqnatividad/rust-csv?branch=perf-tweaks)",
  "csv-index",
  "csv-sniffer",
  "docopt",

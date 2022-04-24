@@ -57,9 +57,9 @@ calamine = { version = "0.18", git = "https://github.com/jqnatividad/calamine" }
 censor = { version = "0.2", optional = true }
 chrono = { version = "0.4", optional = true }
 crossbeam-channel = "0.5"
-csv = { version = "1.1", git = "https://github.com/jqnatividad/rust-csv" }
-csv-core = { version = "0.1", git = "https://github.com/jqnatividad/rust-csv" }
-csv-index = { version = "0.1", git = "https://github.com/jqnatividad/rust-csv" }
+csv = { version = "1.1", git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
+csv-core = { version = "0.1", git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
+csv-index = { version = "0.1", git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
 csv-sniffer = "0.3"
 docopt = "1"
 dynfmt = { version = "0.1", default-features = false, features = [
