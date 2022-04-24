@@ -5,9 +5,14 @@ use csv_sniffer::{SampleSize, Sniffer};
 use serde::Deserialize;
 use thousands::Separable;
 
-static USAGE: &str = "
+static USAGE: &str = r#"
 Quickly sniff CSV details (delimiter, quote character, number of fields, data types,
 header row, preamble rows).
+
+NOTE: sniff is a thin wrapper around the csv-sniffer crate (https://docs.rs/csv-sniffer).
+It "sniffs" a CSV's schema by scanning the first few rows of a CSV file, and its inferences
+are sometimes wrong. If you want more robust, guaranteed schemata - use the "schema" or
+"stats" commands instead. 
 
 Usage:
     qsv sniff [options] [<input>]
@@ -18,7 +23,7 @@ sniff options:
 
 Common options:
     -h, --help             Display this message
-";
+"#;
 
 #[derive(Deserialize)]
 struct Args {
