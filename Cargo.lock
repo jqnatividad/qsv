@@ -480,9 +480,9 @@ dependencies = [
 
 [[package]]
 name = "combine"
-version = "4.6.3"
+version = "4.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "50b727aacc797f9fc28e355d21f34709ac4fc9adecfe470ad07b8f4464f53062"
+checksum = "2a604e93b79d1808327a6fca85a6f2d69de66461e7620f5a4cbf5fb4d1d7c948"
 dependencies = [
  "bytes",
  "memchr",
@@ -634,35 +634,13 @@ dependencies = [
 [[package]]
 name = "csv"
 version = "1.1.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "22813a6dc45b335f9bade10bf7271dc477e81113e89eb251a0bc2a8a81c536e1"
-dependencies = [
- "bstr",
- "csv-core 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)",
- "itoa 0.4.8",
- "ryu",
- "serde",
-]
-
-[[package]]
-name = "csv"
-version = "1.1.6"
 source = "git+https://github.com/jqnatividad/rust-csv?branch=perf-tweaks#330427998aa332ae555b63c08ca591a1785ba16c"
 dependencies = [
  "bstr",
- "csv-core 0.1.10 (git+https://github.com/jqnatividad/rust-csv?branch=perf-tweaks)",
+ "csv-core",
  "itoa 1.0.1",
  "ryu",
  "serde",
-]
-
-[[package]]
-name = "csv-core"
-version = "0.1.10"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b2466559f260f48ad25fe6317b3c8dac77b5bdb5763ac7d9d6103530663bc90"
-dependencies = [
- "memchr",
 ]
 
 [[package]]
@@ -679,7 +657,7 @@ version = "0.1.6"
 source = "git+https://github.com/jqnatividad/rust-csv?branch=perf-tweaks#330427998aa332ae555b63c08ca591a1785ba16c"
 dependencies = [
  "byteorder",
- "csv 1.1.6 (git+https://github.com/jqnatividad/rust-csv?branch=perf-tweaks)",
+ "csv",
 ]
 
 [[package]]
@@ -689,8 +667,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a1e32aa93b952410d55c1ae03048cc22a6cc62a323711b8e9245ef4b5578051c"
 dependencies = [
  "bitflags",
- "csv 1.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
- "csv-core 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)",
+ "csv",
+ "csv-core",
  "memchr",
  "regex",
 ]
@@ -1363,7 +1341,7 @@ dependencies = [
  "parking_lot 0.12.0",
  "percent-encoding",
  "regex",
- "reqwest 0.11.10 (registry+https://github.com/rust-lang/crates.io-index)",
+ "reqwest",
  "serde",
  "serde_json",
  "time 0.3.9",
@@ -2076,8 +2054,8 @@ dependencies = [
  "censor",
  "chrono",
  "crossbeam-channel",
- "csv 1.1.6 (git+https://github.com/jqnatividad/rust-csv?branch=perf-tweaks)",
- "csv-core 0.1.10 (git+https://github.com/jqnatividad/rust-csv?branch=perf-tweaks)",
+ "csv",
+ "csv-core",
  "csv-index",
  "csv-sniffer",
  "docopt",
@@ -2106,7 +2084,7 @@ dependencies = [
  "rayon",
  "redis",
  "regex",
- "reqwest 0.11.10 (git+https://github.com/jqnatividad/reqwest)",
+ "reqwest",
  "reverse_geocoder",
  "ryu",
  "self_update",
@@ -2341,45 +2319,7 @@ dependencies = [
 [[package]]
 name = "reqwest"
 version = "0.11.10"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "46a1f7aa4f35e5e8b4160449f51afc758f0ce6454315a9fa7d0d113e958c41eb"
-dependencies = [
- "base64",
- "bytes",
- "encoding_rs",
- "futures-core",
- "futures-util",
- "h2",
- "http",
- "http-body",
- "hyper",
- "hyper-rustls",
- "ipnet",
- "js-sys",
- "lazy_static",
- "log",
- "mime",
- "percent-encoding",
- "pin-project-lite",
- "rustls",
- "rustls-pemfile 0.3.0",
- "serde",
- "serde_json",
- "serde_urlencoded",
- "tokio",
- "tokio-rustls",
- "url",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
- "webpki-roots",
- "winreg",
-]
-
-[[package]]
-name = "reqwest"
-version = "0.11.10"
-source = "git+https://github.com/jqnatividad/reqwest#d24a5286c7bd101f82c90e39cb2ccc21ae854da8"
+source = "git+https://github.com/seanmonstar/reqwest#d24a5286c7bd101f82c90e39cb2ccc21ae854da8"
 dependencies = [
  "async-compression",
  "base64",
@@ -2403,7 +2343,7 @@ dependencies = [
  "pin-project-lite",
  "proc-macro-hack",
  "rustls",
- "rustls-pemfile 1.0.0",
+ "rustls-pemfile",
  "serde",
  "serde_json",
  "serde_urlencoded",
@@ -2425,7 +2365,7 @@ version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7e2c7983a04230d15e83a3079765d370628e04a2474d585b712d7c46e17e9ab0"
 dependencies = [
- "csv 1.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "csv",
  "kdtree",
  "serde",
  "serde_derive",
@@ -2471,15 +2411,6 @@ dependencies = [
  "ring",
  "sct",
  "webpki",
-]
-
-[[package]]
-name = "rustls-pemfile"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1ee86d63972a7c661d1536fefe8c3c8407321c3df668891286de28abcd087360"
-dependencies = [
- "base64",
 ]
 
 [[package]]
@@ -2539,7 +2470,7 @@ dependencies = [
  "log",
  "quick-xml",
  "regex",
- "reqwest 0.11.10 (registry+https://github.com/rust-lang/crates.io-index)",
+ "reqwest",
  "semver 0.11.0",
  "serde_json",
  "tempfile",
@@ -2788,7 +2719,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "640e18df4252c8ccb6c1c3abd1e48c9f2c674a61eb3136936811b79b9b7f58d6"
 dependencies = [
  "crossbeam",
- "csv 1.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "csv",
  "indexmap",
  "levenshtein",
  "log",
