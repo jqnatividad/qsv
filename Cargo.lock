@@ -1072,8 +1072,8 @@ dependencies = [
 
 [[package]]
 name = "grex"
-version = "1.4.0-SNAPSHOT"
-source = "git+https://github.com/pemistahl/grex?rev=9dea3b421d1d27a7dc10ad1a8a81e44eac5ebd1d#9dea3b421d1d27a7dc10ad1a8a81e44eac5ebd1d"
+version = "1.3.0"
+source = "git+https://github.com/jqnatividad/grex?rev=45af84167b8bd6d38c9e36ada7fe677bebe8886f#45af84167b8bd6d38c9e36ada7fe677bebe8886f"
 dependencies = [
  "itertools",
  "lazy_static",

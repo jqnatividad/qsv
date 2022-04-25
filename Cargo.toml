@@ -71,7 +71,7 @@ flexi_logger = { version = "0.22", features = [
     "compress",
 ], default-features = false }
 governor = { version = "0.4", optional = true }
-grex = { version = "1.4.0-SNAPSHOT", default-features = false }
+grex = { version = "1.3.0", default-features = false }
 indicatif = "0.16"
 itertools = "0.10"
 itoa = "1"
@@ -139,7 +139,7 @@ csv = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" 
 csv-core = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
 csv-index = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
 docopt = { git = "https://github.com/jqnatividad/docopt.rs", branch = "perf-clippy-2021" }
-grex = { git = "https://github.com/pemistahl/grex", rev = "9dea3b421d1d27a7dc10ad1a8a81e44eac5ebd1d" }
+grex = { git = "https://github.com/jqnatividad/grex", rev = "45af84167b8bd6d38c9e36ada7fe677bebe8886f" }
 redis = { git = "https://github.com/mitsuhiko/redis-rs", rev = "b8eb47303c5728e943b914cd10dc35d1fceee05c" }
 reqwest = { git = "https://github.com/seanmonstar/reqwest", rev = "5d8bf830cbce552075d9bd03f09644469533b50e" }
 
