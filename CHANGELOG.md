@@ -5,6 +5,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.42.1] - 2022-04-25
+### Changed
+* use `[patch.crates-io]` to use crate forks, rather than using the git directive in the dependencies section.
+This has the added benefit of making the dependency tree smaller, as other crates that depend on the patched crates also
+use the patches. This should also result in smaller binaries.
+
 ## [0.42.0] - 2022-04-24
 ### Added
 * `input` refactor. Added trimming and epilog skiplines option. https://github.com/jqnatividad/qsv/pull/270
