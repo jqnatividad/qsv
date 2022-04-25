@@ -140,6 +140,7 @@ csv-core = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-twe
 csv-index = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
 docopt = { git = "https://github.com/jqnatividad/docopt.rs", branch = "perf-clippy-2021" }
 grex = { git = "https://github.com/jqnatividad/grex", branch = "qsv-nocli" }
+redis = { git = "https://github.com/mitsuhiko/redis-rs" }
 reqwest = { git = "https://github.com/seanmonstar/reqwest" }
 
 [features]
