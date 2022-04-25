@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.42.2] - 2022-04-25
+### Changed
+* use our grex fork, as the upstream fork has an unpublished version number that prevents us from publishing on crates.io.
+
 ## [0.42.1] - 2022-04-25
 ### Changed
 * use `[patch.crates-io]` to use crate forks, rather than using the git directive in the dependencies section.
