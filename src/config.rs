@@ -20,8 +20,9 @@ const DEFAULT_RDR_BUFFER_CAPACITY: usize = 16 * (1 << 10);
 pub const DEFAULT_WTR_BUFFER_CAPACITY: usize = 64 * (1 << 10);
 // number of rows for csv_sniffer to sample
 const DEFAULT_SNIFFER_SAMPLE: usize = 200;
-// number of bytes to check for UTF8 encoding
+// for files, number of bytes to check for UTF8 encoding
 const DEFAULT_UTF8_CHECK_BUFFER_LEN: usize = 8192;
+const UTF8_ERROR_MSG: &str = "is not UTF-8 encoded. Use the input command to transcode to UTF-8.";
 
 #[derive(Clone, Copy, Debug)]
 pub struct Delimiter(pub u8);
@@ -232,6 +233,11 @@ impl Config {
         self.path.is_none()
     }
 
+    pub fn checkutf8(mut self, yes: bool) -> Config {
+        self.checkutf8 = yes;
+        self
+    }
+
     pub fn selection(&self, first_record: &csv::ByteRecord) -> Result<Selection, String> {
         match self.select_columns {
             None => Err("Config has no 'SelectColums'. Did you call \
@@ -273,7 +279,7 @@ impl Config {
                 if !self.is_utf8_encoded() {
                     return Err(io::Error::new(
                         io::ErrorKind::InvalidData,
-                        format!("{p:?} is not UTF8 encoded."),
+                        format!("{p:?} {UTF8_ERROR_MSG}"),
                     ));
                 }
                 fs::File::open(p).map(|f| self.from_reader(f))
@@ -295,7 +301,7 @@ impl Config {
                     if s.is_err() {
                         return Err(io::Error::new(
                             io::ErrorKind::InvalidData,
-                            "<stdin> is not UTF8 encoded.",
+                            format!("<stdin> {UTF8_ERROR_MSG}"),
                         ));
                     }
                 }
@@ -305,7 +311,7 @@ impl Config {
                 if !self.is_utf8_encoded() {
                     return Err(io::Error::new(
                         io::ErrorKind::InvalidData,
-                        format!("{p:?} is not UTF8 encoded."),
+                        format!("{p:?} {UTF8_ERROR_MSG}"),
                     ));
                 }
                 self.from_reader(Box::new(fs::File::open(p).unwrap()))
@@ -414,7 +420,7 @@ impl Config {
                     if s.is_err() {
                         return Err(io::Error::new(
                             io::ErrorKind::InvalidData,
-                            "<stdin> is not UTF8 encoded.",
+                            format!("<stdin> {UTF8_ERROR_MSG}"),
                         ));
                     }
                     Box::new(io::Cursor::new(buffer))
@@ -426,7 +432,7 @@ impl Config {
                 if !self.is_utf8_encoded() {
                     return Err(io::Error::new(
                         io::ErrorKind::InvalidData,
-                        format!("{p:?} is not UTF8 encoded."),
+                        format!("{p:?} {UTF8_ERROR_MSG}"),
                     ));
                 }
                 match fs::File::open(p) {
