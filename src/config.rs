@@ -290,9 +290,9 @@ impl Config {
                 stdin.lock().read_to_end(&mut buffer)?;
                 // check if its utf8-encoded
                 if self.checkutf8 {
-                    let s = String::from_utf8_lossy(&buffer);
                     debug!("checking stdin encoding...");
-                    if s.contains(std::char::REPLACEMENT_CHARACTER) {
+                    let s = std::str::from_utf8(&buffer);
+                    if s.is_err() {
                         return Err(io::Error::new(
                             io::ErrorKind::InvalidData,
                             "<stdin> is not UTF8 encoded.",
@@ -330,8 +330,8 @@ impl Config {
             }
             let mut buffer = vec![0; buffer_size];
             if f.read_exact(&mut buffer).is_ok() {
-                let s = String::from_utf8_lossy(&buffer);
-                return !s.contains(std::char::REPLACEMENT_CHARACTER);
+                let s = std::str::from_utf8(&buffer);
+                return s.is_ok();
             }
         }
         false
@@ -410,9 +410,8 @@ impl Config {
                     let mut buffer: Vec<u8> = Vec::new();
                     stdin_reader.lock().read_to_end(&mut buffer)?;
                     // check if its utf8-encoded
-                    let s = String::from_utf8_lossy(&buffer);
-                    debug!("checking stdin encoding...");
-                    if s.contains(std::char::REPLACEMENT_CHARACTER) {
+                    let s = std::str::from_utf8(&buffer);
+                    if s.is_err() {
                         return Err(io::Error::new(
                             io::ErrorKind::InvalidData,
                             "<stdin> is not UTF8 encoded.",
