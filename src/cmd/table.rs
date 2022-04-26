@@ -72,7 +72,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
-        .no_headers(true);
+        .no_headers(true)
+        .flexible(true);
     let wconfig = Config::new(&args.flag_output).delimiter(Some(Delimiter(b'\t')));
 
     let tw = TabWriter::new(wconfig.io_writer()?)
