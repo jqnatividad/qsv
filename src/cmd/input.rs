@@ -4,7 +4,7 @@ use crate::CliResult;
 use serde::Deserialize;
 
 static USAGE: &str = r#"
-Read CSV data with special quoting, trimming and line-skipping rules.
+Read CSV data with special quoting, trimming, line-skipping and UTF-8 transcoding rules.
 
 Generally, all qsv commands support basic options like specifying the delimiter
 used in CSV data. This does not cover all possible types of CSV data. For
@@ -13,6 +13,9 @@ styles.
 
 Also, CSVs with preamble lines can be have the preamble skipped with the --skip-lines 
 option. Similarly, --skip-lastlines allows epilog lines to be skipped.
+
+Finally, non-UTF8 encoded files are transcoded to UTF8 with this command, replacing all
+invalid UTF8 sequences with �.
 
 Usage:
     qsv input [options] [<input>]
@@ -62,7 +65,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .delimiter(args.flag_delimiter)
         .no_headers(true)
         .quote(args.flag_quote.as_byte())
-        .trim(trim_setting);
+        .trim(trim_setting)
+        .checkutf8(false);
     let wconfig = Config::new(&args.flag_output);
 
     if let Some(escape) = args.flag_escape {
@@ -80,14 +84,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let row_count = util::count_rows(&rconfig);
         if skip_llines > row_count {
             return fail!("--skip-lastlines: {skip_llines} is greater than row_count: {rowcount}.");
-        } else {
-            total_lines = row_count - skip_llines;
         }
+        total_lines = row_count - skip_llines;
     }
 
     let mut rdr = rconfig.reader()?;
     let mut wtr = wconfig.writer()?;
     let mut row = csv::ByteRecord::new();
+    let mut str_row = csv::StringRecord::new();
+
     if let Some(skip_lines) = args.flag_skip_lines {
         for _i in 1..=skip_lines {
             rdr.read_byte_record(&mut row)?;
@@ -101,12 +106,21 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if trim_setting == csv::Trim::Headers || trim_setting == csv::Trim::All {
         rdr.read_byte_record(&mut row)?;
         row.trim();
-        wtr.write_record(&row)?;
+
+        for field in row.iter() {
+            str_row.push_field(&String::from_utf8_lossy(field));
+        }
+        wtr.write_record(&str_row)?;
     }
 
     let mut i = 1_u64;
     while rdr.read_byte_record(&mut row)? {
-        wtr.write_record(&row)?;
+        str_row.clear();
+        for field in row.iter() {
+            str_row.push_field(&String::from_utf8_lossy(field));
+        }
+        wtr.write_record(&str_row)?;
+
         if total_lines > 0 {
             i += 1;
             if i > total_lines {
