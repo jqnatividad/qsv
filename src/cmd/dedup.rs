@@ -84,15 +84,19 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             if no_case {
                 if iter_cmp_no_case(a, b) != cmp::Ordering::Equal {
                     new.push(all[current].clone());
-                } else if dupes_output {
+                } else {
                     dupe_count += 1;
-                    dupewtr.write_byte_record(&all[current])?;
+                    if dupes_output {
+                        dupewtr.write_byte_record(&all[current])?;
+                    }
                 }
             } else if iter_cmp(a, b) != cmp::Ordering::Equal {
                 new.push(all[current].clone());
-            } else if dupes_output {
+            } else {
                 dupe_count += 1;
-                dupewtr.write_byte_record(&all[current])?;
+                if dupes_output {
+                    dupewtr.write_byte_record(&all[current])?;
+                }
             }
             current += 1;
         }
