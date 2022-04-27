@@ -8,10 +8,12 @@ use serde::Deserialize;
 
 use crate::cmd::sort::iter_cmp;
 
-static USAGE: &str = "
+static USAGE: &str = r#"
 Dedups CSV rows. 
 
 Note that this requires reading all of the CSV data into memory, because the rows need to be sorted first.
+
+A duplicate count will be sent to <stderr>.
 
 Usage:
     qsv dedup [options] [<input>]
@@ -23,7 +25,7 @@ sort options:
                                See 'qsv select --help' for the format details.
     -C, --no-case              Compare strings disregarding case
     -D, --dupes-output <file>  Write duplicates to <file>.
-    -H, --human-readable       Comma separate row count.
+    -H, --human-readable       Comma separate duplicate count.
 
 Common options:
     -h, --help                 Display this message
@@ -34,7 +36,7 @@ Common options:
                                appear as the header row in the output.
     -d, --delimiter <arg>      The field delimiter for reading CSV data.
                                Must be a single character. (default: ,)
-";
+"#;
 
 #[derive(Deserialize)]
 struct Args {
