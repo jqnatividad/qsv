@@ -14,7 +14,7 @@ Usage:
     qsv count [options] [<input>]
 
 count options:
-    -H, --human-readable   comma separate row count.
+    -H, --human-readable   Comma separate row count.
 
 Common options:
     -h, --help             Display this message
