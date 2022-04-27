@@ -23,6 +23,7 @@ sort options:
                                See 'qsv select --help' for the format details.
     -C, --no-case              Compare strings disregarding case
     -D, --dupes-output <file>  Write duplicates to <file>.
+    -H, --human-readable       Comma separate row count.
 
 Common options:
     -h, --help                 Display this message
@@ -44,6 +45,7 @@ struct Args {
     flag_output: Option<String>,
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
+    flag_human_readable: bool,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -66,6 +68,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let sel = rconfig.selection(&headers)?;
 
     let mut new: Vec<_> = vec![];
+    let mut dupe_count = 0_usize;
     {
         let mut all = rdr.byte_records().collect::<Result<Vec<_>, _>>()?;
         all.sort_by(|r1, r2| {
@@ -81,13 +84,19 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             if no_case {
                 if iter_cmp_no_case(a, b) != cmp::Ordering::Equal {
                     new.push(all[current].clone());
-                } else if dupes_output {
-                    dupewtr.write_byte_record(&all[current])?;
+                } else {
+                    dupe_count += 1;
+                    if dupes_output {
+                        dupewtr.write_byte_record(&all[current])?;
+                    }
                 }
             } else if iter_cmp(a, b) != cmp::Ordering::Equal {
                 new.push(all[current].clone());
-            } else if dupes_output {
-                dupewtr.write_byte_record(&all[current])?;
+            } else {
+                dupe_count += 1;
+                if dupes_output {
+                    dupewtr.write_byte_record(&all[current])?;
+                }
             }
             current += 1;
         }
@@ -99,6 +108,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     for r in new {
         wtr.write_byte_record(&r)?;
     }
+
+    if args.flag_human_readable {
+        use thousands::Separable;
+
+        eprintln!("{}", dupe_count.separate_with_commas());
+    } else {
+        eprintln!("{dupe_count}");
+    }
+
     Ok(wtr.flush()?)
 }
 
