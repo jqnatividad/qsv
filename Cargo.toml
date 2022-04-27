@@ -22,6 +22,7 @@ test    = false
 bench   = false
 doctest = false
 path    = "src/main.rs"
+required-features = ["full"]
 
 [[bin]]
 name              = "qsvlite"
@@ -30,6 +31,14 @@ bench             = false
 doctest           = false
 path              = "src/mainlite.rs"
 required-features = ["lite"]
+
+[[bin]]
+name              = "qsvdp"
+test              = false
+bench             = false
+doctest           = false
+path              = "src/maindp.rs"
+required-features = ["datapusher_plus"]
 
 [[test]]
 name = "tests"
@@ -171,5 +180,7 @@ fetch = [
 foreach = []
 generate = ["test-data-generation"]
 lite = []
+datapusher_plus = []
+full = []
 lua = ["mlua"]
 python = ["pyo3"]
