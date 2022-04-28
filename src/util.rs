@@ -6,10 +6,14 @@ use std::{env, fs, io, str, thread, time};
 use crate::config::{Config, Delimiter};
 use crate::CliResult;
 use docopt::Docopt;
+#[cfg(any(feature = "full", feature = "lite"))]
 use indicatif::{ProgressBar, ProgressStyle};
+#[cfg(any(feature = "full", feature = "lite"))]
 use log::{debug, error, info, log_enabled, Level};
+#[cfg(any(feature = "full", feature = "lite"))]
 use regex::Regex;
 use serde::de::{Deserialize, DeserializeOwned, Deserializer, Error};
+#[cfg(any(feature = "full", feature = "lite"))]
 use thousands::Separable;
 
 #[macro_export]
@@ -137,6 +141,7 @@ pub fn count_rows(conf: &Config) -> u64 {
     }
 }
 
+#[cfg(any(feature = "full", feature = "lite"))]
 pub fn prep_progress(progress: &ProgressBar, record_count: u64) {
     progress.set_length(record_count);
     progress.set_style(
@@ -156,6 +161,7 @@ pub fn prep_progress(progress: &ProgressBar, record_count: u64) {
     }
 }
 
+#[cfg(any(feature = "full", feature = "lite"))]
 pub fn finish_progress(progress: &ProgressBar) {
     let per_sec_rate = progress.per_sec();
 
@@ -448,6 +454,7 @@ pub fn init_logger() {
         .unwrap();
 }
 
+#[cfg(any(feature = "full", feature = "lite"))]
 pub fn qsv_check_for_update(bin_name: &str) {
     use self_update::cargo_crate_version;
 
@@ -508,6 +515,7 @@ pub fn qsv_check_for_update(bin_name: &str) {
     };
 }
 
+#[cfg(any(feature = "full", feature = "lite"))]
 pub fn safe_header_names(headers: &csv::StringRecord, check_first_char: bool) -> Vec<String> {
     // Create "safe" var/key names - to support dynfmt/url-template and valid python vars
     // Replace whitespace/invalid chars with _.

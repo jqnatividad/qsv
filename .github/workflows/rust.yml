@@ -40,4 +40,4 @@ jobs:
         command: clippy
         args: -- -D warnings        
     - name: Run tests
-      run: cargo test --verbose --locked --features=apply,fetch,foreach,generate,lua,python
+      run: cargo test --verbose --locked --features=apply,fetch,foreach,generate,lua,python,full

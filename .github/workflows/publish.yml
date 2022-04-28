@@ -140,7 +140,7 @@ jobs:
         command: build
         use-cross: ${{ matrix.job.use-cross }}
         toolchain: ${{ matrix.rust }}
-        args: --release --locked --bin qsv --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }} ${{ matrix.job.default-features }}
+        args: --release --locked --bin qsv --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }},full ${{ matrix.job.default-features }}
     - name: Build qsvlite
       uses: actions-rs/cargo@v1
       with:
@@ -148,6 +148,13 @@ jobs:
         use-cross: ${{ matrix.job.use-cross }}
         toolchain: ${{ matrix.rust }}
         args: --release --locked --bin qsvlite --features=lite --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}
+    - name: Build qsvdp
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        use-cross: ${{ matrix.job.use-cross }}
+        toolchain: ${{ matrix.rust }}
+        args: --release --locked --bin qsvdp --features=datapusher_plus --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}
     - name: Copy binaries to working dir
       shell: bash
       run: |
