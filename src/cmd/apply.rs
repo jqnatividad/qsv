@@ -129,7 +129,7 @@ $ qsv apply emptyreplace --replacement Unknown Measurement file.csv
 
 DATEFMT
 Formats a recognized date column to a specified format using --formatstr. 
-See https://docs.rs/dateparser/0.1.6/dateparser/#accepted-date-formats for
+See https://github.com/jqnatividad/belt/tree/main/dateparser#accepted-date-formats for
 recognized date formats.
 See https://docs.rs/chrono/0.4.19/chrono/format/strftime/ for 
 accepted date formats for --formatstr.
