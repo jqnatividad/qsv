@@ -77,8 +77,8 @@ Installation
 ------------
 Pre-built binaries for Windows, Linux and macOS are available [from GitHub](https://github.com/jqnatividad/qsv/releases/latest).
 
-There are two versions of qsv. `qsvlite` has all [features](#feature-flags) disabled. `qsv` supports features, with the pre-built binaries
-enabling all valid platform features[^6].
+There are three versions of qsv. `qsv` supports features, with the pre-built binaries enabling all valid platform features[^6]; 
+`qsvlite` has all [features](#feature-flags) disabled (half the size of `qsv`); `qsvdp` is optimized for use with [DataPusher+](https://github.com/dathere/datapusher-plus), with only DataPusher+ relevant commands and the self-update engine removed (a sixth of the size of `qsv`). 
 
 Alternatively, you can compile from source by
 [installing Cargo](https://crates.io/install)
@@ -215,7 +215,9 @@ Feature Flags
 * `apply` - enable `apply` command. This swiss-army knife of CSV transformations is very powerful, but it has a lot of dependencies that increases both compile time and binary size. 
 * `fetch` - enable `fetch` command.
 * `generate` - enable `generate` command.
+* `full` - eanble to build qsv.
 * `lite` - enable to build qsvlite.
+* `datapusher_plus` - enable to build qsvdp.
 
 The following "power-user" commands can be abused and present "foot-shooting" scenarios.
 * `lua` - enable `lua` command.
