@@ -219,7 +219,7 @@ Feature Flags
 * `apply` - enable `apply` command. This swiss-army knife of CSV transformations is very powerful, but it has a lot of dependencies that increases both compile time and binary size. 
 * `fetch` - enable `fetch` command.
 * `generate` - enable `generate` command.
-* `full` - eanble to build qsv.
+* `full` - enable to build qsv.
 * `lite` - enable to build qsvlite.
 * `datapusher_plus` - enable to build qsvdp.
 
