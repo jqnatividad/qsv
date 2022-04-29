@@ -27,6 +27,28 @@ The next thing you might want to do is get an overview of the kind of data that
 appears in each column. The `stats` command will do this for you:
 
 ```
+$ qsv stats wcp.csv | qsv table
+field       type     sum                min           max          min_length  max_length  mean                stddev              variance
+Country     String                      ad            zw           2           2
+
+City        String                       al lusayli   ??ykkvibaer  1           87
+
+AccentCity  String                       Al Lusayli   ??zl??ce     1           87
+
+Region      String                      00            Z4           0           2
+
+Population  Integer  2290536128         3             31480498     0           8           48729.62723114559   308410.84307353816  95117248125.33058
+Latitude    Float    76585211.1977638   -54.9333333   82.483333    1           12          28.371681223642454  21.938373536961045  481.2922334472327
+Longitude   Float    75976506.66428815  -179.9833333  180.0        1           14          28.14618114715136   62.47285862586659   3902.8580648875136
+```
+
+Wow! That was fast! It took just 1.3 seconds to compile all that. But can we get more descriptive statistics? What's the variance, the modes, the distribution, the cardinality and the nullcount?  No problem. That's why `qsv stats` has the `--everything` option to compute more "expensive" stats that require loading the entire CSV into memory.
+
+> SIDENOTE: The `qsv table` command takes any CSV data and formats it into aligned columns
+using [elastic tabstops](https://github.com/BurntSushi/tabwriter). You'll
+notice that it even gets alignment right with respect to Unicode characters.
+
+```
 $ qsv stats wcp.csv --everything | qsv table
 field       type     sum                min           max         min_length  max_length  mean                stddev              variance            lower_fence         q1          q2_median   q3          iqr                upper_fence         skew                  mode         cardinality  nullcount
 Country     String                      ad            zw          2           2                                                                                                                                                                                            ru           231          0
@@ -38,10 +60,6 @@ Latitude    Float    76585211.19776328  -54.9333333   82.483333   1           12
 Longitude   Float    75976506.66429423  -179.9833333  180         1           14          28.14618114715278   62.472858625866486  3902.8580648875004  -98.49166745000002  2.383333    26.8802778  69.6333333  67.25000030000001  170.50833375000002  0.060789759344963286  23.1         407568       0
 ```
 
-The `qsv table` command takes any CSV data and formats it into aligned columns
-using [elastic tabstops](https://github.com/BurntSushi/tabwriter). You'll
-notice that it even gets alignment right with respect to Unicode characters.
-
 So, this command took 3.22 seconds to run on my machine, but we can speed
 it up by creating an index and re-running the command:
 
@@ -51,7 +69,7 @@ $ qsv stats wcp.csv --everything | qsv table
 ```
 
 Which cuts it down to 1.95 seconds on my machine. (And creating the index
-took 0.27 seconds.)
+took 0.27 seconds. And the original `stats` without `--everything`? Just 0.16 seconds with an index!)
 
 Notably, the same type of "statistics" command in another
 [CSV command line toolkit](https://csvkit.readthedocs.io/)
