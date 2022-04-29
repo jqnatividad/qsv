@@ -97,8 +97,6 @@ once_cell = { version = "1.10", optional = true }
 pyo3 = { version = "0.16", features = [
     "abi3-py38",
     "auto-initialize",
-    # Automatically generates `python3.dll` import libraries for Windows targets.
-    "generate-abi3-import-lib",
 ], optional = true }
 qsv-dateparser = "0.2"
 qsv-stats = "0.3"
