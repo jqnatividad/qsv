@@ -1991,6 +1991,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "450e2e56cbfa67bbe224cef93312b7a76d81c471d4e0c459d24d4bfaf3d75b53"
 dependencies = [
  "once_cell",
+ "python3-dll-a",
  "target-lexicon",
 ]
 
@@ -2025,6 +2026,15 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "python3-dll-a"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c3b5b505af5f5e8925e62ec7ed2c13d990412c6bdabc682dffe08da6b9944c1a"
+dependencies = [
+ "cc",
 ]
 
 [[package]]
