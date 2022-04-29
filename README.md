@@ -205,7 +205,7 @@ Several dependencies also have environment variables that influence qsv's perfor
   qsv uses reqwest for its `fetch`, `validate` and `--update` functions and will honor [proxy settings](https://docs.rs/reqwest/latest/reqwest/index.html#proxies) set through `HTTP_PROXY`, `HTTPS_PROXY` and `NO_PROXY`.
   
 
-> **NOTE:** To get a list of all qsv-relevant environment variables, run `qsv --envlist`.
+> **NOTE:** To get a list of all active qsv-relevant environment variables, run `qsv --envlist`.
 
 Feature Flags
 -------------
