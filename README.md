@@ -111,14 +111,18 @@ The compiled binary will end up in `./target/release/`.
 To enable optional features, use cargo `--features` (see [Feature Flags](#feature-flags) for more info):
 
 ```bash
-cargo install qsv --features apply,generate,lua,fetch,foreach,python
+cargo install qsv --features apply,generate,lua,fetch,foreach,python,full
 # or to build qsvlite
 cargo install qsv --features lite
+# or to build qsvdp
+cargo install qsv --features datapusher_plus
 
 # or when compiling from a local repo
-cargo build --release --features apply,generate,lua,fetch,foreach,python
+cargo build --release --features apply,generate,lua,fetch,foreach,python,full
 # for qsvlite
 cargo build --release --features lite
+# for qsvdp
+cargo build --release --features datapusher_plus
 ```
 
 [^6]: The `foreach` feature is not available on Windows. The `python` feature is not enabled on cross-compiled pre-built binaries as we don't have
