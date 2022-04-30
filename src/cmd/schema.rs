@@ -25,7 +25,8 @@ Generate JSON Schema from CSV data.
 This command generates reference JSON Schema (Draft 7) from CSV data, 
 including validation rules based on input data range.
 
-Running `validate` command on original input CSV with generated schema should not flag any invalid records.
+Running `validate` command on original input CSV with generated schema 
+should not flag any invalid records.
 
 Generated schema file has `.schema.json` postfix appended. For example, 
 for input `mydata.csv`, schema file would be `mydata.csv.schema.json`. 
@@ -36,8 +37,10 @@ Usage:
     qsv schema [options] [<input>]
 
 Schema options:
-    --enum-threshold NUM       Cardinality threshold for adding enum constraints [default: 50]
-    --strict-dates             Enforce Internet Datetime format (RFC-3339) for detected datetime columns
+    --enum-threshold NUM       Cardinality threshold for adding enum
+                               constraints [default: 50]
+    --strict-dates             Enforce Internet Datetime format (RFC-3339)
+                               for detected datetime columns
     --pattern-columns <args>   Select columns to add pattern constraints
 
 Common options:
@@ -88,7 +91,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         };
 
-    // generate regex patternfor selected String columns
+    // generate regex pattern for selected String columns
     let pattern_map = generate_string_patterns(&args, &properties_map)?;
 
     // enrich properties map with pattern constraint for String fields
@@ -101,7 +104,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     }
 
-    // generated list of required fields
+    // generate list of required fields
     let required_fields = get_required_fields(&properties_map);
 
     // create final JSON object for output
@@ -454,6 +457,7 @@ fn construct_map_of_unique_values(
 }
 
 /// convert byte slice to UTF8 String
+#[inline]
 fn convert_to_string(byte_slice: &[u8]) -> CliResult<String> {
     // convert csv header to string
     let string: String = match std::str::from_utf8(byte_slice) {
