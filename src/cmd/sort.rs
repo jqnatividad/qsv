@@ -11,7 +11,9 @@ use serde::Deserialize;
 static USAGE: &str = "
 Sorts CSV data lexicographically.
 
-Note that this requires reading all of the CSV data into memory.
+Note that this requires reading all of the CSV data into memory. If
+you need to sort a large file that may not fit into memory, use the
+extsort command instead.
 
 Usage:
     qsv sort [options] [<input>]
