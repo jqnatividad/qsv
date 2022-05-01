@@ -75,6 +75,7 @@ dynfmt = { version = "0.1", default-features = false, features = [
     "curly",
 ], optional = true }
 eudex = { version = "0.1", optional = true }
+ext-sort = { version = "0.1", features = ["memory-limit"] }
 filetime = "0.2"
 flexi_logger = { version = "0.22", features = [
     "compress",
@@ -140,6 +141,7 @@ actix-web = { version = "4.0", default-features = false, features = [
     "compress-gzip",
 ] }
 assert-json-diff = "2.0"
+newline-converter = "0.2.0"
 quickcheck = { version = "1", default-features = false }
 redis = { version = "0.21", default-features = false }
 serial_test = "0.6"
@@ -150,6 +152,7 @@ csv = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" 
 csv-core = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
 csv-index = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
 docopt = { git = "https://github.com/jqnatividad/docopt.rs", branch = "perf-clippy-2021" }
+ext-sort = { git = "https://github.com/jqnatividad/ext-sort-rs", rev = "fd955e2462a65cae0de9c9e5113ea56d2904106a" }
 grex = { git = "https://github.com/jqnatividad/grex", rev = "45af84167b8bd6d38c9e36ada7fe677bebe8886f" }
 redis = { git = "https://github.com/mitsuhiko/redis-rs", rev = "b8eb47303c5728e943b914cd10dc35d1fceee05c" }
 reqwest = { git = "https://github.com/seanmonstar/reqwest", rev = "5d8bf830cbce552075d9bd03f09644469533b50e" }
@@ -181,8 +184,8 @@ fetch = [
 ]
 foreach = []
 generate = ["test-data-generation"]
+lua = ["mlua"]
+python = ["pyo3"]
 lite = []
 datapusher_plus = []
 full = []
-lua = ["mlua"]
-python = ["pyo3"]
