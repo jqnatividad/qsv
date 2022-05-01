@@ -5,8 +5,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.45.1] - 2022-05-01
+### Added
+* added rust-clippy GH action workflow
+* added security policy
+
+### Changed:
+* `extsort`: use util::njobs to process --jobs option
+* various improvements on Whirlwind tour to help users follow along
+* `extsort`: add link to "External Sorting" wikipedia article
+* `extsort`: made <input> and <output> mandatory docopt arguments 
+* `sort`: mention `extsort` in usage text
+* added markdownlint.json config to suppress noisy markdown lints in VSC
+* reformatted README to apply some markdown lints
+* bump whatlang from 0.14 to 0.15
+* bump qsv-stats from 0.3.6 to 0.3.7 for some minor perf improvements
+
 ## [0.45.0] - 2022-04-30
-## Added
+### Added
 * Added `extsort` command - sort arbitrarily large text files\CSVs using a multi-threaded external sort algorithm.
 
 ### Changed
