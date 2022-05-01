@@ -32,7 +32,7 @@ fn generate_schema_with_defaults_and_validate_with_no_errors() {
     // diff output json with expected json
     let expected_schema: String =
         wrk.load_test_resource("adur-public-toilets.csv.schema-default.expected.json");
-    let expected_schema_json: Value = serde_json::from_str(&expected_schema.to_string()).unwrap();
+    let expected_schema_json: Value = serde_json::from_str(&expected_schema).unwrap();
     assert_json_eq!(expected_schema_json, output_schema_json);
 
     // invoke validate command from schema created above
@@ -44,9 +44,9 @@ fn generate_schema_with_defaults_and_validate_with_no_errors() {
     // not expecting any invalid rows, so confirm there are NO output files generated
     let validation_error_path = &wrk.path("adur-public-toilets.csv.validation-errors.tsv");
     println!("not expecting validation error file at: {validation_error_path:?}");
-    assert!(Path::new(validation_error_path).exists() == false);
-    assert!(Path::new(&wrk.path("adur-public-toilets.csv.valid")).exists() == false);
-    assert!(Path::new(&wrk.path("adur-public-toilets.csv.invalid")).exists() == false);
+    assert!(!Path::new(validation_error_path).exists());
+    assert!(!Path::new(&wrk.path("adur-public-toilets.csv.valid")).exists());
+    assert!(!Path::new(&wrk.path("adur-public-toilets.csv.invalid")).exists());
 }
 
 #[test]
@@ -83,7 +83,7 @@ fn generate_schema_with_optional_flags_and_validate_with_errors() {
     // diff output json with expected json
     let expected_schema: String =
         wrk.load_test_resource("adur-public-toilets.csv.schema-strict.expected.json");
-    let expected_schema_json: Value = serde_json::from_str(&expected_schema.to_string()).unwrap();
+    let expected_schema_json: Value = serde_json::from_str(&expected_schema).unwrap();
     assert_json_eq!(expected_schema_json, output_schema_json);
 
     // invoke validate command from schema created above
@@ -114,15 +114,15 @@ fn generate_schema_with_optional_flags_and_validate_with_errors() {
     let validation_error_path = &wrk.path("adur-public-toilets.csv.validation-errors.tsv");
     println!("expecting validation error file at: {validation_error_path:?}");
 
-    assert!(Path::new(validation_error_path).exists() == true);
-    assert!(Path::new(&wrk.path("adur-public-toilets.csv.valid")).exists() == true);
-    assert!(Path::new(&wrk.path("adur-public-toilets.csv.invalid")).exists() == true);
+    assert!(Path::new(validation_error_path).exists());
+    assert!(Path::new(&wrk.path("adur-public-toilets.csv.valid")).exists());
+    assert!(Path::new(&wrk.path("adur-public-toilets.csv.invalid")).exists());
 
     // check validation error output
     let validation_error_output: String =
         wrk.from_str(&wrk.path("adur-public-toilets.csv.validation-errors.tsv"));
 
-    assert!(validation_error_output.len() > 0);
+    assert!(!validation_error_output.is_empty());
 
     assert_eq!(
         validation_errors_expected.to_string(),
