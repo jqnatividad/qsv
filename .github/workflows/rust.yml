@@ -33,11 +33,6 @@ jobs:
       uses: actions-rs/cargo@v1
       with:
         command: fmt
-        args: -- --check
-    - name: Clippy Check
-      uses: actions-rs/cargo@v1
-      with:
-        command: clippy
-        args: -- -D warnings        
+        args: -- --check  
     - name: Run tests
       run: cargo test --verbose --locked --features=apply,fetch,foreach,generate,lua,python,full
