@@ -62,7 +62,7 @@ macro_rules! command_list {
     headers     Show header names
     help        Show this usage message
     index       Create CSV index for faster access
-    input       Read CSV data with special quoting, skipping & trimming rules
+    input       Read CSVs w/ special quoting, skipping, trimming & transcoding rules
     join        Join CSV files
     jsonl       Convert newline-delimited JSON files to CSV
     lua*        Execute Lua script on CSV data
