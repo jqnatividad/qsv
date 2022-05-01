@@ -46,18 +46,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut input_reader = io::BufReader::new(fs::File::open(&args.arg_input)?);
 
-    let mut num_jobs = util::max_jobs();
-    if let Some(jobs) = args.flag_jobs {
-        if jobs <= util::num_cpus() {
-            num_jobs = jobs;
-        }
-    }
-
     let sorter: ExternalSorter<String, io::Error, MemoryLimitedBufferBuilder> =
         ExternalSorterBuilder::new()
             .with_tmp_dir(path::Path::new("./"))
             .with_buffer(MemoryLimitedBufferBuilder::new(50 * 1_000_000))
-            .with_threads_number(num_jobs)
+            .with_threads_number(util::njobs(self.flag_jobs))
             .build()
             .unwrap();
 
