@@ -75,8 +75,14 @@ takes ~1.5 minutes to calculate a subset of these statistics with its Describe s
 `describe(include="all"))` took 12 seconds to calculate a subset of qsv's statistics.
 
 Creating an index gives us more than just faster statistics gathering. It 
-enables multithreading on several other commands - `frequency`, `split` & `schema`. 
-It also makes slice operations extremely fast because *only the sliced portion* 
+enables multithreading on several other commands - `frequency`, `split` & `schema`.
+It also accelerates the `count`, `join`, `sample` and `slice` commands.
+
+> ℹ️ **NOTE:** Creating/updating an index itself is extremely fast as well. If you want
+qsv to automatically create and update indices, set the environment var
+`QSV_AUTOINDEX`.
+
+The slice operations extremely fast with an index because *only the sliced portion* 
 has to be parsed. For example, let's say you wanted to grab the last 10 records:
 
 ```
