@@ -74,6 +74,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut all = rdr.byte_records().collect::<Result<Vec<_>, _>>()?;
     match (numeric, reverse, random) {
         (_, _, true) => {
+            // we don't need cryptographically strong RNGs for this
             if let Some(val) = seed {
                 let mut rng = StdRng::seed_from_u64(val);
                 SliceRandom::shuffle(&mut *all, &mut rng);
