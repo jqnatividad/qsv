@@ -4,7 +4,7 @@ use std::path;
 
 use crate::util;
 use crate::CliResult;
-use ext_sort::{ExternalSorter, ExternalSorterBuilder};
+use ext_sort::{buffer::mem::MemoryLimitedBufferBuilder, ExternalSorter, ExternalSorterBuilder};
 use serde::Deserialize;
 
 static USAGE: &str = "
@@ -40,17 +40,22 @@ struct Args {
     flag_jobs: Option<usize>,
     flag_no_headers: bool,
 }
+// buffer to use for sorting in memory,
+// if the file is larger, addl sorting done on tmp_dir
+const MEMORY_LIMITED_BUFFER: u64 = 100 * 1_000_000; // 100 MB
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
     let mut input_reader = io::BufReader::new(fs::File::open(&args.arg_input)?);
 
-    let sorter: ExternalSorter<String, io::Error> = ExternalSorterBuilder::new()
-        .with_tmp_dir(path::Path::new("./"))
-        .with_threads_number(util::njobs(args.flag_jobs))
-        .build()
-        .unwrap();
+    let sorter: ExternalSorter<String, io::Error, MemoryLimitedBufferBuilder> =
+        ExternalSorterBuilder::new()
+            .with_tmp_dir(path::Path::new("./"))
+            .with_buffer(MemoryLimitedBufferBuilder::new(MEMORY_LIMITED_BUFFER))
+            .with_threads_number(util::njobs(args.flag_jobs))
+            .build()
+            .unwrap();
 
     let mut header = String::new();
     if !args.flag_no_headers {
