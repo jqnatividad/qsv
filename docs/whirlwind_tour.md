@@ -41,7 +41,7 @@ Longitude   Float    75976506.66428815  -179.9833333  180.0        1           1
 
 Wow! That was fast! It took just 1.3 seconds to compile all that. But can we get more descriptive statistics? What's the variance, the modes, the distribution, the cardinality and the nullcount?  No problem. That's why `qsv stats` has the `--everything` option to compute more "expensive" stats that require loading the entire CSV into memory.
 
-> ℹ️ **NOTE**: The `qsv table` command takes any CSV data and formats it into aligned columns
+> ℹ️ **NOTE:** The `qsv table` command takes any CSV data and formats it into aligned columns
 using [elastic tabstops](https://github.com/BurntSushi/tabwriter). You'll
 notice that it even gets alignment right with respect to Unicode characters.
 
