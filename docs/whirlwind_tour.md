@@ -41,7 +41,7 @@ Longitude   Float    75976506.66428815  -179.9833333  180.0        1           1
 
 Wow! That was fast! It took just 1.3 seconds to compile all that. But can we get more descriptive statistics? What's the variance, the modes, the distribution, the cardinality and the nullcount?  No problem. That's why `qsv stats` has the `--everything` option to compute more "expensive" stats that require loading the entire CSV into memory.
 
-> SIDENOTE: The `qsv table` command takes any CSV data and formats it into aligned columns
+> ℹ️ **NOTE**: The `qsv table` command takes any CSV data and formats it into aligned columns
 using [elastic tabstops](https://github.com/BurntSushi/tabwriter). You'll
 notice that it even gets alignment right with respect to Unicode characters.
 
@@ -177,7 +177,7 @@ sv       Apastepeque        5785
 ge       Lajanurhesi        95
 ```
 
-> :warning: **NOTE:** The `tee` command reads from standard input and writes 
+> ℹ️ **NOTE:** The `tee` command reads from standard input and writes 
 to both standard output and one or more files at the same time. We do this so 
 we can create the `sample.csv` file we need for the next step, and pipe the 
 same data to the `qsv table` command.<br/>Why create `sample.csv`? Even though qsv is blazing-fast, we're just doing an 
