@@ -112,9 +112,9 @@ so we get a reproducible random sample. And then, let's display only the Country
 AccentCity and Population columns with the `select` command.
 
 ```
-$ qsv sample --seed 42 10 wcp.csv \
-  | qsv select Country,AccentCity,Population \
-  | qsv table
+$ qsv sample --seed 42 10 wcp.csv | 
+    qsv select Country,AccentCity,Population | 
+    qsv table
 Country  AccentCity            Population
 ar       Colonia Santa Teresa  
 ro       Piscu Scoartei        
@@ -165,11 +165,11 @@ them at all (2,652,350 to be exact). No matter — we can adjust our previous
 command so that it only shows rows with a population count:
 
 ```
-$ qsv search --select Population '[0-9]' wcp.csv \
-  | qsv sample --seed 42 10 \
-  | qsv select Country,AccentCity,Population \
-  | tee sample.csv \
-  | qsv table
+$ qsv search --select Population '[0-9]' wcp.csv |
+    qsv sample --seed 42 10 |
+    qsv select Country,AccentCity,Population |
+    tee sample.csv |
+    qsv table
 Country  AccentCity         Population
 it       Isernia            21409
 lt       Ramygala           1637
@@ -261,11 +261,11 @@ No worries. Let's use the `select` (so we only get the columns we need, in the o
 `dedup` (so we only get unique County/City combinations) and `rename` (columns in titlecase) commands: 
 
 ```
-$ qsv join --no-case Country sample.csv iso2 country_continent.csv \
-  | qsv select 'AccentCity,Population,country,continent' \
-  | qsv dedup --select 'country,AccentCity' \
-  | qsv rename City,Population,Country,Continent \
-  | qsv table
+$ qsv join --no-case Country sample.csv iso2 country_continent.csv |
+    qsv select 'AccentCity,Population,country,continent' |
+    qsv dedup --select 'country,AccentCity' |
+    qsv rename City,Population,Country,Continent |
+    qsv table
 City               Population  Country                                             Continent
 Parbatipur         48026       Bangladesh, People's Republic of                    Asia
 Apastepeque        5785        El Salvador, Republic of                            North America
@@ -290,11 +290,11 @@ Indeed we can — because `qsv` is designed for speed - written in [Rust](https:
 performance-focused [mimalloc](https://github.com/microsoft/mimalloc) allocator.
 
 ```
-$ qsv join --no-case Country wcp.csv iso2 country_continent.csv \
-  | qsv search --select Population '[0-9]' \
-  | qsv select 'AccentCity,Population,country,continent,Latitude,Longitude' \
-  | qsv dedup --select 'country,AccentCity,Latitude,Longitude' --dupes-output wcp_dupes.csv \
-  | qsv rename City,Population,Country,Continent,Latitude,Longitude --output wcp_countrycontinent.csv
+$ qsv join --no-case Country wcp.csv iso2 country_continent.csv |
+    qsv search --select Population '[0-9]' |
+    qsv select 'AccentCity,Population,country,continent,Latitude,Longitude' |
+    qsv dedup --select 'country,AccentCity,Latitude,Longitude' --dupes-output wcp_dupes.csv |
+    qsv rename City,Population,Country,Continent,Latitude,Longitude --output wcp_countrycontinent.csv
 
 $ qsv sample 10 --seed 33 wcp_countrycontinent.csv | qsv table
 City            Population  Country                       Continent      Latitude    Longitude
