@@ -5,6 +5,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.45.0] - 2022-04-30
+## Added
+* Added `extsort` command - sort arbitrarily large text files\CSVs using a multi-threaded external sort algorithm.
+
+### Changed
+* Updated whirlwind tour with simple `stats` step
+* `py`: Automatically create python3.dll import libraries on Windows targets
+* Updated build instructions to include `full` feature
+* `index`: mention QSV_AUTOINDEX env var in usage text
+* Corrected minor typos
+* Bump jql from 4.0.1 to 4.0.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/276
+* cargo update bump several dependencies - notably mimalloc
+
 ## [0.44.0] - 2022-04-27
 ### Added
 * Created new binary - qsvdp - binary optimized for [DataPusher+](https://github.com/dathere/datapusher-plus) in https://github.com/jqnatividad/qsv/pull/273
