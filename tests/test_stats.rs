@@ -106,6 +106,7 @@ macro_rules! stats_test_no_headers {
     };
 }
 
+#[allow(clippy::too_many_arguments)]
 fn test_stats<S>(
     name: S,
     field: &str,

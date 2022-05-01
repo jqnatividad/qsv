@@ -121,6 +121,7 @@ impl CsvRecord {
     }
 }
 
+#[allow(clippy::needless_lifetimes)]
 impl ops::Deref for CsvRecord {
     type Target = [String];
     fn deref<'a>(&'a self) -> &'a [String] {
@@ -128,6 +129,7 @@ impl ops::Deref for CsvRecord {
     }
 }
 
+#[allow(clippy::needless_lifetimes)]
 impl ops::DerefMut for CsvRecord {
     fn deref_mut<'a>(&'a mut self) -> &'a mut [String] {
         &mut *self.0
@@ -186,6 +188,7 @@ impl CsvData {
     }
 }
 
+#[allow(clippy::needless_lifetimes)]
 impl ops::Deref for CsvData {
     type Target = [CsvRecord];
     fn deref<'a>(&'a self) -> &'a [CsvRecord] {

@@ -196,6 +196,7 @@ impl Workdir {
         path.into_os_string().into_string().unwrap()
     }
 
+    #[allow(clippy::wrong_self_convention)]
     pub fn from_str<T: FromStr>(&self, name: &Path) -> T {
         let mut o = String::new();
         fs::File::open(name)
