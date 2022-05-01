@@ -6,13 +6,10 @@ several CSV files. Maybe you're interested in the population counts of each
 city in the world. So grab the 124MB, 2.7M row CSV file and start examining it:
 
 ```
-$ curl -LO https://raw.githubusercontent.com/petewarden/dstkdata/master/worldcitiespop.csv
-# there are no headers in the file, so let's get the headers
-$ curl -LO https://raw.githubusercontent.com/jqnatividad/qsv/master/resources/whirlwind_tour/worldcitiespop-header.csv
-# and preppend the header. On Linux and macOS do
-$ cat worldcitiespop-header.csv worldcitiespop.csv > wcp.csv
-# on Windows Powershell
-$ Get-Content worldcitiespop-header.csv, worldcitiespop.csv | Out-File wcp.csv -Encoding utf8
+# there are no headers in the original repo, so let's download a prepared CSV with headers
+$ curl -LO https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/wcp.zip
+$ unzip wcp.zip
+# on Windows Powershell, do `Expand-Archive wcp.zip`
 $ qsv headers wcp.csv
 1   Country
 2   City
