@@ -47,6 +47,7 @@ macro_rules! command_list {
     excel       Exports an Excel sheet to a CSV
     exclude     Excludes the records in one CSV from another
     explode     Explode rows based on some column separator
+    extsort     Sort arbitrarily large text file
     fill        Fill empty values
     fixlengths  Makes all records have same length
     flatten     Show one field per line
@@ -211,6 +212,7 @@ enum Command {
     Excel,
     Exclude,
     Explode,
+    ExtSort,
     Fill,
     FixLengths,
     Flatten,
@@ -263,6 +265,7 @@ impl Command {
             Command::Excel => cmd::excel::run(argv),
             Command::Exclude => cmd::exclude::run(argv),
             Command::Explode => cmd::explode::run(argv),
+            Command::ExtSort => cmd::extsort::run(argv),
             Command::Fill => cmd::fill::run(argv),
             Command::FixLengths => cmd::fixlengths::run(argv),
             Command::Flatten => cmd::flatten::run(argv),

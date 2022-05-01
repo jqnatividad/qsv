@@ -50,6 +50,7 @@ macro_rules! command_list {
     excel       Exports an Excel sheet to a CSV
     exclude     Excludes the records in one CSV from another
     explode     Explode rows based on some column separator
+    extsort     Sort arbitrarily large text file
     fetch*      Create a new column or fetch values from a URL column/template
     fill        Fill empty values
     fixlengths  Makes all records have same length
@@ -238,6 +239,7 @@ enum Command {
     Excel,
     Exclude,
     Explode,
+    ExtSort,
     #[cfg(all(feature = "fetch", not(feature = "lite")))]
     Fetch,
     Fill,
@@ -302,6 +304,7 @@ impl Command {
             Command::Excel => cmd::excel::run(argv),
             Command::Exclude => cmd::exclude::run(argv),
             Command::Explode => cmd::explode::run(argv),
+            Command::ExtSort => cmd::extsort::run(argv),
             #[cfg(all(feature = "fetch", not(feature = "lite")))]
             Command::Fetch => cmd::fetch::run(argv),
             #[cfg(all(feature = "foreach", target_family = "unix", not(feature = "lite")))]
