@@ -46,7 +46,7 @@ macro_rules! command_list {
     frequency   Show frequency tables
     help        Show this usage message
     index       Create CSV index for faster access
-    input       Read CSV data with special quoting rules
+    input       Read CSVs w/ special quoting, skipping, trimming & transcoding rules
     pseudo      Pseudonymise the values of a column
     replace     Replace patterns in CSV data
     sample      Randomly sample CSV data
