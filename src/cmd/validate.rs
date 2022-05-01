@@ -568,6 +568,7 @@ mod tests_for_csv_to_json_conversion {
     }
 
     #[test]
+    #[allow(clippy::approx_constant)]
     fn test_to_json_instance() {
         let csv = "A,B,C,D,E,F,G,H,I,J,K,L
         hello,3.1415,300000000,true,,,,,hello,3.1415,300000000,true";
@@ -705,7 +706,7 @@ mod tests_for_schema_validation {
 
         let record = &rdr.byte_records().next().unwrap().unwrap();
 
-        let instance = to_json_instance(&headers, &record, &schema_json()).unwrap();
+        let instance = to_json_instance(&headers, record, &schema_json()).unwrap();
 
         let result = validate_json_instance(&instance, &compiled_schema());
 
@@ -722,7 +723,7 @@ mod tests_for_schema_validation {
 
         let record = &rdr.byte_records().next().unwrap().unwrap();
 
-        let instance = to_json_instance(&headers, &record, &schema_json()).unwrap();
+        let instance = to_json_instance(&headers, record, &schema_json()).unwrap();
 
         let result = validate_json_instance(&instance, &compiled_schema());
 
@@ -769,7 +770,7 @@ fn load_json(uri: &str) -> Result<String> {
 #[test]
 fn test_load_json_via_url() {
     let json_string_result =
-        load_json(&("https://geojson.org/schema/FeatureCollection.json".to_owned()));
+        load_json("https://geojson.org/schema/FeatureCollection.json");
     assert!(&json_string_result.is_ok());
 
     let json_result: Result<Value, serde_json::Error> =
