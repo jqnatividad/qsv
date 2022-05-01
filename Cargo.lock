@@ -720,26 +720,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "deepsize"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1cdb987ec36f6bf7bfbea3f928b75590b736fc42af8e54d97592481351b2b96c"
-dependencies = [
- "deepsize_derive",
-]
-
-[[package]]
-name = "deepsize_derive"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "990101d41f3bc8c1a45641024377ee284ecc338e5ecf3ea0f0e236d897c72796"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "derive_more"
 version = "0.99.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -836,7 +816,6 @@ name = "ext-sort"
 version = "0.1.2"
 source = "git+https://github.com/jqnatividad/ext-sort-rs?rev=fd955e2462a65cae0de9c9e5113ea56d2904106a#fd955e2462a65cae0de9c9e5113ea56d2904106a"
 dependencies = [
- "deepsize",
  "log",
  "rayon",
  "rmp-serde",

@@ -75,7 +75,7 @@ dynfmt = { version = "0.1", default-features = false, features = [
     "curly",
 ], optional = true }
 eudex = { version = "0.1", optional = true }
-ext-sort = { version = "0.1", features = ["memory-limit"] }
+ext-sort = "0.1"
 filetime = "0.2"
 flexi_logger = { version = "0.22", features = [
     "compress",
