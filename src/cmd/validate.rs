@@ -769,8 +769,7 @@ fn load_json(uri: &str) -> Result<String> {
 
 #[test]
 fn test_load_json_via_url() {
-    let json_string_result =
-        load_json("https://geojson.org/schema/FeatureCollection.json");
+    let json_string_result = load_json("https://geojson.org/schema/FeatureCollection.json");
     assert!(&json_string_result.is_ok());
 
     let json_result: Result<Value, serde_json::Error> =
