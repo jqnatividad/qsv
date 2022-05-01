@@ -46,6 +46,7 @@ mod test_enumerate;
 mod test_excel;
 mod test_exclude;
 mod test_explode;
+mod test_extsort;
 #[cfg(feature = "fetch")]
 mod test_fetch;
 mod test_fill;
