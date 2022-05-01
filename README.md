@@ -1,4 +1,5 @@
-## qsv: Ultra-fast CSV data-wrangling CLI toolkit   
+# qsv: Ultra-fast CSV data-wrangling CLI toolkit
+
 [![Linux build status](https://github.com/jqnatividad/qsv/actions/workflows/rust.yml/badge.svg)](https://github.com/jqnatividad/qsv/actions/workflows/rust.yml)
 [![Windows build status](https://github.com/jqnatividad/qsv/actions/workflows/rust-windows.yml/badge.svg)](https://github.com/jqnatividad/qsv/actions/workflows/rust-windows.yml)
 [![macOS build status](https://github.com/jqnatividad/qsv/actions/workflows/rust-macos.yml/badge.svg)](https://github.com/jqnatividad/qsv/actions/workflows/rust-macos.yml)
@@ -7,21 +8,21 @@
 [![Minimum supported Rust version](https://img.shields.io/badge/Rust-1.60.0-red?logo=rust)](#minimum-supported-rust-version)
 [![Discussions](https://img.shields.io/github/discussions/jqnatividad/qsv)](https://github.com/jqnatividad/qsv/discussions)
 [![Docs](https://img.shields.io/badge/wiki-docs-yellowgreen)](https://github.com/jqnatividad/qsv/wiki)
-[![Downloads](https://img.shields.io/github/downloads/jqnatividad/qsv/total)](https://github.com/jqnatividad/qsv/releases/latest)   
+[![Downloads](https://img.shields.io/github/downloads/jqnatividad/qsv/total)](https://github.com/jqnatividad/qsv/releases/latest)
 
 <div align="center">
 
  &nbsp;          |  Table of Contents
 :-------------------------:|:-------------------------
-![](docs/images/qsv-logo.png)  |qsv is a command line program for<br>indexing, slicing, analyzing, splitting,<br>enriching, validating & joining CSV files.<br>Commands are simple, fast & composable.<br><br>* [Available Commands](#available-commands)<br>* [Installation](#installation)<br> * [Whirlwind Tour](docs/whirlwind_tour.md#a-whirlwind-tour)<br>* [Cookbook](https://github.com/jqnatividad/qsv/wiki)<br>* [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ)<br>* [Changelog](https://github.com/jqnatividad/qsv/blob/master/CHANGELOG.md#changelog)<br>* [Benchmarks](docs/BENCHMARKS.md)<br>* [NYC School of Data 2022 presentation](https://docs.google.com/presentation/d/e/2PACX-1vQ12ndZL--gkz0HLQRaxqsNOwzddkv1iUKB3sq661yA77OPlAsmHJHpjaqt9s9QEf73VqMfb0cv4jHU/pub?start=false&loop=false&delayms=3000)<br>* [Sponsor](#sponsor)
+![qsv logo](docs/images/qsv-logo.png)  |qsv is a command line program for<br>indexing, slicing, analyzing, splitting,<br>enriching, validating & joining CSV files.<br>Commands are simple, fast & composable.<br><br>* [Available Commands](#available-commands)<br>* [Installation](#installation)<br> * [Whirlwind Tour](docs/whirlwind_tour.md#a-whirlwind-tour)<br>* [Cookbook](https://github.com/jqnatividad/qsv/wiki)<br>* [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ)<br>* [Changelog](https://github.com/jqnatividad/qsv/blob/master/CHANGELOG.md#changelog)<br>* [Benchmarks](docs/BENCHMARKS.md)<br>* [NYC School of Data 2022 presentation](https://docs.google.com/presentation/d/e/2PACX-1vQ12ndZL--gkz0HLQRaxqsNOwzddkv1iUKB3sq661yA77OPlAsmHJHpjaqt9s9QEf73VqMfb0cv4jHU/pub?start=false&loop=false&delayms=3000)<br>* [Sponsor](#sponsor)
 
 </div>
 
-> **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's release](https://github.com/BurntSushi/xsv/issues/267). It also has numerous new features & 53 additional commands/subcommands/operations (for a total of 73).   
+> **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's release](https://github.com/BurntSushi/xsv/issues/267). It also has numerous new features & 53 additional commands/subcommands/operations (for a total of 73).
 See [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ) for more details.
 
-Available commands
-------------------
+## Available commands
+
 | Command | Description |
 | --- | --- |
 | [apply](/src/cmd/apply.rs#L27-L28)[^1] | Apply series of string, date, currency & geocoding transformations to a CSV column. It also has some basic [NLP](https://en.wikipedia.org/wiki/Natural_language_processing) functions ([similarity](https://crates.io/crates/strsim), [sentiment analysis](https://crates.io/crates/vader_sentiment), [profanity](https://docs.rs/censor/latest/censor/), [eudex](https://github.com/ticki/eudex#eudex-a-blazingly-fast-phonetic-reductionhashing-algorithm) & [language detection](https://crates.io/crates/whatlang)).  |
@@ -46,7 +47,7 @@ Available commands
 | [index](/src/cmd/index.rs#L13-L14) | Create an index for a CSV. This is very quick & provides constant time indexing into the CSV file. Also enables multithreading for `frequency`, `split`, `stats` and `schema` commands. |
 | [input](/src/cmd/input.rs#L7) | Read CSV data with special quoting, trimming, line-skipping and UTF-8 transcoding rules. |
 | [join](/src/cmd/join.rs#L18)[^2] | Inner, outer, cross, anti & semi joins. Uses a simple hash index to make it fast.  |
-| [jsonl](/src/cmd/jsonl.rs#L11-L12) | Convert newline-delimited JSON ([JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/)) to CSV. 
+| [jsonl](/src/cmd/jsonl.rs#L11-L12) | Convert newline-delimited JSON ([JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/)) to CSV.
 | [lua](/src/cmd/lua.rs#L14-L15)[^1] | Execute a [Lua](https://www.lua.org/about.html) script over CSV lines to transform, aggregate or filter them. Embeds [Lua 5.4.4](https://www.lua.org/manual/5.4/manual.html).  |
 | [partition](/src/cmd/partition.rs#L17) | Partition a CSV based on a column value. |
 | [pseudo](/src/cmd/pseudo.rs#L10-L11) | [Pseudonymise](https://en.wikipedia.org/wiki/Pseudonymization) the value of the given column by replacing them with an incremental identifier.  |
@@ -72,14 +73,14 @@ Available commands
 [^2]: uses an index when available.   
 [^3]: loads the entire CSV into memory. Note that `stats` & `transpose` have modes that do not load the entire CSV into memory.   
 [^4]: multithreaded when an index is available (use `--jobs` option to adjust).   
-[^5]: multithreaded even without an index.   
+[^5]: multithreaded even without an index.
 
-Installation
-------------
+## Installation
+
 Pre-built binaries for Windows, Linux and macOS are available [from GitHub](https://github.com/jqnatividad/qsv/releases/latest).
 
-There are three versions of qsv. `qsv` supports features, with the pre-built binaries enabling all valid platform features[^6]; 
-`qsvlite` has all [features](#feature-flags) disabled (half the size of `qsv`); `qsvdp` is optimized for use with [DataPusher+](https://github.com/dathere/datapusher-plus), with only DataPusher+ relevant commands and the self-update engine removed (a sixth of the size of `qsv`). 
+There are three versions of qsv. `qsv` supports features, with the pre-built binaries enabling all valid platform features[^6];
+`qsvlite` has all [features](#feature-flags) disabled (half the size of `qsv`); `qsvdp` is optimized for use with [DataPusher+](https://github.com/dathere/datapusher-plus), with only DataPusher+ relevant commands and the self-update engine removed (a sixth of the size of `qsv`).
 
 Alternatively, you can compile from source by
 [installing Cargo](https://crates.io/install)
@@ -130,10 +131,11 @@ cargo build --release --features datapusher_plus
 access to a native python interpreter for those platforms (aarch64, i686, and arm) on GitHub's action runners. Compile natively on those platforms with Python 3.8+ installed, if you want to enable the `python` feature.
 
 ### Minimum Supported Rust Version
+
 Building qsv requires Rust stable - currently version 1.60.0.
 
-Tab Completion
---------------
+## Tab Completion
+
 qsv's command-line options are quite extensive. Thankfully, since it uses [docopt](http://docopt.org/) for CLI processing,
 we can take advantage of [docopt.rs' tab completion support](https://github.com/docopt/docopt.rs#tab-completion-support) to make it
 easier to use qsv at the command-line (currently, only bash shell is supported):
@@ -149,8 +151,8 @@ echo "source \"$(pwd)/scripts/docopt-wordlist.bash\"" >> $HOME/.bash_completion
 echo "complete -F _docopt_wordlist_commands qsv" >> $HOME/.bash_completion
 ```
 
-Recognized file formats
------------------------
+## Recognized file formats
+
 qsv recognizes UTF-8/ASCII encoded, CSV (`.csv`) and TSV files (`.tsv` and `.tab`). CSV files are assummed to have "," (comma) as a delimiter,
 and TSV files, "\t" (tab) as a delimiter. The delimiter is a single ascii character that can be set either by the `--delimiter` command-line option or
 with the `QSV_DEFAULT_DELIMITER` environment variable or automatically detected when `QSV_SNIFF_DELIMITER` is set.
@@ -163,23 +165,27 @@ The `fetch` command also produces JSONL files when its invoked without the `--ne
 
 The `excel` command recognizes Excel and Open Document Spreadsheet(ODS) files (`.xls`, `.xlsx`, `.xlsm`, `.xlsb` and `.ods` files).
 
-### **UTF-8 Encoding**   
+### **UTF-8 Encoding**
+
 qsv requires UTF-8 encoded (of which ASCII is a subset) input files. On startup, it scans the input if it's UTF-8 encoded (for files, the first 8k; for stdin, the entire buffer), and will abort if its not unless `QSV_SKIPUTF8_CHECK` is set. On Linux and macOS, UTF-8 encoding is the default.
 
 Should you need to reencode CSV/TSV files, you can use the `input` command to transcode to UTF-8. It will replace all invalid UTF-8 sequences with `�`. Alternatively, there are several utilities you can use to do so on [Linux/macOS](https://stackoverflow.com/questions/805418/how-can-i-find-encoding-of-a-file-via-a-script-on-linux) and [Windows](https://superuser.com/questions/1163753/converting-text-file-to-utf-8-on-windows-command-prompt).
 
-### **Windows Usage Note**   
-Unlike other modern operating systems, Windows' [default encoding is UTF16-LE](https://stackoverflow.com/questions/66072117/why-does-windows-use-utf-16le). This will cause problems when redirecting qsv's output to a CSV file and trying to open it with Excel (which ignores the comma delimiter, with everything in the first column):   
+### **Windows Usage Note**
+
+Unlike other modern operating systems, Windows' [default encoding is UTF16-LE](https://stackoverflow.com/questions/66072117/why-does-windows-use-utf-16le). This will cause problems when redirecting qsv's output to a CSV file and trying to open it with Excel (which ignores the comma delimiter, with everything in the first column):
+
 ```
 qsv stats wcp.csv > wcpstats.csv
-```   
-Which is weird, since you would think [Microsoft Excel would properly recognize UTF16-LE encoded CSV files](https://answers.microsoft.com/en-us/msoffice/forum/all/opening-csv-file-with-utf16-encoding-in-excel-2010/ed522cb9-e88d-4b82-b88e-a2d4bd99f874?auth=1). Regardless, to create a properly UTF-8 encoded file, use the `--output` option instead: 
+```
+
+Which is weird, since you would think [Microsoft Excel would properly recognize UTF16-LE encoded CSV files](https://answers.microsoft.com/en-us/msoffice/forum/all/opening-csv-file-with-utf16-encoding-in-excel-2010/ed522cb9-e88d-4b82-b88e-a2d4bd99f874?auth=1). Regardless, to create a properly UTF-8 encoded file, use the `--output` option instead:
+
 ```
 qsv stats wcp.csv --output wcpstats.csv
 ```
 
-Environment Variables
----------------------
+## Environment Variables
 
 * `QSV_DEFAULT_DELIMITER` - single ascii character to use as delimiter.  Overrides `--delimeter` option. Defaults to "," (comma) for CSV files and "\t" (tab) for TSV files, when not set. Note that this will also set the delimiter for qsv's output to stdout. However, using the `--output` option, regardless of this environment variable, will automatically change the delimiter used in the generated file based on the file extension - i.e. comma for `.csv`, tab for `.tsv` and `.tab` files.
 * `QSV_SNIFF_DELIMITER` - when set, the delimiter is automatically detected. Overrides `QSV_DEFAULT_DELIMITER` and `--delimiter` option.
@@ -203,21 +209,20 @@ commands are not unicode-aware and will ignore unicode values when matching and 
 
 Several dependencies also have environment variables that influence qsv's performance & behavior:
 
-* Memory Management ([mimalloc](https://docs.rs/mimalloc/latest/mimalloc/))   
-  When incorporating qsv into a data pipeline that runs in batch mode, particularly with very large CSV files using qsv commands that load entire CSV files into memory, you can 
+* Memory Management ([mimalloc](https://docs.rs/mimalloc/latest/mimalloc/))
+  When incorporating qsv into a data pipeline that runs in batch mode, particularly with very large CSV files using qsv commands that load entire CSV files into memory, you can
   [fine-tune Mimalloc's behavior using its environment variables](https://github.com/microsoft/mimalloc#environment-options).
-* Network Access ([reqwest](https://docs.rs/reqwest/latest/reqwest/))   
+* Network Access ([reqwest](https://docs.rs/reqwest/latest/reqwest/))
   qsv uses reqwest for its `fetch`, `validate` and `--update` functions and will honor [proxy settings](https://docs.rs/reqwest/latest/reqwest/index.html#proxies) set through `HTTP_PROXY`, `HTTPS_PROXY` and `NO_PROXY`.
   
-
 > **NOTE:** To get a list of all active qsv-relevant environment variables, run `qsv --envlist`.
 
-Feature Flags
--------------
+## Feature Flags
+
 `qsv` has several features:
 
 * `mimalloc` (default) - use the mimalloc allocator (see [Memory Allocator](#memory-allocator) for more info).
-* `apply` - enable `apply` command. This swiss-army knife of CSV transformations is very powerful, but it has a lot of dependencies that increases both compile time and binary size. 
+* `apply` - enable `apply` command. This swiss-army knife of CSV transformations is very powerful, but it has a lot of dependencies that increases both compile time and binary size.
 * `fetch` - enable `fetch` command.
 * `generate` - enable `generate` command.
 * `full` - enable to build qsv.
@@ -225,31 +230,35 @@ Feature Flags
 * `datapusher_plus` - enable to build qsvdp.
 
 The following "power-user" commands can be abused and present "foot-shooting" scenarios.
+
 * `lua` - enable `lua` command.
 * `foreach` - enable `foreach` command (not valid for Windows).
 * `python` - enable `py` command (requires Python 3.8+). Note that qsv will automatically use the currently activated python version when run in a virtual environment.
 
 > **NOTE:** `qsvlite`, as the name implies, always has **non-default features disabled**. `qsv` can be built with any combination of the above features  using the cargo `--features` & `--no-default-features` flags. The pre-built `qsv` binaries has **all applicable features enabled for the target platform**[^6].
 
-Performance Tuning
-------------------
+## Performance Tuning
+
 ### CPU Optimization
+
 Modern CPUs have various features that the Rust compiler can take advantage
 of to increase performance. If you want the compiler to take advantage of these
 CPU-specific speed-ups, set this environment variable **BEFORE** installing/compiling qsv:
 
 On Linux and macOS:
+
 ```bash
 export CARGO_BUILD_RUSTFLAGS='-C target-cpu=native'
 ```
 
 On Windows Powershell:
+
 ```powershell
 $env:CARGO_BUILD_RUSTFLAGS='-C target-cpu=native'
 ```
 
 Do note though that the resulting binary will only run on machines with the
-same architecture as the machine you installed/compiled from.   
+same architecture as the machine you installed/compiled from.
 To find out your CPU architecture and other valid values for `target-cpu`:
 
 ```bash
@@ -264,7 +273,9 @@ rustc --print cfg -C target-cpu=native | grep -i target_feature
 # to get a short explanation of each CPU target-feature
 rustc --print target-features
 ```
+
 ### Memory Allocator
+
 By default, qsv uses an alternative allocator - [mimalloc](https://github.com/microsoft/mimalloc),
 a performance-oriented allocator from Microsoft.
 If you want to use the standard allocator, use the `--no-default-features` flag
@@ -274,7 +285,7 @@ when installing/compiling qsv, e.g.:
 cargo install qsv --path . --no-default-features
 ```
 
-or 
+or
 
 ```bash
 cargo build --release --no-default-features
@@ -283,6 +294,7 @@ cargo build --release --no-default-features
 To find out what memory allocator qsv is using, run `qsv --version`. After the qsv version number, the allocator used is displayed ("`standard`" or "`mimalloc`"). Note that mimalloc is not supported on the `x86_64-pc-windows-gnu` and `arm` targets, and you'll need to use the "standard" allocator on those platforms.
 
 ### Buffer size
+
 Depending on your filesystem's configuration (e.g. block size, file system type, writing to remote file systems (e.g. sshfs, efs, nfs),
 SSD or rotating magnetic disks, etc.), you can also fine-tune qsv's read/write buffers.
 
@@ -292,6 +304,7 @@ variable `QSV_RDR_BUFFER_CAPACITY` in bytes.
 The same is true with the write buffer (default: 64k) with the `QSV_WTR_BUFFER_CAPACITY` environment variable.
 
 ### Multithreading
+
 Several commands support multithreading - `stats`, `frequency`, `schema` and `split` (when an index is available); `extsort` and `validate` (no index required).
 
 qsv will automatically spawn parallel jobs equal to the detected number of logical processors. Should you want to manually override this, use the `--jobs` command-line option or the `QSV_MAX_JOBS` environment variable.
@@ -299,32 +312,33 @@ qsv will automatically spawn parallel jobs equal to the detected number of logic
 To find out your jobs setting, call `qsv --version`. The second to the last number is the number of jobs qsv will use for multithreaded commands. The last number is the number of logical processors detected by qsv.
 
 ### Benchmarking for Performance
+
 Use and fine-tune the [benchmark script](scripts/benchmark-basic.sh) when tweaking qsv's performance to your environment.
 Don't be afraid to change the benchmark data and the qsv commands to something that is more representative of your
 workloads.
 
 Use the generated benchmark TSV files to meter and compare performance across platforms. You'd be surprised how performance varies
 across environments - e.g. qsv's `join` performs abysmally on Windows's WSL running Ubuntu 20.04 LTS, taking 172.44 seconds.
-On the same machine, running in a VirtualBox VM at that with the same Ubuntu version, `join` was done in 1.34 seconds - 
+On the same machine, running in a VirtualBox VM at that with the same Ubuntu version, `join` was done in 1.34 seconds -
 two orders of magnitude faster!
 
 However, `stats` performs two times faster on WSL vs the VirtualBox VM - 2.80 seconds vs 5.33 seconds for the `stats_index` benchmark.
 
-License
--------
+## License
+
 Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org).
 
-Sponsor
--------
+## Sponsor
+
 <div align="center">
 
 |qsv was made possible by|
 :-------------------------:|
-|[![](docs/images/datHere-logo-withtagline.png)](https://datHere.com)<br>|
+|[![datHere Logo](docs/images/datHere-logo-withtagline.png)](https://datHere.com)<br>|
 |Standards-based, best-of-breed, open source solutions<br>to make your **Data Useful, Usable & Used.**   |
 
 </div>
 
-Naming Collision
-----------------
+## Naming Collision
+
 This project is unrelated to [Intel's Quick Sync Video](https://www.intel.com/content/www/us/en/architecture-and-technology/quick-sync-video/quick-sync-video-general.html).
