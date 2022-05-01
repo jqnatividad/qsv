@@ -61,8 +61,8 @@ So, this command took 3.22 seconds to run on my machine, but we can speed
 it up by creating an index and re-running the command:
 
 ```
-$ qsv index wcp.csv
-$ qsv stats wcp.csv --everything | qsv table
+qsv index wcp.csv
+qsv stats wcp.csv --everything | qsv table
 ```
 
 Which cuts it down to 1.95 seconds on my machine. (And creating the index
@@ -80,8 +80,8 @@ It also makes slice operations extremely fast because *only the sliced portion*
 has to be parsed. For example, let's say you wanted to grab the last 10 records:
 
 ```
-$ qsv count wcp.csv
-2699354
+$ qsv count --human-readable wcp.csv
+2,699,354
 $ qsv slice wcp.csv --start -10 | qsv table
 Country  City               AccentCity         Region  Population  Latitude     Longitude
 zw       zibalonkwe         Zibalonkwe         06                  -19.8333333  27.4666667
@@ -222,6 +222,7 @@ $ qsv headers country_continent.csv
 5   iso3
 6   number
 ```
+
 That's more like it. We can now do a join to see which countries and continents these are:
 
 ```
@@ -302,10 +303,10 @@ El Calvario     557         Colombia, Republic of         South America  4.35472
 Kunoy           70          Faroe Islands                 Europe         62.2833333  -6.6666667
 Lufkin          33667       United States of America      North America  31.3380556  -94.7288889
 
-$ qsv count wcp_countrycontinent.csv
-47004
-$ qsv count wcp-dupes.csv
-5155
+$ qsv count -H wcp_countrycontinent.csv
+47,004
+$ qsv count -H wcp-dupes.,csv
+5,155
 ```
 
 We fine-tuned `dedup` by adding `Latitude` and `Longitude` as there may be 
@@ -341,6 +342,7 @@ total 164M
 4.0K Gibraltar.csv
 4.0K Ukraine.csv
 ```
+
 Examining the USA csv file:
 
 ```
@@ -354,6 +356,7 @@ Continent   String                       North America             North America
 Latitude    Float    158455.7901657997   17.9677778                71.2905556                10          10          37.95348267444306   6.0032154906925355  36.03859622769082  22.244444449999992  34.0552778   39.4694444   41.9291667   7.873888900000004  53.740000050000006   -0.7575748669562047  42.0333333                                                    4010         0
 Longitude   Float    -377616.7797696997  -165.4063889              -65.3013889               11          12          -90.44713287897018  17.2089567990395    296.1481941112077  -128.2138889        -97.4863889  -86.0341667  -77.0013889  20.485             -46.273888899999996  -0.769302793394743   -118.3516667,-71.0666667,-71.3972222,-71.4166667,-83.1500000  4074         0
 ```
+
 Hhhmmm... clearly the worldcitiespop.csv file from the Data Science Toolkit does not have 
 comprehensive coverage of City populations.
 
