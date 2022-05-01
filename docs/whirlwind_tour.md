@@ -72,7 +72,7 @@ Notably, the same type of "statistics" command in another
 [CSV command line toolkit](https://csvkit.readthedocs.io/)
 takes about 10 seconds to produce similar statistics on the same data set. [Visidata](https://visidata.org)
 takes ~1.5 minutes to calculate a subset of these statistics with its Describe sheet. Even python [pandas'](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.describe.html) 
-`describe(include="all"))` took 12 seconds to calculate a subset of qsv's statistics.
+`describe(include="all"))` took 12 seconds to calculate a subset of qsv's statistics.[^1]
 
 Creating an index gives us more than just faster statistics gathering. It 
 enables multithreading on several other commands - `frequency`, `split` & `schema`.
@@ -369,3 +369,5 @@ comprehensive coverage of City populations.
 The US population is far more than 179,123,400 (Population sum) and 3,439 cities (City cardinality).
 Perhaps we can get population info elsewhere with the `fetch` command...
 But that's another tour by itself! 😄
+
+[^1]: [Why is qsv exponentially faster than python pandas?](https://github.com/dathere/datapusher-plus/discussions/15)
