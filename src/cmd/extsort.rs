@@ -18,7 +18,7 @@ line-by-line basis. If sorting a non-CSV file, be sure to set --no-headers,
 otherwise, the first line will not be included in the external sort.
 
 Usage:
-    qsv extsort [options] [<input>] [<output>]
+    qsv extsort [options] <input> <output>
 
 External sort option:
     -j, --jobs <arg>       The number of jobs to run in parallel.
