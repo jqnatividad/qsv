@@ -3226,9 +3226,9 @@ dependencies = [
 
 [[package]]
 name = "whatlang"
-version = "0.14.0"
+version = "0.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "396dabbbefa5e83bb417a0c926057430f0462af976ff8d20cea6726008a98ee5"
+checksum = "ace22f62983d7c2ca0512ef319de0b52f837a1e8e79d81107825a9e8699c5bd8"
 dependencies = [
  "hashbrown 0.12.0",
  "once_cell",
