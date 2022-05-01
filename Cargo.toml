@@ -18,7 +18,7 @@ include       = ["src/**/*", "LICENSE-MIT", "README.md", "CHANGELOG.md"]
 
 [[bin]]
 name    = "qsv"
-test    = false
+test    = true
 bench   = false
 doctest = false
 path    = "src/main.rs"
@@ -26,7 +26,7 @@ required-features = ["full"]
 
 [[bin]]
 name              = "qsvlite"
-test              = false
+test              = true
 bench             = false
 doctest           = false
 path              = "src/mainlite.rs"
@@ -34,7 +34,7 @@ required-features = ["lite"]
 
 [[bin]]
 name              = "qsvdp"
-test              = false
+test              = true
 bench             = false
 doctest           = false
 path              = "src/maindp.rs"
