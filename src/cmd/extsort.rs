@@ -4,11 +4,11 @@ use std::path;
 
 use crate::util;
 use crate::CliResult;
-use ext_sort::{buffer::mem::MemoryLimitedBufferBuilder, ExternalSorter, ExternalSorterBuilder};
+use ext_sort::{ExternalSorter, ExternalSorterBuilder};
 use serde::Deserialize;
 
 static USAGE: &str = "
-Sort an arbitrarily large text file using a multi-threaded external sort algorithm.
+Sort an arbitrarily large CSV/text file using a multithreaded external sort algorithm.
 
 This command does not work with <stdin>/<stdout>. Valid input, and output
 files are expected.
@@ -28,7 +28,7 @@ External sort option:
 Common options:
     -h, --help             Display this message
     -n, --no-headers       When set, the first row will not be interpreted
-                           as headers. Namely, it will be sorted with the rest
+                           as headers and will be sorted with the rest
                            of the rows. Otherwise, the first row will always
                            appear as the header row in the output.
 ";
@@ -46,12 +46,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut input_reader = io::BufReader::new(fs::File::open(&args.arg_input)?);
 
-    let sorter: ExternalSorter<String, io::Error, MemoryLimitedBufferBuilder> =
-        ExternalSorterBuilder::new()
-            .with_tmp_dir(path::Path::new("./"))
-            .with_threads_number(util::njobs(self.flag_jobs))
-            .build()
-            .unwrap();
+    let sorter: ExternalSorter<String, io::Error> = ExternalSorterBuilder::new()
+        .with_tmp_dir(path::Path::new("./"))
+        .with_threads_number(util::njobs(args.flag_jobs))
+        .build()
+        .unwrap();
 
     let mut header = String::new();
     if !args.flag_no_headers {
