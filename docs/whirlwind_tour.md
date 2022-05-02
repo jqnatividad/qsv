@@ -370,5 +370,5 @@ The US population is far more than 179,123,400 (Population sum) and 3,439 cities
 Perhaps we can get population info elsewhere with the `fetch` command...
 But that's another tour by itself! 😄
 
-[^1]: Collected by setting `QSV_LOG_LEVEL='debug'` on a Ryzen 4800H laptop (8 physical/16 logical cores) running Windows 11 with 32gb of memory and a 1 TB SSD.
+[^1]: Timings collected by setting `QSV_LOG_LEVEL='debug'` on a Ryzen 4800H laptop (8 physical/16 logical cores) running Windows 11 with 32gb of memory and a 1 TB SSD.
 [^2]: [Why is qsv exponentially faster than python pandas?](https://github.com/dathere/datapusher-plus/discussions/15)
