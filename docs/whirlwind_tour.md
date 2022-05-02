@@ -39,7 +39,7 @@ Latitude    Float    76585211.1977638   -54.9333333   82.483333    1           1
 Longitude   Float    75976506.66428815  -179.9833333  180.0        1           14          28.14618114715136   62.47285862586659   3902.8580648875136
 ```
 
-Wow! That was fast! It took just 1.3 seconds to compile all that. But can we get more descriptive statistics? What's the variance, the modes, the distribution, the cardinality and the nullcount?  No problem. That's why `qsv stats` has the `--everything` option to compute more "expensive" stats that require loading the entire CSV into memory.
+Wow! That was fast! It took just 1.3 seconds to compile all that[^1]. But can we get more descriptive statistics? What's the variance, the modes, the distribution, the cardinality and the nullcount?  No problem. That's why `qsv stats` has the `--everything` option to compute more "expensive" stats that require loading the entire CSV into memory.
 
 > ℹ️ **NOTE:** The `qsv table` command takes any CSV data and formats it into aligned columns
 using [elastic tabstops](https://github.com/BurntSushi/tabwriter). You'll
@@ -72,7 +72,7 @@ Notably, the same type of "statistics" command in another
 [CSV command line toolkit](https://csvkit.readthedocs.io/)
 takes about 10 seconds to produce similar statistics on the same data set. [Visidata](https://visidata.org)
 takes ~1.5 minutes to calculate a subset of these statistics with its Describe sheet. Even python [pandas'](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.describe.html) 
-`describe(include="all"))` took 12 seconds to calculate a subset of qsv's statistics.[^1]
+`describe(include="all"))` took 12 seconds to calculate a subset of qsv's statistics.[^2]
 
 Creating an index gives us more than just faster statistics gathering. It 
 enables multithreading on several other commands - `frequency`, `split` & `schema`.
@@ -370,4 +370,5 @@ The US population is far more than 179,123,400 (Population sum) and 3,439 cities
 Perhaps we can get population info elsewhere with the `fetch` command...
 But that's another tour by itself! 😄
 
-[^1]: [Why is qsv exponentially faster than python pandas?](https://github.com/dathere/datapusher-plus/discussions/15)
+[^1]: Collected by setting `QSV_LOG_LEVEL='debug'` on a Ryzen 4800H laptop (8 physical/16 logical cores) running Windows 11 with 32gb of memory and a 1 TB SSD.
+[^2]: [Why is qsv exponentially faster than python pandas?](https://github.com/dathere/datapusher-plus/discussions/15)
