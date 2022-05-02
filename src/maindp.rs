@@ -44,6 +44,7 @@ macro_rules! command_list {
     excel       Exports an Excel sheet to a CSV
     exclude     Excludes the records in one CSV from another
     frequency   Show frequency tables
+    headers     Show header names
     help        Show this usage message
     index       Create CSV index for faster access
     input       Read CSVs w/ special quoting, skipping, trimming & transcoding rules
@@ -181,6 +182,7 @@ enum Command {
     Excel,
     Exclude,
     Frequency,
+    Headers,
     Help,
     Index,
     Input,
@@ -213,6 +215,7 @@ impl Command {
             Command::Excel => cmd::excel::run(argv),
             Command::Exclude => cmd::exclude::run(argv),
             Command::Frequency => cmd::frequency::run(argv),
+            Command::Headers => cmd::headers::run(argv),
             Command::Help => {
                 wout!("{USAGE}");
                 Ok(())

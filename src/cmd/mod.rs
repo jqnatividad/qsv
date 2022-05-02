@@ -28,7 +28,6 @@ pub mod foreach;
 pub mod frequency;
 #[cfg(all(feature = "generate", not(feature = "lite")))]
 pub mod generate;
-#[cfg(any(feature = "full", feature = "lite"))]
 pub mod headers;
 pub mod index;
 pub mod input;
