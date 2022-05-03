@@ -101,9 +101,15 @@ impl Config {
             Some(ref s) if s.deref() == "-" => (None, default_delim),
             Some(ref s) => {
                 let path = PathBuf::from(s);
-                let delim = if path.extension().map_or(false, |v| v == "tsv" || v == "tab") {
+                let file_extension = path
+                    .extension()
+                    .unwrap_or_default()
+                    .to_str()
+                    .unwrap()
+                    .to_lowercase();
+                let delim = if file_extension == "tsv" || file_extension == "tab" {
                     b'\t'
-                } else if path.extension().map_or(false, |v| v == "csv") {
+                } else if file_extension == "csv" {
                     b','
                 } else {
                     default_delim
