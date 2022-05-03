@@ -313,6 +313,7 @@ To find out your jobs setting, call `qsv --version`. The second to the last numb
 
 ### Caching
 The `apply geocode` command [memoizes](https://en.wikipedia.org/wiki/Memoization) otherwise expensive geocoding operations and will report its cache hit rate. `apply geocode` memoization, however, is not persistent across sessions.
+
 The `fetch` command also memoizes expensive REST API calls with its optional Redis support. It effectively has a persistent cache as the default time-to-live (TTL) before a Redis cache entry is expired is 28 days and Redis entries are persisted across restarts. Redis cache settings can be fine-tuned with the `QSV_REDIS_CONNECTION_STRING`, `QSV_REDIS_TTL_SECONDS` and `QSV_REDIS_TTL_REFRESH` environment variables.
 
 ### Benchmarking for Performance
