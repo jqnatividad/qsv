@@ -316,6 +316,11 @@ The `apply geocode` command [memoizes](https://en.wikipedia.org/wiki/Memoization
 
 The `fetch` command also memoizes expensive REST API calls with its optional Redis support. It effectively has a persistent cache as the default time-to-live (TTL) before a Redis cache entry is expired is 28 days and Redis entries are persisted across restarts. Redis cache settings can be fine-tuned with the `QSV_REDIS_CONNECTION_STRING`, `QSV_REDIS_TTL_SECONDS` and `QSV_REDIS_TTL_REFRESH` environment variables.
 
+### UTF-8 Encoding for Performance
+[Rust strings are utf-8 encoded](https://doc.rust-lang.org/std/string/struct.String.html). As a result, qsv **requires** UTF-8 encoded files, primarily, for performance. It makes extensive use of [`str::from_utf8_unchecked`](https://doc.rust-lang.org/stable/std/str/fn.from_utf8_unchecked.html) to skip utf-8 validation that [`str::from_utf8`](https://doc.rust-lang.org/stable/std/str/fn.from_utf8.html) will otherwise incur everytime raw bytes are converted to string.
+
+For the most part, this shouldn't be a problem as UTF-8 is the de facto encoding standard. Should you need to process a CSV file with a different encoding, use the `input` command to "transcode" to UTF-8.
+
 ### Benchmarking for Performance
 
 Use and fine-tune the [benchmark script](scripts/benchmark-basic.sh) when tweaking qsv's performance to your environment.
