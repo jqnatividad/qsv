@@ -821,7 +821,6 @@ impl Commute for TypedMinMax {
 
 #[inline]
 fn from_bytes<T: FromStr>(bytes: &[u8]) -> Option<T> {
-    // we don't need to do UTF-8 validation as we automatically
-    // transcode to UTF-8 the input
+    // we don't need to do UTF-8 validation as qsv requires UTF-8 encoding
     unsafe { str::from_utf8_unchecked(bytes).parse().ok() }
 }
