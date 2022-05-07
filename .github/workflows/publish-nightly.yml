@@ -120,8 +120,11 @@ jobs:
         rm target/${{ matrix.job.target }}/release/*.d 
         cp target/${{ matrix.job.target }}/release/qsv* qsv-${{ needs.analyze-tags.outputs.previous-tag }}
         cd qsv-${{ needs.analyze-tags.outputs.previous-tag }}
-        for filename in qsv*; do mv "$filename" "nightly_${filename}"; done;
-        for filename in qsv*.exe; do mv "$filename" "nightly_${filename}" 2> /dev/null; done;
+        if [ "$RUNNER_OS" == "Windows"]; then
+             for filename in qsv*.exe; do mv "$filename" "nightly_${filename}.exe"; done;
+        else
+             for filename in qsv*; do mv "$filename" "nightly_${filename}"; done;
+        fi
         cd ..
     - name: zip up binaries
       run: 7z a -tzip qsv-nightly-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/qsv* -mx=9 -mmt=on
