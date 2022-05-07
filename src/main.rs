@@ -164,7 +164,7 @@ fn main() {
         return;
     }
     if args.flag_update {
-        util::qsv_check_for_update("qsv");
+        util::qsv_check_for_update();
         return;
     }
     match args.arg_command {
@@ -175,7 +175,7 @@ fn main() {
 Please choose one of the following commands:",
                 command_list!()
             ));
-            util::qsv_check_for_update("qsv");
+            util::qsv_check_for_update();
             ::std::process::exit(0);
         }
         Some(cmd) => match cmd.run() {
@@ -319,7 +319,7 @@ impl Command {
             Command::Headers => cmd::headers::run(argv),
             Command::Help => {
                 wout!("{USAGE}");
-                util::qsv_check_for_update("qsv");
+                util::qsv_check_for_update();
                 Ok(())
             }
             Command::Index => cmd::index::run(argv),

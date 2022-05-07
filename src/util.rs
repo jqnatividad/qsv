@@ -455,12 +455,19 @@ pub fn init_logger() {
 }
 
 #[cfg(any(feature = "full", feature = "lite"))]
-pub fn qsv_check_for_update(bin_name: &str) {
+pub fn qsv_check_for_update() {
     use self_update::cargo_crate_version;
 
     if env::var("QSV_NO_UPDATE").is_ok() {
         return;
     }
+
+    let bin_name = std::env::current_exe()
+        .expect("Can't get the exec path")
+        .file_stem()
+        .expect("Can't get the exec stem name")
+        .to_string_lossy()
+        .into_owned();
 
     eprintln!("Checking GitHub for updates...");
     info!("Checking GitHub for updates...");
@@ -482,7 +489,7 @@ pub fn qsv_check_for_update(bin_name: &str) {
         match self_update::backends::github::Update::configure()
             .repo_owner("jqnatividad")
             .repo_name("qsv")
-            .bin_name(bin_name)
+            .bin_name(&bin_name)
             .show_download_progress(true)
             .show_output(false)
             .no_confirm(false)
