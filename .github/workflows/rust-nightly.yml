@@ -36,4 +36,4 @@ jobs:
       with:
         key: qsv-nightly-cache
     - name: Run tests
-      run: cargo +nightly test --verbose --locked --features=apply,fetch,foreach,generate,lua,python,full
+      run: cargo +nightly test --verbose --locked --features=apply,fetch,foreach,generate,lua,python,full,nightly
