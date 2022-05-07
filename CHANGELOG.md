@@ -5,6 +5,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.46.0] - 2022-05-07
+### Added
+* Added release nightly binaries, optimized for size and speed
+   * uses Rust nightly
+   * also compiles stdlib, so build-time optimizations also apply, instead of using pre-built stdlib
+   * set `panic=abort` - removing panic-handling, formatting and backtrace code from binaries
+   * set `RUSTFLAGS= -C target-cpu=native` to enable use of additional CPU-level features
+   * enables unstable/nightly features on `regex` and `rand` crates
+* Added testing on nightly to CI
+
+### Changed
+* `dedup`: reduced memory footprint by half by writing directly to disk, rather than storing in working mem, before writing
+* `excel`: show sheet name in message along with row count; let docopt take care of validating mandatory arguments
+* More whirlwind tour improvements - how timings were collected, footnotes, etc.
+* Bump github/codeql-action from 1 to 2 by @dependabot in https://github.com/jqnatividad/qsv/pull/277
+* Bump log from 0.4.16 to 0.4.17 by @dependabot in https://github.com/jqnatividad/qsv/pull/278
+* Bump whatlang from 0.15 to 0.16
+* Make file extension processing case-insensitive in https://github.com/jqnatividad/qsv/pull/280
+* Added Caching section to Performance Tuning
+* Added UTF-8 section to Performance Tuning
+
+### Removed
+* removed unneeded header file for wcp.csv used in Whirlwind Tour, now that we have a well-formed wcp.csv
+
 ## [0.45.2] - 2022-05-01
 ### Added
 * added `headers` command to qsvdp binary
