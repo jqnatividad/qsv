@@ -69,16 +69,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
     let sel = rconfig.selection(&headers)?;
 
-    let mut new: Vec<_> = vec![];
+    let mut all = rdr.byte_records().collect::<Result<Vec<_>, _>>()?;
+    all.sort_unstable_by(|r1, r2| {
+        let a = sel.select(r1);
+        let b = sel.select(r2);
+        iter_cmp(a, b)
+    });
+
+    //let mut new: Vec<_> = vec![];
+    let mut new: Vec<_> = Vec::with_capacity(all.len());
     let mut dupe_count = 0_usize;
     {
-        let mut all = rdr.byte_records().collect::<Result<Vec<_>, _>>()?;
-        all.sort_by(|r1, r2| {
-            let a = sel.select(r1);
-            let b = sel.select(r2);
-            iter_cmp(a, b)
-        });
-
         let mut current = 0;
         while current + 1 < all.len() {
             let a = sel.select(&all[current]);
