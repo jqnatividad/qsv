@@ -115,10 +115,15 @@ jobs:
         mkdir qsv-${{ needs.analyze-tags.outputs.previous-tag }}
         cp target/${{ matrix.job.target }}/release-nightly/qsv* qsv-${{ needs.analyze-tags.outputs.previous-tag }}
         cd qsv-${{ needs.analyze-tags.outputs.previous-tag }}
+        rm target/${{ matrix.job.target }}/release-nightly/*.d 
         if [ "$RUNNER_OS" == "Windows"]; then
-             for filename in qsv*.exe; do mv "$filename" "${filename}_nightly.exe"; done;
+             mv qsv.exe qsv_nightly.exe
+             mv qsvlite.exe qsvlite_nightly.exe
+             mv qsvdp.exe qsvdp_nightly.exe
         else
-             for filename in qsv*; do mv "$filename" "${filename}_nightly"; done;
+             mv qsv qsv_nightly
+             mv qsvlite qsvlite_nightly
+             mv qsvdp qsvdp_nightly
         fi
         cd ..
     - name: zip up binaries
