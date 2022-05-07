@@ -76,8 +76,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         iter_cmp(a, b)
     });
 
-    //let mut new: Vec<_> = vec![];
-    let mut new: Vec<_> = Vec::with_capacity(all.len());
+    rconfig.write_headers(&mut rdr, &mut wtr)?;
     let mut dupe_count = 0_usize;
     {
         let mut current = 0;
@@ -86,7 +85,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let b = sel.select(&all[current + 1]);
             if no_case {
                 if iter_cmp_no_case(a, b) != cmp::Ordering::Equal {
-                    new.push(all[current].clone());
+                    wtr.write_byte_record(&all[current])?;
                 } else {
                     dupe_count += 1;
                     if dupes_output {
@@ -94,7 +93,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     }
                 }
             } else if iter_cmp(a, b) != cmp::Ordering::Equal {
-                new.push(all[current].clone());
+                wtr.write_byte_record(&all[current])?;
             } else {
                 dupe_count += 1;
                 if dupes_output {
@@ -103,14 +102,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
             current += 1;
         }
-        new.push(all[current].clone());
+        wtr.write_byte_record(&all[current])?;
     }
 
     dupewtr.flush()?;
-    rconfig.write_headers(&mut rdr, &mut wtr)?;
-    for r in new {
-        wtr.write_byte_record(&r)?;
-    }
 
     if args.flag_human_readable {
         use thousands::Separable;
