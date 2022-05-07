@@ -1,0 +1,178 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - '*'
+  workflow_dispatch:
+
+jobs:
+  analyze-tags:
+    runs-on: ubuntu-latest
+    outputs:
+      previous-tag: ${{ steps.previoustag.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      #▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼#
+      - name: Get previous tag
+        id: previoustag
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+      #▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲#
+
+  publish:
+    name: Publish for ${{ matrix.job.target }}
+    needs: analyze-tags
+    runs-on: ${{ matrix.job.os }}
+    strategy:
+      matrix:
+        rust: [nightly]
+        job:
+          - os: ubuntu-latest
+            os-name: linux
+            target: x86_64-unknown-linux-gnu
+            architecture: x86_64
+            use-cross: false
+            addl-build-args: --features=apply,generate,lua,fetch,foreach,python
+            default-features:
+          - os: ubuntu-latest
+            os-name: linux
+            target: x86_64-unknown-linux-musl
+            architecture: x86_64
+            musl-prep: true
+            use-cross: false
+            addl-build-args: --features=apply,generate,lua,fetch,foreach,python
+            default-features:            
+          - os: ubuntu-latest
+            os-name: linux
+            target: i686-unknown-linux-gnu
+            architecture: i686
+            use-cross: true
+            addl-build-args: --features=apply,generate,lua,fetch,foreach
+            default-features:
+          - os: windows-latest
+            os-name: windows
+            target: x86_64-pc-windows-msvc
+            architecture: x86_64
+            use-cross: false
+            addl-build-args: --features=apply,generate,lua,fetch,python
+            default-features:
+          - os: windows-latest
+            os-name: windows
+            target: i686-pc-windows-msvc
+            architecture: i686
+            use-cross: true
+            addl-build-args: --features=apply,generate,lua,fetch
+            default-features:
+          - os: windows-latest
+            os-name: windows
+            target: x86_64-pc-windows-gnu
+            architecture: x86_64
+            use-cross: false
+            addl-build-args: --features=apply,generate,lua,fetch,python
+            default-features: --no-default-features 
+          - os: macos-latest
+            os-name: macos
+            target: x86_64-apple-darwin
+            architecture: x86_64
+            use-cross: false
+            addl-build-args: --features=apply,generate,lua,fetch,foreach,python
+            default-features: --no-default-features 
+          - os: macos-latest
+            os-name: macos
+            target: aarch64-apple-darwin
+            architecture: aarch64
+            build-prep: true
+            use-cross: true
+            addl-build-args: --features=apply,generate,lua,fetch,foreach
+            default-features: --no-default-features
+          - os: ubuntu-latest
+            os-name: linux
+            target: aarch64-unknown-linux-gnu
+            architecture: aarch64
+            use-cross: true
+            addl-build-args: --features=apply,generate,lua,fetch,foreach
+            default-features:
+          - os: ubuntu-latest
+            os-name: linux
+            target: arm-unknown-linux-gnueabihf
+            architecture: arm
+            use-cross: true
+            addl-build-args: --features=apply,generate,lua,fetch,foreach
+            default-features: --no-default-features
+          - os: ubuntu-latest
+            os-name: linux
+            target: arm-unknown-linux-musleabihf
+            architecture: arm
+            use-cross: true
+            addl-build-args: --features=apply,generate,lua,fetch,foreach
+            default-features: --no-default-features
+
+    steps:
+    - name: Installing Rust toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: ${{ matrix.rust }}
+        profile: minimal
+        target: ${{ matrix.job.target }}
+        override: true
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        submodules: recursive
+        ref: ${{ needs.analyze-tags.outputs.previous-tag }}
+    - uses: actions/setup-python@v3.1.2
+      with:
+        python-version: '3.8'
+    - name: build prep for aarch64-apple-darwin
+      if: ${{ matrix.job.build-prep }}
+      run: |
+        sudo xcode-select -s "/Applications/Xcode_12.5.1.app"
+        sudo rm -Rf /Library/Developer/CommandLineTools/SDKs/*
+    - name: build prep for x86_64-unknown-linux-musl
+      if: ${{ matrix.job.musl-prep }}
+      run: |
+        sudo apt-get install musl-tools
+    - name: Build qsv-nightly
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        use-cross: ${{ matrix.job.use-cross }}
+        toolchain: ${{ matrix.rust }}
+        args: --release --locked --bin qsv -Z build-std=std,panic_abort --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }},full ${{ matrix.job.default-features }}
+    - name: Build qsvlite-nightly
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        use-cross: ${{ matrix.job.use-cross }}
+        toolchain: ${{ matrix.rust }}
+        args: --release --locked --bin qsvlite -Z build-std=std,panic_abort --features=lite --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}
+    - name: Build qsvdp-nightly
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        use-cross: ${{ matrix.job.use-cross }}
+        toolchain: ${{ matrix.rust }}
+        args: --release --locked --bin qsvdp -Z build-std=std,panic_abort --features=datapusher_plus --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}
+    - name: Copy binaries to working dir
+      shell: bash
+      run: |
+        mkdir qsv-${{ needs.analyze-tags.outputs.previous-tag }}
+        rm target/${{ matrix.job.target }}/release/*.d 
+        cp target/${{ matrix.job.target }}/release/qsv* qsv-${{ needs.analyze-tags.outputs.previous-tag }}
+        cd qsv-${{ needs.analyze-tags.outputs.previous-tag }}
+        for filename in qsv*; do mv "$filename" "nightly_${filename}"; done;
+        for filename in qsv*.exe; do mv "$filename" "nightly_${filename}"; done;
+        cd ..
+    - name: zip up binaries
+      run: 7z a -tzip qsv-nightly-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/qsv* -mx=9 -mmt=on
+    - name: Upload zipped binaries to release
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: qsv-nightly-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip
+        asset_name: qsv-nightly-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip
+        overwrite: true
+        tag: ${{ needs.analyze-tags.outputs.previous-tag }}    
+ 
