@@ -115,6 +115,7 @@ jobs:
       with:
         toolchain: ${{ matrix.rust }}
         profile: minimal
+        components: rust-src
         target: ${{ matrix.job.target }}
         override: true
     - name: Checkout repository
