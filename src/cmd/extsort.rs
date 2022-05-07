@@ -6,6 +6,7 @@ use crate::util;
 use crate::CliResult;
 use ext_sort::{buffer::mem::MemoryLimitedBufferBuilder, ExternalSorter, ExternalSorterBuilder};
 use serde::Deserialize;
+use sysinfo::{System, SystemExt};
 
 static USAGE: &str = "
 Sort an arbitrarily large CSV/text file using a multithreaded external sort algorithm.
@@ -40,19 +41,31 @@ struct Args {
     flag_jobs: Option<usize>,
     flag_no_headers: bool,
 }
-// buffer to use for sorting in memory,
-// if the file is larger, addl sorting done on tmp_dir
+
 const MEMORY_LIMITED_BUFFER: u64 = 100 * 1_000_000; // 100 MB
+const RW_BUFFER_CAPACITY: usize = 1000 * (1 << 10); // 1 MB
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
+
+    // buffer to use for sorting in memory,
+    // use 10% of total memory if we can detect it, otherwise
+    // set it to MEMORY_LIMITED_BUFFER
+    let mem_limited_buffer = if System::IS_SUPPORTED {
+        let mut sys = System::new_all();
+        sys.refresh_memory();
+        (sys.total_memory() * 1000) / 10 // 10 percent of total memory
+    } else {
+        MEMORY_LIMITED_BUFFER
+    };
 
     let mut input_reader = io::BufReader::new(fs::File::open(&args.arg_input)?);
 
     let sorter: ExternalSorter<String, io::Error, MemoryLimitedBufferBuilder> =
         ExternalSorterBuilder::new()
             .with_tmp_dir(path::Path::new("./"))
-            .with_buffer(MemoryLimitedBufferBuilder::new(MEMORY_LIMITED_BUFFER))
+            .with_buffer(MemoryLimitedBufferBuilder::new(mem_limited_buffer))
+            .with_rw_buf_size(RW_BUFFER_CAPACITY)
             .with_threads_number(util::njobs(args.flag_jobs))
             .build()
             .unwrap();
@@ -72,6 +85,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     for item in sorted.map(Result::unwrap) {
         output_writer.write_all(format!("{item}\n").as_bytes())?;
     }
-    output_writer.flush().unwrap();
+    output_writer.flush()?;
     Ok(())
 }

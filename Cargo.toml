@@ -128,6 +128,7 @@ self_update = { version = "0.30", features = [
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1.0", features = ["preserve_order"] }
 strsim = { version = "0.10", optional = true }
+sysinfo = "0.23"
 tabwriter = "1.2"
 test-data-generation = { version = "0.3", optional = true }
 thiserror = { version = "1.0", optional = true }
