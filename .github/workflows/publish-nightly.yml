@@ -83,11 +83,6 @@ jobs:
     - uses: actions/setup-python@v3.1.2
       with:
         python-version: '3.8'
-    - name: build prep for aarch64-apple-darwin
-      if: ${{ matrix.job.build-prep }}
-      run: |
-        sudo xcode-select -s "/Applications/Xcode_12.5.1.app"
-        sudo rm -Rf /Library/Developer/CommandLineTools/SDKs/*
     - name: build prep for x86_64-unknown-linux-musl
       if: ${{ matrix.job.musl-prep }}
       run: |
@@ -127,7 +122,7 @@ jobs:
         fi
         cd ..
     - name: zip up binaries
-      run: 7z a -tzip qsv-nightly-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/qsv* -mx=9 -mmt=on
+      run: 7z a -tzip qsv-nightly-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/nightly_* -mx=9 -mmt=on
     - name: Upload zipped binaries to release
       uses: svenstaro/upload-release-action@v2
       with:
