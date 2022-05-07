@@ -51,6 +51,10 @@ lto           = true
 opt-level     = 3
 strip         = true
 
+[profile.release-nightly]
+inherits = "release"
+panic = "abort"
+
 [profile.test]
 opt-level = 3
 
