@@ -11,7 +11,7 @@ static USAGE: &str = "
 Exports a specified Excel/ODS sheet to a CSV file.
 
 Usage:
-    qsv excel [options] [<input>]
+    qsv excel [options] <input>
 
 Excel options:
     -s, --sheet <name/index>   Name or zero-based index of sheet to export.
@@ -32,7 +32,7 @@ Common options:
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input: Option<String>,
+    arg_input: String,
     flag_sheet: String,
     flag_flexible: bool,
     flag_human_readable: bool,
@@ -42,15 +42,11 @@ struct Args {
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
-
-    let path = match &args.arg_input {
-        Some(path) => path,
-        None => return fail!("Cannot use <stdin> with excel command."),
-    };
+    let path = &args.arg_input;
 
     let sce = PathBuf::from(path.to_ascii_lowercase());
     match sce.extension().and_then(std::ffi::OsStr::to_str) {
-        Some("xlsx") | Some("xlsm") | Some("xlsb") | Some("xls") | Some("ods") => (),
+        Some("xls") | Some("xlsx") | Some("xlsm") | Some("xlsb") | Some("ods") => (),
         _ => {
             return fail!("Expecting an Excel/ODS file.");
         }
@@ -135,9 +131,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if args.flag_human_readable {
         use thousands::Separable;
 
-        eprintln!("{} rows exported.", count.separate_with_commas());
+        eprintln!(
+            "{} rows exported from sheet:{sheet}",
+            count.separate_with_commas()
+        );
     } else {
-        eprintln!("{count} rows exported.");
+        eprintln!("{count} rows exported from sheet:{sheet}");
     }
     Ok(())
 }
