@@ -113,7 +113,6 @@ jobs:
       shell: bash
       run: |
         mkdir qsv-${{ needs.analyze-tags.outputs.previous-tag }}
-        rm target/${{ matrix.job.target }}/release/*.d 
         cp target/${{ matrix.job.target }}/release/qsv* qsv-${{ needs.analyze-tags.outputs.previous-tag }}
         cd qsv-${{ needs.analyze-tags.outputs.previous-tag }}
         if [ "$RUNNER_OS" == "Windows"]; then
