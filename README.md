@@ -18,7 +18,7 @@
 
 </div>
 
-> **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's release](https://github.com/BurntSushi/xsv/issues/267). It also has numerous new features & 53 additional commands/subcommands/operations (for a total of 73).
+> **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's May 2018 release](https://github.com/BurntSushi/xsv/issues/267). It also has numerous new features & 53 additional commands/subcommands/operations (for a total of 73).
 See [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ) for more details.
 
 ## Available commands
@@ -228,6 +228,7 @@ Several dependencies also have environment variables that influence qsv's perfor
 * `full` - enable to build qsv.
 * `lite` - enable to build qsvlite.
 * `datapusher_plus` - enable to build qsvdp.
+* `nightly` - enable to turn on nightly/unstable features in the `rand` and `regex` creates when building with Rust nightly/unstable.
 
 The following "power-user" commands can be abused and present "foot-shooting" scenarios.
 
@@ -320,6 +321,41 @@ The `fetch` command also memoizes expensive REST API calls with its optional Red
 [Rust strings are utf-8 encoded](https://doc.rust-lang.org/std/string/struct.String.html). As a result, qsv **requires** UTF-8 encoded files, primarily, for performance. It makes extensive use of [`str::from_utf8_unchecked`](https://doc.rust-lang.org/stable/std/str/fn.from_utf8_unchecked.html) to skip utf-8 validation that [`str::from_utf8`](https://doc.rust-lang.org/stable/std/str/fn.from_utf8.html) will otherwise incur everytime raw bytes are converted to string.
 
 For the most part, this shouldn't be a problem as UTF-8 is the de facto encoding standard. Should you need to process a CSV file with a different encoding, use the `input` command to "transcode" to UTF-8.
+
+### Nightly Release Builds
+Pre-built binaries compiled using Rust Nightly/Unstable are also available for download. These binaries are optimized for size and speed:
+
+* compiled with the current Rust nightly/unstable at the time of release.
+* stdlib is compiled from source, instead of using the pre-built stdlib. This ensures stdlib is compiled with all the release settings
+  (link time optimization, opt-level, codegen-units, panic=abort, etc.). This is why we only have nightly release builds for select platforms 
+  (the platform of GitHub's action runners), as we need access to the "native hardware" and cannot cross-compile stdlib to other platforms.
+* set `panic=abort` - removing panic-handling/formatting and backtrace code from binaries, making for smaller binaries.
+* set `RUSTFLAGS=-C target-cpu=native` to enable use of additional CPU-level features.
+* enables unstable/nightly features on `regex` and `rand` crates, that unlock performance/SIMD features on those crates.
+
+Despite the 'unstable' label, these binaries are actually quite stable, given how [Rust is made](https://doc.rust-lang.org/book/appendix-07-nightly-rust.html),
+and the fact that qsv itself doesn't actually use any unstable feature flags, beyond activating the 'unstable' features in the `rand` and `regex` crates, which is really more about performance (that's why we can still compile with Rust stable).
+
+If you need to maximize speed/performance - use the nightly builds. If you prefer a "safer", rock-solid experience, use the stable builds.
+
+If you want to really squeeze every little bit of performance from qsv, build it locally like how the Nightly Release Builds are built.
+Doing so will ensure the CPU flags are tailored to your hardware and you're using the latest nightly release.
+For example, on Ubuntu 22.04 LTS Linux:
+
+```
+rustup default nightly
+rustup update
+export RUSTFLAGS='-C target-cpu=native'
+
+# to build qsv on nightly with all features. The binary will be in the target/release-nightly folder.
+cargo build --profile release-nightly --bin qsv -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --features=full --target x86_64-unknown-linux-gnu --features apply,generate,lua,fetch,foreach,python,nightly
+
+# to build qsvlite
+cargo build --profile release-nightly --bin qsvlite -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --features=lite --target x86_64-unknown-linux-gnu --features apply,generate,lua,fetch,foreach,python,nightly
+
+# to build qsvdp
+cargo build --profile release-nightly --bin qsvdp -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --features=datapusher_plus --target x86_64-unknown-linux-gnu --features apply,generate,lua,fetch,foreach,python,nightly
+```
 
 ### Benchmarking for Performance
 
