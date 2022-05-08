@@ -323,7 +323,7 @@ The `fetch` command also memoizes expensive REST API calls with its optional Red
 For the most part, this shouldn't be a problem as UTF-8 is the de facto encoding standard. Should you need to process a CSV file with a different encoding, use the `input` command to "transcode" to UTF-8.
 
 ### Nightly Release Builds
-Pre-built binaries compiled using Rust Nightly/Unstable are also available for download. These binaries are optimized for size and speed:
+Pre-built binaries compiled using Rust Nightly/Unstable are also [available for download](https://github.com/jqnatividad/qsv/releases/latest). These binaries are optimized for size and speed:
 
 * compiled with the current Rust nightly/unstable at the time of release.
 * stdlib is compiled from source, instead of using the pre-built stdlib. This ensures stdlib is compiled with all of qsv's release settings
