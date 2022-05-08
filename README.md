@@ -348,13 +348,13 @@ rustup update
 export RUSTFLAGS='-C target-cpu=native'
 
 # to build qsv on nightly with all features. The binary will be in the target/release-nightly folder.
-cargo build --profile release-nightly --bin qsv -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --features=full --target x86_64-unknown-linux-gnu --features apply,generate,lua,fetch,foreach,python,nightly
+cargo build --profile release-nightly --bin qsv -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --features full,apply,generate,lua,fetch,foreach,python,nightly --target x86_64-unknown-linux-gnu
 
 # to build qsvlite
-cargo build --profile release-nightly --bin qsvlite -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --features=lite --target x86_64-unknown-linux-gnu --features apply,generate,lua,fetch,foreach,python,nightly
+cargo build --profile release-nightly --bin qsvlite -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --features lite,nightly --target x86_64-unknown-linux-gnu
 
 # to build qsvdp
-cargo build --profile release-nightly --bin qsvdp -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --features=datapusher_plus --target x86_64-unknown-linux-gnu --features apply,generate,lua,fetch,foreach,python,nightly
+cargo build --profile release-nightly --bin qsvdp -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --features datapusher_plus,nightly --target x86_64-unknown-linux-gnu
 ```
 
 ### Benchmarking for Performance
