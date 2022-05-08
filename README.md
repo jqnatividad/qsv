@@ -329,7 +329,7 @@ Pre-built binaries compiled using Rust Nightly/Unstable are also [available for 
 * stdlib is compiled from source, instead of using the pre-built stdlib. This ensures stdlib is compiled with all of qsv's release settings
   (link time optimization, opt-level, codegen-units, panic=abort, etc.). This is why we only have nightly release builds for select platforms 
   (the platform of GitHub's action runners), as we need access to the "native hardware" and cannot cross-compile stdlib to other platforms.
-* set `panic=abort` - removing panic-handling/formatting and backtrace code from binaries, making for smaller binaries.
+* set `panic=abort` - removing panic-handling/formatting and backtrace code, making for smaller binaries.
 * set `RUSTFLAGS=-C target-cpu=native` to enable use of additional CPU-level features.
 * enables unstable/nightly features on `regex` and `rand` crates, that unlock performance/SIMD features on those crates.
 
