@@ -113,9 +113,9 @@ jobs:
       shell: bash
       run: |
         mkdir qsv-${{ needs.analyze-tags.outputs.previous-tag }}
+        rm target/${{ matrix.job.target }}/release-nightly/*.d 
         cp target/${{ matrix.job.target }}/release-nightly/qsv* qsv-${{ needs.analyze-tags.outputs.previous-tag }}
         cd qsv-${{ needs.analyze-tags.outputs.previous-tag }}
-        rm target/${{ matrix.job.target }}/release-nightly/*.d 
         if [ "$RUNNER_OS" == "Windows"]; then
              mv qsv.exe qsv_nightly.exe
              mv qsvlite.exe qsvlite_nightly.exe
