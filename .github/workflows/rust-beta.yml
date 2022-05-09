@@ -1,10 +1,7 @@
 name: Rust Beta
 
 on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+  workflow_dispatch:
 
 env:
   CARGO_TERM_COLOR: always
