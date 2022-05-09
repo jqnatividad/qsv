@@ -80,9 +80,6 @@ fn combo_sort_dedup() {
 
 #[test]
 fn utf8_check_invalid() {
-    // this test runs properly locally, but the github action runners
-    // don't run it properly, as the test files are not encoded properly by GitHub
-    // so we're ignoring it for CI to work.
     let wrk = Workdir::new("utf8_check_invalid");
 
     let nonutf8_file = wrk.load_test_file("test-windows1252.csv");
