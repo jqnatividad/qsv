@@ -6,6 +6,7 @@ use log::debug;
 use serde::Deserialize;
 use std::cmp;
 use std::path::PathBuf;
+use thousands::Separable;
 
 static USAGE: &str = "
 Exports a specified Excel/ODS sheet to a CSV file.
@@ -23,7 +24,6 @@ Excel options:
     --trim                     Trim all fields of records so that leading and trailing
                                whitespaces (Unicode definition) are removed.
                                Also removes embedded linebreaks.
-    -H, --human-readable       Comma separate row count.
 
 Common options:
     -h, --help                 Display this message
@@ -35,7 +35,6 @@ struct Args {
     arg_input: String,
     flag_sheet: String,
     flag_flexible: bool,
-    flag_human_readable: bool,
     flag_trim: bool,
     flag_output: Option<String>,
 }
@@ -96,6 +95,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut trimmed_record = csv::StringRecord::new();
     let mut count = 0_u32; // Excel can only hold 1m rows anyways, ODS - only 32k
     for row in range.rows() {
+        record.clear();
         for cell in row {
             match *cell {
                 DataType::Empty => record.push_field(""),
@@ -123,20 +123,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         } else {
             wtr.write_record(&record).unwrap();
         }
-        record.clear();
         count += 1;
     }
     wtr.flush()?;
 
-    if args.flag_human_readable {
-        use thousands::Separable;
+    eprintln!(
+        "{} {}-column rows exported from \"{sheet}\"",
+        // don't count the header in row count
+        (count - 1).separate_with_commas(),
+        record.len().separate_with_commas(),
+    );
 
-        eprintln!(
-            "{} rows exported from sheet:{sheet}",
-            count.separate_with_commas()
-        );
-    } else {
-        eprintln!("{count} rows exported from sheet:{sheet}");
-    }
     Ok(())
 }
