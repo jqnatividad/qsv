@@ -150,3 +150,16 @@ fn excel_sheet_name() {
     ];
     assert_eq!(got, expected);
 }
+
+#[test]
+fn excel_message() {
+    let wrk = Workdir::new("excel_message");
+
+    let xls_file = wrk.load_test_file("excel-xls.xls");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--sheet").arg("Middle").arg(xls_file);
+
+    let got = wrk.output_stderr(&mut cmd);
+    assert_eq!(got, "5 2-column rows exported from \"Middle\"\n");
+}
