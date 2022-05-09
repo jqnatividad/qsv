@@ -5,6 +5,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.46.1] - 2022-05-08
+### Changed
+* `extsort`: increased performance. Use 10% of total memory or if total mem is not detectable, 100 mb for in-mem sorting. Increased R/W buffer size to 1mb [e2f013f](https://github.com/jqnatividad/qsv/commit/e2f013f267ce0add457a3a64bc16b9924c142a05)
+* `searchset`: more idiomatic rust [fa1f340](https://github.com/jqnatividad/qsv/commit/fa1f340c3084cea548008ec204ec12bc67c60ad7)
+* added "Nightly Release Builds" section in README Performance Tuning
+* cargo update bump several dependencies
+
+### Fixed
+* `excel`: fixed off by +1 row count (we were counting the header as well); added column count to final message and removed useless human-readable option. [c99df2533b5c112d90c6e04068227b7f873459c2](https://github.com/jqnatividad/qsv/commit/c99df2533b5c112d90c6e04068227b7f873459c2)
+* fixed various bugs in Publish Nightly GitHub Action that automatically built nightly binaries
+
 ## [0.46.0] - 2022-05-07
 ### Added
 * Added release nightly binaries, optimized for size and speed
