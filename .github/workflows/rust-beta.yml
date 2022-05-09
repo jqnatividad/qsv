@@ -18,6 +18,7 @@ jobs:
         python-version: '3.8'
     - name: Update Rust Beta
       run: |
-        RUSTUP_DIST_SERVER=https://dev-static.rust-lang.org rustup update stable
+        rustup update beta
+        rustup default beta
     - name: Run tests
       run: cargo test --verbose --locked --all-features
