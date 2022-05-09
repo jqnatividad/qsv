@@ -79,7 +79,6 @@ fn combo_sort_dedup() {
 }
 
 #[test]
-#[ignore]
 fn utf8_check_invalid() {
     // this test runs properly locally, but the github action runners
     // don't run it properly, as the test files are not encoded properly by GitHub
@@ -92,7 +91,7 @@ fn utf8_check_invalid() {
     cmd.arg(nonutf8_file);
 
     let got: String = wrk.output_stderr(&mut cmd);
-    assert!(got.contains("is not UTF8 encoded"));
+    assert!(got.contains("is not UTF-8 encoded"));
 }
 
 #[test]
