@@ -152,8 +152,11 @@ impl Workdir {
             _stderr.flush().unwrap();
         }
         let o = cmd.output().unwrap();
+        let o_utf8 = String::from_utf8_lossy(&o.stderr).to_string();
         if !o.status.success() {
-            String::from_utf8_lossy(&o.stderr).to_string()
+            o_utf8
+        } else if o.status.success() && !o_utf8.is_empty() {
+            o_utf8
         } else {
             "No error".to_string()
         }
