@@ -21,4 +21,4 @@ jobs:
         rustup update beta
         rustup default beta
     - name: Run tests
-      run: cargo test --verbose --locked --all-features
+      run: cargo test --verbose --full,apply,fetch,generate,foreach,python,lua
