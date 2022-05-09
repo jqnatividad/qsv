@@ -19,9 +19,5 @@ jobs:
     - name: Update Rust Beta
       run: |
         RUSTUP_DIST_SERVER=https://dev-static.rust-lang.org rustup update stable
-    - name: Setup Rust-cache
-      uses: Swatinem/rust-cache@v1
-      with:
-        key: qsv-cache
     - name: Run tests
       run: cargo test --verbose --locked --all-features
