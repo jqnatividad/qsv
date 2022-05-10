@@ -4,6 +4,7 @@ use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
 use crate::util;
 use crate::CliResult;
+use rayon::prelude::*;
 use serde::Deserialize;
 
 use crate::cmd::sort::iter_cmp;
@@ -26,6 +27,9 @@ sort options:
     -C, --no-case              Compare strings disregarding case
     -D, --dupes-output <file>  Write duplicates to <file>.
     -H, --human-readable       Comma separate duplicate count.
+    -j, --jobs <arg>           The number of jobs to run in parallel.
+                               When not set, the number of jobs is set to the
+                               number of CPUs detected.
 
 Common options:
     -h, --help                 Display this message
@@ -48,6 +52,7 @@ struct Args {
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
     flag_human_readable: bool,
+    flag_jobs: Option<usize>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -69,8 +74,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
     let sel = rconfig.selection(&headers)?;
 
+    util::njobs(args.flag_jobs);
+
     let mut all = rdr.byte_records().collect::<Result<Vec<_>, _>>()?;
-    all.sort_unstable_by(|r1, r2| {
+    all.par_sort_unstable_by(|r1, r2| {
         let a = sel.select(r1);
         let b = sel.select(r2);
         iter_cmp(a, b)
@@ -119,6 +126,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 }
 
 /// Try comparing `a` and `b` ignoring the case
+#[inline]
 pub fn iter_cmp_no_case<'a, L, R>(mut a: L, mut b: R) -> cmp::Ordering
 where
     L: Iterator<Item = &'a [u8]>,
