@@ -29,7 +29,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ) for more details.
 | [behead](/src/cmd/behead.rs#L7) | Drop headers from a CSV.  |
 | [cat](/src/cmd/cat.rs#L7) | Concatenate CSV files by row or by column. |
 | [count](/src/cmd/count.rs#L8)[^2] | Count the rows in a CSV file. (Instantaneous with an index.) |
-| [dedup](/src/cmd/dedup.rs#L12)[^3] | Remove redundant rows.  |
+| [dedup](/src/cmd/dedup.rs#L13)[^3][^5] | Remove redundant rows.  |
 | [enum](/src/cmd/enumerate.rs#L10-L12) | Add a new column enumerating rows by adding a column of incremental or uuid identifiers. Can also be used to copy a column or fill a new column with a constant value.  |
 | [excel](/src/cmd/excel.rs#L11) | Exports a specified Excel/ODS sheet to a CSV file. |
 | [exclude](/src/cmd/exclude.rs#L18)[^2] | Removes a set of CSV data from another set based on the specified columns.  |
@@ -62,7 +62,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ) for more details.
 | [select](/src/cmd/select.rs#L8) | Select, re-order, duplicate or drop columns.  |
 | [slice](/src/cmd/slice.rs#L10-L11)[^2][^3] | Slice rows from any part of a CSV. When an index is present, this only has to parse the rows in the slice (instead of all rows leading up to the start of the slice).  |
 | [sniff](/src/cmd/sniff.rs#L9-L10) | Quickly sniffs CSV details (delimiter, quote character, number of columns, data types, header row, preamble rows). |
-| [sort](/src/cmd/sort.rs#L12) | Sorts CSV data in alphabetical, numerical, reverse or random (with optional seed) order.  |
+| [sort](/src/cmd/sort.rs#L13)[^5] | Sorts CSV data in alphabetical, numerical, reverse or random (with optional seed) order.  |
 | [split](/src/cmd/split.rs#L14)[^2][^4] | Split one CSV file into many CSV files of N chunks. (Uses multithreading to go faster if an index is present.) |
 | [stats](/src/cmd/stats.rs#L24)[^2][^3][^4] | Infer data type & compute descriptive statistics for each column in a CSV (sum, min/max, min/max length, mean, stddev, variance, quartiles, IQR, lower/upper fences, skew, median, mode, cardinality & nullcount). Uses multithreading to go faster if an index is present. |
 | [table](/src/cmd/table.rs#L12)[^3] | Show aligned output of a CSV using [elastic tabstops](https://github.com/BurntSushi/tabwriter).  |
@@ -72,7 +72,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ) for more details.
 [^1]: enabled by optional feature flag. Not available on `qsvlite`.   
 [^2]: uses an index when available.   
 [^3]: loads the entire CSV into memory. Note that `stats` & `transpose` have modes that do not load the entire CSV into memory.   
-[^4]: multithreaded when an index is available (use `--jobs` option to adjust).   
+[^4]: multithreaded when an index is available.   
 [^5]: multithreaded even without an index.
 
 ## Installation
@@ -193,7 +193,7 @@ qsv stats wcp.csv --output wcpstats.csv
 * `QSV_TOGGLE_HEADERS` - if set to `1`, toggles header setting - i.e. inverts qsv header behavior, with no headers being the default, and setting `--no-headers` will actually mean headers will not be ignored.
 * `QSV_AUTOINDEX` - when set, automatically create an index when none is detected. Also automatically updates stale indices.
 * `QSV_SKIPUTF8_CHECK` - when set, skip UTF-8 encoding check. Otherwise, qsv scans the first 8k of files. For stdin, it scans the entire buffer.
-* `QSV_MAX_JOBS` - number of jobs to use for multithreaded commands (currently `extsort`, `frequency`, `split`, `schema` and `stats`). If not set, max_jobs is set
+* `QSV_MAX_JOBS` - number of jobs to use for multithreaded commands (currently `dedup`, `extsort`, `frequency`, `schema`, `sort`, `split`, `stats` and `validate`). If not set, max_jobs is set
 to the detected number of logical processors.  See [Multithreading](#multithreading) for more info.
 * `QSV_REGEX_UNICODE` - if set, makes `search`, `searchset` and `replace` commands unicode-aware. For increased performance, these
 commands are not unicode-aware and will ignore unicode values when matching and will panic when unicode characters are used in the regex.
@@ -306,7 +306,7 @@ The same is true with the write buffer (default: 64k) with the `QSV_WTR_BUFFER_C
 
 ### Multithreading
 
-Several commands support multithreading - `stats`, `frequency`, `schema` and `split` (when an index is available); `extsort` and `validate` (no index required).
+Several commands support multithreading - `stats`, `frequency`, `schema` and `split` (when an index is available); `dedup`, `extsort`, `sort` and `validate` (no index required).
 
 qsv will automatically spawn parallel jobs equal to the detected number of logical processors. Should you want to manually override this, use the `--jobs` command-line option or the `QSV_MAX_JOBS` environment variable.
 
