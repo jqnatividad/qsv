@@ -45,6 +45,9 @@ Validate options:
     --fail-fast                Stops on first error.
     --valid <suffix>           Valid record output file suffix. [default: valid]
     --invalid <suffix>         Invalid record output file suffix. [default: invalid]
+    -j, --jobs <arg>           The number of jobs to run in parallel.
+                               When not set, the number of jobs is set to the
+                               number of CPUs detected.
 
 
 Common options:
@@ -63,6 +66,7 @@ struct Args {
     flag_fail_fast: bool,
     flag_valid: Option<String>,
     flag_invalid: Option<String>,
+    flag_jobs: Option<usize>,
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
     flag_quiet: bool,
@@ -78,6 +82,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .no_headers(args.flag_no_headers);
 
     let mut rdr = rconfig.reader()?;
+
+    // set RAYON_NUM_THREADS
+    util::njobs(args.flag_jobs);
 
     // if no json schema supplied, only let csv reader validate csv file
     if args.arg_json_schema.is_none() {
