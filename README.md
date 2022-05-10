@@ -310,7 +310,14 @@ Several commands support multithreading - `stats`, `frequency`, `schema` and `sp
 
 qsv will automatically spawn parallel jobs equal to the detected number of logical processors. Should you want to manually override this, use the `--jobs` command-line option or the `QSV_MAX_JOBS` environment variable.
 
-To find out your jobs setting, call `qsv --version`. The second to the last number is the number of jobs qsv will use for multithreaded commands. The last number is the number of logical processors detected by qsv.
+To find out your jobs setting, call `qsv --version`. The second to the last number is the number of jobs qsv will use for multithreaded commands. The last number is the number of logical processors detected by qsv.  For example:
+
+```
+$ qsv --version
+qsv 0.46.1-mimalloc-apply;fetch;generate;lua;python;-16-16
+```
+
+Shows that I'm running qsv version 0.46.1, with the `mimalloc` allocator (instead of `standard`), and I have the `apply`, `fetch`, `generate`, `lua` and `python` features enabled, and qsv will be using 16 logical processors out of 16 detected when running multithreaded commands.
 
 ### Caching
 The `apply geocode` command [memoizes](https://en.wikipedia.org/wiki/Memoization) otherwise expensive geocoding operations and will report its cache hit rate. `apply geocode` memoization, however, is not persistent across sessions.
