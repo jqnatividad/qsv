@@ -193,7 +193,7 @@ qsv stats wcp.csv --output wcpstats.csv
 * `QSV_TOGGLE_HEADERS` - if set to `1`, toggles header setting - i.e. inverts qsv header behavior, with no headers being the default, and setting `--no-headers` will actually mean headers will not be ignored.
 * `QSV_AUTOINDEX` - when set, automatically create an index when none is detected. Also automatically updates stale indices.
 * `QSV_SKIPUTF8_CHECK` - when set, skip UTF-8 encoding check. Otherwise, qsv scans the first 8k of files. For stdin, it scans the entire buffer.
-* `QSV_MAX_JOBS` - number of jobs to use for multithreaded commands (currently `frequency`, `split`, `schema` and `stats`). If not set, max_jobs is set
+* `QSV_MAX_JOBS` - number of jobs to use for multithreaded commands (currently `extsort`, `frequency`, `split`, `schema` and `stats`). If not set, max_jobs is set
 to the detected number of logical processors.  See [Multithreading](#multithreading) for more info.
 * `QSV_REGEX_UNICODE` - if set, makes `search`, `searchset` and `replace` commands unicode-aware. For increased performance, these
 commands are not unicode-aware and will ignore unicode values when matching and will panic when unicode characters are used in the regex.
