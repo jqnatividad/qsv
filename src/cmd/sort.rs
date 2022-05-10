@@ -6,6 +6,7 @@ use crate::select::SelectColumns;
 use crate::util;
 use crate::CliResult;
 use rand::{rngs::StdRng, seq::SliceRandom, SeedableRng};
+use rayon::prelude::*;
 use serde::Deserialize;
 
 static USAGE: &str = "
@@ -25,6 +26,9 @@ sort options:
     -R, --reverse          Reverse order
     --random               Random order
     --seed <number>        RNG seed
+    -j, --jobs <arg>       The number of jobs to run in parallel.
+                           When not set, the number of jobs is set to the
+                           number of CPUs detected.
 
 Common options:
     -h, --help             Display this message
@@ -47,6 +51,7 @@ struct Args {
     flag_reverse: bool,
     flag_random: bool,
     flag_seed: Option<u64>,
+    flag_jobs: Option<usize>,
     flag_output: Option<String>,
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
@@ -68,6 +73,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let headers = rdr.byte_headers()?.clone();
     let sel = rconfig.selection(&headers)?;
 
+    util::njobs(args.flag_jobs);
+
     // Seeding rng
     let seed = args.flag_seed;
 
@@ -83,22 +90,22 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 SliceRandom::shuffle(&mut *all, &mut rng);
             }
         }
-        (false, false, false) => all.sort_by(|r1, r2| {
+        (false, false, false) => all.par_sort_unstable_by(|r1, r2| {
             let a = sel.select(r1);
             let b = sel.select(r2);
             iter_cmp(a, b)
         }),
-        (true, false, false) => all.sort_by(|r1, r2| {
+        (true, false, false) => all.par_sort_unstable_by(|r1, r2| {
             let a = sel.select(r1);
             let b = sel.select(r2);
             iter_cmp_num(a, b)
         }),
-        (false, true, false) => all.sort_by(|r1, r2| {
+        (false, true, false) => all.par_sort_unstable_by(|r1, r2| {
             let a = sel.select(r1);
             let b = sel.select(r2);
             iter_cmp(b, a)
         }),
-        (true, true, false) => all.sort_by(|r1, r2| {
+        (true, true, false) => all.par_sort_unstable_by(|r1, r2| {
             let a = sel.select(r1);
             let b = sel.select(r2);
             iter_cmp_num(b, a)
@@ -131,6 +138,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 }
 
 /// Order `a` and `b` lexicographically using `Ord`
+#[inline]
 pub fn iter_cmp<A, L, R>(mut a: L, mut b: R) -> cmp::Ordering
 where
     A: Ord,
@@ -151,6 +159,7 @@ where
 }
 
 /// Try parsing `a` and `b` as numbers when ordering
+#[inline]
 pub fn iter_cmp_num<'a, L, R>(mut a: L, mut b: R) -> cmp::Ordering
 where
     L: Iterator<Item = &'a [u8]>,
@@ -175,6 +184,7 @@ enum Number {
     Float(f64),
 }
 
+#[inline]
 fn compare_num(n1: Number, n2: Number) -> cmp::Ordering {
     match (n1, n2) {
         (Int(i1), Int(i2)) => i1.cmp(&i2),
@@ -184,10 +194,12 @@ fn compare_num(n1: Number, n2: Number) -> cmp::Ordering {
     }
 }
 
+#[inline]
 fn compare_float(f1: f64, f2: f64) -> cmp::Ordering {
     f1.partial_cmp(&f2).unwrap_or(cmp::Ordering::Equal)
 }
 
+#[inline]
 fn next_num<'a, X>(xs: &mut X) -> Option<Number>
 where
     X: Iterator<Item = &'a [u8]>,
