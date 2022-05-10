@@ -42,6 +42,9 @@ Schema options:
     --strict-dates             Enforce Internet Datetime format (RFC-3339)
                                for detected datetime columns
     --pattern-columns <args>   Select columns to add pattern constraints
+    -j, --jobs <arg>           The number of jobs to run in parallel.
+                               When not set, the number of jobs is set to the
+                               number of CPUs detected.
 
 Common options:
     -h, --help                 Display this message
@@ -58,6 +61,7 @@ struct Args {
     flag_enum_threshold: usize,
     flag_strict_dates: bool,
     flag_pattern_columns: SelectColumns,
+    flag_jobs: Option<usize>,
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
     arg_input: Option<String>,
@@ -317,7 +321,7 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
         flag_nulls: false,
         flag_nullcount: true,
         flag_infer_dates: true,
-        flag_jobs: Some(util::max_jobs()),
+        flag_jobs: Some(util::njobs(args.flag_jobs)),
         flag_output: None,
         flag_no_headers: args.flag_no_headers,
         flag_delimiter: args.flag_delimiter,
@@ -406,7 +410,7 @@ fn get_unique_values(
         flag_limit: args.flag_enum_threshold,
         flag_asc: false,
         flag_no_nulls: true,
-        flag_jobs: Some(util::max_jobs()),
+        flag_jobs: Some(util::njobs(args.flag_jobs)),
         flag_output: None,
         flag_no_headers: args.flag_no_headers,
         flag_delimiter: args.flag_delimiter,
