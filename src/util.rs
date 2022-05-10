@@ -53,8 +53,10 @@ pub fn njobs(flag_jobs: Option<usize>) -> usize {
     let num_cpus = num_cpus();
     flag_jobs.map_or(num_cpus, |jobs| {
         if jobs == 0 || jobs > num_cpus {
+            env::set_var("RAYON_NUM_THREADS", num_cpus.to_string());
             num_cpus
         } else {
+            env::set_var("RAYON_NUM_THREADS", jobs.to_string());
             jobs
         }
     })
