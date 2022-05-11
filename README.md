@@ -337,7 +337,6 @@ Pre-built binaries compiled using Rust Nightly/Unstable are also [available for 
   (link time optimization, opt-level, codegen-units, panic=abort, etc.). This is why we only have nightly release builds for select platforms 
   (the platform of GitHub's action runners), as we need access to the "native hardware" and cannot cross-compile stdlib to other platforms.
 * set `panic=abort` - removing panic-handling/formatting and backtrace code, making for smaller binaries.
-* set `RUSTFLAGS=-C target-cpu=native` to enable use of additional CPU-level features.
 * enables unstable/nightly features on `regex` and `rand` crates, that unlock performance/SIMD features on those crates.
 
 Despite the 'unstable' label, these binaries are actually quite stable, given how [Rust is made](https://doc.rust-lang.org/book/appendix-07-nightly-rust.html),
@@ -346,7 +345,7 @@ and the fact that qsv itself doesn't actually use any unstable feature flags, be
 If you need to maximize speed/performance - use the nightly builds. If you prefer a "safer", rock-solid experience, use the stable builds.
 
 If you want to really squeeze every little bit of performance from qsv, build it locally like how the Nightly Release Builds are built.
-Doing so will ensure the CPU flags are tailored to your hardware and you're using the latest Rust nightly.
+Doing so will ensure CPU features are tailored to your hardware and you're using the latest Rust nightly.
 For example, on Ubuntu 22.04 LTS Linux:
 
 ```
