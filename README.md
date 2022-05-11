@@ -88,14 +88,14 @@ Alternatively, you can compile from source by
 and installing `qsv` using Cargo:
 
 ```bash
-cargo install qsv
+cargo install qsv --features full
 ```
 
 If you encounter compilation errors, ensure you're using the exact
 version of the dependencies qsv was built with by issuing:
 
 ```bash
-cargo install qsv --locked
+cargo install qsv --locked --features full
 ```
 
 Compiling from this repository also works similarly:
@@ -103,9 +103,9 @@ Compiling from this repository also works similarly:
 ```bash
 git clone git@github.com:jqnatividad/qsv.git
 cd qsv
-cargo build --release
+cargo build --release --features full
 # or if you encounter compilation errors
-cargo build --release --locked
+cargo build --release --locked --features full
 ```
 
 The compiled binary will end up in `./target/release/`.
