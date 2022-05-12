@@ -152,7 +152,7 @@ redis = { version = "0.21", default-features = false }
 serial_test = "0.6"
 
 [patch.crates-io]
-calamine = { git = "https://github.com/jqnatividad/calamine", rev = "c3a00ffdc48201195102e3904758ed62e0af37ea" }
+calamine = { git = "https://github.com/jqnatividad/calamine", rev = "8023d886519fd4a43b74633da56fc63a2c6387a4" }
 csv = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
 csv-core = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
 csv-index = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }

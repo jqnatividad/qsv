@@ -424,7 +424,7 @@ checksum = "3a4f925191b4367301851c6d99b09890311d74b0d43f274c0b34c86d308a3663"
 [[package]]
 name = "calamine"
 version = "0.18.0"
-source = "git+https://github.com/jqnatividad/calamine?rev=c3a00ffdc48201195102e3904758ed62e0af37ea#c3a00ffdc48201195102e3904758ed62e0af37ea"
+source = "git+https://github.com/jqnatividad/calamine?rev=8023d886519fd4a43b74633da56fc63a2c6387a4#8023d886519fd4a43b74633da56fc63a2c6387a4"
 dependencies = [
  "byteorder",
  "codepage",
