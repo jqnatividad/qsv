@@ -5,6 +5,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.47.0] - 2022-05-12
+### Added
+* `dedup` and `sort` are now multithreaded with rayon in https://github.com/jqnatividad/qsv/pull/283
+* add `--jobs` option to `schema` and `validate` in https://github.com/jqnatividad/qsv/pull/284
+
+### Changed
+* `--jobs` and `QSV_MAX_JOBS` settings also now work with rayon
+* cargo update bump several dependencies
+* upgrade `calamine` fork patch that enables `excel` command
+* removed `target-cpu=native` in nightly builds so they are more portable
+
+### Fixed
+* fixed `publish-nightly` workflow bugs so nightly builds are built properly
+* corrected several build instructions errors in README
+* fixed `workdir:output_stderr()` helper so it also returns std_err message
+* fixed `Rust Beta` workflow so we can also manually test against Rust Beta
+
 ## [0.46.1] - 2022-05-08
 ### Changed
 * `extsort`: increased performance. Use 10% of total memory or if total mem is not detectable, 100 mb for in-mem sorting. Increased R/W buffer size to 1mb [e2f013f](https://github.com/jqnatividad/qsv/commit/e2f013f267ce0add457a3a64bc16b9924c142a05)
