@@ -495,6 +495,38 @@ stats_tests!(
     "0"
 );
 stats_tests!(stats_nullcount_all, "nullcount", &["", "", ""], "3");
+stats_no_infer_dates_tests!(
+    stats_noinfer_null_nodate2,
+    "type",
+    &["", "September 17, 2012 at 10:09am PST"],
+    "String",
+    true,
+    false
+);
+stats_no_infer_dates_tests!(
+    stats_infer_null_nodate2,
+    "type",
+    &["", "September 17, 2012 at 10:09am PST"],
+    "DateTime",
+    true,
+    true
+);
+stats_tests!(
+    stats_infer_date_datetime2,
+    "type",
+    &["September 11, 2001", "September 17, 2012 at 10:09am PST"],
+    "DateTime",
+    false,
+    true
+);
+stats_no_infer_dates_tests!(
+    stats_infer_date_datetime3,
+    "type",
+    &["9-11", "September 17, 2012 at 10:09am PST"],
+    "String",
+    false,
+    true
+);
 
 mod stats_infer_nothing {
     // Only test CSV data with headers.
