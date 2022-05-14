@@ -11,16 +11,18 @@ use serde::Deserialize;
 use crate::cmd::sort::iter_cmp;
 
 static USAGE: &str = r#"
-Dedups CSV rows. 
+Deduplicates CSV rows. 
 
 Note that this requires reading all of the CSV data into memory because because the 
-rows need to be sorted first. That is, unless the --sorted option is used to indicate
-the CSV is already sorted (typically, with the extsort command).
+rows need to be sorted first. 
 
-An extsort/dedup --sorted combination is typically done when deduping extremely
-large CSV files that will not fit into memory.
+That is, unless the --sorted option is used to indicate the CSV is already sorted
+(typically, with the extsort command). This will make dedup run in streaming mode 
+with constant memory.
 
-A duplicate count will be sent to <stderr>.
+Either way, the output will not only be deduplicated, it will also be sorted.
+
+A duplicate count will also be sent to <stderr>.
 
 Usage:
     qsv dedup [options] [<input>]
