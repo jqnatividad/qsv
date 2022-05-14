@@ -54,9 +54,11 @@ pub fn njobs(flag_jobs: Option<usize>) -> usize {
     flag_jobs.map_or(max_jobs, |jobs| {
         if jobs == 0 || jobs > max_jobs {
             env::set_var("RAYON_NUM_THREADS", max_jobs.to_string());
+            info!("Using {max_jobs} processors...");
             max_jobs
         } else {
             env::set_var("RAYON_NUM_THREADS", jobs.to_string());
+            info!("Using {max_jobs} processors...");
             jobs
         }
     })
