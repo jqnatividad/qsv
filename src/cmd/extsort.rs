@@ -43,7 +43,7 @@ struct Args {
 }
 
 const MEMORY_LIMITED_BUFFER: u64 = 100 * 1_000_000; // 100 MB
-const RW_BUFFER_CAPACITY: usize = 1000 * (1 << 10); // 1 MB
+const RW_BUFFER_CAPACITY: usize = 1_000_000; // 1 MB
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
@@ -58,6 +58,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } else {
         MEMORY_LIMITED_BUFFER
     };
+    log::info!("{mem_limited_buffer} bytes used for in memory mergesort buffer...");
 
     let mut input_reader = io::BufReader::new(fs::File::open(&args.arg_input)?);
 
