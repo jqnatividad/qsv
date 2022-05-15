@@ -100,8 +100,9 @@ mimalloc = { version = "0.1", default-features = false, optional = true }
 mlua = { version = "0.7", features = ["lua54", "vendored"], optional = true }
 once_cell = { version = "1.10", optional = true }
 pyo3 = { version = "0.16", features = [
-    "abi",
     "abi3-py38",
+    "abi3-py39",
+    "abi3-py310",
     "auto-initialize",
     # Automatically generates `python3.dll` import libraries for Windows targets.
     "generate-abi3-import-lib",    
