@@ -858,9 +858,9 @@ checksum = "e88a8acf291dafb59c2d96e8f59828f3838bb1a70398823ade51a84de6a6deed"
 
 [[package]]
 name = "fancy-regex"
-version = "0.8.0"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d95b4efe5be9104a4a18a9916e86654319895138be727b229820c39257c30dda"
+checksum = "0678ab2d46fa5195aaf59ad034c083d351377d4af57f3e073c074d0da3e3c766"
 dependencies = [
  "bit-set",
  "regex",
@@ -1348,8 +1348,7 @@ dependencies = [
 [[package]]
 name = "jsonschema"
 version = "0.16.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4ebd40599e7f1230ce296f73b88c022b98ed66689f97eaa54bbeadc337a2ffa6"
+source = "git+https://github.com/Stranger6667/jsonschema-rs?rev=ead0da16db5a12a6d12cd54bc087d18ed6e62c08#ead0da16db5a12a6d12cd54bc087d18ed6e62c08"
 dependencies = [
  "ahash",
  "anyhow",
@@ -1370,7 +1369,7 @@ dependencies = [
  "serde_json",
  "time 0.3.9",
  "url",
- "uuid 0.8.2",
+ "uuid",
 ]
 
 [[package]]
@@ -2146,7 +2145,7 @@ dependencies = [
  "thousands",
  "threadpool",
  "titlecase",
- "uuid 1.0.0",
+ "uuid",
  "vader_sentiment",
  "whatlang",
 ]
@@ -3098,12 +3097,6 @@ dependencies = [
  "matches",
  "percent-encoding",
 ]
-
-[[package]]
-name = "uuid"
-version = "0.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc5cf98d8186244414c848017f0e2676b3fcb46807f6668a97dfe67359a3c4b7"
 
 [[package]]
 name = "uuid"
