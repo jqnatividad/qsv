@@ -5,6 +5,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.48.0] - 2022-05-15
+### Added
+* `dedup`: add `--sorted` option in https://github.com/jqnatividad/qsv/pull/286
+* `sniff`: add `--json` and `--pretty-json` options in https://github.com/jqnatividad/qsv/pull/297
+* added rust version info to nightly build zip files so users can see which Rust nightly version was used to build the nightly binaries
+
+### Changed:
+* `stats`: added more `--infer-dates` tests
+* number of processors used now logged when logging is on
+* `python`: nightly build optimization in https://github.com/jqnatividad/qsv/pull/296
+* moved Performance Tuning to its own markdown file, and included it in the TOC
+* bumped several dependencies, notably `rayon`, `jsonschema` and `pyo3`
+* moved FAQ from Wiki to Discussions
+* added clone count badge
+
+### Fixed:
+* `python`: should now work with python 3.8, 3.9.or 3.10
+
 ## [0.47.0] - 2022-05-12
 ### Added
 * `dedup` and `sort` are now multithreaded with rayon in https://github.com/jqnatividad/qsv/pull/283
