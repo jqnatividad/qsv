@@ -19,6 +19,77 @@ fn validate_good_csv() {
 }
 
 #[test]
+fn validate_good_csv_msg() {
+    let wrk = Workdir::new("validate_good_csv_msg").flexible(true);
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["title", "name", "age"],
+            svec!["Professor", "Xaviers", "60"],
+            svec!["Prisoner", "Magneto", "90"],
+            svec!["First Class Student", "Iceman", "14"],
+        ],
+    );
+    let mut cmd = wrk.command("validate");
+    cmd.arg("data.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = "Valid: 3 columns (title, name, age) and 3 records detected. Can't validate data without schema, but CSV looks good!";
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn validate_good_csv_pretty_json() {
+    let wrk = Workdir::new("validate_good_csv_pretty_json").flexible(true);
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["title", "name", "age"],
+            svec!["Professor", "Xaviers", "60"],
+            svec!["Prisoner", "Magneto", "90"],
+            svec!["First Class Student", "Iceman", "14"],
+        ],
+    );
+    let mut cmd = wrk.command("validate");
+    cmd.arg("--pretty-json").arg("data.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = r#"{
+  "delimiter_char": ",",
+  "header_row": true,
+  "quote_char": "\"",
+  "num_records": 3,
+  "num_fields": 3,
+  "fields": [
+    "title",
+    "name",
+    "age"
+  ]
+}"#;
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn validate_good_csv_json() {
+    let wrk = Workdir::new("validate_good_csv_json").flexible(true);
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["title", "name", "age"],
+            svec!["Professor", "Xaviers", "60"],
+            svec!["Prisoner", "Magneto", "90"],
+            svec!["First Class Student", "Iceman", "14"],
+        ],
+    );
+    let mut cmd = wrk.command("validate");
+    cmd.arg("--json").arg("data.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = "{\"delimiter_char\":\",\",\"header_row\":true,\"quote_char\":\"\\\"\",\"num_records\":3,\"num_fields\":3,\"fields\":[\"title\",\"name\",\"age\"]}";
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn validate_bad_csv() {
     let wrk = Workdir::new("validate").flexible(true);
     wrk.create(
@@ -34,6 +105,25 @@ fn validate_bad_csv() {
     cmd.arg("data.csv");
 
     wrk.assert_err(&mut cmd);
+}
+
+#[test]
+fn validate_bad_csv_json() {
+    let wrk = Workdir::new("validate_bad_csv_json").flexible(true);
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["title", "name", "age"],
+            svec!["Professor", "Xaviers", "60"],
+            svec!["Magneto", "90",],
+            svec!["First Class Student", "Iceman", "14"],
+        ],
+    );
+    let mut cmd = wrk.command("validate");
+    cmd.arg("--json").arg("data.csv");
+
+    let got: String = wrk.output_stderr(&mut cmd);
+    assert!(got.contains("Validation error"));
 }
 
 fn adur_errors() -> &'static str {
