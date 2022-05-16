@@ -8,7 +8,6 @@ use crate::CliResult;
 use docopt::Docopt;
 #[cfg(any(feature = "full", feature = "lite"))]
 use indicatif::{ProgressBar, ProgressStyle};
-#[cfg(any(feature = "full", feature = "lite"))]
 use log::{debug, error, info, log_enabled, Level};
 #[cfg(any(feature = "full", feature = "lite"))]
 use regex::Regex;
