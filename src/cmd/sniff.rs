@@ -2,7 +2,8 @@ use crate::config::Config;
 use crate::util;
 use crate::CliResult;
 use csv_sniffer::{SampleSize, Sniffer};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
+use serde_json::json;
 use thousands::Separable;
 
 static USAGE: &str = r#"
@@ -20,6 +21,8 @@ Usage:
 sniff options:
     -l, --len <arg>        How many rows to sample to sniff out the details.
                            [default: 100]
+    --json                 Return results in JSON format.
+    --pretty-json          Return results in pretty JSON format.
 
 Common options:
     -h, --help             Display this message
@@ -29,6 +32,19 @@ Common options:
 struct Args {
     arg_input: Option<String>,
     flag_len: usize,
+    flag_json: bool,
+    flag_pretty_json: bool,
+}
+
+#[derive(Serialize, Deserialize)]
+struct SniffStruct {
+    delimiter_char: char,
+    header_row: bool,
+    preamble_rows: usize,
+    quote_char: String,
+    num_records: u64,
+    num_fields: usize,
+    types: Vec<String>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -37,29 +53,65 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let conf = Config::new(&args.arg_input);
     let rdr = conf.reader_file_stdin()?;
 
-    match Sniffer::new()
+    let sniff_results = Sniffer::new()
         .sample_size(SampleSize::Records(args.flag_len))
-        .sniff_reader(rdr.into_inner())
-    {
-        Ok(metadata) => {
-            let full_metadata = format!("{}", metadata);
-            // show otherwise invisible tab character as "tab"
-            let mut disp = full_metadata.replace("\tDelimiter: \t", "\tDelimiter: tab");
-            // remove Dialect header
-            disp = disp.replace("Dialect:\n", "");
-            // add number of records if not stdin, where we can count rows
-            let num_rows = util::count_rows(&conf);
-            if num_rows > 0 {
-                let rows_str = format!(
-                    "\nNumber of records: {}\nNumber of fields:",
-                    num_rows.separate_with_commas()
-                );
-                disp = disp.replace("\nNumber of fields:", &rows_str);
+        .sniff_reader(rdr.into_inner());
+
+    let num_rows = util::count_rows(&conf);
+
+    if args.flag_json || args.flag_pretty_json {
+        match sniff_results {
+            Ok(metadata) => {
+                let mut sniffedtypes: Vec<String> = Vec::with_capacity(metadata.num_fields);
+                for ty in metadata.types.iter() {
+                    sniffedtypes.push(ty.to_string());
+                }
+
+                let sniffed = SniffStruct {
+                    delimiter_char: metadata.dialect.delimiter as char,
+                    header_row: metadata.dialect.header.has_header_row,
+                    preamble_rows: metadata.dialect.header.num_preamble_rows,
+                    quote_char: match metadata.dialect.quote {
+                        csv_sniffer::metadata::Quote::Some(chr) => format!("{}", char::from(chr)),
+                        csv_sniffer::metadata::Quote::None => "none".into(),
+                    },
+                    num_records: num_rows,
+                    num_fields: metadata.num_fields,
+                    types: sniffedtypes,
+                };
+                if args.flag_pretty_json {
+                    println!("{}", serde_json::to_string_pretty(&sniffed).unwrap());
+                } else {
+                    let json_result = serde_json::to_string(&sniffed).unwrap();
+                    println!("{json_result}");
+                };
             }
-            println!("{disp}");
+            Err(e) => {
+                let json_result = json!({ "error": e.to_string() });
+                eprintln!("{json_result}");
+            }
         }
-        Err(e) => {
-            return fail!(format!("sniff error: {e}"));
+    } else {
+        match sniff_results {
+            Ok(metadata) => {
+                let full_metadata = format!("{}", metadata);
+                // show otherwise invisible tab character as "tab"
+                let mut disp = full_metadata.replace("\tDelimiter: \t", "\tDelimiter: tab");
+                // remove Dialect header
+                disp = disp.replace("Dialect:\n", "");
+                // add number of records if not stdin, where we can count rows
+                if num_rows > 0 {
+                    let rows_str = format!(
+                        "\nNumber of records: {}\nNumber of fields:",
+                        num_rows.separate_with_commas()
+                    );
+                    disp = disp.replace("\nNumber of fields:", &rows_str);
+                }
+                println!("{disp}");
+            }
+            Err(e) => {
+                return fail!(format!("sniff error: {e}"));
+            }
         }
     }
 
