@@ -47,17 +47,29 @@ struct SniffStruct {
     types: Vec<String>,
 }
 
+fn rowcount(conf: &Config, metadata: &csv_sniffer::metadata::Metadata) -> u64 {
+    let has_header_row = metadata.dialect.header.has_header_row;
+    let num_preamble_rows = metadata.dialect.header.num_preamble_rows;
+    let prelim_count = util::count_rows(conf);
+    let mut final_rowcount = prelim_count;
+
+    if !has_header_row {
+        final_rowcount += 1;
+    }
+
+    final_rowcount = final_rowcount - num_preamble_rows as u64;
+    final_rowcount
+}
+
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
-    let conf = Config::new(&args.arg_input);
+    let conf = Config::new(&args.arg_input).flexible(true);
     let rdr = conf.reader_file_stdin()?;
 
     let sniff_results = Sniffer::new()
         .sample_size(SampleSize::Records(args.flag_len))
         .sniff_reader(rdr.into_inner());
-
-    let num_rows = util::count_rows(&conf);
 
     if args.flag_json || args.flag_pretty_json {
         match sniff_results {
@@ -75,7 +87,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         csv_sniffer::metadata::Quote::Some(chr) => format!("{}", char::from(chr)),
                         csv_sniffer::metadata::Quote::None => "none".into(),
                     },
-                    num_records: num_rows,
+                    num_records: rowcount(&conf, &metadata),
                     num_fields: metadata.num_fields,
                     types: sniffedtypes,
                 };
@@ -100,6 +112,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 // remove Dialect header
                 disp = disp.replace("Dialect:\n", "");
                 // add number of records if not stdin, where we can count rows
+                let num_rows = rowcount(&conf, &metadata);
                 if num_rows > 0 {
                     let rows_str = format!(
                         "\nNumber of records: {}\nNumber of fields:",
