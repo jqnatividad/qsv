@@ -112,39 +112,39 @@ fn qsv_sniff_tab_delimiter_env() {
 #[test]
 fn sniff_json() {
     let wrk = Workdir::new("sniff_json");
-    wrk.create_with_delim("in.file", data(), b',');
+    let test_file = wrk.load_test_file("snifftest.csv");
 
     let mut cmd = wrk.command("sniff");
-    cmd.arg("--json").arg("in.file");
+    cmd.arg("--json").arg(test_file);
 
     let got: String = wrk.stdout(&mut cmd);
 
-    let expected = r#"{"delimiter_char":",","header_row":true,"preamble_rows":0,"quote_char":"none","num_records":2,"num_fields":3,"types":["Text","Unsigned","Text"]}"#;
-
+    let expected = r#"{"delimiter_char":",","header_row":true,"preamble_rows":3,"quote_char":"none","num_records":3,"num_fields":4,"types":["Text","Unsigned","Text","Float"]}"#;
     assert_eq!(got, expected);
 }
 
 #[test]
 fn sniff_pretty_json() {
     let wrk = Workdir::new("sniff_pretty_json");
-    wrk.create_with_delim("in.file", data(), b',');
+    let test_file = wrk.load_test_file("snifftest.csv");
 
     let mut cmd = wrk.command("sniff");
-    cmd.arg("--pretty-json").arg("in.file");
+    cmd.arg("--pretty-json").arg(test_file);
 
     let got: String = wrk.stdout(&mut cmd);
 
     let expected = r#"{
   "delimiter_char": ",",
   "header_row": true,
-  "preamble_rows": 0,
+  "preamble_rows": 3,
   "quote_char": "none",
-  "num_records": 2,
-  "num_fields": 3,
+  "num_records": 3,
+  "num_fields": 4,
   "types": [
     "Text",
     "Unsigned",
-    "Text"
+    "Text",
+    "Float"
   ]
 }"#;
 
