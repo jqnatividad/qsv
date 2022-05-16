@@ -56,7 +56,7 @@ fn rowcount(conf: &Config, metadata: &csv_sniffer::metadata::Metadata) -> u64 {
     if !has_header_row {
         final_rowcount += 1;
     }
-    
+
     final_rowcount = final_rowcount - num_preamble_rows as u64;
     final_rowcount
 }
