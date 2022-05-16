@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.48.1] - 2022-05-16
+### Fixed:
+* Fixed conditional compilation directives that caused qsvdp build to fail.
+
 ## [0.48.0] - 2022-05-15
 ### Added
 * `dedup`: add `--sorted` option in https://github.com/jqnatividad/qsv/pull/286
