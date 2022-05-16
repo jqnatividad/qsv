@@ -10,8 +10,8 @@ use jsonschema::{output::BasicOutput, JSONSchema};
 #[allow(unused_imports)]
 use log::{debug, info};
 use rayon::prelude::*;
-use serde::Deserialize;
-use serde_json::{value::Number, Map, Value};
+use serde::{Deserialize, Serialize};
+use serde_json::{json, value::Number, Map, Value};
 use std::{env, fs::File, io::BufReader, io::BufWriter, io::Read, io::Write, str};
 use thousands::Separable;
 
@@ -45,6 +45,9 @@ Validate options:
     --fail-fast                Stops on first error.
     --valid <suffix>           Valid record output file suffix. [default: valid]
     --invalid <suffix>         Invalid record output file suffix. [default: invalid]
+    --json                     When validating without a schema, return the RFC 4180 check
+                               as a JSON file instead of a message.
+    --pretty-json              Same as --json, but pretty printed.
     -j, --jobs <arg>           The number of jobs to run in parallel.
                                When not set, the number of jobs is set to the
                                number of CPUs detected.
@@ -66,12 +69,24 @@ struct Args {
     flag_fail_fast: bool,
     flag_valid: Option<String>,
     flag_invalid: Option<String>,
+    flag_json: bool,
+    flag_pretty_json: bool,
     flag_jobs: Option<usize>,
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
     flag_quiet: bool,
     arg_input: Option<String>,
     arg_json_schema: Option<String>,
+}
+
+#[derive(Serialize, Deserialize)]
+struct RFC4180Struct {
+    delimiter_char: char,
+    header_row: bool,
+    quote_char: char,
+    num_records: u64,
+    num_fields: usize,
+    fields: Vec<String>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -83,40 +98,79 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut rdr = rconfig.reader()?;
 
-    // set RAYON_NUM_THREADS
-    util::njobs(args.flag_jobs);
-
     // if no json schema supplied, only let csv reader validate csv file
     if args.arg_json_schema.is_none() {
         // just read csv file and let csv reader report problems
 
         let mut header_msg = String::new();
+        let mut header_len = 0;
+        let mut field_vec = vec![];
         if !args.flag_no_headers {
-            let header_results = rdr.headers();
-            match header_results {
-                Ok(header) => {
-                    let header_len = header.len();
-                    header_msg = format!("{} columns and ", header_len.separate_with_commas());
+            let fields_result = rdr.headers();
+            match fields_result {
+                Ok(fields) => {
+                    header_len = fields.len();
+                    for field in fields.iter() {
+                        field_vec.push(field.to_string());
+                    }
+                    let field_list = field_vec.join(", ");
+                    header_msg = format!(
+                        "{} columns ({field_list}) and ",
+                        header_len.separate_with_commas()
+                    );
                 }
-                Err(e) => return fail!(format!("Cannot read header ({e}).")),
+                Err(e) => {
+                    if args.flag_json || args.flag_pretty_json {
+                        let header_error = json!({
+                                "error" : "Cannot read header",
+                                "error_details" : format!("{e}")
+                        });
+                        return fail!(header_error.to_string());
+                    } else {
+                        return fail!(format!("Cannot read header ({e})."));
+                    }
+                }
             }
         }
 
         let mut record_count: u64 = 0;
         for result in rdr.records() {
             if let Err(e) = result {
-                return fail!(format!(
-                    r#"Validation error: {e}. Try "qsv fixlengths" or "qsv fmt" to fix it."#
-                ));
+                if args.flag_json || args.flag_pretty_json {
+                    let validation_error = json!({
+                            "error" : "Validation error",
+                            "error_details" : format!("{e}")
+                    });
+                    return fail!(validation_error.to_string());
+                } else {
+                    return fail!(format!(
+                        r#"Validation error: {e}. Try "qsv fixlengths" or "qsv fmt" to fix it."#
+                    ));
+                }
             }
             record_count += 1;
         }
 
-        let msg = format!(
-            "Valid: {header_msg}{} records detected. Can't validate data without schema, but CSV looks good!",
-            record_count.separate_with_commas()
-        );
+        let msg = if args.flag_json || args.flag_pretty_json {
+            let rfc4180 = RFC4180Struct {
+                delimiter_char: rconfig.get_delimiter() as char,
+                header_row: !rconfig.no_headers,
+                quote_char: rconfig.quote as char,
+                num_records: record_count,
+                num_fields: header_len,
+                fields: field_vec,
+            };
 
+            if args.flag_pretty_json {
+                serde_json::to_string_pretty(&rfc4180).unwrap()
+            } else {
+                serde_json::to_string(&rfc4180).unwrap()
+            }
+        } else {
+            format!(
+            "Valid: {header_msg}{} records detected. Can't validate data without schema, but CSV looks good!",
+            record_count.separate_with_commas())
+        };
         info!("{msg}");
         println!("{msg}");
 
@@ -177,6 +231,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut batch = Vec::with_capacity(BATCH_SIZE);
     let mut valid_flags: Vec<bool> = Vec::with_capacity(record_count as usize);
     let mut validation_error_messages: Vec<String> = Vec::with_capacity(50);
+
+    // set RAYON_NUM_THREADS
+    util::njobs(args.flag_jobs);
 
     // main loop to read CSV and construct batches for parallel processing.
     // each batch is processed via Rayon parallel iterator.
