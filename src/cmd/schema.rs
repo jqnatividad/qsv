@@ -30,8 +30,10 @@ should not flag any invalid records.
 
 Generated schema file has `.schema.json` postfix appended. For example, 
 for input `mydata.csv`, schema file would be `mydata.csv.schema.json`. 
-If piped from stdin, then schema file would be `stdin.csv.schema.json`.
+If piped from stdin, then schema file would be `stdin.csv.schema.json` and
+a `stdin.csv` file will created with stdin's contents as well.
 
+Note that `stdin.csv` will be overwritten if it already exists.
 
 Usage:
     qsv schema [options] [<input>]
@@ -68,7 +70,18 @@ struct Args {
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
-    let args: Args = util::get_args(USAGE, argv)?;
+    let preargs: Args = util::get_args(USAGE, argv)?;
+    let mut args: Args = util::get_args(USAGE, argv)?;
+
+    // if using stdin, we create a stdin.csv file as stdin is not seekable and we need to
+    // open the file multiple times to compile stats/unique values, etc.
+    if preargs.arg_input.is_none() {
+        let mut stdin_file = File::create("./stdin.csv").expect("Can't create stdin.csv");
+        let stdin = std::io::stdin();
+        let mut stdin_handle = stdin.lock();
+        std::io::copy(&mut stdin_handle, &mut stdin_file).expect("Can't copy stdin to stdin.csv");
+        args.arg_input = Some("./stdin.csv".to_string());
+    };
 
     // dbg!(&args);
 
