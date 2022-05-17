@@ -57,7 +57,7 @@ fn rowcount(conf: &Config, metadata: &csv_sniffer::metadata::Metadata) -> u64 {
         final_rowcount += 1;
     }
 
-    final_rowcount = final_rowcount - num_preamble_rows as u64;
+    final_rowcount -= num_preamble_rows as u64;
     final_rowcount
 }
 
@@ -75,7 +75,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         match sniff_results {
             Ok(metadata) => {
                 let mut sniffedtypes: Vec<String> = Vec::with_capacity(metadata.num_fields);
-                for ty in metadata.types.iter() {
+                for ty in &metadata.types {
                     sniffedtypes.push(ty.to_string());
                 }
 
