@@ -85,7 +85,7 @@ fn validate_good_csv_json() {
     cmd.arg("--json").arg("data.csv");
 
     let got: String = wrk.stdout(&mut cmd);
-    let expected = "{\"delimiter_char\":\",\",\"header_row\":true,\"quote_char\":\"\\\"\",\"num_records\":3,\"num_fields\":3,\"fields\":[\"title\",\"name\",\"age\"]}";
+    let expected = r#"{"delimiter_char":",","header_row":true,"quote_char":"\"","num_records":3,"num_fields":3,"fields":["title","name","age"]}"#;
     assert_eq!(got, expected);
 }
 
