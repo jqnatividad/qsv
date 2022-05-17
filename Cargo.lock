@@ -1111,8 +1111,8 @@ dependencies = [
 
 [[package]]
 name = "grex"
-version = "1.3.0"
-source = "git+https://github.com/jqnatividad/grex?rev=45af84167b8bd6d38c9e36ada7fe677bebe8886f#45af84167b8bd6d38c9e36ada7fe677bebe8886f"
+version = "1.4.0-SNAPSHOT"
+source = "git+https://github.com/pemistahl/grex?rev=73cff544882239016503b3ad46fb9c31fc445ec9#73cff544882239016503b3ad46fb9c31fc445ec9"
 dependencies = [
  "itertools",
  "lazy_static",
@@ -1411,9 +1411,9 @@ checksum = "db13adb97ab515a3691f56e4dbab09283d0b86cb45abd991d8634a9d6f501760"
 
 [[package]]
 name = "libc"
-version = "0.2.125"
+version = "0.2.126"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5916d2ae698f6de9bfb891ad7a8d65c09d232dc58cc4ac433c7da3b2fd84bc2b"
+checksum = "349d5a591cd28b49e1d1037471617a32ddcda5731b99419008085f72d5a53836"
 
 [[package]]
 name = "libm"
@@ -2076,9 +2076,9 @@ dependencies = [
 
 [[package]]
 name = "python3-dll-a"
-version = "0.2.2"
+version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "756dc4b8f4f5821cdf8358df7450ae53fdc1099f3bc096196c9d3738deeba1e6"
+checksum = "e6587fb842b58a37d05f4ccc6d696ce0d450cb4b4df6f6e99aa1f3e85a0e990c"
 dependencies = [
  "cc",
 ]
