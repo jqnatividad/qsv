@@ -260,13 +260,15 @@ impl Args {
             fields.push("median");
         }
         if self.flag_quartiles || all {
-            fields.push("lower_fence");
-            fields.push("q1");
-            fields.push("q2_median");
-            fields.push("q3");
-            fields.push("iqr");
-            fields.push("upper_fence");
-            fields.push("skew");
+            fields.extend_from_slice(&[
+                "lower_fence",
+                "q1",
+                "q2_median",
+                "q3",
+                "iqr",
+                "upper_fence",
+                "skew",
+            ]);
         }
         if self.flag_mode || all {
             fields.push("mode");
@@ -320,25 +322,25 @@ impl Stats {
         let (mut sum, mut minmax, mut online, mut modes, mut median, mut quartiles) =
             (None, None, None, None, None, None);
         if which.sum {
-            sum = Some(Default::default());
+            sum = Some(TypedSum::default());
         }
         if which.range {
-            minmax = Some(Default::default());
+            minmax = Some(TypedMinMax::default());
         }
         if which.dist {
-            online = Some(Default::default());
+            online = Some(stats::OnlineStats::default());
         }
         if which.mode || which.cardinality {
-            modes = Some(Default::default());
+            modes = Some(stats::Unsorted::default());
         }
         if which.median {
-            median = Some(Default::default());
+            median = Some(stats::Unsorted::default());
         }
         if which.quartiles {
-            quartiles = Some(Default::default());
+            quartiles = Some(stats::Unsorted::default());
         }
         Stats {
-            typ: Default::default(),
+            typ: FieldType::default(),
             sum,
             minmax,
             online,
@@ -594,13 +596,13 @@ impl Commute for FieldType {
             (TString, TString) => TString,
             (TFloat, TFloat) => TFloat,
             (TInteger, TInteger) => TInteger,
-            // date data types
-            (TDate, TDate) => TDate,
-            (TDateTime | TDate, TDateTime) | (TDateTime, TDate) => TDateTime,
             // Null does not impact the type.
             (TNull, any) | (any, TNull) => any,
             // Integers can degrade to floats.
             (TFloat, TInteger) | (TInteger, TFloat) => TFloat,
+            // date data types
+            (TDate, TDate) => TDate,
+            (TDateTime | TDate, TDateTime) | (TDateTime, TDate) => TDateTime,
             // anything else is a String
             (_, _) => TString,
         };
@@ -780,10 +782,6 @@ impl TypedMinMax {
                 },
                 _ => None,
             },
-            TDate | TDateTime => match (self.dates.min(), self.dates.max()) {
-                (Some(min), Some(max)) => Some((min.to_string(), max.to_string())),
-                _ => None,
-            },
             TInteger => match (self.integers.min(), self.integers.max()) {
                 (Some(min), Some(max)) => {
                     let mut buffer = itoa::Buffer::new();
@@ -802,6 +800,10 @@ impl TypedMinMax {
                         buffer.format(*max).to_owned(),
                     ))
                 }
+                _ => None,
+            },
+            TDate | TDateTime => match (self.dates.min(), self.dates.max()) {
+                (Some(min), Some(max)) => Some((min.to_string(), max.to_string())),
                 _ => None,
             },
         }
