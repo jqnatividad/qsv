@@ -4,6 +4,7 @@ use crate::CliError;
 use crate::CliResult;
 use anyhow::{anyhow, Result};
 use csv::ByteRecord;
+#[cfg(any(feature = "full", feature = "lite"))]
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use jsonschema::paths::PathChunk;
 use jsonschema::{output::BasicOutput, JSONSchema};
@@ -184,12 +185,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let headers = rdr.byte_headers()?.clone();
 
     // prep progress bar
+    #[cfg(any(feature = "full", feature = "lite"))]
     let progress = ProgressBar::new(0);
-    // for purpose of full file row count, prevent CSV reader to abort on incosistent column count
+
+    // for purpose of full file row count, prevent CSV reader to abort on inconsistent column count
     rconfig = rconfig.flexible(true);
     let record_count = util::count_rows(&rconfig);
     rconfig = rconfig.flexible(false);
 
+    #[cfg(any(feature = "full", feature = "lite"))]
     if !args.flag_quiet {
         util::prep_progress(&progress, record_count);
     } else {
@@ -268,6 +272,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             break;
         }
 
+        #[cfg(any(feature = "full", feature = "lite"))]
         let batch_size = batch.len();
 
         // do actual validation via Rayon parallel iterator
@@ -295,6 +300,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         }
 
+        #[cfg(any(feature = "full", feature = "lite"))]
         if !args.flag_quiet {
             progress.inc(batch_size as u64);
         }
@@ -305,6 +311,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     } // end infinite loop
 
+    #[cfg(any(feature = "full", feature = "lite"))]
     if !args.flag_quiet {
         progress.set_message(format!(
             " validated {} records.",

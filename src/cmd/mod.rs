@@ -64,5 +64,4 @@ pub mod stats;
 pub mod table;
 #[cfg(any(feature = "full", feature = "lite"))]
 pub mod transpose;
-#[cfg(any(feature = "full", feature = "lite"))]
 pub mod validate;
