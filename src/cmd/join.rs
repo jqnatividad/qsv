@@ -245,12 +245,12 @@ impl<R: io::Read + io::Seek, W: io::Write> IoState<R, W> {
                 }
             } else if !anti {
                 // semi_join
-                if !first_row {
+                if first_row {
+                    first_row = false;
+                } else {
                     // since the first row in a left-semi is
                     // the header, even if no-header is on
                     self.wtr.write_record(&row)?;
-                } else {
-                    first_row = false;
                 }
             }
         }

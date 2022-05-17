@@ -45,7 +45,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let sce = PathBuf::from(path.to_ascii_lowercase());
     match sce.extension().and_then(std::ffi::OsStr::to_str) {
-        Some("xls") | Some("xlsx") | Some("xlsm") | Some("xlsb") | Some("ods") => (),
+        Some("xls" | "xlsx" | "xlsm" | "xlsb" | "ods") => (),
         _ => {
             return fail!("Expecting an Excel/ODS file.");
         }
