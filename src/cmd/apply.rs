@@ -486,7 +486,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         } else if args.cmd_dynfmt {
             let mut record_vec: Vec<String> = Vec::with_capacity(record.len());
-            for field in record.into_iter() {
+            for field in &record {
                 record_vec.push(field.to_string());
             }
             if let Ok(formatted) = dynfmt::SimpleCurlyFormat.format(&dynfmt_template, record_vec) {

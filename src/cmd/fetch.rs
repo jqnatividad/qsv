@@ -306,7 +306,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         url.clear();
         if args.flag_url_template.is_some() {
             let mut record_vec: Vec<String> = Vec::with_capacity(record.len());
-            for field in record.into_iter() {
+            for field in &record {
                 let str_value = unsafe { std::str::from_utf8_unchecked(field).trim().to_string() };
                 record_vec.push(str_value);
             }
