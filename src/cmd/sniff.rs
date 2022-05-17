@@ -99,7 +99,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 };
             }
             Err(e) => {
-                let json_result = json!({ "error": e.to_string() });
+                let json_result = json!({
+                    "errors": [{
+                        "title": "sniff error",
+                        "detail": e.to_string()
+                    }]
+                });
                 eprintln!("{json_result}");
             }
         }

@@ -122,8 +122,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 Err(e) => {
                     if args.flag_json || args.flag_pretty_json {
                         let header_error = json!({
-                                "error" : "Cannot read header",
-                                "error_details" : format!("{e}")
+                            "errors": [{
+                                "title" : "Cannot read header",
+                                "detail" : format!("{e}")
+                            }]
                         });
                         return fail!(header_error.to_string());
                     } else {
@@ -138,8 +140,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             if let Err(e) = result {
                 if args.flag_json || args.flag_pretty_json {
                     let validation_error = json!({
-                            "error" : "Validation error",
-                            "error_details" : format!("{e}")
+                        "errors": [{
+                            "title" : "Validation error",
+                            "detail" : format!("{e}")
+                        }]
                     });
                     return fail!(validation_error.to_string());
                 } else {
