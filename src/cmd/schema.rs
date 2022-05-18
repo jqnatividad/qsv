@@ -58,7 +58,7 @@ Common options:
                                Must be a single character. [default: ,]
 ";
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 struct Args {
     flag_enum_threshold: usize,
     flag_strict_dates: bool,
@@ -69,30 +69,29 @@ struct Args {
     arg_input: Option<String>,
 }
 
+const STDIN_CSV: &str = "stdin.csv";
+
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let preargs: Args = util::get_args(USAGE, argv)?;
-    let mut args: Args = util::get_args(USAGE, argv)?;
+    let mut args = preargs.clone();
 
-    let input_path;
-    let input_filename;
     // if using stdin, we create a stdin.csv file as stdin is not seekable and we need to
     // open the file multiple times to compile stats/unique values, etc.
-    if preargs.arg_input.is_none() {
-        let mut stdin_file = File::create("stdin.csv").expect("Can't create stdin.csv");
+    let (input_path, input_filename) = if preargs.arg_input.is_none() {
+        let mut stdin_file = File::create(STDIN_CSV)?;
         let stdin = std::io::stdin();
         let mut stdin_handle = stdin.lock();
-        std::io::copy(&mut stdin_handle, &mut stdin_file).expect("Can't copy stdin to stdin.csv");
-        args.arg_input = Some("stdin.csv".to_string());
-        input_path = "stdin.csv".to_string();
-        input_filename = "stdin.csv".to_string();
+        std::io::copy(&mut stdin_handle, &mut stdin_file)?;
+        args.arg_input = Some(STDIN_CSV.to_string());
+        (STDIN_CSV.to_string(), STDIN_CSV.to_string())
     } else {
-        input_path = args.arg_input.clone().unwrap();
-        input_filename = Path::new(args.arg_input.as_ref().unwrap())
+        let filename = Path::new(args.arg_input.as_ref().unwrap())
             .file_name()
             .unwrap()
             .to_string_lossy()
             .to_string();
-    }
+        (args.arg_input.clone().unwrap(), filename)
+    };
 
     let schema_output_filename = input_path + ".schema.json";
     let mut schema_output_file =
