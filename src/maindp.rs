@@ -57,6 +57,7 @@ macro_rules! command_list {
     slice       Slice records from CSV
     sort        Sort CSV data in alphabetical, numerical, reverse or random order
     stats       Infer data types and compute descriptive statistics
+    validate    Validate CSV data with JSON Schema
 
     sponsored by datHere - Data Infrastructure Engineering
 "
@@ -195,6 +196,7 @@ enum Command {
     Slice,
     Sort,
     Stats,
+    Validate,
 }
 
 impl Command {
@@ -231,6 +233,7 @@ impl Command {
             Command::Slice => cmd::slice::run(argv),
             Command::Sort => cmd::sort::run(argv),
             Command::Stats => cmd::stats::run(argv),
+            Command::Validate => cmd::validate::run(argv),
         }
     }
 }
