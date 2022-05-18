@@ -5,6 +5,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.49.0] - 2022-05-17
+### Added
+* `validate`: add `--json` & `--pretty-json` options for RFC4180 check in https://github.com/jqnatividad/qsv/pull/303
+* `qsvdp`: add `validate` command in https://github.com/jqnatividad/qsv/pull/306
+* added rust nightly version info to nightly builds
+
+### Changed
+* apply select clippy::pedantic recommendations in https://github.com/jqnatividad/qsv/pull/305
+* Bump actions/checkout from 2 to 3 by @dependabot in https://github.com/jqnatividad/qsv/pull/300
+* `sniff` and `validate` json errors are now JSONAPI compliant
+* cargo update bump several dependencies
+
+### Removed
+* removed unused debian package publishing workflow 
+
+### Fixed
+* `sniff`: preamble and rowcount fixes in https://github.com/jqnatividad/qsv/pull/301
+* `schema`: fixed stdin bug in https://github.com/jqnatividad/qsv/pull/304
+
 ## [0.48.1] - 2022-05-16
 ### Fixed:
 * Fixed conditional compilation directives that caused qsvdp build to fail.
