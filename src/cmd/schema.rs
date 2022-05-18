@@ -73,34 +73,34 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let preargs: Args = util::get_args(USAGE, argv)?;
     let mut args: Args = util::get_args(USAGE, argv)?;
 
+    let input_path;
+    let input_filename;
     // if using stdin, we create a stdin.csv file as stdin is not seekable and we need to
     // open the file multiple times to compile stats/unique values, etc.
     if preargs.arg_input.is_none() {
-        let mut stdin_file = File::create("./stdin.csv").expect("Can't create stdin.csv");
+        let mut stdin_file = File::create("stdin.csv").expect("Can't create stdin.csv");
         let stdin = std::io::stdin();
         let mut stdin_handle = stdin.lock();
         std::io::copy(&mut stdin_handle, &mut stdin_file).expect("Can't copy stdin to stdin.csv");
-        args.arg_input = Some("./stdin.csv".to_string());
-    };
+        args.arg_input = Some("stdin.csv".to_string());
+        input_path = "stdin.csv".to_string();
+        input_filename = "stdin.csv".to_string();
+    } else {
+        input_path = args.arg_input.clone().unwrap();
+        input_filename = Path::new(args.arg_input.as_ref().unwrap())
+            .file_name()
+            .unwrap()
+            .to_string_lossy()
+            .to_string();
+    }
 
-    // dbg!(&args);
-
-    let input_path = match &args.arg_input {
-        Some(path) => path,
-        None => "stdin.csv",
-    };
-    let input_filename: &str = match &args.arg_input {
-        Some(path) => Path::new(path).file_name().unwrap().to_str().unwrap(),
-        None => "stdin.csv",
-    };
-
-    let schema_output_filename = input_path.to_owned() + ".schema.json";
+    let schema_output_filename = input_path + ".schema.json";
     let mut schema_output_file =
         File::create(&schema_output_filename).expect("unable to create schema output file");
 
     // build schema for each field by their inferred type, min/max value/length, and unique values
     let mut properties_map: Map<String, Value> =
-        match infer_schema_from_stats(&args, input_filename) {
+        match infer_schema_from_stats(&args, &input_filename) {
             Ok(map) => map,
             Err(e) => {
                 let msg = format!("Failed to infer schema via stats and frequency: {e}");
