@@ -58,7 +58,7 @@ Common options:
                                Must be a single character. [default: ,]
 ";
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Clone)]
 struct Args {
     flag_enum_threshold: usize,
     flag_strict_dates: bool,
