@@ -100,7 +100,7 @@ impl SelectorParser {
     }
 
     fn parse(&mut self) -> Result<Vec<Selector>, String> {
-        if let (Some('/'), Some('/')) = (self.chars.first(), self.chars.last()) {
+        if (self.chars.first(), self.chars.last()) == (Some(&'/'), Some(&'/')) {
             if self.chars.len() == 2 {
                 return Err(format!(
                     "Empty regex: {}",
