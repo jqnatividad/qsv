@@ -231,6 +231,7 @@ fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<S
 
                 // enum constraint
                 if let Some(values) = unique_values_map.get(&header_string) {
+                    enum_list.reserve(values.len()); // to save on allocs
                     for value in values {
                         enum_list.push(Value::String(value.to_string()));
                     }
@@ -457,7 +458,7 @@ fn construct_map_of_unique_values(
         let header_string = convert_to_string(header_byte_slice)?;
 
         // sort the values so enum list so schema can be diff'ed between runs
-        unique_values.sort();
+        unique_values.sort_unstable();
 
         debug!(
             "enum[{header_string}]: len={}, val={:?}",
