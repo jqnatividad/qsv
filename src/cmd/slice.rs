@@ -95,7 +95,9 @@ impl Args {
         let mut start = None;
         if let Some(start_arg) = self.flag_start {
             if start_arg < 0 {
-                start = Some(util::count_rows(&self.rconfig()) as usize - start_arg.abs() as usize);
+                start = Some(
+                    (util::count_rows(&self.rconfig()) as usize).abs_diff(start_arg.abs() as usize),
+                );
             } else {
                 start = Some(start_arg as usize);
             }
