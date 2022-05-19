@@ -50,8 +50,7 @@ struct SniffStruct {
 fn rowcount(conf: &Config, metadata: &csv_sniffer::metadata::Metadata) -> u64 {
     let has_header_row = metadata.dialect.header.has_header_row;
     let num_preamble_rows = metadata.dialect.header.num_preamble_rows;
-    let prelim_count = util::count_rows(conf);
-    let mut final_rowcount = prelim_count;
+    let mut final_rowcount = util::count_rows(conf);
 
     if !has_header_row {
         final_rowcount += 1;
@@ -105,7 +104,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         "detail": e.to_string()
                     }]
                 });
-                eprintln!("{json_result}");
+                return fail!(format!("{json_result}"));
             }
         }
     } else {
