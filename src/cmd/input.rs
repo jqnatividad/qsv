@@ -17,6 +17,9 @@ option. Similarly, --skip-lastlines allows epilog lines to be skipped.
 Finally, non-UTF8 encoded files are transcoded to UTF8 with this command, replacing all
 invalid UTF8 sequences with �.
 
+input, as the name implies, is generally used in the beginning of a data pipeline to
+prepare CSVs for further processing with other qsv commands.
+
 Usage:
     qsv input [options] [<input>]
 
