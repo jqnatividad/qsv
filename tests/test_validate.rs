@@ -24,7 +24,7 @@ fn validate_good_csv_msg() {
     wrk.create(
         "data.csv",
         vec![
-            svec!["title", "name", "age"],
+            svec!["title", "name", "real age (earth years)"],
             svec!["Professor", "Xaviers", "60"],
             svec!["Prisoner", "Magneto", "90"],
             svec!["First Class Student", "Iceman", "14"],
@@ -34,7 +34,7 @@ fn validate_good_csv_msg() {
     cmd.arg("data.csv");
 
     let got: String = wrk.stdout(&mut cmd);
-    let expected = "Valid: 3 columns (title, name, age) and 3 records detected. Can't validate data without schema, but CSV looks good!";
+    let expected = "Valid: 3 columns (\"title\", \"name\", \"real age (earth years)\") and 3 records detected.";
     assert_eq!(got, expected);
 }
 
@@ -44,7 +44,7 @@ fn validate_good_csv_pretty_json() {
     wrk.create(
         "data.csv",
         vec![
-            svec!["title", "name", "age"],
+            svec!["title", "name", "real age (earth years)"],
             svec!["Professor", "Xaviers", "60"],
             svec!["Prisoner", "Magneto", "90"],
             svec!["First Class Student", "Iceman", "14"],
@@ -63,7 +63,7 @@ fn validate_good_csv_pretty_json() {
   "fields": [
     "title",
     "name",
-    "age"
+    "real age (earth years)"
   ]
 }"#;
     assert_eq!(got, expected);

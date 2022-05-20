@@ -84,7 +84,7 @@ macro_rules! command_list {
     stats       Infer data types and compute descriptive statistics
     table       Align CSV data into columns
     transpose   Transpose rows/columns of CSV data
-    validate    Validate CSV data with JSON Schema
+    validate    Validate CSV data for RFC4180-compliance or with JSON Schema
 
     * optional feature
 
