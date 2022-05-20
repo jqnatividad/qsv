@@ -54,7 +54,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             length
         }
         None => {
-            if config.is_std() {
+            if config.is_stdin() {
                 return fail!(
                     "<stdin> cannot be used in this command. \
                               Please specify a file path."

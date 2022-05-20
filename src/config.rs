@@ -235,7 +235,7 @@ impl Config {
         self
     }
 
-    pub fn is_std(&self) -> bool {
+    pub fn is_stdin(&self) -> bool {
         self.path.is_none()
     }
 

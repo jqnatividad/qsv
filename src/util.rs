@@ -259,7 +259,7 @@ pub fn many_configs(
 }
 
 pub fn errif_greater_one_stdin(inps: &[Config]) -> Result<(), String> {
-    let nstd = inps.iter().filter(|inp| inp.is_std()).count();
+    let nstd = inps.iter().filter(|inp| inp.is_stdin()).count();
     if nstd > 1 {
         return Err("At most one <stdin> input is allowed.".to_owned());
     }
