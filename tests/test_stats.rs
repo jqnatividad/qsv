@@ -485,6 +485,7 @@ stats_tests!(
     &["1", "2.0", "3", "4"],
     "-1.5,1.5,2.5,3.5,1,4.5"
 );
+stats_tests!(stats_quartiles_null_empty, "quartiles", &[""], "");
 
 stats_tests!(stats_nullcount, "nullcount", &["", "1", "2"], "1");
 stats_tests!(stats_nullcount_none, "nullcount", &["a", "1", "2"], "0");
