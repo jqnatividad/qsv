@@ -439,12 +439,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // prep progress bar
     let progress = ProgressBar::new(0);
-    if !args.flag_quiet {
+    if args.flag_quiet {
+        progress.set_draw_target(ProgressDrawTarget::hidden());
+    } else {
         let record_count = util::count_rows(&rconfig);
         util::prep_progress(&progress, record_count);
-    } else {
-        progress.set_draw_target(ProgressDrawTarget::hidden());
     }
+
+    let not_quiet = !args.flag_quiet;
 
     #[allow(unused_assignments)]
     let mut record = csv::StringRecord::new();
@@ -452,7 +454,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     for result in records_iter {
         record = result?;
 
-        if !args.flag_quiet {
+        if not_quiet {
             progress.inc(1);
         }
         let mut cell = record[column_index].to_owned();
@@ -505,7 +507,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         wtr.write_record(&record)?;
     }
-    if !args.flag_quiet {
+    if not_quiet {
         if args.cmd_geocode {
             util::update_cache_info!(progress, SEARCH_CACHED);
         }

@@ -192,11 +192,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     rconfig = rconfig.flexible(false);
 
     #[cfg(any(feature = "full", feature = "lite"))]
-    if !args.flag_quiet {
-        util::prep_progress(&progress, record_count);
-    } else {
+    if args.flag_quiet {
         progress.set_draw_target(ProgressDrawTarget::hidden());
+    } else {
+        util::prep_progress(&progress, record_count);
     }
+
+    let not_quiet = args.flag_quiet;
 
     // parse and compile supplied JSON Schema
     let (schema_json, schema_compiled): (Value, JSONSchema) =
@@ -299,7 +301,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         #[cfg(any(feature = "full", feature = "lite"))]
-        if !args.flag_quiet {
+        if not_quiet {
             progress.inc(batch_size as u64);
         }
 
@@ -310,7 +312,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } // end infinite loop
 
     #[cfg(any(feature = "full", feature = "lite"))]
-    if !args.flag_quiet {
+    if not_quiet {
         progress.set_message(format!(
             " validated {} records.",
             progress.length().separate_with_commas()

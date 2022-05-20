@@ -83,15 +83,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // prep progress bar
     let progress = ProgressBar::new(0);
-    if !args.flag_quiet {
+    if args.flag_quiet {
+        progress.set_draw_target(ProgressDrawTarget::hidden());
+    } else {
         let record_count = util::count_rows(&rconfig);
         util::prep_progress(&progress, record_count);
-    } else {
-        progress.set_draw_target(ProgressDrawTarget::hidden());
     }
 
+    let not_quiet = args.flag_quiet;
+
     while rdr.read_byte_record(&mut record)? {
-        if !args.flag_quiet {
+        if not_quiet {
             progress.inc(1);
         }
         let current_value = &record[column_index];
@@ -167,7 +169,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             cmd.wait().unwrap();
         }
     }
-    if !args.flag_quiet {
+    if not_quiet {
         util::finish_progress(&progress);
     }
     Ok(())
