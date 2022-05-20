@@ -656,12 +656,12 @@ fn search_cached(cell: &str, formatstr: &str) -> Option<String> {
     );
 
     let loccaps = locregex.captures(cell);
-    if let Some(loccaps) = loccaps {
+    loccaps.and_then(|loccaps| {
         let lat = loccaps[1].to_string().parse::<f64>().unwrap_or_default();
         let long = loccaps[2].to_string().parse::<f64>().unwrap_or_default();
         if (-90.0..=90.00).contains(&lat) && (-180.0..=180.0).contains(&long) {
             let search_result = geocoder.search((lat, long));
-            if let Some(locdetails) = search_result {
+            search_result.map(|locdetails| {
                 let geocoded_result = match formatstr {
                     "%+" | "city-state" => format!(
                         "{name}, {admin1}",
@@ -696,14 +696,10 @@ fn search_cached(cell: &str, formatstr: &str) -> Option<String> {
                     "country" => locdetails.record.cc.to_string(),
                     _ => locdetails.record.name.to_string(),
                 };
-                Some(geocoded_result)
-            } else {
-                None
-            }
+                geocoded_result
+            })
         } else {
             None
         }
-    } else {
-        None
-    }
+    })
 }
