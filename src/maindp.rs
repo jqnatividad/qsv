@@ -57,7 +57,7 @@ macro_rules! command_list {
     slice       Slice records from CSV
     sort        Sort CSV data in alphabetical, numerical, reverse or random order
     stats       Infer data types and compute descriptive statistics
-    validate    Validate CSV data with JSON Schema
+    validate    Validate CSV data for RFC4180-compliance or with JSON Schema
 
     sponsored by datHere - Data Infrastructure Engineering
 "

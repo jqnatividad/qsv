@@ -99,7 +99,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut rdr = rconfig.reader()?;
 
-    // if no json schema supplied, only let csv reader validate csv file
+    // if no json schema supplied, only let csv reader RFC4180-validate csv file
     if args.arg_json_schema.is_none() {
         // just read csv file and let csv reader report problems
 
@@ -114,9 +114,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     for field in fields.iter() {
                         field_vec.push(field.to_string());
                     }
-                    let field_list = field_vec.join(", ");
+                    let field_list = field_vec.join("\", \"");
                     header_msg = format!(
-                        "{} columns ({field_list}) and ",
+                        "{} columns (\"{field_list}\") and ",
                         header_len.separate_with_commas()
                     );
                 }
@@ -171,8 +171,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         } else {
             format!(
-            "Valid: {header_msg}{} records detected. Can't validate data without schema, but CSV looks good!",
-            record_count.separate_with_commas())
+                "Valid: {header_msg}{} records detected.",
+                record_count.separate_with_commas()
+            )
         };
         info!("{msg}");
         println!("{msg}");
