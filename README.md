@@ -153,7 +153,7 @@ echo "source \"$(pwd)/scripts/docopt-wordlist.bash\"" >> $HOME/.bash_completion
 echo "complete -F _docopt_wordlist_commands qsv" >> $HOME/.bash_completion
 ```
 
-## Recognized file formats
+## File formats
 
 qsv recognizes UTF-8/ASCII encoded, CSV (`.csv`) and TSV files (`.tsv` and `.tab`). CSV files are assummed to have "," (comma) as a delimiter,
 and TSV files, "\t" (tab) as a delimiter. The delimiter is a single ascii character that can be set either by the `--delimiter` command-line option or
@@ -165,6 +165,8 @@ When using the `--output` option, note that qsv will UTF-8 encode the file and a
 
 The `fetch` command also produces JSONL files when its invoked without the `--new-column` option.
 
+The `sniff` and `validate` commands produce JSON files with their `--json` and `--pretty-json` options.
+
 The `excel` command recognizes Excel and Open Document Spreadsheet(ODS) files (`.xls`, `.xlsx`, `.xlsm`, `.xlsb` and `.ods` files).
 
 ### RFC 4180
@@ -172,7 +174,7 @@ The `excel` command recognizes Excel and Open Document Spreadsheet(ODS) files (`
 qsv validates against the [RFC 4180](https://datatracker.ietf.org/doc/html/rfc4180) CSV standard. However IRL, CSV formats vary significantly and qsv is actually not strictly compliant with the specification so it can process "real-world" CSV files.
 qsv leverages the awesome [Rust CSV](https://docs.rs/csv/latest/csv/) library, which in turn, is built on top of the [csv-core](https://docs.rs/csv-core/latest/csv_core/index.html) library to read CSV files.
 
-Click [here](https://docs.rs/csv-core/latest/csv_core/struct.Reader.html#rfc-4180) to find out how qsv conforms to the standard.
+Click [here](https://docs.rs/csv-core/latest/csv_core/struct.Reader.html#rfc-4180) to find out how qsv conforms to the standard with `csv-core`.
 
 ### **UTF-8 Encoding**
 
