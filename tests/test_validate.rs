@@ -34,7 +34,8 @@ fn validate_good_csv_msg() {
     cmd.arg("data.csv");
 
     let got: String = wrk.stdout(&mut cmd);
-    let expected = r#"Valid: 3 columns ("title", "name", "real age (earth years)") and 3 records detected."#;
+    let expected =
+        r#"Valid: 3 columns ("title", "name", "real age (earth years)") and 3 records detected."#;
     assert_eq!(got, expected);
 }
 
