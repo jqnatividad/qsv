@@ -156,7 +156,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         util::prep_progress(&progress, record_count);
     }
 
-    let not_quiet = args.flag_quiet;
+    let not_quiet = !args.flag_quiet;
 
     let mut record = csv::StringRecord::new();
 
