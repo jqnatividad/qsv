@@ -67,7 +67,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     fs::create_dir_all(&args.arg_outdir)?;
 
     match args.rconfig().indexed()? {
-        Some(idx) => args.parallel_split(idx),
+        Some(idx) => args.parallel_split(&idx),
         None => args.sequential_split(),
     }
 }
@@ -93,7 +93,7 @@ impl Args {
         Ok(())
     }
 
-    fn parallel_split(&self, idx: Indexed<fs::File, fs::File>) -> CliResult<()> {
+    fn parallel_split(&self, idx: &Indexed<fs::File, fs::File>) -> CliResult<()> {
         let nchunks = util::num_of_chunks(idx.count() as usize, self.flag_size);
         let pool = ThreadPool::new(util::njobs(self.flag_jobs));
         for i in 0..nchunks {

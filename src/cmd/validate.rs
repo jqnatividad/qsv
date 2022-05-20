@@ -129,9 +129,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             }]
                         });
                         return fail!(header_error.to_string());
-                    } else {
-                        return fail!(format!("Cannot read header ({e})."));
                     }
+                    return fail!(format!("Cannot read header ({e})."));
                 }
             }
         }
@@ -147,11 +146,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         }]
                     });
                     return fail!(validation_error.to_string());
-                } else {
-                    return fail!(format!(
-                        r#"Validation error: {e}. Try "qsv fixlengths" or "qsv fmt" to fix it."#
-                    ));
                 }
+                return fail!(format!(
+                    r#"Validation error: {e}. Try "qsv fixlengths" or "qsv fmt" to fix it."#
+                ));
             }
             record_count += 1;
         }
@@ -516,12 +514,11 @@ fn to_json_instance(headers: &ByteRecord, record: &ByteRecord, schema: &Value) -
 
                 // grab the first entry that's not a "null", since it just means value is optional
                 for val in vec {
-                    if *val != null_type {
-                        return_val = val.as_str().expect("type info should be a JSON string");
-                    } else {
+                    if *val == null_type {
                         // keep looking
                         continue;
                     }
+                    return_val = val.as_str().expect("type info should be a JSON string");
                 }
 
                 return_val

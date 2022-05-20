@@ -87,7 +87,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
     let mut record = csv::ByteRecord::new();
     let mut flag_rowi: u64 = 1;
-    let mut _matched_rows = String::from("");
+    #[allow(unused_assignments)]
+    let mut matched_rows = String::with_capacity(20); // to save on allocs
     while rdr.read_byte_record(&mut record)? {
         let mut m = sel.select(&record).any(|f| pattern.is_match(f));
         if args.flag_invert_match {
@@ -97,8 +98,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         if args.flag_flag.is_some() {
             flag_rowi += 1;
             record.push_field(if m {
-                _matched_rows = flag_rowi.to_string();
-                _matched_rows.as_bytes()
+                matched_rows = flag_rowi.to_string();
+                matched_rows.as_bytes()
             } else {
                 b"0"
             });

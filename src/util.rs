@@ -132,17 +132,18 @@ pub fn show_env_vars() {
 }
 
 pub fn count_rows(conf: &Config) -> u64 {
-    if let Some(idx) = conf.indexed().unwrap() {
-        idx.count()
-    } else {
-        let mut rdr = conf.reader().unwrap();
-        let mut count = 0u64;
-        let mut record = csv::ByteRecord::new();
-        while rdr.read_byte_record(&mut record).unwrap() {
-            count += 1;
-        }
-        count
-    }
+    conf.indexed().unwrap().map_or_else(
+        || {
+            let mut rdr = conf.reader().unwrap();
+            let mut count = 0u64;
+            let mut record = csv::ByteRecord::new();
+            while rdr.read_byte_record(&mut record).unwrap() {
+                count += 1;
+            }
+            count
+        },
+        |idx| idx.count(),
+    )
 }
 
 #[cfg(any(feature = "full", feature = "lite"))]

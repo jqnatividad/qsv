@@ -98,7 +98,6 @@ fn json_line_to_csv_record(value: &Value, headers: &[Vec<String>]) -> csv::Strin
 
         if let Some(value) = value {
             record.push_field(&match value {
-                Value::Null => String::new(),
                 Value::Bool(v) => {
                     if v {
                         String::from("true")

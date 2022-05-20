@@ -115,8 +115,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut record = csv::ByteRecord::new();
     let mut flag_rowi: u64 = 1;
-    let mut _matched_rows = String::new();
-    let mut _match_list_with_row = String::new();
+    // to save allocs
+    #[allow(unused_assignments)]
+    let mut matched_rows = String::with_capacity(20);
+    #[allow(unused_assignments)]
+    let mut match_list_with_row = String::with_capacity(20);
     while rdr.read_byte_record(&mut record)? {
         let mut m = sel.select(&record).any(|f| {
             let matched = pattern.is_match(f);
@@ -136,12 +139,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         if do_match_list {
             flag_rowi += 1;
             record.push_field(if m {
-                _matched_rows = flag_rowi.to_string();
+                matched_rows = flag_rowi.to_string();
                 if args.flag_invert_match {
-                    _matched_rows.as_bytes()
+                    matched_rows.as_bytes()
                 } else {
-                    _match_list_with_row = format!("{_matched_rows};{match_list}");
-                    _match_list_with_row.as_bytes()
+                    match_list_with_row = format!("{matched_rows};{match_list}");
+                    match_list_with_row.as_bytes()
                 }
             } else {
                 b"0"

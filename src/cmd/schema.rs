@@ -434,7 +434,7 @@ fn get_unique_values(
         _ => freq_args.sequential_ftables(),
     }?;
 
-    let unique_values_map = construct_map_of_unique_values(&headers, ftables)?;
+    let unique_values_map = construct_map_of_unique_values(&headers, &ftables)?;
 
     Ok(unique_values_map)
 }
@@ -442,7 +442,7 @@ fn get_unique_values(
 /// construct map of unique values keyed by header
 fn construct_map_of_unique_values(
     freq_csv_fields: &ByteRecord,
-    frequency_tables: Vec<Frequencies<Vec<u8>>>,
+    frequency_tables: &[Frequencies<Vec<u8>>],
 ) -> CliResult<AHashMap<String, Vec<String>>> {
     let mut unique_values_map: AHashMap<String, Vec<String>> = AHashMap::new();
 

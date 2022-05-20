@@ -488,9 +488,9 @@ impl Stats {
                 pieces.push(buffer.format(1.5f64.mul_add(iqr, q3)).to_owned());
                 // calculate skewnewss using Pearson's median skewness
                 // https://en.wikipedia.org/wiki/Skewness#Pearson's_second_skewness_coefficient_(median_skewness)
-                let _mean = self.online.unwrap().mean();
-                let _stddev = self.online.unwrap().stddev();
-                pieces.push(buffer.format((3.0 * (_mean - q2)) / _stddev).to_owned());
+                let mean = self.online.unwrap().mean();
+                let stddev = self.online.unwrap().stddev();
+                pieces.push(buffer.format((3.0 * (mean - q2)) / stddev).to_owned());
             }
         }
         match self.modes.as_mut() {

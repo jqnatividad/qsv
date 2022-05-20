@@ -63,30 +63,28 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut sample_size = args.arg_sample_size;
 
     let mut wtr = Config::new(&args.flag_output).writer()?;
-    let sampled = match rconfig.indexed()? {
-        Some(mut idx) => {
-            if sample_size < 1.0 {
-                sample_size *= idx.count() as f64;
-            }
-            if args.flag_seed.is_none() && do_random_access(sample_size as u64, idx.count()) {
-                rconfig.write_headers(&mut *idx, &mut wtr)?;
-                sample_random_access(&mut idx, sample_size as u64)?
-            } else {
-                let mut rdr = rconfig.reader()?;
-                rconfig.write_headers(&mut rdr, &mut wtr)?;
-                sample_reservoir(&mut rdr, sample_size as u64, args.flag_seed)?
-            }
+    let sampled = if let Some(mut idx) = rconfig.indexed()? {
+        if sample_size < 1.0 {
+            sample_size *= idx.count() as f64;
         }
-        _ => {
-            debug!("no index");
-            if sample_size < 1.0 {
-                return fail!("Percentage sampling requires an index.");
-            }
+        if args.flag_seed.is_none() && do_random_access(sample_size as u64, idx.count()) {
+            rconfig.write_headers(&mut *idx, &mut wtr)?;
+            sample_random_access(&mut idx, sample_size as u64)?
+        } else {
             let mut rdr = rconfig.reader()?;
             rconfig.write_headers(&mut rdr, &mut wtr)?;
             sample_reservoir(&mut rdr, sample_size as u64, args.flag_seed)?
         }
+    } else {
+        debug!("no index");
+        if sample_size < 1.0 {
+            return fail!("Percentage sampling requires an index.");
+        }
+        let mut rdr = rconfig.reader()?;
+        rconfig.write_headers(&mut rdr, &mut wtr)?;
+        sample_reservoir(&mut rdr, sample_size as u64, args.flag_seed)?
     };
+
     for row in sampled {
         wtr.write_byte_record(&row)?;
     }
