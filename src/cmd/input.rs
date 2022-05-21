@@ -154,7 +154,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         }
     }
-    info!("Wrote {} rows...", i-1);
+    info!("Wrote {} rows...", i - 1);
     wtr.flush()?;
     Ok(())
 }
