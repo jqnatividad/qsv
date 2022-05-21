@@ -124,10 +124,10 @@ impl Args {
                 };
             if self.flag_drop {
                 wtr.write_record(row.iter().enumerate().filter_map(|(i, e)| {
-                    if i != key_col {
-                        Some(e)
-                    } else {
+                    if i == key_col {
                         None
+                    } else {
+                        Some(e)
                     }
                 }))?;
             } else {
