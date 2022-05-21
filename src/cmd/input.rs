@@ -1,6 +1,7 @@
 use crate::config::{Config, Delimiter};
 use crate::util;
 use crate::CliResult;
+use log::info;
 use serde::Deserialize;
 
 static USAGE: &str = r#"
@@ -29,6 +30,9 @@ input options:
                              quotes are escaped by doubling them.
     --no-quoting             Disable quoting completely.
     --skip-lines <arg>       The number of preamble lines to skip.
+    --auto-skip              Sniff's a CSV for preamble lines and automatically
+                             skips them. Takes precedence over --skip-lines option.
+                             Does not work with <stdin>.
     --skip-lastlines <arg>   The number of epilog lines to skip.
     --trim-headers           Trim leading & trailing whitespace from header values.
     --trim-fields            Trim leading & trailing whitespace from field values.
@@ -50,6 +54,7 @@ struct Args {
     flag_no_quoting: bool,
     flag_skip_lines: Option<u64>,
     flag_skip_lastlines: Option<u64>,
+    flag_auto_skip: bool,
     flag_trim_headers: bool,
     flag_trim_fields: bool,
 }
@@ -64,12 +69,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         (false, true) => csv::Trim::Fields,
     };
 
+    if args.flag_auto_skip {
+        std::env::set_var("QSV_SNIFF_PREAMBLE", "1");
+    }
     let mut rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
         .no_headers(true)
         .quote(args.flag_quote.as_byte())
         .trim(trim_setting)
         .checkutf8(false);
+    if args.flag_auto_skip {
+        std::env::remove_var("QSV_SNIFF_PREAMBLE");
+    }
     let wconfig = Config::new(&args.flag_output);
 
     if let Some(escape) = args.flag_escape {
@@ -78,7 +89,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if args.flag_no_quoting {
         rconfig = rconfig.quoting(false);
     }
-    if args.flag_skip_lines.is_some() || args.flag_skip_lastlines.is_some() {
+    if args.flag_auto_skip || args.flag_skip_lines.is_some() || args.flag_skip_lastlines.is_some() {
         rconfig = rconfig.flexible(true);
     }
 
@@ -88,6 +99,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         if skip_llines > row_count {
             return fail!("--skip-lastlines: {skip_llines} is greater than row_count: {rowcount}.");
         }
+        info!("Set to skip last {skip_llines} lines...");
         total_lines = row_count - skip_llines;
     }
 
@@ -96,17 +108,28 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut row = csv::ByteRecord::new();
     let mut str_row = csv::StringRecord::new();
 
-    if let Some(skip_lines) = args.flag_skip_lines {
-        for _i in 1..=skip_lines {
+    let preamble_rows: u64 = if args.flag_auto_skip {
+        info!("auto-skip on...");
+        rconfig.preamble_rows
+    } else if args.flag_skip_lines.is_some() {
+        args.flag_skip_lines.unwrap()
+    } else {
+        0
+    };
+
+    if preamble_rows > 0 {
+        info!("skipping {preamble_rows} preamble rows...");
+        for _i in 1..=preamble_rows {
             rdr.read_byte_record(&mut row)?;
         }
-        if total_lines.saturating_sub(skip_lines) > 0 {
-            total_lines -= skip_lines;
+        if total_lines.saturating_sub(preamble_rows) > 0 {
+            total_lines -= preamble_rows;
         }
     }
     // the first rdr record is the header, since
     // we have no_headers = true, we manually trim the first record
     if trim_setting == csv::Trim::Headers || trim_setting == csv::Trim::All {
+        info!("trimming...");
         rdr.read_byte_record(&mut row)?;
         row.trim();
 
@@ -123,14 +146,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             str_row.push_field(&String::from_utf8_lossy(field));
         }
         wtr.write_record(&str_row)?;
+        i += 1;
 
         if total_lines > 0 {
-            i += 1;
             if i > total_lines {
                 break;
             }
         }
     }
+    info!("Wrote {} rows...", i-1);
     wtr.flush()?;
     Ok(())
 }
