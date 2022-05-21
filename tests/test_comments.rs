@@ -216,6 +216,24 @@ fn test_input_skiplines() {
 }
 
 #[test]
+fn test_input_autoskip() {
+    let wrk = Workdir::new("input_autoskip");
+    let test_file = wrk.load_test_file("snifftest.csv");
+
+    let mut cmd = wrk.command("input");
+    cmd.arg("--auto-skip").arg(test_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["h1", "h2", "h3", "h4"],
+        svec!["abcdefg", "1", "a", "3.14"],
+        svec!["a", "2", "z", "1.2020569"],
+        svec!["c", "42", "x", "1.0"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn test_input_skip_one_line() {
     let wrk = Workdir::new("input_skip_one_line");
     wrk.create(
