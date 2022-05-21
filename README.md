@@ -47,7 +47,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ) for more details.
 | [generate](/src/cmd/generate.rs#L12-L13)[^1] | Generate test data by profiling a CSV using [Markov decision process](https://crates.io/crates/test-data-generation) machine learning.  |
 | [headers](/src/cmd/headers.rs#L11) | Show the headers of a CSV. Or show the intersection of all headers between many CSV files. |
 | [index](/src/cmd/index.rs#L13-L14) | Create an index for a CSV. This is very quick & provides constant time indexing into the CSV file. Also enables multithreading for `frequency`, `split`, `stats` and `schema` commands. |
-| [input](/src/cmd/input.rs#L7) | Read CSV data with special quoting, trimming, line-skipping and UTF-8 transcoding rules. |
+| [input](/src/cmd/input.rs#L7) | Read CSV data with special quoting, trimming, line-skipping and UTF-8 transcoding rules. Typically used to "normalize" a CSV for further processing with other qsv commands. |
 | [join](/src/cmd/join.rs#L18)[^2] | Inner, outer, cross, anti & semi joins. Uses a simple hash index to make it fast.  |
 | [jsonl](/src/cmd/jsonl.rs#L11-L12) | Convert newline-delimited JSON ([JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/)) to CSV.
 | [lua](/src/cmd/lua.rs#L14-L15)[^1] | Execute a [Lua](https://www.lua.org/about.html) script over CSV lines to transform, aggregate or filter them. Embeds [Lua 5.4.4](https://www.lua.org/manual/5.4/manual.html).  |
@@ -199,7 +199,8 @@ qsv stats wcp.csv --output wcpstats.csv
 ## Environment Variables
 
 * `QSV_DEFAULT_DELIMITER` - single ascii character to use as delimiter.  Overrides `--delimeter` option. Defaults to "," (comma) for CSV files and "\t" (tab) for TSV files, when not set. Note that this will also set the delimiter for qsv's output to stdout. However, using the `--output` option, regardless of this environment variable, will automatically change the delimiter used in the generated file based on the file extension - i.e. comma for `.csv`, tab for `.tsv` and `.tab` files.
-* `QSV_SNIFF_DELIMITER` - when set, the delimiter is automatically detected. Overrides `QSV_DEFAULT_DELIMITER` and `--delimiter` option.
+* `QSV_SNIFF_DELIMITER` - when set, the delimiter is automatically detected. Overrides `QSV_DEFAULT_DELIMITER` and `--delimiter` option. Note that this does not work
+with stdin and requires UTF8-encoded files.
 * `QSV_NO_HEADERS` - when set, the first row will **NOT** be interpreted as headers. Supersedes `QSV_TOGGLE_HEADERS`.
 * `QSV_TOGGLE_HEADERS` - if set to `1`, toggles header setting - i.e. inverts qsv header behavior, with no headers being the default, and setting `--no-headers` will actually mean headers will not be ignored.
 * `QSV_AUTOINDEX` - when set, automatically create an index when none is detected. Also automatically updates stale indices.
