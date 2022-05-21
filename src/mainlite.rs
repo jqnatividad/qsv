@@ -124,7 +124,11 @@ fn main() {
     util::init_logger();
 
     let now = Instant::now();
-    let mut qsv_args: String = env::args().skip(1).collect::<Vec<_>>().join(" ");
+    let qsv_args: String = if log_enabled!(Level::Info) {
+        env::args().skip(1).collect::<Vec<_>>().join(" ")
+    } else {
+        "".to_string()
+    };
     info!("START: {qsv_args}");
 
     let args: Args = Docopt::new(USAGE)
