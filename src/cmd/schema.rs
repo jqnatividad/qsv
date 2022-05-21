@@ -332,7 +332,6 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
         flag_median: false,
         flag_quartiles: false,
         flag_nulls: false,
-        flag_nullcount: true,
         flag_infer_dates: true,
         flag_jobs: Some(util::njobs(args.flag_jobs)),
         flag_output: None,
