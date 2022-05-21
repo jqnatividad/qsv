@@ -6,7 +6,7 @@ use std::ops::Deref;
 use std::path::PathBuf;
 
 use csv_sniffer::{SampleSize, Sniffer};
-use log::{debug, warn};
+use log::{debug, info, warn};
 use serde::de::{Deserialize, Deserializer, Error};
 
 use crate::index::Indexed;
@@ -19,7 +19,7 @@ const DEFAULT_RDR_BUFFER_CAPACITY: usize = 16 * (1 << 10);
 // previous wtr default in xsv is 32k, we're doubling it
 pub const DEFAULT_WTR_BUFFER_CAPACITY: usize = 64 * (1 << 10);
 // number of rows for csv_sniffer to sample
-const DEFAULT_SNIFFER_SAMPLE: usize = 200;
+const DEFAULT_SNIFFER_SAMPLE: usize = 100;
 // for files, number of bytes to check for UTF8 encoding
 const DEFAULT_UTF8_CHECK_BUFFER_LEN: usize = 8192;
 const UTF8_ERROR_MSG: &str = "is not UTF-8 encoded. Use the input command to transcode to UTF-8.";
@@ -81,6 +81,7 @@ pub struct Config {
     double_quote: bool,
     escape: Option<u8>,
     quoting: bool,
+    pub preamble_rows: u64,
     trim: csv::Trim,
     autoindex: bool,
     checkutf8: bool,
@@ -117,8 +118,10 @@ impl Config {
                 (Some(path), delim)
             }
         };
-        let sniff_delimiter = env::var("QSV_SNIFF_DELIMITER").is_ok();
-        if sniff_delimiter && path.is_some() {
+        let sniff =
+            env::var("QSV_SNIFF_DELIMITER").is_ok() || env::var("QSV_SNIFF_PREAMBLE").is_ok();
+        let mut preamble = 0_u64;
+        if sniff && path.is_some() {
             let sniff_path = path.as_ref().unwrap().to_str().unwrap();
 
             match Sniffer::new()
@@ -126,14 +129,18 @@ impl Config {
                 .sniff_path(sniff_path)
             {
                 Ok(metadata) => {
-                    debug!("sniffed metadata: {metadata:?}");
-                    if sniff_delimiter {
-                        delim = metadata.dialect.delimiter;
-                        debug!("use sniffed delimiter");
-                    }
+                    delim = metadata.dialect.delimiter;
+                    preamble = metadata.dialect.header.num_preamble_rows as u64;
+                    info!(
+                        "sniffed delimiter {} and {preamble} preamble rows",
+                        delim as char
+                    );
                 }
                 Err(e) => {
-                    debug!("sniff error: {e}");
+                    // most likely, the file is not utf8 encoded
+                    // we only warn, as we don't want to stop processing the file
+                    // if sniffing doesn't work
+                    warn!("sniff error: {e}");
                 }
             }
         }
@@ -151,6 +158,7 @@ impl Config {
             double_quote: true,
             escape: None,
             quoting: true,
+            preamble_rows: preamble,
             trim: csv::Trim::None,
             autoindex: env::var("QSV_AUTOINDEX").is_ok(),
             checkutf8: env::var("QSV_SKIPUTF8_CHECK").is_err(),
