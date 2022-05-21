@@ -24,12 +24,12 @@ static USAGE: &str = "
 Computes descriptive statistics on CSV data.
 
 Descriptive statistics includes sum, min/max, min/max length, mean, stddev, variance,
-quartiles, median, modes, cardinality & nullcount. Note that some statistics are
+nullcount, quartiles, median, modes, & cardinality. Note that some statistics are
 expensive to compute and requires loading the entire file into memory,
 so they must be enabled explicitly. 
 
 By default, the following statistics are reported for *every* column in the CSV data:
-sum, min/max values, min/max length, mean, stddev & variance. The default set of statistics 
+sum, min/max values, min/max length, mean, stddev, variance & nullcount. The default set of statistics 
 corresponds to statistics that can be computed efficiently on a stream of data (i.e., constant memory).
 
 The data type of each column is also inferred (Unknown, NULL, Integer, String,
@@ -55,7 +55,6 @@ stats options:
                            This requires storing all CSV data in memory.
     --median               Show the median.
                            This requires storing all CSV data in memory.
-    --nullcount            Show the number of NULLs.
     --quartiles            Show the quartiles, the IQR, the lower/upper fences
                            and skew.
                            This requires storing all CSV data in memory.
@@ -91,7 +90,6 @@ pub struct Args {
     pub flag_quartiles: bool,
     pub flag_nulls: bool,
     pub flag_infer_dates: bool,
-    pub flag_nullcount: bool,
     pub flag_jobs: Option<usize>,
     pub flag_output: Option<String>,
     pub flag_no_headers: bool,
@@ -232,7 +230,6 @@ impl Args {
             range: true,
             dist: true,
             cardinality: self.flag_cardinality || self.flag_everything,
-            nullcount: self.flag_nullcount || self.flag_everything,
             median: self.flag_median && !self.flag_quartiles && !self.flag_everything,
             quartiles: self.flag_quartiles || self.flag_everything,
             mode: self.flag_mode || self.flag_everything,
@@ -254,6 +251,7 @@ impl Args {
             "mean",
             "stddev",
             "variance",
+            "nullcount",
         ];
         let all = self.flag_everything;
         if self.flag_median && !self.flag_quartiles && !all {
@@ -276,9 +274,6 @@ impl Args {
         if self.flag_cardinality || all {
             fields.push("cardinality");
         }
-        if self.flag_nullcount || all {
-            fields.push("nullcount");
-        }
         csv::StringRecord::from(fields)
     }
 }
@@ -290,7 +285,6 @@ struct WhichStats {
     range: bool,
     dist: bool,
     cardinality: bool,
-    nullcount: bool,
     median: bool,
     quartiles: bool,
     mode: bool,
@@ -310,9 +304,9 @@ pub struct Stats {
     sum: Option<TypedSum>,
     minmax: Option<TypedMinMax>,
     online: Option<OnlineStats>,
+    nullcount: u64,
     modes: Option<Unsorted<Vec<u8>>>,
     median: Option<Unsorted<f64>>,
-    nullcount: u64,
     quartiles: Option<Unsorted<f64>>,
     which: WhichStats,
 }
@@ -344,9 +338,9 @@ impl Stats {
             sum,
             minmax,
             online,
+            nullcount: 0,
             modes,
             median,
-            nullcount: 0,
             quartiles,
             which,
         }
@@ -448,6 +442,9 @@ impl Stats {
             pieces.push(empty());
         }
 
+        let mut buffer = itoa::Buffer::new();
+        pieces.push(buffer.format(self.nullcount).to_owned());
+
         match self.median.as_mut().and_then(|v| match self.typ {
             TInteger | TFloat => v.median(),
             _ => None,
@@ -517,10 +514,6 @@ impl Stats {
                 }
             }
         }
-        if self.which.nullcount {
-            let mut buffer = itoa::Buffer::new();
-            pieces.push(buffer.format(self.nullcount).to_owned());
-        }
         csv::StringRecord::from(pieces)
     }
 }
@@ -532,9 +525,9 @@ impl Commute for Stats {
         self.sum.merge(other.sum);
         self.minmax.merge(other.minmax);
         self.online.merge(other.online);
+        self.nullcount += other.nullcount;
         self.modes.merge(other.modes);
         self.median.merge(other.median);
-        self.nullcount += other.nullcount;
         self.quartiles.merge(other.quartiles);
         self.which.merge(other.which);
     }

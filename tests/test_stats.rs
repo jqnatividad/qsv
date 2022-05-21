@@ -165,9 +165,6 @@ where
 }
 
 fn get_field_value(wrk: &Workdir, cmd: &mut process::Command, field: &str) -> String {
-    if field == "nullcount" {
-        cmd.arg("--nullcount");
-    }
     if field == "median" {
         cmd.arg("--median");
     }
