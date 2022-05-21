@@ -26,14 +26,19 @@ macro_rules! wout {
 macro_rules! werr {
     ($($arg:tt)*) => ({
         use std::io::Write;
+        use log::error;
+        error!("{}", $($arg)*);
         (writeln!(&mut ::std::io::stderr(), $($arg)*)).unwrap();
     });
 }
 
 macro_rules! fail {
-    ($e:expr) => {
-        Err(::std::convert::From::from($e))
-    };
+    ($e:expr) => {{
+        use log::error;
+        let err = ::std::convert::From::from($e);
+        error!("{err}");
+        Err(err)
+    }};
 }
 
 macro_rules! command_list {
@@ -99,9 +104,7 @@ fn main() {
 
     let now = Instant::now();
     let mut qsv_args: String = env::args().skip(1).collect::<Vec<_>>().join(" ");
-    if log_enabled!(Level::Info) {
-        info!("START: {qsv_args}");
-    }
+    info!("START: {qsv_args}");
 
     let args: Args = Docopt::new(USAGE)
         .and_then(|d| {
@@ -112,9 +115,11 @@ fn main() {
         .unwrap_or_else(|e| e.exit());
     if args.flag_list {
         wout!(concat!("Installed commands:", command_list!()));
+        log_end(qsv_args, &now);
         return;
     } else if args.flag_envlist {
         util::show_env_vars();
+        log_end(qsv_args, &now);
         return;
     }
     match args.arg_command {
@@ -129,49 +134,45 @@ Please choose one of the following commands:",
         }
         Some(cmd) => match cmd.run() {
             Ok(()) => {
-                if log_enabled!(Level::Info) {
-                    let ellipsis = if qsv_args.len() > 15 {
-                        qsv_args.truncate(15);
-                        "..."
-                    } else {
-                        ""
-                    };
-                    info!(
-                        "END \"{qsv_args}{ellipsis}\" elapsed: {}",
-                        now.elapsed().as_secs_f32()
-                    );
-                }
+                log_end(qsv_args, &now);
                 process::exit(0);
             }
             Err(CliError::Flag(err)) => err.exit(),
             Err(CliError::Csv(err)) => {
-                if log_enabled!(Level::Error) {
-                    error!("{err}");
-                } else {
-                    werr!("{err}");
-                }
+                werr!("{err}");
+                log_end(qsv_args, &now);
                 process::exit(1);
             }
             Err(CliError::Io(ref err)) if err.kind() == io::ErrorKind::BrokenPipe => {
+                log_end(qsv_args, &now);
                 process::exit(0);
             }
             Err(CliError::Io(err)) => {
-                if log_enabled!(Level::Error) {
-                    error!("{err}");
-                } else {
-                    werr!("{err}");
-                }
+                werr!("{err}");
+                log_end(qsv_args, &now);
                 process::exit(1);
             }
             Err(CliError::Other(msg)) => {
-                if log_enabled!(Level::Error) {
-                    error!("{msg}");
-                } else {
-                    werr!("{msg}");
-                }
+                werr!("{msg}");
+                log_end(qsv_args, &now);
                 process::exit(1);
             }
         },
+    }
+}
+
+fn log_end(mut qsv_args: String, now: &Instant) {
+    if log_enabled!(Level::Info) {
+        let ellipsis = if qsv_args.len() > 15 {
+            qsv_args.truncate(15);
+            "..."
+        } else {
+            ""
+        };
+        info!(
+            "END \"{qsv_args}{ellipsis}\" elapsed: {}",
+            now.elapsed().as_secs_f32()
+        );
     }
 }
 
