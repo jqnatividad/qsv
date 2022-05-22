@@ -200,7 +200,7 @@ qsv stats wcp.csv --output wcpstats.csv
 
 * `QSV_DEFAULT_DELIMITER` - single ascii character to use as delimiter.  Overrides `--delimeter` option. Defaults to "," (comma) for CSV files and "\t" (tab) for TSV files, when not set. Note that this will also set the delimiter for qsv's output to stdout. However, using the `--output` option, regardless of this environment variable, will automatically change the delimiter used in the generated file based on the file extension - i.e. comma for `.csv`, tab for `.tsv` and `.tab` files.
 * `QSV_SNIFF_DELIMITER` - when set, the delimiter is automatically detected. Overrides `QSV_DEFAULT_DELIMITER` and `--delimiter` option. Note that this does not work
-with stdin and requires UTF8-encoded files.
+with stdin.
 * `QSV_NO_HEADERS` - when set, the first row will **NOT** be interpreted as headers. Supersedes `QSV_TOGGLE_HEADERS`.
 * `QSV_TOGGLE_HEADERS` - if set to `1`, toggles header setting - i.e. inverts qsv header behavior, with no headers being the default, and setting `--no-headers` will actually mean headers will not be ignored.
 * `QSV_AUTOINDEX` - when set, automatically create an index when none is detected. Also automatically updates stale indices.
