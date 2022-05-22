@@ -73,7 +73,7 @@ crossbeam-channel = "0.5"
 csv = "1.1"
 csv-core = "0.1"
 csv-index = "0.1"
-csv-sniffer = "0.3"
+csv-sniffer = { version = "0.3", features = ["runtime-dispatch-simd"] }
 docopt = "1"
 dynfmt = { version = "0.1", default-features = false, features = [
     "curly",
@@ -157,6 +157,7 @@ calamine = { git = "https://github.com/jqnatividad/calamine", rev = "8023d886519
 csv = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
 csv-core = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
 csv-index = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
+csv-sniffer = { git = "https://github.com/jqnatividad/csv-sniffer", branch = "non-utf8-bytecount" }
 docopt = { git = "https://github.com/jqnatividad/docopt.rs", branch = "perf-clippy-2021" }
 ext-sort = { git = "https://github.com/jqnatividad/ext-sort-rs", rev = "fd955e2462a65cae0de9c9e5113ea56d2904106a" }
 jsonschema = { git = "https://github.com/Stranger6667/jsonschema-rs", rev = "ead0da16db5a12a6d12cd54bc087d18ed6e62c08"}

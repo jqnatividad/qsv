@@ -669,10 +669,10 @@ dependencies = [
 [[package]]
 name = "csv-sniffer"
 version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1e32aa93b952410d55c1ae03048cc22a6cc62a323711b8e9245ef4b5578051c"
+source = "git+https://github.com/jqnatividad/csv-sniffer?branch=non-utf8-bytecount#57c4e81151a0200c6c6873fbe61dfdebacb536d8"
 dependencies = [
  "bitflags",
+ "bytecount",
  "csv",
  "csv-core",
  "memchr",
