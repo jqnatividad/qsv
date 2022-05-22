@@ -11,15 +11,15 @@ Quickly sniff CSV details (delimiter, quote character, number of fields, data ty
 header row, preamble rows).
 
 NOTE: sniff is a thin wrapper around the csv-sniffer crate (https://docs.rs/csv-sniffer).
-It "sniffs" a CSV's schema by scanning the first few rows of a CSV file, and its inferences
-are sometimes wrong. If you want more robust, guaranteed schemata - use the "schema" or
-"stats" commands instead. 
+It "sniffs" a CSV's schema by scanning the first n rows of a CSV file (use --sample to adjust), 
+and its inferences are sometimes wrong. If you want more robust, guaranteed schemata - use the
+"schema" or "stats" commands instead. 
 
 Usage:
     qsv sniff [options] [<input>]
 
 sniff options:
-    -l, --len <arg>        How many rows to sample to sniff out the details.
+    --sample <arg>         First n rows to sample to sniff out the details.
                            [default: 100]
     --json                 Return results in JSON format.
     --pretty-json          Return results in pretty JSON format.
@@ -31,7 +31,7 @@ Common options:
 #[derive(Deserialize)]
 struct Args {
     arg_input: Option<String>,
-    flag_len: usize,
+    flag_sample: usize,
     flag_json: bool,
     flag_pretty_json: bool,
 }
@@ -42,6 +42,7 @@ struct SniffStruct {
     header_row: bool,
     preamble_rows: usize,
     quote_char: String,
+    flexible: bool,
     num_records: u64,
     num_fields: usize,
     types: Vec<String>,
@@ -63,11 +64,11 @@ fn rowcount(conf: &Config, metadata: &csv_sniffer::metadata::Metadata) -> u64 {
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
-    let conf = Config::new(&args.arg_input).flexible(true);
+    let conf = Config::new(&args.arg_input).flexible(true).checkutf8(false);
     let rdr = conf.reader_file_stdin()?;
 
     let sniff_results = Sniffer::new()
-        .sample_size(SampleSize::Records(args.flag_len))
+        .sample_size(SampleSize::Records(args.flag_sample))
         .sniff_reader(rdr.into_inner());
 
     if args.flag_json || args.flag_pretty_json {
@@ -86,6 +87,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         csv_sniffer::metadata::Quote::Some(chr) => format!("{}", char::from(chr)),
                         csv_sniffer::metadata::Quote::None => "none".into(),
                     },
+                    flexible: metadata.dialect.flexible,
                     num_records: rowcount(&conf, &metadata),
                     num_fields: metadata.num_fields,
                     types: sniffedtypes,
