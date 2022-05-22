@@ -137,7 +137,6 @@ fn sniff_flexible_json() {
     assert_eq!(got, expected);
 }
 
-
 #[test]
 fn sniff_pretty_json() {
     let wrk = Workdir::new("sniff_pretty_json");
