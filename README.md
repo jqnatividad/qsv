@@ -180,6 +180,11 @@ Click [here](https://docs.rs/csv-core/latest/csv_core/struct.Reader.html#rfc-418
 
 qsv requires UTF-8 encoded (of which ASCII is a subset) input files. On startup, it scans the input if it's UTF-8 encoded (for files, the first 8k; for stdin, the entire buffer), and will abort if its not unless `QSV_SKIPUTF8_CHECK` is set. On Linux and macOS, UTF-8 encoding is the default.
 
+Previously, several qsv commands worked with non utf-8 encoded files, but to increase performance, qsv versions since 0.38 make extensive use of `from_utf8_unchecked`
+so as not to pay the repetitive utf-8 validation penalty even for utf-8 encoded files (particularly in `stats`).
+
+Only two commands still work with non utf-8 encoded files - `sniff` and `input`, as `sniff` is meant to screen files, and `input` to prepare files for further qsv processing.
+
 Should you need to reencode CSV/TSV files, you can use the `input` command to transcode to UTF-8. It will replace all invalid UTF-8 sequences with `�`. Alternatively, there are several utilities you can use to do so on [Linux/macOS](https://stackoverflow.com/questions/805418/how-can-i-find-encoding-of-a-file-via-a-script-on-linux) and [Windows](https://superuser.com/questions/1163753/converting-text-file-to-utf-8-on-windows-command-prompt).
 
 ### **Windows Usage Note**

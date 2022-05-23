@@ -31,6 +31,7 @@ fn sniff() {
 	Number of preamble rows: 0
 	Quote character: none
 	Flexible: false
+	Is utf-8 encoded?: true
 
 Number of records: 2
 Number of fields: 3
@@ -59,6 +60,7 @@ fn sniff_tab() {
 	Number of preamble rows: 0
 	Quote character: none
 	Flexible: false
+	Is utf-8 encoded?: true
 
 Number of records: 2
 Number of fields: 3
@@ -119,7 +121,7 @@ fn sniff_json() {
 
     let got: String = wrk.stdout(&mut cmd);
 
-    let expected = r#"{"delimiter_char":",","header_row":true,"preamble_rows":3,"quote_char":"none","flexible":false,"num_records":3,"num_fields":4,"types":["Text","Unsigned","Text","Float"]}"#;
+    let expected = r#"{"delimiter_char":",","header_row":true,"preamble_rows":3,"quote_char":"none","flexible":false,"is_utf8":true,"num_records":3,"num_fields":4,"types":["Text","Unsigned","Text","Float"]}"#;
     assert_eq!(got, expected);
 }
 
@@ -133,7 +135,7 @@ fn sniff_flexible_json() {
 
     let got: String = wrk.stdout(&mut cmd);
 
-    let expected = r#"{"delimiter_char":",","header_row":true,"preamble_rows":3,"quote_char":"none","flexible":true,"num_records":5,"num_fields":4,"types":["Text","Unsigned","Text","Float"]}"#;
+    let expected = r#"{"delimiter_char":",","header_row":true,"preamble_rows":3,"quote_char":"none","flexible":true,"is_utf8":true,"num_records":5,"num_fields":4,"types":["Text","Unsigned","Text","Float"]}"#;
     assert_eq!(got, expected);
 }
 
@@ -153,6 +155,7 @@ fn sniff_pretty_json() {
   "preamble_rows": 3,
   "quote_char": "none",
   "flexible": false,
+  "is_utf8": true,
   "num_records": 3,
   "num_fields": 4,
   "types": [
