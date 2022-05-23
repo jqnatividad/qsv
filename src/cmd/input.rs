@@ -148,10 +148,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         wtr.write_record(&str_row)?;
         i += 1;
 
-        if total_lines > 0 {
-            if i > total_lines {
-                break;
-            }
+        if total_lines > 0 && i > total_lines {
+            break;
         }
     }
     info!("Wrote {} rows...", i - 1);
