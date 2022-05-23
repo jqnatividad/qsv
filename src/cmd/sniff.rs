@@ -7,16 +7,16 @@ use serde_json::json;
 use thousands::Separable;
 
 static USAGE: &str = r#"
-Quickly sniff CSV details (delimiter, quote character, number of fields, data types,
-header row, preamble rows).
+Quickly sniff CSV details (delimiter, header row, preamble rows, quote character, 
+flexible, is_utf8, number of records, number of fields and data types).
 
 NOTE: sniff is a thin wrapper around the csv-sniffer crate (https://docs.rs/csv-sniffer).
-It "sniffs" a CSV's schema by scanning the first n rows of a CSV file (use --sample to adjust), 
-and its inferences are sometimes wrong. If you want more robust, guaranteed schemata - use the
-"schema" or "stats" commands instead. 
+It "sniffs" a CSV's schema by sampling the first n rows of a file (use --sample to adjust), 
+and its inferences are sometimes wrong. If you want more robust, guaranteed schemata,
+use the "schema" or "stats" commands instead as they scan the entire file.
 
 Usage:
-    qsv sniff [options] [<input>]
+    qsv sniff [options] [<input>] 
 
 sniff options:
     --sample <arg>         First n rows to sample to sniff out the details.
