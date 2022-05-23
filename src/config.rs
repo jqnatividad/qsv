@@ -137,7 +137,6 @@ impl Config {
                     );
                 }
                 Err(e) => {
-                    // most likely, the file is not utf8 encoded
                     // we only warn, as we don't want to stop processing the file
                     // if sniffing doesn't work
                     warn!("sniff error: {e}");
