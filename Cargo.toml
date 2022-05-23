@@ -1,6 +1,6 @@
 [package]
 name          = "qsv"
-version       = "0.50.0"                                                  #:version
+version       = "0.50.1"                                                  #:version
 authors       = ["Joel Natividad <joel@datHere.com>"]
 description   = "A high performance CSV data-wrangling toolkit."
 documentation = "https://github.com/jqnatividad/qsv"
@@ -73,7 +73,7 @@ crossbeam-channel = "0.5"
 csv = "1.1"
 csv-core = "0.1"
 csv-index = "0.1"
-csv-sniffer = { version = "0.3", features = ["runtime-dispatch-simd"] }
+csv-sniffer = "0.3"
 docopt = "1"
 dynfmt = { version = "0.1", default-features = false, features = [
     "curly",
