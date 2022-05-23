@@ -5,21 +5,21 @@ use log::info;
 use serde::Deserialize;
 
 static USAGE: &str = r#"
-Read CSV data with special quoting, trimming, line-skipping and UTF-8 transcoding rules.
+Read CSV data with special quoting, trimming, line-skipping & UTF-8 transcoding rules.
 
 Generally, all qsv commands support basic options like specifying the delimiter
 used in CSV data. This does not cover all possible types of CSV data. For
 example, some CSV files don't use '"' for quotes or use different escaping
 styles.
 
-Also, CSVs with preamble lines can be have the preamble skipped with the --skip-lines 
-option. Similarly, --skip-lastlines allows epilog lines to be skipped.
+Also, CSVs with preamble lines can have them skipped with the --skip-lines & --auto-skip
+options. Similarly, --skip-lastlines allows epilog lines to be skipped.
 
-Finally, non-UTF8 encoded files are transcoded to UTF8 with this command, replacing all
-invalid UTF8 sequences with �.
+Finally, non-UTF8 encoded files are transcoded to UTF-8 with this command, replacing all
+invalid UTF-8 sequences with �.
 
-input, as the name implies, is typically used in the beginning of a data pipeline to
-prepare CSVs for further processing with other qsv commands.
+This command is typically used in the beginning of a data pipeline to prepare CSVs
+for further processing with other qsv commands.
 
 Usage:
     qsv input [options] [<input>]
