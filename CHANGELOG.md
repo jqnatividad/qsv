@@ -5,6 +5,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.50.0] - 2022-05-23
+### Added
+* `input`:  added `--auto-skip` CSV preamble option in https://github.com/jqnatividad/qsv/pull/313
+* `sniff`: support non-utf8 files; flexible detection now works; rename --len to --sample in https://github.com/jqnatividad/qsv/pull/315
+* `sniff`: added `is_utf8` property in https://github.com/jqnatividad/qsv/pull/316
+* added RFC4180 section to README
+
+### Changed
+* `validate`: improve RFC4180 validation messages in https://github.com/jqnatividad/qsv/pull/309
+* `stats`: nullcount is a "streaming" statistic and is now on by default in https://github.com/jqnatividad/qsv/pull/311
+* `schema`: refactored stdin processing 
+* Made logging more consistent in https://github.com/jqnatividad/qsv/pull/314
+* bumped MSRV to Rust 1.61.0
+* use a qsv-optimized fork of csv-sniffer (https://github.com/jqnatividad/csv-sniffer/tree/non-utf8-qsv), that fixes flexible detection,
+  reads non-utf8 encoded files, reports if a file is utf8-encoded, and uses SIMD/CPU features to accelerate performance.
+* applied select pedantic clippy recommendations
+* bumped several dependencies, notably regex from 1.5.5 to 1.5.6
+
+### Fixed
+* `py`: enabled `abi3` feature properly, so qsv now works with higher versions of python over v3.8
+
 ## [0.49.0] - 2022-05-17
 ### Added
 * `validate`: add `--json` & `--pretty-json` options for RFC4180 check in https://github.com/jqnatividad/qsv/pull/303
