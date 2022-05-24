@@ -669,7 +669,7 @@ dependencies = [
 [[package]]
 name = "csv-sniffer"
 version = "0.3.1"
-source = "git+https://github.com/jqnatividad/csv-sniffer?branch=non-utf8-qsv#b7e8bba11c2deb259d2f06459d798bab8ef24c73"
+source = "git+https://github.com/jqnatividad/csv-sniffer?branch=qsv-optimized#d442ed5bb0cb5e74681135503e463cb45caebcad"
 dependencies = [
  "bitflags",
  "bytecount",
@@ -678,6 +678,7 @@ dependencies = [
  "memchr",
  "once_cell",
  "regex",
+ "tabwriter",
 ]
 
 [[package]]
