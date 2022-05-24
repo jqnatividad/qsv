@@ -7,19 +7,21 @@ use serde_json::json;
 use thousands::Separable;
 
 static USAGE: &str = r#"
-Quickly sniff CSV details (delimiter, header row, preamble rows, quote character, 
-flexible, is_utf8, number of records, number of fields and data types).
+Quickly sniff CSV metadata (delimiter, header row, preamble rows, quote character, 
+flexible, is_utf8, number of records, number of fields, field names & data types).
 
-NOTE: sniff is a thin wrapper around the csv-sniffer crate (https://docs.rs/csv-sniffer).
-It "sniffs" a CSV's schema by sampling the first n rows of a file (use --sample to adjust), 
-and its inferences are sometimes wrong. If you want more robust, guaranteed schemata,
-use the "schema" or "stats" commands instead as they scan the entire file.
+NOTE: This command "sniffs" a CSV's schema by sampling the first n rows of a file
+(use --sample to adjust), and its inferences are sometimes wrong if the sample is
+not large enough.
+
+If you want more robust, guaranteed schemata, use the "schema" or "stats" commands
+instead as they scan the entire file.
 
 Usage:
     qsv sniff [options] [<input>] 
 
 sniff options:
-    --sample <arg>         First n rows to sample to sniff out the details.
+    --sample <arg>         First n rows to sample to sniff out the metadata.
                            [default: 100]
     --json                 Return results in JSON format.
     --pretty-json          Return results in pretty JSON format.
@@ -46,6 +48,7 @@ struct SniffStruct {
     is_utf8: bool,
     num_records: u64,
     num_fields: usize,
+    fields: Vec<String>,
     types: Vec<String>,
 }
 
@@ -75,6 +78,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if args.flag_json || args.flag_pretty_json {
         match sniff_results {
             Ok(metadata) => {
+                let mut sniffedfields: Vec<String> = Vec::with_capacity(metadata.num_fields);
+                for field in &metadata.fields {
+                    sniffedfields.push(field.to_string());
+                }
+
                 let mut sniffedtypes: Vec<String> = Vec::with_capacity(metadata.num_fields);
                 for ty in &metadata.types {
                     sniffedtypes.push(ty.to_string());
@@ -92,6 +100,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     is_utf8: metadata.dialect.is_utf8,
                     num_records: rowcount(&conf, &metadata),
                     num_fields: metadata.num_fields,
+                    fields: sniffedfields,
                     types: sniffedtypes,
                 };
                 if args.flag_pretty_json {
