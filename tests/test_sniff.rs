@@ -175,14 +175,16 @@ fn sniff_pretty_json() {
     assert_eq!(got, expected);
 }
 
-
 #[test]
 fn sniff_sample() {
     let wrk = Workdir::new("sniff_sample");
     let test_file = wrk.load_test_file("adur-public-toilets.csv");
 
     let mut cmd = wrk.command("sniff");
-    cmd.arg("--pretty-json").arg("--sample").arg("0.25").arg(test_file);
+    cmd.arg("--pretty-json")
+        .arg("--sample")
+        .arg("0.25")
+        .arg(test_file);
 
     let got: String = wrk.stdout(&mut cmd);
 
