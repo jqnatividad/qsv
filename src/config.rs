@@ -5,8 +5,8 @@ use std::io::{self, Read};
 use std::ops::Deref;
 use std::path::PathBuf;
 
-use qsv_sniffer::{SampleSize, Sniffer};
 use log::{debug, info, warn};
+use qsv_sniffer::{SampleSize, Sniffer};
 use serde::de::{Deserialize, Deserializer, Error};
 
 use crate::index::Indexed;
