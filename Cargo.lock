@@ -667,21 +667,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "csv-sniffer"
-version = "0.3.1"
-source = "git+https://github.com/jqnatividad/csv-sniffer?branch=qsv-optimized#d442ed5bb0cb5e74681135503e463cb45caebcad"
-dependencies = [
- "bitflags",
- "bytecount",
- "csv",
- "csv-core",
- "memchr",
- "once_cell",
- "regex",
- "tabwriter",
-]
-
-[[package]]
 name = "darling"
 version = "0.13.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2103,7 +2088,6 @@ dependencies = [
  "csv",
  "csv-core",
  "csv-index",
- "csv-sniffer",
  "docopt",
  "dynfmt",
  "eudex",
@@ -2125,6 +2109,7 @@ dependencies = [
  "once_cell",
  "pyo3",
  "qsv-dateparser",
+ "qsv-sniffer",
  "qsv-stats",
  "qsv_currency",
  "quickcheck",
@@ -2162,6 +2147,22 @@ dependencies = [
  "chrono",
  "once_cell",
  "regex",
+]
+
+[[package]]
+name = "qsv-sniffer"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9f88555486a4988c43aec6d906b7a81c6158274aa5f2936ae06f7b7e30fbc860"
+dependencies = [
+ "bitflags",
+ "bytecount",
+ "csv",
+ "csv-core",
+ "memchr",
+ "once_cell",
+ "regex",
+ "tabwriter",
 ]
 
 [[package]]

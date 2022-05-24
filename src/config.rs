@@ -5,8 +5,8 @@ use std::io::{self, Read};
 use std::ops::Deref;
 use std::path::PathBuf;
 
-use csv_sniffer::{SampleSize, Sniffer};
 use log::{debug, info, warn};
+use qsv_sniffer::{SampleSize, Sniffer};
 use serde::de::{Deserialize, Deserializer, Error};
 
 use crate::index::Indexed;
@@ -18,7 +18,7 @@ use crate::CliResult;
 const DEFAULT_RDR_BUFFER_CAPACITY: usize = 16 * (1 << 10);
 // previous wtr default in xsv is 32k, we're doubling it
 pub const DEFAULT_WTR_BUFFER_CAPACITY: usize = 64 * (1 << 10);
-// number of rows for csv_sniffer to sample
+// number of rows for qsv_sniffer to sample
 const DEFAULT_SNIFFER_SAMPLE: usize = 100;
 // for files, number of bytes to check for UTF8 encoding
 const DEFAULT_UTF8_CHECK_BUFFER_LEN: usize = 8192;
