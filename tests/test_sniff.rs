@@ -174,3 +174,98 @@ fn sniff_pretty_json() {
 
     assert_eq!(got, expected);
 }
+
+#[test]
+fn sniff_sample() {
+    let wrk = Workdir::new("sniff_sample");
+    let test_file = wrk.load_test_file("adur-public-toilets.csv");
+
+    let mut cmd = wrk.command("sniff");
+    cmd.arg("--pretty-json")
+        .arg("--sample")
+        .arg("0.25")
+        .arg(test_file);
+
+    let got: String = wrk.stdout(&mut cmd);
+
+    let expected = r#"{
+  "delimiter_char": ",",
+  "header_row": true,
+  "preamble_rows": 0,
+  "quote_char": "none",
+  "flexible": false,
+  "is_utf8": true,
+  "num_records": 15,
+  "num_fields": 32,
+  "fields": [
+    "ExtractDate",
+    "OrganisationURI",
+    "OrganisationLabel",
+    "ServiceTypeURI",
+    "ServiceTypeLabel",
+    "LocationText",
+    "CoordinateReferenceSystem",
+    "GeoX",
+    "GeoY",
+    "GeoPointLicensingURL",
+    "Category",
+    "AccessibleCategory",
+    "RADARKeyNeeded",
+    "BabyChange",
+    "FamilyToilet",
+    "ChangingPlace",
+    "AutomaticPublicConvenience",
+    "FullTimeStaffing",
+    "PartOfCommunityScheme",
+    "CommunitySchemeName",
+    "ChargeAmount",
+    "InfoURL",
+    "OpeningHours",
+    "ManagedBy",
+    "ReportEmail",
+    "ReportTel",
+    "Notes",
+    "UPRN",
+    "Postcode",
+    "StreetAddress",
+    "GeoAreaURI",
+    "GeoAreaLabel"
+  ],
+  "types": [
+    "Text",
+    "Text",
+    "Text",
+    "Text",
+    "Text",
+    "Text",
+    "Text",
+    "Unsigned",
+    "Unsigned",
+    "Text",
+    "Text",
+    "Text",
+    "Text",
+    "Text",
+    "Text",
+    "Text",
+    "Text",
+    "Text",
+    "Text",
+    "Boolean",
+    "Boolean",
+    "Text",
+    "Text",
+    "Text",
+    "Text",
+    "Text",
+    "Text",
+    "Unsigned",
+    "Boolean",
+    "Text",
+    "Boolean",
+    "Boolean"
+  ]
+}"#;
+
+    assert_eq!(got, expected);
+}
