@@ -10,9 +10,9 @@ static USAGE: &str = r#"
 Quickly sniff CSV metadata (delimiter, header row, preamble rows, quote character, 
 flexible, is_utf8, number of records, number of fields, field names & data types).
 
-NOTE: This command "sniffs" a CSV's schema by sampling the first n rows of a file
-(use --sample to adjust), and its inferences are sometimes wrong if the sample is
-not large enough.
+NOTE: This command "sniffs" a CSV's schema by sampling the first n rows of a file.
+Its inferences are sometimes wrong if the sample is not large enough (use --sample 
+to adjust). 
 
 If you want more robust, guaranteed schemata, use the "schema" or "stats" commands
 instead as they scan the entire file.
@@ -85,10 +85,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // is really not precise - see https://floating-point-gui.de/errors/comparison/
         sample_all = true;
     }
-    // sample_size is at least 10
-    if sample_size < 10.0 {
-        sample_size = 10.0;
-    }
 
     let rdr = conf.reader_file_stdin()?;
 
@@ -98,7 +94,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .sample_size(SampleSize::All)
             .sniff_reader(rdr.into_inner())
     } else {
-        let sniff_size = sample_size as usize;
+        let mut sniff_size = sample_size as usize;
+        // sample_size is at least 10
+        if sniff_size < 10 {
+            sniff_size = 10;
+        }
         log::info!("Sniffing {sniff_size} of {n_rows} rows...");
         Sniffer::new()
             .sample_size(SampleSize::Records(sniff_size))
