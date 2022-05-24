@@ -1,7 +1,7 @@
 use crate::config::Config;
 use crate::util;
 use crate::CliResult;
-use csv_sniffer::{SampleSize, Sniffer};
+use qsv_sniffer::{SampleSize, Sniffer};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use thousands::Separable;
@@ -56,7 +56,7 @@ struct SniffStruct {
     types: Vec<String>,
 }
 
-fn rowcount(metadata: &csv_sniffer::metadata::Metadata, rowcount: u64) -> u64 {
+fn rowcount(metadata: &qsv_sniffer::metadata::Metadata, rowcount: u64) -> u64 {
     let has_header_row = metadata.dialect.header.has_header_row;
     let num_preamble_rows = metadata.dialect.header.num_preamble_rows;
     let mut final_rowcount = rowcount;
@@ -123,8 +123,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     header_row: metadata.dialect.header.has_header_row,
                     preamble_rows: metadata.dialect.header.num_preamble_rows,
                     quote_char: match metadata.dialect.quote {
-                        csv_sniffer::metadata::Quote::Some(chr) => format!("{}", char::from(chr)),
-                        csv_sniffer::metadata::Quote::None => "none".into(),
+                        qsv_sniffer::metadata::Quote::Some(chr) => format!("{}", char::from(chr)),
+                        qsv_sniffer::metadata::Quote::None => "none".into(),
                     },
                     flexible: metadata.dialect.flexible,
                     is_utf8: metadata.dialect.is_utf8,
