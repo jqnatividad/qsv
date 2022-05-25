@@ -42,7 +42,6 @@ pub mod partition;
 pub mod pseudo;
 #[cfg(all(feature = "python", not(feature = "lite")))]
 pub mod python;
-#[cfg(any(feature = "full", feature = "lite"))]
 pub mod rename;
 pub mod replace;
 #[cfg(any(feature = "full", feature = "lite"))]
