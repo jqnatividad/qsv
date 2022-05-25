@@ -394,7 +394,7 @@ fn build_low_cardinality_column_selector_arg(
     csv_stats: &[Stats],
     stats_col_index_map: &AHashMap<String, usize>,
 ) -> String {
-    let mut low_cardinality_column_indices = Vec::new();
+    let mut low_cardinality_column_indices = Vec::with_capacity(enum_cardinality_threshold + 1);
 
     // identify low cardinality columns
     for i in 0..csv_fields.len() {
