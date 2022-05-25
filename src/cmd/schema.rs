@@ -176,8 +176,13 @@ fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<S
     // invoke cmd::stats
     let (csv_fields, csv_stats, stats_col_index_map) = get_stats_records(args)?;
 
+    // amortize memory allocation
+    let mut low_cardinality_column_indices: Vec<usize> =
+        Vec::with_capacity(args.flag_enum_threshold);
+
     // build column selector arg to invoke cmd::frequency with
     let column_select_arg: String = build_low_cardinality_column_selector_arg(
+        &mut low_cardinality_column_indices,
         args.flag_enum_threshold,
         &csv_fields,
         &csv_stats,
@@ -188,7 +193,12 @@ fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<S
     let unique_values_map = get_unique_values(args, &column_select_arg)?;
 
     // map holds "properties" object of json schema
-    let mut properties_map: Map<String, Value> = Map::new();
+    let mut properties_map: Map<String, Value> = Map::with_capacity(csv_fields.len());
+
+    // amortize memory allocations
+    let mut field_map: Map<String, Value> = Map::with_capacity(10);
+    let mut type_list: Vec<Value> = Vec::with_capacity(4);
+    let mut enum_list: Vec<Value> = Vec::with_capacity(args.flag_enum_threshold);
 
     // generate definition for each CSV column/field and add to properties_map
     for i in 0..csv_fields.len() {
@@ -215,13 +225,13 @@ fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<S
         // );
 
         // map for holding field definition
-        let mut field_map: Map<String, Value> = Map::new();
+        field_map.clear();
         let desc = format!("{header_string} column from {input_filename}");
         field_map.insert("description".to_string(), Value::String(desc));
 
         // use list to hold types, since optional fields get appended a "null" type
-        let mut type_list: Vec<Value> = Vec::new();
-        let mut enum_list: Vec<Value> = Vec::new();
+        type_list.clear();
+        enum_list.clear();
 
         match col_type {
             "String" => {
@@ -247,7 +257,6 @@ fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<S
 
                 // enum constraint
                 if let Some(values) = unique_values_map.get(&header_string) {
-                    enum_list.reserve(values.len()); // to save on allocs
                     for value in values {
                         enum_list.push(Value::String(value.to_string()));
                     }
@@ -322,15 +331,15 @@ fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<S
         }
 
         if type_list.len() > 0 {
-            field_map.insert("type".to_string(), Value::Array(type_list));
+            field_map.insert("type".to_string(), Value::Array(type_list.clone()));
         }
 
         if enum_list.len() > 0 {
-            field_map.insert("enum".to_string(), Value::Array(enum_list));
+            field_map.insert("enum".to_string(), Value::Array(enum_list.clone()));
         }
 
         // add current field definition to properties map
-        properties_map.insert(header_string, Value::Object(field_map));
+        properties_map.insert(header_string, Value::Object(field_map.clone()));
     }
 
     Ok(properties_map)
@@ -389,12 +398,13 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
 
 /// get column selector argument string for low cardinality columns
 fn build_low_cardinality_column_selector_arg(
+    low_cardinality_column_indices: &mut Vec<usize>,
     enum_cardinality_threshold: usize,
     csv_fields: &ByteRecord,
     csv_stats: &[Stats],
     stats_col_index_map: &AHashMap<String, usize>,
 ) -> String {
-    let mut low_cardinality_column_indices = Vec::with_capacity(enum_cardinality_threshold + 1);
+    low_cardinality_column_indices.clear();
 
     // identify low cardinality columns
     for i in 0..csv_fields.len() {
@@ -414,7 +424,7 @@ fn build_low_cardinality_column_selector_arg(
         };
     }
 
-    debug!("low cardinality columns: {low_cardinality_column_indices:?}");
+    // debug!("low cardinality columns: {low_cardinality_column_indices:?}");
 
     use itertools::Itertools;
     let column_select_arg: String = low_cardinality_column_indices
@@ -508,7 +518,7 @@ fn convert_to_string(byte_slice: &[u8]) -> CliResult<String> {
 
 /// determine required fields
 fn get_required_fields(properties_map: &Map<String, Value>) -> Vec<Value> {
-    let mut fields: Vec<Value> = Vec::new();
+    let mut fields: Vec<Value> = Vec::with_capacity(properties_map.len());
 
     // for CSV, all columns in original input file are assume required
     for key in properties_map.keys() {
@@ -574,6 +584,7 @@ fn generate_string_patterns(
 
     debug!("unique values for eligible pattern columns: {unique_values_map:?}");
 
+    pattern_map.reserve(unique_values_map.len());
     for (header, value_set) in unique_values_map.iter() {
         // Convert Set to Vector
         let values: Vec<&String> = Vec::from_iter(value_set);
