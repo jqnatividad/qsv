@@ -44,6 +44,7 @@ Schema options:
     --strict-dates             Enforce Internet Datetime format (RFC-3339)
                                for detected datetime columns
     --pattern-columns <args>   Select columns to add pattern constraints
+    --stdout                   Send generated JSON schema file to stdout instead.
     -j, --jobs <arg>           The number of jobs to run in parallel.
                                When not set, the number of jobs is set to the
                                number of CPUs detected.
@@ -63,6 +64,7 @@ struct Args {
     flag_enum_threshold: usize,
     flag_strict_dates: bool,
     flag_pattern_columns: SelectColumns,
+    flag_stdout: bool,
     flag_jobs: Option<usize>,
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
@@ -92,10 +94,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .to_string();
         (args.arg_input.clone().unwrap(), filename)
     };
-
-    let schema_output_filename = input_path + ".schema.json";
-    let mut schema_output_file =
-        File::create(&schema_output_filename).expect("unable to create schema output file");
 
     // build schema for each field by their inferred type, min/max value/length, and unique values
     let mut properties_map: Map<String, Value> =
@@ -135,14 +133,32 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let schema_pretty = serde_json::to_string_pretty(&schema).expect("prettify schema json");
 
-    schema_output_file
-        .write_all(schema_pretty.as_bytes())
-        .expect("unable to write schema file");
+    if args.flag_stdout {
+        let stdout = std::io::stdout();
+        let mut handle = stdout.lock();
 
-    // flush error report; file gets closed automagically when out-of-scope
-    schema_output_file.flush().unwrap();
+        handle
+            .write_all(schema_pretty.as_bytes())
+            .expect("unable to write schema file to stdout");
 
-    println!("Schema written to {schema_output_filename}");
+        handle.flush().unwrap();
+
+        info!("Schema written to stdout");
+    } else {
+        let schema_output_filename = input_path + ".schema.json";
+        let mut schema_output_file =
+            File::create(&schema_output_filename).expect("unable to create schema output file");
+
+        schema_output_file
+            .write_all(schema_pretty.as_bytes())
+            .expect("unable to write schema file");
+
+        // flush error report; file gets closed automagically when out-of-scope
+        schema_output_file.flush().unwrap();
+
+        println!("Schema written to {schema_output_filename}");
+        info!("Schema written to {schema_output_filename}");
+    }
 
     Ok(())
 }
