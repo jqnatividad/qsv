@@ -54,6 +54,7 @@ macro_rules! command_list {
     index       Create CSV index for faster access
     input       Read CSVs w/ special quoting, skipping, trimming & transcoding rules
     pseudo      Pseudonymise the values of a column
+    rename      Rename the columns of CSV data efficiently
     replace     Replace patterns in CSV data
     sample      Randomly sample CSV data
     search      Search CSV data with a regex
@@ -193,6 +194,7 @@ enum Command {
     Index,
     Input,
     Pseudo,
+    Rename,
     Replace,
     Sample,
     Search,
@@ -230,6 +232,7 @@ impl Command {
             Command::Index => cmd::index::run(argv),
             Command::Input => cmd::input::run(argv),
             Command::Pseudo => cmd::pseudo::run(argv),
+            Command::Rename => cmd::rename::run(argv),
             Command::Replace => cmd::replace::run(argv),
             Command::Sample => cmd::sample::run(argv),
             Command::Search => cmd::search::run(argv),
