@@ -129,3 +129,27 @@ fn generate_schema_with_optional_flags_and_validate_with_errors() {
         validation_error_output
     );
 }
+
+#[test]
+fn generate_schema_with_defaults_to_stdout() {
+    // create workspace and invoke schema command with value constraints flag
+    let wrk = Workdir::new("schema_stdout").flexible(true);
+    wrk.clear_contents().unwrap();
+
+    // copy csv file to workdir
+    let csv = wrk.load_test_resource("adur-public-toilets.csv");
+    wrk.create_from_string("adur-public-toilets.csv", &csv);
+
+    // run schema command
+    let mut cmd = wrk.command("schema");
+    cmd.arg("--stdout").arg("adur-public-toilets.csv");
+    let stdout = wrk.stdout::<String>(&mut cmd);
+    let output_schema_json: Value = serde_json::from_str(&stdout).unwrap();
+
+    // diff output json with expected json
+    let expected_schema: String =
+        wrk.load_test_resource("adur-public-toilets.csv.schema-default.expected.json");
+    let expected_schema_json: Value = serde_json::from_str(&expected_schema).unwrap();
+
+    assert_json_eq!(expected_schema_json, output_schema_json);
+}
