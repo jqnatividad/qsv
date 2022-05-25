@@ -167,7 +167,7 @@ The `fetch` command also produces JSONL files when its invoked without the `--ne
 
 The `sniff` and `validate` commands produce JSON files with their `--json` and `--pretty-json` options.
 
-The `schema` command produces [JSON Schema Validation (Draft 7)](https://json-schema.org/draft/2020-12/json-schema-validation.html) files with the ".schema.json" file extension.
+The `schema` command produces [JSON Schema Validation (Draft 7)](https://json-schema.org/draft/2020-12/json-schema-validation.html) files with the ".schema.json" file extension, which can be used with the `validate` command.
 
 The `excel` command recognizes Excel and Open Document Spreadsheet(ODS) files (`.xls`, `.xlsx`, `.xlsm`, `.xlsb` and `.ods` files).
 
