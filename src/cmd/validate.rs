@@ -199,6 +199,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         util::prep_progress(&progress, record_count);
     }
 
+    #[cfg(any(feature = "full", feature = "lite"))]
     let not_quiet = !args.flag_quiet;
 
     // parse and compile supplied JSON Schema
