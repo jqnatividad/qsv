@@ -94,7 +94,7 @@ Pre-built binaries compiled using Rust Nightly/Unstable are also [available for 
 
 * compiled with the current Rust nightly/unstable at the time of release.
 * stdlib is compiled from source, instead of using the pre-built stdlib. This ensures stdlib is compiled with all of qsv's release settings
-  (link time optimization, opt-level, codegen-units, panic=abort, etc.), presenting more opportunities for the Rust/LLVM to optimize the generated code.
+  (link time optimization, opt-level, codegen-units, panic=abort, etc.), presenting more opportunities for Rust/LLVM to optimize the generated code.
   This is why we only have nightly release builds for select platforms (the platform of GitHub's action runners), as we need access to the "native hardware"
   and cannot cross-compile stdlib to other platforms.
 * set `panic=abort` - removing panic-handling/formatting and backtrace code, making for smaller binaries.
