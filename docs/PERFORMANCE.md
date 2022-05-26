@@ -85,24 +85,25 @@ The `apply geocode` command [memoizes](https://en.wikipedia.org/wiki/Memoization
 The `fetch` command also memoizes expensive REST API calls with its optional Redis support. It effectively has a persistent cache as the default time-to-live (TTL) before a Redis cache entry is expired is 28 days and Redis entries are persisted across restarts. Redis cache settings can be fine-tuned with the `QSV_REDIS_CONNECTION_STRING`, `QSV_REDIS_TTL_SECONDS` and `QSV_REDIS_TTL_REFRESH` environment variables.
 
 ## UTF-8 Encoding for Performance
-[Rust strings are utf-8 encoded](https://doc.rust-lang.org/std/string/struct.String.html). As a result, qsv **requires** UTF-8 encoded files, primarily, for performance. It makes extensive use of [`str::from_utf8_unchecked`](https://doc.rust-lang.org/stable/std/str/fn.from_utf8_unchecked.html) to skip utf-8 validation that [`str::from_utf8`](https://doc.rust-lang.org/stable/std/str/fn.from_utf8.html) will otherwise incur everytime raw bytes are converted to string.
+[Rust strings are utf-8 encoded](https://doc.rust-lang.org/std/string/struct.String.html). As a result, qsv **requires** UTF-8 encoded files, primarily, for performance. It makes extensive use of [`str::from_utf8_unchecked`](https://doc.rust-lang.org/stable/std/str/fn.from_utf8_unchecked.html) to skip utf-8 validation that [`str::from_utf8`](https://doc.rust-lang.org/stable/std/str/fn.from_utf8.html) will otherwise incur everytime raw bytes are converted to string, even if the file is already utf8-encoded.
 
-For the most part, this shouldn't be a problem as UTF-8 is the de facto encoding standard. Should you need to process a CSV file with a different encoding, use the `input` command to "transcode" to UTF-8.
+For the most part, this shouldn't be a problem as UTF-8 is the de facto encoding standard. Should you need to process a CSV file with a different encoding, use the `input` command first to "[loosely transcode](https://doc.rust-lang.org/std/string/struct.String.html#method.from_utf8_lossy)" it to UTF-8.
 
 ## Nightly Release Builds
 Pre-built binaries compiled using Rust Nightly/Unstable are also [available for download](https://github.com/jqnatividad/qsv/releases/latest). These binaries are optimized for size and speed:
 
 * compiled with the current Rust nightly/unstable at the time of release.
 * stdlib is compiled from source, instead of using the pre-built stdlib. This ensures stdlib is compiled with all of qsv's release settings
-  (link time optimization, opt-level, codegen-units, panic=abort, etc.). This is why we only have nightly release builds for select platforms 
-  (the platform of GitHub's action runners), as we need access to the "native hardware" and cannot cross-compile stdlib to other platforms.
+  (link time optimization, opt-level, codegen-units, panic=abort, etc.), presenting more opportunities for the Rust/LLVM to optimize the generated code.
+  This is why we only have nightly release builds for select platforms (the platform of GitHub's action runners), as we need access to the "native hardware"
+  and cannot cross-compile stdlib to other platforms.
 * set `panic=abort` - removing panic-handling/formatting and backtrace code, making for smaller binaries.
 * enables unstable/nightly features on `regex`, `rand` and `pyo3` crates, that unlock performance/SIMD features on those crates.
 
 Despite the 'unstable' label, these binaries are actually quite stable, given how [Rust is made](https://doc.rust-lang.org/book/appendix-07-nightly-rust.html),
 and the fact that qsv itself doesn't actually use any unstable feature flags, beyond activating the 'unstable' features in the `rand`, `regex` and `pyo3` crates, which is really more about performance (that's why we can still compile with Rust stable). You only really loose the backtrace messages when qsv panics.
 
-If you need to maximize speed/performance - use the nightly builds. If you prefer a "safer", rock-solid experience, use the stable builds.
+If you need to maximize performance - use the nightly builds. If you prefer a "safer", rock-solid experience, use the stable builds.
 
 If you want to really squeeze every little bit of performance from qsv, build it locally like how the Nightly Release Builds are built.
 Doing so will ensure CPU features are tailored to your hardware and you're using the latest Rust nightly.
@@ -122,6 +123,9 @@ cargo build --profile release-nightly --bin qsvlite -Z build-std=std,panic_abort
 # to build qsvdp
 cargo build --profile release-nightly --bin qsvdp -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --features datapusher_plus,nightly --target x86_64-unknown-linux-gnu
 ```
+
+With that said, there are times that Rust Nightly/Unstable does "break" qsv. That's why we include `qsv_rust_version_info.txt` in the 
+nightly release build zip files, should you need to pin Rust to a specific nightly version when building locally.
 
 ## Benchmarking for Performance
 
