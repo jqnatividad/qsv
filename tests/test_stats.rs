@@ -158,7 +158,9 @@ where
         cmd.arg("--nulls");
     }
     if infer_dates {
-        cmd.arg("--infer-dates");
+        cmd.arg("--infer-dates")
+            .arg("--dates-whitelist")
+            .arg("<NULL>");
     }
 
     (wrk, cmd)
