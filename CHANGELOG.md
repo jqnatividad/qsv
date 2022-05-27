@@ -5,6 +5,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.51.0] - 2022-05-27
+### Added
+* `sniff`: sniff field names as well in addition to field data types in https://github.com/jqnatividad/qsv/pull/317
+* `sniff`: intelligent sampling. In addition to specifying the number of first n rows to sample, when `--sample`
+is between 0 and 1 exclusive, its treated as a percentage of the CSV to sample (e.g. 0.20 is 20 percent).
+If its zero, the entire file will be sampled. https://github.com/jqnatividad/qsv/pull/318
+* `schema`: add --stdout option in https://github.com/jqnatividad/qsv/pull/321
+* `stats`: smart date inferencing with field-name date whitelist. Also did some minor tweaks for a little more performance
+* `rename`: added to `qsvdp` - [DataPusher+](https://github.com/dathere/datapusher-plus)-optimized qsv binary in https://github.com/jqnatividad/qsv/pull/327
+
+### Changed
+* Switch to qsv_sniffer fork of csv_sniffer. qsv_sniffer has several optimizations (field name sniffing, 
+utf-8 encoding detection, SIMD speedups, [etc.](https://github.com/jqnatividad/qsv-sniffer/releases/tag/0.4.0))
+that enabled the added `sniff` features above. https://github.com/jqnatividad/qsv/pull/320
+* `rename`: add it to datapusher_plus build in https://github.com/jqnatividad/qsv/pull/324
+* Bump uuid from 1.0.0 to 1.1.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/323
+* Improved Performance Tuning section with more details about UTF-8 encoding, and Nightly builds
+* Updated list of commands that use an index
+* cargo update bump dependencies, notably jql 4.0.3 to 4.0.4, and cookie_store from 0.16.0 to 0.16.1
+
+### Fixed
+* pinned Rust Nightly to 2022-05-23. Later Rust Nightly releases "broke" packed-simd dependency
+which prevented us from building qsv's nightly build. (see https://github.com/apache/arrow-rs/issues/1734)
+
 ## [0.50.1] - 2022-05-23
 ### Changed
 * disable simd acceleration feature on our csv-sniffer fork so we can publish on crates.io
