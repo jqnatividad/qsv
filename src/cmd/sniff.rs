@@ -21,8 +21,8 @@ Usage:
     qsv sniff [options] [<input>] 
 
 sniff options:
-    --sample <arg>         First n rows to sample to sniff out the metadata.
-                           When sample-size is between 0 and 1 exclusive, 
+    --sample <size>        First n rows to sample to sniff out the metadata.
+                           When sample size is between 0 and 1 exclusive, 
                            it is treated as a percentage of the CSV to sample
                            (e.g. 0.20 is 20 percent).
                            When it is zero, the entire file will be sampled.
