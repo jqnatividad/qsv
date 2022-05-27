@@ -445,7 +445,6 @@ fn build_low_cardinality_column_selector_arg(
 
     // debug!("low cardinality columns: {low_cardinality_column_indices:?}");
 
-    // use itertools::Itertools;
     let column_select_arg: String = low_cardinality_column_indices
         .iter()
         .map(ToString::to_string)
