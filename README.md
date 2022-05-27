@@ -50,7 +50,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ) for more details.
 | [input](/src/cmd/input.rs#L8)[^2] | Read CSV data with special quoting, trimming, line-skipping and UTF-8 transcoding rules. Typically used to "normalize" a CSV for further processing with other qsv commands. |
 | [join](/src/cmd/join.rs#L18)[^2] | Inner, outer, cross, anti & semi joins. Uses a simple hash index to make it fast.  |
 | [jsonl](/src/cmd/jsonl.rs#L11-L12) | Convert newline-delimited JSON ([JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/)) to CSV.
-| [lua](/src/cmd/lua.rs#L14-L15)[^1] | Execute a [Lua](https://www.lua.org/about.html) script over CSV lines to transform, aggregate or filter them. Embeds [Lua 5.4.4](https://www.lua.org/manual/5.4/manual.html).  |
+| [lua](/src/cmd/lua.rs#L14-L15)[^1] | Execute a [Lua](https://www.lua.org/about.html) 5.4.4 script over CSV lines to transform, aggregate or filter them.  |
 | [partition](/src/cmd/partition.rs#L17) | Partition a CSV based on a column value. |
 | [pseudo](/src/cmd/pseudo.rs#L10-L11) | [Pseudonymise](https://en.wikipedia.org/wiki/Pseudonymization) the value of the given column by replacing them with an incremental identifier.  |
 | [py](/src/cmd/python.rs#L42-L43)[^1] | Evaluate a Python expression over CSV lines to transform, aggregate or filter them. Python's [f-strings](https://www.freecodecamp.org/news/python-f-strings-tutorial-how-to-use-f-strings-for-string-formatting/) is particularly useful for extended formatting (Python 3.8+ required).  |
@@ -246,14 +246,14 @@ Several dependencies also have environment variables that influence qsv's perfor
 * `generate` - enable `generate` command.
 * `full` - enable to build qsv.
 * `lite` - enable to build qsvlite.
-* `datapusher_plus` - enable to build qsvdp.
+* `datapusher_plus` - enable to build qsvdp - the [DataPusher+](https://github.com/dathere/datapusher-plus) optimized qsv binary.
 * `nightly` - enable to turn on nightly/unstable features in the `rand` and `regex` creates when building with Rust nightly/unstable.
 
 The following "power-user" commands can be abused and present "foot-shooting" scenarios.
 
-* `lua` - enable `lua` command.
+* `lua` - enable `lua` command. Embeds a [Lua 5.4.4](https://www.lua.org/manual/5.4/manual.html) interpreter into qsv.
 * `foreach` - enable `foreach` command (not valid for Windows).
-* `python` - enable `py` command (requires Python 3.8+). Note that qsv will automatically use the currently activated python version when run in a virtual environment.
+* `python` - enable `py` command (requires Python 3.8+). Note that qsv will automatically use the currently activated python version when running in a virtual environment.
 
 > **NOTE:** `qsvlite`, as the name implies, always has **non-default features disabled**. `qsv` can be built with any combination of the above features  using the cargo `--features` & `--no-default-features` flags. The pre-built `qsv` binaries has **all applicable features enabled for the target platform**[^6].
 
