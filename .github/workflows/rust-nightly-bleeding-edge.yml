@@ -1,0 +1,34 @@
+name: Linux Nightly Bleeding Edge
+
+on:
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v3.1.2
+      with:
+        python-version: '3.8'
+    - name: Install and Run Redis
+      run: |
+        sudo apt-get install redis-server
+        sudo service redis-server start
+    - name: Installing Rust toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        # get the LATEST rust nightly
+        toolchain: nightly
+        profile: minimal
+        components: rust-src
+        target: x86_64-unknown-linux-gnu
+        override: true
+        default: true
+    - name: Run tests
+      run: cargo test --verbose --locked --features=apply,fetch,foreach,generate,lua,python,full,nightly
