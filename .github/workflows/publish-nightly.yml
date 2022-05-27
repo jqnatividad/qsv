@@ -120,7 +120,7 @@ jobs:
              mv qsvlite qsvlite_nightly
              mv qsvdp qsvdp_nightly
         fi
-        rustup check > qsv_rust_version_info.txt
+        rustup show > qsv_rust_version_info.txt
         cd ..
     - name: zip up binaries
       run: 7z a -tzip qsv-nightly-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/qsv* -mx=9 -mmt=on
