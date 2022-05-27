@@ -7,6 +7,7 @@ use crate::CliResult;
 use ahash::AHashMap;
 use csv::ByteRecord;
 use grex::RegExpBuilder;
+use itertools::Itertools;
 use log::{debug, error, info, warn};
 use serde::Deserialize;
 use serde_json::{json, value::Number, Map, Value};
@@ -44,6 +45,11 @@ Schema options:
     --strict-dates             Enforce Internet Datetime format (RFC-3339)
                                for detected datetime columns
     --pattern-columns <args>   Select columns to add pattern constraints
+    --dates-whitelist <list>   The case-insensitive patterns to look for when 
+                               shortlisting fields for date inference.
+                               Set to <NULL> to inspect ALL fields for
+                               date/datetime types.
+                               [default: date,time,due,opened,closed]
     --stdout                   Send generated JSON schema file to stdout instead.
     -j, --jobs <arg>           The number of jobs to run in parallel.
                                When not set, the number of jobs is set to the
@@ -64,6 +70,7 @@ struct Args {
     flag_enum_threshold: usize,
     flag_strict_dates: bool,
     flag_pattern_columns: SelectColumns,
+    flag_dates_whitelist: String,
     flag_stdout: bool,
     flag_jobs: Option<usize>,
     flag_no_headers: bool,
@@ -358,26 +365,38 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
         flag_quartiles: false,
         flag_nulls: false,
         flag_infer_dates: true,
+        flag_dates_whitelist: "date,time,due,opened,closed".to_string(),
         flag_jobs: Some(util::njobs(args.flag_jobs)),
         flag_output: None,
         flag_no_headers: args.flag_no_headers,
         flag_delimiter: args.flag_delimiter,
     };
 
+    log::info!(
+        "inferring dates using date-whitelist: {}",
+        args.flag_dates_whitelist
+    );
+    let date_whitelist_vec = stats_args
+        .flag_dates_whitelist
+        .to_lowercase()
+        .split(',')
+        .map(|s| s.trim().to_string())
+        .collect_vec();
+
     let (csv_fields, csv_stats) = match stats_args.rconfig().indexed() {
         Ok(o) => match o {
             None => {
                 info!("no index, triggering sequential stats");
-                stats_args.sequential_stats()
+                stats_args.sequential_stats(&date_whitelist_vec)
             }
             Some(idx) => {
                 info!("has index, triggering parallel stats");
-                stats_args.parallel_stats(idx)
+                stats_args.parallel_stats(&date_whitelist_vec, idx)
             }
         },
         Err(e) => {
             warn!("error determining if indexed, triggering sequential stats: {e}");
-            stats_args.sequential_stats()
+            stats_args.sequential_stats(&date_whitelist_vec)
         }
     }?;
 
@@ -426,7 +445,7 @@ fn build_low_cardinality_column_selector_arg(
 
     // debug!("low cardinality columns: {low_cardinality_column_indices:?}");
 
-    use itertools::Itertools;
+    // use itertools::Itertools;
     let column_select_arg: String = low_cardinality_column_indices
         .iter()
         .map(ToString::to_string)

@@ -15,6 +15,7 @@ use crate::index::Indexed;
 use crate::select::{SelectColumns, Selection};
 use crate::util;
 use crate::CliResult;
+use once_cell::sync::OnceCell;
 use qsv_dateparser::DateTimeUtc;
 use serde::Deserialize;
 
@@ -44,30 +45,35 @@ Usage:
     qsv stats [options] [<input>]
 
 stats options:
-    -s, --select <arg>     Select a subset of columns to compute stats for.
-                           See 'qsv select --help' for the format details.
-                           This is provided here because piping 'qsv select'
-                           into 'qsv stats' will disable the use of indexing.
-    --everything           Show all statistics available.
-    --mode                 Show the mode/s. Multimodal-aware.
-                           This requires storing all CSV data in memory.
-    --cardinality          Show the cardinality.
-                           This requires storing all CSV data in memory.
-    --median               Show the median.
-                           This requires storing all CSV data in memory.
-    --quartiles            Show the quartiles, the IQR, the lower/upper fences
-                           and skew.
-                           This requires storing all CSV data in memory.
-    --nulls                Include NULLs in the population size for computing
-                           mean and standard deviation.
-    --infer-dates          Infer date/datetime datatypes. This is a very expensive
-                           option and should only be used when you know there
-                           are date/datetime fields.
-    -j, --jobs <arg>       The number of jobs to run in parallel.
-                           This works only when the given CSV has an index.
-                           Note that a file handle is opened for each job.
-                           When not set, the number of jobs is set to the
-                           number of CPUs detected.
+    -s, --select <arg>        Select a subset of columns to compute stats for.
+                              See 'qsv select --help' for the format details.
+                              This is provided here because piping 'qsv select'
+                              into 'qsv stats' will disable the use of indexing.
+    --everything              Show all statistics available.
+    --mode                    Show the mode/s. Multimodal-aware.
+                              This requires storing all CSV data in memory.
+    --cardinality             Show the cardinality.
+                              This requires storing all CSV data in memory.
+    --median                  Show the median.
+                              This requires storing all CSV data in memory.
+    --quartiles               Show the quartiles, the IQR, the lower/upper fences
+                              and skew.
+                              This requires storing all CSV data in memory.
+    --nulls                   Include NULLs in the population size for computing
+                              mean and standard deviation.
+    --infer-dates             Infer date/datetime datatypes. This is a very expensive
+                              option and should only be used when you know there
+                              are date/datetime fields.
+    --dates-whitelist <list>  The case-insensitive patterns to look for when 
+                              shortlisting fields for date inference.
+                              Set to <NULL> to inspect ALL fields for
+                              date/datetime types.
+                              [default: date,time,due,opened,closed]
+    -j, --jobs <arg>          The number of jobs to run in parallel.
+                              This works only when the given CSV has an index.
+                              Note that a file handle is opened for each job.
+                              When not set, the number of jobs is set to the
+                              number of CPUs detected.
 
 Common options:
     -h, --help             Display this message
@@ -90,27 +96,45 @@ pub struct Args {
     pub flag_quartiles: bool,
     pub flag_nulls: bool,
     pub flag_infer_dates: bool,
+    pub flag_dates_whitelist: String,
     pub flag_jobs: Option<usize>,
     pub flag_output: Option<String>,
     pub flag_no_headers: bool,
     pub flag_delimiter: Option<Delimiter>,
 }
 
+static INFER_DATE_FLAGS: once_cell::sync::OnceCell<Vec<bool>> = OnceCell::new();
+
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
+    let date_whitelist_vec = if args.flag_infer_dates {
+        log::info!(
+            "inferring dates using date-whitelist: {}",
+            args.flag_dates_whitelist
+        );
+
+        args.flag_dates_whitelist
+            .to_lowercase()
+            .split(',')
+            .map(|s| s.trim().to_string())
+            .collect_vec()
+    } else {
+        vec![]
+    };
+
     let mut wtr = Config::new(&args.flag_output).writer()?;
     let (headers, stats) = match args.rconfig().indexed()? {
-        None => args.sequential_stats(),
+        None => args.sequential_stats(&date_whitelist_vec),
         Some(idx) => {
             if let Some(num_jobs) = args.flag_jobs {
                 if num_jobs == 1 {
-                    args.sequential_stats()
+                    args.sequential_stats(&date_whitelist_vec)
                 } else {
-                    args.parallel_stats(idx)
+                    args.parallel_stats(&date_whitelist_vec, idx)
                 }
             } else {
-                args.parallel_stats(idx)
+                args.parallel_stats(&date_whitelist_vec, idx)
             }
         }
     }?;
@@ -132,25 +156,34 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 }
 
 impl Args {
-    pub fn sequential_stats(&self) -> CliResult<(csv::ByteRecord, Vec<Stats>)> {
+    pub fn sequential_stats(
+        &self,
+        d_whitelist: &[String],
+    ) -> CliResult<(csv::ByteRecord, Vec<Stats>)> {
         let mut rdr = self.rconfig().reader()?;
         let (headers, sel) = self.sel_headers(&mut rdr)?;
+
+        init_date_inference(self.flag_infer_dates, &headers, d_whitelist);
+
         let stats = self.compute(&sel, rdr.byte_records())?;
         Ok((headers, stats))
     }
 
     pub fn parallel_stats(
         &self,
+        d_whitelist: &[String],
         idx: Indexed<fs::File, fs::File>,
     ) -> CliResult<(csv::ByteRecord, Vec<Stats>)> {
         // N.B. This method doesn't handle the case when the number of records
         // is zero correctly. So we use `sequential_stats` instead.
         if idx.count() == 0 {
-            return self.sequential_stats();
+            return self.sequential_stats(d_whitelist);
         }
 
         let mut rdr = self.rconfig().reader()?;
         let (headers, sel) = self.sel_headers(&mut rdr)?;
+
+        init_date_inference(self.flag_infer_dates, &headers, d_whitelist);
 
         let chunk_size = util::chunk_size(idx.count() as usize, util::njobs(self.flag_jobs));
         let nchunks = util::num_of_chunks(idx.count() as usize, chunk_size);
@@ -197,9 +230,10 @@ impl Args {
             let row = row?;
             for (i, field) in sel.select(&row).enumerate() {
                 unsafe {
-                    // we use unsafe here so we skip unnecessary
-                    // bounds checking for this hot loop
-                    stats.get_unchecked_mut(i).add(field);
+                    // we use unsafe here so we skip unnecessary bounds checking
+                    stats
+                        .get_unchecked_mut(i)
+                        .add(field, INFER_DATE_FLAGS.get().unwrap()[i]);
                 }
             }
         }
@@ -233,7 +267,6 @@ impl Args {
             median: self.flag_median && !self.flag_quartiles && !self.flag_everything,
             quartiles: self.flag_quartiles || self.flag_everything,
             mode: self.flag_mode || self.flag_everything,
-            infer_dates: self.flag_infer_dates,
         }))
         .take(record_len)
         .collect()
@@ -278,6 +311,37 @@ impl Args {
     }
 }
 
+fn init_date_inference(infer_dates: bool, headers: &csv::ByteRecord, d_whitelist: &[String]) {
+    if infer_dates {
+        if d_whitelist[0] == "<null>" {
+            log::info!("inferring dates for ALL fields...");
+            INFER_DATE_FLAGS.set(vec![true; headers.len()]).unwrap();
+            return;
+        }
+
+        let mut infer_date_flag = Vec::with_capacity(headers.len());
+        for header in headers {
+            let header_str = from_bytes::<String>(header).to_lowercase();
+            let mut date_found = false;
+            for whitelist_item in d_whitelist.iter() {
+                if header_str.contains(whitelist_item) {
+                    infer_date_flag.push(true);
+                    date_found = true;
+                    log::info!("inferring dates for {header_str}...");
+                    break;
+                }
+            }
+            if !date_found {
+                infer_date_flag.push(false);
+            }
+        }
+        INFER_DATE_FLAGS.set(infer_date_flag).unwrap();
+    } else {
+        log::info!("NOT inferring dates...");
+        INFER_DATE_FLAGS.set(vec![false; headers.len()]).unwrap();
+    }
+}
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 struct WhichStats {
     include_nulls: bool,
@@ -288,7 +352,6 @@ struct WhichStats {
     median: bool,
     quartiles: bool,
     mode: bool,
-    infer_dates: bool,
 }
 
 impl Commute for WhichStats {
@@ -348,8 +411,8 @@ impl Stats {
 
     #[allow(clippy::option_map_unit_fn)]
     #[inline]
-    fn add(&mut self, sample: &[u8]) {
-        let sample_type = FieldType::from_sample(self.which.infer_dates, sample);
+    fn add(&mut self, sample: &[u8], infer_dates: bool) {
+        let sample_type = FieldType::from_sample(infer_dates, sample);
         self.typ.merge(sample_type);
 
         let t = self.typ;
@@ -382,7 +445,7 @@ impl Stats {
                         };
                     }
                 } else {
-                    let n = from_bytes::<f64>(sample).unwrap();
+                    let n = from_bytes::<f64>(sample);
                     self.median.as_mut().map(|v| {
                         v.add(n);
                     });
@@ -562,6 +625,9 @@ impl FieldType {
             if let Ok(parsed_date) = string.parse::<DateTimeUtc>() {
                 let rfc3339_date_str = parsed_date.0.to_string();
 
+                // with rfc3339 format, time component
+                // starts at position 17. If its shorter than 17,
+                // its a plain date, otherwise, its a datetime.
                 if rfc3339_date_str.len() >= 17 {
                     return TDateTime;
                 }
@@ -653,7 +719,7 @@ impl TypedSum {
         }
         match typ {
             TFloat => {
-                let float: f64 = from_bytes::<f64>(sample).unwrap();
+                let float: f64 = from_bytes::<f64>(sample);
                 match self.float {
                     None => {
                         self.float = Some((self.integer as f64) + float);
@@ -665,9 +731,9 @@ impl TypedSum {
             }
             TInteger => {
                 if let Some(ref mut float) = self.float {
-                    *float += from_bytes::<f64>(sample).unwrap();
+                    *float += from_bytes::<f64>(sample);
                 } else {
-                    self.integer += from_bytes::<i64>(sample).unwrap();
+                    self.integer += from_bytes::<i64>(sample);
                 }
             }
             _ => {}
@@ -815,7 +881,10 @@ impl Commute for TypedMinMax {
 }
 
 #[inline(always)]
-fn from_bytes<T: FromStr>(bytes: &[u8]) -> Option<T> {
+fn from_bytes<T: FromStr>(bytes: &[u8]) -> T
+where
+    <T as FromStr>::Err: std::fmt::Debug,
+{
     // we don't need to do UTF-8 validation as qsv requires UTF-8 encoding
-    unsafe { str::from_utf8_unchecked(bytes).parse().ok() }
+    unsafe { str::from_utf8_unchecked(bytes).parse().unwrap() }
 }
