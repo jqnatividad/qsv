@@ -10,16 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `sniff`: sniff field names as well in addition to field data types in https://github.com/jqnatividad/qsv/pull/317
 * `sniff`: intelligent sampling. In addition to specifying the number of first n rows to sample, when `--sample`
 is between 0 and 1 exclusive, its treated as a percentage of the CSV to sample (e.g. 0.20 is 20 percent).
-If its zero, the entire file will be sampled. https://github.com/jqnatividad/qsv/pull/318
+If its zero, the entire file is sampled. https://github.com/jqnatividad/qsv/pull/318
 * `schema`: add --stdout option in https://github.com/jqnatividad/qsv/pull/321
-* `stats`: smart date inferencing with field-name date whitelist. Also did some minor tweaks for a little more performance
-* `rename`: added to `qsvdp` - [DataPusher+](https://github.com/dathere/datapusher-plus)-optimized qsv binary in https://github.com/jqnatividad/qsv/pull/327
+* `stats`: smart date inferencing with field-name date whitelist. Also did some minor tweaks for a little more performance in https://github.com/jqnatividad/qsv/pull/327
+* `rename`: added to `qsvdp` - [DataPusher+](https://github.com/dathere/datapusher-plus)-optimized qsv binary 
 
 ### Changed
-* Switch to qsv_sniffer fork of csv_sniffer. qsv_sniffer has several optimizations (field name sniffing, 
-utf-8 encoding detection, SIMD speedups, [etc.](https://github.com/jqnatividad/qsv-sniffer/releases/tag/0.4.0))
-that enabled the added `sniff` features above. https://github.com/jqnatividad/qsv/pull/320
-* `rename`: add it to datapusher_plus build in https://github.com/jqnatividad/qsv/pull/324
+* Switch to qsv_sniffer fork of csv_sniffer. [qsv_sniffer](https://github.com/jqnatividad/qsv-sniffer) has several optimizations (field name sniffing, utf-8 encoding detection, 
+SIMD speedups, [etc.](https://github.com/jqnatividad/qsv-sniffer/releases/tag/0.4.0)) that enabled the added `sniff` features above. https://github.com/jqnatividad/qsv/pull/320
 * Bump uuid from 1.0.0 to 1.1.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/323
 * Improved Performance Tuning section with more details about UTF-8 encoding, and Nightly builds
 * Updated list of commands that use an index
