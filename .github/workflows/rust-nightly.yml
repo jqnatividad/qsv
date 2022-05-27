@@ -23,10 +23,15 @@ jobs:
     - name: Installing Rust toolchain
       uses: actions-rs/toolchain@v1
       with:
-        toolchain: nightly-2020-05-22
+        toolchain: nightly
         profile: minimal
         components: rust-src
         target: x86_64-unknown-linux-gnu
-        override: true        
+        override: true
+    - name: Setup rust nightly toolchain
+      shell: bash
+      run: |
+        echo "nightly-2022-05-22" > rust-toolchain
+        rustup update 
     - name: Run tests
-      run: cargo +nightly-2020-05-22 test --verbose --locked --features=apply,fetch,foreach,generate,lua,python,full,nightly
+      run: cargo +nightly test --verbose --locked --features=apply,fetch,foreach,generate,lua,python,full,nightly
