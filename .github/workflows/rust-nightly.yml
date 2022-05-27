@@ -23,7 +23,7 @@ jobs:
     - name: Installing Rust toolchain
       uses: actions-rs/toolchain@v1
       with:
-        toolchain: nightly-2022-05-22
+        toolchain: nightly-2022-05-23
         profile: minimal
         components: rust-src
         target: x86_64-unknown-linux-gnu
