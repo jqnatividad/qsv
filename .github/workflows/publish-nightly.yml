@@ -27,7 +27,7 @@ jobs:
     runs-on: ${{ matrix.job.os }}
     strategy:
       matrix:
-        rust: [nightly]
+        rust: nightly-2022-05-22
         job:
           - os: ubuntu-latest
             os-name: linux
@@ -70,6 +70,7 @@ jobs:
         components: rust-src
         target: ${{ matrix.job.target }}
         override: true
+        default: true
     - name: Checkout repository
       uses: actions/checkout@v3
       with:
