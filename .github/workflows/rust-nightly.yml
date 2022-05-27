@@ -29,4 +29,4 @@ jobs:
         target: x86_64-unknown-linux-gnu
         override: true        
     - name: Run tests
-      run: cargo +nightly test --verbose --locked --features=apply,fetch,foreach,generate,lua,python,full,nightly
+      run: cargo +nightly-2020-05-22 test --verbose --locked --features=apply,fetch,foreach,generate,lua,python,full,nightly
