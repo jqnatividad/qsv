@@ -113,7 +113,7 @@ impl Args {
                         if !rconfig.no_headers {
                             if self.flag_drop {
                                 wtr.write_record(headers.iter().enumerate().filter_map(
-                                    |(i, e)| if i != key_col { Some(e) } else { None },
+                                    |(i, e)| if i == key_col { None } else { Some(e) },
                                 ))?;
                             } else {
                                 wtr.write_record(&headers)?;

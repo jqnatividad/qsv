@@ -97,10 +97,10 @@ impl<R: io::Read + io::Seek, W: io::Write> IoState<R, W> {
             let key = get_row_key(&self.sel1, &row, self.casei);
             match validx.values.get(&key) {
                 None => {
-                    if !invert {
-                        self.wtr.write_record(row.iter())?;
-                    } else {
+                    if invert {
                         continue;
+                    } else {
+                        self.wtr.write_record(row.iter())?;
                     }
                 }
                 Some(_rows) => {
@@ -181,18 +181,18 @@ impl<R: io::Read + io::Seek> ValueIndex<R> {
         // This logic is kind of tricky. Basically, we want to include
         // the header row in the line index (because that's what csv::index
         // does), but we don't want to include header values in the ValueIndex.
-        if !rdr.has_headers() {
-            // ... so if there are no headers, we seek to the beginning and
-            // index everything.
-            let mut pos = csv::Position::new();
-            pos.set_byte(0);
-            rdr.seek(pos)?;
-        } else {
-            // ... and if there are headers, we make sure that we've parsed
+        if rdr.has_headers() {
+            // ... so if there are headers, we make sure that we've parsed
             // them, and write the offset of the header row to the index.
             rdr.byte_headers()?;
             row_idx.write_u64::<BigEndian>(0)?;
             count += 1;
+        } else {
+            // ... and if there are no headers, we seek to the beginning and
+            // index everything.
+            let mut pos = csv::Position::new();
+            pos.set_byte(0);
+            rdr.seek(pos)?;
         }
 
         let mut row = csv::ByteRecord::new();
