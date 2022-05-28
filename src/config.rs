@@ -164,7 +164,7 @@ impl Config {
         }
     }
 
-    pub fn delimiter(mut self, d: Option<Delimiter>) -> Config {
+    pub const fn delimiter(mut self, d: Option<Delimiter>) -> Config {
         if let Some(d) = d {
             self.delimiter = d.as_byte();
         }

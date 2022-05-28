@@ -236,12 +236,12 @@ impl Filler {
         }
     }
 
-    fn use_first_value(mut self, first: bool) -> Self {
+    const fn use_first_value(mut self, first: bool) -> Self {
         self.first = first;
         self
     }
 
-    fn backfill_empty_values(mut self, backfill: bool) -> Self {
+    const fn backfill_empty_values(mut self, backfill: bool) -> Self {
         self.backfill = backfill;
         self
     }
