@@ -33,7 +33,7 @@ pub struct Delimiter(pub u8);
 /// Its purpose is to ensure that the Unicode character given decodes to a
 /// valid ASCII character as required by the CSV parser.
 impl Delimiter {
-    pub fn as_byte(self) -> u8 {
+    pub const fn as_byte(self) -> u8 {
         self.0
     }
 
@@ -172,7 +172,7 @@ impl Config {
     }
 
     #[allow(dead_code)]
-    pub fn get_delimiter(&self) -> u8 {
+    pub const fn get_delimiter(&self) -> u8 {
         self.delimiter
     }
 
@@ -188,12 +188,12 @@ impl Config {
         self
     }
 
-    pub fn flexible(mut self, yes: bool) -> Config {
+    pub const fn flexible(mut self, yes: bool) -> Config {
         self.flexible = yes;
         self
     }
 
-    pub fn crlf(mut self, yes: bool) -> Config {
+    pub const fn crlf(mut self, yes: bool) -> Config {
         if yes {
             self.terminator = csv::Terminator::CRLF;
         } else {
@@ -202,37 +202,37 @@ impl Config {
         self
     }
 
-    pub fn terminator(mut self, term: csv::Terminator) -> Config {
+    pub const fn terminator(mut self, term: csv::Terminator) -> Config {
         self.terminator = term;
         self
     }
 
-    pub fn quote(mut self, quote: u8) -> Config {
+    pub const fn quote(mut self, quote: u8) -> Config {
         self.quote = quote;
         self
     }
 
-    pub fn quote_style(mut self, style: csv::QuoteStyle) -> Config {
+    pub const fn quote_style(mut self, style: csv::QuoteStyle) -> Config {
         self.quote_style = style;
         self
     }
 
-    pub fn double_quote(mut self, yes: bool) -> Config {
+    pub const fn double_quote(mut self, yes: bool) -> Config {
         self.double_quote = yes;
         self
     }
 
-    pub fn escape(mut self, escape: Option<u8>) -> Config {
+    pub const fn escape(mut self, escape: Option<u8>) -> Config {
         self.escape = escape;
         self
     }
 
-    pub fn quoting(mut self, yes: bool) -> Config {
+    pub const fn quoting(mut self, yes: bool) -> Config {
         self.quoting = yes;
         self
     }
 
-    pub fn trim(mut self, trim_type: csv::Trim) -> Config {
+    pub const fn trim(mut self, trim_type: csv::Trim) -> Config {
         self.trim = trim_type;
         self
     }
@@ -242,11 +242,11 @@ impl Config {
         self
     }
 
-    pub fn is_stdin(&self) -> bool {
+    pub const fn is_stdin(&self) -> bool {
         self.path.is_none()
     }
 
-    pub fn checkutf8(mut self, yes: bool) -> Config {
+    pub const fn checkutf8(mut self, yes: bool) -> Config {
         self.checkutf8 = yes;
         self
     }

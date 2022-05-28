@@ -56,7 +56,7 @@ struct SniffStruct {
     types: Vec<String>,
 }
 
-fn rowcount(metadata: &qsv_sniffer::metadata::Metadata, rowcount: u64) -> u64 {
+const fn rowcount(metadata: &qsv_sniffer::metadata::Metadata, rowcount: u64) -> u64 {
     let has_header_row = metadata.dialect.header.has_header_row;
     let num_preamble_rows = metadata.dialect.header.num_preamble_rows;
     let mut final_rowcount = rowcount;
