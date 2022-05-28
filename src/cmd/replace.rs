@@ -71,7 +71,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .unicode(regex_unicode)
         .build()?;
     let replacement = if args.arg_replacement == NULL_VALUE {
-        "".as_bytes()
+        b""
     } else {
         args.arg_replacement.as_bytes()
     };
