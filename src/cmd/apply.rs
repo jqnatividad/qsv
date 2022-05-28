@@ -4,14 +4,13 @@ use crate::CliResult;
 use crate::{regex_once_cell, util};
 use cached::proc_macro::cached;
 use censor::{Censor, Sex, Zealous};
-use chrono::{NaiveTime, Utc};
 use dynfmt::Format;
 use eudex::Hash;
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::debug;
 use once_cell::sync::OnceCell;
 use qsv_currency::Currency;
-use qsv_dateparser::parse_with;
+use qsv_dateparser::parse_with_preference;
 use regex::Regex;
 use reverse_geocoder::{Locations, ReverseGeocoder};
 use serde::Deserialize;
@@ -196,6 +195,8 @@ apply options:
     -r, --rename <name>         New name for the transformed column.
     -C, --comparand=<string>    The string to compare against for replace & similarity operations.
     -R, --replacement=<string>  The string to use for the replace & emptyreplace operations.
+    --prefer-dmy                Prefer to parse dates in dmy format. Otherwise, use mdy format.
+                                Only used with the DATEFMT subcommand.
     -f, --formatstr=<string>    The date format to use with the datefmt subcommand. For formats, see
                                 https://docs.rs/chrono/0.4.19/chrono/format/strftime/index.html
                                 [default: %+]
@@ -265,6 +266,7 @@ struct Args {
     flag_rename: Option<String>,
     flag_comparand: String,
     flag_replacement: String,
+    flag_prefer_dmy: bool,
     flag_formatstr: String,
     flag_new_column: Option<String>,
     flag_output: Option<String>,
@@ -273,7 +275,6 @@ struct Args {
     flag_quiet: bool,
 }
 
-static MIDNIGHT: OnceCell<chrono::NaiveTime> = OnceCell::new();
 static CENSOR: OnceCell<Censor> = OnceCell::new();
 static LOCS: OnceCell<Locations> = OnceCell::new();
 static GEOCODER: OnceCell<ReverseGeocoder> = OnceCell::new();
@@ -471,8 +472,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 cell = args.flag_replacement.to_string();
             }
         } else if args.cmd_datefmt && !cell.is_empty() {
-            let midnight = MIDNIGHT.get_or_init(|| NaiveTime::from_hms(0, 0, 0));
-            let parsed_date = parse_with(&cell, &Utc, *midnight);
+            let parsed_date = parse_with_preference(&cell, args.flag_prefer_dmy);
             if let Ok(format_date) = parsed_date {
                 let formatted_date = format_date.format(&args.flag_formatstr).to_string();
                 if formatted_date.ends_with("T00:00:00+00:00") {
