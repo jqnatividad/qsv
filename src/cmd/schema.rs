@@ -50,6 +50,7 @@ Schema options:
                                Set to <NULL> to inspect ALL fields for
                                date/datetime types.
                                [default: date,time,due,opened,closed]
+    --prefer-dmy               Prefer to parse dates in dmy format. Otherwise, use mdy format.
     --stdout                   Send generated JSON schema file to stdout instead.
     -j, --jobs <arg>           The number of jobs to run in parallel.
                                When not set, the number of jobs is set to the
@@ -71,6 +72,7 @@ struct Args {
     flag_strict_dates: bool,
     flag_pattern_columns: SelectColumns,
     flag_dates_whitelist: String,
+    flag_prefer_dmy: bool,
     flag_stdout: bool,
     flag_jobs: Option<usize>,
     flag_no_headers: bool,
@@ -365,7 +367,8 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
         flag_quartiles: false,
         flag_nulls: false,
         flag_infer_dates: true,
-        flag_dates_whitelist: "date,time,due,opened,closed".to_string(),
+        flag_dates_whitelist: args.flag_dates_whitelist.to_string(),
+        flag_prefer_dmy: args.flag_prefer_dmy,
         flag_jobs: Some(util::njobs(args.flag_jobs)),
         flag_output: None,
         flag_no_headers: args.flag_no_headers,

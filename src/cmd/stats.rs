@@ -16,7 +16,7 @@ use crate::select::{SelectColumns, Selection};
 use crate::util;
 use crate::CliResult;
 use once_cell::sync::OnceCell;
-use qsv_dateparser::DateTimeUtc;
+use qsv_dateparser::parse_with_preference;
 use serde::Deserialize;
 
 use self::FieldType::{TDate, TDateTime, TFloat, TInteger, TNull, TString};
@@ -67,8 +67,10 @@ stats options:
     --dates-whitelist <list>  The case-insensitive patterns to look for when 
                               shortlisting fields for date inference.
                               Set to <NULL> to inspect ALL fields for
-                              date/datetime types.
+                              date/datetime types. Ignored if --infer-dates is false.
                               [default: date,time,due,opened,closed]
+    --prefer-dmy              Prefer to parse dates in dmy format. Otherwise, use mdy format.
+                              Ignored if --infer-dates is false.
     -j, --jobs <arg>          The number of jobs to run in parallel.
                               This works only when the given CSV has an index.
                               Note that a file handle is opened for each job.
@@ -97,6 +99,7 @@ pub struct Args {
     pub flag_nulls: bool,
     pub flag_infer_dates: bool,
     pub flag_dates_whitelist: String,
+    pub flag_prefer_dmy: bool,
     pub flag_jobs: Option<usize>,
     pub flag_output: Option<String>,
     pub flag_no_headers: bool,
@@ -104,6 +107,7 @@ pub struct Args {
 }
 
 static INFER_DATE_FLAGS: once_cell::sync::OnceCell<Vec<bool>> = OnceCell::new();
+static DMY_PREFERENCE: once_cell::sync::OnceCell<bool> = OnceCell::new();
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
@@ -163,7 +167,12 @@ impl Args {
         let mut rdr = self.rconfig().reader()?;
         let (headers, sel) = self.sel_headers(&mut rdr)?;
 
-        init_date_inference(self.flag_infer_dates, &headers, d_whitelist);
+        init_date_inference(
+            self.flag_infer_dates,
+            self.flag_prefer_dmy,
+            &headers,
+            d_whitelist,
+        );
 
         let stats = self.compute(&sel, rdr.byte_records())?;
         Ok((headers, stats))
@@ -183,7 +192,12 @@ impl Args {
         let mut rdr = self.rconfig().reader()?;
         let (headers, sel) = self.sel_headers(&mut rdr)?;
 
-        init_date_inference(self.flag_infer_dates, &headers, d_whitelist);
+        init_date_inference(
+            self.flag_infer_dates,
+            self.flag_prefer_dmy,
+            &headers,
+            d_whitelist,
+        );
 
         let chunk_size = util::chunk_size(idx.count() as usize, util::njobs(self.flag_jobs));
         let nchunks = util::num_of_chunks(idx.count() as usize, chunk_size);
@@ -311,7 +325,12 @@ impl Args {
     }
 }
 
-fn init_date_inference(infer_dates: bool, headers: &csv::ByteRecord, d_whitelist: &[String]) {
+fn init_date_inference(
+    infer_dates: bool,
+    prefer_dmy: bool,
+    headers: &csv::ByteRecord,
+    d_whitelist: &[String],
+) {
     if infer_dates {
         if d_whitelist[0] == "<null>" {
             log::info!("inferring dates for ALL fields...");
@@ -340,6 +359,8 @@ fn init_date_inference(infer_dates: bool, headers: &csv::ByteRecord, d_whitelist
         log::info!("NOT inferring dates...");
         INFER_DATE_FLAGS.set(vec![false; headers.len()]).unwrap();
     }
+    log::info!("prefer DMY?: {prefer_dmy}");
+    DMY_PREFERENCE.set(prefer_dmy).unwrap();
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -622,8 +643,10 @@ impl FieldType {
             return TFloat;
         }
         if infer_dates {
-            if let Ok(parsed_date) = string.parse::<DateTimeUtc>() {
-                let rfc3339_date_str = parsed_date.0.to_string();
+            if let Ok(parsed_date) =
+                parse_with_preference(string, *DMY_PREFERENCE.get_or_init(|| false))
+            {
+                let rfc3339_date_str = parsed_date.to_string();
 
                 // with rfc3339 format, time component
                 // starts at position 17. If its shorter than 17,
