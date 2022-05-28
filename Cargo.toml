@@ -105,7 +105,7 @@ pyo3 = { version = "0.16", features = [
     # Automatically generates `python3.dll` import libraries for Windows targets.
     "generate-abi3-import-lib",    
 ], optional = true }
-qsv-dateparser = "0.2"
+qsv-dateparser = "0.4"
 qsv-stats = "0.3"
 qsv_currency = { version = "0.5", optional = true }
 qsv-sniffer = { version = "0.4", features = ["runtime-dispatch-simd"] }
