@@ -112,6 +112,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         log::info!("Sniffing {sniff_size} of {n_rows} rows...");
         Sniffer::new()
             .sample_size(SampleSize::Records(sniff_size))
+            .date_preference(dt_preference)
             .sniff_reader(rdr.into_inner())
     };
 
