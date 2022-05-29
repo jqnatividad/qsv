@@ -27,6 +27,7 @@ const BATCH_SIZE: usize = 16000;
 
 static USAGE: &str = "
 Validate CSV data with JSON Schema, and put invalid records into a separate file.
+When run without JSON Schema, only a simple CSV check (RFC 4180) is performed.
 
 Example output files from `mydata.csv`. If piped from stdin, then filename is `stdin.csv`.
 
@@ -35,9 +36,6 @@ Example output files from `mydata.csv`. If piped from stdin, then filename is `s
 * mydata.csv.validation-errors.tsv
 
 JSON Schema can be a local file or a URL.
-
-When run without JSON Schema, only a simple CSV check (RFC 4180) is performed.
-
 
 Usage:
     qsv validate [options] [<input>] [<json-schema>]
