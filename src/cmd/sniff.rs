@@ -1,7 +1,7 @@
 use crate::config::Config;
 use crate::util;
 use crate::CliResult;
-use qsv_sniffer::{SampleSize, Sniffer};
+use qsv_sniffer::{DatePreference, SampleSize, Sniffer};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use thousands::Separable;
@@ -27,6 +27,8 @@ sniff options:
                            (e.g. 0.20 is 20 percent).
                            When it is zero, the entire file will be sampled.
                            [default: 100]
+    --prefer-dmy           Prefer to parse dates in dmy format.
+                           Otherwise, use mdy format.
     --json                 Return results in JSON format.
     --pretty-json          Return results in pretty JSON format.
 
@@ -38,6 +40,7 @@ Common options:
 struct Args {
     arg_input: Option<String>,
     flag_sample: f64,
+    flag_prefer_dmy: bool,
     flag_json: bool,
     flag_pretty_json: bool,
 }
@@ -88,10 +91,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let rdr = conf.reader_file_stdin()?;
 
+    let dt_preference = if args.flag_prefer_dmy {
+        DatePreference::DmyFormat
+    } else {
+        DatePreference::MdyFormat
+    };
+
     let sniff_results = if sample_all {
         log::info!("Sniffing ALL {n_rows} rows...");
         Sniffer::new()
             .sample_size(SampleSize::All)
+            .date_preference(dt_preference)
             .sniff_reader(rdr.into_inner())
     } else {
         let mut sniff_size = sample_size as usize;
