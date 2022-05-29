@@ -1334,7 +1334,7 @@ dependencies = [
 [[package]]
 name = "jsonschema"
 version = "0.16.0"
-source = "git+https://github.com/Stranger6667/jsonschema-rs?rev=ead0da16db5a12a6d12cd54bc087d18ed6e62c08#ead0da16db5a12a6d12cd54bc087d18ed6e62c08"
+source = "git+https://github.com/Stranger6667/jsonschema-rs?rev=bfe69d393a842e331832fce55a43e0051b988761#bfe69d393a842e331832fce55a43e0051b988761"
 dependencies = [
  "ahash",
  "anyhow",
