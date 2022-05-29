@@ -232,7 +232,7 @@ fn sniff_sample() {
     "GeoAreaLabel"
   ],
   "types": [
-    "Text",
+    "DateTime",
     "Text",
     "Text",
     "Text",
