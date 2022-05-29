@@ -5,6 +5,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.52.0] - 2022-05-29
+### Added
+* `apply`: DATEFMT subcommand now has a `--prefer-dmy` option. https://github.com/jqnatividad/qsv/pull/328
+* `stats` and `schema`: add `--prefer-dmy` option. https://github.com/jqnatividad/qsv/pull/329
+* `sniff`: can now sniff Date and Datetime data types.  https://github.com/jqnatividad/qsv/pull/330
+* `sniff`: added to `qsvdp` - [DataPusher+](https://github.com/dathere/datapusher-plus)-optimized qsv binary
+* added DevSkim security linter Github Action to CI
+
+### Changed
+* applied various clippy pedantic and nursery recommendations
+* cargo bump updated several dependencies, notably [qsv-dateparser](https://docs.rs/qsv-dateparser/0.4.1/qsv_dateparser/) with its new DMY format parsing capability and
+  [qsv-sniffer](https://github.com/jqnatividad/qsv-sniffer) with its Date and Datetime data type detection
+
+### Fixed
+* Closed all cargo-audit findings(https://github.com/jqnatividad/qsv/issues/167), as the latest `qsv-dateparser` eliminated qsv's `chrono` dependency.
+* Properly create `qsv_rust_version_info.txt` in nightly builds
+* Fixed multithreading link in Features Flag section
+
 ## [0.51.0] - 2022-05-27
 ### Added
 * `sniff`: sniff field names as well in addition to field data types in https://github.com/jqnatividad/qsv/pull/317
