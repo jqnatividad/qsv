@@ -53,7 +53,6 @@ pub mod search;
 pub mod searchset;
 pub mod select;
 pub mod slice;
-#[cfg(any(feature = "full", feature = "lite"))]
 pub mod sniff;
 pub mod sort;
 #[cfg(any(feature = "full", feature = "lite"))]
