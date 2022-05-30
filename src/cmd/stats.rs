@@ -644,7 +644,7 @@ impl FieldType {
         }
         if infer_dates {
             if let Ok(parsed_date) =
-                parse_with_preference(string, unsafe { *DMY_PREFERENCE.get_unchecked() })
+                parse_with_preference(string, *DMY_PREFERENCE.get_or_init(|| false))
             {
                 let rfc3339_date_str = parsed_date.to_string();
 
@@ -835,7 +835,8 @@ impl TypedMinMax {
             },
             TDate | TDateTime => unsafe {
                 let tempstr = str::from_utf8_unchecked(&*sample);
-                let n = parse_with_preference(tempstr, *DMY_PREFERENCE.get_unchecked()).unwrap();
+                let n =
+                    parse_with_preference(tempstr, *DMY_PREFERENCE.get_or_init(|| false)).unwrap();
 
                 self.dates.add(n.to_string());
             },
