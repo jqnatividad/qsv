@@ -790,7 +790,7 @@ impl Commute for TypedSum {
             (Some(f1), Some(f2)) => self.float = Some(f1 + f2),
             (Some(f1), None) => self.float = Some(f1 + (other.integer as f64)),
             (None, Some(f2)) => self.float = Some((self.integer as f64) + f2),
-            (None, None) => self.integer += self.integer.saturating_add(other.integer),
+            (None, None) => self.integer = self.integer.saturating_add(other.integer),
         }
     }
 }
