@@ -117,7 +117,7 @@ jobs:
              mv qsvlite qsvlite_nightly
              mv qsvdp qsvdp_nightly
         fi
-        rustup show > qsv_rust_version_info.txt
+        rustup show > qsv_nightly_rust_version_info.txt
         cd ..
     - name: Download latest release zip
       uses: robinraju/release-downloader@v1.3
