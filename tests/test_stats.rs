@@ -393,6 +393,19 @@ stats_tests!(stats_sum_mixed2, "sum", &["2", "1.5"], "3.5");
 stats_tests!(stats_sum_mixed3, "sum", &["1.5", "hi", "2.8"], "4.3");
 stats_tests!(stats_sum_nulls1, "sum", &["1", "", "2"], "3");
 stats_tests!(stats_sum_nulls2, "sum", &["", "1", "2"], "3");
+stats_tests!(
+    stats_sum_overflow,
+    "sum",
+    &[
+        {
+            let i = i64::MAX;
+            &i.to_string()
+        },
+        "1",
+        "2"
+    ],
+    "OVERFLOW"
+);
 
 stats_tests!(stats_min, "min", &["2", "1.1"], "1.1");
 stats_tests!(stats_max, "max", &["2", "1.1"], "2");
