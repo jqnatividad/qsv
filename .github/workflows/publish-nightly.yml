@@ -122,6 +122,7 @@ jobs:
     - name: Download latest release zip
       uses: robinraju/release-downloader@v1.3
       with:
+        repository: "jqnatividad/qsv"
         latest: true
         fileName: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip
     - name: add nightly files to zip
