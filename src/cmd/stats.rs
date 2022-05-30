@@ -756,7 +756,7 @@ impl TypedSum {
                 if let Some(ref mut float) = self.float {
                     *float += from_bytes::<f64>(sample);
                 } else {
-                    self.integer += from_bytes::<i64>(sample);
+                    self.integer = self.integer.saturating_add(from_bytes::<i64>(sample));
                 }
             }
             _ => {}
@@ -768,8 +768,12 @@ impl TypedSum {
         match typ {
             TNull | TString | TDate | TDateTime => None,
             TInteger => {
-                let mut buffer = itoa::Buffer::new();
-                Some(buffer.format(self.integer).to_owned())
+                if self.integer == i64::MAX {
+                    Some("OVERFLOW".to_string())
+                } else {
+                    let mut buffer = itoa::Buffer::new();
+                    Some(buffer.format(self.integer).to_owned())
+                }
             }
             TFloat => {
                 let mut buffer = ryu::Buffer::new();
@@ -786,7 +790,7 @@ impl Commute for TypedSum {
             (Some(f1), Some(f2)) => self.float = Some(f1 + f2),
             (Some(f1), None) => self.float = Some(f1 + (other.integer as f64)),
             (None, Some(f2)) => self.float = Some((self.integer as f64) + f2),
-            (None, None) => self.integer += other.integer,
+            (None, None) => self.integer += self.integer.saturating_add(other.integer),
         }
     }
 }
