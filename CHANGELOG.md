@@ -5,6 +5,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.52.1] - 2022-05-31
+### Added
+* added qsv GitHub social media image which
+
+### Changed
+* `stats`: added sum integer overflow handling. If sum overflows, instead of panicking, the value 'OVERFLOW' is returned
+* upgraded to faster qsv_dateparser 0.4.2, which parses the slash_dmy/slash_mdy date formats earlier in the parse tree, which has more prevalent usage.
+* nightly builds are now bundled into the main distribution zip archive.
+* renamed qsv_rust_version_info.txt to qsv_nightly_rust_version.info.txt in the distribution zip archive to make it clearer that it only pertains to nightly builds
+* cargo bump update several dependencies
+
+### Removed
+* nightly distribution zip archives have been removed, now that the nightly builds are in the main zip archive.
+
+### Fixed
+* `stats`: prefer_dmy date-parsing preference was not used when computing date min/max
+* `stats`: prefer_dmy setting was not initialized properly the first time its called
+* nightly build self-update now works properly, now that they are bundled into the main distribution zip archive
+
 ## [0.52.0] - 2022-05-29
 ### Added
 * `apply`: DATEFMT subcommand now has a `--prefer-dmy` option. https://github.com/jqnatividad/qsv/pull/328
