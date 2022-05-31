@@ -169,8 +169,8 @@ Please choose one of the following commands:",
 
 fn log_end(mut qsv_args: String, now: &Instant) {
     if log_enabled!(Level::Info) {
-        let ellipsis = if qsv_args.len() > 15 {
-            qsv_args.truncate(15);
+        let ellipsis = if qsv_args.len() > 24 {
+            qsv_args.truncate(24);
             "..."
         } else {
             ""
