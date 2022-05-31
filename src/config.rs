@@ -253,7 +253,7 @@ impl Config {
 
     pub fn selection(&self, first_record: &csv::ByteRecord) -> Result<Selection, String> {
         match self.select_columns {
-            None => Err("Config has no 'SelectColums'. Did you call \
+            None => Err("Config has no 'SelectColumns'. Did you call \
                          Config::select?"
                 .to_owned()),
             Some(ref sel) => sel.selection(first_record, !self.no_headers),
