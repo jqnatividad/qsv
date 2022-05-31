@@ -335,26 +335,25 @@ fn init_date_inference(
         if d_whitelist[0] == "<null>" {
             log::info!("inferring dates for ALL fields...");
             INFER_DATE_FLAGS.set(vec![true; headers.len()]).unwrap();
-            return;
-        }
-
-        let mut infer_date_flag = Vec::with_capacity(headers.len());
-        for header in headers {
-            let header_str = from_bytes::<String>(header).to_lowercase();
-            let mut date_found = false;
-            for whitelist_item in d_whitelist.iter() {
-                if header_str.contains(whitelist_item) {
-                    infer_date_flag.push(true);
-                    date_found = true;
-                    log::info!("inferring dates for {header_str}...");
-                    break;
+        } else {
+            let mut infer_date_flag = Vec::with_capacity(headers.len());
+            for header in headers {
+                let header_str = from_bytes::<String>(header).to_lowercase();
+                let mut date_found = false;
+                for whitelist_item in d_whitelist.iter() {
+                    if header_str.contains(whitelist_item) {
+                        infer_date_flag.push(true);
+                        date_found = true;
+                        log::info!("inferring dates for {header_str}...");
+                        break;
+                    }
+                }
+                if !date_found {
+                    infer_date_flag.push(false);
                 }
             }
-            if !date_found {
-                infer_date_flag.push(false);
-            }
+            INFER_DATE_FLAGS.set(infer_date_flag).unwrap();
         }
-        INFER_DATE_FLAGS.set(infer_date_flag).unwrap();
     } else {
         log::info!("NOT inferring dates...");
         INFER_DATE_FLAGS.set(vec![false; headers.len()]).unwrap();
@@ -644,7 +643,7 @@ impl FieldType {
         }
         if infer_dates {
             if let Ok(parsed_date) =
-                parse_with_preference(string, *DMY_PREFERENCE.get_or_init(|| false))
+                parse_with_preference(string, unsafe { *DMY_PREFERENCE.get_unchecked() })
             {
                 let rfc3339_date_str = parsed_date.to_string();
 
@@ -835,9 +834,7 @@ impl TypedMinMax {
             },
             TDate | TDateTime => unsafe {
                 let tempstr = str::from_utf8_unchecked(&*sample);
-                let n =
-                    parse_with_preference(tempstr, *DMY_PREFERENCE.get_or_init(|| false)).unwrap();
-
+                let n = parse_with_preference(tempstr, *DMY_PREFERENCE.get_unchecked()).unwrap();
                 self.dates.add(n.to_string());
             },
         }
