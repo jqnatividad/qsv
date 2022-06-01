@@ -907,6 +907,7 @@ fn apply_datefmt_prefer_dmy() {
             svec!["July 4, 2005"],
             svec!["2021-05-01T01:17:02.604456Z"],
             svec!["10/05/71"],
+            svec!["12/31/71"],
             svec!["This is not a date and it will not be reformatted"],
         ],
     );
@@ -925,6 +926,45 @@ fn apply_datefmt_prefer_dmy() {
         svec!["2005-07-04"],
         svec!["2021-05-01T01:17:02.604456+00:00"],
         svec!["1971-05-10"],
+        svec!["12/31/71"],
+        svec!["This is not a date and it will not be reformatted"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn apply_datefmt_prefer_dmy_env() {
+    let wrk = Workdir::new("apply_prefer_dmy_env");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["Created Date"],
+            svec!["September 17, 2012 10:09am EST"],
+            svec!["02/06/2021"],
+            svec!["2009-01-20 05:00 EST"],
+            svec!["July 4, 2005"],
+            svec!["2021-05-01T01:17:02.604456Z"],
+            svec!["10/05/71"],
+            svec!["12/31/71"],
+            svec!["This is not a date and it will not be reformatted"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.env("QSV_PREFER_DMY", "1");
+    cmd.arg("datefmt")
+        .arg("Created Date")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["Created Date"],
+        svec!["2012-09-17T15:09:00+00:00"],
+        svec!["2021-06-02"],
+        svec!["2009-01-20T10:00:00+00:00"],
+        svec!["2005-07-04"],
+        svec!["2021-05-01T01:17:02.604456+00:00"],
+        svec!["1971-05-10"],
+        svec!["12/31/71"],
         svec!["This is not a date and it will not be reformatted"],
     ];
     assert_eq!(got, expected);
