@@ -104,6 +104,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         (args.arg_input.clone().unwrap(), filename)
     };
 
+    // we can do this directly here, since args is mutable and
+    // Config has not been created yet at this point
+    args.flag_prefer_dmy = args.flag_prefer_dmy || std::env::var("QSV_PREFER_DMY").is_ok();
+
     // build schema for each field by their inferred type, min/max value/length, and unique values
     let mut properties_map: Map<String, Value> =
         match infer_schema_from_stats(&args, &input_filename) {

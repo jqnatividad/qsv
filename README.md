@@ -20,7 +20,7 @@
 
 </div>
 
-> **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's May 2018 release](https://github.com/BurntSushi/xsv/issues/267). It also has numerous new features & 53 additional commands/subcommands/operations (for a total of 73).
+> ℹ️ **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's May 2018 release](https://github.com/BurntSushi/xsv/issues/267). It also has numerous new features & 53 additional commands/subcommands/operations (for a total of 73).
 See [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ) for more details.
 
 ## Available commands
@@ -205,26 +205,26 @@ qsv stats wcp.csv --output wcpstats.csv
 
 ## Environment Variables
 
-* `QSV_DEFAULT_DELIMITER` - single ascii character to use as delimiter.  Overrides `--delimeter` option. Defaults to "," (comma) for CSV files and "\t" (tab) for TSV files, when not set. Note that this will also set the delimiter for qsv's output to stdout. However, using the `--output` option, regardless of this environment variable, will automatically change the delimiter used in the generated file based on the file extension - i.e. comma for `.csv`, tab for `.tsv` and `.tab` files.
-* `QSV_SNIFF_DELIMITER` - when set, the delimiter is automatically detected. Overrides `QSV_DEFAULT_DELIMITER` and `--delimiter` option. Note that this does not work
-with stdin.
-* `QSV_NO_HEADERS` - when set, the first row will **NOT** be interpreted as headers. Supersedes `QSV_TOGGLE_HEADERS`.
-* `QSV_TOGGLE_HEADERS` - if set to `1`, toggles header setting - i.e. inverts qsv header behavior, with no headers being the default, and setting `--no-headers` will actually mean headers will not be ignored.
-* `QSV_AUTOINDEX` - when set, automatically create an index when none is detected. Also automatically updates stale indices.
-* `QSV_SKIPUTF8_CHECK` - when set, skip UTF-8 encoding check. Otherwise, qsv scans the first 8k of files. For stdin, it scans the entire buffer.
-* `QSV_MAX_JOBS` - number of jobs to use for multithreaded commands (currently `dedup`, `extsort`, `frequency`, `schema`, `sort`, `split`, `stats` and `validate`). If not set, max_jobs is set
-to the detected number of logical processors.  See [Multithreading](docs/PERFORMANCE.md#multithreading) for more info.
-* `QSV_REGEX_UNICODE` - if set, makes `search`, `searchset` and `replace` commands unicode-aware. For increased performance, these
-commands are not unicode-aware and will ignore unicode values when matching and will panic when unicode characters are used in the regex.
-* `QSV_RDR_BUFFER_CAPACITY` - set to change reader buffer size (bytes - default when not set: 16384)
-* `QSV_WTR_BUFFER_CAPACITY` - set to change writer buffer size (bytes - default when not set: 65536)
-* `QSV_COMMENT_CHAR` - set to a comment character which will ignore any lines (including the header) that start with this character (default: comments disabled).
-* `QSV_LOG_LEVEL` - set to desired level (default - off, error, warn, info, trace, debug).
-* `QSV_LOG_DIR` - when logging is enabled, the directory where the log files will be stored. If the specified directory does not exist, qsv will attempt to create it. If not set, the log files are created in the directory where qsv was started. See [Logging](docs/Logging.md#logging) for more info.
-* `QSV_NO_UPDATE` - prohibit self-update version check for the latest qsv release published on GitHub.
-* `QSV_REDIS_CONNECTION_STRING` - the `fetch` command can use Redis to cache responses. By default it connects to `redis:127.0.0.1:6379`. Set to connect to another Redis instance.
-* `QSV_REDIS_TTL_SECONDS` - by default, Redis cached values have a time-to-live of 2,419,200 seconds (28 days).
-* `QSV_REDIS_TTL_REFRESH`- set to enable cache hits to refresh TTL of cached values.
+| Variable | Description |
+| --- | --- |
+| `QSV_DEFAULT_DELIMITER` | single ascii character to use as delimiter.  Overrides `--delimeter` option. Defaults to "," (comma) for CSV files and "\t" (tab) for TSV files when not set. Note that this will also set the delimiter for qsv's output to stdout.<br>However, using the `--output` option, regardless of this environment variable, will automatically change the delimiter used in the generated file based on the file extension - i.e. comma for `.csv`, tab for `.tsv` and `.tab` files. |
+| `QSV_SNIFF_DELIMITER` | if set, the delimiter is automatically detected. Overrides `QSV_DEFAULT_DELIMITER` and `--delimiter` option. Note that this does not work with stdin. |
+| `QSV_NO_HEADERS` | if set, the first row will **NOT** be interpreted as headers. Supersedes `QSV_TOGGLE_HEADERS`. |
+| `QSV_TOGGLE_HEADERS` | if set to `1`, toggles header setting - i.e. inverts qsv header behavior, with no headers being the default, and setting `--no-headers` will actually mean headers will not be ignored. |
+| `QSV_AUTOINDEX` | if set, automatically create an index when none is detected. Also automatically update stale indices. |
+| `QSV_COMMENT_CHAR` | set to an ascii character. If set, any lines(including the header) that start with this character are ignored. |
+| `QSV_MAX_JOBS` | number of jobs to use for multithreaded commands (currently `dedup`, `extsort`, `frequency`, `schema`, `sort`, `split`, `stats` and `validate`). If not set, max_jobs is set to the detected number of logical processors.  See [Multithreading](docs/PERFORMANCE.md#multithreading) for more info. |
+| `QSV_NO_UPDATE` | if set, prohibit self-update version check for the latest qsv release published on GitHub. |
+| `QSV_PREFER_DMY` | if set, date parsing will use DMY format. Otherwise, use MDY format (used with `apply datefmt`, `schema`, `sniff` & `stats` commands). |
+| `QSV_REGEX_UNICODE` | if set, makes `search`, `searchset` and `replace` commands unicode-aware. For increased performance, these commands are not unicode-aware and will ignore unicode values when matching and will panic when unicode characters are used in the regex. |
+| `QSV_SKIPUTF8_CHECK` | if set, skip UTF-8 encoding check. Otherwise, qsv scans the first 8k of files. For stdin, it scans the entire buffer. |
+| `QSV_RDR_BUFFER_CAPACITY` | reader buffer size (default (bytes): 16384) |
+| `QSV_WTR_BUFFER_CAPACITY` | writer buffer size (default (bytes): 65536) |
+| `QSV_LOG_LEVEL` | desired level (default - `off`; `error`, `warn`, `info`, `trace`, `debug`). |
+| `QSV_LOG_DIR` | when logging is enabled, the directory where the log files will be stored. If the specified directory does not exist, qsv will attempt to create it. If not set, the log files are created in the directory where qsv was started. See [Logging](docs/Logging.md#logging) for more info. |
+| `QSV_REDIS_CONNECTION_STRING` | the `fetch` command can use [Redis](https://redis.io/) to cache responses. Set to connect to another Redis instance. (default: `redis:127.0.0.1:6379`) |
+| `QSV_REDIS_TTL_SECONDS` | set time-to-live of Redis cached values (default (seconds): 2419200 (28 days)). |
+| `QSV_REDIS_TTL_REFRESH`| if set, enables cache hits to refresh TTL of cached values. |
 
 Several dependencies also have environment variables that influence qsv's performance & behavior:
 
@@ -234,7 +234,7 @@ Several dependencies also have environment variables that influence qsv's perfor
 * Network Access ([reqwest](https://docs.rs/reqwest/latest/reqwest/))
   qsv uses reqwest for its `fetch`, `validate` and `--update` functions and will honor [proxy settings](https://docs.rs/reqwest/latest/reqwest/index.html#proxies) set through `HTTP_PROXY`, `HTTPS_PROXY` and `NO_PROXY`.
   
-> **NOTE:** To get a list of all active qsv-relevant environment variables, run `qsv --envlist`.
+> ℹ️ **NOTE:** To get a list of all active qsv-relevant environment variables, run `qsv --envlist`.
 
 ## Feature Flags
 
@@ -255,7 +255,7 @@ The following "power-user" commands can be abused and present "foot-shooting" sc
 * `foreach` - enable `foreach` command (not valid for Windows).
 * `python` - enable `py` command (requires Python 3.8+). Note that qsv will automatically use the currently activated python version when running in a virtual environment.
 
-> **NOTE:** `qsvlite`, as the name implies, always has **non-default features disabled**. `qsv` can be built with any combination of the above features  using the cargo `--features` & `--no-default-features` flags. The pre-built `qsv` binaries has **all applicable features enabled for the target platform**[^6].
+> ℹ️ **NOTE:** `qsvlite`, as the name implies, always has **non-default features disabled**. `qsv` can be built with any combination of the above features  using the cargo `--features` & `--no-default-features` flags. The pre-built `qsv` binaries has **all applicable features enabled for the target platform**[^6].
 
 ## License
 

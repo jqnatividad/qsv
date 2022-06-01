@@ -85,6 +85,7 @@ pub struct Config {
     trim: csv::Trim,
     autoindex: bool,
     checkutf8: bool,
+    prefer_dmy: bool,
 }
 
 // Empty trait as an alias for Seek and Read that avoids auto trait errors
@@ -161,6 +162,7 @@ impl Config {
             trim: csv::Trim::None,
             autoindex: env::var("QSV_AUTOINDEX").is_ok(),
             checkutf8: env::var("QSV_SKIPUTF8_CHECK").is_err(),
+            prefer_dmy: env::var("QSV_PREFER_DMY").is_ok(),
         }
     }
 
@@ -171,9 +173,12 @@ impl Config {
         self
     }
 
-    #[allow(dead_code)]
     pub const fn get_delimiter(&self) -> u8 {
         self.delimiter
+    }
+
+    pub const fn get_dmy_preference(&self) -> bool {
+        self.prefer_dmy
     }
 
     pub fn no_headers(mut self, mut yes: bool) -> Config {
@@ -289,7 +294,7 @@ impl Config {
                 "Cannot use <stdin> here",
             )),
             Some(ref p) => {
-                if !self.is_utf8_encoded() {
+                if !self.is_utf8_encoded()? {
                     return Err(io::Error::new(
                         io::ErrorKind::InvalidData,
                         format!("{p:?} {UTF8_ERROR_MSG}"),
@@ -321,7 +326,7 @@ impl Config {
                 self.from_reader(Box::new(io::Cursor::new(buffer)))
             }
             Some(ref p) => {
-                if !self.is_utf8_encoded() {
+                if !self.is_utf8_encoded()? {
                     return Err(io::Error::new(
                         io::ErrorKind::InvalidData,
                         format!("{p:?} {UTF8_ERROR_MSG}"),
@@ -335,13 +340,20 @@ impl Config {
     // qsv only works safely with utf8 encoded files
     // check first DEFAULT_UTF8_CHECK_BUFFER_LEN bytes
     // of file to quickly check if its utf8
-    fn is_utf8_encoded(&self) -> bool {
+    fn is_utf8_encoded(&self) -> io::Result<bool> {
         if !self.checkutf8 {
-            return true;
+            return Ok(true);
         }
         if let Some(path_buf) = &self.path {
             debug!("checking encoding...");
-            let mut f = fs::File::open(path_buf).unwrap();
+            let mut f = match fs::File::open(path_buf) {
+                Ok(x) => x,
+                Err(err) => {
+                    let msg = format!("failed to open {}: {}", path_buf.display(), err);
+                    return Err(io::Error::new(io::ErrorKind::NotFound, msg));
+                }
+            };
+
             let fsize = f.metadata().unwrap().len() as usize;
             let mut buffer_size = DEFAULT_UTF8_CHECK_BUFFER_LEN;
             if fsize < buffer_size {
@@ -350,10 +362,10 @@ impl Config {
             let mut buffer = vec![0; buffer_size];
             if f.read_exact(&mut buffer).is_ok() {
                 let s = std::str::from_utf8(&buffer);
-                return s.is_ok();
+                return Ok(s.is_ok());
             }
         }
-        false
+        Ok(false)
     }
 
     fn autoindex_file(&self) {
@@ -442,7 +454,7 @@ impl Config {
                 }
             }
             Some(ref p) => {
-                if !self.is_utf8_encoded() {
+                if !self.is_utf8_encoded()? {
                     return Err(io::Error::new(
                         io::ErrorKind::InvalidData,
                         format!("{p:?} {UTF8_ERROR_MSG}"),
