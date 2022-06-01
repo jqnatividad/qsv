@@ -555,11 +555,9 @@ fn stats_prefer_dmy() {
 
     let got: String = wrk.stdout(&mut cmd);
 
-    let expected = wrk
-        .load_test_resource("boston311-dmy-100-stats.csv")
-        .to_string();
+    let expected = wrk.load_test_resource("boston311-dmy-100-stats.csv");
 
-    assert_eq!(got, expected.trim_end());
+    assert_eq!(got, expected.replace("\r\n", "\n").trim_end());
 }
 
 mod stats_infer_nothing {
