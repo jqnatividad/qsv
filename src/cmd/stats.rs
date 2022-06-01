@@ -169,7 +169,7 @@ impl Args {
 
         init_date_inference(
             self.flag_infer_dates,
-            self.flag_prefer_dmy,
+            self.flag_prefer_dmy || std::env::var("QSV_PREFER_DMY").is_ok(),
             &headers,
             d_whitelist,
         );
@@ -194,7 +194,7 @@ impl Args {
 
         init_date_inference(
             self.flag_infer_dates,
-            self.flag_prefer_dmy,
+            self.flag_prefer_dmy || std::env::var("QSV_PREFER_DMY").is_ok(),
             &headers,
             d_whitelist,
         );
