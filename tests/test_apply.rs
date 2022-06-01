@@ -951,9 +951,7 @@ fn apply_datefmt_prefer_dmy_env() {
     );
     let mut cmd = wrk.command("apply");
     cmd.env("QSV_PREFER_DMY", "1");
-    cmd.arg("datefmt")
-        .arg("Created Date")
-        .arg("data.csv");
+    cmd.arg("datefmt").arg("Created Date").arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
