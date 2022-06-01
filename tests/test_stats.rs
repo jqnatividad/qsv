@@ -541,6 +541,25 @@ stats_no_infer_dates_tests!(
     true
 );
 
+#[test]
+fn stats_prefer_dmy() {
+    let wrk = Workdir::new("stats_prefer_dmy");
+    let test_file = wrk.load_test_file("boston311-dmy-100.csv");
+
+    let mut cmd = wrk.command("stats");
+    cmd.arg("--infer-dates")
+        .arg("--prefer-dmy")
+        .arg("--dates-whitelist")
+        .arg("_dt")
+        .arg(test_file);
+
+    let got: String = wrk.stdout(&mut cmd);
+
+    let expected = wrk.load_test_resource("boston311-dmy-100-stats.csv").to_string();
+
+    assert_eq!(got, expected.trim_end());
+}
+
 mod stats_infer_nothing {
     // Only test CSV data with headers.
     // Empty CSV data with no headers won't produce any statistical analysis.
