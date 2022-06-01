@@ -220,7 +220,7 @@ qsv stats wcp.csv --output wcpstats.csv
 | `QSV_SKIPUTF8_CHECK` | if set, skip UTF-8 encoding check. Otherwise, qsv scans the first 8k of files. For stdin, it scans the entire buffer. |
 | `QSV_RDR_BUFFER_CAPACITY` | reader buffer size (default (bytes): 16384) |
 | `QSV_WTR_BUFFER_CAPACITY` | writer buffer size (default (bytes): 65536) |
-| `QSV_LOG_LEVEL` | desired level (default - `off`; `error`, `warn`, `info`, `trace`, `debug`). |
+| `QSV_LOG_LEVEL` | desired level (default - off; `error`, `warn`, `info`, `trace`, `debug`). |
 | `QSV_LOG_DIR` | when logging is enabled, the directory where the log files will be stored. If the specified directory does not exist, qsv will attempt to create it. If not set, the log files are created in the directory where qsv was started. See [Logging](docs/Logging.md#logging) for more info. |
 | `QSV_REDIS_CONNECTION_STRING` | the `fetch` command can use [Redis](https://redis.io/) to cache responses. Set to connect to another Redis instance. (default: `redis:127.0.0.1:6379`) |
 | `QSV_REDIS_TTL_SECONDS` | set time-to-live of Redis cached values (default (seconds): 2419200 (28 days)). |
