@@ -85,6 +85,7 @@ pub struct Config {
     trim: csv::Trim,
     autoindex: bool,
     checkutf8: bool,
+    prefer_dmy: bool,
 }
 
 // Empty trait as an alias for Seek and Read that avoids auto trait errors
@@ -161,6 +162,7 @@ impl Config {
             trim: csv::Trim::None,
             autoindex: env::var("QSV_AUTOINDEX").is_ok(),
             checkutf8: env::var("QSV_SKIPUTF8_CHECK").is_err(),
+            prefer_dmy: env::var("QSV_PREFER_DMY").is_ok(),
         }
     }
 
@@ -171,9 +173,12 @@ impl Config {
         self
     }
 
-    #[allow(dead_code)]
     pub const fn get_delimiter(&self) -> u8 {
         self.delimiter
+    }
+
+    pub const fn get_dmy_preference(&self) -> bool {
+        self.prefer_dmy
     }
 
     pub fn no_headers(mut self, mut yes: bool) -> Config {
