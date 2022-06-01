@@ -91,7 +91,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let rdr = conf.reader_file_stdin()?;
 
-    let dt_preference = if args.flag_prefer_dmy {
+    let dt_preference = if args.flag_prefer_dmy || conf.get_dmy_preference() {
         DatePreference::DmyFormat
     } else {
         DatePreference::MdyFormat
