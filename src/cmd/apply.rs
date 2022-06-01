@@ -452,6 +452,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     #[allow(unused_assignments)]
     let mut record = csv::StringRecord::new();
     let records_iter = rdr.records();
+    let prefer_dmy = args.flag_prefer_dmy || rconfig.get_dmy_preference();
     for result in records_iter {
         record = result?;
 
@@ -472,7 +473,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 cell = args.flag_replacement.to_string();
             }
         } else if args.cmd_datefmt && !cell.is_empty() {
-            let parsed_date = parse_with_preference(&cell, args.flag_prefer_dmy);
+            let parsed_date = parse_with_preference(&cell, prefer_dmy);
             if let Ok(format_date) = parsed_date {
                 let formatted_date = format_date.format(&args.flag_formatstr).to_string();
                 if formatted_date.ends_with("T00:00:00+00:00") {
