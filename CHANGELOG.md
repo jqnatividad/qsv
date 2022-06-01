@@ -5,6 +5,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.52.2] - 2022-06-01
+### Added
+* added `QSV_PREFER_DMY` environment variable. https://github.com/jqnatividad/qsv/pull/331
+
+### Changed
+* reorganized Environment Variables section in README https://github.com/jqnatividad/qsv/commit/f25bbf0361fcb7b960d45590ca35b2e676a4497d
+* logging: longer END snippet to make it easier to match START/END pairs
+* added Boston 311 sample data to tests
+* Bump uuid from 1.1.0 to 1.1.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/332
+* cargo update bumped packed_simd_2 from 0.3.7 to 0.3.8
+
+### Fixed
+* Instead of panicking, do proper error-handling on IO errors when checking utf-8 encoding https://github.com/jqnatividad/qsv/pull/331/commits/37b4482aae77563995f13a15f73ca8849df6a27d
+
 ## [0.52.1] - 2022-05-31
 ### Added
 * added qsv GitHub social media image which
