@@ -197,13 +197,16 @@ apply options:
     -R, --replacement=<string>  The string to use for the replace & emptyreplace operations.
     --prefer-dmy                Prefer to parse dates in dmy format. Otherwise, use mdy format.
                                 Only used with the DATEFMT subcommand.
-    -f, --formatstr=<string>    The date format to use with the datefmt subcommand. For formats, see
-                                https://docs.rs/chrono/0.4.19/chrono/format/strftime/index.html
-                                [default: %+]
+    -f, --formatstr=<string>    This option is used by several subcommands:
 
-                                the template to use with the dynfmt subcommand.
+                                DATEFMT: The date format to use. For formats, see
+                                  https://docs.rs/chrono/0.4.19/chrono/format/strftime/index.html
+                                  [default: %+]
 
-                                the place format to use with the geocode subcommand. The available formats are:
+                                DYNFMT: the template to use to construct a new column.
+
+                                GEOCODE: the place format to use with the geocode subcommand.
+                                  The available formats are:
                                   - 'city-state' (default) - e.g. Brooklyn, New York
                                   - 'city-country' - Brooklyn, US 
                                   - 'city-state-country' | 'city-admin1-country' - Brooklyn, New York US
