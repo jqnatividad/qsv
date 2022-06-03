@@ -102,6 +102,8 @@ where
     debug!("doing sample_random_access");
     let mut all_indices = (0..idx.count()).collect::<Vec<_>>();
     let mut rng = ::rand::thread_rng();
+    // this non-cryptographic shuffle is sufficient for our use case
+    // as we're optimizing for performance
     SliceRandom::shuffle(&mut *all_indices, &mut rng);
 
     let mut sampled = Vec::with_capacity(sample_size as usize);
@@ -129,6 +131,8 @@ fn sample_reservoir<R: io::Read>(
     // Seeding rng
     let mut rng: StdRng = match seed {
         None => StdRng::from_rng(rand::thread_rng()).unwrap(),
+        // the non-cryptographic seed_from_u64 is sufficient for our use case
+        // as we're optimizing for performance
         Some(seed) => StdRng::seed_from_u64(seed as u64),
     };
 
