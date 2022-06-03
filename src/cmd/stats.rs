@@ -445,7 +445,7 @@ impl Stats {
         if let Some(v) = self.modes.as_mut() {
             v.add(sample.to_vec());
         };
-        if sample_type.is_null() {
+        if sample_type == TNull {
             self.nullcount += 1;
         }
         match self.typ {
@@ -458,7 +458,7 @@ impl Stats {
             }
             TString => {}
             TFloat | TInteger => {
-                if sample_type.is_null() {
+                if sample_type == TNull {
                     if self.which.include_nulls {
                         if let Some(v) = self.online.as_mut() {
                             v.add_null();
@@ -510,7 +510,7 @@ impl Stats {
             pieces.push(empty());
         }
 
-        if !self.typ.is_number() {
+        if !(self.typ == TFloat || self.typ == TInteger) {
             pieces.push(empty());
             pieces.push(empty());
             pieces.push(empty());
@@ -657,16 +657,6 @@ impl FieldType {
             }
         }
         TString
-    }
-
-    #[inline]
-    fn is_number(self) -> bool {
-        self == TFloat || self == TInteger
-    }
-
-    #[inline]
-    fn is_null(self) -> bool {
-        self == TNull
     }
 }
 
