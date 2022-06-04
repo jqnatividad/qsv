@@ -285,6 +285,7 @@ static EUDEX_COMPARAND_HASH: OnceCell<eudex::Hash> = OnceCell::new();
 static REGEX_REPLACE: OnceCell<Regex> = OnceCell::new();
 static SENTIMENT_ANALYZER: OnceCell<SentimentIntensityAnalyzer> = OnceCell::new();
 
+#[inline]
 pub fn replace_column_value(
     record: &csv::StringRecord,
     column_index: usize,
@@ -331,7 +332,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut sim_invokes = 0_usize;
     let mut eudex_invokes = 0_usize;
     let mut sentiment_invokes = 0_usize;
-    let operations: Vec<&str> = args.arg_operations.split(',').collect();
+    let operations_lowercase = args.arg_operations.to_lowercase();
+    let operations: Vec<&str> = operations_lowercase.split(',').collect();
     if args.cmd_operations {
         for op in &operations {
             if !OPERATIONS.contains(op) {
