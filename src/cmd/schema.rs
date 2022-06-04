@@ -47,6 +47,8 @@ Schema options:
     --pattern-columns <args>   Select columns to add pattern constraints
     --dates-whitelist <list>   The case-insensitive patterns to look for when 
                                shortlisting fields for date inference.
+                               i.e. if the field's name has any of these patterns,
+                               it is shortlisted for date inferencing.
                                Set to <NULL> to inspect ALL fields for
                                date/datetime types.
                                [default: date,time,due,opened,closed]
