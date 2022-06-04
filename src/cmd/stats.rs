@@ -114,9 +114,14 @@ static DMY_PREFERENCE: once_cell::sync::OnceCell<bool> = OnceCell::new();
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
+    // if inferring dates, setup date parsing preference and date field name whitelist
     let date_whitelist_vec = if args.flag_infer_dates {
+        let dmy_preferred = args.flag_prefer_dmy || std::env::var("QSV_PREFER_DMY").is_ok();
+        DMY_PREFERENCE
+            .set(dmy_preferred)
+            .expect("Cannot init date format preference");
         log::info!(
-            "inferring dates using date-whitelist: {}",
+            "inferring dates with DMY preference: {dmy_preferred} and date-whitelist: {}",
             args.flag_dates_whitelist
         );
 
@@ -169,12 +174,7 @@ impl Args {
         let mut rdr = self.rconfig().reader()?;
         let (headers, sel) = self.sel_headers(&mut rdr)?;
 
-        init_date_inference(
-            self.flag_infer_dates,
-            self.flag_prefer_dmy || std::env::var("QSV_PREFER_DMY").is_ok(),
-            &headers,
-            d_whitelist,
-        );
+        init_date_inference(self.flag_infer_dates, &headers, d_whitelist);
 
         let stats = self.compute(&sel, rdr.byte_records())?;
         Ok((headers, stats))
@@ -194,12 +194,7 @@ impl Args {
         let mut rdr = self.rconfig().reader()?;
         let (headers, sel) = self.sel_headers(&mut rdr)?;
 
-        init_date_inference(
-            self.flag_infer_dates,
-            self.flag_prefer_dmy || std::env::var("QSV_PREFER_DMY").is_ok(),
-            &headers,
-            d_whitelist,
-        );
+        init_date_inference(self.flag_infer_dates, &headers, d_whitelist);
 
         let chunk_size = util::chunk_size(idx.count() as usize, util::njobs(self.flag_jobs));
         let nchunks = util::num_of_chunks(idx.count() as usize, chunk_size);
@@ -327,16 +322,13 @@ impl Args {
     }
 }
 
-fn init_date_inference(
-    infer_dates: bool,
-    prefer_dmy: bool,
-    headers: &csv::ByteRecord,
-    d_whitelist: &[String],
-) {
+fn init_date_inference(infer_dates: bool, headers: &csv::ByteRecord, d_whitelist: &[String]) {
     if infer_dates {
         if d_whitelist[0] == "<null>" {
             log::info!("inferring dates for ALL fields...");
-            INFER_DATE_FLAGS.set(vec![true; headers.len()]).unwrap();
+            INFER_DATE_FLAGS
+                .set(vec![true; headers.len()])
+                .expect("Cannot init date inference flags for ALL fields");
         } else {
             let mut infer_date_flag = Vec::with_capacity(headers.len());
             for header in headers {
@@ -344,24 +336,22 @@ fn init_date_inference(
                 let mut date_found = false;
                 for whitelist_item in d_whitelist.iter() {
                     if header_str.contains(whitelist_item) {
-                        infer_date_flag.push(true);
                         date_found = true;
                         log::info!("inferring dates for {header_str}...");
                         break;
                     }
                 }
-                if !date_found {
-                    infer_date_flag.push(false);
-                }
+                infer_date_flag.push(date_found);
             }
-            INFER_DATE_FLAGS.set(infer_date_flag).unwrap();
+            INFER_DATE_FLAGS
+                .set(infer_date_flag)
+                .expect("Cannot init date inference flags");
         }
     } else {
-        log::info!("NOT inferring dates...");
-        INFER_DATE_FLAGS.set(vec![false; headers.len()]).unwrap();
+        INFER_DATE_FLAGS
+            .set(vec![false; headers.len()])
+            .expect("Cannot init empty date inference flags");
     }
-    log::info!("prefer DMY?: {prefer_dmy}");
-    DMY_PREFERENCE.set(prefer_dmy).unwrap();
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
