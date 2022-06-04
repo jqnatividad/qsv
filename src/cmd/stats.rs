@@ -246,10 +246,10 @@ impl Args {
             let row = row?;
             for (i, field) in sel.select(&row).enumerate() {
                 unsafe {
-                    // we use unsafe here so we skip unnecessary bounds checking
+                    // we use unsafe/unchecked here so we skip unnecessary bounds checking
                     stats
                         .get_unchecked_mut(i)
-                        .add(field, INFER_DATE_FLAGS.get().unwrap()[i]);
+                        .add(field, INFER_DATE_FLAGS.get_unchecked()[i]);
                 }
             }
         }
