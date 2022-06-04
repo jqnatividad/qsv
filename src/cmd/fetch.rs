@@ -445,12 +445,8 @@ fn get_response(
         thread::sleep(time::Duration::from_millis(10));
     }
 
-    let resp: reqwest::blocking::Response;
-
-    match client.get(url).send() {
-        Ok(response) => {
-            resp = response;
-        }
+    let resp: reqwest::blocking::Response = match client.get(url).send() {
+        Ok(response) => response,
         Err(error) => {
             error!("Cannot fetch url: {url:?}, error: {error:?}");
             if flag_store_error {
@@ -458,7 +454,7 @@ fn get_response(
             }
             return String::default();
         }
-    }
+    };
     debug!("response: {:?}", &resp);
 
     let api_status = resp.status();
