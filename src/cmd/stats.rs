@@ -243,9 +243,13 @@ impl Args {
         I: Iterator<Item = csv::Result<csv::ByteRecord>>,
     {
         let mut stats = self.new_stats(sel.len());
+
+        // amortize allocation
+        #[allow(unused_assignments)]
+        let mut record = csv::ByteRecord::new();
         for row in it {
-            let row = row?;
-            for (i, field) in sel.select(&row).enumerate() {
+            record = row?;
+            for (i, field) in sel.select(&record).enumerate() {
                 unsafe {
                     // we use unsafe/unchecked here so we skip unnecessary bounds checking
                     stats
