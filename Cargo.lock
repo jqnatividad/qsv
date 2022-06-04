@@ -640,7 +640,7 @@ dependencies = [
 [[package]]
 name = "csv"
 version = "1.1.6"
-source = "git+https://github.com/jqnatividad/rust-csv?branch=perf-tweaks#330427998aa332ae555b63c08ca591a1785ba16c"
+source = "git+https://github.com/jqnatividad/rust-csv?branch=perf-tweaks#db66117702c47703a65367498bb79d6392cb7393"
 dependencies = [
  "bstr",
  "csv-core",
@@ -652,7 +652,7 @@ dependencies = [
 [[package]]
 name = "csv-core"
 version = "0.1.10"
-source = "git+https://github.com/jqnatividad/rust-csv?branch=perf-tweaks#330427998aa332ae555b63c08ca591a1785ba16c"
+source = "git+https://github.com/jqnatividad/rust-csv?branch=perf-tweaks#db66117702c47703a65367498bb79d6392cb7393"
 dependencies = [
  "memchr",
 ]
@@ -660,7 +660,7 @@ dependencies = [
 [[package]]
 name = "csv-index"
 version = "0.1.6"
-source = "git+https://github.com/jqnatividad/rust-csv?branch=perf-tweaks#330427998aa332ae555b63c08ca591a1785ba16c"
+source = "git+https://github.com/jqnatividad/rust-csv?branch=perf-tweaks#db66117702c47703a65367498bb79d6392cb7393"
 dependencies = [
  "byteorder",
  "csv",
@@ -2904,9 +2904,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-macros"
-version = "1.7.0"
+version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b557f72f448c511a979e2564e55d74e6c4432fc96ff4f6241bc6bded342643b7"
+checksum = "9724f9a975fb987ef7a3cd9be0350edcbe130698af5b8f7a631e23d42d052484"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2926,9 +2926,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-util"
-version = "0.7.2"
+version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f988a1a1adc2fb21f9c12aa96441da33a1728193ae0b95d2be22dbd17fcb4e5c"
+checksum = "cc463cd8deddc3770d20f9852143d50bf6094e640b485cb2e189a2099085ff45"
 dependencies = [
  "bytes",
  "futures-core",
@@ -2953,19 +2953,7 @@ dependencies = [
  "cfg-if",
  "log",
  "pin-project-lite",
- "tracing-attributes",
  "tracing-core",
-]
-
-[[package]]
-name = "tracing-attributes"
-version = "0.1.21"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cc6b8ad3567499f98a1db7a752b07a7c8c7c7c34c332ec00effb2b0027974b7c"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
 ]
 
 [[package]]
