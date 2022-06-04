@@ -250,7 +250,7 @@ impl Args {
                     // we use unsafe/unchecked here so we skip unnecessary bounds checking
                     stats
                         .get_unchecked_mut(i)
-                        .add(field, INFER_DATE_FLAGS.get_unchecked()[i]);
+                        .add(field, *INFER_DATE_FLAGS.get_unchecked().get_unchecked(i));
                 }
             }
         }
