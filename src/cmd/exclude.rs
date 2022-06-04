@@ -99,9 +99,8 @@ impl<R: io::Read + io::Seek, W: io::Write> IoState<R, W> {
                 None => {
                     if invert {
                         continue;
-                    } else {
-                        self.wtr.write_record(row.iter())?;
                     }
+                    self.wtr.write_record(row.iter())?;
                 }
                 Some(_rows) => {
                     if invert {

@@ -422,25 +422,24 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if args.cmd_dynfmt {
         if args.flag_no_headers {
             return fail!("dynfmt operation requires headers.");
-        } else {
-            // first, get the fields used in the dynfmt template
-            let safe_headers = util::safe_header_names(&headers, false);
-            let formatstr_re: &'static Regex = crate::regex_once_cell!(r"\{(?P<key>\w+)?\}");
-            for format_fields in formatstr_re.captures_iter(&args.flag_formatstr) {
-                dynfmt_fields.push(format_fields.name("key").unwrap().as_str());
-            }
-            // we sort the fields so we can do binary_search
-            dynfmt_fields.sort_unstable();
-            // now, get the indices of the columns for the lookup vec
-            for (i, field) in safe_headers.into_iter().enumerate() {
-                if dynfmt_fields.binary_search(&field.as_str()).is_ok() {
-                    let field_with_curly = format!("{{{field}}}");
-                    let field_index = format!("{{{i}}}");
-                    dynfmt_template = dynfmt_template.replace(&field_with_curly, &field_index);
-                }
-            }
-            debug!("dynfmt_fields: {dynfmt_fields:?}  dynfmt_template: {dynfmt_template}");
         }
+        // first, get the fields used in the dynfmt template
+        let safe_headers = util::safe_header_names(&headers, false);
+        let formatstr_re: &'static Regex = crate::regex_once_cell!(r"\{(?P<key>\w+)?\}");
+        for format_fields in formatstr_re.captures_iter(&args.flag_formatstr) {
+            dynfmt_fields.push(format_fields.name("key").unwrap().as_str());
+        }
+        // we sort the fields so we can do binary_search
+        dynfmt_fields.sort_unstable();
+        // now, get the indices of the columns for the lookup vec
+        for (i, field) in safe_headers.into_iter().enumerate() {
+            if dynfmt_fields.binary_search(&field.as_str()).is_ok() {
+                let field_with_curly = format!("{{{field}}}");
+                let field_index = format!("{{{i}}}");
+                dynfmt_template = dynfmt_template.replace(&field_with_curly, &field_index);
+            }
+        }
+        debug!("dynfmt_fields: {dynfmt_fields:?}  dynfmt_template: {dynfmt_template}");
     }
 
     // prep progress bar

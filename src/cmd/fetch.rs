@@ -193,27 +193,25 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if let Some(ref url_template) = args.flag_url_template {
         if args.flag_no_headers {
             return fail!("--url-template option requires headers.");
-        } else {
-            dynfmt_url_template = url_template.to_string();
-            // first, get the fields used in the url template
-            let safe_headers = util::safe_header_names(&str_headers, false);
-            let formatstr_re: &'static Regex = regex_once_cell!(r"\{(?P<key>\w+)?\}");
-            for format_fields in formatstr_re.captures_iter(url_template) {
-                dynfmt_fields.push(format_fields.name("key").unwrap().as_str());
-            }
-            // we sort the fields so we can do binary_search
-            dynfmt_fields.sort_unstable();
-            // now, get the indices of the columns for the lookup vec
-            for (i, field) in safe_headers.into_iter().enumerate() {
-                if dynfmt_fields.binary_search(&field.as_str()).is_ok() {
-                    let field_with_curly = format!("{{{field}}}");
-                    let field_index = format!("{{{i}}}");
-                    dynfmt_url_template =
-                        dynfmt_url_template.replace(&field_with_curly, &field_index);
-                }
-            }
-            debug!("dynfmt_fields: {dynfmt_fields:?}  url_template: {dynfmt_url_template}");
         }
+        dynfmt_url_template = url_template.to_string();
+        // first, get the fields used in the url template
+        let safe_headers = util::safe_header_names(&str_headers, false);
+        let formatstr_re: &'static Regex = regex_once_cell!(r"\{(?P<key>\w+)?\}");
+        for format_fields in formatstr_re.captures_iter(url_template) {
+            dynfmt_fields.push(format_fields.name("key").unwrap().as_str());
+        }
+        // we sort the fields so we can do binary_search
+        dynfmt_fields.sort_unstable();
+        // now, get the indices of the columns for the lookup vec
+        for (i, field) in safe_headers.into_iter().enumerate() {
+            if dynfmt_fields.binary_search(&field.as_str()).is_ok() {
+                let field_with_curly = format!("{{{field}}}");
+                let field_index = format!("{{{i}}}");
+                dynfmt_url_template = dynfmt_url_template.replace(&field_with_curly, &field_index);
+            }
+        }
+        debug!("dynfmt_fields: {dynfmt_fields:?}  url_template: {dynfmt_url_template}");
     }
 
     use std::num::NonZeroU32;
@@ -457,9 +455,8 @@ fn get_response(
             error!("Cannot fetch url: {url:?}, error: {error:?}");
             if flag_store_error {
                 return error.to_string();
-            } else {
-                return String::default();
             }
+            return String::default();
         }
     }
     debug!("response: {:?}", &resp);
