@@ -158,9 +158,7 @@ where
         cmd.arg("--nulls");
     }
     if infer_dates {
-        cmd.arg("--infer-dates")
-            .arg("--dates-whitelist")
-            .arg("<NULL>");
+        cmd.arg("--infer-dates").arg("--dates-whitelist").arg("all");
     }
 
     (wrk, cmd)
@@ -574,6 +572,40 @@ fn stats_prefer_mdy() {
     let got: String = wrk.stdout(&mut cmd);
 
     let expected = wrk.load_test_resource("boston311-100-stats.csv");
+
+    assert_eq!(got, expected.replace("\r\n", "\n").trim_end());
+}
+
+#[test]
+fn stats_no_date_inference() {
+    let wrk = Workdir::new("stats_no_date_inference");
+    let test_file = wrk.load_test_file("boston311-100.csv");
+
+    let mut cmd = wrk.command("stats");
+    cmd.arg("--everything").arg(test_file);
+
+    let got: String = wrk.stdout(&mut cmd);
+
+    let expected = wrk.load_test_resource("boston311-100-everything-nodate-stats.csv");
+
+    assert_eq!(got, expected.replace("\r\n", "\n").trim_end());
+}
+
+#[test]
+fn stats_with_date_inference() {
+    let wrk = Workdir::new("stats_with_date_inference");
+    let test_file = wrk.load_test_file("boston311-100.csv");
+
+    let mut cmd = wrk.command("stats");
+    cmd.arg("--everything")
+        .arg(test_file)
+        .arg("--infer-dates")
+        .arg("--dates-whitelist")
+        .arg("all");
+
+    let got: String = wrk.stdout(&mut cmd);
+
+    let expected = wrk.load_test_resource("boston311-100-everything-date-stats.csv");
 
     assert_eq!(got, expected.replace("\r\n", "\n").trim_end());
 }
