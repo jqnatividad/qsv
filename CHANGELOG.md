@@ -5,6 +5,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.53.0] - 2022-06-05
+
+### Changed
+* `stats`: changed `--dates-whitelist` option to use "all" instead of "\<null\>"; better usage text; more perf tweaks; more tests https://github.com/jqnatividad/qsv/pull/334
+* `stats`: mem alloc tweaks & date-inferencing optimization https://github.com/jqnatividad/qsv/pull/333
+* `apply`: improved usage text about --formatstr https://github.com/jqnatividad/qsv/commit/2f18565caec6c6e900f776c5f6f3e1adf4c9b6e1
+* `sample`: added note about why we don't need crypto secure random number generators https://github.com/jqnatividad/qsv/commit/3384d1a9630bc1033ff67db5dcbf48c067e97728
+* `excel` & `slice`: avoid panic by replacing `abs` with `unsigned_abs` https://github.com/jqnatividad/qsv/commit/7e2b14a5de67e70ee0b26ea0eff83462dbc77a0a
+* turn on once_cell `parking_lot` feature for storage efficiency/performance https://github.com/jqnatividad/qsv/commit/849548cde8bc9c2d96ddf464f2578faf63d6e9cf
+* applied various cargo +nightly clippy optimizations
+* pin nightly build to Rust Nightly 2022-06-
+* made various optimizations to our csv fork https://github.com/BurntSushi/rust-csv/compare/master...jqnatividad:perf-tweaks
+* cargo bump updated several dependencies
+
 ## [0.52.2] - 2022-06-01
 ### Added
 * added `QSV_PREFER_DMY` environment variable. https://github.com/jqnatividad/qsv/pull/331
