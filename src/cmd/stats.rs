@@ -21,22 +21,23 @@ use serde::Deserialize;
 
 use self::FieldType::{TDate, TDateTime, TFloat, TInteger, TNull, TString};
 
-static USAGE: &str = "
+static USAGE: &str = r#"
 Computes descriptive statistics on CSV data.
 
 Descriptive statistics includes sum, min/max, min/max length, mean, stddev, variance,
-nullcount, quartiles, median, modes, & cardinality. Note that some statistics are
-expensive to compute and requires loading the entire file into memory,
-so they must be enabled explicitly. 
+nullcount, quartiles, IQR, lower/upper fences, skew, median, mode/s, & cardinality. 
+Note that some statistics are expensive to compute and requires loading the entire 
+file into memory, so they must be enabled explicitly. 
 
 By default, the following statistics are reported for *every* column in the CSV data:
-sum, min/max values, min/max length, mean, stddev, variance & nullcount. The default set of statistics 
-corresponds to statistics that can be computed efficiently on a stream of data (i.e., constant memory).
+sum, min/max values, min/max length, mean, stddev, variance & nullcount. The default
+set of statistics corresponds to statistics that can be computed efficiently on a stream
+of data (i.e., constant memory) and can work with arbitrarily large CSV files.
 
-The data type of each column is also inferred (Unknown, NULL, Integer, String,
-Float, Date and DateTime). Note that the Date and DateTime data types are only inferred with
-the --infer-dates option as its an expensive operation. The date formats recognized can be found at
-https://github.com/jqnatividad/belt/tree/main/dateparser#accepted-date-formats.
+The data type of each column is also inferred (Unknown, NULL, Integer, String, Float,
+Date and DateTime). Note that the Date and DateTime data types are only inferred with
+the --infer-dates option as its an expensive operation. The date formats recognized can be
+found at https://github.com/jqnatividad/belt/tree/main/dateparser#accepted-date-formats.
 
 Computing statistics on a large file can be made much faster if you create
 an index for it first with 'qsv index' to enable multithreading.
@@ -51,27 +52,28 @@ stats options:
                               into 'qsv stats' will disable the use of indexing.
     --everything              Show all statistics available.
     --mode                    Show the mode/s. Multimodal-aware.
-                              This requires storing all CSV data in memory.
+                              This requires loading all CSV data in memory.
     --cardinality             Show the cardinality.
-                              This requires storing all CSV data in memory.
+                              This requires loading all CSV data in memory.
     --median                  Show the median.
-                              This requires storing all CSV data in memory.
+                              This requires loading all CSV data in memory.
     --quartiles               Show the quartiles, the IQR, the lower/upper fences
                               and skew.
-                              This requires storing all CSV data in memory.
+                              This requires loading all CSV data in memory.
     --nulls                   Include NULLs in the population size for computing
                               mean and standard deviation.
-    --infer-dates             Infer date/datetime datatypes. This is a very expensive
+    --infer-dates             Infer date/datetime datatypes. This is an expensive
                               option and should only be used when you know there
                               are date/datetime fields.
+                              Also, if timezone is not specified, it'll be set to UTC.
     --dates-whitelist <list>  The case-insensitive patterns to look for when 
                               shortlisting fields for date inference.
                               i.e. if the field's name has any of these patterns,
                               it is shortlisted for date inferencing.
-                              Set to <NULL> to inspect ALL fields for
+                              Set to "all" to inspect ALL fields for
                               date/datetime types. Ignored if --infer-dates is false.
                               [default: date,time,due,opened,closed]
-    --prefer-dmy              Prefer to parse dates in dmy format. Otherwise, use mdy format.
+    --prefer-dmy              Parse dates in dmy format. Otherwise, use mdy format.
                               Ignored if --infer-dates is false.
     -j, --jobs <arg>          The number of jobs to run in parallel.
                               This works only when the given CSV has an index.
@@ -87,7 +89,7 @@ Common options:
                            in statistics.
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
-";
+"#;
 
 #[derive(Clone, Deserialize)]
 pub struct Args {
@@ -341,7 +343,7 @@ fn init_date_inference(
             .map(|s| s.trim().to_string())
             .collect_vec();
 
-        if whitelist[0] == "<null>" {
+        if whitelist[0] == "all" {
             log::info!("inferring dates for ALL fields with DMY preference: {dmy_preferred}");
             INFER_DATE_FLAGS
                 .set(vec![true; headers.len()])
