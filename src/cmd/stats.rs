@@ -336,19 +336,20 @@ fn init_date_inference(
             .set(dmy_preferred)
             .expect("Cannot init date format preference");
 
-        log::info!("inferring dates with date-whitelist: {flag_whitelist}");
-        let whitelist = flag_whitelist
-            .to_lowercase()
-            .split(',')
-            .map(|s| s.trim().to_string())
-            .collect_vec();
+        let whitelist_lower = flag_whitelist.to_lowercase();
+        log::info!("inferring dates with date-whitelist: {whitelist_lower}");
 
-        if whitelist[0] == "all" {
+        if whitelist_lower == "all" {
             log::info!("inferring dates for ALL fields with DMY preference: {dmy_preferred}");
             INFER_DATE_FLAGS
                 .set(vec![true; headers.len()])
                 .expect("Cannot init date inference flags for ALL fields");
         } else {
+            let whitelist = whitelist_lower
+                .split(',')
+                .map(|s| s.trim().to_string())
+                .collect_vec();
+
             let mut infer_date_flag = Vec::with_capacity(headers.len());
             for header in headers {
                 let header_str = from_bytes::<String>(header).to_lowercase();
