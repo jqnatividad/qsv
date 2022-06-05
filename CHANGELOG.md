@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `excel` & `slice`: avoid panic by replacing `abs` with `unsigned_abs` https://github.com/jqnatividad/qsv/commit/7e2b14a5de67e70ee0b26ea0eff83462dbc77a0a
 * turn on once_cell `parking_lot` feature for storage efficiency/performance https://github.com/jqnatividad/qsv/commit/849548cde8bc9c2d96ddf464f2578faf63d6e9cf
 * applied various cargo +nightly clippy optimizations
-* pin nightly build to Rust Nightly 2022-06-
+* pin nightly build to Rust Nightly 2022-06-04
 * made various optimizations to our csv fork https://github.com/BurntSushi/rust-csv/compare/master...jqnatividad:perf-tweaks
 * cargo bump updated several dependencies
 
