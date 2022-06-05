@@ -65,7 +65,8 @@ stats options:
     --infer-dates             Infer date/datetime datatypes. This is an expensive
                               option and should only be used when you know there
                               are date/datetime fields.
-                              Also, if timezone is not specified, it'll be set to UTC.
+                              Also, if timezone is not specified in the data, it'll
+                              be set to UTC.
     --dates-whitelist <list>  The case-insensitive patterns to look for when 
                               shortlisting fields for date inference.
                               i.e. if the field's name has any of these patterns,
