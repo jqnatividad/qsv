@@ -155,7 +155,7 @@ assert-json-diff = "2.0"
 newline-converter = "0.2.0"
 quickcheck = { version = "1", default-features = false }
 redis = { version = "0.21", default-features = false }
-serial_test = "0.6"
+serial_test = "0.7"
 
 [patch.crates-io]
 calamine = { git = "https://github.com/jqnatividad/calamine", rev = "c8623af0165e6d42519c5c5644ae11099022001b" }
