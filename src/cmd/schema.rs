@@ -20,7 +20,7 @@ macro_rules! fail {
     };
 }
 
-static USAGE: &str = "
+static USAGE: &str = r#"
 Generate JSON Schema from CSV data.
 
 This command generates reference JSON Schema (Draft 7) from CSV data, 
@@ -49,7 +49,7 @@ Schema options:
                                shortlisting fields for date inference.
                                i.e. if the field's name has any of these patterns,
                                it is shortlisted for date inferencing.
-                               Set to <NULL> to inspect ALL fields for
+                               Set to "all" to inspect ALL fields for
                                date/datetime types.
                                [default: date,time,due,opened,closed]
     --prefer-dmy               Prefer to parse dates in dmy format. Otherwise, use mdy format.
@@ -66,7 +66,7 @@ Common options:
                                appear as the header row in the output.
     -d, --delimiter <arg>      The field delimiter for reading CSV data.
                                Must be a single character. [default: ,]
-";
+"#;
 
 #[derive(Deserialize, Clone)]
 struct Args {
