@@ -150,7 +150,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 }
 
 impl Args {
-    pub fn sequential_stats(&self, whitelist: &String) -> CliResult<(csv::ByteRecord, Vec<Stats>)> {
+    pub fn sequential_stats(&self, whitelist: &str) -> CliResult<(csv::ByteRecord, Vec<Stats>)> {
         let mut rdr = self.rconfig().reader()?;
         let (headers, sel) = self.sel_headers(&mut rdr)?;
 
@@ -167,7 +167,7 @@ impl Args {
 
     pub fn parallel_stats(
         &self,
-        whitelist: &String,
+        whitelist: &str,
         idx: Indexed<fs::File, fs::File>,
     ) -> CliResult<(csv::ByteRecord, Vec<Stats>)> {
         // N.B. This method doesn't handle the case when the number of records
@@ -329,7 +329,7 @@ fn init_date_inference(
     infer_dates: bool,
     prefer_dmy: bool,
     headers: &csv::ByteRecord,
-    flag_whitelist: &String,
+    flag_whitelist: &str,
 ) {
     if infer_dates {
         let dmy_preferred = prefer_dmy || std::env::var("QSV_PREFER_DMY").is_ok();
