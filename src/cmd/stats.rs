@@ -114,34 +114,18 @@ static DMY_PREFERENCE: once_cell::sync::OnceCell<bool> = OnceCell::new();
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
-    // if inferring dates, setup date parsing preference and date field name whitelist
-    let date_whitelist_vec = if args.flag_infer_dates {
-        log::info!(
-            "inferring dates with date-whitelist: {}",
-            args.flag_dates_whitelist
-        );
-
-        args.flag_dates_whitelist
-            .to_lowercase()
-            .split(',')
-            .map(|s| s.trim().to_string())
-            .collect_vec()
-    } else {
-        vec![]
-    };
-
     let mut wtr = Config::new(&args.flag_output).writer()?;
     let (headers, stats) = match args.rconfig().indexed()? {
-        None => args.sequential_stats(&date_whitelist_vec),
+        None => args.sequential_stats(&args.flag_dates_whitelist),
         Some(idx) => {
             if let Some(num_jobs) = args.flag_jobs {
                 if num_jobs == 1 {
-                    args.sequential_stats(&date_whitelist_vec)
+                    args.sequential_stats(&args.flag_dates_whitelist)
                 } else {
-                    args.parallel_stats(&date_whitelist_vec, idx)
+                    args.parallel_stats(&args.flag_dates_whitelist, idx)
                 }
             } else {
-                args.parallel_stats(&date_whitelist_vec, idx)
+                args.parallel_stats(&args.flag_dates_whitelist, idx)
             }
         }
     }?;
@@ -163,10 +147,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 }
 
 impl Args {
-    pub fn sequential_stats(
-        &self,
-        d_whitelist: &[String],
-    ) -> CliResult<(csv::ByteRecord, Vec<Stats>)> {
+    pub fn sequential_stats(&self, whitelist: &String) -> CliResult<(csv::ByteRecord, Vec<Stats>)> {
         let mut rdr = self.rconfig().reader()?;
         let (headers, sel) = self.sel_headers(&mut rdr)?;
 
@@ -174,7 +155,7 @@ impl Args {
             self.flag_infer_dates,
             self.flag_prefer_dmy,
             &headers,
-            d_whitelist,
+            whitelist,
         );
 
         let stats = self.compute(&sel, rdr.byte_records())?;
@@ -183,13 +164,13 @@ impl Args {
 
     pub fn parallel_stats(
         &self,
-        d_whitelist: &[String],
+        whitelist: &String,
         idx: Indexed<fs::File, fs::File>,
     ) -> CliResult<(csv::ByteRecord, Vec<Stats>)> {
         // N.B. This method doesn't handle the case when the number of records
         // is zero correctly. So we use `sequential_stats` instead.
         if idx.count() == 0 {
-            return self.sequential_stats(d_whitelist);
+            return self.sequential_stats(whitelist);
         }
 
         let mut rdr = self.rconfig().reader()?;
@@ -199,7 +180,7 @@ impl Args {
             self.flag_infer_dates,
             self.flag_prefer_dmy,
             &headers,
-            d_whitelist,
+            whitelist,
         );
 
         let chunk_size = util::chunk_size(idx.count() as usize, util::njobs(self.flag_jobs));
@@ -220,10 +201,12 @@ impl Args {
         Ok((headers, merge_all(recv.iter()).unwrap_or_default()))
     }
 
+    #[inline]
     pub fn stats_to_records(&self, stats: Vec<Stats>) -> Vec<csv::StringRecord> {
-        let mut records: Vec<_> = repeat(csv::StringRecord::new()).take(stats.len()).collect();
+        let mut records = Vec::with_capacity(stats.len());
+        records.extend(repeat(csv::StringRecord::new()).take(stats.len()));
         let pool = ThreadPool::new(util::njobs(self.flag_jobs));
-        let mut results = vec![];
+        let mut results = Vec::with_capacity(stats.len());
         for mut stat in stats {
             let (send, recv) = channel::bounded(0);
             results.push(recv);
@@ -251,7 +234,7 @@ impl Args {
             record = row?;
             for (i, field) in sel.select(&record).enumerate() {
                 unsafe {
-                    // we use unsafe/unchecked here so we skip unnecessary bounds checking
+                    // we use unchecked here so we skip unnecessary bounds checking
                     stats
                         .get_unchecked_mut(i)
                         .add(field, *INFER_DATE_FLAGS.get_unchecked().get_unchecked(i));
@@ -279,22 +262,28 @@ impl Args {
 
     #[inline]
     fn new_stats(&self, record_len: usize) -> Vec<Stats> {
-        repeat(Stats::new(WhichStats {
-            include_nulls: self.flag_nulls,
-            sum: true,
-            range: true,
-            dist: true,
-            cardinality: self.flag_cardinality || self.flag_everything,
-            median: self.flag_median && !self.flag_quartiles && !self.flag_everything,
-            quartiles: self.flag_quartiles || self.flag_everything,
-            mode: self.flag_mode || self.flag_everything,
-        }))
-        .take(record_len)
-        .collect()
+        #[allow(unused_assignments)]
+        let mut stats: Vec<Stats> = Vec::with_capacity(record_len);
+        stats.extend(
+            repeat(Stats::new(WhichStats {
+                include_nulls: self.flag_nulls,
+                sum: true,
+                range: true,
+                dist: true,
+                cardinality: self.flag_cardinality || self.flag_everything,
+                median: self.flag_median && !self.flag_quartiles && !self.flag_everything,
+                quartiles: self.flag_quartiles || self.flag_everything,
+                mode: self.flag_mode || self.flag_everything,
+            }))
+            .take(record_len),
+        );
+        stats
     }
 
     pub fn stat_headers(&self) -> csv::StringRecord {
-        let mut fields = vec![
+        // with --everything, we have 20 columns at most
+        let mut fields = Vec::with_capacity(20);
+        fields.extend_from_slice(&[
             "field",
             "type",
             "sum",
@@ -306,7 +295,7 @@ impl Args {
             "stddev",
             "variance",
             "nullcount",
-        ];
+        ]);
         let all = self.flag_everything;
         if self.flag_median && !self.flag_quartiles && !all {
             fields.push("median");
@@ -332,17 +321,25 @@ impl Args {
     }
 }
 
+#[inline]
 fn init_date_inference(
     infer_dates: bool,
     prefer_dmy: bool,
     headers: &csv::ByteRecord,
-    whitelist: &[String],
+    flag_whitelist: &String,
 ) {
     if infer_dates {
         let dmy_preferred = prefer_dmy || std::env::var("QSV_PREFER_DMY").is_ok();
         DMY_PREFERENCE
             .set(dmy_preferred)
             .expect("Cannot init date format preference");
+
+        log::info!("inferring dates with date-whitelist: {flag_whitelist}");
+        let whitelist = flag_whitelist
+            .to_lowercase()
+            .split(',')
+            .map(|s| s.trim().to_string())
+            .collect_vec();
 
         if whitelist[0] == "<null>" {
             log::info!("inferring dates for ALL fields with DMY preference: {dmy_preferred}");
@@ -354,7 +351,7 @@ fn init_date_inference(
             for header in headers {
                 let header_str = from_bytes::<String>(header).to_lowercase();
                 let mut date_found = false;
-                for whitelist_item in whitelist.iter() {
+                for whitelist_item in &whitelist {
                     if header_str.contains(whitelist_item) {
                         date_found = true;
                         log::info!(
