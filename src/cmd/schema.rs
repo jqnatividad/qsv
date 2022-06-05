@@ -381,31 +381,20 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
         flag_delimiter: args.flag_delimiter,
     };
 
-    log::info!(
-        "inferring dates using date-whitelist: {}",
-        args.flag_dates_whitelist
-    );
-    let date_whitelist_vec = stats_args
-        .flag_dates_whitelist
-        .to_lowercase()
-        .split(',')
-        .map(|s| s.trim().to_string())
-        .collect_vec();
-
     let (csv_fields, csv_stats) = match stats_args.rconfig().indexed() {
         Ok(o) => match o {
             None => {
                 info!("no index, triggering sequential stats");
-                stats_args.sequential_stats(&date_whitelist_vec)
+                stats_args.sequential_stats(&stats_args.flag_dates_whitelist)
             }
             Some(idx) => {
                 info!("has index, triggering parallel stats");
-                stats_args.parallel_stats(&date_whitelist_vec, idx)
+                stats_args.parallel_stats(&stats_args.flag_dates_whitelist, idx)
             }
         },
         Err(e) => {
             warn!("error determining if indexed, triggering sequential stats: {e}");
-            stats_args.sequential_stats(&date_whitelist_vec)
+            stats_args.sequential_stats(&stats_args.flag_dates_whitelist)
         }
     }?;
 

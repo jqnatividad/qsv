@@ -555,7 +555,25 @@ fn stats_prefer_dmy() {
 
     let got: String = wrk.stdout(&mut cmd);
 
-    let expected = wrk.load_test_resource("boston311-dmy-100-stats.csv");
+    let expected = wrk.load_test_resource("boston311-100-stats.csv");
+
+    assert_eq!(got, expected.replace("\r\n", "\n").trim_end());
+}
+
+#[test]
+fn stats_prefer_mdy() {
+    let wrk = Workdir::new("stats_prefer_mdy");
+    let test_file = wrk.load_test_file("boston311-100.csv");
+
+    let mut cmd = wrk.command("stats");
+    cmd.arg("--infer-dates")
+        .arg("--dates-whitelist")
+        .arg("_dt")
+        .arg(test_file);
+
+    let got: String = wrk.stdout(&mut cmd);
+
+    let expected = wrk.load_test_resource("boston311-100-stats.csv");
 
     assert_eq!(got, expected.replace("\r\n", "\n").trim_end());
 }
