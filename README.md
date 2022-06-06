@@ -81,8 +81,8 @@ See [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ) for more details.
 
 Pre-built binaries for Windows, Linux and macOS are available [from GitHub](https://github.com/jqnatividad/qsv/releases/latest), including binaries compiled with [Rust Nightly/Unstable](https://stackoverflow.com/questions/70745970/rust-nightly-vs-beta-version) (click [here](https://github.com/jqnatividad/qsv/blob/master/docs/PERFORMANCE.md#nightly-release-builds) for more info).
 
-There are three versions of qsv. `qsv` supports features, with the pre-built binaries enabling all valid platform features[^6];
-`qsvlite` has all [features](#feature-flags) disabled (half the size of `qsv`); `qsvdp` is optimized for use with [DataPusher+](https://github.com/dathere/datapusher-plus), with only DataPusher+ relevant commands and the self-update engine removed (a sixth of the size of `qsv`).
+There are three versions of qsv. `qsv` enables all [features](#feature-flags) valid for the target platform[^6];
+`qsvlite` has all features disabled (half the size of `qsv`); `qsvdp` is optimized for use with [DataPusher+](https://github.com/dathere/datapusher-plus), with only DataPusher+ relevant commands and the self-update engine removed (a sixth of the size of `qsv`).
 
 Alternatively, you can compile from source by
 [installing Cargo](https://crates.io/install)
@@ -176,7 +176,7 @@ The `excel` command recognizes Excel and Open Document Spreadsheet(ODS) files (`
 qsv validates against the [RFC 4180](https://datatracker.ietf.org/doc/html/rfc4180) CSV standard. However IRL, CSV formats vary significantly and qsv is actually not strictly compliant with the specification so it can process "real-world" CSV files.
 qsv leverages the awesome [Rust CSV](https://docs.rs/csv/latest/csv/) library, which in turn, is built on top of the [csv-core](https://docs.rs/csv-core/latest/csv_core/index.html) library to read CSV files.
 
-Click [here](https://docs.rs/csv-core/latest/csv_core/struct.Reader.html#rfc-4180) to find out how qsv conforms to the standard with `csv-core`.
+Click [here](https://docs.rs/csv-core/latest/csv_core/struct.Reader.html#rfc-4180) to find out more about how qsv conforms to the standard with `csv-core`.
 
 ### **UTF-8 Encoding**
 
@@ -255,7 +255,7 @@ The following "power-user" commands can be abused and present "foot-shooting" sc
 * `foreach` - enable `foreach` command (not valid for Windows).
 * `python` - enable `py` command (requires Python 3.8+). Note that qsv will automatically use the currently activated python version when running in a virtual environment.
 
-> ℹ️ **NOTE:** `qsvlite`, as the name implies, always has **non-default features disabled**. `qsv` can be built with any combination of the above features  using the cargo `--features` & `--no-default-features` flags. The pre-built `qsv` binaries has **all applicable features enabled for the target platform**[^6].
+> ℹ️ **NOTE:** `qsvlite`, as the name implies, always has **non-default features disabled**. `qsv` can be built with any combination of the above features  using the cargo `--features` & `--no-default-features` flags. The pre-built `qsv` binaries has **all applicable features valid for the target platform**[^6].
 
 ## License
 
