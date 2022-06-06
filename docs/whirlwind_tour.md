@@ -63,7 +63,7 @@ using [elastic tabstops](https://github.com/BurntSushi/tabwriter). You'll
 notice that it even gets alignment right with respect to Unicode characters.
 
 So, this command took 3.22 seconds to run on my machine, but we can speed
-it up by creating an index and re-running the command:
+it up even further by creating an index and re-running the command:
 
 ```
 qsv index wcp.csv
@@ -71,14 +71,14 @@ qsv stats wcp.csv --everything | qsv table
 ```
 
 Which cuts it down to 1.95 seconds! (And creating the index took 0.27 seconds. 
-And the original `stats` without `--everything`? Just 0.16 seconds with an index!)
+What about the first `stats` without `--everything`? From 1.3 seconds to 0.16 seconds with an index - 8.25x faster!)
 
 Notably, the same type of "statistics" command in another
 [CSV command line toolkit](https://csvkit.readthedocs.io/)
-takes about 10 seconds to produce a subset of statistics on the same data set. [Visidata](https://visidata.org)
-takes much longer - ~1.5 minutes to calculate a subset of these statistics with its Describe sheet. 
+takes about 10 seconds to produce a *subset* of statistics on the same data set. [Visidata](https://visidata.org)
+takes much longer - ~1.5 minutes to calculate a *subset* of these statistics with its Describe sheet. 
 Even python [pandas'](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.describe.html) 
-`describe(include="all"))` took 12 seconds to calculate a subset of qsv's "streaming" statistics.[^3]
+`describe(include="all"))` took 12 seconds to calculate a *subset* of qsv's "streaming" statistics.[^3]
 
 Creating an index accelerated statistics gathering as it enables multithreading and fast I/O. Apart from 
 `stats` it also accelerates several other commands - `frequency`, `split`, `schema`, `count`, `join`, 
