@@ -70,7 +70,7 @@ qsv index wcp.csv
 qsv stats wcp.csv --everything | qsv table
 ```
 
-Which cuts it down to 1.95 seconds! (And creating the index took 0.27 seconds. 
+Which cuts it down to 1.95 seconds - 1.65x faster! (And creating the index took 0.27 seconds. 
 What about the first `stats` without `--everything`? From 1.3 seconds to 0.16 seconds with an index - 8.25x faster!)
 
 Notably, the same type of "statistics" command in another
