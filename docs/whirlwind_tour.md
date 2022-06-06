@@ -35,10 +35,10 @@ Latitude    Float    76585211.1977638   -54.9333333   82.483333    1           1
 Longitude   Float    75976506.66428813  -179.9833333  180.0        1           14          28.14618114715136   62.472858625866586  3902.858064887513  0
 ```
 
-Wow! That was fast! It took just 1.3 seconds to compile all that[^1]. It's so fast
+Wow! That was fast! It took just 1.3 seconds to compile all that.[^1] It's so fast
 because qsv by default, works in "streaming" mode - computing statistics as it "streams"
 the file line by line, without having to load the entire file into memory. Which means it
-can gather statistics on arbitrarily large CSV files[^2]!
+can gather statistics on arbitrarily large CSV files![^2]
 
 But can we get more descriptive statistics? What's the variance, the modes, the distribution (quartiles), 
 and the cardinality of the data?  No problem. That's why `qsv stats` has an `--everything` option to 
