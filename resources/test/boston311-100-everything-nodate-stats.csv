@@ -1,30 +1,30 @@
-field,type,sum,min,max,min_length,max_length,mean,stddev,variance,nullcount,lower_fence,q1,q2_median,q3,iqr,upper_fence,skewness,mode,cardinality
-case_enquiry_id,Integer,10100411645180,101004113298,101004155594,12,12,101004116451.80003,7905.5201545357395,62497248.91377078,0,101004111646.0,101004113725.0,101004114353.0,101004115111.0,1386.0,101004117190.0,0.09379509379509379,,100
-open_dt,String,,2022-01-01 00:16:00,2022-01-31 11:46:00,19,19,,,,0,,,,,,,,,100
-target_dt,String,,2022-01-03 10:32:34,2022-05-20 13:03:21,0,19,,,,11,,,,,,,,2022-01-04 08:30:00,42
-closed_dt,String,,2022-01-01 12:56:14,2022-04-25 14:30:31,0,19,,,,15,,,,,,,,,86
-ontime,String,,ONTIME,OVERDUE,6,7,,,,0,,,,,,,,ONTIME,2
-case_status,String,,Closed,Open,4,6,,,,0,,,,,,,,Closed,2
-closure_reason,String,, ,Case Closed. Closed date : Wed Jan 19 11:42:16 EST 2022 Resolved Removed df  ,1,284,,,,0,,,,,,,, ,86
-case_title,String,,Abandoned Vehicles,Traffic Signal Inspection,10,57,,,,0,,,,,,,,Parking Enforcement,42
-subject,String,,Animal Control,Transportation - Traffic Division,14,33,,,,0,,,,,,,,Public Works Department,9
-reason,String,,Administrative & General Requests,Street Lights,7,33,,,,0,,,,,,,,Enforcement & Abandoned Vehicles,20
-type,String,,Abandoned Vehicles,Unsatisfactory Utilities - Electrical  Plumbing,10,47,,,,0,,,,,,,,Parking Enforcement,36
-queue,String,,BTDT_AVRS Interface Queue,PWDx_Street Light_General Lighting Request,13,55,,,,0,,,,,,,,BTDT_Parking Enforcement,35
-department,String,,BTDT,PWDx,3,4,,,,0,,,,,,,,PWDx,7
-submittedphoto,String,,https://311.boston.gov/media/boston/report/photos/61d03f0d05bbcf180c2965fd/report.jpg,https://311.boston.gov/media/boston/report/photos/61d75bba05bbcf180c2d41de/report.jpg,0,100,,,,58,,,,,,,,,43
-closedphoto,NULL,,,,0,0,,,,100,,,,,,,,,1
-location,String,, ,INTERSECTION of Verdun St & Gallivan Blvd  Dorchester  MA  ,1,63,,,,0,,,,,,,,"563 Columbus Ave  Roxbury  MA  02118,INTERSECTION of Gallivan Blvd & Washington St  Dorchester  MA  ",98
-fire_district,String,, ,9,1,2,,,,0,,,,,,,,3,10
-pwd_district,String,, ,1C,1,3,,,,0,,,,,,,,1B,14
-city_council_district,String,, ,9,1,1,,,,0,,,,,,,,1,10
-police_district,String,, ,E5,1,3,,,,0,,,,,,,,A1,13
-neighborhood,String,, ,West Roxbury,1,38,,,,0,,,,,,,,Dorchester,19
-neighborhood_services_district,String,, ,9,1,2,,,,0,,,,,,,,3,16
-ward,String,, ,Ward 9,1,7,,,,0,,,,,,,,Ward 3,42
-precinct,String,, ,2210,0,4,,,,1,,,,,,,,0306,76
-location_street_name,String,,103 N Beacon St,INTERSECTION Verdun St & Gallivan Blvd,0,45,,,,1,,,,,,,,"20 Washington St,563 Columbus Ave,INTERSECTION Gallivan Blvd & Washington St",97
-location_zipcode,Integer,176426,2109,2215,0,5,2125.614457831326,15.394280995118047,236.9838873566527,17,2101.5,2118.0,2125.0,2129.0,11.0,2145.5,-0.2727272727272727,,24
-latitude,Float,4233.6674,42.2553,42.3806,6,7,42.336674000000016,0.030502792068925106,0.0009304203240000804,0,42.26190000000001,42.32040000000001,42.34315,42.3594,0.03899999999999437,42.41789999999999,-0.16666666666657556,42.3594,78
-longitude,Float,-7107.268799999998,-71.1626,-71.0298,6,8,-71.07268799999999,0.0310744952654089,0.0009656242559999203,0,-71.12942500000001,-71.0848,-71.06085,-71.05505,0.02975000000000705,-71.01042499999998,-0.6100840336130134,-71.0587,77
-source,String,,Citizens Connect App,Self Service,12,20,,,,0,,,,,,,,Citizens Connect App,4
+field,type,sum,min,max,min_length,max_length,mean,stddev,variance,nullcount,lower_outer_fence,lower_inner_fence,q1,q2_median,q3,iqr,upper_inner_fence,upper_outer_fence,skewness,mode,cardinality
+case_enquiry_id,Integer,10100411645180,101004113298,101004155594,12,12,101004116451.80003,7905.5201545357395,62497248.91377078,0,101004109567.0,101004111646.0,101004113725.0,101004114353.0,101004115111.0,1386.0,101004117190.0,101004119269.0,0.09379509379509379,,100
+open_dt,String,,2022-01-01 00:16:00,2022-01-31 11:46:00,19,19,,,,0,,,,,,,,,,,100
+target_dt,String,,2022-01-03 10:32:34,2022-05-20 13:03:21,0,19,,,,11,,,,,,,,,,2022-01-04 08:30:00,42
+closed_dt,String,,2022-01-01 12:56:14,2022-04-25 14:30:31,0,19,,,,15,,,,,,,,,,,86
+ontime,String,,ONTIME,OVERDUE,6,7,,,,0,,,,,,,,,,ONTIME,2
+case_status,String,,Closed,Open,4,6,,,,0,,,,,,,,,,Closed,2
+closure_reason,String,, ,Case Closed. Closed date : Wed Jan 19 11:42:16 EST 2022 Resolved Removed df  ,1,284,,,,0,,,,,,,,,, ,86
+case_title,String,,Abandoned Vehicles,Traffic Signal Inspection,10,57,,,,0,,,,,,,,,,Parking Enforcement,42
+subject,String,,Animal Control,Transportation - Traffic Division,14,33,,,,0,,,,,,,,,,Public Works Department,9
+reason,String,,Administrative & General Requests,Street Lights,7,33,,,,0,,,,,,,,,,Enforcement & Abandoned Vehicles,20
+type,String,,Abandoned Vehicles,Unsatisfactory Utilities - Electrical  Plumbing,10,47,,,,0,,,,,,,,,,Parking Enforcement,36
+queue,String,,BTDT_AVRS Interface Queue,PWDx_Street Light_General Lighting Request,13,55,,,,0,,,,,,,,,,BTDT_Parking Enforcement,35
+department,String,,BTDT,PWDx,3,4,,,,0,,,,,,,,,,PWDx,7
+submittedphoto,String,,https://311.boston.gov/media/boston/report/photos/61d03f0d05bbcf180c2965fd/report.jpg,https://311.boston.gov/media/boston/report/photos/61d75bba05bbcf180c2d41de/report.jpg,0,100,,,,58,,,,,,,,,,,43
+closedphoto,NULL,,,,0,0,,,,100,,,,,,,,,,,1
+location,String,, ,INTERSECTION of Verdun St & Gallivan Blvd  Dorchester  MA  ,1,63,,,,0,,,,,,,,,,"563 Columbus Ave  Roxbury  MA  02118,INTERSECTION of Gallivan Blvd & Washington St  Dorchester  MA  ",98
+fire_district,String,, ,9,1,2,,,,0,,,,,,,,,,3,10
+pwd_district,String,, ,1C,1,3,,,,0,,,,,,,,,,1B,14
+city_council_district,String,, ,9,1,1,,,,0,,,,,,,,,,1,10
+police_district,String,, ,E5,1,3,,,,0,,,,,,,,,,A1,13
+neighborhood,String,, ,West Roxbury,1,38,,,,0,,,,,,,,,,Dorchester,19
+neighborhood_services_district,String,, ,9,1,2,,,,0,,,,,,,,,,3,16
+ward,String,, ,Ward 9,1,7,,,,0,,,,,,,,,,Ward 3,42
+precinct,String,, ,2210,0,4,,,,1,,,,,,,,,,0306,76
+location_street_name,String,,103 N Beacon St,INTERSECTION Verdun St & Gallivan Blvd,0,45,,,,1,,,,,,,,,,"20 Washington St,563 Columbus Ave,INTERSECTION Gallivan Blvd & Washington St",97
+location_zipcode,Integer,176426,2109,2215,0,5,2125.614457831326,15.394280995118047,236.9838873566527,17,2085.0,2101.5,2118.0,2125.0,2129.0,11.0,2145.5,2162.0,-0.2727272727272727,,24
+latitude,Float,4233.6674,42.2553,42.3806,6,7,42.336674000000016,0.030502792068925106,0.0009304203240000804,0,42.20340000000002,42.26190000000001,42.32040000000001,42.34315,42.3594,0.03899999999999437,42.41789999999999,42.476399999999984,-0.16666666666657556,42.3594,78
+longitude,Float,-7107.268799999998,-71.1626,-71.0298,6,8,-71.07268799999999,0.0310744952654089,0.0009656242559999203,0,-71.17405000000002,-71.12942500000001,-71.0848,-71.06085,-71.05505,0.02975000000000705,-71.01042499999998,-70.96579999999997,-0.6100840336130134,-71.0587,77
+source,String,,Citizens Connect App,Self Service,12,20,,,,0,,,,,,,,,,Citizens Connect App,4
