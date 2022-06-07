@@ -821,7 +821,7 @@ impl TypedMinMax {
         match typ {
             TString | TNull => {}
             TFloat => unsafe {
-                let n = str::from_utf8_unchecked(&*sample)
+                let n = str::from_utf8_unchecked(sample)
                     .parse::<f64>()
                     .ok()
                     .unwrap();
@@ -830,7 +830,7 @@ impl TypedMinMax {
                 self.integers.add(n as i64);
             },
             TInteger => unsafe {
-                let n = str::from_utf8_unchecked(&*sample)
+                let n = str::from_utf8_unchecked(sample)
                     .parse::<i64>()
                     .ok()
                     .unwrap();
@@ -838,7 +838,7 @@ impl TypedMinMax {
                 self.floats.add(n as f64);
             },
             TDate | TDateTime => unsafe {
-                let tempstr = str::from_utf8_unchecked(&*sample);
+                let tempstr = str::from_utf8_unchecked(sample);
                 let n = parse_with_preference(tempstr, *DMY_PREFERENCE.get_unchecked()).unwrap();
                 self.dates.add(n.to_string());
             },
