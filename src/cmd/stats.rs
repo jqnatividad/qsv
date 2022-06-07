@@ -25,7 +25,7 @@ static USAGE: &str = r#"
 Computes descriptive statistics on CSV data.
 
 Descriptive statistics includes sum, min/max, min/max length, mean, stddev, variance,
-nullcount, quartiles, IQR, lower/upper fences, skew, median, mode/s, & cardinality. 
+nullcount, quartiles, IQR, lower/upper fences, skewness, median, mode/s, & cardinality. 
 Note that some statistics are expensive to compute and requires loading the entire 
 file into memory, so they must be enabled explicitly. 
 
@@ -58,7 +58,7 @@ stats options:
     --median                  Show the median.
                               This requires loading all CSV data in memory.
     --quartiles               Show the quartiles, the IQR, the lower/upper fences
-                              and skew.
+                              and skewness.
                               This requires loading all CSV data in memory.
     --nulls                   Include NULLs in the population size for computing
                               mean and standard deviation.
@@ -311,7 +311,7 @@ impl Args {
                 "q3",
                 "iqr",
                 "upper_fence",
-                "skew",
+                "skewness",
             ]);
         }
         if self.flag_mode || all {
