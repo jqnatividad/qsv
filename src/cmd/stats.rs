@@ -68,7 +68,7 @@ stats options:
                               Also, if timezone is not specified in the data, it'll
                               be set to UTC.
     --dates-whitelist <list>  The case-insensitive patterns to look for when 
-                              shortlisting fields for date inference.
+                              shortlisting fields for date inferencing.
                               i.e. if the field's name has any of these patterns,
                               it is shortlisted for date inferencing.
                               Set to "all" to inspect ALL fields for
@@ -581,11 +581,11 @@ impl Stats {
                 pieces.push(buffer.format(q3).to_owned());
                 pieces.push(buffer.format(iqr).to_owned());
                 pieces.push(buffer.format(1.5f64.mul_add(iqr, q3)).to_owned());
-                // calculate skewnewss using Pearson's median skewness
-                // https://en.wikipedia.org/wiki/Skewness#Pearson's_second_skewness_coefficient_(median_skewness)
-                let mean = self.online.unwrap().mean();
-                let stddev = self.online.unwrap().stddev();
-                pieces.push(buffer.format((3.0 * (mean - q2)) / stddev).to_owned());
+                // calculate skewness using Quantile-based measures
+                // https://en.wikipedia.org/wiki/Skewness#Quantile-based_measures
+                let numerator = (q3 + q1) / 2.0;
+                let denominator = (numerator - q2) / ((q3 - q1) / 2.0);
+                pieces.push(buffer.format(numerator / denominator).to_owned());
             }
         }
         match self.modes.as_mut() {
