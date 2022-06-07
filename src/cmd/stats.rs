@@ -57,8 +57,8 @@ stats options:
                               This requires loading all CSV data in memory.
     --median                  Show the median.
                               This requires loading all CSV data in memory.
-    --quartiles               Show the quartiles, the IQR, the lower/upper fences
-                              and skewness.
+    --quartiles               Show the quartiles, the IQR, the lower/upper inner/outer
+                              fences and skewness.
                               This requires loading all CSV data in memory.
     --nulls                   Include NULLs in the population size for computing
                               mean and standard deviation.
@@ -284,8 +284,8 @@ impl Args {
     }
 
     pub fn stat_headers(&self) -> csv::StringRecord {
-        // with --everything, we have 20 columns at most
-        let mut fields = Vec::with_capacity(20);
+        // with --everything, we have 22 columns at most
+        let mut fields = Vec::with_capacity(22);
         fields.extend_from_slice(&[
             "field",
             "type",
@@ -305,12 +305,14 @@ impl Args {
         }
         if self.flag_quartiles || all {
             fields.extend_from_slice(&[
-                "lower_fence",
+                "lower_outer_fence",
+                "lower_inner_fence",
                 "q1",
                 "q2_median",
                 "q3",
                 "iqr",
-                "upper_fence",
+                "upper_inner_fence",
+                "upper_outer_fence",
                 "skewness",
             ]);
         }
@@ -499,7 +501,8 @@ impl Stats {
     #[allow(clippy::wrong_self_convention)]
     pub fn to_record(&mut self) -> csv::StringRecord {
         let typ = self.typ;
-        let mut pieces = Vec::with_capacity(20);
+        // we have 22 columns at most with --everything
+        let mut pieces = Vec::with_capacity(22);
         let empty = || "".to_owned();
 
         pieces.push(self.typ.to_string());
@@ -570,17 +573,30 @@ impl Stats {
                     pieces.push(empty());
                     pieces.push(empty());
                     pieces.push(empty());
+                    pieces.push(empty());
+                    pieces.push(empty());
                 }
             }
             Some((q1, q2, q3)) => {
                 let iqr = q3 - q1;
                 let mut buffer = ryu::Buffer::new();
+                // lower outer and inner fence
+                pieces.push(buffer.format(q1 - (3.0 * iqr)).to_owned());
                 pieces.push(buffer.format(q1 - (1.5 * iqr)).to_owned());
+
                 pieces.push(buffer.format(q1).to_owned());
                 pieces.push(buffer.format(q2).to_owned());
                 pieces.push(buffer.format(q3).to_owned());
                 pieces.push(buffer.format(iqr).to_owned());
-                pieces.push(buffer.format(1.5f64.mul_add(iqr, q3)).to_owned());
+
+                // the fused multiply_add below calculates the upper inner fence and
+                // is equivalent to "q3 + (1.5 * iqr)"
+                // fused mul_add is more performant if the target architecture
+                // has a dedicated `fma` CPU instruction
+                pieces.push(buffer.format(1.5_f64.mul_add(iqr, q3)).to_owned());
+                // upper outer fence
+                pieces.push(buffer.format(3.0_f64.mul_add(iqr, q3)).to_owned());
+
                 // calculate skewness using Quantile-based measures
                 // https://en.wikipedia.org/wiki/Skewness#Quantile-based_measures
                 let numerator = q3 - (2.0 * q2) + q1;
