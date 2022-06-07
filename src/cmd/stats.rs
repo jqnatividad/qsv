@@ -599,9 +599,7 @@ impl Stats {
 
                 // calculate skewness using Quantile-based measures
                 // https://en.wikipedia.org/wiki/Skewness#Quantile-based_measures
-                let numerator = q3 - (2.0 * q2) + q1;
-                let denominator = q3 - q1;
-                pieces.push(buffer.format(numerator / denominator).to_owned());
+                pieces.push(buffer.format((q3 - (2.0 * q2) + q1) / iqr).to_owned());
             }
         }
         match self.modes.as_mut() {
