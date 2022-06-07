@@ -188,10 +188,10 @@ fn get_field_value(wrk: &Workdir, cmd: &mut process::Command, field: &str) -> St
         for (h, val) in headers.iter().zip(row.iter()) {
             match field {
                 "quartiles" => match &**h {
-                    "lower_fence" | "q1" | "q2_median" | "q3" | "iqr" => {
+                    "lower_fence" | "q1" | "q2_median" | "q3" | "iqr" | "upper_fence" => {
                         sequence.push(val);
                     }
-                    "upper_fence" => {
+                    "skewness" => {
                         sequence.push(val);
                         return sequence.join(",");
                     }
