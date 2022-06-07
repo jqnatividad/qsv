@@ -123,7 +123,7 @@ fn test_stats<S>(
     let field_val = get_field_value(&wrk, &mut cmd, field);
     // Only compare the first few bytes since floating point arithmetic
     // can mess with exact comparisons.
-    let len = cmp::min(11, cmp::min(field_val.len(), expected.len()));
+    let len = cmp::min(40, cmp::min(field_val.len(), expected.len()));
     assert_eq!(&field_val[0..len], &expected[0..len]);
 }
 
@@ -188,7 +188,8 @@ fn get_field_value(wrk: &Workdir, cmd: &mut process::Command, field: &str) -> St
         for (h, val) in headers.iter().zip(row.iter()) {
             match field {
                 "quartiles" => match &**h {
-                    "lower_fence" | "q1" | "q2_median" | "q3" | "iqr" | "upper_fence" => {
+                    "lower_outer_fence" | "lower_inner_fence" | "q1" | "q2_median" | "q3"
+                    | "iqr" | "upper_inner_fence" | "upper_outer_fence" => {
                         sequence.push(val);
                     }
                     "skewness" => {
@@ -469,31 +470,31 @@ stats_tests!(
     stats_quartiles,
     "quartiles",
     &["1", "2", "3"],
-    "-2.0,1.0,2.0,3.0,2.0,4.0"
+    "-5.0,-2.0,1.0,2.0,3.0,2.0,6.0,9.0"
 );
 stats_tests!(
     stats_quartiles_null,
     "quartiles",
     &["", "1", "2", "3"],
-    "-2.0,1.0,2.0,3.0,2.0,4.0"
+    "-5.0,-2.0,1.0,2.0,3.0,2.0,6.0,9.0"
 );
 stats_tests!(
     stats_quartiles_even,
     "quartiles",
     &["1", "2", "3", "4"],
-    "-1.5,1.5,2.5,3.5,1,4.5"
+    "-4.5,-1.5,1.5,2.5,3.5,2.0,6.5,9.5"
 );
 stats_tests!(
     stats_quartiles_even_null,
     "quartiles",
     &["", "1", "2", "3", "4"],
-    "-1.5,1.5,2.5,3.5,1,4.5"
+    "-4.5,-1.5,1.5,2.5,3.5,2.0,6.5,9.5"
 );
 stats_tests!(
     stats_quartiles_mix,
     "quartiles",
     &["1", "2.0", "3", "4"],
-    "-1.5,1.5,2.5,3.5,1,4.5"
+    "-4.5,-1.5,1.5,2.5,3.5,2.0,6.5,9.5"
 );
 stats_tests!(stats_quartiles_null_empty, "quartiles", &[""], "");
 
