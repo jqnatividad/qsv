@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 * `stats`: change skewness algorithm to use [quantile-based measures](https://en.wikipedia.org/wiki/Skewness#Quantile-based_measures)
 * whirlwind tour: added more stats about stats command; updated stats output with the additional columns
+* pin nightly to 2022-06-07
 * cargo update bump several dependencies
 
 ### Fixed
