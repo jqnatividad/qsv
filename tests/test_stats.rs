@@ -123,7 +123,13 @@ fn test_stats<S>(
     let field_val = get_field_value(&wrk, &mut cmd, field);
     // Only compare the first few bytes since floating point arithmetic
     // can mess with exact comparisons.
-    let len = cmp::min(40, cmp::min(field_val.len(), expected.len()));
+    // when field = skewness, we're comparing a long sequence of the quartile columns,
+    // that's why we use 40, if not, its a single column, and we need to compare only
+    // the first 15 characters just in case its a float
+    let len = cmp::min(
+        if field == "skewness" { 40 } else { 15 },
+        cmp::min(field_val.len(), expected.len()),
+    );
     assert_eq!(&field_val[0..len], &expected[0..len]);
 }
 
