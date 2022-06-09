@@ -83,10 +83,12 @@ Even python [pandas'](https://pandas.pydata.org/docs/reference/api/pandas.DataFr
 This is another reason for qsv's speed. Creating an index accelerated statistics gathering as it enables 
 ***multithreading & fast I/O***.
 
-> ℹ️ **NOTE:** Creating/updating an index itself is extremely fast as well. If you want
-qsv to automatically create and update indices, set the environment var `QSV_AUTOINDEX`.
+**For multithreading** - running `stats` with an index was 8.25x faster because it divided the file into 
+16 equal chunks[^1] with ~170k records each, then running stats on each chunk in parallel across 16 
+logical processors and merging the results in the end. It was "only" 8x, and not 16x faster as there is 
+some overhead involved in multithreading. 
 
-For example, let's say you wanted to grab the last 10 records:
+**For fast I/O** - let's say you wanted to grab the last 10 records:
 
 ```
 $ qsv count --human-readable wcp.csv
@@ -110,6 +112,9 @@ with an index because for `count` - the index already precomputed the record cou
 *only the sliced portion* has to be parsed - because an index allowed us to jump directly to that 
 part of the file. It didn't have to scan the entire file to get the last 10 records. For comparison,
 without an index, it took 0.25 (41x slower) and 0.66 (39x slower) seconds respectively.
+
+> ℹ️ **NOTE:** Creating/updating an index itself is extremely fast as well. If you want
+qsv to automatically create and update indices, set the environment var `QSV_AUTOINDEX`.
 
 Okay, okay! Let's switch gears and stop obsessing over how fast :rocket: qsv is... let's go back to exploring :mag_right:
 the data set.
