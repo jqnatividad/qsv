@@ -86,8 +86,7 @@ This is another reason for qsv's speed. Creating an index accelerated statistics
 > ℹ️ **NOTE:** Creating/updating an index itself is extremely fast as well. If you want
 qsv to automatically create and update indices, set the environment var `QSV_AUTOINDEX`.
 
-The slice operations are extremely fast with an index because *only the sliced portion* 
-has to be parsed. For example, let's say you wanted to grab the last 10 records:
+For example, let's say you wanted to grab the last 10 records:
 
 ```
 $ qsv count --human-readable wcp.csv
@@ -106,9 +105,13 @@ zw       zuzumba            Zuzumba            06                  -20.0333333  
 zw       zvishavane         Zvishavane         07      79876       -20.3333333  30.0333333
 ```
 
-Returning in 0.017 seconds! This command was *instantaneous* because an index allowed us to
-jump directly to that part of the file. It didn't have to scan the entire file to get the
-last 10 records.
+`qsv count` took 0.006 seconds and `qsv slice`, 0.017 seconds! These commands are *instantaneous* 
+with an index because for `count` - the index already precomputed the record count, and with `slice`,  
+*only the sliced portion* has to be parsed - because an index allowed us to jump directly to that 
+part of the file. It didn't have to scan the entire file to get the last 10 records.
+
+Okay... let's switch gears and stop obsessing over how fast qsv is... let's go back to exploring
+the data set.
 
 Hmmmm... the Population column has a lot of null values. How pervasive is that?
 First, let's take a look at 10 "random" rows with `sample`. We use the `--seed` parameter
