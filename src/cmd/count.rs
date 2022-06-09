@@ -45,10 +45,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         &args.flag_delimiter
     );
 
-    let count = if let Some(idx) = conf.indexed()? {
+    let count = if let Some(idx) = conf.indexed().unwrap_or_else(|_| {
+        info!("index is stale...");
+        None
+    }) {
         info!("index used");
         idx.count()
     } else {
+        info!(r#"counting "manually"..."#);
         let mut rdr = conf.reader()?;
         let mut count = 0u64;
         let mut record = csv::ByteRecord::new();
