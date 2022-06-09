@@ -106,11 +106,12 @@ zw       zvishavane         Zvishavane         07      79876       -20.3333333  
 ```
 
 `qsv count` took 0.006 seconds and `qsv slice`, 0.017 seconds! These commands are *instantaneous* 
-with an index because for `count` - the index already precomputed the record count, and with `slice`,  
+with an index because for `count` - the index already precomputed the record count, and with `slice`,
 *only the sliced portion* has to be parsed - because an index allowed us to jump directly to that 
-part of the file. It didn't have to scan the entire file to get the last 10 records.
+part of the file. It didn't have to scan the entire file to get the last 10 records. For comparison,
+without an index, it took 0.25 (41x slower) and 0.66 (39x slower) seconds respectively.
 
-Okay... let's switch gears and stop obsessing over how fast qsv is... let's go back to exploring
+Okay, okay! Let's switch gears and stop obsessing over how fast :rocket: qsv is... let's go back to exploring :mag_right:
 the data set.
 
 Hmmmm... the Population column has a lot of null values. How pervasive is that?
