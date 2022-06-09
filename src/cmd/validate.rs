@@ -180,6 +180,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     let headers = rdr.byte_headers()?.clone();
+    let headers_len = headers.len();
 
     // prep progress bar
     #[cfg(any(feature = "full", feature = "lite"))]
@@ -253,6 +254,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     if has_data {
                         row_number += 1;
                         record.push_field(row_number.to_string().as_bytes());
+                        // non-allocating trimming in place is much faster on the record level
+                        // with our csv fork than doing field-by-field std::str::trim which is allocating
+                        record.trim();
                         batch.push(record.to_owned());
                     } else {
                         // nothing else to add to batch
@@ -279,7 +283,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // validation_results vector should have same row count and in same order as input CSV
         let validation_results: Vec<Option<String>> = batch
             .par_iter()
-            .map(|record| do_json_validation(&headers, record, &schema_json, &schema_compiled))
+            .map(|record| {
+                do_json_validation(
+                    &headers,
+                    &headers_len,
+                    record,
+                    &schema_json,
+                    &schema_compiled,
+                )
+            })
             .collect();
 
         batch.clear();
@@ -442,41 +454,41 @@ fn write_error_report(input_path: &str, validation_error_messages: Vec<String>) 
 }
 
 /// if given record is valid, return None, otherwise, error file entry string
+#[inline]
 fn do_json_validation(
     headers: &ByteRecord,
+    headers_len: &usize,
     record: &ByteRecord,
     schema_json: &Value,
     schema_compiled: &JSONSchema,
 ) -> Option<String> {
     // row number was added as last column. We use unsafe from_utf8_unchecked to
     // skip UTF8 validation since we know its safe as we added it earlier
-    let row_number_string = unsafe { str::from_utf8_unchecked(record.get(headers.len()).unwrap()) };
-
-    let instance: Value = match to_json_instance(headers, record, schema_json) {
-        Ok(obj) => obj,
-        Err(e) => {
-            return Some(format!("{row_number_string}\t<RECORD>\t{e}"));
-        }
-    };
+    let row_number_string = unsafe { str::from_utf8_unchecked(record.get(*headers_len).unwrap()) };
 
     // debug!("instance[{row_number}]: {instance:?}");
+    validate_json_instance(
+        &(match to_json_instance(headers, record, schema_json) {
+            Ok(obj) => obj,
+            Err(e) => {
+                return Some(format!("{row_number_string}\t<RECORD>\t{e}"));
+            }
+        }),
+        schema_compiled,
+    )
+    .map_or(None, |validation_errors| {
+        use itertools::Itertools;
+        // squash multiple errors into one long String with linebreaks
+        let combined_errors: String = validation_errors
+            .iter()
+            .map(|tuple| {
+                // validation error file format: row_number, field, error
+                format!("{row_number_string}\t{}\t{}", tuple.0, tuple.1)
+            })
+            .join("\n");
 
-    match validate_json_instance(&instance, schema_compiled) {
-        Some(validation_errors) => {
-            use itertools::Itertools;
-            // squash multiple errors into one long String with linebreaks
-            let combined_errors: String = validation_errors
-                .iter()
-                .map(|tuple| {
-                    // validation error file format: row_number, field, error
-                    format!("{row_number_string}\t{}\t{}", tuple.0, tuple.1)
-                })
-                .join("\n");
-
-            Some(combined_errors)
-        }
-        None => None,
-    }
+        Some(combined_errors)
+    })
 }
 
 /// convert CSV Record into JSON instance by referencing Type from Schema
@@ -490,16 +502,14 @@ fn to_json_instance(headers: &ByteRecord, record: &ByteRecord, schema: &Value) -
     // we use with_capacity to minimize allocs
     let mut json_object_map: Map<String, Value> = Map::with_capacity(50);
 
-    // iterate over each CSV field and convert to JSON type
-    let headers_iter = headers.iter().enumerate();
-
     let null_type: Value = Value::String("null".to_string());
 
-    for (i, header) in headers_iter {
+    // iterate over each CSV field and convert to JSON type
+    for (i, header) in headers.iter().enumerate() {
         // convert csv header to string
         let header_string = unsafe { std::str::from_utf8_unchecked(header).to_string() };
-        // convert csv value to string; trim whitespace
-        let value_string = unsafe { std::str::from_utf8_unchecked(&record[i]).trim().to_string() };
+        // convert csv value to string; no trimming is done as that's done on the record level beforehand
+        let value_string = unsafe { std::str::from_utf8_unchecked(&record[i]).to_string() };
 
         // get json type from schema; defaults to STRING if not specified
         let field_def: &Value = schema_properties
@@ -649,14 +659,12 @@ mod tests_for_csv_to_json_conversion {
 
         let mut rdr = csv::Reader::from_reader(csv.as_bytes());
         let headers = rdr.byte_headers().unwrap().clone();
+        let mut record = rdr.byte_records().next().unwrap().unwrap();
+        record.trim();
 
         assert_eq!(
-            to_json_instance(
-                &headers,
-                &rdr.byte_records().next().unwrap().unwrap(),
-                &schema_json()
-            )
-            .expect("can convert csv to json instance"),
+            to_json_instance(&headers, &record, &schema_json())
+                .expect("can convert csv to json instance"),
             json!({
                 "A": "hello",
                 "B": 3.1415,
