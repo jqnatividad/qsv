@@ -35,10 +35,10 @@ Latitude    Float    76585211.1977638   -54.9333333   82.483333    1           1
 Longitude   Float    75976506.66428813  -179.9833333  180.0        1           14          28.14618114715136   62.472858625866586  3902.858064887513  0
 ```
 
-Wow! That was fast! It took just 1.3 seconds to compile all that.[^1] It's so fast
-because qsv by default, works in "streaming" mode - computing statistics as it "streams"
-the file line by line, without having to load the entire file into memory. Which means it
-can gather statistics on arbitrarily large CSV files![^2]
+Wow! That was fast! It took just 1.3 seconds to compile all that.[^1] One reason for qsv's speed
+is that ***it mainly works in "streaming" mode*** - computing statistics as it "streams"
+the CSV file line by line. This also means it can gather statistics on arbitrarily large files,
+as it does not have to load the entire file into memory.[^2]
 
 But can we get more descriptive statistics? What's the variance, the modes, the distribution (quartiles), 
 and the cardinality of the data?  No problem. That's why `qsv stats` has an `--everything` option to 
@@ -63,14 +63,14 @@ using [elastic tabstops](https://github.com/BurntSushi/tabwriter). You'll
 notice that it even gets alignment right with respect to Unicode characters.
 
 So, this command took 3.22 seconds to run on my machine, but we can speed
-it up even further by creating an index and re-running the command:
+it up by creating an index and re-running the command:
 
 ```
 qsv index wcp.csv
 qsv stats wcp.csv --everything | qsv table
 ```
 
-Which cuts it down to 1.95 seconds - 1.65x faster! (And creating the index took 0.27 seconds. 
+Which cuts it down to 1.95 seconds - 1.65x faster! (And creating the 21.6mb index took 0.27 seconds. 
 What about the first `stats` without `--everything`? From 1.3 seconds to 0.16 seconds with an index - 8.25x faster!)
 
 Notably, the same type of "statistics" command in another
@@ -80,13 +80,11 @@ takes much longer - ~1.5 minutes to calculate a *subset* of these statistics wit
 Even python [pandas'](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.describe.html) 
 `describe(include="all"))` took 12 seconds to calculate a *subset* of qsv's "streaming" statistics.[^3]
 
-Creating an index accelerated statistics gathering as it enables multithreading and fast I/O. Apart from 
-`stats` it also accelerates several other commands - `frequency`, `split`, `schema`, `count`, `join`, 
-`sample` and `slice`.
+This is another reason for qsv's speed. Creating an index accelerated statistics gathering as it enables 
+***multithreading & fast I/O***.
 
 > ℹ️ **NOTE:** Creating/updating an index itself is extremely fast as well. If you want
-qsv to automatically create and update indices, set the environment var
-`QSV_AUTOINDEX`.
+qsv to automatically create and update indices, set the environment var `QSV_AUTOINDEX`.
 
 The slice operations are extremely fast with an index because *only the sliced portion* 
 has to be parsed. For example, let's say you wanted to grab the last 10 records:
@@ -108,9 +106,9 @@ zw       zuzumba            Zuzumba            06                  -20.0333333  
 zw       zvishavane         Zvishavane         07      79876       -20.3333333  30.0333333
 ```
 
-Returning the last 10 records in 0.017 seconds! These commands are *instantaneous* because 
-they run in time and memory proportional to the size of the slice (which means they will scale to
-arbitrarily large CSV data).
+Returning in 0.017 seconds! This command was *instantaneous* because an index allowed us to
+jump directly to that part of the file. It didn't have to scan the entire file to get the
+last 10 records.
 
 Hmmmm... the Population column has a lot of null values. How pervasive is that?
 First, let's take a look at 10 "random" rows with `sample`. We use the `--seed` parameter
