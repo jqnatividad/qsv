@@ -122,7 +122,7 @@ jobs:
       with:
         submodules: recursive
         ref: ${{ needs.analyze-tags.outputs.previous-tag }}
-    - uses: actions/setup-python@v3.1.2
+    - uses: actions/setup-python@v4.0.0
       with:
         python-version: '3.8'
     - name: build prep for aarch64-apple-darwin
