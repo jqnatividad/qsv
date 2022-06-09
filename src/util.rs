@@ -131,9 +131,14 @@ pub fn show_env_vars() {
     }
 }
 
+#[inline]
 pub fn count_rows(conf: &Config) -> u64 {
-    conf.indexed().unwrap().map_or_else(
-        || {
+    let indexed = conf.indexed().unwrap_or(None);
+
+    match indexed {
+        None => {
+            // index does not exist or is stale,
+            // count records manually
             let mut rdr = conf.reader().unwrap();
             let mut count = 0u64;
             let mut record = csv::ByteRecord::new();
@@ -141,9 +146,9 @@ pub fn count_rows(conf: &Config) -> u64 {
                 count += 1;
             }
             count
-        },
-        |idx| idx.count(),
-    )
+        }
+        Some(idx) => idx.count(),
+    }
 }
 
 #[cfg(any(feature = "full", feature = "lite"))]
