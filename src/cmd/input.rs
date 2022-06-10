@@ -95,7 +95,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut total_lines = 0_u64;
     if let Some(skip_llines) = args.flag_skip_lastlines {
-        let row_count = util::count_rows(&rconfig);
+        let row_count = util::count_rows(&rconfig)?;
         if skip_llines > row_count {
             return fail!("--skip-lastlines: {skip_llines} is greater than row_count: {rowcount}.");
         }
