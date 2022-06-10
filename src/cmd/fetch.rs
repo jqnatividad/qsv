@@ -277,7 +277,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if args.flag_quiet {
         progress.set_draw_target(ProgressDrawTarget::hidden());
     } else {
-        record_count = util::count_rows(&rconfig);
+        record_count = util::count_rows(&rconfig)?;
         util::prep_progress(&progress, record_count);
     }
 

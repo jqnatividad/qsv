@@ -152,7 +152,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if args.flag_quiet {
         progress.set_draw_target(ProgressDrawTarget::hidden());
     } else {
-        let record_count = util::count_rows(&rconfig);
+        let record_count = util::count_rows(&rconfig)?;
         util::prep_progress(&progress, record_count);
     }
 
