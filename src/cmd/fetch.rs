@@ -84,7 +84,7 @@ Note how field name non-alphanumeric characters in the url-template were replace
        addr_data.csv -c CityState > enriched.csv
 
 Usage:
-    qsv fetch (<column> | --url-template <template>) [--jql <selector> | --jqlfile <file>] [--http-header <k:v>...] [options] [<input>]
+    qsv fetch [<column> | --url-template <template>] [--jql <selector> | --jqlfile <file>] [--http-header <k:v>...] [options] [<input>]
 
 Fetch options:
     --url-template <template>  URL template to use. Use column names enclosed with
