@@ -188,7 +188,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // for purpose of full file row count, prevent CSV reader to abort on inconsistent column count
     rconfig = rconfig.flexible(true);
-    let record_count = util::count_rows(&rconfig);
+    let record_count = util::count_rows(&rconfig)?;
     rconfig = rconfig.flexible(false);
 
     #[cfg(any(feature = "full", feature = "lite"))]

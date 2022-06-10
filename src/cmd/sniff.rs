@@ -76,7 +76,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
     let conf = Config::new(&args.arg_input).flexible(true).checkutf8(false);
-    let n_rows = util::count_rows(&conf);
+    let n_rows = util::count_rows(&conf)?;
 
     let mut sample_size = args.flag_sample;
     let mut sample_all = false;

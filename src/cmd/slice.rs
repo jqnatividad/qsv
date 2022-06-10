@@ -96,7 +96,8 @@ impl Args {
         if let Some(start_arg) = self.flag_start {
             if start_arg < 0 {
                 start = Some(
-                    (util::count_rows(&self.rconfig()) as usize).abs_diff(start_arg.unsigned_abs()),
+                    (util::count_rows(&self.rconfig()).unwrap() as usize)
+                        .abs_diff(start_arg.unsigned_abs()),
                 );
             } else {
                 start = Some(start_arg as usize);

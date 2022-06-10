@@ -132,19 +132,19 @@ pub fn show_env_vars() {
 }
 
 #[inline]
-pub fn count_rows(conf: &Config) -> u64 {
+pub fn count_rows(conf: &Config) -> Result<u64, io::Error> {
     if let Some(idx) = conf.indexed().unwrap_or_else(|_| None) {
-        idx.count()
+        Ok(idx.count())
     } else {
         // index does not exist or is stale,
         // count records manually
-        let mut rdr = conf.reader().unwrap();
+        let mut rdr = conf.reader()?;
         let mut count = 0u64;
         let mut record = csv::ByteRecord::new();
-        while rdr.read_byte_record(&mut record).unwrap() {
+        while rdr.read_byte_record(&mut record)? {
             count += 1;
         }
-        count
+        Ok(count)
     }
 }
 
