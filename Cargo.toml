@@ -167,7 +167,7 @@ ext-sort = { git = "https://github.com/jqnatividad/ext-sort-rs", rev = "fd955e24
 jsonschema = { git = "https://github.com/Stranger6667/jsonschema-rs", rev = "bfe69d393a842e331832fce55a43e0051b988761"}
 grex = { git = "https://github.com/jqnatividad/grex", rev = "45af84167b8bd6d38c9e36ada7fe677bebe8886f" }
 redis = { git = "https://github.com/mitsuhiko/redis-rs", rev = "b8eb47303c5728e943b914cd10dc35d1fceee05c" }
-reqwest = { git = "https://github.com/seanmonstar/reqwest", rev = "5d8bf830cbce552075d9bd03f09644469533b50e" }
+reqwest = { git = "https://github.com/seanmonstar/reqwest", rev = "c4603b0a5d21287222668d038d3cd7704d4fe6dd" }
 
 [features]
 default = ["mimalloc"]
