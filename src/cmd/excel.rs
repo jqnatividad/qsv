@@ -72,10 +72,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 // i.e -1 is the last sheet; -2 = 2nd to last sheet
                 sheet_names[cmp::max(
                     0,
-                    cmp::min(
-                        num_sheets,
-                        num_sheets.abs_diff(sheet_index.unsigned_abs().try_into().unwrap()),
-                    ),
+                    cmp::min(num_sheets, num_sheets.abs_diff(sheet_index.abs() as usize)),
                 )]
                 .to_string()
             }
@@ -89,7 +86,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             first_sheet
         }
     };
-    let range = workbook.worksheet_range(&sheet).unwrap().unwrap();
+    let range = if let Ok(range) = workbook.worksheet_range(&sheet).unwrap() {
+        range
+    } else {
+        return fail!("Cannot get worksheet data from {sheet}");
+    };
 
     let mut wtr = Config::new(&args.flag_output)
         .flexible(args.flag_flexible)
@@ -121,9 +122,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     trimmed_record.push_field(field);
                 }
             });
-            wtr.write_record(&trimmed_record).unwrap();
+            wtr.write_record(&trimmed_record)?;
         } else {
-            wtr.write_record(&record).unwrap();
+            wtr.write_record(&record)?;
         }
         count += 1;
     }
