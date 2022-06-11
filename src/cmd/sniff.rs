@@ -119,15 +119,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if args.flag_json || args.flag_pretty_json {
         match sniff_results {
             Ok(metadata) => {
-                let mut sniffedfields: Vec<String> = Vec::with_capacity(metadata.num_fields);
-                for field in &metadata.fields {
-                    sniffedfields.push(field.to_string());
-                }
-
-                let mut sniffedtypes: Vec<String> = Vec::with_capacity(metadata.num_fields);
-                for ty in &metadata.types {
-                    sniffedtypes.push(ty.to_string());
-                }
+                let sniffedfields = metadata.fields.iter().map(|f| f.to_string()).collect();
+                let sniffedtypes = metadata.types.iter().map(|t| t.to_string()).collect();
 
                 let sniffed = SniffStruct {
                     delimiter_char: metadata.dialect.delimiter as char,
