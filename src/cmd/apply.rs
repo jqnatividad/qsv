@@ -629,7 +629,10 @@ fn apply_operations(operations: &[&str], cell: &mut String, comparand: &str, rep
                 let sentiment_analyzer = SENTIMENT_ANALYZER
                     .get_or_init(vader_sentiment::SentimentIntensityAnalyzer::new);
                 let sentiment_scores = sentiment_analyzer.polarity_scores(cell);
-                *cell = sentiment_scores.get("compound").unwrap().to_string();
+                *cell = sentiment_scores
+                    .get("compound")
+                    .unwrap_or_else(|| &0.0)
+                    .to_string();
             }
             "whatlang" => {
                 let lang_info = detect(cell);
