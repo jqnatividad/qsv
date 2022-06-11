@@ -2371,7 +2371,7 @@ dependencies = [
 [[package]]
 name = "reqwest"
 version = "0.11.10"
-source = "git+https://github.com/seanmonstar/reqwest?rev=5d8bf830cbce552075d9bd03f09644469533b50e#5d8bf830cbce552075d9bd03f09644469533b50e"
+source = "git+https://github.com/seanmonstar/reqwest?rev=c4603b0a5d21287222668d038d3cd7704d4fe6dd#c4603b0a5d21287222668d038d3cd7704d4fe6dd"
 dependencies = [
  "async-compression",
  "base64",
@@ -2402,6 +2402,7 @@ dependencies = [
  "tokio",
  "tokio-rustls",
  "tokio-util",
+ "tower-service",
  "url",
  "wasm-bindgen",
  "wasm-bindgen-futures",
@@ -2552,9 +2553,9 @@ dependencies = [
 
 [[package]]
 name = "semver"
-version = "1.0.9"
+version = "1.0.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8cb243bdfdb5936c8dc3c45762a19d12ab4550cdc753bc247637d4ec35a040fd"
+checksum = "a41d061efea015927ac527063765e73601444cdc344ba855bc7bd44578b25e1c"
 
 [[package]]
 name = "serde"
@@ -2722,9 +2723,9 @@ dependencies = [
 
 [[package]]
 name = "sysinfo"
-version = "0.24.2"
+version = "0.24.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9a2809487b962344ca55d9aea565f9ffbcb6929780802217acc82561f6746770"
+checksum = "6e6241cec618592e5d52f7ed0c8abba0cd1969a5aa4be7b5351281d922113e1d"
 dependencies = [
  "cfg-if",
  "core-foundation-sys",
@@ -2947,9 +2948,9 @@ checksum = "360dfd1d6d30e05fda32ace2c8c70e9c0a9da713275777f5a4dbb8a1893930c6"
 
 [[package]]
 name = "tracing"
-version = "0.1.34"
+version = "0.1.35"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5d0ecdcb44a79f0fe9844f0c4f33a342cbcbb5117de8001e6ba0dc2351327d09"
+checksum = "a400e31aa60b9d44a52a8ee0343b5b18566b03a8321e0d321f695cf56e940160"
 dependencies = [
  "cfg-if",
  "log",
@@ -3094,9 +3095,9 @@ dependencies = [
 
 [[package]]
 name = "uuid"
-version = "1.1.1"
+version = "1.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c6d5d669b51467dcf7b2f1a796ce0f955f05f01cafda6c19d6e95f730df29238"
+checksum = "dd6469f4314d5f1ffec476e05f17cc9a78bc7a27a6a857842170bdf8d6f98d2f"
 dependencies = [
  "getrandom",
 ]
