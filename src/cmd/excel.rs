@@ -114,14 +114,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         if args.flag_trim {
             record.trim();
             trimmed_record.clear();
-            for field in record.iter() {
+            record.iter().for_each(|field| {
                 if field.contains('\n') {
-                    let no_newlines = field.to_string().replace('\n', " ");
-                    trimmed_record.push_field(&no_newlines);
+                    trimmed_record.push_field(&field.to_string().replace('\n', " "));
                 } else {
                     trimmed_record.push_field(field);
                 }
-            }
+            });
             wtr.write_record(&trimmed_record).unwrap();
         } else {
             wtr.write_record(&record).unwrap();
