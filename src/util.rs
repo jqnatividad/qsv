@@ -102,11 +102,11 @@ pub fn version() -> String {
                     numcpus = num_cpus()
                 );
             }
-            return format!(
+            format!(
                     "{qsvtype} {maj}.{min}.{pat}-{pre}-{malloc_kind}-{enabled_features}{maxjobs}-{numcpus}",
                     maxjobs = max_jobs(),
                     numcpus = num_cpus(),
-                );
+                )
         }
         _ => "".to_owned(),
     }
@@ -133,7 +133,7 @@ pub fn show_env_vars() {
 
 #[inline]
 pub fn count_rows(conf: &Config) -> Result<u64, io::Error> {
-    if let Some(idx) = conf.indexed().unwrap_or_else(|_| None) {
+    if let Some(idx) = conf.indexed().unwrap_or(None) {
         Ok(idx.count())
     } else {
         // index does not exist or is stale,
