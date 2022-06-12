@@ -73,7 +73,6 @@ cached = { version = "0.34", default-features = false, features = [
 ], optional = true }
 calamine = "0.18"
 censor = { version = "0.2", optional = true }
-chrono = { version = "0.4", optional = true }
 crossbeam-channel = "0.5"
 csv = "1.1"
 csv-core = "0.1"
@@ -174,7 +173,6 @@ default = ["mimalloc"]
 apply = [
     "cached",
     "censor",
-    "chrono",
     "dynfmt",
     "eudex",
     "qsv_currency",
