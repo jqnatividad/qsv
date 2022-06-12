@@ -714,42 +714,39 @@ fn search_cached(cell: &str, formatstr: &str) -> Option<String> {
         let long = loccaps[2].to_string().parse::<f64>().unwrap_or_default();
         if (-90.0..=90.00).contains(&lat) && (-180.0..=180.0).contains(&long) {
             let search_result = geocoder.search((lat, long));
-            search_result.map(|locdetails| {
-                let geocoded_result = match formatstr {
-                    "%+" | "city-state" => format!(
-                        "{name}, {admin1}",
-                        name = locdetails.record.name,
-                        admin1 = locdetails.record.admin1,
-                    ),
-                    "city-country" => format!(
-                        "{name}, {cc}",
-                        name = locdetails.record.name,
-                        cc = locdetails.record.cc
-                    ),
-                    "city-state-country" | "city-admin1-country" => format!(
-                        "{name}, {admin1} {cc}",
-                        name = locdetails.record.name,
-                        admin1 = locdetails.record.admin1,
-                        cc = locdetails.record.cc
-                    ),
-                    "city" => locdetails.record.name.to_string(),
-                    "county" | "admin2" => locdetails.record.admin2.to_string(),
-                    "state" | "admin1" => locdetails.record.admin1.to_string(),
-                    "county-country" | "admin2-country" => format!(
-                        "{admin2}, {cc}",
-                        admin2 = locdetails.record.admin2,
-                        cc = locdetails.record.cc
-                    ),
-                    "county-state-country" | "admin2-admin1-country" => format!(
-                        "{admin2}, {admin1} {cc}",
-                        admin2 = locdetails.record.admin2,
-                        admin1 = locdetails.record.admin1,
-                        cc = locdetails.record.cc
-                    ),
-                    "country" => locdetails.record.cc.to_string(),
-                    _ => locdetails.record.name.to_string(),
-                };
-                geocoded_result
+            search_result.map(|locdetails| match formatstr {
+                "%+" | "city-state" => format!(
+                    "{name}, {admin1}",
+                    name = locdetails.record.name,
+                    admin1 = locdetails.record.admin1,
+                ),
+                "city-country" => format!(
+                    "{name}, {cc}",
+                    name = locdetails.record.name,
+                    cc = locdetails.record.cc
+                ),
+                "city-state-country" | "city-admin1-country" => format!(
+                    "{name}, {admin1} {cc}",
+                    name = locdetails.record.name,
+                    admin1 = locdetails.record.admin1,
+                    cc = locdetails.record.cc
+                ),
+                "city" => locdetails.record.name.to_string(),
+                "county" | "admin2" => locdetails.record.admin2.to_string(),
+                "state" | "admin1" => locdetails.record.admin1.to_string(),
+                "county-country" | "admin2-country" => format!(
+                    "{admin2}, {cc}",
+                    admin2 = locdetails.record.admin2,
+                    cc = locdetails.record.cc
+                ),
+                "county-state-country" | "admin2-admin1-country" => format!(
+                    "{admin2}, {admin1} {cc}",
+                    admin2 = locdetails.record.admin2,
+                    admin1 = locdetails.record.admin1,
+                    cc = locdetails.record.cc
+                ),
+                "country" => locdetails.record.cc.to_string(),
+                _ => locdetails.record.name.to_string(),
             })
         } else {
             None
