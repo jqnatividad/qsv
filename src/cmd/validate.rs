@@ -286,7 +286,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .map(|record| {
                 do_json_validation(
                     &headers,
-                    &headers_len,
+                    headers_len,
                     record,
                     &schema_json,
                     &schema_compiled,
@@ -457,14 +457,14 @@ fn write_error_report(input_path: &str, validation_error_messages: Vec<String>) 
 #[inline]
 fn do_json_validation(
     headers: &ByteRecord,
-    headers_len: &usize,
+    headers_len: usize,
     record: &ByteRecord,
     schema_json: &Value,
     schema_compiled: &JSONSchema,
 ) -> Option<String> {
     // row number was added as last column. We use unsafe from_utf8_unchecked to
     // skip UTF8 validation since we know its safe as we added it earlier
-    let row_number_string = unsafe { str::from_utf8_unchecked(record.get(*headers_len).unwrap()) };
+    let row_number_string = unsafe { str::from_utf8_unchecked(record.get(headers_len).unwrap()) };
 
     // debug!("instance[{row_number}]: {instance:?}");
     validate_json_instance(
@@ -494,7 +494,7 @@ fn do_json_validation(
 /// convert CSV Record into JSON instance by referencing Type from Schema
 fn to_json_instance(
     headers: &ByteRecord,
-    headers_len: &usize,
+    headers_len: usize,
     record: &ByteRecord,
     schema: &Value,
 ) -> Result<Value> {
@@ -505,7 +505,7 @@ fn to_json_instance(
 
     // map holds individual CSV fields converted as serde_json::Value
     // we use with_capacity to minimize allocs
-    let mut json_object_map: Map<String, Value> = Map::with_capacity(*headers_len);
+    let mut json_object_map: Map<String, Value> = Map::with_capacity(headers_len);
 
     let null_type: Value = Value::String("null".to_string());
 
@@ -668,7 +668,7 @@ mod tests_for_csv_to_json_conversion {
         record.trim();
 
         assert_eq!(
-            to_json_instance(&headers, &headers.len(), &record, &schema_json())
+            to_json_instance(&headers, headers.len(), &record, &schema_json())
                 .expect("can convert csv to json instance"),
             json!({
                 "A": "hello",
@@ -697,7 +697,7 @@ mod tests_for_csv_to_json_conversion {
 
         let result = to_json_instance(
             &headers,
-            &headers.len(),
+            headers.len(),
             &rdr.byte_records().next().unwrap().unwrap(),
             &schema_json(),
         );
@@ -794,7 +794,7 @@ mod tests_for_schema_validation {
 
         let record = &rdr.byte_records().next().unwrap().unwrap();
 
-        let instance = to_json_instance(&headers, &headers.len(), record, &schema_json()).unwrap();
+        let instance = to_json_instance(&headers, headers.len(), record, &schema_json()).unwrap();
 
         let result = validate_json_instance(&instance, &compiled_schema());
 
@@ -811,7 +811,7 @@ mod tests_for_schema_validation {
 
         let record = &rdr.byte_records().next().unwrap().unwrap();
 
-        let instance = to_json_instance(&headers, &headers.len(), record, &schema_json()).unwrap();
+        let instance = to_json_instance(&headers, headers.len(), record, &schema_json()).unwrap();
 
         let result = validate_json_instance(&instance, &compiled_schema());
 
