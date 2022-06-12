@@ -23,7 +23,7 @@ macro_rules! fail {
 }
 
 // number of CSV rows to process in a batch
-const BATCH_SIZE: usize = 16000;
+const BATCH_SIZE: usize = 24_000;
 
 static USAGE: &str = "
 Validate CSV data with JSON Schema, and put invalid records into a separate file.
@@ -276,9 +276,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             break;
         }
 
-        #[cfg(any(feature = "full", feature = "lite"))]
-        let batch_size = batch.len();
-
         // do actual validation via Rayon parallel iterator
         // validation_results vector should have same row count and in same order as input CSV
         let validation_results: Vec<Option<String>> = batch
@@ -293,8 +290,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 )
             })
             .collect();
-
-        batch.clear();
 
         // write to validation error report, but keep Vec<bool> to gen valid/invalid files later
         // because Rayon collect() guaranteeds original order, can sequentially append results to vector with each batch
@@ -314,8 +309,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         #[cfg(any(feature = "full", feature = "lite"))]
         if not_quiet {
-            progress.inc(batch_size as u64);
+            progress.inc(batch.len() as u64);
         }
+        batch.clear();
 
         // for fail-fast, exit loop if batch has any error
         if args.flag_fail_fast && invalid_count > 0 {
