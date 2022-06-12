@@ -476,7 +476,7 @@ fn do_json_validation(
         }),
         schema_compiled,
     )
-    .and_then(|validation_errors| {
+    .map(|validation_errors| {
         use itertools::Itertools;
         // squash multiple errors into one long String with linebreaks
         let combined_errors: String = validation_errors
@@ -487,7 +487,7 @@ fn do_json_validation(
             })
             .join("\n");
 
-        Some(combined_errors)
+        combined_errors
     })
 }
 
