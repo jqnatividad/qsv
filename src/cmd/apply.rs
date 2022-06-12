@@ -1,5 +1,6 @@
 use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
+use crate::CliError;
 use crate::CliResult;
 use crate::{regex_once_cell, util};
 use cached::proc_macro::cached;
@@ -11,6 +12,7 @@ use log::debug;
 use once_cell::sync::OnceCell;
 use qsv_currency::Currency;
 use qsv_dateparser::parse_with_preference;
+use rayon::prelude::*;
 use regex::Regex;
 use reverse_geocoder::{Locations, ReverseGeocoder};
 use serde::Deserialize;
@@ -226,6 +228,9 @@ Common options:
                                 Must be a single character. (default: ,)
     -q, --quiet                 Don't show progress bars.
 ";
+
+// number of CSV rows to process in a batch
+const BATCH_SIZE: usize = 16000;
 
 static OPERATIONS: &[&str] = &[
     "len",
@@ -455,63 +460,104 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     #[allow(unused_assignments)]
     let mut record = csv::StringRecord::new();
-    let records_iter = rdr.records();
     let prefer_dmy = args.flag_prefer_dmy || rconfig.get_dmy_preference();
-    for result in records_iter {
-        record = result?;
 
-        if not_quiet {
-            progress.inc(1);
-        }
-        let mut cell = record[column_index].to_owned();
+    // reuse batch buffer
+    let mut batch = Vec::with_capacity(BATCH_SIZE);
 
-        if args.cmd_operations {
-            apply_operations(
-                &operations,
-                &mut cell,
-                &args.flag_comparand,
-                &args.flag_replacement,
-            );
-        } else if args.cmd_emptyreplace {
-            if cell.trim().is_empty() {
-                cell = args.flag_replacement.to_string();
-            }
-        } else if args.cmd_datefmt && !cell.is_empty() {
-            let parsed_date = parse_with_preference(&cell, prefer_dmy);
-            if let Ok(format_date) = parsed_date {
-                let formatted_date = format_date.format(&args.flag_formatstr).to_string();
-                if formatted_date.ends_with("T00:00:00+00:00") {
-                    cell = formatted_date[..10].to_string();
-                } else {
-                    cell = formatted_date;
+    loop {
+        for _ in 0..BATCH_SIZE {
+            match rdr.read_record(&mut record) {
+                Ok(has_data) => {
+                    if has_data {
+                        batch.push(record.to_owned());
+                    } else {
+                        // nothing else to add to batch
+                        break;
+                    }
+                }
+                Err(e) => {
+                    return Err(CliError::Other(format!("Error reading file: {e}")));
                 }
             }
-        } else if args.cmd_geocode && !cell.is_empty() {
-            let search_result = search_cached(&cell, &args.flag_formatstr);
-            if let Some(geocoded_result) = search_result {
-                cell = geocoded_result;
-            }
-        } else if args.cmd_dynfmt {
-            let mut record_vec: Vec<String> = Vec::with_capacity(record.len());
-            for field in &record {
-                record_vec.push(field.to_string());
-            }
-            if let Ok(formatted) = dynfmt::SimpleCurlyFormat.format(&dynfmt_template, record_vec) {
-                cell = formatted.to_string();
-            }
         }
 
-        match &args.flag_new_column {
-            Some(_) => {
-                record.push_field(&cell);
-            }
-            None => {
-                record = replace_column_value(&record, column_index, &cell);
-            }
+        if batch.is_empty() {
+            // break out of infinite loop when at EOF
+            break;
         }
 
-        wtr.write_record(&record)?;
-    }
+        let batch_size = batch.len();
+
+        // do actual apply command via Rayon parallel iterator
+        let apply_results: Vec<csv::StringRecord> = batch
+            .par_iter()
+            .map(|record_item| {
+                let mut record = record_item.clone();
+                let mut cell = record[column_index].to_owned();
+
+                if args.cmd_operations {
+                    apply_operations(
+                        &operations,
+                        &mut cell,
+                        &args.flag_comparand,
+                        &args.flag_replacement,
+                    );
+                } else if args.cmd_emptyreplace {
+                    if cell.trim().is_empty() {
+                        cell = args.flag_replacement.to_string();
+                    }
+                } else if args.cmd_datefmt && !cell.is_empty() {
+                    let parsed_date = parse_with_preference(&cell, prefer_dmy);
+                    if let Ok(format_date) = parsed_date {
+                        let formatted_date = format_date.format(&args.flag_formatstr).to_string();
+                        if formatted_date.ends_with("T00:00:00+00:00") {
+                            cell = formatted_date[..10].to_string();
+                        } else {
+                            cell = formatted_date;
+                        }
+                    }
+                } else if args.cmd_geocode && !cell.is_empty() {
+                    let search_result = search_cached(&cell, &args.flag_formatstr);
+                    if let Some(geocoded_result) = search_result {
+                        cell = geocoded_result;
+                    }
+                } else if args.cmd_dynfmt {
+                    let mut record_vec: Vec<String> = Vec::with_capacity(record.len());
+                    for field in &record {
+                        record_vec.push(field.to_string());
+                    }
+                    if let Ok(formatted) =
+                        dynfmt::SimpleCurlyFormat.format(&dynfmt_template, record_vec)
+                    {
+                        cell = formatted.to_string();
+                    }
+                }
+
+                match &args.flag_new_column {
+                    Some(_) => {
+                        record.push_field(&cell);
+                    }
+                    None => {
+                        record = replace_column_value(&record, column_index, &cell);
+                    }
+                }
+                record
+            })
+            .collect();
+
+        // rayon collect() guarantees original order, so we can just append results each batch
+        for result_record in apply_results {
+            wtr.write_record(&result_record)?;
+        }
+
+        if not_quiet {
+            progress.inc(batch_size as u64);
+        }
+
+        batch.clear();
+    } // end infinite loop
+
     if not_quiet {
         if args.cmd_geocode {
             util::update_cache_info!(progress, SEARCH_CACHED);
