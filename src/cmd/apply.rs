@@ -218,6 +218,8 @@ apply options:
                                   - 'county-country' | 'admin2-country' - Kings County, US
                                   - 'county-state-country' | 'admin2-admin1-country' - Kings County, New York US
                                   - 'country' - US
+    -j, --jobs <arg>            The number of jobs to run in parallel.
+                                When not set, the number of jobs is set to the number of CPUs detected.
 
 Common options:
     -h, --help                  Display this message
@@ -230,7 +232,7 @@ Common options:
 ";
 
 // number of CSV rows to process in a batch
-const BATCH_SIZE: usize = 16000;
+const BATCH_SIZE: usize = 24_000;
 
 static OPERATIONS: &[&str] = &[
     "len",
@@ -276,6 +278,7 @@ struct Args {
     flag_replacement: String,
     flag_prefer_dmy: bool,
     flag_formatstr: String,
+    flag_jobs: Option<usize>,
     flag_new_column: Option<String>,
     flag_output: Option<String>,
     flag_no_headers: bool,
@@ -447,30 +450,51 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         debug!("dynfmt_fields: {dynfmt_fields:?}  dynfmt_template: {dynfmt_template}");
     }
 
+    pub enum ApplySubCmd {
+        Operations,
+        DateFmt,
+        DynFmt,
+        Geocode,
+    }
+
+    let apply_cmd = if args.cmd_operations {
+        ApplySubCmd::Operations
+    } else if args.cmd_geocode {
+        ApplySubCmd::Geocode
+    } else if args.cmd_datefmt {
+        ApplySubCmd::DateFmt
+    } else {
+        ApplySubCmd::DynFmt
+    };
+
     // prep progress bar
     let progress = ProgressBar::new(0);
     if args.flag_quiet {
         progress.set_draw_target(ProgressDrawTarget::hidden());
-    } else {
-        let record_count = util::count_rows(&rconfig)?;
-        util::prep_progress(&progress, record_count);
     }
-
+    util::prep_progress(&progress, util::count_rows(&rconfig)?);
     let not_quiet = !args.flag_quiet;
 
+    // amortize memory allocation by reusing record
     #[allow(unused_assignments)]
-    let mut record = csv::StringRecord::new();
+    let mut batch_record = csv::StringRecord::new();
     let prefer_dmy = args.flag_prefer_dmy || rconfig.get_dmy_preference();
 
     // reuse batch buffer
     let mut batch = Vec::with_capacity(BATCH_SIZE);
 
+    // set RAYON_NUM_THREADS
+    util::njobs(args.flag_jobs);
+
+    // main loop to read CSV and construct batches for parallel processing.
+    // each batch is processed via Rayon parallel iterator.
+    // loop exits when batch is empty.
     loop {
         for _ in 0..BATCH_SIZE {
-            match rdr.read_record(&mut record) {
+            match rdr.read_record(&mut batch_record) {
                 Ok(has_data) => {
                     if has_data {
-                        batch.push(record.to_owned());
+                        batch.push(batch_record.to_owned());
                     } else {
                         // nothing else to add to batch
                         break;
@@ -487,8 +511,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             break;
         }
 
-        let batch_size = batch.len();
-
         // do actual apply command via Rayon parallel iterator
         let apply_results: Vec<csv::StringRecord> = batch
             .par_iter()
@@ -496,51 +518,54 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 let mut record = record_item.clone();
                 let mut cell = record[column_index].to_owned();
 
-                if args.cmd_operations {
-                    apply_operations(
-                        &operations,
-                        &mut cell,
-                        &args.flag_comparand,
-                        &args.flag_replacement,
-                    );
-                } else if args.cmd_emptyreplace {
-                    if cell.trim().is_empty() {
-                        cell = args.flag_replacement.to_string();
-                    }
-                } else if args.cmd_datefmt && !cell.is_empty() {
-                    let parsed_date = parse_with_preference(&cell, prefer_dmy);
-                    if let Ok(format_date) = parsed_date {
-                        let formatted_date = format_date.format(&args.flag_formatstr).to_string();
-                        if formatted_date.ends_with("T00:00:00+00:00") {
-                            cell = formatted_date[..10].to_string();
-                        } else {
-                            cell = formatted_date;
+                if args.cmd_emptyreplace && cell.trim().is_empty() {
+                    cell = args.flag_replacement.to_string();
+                } else if !cell.is_empty() {
+                    match apply_cmd {
+                        ApplySubCmd::Geocode => {
+                            let search_result = search_cached(&cell, &args.flag_formatstr);
+                            if let Some(geocoded_result) = search_result {
+                                cell = geocoded_result;
+                            }
                         }
-                    }
-                } else if args.cmd_geocode && !cell.is_empty() {
-                    let search_result = search_cached(&cell, &args.flag_formatstr);
-                    if let Some(geocoded_result) = search_result {
-                        cell = geocoded_result;
-                    }
-                } else if args.cmd_dynfmt {
-                    let mut record_vec: Vec<String> = Vec::with_capacity(record.len());
-                    for field in &record {
-                        record_vec.push(field.to_string());
-                    }
-                    if let Ok(formatted) =
-                        dynfmt::SimpleCurlyFormat.format(&dynfmt_template, record_vec)
-                    {
-                        cell = formatted.to_string();
+                        ApplySubCmd::Operations => {
+                            apply_operations(
+                                &operations,
+                                &mut cell,
+                                &args.flag_comparand,
+                                &args.flag_replacement,
+                            );
+                        }
+                        ApplySubCmd::DateFmt => {
+                            let parsed_date = parse_with_preference(&cell, prefer_dmy);
+                            if let Ok(format_date) = parsed_date {
+                                let formatted_date =
+                                    format_date.format(&args.flag_formatstr).to_string();
+                                if formatted_date.ends_with("T00:00:00+00:00") {
+                                    cell = formatted_date[..10].to_string();
+                                } else {
+                                    cell = formatted_date;
+                                }
+                            }
+                        }
+                        ApplySubCmd::DynFmt => {
+                            let mut record_vec: Vec<String> = Vec::with_capacity(record.len());
+                            for field in &record {
+                                record_vec.push(field.to_string());
+                            }
+                            if let Ok(formatted) =
+                                dynfmt::SimpleCurlyFormat.format(&dynfmt_template, record_vec)
+                            {
+                                cell = formatted.to_string();
+                            }
+                        }
                     }
                 }
 
-                match &args.flag_new_column {
-                    Some(_) => {
-                        record.push_field(&cell);
-                    }
-                    None => {
-                        record = replace_column_value(&record, column_index, &cell);
-                    }
+                if args.flag_new_column.is_some() {
+                    record.push_field(&cell);
+                } else {
+                    record = replace_column_value(&record, column_index, &cell);
                 }
                 record
             })
@@ -552,7 +577,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         if not_quiet {
-            progress.inc(batch_size as u64);
+            progress.inc(batch.len() as u64);
         }
 
         batch.clear();
