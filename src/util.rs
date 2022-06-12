@@ -150,7 +150,6 @@ pub fn count_rows(conf: &Config) -> Result<u64, io::Error> {
 
 #[cfg(any(feature = "full", feature = "lite"))]
 pub fn prep_progress(progress: &ProgressBar, record_count: u64) {
-    progress.set_length(record_count);
     progress.set_style(
         ProgressStyle::default_bar()
             .template("[{elapsed_precise}] [{bar:20} {percent}%{msg}] ({eta})")
@@ -160,6 +159,9 @@ pub fn prep_progress(progress: &ProgressBar, record_count: u64) {
         " of {} records",
         record_count.separate_with_commas()
     ));
+    // draw progress bar for the first time using specified style
+    progress.set_length(record_count);
+
     // redraw every 1% of progress
     progress.set_draw_delta(record_count / 100);
 
