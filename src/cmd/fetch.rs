@@ -280,7 +280,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         record_count = util::count_rows(&rconfig)?;
         util::prep_progress(&progress, record_count);
     }
-
     let not_quiet = !args.flag_quiet;
 
     #[allow(unused_assignments)]

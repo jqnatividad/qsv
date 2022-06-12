@@ -477,8 +477,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let progress = ProgressBar::new(0);
     if args.flag_quiet {
         progress.set_draw_target(ProgressDrawTarget::hidden());
+    } else {
+        util::prep_progress(&progress, util::count_rows(&rconfig)?);
     }
-    util::prep_progress(&progress, util::count_rows(&rconfig)?);
     let not_quiet = !args.flag_quiet;
 
     // amortize memory allocation by reusing record
