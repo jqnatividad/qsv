@@ -455,6 +455,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         DateFmt,
         DynFmt,
         Geocode,
+        EmptyReplace,
+        Unknown,
     }
 
     let apply_cmd = if args.cmd_operations {
@@ -463,8 +465,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         ApplySubCmd::Geocode
     } else if args.cmd_datefmt {
         ApplySubCmd::DateFmt
-    } else {
+    } else if args.cmd_dynfmt {
         ApplySubCmd::DynFmt
+    } else if args.cmd_emptyreplace {
+        ApplySubCmd::EmptyReplace
+    } else {
+        ApplySubCmd::Unknown
     };
 
     // prep progress bar
@@ -518,25 +524,30 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 let mut record = record_item.clone();
                 let mut cell = record[column_index].to_owned();
 
-                if args.cmd_emptyreplace && cell.trim().is_empty() {
-                    cell = args.flag_replacement.to_string();
-                } else if !cell.is_empty() {
-                    match apply_cmd {
-                        ApplySubCmd::Geocode => {
+                match apply_cmd {
+                    ApplySubCmd::Geocode => {
+                        if !cell.is_empty() {
                             let search_result = search_cached(&cell, &args.flag_formatstr);
                             if let Some(geocoded_result) = search_result {
                                 cell = geocoded_result;
                             }
                         }
-                        ApplySubCmd::Operations => {
-                            apply_operations(
-                                &operations,
-                                &mut cell,
-                                &args.flag_comparand,
-                                &args.flag_replacement,
-                            );
+                    }
+                    ApplySubCmd::Operations => {
+                        apply_operations(
+                            &operations,
+                            &mut cell,
+                            &args.flag_comparand,
+                            &args.flag_replacement,
+                        );
+                    }
+                    ApplySubCmd::EmptyReplace => {
+                        if cell.trim().is_empty() {
+                            cell = args.flag_replacement.to_string();
                         }
-                        ApplySubCmd::DateFmt => {
+                    }
+                    ApplySubCmd::DateFmt => {
+                        if !cell.is_empty() {
                             let parsed_date = parse_with_preference(&cell, prefer_dmy);
                             if let Ok(format_date) = parsed_date {
                                 let formatted_date =
@@ -548,7 +559,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                                 }
                             }
                         }
-                        ApplySubCmd::DynFmt => {
+                    }
+                    ApplySubCmd::DynFmt => {
+                        if !cell.is_empty() {
                             let mut record_vec: Vec<String> = Vec::with_capacity(record.len());
                             for field in &record {
                                 record_vec.push(field.to_string());
@@ -559,6 +572,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                                 cell = formatted.to_string();
                             }
                         }
+                    }
+                    ApplySubCmd::Unknown => {
+                        unreachable!("apply subcommands are always known");
                     }
                 }
 
