@@ -119,8 +119,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if args.flag_json || args.flag_pretty_json {
         match sniff_results {
             Ok(metadata) => {
-                let sniffedfields = metadata.fields.iter().map(std::string::ToString::to_string).collect();
-                let sniffedtypes = metadata.types.iter().map(std::string::ToString::to_string).collect();
+                let sniffedfields = metadata
+                    .fields
+                    .iter()
+                    .map(std::string::ToString::to_string)
+                    .collect();
+                let sniffedtypes = metadata
+                    .types
+                    .iter()
+                    .map(std::string::ToString::to_string)
+                    .collect();
 
                 let sniffed = SniffStruct {
                     delimiter_char: metadata.dialect.delimiter as char,
