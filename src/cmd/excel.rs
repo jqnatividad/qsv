@@ -72,7 +72,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 // i.e -1 is the last sheet; -2 = 2nd to last sheet
                 sheet_names[cmp::max(
                     0,
-                    cmp::min(num_sheets, num_sheets.abs_diff(sheet_index.abs() as usize)),
+                    cmp::min(
+                        num_sheets,
+                        num_sheets.abs_diff(sheet_index.unsigned_abs() as usize),
+                    ),
                 )]
                 .to_string()
             }
