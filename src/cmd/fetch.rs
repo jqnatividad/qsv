@@ -172,7 +172,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .no_headers(args.flag_no_headers);
 
     let mut rdr = rconfig.reader()?;
-    let mut wtr = Config::new(&args.flag_output).writer()?;
+    let mut wtr = if args.flag_new_column.is_some() {
+        Config::new(&args.flag_output).writer()?
+    } else {
+        Config::new(&args.flag_output)
+            .quote_style(csv::QuoteStyle::Never)
+            .writer()?
+    };
 
     let mut headers = rdr.byte_headers()?.clone();
 
@@ -285,6 +291,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     #[allow(unused_assignments)]
     let mut record = csv::ByteRecord::new();
     #[allow(unused_assignments)]
+    let mut output_record = csv::ByteRecord::new();
+
+    #[allow(unused_assignments)]
     let mut url = String::default();
     let mut redis_cache_hits: u64 = 0;
     #[allow(unused_assignments)]
@@ -352,8 +361,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             record.push_field(final_value.as_bytes());
             wtr.write_byte_record(&record)?;
         } else {
-            let mut output_record = csv::ByteRecord::new();
-            output_record.push_field(final_value.as_bytes());
+            output_record.clear();
+            if final_value.is_empty() {
+                output_record.push_field("{}".as_bytes());
+            } else {
+                output_record.push_field(final_value.as_bytes());
+            }
             wtr.write_byte_record(&output_record)?;
         }
     }
@@ -367,7 +380,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         util::finish_progress(&progress);
     }
 
-    Ok(())
+    Ok(wtr.flush()?)
 }
 
 use governor::{
