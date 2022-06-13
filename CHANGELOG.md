@@ -5,6 +5,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.55.0] - 2022-06-12
+### Added
+* `apply`: now multithreaded with rayon (up to 10x 🚀🚀🚀 faster!) https://github.com/jqnatividad/qsv/pull/342
+
+### Changed
+* `apply`: refactor hot loop to use enums instead of nested if https://github.com/jqnatividad/qsv/pull/343
+* `sniff`: more idiomatic vec loop https://github.com/jqnatividad/qsv/commit/2a70134bf45f9485bcbb27579f92f89abb7b6bb1
+* `validate`: optimizations (up to 20% 🚀 faster) https://github.com/jqnatividad/qsv/commit/0f0be0aba0a6d0cd10f5c96fd17ffd726d3231d1
+* `excel`: optimize trimming https://github.com/jqnatividad/qsv/commit/780206a575d40cf759abd295aa91da640e5febed
+* various whirlwind tour improvements (more timings, flows/reads better, removed non-sequiturs)
+* improved progress bar prep (unstyled progress bar is not momentarily displayed, standardized across cmds)
+* bumped reqwest patch to latest upstream https://github.com/jqnatividad/qsv/commit/cb0eb1717f07d8481211e289e6762d9b994fac18
+* Bump actions/setup-python from 3.1.2 to 4.0.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/339
+* Bump mlua from 0.7.4 to 0.8.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/340
+
+### Fixed
+* fixed error-handling in util::count_rows()  https://github.com/jqnatividad/qsv/pull/341
+* do not panic when index is stale https://github.com/jqnatividad/qsv/commit/36dbd79591e3ae1e9c271ec3c0272599cc8695de
+* `fetch`: fixed docopt arg processing so --help text is displayed properly https://github.com/jqnatividad/qsv/commit/0cbf7017ebc7f28fa67951133e3bac7d2c7a1368
+* `excel`: more robust error handling https://github.com/jqnatividad/qsv/commit/413c693320653d085b5cca48ca32b0d371ccd240
+
 ## [0.54.0] - 2022-06-08
 
 ### Added
