@@ -213,7 +213,7 @@ qsv stats wcp.csv --output wcpstats.csv
 | `QSV_TOGGLE_HEADERS` | if set to `1`, toggles header setting - i.e. inverts qsv header behavior, with no headers being the default, and setting `--no-headers` will actually mean headers will not be ignored. |
 | `QSV_AUTOINDEX` | if set, automatically create an index when none is detected. Also automatically update stale indices. |
 | `QSV_COMMENT_CHAR` | set to an ascii character. If set, any lines(including the header) that start with this character are ignored. |
-| `QSV_MAX_JOBS` | number of jobs to use for multithreaded commands (currently `dedup`, `extsort`, `frequency`, `schema`, `sort`, `split`, `stats` and `validate`). If not set, max_jobs is set to the detected number of logical processors.  See [Multithreading](docs/PERFORMANCE.md#multithreading) for more info. |
+| `QSV_MAX_JOBS` | number of jobs to use for multithreaded commands (currently `apply`, `dedup`, `extsort`, `frequency`, `schema`, `sort`, `split`, `stats` and `validate`). If not set, max_jobs is set to the detected number of logical processors.  See [Multithreading](docs/PERFORMANCE.md#multithreading) for more info. |
 | `QSV_NO_UPDATE` | if set, prohibit self-update version check for the latest qsv release published on GitHub. |
 | `QSV_PREFER_DMY` | if set, date parsing will use DMY format. Otherwise, use MDY format (used with `apply datefmt`, `schema`, `sniff` & `stats` commands). |
 | `QSV_REGEX_UNICODE` | if set, makes `search`, `searchset` and `replace` commands unicode-aware. For increased performance, these commands are not unicode-aware and will ignore unicode values when matching and will panic when unicode characters are used in the regex. |
