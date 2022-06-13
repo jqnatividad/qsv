@@ -5,6 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.55.1] - 2022-06-13
+### Changed
+* Pin Rust nightly to 2022-06-12
+
+### Fixed
+* `fetch`: fix invalid jsonl response https://github.com/jqnatividad/qsv/pull/346
+
 ## [0.55.0] - 2022-06-12
 ### Added
 * `apply`: now multithreaded with rayon (up to 10x 🚀🚀🚀 faster!) https://github.com/jqnatividad/qsv/pull/342
