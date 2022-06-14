@@ -5,6 +5,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.55.2] - 2022-06-14
+### Changed
+* `fetch`: more robust/consistent error handling https://github.com/jqnatividad/qsv/pull/347
+* removed reqwest 0.11.10 patch and used reqwest 0.11.11
+* Pin Rust nightly to 2022-06-13
+
 ## [0.55.1] - 2022-06-13
 ### Changed
 * Pin Rust nightly to 2022-06-12
