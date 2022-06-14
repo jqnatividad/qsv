@@ -8,6 +8,7 @@ use dynfmt::Format;
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::{debug, error};
 use once_cell::sync::{Lazy, OnceCell};
+use rand::Rng;
 use regex::Regex;
 use serde::Deserialize;
 use serde_json::json;
@@ -175,10 +176,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut rdr = rconfig.reader()?;
     let mut wtr = if args.flag_new_column.is_some() {
+        // when adding a new column for the response, the output
+        // is a regular CSV file
         Config::new(&args.flag_output).writer()?
     } else {
+        // otherwise, the output is a JSONL file. So we need to configure
+        // the csv writer so it doesn't double double quote the JSON response
+        // and its flexible (i.e. "column counts are different row to row")
         Config::new(&args.flag_output)
             .quote_style(csv::QuoteStyle::Never)
+            .flexible(true)
             .writer()?
     };
 
@@ -194,14 +201,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     }
 
-    let str_headers = rdr.headers()?.clone();
-
-    let mut dynfmt_fields = Vec::with_capacity(10); // 10 is a reasonable default to save allocs
     let mut dynfmt_url_template = String::from("");
     if let Some(ref url_template) = args.flag_url_template {
         if args.flag_no_headers {
             return fail!("--url-template option requires headers.");
         }
+        let str_headers = rdr.headers()?.clone();
+        let mut dynfmt_fields = Vec::with_capacity(10); // 10 is a reasonable default to save allocs
+
         dynfmt_url_template = url_template.to_string();
         // first, get the fields used in the url template
         let safe_headers = util::safe_header_names(&str_headers, false);
@@ -270,7 +277,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let limiter = RateLimiter::direct(Quota::per_second(rate_limit));
 
     let mut include_existing_columns = false;
-
     if let Some(name) = args.flag_new_column {
         include_existing_columns = true;
 
@@ -290,16 +296,22 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
     let not_quiet = !args.flag_quiet;
 
+    // amortize memory allocations
+    // why optimize for speed, when we're throttling URL fetches?
+    // we still optimize since if we're using redis cache, we want to
+    // return responses as fast as possible
     #[allow(unused_assignments)]
     let mut record = csv::ByteRecord::new();
     #[allow(unused_assignments)]
     let mut output_record = csv::ByteRecord::new();
-
     #[allow(unused_assignments)]
     let mut url = String::default();
-    let mut redis_cache_hits: u64 = 0;
     #[allow(unused_assignments)]
     let mut final_value = String::default();
+    #[allow(unused_assignments)]
+    let mut record_vec: Vec<String> = Vec::with_capacity(headers.len());
+
+    let mut redis_cache_hits: u64 = 0;
 
     let mut jql_selector: Option<String> = None;
     if let Some(jql_file) = args.flag_jqlfile {
@@ -317,13 +329,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         if args.flag_url_template.is_some() {
             // we're using a URL template.
             // let's construct the URL using it
-            let mut record_vec: Vec<String> = Vec::with_capacity(record.len());
+            record_vec.clear();
             for field in &record {
                 let str_value = unsafe { std::str::from_utf8_unchecked(field).trim().to_string() };
                 record_vec.push(str_value);
             }
             if let Ok(formatted) =
-                dynfmt::SimpleCurlyFormat.format(&dynfmt_url_template, record_vec)
+                dynfmt::SimpleCurlyFormat.format(&dynfmt_url_template, &*record_vec)
             {
                 url = formatted.to_string();
             }
@@ -510,6 +522,7 @@ fn get_response(
     };
     debug!("response: {:?}", &resp);
 
+    let api_respheader = resp.headers().clone();
     let api_status = resp.status();
     let api_value: String = resp.text().unwrap();
     debug!("api value: {}", &api_value);
@@ -568,6 +581,61 @@ fn get_response(
     }
 
     debug!("final value: {final_value}");
+
+    // check if the API has ratelimits and we need to do dynamic throttling to respect the limits or
+    // the API status code is not 200 (most likely 503-service not available or 493-too many request)
+    if api_respheader.contains_key("x-ratelimit-limit")
+        || api_respheader.contains_key("x-ratelimit-limit-second")
+        || api_status != 200
+    {
+        let ratelimit = api_respheader.get("x-ratelimit-limit");
+        let ratelimit_remaining = api_respheader.get("x-ratelimit-remaining");
+        let ratelimit_reset = api_respheader.get("x-ratelimit-reset");
+        let ratelimit_sec = api_respheader.get("x-ratelimit-limit-second");
+        let ratelimit_remaining_sec = api_respheader.get("x-ratelimit-remaining-second");
+        let ratelimit_reset_sec = api_respheader.get("x-ratelimit-reset-second");
+        let retry_after = api_respheader.get("retry-after");
+
+        debug!("api_status:{api_status:?} rate_limit:{ratelimit:?} {ratelimit_sec:?} rate_limit_remaining:{ratelimit_remaining:?} \
+ {ratelimit_remaining_sec:?} ratelimit_reset:{ratelimit_reset:?} {ratelimit_reset_sec:?} retry_after:{retry_after:?}");
+
+        let mut remaining = if let Some(ratelimit_remaining) = ratelimit_remaining {
+            let remaining_str = ratelimit_remaining.to_str().unwrap();
+            remaining_str.parse::<u64>().unwrap_or_default()
+        } else {
+            9999_u64
+        };
+
+        if let Some(ratelimit_remaining_sec) = ratelimit_remaining_sec {
+            let remaining_sec_str = ratelimit_remaining_sec.to_str().unwrap();
+            remaining = remaining_sec_str.parse::<u64>().unwrap_or_default();
+        }
+
+        let mut reset = if let Some(ratelimit_reset) = ratelimit_reset {
+            let reset_str = ratelimit_reset.to_str().unwrap();
+            reset_str.parse::<u64>().unwrap_or_default()
+        } else {
+            1_u64
+        };
+
+        if let Some(retry_after) = retry_after {
+            let retry_str = retry_after.to_str().unwrap();
+            reset = retry_str.parse::<u64>().unwrap_or_default();
+        }
+
+        if remaining == 0 || reset > 1 {
+            // minimal random sleep delta between 50 and 400 milliseconds
+            let rand_sleep: u64 = rand::thread_rng().gen_range(50..400);
+
+            debug!(
+                "sleeping for {reset}.{} seconds until ratelimit is reset or retry_after has elapsed",
+                rand_sleep / 100
+            );
+
+            // sleep for reset seconds + rand_sleep milliseconds, to be sure
+            thread::sleep(time::Duration::from_millis((reset * 1_000) + rand_sleep));
+        }
+    }
 
     final_value
 }
