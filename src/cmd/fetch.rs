@@ -8,6 +8,7 @@ use dynfmt::Format;
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::{debug, error};
 use once_cell::sync::{Lazy, OnceCell};
+use rand::Rng;
 use regex::Regex;
 use serde::Deserialize;
 use serde_json::json;
@@ -623,12 +624,16 @@ fn get_response(
         }
 
         if remaining == 0 || reset > 1 {
+            // minimal random sleep delta between 50 and 400 milliseconds
+            let rand_sleep: u64 = rand::thread_rng().gen_range(50..400);
+
             debug!(
-                "sleeping for {reset}.1 seconds until ratelimit is reset or retry_after has elapsed"
+                "sleeping for {reset}.{} seconds until ratelimit is reset or retry_after has elapsed",
+                rand_sleep / 100
             );
 
-            // sleep for reset seconds + 100 milliseconds, to be sure
-            thread::sleep(time::Duration::from_millis((reset * 1_000) + 100));
+            // sleep for reset seconds + rand_sleep milliseconds, to be sure
+            thread::sleep(time::Duration::from_millis((reset * 1_000) + rand_sleep));
         }
     }
 
