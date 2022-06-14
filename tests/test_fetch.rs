@@ -20,7 +20,7 @@ fn fetch_simple() {
 
     let got = wrk.stdout::<String>(&mut cmd);
 
-    let expected = r#"HTTP 404 - Not Found
+    let expected = r#"{"errors":[{"title":"HTTP ERROR","detail":"HTTP ERROR 404 - Not Found"}]}
 {"post code":"90210","country":"United States","country abbreviation":"US","places":[{"place name":"Beverly Hills","longitude":"-118.4065","state":"California","state abbreviation":"CA","latitude":"34.0901"}]}
 {"post code":"94105","country":"United States","country abbreviation":"US","places":[{"place name":"San Francisco","longitude":"-122.3892","state":"California","state abbreviation":"CA","latitude":"37.7864"}]}
 {"post code":"92802","country":"United States","country abbreviation":"US","places":[{"place name":"Anaheim","longitude":"-117.9228","state":"California","state abbreviation":"CA","latitude":"33.8085"}]}
@@ -49,7 +49,7 @@ fn fetch_simple_url_template() {
 
     let got = wrk.stdout::<String>(&mut cmd);
 
-    let expected = r#"HTTP 404 - Not Found
+    let expected = r#"{"errors":[{"title":"HTTP ERROR","detail":"HTTP ERROR 404 - Not Found"}]}
 {"post code":"90210","country":"United States","country abbreviation":"US","places":[{"place name":"Beverly Hills","longitude":"-118.4065","state":"California","state abbreviation":"CA","latitude":"34.0901"}]}
 {"post code":"94105","country":"United States","country abbreviation":"US","places":[{"place name":"San Francisco","longitude":"-122.3892","state":"California","state abbreviation":"CA","latitude":"37.7864"}]}
 {"post code":"92802","country":"United States","country abbreviation":"US","places":[{"place name":"Anaheim","longitude":"-117.9228","state":"California","state abbreviation":"CA","latitude":"33.8085"}]}"#;
@@ -74,6 +74,7 @@ fn fetch_simple_redis() {
             svec!["  http://api.zippopotam.us/us/90210"],
             svec!["https://api.zippopotam.us/us/94105"],
             svec!["http://api.zippopotam.us/us/92802"],
+            svec!["thisisnotaurl"],
             svec!["https://query.wikidata.org/sparql?query=SELECT%20?dob%20WHERE%20{wd:Q42%20wdt:P569%20?dob.}&format=json"],
         ],
     );
@@ -85,11 +86,13 @@ fn fetch_simple_redis() {
 
     let got = wrk.stdout::<String>(&mut cmd);
 
-    let expected = r#"HTTP 404 - Not Found
+    let expected = r#"{"errors":[{"title":"HTTP ERROR","detail":"HTTP ERROR 404 - Not Found"}]}
 {"post code":"90210","country":"United States","country abbreviation":"US","places":[{"place name":"Beverly Hills","longitude":"-118.4065","state":"California","state abbreviation":"CA","latitude":"34.0901"}]}
 {"post code":"94105","country":"United States","country abbreviation":"US","places":[{"place name":"San Francisco","longitude":"-122.3892","state":"California","state abbreviation":"CA","latitude":"37.7864"}]}
 {"post code":"92802","country":"United States","country abbreviation":"US","places":[{"place name":"Anaheim","longitude":"-117.9228","state":"California","state abbreviation":"CA","latitude":"33.8085"}]}
+{"errors":[{"title":"Invalid URL","detail":"relative URL without a base"}]}
 {"head":{"vars":["dob"]},"results":{"bindings":[{"dob":{"datatype":"http://www.w3.org/2001/XMLSchema#dateTime","type":"literal","value":"1952-03-11T00:00:00Z"}}]}}"#;
+
     assert_eq!(got, expected);
 }
 
@@ -102,6 +105,7 @@ fn fetch_jql_single() {
             svec!["URL"],
             svec!["http://api.zippopotam.us/us/90210"],
             svec!["http://api.zippopotam.us/us/94105"],
+            svec!["thisisnotaurl"],
             svec!["https://api.zippopotam.us/us/92802"],
         ],
     );
@@ -118,8 +122,10 @@ fn fetch_jql_single() {
         svec!["URL", "City"],
         svec!["http://api.zippopotam.us/us/90210", "Beverly Hills"],
         svec!["http://api.zippopotam.us/us/94105", "San Francisco"],
+        svec!["thisisnotaurl", ""],
         svec!["https://api.zippopotam.us/us/92802", "Anaheim"],
     ];
+
     assert_eq!(got, expected);
 }
 
