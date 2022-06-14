@@ -10,8 +10,10 @@ use log::{debug, error};
 use once_cell::sync::{Lazy, OnceCell};
 use regex::Regex;
 use serde::Deserialize;
+use serde_json::json;
 use std::fs;
 use thiserror::Error;
+use url::Url;
 
 static USAGE: &str = "
 This command fetches data from a web API for every row in the URL column, 
@@ -313,6 +315,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         url.clear();
         if args.flag_url_template.is_some() {
+            // we're using a URL template.
+            // let's construct the URL using it
             let mut record_vec: Vec<String> = Vec::with_capacity(record.len());
             for field in &record {
                 let str_value = unsafe { std::str::from_utf8_unchecked(field).trim().to_string() };
@@ -324,14 +328,42 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 url = formatted.to_string();
             }
         } else if let Ok(s) = std::str::from_utf8(&record[column_index]) {
+            // we're not using a URL template,
+            // just use the field as is as the URL
             url = s.trim().to_string();
-        } else {
-            final_value = "Invalid URL".to_string();
         }
 
-        debug!("Fetching URL: {url:?}");
-        if !url.is_empty() {
-            if args.flag_redis {
+        // validate the URL
+        let mut url_valid = false;
+        match Url::parse(&url) {
+            Ok(_) => url_valid = true,
+            Err(e) => {
+                if args.flag_store_error {
+                    if include_existing_columns {
+                        final_value = format!("Invalid URL: {e}");
+                    } else {
+                        // its a JSONL response, so return the error
+                        // in a JSON API compliant format
+                        let json_error = json!({
+                            "errors": [{
+                                "title": "Invalid URL",
+                                "detail": e.to_string()
+                            }]
+                        });
+                        final_value = format!("{json_error}");
+                    }
+                } else {
+                    final_value = "".to_string();
+                }
+                debug!("{final_value}");
+            }
+        }
+
+        if url_valid {
+            debug!("Fetching URL: {url:?}");
+            if url.is_empty() {
+                final_value = "".to_string();
+            } else if args.flag_redis {
                 let intermediate_value = get_redis_response(
                     &url,
                     &client,
@@ -363,7 +395,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         } else {
             output_record.clear();
             if final_value.is_empty() {
-                output_record.push_field("{}".as_bytes());
+                output_record.push_field(b"{}");
+            } else if final_value.starts_with("HTTP ERROR ") && args.flag_store_error {
+                let json_error = json!({
+                    "errors": [{
+                        "title": "HTTP ERROR",
+                        "detail": final_value
+                    }]
+                });
+                final_value = format!("{json_error}");
+                output_record.push_field(final_value.as_bytes());
             } else {
                 output_record.push_field(final_value.as_bytes());
             }
@@ -484,7 +525,7 @@ fn get_response(
 
         if flag_store_error {
             final_value = format!(
-                "HTTP {} - {}",
+                "HTTP ERROR {} - {}",
                 api_status.as_str(),
                 api_status.canonical_reason().unwrap_or("unknown error")
             );
