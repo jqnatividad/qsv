@@ -586,21 +586,41 @@ fn get_response(
 
     // check if the API has ratelimits and we need to do dynamic throttling to respect the limits or
     // the API status code is not 200 (most likely 503-service not available or 493-too many requests)
-    if api_respheader.contains_key("x-ratelimit-limit")
-        || api_respheader.contains_key("x-ratelimit-limit-second")
-        || api_status != 200
+    // because ratelimit is still relatively new, there are several variants of how its used in the wild
+    // we recognize variants with the "x-" prefix (custom header) and the "-second" suffix
+    if api_status != 200
+        || api_respheader.contains_key("ratelimit-limit")
+        || api_respheader.contains_key("ratelimit-limit-remaining")
+        || api_respheader.contains_key("ratelimit-limit-remaining-second")
+        || api_respheader.contains_key("x-ratelimit-limit")
+        || api_respheader.contains_key("x-ratelimit-limit-remaining")
+        || api_respheader.contains_key("x-ratelimit-limit-remaining-second")
     {
-        let ratelimit = api_respheader.get("x-ratelimit-limit");
-        let ratelimit_remaining = api_respheader.get("x-ratelimit-remaining");
-        let ratelimit_reset = api_respheader.get("x-ratelimit-reset");
+        let mut ratelimit_remaining = api_respheader.get("ratelimit-remaining");
+        let temp_var = api_respheader.get("x-ratelimit-remaining");
+        if temp_var.is_some() {
+            ratelimit_remaining = temp_var;
+        }
+        let mut ratelimit_reset = api_respheader.get("x-ratelimit-reset");
+        let temp_var = api_respheader.get("ratelimit-reset");
+        if temp_var.is_some() {
+            ratelimit_reset = temp_var;
+        }
         // some APIs add the "-second" suffix to ratelimit fields
-        let ratelimit_sec = api_respheader.get("x-ratelimit-limit-second");
-        let ratelimit_remaining_sec = api_respheader.get("x-ratelimit-remaining-second");
-        let ratelimit_reset_sec = api_respheader.get("x-ratelimit-reset-second");
+        let mut ratelimit_remaining_sec = api_respheader.get("ratelimit-remaining-second");
+        let temp_var = api_respheader.get("x-ratelimit-remaining-second");
+        if temp_var.is_some() {
+            ratelimit_remaining_sec = temp_var;
+        }
+        let mut ratelimit_reset_sec = api_respheader.get("ratelimit-reset-second");
+        let temp_var = api_respheader.get("x-ratelimit-reset-second");
+        if temp_var.is_some() {
+            ratelimit_reset_sec = temp_var;
+        }
         let retry_after = api_respheader.get("retry-after");
 
-        debug!("api_status:{api_status:?} rate_limit:{ratelimit:?} {ratelimit_sec:?} rate_limit_remaining:{ratelimit_remaining:?} \
- {ratelimit_remaining_sec:?} ratelimit_reset:{ratelimit_reset:?} {ratelimit_reset_sec:?} retry_after:{retry_after:?}");
+        debug!("api_status:{api_status:?} rate_limit_remaining:{ratelimit_remaining:?} {ratelimit_remaining_sec:?} \
+ratelimit_reset:{ratelimit_reset:?} {ratelimit_reset_sec:?} retry_after:{retry_after:?}");
 
         // if there's a ratelimit_remaining field in the response header, get it
         // otherwise, set remaining to sentinel value 9999
@@ -619,6 +639,10 @@ fn get_response(
             let reset_str = ratelimit_reset.to_str().unwrap();
             reset_str.parse::<u64>().unwrap_or_default()
         });
+        if let Some(ratelimit_reset_sec) = ratelimit_reset_sec {
+            let reset_sec_str = ratelimit_reset_sec.to_str().unwrap();
+            reset = reset_sec_str.parse::<u64>().unwrap_or_default();
+        }
         // if there's a retry_after field in the response header, get it
         // and set reset to it
         if let Some(retry_after) = retry_after {
@@ -629,7 +653,9 @@ fn get_response(
         // if there are no more remaining calls per the ratelimit quota or
         // reset is greater than 1, dynamically throttle and sleep for ~reset seconds
         if remaining == 0 || reset > 1 {
-            // we add a small random delta to how long fetch sleeps just to be sure
+            // we add a small random delta to how long fetch sleeps
+            // as we need to add a little jitter as per the spec
+            // https://tools.ietf.org/id/draft-polli-ratelimit-headers-00.html#rfc.section.7.5
             let rand_addl_sleep: u64 = rand::thread_rng().gen_range(50..400);
 
             info!(
@@ -637,7 +663,7 @@ fn get_response(
                 rand_addl_sleep / 100
             );
 
-            // sleep for reset seconds + rand_sleep milliseconds, to be sure
+            // sleep for reset seconds + rand_addl_sleep milliseconds
             thread::sleep(time::Duration::from_millis(
                 (reset * 1_000) + rand_addl_sleep,
             ));
