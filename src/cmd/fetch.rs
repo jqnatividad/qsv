@@ -6,7 +6,7 @@ use cached::proc_macro::{cached, io_cached};
 use cached::{RedisCache, Return};
 use dynfmt::Format;
 use indicatif::{ProgressBar, ProgressDrawTarget};
-use log::{debug, error};
+use log::{debug, error, info};
 use once_cell::sync::{Lazy, OnceCell};
 use rand::Rng;
 use regex::Regex;
@@ -97,7 +97,9 @@ Fetch options:
     --jqlfile <file>           Load jql selector from file instead.
     --pretty                   Prettify JSON responses. Otherwise, they're minified.
                                If the response is not in JSON format, it's passed through.
-    --rate-limit <qps>         Rate Limit in Queries Per Second. [default: 10]
+    --rate-limit <qps>         Rate Limit in Queries Per Second. Note that fetch
+                               dynamically throttles as well based on rate-limit and
+                               retry-after response headers. [default: 10]
     --http-header <key:value>  Pass custom header(s) to the server.
     --store-error              On error, store error code/message instead of blank value.
     --cookies                  Allow cookies.
@@ -372,7 +374,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         if url_valid {
-            debug!("Fetching URL: {url:?}");
+            info!("Fetching URL: {url:?}");
             if url.is_empty() {
                 final_value = "".to_string();
             } else if args.flag_redis {
@@ -583,7 +585,7 @@ fn get_response(
     debug!("final value: {final_value}");
 
     // check if the API has ratelimits and we need to do dynamic throttling to respect the limits or
-    // the API status code is not 200 (most likely 503-service not available or 493-too many request)
+    // the API status code is not 200 (most likely 503-service not available or 493-too many requests)
     if api_respheader.contains_key("x-ratelimit-limit")
         || api_respheader.contains_key("x-ratelimit-limit-second")
         || api_status != 200
@@ -627,7 +629,7 @@ fn get_response(
             // minimal random sleep delta between 50 and 400 milliseconds
             let rand_sleep: u64 = rand::thread_rng().gen_range(50..400);
 
-            debug!(
+            info!(
                 "sleeping for {reset}.{} seconds until ratelimit is reset or retry_after has elapsed",
                 rand_sleep / 100
             );
