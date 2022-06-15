@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.55.4] - 2022-06-15
+### Changed
+* `fetch`: preemptively throttle down before we hit the ratelimit quota
+
 ## [0.55.3] - 2022-06-15
 ### Added
 * `fetch`: add "dynamic throttling". If response header has [rate-limit](https://tools.ietf.org/id/draft-polli-ratelimit-headers-00.html) or [retry-after](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Retry-After) fields, fetch will dynamically throttle itself as needed. https://github.com/jqnatividad/qsv/pull/348
