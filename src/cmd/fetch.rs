@@ -593,6 +593,7 @@ fn get_response(
         let ratelimit = api_respheader.get("x-ratelimit-limit");
         let ratelimit_remaining = api_respheader.get("x-ratelimit-remaining");
         let ratelimit_reset = api_respheader.get("x-ratelimit-reset");
+        // some APIs add the "-second" suffix to ratelimit fields
         let ratelimit_sec = api_respheader.get("x-ratelimit-limit-second");
         let ratelimit_remaining_sec = api_respheader.get("x-ratelimit-remaining-second");
         let ratelimit_reset_sec = api_respheader.get("x-ratelimit-reset-second");
@@ -601,41 +602,45 @@ fn get_response(
         debug!("api_status:{api_status:?} rate_limit:{ratelimit:?} {ratelimit_sec:?} rate_limit_remaining:{ratelimit_remaining:?} \
  {ratelimit_remaining_sec:?} ratelimit_reset:{ratelimit_reset:?} {ratelimit_reset_sec:?} retry_after:{retry_after:?}");
 
-        let mut remaining = if let Some(ratelimit_remaining) = ratelimit_remaining {
+        // if there's a ratelimit_remaining field in the response header, get it
+        // otherwise, set remaining to sentinel value 9999
+        let mut remaining = ratelimit_remaining.map_or(9999_u64, |ratelimit_remaining| {
             let remaining_str = ratelimit_remaining.to_str().unwrap();
             remaining_str.parse::<u64>().unwrap_or_default()
-        } else {
-            9999_u64
-        };
-
+        });
         if let Some(ratelimit_remaining_sec) = ratelimit_remaining_sec {
             let remaining_sec_str = ratelimit_remaining_sec.to_str().unwrap();
             remaining = remaining_sec_str.parse::<u64>().unwrap_or_default();
         }
 
-        let mut reset = if let Some(ratelimit_reset) = ratelimit_reset {
+        // if there's a ratelimit_reset field in the response header, get it
+        // otherwise, set reset to sentinel value 1
+        let mut reset = ratelimit_reset.map_or(1_u64, |ratelimit_reset| {
             let reset_str = ratelimit_reset.to_str().unwrap();
             reset_str.parse::<u64>().unwrap_or_default()
-        } else {
-            1_u64
-        };
-
+        });
+        // if there's a retry_after field in the response header, get it
+        // and set reset to it
         if let Some(retry_after) = retry_after {
             let retry_str = retry_after.to_str().unwrap();
             reset = retry_str.parse::<u64>().unwrap_or_default();
         }
 
+        // if there are no more remaining calls per the ratelimit quota or
+        // reset is greater than 1, dynamically throttle and sleep for ~reset seconds
         if remaining == 0 || reset > 1 {
-            // minimal random sleep delta between 50 and 400 milliseconds
-            let rand_sleep: u64 = rand::thread_rng().gen_range(50..400);
+            // we add a small random delta to how long fetch sleeps just to be sure
+            let rand_addl_sleep: u64 = rand::thread_rng().gen_range(50..400);
 
             info!(
                 "sleeping for {reset}.{} seconds until ratelimit is reset or retry_after has elapsed",
-                rand_sleep / 100
+                rand_addl_sleep / 100
             );
 
             // sleep for reset seconds + rand_sleep milliseconds, to be sure
-            thread::sleep(time::Duration::from_millis((reset * 1_000) + rand_sleep));
+            thread::sleep(time::Duration::from_millis(
+                (reset * 1_000) + rand_addl_sleep,
+            ));
         }
     }
 
