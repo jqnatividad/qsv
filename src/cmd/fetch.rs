@@ -601,8 +601,8 @@ fn get_response(
         if temp_var.is_some() {
             ratelimit_remaining = temp_var;
         }
-        let mut ratelimit_reset = api_respheader.get("x-ratelimit-reset");
-        let temp_var = api_respheader.get("ratelimit-reset");
+        let mut ratelimit_reset = api_respheader.get("ratelimit-reset");
+        let temp_var = api_respheader.get("x-ratelimit-reset");
         if temp_var.is_some() {
             ratelimit_reset = temp_var;
         }
