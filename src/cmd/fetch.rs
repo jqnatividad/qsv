@@ -650,9 +650,9 @@ ratelimit_reset:{ratelimit_reset:?} {ratelimit_reset_sec:?} retry_after:{retry_a
             reset = retry_str.parse::<u64>().unwrap_or_default();
         }
 
-        // if there are no more remaining calls per the ratelimit quota or
+        // if there is only one more remaining call per our ratelimit quota or
         // reset is greater than 1, dynamically throttle and sleep for ~reset seconds
-        if remaining == 0 || reset > 1 {
+        if remaining <= 1 || reset > 1 {
             // we add a small random delta to how long fetch sleeps
             // as we need to add a little jitter as per the spec
             // https://tools.ietf.org/id/draft-polli-ratelimit-headers-00.html#rfc.section.7.5
