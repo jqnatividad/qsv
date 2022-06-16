@@ -5,6 +5,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.55.5] - 2022-06-16
+### Changed
+* `fetch`: performance tweaks https://github.com/jqnatividad/qsv/pull/350
+* Bump titlecase from 1.1.0 to 2.0.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/349
+* Bump sysinfo from 0.24.3 to 0.24.4
+
+### Fixed
+* `fetch`: convert non-persistent cache from an Unbound cache to a Sized LRU cache, 
+so we don't run out of memory if the file being processed is very large and cache hits are low.
+https://github.com/jqnatividad/qsv/commit/4349fc9389a32c0d9544be824d1f42b1af65974d
+
 ## [0.55.4] - 2022-06-15
 ### Changed
 * `fetch`: preemptively throttle down before we hit the ratelimit quota
