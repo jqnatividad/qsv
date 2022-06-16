@@ -454,6 +454,7 @@ use governor::{
 use std::{thread, time};
 
 #[cached(
+    size = 1_000_000,
     key = "String",
     convert = r#"{ format!("{}{:?}", url, flag_jql) }"#,
     sync_writes = false
