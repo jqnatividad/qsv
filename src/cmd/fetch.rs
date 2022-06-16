@@ -18,7 +18,7 @@ use url::Url;
 
 // NOTE: when using the examples with jql, DO NOT USE the example here as rendered in
 // source code, use the example as rendered by "qsv fetch --help".
-// the source code below has addl escape characters for the jql examples, 
+// the source code below has addl escape characters for the jql examples,
 // so cutting and pasting it into the command line will not work.
 static USAGE: &str = "
 Fetches HTML/data from web pages or web services for every row.
