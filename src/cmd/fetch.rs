@@ -147,6 +147,12 @@ struct Args {
 static DEFAULT_REDIS_CONN_STR: &str = "redis://127.0.0.1:6379";
 static DEFAULT_REDIS_TTL_SECONDS: u64 = 60 * 60 * 24 * 28; // 28 days in seconds
 
+impl From<reqwest::Error> for CliError {
+    fn from(err: reqwest::Error) -> CliError {
+        CliError::Other(err.to_string())
+    }
+}
+
 struct RedisConfig {
     conn_str: String,
     ttl_secs: u64,
@@ -272,8 +278,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .cookie_store(args.flag_cookies)
         .brotli(true)
         .gzip(true)
-        .build()
-        .unwrap();
+        .http2_adaptive_window(true)
+        .build()?;
 
     use governor::{Quota, RateLimiter};
 
@@ -531,7 +537,7 @@ fn get_response(
 
     let api_respheader = resp.headers().clone();
     let api_status = resp.status();
-    let api_value: String = resp.text().unwrap();
+    let api_value: String = resp.text().unwrap_or_default();
     debug!("api value: {}", &api_value);
 
     let final_value: String;
