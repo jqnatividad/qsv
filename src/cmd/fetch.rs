@@ -46,8 +46,8 @@ EXAMPLES USING THE COLUMN ARGUMENT:
 
 data.csv
   URL
-  http://api.zippopotam.us/us/90210
-  http://api.zippopotam.us/us/94105
+  https://api.zippopotam.us/us/90210
+  https://api.zippopotam.us/us/94105
   https://api.zippopotam.us/us/92802
 
 Given the data.csv above, fetch the JSON response.
@@ -66,8 +66,8 @@ new-column and jql options.
 
 data_with_CityState.csv
   URL, CityState,
-  http://api.zippopotam.us/us/90210, \"Beverly Hills, CA\"
-  http://api.zippopotam.us/us/94105, \"San Francisco, CA\"
+  https://api.zippopotam.us/us/90210, \"Beverly Hills, CA\"
+  https://api.zippopotam.us/us/94105, \"San Francisco, CA\"
   https://api.zippopotam.us/us/92802, \"Anaheim, CA\"
 
 As you can see, entering jql selectors can quickly become cumbersome, more so because
