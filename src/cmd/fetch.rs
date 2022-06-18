@@ -1,5 +1,6 @@
 use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
+use crate::CliError;
 use crate::CliResult;
 use crate::{regex_once_cell, util};
 use cached::proc_macro::{cached, io_cached};
@@ -13,7 +14,6 @@ use regex::Regex;
 use serde::Deserialize;
 use serde_json::json;
 use std::fs;
-use thiserror::Error;
 use url::Url;
 
 // NOTE: when using the examples with jql, DO NOT USE the example here as rendered in
@@ -167,14 +167,7 @@ impl RedisConfig {
 }
 
 static REDISCONFIG: Lazy<RedisConfig> = Lazy::new(RedisConfig::load);
-
 static JQL_GROUPS: once_cell::sync::OnceCell<Vec<jql::Group>> = OnceCell::new();
-
-#[derive(Error, Debug, PartialEq, Clone)]
-enum FetchRedisError {
-    #[error("error with redis cache `{0}`")]
-    RedisError(String),
-}
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
@@ -310,7 +303,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // why optimize for speed, when we're just doing single-threaded, throttled URL fetches?
     // we still optimize since fetch is backed by a memoized cache
     // (in memory or Redis, when --redis is used),
-    // so we want to return responses as fast as possible as we bypass the fetch
+    // so we want to return responses as fast as possible as we bypass the network fetch
     // with a cache hit
     #[allow(unused_assignments)]
     let mut record = csv::ByteRecord::new();
@@ -339,7 +332,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         url.clear();
         if args.flag_url_template.is_some() {
             // we're using a URL template.
-            // let's construct the URL using it
+            // let's dynamically construct the URL with it
             record_vec.clear();
             for field in &record {
                 let str_value = unsafe { std::str::from_utf8_unchecked(field).trim().to_string() };
@@ -358,11 +351,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         // validate the URL
         let url_valid = if let Err(e) = Url::parse(&url) {
+            // the URL is invalid
             if args.flag_store_error {
                 if include_existing_columns {
+                    // the output is a CSV
                     final_value = format!("Invalid URL: {e}");
                 } else {
-                    // its a JSONL response, so return the error
+                    // the output is a JSONL file, so return the error
                     // in a JSON API compliant format
                     let json_error = json!({
                         "errors": [{
@@ -396,8 +391,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     &jql_selector,
                     args.flag_store_error,
                     args.flag_pretty,
-                )
-                .unwrap();
+                )?;
                 if intermediate_value.was_cached {
                     redis_cache_hits += 1;
                 }
@@ -489,7 +483,7 @@ fn get_cached_response(
             .build()
             .expect("error building redis cache")
     } "##,
-    map_error = r##"|e| FetchRedisError::RedisError(format!("{:?}", e))"##,
+    map_error = r##"|e| CliError::Other(format!("Redis Error: {:?}", e))"##,
     with_cached_flag = true
 )]
 fn get_redis_response(
@@ -499,7 +493,7 @@ fn get_redis_response(
     flag_jql: &Option<String>,
     flag_store_error: bool,
     flag_pretty: bool,
-) -> Result<cached::Return<String>, FetchRedisError> {
+) -> Result<cached::Return<String>, CliError> {
     Ok(Return::new(get_response(
         url,
         client,
