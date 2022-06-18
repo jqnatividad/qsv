@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use std::borrow::Cow;
 use std::path::{Path, PathBuf};
 use std::{env, fs, io, str, thread, time};
@@ -96,17 +95,18 @@ pub fn version() -> String {
     match (qsvtype, maj, min, pat, pre) {
         (Some(qsvtype), Some(maj), Some(min), Some(pat), Some(pre)) => {
             if pre.is_empty() {
-                return format!(
+                format!(
                     "{qsvtype} {maj}.{min}.{pat}-{malloc_kind}-{enabled_features}{maxjobs}-{numcpus}",
                     maxjobs = max_jobs(),
                     numcpus = num_cpus()
-                );
-            }
-            format!(
+                )
+            } else {
+                format!(
                     "{qsvtype} {maj}.{min}.{pat}-{pre}-{malloc_kind}-{enabled_features}{maxjobs}-{numcpus}",
                     maxjobs = max_jobs(),
                     numcpus = num_cpus(),
                 )
+            }
         }
         _ => "".to_owned(),
     }
