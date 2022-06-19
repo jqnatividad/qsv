@@ -10,6 +10,7 @@ use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::{debug, error, info};
 use once_cell::sync::{Lazy, OnceCell};
 use rand::Rng;
+use rayon::prelude::*;
 use regex::Regex;
 use serde::Deserialize;
 use serde_json::json;
@@ -111,6 +112,8 @@ Fetch options:
     --store-error              On error, store error code/message instead of blank value.
     --cookies                  Allow cookies.
     --redis                    Use Redis to cache responses.
+    -j, --jobs <arg>           The number of jobs to run in parallel.
+                               When not set, the number of jobs is set to the number of CPUs detected.
 
 Common options:
     -h, --help                 Display this message
@@ -136,6 +139,7 @@ struct Args {
     flag_store_error: bool,
     flag_cookies: bool,
     flag_redis: bool,
+    flag_jobs: Option<usize>,
     flag_output: Option<String>,
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
@@ -146,6 +150,9 @@ struct Args {
 
 static DEFAULT_REDIS_CONN_STR: &str = "redis://127.0.0.1:6379";
 static DEFAULT_REDIS_TTL_SECONDS: u64 = 60 * 60 * 24 * 28; // 28 days in seconds
+
+// number of CSV rows to process in a batch
+const BATCH_SIZE: usize = 24_000;
 
 impl From<reqwest::Error> for CliError {
     fn from(err: reqwest::Error) -> CliError {
@@ -304,25 +311,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         util::prep_progress(&progress, record_count);
     }
     let not_quiet = !args.flag_quiet;
-
-    // amortize memory allocations
-    // why optimize for speed, when we're just doing single-threaded, throttled URL fetches?
-    // we still optimize since fetch is backed by a memoized cache
-    // (in memory or Redis, when --redis is used),
-    // so we want to return responses as fast as possible as we bypass the network fetch
-    // with a cache hit
-    #[allow(unused_assignments)]
-    let mut record = csv::ByteRecord::new();
-    #[allow(unused_assignments)]
-    let mut output_record = csv::ByteRecord::new();
-    #[allow(unused_assignments)]
-    let mut url = String::default();
-    #[allow(unused_assignments)]
-    let mut final_value = String::default();
-    #[allow(unused_assignments)]
-    let mut record_vec: Vec<String> = Vec::with_capacity(headers.len());
-
-    let mut redis_cache_hits: u64 = 0;
+    let mut total_redis_cache_hits: u64 = 0;
 
     let jql_selector: Option<String> = if let Some(jql_file) = args.flag_jqlfile {
         Some(fs::read_to_string(jql_file)?)
@@ -330,115 +319,176 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         args.flag_jql.as_ref().map(|jql| jql.to_string())
     };
 
-    while rdr.read_byte_record(&mut record)? {
-        if not_quiet {
-            progress.inc(1);
+    // amortize memory allocation by reusing record
+    #[allow(unused_assignments)]
+    let mut batch_record = csv::ByteRecord::new();
+
+    // reuse batch buffer
+    let mut batch = Vec::with_capacity(BATCH_SIZE);
+
+    // set RAYON_NUM_THREADS
+    util::njobs(args.flag_jobs);
+
+    // main loop to read CSV and construct batches for parallel processing.
+    // why do parallel processing with throttled network fetches?
+    // Because with our memoized caches (both in-memory and Redis-backed),
+    // we bypass the network and parallel processing is faster.
+    // each batch is processed via Rayon parallel iterator.
+    // loop exits when batch is empty.
+    loop {
+        for _ in 0..BATCH_SIZE {
+            match rdr.read_byte_record(&mut batch_record) {
+                Ok(has_data) => {
+                    if has_data {
+                        batch.push(batch_record.to_owned());
+                    } else {
+                        // nothing else to add to batch
+                        break;
+                    }
+                }
+                Err(e) => {
+                    return Err(CliError::Other(format!("Error reading file: {e}")));
+                }
+            }
         }
 
-        url.clear();
-        if args.flag_url_template.is_some() {
-            // we're using a URL template.
-            // let's dynamically construct the URL with it
-            record_vec.clear();
-            for field in &record {
-                let str_value = unsafe { std::str::from_utf8_unchecked(field).trim().to_string() };
-                record_vec.push(str_value);
-            }
-            if let Ok(formatted) =
-                dynfmt::SimpleCurlyFormat.format(&dynfmt_url_template, &*record_vec)
-            {
-                url = formatted.to_string();
-            }
-        } else if let Ok(s) = std::str::from_utf8(&record[column_index]) {
-            // we're not using a URL template,
-            // just use the field as is as the URL
-            url = s.trim().to_string();
+        if batch.is_empty() {
+            // break out of infinite loop when at EOF
+            break;
         }
 
-        // validate the URL
-        let url_valid = if let Err(e) = Url::parse(&url) {
-            // the URL is invalid
-            if args.flag_store_error {
-                if include_existing_columns {
-                    // the output is a CSV
-                    final_value = format!("Invalid URL: {e}");
+        let (fetch_results, redis_cache_hits): (Vec<csv::ByteRecord>, Vec<u64>) = batch
+            .par_iter()
+            .map(|record_item| {
+                let mut record = record_item.clone();
+                let mut url = String::default();
+                let mut final_value = String::default();
+                let mut cache_hits: u64 = 0;
+
+                if args.flag_url_template.is_some() {
+                    // we're using a URL template.
+                    // let's dynamically construct the URL with it
+                    let mut record_vec: Vec<String> = Vec::with_capacity(record.len());
+                    for field in &record {
+                        let str_value =
+                            unsafe { std::str::from_utf8_unchecked(field).trim().to_string() };
+                        record_vec.push(str_value);
+                    }
+                    if let Ok(formatted) =
+                        dynfmt::SimpleCurlyFormat.format(&dynfmt_url_template, &*record_vec)
+                    {
+                        url = formatted.to_string();
+                    }
+                } else if let Ok(s) = std::str::from_utf8(&record[column_index]) {
+                    // we're not using a URL template,
+                    // just use the field as is as the URL
+                    url = s.trim().to_string();
+                }
+
+                // validate the URL
+                let url_valid = if let Err(e) = Url::parse(&url) {
+                    // the URL is invalid
+                    if args.flag_store_error {
+                        if include_existing_columns {
+                            // the output is a CSV
+                            final_value = format!("Invalid URL: {e}");
+                        } else {
+                            // the output is a JSONL file, so return the error
+                            // in a JSON API compliant format
+                            let json_error = json!({
+                                "errors": [{
+                                    "title": "Invalid URL",
+                                    "detail": e.to_string()
+                                }]
+                            });
+                            final_value = format!("{json_error}");
+                        }
+                    } else {
+                        final_value = "".to_string();
+                    }
+                    debug!(
+                        "Invalid URL: Store_error: {} - {final_value}",
+                        args.flag_store_error
+                    );
+                    false
                 } else {
-                    // the output is a JSONL file, so return the error
-                    // in a JSON API compliant format
-                    let json_error = json!({
-                        "errors": [{
-                            "title": "Invalid URL",
-                            "detail": e.to_string()
-                        }]
-                    });
-                    final_value = format!("{json_error}");
-                }
-            } else {
-                final_value = "".to_string();
-            }
-            debug!(
-                "Invalid URL: Store_error: {} - {final_value}",
-                args.flag_store_error
-            );
-            false
-        } else {
-            true
-        };
+                    true
+                };
 
-        if url_valid {
-            info!("Fetching URL: {url}");
-            final_value = if url.is_empty() {
-                "".to_string()
-            } else if args.flag_redis {
-                let intermediate_value = get_redis_response(
-                    &url,
-                    &client,
-                    &limiter,
-                    &jql_selector,
-                    args.flag_store_error,
-                    args.flag_pretty,
-                )?;
-                if intermediate_value.was_cached {
-                    redis_cache_hits += 1;
+                if url_valid {
+                    info!("Fetching URL: {url}");
+                    final_value = if url.is_empty() {
+                        "".to_string()
+                    } else if args.flag_redis {
+                        let intermediate_value = get_redis_response(
+                            &url,
+                            &client,
+                            &limiter,
+                            &jql_selector,
+                            args.flag_store_error,
+                            args.flag_pretty,
+                        )
+                        .unwrap();
+                        if intermediate_value.was_cached {
+                            cache_hits += 1;
+                        }
+                        intermediate_value.to_string()
+                    } else {
+                        get_cached_response(
+                            &url,
+                            &client,
+                            &limiter,
+                            &jql_selector,
+                            args.flag_store_error,
+                            args.flag_pretty,
+                        )
+                    }
                 }
-                intermediate_value.to_string()
-            } else {
-                get_cached_response(
-                    &url,
-                    &client,
-                    &limiter,
-                    &jql_selector,
-                    args.flag_store_error,
-                    args.flag_pretty,
-                )
+
+                if include_existing_columns {
+                    record.push_field(final_value.as_bytes());
+                    (record, cache_hits)
+                } else {
+                    record.clear();
+                    if final_value.is_empty() {
+                        record.push_field(b"{}");
+                    } else if final_value.starts_with("HTTP ERROR ") && args.flag_store_error {
+                        let json_error = json!({
+                            "errors": [{
+                                "title": "HTTP ERROR",
+                                "detail": final_value
+                            }]
+                        });
+                        record.push_field(format!("{json_error}").as_bytes());
+                    } else {
+                        record.push_field(final_value.as_bytes());
+                    }
+                    (record, cache_hits)
+                }
+            })
+            .collect();
+
+        // rayon collect() guarantees original order, so we can just append results of each batch
+        for result_record in fetch_results {
+            wtr.write_byte_record(&result_record)?;
+        }
+
+        if args.flag_redis {
+            for batch_cache_hits in redis_cache_hits {
+                total_redis_cache_hits += batch_cache_hits;
             }
         }
 
-        if include_existing_columns {
-            record.push_field(final_value.as_bytes());
-            wtr.write_byte_record(&record)?;
-        } else {
-            output_record.clear();
-            if final_value.is_empty() {
-                output_record.push_field(b"{}");
-            } else if final_value.starts_with("HTTP ERROR ") && args.flag_store_error {
-                let json_error = json!({
-                    "errors": [{
-                        "title": "HTTP ERROR",
-                        "detail": final_value
-                    }]
-                });
-                output_record.push_field(format!("{json_error}").as_bytes());
-            } else {
-                output_record.push_field(final_value.as_bytes());
-            }
-            wtr.write_byte_record(&output_record)?;
+        if not_quiet {
+            progress.inc(batch.len() as u64);
         }
-    }
+
+        batch.clear();
+    } //infinite loop
 
     if not_quiet {
         if args.flag_redis {
-            util::update_cache_info!(progress, redis_cache_hits, record_count);
+            util::update_cache_info!(progress, total_redis_cache_hits, record_count);
         } else {
             util::update_cache_info!(progress, GET_CACHED_RESPONSE);
         }
@@ -667,17 +717,14 @@ ratelimit_reset:{ratelimit_reset:?} {ratelimit_reset_sec:?} retry_after:{retry_a
             // we add a small random delta to how long fetch sleeps
             // as we need to add a little jitter as per the spec
             // https://tools.ietf.org/id/draft-polli-ratelimit-headers-00.html#rfc.section.7.5
-            let rand_addl_sleep: u64 = rand::thread_rng().gen_range(50..400);
+            let rand_addl_sleep = (reset * 1000) + rand::thread_rng().gen_range(20..200);
 
             info!(
-                "sleeping for {reset}.{} seconds until ratelimit is reset or retry_after has elapsed",
-                rand_addl_sleep / 100
+                "sleeping for {rand_addl_sleep} milliseconds until ratelimit is reset or retry_after has elapsed"
             );
 
             // sleep for reset seconds + rand_addl_sleep milliseconds
-            thread::sleep(time::Duration::from_millis(
-                (reset * 1_000) + rand_addl_sleep,
-            ));
+            thread::sleep(time::Duration::from_millis(rand_addl_sleep));
         }
     }
 
