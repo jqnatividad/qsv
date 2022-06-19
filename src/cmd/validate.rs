@@ -237,6 +237,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut record = csv::ByteRecord::new();
     // reuse batch buffer
     let mut batch = Vec::with_capacity(BATCH_SIZE);
+    let mut validation_results = Vec::with_capacity(BATCH_SIZE);
     let mut valid_flags: Vec<bool> = Vec::with_capacity(record_count as usize);
     let mut validation_error_messages: Vec<String> = Vec::with_capacity(50);
 
@@ -277,7 +278,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         // do actual validation via Rayon parallel iterator
         // validation_results vector should have same row count and in same order as input CSV
-        let validation_results: Vec<Option<String>> = batch
+        batch
             .par_iter()
             .map(|record| {
                 do_json_validation(
@@ -288,21 +289,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     &schema_compiled,
                 )
             })
-            .collect();
+            .collect_into_vec(&mut validation_results);
 
         // write to validation error report, but keep Vec<bool> to gen valid/invalid files later
         // because Rayon collect() guaranteeds original order, can sequentially append results to vector with each batch
-        for result in validation_results {
-            match result {
-                Some(validation_error_msg) => {
-                    invalid_count += 1;
-                    valid_flags.push(false);
+        for result in &validation_results {
+            if let Some(validation_error_msg) = result {
+                invalid_count += 1;
+                valid_flags.push(false);
 
-                    validation_error_messages.push(validation_error_msg);
-                }
-                None => {
-                    valid_flags.push(true);
-                }
+                validation_error_messages.push(validation_error_msg.to_string());
+            } else {
+                valid_flags.push(true);
             }
         }
 
