@@ -482,13 +482,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
     let not_quiet = !args.flag_quiet;
 
+    let prefer_dmy = args.flag_prefer_dmy || rconfig.get_dmy_preference();
+
     // amortize memory allocation by reusing record
     #[allow(unused_assignments)]
     let mut batch_record = csv::StringRecord::new();
-    let prefer_dmy = args.flag_prefer_dmy || rconfig.get_dmy_preference();
 
-    // reuse batch buffer
+    // reuse batch buffers
     let mut batch = Vec::with_capacity(BATCH_SIZE);
+    let mut batch_results = Vec::with_capacity(BATCH_SIZE);
 
     // set RAYON_NUM_THREADS
     util::njobs(args.flag_jobs);
@@ -519,7 +521,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         // do actual apply command via Rayon parallel iterator
-        let apply_results: Vec<csv::StringRecord> = batch
+        batch
             .par_iter()
             .map(|record_item| {
                 let mut record = record_item.clone();
@@ -586,11 +588,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 }
                 record
             })
-            .collect();
+            .collect_into_vec(&mut batch_results);
 
         // rayon collect() guarantees original order, so we can just append results each batch
-        for result_record in apply_results {
-            wtr.write_record(&result_record)?;
+        for result_record in &batch_results {
+            wtr.write_record(result_record)?;
         }
 
         if not_quiet {
