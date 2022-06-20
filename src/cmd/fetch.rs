@@ -362,7 +362,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .map(|record_item| {
                 let mut record = record_item.clone();
                 let mut url = String::default();
-                let mut cache_hits: u64 = 0;
+                let mut redis_cache_hit: bool = false;
 
                 if args.flag_url_template.is_some() {
                     // we're using a URL template.
@@ -398,7 +398,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     )
                     .unwrap();
                     if intermediate_value.was_cached {
-                        cache_hits += 1;
+                        redis_cache_hit = true;
                     }
                     intermediate_value.to_string()
                 } else {
@@ -415,7 +415,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
                 if include_existing_columns {
                     record.push_field(final_value.as_bytes());
-                    (record, cache_hits)
                 } else {
                     record.clear();
                     if final_value.is_empty() {
@@ -423,8 +422,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     } else {
                         record.push_field(final_value.as_bytes());
                     }
-                    (record, cache_hits)
                 }
+
+                (record, if redis_cache_hit { 1 } else { 0 })
             })
             .collect();
 
@@ -434,8 +434,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         if args.flag_redis {
-            for batch_cache_hits in redis_cache_hits {
-                total_redis_cache_hits += batch_cache_hits;
+            for redis_cache_hit in redis_cache_hits {
+                total_redis_cache_hits += redis_cache_hit;
             }
         }
 
