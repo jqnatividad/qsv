@@ -362,7 +362,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .map(|record_item| {
                 let mut record = record_item.clone();
                 let mut url = String::default();
-                let mut final_value = String::default();
                 let mut cache_hits: u64 = 0;
 
                 if args.flag_url_template.is_some() {
@@ -385,65 +384,34 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     url = s.trim().to_string();
                 }
 
-                // validate the URL
-                let url_valid = if let Err(e) = Url::parse(&url) {
-                    // the URL is invalid
-                    if args.flag_store_error {
-                        if include_existing_columns {
-                            // the output is a CSV
-                            final_value = format!("Invalid URL: {e}");
-                        } else {
-                            // the output is a JSONL file, so return the error
-                            // in a JSON API compliant format
-                            let json_error = json!({
-                                "errors": [{
-                                    "title": "Invalid URL",
-                                    "detail": e.to_string()
-                                }]
-                            });
-                            final_value = format!("{json_error}");
-                        }
-                    } else {
-                        final_value = "".to_string();
+                let final_value = if url.is_empty() {
+                    "".to_string()
+                } else if args.flag_redis {
+                    let intermediate_value = get_redis_response(
+                        &url,
+                        &client,
+                        &limiter,
+                        &jql_selector,
+                        args.flag_store_error,
+                        args.flag_pretty,
+                        include_existing_columns,
+                    )
+                    .unwrap();
+                    if intermediate_value.was_cached {
+                        cache_hits += 1;
                     }
-                    debug!(
-                        "Invalid URL: Store_error: {} - {final_value}",
-                        args.flag_store_error
-                    );
-                    false
+                    intermediate_value.to_string()
                 } else {
-                    true
+                    get_cached_response(
+                        &url,
+                        &client,
+                        &limiter,
+                        &jql_selector,
+                        args.flag_store_error,
+                        args.flag_pretty,
+                        include_existing_columns,
+                    )
                 };
-
-                if url_valid {
-                    info!("Fetching URL: {url}");
-                    final_value = if url.is_empty() {
-                        "".to_string()
-                    } else if args.flag_redis {
-                        let intermediate_value = get_redis_response(
-                            &url,
-                            &client,
-                            &limiter,
-                            &jql_selector,
-                            args.flag_store_error,
-                            args.flag_pretty,
-                        )
-                        .unwrap();
-                        if intermediate_value.was_cached {
-                            cache_hits += 1;
-                        }
-                        intermediate_value.to_string()
-                    } else {
-                        get_cached_response(
-                            &url,
-                            &client,
-                            &limiter,
-                            &jql_selector,
-                            args.flag_store_error,
-                            args.flag_pretty,
-                        )
-                    }
-                }
 
                 if include_existing_columns {
                     record.push_field(final_value.as_bytes());
@@ -452,14 +420,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     record.clear();
                     if final_value.is_empty() {
                         record.push_field(b"{}");
-                    } else if final_value.starts_with("HTTP ERROR ") && args.flag_store_error {
-                        let json_error = json!({
-                            "errors": [{
-                                "title": "HTTP ERROR",
-                                "detail": final_value
-                            }]
-                        });
-                        record.push_field(format!("{json_error}").as_bytes());
                     } else {
                         record.push_field(final_value.as_bytes());
                     }
@@ -506,7 +466,7 @@ use std::{thread, time};
 #[cached(
     size = 1_000_000,
     key = "String",
-    convert = r#"{ format!("{}{:?}", url, flag_jql) }"#,
+    convert = r#"{ format!("{}{:?}{}{}{}", url, flag_jql, flag_store_error, flag_pretty, include_existing_columns) }"#,
     sync_writes = false
 )]
 fn get_cached_response(
@@ -516,6 +476,7 @@ fn get_cached_response(
     flag_jql: &Option<String>,
     flag_store_error: bool,
     flag_pretty: bool,
+    include_existing_columns: bool,
 ) -> String {
     get_response(
         url,
@@ -524,13 +485,14 @@ fn get_cached_response(
         flag_jql,
         flag_store_error,
         flag_pretty,
+        include_existing_columns,
     )
 }
 
 #[io_cached(
     type = "cached::RedisCache<String, String>",
     key = "String",
-    convert = r#"{ format!("{}{:?}", url, flag_jql) }"#,
+    convert = r#"{ format!("{}{:?}{}{}{}", url, flag_jql, flag_store_error, flag_pretty, include_existing_columns) }"#,
     create = r##" {
         RedisCache::new("f", REDISCONFIG.ttl_secs)
             .set_namespace("q")
@@ -549,6 +511,7 @@ fn get_redis_response(
     flag_jql: &Option<String>,
     flag_store_error: bool,
     flag_pretty: bool,
+    include_existing_columns: bool,
 ) -> Result<cached::Return<String>, CliError> {
     Ok(Return::new(get_response(
         url,
@@ -557,6 +520,7 @@ fn get_redis_response(
         flag_jql,
         flag_store_error,
         flag_pretty,
+        include_existing_columns,
     )))
 }
 
@@ -567,7 +531,36 @@ fn get_response(
     flag_jql: &Option<String>,
     flag_store_error: bool,
     flag_pretty: bool,
+    include_existing_columns: bool,
 ) -> String {
+    // validate the URL
+    if let Err(e) = Url::parse(url) {
+        // the URL is invalid
+        let url_invalid_err = if flag_store_error {
+            if include_existing_columns {
+                // the output is a CSV
+                format!("Invalid URL: {e}")
+            } else {
+                // the output is a JSONL file, so return the error
+                // in a JSON API compliant format
+                let json_error = json!({
+                    "errors": [{
+                        "title": "Invalid URL",
+                        "detail": e.to_string()
+                    }]
+                });
+                format!("{json_error}")
+            }
+        } else {
+            "".to_string()
+        };
+        debug!("Invalid URL: Store_error: {flag_store_error} - {url_invalid_err}");
+        return url_invalid_err;
+    }
+
+    // valid URL, go ahead and fetch it
+    info!("Fetching URL: {url}");
+
     // wait until RateLimiter gives Okay
     while limiter.check().is_err() {
         thread::sleep(time::Duration::from_millis(10));
@@ -728,7 +721,19 @@ ratelimit_reset:{ratelimit_reset:?} {ratelimit_reset_sec:?} retry_after:{retry_a
         }
     }
 
-    final_value
+    if include_existing_columns {
+        final_value
+    } else if final_value.starts_with("HTTP ERROR ") && flag_store_error {
+        let json_error = json!({
+            "errors": [{
+                "title": "HTTP ERROR",
+                "detail": final_value
+            }]
+        });
+        format!("{json_error}")
+    } else {
+        final_value
+    }
 }
 
 use jql::groups_walker;
