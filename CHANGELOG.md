@@ -5,6 +5,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.56.0] - 2022-06-20
+### Added
+* `fetch` is now multithreaded! 🚀🚀🚀 - with threadsafe memoized caching, dynamic throttling & http2 adaptive flow control https://github.com/jqnatividad/qsv/pull/354
+
+### Changed
+* `fetch`: do more expensive ops behind cache https://github.com/jqnatividad/qsv/pull/355
+* applied BetterTOML formatting to Cargo.toml
+* `exclude`, `flatten` & `join`: applied clippy recommendation for borrow_deref_ref https://github.com/jqnatividad/qsv/commit/bf1ac90185947a6d923613f17c4af616631dc149
+* `utils`: minor cleanup of version fn https://github.com/jqnatividad/qsv/commit/217702b51785f51d6924608a5122c405ff384fef
+* `validate`: perf tweak - use collect_into_vec to reduce allocations
+* `apply`: perf tweak - use collect_into_vec to reduce allocations
+* removed `thiserror` dependency
+* pin Rust Nightly to 2022-06-19
+* Bump robinraju/release-downloader from 1.3 to 1.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/351
+* Bump crossbeam-channel from 0.5.4 to 0.5.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/352
+* Bump redis patch
+* cargo update bump several other dependencies
+
+### Fixed
+* `fetch`: better error handling https://github.com/jqnatividad/qsv/pull/353
+
+
+###
 ## [0.55.5] - 2022-06-16
 ### Changed
 * `fetch`: performance tweaks https://github.com/jqnatividad/qsv/pull/350
