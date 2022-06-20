@@ -240,17 +240,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "async-trait"
-version = "0.1.56"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "96cf8829f67d2eab0b2dfa42c5d0ef737e0724e4a82b01b3e292456202b19716"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "autocfg"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2314,9 +2303,8 @@ dependencies = [
 [[package]]
 name = "redis"
 version = "0.21.5"
-source = "git+https://github.com/mitsuhiko/redis-rs?rev=b8eb47303c5728e943b914cd10dc35d1fceee05c#b8eb47303c5728e943b914cd10dc35d1fceee05c"
+source = "git+https://github.com/mitsuhiko/redis-rs?rev=bb329dd010dab71e96a730818dc2e4684f563789#bb329dd010dab71e96a730818dc2e4684f563789"
 dependencies = [
- "async-trait",
  "combine",
  "itoa",
  "percent-encoding",

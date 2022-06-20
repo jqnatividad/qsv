@@ -165,7 +165,7 @@ docopt     = { git = "https://github.com/jqnatividad/docopt.rs", branch = "perf-
 ext-sort   = { git = "https://github.com/jqnatividad/ext-sort-rs", rev = "fd955e2462a65cae0de9c9e5113ea56d2904106a" }
 jsonschema = { git = "https://github.com/Stranger6667/jsonschema-rs", rev = "bfe69d393a842e331832fce55a43e0051b988761" }
 grex       = { git = "https://github.com/jqnatividad/grex", rev = "45af84167b8bd6d38c9e36ada7fe677bebe8886f" }
-redis      = { git = "https://github.com/mitsuhiko/redis-rs", rev = "b8eb47303c5728e943b914cd10dc35d1fceee05c" }
+redis      = { git = "https://github.com/mitsuhiko/redis-rs", rev = "bb329dd010dab71e96a730818dc2e4684f563789" }
 
 [features]
 default = ["mimalloc"]
