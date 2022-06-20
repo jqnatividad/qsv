@@ -6,6 +6,7 @@ use anyhow::{anyhow, Result};
 use csv::ByteRecord;
 #[cfg(any(feature = "full", feature = "lite"))]
 use indicatif::{ProgressBar, ProgressDrawTarget};
+use itertools::Itertools;
 use jsonschema::paths::PathChunk;
 use jsonschema::{output::BasicOutput, JSONSchema};
 #[allow(unused_imports)]
@@ -447,7 +448,6 @@ fn write_error_report(input_path: &str, validation_error_messages: Vec<String>) 
 }
 
 /// if given record is valid, return None, otherwise, error file entry string
-#[inline]
 fn do_json_validation(
     headers: &ByteRecord,
     headers_len: usize,
@@ -470,7 +470,6 @@ fn do_json_validation(
         schema_compiled,
     )
     .map(|validation_errors| {
-        use itertools::Itertools;
         // squash multiple errors into one long String with linebreaks
         let combined_errors: String = validation_errors
             .iter()
