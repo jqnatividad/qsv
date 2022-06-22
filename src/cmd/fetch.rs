@@ -290,7 +290,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     use governor::{Quota, RateLimiter};
 
-    let limiter = RateLimiter::direct(Quota::per_second(rate_limit));
+    let limiter =
+        RateLimiter::direct(Quota::per_second(rate_limit).allow_burst(NonZeroU32::new(2).unwrap()));
 
     let include_existing_columns = if let Some(name) = args.flag_new_column {
         // write header with new column
@@ -561,9 +562,14 @@ fn get_response(
     // valid URL, go ahead and fetch it
     info!("Fetching URL: {url}");
 
-    // wait until RateLimiter gives Okay
+    // wait until RateLimiter gives Okay or we timeout
+    let mut limiter_total_wait = 0_u16;
     while limiter.check().is_err() {
+        limiter_total_wait += 1;
         thread::sleep(time::Duration::from_millis(10));
+        if limiter_total_wait > 1000 {
+            break;
+        }
     }
 
     let resp: reqwest::blocking::Response = match client.get(url).send() {
