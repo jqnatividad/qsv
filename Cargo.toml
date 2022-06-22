@@ -1,6 +1,6 @@
 [package]
 name          = "qsv"
-version       = "0.55.2"                                                  #:version
+version       = "0.56.0"                                                                       #:version
 authors       = ["Joel Natividad <joel@datHere.com>"]
 description   = "A high performance CSV data-wrangling toolkit."
 documentation = "https://github.com/jqnatividad/qsv#qsv-ultra-fast-csv-data-wrangling-toolkit"
@@ -17,11 +17,11 @@ autobins      = false
 include       = ["src/**/*", "LICENSE-MIT", "README.md", "CHANGELOG.md"]
 
 [[bin]]
-name    = "qsv"
-test    = true
-bench   = false
-doctest = false
-path    = "src/main.rs"
+name              = "qsv"
+test              = true
+bench             = false
+doctest           = false
+path              = "src/main.rs"
 required-features = ["full"]
 
 [[bin]]
@@ -52,8 +52,8 @@ opt-level     = 3
 strip         = true
 
 [profile.release-nightly]
-inherits = "release"
-panic = "abort"
+inherits      = "release"
+panic         = "abort"
 codegen-units = 1
 debug         = false
 lto           = true
@@ -107,7 +107,7 @@ pyo3 = { version = "0.16", features = [
     "abi3-py38",
     "auto-initialize",
     # Automatically generates `python3.dll` import libraries for Windows targets.
-    "generate-abi3-import-lib",    
+    "generate-abi3-import-lib",
 ], optional = true }
 qsv-dateparser = "0.4"
 qsv-stats = "0.3"
@@ -136,12 +136,11 @@ strsim = { version = "0.10", optional = true }
 sysinfo = "0.24"
 tabwriter = "1.2"
 test-data-generation = { version = "0.3", optional = true }
-thiserror = { version = "1.0", optional = true }
 thousands = "0.2"
 threadpool = "1.8"
-titlecase = { version = "1", optional = true }
+titlecase = { version = "2", optional = true }
 uuid = { version = "1", features = ["v4"] }
-url = {version = "2.2", optional = true}
+url = { version = "2.2", optional = true }
 vader_sentiment = { version = "0.1", optional = true }
 whatlang = { version = "0.16", optional = true }
 
@@ -158,15 +157,15 @@ redis = { version = "0.21", default-features = false }
 serial_test = "0.7"
 
 [patch.crates-io]
-calamine = { git = "https://github.com/jqnatividad/calamine", rev = "c8623af0165e6d42519c5c5644ae11099022001b" }
-csv = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
-csv-core = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
-csv-index = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
-docopt = { git = "https://github.com/jqnatividad/docopt.rs", branch = "perf-clippy-2021" }
-ext-sort = { git = "https://github.com/jqnatividad/ext-sort-rs", rev = "fd955e2462a65cae0de9c9e5113ea56d2904106a" }
-jsonschema = { git = "https://github.com/Stranger6667/jsonschema-rs", rev = "bfe69d393a842e331832fce55a43e0051b988761"}
-grex = { git = "https://github.com/jqnatividad/grex", rev = "45af84167b8bd6d38c9e36ada7fe677bebe8886f" }
-redis = { git = "https://github.com/mitsuhiko/redis-rs", rev = "b8eb47303c5728e943b914cd10dc35d1fceee05c" }
+calamine   = { git = "https://github.com/jqnatividad/calamine", rev = "c8623af0165e6d42519c5c5644ae11099022001b" }
+csv        = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
+csv-core   = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
+csv-index  = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
+docopt     = { git = "https://github.com/jqnatividad/docopt.rs", branch = "perf-clippy-2021" }
+ext-sort   = { git = "https://github.com/jqnatividad/ext-sort-rs", rev = "fd955e2462a65cae0de9c9e5113ea56d2904106a" }
+jsonschema = { git = "https://github.com/Stranger6667/jsonschema-rs", rev = "bfe69d393a842e331832fce55a43e0051b988761" }
+grex       = { git = "https://github.com/jqnatividad/grex", rev = "45af84167b8bd6d38c9e36ada7fe677bebe8886f" }
+redis      = { git = "https://github.com/mitsuhiko/redis-rs", rev = "bb329dd010dab71e96a730818dc2e4684f563789" }
 
 [features]
 default = ["mimalloc"]
@@ -182,15 +181,7 @@ apply = [
     "vader_sentiment",
     "whatlang",
 ]
-fetch = [
-    "cached",
-    "dynfmt",
-    "governor",
-    "jql",
-    "jsonxf",
-    "thiserror",
-    "url",
-]
+fetch = ["cached", "dynfmt", "governor", "jql", "jsonxf", "url"]
 foreach = []
 generate = ["test-data-generation"]
 lua = ["mlua"]
@@ -198,4 +189,9 @@ python = ["pyo3"]
 lite = []
 datapusher_plus = []
 full = []
-nightly = ["regex/unstable", "rand/nightly", "rand/simd_support", "pyo3/nightly"]
+nightly = [
+    "regex/unstable",
+    "rand/nightly",
+    "rand/simd_support",
+    "pyo3/nightly",
+]

@@ -66,7 +66,7 @@ The same is true with the write buffer (default: 64k) with the `QSV_WTR_BUFFER_C
 
 ## Multithreading
 
-Several commands support multithreading - `stats`, `frequency`, `schema` and `split` (when an index is available); `apply`, `dedup`, `extsort`, `sort` and `validate` (no index required).
+Several commands support multithreading - `stats`, `frequency`, `schema` and `split` (when an index is available); `apply`, `dedup`, `extsort`, `fetch`, `sort` and `validate` (no index required).
 
 qsv will automatically spawn parallel jobs equal to the detected number of logical processors. Should you want to manually override this, use the `--jobs` command-line option or the `QSV_MAX_JOBS` environment variable.
 
@@ -92,7 +92,7 @@ For the most part, this shouldn't be a problem as UTF-8 is the de facto encoding
 ## Nightly Release Builds
 Pre-built binaries compiled using Rust Nightly/Unstable are also [available for download](https://github.com/jqnatividad/qsv/releases/latest). These binaries are optimized for size and speed:
 
-* compiled with the last known Rust nightly/unstable that can build qsv (presently nightly-2022-06-13).
+* compiled with the last known Rust nightly/unstable that can build qsv (presently nightly-2022-06-19).
 * stdlib is compiled from source, instead of using the pre-built stdlib. This ensures stdlib is compiled with all of qsv's release settings
   (link time optimization, opt-level, codegen-units, panic=abort, etc.), presenting more opportunities for Rust/LLVM to optimize the generated code.
   This is why we only have nightly release builds for select platforms (the platform of GitHub's action runners), as we need access to the "native hardware"
@@ -110,7 +110,7 @@ Doing so will ensure CPU features are tailored to your hardware and you're using
 For example, on Ubuntu 22.04 LTS Linux:
 
 ```
-rustup default nightly-2022-06-13
+rustup default nightly-2022-06-19
 rustup update
 export RUSTFLAGS='-C target-cpu=native'
 

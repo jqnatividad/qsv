@@ -24,7 +24,7 @@ jobs:
     runs-on: ${{ matrix.job.os }}
     strategy:
       matrix:
-        rust: [nightly-2022-06-13]
+        rust: [nightly-2022-06-19]
         job:
           - os: ubuntu-latest
             os-name: linux
@@ -120,7 +120,7 @@ jobs:
         rustup show > qsv_nightly_rust_version_info.txt
         cd ..
     - name: Download latest release zip
-      uses: robinraju/release-downloader@v1.3
+      uses: robinraju/release-downloader@v1.4
       with:
         repository: "jqnatividad/qsv"
         latest: true

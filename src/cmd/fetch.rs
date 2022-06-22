@@ -1,24 +1,28 @@
 use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
+use crate::CliError;
 use crate::CliResult;
 use crate::{regex_once_cell, util};
 use cached::proc_macro::{cached, io_cached};
 use cached::{RedisCache, Return};
 use dynfmt::Format;
 use indicatif::{ProgressBar, ProgressDrawTarget};
-use log::{debug, error};
+use log::{debug, error, info};
 use once_cell::sync::{Lazy, OnceCell};
 use rand::Rng;
+use rayon::prelude::*;
 use regex::Regex;
 use serde::Deserialize;
 use serde_json::json;
 use std::fs;
-use thiserror::Error;
 use url::Url;
 
+// NOTE: when using the examples with jql, DO NOT USE the example here as rendered in
+// source code, use the example as rendered by "qsv fetch --help".
+// the source code below has addl escape characters for the jql examples,
+// so cutting and pasting it into the command line will not work.
 static USAGE: &str = "
-This command fetches data from a web API for every row in the URL column, 
-and optionally stores them in a new column.
+Fetches HTML/data from web pages or web services for every row.
 
 Fetch is integrated with `jql` to directly parse out values from an API JSON response.
 
@@ -28,9 +32,13 @@ construct URLs for each CSV record with the --url-template option (see Examples 
 To use a proxy, please set env vars HTTP_PROXY and HTTPS_PROXY
 (e.g. export HTTPS_PROXY=socks5://127.0.0.1:1086).
 
-To use Redis for response caching, set the --redis flag. By default, it will connect to
-a local Redis instance at redis://127.0.0.1:6379, with a cache expiry Time-to-Live (TTL)
-of 2,419,200 seconds (28 days), and cache hits NOT refreshing the TTL of cached values.
+Fetch caches responses to minimize traffic and maximize performance. By default, it uses
+a non-persistent memoized cache for each fetch session.
+
+For persistent, inter-session caching, Redis is supported with the --redis flag. 
+By default, it will connect to a local Redis instance at redis://127.0.0.1:6379,
+with a cache expiry Time-to-Live (TTL) of 2,419,200 seconds (28 days),
+and cache hits NOT refreshing the TTL of cached values.
 
 Set the env vars QSV_REDIS_CONNECTION_STRING, QSV_REDIS_TTL_SECONDS and 
 QSV_REDIS_TTL_REFRESH to change default Redis settings.
@@ -39,8 +47,8 @@ EXAMPLES USING THE COLUMN ARGUMENT:
 
 data.csv
   URL
-  http://api.zippopotam.us/us/90210
-  http://api.zippopotam.us/us/94105
+  https://api.zippopotam.us/us/90210
+  https://api.zippopotam.us/us/94105
   https://api.zippopotam.us/us/92802
 
 Given the data.csv above, fetch the JSON response.
@@ -59,8 +67,8 @@ new-column and jql options.
 
 data_with_CityState.csv
   URL, CityState,
-  http://api.zippopotam.us/us/90210, \"Beverly Hills, CA\"
-  http://api.zippopotam.us/us/94105, \"San Francisco, CA\"
+  https://api.zippopotam.us/us/90210, \"Beverly Hills, CA\"
+  https://api.zippopotam.us/us/94105, \"San Francisco, CA\"
   https://api.zippopotam.us/us/92802, \"Anaheim, CA\"
 
 As you can see, entering jql selectors can quickly become cumbersome, more so because
@@ -97,11 +105,15 @@ Fetch options:
     --jqlfile <file>           Load jql selector from file instead.
     --pretty                   Prettify JSON responses. Otherwise, they're minified.
                                If the response is not in JSON format, it's passed through.
-    --rate-limit <qps>         Rate Limit in Queries Per Second. [default: 10]
+    --rate-limit <qps>         Rate Limit in Queries Per Second (max: 25). Note that fetch
+                               dynamically throttles as well based on rate-limit and
+                               retry-after response headers. [default: 10]
     --http-header <key:value>  Pass custom header(s) to the server.
     --store-error              On error, store error code/message instead of blank value.
     --cookies                  Allow cookies.
     --redis                    Use Redis to cache responses.
+    -j, --jobs <arg>           The number of jobs to run in parallel.
+                               When not set, the number of jobs is set to the number of CPUs detected.
 
 Common options:
     -h, --help                 Display this message
@@ -127,6 +139,7 @@ struct Args {
     flag_store_error: bool,
     flag_cookies: bool,
     flag_redis: bool,
+    flag_jobs: Option<usize>,
     flag_output: Option<String>,
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
@@ -137,6 +150,15 @@ struct Args {
 
 static DEFAULT_REDIS_CONN_STR: &str = "redis://127.0.0.1:6379";
 static DEFAULT_REDIS_TTL_SECONDS: u64 = 60 * 60 * 24 * 28; // 28 days in seconds
+
+// number of CSV rows to process in a batch
+const BATCH_SIZE: usize = 24_000;
+
+impl From<reqwest::Error> for CliError {
+    fn from(err: reqwest::Error) -> CliError {
+        CliError::Other(err.to_string())
+    }
+}
 
 struct RedisConfig {
     conn_str: String,
@@ -158,14 +180,7 @@ impl RedisConfig {
 }
 
 static REDISCONFIG: Lazy<RedisConfig> = Lazy::new(RedisConfig::load);
-
 static JQL_GROUPS: once_cell::sync::OnceCell<Vec<jql::Group>> = OnceCell::new();
-
-#[derive(Error, Debug, PartialEq, Clone)]
-enum FetchRedisError {
-    #[error("error with redis cache `{0}`")]
-    RedisError(String),
-}
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
@@ -230,20 +245,21 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     use std::num::NonZeroU32;
-    // default rate limit is actually set via docopt, so below init is just to satisfy compiler
-    let mut rate_limit: NonZeroU32 = NonZeroU32::new(10).unwrap();
-    if let Some(qps) = args.flag_rate_limit {
-        // on my laptop, no more sleep traces with qps > 24, so use round number of 20 as single-thread qps limit
-        if !(qps <= 20 && qps > 0) {
-            return fail!("Rate Limit should be between 1 to 20 queries per second.");
+    let rate_limit = if let Some(qps) = args.flag_rate_limit {
+        // on my laptop, no more sleep traces with qps > 24, so use round number of 25 as single-thread qps limit
+        if !(qps <= 25 && qps > 0) {
+            return fail!("Rate Limit should be between 1 to 25 queries per second.");
         }
-        rate_limit = NonZeroU32::new(qps).unwrap();
-    }
+        NonZeroU32::new(qps).unwrap()
+    } else {
+        // default rate limit is actually set via docopt, so init below is just to satisfy compiler
+        NonZeroU32::new(10).unwrap()
+    };
 
     use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 
     let http_headers: HeaderMap = {
-        let mut map = HeaderMap::new();
+        let mut map = HeaderMap::with_capacity(args.flag_http_header.len());
         for header in args.flag_http_header {
             let vals: Vec<&str> = header.split(':').collect();
 
@@ -269,21 +285,22 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .cookie_store(args.flag_cookies)
         .brotli(true)
         .gzip(true)
-        .build()
-        .unwrap();
+        .http2_adaptive_window(true)
+        .build()?;
 
     use governor::{Quota, RateLimiter};
 
-    let limiter = RateLimiter::direct(Quota::per_second(rate_limit));
+    let limiter =
+        RateLimiter::direct(Quota::per_second(rate_limit).allow_burst(NonZeroU32::new(2).unwrap()));
 
-    let mut include_existing_columns = false;
-    if let Some(name) = args.flag_new_column {
-        include_existing_columns = true;
-
+    let include_existing_columns = if let Some(name) = args.flag_new_column {
         // write header with new column
         headers.push_field(name.as_bytes());
         wtr.write_byte_record(&headers)?;
-    }
+        true
+    } else {
+        false
+    };
 
     // prep progress bar
     let progress = ProgressBar::new(0);
@@ -295,138 +312,144 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         util::prep_progress(&progress, record_count);
     }
     let not_quiet = !args.flag_quiet;
+    let mut total_redis_cache_hits: u64 = 0;
 
-    // amortize memory allocations
-    // why optimize for speed, when we're throttling URL fetches?
-    // we still optimize since if we're using redis cache, we want to
-    // return responses as fast as possible
+    let jql_selector: Option<String> = if let Some(jql_file) = args.flag_jqlfile {
+        Some(fs::read_to_string(jql_file)?)
+    } else {
+        args.flag_jql.as_ref().map(|jql| jql.to_string())
+    };
+
+    // amortize memory allocation by reusing record
     #[allow(unused_assignments)]
-    let mut record = csv::ByteRecord::new();
-    #[allow(unused_assignments)]
-    let mut output_record = csv::ByteRecord::new();
-    #[allow(unused_assignments)]
-    let mut url = String::default();
-    #[allow(unused_assignments)]
-    let mut final_value = String::default();
-    #[allow(unused_assignments)]
-    let mut record_vec: Vec<String> = Vec::with_capacity(headers.len());
+    let mut batch_record = csv::ByteRecord::new();
 
-    let mut redis_cache_hits: u64 = 0;
+    // reuse batch buffer
+    let mut batch = Vec::with_capacity(BATCH_SIZE);
 
-    let mut jql_selector: Option<String> = None;
-    if let Some(jql_file) = args.flag_jqlfile {
-        jql_selector = Some(fs::read_to_string(jql_file)?);
-    } else if let Some(ref jql) = args.flag_jql {
-        jql_selector = Some(jql.to_string());
-    }
+    // set RAYON_NUM_THREADS
+    util::njobs(args.flag_jobs);
 
-    while rdr.read_byte_record(&mut record)? {
-        if not_quiet {
-            progress.inc(1);
-        }
-
-        url.clear();
-        if args.flag_url_template.is_some() {
-            // we're using a URL template.
-            // let's construct the URL using it
-            record_vec.clear();
-            for field in &record {
-                let str_value = unsafe { std::str::from_utf8_unchecked(field).trim().to_string() };
-                record_vec.push(str_value);
-            }
-            if let Ok(formatted) =
-                dynfmt::SimpleCurlyFormat.format(&dynfmt_url_template, &*record_vec)
-            {
-                url = formatted.to_string();
-            }
-        } else if let Ok(s) = std::str::from_utf8(&record[column_index]) {
-            // we're not using a URL template,
-            // just use the field as is as the URL
-            url = s.trim().to_string();
-        }
-
-        // validate the URL
-        let mut url_valid = false;
-        match Url::parse(&url) {
-            Ok(_) => url_valid = true,
-            Err(e) => {
-                if args.flag_store_error {
-                    if include_existing_columns {
-                        final_value = format!("Invalid URL: {e}");
+    // main loop to read CSV and construct batches for parallel processing.
+    // why do parallel processing with throttled network fetches?
+    // Because with our memoized caches (both in-memory and Redis-backed),
+    // we bypass the network and parallel processing is faster.
+    // each batch is processed via Rayon parallel iterator.
+    // loop exits when batch is empty.
+    loop {
+        for _ in 0..BATCH_SIZE {
+            match rdr.read_byte_record(&mut batch_record) {
+                Ok(has_data) => {
+                    if has_data {
+                        batch.push(batch_record.to_owned());
                     } else {
-                        // its a JSONL response, so return the error
-                        // in a JSON API compliant format
-                        let json_error = json!({
-                            "errors": [{
-                                "title": "Invalid URL",
-                                "detail": e.to_string()
-                            }]
-                        });
-                        final_value = format!("{json_error}");
+                        // nothing else to add to batch
+                        break;
                     }
+                }
+                Err(e) => {
+                    return Err(CliError::Other(format!("Error reading file: {e}")));
+                }
+            }
+        }
+
+        if batch.is_empty() {
+            // break out of infinite loop when at EOF
+            break;
+        }
+
+        let (fetch_results, redis_cache_hits): (Vec<csv::ByteRecord>, Vec<u64>) = batch
+            .par_iter()
+            .map(|record_item| {
+                let mut record = record_item.clone();
+                let mut url = String::default();
+                let mut redis_cache_hit: bool = false;
+
+                if args.flag_url_template.is_some() {
+                    // we're using a URL template.
+                    // let's dynamically construct the URL with it
+                    let mut record_vec: Vec<String> = Vec::with_capacity(record.len());
+                    for field in &record {
+                        let str_value =
+                            unsafe { std::str::from_utf8_unchecked(field).trim().to_string() };
+                        record_vec.push(str_value);
+                    }
+                    if let Ok(formatted) =
+                        dynfmt::SimpleCurlyFormat.format(&dynfmt_url_template, &*record_vec)
+                    {
+                        url = formatted.to_string();
+                    }
+                } else if let Ok(s) = std::str::from_utf8(&record[column_index]) {
+                    // we're not using a URL template,
+                    // just use the field as is as the URL
+                    url = s.trim().to_string();
+                }
+
+                let final_value = if url.is_empty() {
+                    "".to_string()
+                } else if args.flag_redis {
+                    let intermediate_value = get_redis_response(
+                        &url,
+                        &client,
+                        &limiter,
+                        &jql_selector,
+                        args.flag_store_error,
+                        args.flag_pretty,
+                        include_existing_columns,
+                    )
+                    .unwrap();
+                    if intermediate_value.was_cached {
+                        redis_cache_hit = true;
+                    }
+                    intermediate_value.to_string()
                 } else {
-                    final_value = "".to_string();
+                    get_cached_response(
+                        &url,
+                        &client,
+                        &limiter,
+                        &jql_selector,
+                        args.flag_store_error,
+                        args.flag_pretty,
+                        include_existing_columns,
+                    )
+                };
+
+                if include_existing_columns {
+                    record.push_field(final_value.as_bytes());
+                } else {
+                    record.clear();
+                    if final_value.is_empty() {
+                        record.push_field(b"{}");
+                    } else {
+                        record.push_field(final_value.as_bytes());
+                    }
                 }
-                debug!("{final_value}");
+
+                (record, if redis_cache_hit { 1 } else { 0 })
+            })
+            .collect();
+
+        // rayon collect() guarantees original order, so we can just append results of each batch
+        for result_record in fetch_results {
+            wtr.write_byte_record(&result_record)?;
+        }
+
+        if args.flag_redis {
+            for redis_cache_hit in redis_cache_hits {
+                total_redis_cache_hits += redis_cache_hit;
             }
         }
 
-        if url_valid {
-            debug!("Fetching URL: {url:?}");
-            if url.is_empty() {
-                final_value = "".to_string();
-            } else if args.flag_redis {
-                let intermediate_value = get_redis_response(
-                    &url,
-                    &client,
-                    &limiter,
-                    &jql_selector,
-                    args.flag_store_error,
-                    args.flag_pretty,
-                )
-                .unwrap();
-                final_value = intermediate_value.to_string();
-                if intermediate_value.was_cached {
-                    redis_cache_hits += 1;
-                }
-            } else {
-                final_value = get_cached_response(
-                    &url,
-                    &client,
-                    &limiter,
-                    &jql_selector,
-                    args.flag_store_error,
-                    args.flag_pretty,
-                );
-            }
+        if not_quiet {
+            progress.inc(batch.len() as u64);
         }
 
-        if include_existing_columns {
-            record.push_field(final_value.as_bytes());
-            wtr.write_byte_record(&record)?;
-        } else {
-            output_record.clear();
-            if final_value.is_empty() {
-                output_record.push_field(b"{}");
-            } else if final_value.starts_with("HTTP ERROR ") && args.flag_store_error {
-                let json_error = json!({
-                    "errors": [{
-                        "title": "HTTP ERROR",
-                        "detail": final_value
-                    }]
-                });
-                final_value = format!("{json_error}");
-                output_record.push_field(final_value.as_bytes());
-            } else {
-                output_record.push_field(final_value.as_bytes());
-            }
-            wtr.write_byte_record(&output_record)?;
-        }
-    }
+        batch.clear();
+    } //infinite loop
 
     if not_quiet {
         if args.flag_redis {
-            util::update_cache_info!(progress, redis_cache_hits, record_count);
+            util::update_cache_info!(progress, total_redis_cache_hits, record_count);
         } else {
             util::update_cache_info!(progress, GET_CACHED_RESPONSE);
         }
@@ -442,8 +465,9 @@ use governor::{
 use std::{thread, time};
 
 #[cached(
+    size = 1_000_000,
     key = "String",
-    convert = r#"{ format!("{}{:?}", url, flag_jql) }"#,
+    convert = r#"{ format!("{}{:?}{}{}{}", url, flag_jql, flag_store_error, flag_pretty, include_existing_columns) }"#,
     sync_writes = false
 )]
 fn get_cached_response(
@@ -453,6 +477,7 @@ fn get_cached_response(
     flag_jql: &Option<String>,
     flag_store_error: bool,
     flag_pretty: bool,
+    include_existing_columns: bool,
 ) -> String {
     get_response(
         url,
@@ -461,13 +486,14 @@ fn get_cached_response(
         flag_jql,
         flag_store_error,
         flag_pretty,
+        include_existing_columns,
     )
 }
 
 #[io_cached(
     type = "cached::RedisCache<String, String>",
     key = "String",
-    convert = r#"{ format!("{}{:?}", url, flag_jql) }"#,
+    convert = r#"{ format!("{}{:?}{}{}{}", url, flag_jql, flag_store_error, flag_pretty, include_existing_columns) }"#,
     create = r##" {
         RedisCache::new("f", REDISCONFIG.ttl_secs)
             .set_namespace("q")
@@ -476,7 +502,7 @@ fn get_cached_response(
             .build()
             .expect("error building redis cache")
     } "##,
-    map_error = r##"|e| FetchRedisError::RedisError(format!("{:?}", e))"##,
+    map_error = r##"|e| CliError::Other(format!("Redis Error: {:?}", e))"##,
     with_cached_flag = true
 )]
 fn get_redis_response(
@@ -486,7 +512,8 @@ fn get_redis_response(
     flag_jql: &Option<String>,
     flag_store_error: bool,
     flag_pretty: bool,
-) -> Result<cached::Return<String>, FetchRedisError> {
+    include_existing_columns: bool,
+) -> Result<cached::Return<String>, CliError> {
     Ok(Return::new(get_response(
         url,
         client,
@@ -494,6 +521,7 @@ fn get_redis_response(
         flag_jql,
         flag_store_error,
         flag_pretty,
+        include_existing_columns,
     )))
 }
 
@@ -504,10 +532,44 @@ fn get_response(
     flag_jql: &Option<String>,
     flag_store_error: bool,
     flag_pretty: bool,
+    include_existing_columns: bool,
 ) -> String {
-    // wait until RateLimiter gives Okay
+    // validate the URL
+    if let Err(e) = Url::parse(url) {
+        // the URL is invalid
+        let url_invalid_err = if flag_store_error {
+            if include_existing_columns {
+                // the output is a CSV
+                format!("Invalid URL: {e}")
+            } else {
+                // the output is a JSONL file, so return the error
+                // in a JSON API compliant format
+                let json_error = json!({
+                    "errors": [{
+                        "title": "Invalid URL",
+                        "detail": e.to_string()
+                    }]
+                });
+                format!("{json_error}")
+            }
+        } else {
+            "".to_string()
+        };
+        debug!("Invalid URL: Store_error: {flag_store_error} - {url_invalid_err}");
+        return url_invalid_err;
+    }
+
+    // valid URL, go ahead and fetch it
+    info!("Fetching URL: {url}");
+
+    // wait until RateLimiter gives Okay or we timeout
+    let mut limiter_total_wait = 0_u16;
     while limiter.check().is_err() {
+        limiter_total_wait += 1;
         thread::sleep(time::Duration::from_millis(10));
+        if limiter_total_wait > 1000 {
+            break;
+        }
     }
 
     let resp: reqwest::blocking::Response = match client.get(url).send() {
@@ -524,7 +586,7 @@ fn get_response(
 
     let api_respheader = resp.headers().clone();
     let api_status = resp.status();
-    let api_value: String = resp.text().unwrap();
+    let api_value: String = resp.text().unwrap_or_default();
     debug!("api value: {}", &api_value);
 
     let final_value: String;
@@ -583,61 +645,101 @@ fn get_response(
     debug!("final value: {final_value}");
 
     // check if the API has ratelimits and we need to do dynamic throttling to respect the limits or
-    // the API status code is not 200 (most likely 503-service not available or 493-too many request)
-    if api_respheader.contains_key("x-ratelimit-limit")
-        || api_respheader.contains_key("x-ratelimit-limit-second")
-        || api_status != 200
+    // the API status code is not 200 (most likely 503-service not available or 493-too many requests)
+    // because ratelimit is still relatively new, there are several variants of how its used in the wild
+    // we recognize variants with the "x-" prefix (custom header) and the "-second" suffix
+    if api_status != 200
+        || api_respheader.contains_key("ratelimit-limit")
+        || api_respheader.contains_key("ratelimit-limit-remaining")
+        || api_respheader.contains_key("ratelimit-limit-remaining-second")
+        || api_respheader.contains_key("x-ratelimit-limit")
+        || api_respheader.contains_key("x-ratelimit-limit-remaining")
+        || api_respheader.contains_key("x-ratelimit-limit-remaining-second")
     {
-        let ratelimit = api_respheader.get("x-ratelimit-limit");
-        let ratelimit_remaining = api_respheader.get("x-ratelimit-remaining");
-        let ratelimit_reset = api_respheader.get("x-ratelimit-reset");
-        let ratelimit_sec = api_respheader.get("x-ratelimit-limit-second");
-        let ratelimit_remaining_sec = api_respheader.get("x-ratelimit-remaining-second");
-        let ratelimit_reset_sec = api_respheader.get("x-ratelimit-reset-second");
+        let mut ratelimit_remaining = api_respheader.get("ratelimit-remaining");
+        let temp_var = api_respheader.get("x-ratelimit-remaining");
+        if temp_var.is_some() {
+            ratelimit_remaining = temp_var;
+        }
+        let mut ratelimit_reset = api_respheader.get("ratelimit-reset");
+        let temp_var = api_respheader.get("x-ratelimit-reset");
+        if temp_var.is_some() {
+            ratelimit_reset = temp_var;
+        }
+        // some APIs add the "-second" suffix to ratelimit fields
+        let mut ratelimit_remaining_sec = api_respheader.get("ratelimit-remaining-second");
+        let temp_var = api_respheader.get("x-ratelimit-remaining-second");
+        if temp_var.is_some() {
+            ratelimit_remaining_sec = temp_var;
+        }
+        let mut ratelimit_reset_sec = api_respheader.get("ratelimit-reset-second");
+        let temp_var = api_respheader.get("x-ratelimit-reset-second");
+        if temp_var.is_some() {
+            ratelimit_reset_sec = temp_var;
+        }
         let retry_after = api_respheader.get("retry-after");
 
-        debug!("api_status:{api_status:?} rate_limit:{ratelimit:?} {ratelimit_sec:?} rate_limit_remaining:{ratelimit_remaining:?} \
- {ratelimit_remaining_sec:?} ratelimit_reset:{ratelimit_reset:?} {ratelimit_reset_sec:?} retry_after:{retry_after:?}");
+        debug!("api_status:{api_status:?} rate_limit_remaining:{ratelimit_remaining:?} {ratelimit_remaining_sec:?} \
+ratelimit_reset:{ratelimit_reset:?} {ratelimit_reset_sec:?} retry_after:{retry_after:?}");
 
-        let mut remaining = if let Some(ratelimit_remaining) = ratelimit_remaining {
+        // if there's a ratelimit_remaining field in the response header, get it
+        // otherwise, set remaining to sentinel value 9999
+        let mut remaining = ratelimit_remaining.map_or(9999_u64, |ratelimit_remaining| {
             let remaining_str = ratelimit_remaining.to_str().unwrap();
             remaining_str.parse::<u64>().unwrap_or_default()
-        } else {
-            9999_u64
-        };
-
+        });
         if let Some(ratelimit_remaining_sec) = ratelimit_remaining_sec {
             let remaining_sec_str = ratelimit_remaining_sec.to_str().unwrap();
             remaining = remaining_sec_str.parse::<u64>().unwrap_or_default();
         }
 
-        let mut reset = if let Some(ratelimit_reset) = ratelimit_reset {
+        // if there's a ratelimit_reset field in the response header, get it
+        // otherwise, set reset to sentinel value 1
+        let mut reset = ratelimit_reset.map_or(1_u64, |ratelimit_reset| {
             let reset_str = ratelimit_reset.to_str().unwrap();
             reset_str.parse::<u64>().unwrap_or_default()
-        } else {
-            1_u64
-        };
-
+        });
+        if let Some(ratelimit_reset_sec) = ratelimit_reset_sec {
+            let reset_sec_str = ratelimit_reset_sec.to_str().unwrap();
+            reset = reset_sec_str.parse::<u64>().unwrap_or_default();
+        }
+        // if there's a retry_after field in the response header, get it
+        // and set reset to it
         if let Some(retry_after) = retry_after {
             let retry_str = retry_after.to_str().unwrap();
             reset = retry_str.parse::<u64>().unwrap_or_default();
         }
 
-        if remaining == 0 || reset > 1 {
-            // minimal random sleep delta between 50 and 400 milliseconds
-            let rand_sleep: u64 = rand::thread_rng().gen_range(50..400);
+        // if there is only one more remaining call per our ratelimit quota or
+        // reset is greater than 1, dynamically throttle and sleep for ~reset seconds
+        if remaining <= 1 || reset > 1 {
+            // we add a small random delta to how long fetch sleeps
+            // as we need to add a little jitter as per the spec
+            // https://tools.ietf.org/id/draft-polli-ratelimit-headers-00.html#rfc.section.7.5
+            let rand_addl_sleep = (reset * 1000) + rand::thread_rng().gen_range(20..200);
 
-            debug!(
-                "sleeping for {reset}.{} seconds until ratelimit is reset or retry_after has elapsed",
-                rand_sleep / 100
+            info!(
+                "sleeping for {rand_addl_sleep} milliseconds until ratelimit is reset or retry_after has elapsed"
             );
 
-            // sleep for reset seconds + rand_sleep milliseconds, to be sure
-            thread::sleep(time::Duration::from_millis((reset * 1_000) + rand_sleep));
+            // sleep for reset seconds + rand_addl_sleep milliseconds
+            thread::sleep(time::Duration::from_millis(rand_addl_sleep));
         }
     }
 
-    final_value
+    if include_existing_columns {
+        final_value
+    } else if final_value.starts_with("HTTP ERROR ") && flag_store_error {
+        let json_error = json!({
+            "errors": [{
+                "title": "HTTP ERROR",
+                "detail": final_value
+            }]
+        });
+        format!("{json_error}")
+    } else {
+        final_value
+    }
 }
 
 use jql::groups_walker;

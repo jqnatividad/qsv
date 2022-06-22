@@ -169,7 +169,7 @@ impl<R: io::Read + io::Seek, W: io::Write> IoState<R, W> {
     fn write_headers1(&mut self) -> CliResult<()> {
         if !self.no_headers {
             let headers = self.rdr1.byte_headers()?;
-            self.wtr.write_record(&*headers)?;
+            self.wtr.write_record(headers)?;
         }
         Ok(())
     }
@@ -361,8 +361,8 @@ impl Args {
     ) -> CliResult<(Selection, Selection)> {
         let headers1 = rdr1.byte_headers()?;
         let headers2 = rdr2.byte_headers()?;
-        let select1 = rconf1.selection(&*headers1)?;
-        let select2 = rconf2.selection(&*headers2)?;
+        let select1 = rconf1.selection(headers1)?;
+        let select2 = rconf2.selection(headers2)?;
         if select1.len() != select2.len() {
             return fail!(format!(
                 "Column selections must have the same number of columns, \

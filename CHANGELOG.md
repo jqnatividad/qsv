@@ -5,6 +5,52 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.56.0] - 2022-06-20
+### Added
+* `fetch` is now multithreaded! 🚀🚀🚀 - with threadsafe memoized caching, dynamic throttling & http2 adaptive flow control https://github.com/jqnatividad/qsv/pull/354
+
+### Changed
+* `fetch`: do more expensive ops behind cache https://github.com/jqnatividad/qsv/pull/355
+* applied BetterTOML formatting to Cargo.toml
+* `exclude`, `flatten` & `join`: applied clippy recommendation for borrow_deref_ref https://github.com/jqnatividad/qsv/commit/bf1ac90185947a6d923613f17c4af616631dc149
+* `utils`: minor cleanup of version fn https://github.com/jqnatividad/qsv/commit/217702b51785f51d6924608a5122c405ff384fef
+* `validate`: perf tweak - use collect_into_vec to reduce allocations
+* `apply`: perf tweak - use collect_into_vec to reduce allocations
+* removed `thiserror` dependency
+* pin Rust Nightly to 2022-06-19
+* Bump robinraju/release-downloader from 1.3 to 1.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/351
+* Bump crossbeam-channel from 0.5.4 to 0.5.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/352
+* Bump redis patch
+* cargo update bump several other dependencies
+
+### Fixed
+* `fetch`: better error handling https://github.com/jqnatividad/qsv/pull/353
+
+
+###
+## [0.55.5] - 2022-06-16
+### Changed
+* `fetch`: performance tweaks https://github.com/jqnatividad/qsv/pull/350
+* Bump titlecase from 1.1.0 to 2.0.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/349
+* Bump sysinfo from 0.24.3 to 0.24.4
+
+### Fixed
+* `fetch`: convert non-persistent cache from an Unbound cache to a Sized LRU cache, 
+so we don't run out of memory if the file being processed is very large and cache hits are low.
+https://github.com/jqnatividad/qsv/commit/4349fc9389a32c0d9544be824d1f42b1af65974d
+
+## [0.55.4] - 2022-06-15
+### Changed
+* `fetch`: preemptively throttle down before we hit the ratelimit quota
+
+## [0.55.3] - 2022-06-15
+### Added
+* `fetch`: add "dynamic throttling". If response header has [rate-limit](https://tools.ietf.org/id/draft-polli-ratelimit-headers-00.html) or [retry-after](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Retry-After) fields, fetch will dynamically throttle itself as needed. https://github.com/jqnatividad/qsv/pull/348
+
+### Changed
+* cargo update bump dependencies
+* Pin Rust nightly to 2022-06-14
+
 ## [0.55.2] - 2022-06-14
 ### Changed
 * `fetch`: more robust/consistent error handling https://github.com/jqnatividad/qsv/pull/347
