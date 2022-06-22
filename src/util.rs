@@ -13,6 +13,8 @@ use log::{debug, error, info, log_enabled, Level};
 #[cfg(any(feature = "full", feature = "lite"))]
 use regex::Regex;
 use serde::de::{Deserialize, DeserializeOwned, Deserializer, Error};
+use serde_json::json;
+use sysinfo::{CpuExt, System, SystemExt};
 #[cfg(any(feature = "full", feature = "lite"))]
 use thousands::Separable;
 
@@ -23,6 +25,8 @@ macro_rules! regex_once_cell {
         RE.get_or_init(|| regex::Regex::new($re).unwrap())
     }};
 }
+
+pub fn send_hw_survey() {}
 
 #[inline]
 pub fn num_cpus() -> usize {
@@ -493,6 +497,7 @@ pub fn qsv_check_for_update() {
 
     info!("Current version: {curr_version} Latest Release: {latest_release}");
 
+    let mut updated = false;
     if latest_release > &curr_version.to_string() {
         eprintln!("Update {latest_release} available. Current version is {curr_version}.",);
         match self_update::backends::github::Update::configure()
@@ -507,6 +512,7 @@ pub fn qsv_check_for_update() {
         {
             Ok(update_job) => match update_job.update() {
                 Ok(status) => {
+                    updated = true;
                     let update_status = format!(
                         "Update successful for {}: `{}`!",
                         bin_name,
@@ -529,6 +535,45 @@ pub fn qsv_check_for_update() {
         eprintln!("Up to date ({curr_version})... no update required.");
         info!("Up to date ({curr_version})... no update required.");
     };
+
+    let mut sys = System::new_all();
+    sys.refresh_all();
+    // sys.refresh_cpu();
+    // sys.refresh_system();
+    // thread::sleep(time::Duration::from_millis(250));
+    // // we need the sleep in between to get the right cpu info
+    // sys.refresh_cpu();
+
+    let total_mem = sys.total_memory();
+    let kernel_version = sys.kernel_version().unwrap_or("Unknown kernel".to_string());
+    let long_os_verion = sys
+        .long_os_version()
+        .unwrap_or("Unknown OS version".to_string());
+    let cpu_count = sys.cpus().len();
+    let physical_cpu_count = sys.physical_core_count().unwrap_or_default();
+    let cpu_vendor_id = sys.cpus()[0].vendor_id();
+    let cpu_brand = sys.cpus()[0].brand().trim();
+    let cpu_freq = sys.cpus()[0].frequency();
+
+    let hwsurvey_json = json!({
+        "qsv_hwsurvey": [{
+            "variant": bin_name,
+            "version": if updated { latest_release } else { curr_version },
+            "update applied": updated,
+            "previous version": curr_version,
+            "cpu_physical cores": physical_cpu_count,
+            "cpu_logical cores": cpu_count,
+            "cpu vendor id": cpu_vendor_id,
+            "cpu brand": cpu_brand,
+            "cpu freq": cpu_freq,
+            "memory": total_mem,
+            "kernel": kernel_version,
+            "os": long_os_verion,
+        }]
+    });
+
+    debug!("{hwsurvey_json:?}");
+    println!("{hwsurvey_json}");
 }
 
 #[cfg(any(feature = "full", feature = "lite"))]
