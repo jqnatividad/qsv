@@ -25,8 +25,6 @@ macro_rules! regex_once_cell {
     }};
 }
 
-pub fn send_hw_survey() {}
-
 #[inline]
 pub fn num_cpus() -> usize {
     thread::available_parallelism().unwrap().get()
@@ -538,17 +536,14 @@ pub fn qsv_check_for_update() {
 
     let mut sys = System::new_all();
     sys.refresh_all();
-    // sys.refresh_cpu();
-    // sys.refresh_system();
-    // thread::sleep(time::Duration::from_millis(250));
-    // // we need the sleep in between to get the right cpu info
-    // sys.refresh_cpu();
 
     let total_mem = sys.total_memory();
-    let kernel_version = sys.kernel_version().unwrap_or("Unknown kernel".to_string());
+    let kernel_version = sys
+        .kernel_version()
+        .unwrap_or_else(|| "Unknown kernel".to_string());
     let long_os_verion = sys
         .long_os_version()
-        .unwrap_or("Unknown OS version".to_string());
+        .unwrap_or_else(|| "Unknown OS version".to_string());
     let cpu_count = sys.cpus().len();
     let physical_cpu_count = sys.physical_core_count().unwrap_or_default();
     let cpu_vendor_id = sys.cpus()[0].vendor_id();
@@ -572,8 +567,25 @@ pub fn qsv_check_for_update() {
         }]
     });
 
-    debug!("{hwsurvey_json:?}");
-    println!("{hwsurvey_json}");
+    debug!("HW survey: {hwsurvey_json:?}");
+
+    let hwsurvey_url = match env::var("QSV_HWSURVEY_URL") {
+        Ok(v) => v,
+        Err(_) => "".to_string(),
+    };
+
+    if !hwsurvey_url.is_empty() {
+        let client = reqwest::blocking::Client::new();
+        if let Ok(resp) = client
+            .post(hwsurvey_url)
+            .body(hwsurvey_json.to_string())
+            .send()
+        {
+            debug!("hw_survey response: {:?}", &resp);
+        } else {
+            error!("Cannot send hw survey");
+        };
+    }
 }
 
 #[cfg(any(feature = "full", feature = "lite"))]
