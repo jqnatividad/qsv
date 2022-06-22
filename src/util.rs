@@ -549,9 +549,14 @@ pub fn qsv_check_for_update() {
     let cpu_vendor_id = sys.cpus()[0].vendor_id();
     let cpu_brand = sys.cpus()[0].brand().trim();
     let cpu_freq = sys.cpus()[0].frequency();
+    let id = std::time::SystemTime::now()
+        .duration_since(std::time::SystemTime::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
 
-    let hwsurvey_json = json!({
-        "qsv_hwsurvey": [{
+    let hwsurvey_json = json!(
+        {
+            "id": id,
             "variant": bin_name,
             "version": if updated { latest_release } else { curr_version },
             "update applied": updated,
@@ -564,8 +569,8 @@ pub fn qsv_check_for_update() {
             "memory": total_mem,
             "kernel": kernel_version,
             "os": long_os_verion,
-        }]
-    });
+        }
+    );
 
     debug!("HW survey: {hwsurvey_json:?}");
 
@@ -585,6 +590,8 @@ pub fn qsv_check_for_update() {
         } else {
             error!("Cannot send hw survey");
         };
+    } else {
+        debug!("QSV_HWSURVEY_URL not set.");
     }
 }
 
