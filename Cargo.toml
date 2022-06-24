@@ -157,15 +157,16 @@ redis = { version = "0.21", default-features = false }
 serial_test = "0.7"
 
 [patch.crates-io]
-calamine   = { git = "https://github.com/jqnatividad/calamine", rev = "c8623af0165e6d42519c5c5644ae11099022001b" }
-csv        = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
-csv-core   = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
-csv-index  = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
-docopt     = { git = "https://github.com/jqnatividad/docopt.rs", branch = "perf-clippy-2021" }
-ext-sort   = { git = "https://github.com/jqnatividad/ext-sort-rs", rev = "fd955e2462a65cae0de9c9e5113ea56d2904106a" }
-jsonschema = { git = "https://github.com/Stranger6667/jsonschema-rs", rev = "bfe69d393a842e331832fce55a43e0051b988761" }
-grex       = { git = "https://github.com/jqnatividad/grex", rev = "45af84167b8bd6d38c9e36ada7fe677bebe8886f" }
-redis      = { git = "https://github.com/mitsuhiko/redis-rs", rev = "bb329dd010dab71e96a730818dc2e4684f563789" }
+calamine     = { git = "https://github.com/jqnatividad/calamine", rev = "c8623af0165e6d42519c5c5644ae11099022001b" }
+csv          = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
+csv-core     = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
+csv-index    = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
+docopt       = { git = "https://github.com/jqnatividad/docopt.rs", branch = "perf-clippy-2021" }
+ext-sort     = { git = "https://github.com/jqnatividad/ext-sort-rs", rev = "fd955e2462a65cae0de9c9e5113ea56d2904106a" }
+jsonschema   = { git = "https://github.com/jqnatividad/jsonschema-rs", rev = "90fb1bbf54b744a3eb176015860ff0721d115703" }
+grex         = { git = "https://github.com/jqnatividad/grex", rev = "45af84167b8bd6d38c9e36ada7fe677bebe8886f" }
+redis        = { git = "https://github.com/mitsuhiko/redis-rs", rev = "bb329dd010dab71e96a730818dc2e4684f563789" }
+publicsuffix = { git = "https://github.com/jqnatividad/publicsuffix", branch = "bump-hashbrown"}
 
 [features]
 default = ["mimalloc"]
