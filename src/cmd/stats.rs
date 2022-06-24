@@ -150,6 +150,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 }
 
 impl Args {
+    #[allow(clippy::unnecessary_wraps)]
     pub fn sequential_stats(&self, whitelist: &str) -> CliResult<(csv::ByteRecord, Vec<Stats>)> {
         let mut rdr = self.rconfig().reader()?;
         let (headers, sel) = self.sel_headers(&mut rdr)?;
@@ -165,6 +166,7 @@ impl Args {
         Ok((headers, stats))
     }
 
+    #[allow(clippy::unnecessary_wraps)]
     pub fn parallel_stats(
         &self,
         whitelist: &str,
@@ -743,7 +745,7 @@ impl fmt::Debug for FieldType {
     }
 }
 
-/// TypedSum keeps a rolling sum of the data seen.
+/// `TypedSum` keeps a rolling sum of the data seen.
 /// It sums integers until it sees a float, at which point it sums floats.
 #[derive(Clone, Default)]
 struct TypedSum {
@@ -811,7 +813,7 @@ impl Commute for TypedSum {
     }
 }
 
-/// TypedMinMax keeps track of minimum/maximum values for each possible type
+/// `TypedMinMax` keeps track of minimum/maximum values for each possible type
 /// where min/max makes sense.
 #[derive(Clone, Default)]
 struct TypedMinMax {

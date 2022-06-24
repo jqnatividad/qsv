@@ -2,7 +2,6 @@ use std::borrow::ToOwned;
 use std::env;
 use std::fs;
 use std::io::{self, Read};
-use std::ops::Deref;
 use std::path::PathBuf;
 
 use log::{debug, info, warn};
@@ -100,7 +99,7 @@ impl Config {
         };
         let (path, mut delim) = match *path {
             None => (None, default_delim),
-            Some(ref s) if s.deref() == "-" => (None, default_delim),
+            Some(ref s) if &**s == "-" => (None, default_delim),
             Some(ref s) => {
                 let path = PathBuf::from(s);
                 let file_extension = path

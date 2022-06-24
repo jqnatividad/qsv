@@ -33,6 +33,7 @@ struct Args {
     flag_output: Option<String>,
 }
 
+#[allow(clippy::needless_pass_by_value)]
 fn recurse_to_infer_headers(value: &Value, headers: &mut Vec<Vec<String>>, path: Vec<String>) {
     match value {
         Value::Object(map) => {
@@ -65,6 +66,7 @@ fn recurse_to_infer_headers(value: &Value, headers: &mut Vec<Vec<String>>, path:
     }
 }
 
+#[allow(clippy::unnecessary_wraps)]
 fn infer_headers(value: &Value) -> Option<Vec<Vec<String>>> {
     let mut headers: Vec<Vec<String>> = Vec::new();
 
@@ -87,7 +89,7 @@ fn get_value_at_path(value: &Value, path: &[String]) -> Option<Value> {
         }
     }
 
-    Some(current.to_owned())
+    Some(current.clone())
 }
 
 fn json_line_to_csv_record(value: &Value, headers: &[Vec<String>]) -> csv::StringRecord {

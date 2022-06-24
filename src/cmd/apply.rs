@@ -426,7 +426,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // we prep it so we only populate the lookup vec with the index of these columns
     // so SimpleCurlyFormat is performant
     let mut dynfmt_fields = Vec::with_capacity(10); // 10 is a reasonable default to save allocs
-    let mut dynfmt_template = args.flag_formatstr.to_owned();
+    let mut dynfmt_template = args.flag_formatstr.clone();
     if args.cmd_dynfmt {
         if args.flag_no_headers {
             return fail!("dynfmt operation requires headers.");
@@ -503,7 +503,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             match rdr.read_record(&mut batch_record) {
                 Ok(has_data) => {
                     if has_data {
-                        batch.push(batch_record.to_owned());
+                        batch.push(batch_record.clone());
                     } else {
                         // nothing else to add to batch
                         break;

@@ -100,7 +100,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .writer()?;
     let mut record = csv::StringRecord::new();
     let mut trimmed_record = csv::StringRecord::new();
-    let mut count = 0_u32; // Excel can only hold 1m rows anyways, ODS - only 32k
+    let mut count = 0_u32; // use u32 as Excel can only hold 1m rows anyways, ODS - only 32k
     for row in range.rows() {
         record.clear();
         for cell in row {
@@ -108,7 +108,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 DataType::Empty => record.push_field(""),
                 DataType::String(ref s) => record.push_field(s),
                 DataType::Float(ref f) | DataType::DateTime(ref f) => {
-                    record.push_field(&f.to_string())
+                    record.push_field(&f.to_string());
                 }
                 DataType::Int(ref i) => record.push_field(&i.to_string()),
                 DataType::Error(ref e) => record.push_field(&format!("{e:?}")),

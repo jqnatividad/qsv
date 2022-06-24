@@ -290,6 +290,7 @@ pub const fn num_of_chunks(nitems: usize, chunk_size: usize) -> usize {
     n
 }
 
+#[allow(clippy::cast_sign_loss)]
 pub fn last_modified(md: &fs::Metadata) -> u64 {
     use filetime::FileTime;
     FileTime::from_last_modification_time(md).unix_seconds() as u64

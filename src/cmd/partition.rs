@@ -181,10 +181,7 @@ impl WriterGenerator {
         };
 
         // Now check for collisions.
-        if !self.used.contains(&base) {
-            self.used.insert(base.clone());
-            base
-        } else {
+        if self.used.contains(&base) {
             loop {
                 let candidate = format!("{}_{}", &base, self.counter);
                 self.counter = self.counter.checked_add(1).unwrap_or_else(|| {
@@ -198,6 +195,9 @@ impl WriterGenerator {
                     return candidate;
                 }
             }
+        } else {
+            self.used.insert(base.clone());
+            base
         }
     }
 }

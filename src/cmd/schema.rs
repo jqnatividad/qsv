@@ -360,8 +360,8 @@ fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<S
     Ok(properties_map)
 }
 
-/// get stats records from cmd::stats
-/// returns tuple (csv_fields, csv_stats, stats_col_index_map)
+/// get stats records from `cmd::stats`
+/// returns tuple (`csv_fields`, `csv_stats`, `stats_col_index_map`)
 fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap<String, usize>)> {
     let stats_args = crate::cmd::stats::Args {
         arg_input: args.arg_input.clone(),
@@ -451,7 +451,7 @@ fn build_low_cardinality_column_selector_arg(
     column_select_arg
 }
 
-/// get frequency tables from cmd::stats
+/// get frequency tables from `cmd::stats`
 /// returns map of unique valules keyed by header
 fn get_unique_values(
     args: &Args,
@@ -613,7 +613,7 @@ fn generate_string_patterns(
             .with_minimum_repetitions(2)
             .build();
 
-        pattern_map.insert(header.to_owned(), regexp);
+        pattern_map.insert(header.clone(), regexp);
     }
 
     debug!("pattern map: {pattern_map:?}");

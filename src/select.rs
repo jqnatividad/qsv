@@ -155,7 +155,7 @@ impl SelectorParser {
             self.bump();
             self.parse_quoted_name()?
         } else {
-            self.parse_name()?
+            self.parse_name()
         };
         Ok(if self.cur() == Some('[') {
             let idx = self.parse_index()?;
@@ -168,7 +168,7 @@ impl SelectorParser {
         })
     }
 
-    fn parse_name(&mut self) -> Result<String, String> {
+    fn parse_name(&mut self) -> String {
         let mut name = String::new();
         loop {
             if self.is_end_of_field() || self.cur() == Some('[') {
@@ -177,7 +177,7 @@ impl SelectorParser {
             name.push(self.cur().unwrap());
             self.bump();
         }
-        Ok(name)
+        name
     }
 
     fn parse_quoted_name(&mut self) -> Result<String, String> {
@@ -399,6 +399,7 @@ impl Selection {
         row: &'b csv::ByteRecord,
     ) -> iter::Scan<slice::Iter<'a, usize>, &'b csv::ByteRecord, _GetField> {
         // This is horrifying.
+        #[allow(clippy::unnecessary_wraps)]
         fn get_field<'c>(row: &mut &'c csv::ByteRecord, idx: &usize) -> Option<&'c [u8]> {
             Some(&row[*idx])
         }
@@ -454,6 +455,8 @@ impl NormalSelection {
         fn filmap<T>(v: Option<T>) -> Option<T> {
             v
         }
+        #[allow(clippy::option_option)]
+        #[allow(clippy::unnecessary_wraps)]
         fn get_field<T>(set: &mut &[bool], t: (usize, T)) -> Option<Option<T>> {
             let (i, v) = t;
             if i < set.len() && set[i] {

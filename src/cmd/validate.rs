@@ -258,7 +258,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         // non-allocating trimming in place is much faster on the record level
                         // with our csv fork than doing field-by-field std::str::trim which is allocating
                         record.trim();
-                        batch.push(record.to_owned());
+                        batch.push(record.clone());
                     } else {
                         // nothing else to add to batch
                         break;
@@ -711,7 +711,9 @@ fn validate_json_instance(
     let validation_output = schema_compiled.apply(instance);
 
     // If validation output is Invalid, then grab field names and errors
-    if !validation_output.flag() {
+    if validation_output.flag() {
+        None
+    } else {
         // get validation errors as String
         let validation_errors: Vec<(String, String)> = match validation_output.basic() {
             BasicOutput::Invalid(errors) => errors
@@ -734,8 +736,6 @@ fn validate_json_instance(
         };
 
         Some(validation_errors)
-    } else {
-        None
     }
 }
 

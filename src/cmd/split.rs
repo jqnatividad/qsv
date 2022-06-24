@@ -93,6 +93,7 @@ impl Args {
         Ok(())
     }
 
+    #[allow(clippy::unnecessary_wraps)]
     fn parallel_split(&self, idx: &Indexed<fs::File, fs::File>) -> CliResult<()> {
         let nchunks = util::num_of_chunks(idx.count() as usize, self.flag_size);
         let pool = ThreadPool::new(util::njobs(self.flag_jobs));

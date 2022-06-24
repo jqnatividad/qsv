@@ -317,7 +317,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let jql_selector: Option<String> = if let Some(jql_file) = args.flag_jqlfile {
         Some(fs::read_to_string(jql_file)?)
     } else {
-        args.flag_jql.as_ref().map(|jql| jql.to_string())
+        args.flag_jql.as_ref().map(std::string::ToString::to_string)
     };
 
     // amortize memory allocation by reusing record
@@ -341,7 +341,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             match rdr.read_byte_record(&mut batch_record) {
                 Ok(has_data) => {
                     if has_data {
-                        batch.push(batch_record.to_owned());
+                        batch.push(batch_record.clone());
                     } else {
                         // nothing else to add to batch
                         break;
