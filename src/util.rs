@@ -559,20 +559,18 @@ pub fn qsv_check_for_update() {
             "id": id,
             "variant": bin_name,
             "version": if updated { latest_release } else { curr_version },
-            "update applied": updated,
-            "previous version": curr_version,
-            "cpu_physical cores": physical_cpu_count,
-            "cpu_logical cores": cpu_count,
-            "cpu vendor id": cpu_vendor_id,
-            "cpu brand": cpu_brand,
-            "cpu freq": cpu_freq,
+            "update_applied": updated,
+            "previous_version": curr_version,
+            "cpu_physical_cores": physical_cpu_count,
+            "cpu_logical_cores": cpu_count,
+            "cpu_vendor_id": cpu_vendor_id,
+            "cpu_brand": cpu_brand,
+            "cpu_freq": cpu_freq,
             "memory": total_mem,
             "kernel": kernel_version,
             "os": long_os_verion,
         }
     );
-
-    debug!("HW survey: {hwsurvey_json:?}");
 
     let hwsurvey_url = match env::var("QSV_HWSURVEY_URL") {
         Ok(v) => v,
@@ -584,6 +582,8 @@ pub fn qsv_check_for_update() {
         if let Ok(resp) = client
             .post(hwsurvey_url)
             .body(hwsurvey_json.to_string())
+            .header(reqwest::header::CONTENT_TYPE, "application/json")
+            .header(reqwest::header::HOST, "qsv.rs")
             .send()
         {
             debug!("hw_survey response: {:?}", &resp);
