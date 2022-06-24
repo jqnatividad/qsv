@@ -204,7 +204,6 @@ impl Args {
         Ok((headers, merge_all(recv.iter()).unwrap_or_default()))
     }
 
-    #[inline]
     pub fn stats_to_records(&self, stats: Vec<Stats>) -> Vec<csv::StringRecord> {
         let mut records = Vec::with_capacity(stats.len());
         records.extend(repeat(csv::StringRecord::new()).take(stats.len()));
@@ -781,7 +780,6 @@ impl TypedSum {
         }
     }
 
-    #[inline]
     fn show(&self, typ: FieldType) -> Option<String> {
         match typ {
             TNull | TString | TDate | TDateTime => None,
@@ -859,7 +857,6 @@ impl TypedMinMax {
         }
     }
 
-    #[inline]
     fn len_range(&self) -> Option<(String, String)> {
         match (self.str_len.min(), self.str_len.max()) {
             (Some(min), Some(max)) => {
@@ -873,7 +870,6 @@ impl TypedMinMax {
         }
     }
 
-    #[inline]
     fn show(&self, typ: FieldType) -> Option<(String, String)> {
         match typ {
             TNull => None,
@@ -924,7 +920,7 @@ impl Commute for TypedMinMax {
     }
 }
 
-#[inline(always)]
+#[inline]
 fn from_bytes<T: FromStr>(bytes: &[u8]) -> T
 where
     <T as FromStr>::Err: std::fmt::Debug,
