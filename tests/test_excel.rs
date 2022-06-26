@@ -72,6 +72,27 @@ fn excel_trim_xls() {
 }
 
 #[test]
+fn excel_date_xls() {
+    let wrk = Workdir::new("excel_date_xls");
+
+    let xls_file = wrk.load_test_file("excel-xls.xls");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--sheet").arg("date test").arg(xls_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["date_col", "num_col"],
+        svec!["2001-12-25", "1"],
+        svec!["2001-09-11 08:30:00", "3"],
+        svec!["7/4/1976  11:00:00 AM UTC", "5"],
+        svec!["1970-01-01", "7"],
+        svec!["1989-12-31", "11"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn excel_open_ods() {
     let wrk = Workdir::new("excel_open_ods");
 
