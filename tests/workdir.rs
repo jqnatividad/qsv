@@ -87,6 +87,7 @@ impl Workdir {
         let stdout: String = self.stdout(cmd);
         let mut rdr = csv::ReaderBuilder::new()
             .has_headers(false)
+            .flexible(true)
             .from_reader(io::Cursor::new(stdout));
 
         let records: Vec<Vec<String>> = rdr
