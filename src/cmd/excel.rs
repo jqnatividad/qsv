@@ -8,7 +8,7 @@ use std::cmp;
 use std::path::PathBuf;
 use thousands::Separable;
 
-static USAGE: &str = "
+static USAGE: &str = r#"
 Exports a specified Excel/ODS sheet to a CSV file.
 
 Usage:
@@ -24,11 +24,19 @@ Excel options:
     --trim                     Trim all fields of records so that leading and trailing
                                whitespaces (Unicode definition) are removed.
                                Also removes embedded linebreaks.
+    --dates-whitelist <list>   The case-insensitive patterns to look for when 
+                               shortlisting fields for date inferencing.
+                               i.e. if the field's name has any of these patterns,
+                               it is shortlisted for date inferencing.
+                               Set to "all" to inspect ALL fields for
+                               date/datetime types. Otherwise, date fields will
+                               be returned as number of days since 1900 (Excel epoch time).
+                               [default: date,time,due,opened,closed]                               
 
 Common options:
     -h, --help                 Display this message
     -o, --output <file>        Write output to <file> instead of stdout.
-";
+"#;
 
 #[derive(Deserialize)]
 struct Args {
@@ -36,6 +44,7 @@ struct Args {
     flag_sheet: String,
     flag_flexible: bool,
     flag_trim: bool,
+    flag_dates_whitelist: String,
     flag_output: Option<String>,
 }
 
@@ -95,20 +104,55 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         return fail!("Cannot get worksheet data from {sheet}");
     };
 
+    let whitelist_lower = args.flag_dates_whitelist.to_lowercase();
+    log::info!("inferring dates with date-whitelist: {whitelist_lower}");
+
+    let dates_whitelist =
+        itertools::Itertools::collect_vec(whitelist_lower.split(',').map(|s| s.trim().to_string()));
+
     let mut wtr = Config::new(&args.flag_output)
         .flexible(args.flag_flexible)
         .writer()?;
     let mut record = csv::StringRecord::new();
     let mut trimmed_record = csv::StringRecord::new();
+    let mut date_flag: Vec<bool> = Vec::new();
     let mut count = 0_u32; // use u32 as Excel can only hold 1m rows anyways, ODS - only 32k
-    for row in range.rows() {
+    for (row_idx, row) in range.rows().enumerate() {
         record.clear();
-        for cell in row {
+        for (col_idx, cell) in row.iter().enumerate() {
+            if row_idx == 0 {
+                // its the header row, capture the column names
+                let column_name = cell.get_string().unwrap_or_default();
+                record.push_field(column_name);
+                if whitelist_lower == "all" {
+                    date_flag.insert(col_idx, true);
+                } else {
+                    // see if the column name is in the dates_whitelist
+                    let mut date_found = false;
+                    for whitelist_item in &dates_whitelist {
+                        if column_name.contains(whitelist_item) {
+                            date_found = true;
+                            log::info!("inferring dates for {column_name}");
+                            break;
+                        }
+                    }
+                    date_flag.insert(col_idx, date_found);
+                }
+                continue;
+            }
             match *cell {
                 DataType::Empty => record.push_field(""),
                 DataType::String(ref s) => record.push_field(s),
                 DataType::Float(ref f) | DataType::DateTime(ref f) => {
-                    record.push_field(&f.to_string());
+                    if date_flag[col_idx] {
+                        if f.fract() > 0.0 {
+                            record.push_field(&format!("{}", &cell.as_datetime().unwrap()));
+                        } else {
+                            record.push_field(&format!("{}", &cell.as_date().unwrap()));
+                        }
+                    } else {
+                        record.push_field(&f.to_string());
+                    }
                 }
                 DataType::Int(ref i) => record.push_field(&i.to_string()),
                 DataType::Error(ref e) => record.push_field(&format!("{e:?}")),
