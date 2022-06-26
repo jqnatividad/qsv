@@ -71,7 +71,7 @@ cached = { version = "0.34", default-features = false, features = [
     "proc_macro",
     "redis_store",
 ], optional = true }
-calamine = "0.18"
+calamine = { version = "0.18", features = ["dates"] }
 censor = { version = "0.2", optional = true }
 crossbeam-channel = "0.5"
 csv = "1.1"
@@ -157,7 +157,7 @@ redis = { version = "0.21", default-features = false }
 serial_test = "0.7"
 
 [patch.crates-io]
-calamine     = { git = "https://github.com/jqnatividad/calamine", rev = "c8623af0165e6d42519c5c5644ae11099022001b" }
+calamine     = { git = "https://github.com/jqnatividad/calamine", branch = "master" }
 csv          = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
 csv-core     = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
 csv-index    = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
