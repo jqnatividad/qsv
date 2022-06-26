@@ -11,6 +11,17 @@ use thousands::Separable;
 static USAGE: &str = r#"
 Exports a specified Excel/ODS sheet to a CSV file.
 
+NOTE: Excel stores dates as number of days since 1900.
+https://support.microsoft.com/en-us/office/date-systems-in-excel-e7fe7167-48a9-4b96-bb53-5612a800b487
+
+Because of this, this command uses a --dates-whitelist to determine if it
+will attempt to transform a numeric value to an ISO 8601 date based on its name.
+If the column name satisfies the whitelist and a row value for a candidate date column
+is a float, it will infer a date for integer values and a datetime for float values.
+
+We need a whitelist so we know to only do this date conversions for date fields and
+not all columns with numeric values.
+
 Usage:
     qsv excel [options] <input>
 
@@ -28,9 +39,11 @@ Excel options:
                                shortlisting fields for date inferencing.
                                i.e. if the field's name has any of these patterns,
                                it is shortlisted for date inferencing.
-                               Set to "all" to inspect ALL fields for
-                               date/datetime types. Otherwise, date fields will
-                               be returned as number of days since 1900 (Excel epoch time).
+                               Set to "all" to inspect ALL fields for date/datetime types.
+                               Note that doing so will cause false positive data conversions
+                               for numeric columns.
+                               Otherwise, Excel date fields that do not satisfy the
+                               whitelist will be returned as number of days since 1900.
                                [default: date,time,due,opened,closed]                               
 
 Common options:
