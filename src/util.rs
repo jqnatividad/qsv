@@ -9,7 +9,7 @@ use docopt::Docopt;
 use indicatif::{ProgressBar, ProgressStyle};
 #[allow(unused_imports)]
 use log::{debug, error, info, log_enabled, Level};
-#[cfg(any(feature = "full", feature = "lite"))]
+#[cfg(any(feature = "apply", feature = "fetch", feature = "python"))]
 use regex::Regex;
 use serde::de::{Deserialize, DeserializeOwned, Deserializer, Error};
 #[cfg(any(feature = "full", feature = "lite"))]
@@ -532,7 +532,7 @@ pub fn qsv_check_for_update() {
     };
 }
 
-#[cfg(any(feature = "full", feature = "lite"))]
+#[cfg(any(feature = "apply", feature = "fetch", feature = "python"))]
 pub fn safe_header_names(headers: &csv::StringRecord, check_first_char: bool) -> Vec<String> {
     // Create "safe" var/key names - to support dynfmt/url-template and valid python vars
     // Replace whitespace/invalid chars with _.
