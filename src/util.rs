@@ -541,6 +541,7 @@ pub fn qsv_check_for_update() {
 // track of qsv's usage in the wild, so we can do a
 // better job of prioritizing platforms/features we support
 // no personally identifiable information is collected
+#[cfg(any(feature = "full", feature = "lite"))]
 fn send_hwsurvey(bin_name: &str, updated: bool, latest_release: &str, curr_version: &str) {
     const TARGET: &str = env!("TARGET");
     static HW_SURVEY_URL: &str =
