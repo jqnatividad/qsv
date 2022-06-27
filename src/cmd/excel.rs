@@ -16,8 +16,10 @@ https://support.microsoft.com/en-us/office/date-systems-in-excel-e7fe7167-48a9-4
 
 Because of this, this command uses a --dates-whitelist to determine if it
 will attempt to transform a numeric value to an ISO 8601 date based on its name.
+
 If the column name satisfies the whitelist and a row value for a candidate date column
-is a float, it will infer a date for integer values and a datetime for float values.
+is a float - it will infer a date for whole numbers and a datetime for float values with
+fractional components (e.g. 40729 is 2011-07-05, 37145.354166666664 is 2001-09-11 8:30:00).
 
 We need a whitelist so we know to only do this date conversions for date fields and
 not all columns with numeric values.
