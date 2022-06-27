@@ -534,35 +534,18 @@ pub fn qsv_check_for_update() {
         info!("Up to date ({curr_version})... no update required.");
     };
 
-    let hwsurvey_url = match env::var("QSV_HWSURVEY_URL") {
-        Ok(v) => v,
-        Err(_) => "".to_string(),
-    };
-
-    if hwsurvey_url.is_empty() {
-        debug!("QSV_HWSURVEY_URL not set.");
-    } else {
-        send_hwsurvey(
-            &hwsurvey_url,
-            &bin_name,
-            updated,
-            latest_release,
-            curr_version,
-        );
-    }
+    send_hwsurvey(&bin_name, updated, latest_release, curr_version);
 }
 
 // the qsv hwsurvey allows us to keep a better
 // track of qsv's usage in the wild, so we can do a
 // better job of prioritizing platforms/features we support
 // no personally identifiable information is collected
-fn send_hwsurvey(
-    hwsurvey_url: &str,
-    bin_name: &str,
-    updated: bool,
-    latest_release: &str,
-    curr_version: &str,
-) {
+fn send_hwsurvey(bin_name: &str, updated: bool, latest_release: &str, curr_version: &str) {
+    const TARGET: &str = env!("TARGET");
+    static HW_SURVEY_URL: &str =
+        "https://30r6xto02k.execute-api.us-west-2.amazonaws.com/dev/json-example";
+
     let mut sys = System::new_all();
     sys.refresh_all();
     let total_mem = sys.total_memory();
@@ -599,10 +582,8 @@ fn send_hwsurvey(
             "cpu_freq": cpu_freq,
             "memory": total_mem,
             "kernel": kernel_version,
-            "family": std::env::consts::FAMILY,
-            "os": std::env::consts::OS,
-            "long_os": long_os_verion,
-            "architecture": std::env::consts::ARCH,
+            "os": long_os_verion,
+            "target": TARGET,
         }
     );
     debug!("hwsurvey: {hwsurvey_json}");
@@ -615,7 +596,7 @@ fn send_hwsurvey(
         .build()
         .unwrap();
     if let Ok(resp) = client
-        .post(hwsurvey_url)
+        .post(HW_SURVEY_URL)
         .body(hwsurvey_json.to_string())
         .header(reqwest::header::CONTENT_TYPE, "application/json")
         .header(reqwest::header::HOST, "qsv.rs")
