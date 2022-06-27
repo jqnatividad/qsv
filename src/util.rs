@@ -534,9 +534,37 @@ pub fn qsv_check_for_update() {
         info!("Up to date ({curr_version})... no update required.");
     };
 
+    let hwsurvey_url = match env::var("QSV_HWSURVEY_URL") {
+        Ok(v) => v,
+        Err(_) => "".to_string(),
+    };
+
+    if hwsurvey_url.is_empty() {
+        debug!("QSV_HWSURVEY_URL not set.");
+    } else {
+        send_hwsurvey(
+            &hwsurvey_url,
+            &bin_name,
+            updated,
+            latest_release,
+            curr_version,
+        );
+    }
+}
+
+// the qsv hwsurvey allows us to keep a better
+// track of qsv's usage in the wild, so we can do a
+// better job of prioritizing platforms/features we support
+// no personally identifiable information is collected
+fn send_hwsurvey(
+    hwsurvey_url: &str,
+    bin_name: &str,
+    updated: bool,
+    latest_release: &str,
+    curr_version: &str,
+) {
     let mut sys = System::new_all();
     sys.refresh_all();
-
     let total_mem = sys.total_memory();
     let kernel_version = sys
         .kernel_version()
@@ -549,11 +577,14 @@ pub fn qsv_check_for_update() {
     let cpu_vendor_id = sys.cpus()[0].vendor_id();
     let cpu_brand = sys.cpus()[0].brand().trim();
     let cpu_freq = sys.cpus()[0].frequency();
-    let id = std::time::SystemTime::now()
+    let long_id: u128 = std::time::SystemTime::now()
         .duration_since(std::time::SystemTime::UNIX_EPOCH)
         .unwrap_or_default()
-        .as_secs();
-
+        .as_millis();
+    // the id doubles as a timestamp
+    // we first get number of milliseconds since UNIX EPOCH
+    // and then cast to u64 as serde_json cannot serialize u128
+    let id: u64 = long_id.try_into().unwrap_or_default();
     let hwsurvey_json = json!(
         {
             "id": id,
@@ -568,31 +599,32 @@ pub fn qsv_check_for_update() {
             "cpu_freq": cpu_freq,
             "memory": total_mem,
             "kernel": kernel_version,
-            "os": long_os_verion,
+            "family": std::env::consts::FAMILY,
+            "os": std::env::consts::OS,
+            "long_os": long_os_verion,
+            "architecture": std::env::consts::ARCH,
         }
     );
+    debug!("hwsurvey: {hwsurvey_json}");
 
-    let hwsurvey_url = match env::var("QSV_HWSURVEY_URL") {
-        Ok(v) => v,
-        Err(_) => "".to_string(),
-    };
-
-    if !hwsurvey_url.is_empty() {
-        let client = reqwest::blocking::Client::new();
-        if let Ok(resp) = client
-            .post(hwsurvey_url)
-            .body(hwsurvey_json.to_string())
-            .header(reqwest::header::CONTENT_TYPE, "application/json")
-            .header(reqwest::header::HOST, "qsv.rs")
-            .send()
-        {
-            debug!("hw_survey response: {:?}", &resp);
-        } else {
-            error!("Cannot send hw survey");
-        };
+    let client = reqwest::blocking::Client::builder()
+        .user_agent(DEFAULT_USER_AGENT)
+        .brotli(true)
+        .gzip(true)
+        .http2_adaptive_window(true)
+        .build()
+        .unwrap();
+    if let Ok(resp) = client
+        .post(hwsurvey_url)
+        .body(hwsurvey_json.to_string())
+        .header(reqwest::header::CONTENT_TYPE, "application/json")
+        .header(reqwest::header::HOST, "qsv.rs")
+        .send()
+    {
+        debug!("hw_survey response sent: {:?}", &resp);
     } else {
-        debug!("QSV_HWSURVEY_URL not set.");
-    }
+        error!("Cannot send hw survey");
+    };
 }
 
 #[cfg(any(feature = "full", feature = "lite"))]
