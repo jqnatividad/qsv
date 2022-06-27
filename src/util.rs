@@ -544,6 +544,7 @@ pub fn qsv_check_for_update() {
 #[cfg(any(feature = "full", feature = "lite"))]
 fn send_hwsurvey(bin_name: &str, updated: bool, latest_release: &str, curr_version: &str) {
     const TARGET: &str = env!("TARGET");
+    const QSV_KIND: &str = env!("QSV_KIND");
     static HW_SURVEY_URL: &str =
         "https://30r6xto02k.execute-api.us-west-2.amazonaws.com/dev/json-example";
 
@@ -573,15 +574,16 @@ fn send_hwsurvey(bin_name: &str, updated: bool, latest_release: &str, curr_versi
         {
             "id": id,
             "variant": bin_name,
-            "version": if updated { latest_release } else { curr_version },
-            "update_applied": updated,
-            "previous_version": curr_version,
-            "cpu_physical_cores": physical_cpu_count,
-            "cpu_logical_cores": cpu_count,
-            "cpu_vendor_id": cpu_vendor_id,
+            "kind": QSV_KIND,
+            "ver": if updated { latest_release } else { curr_version },
+            "updated": updated,
+            "prev_ver": curr_version,
+            "cpu_phy_cores": physical_cpu_count,
+            "cpu_log_cores": cpu_count,
+            "cpu_vendor": cpu_vendor_id,
             "cpu_brand": cpu_brand,
             "cpu_freq": cpu_freq,
-            "memory": total_mem,
+            "mem": total_mem,
             "kernel": kernel_version,
             "os": long_os_verion,
             "target": TARGET,
