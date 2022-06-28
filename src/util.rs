@@ -12,6 +12,8 @@ use log::{debug, error, info, log_enabled, Level};
 #[cfg(any(feature = "apply", feature = "fetch", feature = "python"))]
 use regex::Regex;
 use serde::de::{Deserialize, DeserializeOwned, Deserializer, Error};
+use serde_json::json;
+use sysinfo::{CpuExt, System, SystemExt};
 #[cfg(any(feature = "full", feature = "lite"))]
 use thousands::Separable;
 
@@ -494,6 +496,7 @@ pub fn qsv_check_for_update() {
 
     info!("Current version: {curr_version} Latest Release: {latest_release}");
 
+    let mut updated = false;
     if latest_release > &curr_version.to_string() {
         eprintln!("Update {latest_release} available. Current version is {curr_version}.",);
         match self_update::backends::github::Update::configure()
@@ -508,6 +511,7 @@ pub fn qsv_check_for_update() {
         {
             Ok(update_job) => match update_job.update() {
                 Ok(status) => {
+                    updated = true;
                     let update_status = format!(
                         "Update successful for {}: `{}`!",
                         bin_name,
@@ -529,6 +533,82 @@ pub fn qsv_check_for_update() {
     } else {
         eprintln!("Up to date ({curr_version})... no update required.");
         info!("Up to date ({curr_version})... no update required.");
+    };
+
+    send_hwsurvey(&bin_name, updated, latest_release, curr_version);
+}
+
+// the qsv hwsurvey allows us to keep a better
+// track of qsv's usage in the wild, so we can do a
+// better job of prioritizing platforms/features we support
+// no personally identifiable information is collected
+#[cfg(any(feature = "full", feature = "lite"))]
+fn send_hwsurvey(bin_name: &str, updated: bool, latest_release: &str, curr_version: &str) {
+    const TARGET: &str = env!("TARGET");
+    const QSV_KIND: &str = env!("QSV_KIND");
+    static HW_SURVEY_URL: &str =
+        "https://2oq0qstqg5.execute-api.us-west-2.amazonaws.com/dev/qsv-hwsurvey";
+
+    let mut sys = System::new_all();
+    sys.refresh_all();
+    let total_mem = sys.total_memory();
+    let kernel_version = sys
+        .kernel_version()
+        .unwrap_or_else(|| "Unknown kernel".to_string());
+    let long_os_verion = sys
+        .long_os_version()
+        .unwrap_or_else(|| "Unknown OS version".to_string());
+    let cpu_count = sys.cpus().len();
+    let physical_cpu_count = sys.physical_core_count().unwrap_or_default();
+    let cpu_vendor_id = sys.cpus()[0].vendor_id();
+    let cpu_brand = sys.cpus()[0].brand().trim();
+    let cpu_freq = sys.cpus()[0].frequency();
+    let long_id: u128 = std::time::SystemTime::now()
+        .duration_since(std::time::SystemTime::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis();
+    // the id doubles as a timestamp
+    // we first get number of milliseconds since UNIX EPOCH
+    // and then cast to u64 as serde_json cannot serialize u128
+    let id: u64 = long_id.try_into().unwrap_or_default();
+    let hwsurvey_json = json!(
+        {
+            "id": id,
+            "variant": bin_name,
+            "kind": QSV_KIND,
+            "ver": if updated { latest_release } else { curr_version },
+            "updated": updated,
+            "prev_ver": curr_version,
+            "cpu_phy_cores": physical_cpu_count,
+            "cpu_log_cores": cpu_count,
+            "cpu_vendor": cpu_vendor_id,
+            "cpu_brand": cpu_brand,
+            "cpu_freq": cpu_freq,
+            "mem": total_mem,
+            "kernel": kernel_version,
+            "os": long_os_verion,
+            "target": TARGET,
+        }
+    );
+    debug!("hwsurvey: {hwsurvey_json}");
+
+    let client = reqwest::blocking::Client::builder()
+        .user_agent(DEFAULT_USER_AGENT)
+        .brotli(true)
+        .gzip(true)
+        .http2_adaptive_window(true)
+        .build()
+        .unwrap();
+    if let Ok(resp) = client
+        .post(HW_SURVEY_URL)
+        .body(hwsurvey_json.to_string())
+        .header(reqwest::header::CONTENT_TYPE, "application/json")
+        .header(reqwest::header::HOST, "qsv.rs")
+        .send()
+    {
+        debug!("hw_survey response sent: {:?}", &resp);
+    } else {
+        error!("Cannot send hw survey");
     };
 }
 
