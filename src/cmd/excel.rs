@@ -42,8 +42,8 @@ Excel options:
                                i.e. if the field's name has any of these patterns,
                                it is shortlisted for date inferencing.
                                Set to "all" to inspect ALL fields for date/datetime types.
-                               Note that doing so will cause false positive data conversions
-                               for numeric columns.
+                               Note that doing so will cause false positive date conversions
+                               for all numeric columns.
                                Otherwise, Excel date fields that do not satisfy the
                                whitelist will be returned as number of days since 1900.
                                [default: date,time,due,opened,closed]                               
