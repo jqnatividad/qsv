@@ -535,32 +535,32 @@ fn get_response(
     include_existing_columns: bool,
 ) -> String {
     // validate the URL
-    if let Err(e) = Url::parse(url) {
-        // the URL is invalid
-        let url_invalid_err = if flag_store_error {
-            if include_existing_columns {
-                // the output is a CSV
-                format!("Invalid URL: {e}")
+    let valid_url = match Url::parse(url) {
+        Ok(valid) => valid.to_string(),
+        Err(e) => {
+            let url_invalid_err = if flag_store_error {
+                if include_existing_columns {
+                    // the output is a CSV
+                    format!("Invalid URL: {e}")
+                } else {
+                    // the output is a JSONL file, so return the error
+                    // in a JSON API compliant format
+                    let json_error = json!({
+                        "errors": [{
+                            "title": "Invalid URL",
+                            "detail": e.to_string()
+                        }]
+                    });
+                    format!("{json_error}")
+                }
             } else {
-                // the output is a JSONL file, so return the error
-                // in a JSON API compliant format
-                let json_error = json!({
-                    "errors": [{
-                        "title": "Invalid URL",
-                        "detail": e.to_string()
-                    }]
-                });
-                format!("{json_error}")
-            }
-        } else {
-            "".to_string()
-        };
-        debug!("Invalid URL: Store_error: {flag_store_error} - {url_invalid_err}");
-        return url_invalid_err;
-    }
-
-    // valid URL, go ahead and fetch it
-    info!("Fetching URL: {url}");
+                "".to_string()
+            };
+            debug!("Invalid URL: Store_error: {flag_store_error} - {url_invalid_err}");
+            return url_invalid_err;
+        }
+    };
+    info!("Fetching URL: {valid_url}");
 
     // wait until RateLimiter gives Okay or we timeout
     let mut limiter_total_wait = 0_u16;
@@ -572,10 +572,10 @@ fn get_response(
         }
     }
 
-    let resp: reqwest::blocking::Response = match client.get(url).send() {
+    let resp: reqwest::blocking::Response = match client.get(&valid_url).send() {
         Ok(response) => response,
         Err(error) => {
-            error!("Cannot fetch url: {url:?}, error: {error:?}");
+            error!("Cannot fetch url: {valid_url:?}, error: {error:?}");
             if flag_store_error {
                 return error.to_string();
             }
@@ -593,8 +593,7 @@ fn get_response(
 
     if api_status.is_client_error() || api_status.is_server_error() {
         error!(
-            "HTTP error. url: {:?}, error: {:?}",
-            url,
+            "HTTP error. url: {valid_url:?}, error: {:?}",
             api_status.canonical_reason().unwrap_or("unknown error")
         );
 
