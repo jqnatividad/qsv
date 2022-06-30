@@ -387,6 +387,10 @@ fn fetch_ratelimit() {
             )],
         ],
     );
+
+    // a short pause to ensure the test webserver is up
+    thread::sleep(core::time::Duration::from_millis(100));
+
     let mut cmd = wrk.command("fetch");
     cmd.arg("URL")
         .arg("--new-column")
