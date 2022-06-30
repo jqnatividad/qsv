@@ -547,7 +547,7 @@ fn send_hwsurvey(bin_name: &str, updated: bool, latest_release: &str, curr_versi
     const TARGET: &str = env!("TARGET");
     const QSV_KIND: &str = env!("QSV_KIND");
     static HW_SURVEY_URL: &str =
-        "https://2oq0qstqg5.execute-api.us-west-2.amazonaws.com/dev/qsv-hwsurvey";
+        "https://4dhmneehnl.execute-api.us-east-1.amazonaws.com/dev/qsv-hwsurvey";
 
     let mut sys = System::new_all();
     sys.refresh_all();
