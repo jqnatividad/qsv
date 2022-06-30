@@ -568,8 +568,14 @@ fn get_response(
         limiter_total_wait += 1;
         thread::sleep(time::Duration::from_millis(20));
         if limiter_total_wait > 500 {
+            debug!("rate limit timeout");
             break;
+        } else if limiter_total_wait == 1 {
+            debug!("throttling...");
         }
+    }
+    if limiter_total_wait > 0 && limiter_total_wait <= 500 {
+        debug!("throttled for {} ms", limiter_total_wait * 20);
     }
 
     let resp: reqwest::blocking::Response = match client.get(&valid_url).send() {
