@@ -97,7 +97,7 @@ fn test_slice(
                 cmd.arg("--len").arg(&end.to_string());
             } else {
                 cmd.arg("--len")
-                    .arg(&(end - start.abs() as usize).to_string());
+                    .arg(&(end - start.unsigned_abs()).to_string());
             }
         } else {
             cmd.arg("--end").arg(&end.to_string());
