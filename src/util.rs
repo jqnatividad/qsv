@@ -13,7 +13,6 @@ use log::{debug, error, info, log_enabled, Level};
 use regex::Regex;
 use serde::de::{Deserialize, DeserializeOwned, Deserializer, Error};
 use serde_json::json;
-use sysinfo::{CpuExt, System, SystemExt};
 #[cfg(any(feature = "full", feature = "lite"))]
 use thousands::Separable;
 
@@ -544,6 +543,8 @@ pub fn qsv_check_for_update() {
 // no personally identifiable information is collected
 #[cfg(any(feature = "full", feature = "lite"))]
 fn send_hwsurvey(bin_name: &str, updated: bool, latest_release: &str, curr_version: &str) {
+    use sysinfo::{CpuExt, System, SystemExt};
+
     const TARGET: &str = env!("TARGET");
     const QSV_KIND: &str = env!("QSV_KIND");
     static HW_SURVEY_URL: &str =
