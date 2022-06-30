@@ -133,12 +133,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut date_flag: Vec<bool> = Vec::new();
     let mut count = 0_u32; // use u32 as Excel can only hold 1m rows anyways, ODS - only 32k
 
-    // amortize memory allocations
-    #[allow(unused_assignments)]
-    let mut datetime = String::new();
-    #[allow(unused_assignments)]
-    let mut date = String::new();
-
     for (row_idx, row) in range.rows().enumerate() {
         record.clear();
         for (col_idx, cell) in row.iter().enumerate() {
@@ -169,21 +163,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     if date_flag[col_idx] {
                         if f.fract() > 0.0 {
                             record.push_field({
-                                datetime = if let Some(dt) = &cell.as_datetime() {
-                                    format!("{}", dt)
-                                } else {
-                                    format!("ERROR: Cannot convert {f} to datetime")
-                                };
-                                &datetime
+                                &cell.as_datetime().map_or_else(
+                                    || format!("ERROR: Cannot convert {f} to datetime"),
+                                    |dt| format!("{}", dt),
+                                )
                             });
                         } else {
                             record.push_field({
-                                date = if let Some(d) = &cell.as_date() {
-                                    format!("{}", d)
-                                } else {
-                                    format!("ERROR: Cannot convert {f} to date")
-                                };
-                                &date
+                                &cell.as_date().map_or_else(
+                                    || format!("ERROR: Cannot convert {f} to date"),
+                                    |d| format!("{}", d),
+                                )
                             });
                         };
                     } else {
