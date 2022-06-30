@@ -35,6 +35,7 @@ pub static DEFAULT_USER_AGENT: &str = concat!(
     env!("CARGO_PKG_VERSION"),
     " (https://github.com/jqnatividad/qsv)",
 );
+const TARGET: &str = env!("TARGET");
 
 pub fn max_jobs() -> usize {
     let num_cpus = num_cpus();
@@ -97,13 +98,13 @@ pub fn version() -> String {
         (Some(qsvtype), Some(maj), Some(min), Some(pat), Some(pre)) => {
             if pre.is_empty() {
                 format!(
-                    "{qsvtype} {maj}.{min}.{pat}-{malloc_kind}-{enabled_features}{maxjobs}-{numcpus}",
+                    "{qsvtype} {maj}.{min}.{pat}-{malloc_kind}-{enabled_features}{maxjobs}-{numcpus} ({TARGET})",
                     maxjobs = max_jobs(),
                     numcpus = num_cpus()
                 )
             } else {
                 format!(
-                    "{qsvtype} {maj}.{min}.{pat}-{pre}-{malloc_kind}-{enabled_features}{maxjobs}-{numcpus}",
+                    "{qsvtype} {maj}.{min}.{pat}-{pre}-{malloc_kind}-{enabled_features}{maxjobs}-{numcpus} ({TARGET})",
                     maxjobs = max_jobs(),
                     numcpus = num_cpus(),
                 )
@@ -545,7 +546,6 @@ pub fn qsv_check_for_update() {
 fn send_hwsurvey(bin_name: &str, updated: bool, latest_release: &str, curr_version: &str) {
     use sysinfo::{CpuExt, System, SystemExt};
 
-    const TARGET: &str = env!("TARGET");
     const QSV_KIND: &str = env!("QSV_KIND");
     static HW_SURVEY_URL: &str =
         "https://4dhmneehnl.execute-api.us-east-1.amazonaws.com/dev/qsv-hwsurvey";
