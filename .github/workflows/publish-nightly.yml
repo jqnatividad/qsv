@@ -3,6 +3,9 @@ name: Publish Nightly
 on:
   workflow_dispatch:
 
+env:
+  QSV_KIND: prebuilt
+
 jobs:
   analyze-tags:
     runs-on: ubuntu-latest
