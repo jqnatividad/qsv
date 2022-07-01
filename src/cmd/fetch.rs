@@ -108,9 +108,9 @@ Fetch options:
     --jqlfile <file>           Load jql selector from file instead.
     --pretty                   Prettify JSON responses. Otherwise, they're minified.
                                If the response is not in JSON format, it's passed through.
-    --rate-limit <qps>         Rate Limit in Queries Per Second (max: 50). Note that fetch
+    --rate-limit <qps>         Rate Limit in Queries Per Second (max: 1000). Note that fetch
                                dynamically throttles as well based on rate-limit and
-                               retry-after response headers. [default: 20]
+                               retry-after response headers. [default: 25]
     --timeout <milliseconds>   Timeout for each URL GET. [default: 10000 ]
     --http-header <key:value>  Pass custom header(s) to the server.
     --store-error              On error, store error code/message instead of blank value.
@@ -246,13 +246,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     use std::num::NonZeroU32;
     let rate_limit = if let Some(qps) = args.flag_rate_limit {
-        if !(qps <= 50 && qps > 0) {
-            return fail!("Rate Limit should be between 1 to 50 queries per second.");
+        if !(qps <= 1000 && qps > 0) {
+            return fail!("Rate Limit should be between 1 to 1000 queries per second.");
         }
         NonZeroU32::new(qps).unwrap()
     } else {
         // default rate limit is actually set via docopt, so init below is just to satisfy compiler
-        NonZeroU32::new(20).unwrap()
+        NonZeroU32::new(25).unwrap()
     };
     info!("RATE LIMIT: {rate_limit}");
 
