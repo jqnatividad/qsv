@@ -110,7 +110,12 @@ Fetch options:
                                If the response is not in JSON format, it's passed through.
     --rate-limit <qps>         Rate Limit in Queries Per Second (max: 1000). Note that fetch
                                dynamically throttles as well based on rate-limit and
-                               retry-after response headers. [default: 25]
+                               retry-after response headers.
+                               Set to zero (0) to go as fast as possible, automatically
+                               down-throttling as required.
+                               CAUTION: Only use zero for APIs that use RateLimit headers,
+                               otherwise your fetch job may look like a Denial Of Service attack.
+                               [default: 25]
     --timeout <milliseconds>   Timeout for each URL GET. [default: 10000 ]
     --http-header <key:value>  Pass custom header(s) to the server.
     --store-error              On error, store error code/message instead of blank value.
@@ -246,13 +251,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     use std::num::NonZeroU32;
     let rate_limit = if let Some(qps) = args.flag_rate_limit {
-        if !(qps <= 1000 && qps > 0) {
-            return fail!("Rate Limit should be between 1 to 1000 queries per second.");
+        match qps {
+            0 => NonZeroU32::new(u32::MAX).unwrap(),
+            1..=1000 => NonZeroU32::new(qps).unwrap(),
+            _ => return fail!("Rate Limit should be between 1 to 1000 queries per second."),
         }
-        NonZeroU32::new(qps).unwrap()
     } else {
         // default rate limit is actually set via docopt, so init below is just to satisfy compiler
-        NonZeroU32::new(25).unwrap()
+        NonZeroU32::new(u32::MAX).unwrap()
     };
     info!("RATE LIMIT: {rate_limit}");
 
@@ -688,7 +694,7 @@ ratelimit_reset:{ratelimit_reset:?} {ratelimit_reset_sec:?} retry_after:{retry_a
             // we add a small random delta to how long fetch sleeps
             // as we need to add a little jitter as per the spec
             // https://tools.ietf.org/id/draft-polli-ratelimit-headers-00.html#rfc.section.7.5
-            let rand_addl_sleep = (reset * 1000) + rand::thread_rng().gen_range(20..200);
+            let rand_addl_sleep = (reset * 1000) + rand::thread_rng().gen_range(10..30);
 
             info!(
                 "sleeping for {rand_addl_sleep} milliseconds until ratelimit is reset or retry_after has elapsed"
