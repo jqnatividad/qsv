@@ -364,7 +364,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         } else if let Ok(s) = std::str::from_utf8(&record[column_index]) {
             // we're not using a URL template,
             // just use the field as is as the URL
-            url = s.trim().to_string();
+            url = s.to_string();
         }
 
         let final_value = if url.is_empty() {

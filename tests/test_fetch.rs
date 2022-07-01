@@ -9,9 +9,9 @@ fn fetch_simple() {
         vec![
             svec!["URL"],
             svec!["https://api.zippopotam.us/us/99999"],
-            svec!["  http://api.zippopotam.us/us/90210"],
+            svec!["  http://api.zippopotam.us/us/90210      "],
             svec!["https://api.zippopotam.us/us/94105"],
-            svec!["http://api.zippopotam.us/us/92802"],
+            svec!["http://api.zippopotam.us/us/92802      "],
             svec!["https://query.wikidata.org/sparql?query=SELECT%20?dob%20WHERE%20{wd:Q42%20wdt:P569%20?dob.}&format=json"],
         ],
     );
