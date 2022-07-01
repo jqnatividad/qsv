@@ -328,7 +328,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     // amortize memory allocations
-    // why optimize for speed, when we're just doing single-threaded, throttled URL fetches?
+    // why optimize for mem & speed, when we're just doing single-threaded, throttled URL fetches?
     // we still optimize since fetch is backed by a memoized cache
     // (in memory or Redis, when --redis is used),
     // so we want to return responses as fast as possible as we bypass the network fetch
@@ -338,10 +338,19 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     #[allow(unused_assignments)]
     let mut output_record = csv::ByteRecord::new();
     #[allow(unused_assignments)]
-    let mut url = String::default();
+    let mut url = String::with_capacity(100);
     #[allow(unused_assignments)]
     let mut record_vec: Vec<String> = Vec::with_capacity(headers.len());
     let mut redis_cache_hits: u64 = 0;
+    #[allow(unused_assignments)]
+    let mut intermediate_value: Return<String> = Return {
+        was_cached: false,
+        value: String::with_capacity(150),
+    };
+    #[allow(unused_assignments)]
+    let mut final_value = String::with_capacity(150);
+    #[allow(unused_assignments)]
+    let mut str_value = String::with_capacity(100);
 
     while rdr.read_byte_record(&mut record)? {
         if not_quiet {
@@ -353,24 +362,24 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             // let's dynamically construct the URL with it
             record_vec.clear();
             for field in &record {
-                let str_value = unsafe { std::str::from_utf8_unchecked(field).trim().to_string() };
+                str_value = unsafe { std::str::from_utf8_unchecked(field).trim().to_owned() };
                 record_vec.push(str_value);
             }
             if let Ok(formatted) =
                 dynfmt::SimpleCurlyFormat.format(&dynfmt_url_template, &*record_vec)
             {
-                url = formatted.to_string();
+                url = formatted.into_owned();
             }
         } else if let Ok(s) = std::str::from_utf8(&record[column_index]) {
             // we're not using a URL template,
             // just use the field as is as the URL
-            url = s.to_string();
+            url = s.to_owned();
         }
 
-        let final_value = if url.is_empty() {
+        final_value = if url.is_empty() {
             "".to_string()
         } else if args.flag_redis {
-            let intermediate_value = get_redis_response(
+            intermediate_value = get_redis_response(
                 &url,
                 &client,
                 &limiter,
@@ -383,7 +392,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             if intermediate_value.was_cached {
                 redis_cache_hits += 1;
             }
-            intermediate_value.to_string()
+            intermediate_value.value
         } else {
             get_cached_response(
                 &url,
@@ -710,6 +719,7 @@ use serde_json::{Deserializer, Value};
 
 use anyhow::{anyhow, Result};
 
+#[inline]
 fn apply_jql(json: &str, groups: &[jql::Group]) -> Result<String> {
     // check if api returned valid JSON before applying JQL selector
     if let Err(error) = serde_json::from_str::<Value>(json) {
