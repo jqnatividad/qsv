@@ -5,6 +5,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.57.0] - 2022-06-30
+### Added
+* `excel`: date support https://github.com/jqnatividad/qsv/pull/357
+* added hardware survey reminiscent of [Steam's Hardware Survey](https://store.steampowered.com/hwsurvey). Only sent when checking for updates with no personally identifiable information. https://github.com/jqnatividad/qsv/pull/358
+* `fetch`: ensure URLs are properly encoded https://github.com/jqnatividad/qsv/pull/359
+
+### Changed
+* Bump jql from 4.0.4 to 4.0.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/356
+* cargo bump update several dependencies
+* change MSRV to Rust 1.62.0
+* pin Rust Nightly to 2022-06-29
+
+### Fixed
+* `fetch`: is single-threaded again. It turns out it was more complicated than I hoped. Will revisit making it multi-threaded once I sort out the sync issues.
+
 ## [0.56.0] - 2022-06-20
 ### Added
 * `fetch` is now multithreaded! 🚀🚀🚀 - with threadsafe memoized caching, dynamic throttling & http2 adaptive flow control https://github.com/jqnatividad/qsv/pull/354
