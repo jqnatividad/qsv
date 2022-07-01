@@ -24,7 +24,7 @@ use url::Url;
 // source code, use the example as rendered by "qsv fetch --help".
 // the source code below has addl escape characters for the jql examples,
 // so cutting and pasting it into the command line will not work.
-static USAGE: &str = "
+static USAGE: &str = r#"
 Fetches HTML/data from web pages or web services for every row.
 
 Fetch is integrated with `jql` to directly parse out values from an API JSON response.
@@ -64,15 +64,14 @@ not a CSV file.
 Now, if we want to generate a CSV file with the parsed City and State, we use the 
 new-column and jql options.
 
-  $ qsv fetch URL --new-column CityState \
-    --jql '\"\"\"places\"\"\"[0].\"\"\"place name\"\"\",\"\"\"places\"\"\"[0].\"\"\"state abbreviation\"\"\"' \
-    data.csv > datatest.csv
+$ qsv fetch URL --new-column CityState --jql '"places"[0]."place name","places"[0]."state abbreviation"' 
+  data.csv > datatest.csv
 
 data_with_CityState.csv
   URL, CityState,
-  https://api.zippopotam.us/us/90210, \"Beverly Hills, CA\"
-  https://api.zippopotam.us/us/94105, \"San Francisco, CA\"
-  https://api.zippopotam.us/us/92802, \"Anaheim, CA\"
+  https://api.zippopotam.us/us/90210, "Beverly Hills, CA"
+  https://api.zippopotam.us/us/94105, "San Francisco, CA"
+  https://api.zippopotam.us/us/92802, "Anaheim, CA"
 
 As you can see, entering jql selectors can quickly become cumbersome, more so because
 of the need to escape quotes on the command line. Alternatively, the jql selector
@@ -86,16 +85,16 @@ EXAMPLES USING THE --URL-TEMPLATE OPTION:
 Geocode addresses in addr_data.csv, pass the latitude and longitude fields and store
 the response in a new column called response into enriched_addr_data.csv.
 
-  $ qsv fetch --url-template \"https://geocode.test/api/lookup.json?lat={latitude}&long={longitude}\" \
-       addr_data.csv -c response > enriched_addr_data.csv
+$ qsv fetch --url-template "https://geocode.test/api/lookup.json?lat={latitude}&long={longitude}" 
+  addr_data.csv -c response > enriched_addr_data.csv
 
-Geocode addresses in addr_data.csv, pass the \"street address\" and \"zip-code\" fields
+Geocode addresses in addr_data.csv, pass the "street address" and "zip-code" fields
 and use jql to parse CityState from the JSON response into a new column in enriched.csv.
 Note how field name non-alphanumeric characters in the url-template were replace with _.
 
-  $ qsv fetch --url-template \"https://geocode.test/api/addr.json?addr={street_address}&zip={zip_code}\" \
-       --jql '\"\"\"places\"\"\"[0].\"\"\"place name\"\"\",\"\"\"places\"\"\"[0].\"\"\"state abbreviation\"\"\"' \
-       addr_data.csv -c CityState > enriched.csv
+$ qsv fetch --jql '"places"[0]."place name","places"[0]."state abbreviation"' 
+  addr_data.csv -c CityState --url-template "https://geocode.test/api/addr.json?addr={street_address}&zip={zip_code}"
+  > enriched.csv
 
 Usage:
     qsv fetch [<column> | --url-template <template>] [--jql <selector> | --jqlfile <file>] [--http-header <k:v>...] [options] [<input>]
@@ -132,7 +131,7 @@ Common options:
     -d, --delimiter <arg>      The field delimiter for reading CSV data.
                                Must be a single character. (default: ,)
     -q, --quiet                Don't show progress bars.
-";
+"#;
 
 #[derive(Deserialize, Debug)]
 struct Args {
