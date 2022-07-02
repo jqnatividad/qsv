@@ -1,3 +1,8 @@
+> :exclamation: **WARNING** :exclamation: These benchmarks are stale and very old. I plan to integrate
+the generation of these benchmarks with the publishing process, so they're
+automatically updated with every release. That will require a lot of work, but
+I plan to set aside time to do so Summer 2022.
+
 These are some very basic and unscientific benchmarks of various commands
 provided by the latest release of `qsv`. Please see below for more information.
 
