@@ -154,7 +154,7 @@ pub fn count_rows(conf: &Config) -> Result<u64, io::Error> {
 pub fn prep_progress(progress: &ProgressBar, record_count: u64) {
     progress.set_style(
         ProgressStyle::default_bar()
-            .template("[{elapsed_precise}] [{bar:20} {percent}%{msg}] ({eta})")
+            .template("[{elapsed_precise}] [{bar:25} {percent}%{msg}] ({per_sec} - {eta})")
             .progress_chars("=>-"),
     );
     progress.set_message(format!(
