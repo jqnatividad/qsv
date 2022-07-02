@@ -95,6 +95,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         record.push_field("index");
         record.push_field("sheet_name");
         wtr.write_record(&record)?;
+        #[allow(clippy::needless_range_loop)]
         for i in 0..num_sheets {
             record.clear();
             record.push_field(&i.to_string());
