@@ -95,6 +95,15 @@ $ qsv fetch --jql '"places"[0]."place name","places"[0]."state abbreviation"'
   addr_data.csv -c CityState --url-template "https://geocode.test/api/addr.json?addr={street_address}&zip={zip_code}"
   > enriched.csv
 
+USING THE -HTTP-HEADER OPTION:
+
+The --http-header option allows you to append arbitrary key value pairs (a k-v pair is separated by a :) 
+to the HTTP header (to authenticate against an API, pass custom header fields, etc.). Note that you can 
+pass as many key-value pairs by using --http-header option repeatedly. For example:
+
+$ qsv fetch "https://httpbin.org/get" --http-header " X-Api-Key:TEST_KEY --http-header "X-Api-Secret:ABC123XYZ" data.csv
+
+
 Usage:
     qsv fetch [<column> | --url-template <template>] [--jql <selector> | --jqlfile <file>] [--http-header <k:v>...] [options] [<input>]
 
@@ -115,7 +124,7 @@ Fetch options:
                                otherwise your fetch job may look like a Denial Of Service attack.
                                [default: 25]
     --timeout <milliseconds>   Timeout for each URL GET. [default: 10000 ]
-    --http-header <key:value>  Pass custom header(s) to the server. Pass multiple key-value pairs
+    --http-header <key:value>  Append custom header(s) to the server. Pass multiple key-value pairs
                                by adding this option multiple times, once for each pair.
     --max-errors <count>       Maximum number of errors before aborting.
                                Set to zero (0) to continue despite errors.
