@@ -140,6 +140,7 @@ impl Args {
         })
     }
 
+    #[allow(clippy::unused_self)]
     fn get_selections<R: io::Read>(
         &self,
         rconf1: &Config,

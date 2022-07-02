@@ -194,6 +194,7 @@ impl Args {
     ) -> CliResult<(csv::ByteRecord, Selection)> {
         let headers = rdr.byte_headers()?;
         let sel = self.rconfig().selection(headers)?;
+        #[allow(clippy::redundant_closure_for_method_calls)]
         Ok((sel.select(headers).map(|h| h.to_vec()).collect(), sel))
     }
 }

@@ -81,6 +81,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut sample_size = args.flag_sample;
     let mut sample_all = false;
     // its a percentage, get the actual sample size
+    #[allow(clippy::cast_precision_loss)]
     if sample_size < 1.0 {
         sample_size *= n_rows as f64;
     } else if (sample_size - 0.0).abs() < f64::EPSILON {

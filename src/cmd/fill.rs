@@ -114,6 +114,7 @@ struct ByteRecord(Vec<ByteString>);
 
 impl<'a> From<&'a csv::ByteRecord> for ByteRecord {
     fn from(record: &'a csv::ByteRecord) -> Self {
+        #[allow(clippy::redundant_closure_for_method_calls)]
         ByteRecord(record.iter().map(|f| f.to_vec()).collect())
     }
 }

@@ -76,6 +76,7 @@ impl Args {
     }
 
     /// Get the column to use as a key.
+    #[allow(clippy::unused_self)]
     fn key_column(&self, rconfig: &Config, headers: &csv::ByteRecord) -> CliResult<usize> {
         let select_cols = rconfig.selection(headers)?;
         if select_cols.len() == 1 {
