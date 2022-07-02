@@ -877,8 +877,8 @@ impl TypedMinMax {
             TNull => None,
             TString => match (self.strings.min(), self.strings.max()) {
                 (Some(min), Some(max)) => unsafe {
-                    let min = String::from_utf8_unchecked((&**min).to_vec());
-                    let max = String::from_utf8_unchecked((&**max).to_vec());
+                    let min = String::from_utf8_unchecked((**min).to_vec());
+                    let max = String::from_utf8_unchecked((**max).to_vec());
                     Some((min, max))
                 },
                 _ => None,
