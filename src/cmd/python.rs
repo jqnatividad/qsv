@@ -157,7 +157,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     locals.set_item("row", py_row)?;
 
-    if !rconfig.no_headers {
+    if rconfig.no_headers {
+        headers = csv::StringRecord::new();
+
+        for i in 0..headers_len {
+            headers.push_field(&i.to_string());
+        }
+    } else {
         if !args.cmd_filter {
             let new_column = args
                 .arg_new_column
@@ -167,12 +173,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         wtr.write_record(&headers)?;
-    } else {
-        headers = csv::StringRecord::new();
-
-        for i in 0..headers_len {
-            headers.push_field(&i.to_string());
-        }
     }
 
     let progress = ProgressBar::new(0);
