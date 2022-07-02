@@ -40,7 +40,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     debug!(
         "input: {:?}, no_header: {}, delimiter: {:?}",
-        (&args.arg_input).clone().unwrap(),
+        (args.arg_input).clone().unwrap(),
         &args.flag_no_headers,
         &args.flag_delimiter
     );
