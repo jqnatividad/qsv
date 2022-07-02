@@ -1,3 +1,48 @@
+#![cfg_attr(
+    feature = "cargo-clippy",
+    allow(
+        // clippy bug: https://github.com/rust-lang/rust-clippy/issues/5704
+        clippy::unnested_or_patterns,
+        // clippy bug: https://github.com/rust-lang/rust-clippy/issues/7768
+        clippy::semicolon_if_nothing_returned,
+        clippy::cast_possible_truncation,
+        clippy::cast_possible_wrap,
+        clippy::cast_sign_loss,
+        // things are often more readable this way
+        clippy::cast_lossless,
+        clippy::module_name_repetitions,
+        clippy::option_if_let_else,
+        clippy::single_match_else,
+        clippy::type_complexity,
+        clippy::use_self,
+        clippy::zero_prefixed_literal,
+        // correctly used
+        clippy::derive_partial_eq_without_eq,
+        clippy::enum_glob_use,
+        clippy::explicit_auto_deref,
+        clippy::let_underscore_drop,
+        clippy::map_err_ignore,
+        clippy::result_unit_err,
+        clippy::wildcard_imports,
+        // not practical
+        clippy::needless_pass_by_value,
+        clippy::similar_names,
+        clippy::too_many_lines,
+        clippy::struct_excessive_bools,
+        clippy::cognitive_complexity,
+        // preference
+        clippy::doc_markdown,
+        clippy::unseparated_literal_suffix,
+        clippy::items_after_statements,
+        clippy::unnecessary_wraps,
+        // false positive
+        clippy::needless_doctest_main,
+        // noisy
+        clippy::missing_errors_doc,
+        clippy::must_use_candidate,
+    )
+)]
+
 extern crate crossbeam_channel as channel;
 
 use std::borrow::ToOwned;
@@ -161,16 +206,16 @@ fn main() {
         .unwrap_or_else(|e| e.exit());
     if args.flag_list {
         wout!(concat!("Installed commands:", command_list!()));
-        log_end(qsv_args, &now);
+        log_end(qsv_args, now);
         return;
     } else if args.flag_envlist {
         util::show_env_vars();
-        log_end(qsv_args, &now);
+        log_end(qsv_args, now);
         return;
     }
     if args.flag_update {
         util::qsv_check_for_update();
-        log_end(qsv_args, &now);
+        log_end(qsv_args, now);
         return;
     }
     match args.arg_command {
@@ -182,39 +227,39 @@ Please choose one of the following commands:",
                 command_list!()
             ));
             util::qsv_check_for_update();
-            log_end(qsv_args, &now);
+            log_end(qsv_args, now);
             ::std::process::exit(0);
         }
         Some(cmd) => match cmd.run() {
             Ok(()) => {
-                log_end(qsv_args, &now);
+                log_end(qsv_args, now);
                 process::exit(0);
             }
             Err(CliError::Flag(err)) => err.exit(),
             Err(CliError::Csv(err)) => {
                 werr!("{err}");
-                log_end(qsv_args, &now);
+                log_end(qsv_args, now);
                 process::exit(1);
             }
             Err(CliError::Io(ref err)) if err.kind() == io::ErrorKind::BrokenPipe => {
-                log_end(qsv_args, &now);
+                log_end(qsv_args, now);
                 process::exit(0);
             }
             Err(CliError::Io(err)) => {
                 werr!("{err}");
-                log_end(qsv_args, &now);
+                log_end(qsv_args, now);
                 process::exit(1);
             }
             Err(CliError::Other(msg)) => {
                 werr!("{msg}");
-                log_end(qsv_args, &now);
+                log_end(qsv_args, now);
                 process::exit(1);
             }
         },
     }
 }
 
-fn log_end(mut qsv_args: String, now: &Instant) {
+fn log_end(mut qsv_args: String, now: Instant) {
     if log_enabled!(Level::Info) {
         let ellipsis = if qsv_args.len() > 24 {
             qsv_args.truncate(24);
