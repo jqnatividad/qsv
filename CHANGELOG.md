@@ -5,6 +5,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.58.0] - 2022-07-02
+## Added
+* `excel`: add --list-sheets option https://github.com/jqnatividad/qsv/pull/364
+* `fetch`: added 0 option to --rate-limit to go as fast as possible.  
+**CAUTION:** Only use this with APIs that have [RateLimit](https://tools.ietf.org/id/draft-polli-ratelimit-headers-00.html) headers so qsv can automatically down-throttle as required. Otherwise, the fetch job will look like a Denial-of-Service attack. https://github.com/jqnatividad/qsv/commit/e4ece60aea3720b872119ca7a8ad3666dad033e7
+* `fetch`: added --max-errors option. Maximum number of errors before aborting
+
+## Changed
+* progress bars now display per_sec throughput while running jobs, not just at the end of a job
+* `fetch`: for long-running fetch jobs, the progress bar will update at least every three seconds, so it doesn't look like the job is frozen/stuck.
+* `fetch`: added additional verbiage to usage text on how to pass multiple key-value pairs to the HTTP header
+* `fetch`: made RateLimit jitters (required to avoid [thundering herd](https://en.wikipedia.org/wiki/Thundering_herd_problem) issues as per the [RateLimit spec](https://tools.ietf.org/id/draft-polli-ratelimit-headers-00.html#resource-exhaustion-and-clock-skew)) shorter, as they were too long.
+* pin Rust nightly to 2022-07-01
+* applied various clippy recommendations
+* bumped serde from 1.0.137 to 1.0.138
+* added stale warning to benchmarks. The benchmarks have not been updated since qsv 0.20.0.
+* cargo update bumped several other dependencies
+
+## Fixed
+* remove unneeded sleep pause before fetch ratelimit test
+
 ## [0.57.1] - 2022-06-31
 ### Changed
 * `fetch`: higher default settings which makes fetch much faster
