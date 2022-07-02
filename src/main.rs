@@ -371,7 +371,7 @@ impl fmt::Display for CliError {
             CliError::Flag(ref e) => e.fmt(f),
             CliError::Csv(ref e) => e.fmt(f),
             CliError::Io(ref e) => e.fmt(f),
-            CliError::Other(ref s) => f.write_str(&**s),
+            CliError::Other(ref s) => f.write_str(s),
         }
     }
 }
