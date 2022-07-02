@@ -19,7 +19,7 @@ line-by-line basis. If sorting a non-CSV file, be sure to set --no-headers,
 otherwise, the first line will not be included in the external sort.
 
 Usage:
-    qsv extsort [options] <input> <output>
+    qsv extsort [options] [<input>] [<output>]
 
 External sort option:
     -j, --jobs <arg>       The number of jobs to run in parallel.
@@ -60,7 +60,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
     log::info!("{mem_limited_buffer} bytes used for in memory mergesort buffer...");
 
-    let mut input_reader = io::BufReader::new(fs::File::open(&args.arg_input)?);
+    let mut input_reader = io::BufReader::new(match fs::File::open(&args.arg_input) {
+        Ok(f) => f,
+        Err(_) => return fail!("input file required."),
+    });
+
+    let mut output_writer = io::BufWriter::new(match fs::File::create(&args.arg_output) {
+        Ok(f) => f,
+        Err(_) => return fail!("output file required."),
+    });
 
     let sorter: ExternalSorter<String, io::Error, MemoryLimitedBufferBuilder> =
         ExternalSorterBuilder::new()
@@ -78,7 +86,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let sorted = sorter.sort(input_reader.lines()).unwrap();
 
-    let mut output_writer = io::BufWriter::new(fs::File::create(&args.arg_output)?);
     if !header.is_empty() {
         output_writer.write_all(format!("{}\n", header.trim_end()).as_bytes())?;
     }
