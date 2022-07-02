@@ -173,6 +173,29 @@ fn excel_sheet_name() {
 }
 
 #[test]
+fn excel_list_sheets() {
+    let wrk = Workdir::new("excel_list_sheets");
+
+    let xls_file = wrk.load_test_file("excel-xls.xls");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--list-sheets").arg(xls_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["index", "sheet_name"],
+        svec!["0", "First"],
+        svec!["1", "Flexibility Test"],
+        svec!["2", "Middle"],
+        svec!["3", "Sheet1"],
+        svec!["4", "trim test"],
+        svec!["5", "date test"],
+        svec!["6", "Last"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn excel_message() {
     let wrk = Workdir::new("excel_message");
 
