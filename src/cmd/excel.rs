@@ -25,7 +25,7 @@ We need a whitelist so we know to only do this date conversions for date fields 
 not all columns with numeric values.
 
 Usage:
-    qsv excel [options] <input>
+    qsv excel [options] [<input>]
 
 Excel options:
     -s, --sheet <name/index>   Name or zero-based index of sheet to export.
