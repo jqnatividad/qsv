@@ -32,6 +32,8 @@ Excel options:
                                Negative indices start from the end (-1 = last sheet). 
                                If the sheet cannot be found, qsv will read the first sheet.
                                [default: 0]
+    --list-sheets              Creates a CSV of sheet names with two columns - index and sheet_name.
+                               All other Excel options are ignored.
     --flexible                 Continue even if the number of fields is different 
                                from the previous record.
     --trim                     Trim all fields of records so that leading and trailing
@@ -57,6 +59,7 @@ Common options:
 struct Args {
     arg_input: String,
     flag_sheet: String,
+    flag_list_sheets: bool,
     flag_flexible: bool,
     flag_trim: bool,
     flag_dates_whitelist: String,
@@ -82,6 +85,26 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let sheet_names = workbook.sheet_names();
     let num_sheets = sheet_names.len();
+
+    let mut wtr = Config::new(&args.flag_output)
+        .flexible(args.flag_flexible)
+        .writer()?;
+    let mut record = csv::StringRecord::new();
+
+    if args.flag_list_sheets {
+        record.push_field("index");
+        record.push_field("sheet_name");
+        wtr.write_record(&record)?;
+        for i in 0..num_sheets {
+            record.clear();
+            record.push_field(&i.to_string());
+            record.push_field(&sheet_names[i]);
+            wtr.write_record(&record)?;
+        }
+        wtr.flush()?;
+        log::info!("listed sheet names: {sheet_names:?}");
+        return Ok(());
+    }
 
     // if --sheet name was passed, see if its a valid sheet name.
     let sheet = if sheet_names.contains(&args.flag_sheet) {
@@ -125,10 +148,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let dates_whitelist =
         itertools::Itertools::collect_vec(whitelist_lower.split(',').map(|s| s.trim().to_string()));
 
-    let mut wtr = Config::new(&args.flag_output)
-        .flexible(args.flag_flexible)
-        .writer()?;
-    let mut record = csv::StringRecord::new();
     let mut trimmed_record = csv::StringRecord::new();
     let mut date_flag: Vec<bool> = Vec::new();
     let mut count = 0_u32; // use u32 as Excel can only hold 1m rows anyways, ODS - only 32k
