@@ -17,6 +17,7 @@ use regex::Regex;
 use serde::Deserialize;
 use serde_json::json;
 use std::fs;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::{thread, time};
 use url::Url;
 
@@ -114,7 +115,11 @@ Fetch options:
                                otherwise your fetch job may look like a Denial Of Service attack.
                                [default: 25]
     --timeout <milliseconds>   Timeout for each URL GET. [default: 10000 ]
-    --http-header <key:value>  Pass custom header(s) to the server.
+    --http-header <key:value>  Pass custom header(s) to the server. Pass multiple key-value pairs
+                               by adding this option multiple times, once for each pair.
+    --max-errors <count>       Maximum number of errors before aborting.
+                               Set to zero (0) to continue despite errors.
+                               [default: 0 ]
     --store-error              On error, store error code/message instead of blank value.
     --cookies                  Allow cookies.
     --redis                    Use Redis to cache responses.
@@ -141,6 +146,7 @@ struct Args {
     flag_rate_limit: Option<u32>,
     flag_timeout: u32,
     flag_http_header: Vec<String>,
+    flag_max_errors: usize,
     flag_store_error: bool,
     flag_cookies: bool,
     flag_redis: bool,
@@ -161,6 +167,8 @@ impl From<reqwest::Error> for CliError {
         CliError::Other(err.to_string())
     }
 }
+
+static GLOBAL_ERROR_COUNT: AtomicUsize = AtomicUsize::new(0);
 
 struct RedisConfig {
     conn_str: String,
@@ -186,6 +194,13 @@ static JQL_GROUPS: once_cell::sync::OnceCell<Vec<jql::Group>> = OnceCell::new();
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
+
+    if args.flag_timeout > 36_000_000 {
+        return fail!("Timeout cannot be more than one hour");
+    }
+
+    info!("TIMEOUT: {} ms", args.flag_timeout);
+    TIMEOUT.set((args.flag_timeout / 10) as u16).unwrap();
 
     let mut rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
@@ -259,9 +274,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
     info!("RATE LIMIT: {rate_limit}");
 
-    info!("TIMEOUT: {} ms", args.flag_timeout);
-    TIMEOUT.set((args.flag_timeout / 10) as u16).unwrap();
-
     use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 
     let http_headers: HeaderMap = {
@@ -317,10 +329,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         record_count = util::count_rows(&rconfig)?;
         util::prep_progress(&progress, record_count);
     }
-    // we do a progress update every 1 second
+    // do a progress update every 3 seconds
     // for very large jobs, so the job doesn't look frozen
     if record_count > 100_000 {
-        progress.enable_steady_tick(1_000);
+        progress.enable_steady_tick(3_000);
     }
     let not_quiet = !args.flag_quiet;
 
@@ -419,6 +431,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 output_record.push_field(final_value.as_bytes());
             }
             wtr.write_byte_record(&output_record)?;
+        }
+
+        if args.flag_max_errors > 0
+            && GLOBAL_ERROR_COUNT.load(Ordering::Relaxed) >= args.flag_max_errors
+        {
+            let abort_msg = format!("{} max errors. Fetch aborted.", args.flag_max_errors);
+            info!("{abort_msg}");
+            eprintln!("{abort_msg}");
+            break;
         }
     }
 
@@ -566,12 +587,14 @@ fn get_response(
     debug!("api value: {}", &api_value);
 
     let final_value: String;
+    let mut error_flag = false;
 
     if api_status.is_client_error() || api_status.is_server_error() {
         error!(
             "HTTP error. url: {valid_url:?}, error: {:?}",
             api_status.canonical_reason().unwrap_or("unknown error")
         );
+        error_flag = true;
 
         if flag_store_error {
             final_value = format!(
@@ -602,6 +625,7 @@ fn get_response(
                     } else {
                         final_value = String::default();
                     }
+                    error_flag = true;
                 }
             }
         } else if flag_pretty {
@@ -700,6 +724,10 @@ ratelimit_reset:{ratelimit_reset:?} {ratelimit_reset_sec:?} retry_after:{retry_a
             // sleep for reset seconds + rand_addl_sleep milliseconds
             thread::sleep(time::Duration::from_millis(rand_addl_sleep));
         }
+    }
+
+    if error_flag {
+        GLOBAL_ERROR_COUNT.fetch_add(1, Ordering::SeqCst);
     }
 
     if include_existing_columns {
