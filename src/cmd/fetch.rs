@@ -124,7 +124,7 @@ Fetch options:
                                CAUTION: Only use zero for APIs that use RateLimit headers,
                                otherwise your fetch job may look like a Denial Of Service attack.
                                [default: 25]
-    --timeout <milliseconds>   Timeout for each URL GET. [default: 10000 ]
+    --timeout <seconds>        Timeout for each URL GET. [default: 30 ]
     --http-header <key:value>  Append custom header(s) to the server. Pass multiple key-value pairs
                                by adding this option multiple times, once for each pair.
     --max-errors <count>       Maximum number of errors before aborting.
@@ -154,7 +154,7 @@ struct Args {
     flag_jqlfile: Option<String>,
     flag_pretty: bool,
     flag_rate_limit: Option<u32>,
-    flag_timeout: u32,
+    flag_timeout: u64,
     flag_http_header: Vec<String>,
     flag_max_errors: usize,
     flag_store_error: bool,
@@ -170,7 +170,7 @@ struct Args {
 
 static DEFAULT_REDIS_CONN_STR: &str = "redis://127.0.0.1:6379";
 static DEFAULT_REDIS_TTL_SECONDS: u64 = 60 * 60 * 24 * 28; // 28 days in seconds
-static TIMEOUT: OnceCell<u16> = OnceCell::new();
+static TIMEOUT: OnceCell<u64> = OnceCell::new();
 
 impl From<reqwest::Error> for CliError {
     fn from(err: reqwest::Error) -> CliError {
@@ -205,12 +205,12 @@ static JQL_GROUPS: once_cell::sync::OnceCell<Vec<jql::Group>> = OnceCell::new();
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
-    if args.flag_timeout > 36_000_000 {
+    if args.flag_timeout > 3_600 {
         return fail!("Timeout cannot be more than one hour");
     }
 
-    info!("TIMEOUT: {} ms", args.flag_timeout);
-    TIMEOUT.set((args.flag_timeout / 10) as u16).unwrap();
+    info!("TIMEOUT: {} secs", args.flag_timeout);
+    TIMEOUT.set(args.flag_timeout).unwrap();
 
     let mut rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
@@ -307,6 +307,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     use reqwest::blocking::Client;
+
+    let client_timeout = time::Duration::from_secs(*TIMEOUT.get().unwrap_or(&30));
     let client = Client::builder()
         .user_agent(util::DEFAULT_USER_AGENT)
         .default_headers(http_headers)
@@ -315,6 +317,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .gzip(true)
         .deflate(true)
         .http2_adaptive_window(true)
+        .timeout(client_timeout)
         .build()?;
 
     use governor::{Quota, RateLimiter};
@@ -565,19 +568,22 @@ fn get_response(
     info!("Fetching URL: {valid_url}");
 
     // wait until RateLimiter gives Okay or we timeout
-    let mut limiter_total_wait = 0_u16;
+    const MINIMUM_WAIT_MS: u64 = 10;
+    let min_wait = time::Duration::from_millis(MINIMUM_WAIT_MS);
+    let mut limiter_total_wait = 0;
+    let governor_timeout_ms = unsafe { *TIMEOUT.get_unchecked() * 1_000 };
     while limiter.check().is_err() {
-        limiter_total_wait += 1;
-        thread::sleep(time::Duration::from_millis(10));
-        if limiter_total_wait > unsafe { *TIMEOUT.get_unchecked() } {
+        limiter_total_wait += MINIMUM_WAIT_MS;
+        thread::sleep(min_wait);
+        if limiter_total_wait > governor_timeout_ms {
             info!("rate limit timeout");
             break;
         } else if limiter_total_wait == 1 {
             info!("throttling...");
         }
     }
-    if limiter_total_wait > 0 && limiter_total_wait <= unsafe { *TIMEOUT.get_unchecked() } {
-        info!("throttled for {} ms", limiter_total_wait * 10);
+    if limiter_total_wait > 0 && limiter_total_wait <= governor_timeout_ms {
+        info!("throttled for {} ms", limiter_total_wait);
     }
 
     let resp: reqwest::blocking::Response = match client.get(&valid_url).send() {
