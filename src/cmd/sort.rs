@@ -188,7 +188,9 @@ enum Number {
 fn compare_num(n1: Number, n2: Number) -> cmp::Ordering {
     match (n1, n2) {
         (Int(i1), Int(i2)) => i1.cmp(&i2),
+        #[allow(clippy::cast_precision_loss)]
         (Int(i1), Float(f2)) => compare_float(i1 as f64, f2),
+        #[allow(clippy::cast_precision_loss)]
         (Float(f1), Int(i2)) => compare_float(f1, i2 as f64),
         (Float(f1), Float(f2)) => compare_float(f1, f2),
     }

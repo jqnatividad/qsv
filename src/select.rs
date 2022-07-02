@@ -400,6 +400,7 @@ impl Selection {
     ) -> iter::Scan<slice::Iter<'a, usize>, &'b csv::ByteRecord, _GetField> {
         // This is horrifying.
         #[allow(clippy::unnecessary_wraps)]
+        #[allow(clippy::trivially_copy_pass_by_ref)]
         fn get_field<'c>(row: &mut &'c csv::ByteRecord, idx: &usize) -> Option<&'c [u8]> {
             Some(&row[*idx])
         }
@@ -452,7 +453,7 @@ impl NormalSelection {
     where
         I: Iterator<Item = T>,
     {
-        fn filmap<T>(v: Option<T>) -> Option<T> {
+        const fn filmap<T>(v: Option<T>) -> Option<T> {
             v
         }
         #[allow(clippy::option_option)]

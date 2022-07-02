@@ -140,16 +140,16 @@ fn main() {
         .unwrap_or_else(|e| e.exit());
     if args.flag_list {
         wout!(concat!("Installed commands:", command_list!()));
-        log_end(qsv_args, &now);
+        log_end(qsv_args, now);
         return;
     } else if args.flag_envlist {
         util::show_env_vars();
-        log_end(qsv_args, &now);
+        log_end(qsv_args, now);
         return;
     }
     if args.flag_update {
         util::qsv_check_for_update();
-        log_end(qsv_args, &now);
+        log_end(qsv_args, now);
         return;
     }
     match args.arg_command {
@@ -161,39 +161,39 @@ Please choose one of the following commands:",
                 command_list!()
             ));
             util::qsv_check_for_update();
-            log_end(qsv_args, &now);
+            log_end(qsv_args, now);
             ::std::process::exit(0);
         }
         Some(cmd) => match cmd.run() {
             Ok(()) => {
-                log_end(qsv_args, &now);
+                log_end(qsv_args, now);
                 process::exit(0);
             }
             Err(CliError::Flag(err)) => err.exit(),
             Err(CliError::Csv(err)) => {
                 werr!("{err}");
-                log_end(qsv_args, &now);
+                log_end(qsv_args, now);
                 process::exit(1);
             }
             Err(CliError::Io(ref err)) if err.kind() == io::ErrorKind::BrokenPipe => {
-                log_end(qsv_args, &now);
+                log_end(qsv_args, now);
                 process::exit(0);
             }
             Err(CliError::Io(err)) => {
                 werr!("{err}");
-                log_end(qsv_args, &now);
+                log_end(qsv_args, now);
                 process::exit(1);
             }
             Err(CliError::Other(msg)) => {
                 werr!("{msg}");
-                log_end(qsv_args, &now);
+                log_end(qsv_args, now);
                 process::exit(1);
             }
         },
     }
 }
 
-fn log_end(mut qsv_args: String, now: &Instant) {
+fn log_end(mut qsv_args: String, now: Instant) {
     if log_enabled!(Level::Info) {
         let ellipsis = if qsv_args.len() > 24 {
             qsv_args.truncate(24);

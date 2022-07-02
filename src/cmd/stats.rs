@@ -92,6 +92,7 @@ Common options:
                            Must be a single character. (default: ,)
 "#;
 
+#[allow(clippy::unsafe_derive_deserialize)]
 #[derive(Clone, Deserialize)]
 pub struct Args {
     pub arg_input: Option<String>,
@@ -466,6 +467,7 @@ impl Stats {
         if sample_type == TNull {
             self.nullcount += 1;
         }
+        #[allow(clippy::match_same_arms)]
         match self.typ {
             TNull => {
                 if self.which.include_nulls {
@@ -692,6 +694,7 @@ impl FieldType {
 
 impl Commute for FieldType {
     #[inline]
+    #[allow(clippy::match_same_arms)]
     fn merge(&mut self, other: FieldType) {
         *self = match (*self, other) {
             (TString, TString) => TString,
@@ -759,6 +762,7 @@ impl TypedSum {
         if sample.is_empty() {
             return;
         }
+        #[allow(clippy::cast_precision_loss)]
         match typ {
             TFloat => {
                 let float: f64 = from_bytes::<f64>(sample);
@@ -806,7 +810,9 @@ impl Commute for TypedSum {
     fn merge(&mut self, other: TypedSum) {
         match (self.float, other.float) {
             (Some(f1), Some(f2)) => self.float = Some(f1 + f2),
+            #[allow(clippy::cast_precision_loss)]
             (Some(f1), None) => self.float = Some(f1 + (other.integer as f64)),
+            #[allow(clippy::cast_precision_loss)]
             (None, Some(f2)) => self.float = Some((self.integer as f64) + f2),
             (None, None) => self.integer = self.integer.saturating_add(other.integer),
         }
@@ -841,6 +847,7 @@ impl TypedMinMax {
                     .unwrap();
 
                 self.floats.add(n);
+                #[allow(clippy::cast_precision_loss)]
                 self.integers.add(n as i64);
             },
             TInteger => unsafe {
@@ -849,6 +856,7 @@ impl TypedMinMax {
                     .ok()
                     .unwrap();
                 self.integers.add(n);
+                #[allow(clippy::cast_precision_loss)]
                 self.floats.add(n as f64);
             },
             TDate | TDateTime => unsafe {

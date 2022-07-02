@@ -66,6 +66,7 @@ impl<'de> Deserialize<'de> for Delimiter {
     }
 }
 
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Debug)]
 pub struct Config {
     path: Option<PathBuf>, // None implies <stdin>
@@ -241,6 +242,7 @@ impl Config {
         self
     }
 
+    #[allow(clippy::missing_const_for_fn)]
     pub fn select(mut self, sel_cols: SelectColumns) -> Config {
         self.select_columns = Some(sel_cols);
         self

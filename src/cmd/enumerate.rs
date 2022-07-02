@@ -118,6 +118,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 record.push_field(constant_value.as_bytes());
             }
         } else if copy_operation {
+            #[allow(clippy::unnecessary_to_owned)]
             record.push_field(&record[copy_index].to_vec());
         } else if args.flag_uuid {
             let id = Uuid::new_v4();

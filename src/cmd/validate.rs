@@ -64,6 +64,7 @@ Common options:
     -q, --quiet                Don't show progress bars.
 ";
 
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Deserialize)]
 struct Args {
     flag_fail_fast: bool,

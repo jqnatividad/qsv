@@ -64,6 +64,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut wtr = Config::new(&args.flag_output).writer()?;
     let sampled = if let Some(mut idx) = rconfig.indexed()? {
+        #[allow(clippy::cast_precision_loss)]
         if sample_size < 1.0 {
             sample_size *= idx.count() as f64;
         }
