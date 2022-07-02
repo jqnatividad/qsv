@@ -154,7 +154,7 @@ actix-web = { version = "4.1", default-features = false, features = [
 assert-json-diff = "2.0"
 newline-converter = "0.2"
 quickcheck = { version = "1", default-features = false }
-redis = { version = "0.21", default-features = false }
+redis = { version = "0.21", default-features = false, features = ["ahash"] }
 serial_test = "0.8"
 
 [patch.crates-io]
@@ -163,10 +163,10 @@ csv          = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf
 csv-core     = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
 csv-index    = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
 docopt       = { git = "https://github.com/jqnatividad/docopt.rs", branch = "perf-clippy-2021" }
-ext-sort     = { git = "https://github.com/jqnatividad/ext-sort-rs", rev = "fd955e2462a65cae0de9c9e5113ea56d2904106a" }
-jsonschema   = { git = "https://github.com/jqnatividad/jsonschema-rs", rev = "90fb1bbf54b744a3eb176015860ff0721d115703" }
+ext-sort     = { git = "https://github.com/jqnatividad/ext-sort-rs", branch = "master" }
+jsonschema   = { git = "https://github.com/jqnatividad/jsonschema-rs", branch = "master" }
 grex         = { git = "https://github.com/jqnatividad/grex", rev = "45af84167b8bd6d38c9e36ada7fe677bebe8886f" }
-redis        = { git = "https://github.com/mitsuhiko/redis-rs", rev = "bb329dd010dab71e96a730818dc2e4684f563789" }
+redis        = { git = "https://github.com/mitsuhiko/redis-rs", rev = "c21c2df6d8e18fbaab06de5b3d6617f72bf6c6e8" }
 publicsuffix = { git = "https://github.com/jqnatividad/publicsuffix", branch = "bump-hashbrown"}
 
 [features]
