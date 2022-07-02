@@ -354,9 +354,6 @@ fn fetch_ratelimit() {
         rt::System::new().block_on(server_future)
     });
 
-    // a short pause to ensure the test webserver is up
-    thread::sleep(core::time::Duration::from_millis(100));
-
     let server_handle = rx.recv().expect("test webserver error");
 
     // proceed with usual unit test
