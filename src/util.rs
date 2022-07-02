@@ -597,6 +597,7 @@ fn send_hwsurvey(bin_name: &str, updated: bool, latest_release: &str, curr_versi
         .user_agent(DEFAULT_USER_AGENT)
         .brotli(true)
         .gzip(true)
+        .deflate(true)
         .http2_adaptive_window(true)
         .build()
         .unwrap();
