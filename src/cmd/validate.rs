@@ -829,6 +829,8 @@ fn load_json(uri: &str) -> Result<String> {
                 .user_agent(util::DEFAULT_USER_AGENT)
                 .brotli(true)
                 .gzip(true)
+                .deflate(true)
+                .http2_adaptive_window(true)
                 .build()
                 .unwrap();
 

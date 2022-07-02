@@ -313,6 +313,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .cookie_store(args.flag_cookies)
         .brotli(true)
         .gzip(true)
+        .deflate(true)
         .http2_adaptive_window(true)
         .build()?;
 
