@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Pin Rust nightly to 2022-07-02
 
 ### Fixed
-* fixed redis dev-dependency which mistakenly added a non-existent ahash feature
+* fixed redis dev-dependency which mistakenly added a non-existent ahash feature. This prevented publishing of qsv 0.58.1 to crates.io.
 
 ## [0.58.1] - 2022-07-02
 ### Changed
