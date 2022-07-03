@@ -5,14 +5,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.58.1] - 2022-07-02
+### Changed
+* Universal clippy handling. Added allow clippy hint section in main for clippy lints we allow/ignore, and added exceptions as needed throughout the codebase.
+This means clippy, even in pedantic/nursery/perf mode willl have no warnings. https://github.com/jqnatividad/qsv/pull/365
+* reqwest deflate compression support https://github.com/jqnatividad/qsv/pull/366
+* `fetch`: expanded --http-header explanation/example
+* `fetch`: refactored --timeout processing https://github.com/jqnatividad/qsv/commit/3454ed068f0f243473a0f66520f90f55ece4bf49
+* `fetch`: prioritized ACCEPT-ENCODING to prioritize brotli first, gzip second, and deflate last for compression https://github.com/jqnatividad/qsv/commit/c540d22b630df424a8516bb07af9bbf80150d67b
+* updated patched crates, particularly our rust-csv fork with more clippy recommendations applied
+* cargo update bump actix-http from 3.2.0 to 3.2.1
+
+### Fixed
+* `excel`: fixed docopt usage text which prevents --help from working
+* `extsort`: better parsing/error-handling, instead of generic panic when no input/output is specified. This also allows --help to be displayed.
+
 ## [0.58.0] - 2022-07-02
-## Added
+### Added
 * `excel`: add --list-sheets option https://github.com/jqnatividad/qsv/pull/364
 * `fetch`: added 0 option to --rate-limit to go as fast as possible.  
 **CAUTION:** Only use this with APIs that have [RateLimit](https://tools.ietf.org/id/draft-polli-ratelimit-headers-00.html) headers so qsv can automatically down-throttle as required. Otherwise, the fetch job will look like a Denial-of-Service attack. https://github.com/jqnatividad/qsv/commit/e4ece60aea3720b872119ca7a8ad3666dad033e7
 * `fetch`: added --max-errors option. Maximum number of errors before aborting
 
-## Changed
+### Changed
 * progress bars now display per_sec throughput while running jobs, not just at the end of a job
 * `fetch`: for long-running fetch jobs, the progress bar will update at least every three seconds, so it doesn't look like the job is frozen/stuck.
 * `fetch`: added additional verbiage to usage text on how to pass multiple key-value pairs to the HTTP header
@@ -23,7 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * added stale warning to benchmarks. The benchmarks have not been updated since qsv 0.20.0.
 * cargo update bumped several other dependencies
 
-## Fixed
+### Fixed
 * remove unneeded sleep pause before fetch ratelimit test
 
 ## [0.57.1] - 2022-06-31
