@@ -632,7 +632,7 @@ dependencies = [
 [[package]]
 name = "csv"
 version = "1.1.6"
-source = "git+https://github.com/jqnatividad/rust-csv?branch=perf-tweaks#1a996db36f4cf400e362bc5407e459b8a95172ef"
+source = "git+https://github.com/jqnatividad/rust-csv?branch=perf-tweaks#4caaf305d6fb835f9276001344dbacdec2e9a948"
 dependencies = [
  "bstr",
  "csv-core",
@@ -644,7 +644,7 @@ dependencies = [
 [[package]]
 name = "csv-core"
 version = "0.1.10"
-source = "git+https://github.com/jqnatividad/rust-csv?branch=perf-tweaks#1a996db36f4cf400e362bc5407e459b8a95172ef"
+source = "git+https://github.com/jqnatividad/rust-csv?branch=perf-tweaks#4caaf305d6fb835f9276001344dbacdec2e9a948"
 dependencies = [
  "memchr",
 ]
@@ -652,7 +652,7 @@ dependencies = [
 [[package]]
 name = "csv-index"
 version = "0.1.6"
-source = "git+https://github.com/jqnatividad/rust-csv?branch=perf-tweaks#1a996db36f4cf400e362bc5407e459b8a95172ef"
+source = "git+https://github.com/jqnatividad/rust-csv?branch=perf-tweaks#4caaf305d6fb835f9276001344dbacdec2e9a948"
 dependencies = [
  "byteorder",
  "csv",
