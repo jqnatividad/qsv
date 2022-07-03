@@ -2229,7 +2229,6 @@ name = "redis"
 version = "0.21.5"
 source = "git+https://github.com/mitsuhiko/redis-rs?rev=c21c2df6d8e18fbaab06de5b3d6617f72bf6c6e8#c21c2df6d8e18fbaab06de5b3d6617f72bf6c6e8"
 dependencies = [
- "ahash",
  "combine",
  "itoa",
  "percent-encoding",
