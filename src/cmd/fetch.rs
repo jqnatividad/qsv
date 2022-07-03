@@ -172,6 +172,9 @@ static DEFAULT_REDIS_CONN_STR: &str = "redis://127.0.0.1:6379";
 static DEFAULT_REDIS_TTL_SECONDS: u64 = 60 * 60 * 24 * 28; // 28 days in seconds
 static TIMEOUT: OnceCell<u64> = OnceCell::new();
 
+// prioritize compression schemes. Brotli first, then gzip, then deflate, and * last
+static DEFAULT_ACCEPT_ENCODING: &str = "br;q=1.0, gzip;q=0.6, deflate;q=0.4, *;q=0.2";
+
 impl From<reqwest::Error> for CliError {
     fn from(err: reqwest::Error) -> CliError {
         CliError::Other(err.to_string())
@@ -287,7 +290,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 
     let http_headers: HeaderMap = {
-        let mut map = HeaderMap::with_capacity(args.flag_http_header.len());
+        let mut map = HeaderMap::with_capacity(args.flag_http_header.len() + 1);
         for header in args.flag_http_header {
             let vals: Vec<&str> = header.split(':').collect();
 
@@ -303,6 +306,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             map.append(header_name, header_val);
         }
 
+        map.append(
+            reqwest::header::ACCEPT_ENCODING,
+            HeaderValue::from_str(DEFAULT_ACCEPT_ENCODING).unwrap(),
+        );
         map
     };
 
