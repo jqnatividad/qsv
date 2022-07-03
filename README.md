@@ -69,7 +69,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ) for more details.
 | [stats](/src/cmd/stats.rs#L25)[^2][^3][^4] | Infer data type & compute descriptive statistics for each column in a CSV (sum, min/max, min/max length, mean, stddev, variance, nullcount, quartiles, IQR, lower/upper fences, skewness, median, mode & cardinality). Uses multithreading to go faster if an index is present. |
 | [table](/src/cmd/table.rs#L12)[^3] | Show aligned output of a CSV using [elastic tabstops](https://github.com/BurntSushi/tabwriter).  |
 | [transpose](/src/cmd/transpose.rs#L9)[^3] | Transpose rows/columns of a CSV.  |
-| [validate](/src/cmd/validate.rs#L29-L30)[^2][^5] | Validate CSV data with JSON Schema (See `schema` command). If no jsonschema file is provided, validates if a CSV conforms to the [RFC 4180 standard](https://datatracker.ietf.org/doc/html/rfc4180). |
+| [validate](/src/cmd/validate.rs#L30-L31)[^2][^5] | Validate CSV data with JSON Schema (See `schema` command). If no jsonschema file is provided, validates if a CSV conforms to the [RFC 4180 standard](https://datatracker.ietf.org/doc/html/rfc4180). |
 
 [^1]: enabled by optional feature flag. Not available on `qsvlite`.   
 [^2]: uses an index when available.   
