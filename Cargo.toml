@@ -67,7 +67,7 @@ opt-level = 3
 ahash = "0.7"
 anyhow = "1.0"
 byteorder = "1.4"
-cached = { version = "0.34", default-features = false, features = [
+cached = { version = "0.35", default-features = false, features = [
     "proc_macro",
     "redis_store",
 ], optional = true }
