@@ -43,12 +43,14 @@ Excel options:
                                i.e. if the column's name has any of these patterns,
                                it is interpreted as a date column.
 
+                               Otherwise, Excel date columns that do not satisfy the
+                               whitelist will be returned as number of days since 1900.
+
                                Set to "all" to interpret ALL numeric columns as date types.
                                Note that this will cause false positive date conversions
                                for all numeric columns that are not dates.
 
-                               Otherwise, Excel date columns that do not satisfy the
-                               whitelist will be returned as number of days since 1900.
+                               Conversely, set to "none" to stop date processing altogether.
 
                                If the list is all integers, its interpreted as the zero-based
                                index of all the date columns for date processing.
@@ -180,8 +182,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 let col_name = cell.get_string().unwrap_or_default();
                 record.push_field(col_name);
                 if whitelist_lower == "all" {
-                    // "all" was used - all numeric fields are to be treated as dates
+                    // "all" - all numeric fields are to be treated as dates
                     date_flag.insert(col_idx, true);
+                } else if whitelist_lower == "none" {
+                    // "none" - date processing will not be attempted
+                    date_flag.insert(col_idx, false);
                 } else {
                     // check if the column name is in the dates_whitelist
                     date_flag.insert(
