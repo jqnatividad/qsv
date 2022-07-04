@@ -32,22 +32,26 @@ Excel options:
                                Negative indices start from the end (-1 = last sheet). 
                                If the sheet cannot be found, qsv will read the first sheet.
                                [default: 0]
-    --list-sheets              Creates a CSV of sheet names with two columns - index and sheet_name.
+    --list-sheets              Creates a CSV of sheet names with two columns - index & sheet_name.
                                All other Excel options are ignored.
-    --flexible                 Continue even if the number of fields is different 
+    --flexible                 Continue even if the number of columns is different 
                                from the previous record.
-    --trim                     Trim all fields of records so that leading and trailing
-                               whitespaces (Unicode definition) are removed.
+    --trim                     Trim all fields so that leading & trailing whitespaces are removed.
                                Also removes embedded linebreaks.
     --dates-whitelist <list>   The case-insensitive patterns to look for when 
-                               shortlisting fields for date inferencing.
-                               i.e. if the field's name has any of these patterns,
-                               it is shortlisted for date inferencing.
-                               Set to "all" to inspect ALL fields for date/datetime types.
-                               Note that doing so will cause false positive date conversions
-                               for all numeric columns.
-                               Otherwise, Excel date fields that do not satisfy the
+                               shortlisting columns for date processing.
+                               i.e. if the column's name has any of these patterns,
+                               it is interpreted as a date column.
+
+                               Set to "all" to interpret ALL numeric columns as date types.
+                               Note that this will cause false positive date conversions
+                               for all numeric columns that are not dates.
+
+                               Otherwise, Excel date columns that do not satisfy the
                                whitelist will be returned as number of days since 1900.
+
+                               If the list is all integers, its interpreted as the zero-based
+                               index of all the date columns for date processing.
                                [default: date,time,due,opened,closed]                               
 
 Common options:
@@ -144,10 +148,25 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     let whitelist_lower = args.flag_dates_whitelist.to_lowercase();
-    log::info!("inferring dates with date-whitelist: {whitelist_lower}");
+    info!("using date-whitelist: {whitelist_lower}");
 
-    let dates_whitelist =
-        itertools::Itertools::collect_vec(whitelist_lower.split(',').map(|s| s.trim().to_string()));
+    // an all number whitelist means we're being given
+    // the column indices of the date column names
+    let mut all_numbers_whitelist = true;
+
+    let mut dates_whitelist =
+        itertools::Itertools::collect_vec(whitelist_lower.split(',').map(|s| {
+            if all_numbers_whitelist && s.parse::<u16>().is_err() {
+                all_numbers_whitelist = false;
+                info!("NOT a column index dates whitelist");
+            }
+            s.trim().to_string()
+        }));
+    // we sort the whitelist, so we can do the faster binary_search() instead of contains()
+    // with an all_numbers_whitelist
+    if all_numbers_whitelist {
+        dates_whitelist.sort_unstable();
+    }
 
     let mut trimmed_record = csv::StringRecord::new();
     let mut date_flag: Vec<bool> = Vec::new();
@@ -157,22 +176,31 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         record.clear();
         for (col_idx, cell) in row.iter().enumerate() {
             if row_idx == 0 {
-                // its the header row, capture the column names
-                let column_name = cell.get_string().unwrap_or_default();
-                record.push_field(column_name);
+                // its the header row, check the dates whitelist
+                let col_name = cell.get_string().unwrap_or_default();
+                record.push_field(col_name);
                 if whitelist_lower == "all" {
+                    // "all" was used - all numeric fields are to be treated as dates
                     date_flag.insert(col_idx, true);
                 } else {
-                    // see if the column name is in the dates_whitelist
-                    let mut date_found = false;
-                    for whitelist_item in &dates_whitelist {
-                        if column_name.contains(whitelist_item) {
-                            date_found = true;
-                            log::info!("inferring dates for {column_name}");
-                            break;
-                        }
-                    }
-                    date_flag.insert(col_idx, date_found);
+                    // check if the column name is in the dates_whitelist
+                    date_flag.insert(
+                        col_idx,
+                        if all_numbers_whitelist {
+                            dates_whitelist.binary_search(&col_idx.to_string()).is_ok()
+                        } else {
+                            let mut date_found = false;
+                            let col_name_lower = col_name.to_lowercase();
+                            for whitelist_item in &dates_whitelist {
+                                if col_name_lower.contains(whitelist_item) {
+                                    date_found = true;
+                                    log::info!("date-whitelisted: {col_name}");
+                                    break;
+                                }
+                            }
+                            date_found
+                        },
+                    );
                 }
                 continue;
             }
