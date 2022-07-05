@@ -115,6 +115,7 @@ qsv_currency = { version = "0.5", optional = true }
 qsv-sniffer = { version = "0.5", features = ["runtime-dispatch-simd"] }
 rand = "0.8"
 rayon = "1.5"
+redis = { version = "0.21", default-features = false, optional = true }
 regex = "1"
 reqwest = { version = "0.11", features = [
     "blocking",
@@ -154,7 +155,6 @@ actix-web = { version = "4.1", default-features = false, features = [
 assert-json-diff = "2.0"
 newline-converter = "0.2"
 quickcheck = { version = "1", default-features = false }
-redis = { version = "0.21", default-features = false }
 serial_test = "0.8"
 
 [patch.crates-io]
@@ -183,7 +183,7 @@ apply = [
     "vader_sentiment",
     "whatlang",
 ]
-fetch = ["cached", "dynfmt", "governor", "jql", "jsonxf", "url"]
+fetch = ["cached", "dynfmt", "governor", "jql", "jsonxf", "redis", "url"]
 foreach = []
 generate = ["test-data-generation"]
 lua = ["mlua"]
