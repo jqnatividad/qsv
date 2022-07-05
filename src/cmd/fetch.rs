@@ -14,6 +14,7 @@ use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::{debug, error, info};
 use once_cell::sync::{Lazy, OnceCell};
 use rand::Rng;
+use redis;
 use regex::Regex;
 use serde::Deserialize;
 use serde_json::json;
@@ -132,7 +133,10 @@ Fetch options:
                                [default: 0 ]
     --store-error              On error, store error code/message instead of blank value.
     --cookies                  Allow cookies.
-    --redis                    Use Redis to cache responses.
+    --redis                    Use Redis to cache responses. It connects to "redis://127.0.0.1:6379"
+                               with a TTL of 28 days, and a cache hit NOT renewing an entry's TTL.
+                               Adjust the QSV_REDIS_CONNECTION_STRING, QSV_REDIS_TTL_SECONDS &
+                               QSV_REDIS_TTL_REFRESH respectively to change Redis settings.
 
 Common options:
     -h, --help                 Display this message
@@ -207,6 +211,16 @@ static JQL_GROUPS: once_cell::sync::OnceCell<Vec<jql::Group>> = OnceCell::new();
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
+
+    if args.flag_redis {
+        // check if redis connection is valid
+        let conn_str = &REDISCONFIG.conn_str;
+        let redis_client = redis::Client::open(conn_str.to_string()).unwrap();
+        let redis_conn = redis_client.get_connection();
+        if redis_conn.is_err() {
+            return fail!(format!("Cannot connect to Redis using \"{conn_str}\"."));
+        }
+    }
 
     if args.flag_timeout > 3_600 {
         return fail!("Timeout cannot be more than one hour");
@@ -537,6 +551,7 @@ fn get_redis_response(
     )))
 }
 
+#[inline]
 fn get_response(
     url: &str,
     client: &reqwest::blocking::Client,
@@ -669,15 +684,9 @@ fn get_response(
 
     // check if the API has ratelimits and we need to do dynamic throttling to respect the limits or
     // the API status code is not 200 (most likely 503-service not available or 493-too many requests)
-    // because ratelimit is still relatively new, there are several variants of how its used in the wild
-    // we recognize variants with the "x-" prefix (custom header) and the "-second" suffix
     if api_status != 200
         || api_respheader.contains_key("ratelimit-limit")
-        || api_respheader.contains_key("ratelimit-limit-remaining")
-        || api_respheader.contains_key("ratelimit-limit-remaining-second")
         || api_respheader.contains_key("x-ratelimit-limit")
-        || api_respheader.contains_key("x-ratelimit-limit-remaining")
-        || api_respheader.contains_key("x-ratelimit-limit-remaining-second")
     {
         let mut ratelimit_remaining = api_respheader.get("ratelimit-remaining");
         let temp_var = api_respheader.get("x-ratelimit-remaining");
