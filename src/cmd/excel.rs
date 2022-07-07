@@ -181,15 +181,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 // its the header row, check the dates whitelist
                 let col_name = cell.get_string().unwrap_or_default();
                 record.push_field(col_name);
-                if whitelist_lower == "all" {
+                match whitelist_lower.as_str() {
                     // "all" - all numeric fields are to be treated as dates
-                    date_flag.insert(col_idx, true);
-                } else if whitelist_lower == "none" {
+                    "all" => date_flag.insert(col_idx, true),
                     // "none" - date processing will not be attempted
-                    date_flag.insert(col_idx, false);
-                } else {
+                    "none" => date_flag.insert(col_idx, false),
                     // check if the column name is in the dates_whitelist
-                    date_flag.insert(
+                    _ => date_flag.insert(
                         col_idx,
                         if all_numbers_whitelist {
                             dates_whitelist.binary_search(&col_idx.to_string()).is_ok()
@@ -205,7 +203,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             }
                             date_found
                         },
-                    );
+                    ),
                 }
                 continue;
             }
@@ -218,14 +216,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             record.push_field({
                                 &cell.as_datetime().map_or_else(
                                     || format!("ERROR: Cannot convert {f} to datetime"),
-                                    |dt| format!("{}", dt),
+                                    |dt| format!("{dt}"),
                                 )
                             });
                         } else {
                             record.push_field({
                                 &cell.as_date().map_or_else(
                                     || format!("ERROR: Cannot convert {f} to date"),
-                                    |d| format!("{}", d),
+                                    |d| format!("{d}"),
                                 )
                             });
                         };
