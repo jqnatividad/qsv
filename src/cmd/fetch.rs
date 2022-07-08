@@ -490,10 +490,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     Ok(wtr.flush()?)
 }
 
+// we only need url and flag_jql in the cache key
+// as this is an in-memory cache that is only used
+// for one qsv session
 #[cached(
-    size = 1_000_000,
+    size = 2_000_000,
     key = "String",
-    convert = r#"{ format!("{}{:?}{}{}{}", url, flag_jql, flag_store_error, flag_pretty, include_existing_columns) }"#,
+    convert = r#"{ format!("{}{:?}", url, flag_jql) }"#,
     sync_writes = false
 )]
 fn get_cached_response(
@@ -516,6 +519,9 @@ fn get_cached_response(
     )
 }
 
+// get_redis_response needs a longer key as its a persistent cache
+// and and the values of flag_store_error, flag_pretty and include_existing_columns
+// may change between sessions
 #[io_cached(
     type = "cached::RedisCache<String, String>",
     key = "String",
