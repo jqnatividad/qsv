@@ -648,7 +648,7 @@ fn get_response(
                 api_status.canonical_reason().unwrap_or("unknown error")
             );
         } else {
-            final_value = String::default();
+            final_value = String::new();
         }
     } else {
         // apply JQL selector if provided
@@ -668,7 +668,7 @@ fn get_response(
                     if flag_store_error {
                         final_value = e.to_string();
                     } else {
-                        final_value = String::default();
+                        final_value = String::new();
                     }
                     error_flag = true;
                 }
