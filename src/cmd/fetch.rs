@@ -611,7 +611,7 @@ fn get_response(
         }
     }
     if limiter_total_wait > 0 && limiter_total_wait <= governor_timeout_ms {
-        info!("throttled for {} ms", limiter_total_wait);
+        info!("throttled for {limiter_total_wait} ms");
     }
 
     let resp: reqwest::blocking::Response = match client.get(&valid_url).send() {
@@ -624,12 +624,12 @@ fn get_response(
             return String::default();
         }
     };
-    debug!("response: {:?}", &resp);
+    debug!("response: {resp:?}");
 
     let api_respheader = resp.headers().clone();
     let api_status = resp.status();
     let api_value: String = resp.text().unwrap_or_default();
-    debug!("api value: {}", &api_value);
+    debug!("api value: {api_value}");
 
     let final_value: String;
     let mut error_flag = false;
