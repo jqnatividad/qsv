@@ -174,6 +174,7 @@ struct Args {
 
 static DEFAULT_REDIS_CONN_STR: &str = "redis://127.0.0.1:6379";
 static DEFAULT_REDIS_TTL_SECS: u64 = 60 * 60 * 24 * 28; // 28 days in seconds
+static DEFAULT_REDIS_POOL_SIZE: u32 = 20;
 static TIMEOUT_SECS: OnceCell<u64> = OnceCell::new();
 
 // prioritize compression schemes. Brotli first, then gzip, then deflate, and * last
@@ -189,6 +190,7 @@ static GLOBAL_ERROR_COUNT: AtomicUsize = AtomicUsize::new(0);
 
 struct RedisConfig {
     conn_str: String,
+    max_pool_size: u32,
     ttl_secs: u64,
     ttl_refresh: bool,
 }
@@ -197,10 +199,14 @@ impl RedisConfig {
         Self {
             conn_str: std::env::var("QSV_REDIS_CONNECTION_STRING")
                 .unwrap_or_else(|_| DEFAULT_REDIS_CONN_STR.to_string()),
+            max_pool_size: std::env::var("QSV_REDIS_MAX_POOL_SIZE")
+                .unwrap_or_else(|_| DEFAULT_REDIS_POOL_SIZE.to_string())
+                .parse()
+                .unwrap_or(DEFAULT_REDIS_POOL_SIZE),
             ttl_secs: std::env::var("QSV_REDIS_TTL_SECS")
                 .unwrap_or_else(|_| DEFAULT_REDIS_TTL_SECS.to_string())
                 .parse()
-                .unwrap(),
+                .unwrap_or(DEFAULT_REDIS_TTL_SECS),
             ttl_refresh: std::env::var("QSV_REDIS_TTL_REFRESH").is_ok(),
         }
     }
@@ -531,6 +537,7 @@ fn get_cached_response(
             .set_namespace("q")
             .set_refresh(REDISCONFIG.ttl_refresh)
             .set_connection_string(&REDISCONFIG.conn_str)
+            .set_connection_pool_max_size(REDISCONFIG.max_pool_size)
             .build()
             .expect("error building redis cache")
     } "##,
