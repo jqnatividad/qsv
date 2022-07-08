@@ -458,7 +458,7 @@ pub fn init_logger() {
         .format_for_files(flexi_logger::detailed_format)
         .o_append(true)
         .rotate(
-            Criterion::Size(1_000_000),
+            Criterion::Size(10_000_000), // 10 mb
             Naming::Numbers,
             Cleanup::KeepLogAndCompressedFiles(10, 100),
         )
