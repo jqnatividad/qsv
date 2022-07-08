@@ -597,12 +597,12 @@ fn get_response(
 
     // wait until RateLimiter gives Okay or we timeout
     const MINIMUM_WAIT_MS: u64 = 10;
-    let min_wait = time::Duration::from_millis(MINIMUM_WAIT_MS);
+    const MIN_WAIT: time::Duration = time::Duration::from_millis(MINIMUM_WAIT_MS);
     let mut limiter_total_wait = 0;
     let governor_timeout_ms = unsafe { *TIMEOUT.get_unchecked() * 1_000 };
     while limiter.check().is_err() {
         limiter_total_wait += MINIMUM_WAIT_MS;
-        thread::sleep(min_wait);
+        thread::sleep(MIN_WAIT);
         if limiter_total_wait > governor_timeout_ms {
             info!("rate limit timeout");
             break;
