@@ -173,8 +173,8 @@ struct Args {
 }
 
 static DEFAULT_REDIS_CONN_STR: &str = "redis://127.0.0.1:6379";
-static DEFAULT_REDIS_TTL_SECONDS: u64 = 60 * 60 * 24 * 28; // 28 days in seconds
-static TIMEOUT: OnceCell<u64> = OnceCell::new();
+static DEFAULT_REDIS_TTL_SECS: u64 = 60 * 60 * 24 * 28; // 28 days in seconds
+static TIMEOUT_SECS: OnceCell<u64> = OnceCell::new();
 
 // prioritize compression schemes. Brotli first, then gzip, then deflate, and * last
 static DEFAULT_ACCEPT_ENCODING: &str = "br;q=1.0, gzip;q=0.6, deflate;q=0.4, *;q=0.2";
@@ -198,7 +198,7 @@ impl RedisConfig {
             conn_str: std::env::var("QSV_REDIS_CONNECTION_STRING")
                 .unwrap_or_else(|_| DEFAULT_REDIS_CONN_STR.to_string()),
             ttl_secs: std::env::var("QSV_REDIS_TTL_SECS")
-                .unwrap_or_else(|_| DEFAULT_REDIS_TTL_SECONDS.to_string())
+                .unwrap_or_else(|_| DEFAULT_REDIS_TTL_SECS.to_string())
                 .parse()
                 .unwrap(),
             ttl_refresh: std::env::var("QSV_REDIS_TTL_REFRESH").is_ok(),
@@ -227,7 +227,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     info!("TIMEOUT: {} secs", args.flag_timeout);
-    TIMEOUT.set(args.flag_timeout).unwrap();
+    TIMEOUT_SECS.set(args.flag_timeout).unwrap();
 
     let mut rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
@@ -329,7 +329,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     use reqwest::blocking::Client;
 
-    let client_timeout = time::Duration::from_secs(*TIMEOUT.get().unwrap_or(&30));
+    let client_timeout = time::Duration::from_secs(*TIMEOUT_SECS.get().unwrap_or(&30));
     let client = Client::builder()
         .user_agent(util::DEFAULT_USER_AGENT)
         .default_headers(http_headers)
@@ -599,7 +599,7 @@ fn get_response(
     const MINIMUM_WAIT_MS: u64 = 10;
     const MIN_WAIT: time::Duration = time::Duration::from_millis(MINIMUM_WAIT_MS);
     let mut limiter_total_wait = 0;
-    let governor_timeout_ms = unsafe { *TIMEOUT.get_unchecked() * 1_000 };
+    let governor_timeout_ms = unsafe { *TIMEOUT_SECS.get_unchecked() * 1_000 };
     while limiter.check().is_err() {
         limiter_total_wait += MINIMUM_WAIT_MS;
         thread::sleep(MIN_WAIT);
