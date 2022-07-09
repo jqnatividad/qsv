@@ -275,10 +275,10 @@ impl Args {
                 sum: true,
                 range: true,
                 dist: true,
-                cardinality: self.flag_cardinality || self.flag_everything,
-                median: self.flag_median && !self.flag_quartiles && !self.flag_everything,
-                quartiles: self.flag_quartiles || self.flag_everything,
-                mode: self.flag_mode || self.flag_everything,
+                cardinality: self.flag_everything || self.flag_cardinality,
+                median: !self.flag_everything && self.flag_median && !self.flag_quartiles,
+                quartiles: self.flag_everything || self.flag_quartiles,
+                mode: self.flag_everything || self.flag_mode,
             }))
             .take(record_len),
         );
@@ -429,11 +429,10 @@ impl Stats {
         if which.mode || which.cardinality {
             modes = Some(stats::Unsorted::default());
         }
-        if which.median {
-            median = Some(stats::Unsorted::default());
-        }
         if which.quartiles {
             quartiles = Some(stats::Unsorted::default());
+        } else if which.median {
+            median = Some(stats::Unsorted::default());
         }
         Stats {
             typ: FieldType::default(),
