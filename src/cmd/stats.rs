@@ -839,8 +839,8 @@ impl TypedMinMax {
         self.strings.add(sample.to_vec());
         match typ {
             TString | TNull => {}
-            TFloat => unsafe {
-                let n = str::from_utf8_unchecked(sample)
+            TFloat => {
+                let n = unsafe { str::from_utf8_unchecked(sample) }
                     .parse::<f64>()
                     .ok()
                     .unwrap();
@@ -848,21 +848,22 @@ impl TypedMinMax {
                 self.floats.add(n);
                 #[allow(clippy::cast_precision_loss)]
                 self.integers.add(n as i64);
-            },
-            TInteger => unsafe {
-                let n = str::from_utf8_unchecked(sample)
+            }
+            TInteger => {
+                let n = unsafe { str::from_utf8_unchecked(sample) }
                     .parse::<i64>()
                     .ok()
                     .unwrap();
                 self.integers.add(n);
                 #[allow(clippy::cast_precision_loss)]
                 self.floats.add(n as f64);
-            },
-            TDate | TDateTime => unsafe {
-                let tempstr = str::from_utf8_unchecked(sample);
-                let n = parse_with_preference(tempstr, *DMY_PREFERENCE.get_unchecked()).unwrap();
+            }
+            TDate | TDateTime => {
+                let tempstr = unsafe { str::from_utf8_unchecked(sample) };
+                let n = parse_with_preference(tempstr, unsafe { *DMY_PREFERENCE.get_unchecked() })
+                    .unwrap();
                 self.dates.add(n.to_string());
-            },
+            }
         }
     }
 
