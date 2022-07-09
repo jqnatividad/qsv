@@ -134,9 +134,11 @@ Fetch options:
     --store-error              On error, store error code/message instead of blank value.
     --cookies                  Allow cookies.
     --redis                    Use Redis to cache responses. It connects to "redis://127.0.0.1:6379"
-                               with a TTL of 28 days, and a cache hit NOT renewing an entry's TTL.
-                               Adjust the QSV_REDIS_CONNECTION_STRING, QSV_REDIS_TTL_SECONDS &
-                               QSV_REDIS_TTL_REFRESH respectively to change Redis settings.
+                               with a connection pool size of 20, with a TTL of 28 days, and a cache hit 
+                               NOT renewing an entry's TTL.
+                               Adjust the QSV_REDIS_CONNECTION_STRING, QSV_REDIS_MAX_POOL_SIZE, 
+                               QSV_REDIS_TTL_SECONDS & QSV_REDIS_TTL_REFRESH respectively to
+                               change Redis settings.
 
 Common options:
     -h, --help                 Display this message
