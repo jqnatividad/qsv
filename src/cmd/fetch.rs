@@ -11,7 +11,7 @@ use governor::{
     clock::DefaultClock, middleware::NoOpMiddleware, state::direct::NotKeyed, state::InMemoryState,
 };
 use indicatif::{ProgressBar, ProgressDrawTarget};
-use log::{debug, error, info};
+use log::{debug, error, info, log_enabled};
 use once_cell::sync::{Lazy, OnceCell};
 use rand::Rng;
 use redis;
@@ -346,6 +346,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .gzip(true)
         .deflate(true)
         .http2_adaptive_window(true)
+        .connection_verbose(log_enabled!(log::Level::Debug) || log_enabled!(log::Level::Trace))
         .timeout(client_timeout)
         .build()?;
 
