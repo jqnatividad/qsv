@@ -70,6 +70,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut rdr = rconfig.reader()?;
     let mut wtr = Config::new(&None).writer()?;
 
+    #[allow(clippy::trivial_regex)]
     let template_pattern = Regex::new(r"\{\}")?;
     let splitter_pattern = Regex::new(r#"(?:[\w-]+|"[^"]*"|'[^']*'|`[^`]*`)"#)?;
     let cleaner_pattern = Regex::new(r#"(?:^["'`]|["'`]$)"#)?;
@@ -112,16 +113,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             })
             .collect();
 
-        if !args.flag_unify {
-            let mut cmd = Command::new(prog)
-                .args(cmd_args)
-                .stdout(Stdio::inherit())
-                .stderr(Stdio::inherit())
-                .spawn()
-                .unwrap();
-
-            cmd.wait().unwrap();
-        } else {
+        if args.flag_unify {
             let mut cmd = Command::new(prog)
                 .args(cmd_args)
                 .stdout(Stdio::piped())
@@ -163,6 +155,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     wtr.write_byte_record(&output_record)?;
                 }
             }
+
+            cmd.wait().unwrap();
+        } else {
+            let mut cmd = Command::new(prog)
+                .args(cmd_args)
+                .stdout(Stdio::inherit())
+                .stderr(Stdio::inherit())
+                .spawn()
+                .unwrap();
 
             cmd.wait().unwrap();
         }
