@@ -930,7 +930,8 @@ impl Commute for TypedMinMax {
     }
 }
 
-#[inline]
+#[allow(clippy::inline_always)]
+#[inline(always)]
 fn from_bytes<T: FromStr>(bytes: &[u8]) -> T
 where
     <T as FromStr>::Err: std::fmt::Debug,
