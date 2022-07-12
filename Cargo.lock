@@ -1356,10 +1356,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "kdtree"
-version = "0.6.0"
+name = "kiddo"
+version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "80ee359328fc9087e9e3fc0a4567c4dd27ec69a127d6a70e8d9dd22845b8b1a2"
+checksum = "fc0a5c92307668140bf7d63a03a23e2da0b0453801fd54888c903cb7f723c293"
 dependencies = [
  "num-traits",
 ]
@@ -2326,12 +2326,12 @@ dependencies = [
 
 [[package]]
 name = "reverse_geocoder"
-version = "3.0.0"
+version = "3.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7e2c7983a04230d15e83a3079765d370628e04a2474d585b712d7c46e17e9ab0"
+checksum = "1c7cb9a3269abd8896c527042bd635f05531e18be7d5de1eb71c501027c51423"
 dependencies = [
  "csv",
- "kdtree",
+ "kiddo",
  "serde",
  "serde_derive",
 ]
