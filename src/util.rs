@@ -35,7 +35,10 @@ pub static DEFAULT_USER_AGENT: &str = concat!(
     env!("CARGO_PKG_VERSION"),
     " (https://github.com/jqnatividad/qsv)",
 );
-const TARGET: &str = env!("TARGET");
+const TARGET: &str = match option_env!("TARGET") {
+    Some(target) => target,
+    None => "Unknown_target",
+};
 
 pub fn max_jobs() -> usize {
     let num_cpus = num_cpus();
@@ -546,7 +549,10 @@ pub fn qsv_check_for_update() {
 fn send_hwsurvey(bin_name: &str, updated: bool, latest_release: &str, curr_version: &str) {
     use sysinfo::{CpuExt, System, SystemExt};
 
-    const QSV_KIND: &str = env!("QSV_KIND");
+    const QSV_KIND: &str = match option_env!("QSV_KIND") {
+        Some(kind) => kind,
+        None => "installed",
+    };
     static HW_SURVEY_URL: &str =
         "https://4dhmneehnl.execute-api.us-east-1.amazonaws.com/dev/qsv-hwsurvey";
 
