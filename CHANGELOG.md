@@ -5,6 +5,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.59.0] - 2022-07-18
+### Added
+* added `tojsonl` command - CSV to JSONL https://github.com/jqnatividad/qsv/pull/380
+* `excel`: additional --date-whitelist modes https://github.com/jqnatividad/qsv/pull/368
+* `fetch`: added Redis connection pooling https://github.com/jqnatividad/qsv/pull/373
+
+### Changed
+* `python`: remove unneeded python3.dll generation https://github.com/jqnatividad/qsv/pull/379
+* `stats`: minor performance tweaks
+* `fetch`: minor performance tweaks - larger/faster in-mem cache
+* Bump cached from 0.34.1 to 0.37.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/367 and https://github.com/jqnatividad/qsv/pull/381
+* Bump regex from 1.5.6 to 1.6.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/369
+* Bump reverse_geocoder from 3.0.0 to 3.0.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/377
+* Bump actions/setup-python from 4.0.0 to 4.1.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/376
+* Bump serde from 1.0.138 to 1.0.139 by @dependabot in https://github.com/jqnatividad/qsv/pull/374
+* cargo update bump several dependencies
+* larger logfiles (from 1mb to 10mb) before rotating
+* apply select clippy recommendations
+* pin Rust nightly to 2022-07-13
+
+### Fixed
+* Use option_env! macro to trap errors https://github.com/jqnatividad/qsv/pull/378
+
 ## [0.58.2] - 2022-07-02
 ### Changed
 * Pin Rust nightly to 2022-07-02
