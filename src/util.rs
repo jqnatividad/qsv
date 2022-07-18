@@ -12,6 +12,7 @@ use log::{debug, error, info, log_enabled, Level};
 #[cfg(any(feature = "apply", feature = "fetch", feature = "python"))]
 use regex::Regex;
 use serde::de::{Deserialize, DeserializeOwned, Deserializer, Error};
+#[cfg(any(feature = "full", feature = "lite"))]
 use serde_json::json;
 #[cfg(any(feature = "full", feature = "lite"))]
 use thousands::Separable;
