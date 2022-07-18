@@ -80,6 +80,7 @@ mod test_sort;
 mod test_split;
 mod test_stats;
 mod test_table;
+mod test_tojsonl;
 mod test_transpose;
 mod test_validate;
 
