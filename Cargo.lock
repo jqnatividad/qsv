@@ -2011,6 +2011,7 @@ dependencies = [
  "flexi_logger",
  "governor",
  "grex",
+ "indexmap",
  "indicatif",
  "itertools",
  "itoa",
