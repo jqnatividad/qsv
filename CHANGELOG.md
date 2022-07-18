@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * cargo update bump several dependencies
 * larger logfiles (from 1mb to 10mb) before rotating
 * apply select clippy recommendations
+* pin Rust nightly to 2022-07-13
 
 ### Fixed
 * Use option_env! macro to trap errors https://github.com/jqnatividad/qsv/pull/378
