@@ -68,7 +68,7 @@ Now, if we want to generate a CSV file with the parsed City and State, we use th
 new-column and jql options.
 
 $ qsv fetch URL --new-column CityState --jql '"places"[0]."place name","places"[0]."state abbreviation"' 
-  data.csv > datatest.csv
+  data.csv > data_with_CityState.csv
 
 data_with_CityState.csv
   URL, CityState,
