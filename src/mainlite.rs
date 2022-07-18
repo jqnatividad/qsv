@@ -80,6 +80,7 @@ macro_rules! command_list {
     split       Split CSV data into many files
     stats       Infer data types and compute descriptive statistics
     table       Align CSV data into columns
+    tojsonl     Convert CSV to newline-delimited JSON
     transpose   Transpose rows/columns of CSV data
     validate    Validate CSV data for RFC4180-compliance or with JSON Schema
 
@@ -247,6 +248,7 @@ enum Command {
     Split,
     Stats,
     Table,
+    Tojsonl,
     Transpose,
     Validate,
 }
@@ -304,6 +306,7 @@ impl Command {
             Command::Split => cmd::split::run(argv),
             Command::Stats => cmd::stats::run(argv),
             Command::Table => cmd::table::run(argv),
+            Command::Tojsonl => cmd::tojsonl::run(argv),
             Command::Transpose => cmd::transpose::run(argv),
             Command::Validate => cmd::validate::run(argv),
         }
