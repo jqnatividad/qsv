@@ -8,8 +8,7 @@ use crate::CliResult;
 use serde::Deserialize;
 
 static USAGE: &str = "
-Converts a newline-delimited JSON file (.ndjson or .jsonl, typically) into
-a CSV file.
+Convert newline-delimited JSON (JSONL/NDJSON) to CSV.
 
 The command tries to do its best but since it is not possible to
 straightforwardly convert JSON lines to CSV, the process might lose some complex
