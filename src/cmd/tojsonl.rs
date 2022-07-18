@@ -6,7 +6,7 @@ use crate::CliResult;
 use serde::Deserialize;
 
 static USAGE: &str = "
-Converts a CSV to a newline-delimited JSON (JSONL/NDJSON) file.
+Converts CSV to a newline-delimited JSON (JSONL/NDJSON).
 
 Usage:
     qsv tojsonl [options] [<input>]
