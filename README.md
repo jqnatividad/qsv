@@ -20,7 +20,7 @@
 
 </div>
 
-> ℹ️ **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's May 2018 release](https://github.com/BurntSushi/xsv/issues/267). It also has numerous new features & 53 additional commands/subcommands/operations (for a total of 73).
+> ℹ️ **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's May 2018 release](https://github.com/BurntSushi/xsv/issues/267). It also has numerous new features & 54 additional commands/subcommands/operations (for a total of 74).
 See [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ) for more details.
 
 ## Available commands
@@ -68,6 +68,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ) for more details.
 | [split](/src/cmd/split.rs#L14)[^2][^4] | Split one CSV file into many CSV files of N chunks. (Uses multithreading to go faster if an index is present.) |
 | [stats](/src/cmd/stats.rs#L25)[^2][^3][^4] | Infer data type & compute descriptive statistics for each column in a CSV (sum, min/max, min/max length, mean, stddev, variance, nullcount, quartiles, IQR, lower/upper fences, skewness, median, mode & cardinality). Uses multithreading to go faster if an index is present. |
 | [table](/src/cmd/table.rs#L12)[^3] | Show aligned output of a CSV using [elastic tabstops](https://github.com/BurntSushi/tabwriter).  |
+| [tojsonl](/src/cmd/tojsonl.rs#L11) | Converts a CSV to a newline-delimited JSON file. |
 | [transpose](/src/cmd/transpose.rs#L9)[^3] | Transpose rows/columns of a CSV.  |
 | [validate](/src/cmd/validate.rs#L30-L31)[^2][^5] | Validate CSV data with JSON Schema (See `schema` command). If no jsonschema file is provided, validates if a CSV conforms to the [RFC 4180 standard](https://datatracker.ietf.org/doc/html/rfc4180). |
 
