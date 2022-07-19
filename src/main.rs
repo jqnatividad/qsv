@@ -1,3 +1,4 @@
+#![allow(unknown_lints)]
 #![cfg_attr(
     feature = "cargo-clippy",
     allow(
