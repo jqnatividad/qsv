@@ -134,12 +134,14 @@ Fetch options:
                                [default: 0 ]
     --store-error              On error, store error code/message instead of blank value.
     --cookies                  Allow cookies.
-    --redis                    Use Redis to cache responses. It connects to "redis://127.0.0.1:6379"
+    --redis                    Use Redis to cache responses. It connects to "redis://127.0.0.1:6379/1"
                                with a connection pool size of 20, with a TTL of 28 days, and a cache hit 
                                NOT renewing an entry's TTL.
                                Adjust the QSV_REDIS_CONNECTION_STRING, QSV_REDIS_MAX_POOL_SIZE, 
                                QSV_REDIS_TTL_SECONDS & QSV_REDIS_TTL_REFRESH respectively to
                                change Redis settings.
+    --flushdb                  Flush all the keys in the current Redis database on startup.
+                               This option is ignored if the --redis option is NOT enabled.
 
 Common options:
     -h, --help                 Display this message
@@ -167,6 +169,7 @@ struct Args {
     flag_store_error: bool,
     flag_cookies: bool,
     flag_redis: bool,
+    flag_flushdb: bool,
     flag_output: Option<String>,
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
@@ -175,7 +178,7 @@ struct Args {
     arg_input: Option<String>,
 }
 
-static DEFAULT_REDIS_CONN_STR: &str = "redis://127.0.0.1:6379";
+static DEFAULT_REDIS_CONN_STR: &str = "redis://127.0.0.1:6379/1";
 static DEFAULT_REDIS_TTL_SECS: u64 = 60 * 60 * 24 * 28; // 28 days in seconds
 static DEFAULT_REDIS_POOL_SIZE: u32 = 20;
 static TIMEOUT_SECS: OnceCell<u64> = OnceCell::new();
@@ -225,9 +228,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // check if redis connection is valid
         let conn_str = &REDISCONFIG.conn_str;
         let redis_client = redis::Client::open(conn_str.to_string()).unwrap();
-        let redis_conn = redis_client.get_connection();
-        if redis_conn.is_err() {
-            return fail!(format!("Cannot connect to Redis using \"{conn_str}\"."));
+
+        let mut redis_conn;
+        match redis_client.get_connection() {
+            Err(e) => {
+                return fail!(format!(
+                    r#"Cannot connect to Redis using "{conn_str}": {e:?}"#
+                ))
+            }
+            Ok(x) => redis_conn = x,
+        }
+
+        if args.flag_flushdb {
+            redis::cmd("FLUSHDB").execute(&mut redis_conn);
+            info!("flushed Redis database");
         }
     }
 
@@ -605,7 +619,7 @@ fn get_response(
             } else {
                 "".to_string()
             };
-            debug!("Invalid URL: Store_error: {flag_store_error} - {url_invalid_err}");
+            error!("Invalid URL: Store_error: {flag_store_error} - {url_invalid_err}");
             return url_invalid_err;
         }
     };
@@ -640,12 +654,11 @@ fn get_response(
             return String::default();
         }
     };
-    debug!("response: {resp:?}");
+    // debug!("response: {resp:?}");
 
     let api_respheader = resp.headers().clone();
     let api_status = resp.status();
     let api_value: String = resp.text().unwrap_or_default();
-    debug!("api value: {api_value}");
 
     let final_value: String;
     let mut error_flag = false;
@@ -702,7 +715,7 @@ fn get_response(
         }
     }
 
-    debug!("final value: {final_value}");
+    // debug!("final value: {final_value}");
 
     // check if the API has ratelimits and we need to do dynamic throttling to respect the limits or
     // the API status code is not 200 (most likely 503-service not available or 493-too many requests)
