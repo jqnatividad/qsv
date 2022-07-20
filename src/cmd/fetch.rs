@@ -97,13 +97,13 @@ $ qsv fetch --jql '"places"[0]."place name","places"[0]."state abbreviation"'
   addr_data.csv -c CityState --url-template "https://geocode.test/api/addr.json?addr={street_address}&zip={zip_code}"
   > enriched.csv
 
-USING THE -HTTP-HEADER OPTION:
+USING THE HTTP-HEADER OPTION:
 
-The --http-header option allows you to append arbitrary key value pairs (a k-v pair is separated by a :) 
+The --http-header option allows you to append arbitrary key value pairs (a valid pair is a key and value separated by a colon) 
 to the HTTP header (to authenticate against an API, pass custom header fields, etc.). Note that you can 
 pass as many key-value pairs by using --http-header option repeatedly. For example:
 
-$ qsv fetch "https://httpbin.org/get" --http-header " X-Api-Key:TEST_KEY --http-header "X-Api-Secret:ABC123XYZ" data.csv
+$ qsv fetch URL data.csv --http-header "X-Api-Key:TEST_KEY" --http-header "X-Api-Secret:ABC123XYZ" --http-header "Accept-Language: fr-FR"
 
 
 Usage:
