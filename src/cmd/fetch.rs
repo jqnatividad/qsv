@@ -97,13 +97,13 @@ $ qsv fetch --jql '"places"[0]."place name","places"[0]."state abbreviation"'
   addr_data.csv -c CityState --url-template "https://geocode.test/api/addr.json?addr={street_address}&zip={zip_code}"
   > enriched.csv
 
-USING THE -HTTP-HEADER OPTION:
+USING THE HTTP-HEADER OPTION:
 
-The --http-header option allows you to append arbitrary key value pairs (a k-v pair is separated by a :) 
+The --http-header option allows you to append arbitrary key value pairs (a valid pair is a key and value separated by a colon) 
 to the HTTP header (to authenticate against an API, pass custom header fields, etc.). Note that you can 
 pass as many key-value pairs by using --http-header option repeatedly. For example:
 
-$ qsv fetch "https://httpbin.org/get" --http-header " X-Api-Key:TEST_KEY --http-header "X-Api-Secret:ABC123XYZ" data.csv
+$ qsv fetch URL data.csv --http-header "X-Api-Key:TEST_KEY" --http-header "X-Api-Secret:ABC123XYZ" --http-header "Accept-Language: fr-FR"
 
 
 Usage:
@@ -126,8 +126,9 @@ Fetch options:
                                otherwise your fetch job may look like a Denial Of Service attack.
                                [default: 25]
     --timeout <seconds>        Timeout for each URL GET. [default: 30 ]
-    --http-header <key:value>  Append custom header(s) to the server. Pass multiple key-value pairs
-                               by adding this option multiple times, once for each pair.
+    --http-header <key:value>  Append custom header(s) to the HTTP header. Pass multiple key-value pairs
+                               by adding this option multiple times, once for each pair. The key and value 
+                               should be separated by a colon.
     --max-errors <count>       Maximum number of errors before aborting.
                                Set to zero (0) to continue despite errors.
                                [default: 0 ]
@@ -316,6 +317,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         for header in args.flag_http_header {
             let vals: Vec<&str> = header.split(':').collect();
 
+            if vals.len() != 2 {
+                return fail!(format!("{vals:?} is not a valid key-value pair. Expecting a key and a value seperated by a colon."));
+            }
+
             // allocate new String for header key to put into map
             let k: String = String::from(vals[0].trim());
             let header_name: HeaderName =
@@ -334,6 +339,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         );
         map
     };
+    debug!("HTTP Header: {http_headers:?}");
 
     use reqwest::blocking::Client;
 
