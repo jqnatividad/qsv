@@ -126,7 +126,7 @@ Fetch options:
                                otherwise your fetch job may look like a Denial Of Service attack.
                                [default: 25]
     --timeout <seconds>        Timeout for each URL GET. [default: 30 ]
-    --http-header <key:value>  Append custom header(s) to the server. Pass multiple key-value pairs
+    --http-header <key:value>  Append custom header(s) to the HTTP header. Pass multiple key-value pairs
                                by adding this option multiple times, once for each pair. The key and value 
                                should be separated by a colon.
     --max-errors <count>       Maximum number of errors before aborting.
