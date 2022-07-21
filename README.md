@@ -91,14 +91,14 @@ Alternatively, you can compile from source by
 and installing `qsv` using Cargo:
 
 ```bash
-cargo install qsv --features full
+cargo install qsv --features all_full
 ```
 
 If you encounter compilation errors, ensure you're using the exact
 version of the dependencies qsv was built with by issuing:
 
 ```bash
-cargo install qsv --locked --features full
+cargo install qsv --locked --features all_full
 ```
 
 Compiling from this repository also works similarly:
@@ -106,9 +106,9 @@ Compiling from this repository also works similarly:
 ```bash
 git clone git@github.com:jqnatividad/qsv.git
 cd qsv
-cargo build --release --features full
+cargo build --release --features all_full
 # or if you encounter compilation errors
-cargo build --release --locked --features full
+cargo build --release --locked --features all_full
 ```
 
 The compiled binary will end up in `./target/release/`.
@@ -247,6 +247,7 @@ Several dependencies also have environment variables that influence qsv's perfor
 * `fetch` - enable `fetch` command.
 * `generate` - enable `generate` command.
 * `full` - enable to build qsv.
+* `all_full` - enable to build qsv with all features (apply,fetch,foreach,generate,lua,python)
 * `lite` - enable to build qsvlite.
 * `datapusher_plus` - enable to build qsvdp - the [DataPusher+](https://github.com/dathere/datapusher-plus) optimized qsv binary.
 * `nightly` - enable to turn on nightly/unstable features in the `rand` and `regex` creates when building with Rust nightly/unstable.
