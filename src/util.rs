@@ -181,7 +181,7 @@ pub fn finish_progress(progress: &ProgressBar) {
     let per_sec_rate = progress.per_sec();
 
     let finish_template = format!(
-        "[{{elapsed_precise}}] [{{bar:20}} {{percent}}%{{msg}}] ({}/sec)",
+        "[{{elapsed_precise}}] [{{bar:25}} {{percent}}%{{msg}}] ({}/sec)",
         per_sec_rate.separate_with_commas()
     );
 

@@ -6,11 +6,12 @@ use crate::CliResult;
 use crate::{regex_once_cell, util};
 use cached::proc_macro::{cached, io_cached};
 use cached::{RedisCache, Return};
+use console::set_colors_enabled;
 use dynfmt::Format;
 use governor::{
     clock::DefaultClock, middleware::NoOpMiddleware, state::direct::NotKeyed, state::InMemoryState,
 };
-use indicatif::{ProgressBar, ProgressDrawTarget};
+use indicatif::{MultiProgress, ProgressBar, ProgressDrawTarget};
 use log::{debug, error, info, log_enabled};
 use once_cell::sync::{Lazy, OnceCell};
 use rand::Rng;
@@ -21,6 +22,7 @@ use serde_json::json;
 use std::fs;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::{thread, time};
+use thousands::Separable;
 use url::Url;
 
 // NOTE: when using the examples with jql, DO NOT USE the example here as rendered in
@@ -124,14 +126,14 @@ Fetch options:
                                down-throttling as required.
                                CAUTION: Only use zero for APIs that use RateLimit headers,
                                otherwise your fetch job may look like a Denial Of Service attack.
-                               [default: 25]
+                               [default: 0 ]
     --timeout <seconds>        Timeout for each URL GET. [default: 30 ]
     --http-header <key:value>  Append custom header(s) to the HTTP header. Pass multiple key-value pairs
                                by adding this option multiple times, once for each pair. The key and value 
                                should be separated by a colon.
     --max-errors <count>       Maximum number of errors before aborting.
                                Set to zero (0) to continue despite errors.
-                               [default: 0 ]
+                               [default: 100 ]
     --store-error              On error, store error code/message instead of blank value.
     --cookies                  Allow cookies.
     --redis                    Use Redis to cache responses. It connects to "redis://127.0.0.1:6379/1"
@@ -223,6 +225,8 @@ static JQL_GROUPS: once_cell::sync::OnceCell<Vec<jql::Group>> = OnceCell::new();
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
+
+    set_colors_enabled(true);
 
     if args.flag_redis {
         // check if redis connection is valid
@@ -384,15 +388,35 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         false
     };
 
-    // prep progress bar
-    let progress = ProgressBar::new(0);
+    // prep progress bars
+    let multi_progress = MultiProgress::new();
+    let progress = multi_progress.add(ProgressBar::new(0));
     let mut record_count = 0;
+
+    let error_progress = multi_progress.add(ProgressBar::new(args.flag_max_errors as u64));
+    if args.flag_max_errors > 0 {
+        error_progress.set_style(
+            indicatif::ProgressStyle::default_bar()
+                .template("{bar:37.red/white} {percent}%{msg} ({per_sec})")
+                .progress_chars("##-"),
+        );
+        error_progress.set_message(format!(
+            " of {} max errors",
+            args.flag_max_errors.separate_with_commas()
+        ));
+    } else {
+        error_progress.set_draw_target(ProgressDrawTarget::hidden());
+    }
     if args.flag_quiet {
         progress.set_draw_target(ProgressDrawTarget::hidden());
+        error_progress.set_draw_target(ProgressDrawTarget::hidden());
     } else {
         record_count = util::count_rows(&rconfig)?;
         util::prep_progress(&progress, record_count);
     }
+
+    let multi_progress = thread::spawn(move || multi_progress.join());
+
     // do a progress update every 3 seconds
     // for very large jobs, so the job doesn't look frozen
     if record_count > 100_000 {
@@ -430,6 +454,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut final_value = String::with_capacity(150);
     #[allow(unused_assignments)]
     let mut str_value = String::with_capacity(100);
+    let mut running_error_count = 0_usize;
 
     while rdr.read_byte_record(&mut record)? {
         if not_quiet {
@@ -497,13 +522,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             wtr.write_byte_record(&output_record)?;
         }
 
-        if args.flag_max_errors > 0
-            && GLOBAL_ERROR_COUNT.load(Ordering::Relaxed) >= args.flag_max_errors
-        {
-            let abort_msg = format!("{} max errors. Fetch aborted.", args.flag_max_errors);
-            info!("{abort_msg}");
-            eprintln!("{abort_msg}");
-            break;
+        if args.flag_max_errors > 0 {
+            let error_count = GLOBAL_ERROR_COUNT.load(Ordering::SeqCst);
+            if error_count > running_error_count {
+                error_progress.inc(1);
+                running_error_count += 1;
+            }
+            if error_count >= args.flag_max_errors {
+                break;
+            };
         }
     }
 
@@ -514,6 +541,22 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             util::update_cache_info!(progress, GET_CACHED_RESPONSE);
         }
         util::finish_progress(&progress);
+        if running_error_count == 0 {
+            error_progress.finish_and_clear();
+        } else {
+            error_progress.finish();
+
+            // sleep so we can dependably write eprintln without messing up progress bars
+            thread::sleep(time::Duration::from_nanos(10));
+
+            let abort_msg = format!(
+                "{} max errors. Fetch aborted.",
+                args.flag_max_errors.separate_with_commas()
+            );
+            info!("{abort_msg}");
+            eprintln!("{abort_msg}");
+        }
+        let _ = multi_progress.join().unwrap();
     }
 
     Ok(wtr.flush()?)
@@ -647,7 +690,11 @@ fn get_response(
     let resp: reqwest::blocking::Response = match client.get(&valid_url).send() {
         Ok(response) => response,
         Err(error) => {
-            error!("Cannot fetch url: {valid_url:?}, error: {error:?}");
+            GLOBAL_ERROR_COUNT.fetch_add(1, Ordering::SeqCst);
+            error!(
+                "Cannot fetch url: {valid_url:?}, err_count: {}, error: {error:?}",
+                GLOBAL_ERROR_COUNT.load(Ordering::SeqCst)
+            );
             if flag_store_error {
                 return error.to_string();
             }
