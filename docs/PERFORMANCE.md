@@ -43,13 +43,13 @@ If you want to use the standard allocator, use the `--no-default-features` flag
 when installing/compiling qsv, e.g.:
 
 ```bash
-cargo install qsv --path . --no-default-features
+cargo install qsv --path . --no-default-features --features all_full
 ```
 
 or
 
 ```bash
-cargo build --release --no-default-features
+cargo build --release --no-default-features --features all_full
 ```
 
 To find out what memory allocator qsv is using, run `qsv --version`. After the qsv version number, the allocator used is displayed ("`standard`" or "`mimalloc`"). Note that mimalloc is not supported on the `x86_64-pc-windows-gnu` and `arm` targets, and you'll need to use the "standard" allocator on those platforms.
@@ -74,10 +74,10 @@ To find out your jobs setting, call `qsv --version`. The second to the last numb
 
 ```
 $ qsv --version
-qsv 0.46.1-mimalloc-apply;fetch;generate;lua;python;-16-16
+qsv 0.59.0-mimalloc-apply;fetch;foreach;generate;lua;python;-8-8 (aarch64-apple-darwin)
 ```
 
-Shows that I'm running qsv version 0.46.1, with the `mimalloc` allocator (instead of `standard`), and I have the `apply`, `fetch`, `generate`, `lua` and `python` features enabled, and qsv will be using 16 logical processors out of 16 detected when running multithreaded commands.
+Shows that I'm running qsv version 0.59.0, with the `mimalloc` allocator (instead of `standard`), and I have the `apply`, `fetch`, `foreach`, `generate`, `lua` and `python` features enabled, and qsv will be using 8 logical processors out of 8 detected when running multithreaded commands, and the qsv binary was built to target the aarch64-apple-darwin platform (Apple Silicon).
 
 ## Caching
 The `apply geocode` command [memoizes](https://en.wikipedia.org/wiki/Memoization) otherwise expensive geocoding operations and will report its cache hit rate. `apply geocode` memoization, however, is not persistent across sessions.
@@ -105,7 +105,8 @@ and the fact that qsv itself doesn't actually use any unstable feature flags, be
 
 If you need to maximize performance - use the nightly builds. If you prefer a "safer", rock-solid experience, use the stable builds.
 
-If you want to really squeeze every little bit of performance from qsv, build it locally like how the Nightly Release Builds are built.
+If you want to really squeeze every little bit of performance from qsv, build it locally like how the Nightly Release Builds are built, with the additional step
+of optimizing the build to your machine's CPU by setting `RUSTFLAGS='-C target-cpu=native'`.
 Doing so will ensure CPU features are tailored to your hardware and you're using the latest Rust nightly.
 For example, on Ubuntu 22.04 LTS Linux:
 
@@ -115,7 +116,7 @@ rustup update
 export RUSTFLAGS='-C target-cpu=native'
 
 # to build qsv on nightly with all features. The binary will be in the target/release-nightly folder.
-cargo build --profile release-nightly --bin qsv -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --features full,apply,generate,lua,fetch,foreach,python,nightly --target x86_64-unknown-linux-gnu
+cargo build --profile release-nightly --bin qsv -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --features all_full,nightly --target x86_64-unknown-linux-gnu
 
 # to build qsvlite
 cargo build --profile release-nightly --bin qsvlite -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --features lite,nightly --target x86_64-unknown-linux-gnu
