@@ -12,7 +12,7 @@ categories    = ["command-line-utilities", "parser-implementations"]
 license       = "MIT OR Unlicense"
 autotests     = false
 edition       = "2021"
-rust-version  = "1.62.0"
+rust-version  = "1.62.1"
 autobins      = false
 include       = ["src/**/*", "LICENSE-MIT", "README.md", "CHANGELOG.md"]
 
@@ -73,6 +73,7 @@ cached = { version = "0.37", default-features = false, features = [
 ], optional = true }
 calamine = { version = "0.18", features = ["dates"] }
 censor = { version = "0.2", optional = true }
+console = { version = "0.15", optional = true }
 crossbeam-channel = "0.5"
 csv = "1.1"
 csv-core = "0.1"
@@ -184,7 +185,16 @@ apply = [
     "vader_sentiment",
     "whatlang",
 ]
-fetch = ["cached", "dynfmt", "governor", "jql", "jsonxf", "redis", "url"]
+fetch = [
+    "cached",
+    "console",
+    "dynfmt",
+    "governor",
+    "jql",
+    "jsonxf",
+    "redis",
+    "url",
+]
 foreach = []
 generate = ["test-data-generation"]
 lua = ["mlua"]

@@ -6,11 +6,12 @@ use crate::CliResult;
 use crate::{regex_once_cell, util};
 use cached::proc_macro::{cached, io_cached};
 use cached::{RedisCache, Return};
+use console::set_colors_enabled;
 use dynfmt::Format;
 use governor::{
     clock::DefaultClock, middleware::NoOpMiddleware, state::direct::NotKeyed, state::InMemoryState,
 };
-use indicatif::{ProgressBar, ProgressDrawTarget};
+use indicatif::{MultiProgress, ProgressBar, ProgressDrawTarget};
 use log::{debug, error, info, log_enabled};
 use once_cell::sync::{Lazy, OnceCell};
 use rand::Rng;
@@ -21,6 +22,7 @@ use serde_json::json;
 use std::fs;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::{thread, time};
+use thousands::Separable;
 use url::Url;
 
 // NOTE: when using the examples with jql, DO NOT USE the example here as rendered in
@@ -97,13 +99,13 @@ $ qsv fetch --jql '"places"[0]."place name","places"[0]."state abbreviation"'
   addr_data.csv -c CityState --url-template "https://geocode.test/api/addr.json?addr={street_address}&zip={zip_code}"
   > enriched.csv
 
-USING THE -HTTP-HEADER OPTION:
+USING THE HTTP-HEADER OPTION:
 
-The --http-header option allows you to append arbitrary key value pairs (a k-v pair is separated by a :) 
+The --http-header option allows you to append arbitrary key value pairs (a valid pair is a key and value separated by a colon) 
 to the HTTP header (to authenticate against an API, pass custom header fields, etc.). Note that you can 
 pass as many key-value pairs by using --http-header option repeatedly. For example:
 
-$ qsv fetch "https://httpbin.org/get" --http-header " X-Api-Key:TEST_KEY --http-header "X-Api-Secret:ABC123XYZ" data.csv
+$ qsv fetch URL data.csv --http-header "X-Api-Key:TEST_KEY" --http-header "X-Api-Secret:ABC123XYZ" --http-header "Accept-Language: fr-FR"
 
 
 Usage:
@@ -124,21 +126,24 @@ Fetch options:
                                down-throttling as required.
                                CAUTION: Only use zero for APIs that use RateLimit headers,
                                otherwise your fetch job may look like a Denial Of Service attack.
-                               [default: 25]
+                               [default: 0 ]
     --timeout <seconds>        Timeout for each URL GET. [default: 30 ]
-    --http-header <key:value>  Append custom header(s) to the server. Pass multiple key-value pairs
-                               by adding this option multiple times, once for each pair.
+    --http-header <key:value>  Append custom header(s) to the HTTP header. Pass multiple key-value pairs
+                               by adding this option multiple times, once for each pair. The key and value 
+                               should be separated by a colon.
     --max-errors <count>       Maximum number of errors before aborting.
                                Set to zero (0) to continue despite errors.
-                               [default: 0 ]
+                               [default: 100 ]
     --store-error              On error, store error code/message instead of blank value.
     --cookies                  Allow cookies.
-    --redis                    Use Redis to cache responses. It connects to "redis://127.0.0.1:6379"
+    --redis                    Use Redis to cache responses. It connects to "redis://127.0.0.1:6379/1"
                                with a connection pool size of 20, with a TTL of 28 days, and a cache hit 
                                NOT renewing an entry's TTL.
                                Adjust the QSV_REDIS_CONNECTION_STRING, QSV_REDIS_MAX_POOL_SIZE, 
                                QSV_REDIS_TTL_SECONDS & QSV_REDIS_TTL_REFRESH respectively to
                                change Redis settings.
+    --flushdb                  Flush all the keys in the current Redis database on startup.
+                               This option is ignored if the --redis option is NOT enabled.
 
 Common options:
     -h, --help                 Display this message
@@ -166,6 +171,7 @@ struct Args {
     flag_store_error: bool,
     flag_cookies: bool,
     flag_redis: bool,
+    flag_flushdb: bool,
     flag_output: Option<String>,
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
@@ -174,7 +180,7 @@ struct Args {
     arg_input: Option<String>,
 }
 
-static DEFAULT_REDIS_CONN_STR: &str = "redis://127.0.0.1:6379";
+static DEFAULT_REDIS_CONN_STR: &str = "redis://127.0.0.1:6379/1";
 static DEFAULT_REDIS_TTL_SECS: u64 = 60 * 60 * 24 * 28; // 28 days in seconds
 static DEFAULT_REDIS_POOL_SIZE: u32 = 20;
 static TIMEOUT_SECS: OnceCell<u64> = OnceCell::new();
@@ -220,13 +226,26 @@ static JQL_GROUPS: once_cell::sync::OnceCell<Vec<jql::Group>> = OnceCell::new();
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
+    set_colors_enabled(true);
+
     if args.flag_redis {
         // check if redis connection is valid
         let conn_str = &REDISCONFIG.conn_str;
         let redis_client = redis::Client::open(conn_str.to_string()).unwrap();
-        let redis_conn = redis_client.get_connection();
-        if redis_conn.is_err() {
-            return fail!(format!("Cannot connect to Redis using \"{conn_str}\"."));
+
+        let mut redis_conn;
+        match redis_client.get_connection() {
+            Err(e) => {
+                return fail!(format!(
+                    r#"Cannot connect to Redis using "{conn_str}": {e:?}"#
+                ))
+            }
+            Ok(x) => redis_conn = x,
+        }
+
+        if args.flag_flushdb {
+            redis::cmd("FLUSHDB").execute(&mut redis_conn);
+            info!("flushed Redis database");
         }
     }
 
@@ -316,6 +335,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         for header in args.flag_http_header {
             let vals: Vec<&str> = header.split(':').collect();
 
+            if vals.len() != 2 {
+                return fail!(format!("{vals:?} is not a valid key-value pair. Expecting a key and a value seperated by a colon."));
+            }
+
             // allocate new String for header key to put into map
             let k: String = String::from(vals[0].trim());
             let header_name: HeaderName =
@@ -334,6 +357,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         );
         map
     };
+    debug!("HTTP Header: {http_headers:?}");
 
     use reqwest::blocking::Client;
 
@@ -364,15 +388,35 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         false
     };
 
-    // prep progress bar
-    let progress = ProgressBar::new(0);
+    // prep progress bars
+    let multi_progress = MultiProgress::new();
+    let progress = multi_progress.add(ProgressBar::new(0));
     let mut record_count = 0;
+
+    let error_progress = multi_progress.add(ProgressBar::new(args.flag_max_errors as u64));
+    if args.flag_max_errors > 0 {
+        error_progress.set_style(
+            indicatif::ProgressStyle::default_bar()
+                .template("{bar:37.red/white} {percent}%{msg} ({per_sec})")
+                .progress_chars("##-"),
+        );
+        error_progress.set_message(format!(
+            " of {} max errors",
+            args.flag_max_errors.separate_with_commas()
+        ));
+    } else {
+        error_progress.set_draw_target(ProgressDrawTarget::hidden());
+    }
     if args.flag_quiet {
         progress.set_draw_target(ProgressDrawTarget::hidden());
+        error_progress.set_draw_target(ProgressDrawTarget::hidden());
     } else {
         record_count = util::count_rows(&rconfig)?;
         util::prep_progress(&progress, record_count);
     }
+
+    let multi_progress = thread::spawn(move || multi_progress.join());
+
     // do a progress update every 3 seconds
     // for very large jobs, so the job doesn't look frozen
     if record_count > 100_000 {
@@ -410,6 +454,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut final_value = String::with_capacity(150);
     #[allow(unused_assignments)]
     let mut str_value = String::with_capacity(100);
+    let mut running_error_count = 0_usize;
 
     while rdr.read_byte_record(&mut record)? {
         if not_quiet {
@@ -477,13 +522,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             wtr.write_byte_record(&output_record)?;
         }
 
-        if args.flag_max_errors > 0
-            && GLOBAL_ERROR_COUNT.load(Ordering::Relaxed) >= args.flag_max_errors
-        {
-            let abort_msg = format!("{} max errors. Fetch aborted.", args.flag_max_errors);
-            info!("{abort_msg}");
-            eprintln!("{abort_msg}");
-            break;
+        if args.flag_max_errors > 0 {
+            let error_count = GLOBAL_ERROR_COUNT.load(Ordering::SeqCst);
+            if error_count > running_error_count {
+                error_progress.inc(1);
+                running_error_count += 1;
+            }
+            if error_count >= args.flag_max_errors {
+                break;
+            };
         }
     }
 
@@ -494,6 +541,22 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             util::update_cache_info!(progress, GET_CACHED_RESPONSE);
         }
         util::finish_progress(&progress);
+        if running_error_count == 0 {
+            error_progress.finish_and_clear();
+        } else {
+            error_progress.finish();
+
+            // sleep so we can dependably write eprintln without messing up progress bars
+            thread::sleep(time::Duration::from_nanos(10));
+
+            let abort_msg = format!(
+                "{} max errors. Fetch aborted.",
+                args.flag_max_errors.separate_with_commas()
+            );
+            info!("{abort_msg}");
+            eprintln!("{abort_msg}");
+        }
+        let _ = multi_progress.join().unwrap();
     }
 
     Ok(wtr.flush()?)
@@ -599,7 +662,7 @@ fn get_response(
             } else {
                 "".to_string()
             };
-            debug!("Invalid URL: Store_error: {flag_store_error} - {url_invalid_err}");
+            error!("Invalid URL: Store_error: {flag_store_error} - {url_invalid_err}");
             return url_invalid_err;
         }
     };
@@ -627,19 +690,22 @@ fn get_response(
     let resp: reqwest::blocking::Response = match client.get(&valid_url).send() {
         Ok(response) => response,
         Err(error) => {
-            error!("Cannot fetch url: {valid_url:?}, error: {error:?}");
+            GLOBAL_ERROR_COUNT.fetch_add(1, Ordering::SeqCst);
+            error!(
+                "Cannot fetch url: {valid_url:?}, err_count: {}, error: {error:?}",
+                GLOBAL_ERROR_COUNT.load(Ordering::SeqCst)
+            );
             if flag_store_error {
                 return error.to_string();
             }
             return String::default();
         }
     };
-    debug!("response: {resp:?}");
+    // debug!("response: {resp:?}");
 
     let api_respheader = resp.headers().clone();
     let api_status = resp.status();
     let api_value: String = resp.text().unwrap_or_default();
-    debug!("api value: {api_value}");
 
     let final_value: String;
     let mut error_flag = false;
@@ -696,7 +762,7 @@ fn get_response(
         }
     }
 
-    debug!("final value: {final_value}");
+    // debug!("final value: {final_value}");
 
     // check if the API has ratelimits and we need to do dynamic throttling to respect the limits or
     // the API status code is not 200 (most likely 503-service not available or 493-too many requests)

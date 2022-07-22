@@ -8,7 +8,7 @@
 [![Clones](https://img.shields.io/badge/dynamic/json?color=success&label=clones&query=count&url=https://gist.githubusercontent.com/jqnatividad/13f60ad0b54856a55f60b8e653079349/raw/clone.json&logo=github)](https://github.com/MShawon/github-clone-count-badge)
 [![Discussions](https://img.shields.io/github/discussions/jqnatividad/qsv)](https://github.com/jqnatividad/qsv/discussions)
 [![Docs](https://img.shields.io/badge/wiki-docs-yellowgreen)](https://github.com/jqnatividad/qsv/wiki)
-[![Minimum supported Rust version](https://img.shields.io/badge/Rust-1.62.0-red?logo=rust)](#minimum-supported-rust-version)
+[![Minimum supported Rust version](https://img.shields.io/badge/Rust-1.62.1-red?logo=rust)](#minimum-supported-rust-version)
 [![Crates.io](https://img.shields.io/crates/v/qsv.svg)](https://crates.io/crates/qsv)
 [![Crates.io downloads](https://img.shields.io/crates/d/qsv?color=orange&label=crates.io%20downloads)](https://crates.io/crates/qsv)
 
@@ -37,7 +37,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ) for more details.
 | [exclude](/src/cmd/exclude.rs#L18)[^2] | Removes a set of CSV data from another set based on the specified columns.  |
 | [explode](/src/cmd/explode.rs#L8-L9) | Explode rows into multiple ones by splitting a column value based on the given separator.  |
 | [extsort](/src/cmd/extsort.rs#L12)[^5] | Sort an arbitrarily large CSV/text file using a multithreaded [external merge sort](https://en.wikipedia.org/wiki/External_sorting) algorithm. |
-| [fetch](/src/cmd/fetch.rs#L31) | Fetches HTML/data from web pages or web services for every row. Comes with [jql](https://github.com/yamafaktory/jql#%EF%B8%8F-usage) JSON query language support, dynamic throttling ([RateLimit](https://tools.ietf.org/id/draft-polli-ratelimit-headers-00.html)) & caching with optional [Redis](https://redis.io/) support for persistent caching. |
+| [fetch](/src/cmd/fetch.rs#L33) | Fetches HTML/data from web pages or web services for every row. Comes with [jql](https://github.com/yamafaktory/jql#%EF%B8%8F-usage) JSON query language support, dynamic throttling ([RateLimit](https://tools.ietf.org/id/draft-polli-ratelimit-headers-00.html)) & caching with optional [Redis](https://redis.io/) support for persistent caching. |
 | [fill](/src/cmd/fill.rs#L13) | Fill empty values.  |
 | [fixlengths](/src/cmd/fixlengths.rs#L9-L11) | Force a CSV to have same-length records by either padding or truncating them. |
 | [flatten](/src/cmd/flatten.rs#L12-L15) | A flattened view of CSV records. Useful for viewing one record at a time.<br />e.g. `qsv slice -i 5 data.csv \| qsv flatten`. |
@@ -91,14 +91,14 @@ Alternatively, you can compile from source by
 and installing `qsv` using Cargo:
 
 ```bash
-cargo install qsv --features full
+cargo install qsv --features all_full
 ```
 
 If you encounter compilation errors, ensure you're using the exact
 version of the dependencies qsv was built with by issuing:
 
 ```bash
-cargo install qsv --locked --features full
+cargo install qsv --locked --features all_full
 ```
 
 Compiling from this repository also works similarly:
@@ -106,9 +106,9 @@ Compiling from this repository also works similarly:
 ```bash
 git clone git@github.com:jqnatividad/qsv.git
 cd qsv
-cargo build --release --features full
+cargo build --release --features all_full
 # or if you encounter compilation errors
-cargo build --release --locked --features full
+cargo build --release --locked --features all_full
 ```
 
 The compiled binary will end up in `./target/release/`.
@@ -135,7 +135,7 @@ access to a native python interpreter for those platforms (aarch64, i686, and ar
 
 ### Minimum Supported Rust Version
 
-Building qsv requires Rust stable - currently version 1.62.0.
+Building qsv requires Rust stable - currently version 1.62.1.
 
 ## Tab Completion
 
@@ -223,7 +223,7 @@ qsv stats wcp.csv --output wcpstats.csv
 | `QSV_WTR_BUFFER_CAPACITY` | writer buffer size (default (bytes): 65536) |
 | `QSV_LOG_LEVEL` | desired level (default - off; `error`, `warn`, `info`, `trace`, `debug`). |
 | `QSV_LOG_DIR` | when logging is enabled, the directory where the log files will be stored. If the specified directory does not exist, qsv will attempt to create it. If not set, the log files are created in the directory where qsv was started. See [Logging](docs/Logging.md#logging) for more info. |
-| `QSV_REDIS_CONNECTION_STRING` | the `fetch` command can use [Redis](https://redis.io/) to cache responses. Set to connect to the desired Redis instance. (default: `redis:127.0.0.1:6379`) |
+| `QSV_REDIS_CONNECTION_STRING` | the `fetch` command can use [Redis](https://redis.io/) to cache responses. Set to connect to the desired Redis instance. (default: `redis:127.0.0.1:6379/1`). For more info on valid Redis connection string formats, see https://docs.rs/redis/latest/redis/#connection-parameters. |
 | `QSV_REDIS_MAX_POOL_SIZE` | the maximum Redis connection pool size. (default: 20). |
 | `QSV_REDIS_TTL_SECONDS` | set time-to-live of Redis cached values (default (seconds): 2419200 (28 days)). |
 | `QSV_REDIS_TTL_REFRESH`| if set, enables cache hits to refresh TTL of cached values. |
@@ -247,6 +247,7 @@ Several dependencies also have environment variables that influence qsv's perfor
 * `fetch` - enable `fetch` command.
 * `generate` - enable `generate` command.
 * `full` - enable to build qsv.
+* `all_full` - enable to build qsv with all features (apply,fetch,foreach,generate,lua,python)
 * `lite` - enable to build qsvlite.
 * `datapusher_plus` - enable to build qsvdp - the [DataPusher+](https://github.com/dathere/datapusher-plus) optimized qsv binary.
 * `nightly` - enable to turn on nightly/unstable features in the `rand` and `regex` creates when building with Rust nightly/unstable.
