@@ -69,17 +69,17 @@ Common options:
 "#;
 
 #[derive(Deserialize, Clone)]
-struct Args {
-    flag_enum_threshold: usize,
-    flag_strict_dates: bool,
-    flag_pattern_columns: SelectColumns,
-    flag_dates_whitelist: String,
-    flag_prefer_dmy: bool,
-    flag_stdout: bool,
-    flag_jobs: Option<usize>,
-    flag_no_headers: bool,
-    flag_delimiter: Option<Delimiter>,
-    arg_input: Option<String>,
+pub struct Args {
+    pub flag_enum_threshold: usize,
+    pub flag_strict_dates: bool,
+    pub flag_pattern_columns: SelectColumns,
+    pub flag_dates_whitelist: String,
+    pub flag_prefer_dmy: bool,
+    pub flag_stdout: bool,
+    pub flag_jobs: Option<usize>,
+    pub flag_no_headers: bool,
+    pub flag_delimiter: Option<Delimiter>,
+    pub arg_input: Option<String>,
 }
 
 const STDIN_CSV: &str = "stdin.csv";
@@ -187,7 +187,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 ///  * min
 ///  * max
 #[allow(clippy::len_zero)]
-fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<String, Value>> {
+pub fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<String, Value>> {
     // invoke cmd::stats
     let (csv_fields, csv_stats, stats_col_index_map) = get_stats_records(args)?;
 
