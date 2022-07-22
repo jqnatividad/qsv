@@ -6,10 +6,10 @@ fn tojsonl_simple() {
     wrk.create(
         "in.csv",
         vec![
-            svec!["id", "father", "mother", "oldest_child", "boy"],
-            svec!["1", "Mark", "Charlotte", "Tom", "true"],
-            svec!["2", "John", "Ann", "Jessika", "false"],
-            svec!["3", "Bob", "Monika", "Jerry", "true"],
+            svec!["id", "father", "mother", "oldest_child", "boy", "weight"],
+            svec!["1", "Mark", "Charlotte", "Tom", "true", "150.2"],
+            svec!["2", "John", "Ann", "Jessika", "false", "175.5"],
+            svec!["3", "Bob", "Monika", "Jerry", "true", "199.5"],
         ],
     );
 
@@ -17,9 +17,9 @@ fn tojsonl_simple() {
     cmd.arg("in.csv");
 
     let got: String = wrk.stdout(&mut cmd);
-    let expected = r#"{"id":"1","father":"Mark","mother":"Charlotte","oldest_child":"Tom","boy":"true"}
-{"id":"2","father":"John","mother":"Ann","oldest_child":"Jessika","boy":"false"}
-{"id":"3","father":"Bob","mother":"Monika","oldest_child":"Jerry","boy":"true"}"#;
+    let expected = r#"{"id":1,"father":"Mark","mother":"Charlotte","oldest_child":"Tom","boy":true,"weight":150.2}
+{"id":2,"father":"John","mother":"Ann","oldest_child":"Jessika","boy":false,"weight":175.5}
+{"id":3,"father":"Bob","mother":"Monika","oldest_child":"Jerry","boy":true,"weight":199.5}"#;
     assert_eq!(got, expected);
 }
 
@@ -40,9 +40,9 @@ fn tojsonl_nested() {
     cmd.arg("in.csv");
 
     let got: String = wrk.stdout(&mut cmd);
-    let expected = r#"{"id":"1","father":"Mark","mother":"Charlotte","children":"\"Tom\""}
-{"id":"2","father":"John","mother":"Ann","children":"\"Jessika\",\"Antony\",\"Jack\""}
-{"id":"3","father":"Bob","mother":"Monika","children":"\"Jerry\",\"Karol\""}"#;
+    let expected = r#"{"id":1,"father":"Mark","mother":"Charlotte","children":""Tom""}
+{"id":2,"father":"John","mother":"Ann","children":""Jessika","Antony","Jack""}
+{"id":3,"father":"Bob","mother":"Monika","children":""Jerry","Karol""}"#;
 
     assert_eq!(got, expected);
 }
