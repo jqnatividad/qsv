@@ -196,11 +196,16 @@ impl Args {
         let (send, recv) = channel::bounded(0);
         for i in 0..nchunks {
             let (send, args, sel) = (send.clone(), self.clone(), sel.clone());
-            pool.execute(move || {
-                let mut idx = args.rconfig().indexed().unwrap().unwrap();
-                idx.seek((i * chunk_size) as u64).unwrap();
+            pool.execute(move || unsafe {
+                let mut idx = args
+                    .rconfig()
+                    .indexed()
+                    .unwrap_unchecked()
+                    .unwrap_unchecked();
+                idx.seek((i * chunk_size) as u64).unwrap_unchecked();
                 let it = idx.byte_records().take(chunk_size);
-                send.send(args.compute(&sel, it).unwrap()).unwrap();
+                send.send(args.compute(&sel, it).unwrap_unchecked())
+                    .unwrap_unchecked();
             });
         }
         drop(send);
@@ -216,11 +221,11 @@ impl Args {
             let (send, recv) = channel::bounded(0);
             results.push(recv);
             pool.execute(move || {
-                send.send(stat.to_record()).unwrap();
+                unsafe { send.send(stat.to_record()).unwrap_unchecked() };
             });
         }
         for (i, recv) in results.into_iter().enumerate() {
-            records[i] = recv.recv().unwrap();
+            records[i] = unsafe { recv.recv().unwrap_unchecked() };
         }
         records
     }
@@ -840,28 +845,34 @@ impl TypedMinMax {
         match typ {
             TString | TNull => {}
             TFloat => {
-                let n = unsafe { str::from_utf8_unchecked(sample) }
-                    .parse::<f64>()
-                    .ok()
-                    .unwrap();
+                let n = unsafe {
+                    str::from_utf8_unchecked(sample)
+                        .parse::<f64>()
+                        .ok()
+                        .unwrap_unchecked()
+                };
 
                 self.floats.add(n);
                 #[allow(clippy::cast_precision_loss)]
                 self.integers.add(n as i64);
             }
             TInteger => {
-                let n = unsafe { str::from_utf8_unchecked(sample) }
-                    .parse::<i64>()
-                    .ok()
-                    .unwrap();
+                let n = unsafe {
+                    str::from_utf8_unchecked(sample)
+                        .parse::<i64>()
+                        .ok()
+                        .unwrap_unchecked()
+                };
                 self.integers.add(n);
                 #[allow(clippy::cast_precision_loss)]
                 self.floats.add(n as f64);
             }
             TDate | TDateTime => {
                 let tempstr = unsafe { str::from_utf8_unchecked(sample) };
-                let n = parse_with_preference(tempstr, unsafe { *DMY_PREFERENCE.get_unchecked() })
-                    .unwrap();
+                let n = unsafe {
+                    parse_with_preference(tempstr, *DMY_PREFERENCE.get_unchecked())
+                        .unwrap_unchecked()
+                };
                 self.dates.add(n.to_string());
             }
         }
@@ -937,5 +948,5 @@ where
     <T as FromStr>::Err: std::fmt::Debug,
 {
     // we don't need to do UTF-8 validation as qsv requires UTF-8 encoding
-    unsafe { str::from_utf8_unchecked(bytes).parse().unwrap() }
+    unsafe { str::from_utf8_unchecked(bytes).parse().unwrap_unchecked() }
 }
