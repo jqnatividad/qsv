@@ -1,12 +1,10 @@
-use indexmap::IndexMap;
 use std::{fs::File, path::Path};
 
 use crate::config::{Config, Delimiter};
 use crate::util;
 use crate::CliResult;
-use log::{debug, error, info, warn};
 use serde::Deserialize;
-use serde_json::{json, value::Number, Map, Value};
+use serde_json::{Map, Value};
 
 use super::schema::infer_schema_from_stats;
 
@@ -39,28 +37,29 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // if using stdin, we create a stdin.csv file as stdin is not seekable and we need to
     // open the file multiple times to compile stats/unique values, etc.
-    let (input_path, input_filename) = if preargs.arg_input.is_none() {
+    let input_filename = if preargs.arg_input.is_none() {
         let mut stdin_file = File::create(STDIN_CSV)?;
         let stdin = std::io::stdin();
         let mut stdin_handle = stdin.lock();
         std::io::copy(&mut stdin_handle, &mut stdin_file)?;
         args.arg_input = Some(STDIN_CSV.to_string());
-        (STDIN_CSV.to_string(), STDIN_CSV.to_string())
+        STDIN_CSV.to_string()
     } else {
         let filename = Path::new(args.arg_input.as_ref().unwrap())
             .file_name()
             .unwrap()
             .to_string_lossy()
             .to_string();
-        (args.arg_input.clone().unwrap(), filename)
+        filename
     };
 
+    // we're calling the schema command to infer data types and enums
     let schema_args = crate::cmd::schema::Args {
-        flag_enum_threshold: 50,
+        flag_enum_threshold: 3, // we only do three, as we're only inferring boolean based on enum
         flag_strict_dates: false,
         flag_pattern_columns: crate::select::SelectColumns::parse("").unwrap(),
-        flag_dates_whitelist: "none".to_string(),
-        flag_prefer_dmy: std::env::var("QSV_PREFER_DMY").is_ok(),
+        flag_dates_whitelist: "none".to_string(), // json doesn't have a date type, so don't infer dates
+        flag_prefer_dmy: false,
         flag_stdout: false,
         flag_jobs: Some(util::njobs(Some(util::max_jobs()))),
         flag_no_headers: false,
@@ -69,16 +68,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     // build schema for each field by their inferred type, min/max value/length, and unique values
-    let mut properties_map: Map<String, Value> =
+    let properties_map: Map<String, Value> =
         match infer_schema_from_stats(&schema_args, &input_filename) {
             Ok(map) => map,
             Err(e) => {
-                let msg = format!("Failed to infer schema via stats and frequency: {e}");
+                let msg = format!("Failed to infer field types via stats and frequency: {e}");
                 return fail!(msg);
             }
         };
-
-    debug!("{properties_map:?}");
 
     let mut rdr = conf.reader()?;
     let mut wtr = Config::new(&args.flag_output)
@@ -89,14 +86,73 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let headers = rdr.headers()?.clone();
     let mut record = csv::StringRecord::new();
-    let mut kv: IndexMap<String, String> = IndexMap::with_capacity(headers.len());
-    while rdr.read_record(&mut record)? {
-        for (idx, field) in record.iter().enumerate() {
-            kv.insert(headers[idx].to_string(), field.to_string());
+
+    // create a vec lookup about inferred field data types
+    let mut field_type_vec: Vec<String> = Vec::with_capacity(headers.len());
+    for (_field_name, field_def) in properties_map.iter() {
+        let field_map = field_def.as_object().unwrap();
+        let prelim_type = field_map.get("type").unwrap();
+        let field_values_enum = field_map.get("enum");
+
+        // check if a field has a boolean data type
+        if let Some(values) = field_values_enum {
+            let vals = values.as_array().unwrap();
+            if vals.len() == 2 {
+                let val1 = vals[0].as_str().unwrap().to_string().to_lowercase();
+                let val2 = vals[1].as_str().unwrap().to_string().to_lowercase();
+                if let ("true", "false")
+                | ("false", "true")
+                | ("1", "0")
+                | ("0", "1")
+                | ("yes", "no")
+                | ("no", "yes") = (val1.as_str(), val2.as_str())
+                {
+                    field_type_vec.push("boolean".to_string());
+                    continue;
+                }
+            }
         }
-        let json = serde_json::to_string(&kv).unwrap_or_default();
-        wtr.write_record(&[json])?;
-        kv.clear();
+        // its not a boolean, so its a Number, String or Null
+        let temp_type = prelim_type.clone();
+        let temp_string = temp_type.as_array().unwrap()[0]
+            .as_str()
+            .unwrap()
+            .to_string();
+        if temp_string == "integer" {
+            field_type_vec.push("number".to_string());
+        } else {
+            field_type_vec.push(temp_string);
+        }
+    }
+
+    // amortize allocs
+    #[allow(unused_assignments)]
+    let mut temp_str = String::with_capacity(100);
+
+    // write jsonl file
+    while rdr.read_record(&mut record)? {
+        use std::fmt::Write as _;
+
+        temp_str.clear();
+        let _ = write!(temp_str, "{{");
+        for (idx, field) in record.iter().enumerate() {
+            let field_val = match field_type_vec[idx].as_str() {
+                "string" => format!(r#""{field}""#),
+                "number" => field.to_string(),
+                "boolean" => match field.to_lowercase().as_str() {
+                    "true" | "yes" | "1" => "true".to_string(),
+                    _ => "false".to_string(),
+                },
+                "null" => "null".to_string(),
+                _ => "unknown".to_string(),
+            };
+            let _ = write!(temp_str, r#""{}":{},"#, &headers[idx], field_val);
+        }
+        temp_str.pop(); // remove last comma
+        temp_str.push('}');
+        record.clear();
+        record.push_field(&temp_str);
+        wtr.write_record(&record)?;
     }
 
     Ok(wtr.flush()?)
