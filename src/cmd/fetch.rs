@@ -180,6 +180,7 @@ struct Args {
     arg_input: Option<String>,
 }
 
+// connect to Redis at localhost, using database 1 by default when --redis is enabled
 static DEFAULT_REDIS_CONN_STR: &str = "redis://127.0.0.1:6379/1";
 static DEFAULT_REDIS_TTL_SECS: u64 = 60 * 60 * 24 * 28; // 28 days in seconds
 static DEFAULT_REDIS_POOL_SIZE: u32 = 20;
@@ -478,6 +479,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             // we're not using a URL template,
             // just use the field as is as the URL
             url = s.to_owned();
+        } else {
+            url = "".to_owned();
         }
 
         final_value = if url.is_empty() {
@@ -677,9 +680,9 @@ fn get_response(
         limiter_total_wait += MINIMUM_WAIT_MS;
         thread::sleep(MIN_WAIT);
         if limiter_total_wait > governor_timeout_ms {
-            info!("rate limit timeout");
+            info!("rate limit timed out after {limiter_total_wait} ms");
             break;
-        } else if limiter_total_wait == 1 {
+        } else if limiter_total_wait == MINIMUM_WAIT_MS {
             info!("throttling...");
         }
     }
@@ -764,73 +767,107 @@ fn get_response(
 
     // debug!("final value: {final_value}");
 
-    // check if the API has ratelimits and we need to do dynamic throttling to respect the limits or
-    // the API status code is not 200 (most likely 503-service not available or 493-too many requests)
-    if api_status != 200
+    // check if there's an API error (likely 503-service not available or 493-too many requests) or
+    // if the API has ratelimits and we need to do dynamic throttling to respect the limits
+    if api_status != reqwest::StatusCode::OK
         || api_respheader.contains_key("ratelimit-limit")
         || api_respheader.contains_key("x-ratelimit-limit")
     {
         let mut ratelimit_remaining = api_respheader.get("ratelimit-remaining");
-        let temp_var = api_respheader.get("x-ratelimit-remaining");
-        if temp_var.is_some() {
-            ratelimit_remaining = temp_var;
+        if ratelimit_remaining.is_none() {
+            let temp_var = api_respheader.get("x-ratelimit-remaining");
+            if temp_var.is_some() {
+                ratelimit_remaining = temp_var;
+            }
         }
         let mut ratelimit_reset = api_respheader.get("ratelimit-reset");
-        let temp_var = api_respheader.get("x-ratelimit-reset");
-        if temp_var.is_some() {
-            ratelimit_reset = temp_var;
+        if ratelimit_reset.is_none() {
+            let temp_var = api_respheader.get("x-ratelimit-reset");
+            if temp_var.is_some() {
+                ratelimit_reset = temp_var;
+            }
         }
+
         // some APIs add the "-second" suffix to ratelimit fields
         let mut ratelimit_remaining_sec = api_respheader.get("ratelimit-remaining-second");
-        let temp_var = api_respheader.get("x-ratelimit-remaining-second");
-        if temp_var.is_some() {
-            ratelimit_remaining_sec = temp_var;
+        if ratelimit_remaining_sec.is_none() {
+            let temp_var = api_respheader.get("x-ratelimit-remaining-second");
+            if temp_var.is_some() {
+                ratelimit_remaining_sec = temp_var;
+            }
         }
         let mut ratelimit_reset_sec = api_respheader.get("ratelimit-reset-second");
-        let temp_var = api_respheader.get("x-ratelimit-reset-second");
-        if temp_var.is_some() {
-            ratelimit_reset_sec = temp_var;
+        if ratelimit_reset_sec.is_none() {
+            let temp_var = api_respheader.get("x-ratelimit-reset-second");
+            if temp_var.is_some() {
+                ratelimit_reset_sec = temp_var;
+            }
         }
+
         let retry_after = api_respheader.get("retry-after");
 
-        debug!("api_status:{api_status:?} rate_limit_remaining:{ratelimit_remaining:?} {ratelimit_remaining_sec:?} \
+        if log_enabled!(log::Level::Debug) {
+            debug!("api_status:{api_status:?} rate_limit_remaining:{ratelimit_remaining:?} {ratelimit_remaining_sec:?} \
 ratelimit_reset:{ratelimit_reset:?} {ratelimit_reset_sec:?} retry_after:{retry_after:?}");
+        }
 
         // if there's a ratelimit_remaining field in the response header, get it
         // otherwise, set remaining to sentinel value 9999
-        let mut remaining = ratelimit_remaining.map_or(9999_u64, |ratelimit_remaining| {
-            let remaining_str = ratelimit_remaining.to_str().unwrap();
-            remaining_str.parse::<u64>().unwrap_or_default()
-        });
-        if let Some(ratelimit_remaining_sec) = ratelimit_remaining_sec {
-            let remaining_sec_str = ratelimit_remaining_sec.to_str().unwrap();
-            remaining = remaining_sec_str.parse::<u64>().unwrap_or_default();
-        }
+        let remaining = ratelimit_remaining.map_or_else(
+            || {
+                if let Some(ratelimit_remaining_sec) = ratelimit_remaining_sec {
+                    let remaining_sec_str = ratelimit_remaining_sec.to_str().unwrap();
+                    remaining_sec_str.parse::<u64>().unwrap_or(1)
+                } else {
+                    9999_u64
+                }
+            },
+            |ratelimit_remaining| {
+                let remaining_str = ratelimit_remaining.to_str().unwrap();
+                remaining_str.parse::<u64>().unwrap_or(1)
+            },
+        );
 
         // if there's a ratelimit_reset field in the response header, get it
-        // otherwise, set reset to sentinel value 1
-        let mut reset = ratelimit_reset.map_or(1_u64, |ratelimit_reset| {
-            let reset_str = ratelimit_reset.to_str().unwrap();
-            reset_str.parse::<u64>().unwrap_or_default()
-        });
-        if let Some(ratelimit_reset_sec) = ratelimit_reset_sec {
-            let reset_sec_str = ratelimit_reset_sec.to_str().unwrap();
-            reset = reset_sec_str.parse::<u64>().unwrap_or_default();
-        }
+        // otherwise, set reset to sentinel value 0
+        let mut reset_secs = ratelimit_reset.map_or_else(
+            || {
+                if let Some(ratelimit_reset_sec) = ratelimit_reset_sec {
+                    let reset_sec_str = ratelimit_reset_sec.to_str().unwrap();
+                    reset_sec_str.parse::<u64>().unwrap_or(1)
+                } else if api_status != reqwest::StatusCode::OK {
+                    // sleep for at least 1 second if there are no ratelimit headers
+                    // but we still got an API error
+                    1_u64
+                } else {
+                    0_u64
+                }
+            },
+            |ratelimit_reset| {
+                let reset_str = ratelimit_reset.to_str().unwrap();
+                reset_str.parse::<u64>().unwrap_or(1)
+            },
+        );
+
         // if there's a retry_after field in the response header, get it
         // and set reset to it
         if let Some(retry_after) = retry_after {
             let retry_str = retry_after.to_str().unwrap();
-            reset = retry_str.parse::<u64>().unwrap_or_default();
+            // if we cannot parse its value as u64, the retry after value
+            // is most likely an rfc2822 date and not number of seconds to
+            // wait before retrying, which is a valid value
+            // however, we don't want to do date-parsing here, so we just
+            // wait 10 seconds before retrying
+            reset_secs = retry_str.parse::<u64>().unwrap_or(10);
         }
 
         // if there is only one more remaining call per our ratelimit quota or
-        // reset is greater than 1, dynamically throttle and sleep for ~reset seconds
-        if remaining <= 1 || reset > 1 {
+        // reset is greater than or equal to 1, dynamically throttle and sleep for ~reset seconds
+        if remaining <= 1 || reset_secs >= 1 {
             // we add a small random delta to how long fetch sleeps
-            // as we need to add a little jitter as per the spec
+            // as we need to add a little jitter as per the spec to avoid thundering herd issues
             // https://tools.ietf.org/id/draft-polli-ratelimit-headers-00.html#rfc.section.7.5
-            let rand_addl_sleep = (reset * 1000) + rand::thread_rng().gen_range(10..30);
+            let rand_addl_sleep = (reset_secs * 1000) + rand::thread_rng().gen_range(10..30);
 
             info!(
                 "sleeping for {rand_addl_sleep} milliseconds until ratelimit is reset or retry_after has elapsed"
