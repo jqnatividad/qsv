@@ -180,6 +180,7 @@ struct Args {
     arg_input: Option<String>,
 }
 
+// connect to Redis at localhost, using database 1 by default when --redis is enabled
 static DEFAULT_REDIS_CONN_STR: &str = "redis://127.0.0.1:6379/1";
 static DEFAULT_REDIS_TTL_SECS: u64 = 60 * 60 * 24 * 28; // 28 days in seconds
 static DEFAULT_REDIS_POOL_SIZE: u32 = 20;
@@ -478,6 +479,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             // we're not using a URL template,
             // just use the field as is as the URL
             url = s.to_owned();
+        } else {
+            url = "".to_owned();
         }
 
         final_value = if url.is_empty() {
@@ -827,7 +830,7 @@ ratelimit_reset:{ratelimit_reset:?} {ratelimit_reset_sec:?} retry_after:{retry_a
 
         // if there's a ratelimit_reset field in the response header, get it
         // otherwise, set reset to sentinel value 0
-        let mut reset = ratelimit_reset.map_or_else(
+        let mut reset_secs = ratelimit_reset.map_or_else(
             || {
                 if let Some(ratelimit_reset_sec) = ratelimit_reset_sec {
                     let reset_sec_str = ratelimit_reset_sec.to_str().unwrap();
@@ -850,16 +853,21 @@ ratelimit_reset:{ratelimit_reset:?} {ratelimit_reset_sec:?} retry_after:{retry_a
         // and set reset to it
         if let Some(retry_after) = retry_after {
             let retry_str = retry_after.to_str().unwrap();
-            reset = retry_str.parse::<u64>().unwrap_or(1);
+            // if we cannot parse its value as u64, the retry after value
+            // is most likely an rfc2822 date and not number of seconds to
+            // wait before retrying, which is a valid value
+            // however, we don't want to do date-parsing here, so we just
+            // wait 10 seconds before retrying
+            reset_secs = retry_str.parse::<u64>().unwrap_or(10);
         }
 
         // if there is only one more remaining call per our ratelimit quota or
         // reset is greater than or equal to 1, dynamically throttle and sleep for ~reset seconds
-        if remaining <= 1 || reset >= 1 {
+        if remaining <= 1 || reset_secs >= 1 {
             // we add a small random delta to how long fetch sleeps
             // as we need to add a little jitter as per the spec to avoid thundering herd issues
             // https://tools.ietf.org/id/draft-polli-ratelimit-headers-00.html#rfc.section.7.5
-            let rand_addl_sleep = (reset * 1000) + rand::thread_rng().gen_range(10..30);
+            let rand_addl_sleep = (reset_secs * 1000) + rand::thread_rng().gen_range(10..30);
 
             info!(
                 "sleeping for {rand_addl_sleep} milliseconds until ratelimit is reset or retry_after has elapsed"
