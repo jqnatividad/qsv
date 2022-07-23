@@ -565,13 +565,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     Ok(wtr.flush()?)
 }
 
-// we only need url and flag_jql in the cache key
+// we only need url in the cache key
 // as this is an in-memory cache that is only used
 // for one qsv session
 #[cached(
     size = 2_000_000,
     key = "String",
-    convert = r#"{ format!("{}{:?}", url, flag_jql) }"#,
+    convert = r#"{ format!("{}", url) }"#,
     sync_writes = false
 )]
 fn get_cached_response(
