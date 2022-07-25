@@ -498,7 +498,15 @@ impl Config {
     pub fn io_writer(&self) -> io::Result<Box<dyn io::Write + 'static>> {
         Ok(match self.path {
             None => Box::new(io::stdout()),
-            Some(ref p) => Box::new(fs::File::create(p)?),
+            Some(ref p) => {
+                let p_str = p.as_os_str();
+                if p_str == "sink" {
+                    // sink is /dev/null
+                    Box::new(io::sink())
+                } else {
+                    Box::new(fs::File::create(p)?)
+                }
+            }
         })
     }
 
