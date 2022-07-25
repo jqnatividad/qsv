@@ -5,14 +5,14 @@ use crate::CliError;
 use crate::CliResult;
 use crate::{regex_once_cell, util};
 use cached::proc_macro::{cached, io_cached};
-use cached::{Cached, RedisCache, Return};
+use cached::{Cached, IOCached, RedisCache, Return};
 use console::set_colors_enabled;
 use dynfmt::Format;
 use governor::{
     clock::DefaultClock, middleware::NoOpMiddleware, state::direct::NotKeyed, state::InMemoryState,
 };
 use indicatif::{MultiProgress, ProgressBar, ProgressDrawTarget};
-use log::{debug, error, info, log_enabled};
+use log::{debug, error, info, log_enabled, warn};
 use once_cell::sync::{Lazy, OnceCell};
 use rand::Rng;
 use redis;
@@ -250,26 +250,24 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     info!("TIMEOUT: {} secs", args.flag_timeout);
     TIMEOUT_SECS.set(args.flag_timeout).unwrap();
 
-    let mut redis_conn: Option<redis::Connection> = None;
     if args.flag_redis {
         // check if redis connection is valid
         let conn_str = &REDISCONFIG.conn_str;
         let redis_client = redis::Client::open(conn_str.to_string()).unwrap();
 
+        let mut redis_conn;
         match redis_client.get_connection() {
             Err(e) => {
                 return fail!(format!(
                     r#"Cannot connect to Redis using "{conn_str}": {e:?}"#
                 ))
             }
-            Ok(x) => redis_conn = Some(x),
+            Ok(x) => redis_conn = x,
         }
 
         if args.flag_flushdb {
-            if let Some(ref mut rconn) = redis_conn {
-                redis::cmd("FLUSHDB").execute(rconn);
-                info!("flushed Redis database");
-            }
+            redis::cmd("FLUSHDB").execute(&mut redis_conn);
+            info!("flushed Redis database");
         }
     }
 
@@ -597,9 +595,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     include_existing_columns
                 );
 
-                if let Some(ref mut rconn) = redis_conn {
-                    redis::Cmd::del(key).execute(rconn);
-                }
+                if GET_REDIS_RESPONSE.cache_remove(&key).is_err() && log_enabled!(log::Level::Warn)
+                {
+                    // failure to removing cache keys is non-fatal. Continue, but log it.
+                    warn!(r#"Cannot remove key "{key}" from Redis"#);
+                };
             }
         } else {
             intermediate_value = get_cached_response(
