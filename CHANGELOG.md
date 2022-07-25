@@ -5,6 +5,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.60.0] - 2022-07-24
+### Added
+* `fetch`: add redis --flushdb option https://github.com/jqnatividad/qsv/pull/387
+* `fetch`: add --report & --cache-error options. --report creates a separate report file, detailing the URL used,
+the response, the HTTP status code, and if its a cache hit.
+--cache-error is used to also cache errors - i.e. identical fetches will return the cached error. Otherwise, fetch will
+request the URL again. https://github.com/jqnatividad/qsv/pull/393
+
+### Changed
+* `fetch`: fast defaults. Now tries to go as fast as possible, leveraging dynamic throttling (using RateLimit and Rety-After headers) 
+but aborting after 100 errors. Also added a separate error progress bar. https://github.com/jqnatividad/qsv/pull/388
+* Smarter `tojsonl`. Now scans CSV file and infers data types and uses the appropriate JSON data type https://github.com/jqnatividad/qsv/pull/389
+* `tojsonl` is also multithreaded https://github.com/jqnatividad/qsv/pull/392
+* `stats`: use unwrap_unchecked for even more performance https://github.com/jqnatividad/qsv/pull/390
+* `fetch`: refactor dynamic throttling https://github.com/jqnatividad/qsv/pull/391
+* Bump sysinfo from 0.24.6 to 0.24.7 by @dependabot in https://github.com/jqnatividad/qsv/pull/384
+* cargo bump update several dependencies
+* pin Rust nightly to 2022-07-23
+
+### Fixed
+* `fetch`: fix --http-header parsing bug https://github.com/jqnatividad/qsv/pull/386
+
 ## [0.59.0] - 2022-07-18
 ### Added
 * added `tojsonl` command - CSV to JSONL https://github.com/jqnatividad/qsv/pull/380
