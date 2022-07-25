@@ -19,9 +19,9 @@ use redis;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::fs;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::{thread, time};
+use std::time::Instant;
+use std::{fs, thread, time};
 use thousands::Separable;
 use url::Url;
 
@@ -139,11 +139,11 @@ Fetch options:
     --report <kind>            Creates a report of the fetch job. The report has the same name as the input file
                                with the ".fetch-report" suffix. 
                                There are two kinds of report - "detailed" and "short". The detailed report has
-                               the same columns as the input CSV with four additional columns - 
-                               qsv_fetch_url, qsv_fetch_result, qsv_fetch_status & qsv_fetch_cache_hit.
-                               qsv_fetch_url is the URL used, fetch_result - the result of the fetch,
-                               fetch_status - the HTTP status code & fetch_cache_hit - a cached result flag.
-                               The short report only has the four columns.
+                               the same columns as the input CSV with five additional columns - 
+                               qsv_fetch_url, qsv_fetch_result, qsv_fetch_status, qsv_fetch_cache_hit & qsv_fetch_elapsed_ms.
+                               qsv_fetch_url - the URL used, fetch_response - the fetch response, fetch_status - HTTP status code,
+                               fetch_cache_hit - cached result flag & fetch_elapsed - the elapsed time.
+                               The short report only has the five columns.
                                [default: none ]
     --redis                    Use Redis to cache responses. It connects to "redis://127.0.0.1:6379/1"
                                with a connection pool size of 20, with a TTL of 28 days, and a cache hit 
@@ -482,9 +482,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 _ => csv::ByteRecord::new(),
             };
             report_headers.push_field(b"qsv_fetch_url");
-            report_headers.push_field(b"qsv_fetch_result");
+            report_headers.push_field(b"qsv_fetch_response");
             report_headers.push_field(b"qsv_fetch_status");
             report_headers.push_field(b"qsv_fetch_cache_hit");
+            report_headers.push_field(b"qsv_fetch_elapsed_ms");
             report_wtr.write_byte_record(&report_headers)?;
         }
     } else {
@@ -534,11 +535,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
     let mut running_error_count = 0_usize;
     let mut was_cached;
+    let mut now = Instant::now();
 
     while rdr.read_byte_record(&mut record)? {
         if not_quiet {
             progress.inc(1);
         }
+
+        if report != ReportKind::None {
+            now = Instant::now()
+        };
 
         if args.flag_url_template.is_some() {
             // we're using a URL template.
@@ -644,6 +650,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
             report_record.push_field(final_response.status_code.to_string().as_bytes());
             report_record.push_field(if was_cached { b"1" } else { b"0" });
+            report_record.push_field(now.elapsed().as_millis().to_string().as_bytes());
             report_wtr.write_byte_record(&report_record)?;
         }
 
