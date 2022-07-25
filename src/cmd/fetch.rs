@@ -5,7 +5,7 @@ use crate::CliError;
 use crate::CliResult;
 use crate::{regex_once_cell, util};
 use cached::proc_macro::{cached, io_cached};
-use cached::{RedisCache, Return};
+use cached::{Cached, RedisCache, Return};
 use console::set_colors_enabled;
 use dynfmt::Format;
 use governor::{
@@ -17,7 +17,7 @@ use once_cell::sync::{Lazy, OnceCell};
 use rand::Rng;
 use redis;
 use regex::Regex;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::fs;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -25,10 +25,6 @@ use std::{thread, time};
 use thousands::Separable;
 use url::Url;
 
-// NOTE: when using the examples with jql, DO NOT USE the example here as rendered in
-// source code, use the example as rendered by "qsv fetch --help".
-// the source code below has addl escape characters for the jql examples,
-// so cutting and pasting it into the command line will not work.
 static USAGE: &str = r#"
 Fetches HTML/data from web pages or web services for every row.
 
@@ -124,10 +120,11 @@ Fetch options:
                                retry-after response headers.
                                Set to zero (0) to go as fast as possible, automatically
                                down-throttling as required.
-                               CAUTION: Only use zero for APIs that use RateLimit headers,
+                               CAUTION: Only use zero for APIs that use RateLimit and/or Retry-After headers,
                                otherwise your fetch job may look like a Denial Of Service attack.
                                [default: 0 ]
-    --timeout <seconds>        Timeout for each URL GET. [default: 30 ]
+    --timeout <seconds>        Timeout for each URL GET.
+                               [default: 30 ]
     --http-header <key:value>  Append custom header(s) to the HTTP header. Pass multiple key-value pairs
                                by adding this option multiple times, once for each pair. The key and value 
                                should be separated by a colon.
@@ -135,7 +132,18 @@ Fetch options:
                                Set to zero (0) to continue despite errors.
                                [default: 100 ]
     --store-error              On error, store error code/message instead of blank value.
+    --cache-error              Cache error responses even if a fetch fails. If an identical fetch is requested,
+                               the cached error is returned. Otherwise, the fetch is attempted again.
     --cookies                  Allow cookies.
+    --report <kind>            Creates a report of the fetch job. The report has the same name as the input file
+                               with the ".fetch-report" suffix. 
+                               There are two kinds of report - "detailed" and "short". The detailed report has
+                               the same columns as the input CSV with four additional columns - 
+                               qsv_fetch_url, qsv_fetch_result, qsv_fetch_status & qsv_fetch_cache_hit.
+                               qsv_fetch_url is the URL used, fetch_result - the result of the fetch,
+                               fetch_status - the HTTP status code & fetch_cache_hit - a cached result flag.
+                               The short report only has the four columns.
+                               [default: none ]
     --redis                    Use Redis to cache responses. It connects to "redis://127.0.0.1:6379/1"
                                with a connection pool size of 20, with a TTL of 28 days, and a cache hit 
                                NOT renewing an entry's TTL.
@@ -169,7 +177,9 @@ struct Args {
     flag_http_header: Vec<String>,
     flag_max_errors: usize,
     flag_store_error: bool,
+    flag_cache_error: bool,
     flag_cookies: bool,
+    flag_report: Option<String>,
     flag_redis: bool,
     flag_flushdb: bool,
     flag_output: Option<String>,
@@ -221,44 +231,50 @@ impl RedisConfig {
     }
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+struct FetchResponse {
+    response: String,
+    status_code: u16,
+}
+
 static REDISCONFIG: Lazy<RedisConfig> = Lazy::new(RedisConfig::load);
 static JQL_GROUPS: once_cell::sync::OnceCell<Vec<jql::Group>> = OnceCell::new();
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
-    set_colors_enabled(true);
+    if args.flag_timeout > 3_600 {
+        return fail!("Timeout cannot be more than one hour");
+    }
+    info!("TIMEOUT: {} secs", args.flag_timeout);
+    TIMEOUT_SECS.set(args.flag_timeout).unwrap();
 
+    let mut redis_conn: Option<redis::Connection> = None;
     if args.flag_redis {
         // check if redis connection is valid
         let conn_str = &REDISCONFIG.conn_str;
         let redis_client = redis::Client::open(conn_str.to_string()).unwrap();
 
-        let mut redis_conn;
         match redis_client.get_connection() {
             Err(e) => {
                 return fail!(format!(
                     r#"Cannot connect to Redis using "{conn_str}": {e:?}"#
                 ))
             }
-            Ok(x) => redis_conn = x,
+            Ok(x) => redis_conn = Some(x),
         }
 
         if args.flag_flushdb {
-            redis::cmd("FLUSHDB").execute(&mut redis_conn);
-            info!("flushed Redis database");
+            if let Some(ref mut rconn) = redis_conn {
+                redis::cmd("FLUSHDB").execute(rconn);
+                info!("flushed Redis database");
+            }
         }
     }
 
-    if args.flag_timeout > 3_600 {
-        return fail!("Timeout cannot be more than one hour");
-    }
-
-    info!("TIMEOUT: {} secs", args.flag_timeout);
-    TIMEOUT_SECS.set(args.flag_timeout).unwrap();
-
     let mut rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
+        .trim(csv::Trim::All)
         .no_headers(args.flag_no_headers);
 
     let mut rdr = rconfig.reader()?;
@@ -390,6 +406,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     // prep progress bars
+    set_colors_enabled(true); // as error progress bar is red
     let multi_progress = MultiProgress::new();
     let progress = multi_progress.add(ProgressBar::new(0));
     let mut record_count = 0;
@@ -431,6 +448,47 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         args.flag_jql.as_ref().map(std::string::ToString::to_string)
     };
 
+    #[derive(PartialEq)]
+    enum ReportKind {
+        Detailed,
+        Short,
+        None,
+    }
+
+    // prepare report
+    let mut report_wtr;
+    let mut report = ReportKind::None;
+    if let Some(report_kind) = args.flag_report {
+        report = match report_kind.to_lowercase().as_str() {
+            "detailed" => ReportKind::Detailed,
+            "short" => ReportKind::Short,
+            "none" => ReportKind::None,
+            _ => ReportKind::Short, // defaults to short if kind is misspelled
+        };
+
+        if report == ReportKind::None {
+            report_wtr = Config::new(&Some("sink".to_string())).writer()?;
+        } else {
+            let input_path = args
+                .arg_input
+                .clone()
+                .unwrap_or_else(|| "stdin.csv".to_string());
+
+            report_wtr = Config::new(&Some(input_path + ".fetch-report.tsv")).writer()?;
+            let mut report_headers = match report {
+                ReportKind::Detailed => headers.clone(),
+                _ => csv::ByteRecord::new(),
+            };
+            report_headers.push_field(b"qsv_fetch_url");
+            report_headers.push_field(b"qsv_fetch_result");
+            report_headers.push_field(b"qsv_fetch_status");
+            report_headers.push_field(b"qsv_fetch_cache_hit");
+            report_wtr.write_byte_record(&report_headers)?;
+        }
+    } else {
+        report_wtr = Config::new(&Some("sink".to_string())).writer()?;
+    }
+
     // amortize memory allocations
     // why optimize for mem & speed, when we're just doing single-threaded, throttled URL fetches?
     // we still optimize since fetch is backed by a memoized cache
@@ -442,20 +500,38 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     #[allow(unused_assignments)]
     let mut output_record = csv::ByteRecord::new();
     #[allow(unused_assignments)]
+    let mut report_record = csv::ByteRecord::new();
+    #[allow(unused_assignments)]
     let mut url = String::with_capacity(100);
     #[allow(unused_assignments)]
     let mut record_vec: Vec<String> = Vec::with_capacity(headers.len());
     let mut redis_cache_hits: u64 = 0;
     #[allow(unused_assignments)]
-    let mut intermediate_value: Return<String> = Return {
+    let mut intermediate_redis_value: Return<String> = Return {
         was_cached: false,
-        value: String::with_capacity(150),
+        value: String::new(),
+    };
+    #[allow(unused_assignments)]
+    let mut intermediate_value: Return<FetchResponse> = Return {
+        was_cached: false,
+        value: FetchResponse {
+            response: String::new(),
+            status_code: 0_u16,
+        },
     };
     #[allow(unused_assignments)]
     let mut final_value = String::with_capacity(150);
     #[allow(unused_assignments)]
-    let mut str_value = String::with_capacity(100);
+    let mut final_response = FetchResponse {
+        response: String::new(),
+        status_code: 0_u16,
+    };
+    let empty_response = FetchResponse {
+        response: String::new(),
+        status_code: 0_u16,
+    };
     let mut running_error_count = 0_usize;
+    let mut was_cached;
 
     while rdr.read_byte_record(&mut record)? {
         if not_quiet {
@@ -467,8 +543,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             // let's dynamically construct the URL with it
             record_vec.clear();
             for field in &record {
-                str_value = unsafe { std::str::from_utf8_unchecked(field).trim().to_owned() };
-                record_vec.push(str_value);
+                record_vec.push(unsafe { std::str::from_utf8_unchecked(field).to_owned() });
             }
             if let Ok(formatted) =
                 dynfmt::SimpleCurlyFormat.format(&dynfmt_url_template, &*record_vec)
@@ -477,16 +552,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         } else if let Ok(s) = std::str::from_utf8(&record[column_index]) {
             // we're not using a URL template,
-            // just use the field as is as the URL
+            // just use the field as-is as the URL
             url = s.to_owned();
         } else {
             url = "".to_owned();
         }
 
-        final_value = if url.is_empty() {
-            "".to_string()
+        if url.is_empty() {
+            final_response.clone_from(&empty_response);
+            was_cached = false;
         } else if args.flag_redis {
-            intermediate_value = get_redis_response(
+            intermediate_redis_value = get_redis_response(
                 &url,
                 &client,
                 &limiter,
@@ -496,12 +572,29 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 include_existing_columns,
             )
             .unwrap();
-            if intermediate_value.was_cached {
+            was_cached = intermediate_redis_value.was_cached;
+            if was_cached {
                 redis_cache_hits += 1;
             }
-            intermediate_value.value
+            final_response = serde_json::from_str(&intermediate_redis_value).unwrap();
+            if !args.flag_cache_error
+                && final_response.status_code != reqwest::StatusCode::OK.as_u16()
+            {
+                let key = format!(
+                    "{}{:?}{}{}{}",
+                    url,
+                    jql_selector,
+                    args.flag_store_error,
+                    args.flag_pretty,
+                    include_existing_columns
+                );
+
+                if let Some(ref mut rconn) = redis_conn {
+                    redis::Cmd::del(key).execute(rconn);
+                }
+            }
         } else {
-            get_cached_response(
+            intermediate_value = get_cached_response(
                 &url,
                 &client,
                 &limiter,
@@ -509,8 +602,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 args.flag_store_error,
                 args.flag_pretty,
                 include_existing_columns,
-            )
+            );
+            final_response = intermediate_value.value;
+            was_cached = intermediate_value.was_cached;
+            if !args.flag_cache_error
+                && final_response.status_code != reqwest::StatusCode::OK.as_u16()
+            {
+                let mut cache = GET_CACHED_RESPONSE.lock().unwrap();
+                cache.cache_remove(&url).unwrap();
+            }
         };
+
+        final_value.clone_from(&final_response.response);
 
         if include_existing_columns {
             record.push_field(final_value.as_bytes());
@@ -523,6 +626,23 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 output_record.push_field(final_value.as_bytes());
             }
             wtr.write_byte_record(&output_record)?;
+        }
+
+        if report != ReportKind::None {
+            if report == ReportKind::Detailed {
+                report_record.clone_from(&record);
+            } else {
+                report_record.clear();
+            }
+            report_record.push_field(url.as_bytes());
+            if include_existing_columns {
+                report_record.push_field(final_value.as_bytes());
+            } else {
+                report_record.push_field(output_record.as_slice());
+            }
+            report_record.push_field(final_response.status_code.to_string().as_bytes());
+            report_record.push_field(if was_cached { b"1" } else { b"0" });
+            report_wtr.write_byte_record(&report_record)?;
         }
 
         if args.flag_max_errors > 0 {
@@ -562,6 +682,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let _ = multi_progress.join().unwrap();
     }
 
+    if report == ReportKind::None {
+        drop(report_wtr);
+    } else {
+        report_wtr.flush()?;
+    }
     Ok(wtr.flush()?)
 }
 
@@ -572,7 +697,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     size = 2_000_000,
     key = "String",
     convert = r#"{ format!("{}", url) }"#,
-    sync_writes = false
+    with_cached_flag = true
 )]
 fn get_cached_response(
     url: &str,
@@ -582,8 +707,8 @@ fn get_cached_response(
     flag_store_error: bool,
     flag_pretty: bool,
     include_existing_columns: bool,
-) -> String {
-    get_response(
+) -> cached::Return<FetchResponse> {
+    Return::new(get_response(
         url,
         client,
         limiter,
@@ -591,11 +716,11 @@ fn get_cached_response(
         flag_store_error,
         flag_pretty,
         include_existing_columns,
-    )
+    ))
 }
 
-// get_redis_response needs a longer key as its a persistent cache
-// and and the values of flag_store_error, flag_pretty and include_existing_columns
+// get_redis_response needs a longer key as its a persistent cache and the
+// values of flag_jql, flag_store_error, flag_pretty and include_existing_columns
 // may change between sessions
 #[io_cached(
     type = "cached::RedisCache<String, String>",
@@ -622,15 +747,18 @@ fn get_redis_response(
     flag_pretty: bool,
     include_existing_columns: bool,
 ) -> Result<cached::Return<String>, CliError> {
-    Ok(Return::new(get_response(
-        url,
-        client,
-        limiter,
-        flag_jql,
-        flag_store_error,
-        flag_pretty,
-        include_existing_columns,
-    )))
+    Ok(Return::new({
+        serde_json::to_string(&get_response(
+            url,
+            client,
+            limiter,
+            flag_jql,
+            flag_store_error,
+            flag_pretty,
+            include_existing_columns,
+        ))
+        .unwrap()
+    }))
 }
 
 #[inline]
@@ -642,7 +770,7 @@ fn get_response(
     flag_store_error: bool,
     flag_pretty: bool,
     include_existing_columns: bool,
-) -> String {
+) -> FetchResponse {
     // validate the URL
     let valid_url = match Url::parse(url) {
         Ok(valid) => valid.to_string(),
@@ -666,7 +794,10 @@ fn get_response(
                 "".to_string()
             };
             error!("Invalid URL: Store_error: {flag_store_error} - {url_invalid_err}");
-            return url_invalid_err;
+            return FetchResponse {
+                response: url_invalid_err,
+                status_code: reqwest::StatusCode::NOT_FOUND.as_u16(),
+            };
         }
     };
     info!("Fetching URL: {valid_url}");
@@ -699,9 +830,15 @@ fn get_response(
                 GLOBAL_ERROR_COUNT.load(Ordering::SeqCst)
             );
             if flag_store_error {
-                return error.to_string();
+                return FetchResponse {
+                    response: error.to_string(),
+                    status_code: reqwest::StatusCode::BAD_REQUEST.as_u16(),
+                };
             }
-            return String::default();
+            return FetchResponse {
+                response: String::default(),
+                status_code: reqwest::StatusCode::BAD_REQUEST.as_u16(),
+            };
         }
     };
     // debug!("response: {resp:?}");
@@ -883,7 +1020,10 @@ ratelimit_reset:{ratelimit_reset:?} {ratelimit_reset_sec:?} retry_after:{retry_a
     }
 
     if include_existing_columns {
-        final_value
+        FetchResponse {
+            response: final_value,
+            status_code: api_status.as_u16(),
+        }
     } else if final_value.starts_with("HTTP ERROR ") && flag_store_error {
         let json_error = json!({
             "errors": [{
@@ -891,9 +1031,15 @@ ratelimit_reset:{ratelimit_reset:?} {ratelimit_reset_sec:?} retry_after:{retry_a
                 "detail": final_value
             }]
         });
-        format!("{json_error}")
+        FetchResponse {
+            response: format!("{json_error}"),
+            status_code: api_status.as_u16(),
+        }
     } else {
-        final_value
+        FetchResponse {
+            response: final_value,
+            status_code: api_status.as_u16(),
+        }
     }
 }
 
