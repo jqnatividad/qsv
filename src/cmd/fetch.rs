@@ -443,7 +443,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let not_quiet = !args.flag_quiet;
 
     let jql_selector: Option<String> = if let Some(jql_file) = args.flag_jqlfile {
-        Some(fs::read_to_string(jql_file)?)
+        Some(fs::read_to_string(jql_file).expect("Cannot read jql file."))
     } else {
         args.flag_jql.as_ref().map(std::string::ToString::to_string)
     };
