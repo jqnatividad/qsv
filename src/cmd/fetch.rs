@@ -40,7 +40,7 @@ Fetch caches responses to minimize traffic and maximize performance. By default,
 a non-persistent memoized cache for each fetch session.
 
 For persistent, inter-session caching, Redis is supported with the --redis flag. 
-By default, it will connect to a local Redis instance at redis://127.0.0.1:6379,
+By default, it will connect to a local Redis instance at redis://127.0.0.1:6379/1,
 with a cache expiry Time-to-Live (TTL) of 2,419,200 seconds (28 days),
 and cache hits NOT refreshing the TTL of cached values.
 
@@ -110,7 +110,8 @@ Usage:
 Fetch options:
     --url-template <template>  URL template to use. Use column names enclosed with
                                curly braces to insert the CSV data for a record.
-    -c, --new-column <name>    Put the fetched values in a new column instead.
+    -c, --new-column <name>    Put the fetched values in a new column. Specifying this option
+                               creates a new CSV file. Otherwise, the output is a JSONL file.
     --jql <selector>           Apply jql selector to API returned JSON value.
     --jqlfile <file>           Load jql selector from file instead.
     --pretty                   Prettify JSON responses. Otherwise, they're minified.
@@ -123,7 +124,7 @@ Fetch options:
                                CAUTION: Only use zero for APIs that use RateLimit and/or Retry-After headers,
                                otherwise your fetch job may look like a Denial Of Service attack.
                                [default: 0 ]
-    --timeout <seconds>        Timeout for each URL GET.
+    --timeout <seconds>        Timeout for each URL request.
                                [default: 30 ]
     --http-header <key:value>  Append custom header(s) to the HTTP header. Pass multiple key-value pairs
                                by adding this option multiple times, once for each pair. The key and value 
@@ -132,7 +133,7 @@ Fetch options:
                                Set to zero (0) to continue despite errors.
                                [default: 100 ]
     --store-error              On error, store error code/message instead of blank value.
-    --cache-error              Cache error responses even if a fetch fails. If an identical fetch is requested,
+    --cache-error              Cache error responses even if a request fails. If an identical URL is requested,
                                the cached error is returned. Otherwise, the fetch is attempted again.
     --cookies                  Allow cookies.
     --report <kind>            Creates a report of the fetch job. The report has the same name as the input file
@@ -300,7 +301,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let sel = rconfig.selection(&headers)?;
         column_index = *sel.iter().next().unwrap();
         if sel.len() != 1 {
-            return fail!("Only one single URL column may be selected.");
+            return fail!("Only a single URL column may be selected.");
         }
     }
 
@@ -433,6 +434,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         util::prep_progress(&progress, record_count);
     }
 
+    // create a separate thread for the progress bars
     let multi_progress = thread::spawn(move || multi_progress.join());
 
     // do a progress update every 3 seconds
