@@ -15,6 +15,11 @@ Usage:
     qsv tojsonl [options] [<input>]
     qsv tojsonl --help
 
+Tojsonl optionns:
+    -j, --jobs <arg>       The number of jobs to run in parallel.
+                           When not set, the number of jobs is set to the
+                           number of CPUs detected.
+
 Common options:
     -h, --help             Display this message
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
@@ -26,6 +31,7 @@ const STDIN_CSV: &str = "stdin.csv";
 #[derive(Deserialize, Clone)]
 struct Args {
     arg_input: Option<String>,
+    flag_jobs: Option<usize>,
     flag_delimiter: Option<Delimiter>,
     flag_output: Option<String>,
 }
@@ -61,7 +67,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         flag_dates_whitelist: "none".to_string(), // json doesn't have a date type, so don't infer dates
         flag_prefer_dmy: false,
         flag_stdout: false,
-        flag_jobs: Some(util::njobs(Some(util::max_jobs()))),
+        flag_jobs: Some(util::njobs(args.flag_jobs)),
         flag_no_headers: false,
         flag_delimiter: args.flag_delimiter,
         arg_input: args.arg_input.clone(),
