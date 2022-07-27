@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
 use crate::CliError;
@@ -12,6 +11,7 @@ use governor::{
     clock::DefaultClock, middleware::NoOpMiddleware, state::direct::NotKeyed, state::InMemoryState,
 };
 use indicatif::{MultiProgress, ProgressBar, ProgressDrawTarget};
+use log::Level::{Debug, Trace, Warn};
 use log::{debug, error, info, log_enabled, warn};
 use once_cell::sync::{Lazy, OnceCell};
 use rand::Rng;
@@ -19,7 +19,6 @@ use redis;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Instant;
 use std::{fs, thread, time};
 use thousands::Separable;
@@ -125,16 +124,18 @@ Fetch options:
                                otherwise your fetch job may look like a Denial Of Service attack.
                                [default: 0 ]
     --timeout <seconds>        Timeout for each URL request.
-                               [default: 30 ]
+                               [default: 15 ]
     --http-header <key:value>  Append custom header(s) to the HTTP header. Pass multiple key-value pairs
                                by adding this option multiple times, once for each pair. The key and value 
                                should be separated by a colon.
+    --max-retries <count>      Maximum number of retries per record before an error is raised.
+                               [default: 5]
     --max-errors <count>       Maximum number of errors before aborting.
                                Set to zero (0) to continue despite errors.
                                [default: 100 ]
     --store-error              On error, store error code/message instead of blank value.
     --cache-error              Cache error responses even if a request fails. If an identical URL is requested,
-                               the cached error is returned. Otherwise, the fetch is attempted again.
+                               the cached error is returned. Otherwise, the fetch is attempted again for --max-retries.
     --cookies                  Allow cookies.
     --report <kind>            Creates a report of the fetch job. The report has the same name as the input file
                                with the ".fetch-report" suffix. 
@@ -173,14 +174,15 @@ struct Args {
     flag_jql: Option<String>,
     flag_jqlfile: Option<String>,
     flag_pretty: bool,
-    flag_rate_limit: Option<u32>,
+    flag_rate_limit: u32,
     flag_timeout: u64,
     flag_http_header: Vec<String>,
-    flag_max_errors: usize,
+    flag_max_retries: u8,
+    flag_max_errors: u64,
     flag_store_error: bool,
     flag_cache_error: bool,
     flag_cookies: bool,
-    flag_report: Option<String>,
+    flag_report: String,
     flag_redis: bool,
     flag_flushdb: bool,
     flag_output: Option<String>,
@@ -206,7 +208,7 @@ impl From<reqwest::Error> for CliError {
     }
 }
 
-static GLOBAL_ERROR_COUNT: AtomicUsize = AtomicUsize::new(0);
+// static GLOBAL_ERROR_COUNT: AtomicUsize = AtomicUsize::new(0);
 
 struct RedisConfig {
     conn_str: String,
@@ -332,15 +334,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     use std::num::NonZeroU32;
-    let rate_limit = if let Some(qps) = args.flag_rate_limit {
-        match qps {
-            0 => NonZeroU32::new(u32::MAX).unwrap(),
-            1..=1000 => NonZeroU32::new(qps).unwrap(),
-            _ => return fail!("Rate Limit should be between 1 to 1000 queries per second."),
-        }
-    } else {
-        // default rate limit is actually set via docopt, so init below is just to satisfy compiler
-        NonZeroU32::new(u32::MAX).unwrap()
+    let rate_limit = match args.flag_rate_limit {
+        0 => NonZeroU32::new(u32::MAX).unwrap(),
+        1..=1000 => NonZeroU32::new(args.flag_rate_limit).unwrap(),
+        _ => return fail!("Rate Limit should be between 1 to 1000 queries per second."),
     };
     info!("RATE LIMIT: {rate_limit}");
 
@@ -386,7 +383,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .gzip(true)
         .deflate(true)
         .http2_adaptive_window(true)
-        .connection_verbose(log_enabled!(log::Level::Debug) || log_enabled!(log::Level::Trace))
+        .connection_verbose(log_enabled!(Debug) || log_enabled!(Trace))
         .timeout(client_timeout)
         .build()?;
 
@@ -456,46 +453,41 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     // prepare report
+    let report = match args.flag_report.to_lowercase().as_str() {
+        "detailed" => ReportKind::Detailed,
+        "short" => ReportKind::Short,
+        "none" => ReportKind::None,
+        _ => ReportKind::Short, // defaults to short if kind is misspelled
+    };
+
     let mut report_wtr;
-    let mut report = ReportKind::None;
-    if let Some(report_kind) = args.flag_report {
-        report = match report_kind.to_lowercase().as_str() {
-            "detailed" => ReportKind::Detailed,
-            "short" => ReportKind::Short,
-            "none" => ReportKind::None,
-            _ => ReportKind::Short, // defaults to short if kind is misspelled
-        };
-
-        if report == ReportKind::None {
-            report_wtr = Config::new(&Some("sink".to_string())).writer()?;
-        } else {
-            let input_path = args
-                .arg_input
-                .clone()
-                .unwrap_or_else(|| "stdin.csv".to_string());
-
-            report_wtr = Config::new(&Some(input_path + ".fetch-report.tsv")).writer()?;
-            let mut report_headers = match report {
-                ReportKind::Detailed => headers.clone(),
-                _ => csv::ByteRecord::new(),
-            };
-            report_headers.push_field(b"qsv_fetch_url");
-            report_headers.push_field(b"qsv_fetch_response");
-            report_headers.push_field(b"qsv_fetch_status");
-            report_headers.push_field(b"qsv_fetch_cache_hit");
-            report_headers.push_field(b"qsv_fetch_elapsed_ms");
-            report_wtr.write_byte_record(&report_headers)?;
-        }
-    } else {
+    if report == ReportKind::None {
         report_wtr = Config::new(&Some("sink".to_string())).writer()?;
+    } else {
+        let input_path = args
+            .arg_input
+            .clone()
+            .unwrap_or_else(|| "stdin.csv".to_string());
+
+        report_wtr = Config::new(&Some(input_path + ".fetch-report.tsv")).writer()?;
+        let mut report_headers = if report == ReportKind::Detailed {
+            headers.clone()
+        } else {
+            csv::ByteRecord::new()
+        };
+        report_headers.push_field(b"qsv_fetch_url");
+        report_headers.push_field(b"qsv_fetch_response");
+        report_headers.push_field(b"qsv_fetch_status");
+        report_headers.push_field(b"qsv_fetch_cache_hit");
+        report_headers.push_field(b"qsv_fetch_elapsed_ms");
+        report_wtr.write_byte_record(&report_headers)?;
     }
 
     // amortize memory allocations
     // why optimize for mem & speed, when we're just doing single-threaded, throttled URL fetches?
     // we still optimize since fetch is backed by a memoized cache
     // (in memory or Redis, when --redis is used),
-    // so we want to return responses as fast as possible as we bypass the network fetch
-    // with a cache hit
+    // so we want to return responses as fast as possible as we bypass the network request with a cache hit
     #[allow(unused_assignments)]
     let mut record = csv::ByteRecord::new();
     #[allow(unused_assignments)]
@@ -531,7 +523,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         response: String::new(),
         status_code: 0_u16,
     };
-    let mut running_error_count = 0_usize;
+    let mut running_error_count = 0_u64;
+    let mut running_success_count = 0_u64;
     let mut was_cached;
     let mut now = Instant::now();
 
@@ -576,6 +569,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 args.flag_store_error,
                 args.flag_pretty,
                 include_existing_columns,
+                args.flag_max_retries,
             )
             .unwrap();
             was_cached = intermediate_redis_value.was_cached;
@@ -583,9 +577,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 redis_cache_hits += 1;
             }
             final_response = serde_json::from_str(&intermediate_redis_value).unwrap();
-            if !args.flag_cache_error
-                && final_response.status_code != reqwest::StatusCode::OK.as_u16()
-            {
+            if !args.flag_cache_error && final_response.status_code != 200 {
                 let key = format!(
                     "{}{:?}{}{}{}",
                     url,
@@ -595,10 +587,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     include_existing_columns
                 );
 
-                if GET_REDIS_RESPONSE.cache_remove(&key).is_err() && log_enabled!(log::Level::Warn)
-                {
-                    // failure to removing cache keys is non-fatal. Continue, but log it.
-                    warn!(r#"Cannot remove key "{key}" from Redis"#);
+                if GET_REDIS_RESPONSE.cache_remove(&key).is_err() && log_enabled!(Warn) {
+                    // failure to remove cache keys is non-fatal. Continue, but log it.
+                    warn!(r#"Cannot remove Redis key "{key}""#);
                 };
             }
         } else {
@@ -610,16 +601,22 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 args.flag_store_error,
                 args.flag_pretty,
                 include_existing_columns,
+                args.flag_max_retries,
             );
             final_response = intermediate_value.value;
             was_cached = intermediate_value.was_cached;
-            if !args.flag_cache_error
-                && final_response.status_code != reqwest::StatusCode::OK.as_u16()
-            {
+            if !args.flag_cache_error && final_response.status_code != 200 {
                 let mut cache = GET_CACHED_RESPONSE.lock().unwrap();
                 cache.cache_remove(&url).unwrap();
             }
         };
+
+        if final_response.status_code == 200 {
+            running_success_count += 1;
+        } else {
+            running_error_count += 1;
+            error_progress.inc(1);
+        }
 
         final_value.clone_from(&final_response.response);
 
@@ -654,15 +651,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             report_wtr.write_byte_record(&report_record)?;
         }
 
-        if args.flag_max_errors > 0 {
-            let error_count = GLOBAL_ERROR_COUNT.load(Ordering::SeqCst);
-            if error_count > running_error_count {
-                error_progress.inc(1);
-                running_error_count += 1;
-            }
-            if error_count >= args.flag_max_errors {
-                break;
-            };
+        if args.flag_max_errors > 0 && running_error_count >= args.flag_max_errors {
+            break;
         }
     }
 
@@ -673,22 +663,32 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             util::update_cache_info!(progress, GET_CACHED_RESPONSE);
         }
         util::finish_progress(&progress);
+
         if running_error_count == 0 {
             error_progress.finish_and_clear();
         } else {
             error_progress.finish();
 
-            // sleep so we can dependably write eprintln without messing up progress bars
-            thread::sleep(time::Duration::from_nanos(10));
-
-            let abort_msg = format!(
-                "{} max errors. Fetch aborted.",
-                args.flag_max_errors.separate_with_commas()
-            );
-            info!("{abort_msg}");
-            eprintln!("{abort_msg}");
+            if running_error_count >= args.flag_max_errors {
+                // sleep so we can dependably write eprintln without messing up progress bars
+                thread::sleep(time::Duration::from_nanos(10));
+                let abort_msg = format!(
+                    "{} max errors. Fetch aborted.",
+                    args.flag_max_errors.separate_with_commas()
+                );
+                info!("{abort_msg}");
+                eprintln!("{abort_msg}");
+            }
         }
         let _ = multi_progress.join().unwrap();
+
+        let end_msg = format!(
+            "{} records successfully fetched. {} errors.",
+            running_success_count.separate_with_commas(),
+            running_error_count.separate_with_commas()
+        );
+        info!("{end_msg}");
+        eprintln!("{end_msg}");
     }
 
     if report == ReportKind::None {
@@ -700,8 +700,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 }
 
 // we only need url in the cache key
-// as this is an in-memory cache that is only used
-// for one qsv session
+// as this is an in-memory cache that is only used for one qsv session
 #[cached(
     size = 2_000_000,
     key = "String",
@@ -716,6 +715,7 @@ fn get_cached_response(
     flag_store_error: bool,
     flag_pretty: bool,
     include_existing_columns: bool,
+    flag_max_retries: u8,
 ) -> cached::Return<FetchResponse> {
     Return::new(get_response(
         url,
@@ -725,6 +725,7 @@ fn get_cached_response(
         flag_store_error,
         flag_pretty,
         include_existing_columns,
+        flag_max_retries,
     ))
 }
 
@@ -755,6 +756,7 @@ fn get_redis_response(
     flag_store_error: bool,
     flag_pretty: bool,
     include_existing_columns: bool,
+    flag_max_retries: u8,
 ) -> Result<cached::Return<String>, CliError> {
     Ok(Return::new({
         serde_json::to_string(&get_response(
@@ -765,6 +767,7 @@ fn get_redis_response(
             flag_store_error,
             flag_pretty,
             include_existing_columns,
+            flag_max_retries,
         ))
         .unwrap()
     }))
@@ -779,6 +782,7 @@ fn get_response(
     flag_store_error: bool,
     flag_pretty: bool,
     include_existing_columns: bool,
+    flag_max_retries: u8,
 ) -> FetchResponse {
     // validate the URL
     let valid_url = match Url::parse(url) {
@@ -815,225 +819,244 @@ fn get_response(
     const MINIMUM_WAIT_MS: u64 = 10;
     const MIN_WAIT: time::Duration = time::Duration::from_millis(MINIMUM_WAIT_MS);
     let mut limiter_total_wait = 0;
-    let governor_timeout_ms = unsafe { *TIMEOUT_SECS.get_unchecked() * 1_000 };
-    while limiter.check().is_err() {
-        limiter_total_wait += MINIMUM_WAIT_MS;
-        thread::sleep(MIN_WAIT);
-        if limiter_total_wait > governor_timeout_ms {
-            info!("rate limit timed out after {limiter_total_wait} ms");
-            break;
-        } else if limiter_total_wait == MINIMUM_WAIT_MS {
-            info!("throttling...");
-        }
-    }
-    if limiter_total_wait > 0 && limiter_total_wait <= governor_timeout_ms {
-        info!("throttled for {limiter_total_wait} ms");
-    }
+    let timeout_secs = unsafe { *TIMEOUT_SECS.get_unchecked() };
+    let governor_timeout_ms = timeout_secs * 1_000;
 
-    let resp: reqwest::blocking::Response = match client.get(&valid_url).send() {
-        Ok(response) => response,
-        Err(error) => {
-            GLOBAL_ERROR_COUNT.fetch_add(1, Ordering::SeqCst);
-            error!(
-                "Cannot fetch url: {valid_url:?}, err_count: {}, error: {error:?}",
-                GLOBAL_ERROR_COUNT.load(Ordering::SeqCst)
-            );
-            if flag_store_error {
+    let mut retries = 0_u8;
+    let mut error_flag;
+    let mut final_value: String;
+    let mut api_status;
+
+    // request with --max-retries
+    'retry: loop {
+        // check the rate-limiter
+        while limiter.check().is_err() {
+            limiter_total_wait += MINIMUM_WAIT_MS;
+            thread::sleep(MIN_WAIT);
+            if limiter_total_wait > governor_timeout_ms {
+                info!("rate limit timed out after {limiter_total_wait} ms");
+                break;
+            } else if limiter_total_wait == MINIMUM_WAIT_MS {
+                info!("throttling...");
+            }
+        }
+        if limiter_total_wait > 0 && limiter_total_wait <= governor_timeout_ms {
+            info!("throttled for {limiter_total_wait} ms");
+        }
+
+        // send the actual request
+        let resp: reqwest::blocking::Response = match client.get(&valid_url).send() {
+            Ok(response) => response,
+            Err(error) => {
+                error!("Cannot fetch url: {valid_url:?}, error: {error:?}");
+                if flag_store_error {
+                    return FetchResponse {
+                        response: error.to_string(),
+                        status_code: reqwest::StatusCode::BAD_REQUEST.as_u16(),
+                    };
+                }
                 return FetchResponse {
-                    response: error.to_string(),
+                    response: String::default(),
                     status_code: reqwest::StatusCode::BAD_REQUEST.as_u16(),
                 };
             }
-            return FetchResponse {
-                response: String::default(),
-                status_code: reqwest::StatusCode::BAD_REQUEST.as_u16(),
-            };
-        }
-    };
-    // debug!("response: {resp:?}");
+        };
+        // debug!("response: {resp:?}");
 
-    let api_respheader = resp.headers().clone();
-    let api_status = resp.status();
-    let api_value: String = resp.text().unwrap_or_default();
+        let api_respheader = resp.headers().clone();
+        api_status = resp.status();
+        let api_value: String = resp.text().unwrap_or_default();
 
-    let final_value: String;
-    let mut error_flag = false;
-
-    if api_status.is_client_error() || api_status.is_server_error() {
-        error!(
-            "HTTP error. url: {valid_url:?}, error: {:?}",
-            api_status.canonical_reason().unwrap_or("unknown error")
-        );
-        error_flag = true;
-
-        if flag_store_error {
-            final_value = format!(
-                "HTTP ERROR {} - {}",
-                api_status.as_str(),
+        if api_status.is_client_error() || api_status.is_server_error() {
+            error_flag = true;
+            error!(
+                "HTTP error. url: {valid_url:?}, error: {:?}",
                 api_status.canonical_reason().unwrap_or("unknown error")
             );
+
+            if flag_store_error {
+                final_value = format!(
+                    "HTTP ERROR {} - {}",
+                    api_status.as_str(),
+                    api_status.canonical_reason().unwrap_or("unknown error")
+                );
+            } else {
+                final_value = String::new();
+            }
         } else {
-            final_value = String::new();
-        }
-    } else {
-        // apply JQL selector if provided
-        if let Some(selectors) = flag_jql {
-            // instead of repeatedly parsing the jql selector,
-            // we compile it only once and cache it for performance using once_cell
-            let jql_groups = JQL_GROUPS.get_or_init(|| jql::selectors_parser(selectors).unwrap());
-            match apply_jql(&api_value, jql_groups) {
-                Ok(s) => {
-                    final_value = s;
-                }
-                Err(e) => {
-                    error!(
+            error_flag = false;
+            // apply JQL selector if provided
+            if let Some(selectors) = flag_jql {
+                // instead of repeatedly parsing the jql selector,
+                // we compile it only once and cache it for performance using once_cell
+                let jql_groups =
+                    JQL_GROUPS.get_or_init(|| jql::selectors_parser(selectors).unwrap());
+                match apply_jql(&api_value, jql_groups) {
+                    Ok(s) => {
+                        final_value = s;
+                    }
+                    Err(e) => {
+                        error!(
                         "jql error. json: {api_value:?}, selectors: {selectors:?}, error: {e:?}"
                     );
 
-                    if flag_store_error {
-                        final_value = e.to_string();
-                    } else {
-                        final_value = String::new();
+                        if flag_store_error {
+                            final_value = e.to_string();
+                        } else {
+                            final_value = String::new();
+                        }
+                        error_flag = true;
                     }
-                    error_flag = true;
                 }
-            }
-        } else if flag_pretty {
-            if let Ok(pretty_json) = jsonxf::pretty_print(&api_value) {
-                final_value = pretty_json;
+            } else if flag_pretty {
+                if let Ok(pretty_json) = jsonxf::pretty_print(&api_value) {
+                    final_value = pretty_json;
+                } else {
+                    final_value = api_value;
+                }
+            } else if let Ok(minimized_json) = jsonxf::minimize(&api_value) {
+                final_value = minimized_json;
             } else {
                 final_value = api_value;
             }
-        } else if let Ok(minimized_json) = jsonxf::minimize(&api_value) {
-            final_value = minimized_json;
-        } else {
-            final_value = api_value;
         }
-    }
 
-    // debug!("final value: {final_value}");
+        // debug!("final value: {final_value}");
 
-    // check if there's an API error (likely 503-service not available or 493-too many requests) or
-    // if the API has ratelimits and we need to do dynamic throttling to respect the limits
-    if api_status != reqwest::StatusCode::OK
-        || api_respheader.contains_key("ratelimit-limit")
-        || api_respheader.contains_key("x-ratelimit-limit")
-    {
-        let mut ratelimit_remaining = api_respheader.get("ratelimit-remaining");
-        if ratelimit_remaining.is_none() {
-            let temp_var = api_respheader.get("x-ratelimit-remaining");
-            if temp_var.is_some() {
-                ratelimit_remaining = temp_var;
+        // check if there's an API error (likely 503-service not available or 493-too many requests) or
+        // if the API has ratelimits and we need to do dynamic throttling to respect the limits
+        if error_flag
+            || api_respheader.contains_key("ratelimit-limit")
+            || api_respheader.contains_key("x-ratelimit-limit")
+        {
+            let mut ratelimit_remaining = api_respheader.get("ratelimit-remaining");
+            if ratelimit_remaining.is_none() {
+                let temp_var = api_respheader.get("x-ratelimit-remaining");
+                if temp_var.is_some() {
+                    ratelimit_remaining = temp_var;
+                }
             }
-        }
-        let mut ratelimit_reset = api_respheader.get("ratelimit-reset");
-        if ratelimit_reset.is_none() {
-            let temp_var = api_respheader.get("x-ratelimit-reset");
-            if temp_var.is_some() {
-                ratelimit_reset = temp_var;
+            let mut ratelimit_reset = api_respheader.get("ratelimit-reset");
+            if ratelimit_reset.is_none() {
+                let temp_var = api_respheader.get("x-ratelimit-reset");
+                if temp_var.is_some() {
+                    ratelimit_reset = temp_var;
+                }
             }
-        }
 
-        // some APIs add the "-second" suffix to ratelimit fields
-        let mut ratelimit_remaining_sec = api_respheader.get("ratelimit-remaining-second");
-        if ratelimit_remaining_sec.is_none() {
-            let temp_var = api_respheader.get("x-ratelimit-remaining-second");
-            if temp_var.is_some() {
-                ratelimit_remaining_sec = temp_var;
+            // some APIs add the "-second" suffix to ratelimit fields
+            let mut ratelimit_remaining_sec = api_respheader.get("ratelimit-remaining-second");
+            if ratelimit_remaining_sec.is_none() {
+                let temp_var = api_respheader.get("x-ratelimit-remaining-second");
+                if temp_var.is_some() {
+                    ratelimit_remaining_sec = temp_var;
+                }
             }
-        }
-        let mut ratelimit_reset_sec = api_respheader.get("ratelimit-reset-second");
-        if ratelimit_reset_sec.is_none() {
-            let temp_var = api_respheader.get("x-ratelimit-reset-second");
-            if temp_var.is_some() {
-                ratelimit_reset_sec = temp_var;
+            let mut ratelimit_reset_sec = api_respheader.get("ratelimit-reset-second");
+            if ratelimit_reset_sec.is_none() {
+                let temp_var = api_respheader.get("x-ratelimit-reset-second");
+                if temp_var.is_some() {
+                    ratelimit_reset_sec = temp_var;
+                }
             }
-        }
 
-        let retry_after = api_respheader.get("retry-after");
+            let retry_after = api_respheader.get("retry-after");
 
-        if log_enabled!(log::Level::Debug) {
-            debug!("api_status:{api_status:?} rate_limit_remaining:{ratelimit_remaining:?} {ratelimit_remaining_sec:?} \
+            if log_enabled!(Debug) {
+                debug!("api_status:{api_status:?} rate_limit_remaining:{ratelimit_remaining:?} {ratelimit_remaining_sec:?} \
 ratelimit_reset:{ratelimit_reset:?} {ratelimit_reset_sec:?} retry_after:{retry_after:?}");
-        }
+            }
 
-        // if there's a ratelimit_remaining field in the response header, get it
-        // otherwise, set remaining to sentinel value 9999
-        let remaining = ratelimit_remaining.map_or_else(
-            || {
-                if let Some(ratelimit_remaining_sec) = ratelimit_remaining_sec {
-                    let remaining_sec_str = ratelimit_remaining_sec.to_str().unwrap();
-                    remaining_sec_str.parse::<u64>().unwrap_or(1)
-                } else {
-                    9999_u64
-                }
-            },
-            |ratelimit_remaining| {
-                let remaining_str = ratelimit_remaining.to_str().unwrap();
-                remaining_str.parse::<u64>().unwrap_or(1)
-            },
-        );
-
-        // if there's a ratelimit_reset field in the response header, get it
-        // otherwise, set reset to sentinel value 0
-        let mut reset_secs = ratelimit_reset.map_or_else(
-            || {
-                if let Some(ratelimit_reset_sec) = ratelimit_reset_sec {
-                    let reset_sec_str = ratelimit_reset_sec.to_str().unwrap();
-                    reset_sec_str.parse::<u64>().unwrap_or(1)
-                } else if api_status != reqwest::StatusCode::OK {
-                    // sleep for at least 1 second if there are no ratelimit headers
-                    // but we still got an API error
-                    1_u64
-                } else {
-                    0_u64
-                }
-            },
-            |ratelimit_reset| {
-                let reset_str = ratelimit_reset.to_str().unwrap();
-                reset_str.parse::<u64>().unwrap_or(1)
-            },
-        );
-
-        // if there's a retry_after field in the response header, get it
-        // and set reset to it
-        if let Some(retry_after) = retry_after {
-            let retry_str = retry_after.to_str().unwrap();
-            // if we cannot parse its value as u64, the retry after value
-            // is most likely an rfc2822 date and not number of seconds to
-            // wait before retrying, which is a valid value
-            // however, we don't want to do date-parsing here, so we just
-            // wait 10 seconds before retrying
-            reset_secs = retry_str.parse::<u64>().unwrap_or(10);
-        }
-
-        // if there is only one more remaining call per our ratelimit quota or
-        // reset is greater than or equal to 1, dynamically throttle and sleep for ~reset seconds
-        if remaining <= 1 || reset_secs >= 1 {
-            // we add a small random delta to how long fetch sleeps
-            // as we need to add a little jitter as per the spec to avoid thundering herd issues
-            // https://tools.ietf.org/id/draft-polli-ratelimit-headers-00.html#rfc.section.7.5
-            let rand_addl_sleep = (reset_secs * 1000) + rand::thread_rng().gen_range(10..30);
-
-            info!(
-                "sleeping for {rand_addl_sleep} milliseconds until ratelimit is reset or retry_after has elapsed"
+            // if there's a ratelimit_remaining field in the response header, get it
+            // otherwise, set remaining to sentinel value 9999
+            let remaining = ratelimit_remaining.map_or_else(
+                || {
+                    if let Some(ratelimit_remaining_sec) = ratelimit_remaining_sec {
+                        let remaining_sec_str = ratelimit_remaining_sec.to_str().unwrap();
+                        remaining_sec_str.parse::<u64>().unwrap_or(1)
+                    } else {
+                        9999_u64
+                    }
+                },
+                |ratelimit_remaining| {
+                    let remaining_str = ratelimit_remaining.to_str().unwrap();
+                    remaining_str.parse::<u64>().unwrap_or(1)
+                },
             );
 
-            // sleep for reset seconds + rand_addl_sleep milliseconds
-            thread::sleep(time::Duration::from_millis(rand_addl_sleep));
-        }
-    }
+            // if there's a ratelimit_reset field in the response header, get it
+            // otherwise, set reset to sentinel value 0
+            let mut reset_secs = ratelimit_reset.map_or_else(
+                || {
+                    if let Some(ratelimit_reset_sec) = ratelimit_reset_sec {
+                        let reset_sec_str = ratelimit_reset_sec.to_str().unwrap();
+                        reset_sec_str.parse::<u64>().unwrap_or(1)
+                    } else if error_flag {
+                        // sleep for at least 1 second if we get an API error,
+                        // even if there is no ratelimit_reset header
+                        1_u64
+                    } else {
+                        0_u64
+                    }
+                },
+                |ratelimit_reset| {
+                    let reset_str = ratelimit_reset.to_str().unwrap();
+                    reset_str.parse::<u64>().unwrap_or(1)
+                },
+            );
 
-    if error_flag {
-        GLOBAL_ERROR_COUNT.fetch_add(1, Ordering::SeqCst);
-    }
+            // if there's a retry_after field in the response header, get it
+            // and set reset to it
+            if let Some(retry_after) = retry_after {
+                let retry_str = retry_after.to_str().unwrap();
+                // if we cannot parse its value as u64, the retry after value
+                // is most likely an rfc2822 date and not number of seconds to
+                // wait before retrying, which is a valid value
+                // however, we don't want to do date-parsing here, so we just
+                // wait timeout_secs seconds before retrying
+                reset_secs = retry_str.parse::<u64>().unwrap_or(timeout_secs);
+            }
+
+            // if reset_secs > timeout, then just time out and skip the retries
+            if reset_secs > timeout_secs {
+                warn!("Reset_secs {reset_secs} > timeout_secs {timeout_secs}.");
+                break 'retry;
+            }
+
+            // if there is only one more remaining call per our ratelimit quota or
+            // reset is greater than or equal to 1, dynamically throttle and sleep for ~reset seconds
+            if remaining <= 1 || reset_secs >= 1 {
+                // we add a small random delta to how long fetch sleeps
+                // as we need to add a little jitter as per the spec to avoid thundering herd issues
+                // https://tools.ietf.org/id/draft-polli-ratelimit-headers-00.html#rfc.section.7.5
+                let addl_sleep = (reset_secs * 1000) + rand::thread_rng().gen_range(10..30);
+
+                info!(
+                    "sleeping for {addl_sleep} ms until ratelimit is reset/retry_after has elapsed"
+                );
+
+                // sleep for reset seconds + addl_sleep milliseconds
+                thread::sleep(time::Duration::from_millis(addl_sleep));
+            }
+
+            if flag_max_retries > 0 && retries > flag_max_retries {
+                warn!("{} max-retries reached.", flag_max_retries);
+                break 'retry;
+            }
+            retries += 1;
+            info!("retrying {retries}...");
+        } else {
+            break 'retry;
+        }
+    } // end retry loop
 
     if include_existing_columns {
         FetchResponse {
             response: final_value,
             status_code: api_status.as_u16(),
         }
-    } else if final_value.starts_with("HTTP ERROR ") && flag_store_error {
+    } else if error_flag && flag_store_error {
+        // final_value.starts_with("HTTP ERROR ")
         let json_error = json!({
             "errors": [{
                 "title": "HTTP ERROR",
