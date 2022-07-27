@@ -212,9 +212,8 @@ macro_rules! update_cache_info {
                     let misses = cache.cache_misses().expect("Cache misses required");
                     let hit_ratio = (hits as f64 / (hits + misses) as f64) * 100.0;
                     $progress.set_message(format!(
-                        " of {} records. Cache hit ratio: {hit_ratio:.2}% - {} entries",
+                        " of {} records. Cache hit ratio: {hit_ratio:.2}%",
                         $progress.length().separate_with_commas(),
-                        cache_size.separate_with_commas(),
                     ));
                 }
             }
