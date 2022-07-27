@@ -89,7 +89,7 @@ flexi_logger = { version = "0.22", features = [
     "compress",
 ], default-features = false }
 governor = { version = "0.4", optional = true }
-grex = { version = "1.3", default-features = false }
+grex = { version = "1.4", default-features = false }
 indicatif = "0.16"
 itertools = "0.10"
 itoa = "1"
@@ -166,7 +166,6 @@ csv-index    = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf
 docopt       = { git = "https://github.com/jqnatividad/docopt.rs", branch = "perf-clippy-2021" }
 ext-sort     = { git = "https://github.com/jqnatividad/ext-sort-rs", branch = "master" }
 jsonschema   = { git = "https://github.com/jqnatividad/jsonschema-rs", branch = "master" }
-grex         = { git = "https://github.com/jqnatividad/grex", rev = "45af84167b8bd6d38c9e36ada7fe677bebe8886f" }
 redis        = { git = "https://github.com/redis-rs/redis-rs", rev = "3c91ce2ecda1933bd183113f1eda32dbb79acadc" }
 publicsuffix = { git = "https://github.com/jqnatividad/publicsuffix", branch = "bump-hashbrown" }
 
