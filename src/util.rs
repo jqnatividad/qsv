@@ -190,10 +190,13 @@ pub fn finish_progress(progress: &ProgressBar) {
             .template(&finish_template)
             .progress_chars("=>-"),
     );
-    progress.finish();
 
-    if log_enabled!(Level::Info) {
+    if progress.length() == progress.position() {
+        progress.finish();
         info!("Progress done... {per_sec_rate} records/sec");
+    } else {
+        progress.abandon();
+        info!("Progress abandoned... {per_sec_rate} records/sec");
     }
 }
 
@@ -461,7 +464,7 @@ pub fn init_logger() {
         .format_for_files(flexi_logger::detailed_format)
         .o_append(true)
         .rotate(
-            Criterion::Size(10_000_000), // 10 mb
+            Criterion::Size(20_000_000), // 20 mb
             Naming::Numbers,
             Cleanup::KeepLogAndCompressedFiles(10, 100),
         )
