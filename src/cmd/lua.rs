@@ -185,7 +185,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         }
 
-        let computed_value: mlua::Value = lua.load(&lua_program).eval()?;
+        let computed_value: mlua::Value = match lua.load(&lua_program).eval() {
+            Ok(computed) => computed,
+            Err(e) => return fail!(format!("Cannot evaluate \"{lua_program}\".\n{e}")),
+        };
 
         if args.cmd_map {
             match computed_value {
