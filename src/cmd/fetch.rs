@@ -1040,22 +1040,23 @@ ratelimit_reset:{ratelimit_reset:?} {ratelimit_reset_sec:?} retry_after:{retry_a
         }
     } // end retry loop
 
-    if include_existing_columns {
-        FetchResponse {
-            response: final_value,
-            status_code: api_status.as_u16(),
-        }
-    } else if error_flag && flag_store_error {
-        // final_value.starts_with("HTTP ERROR ")
-        let json_error = json!({
-            "errors": [{
-                "title": "HTTP ERROR",
-                "detail": final_value
-            }]
-        });
-        FetchResponse {
-            response: format!("{json_error}"),
-            status_code: api_status.as_u16(),
+    if error_flag {
+        if flag_store_error && !include_existing_columns {
+            let json_error = json!({
+                "errors": [{
+                    "title": "HTTP ERROR",
+                    "detail": final_value
+                }]
+            });
+            FetchResponse {
+                response: format!("{json_error}"),
+                status_code: api_status.as_u16(),
+            }
+        } else {
+            FetchResponse {
+                response: String::new(),
+                status_code: api_status.as_u16(),
+            }
         }
     } else {
         FetchResponse {
