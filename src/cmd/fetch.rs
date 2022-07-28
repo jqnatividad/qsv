@@ -11,7 +11,7 @@ use governor::{
     clock::DefaultClock, middleware::NoOpMiddleware, state::direct::NotKeyed, state::InMemoryState,
 };
 use indicatif::{MultiProgress, ProgressBar, ProgressDrawTarget};
-use log::Level::{Debug, Trace, Warn};
+use log::Level::{Debug, Info, Trace, Warn};
 use log::{debug, error, info, log_enabled, warn};
 use once_cell::sync::{Lazy, OnceCell};
 use rand::Rng;
@@ -141,11 +141,13 @@ Fetch options:
     --report <kind>            Creates a report of the fetch job. The report has the same name as the input file
                                with the ".fetch-report" suffix. 
                                There are two kinds of report - "detailed" and "short". The detailed report has
-                               the same columns as the input CSV with five additional columns - 
-                               qsv_fetch_url, qsv_fetch_result, qsv_fetch_status, qsv_fetch_cache_hit & qsv_fetch_elapsed_ms.
-                               qsv_fetch_url - the URL used, fetch_response - the fetch response, fetch_status - HTTP status code,
-                               fetch_cache_hit - cached result flag & fetch_elapsed - the elapsed time.
-                               The short report only has the five columns.
+                               the same columns as the input CSV with six additional columns - 
+                               qsv_fetch_url, qsv_fetch_result, qsv_fetch_status, qsv_fetch_cache_hit, qsv_fetch_retries &
+                               qsv_fetch_elapsed_ms.
+                               fetch_url - the URL used, fetch_response - the response, fetch_status - HTTP status code,
+                               fetch_cache_hit - cached result flag, fetch_retries - retry attempts & fetch_elapsed - 
+                               the elapsed time.
+                               The short report only has the six columns.
                                [default: none ]
     --redis                    Use Redis to cache responses. It connects to "redis://127.0.0.1:6379/1"
                                with a connection pool size of 20, with a TTL of 28 days, and a cache hit 
@@ -239,6 +241,7 @@ impl RedisConfig {
 struct FetchResponse {
     response: String,
     status_code: u16,
+    retries: u8,
 }
 
 static REDISCONFIG: Lazy<RedisConfig> = Lazy::new(RedisConfig::load);
@@ -474,6 +477,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         report_headers.push_field(b"qsv_fetch_response");
         report_headers.push_field(b"qsv_fetch_status");
         report_headers.push_field(b"qsv_fetch_cache_hit");
+        report_headers.push_field(b"qsv_fetch_retries");
         report_headers.push_field(b"qsv_fetch_elapsed_ms");
         report_wtr.write_byte_record(&report_headers)?;
     }
@@ -505,6 +509,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         value: FetchResponse {
             response: String::new(),
             status_code: 0_u16,
+            retries: 0_u8,
         },
     };
     #[allow(unused_assignments)]
@@ -513,10 +518,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut final_response = FetchResponse {
         response: String::new(),
         status_code: 0_u16,
+        retries: 0_u8,
     };
     let empty_response = FetchResponse {
         response: String::new(),
         status_code: 0_u16,
+        retries: 0_u8,
     };
     let mut running_error_count = 0_u64;
     let mut running_success_count = 0_u64;
@@ -642,6 +649,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
             report_record.push_field(final_response.status_code.to_string().as_bytes());
             report_record.push_field(if was_cached { b"1" } else { b"0" });
+            report_record.push_field(final_response.retries.to_string().as_bytes());
             report_record.push_field(now.elapsed().as_millis().to_string().as_bytes());
             report_wtr.write_byte_record(&report_record)?;
         }
@@ -805,6 +813,7 @@ fn get_response(
             return FetchResponse {
                 response: url_invalid_err,
                 status_code: reqwest::StatusCode::NOT_FOUND.as_u16(),
+                retries: 0_u8,
             };
         }
     };
@@ -838,7 +847,8 @@ fn get_response(
                 info!("throttling...");
             }
         }
-        if limiter_total_wait > 0 && limiter_total_wait <= governor_timeout_ms {
+        if log_enabled!(Info) && limiter_total_wait > 0 && limiter_total_wait <= governor_timeout_ms
+        {
             info!("throttled for {limiter_total_wait} ms");
         }
 
@@ -1051,17 +1061,20 @@ ratelimit_reset:{ratelimit_reset:?} {ratelimit_reset_sec:?} retry_after:{retry_a
             FetchResponse {
                 response: format!("{json_error}"),
                 status_code: api_status.as_u16(),
+                retries,
             }
         } else {
             FetchResponse {
                 response: String::new(),
                 status_code: api_status.as_u16(),
+                retries,
             }
         }
     } else {
         FetchResponse {
             response: final_value,
             status_code: api_status.as_u16(),
+            retries,
         }
     }
 }
