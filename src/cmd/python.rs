@@ -135,9 +135,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut helper_text = String::new();
     if let Some(helper_file) = args.flag_helper {
-        helper_text = fs::read_to_string(helper_file)?;
+        helper_text = fs::read_to_string(helper_file).expect("Cannot load python file.");
     }
-    let user_helpers = PyModule::from_code(py, &helper_text, "qsv_user_helpers.py", "qsv_uh")?;
+    let user_helpers = match PyModule::from_code(py, &helper_text, "qsv_user_helpers.py", "qsv_uh")
+    {
+        Ok(helper_code) => helper_code,
+        Err(e) => {
+            return fail!(format!(
+                "Cannot compile user module \"{helper_text}\".\n{e}"
+            ));
+        }
+    };
     globals.set_item("qsv_uh", user_helpers)?;
 
     // Global imports
