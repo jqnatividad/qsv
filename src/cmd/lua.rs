@@ -130,7 +130,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     globals.set("cols", "{}")?;
 
     let lua_script = if args.flag_script_file {
-        let mut file = File::open(&args.arg_script)?;
+        let mut file = File::open(&args.arg_script).expect("Cannot load lua script file.");
 
         let mut script_text = String::new();
         file.read_to_string(&mut script_text)?;
@@ -185,7 +185,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         }
 
-        let computed_value: mlua::Value = lua.load(&lua_program).eval()?;
+        let computed_value: mlua::Value = match lua.load(&lua_program).eval() {
+            Ok(computed) => computed,
+            Err(e) => return fail!(format!("Cannot evaluate \"{lua_program}\".\n{e}")),
+        };
 
         if args.cmd_map {
             match computed_value {
@@ -205,7 +208,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     record.push_field("");
                 }
                 _ => {
-                    return fail!("Unexpected value type returned by provided Lua expression. {computed_value}");
+                    return fail!(format!("Unexpected value type returned by provided Lua expression. {computed_value:?}"));
                 }
             }
 
