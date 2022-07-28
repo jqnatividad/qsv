@@ -17,6 +17,7 @@ use once_cell::sync::{Lazy, OnceCell};
 use rand::Rng;
 use redis;
 use regex::Regex;
+use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::time::Instant;
@@ -341,8 +342,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
     info!("RATE LIMIT: {rate_limit}");
 
-    use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
-
     let http_headers: HeaderMap = {
         let mut map = HeaderMap::with_capacity(args.flag_http_header.len() + 1);
         for header in args.flag_http_header {
@@ -431,12 +430,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // create a separate thread for the progress bars
     let multi_progress = thread::spawn(move || multi_progress.join());
+    progress.enable_steady_tick(3_000);
 
-    // do a progress update every 3 seconds
-    // for very large jobs, so the job doesn't look frozen
-    if record_count > 100_000 {
-        progress.enable_steady_tick(3_000);
-    }
     let not_quiet = !args.flag_quiet;
 
     let jql_selector: Option<String> = if let Some(jql_file) = args.flag_jqlfile {
@@ -666,20 +661,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         if running_error_count == 0 {
             error_progress.finish_and_clear();
-        } else {
+        } else if running_error_count >= args.flag_max_errors {
             error_progress.finish();
-
-            if running_error_count >= args.flag_max_errors {
-                // sleep so we can dependably write eprintln without messing up progress bars
-                thread::sleep(time::Duration::from_nanos(10));
-                let abort_msg = format!(
-                    "{} max errors. Fetch aborted.",
-                    args.flag_max_errors.separate_with_commas()
-                );
-                info!("{abort_msg}");
-                eprintln!("{abort_msg}");
-            }
+            // sleep so we can dependably write eprintln without messing up progress bars
+            thread::sleep(time::Duration::from_nanos(10));
+            let abort_msg = format!(
+                "{} max errors. Fetch aborted.",
+                args.flag_max_errors.separate_with_commas()
+            );
+            info!("{abort_msg}");
+            eprintln!("{abort_msg}");
+        } else {
+            error_progress.abandon();
         }
+
         let _ = multi_progress.join().unwrap();
 
         let end_msg = format!(
@@ -813,23 +808,26 @@ fn get_response(
             };
         }
     };
-    info!("Fetching URL: {valid_url}");
+    info!("Using URL: {valid_url}");
 
     // wait until RateLimiter gives Okay or we timeout
     const MINIMUM_WAIT_MS: u64 = 10;
     const MIN_WAIT: time::Duration = time::Duration::from_millis(MINIMUM_WAIT_MS);
-    let mut limiter_total_wait = 0;
+    let mut limiter_total_wait: u64;
     let timeout_secs = unsafe { *TIMEOUT_SECS.get_unchecked() };
     let governor_timeout_ms = timeout_secs * 1_000;
 
     let mut retries = 0_u8;
     let mut error_flag;
-    let mut final_value: String;
+    let mut final_value = String::new();
     let mut api_status;
+    let mut api_respheader = HeaderMap::new();
+    let empty_headermap = HeaderMap::new();
 
     // request with --max-retries
     'retry: loop {
         // check the rate-limiter
+        limiter_total_wait = 0;
         while limiter.check().is_err() {
             limiter_total_wait += MINIMUM_WAIT_MS;
             thread::sleep(MIN_WAIT);
@@ -845,80 +843,69 @@ fn get_response(
         }
 
         // send the actual request
-        let resp: reqwest::blocking::Response = match client.get(&valid_url).send() {
-            Ok(response) => response,
-            Err(error) => {
-                error!("Cannot fetch url: {valid_url:?}, error: {error:?}");
-                if flag_store_error {
-                    return FetchResponse {
-                        response: error.to_string(),
-                        status_code: reqwest::StatusCode::BAD_REQUEST.as_u16(),
-                    };
-                }
-                return FetchResponse {
-                    response: String::default(),
-                    status_code: reqwest::StatusCode::BAD_REQUEST.as_u16(),
-                };
-            }
-        };
-        // debug!("response: {resp:?}");
+        if let Ok(resp) = client.get(&valid_url).send() {
+            // debug!("{resp:?}");
+            api_respheader.clone_from(resp.headers());
+            api_status = resp.status();
+            let api_value: String = resp.text().unwrap_or_default();
 
-        let api_respheader = resp.headers().clone();
-        api_status = resp.status();
-        let api_value: String = resp.text().unwrap_or_default();
-
-        if api_status.is_client_error() || api_status.is_server_error() {
-            error_flag = true;
-            error!(
-                "HTTP error. url: {valid_url:?}, error: {:?}",
-                api_status.canonical_reason().unwrap_or("unknown error")
-            );
-
-            if flag_store_error {
-                final_value = format!(
-                    "HTTP ERROR {} - {}",
-                    api_status.as_str(),
+            if api_status.is_client_error() || api_status.is_server_error() {
+                error_flag = true;
+                error!(
+                    "HTTP error. url: {valid_url:?}, error: {:?}",
                     api_status.canonical_reason().unwrap_or("unknown error")
                 );
+
+                if flag_store_error {
+                    final_value = format!(
+                        "HTTP ERROR {} - {}",
+                        api_status.as_str(),
+                        api_status.canonical_reason().unwrap_or("unknown error")
+                    );
+                } else {
+                    final_value = String::new();
+                }
             } else {
-                final_value = String::new();
-            }
-        } else {
-            error_flag = false;
-            // apply JQL selector if provided
-            if let Some(selectors) = flag_jql {
-                // instead of repeatedly parsing the jql selector,
-                // we compile it only once and cache it for performance using once_cell
-                let jql_groups =
-                    JQL_GROUPS.get_or_init(|| jql::selectors_parser(selectors).unwrap());
-                match apply_jql(&api_value, jql_groups) {
-                    Ok(s) => {
-                        final_value = s;
-                    }
-                    Err(e) => {
-                        error!(
+                error_flag = false;
+                // apply JQL selector if provided
+                if let Some(selectors) = flag_jql {
+                    // instead of repeatedly parsing the jql selector,
+                    // we compile it only once and cache it for performance using once_cell
+                    let jql_groups =
+                        JQL_GROUPS.get_or_init(|| jql::selectors_parser(selectors).unwrap());
+                    match apply_jql(&api_value, jql_groups) {
+                        Ok(s) => {
+                            final_value = s;
+                        }
+                        Err(e) => {
+                            error!(
                         "jql error. json: {api_value:?}, selectors: {selectors:?}, error: {e:?}"
                     );
 
-                        if flag_store_error {
-                            final_value = e.to_string();
-                        } else {
-                            final_value = String::new();
+                            if flag_store_error {
+                                final_value = e.to_string();
+                            } else {
+                                final_value = String::new();
+                            }
+                            error_flag = true;
                         }
-                        error_flag = true;
                     }
-                }
-            } else if flag_pretty {
-                if let Ok(pretty_json) = jsonxf::pretty_print(&api_value) {
-                    final_value = pretty_json;
+                } else if flag_pretty {
+                    if let Ok(pretty_json) = jsonxf::pretty_print(&api_value) {
+                        final_value = pretty_json;
+                    } else {
+                        final_value = api_value;
+                    }
+                } else if let Ok(minimized_json) = jsonxf::minimize(&api_value) {
+                    final_value = minimized_json;
                 } else {
                     final_value = api_value;
                 }
-            } else if let Ok(minimized_json) = jsonxf::minimize(&api_value) {
-                final_value = minimized_json;
-            } else {
-                final_value = api_value;
             }
+        } else {
+            error_flag = true;
+            api_respheader.clone_from(&empty_headermap);
+            api_status = reqwest::StatusCode::BAD_REQUEST;
         }
 
         // debug!("final value: {final_value}");
@@ -926,8 +913,10 @@ fn get_response(
         // check if there's an API error (likely 503-service not available or 493-too many requests) or
         // if the API has ratelimits and we need to do dynamic throttling to respect the limits
         if error_flag
-            || api_respheader.contains_key("ratelimit-limit")
-            || api_respheader.contains_key("x-ratelimit-limit")
+            || (!api_respheader.is_empty()
+                && (api_respheader.contains_key("ratelimit-limit")
+                    || api_respheader.contains_key("x-ratelimit-limit")
+                    || api_respheader.contains_key("retry-after")))
         {
             let mut ratelimit_remaining = api_respheader.get("ratelimit-remaining");
             if ratelimit_remaining.is_none() {
@@ -1039,13 +1028,14 @@ ratelimit_reset:{ratelimit_reset:?} {ratelimit_reset_sec:?} retry_after:{retry_a
                 thread::sleep(time::Duration::from_millis(addl_sleep));
             }
 
-            if flag_max_retries > 0 && retries > flag_max_retries {
-                warn!("{} max-retries reached.", flag_max_retries);
+            if retries >= flag_max_retries {
+                warn!("{flag_max_retries} max-retries reached.");
                 break 'retry;
             }
             retries += 1;
             info!("retrying {retries}...");
         } else {
+            // there's no request error or ratelimits nor retry-after
             break 'retry;
         }
     } // end retry loop
