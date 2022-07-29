@@ -241,7 +241,7 @@ impl Args {
         #[allow(unused_assignments)]
         let mut record = csv::ByteRecord::new();
         for row in it {
-            record = row?;
+            record = unsafe { row.unwrap_unchecked() };
             for (i, field) in sel.select(&record).enumerate() {
                 unsafe {
                     // we use unchecked here so we skip unnecessary bounds checking
