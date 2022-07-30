@@ -116,6 +116,7 @@ Fetch options:
     --jqlfile <file>           Load jql selector from file instead.
     --pretty                   Prettify JSON responses. Otherwise, they're minified.
                                If the response is not in JSON format, it's passed through.
+                               Note that --pretty requires the --new-column option.
     --rate-limit <qps>         Rate Limit in Queries Per Second (max: 1000). Note that fetch
                                dynamically throttles as well based on rate-limit and
                                retry-after response headers.
@@ -251,7 +252,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
     if args.flag_timeout > 3_600 {
-        return fail!("Timeout cannot be more than one hour");
+        return fail!("Timeout cannot be more than 3,600 seconds (1 hour).");
     }
     info!("TIMEOUT: {} secs", args.flag_timeout);
     TIMEOUT_SECS.set(args.flag_timeout).unwrap();
@@ -273,7 +274,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         if args.flag_flushdb {
             redis::cmd("FLUSHDB").execute(&mut redis_conn);
-            info!("flushed Redis database");
+            info!("flushed Redis database.");
         }
     }
 
@@ -299,6 +300,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut headers = rdr.byte_headers()?.clone();
 
+    let include_existing_columns = if let Some(name) = args.flag_new_column {
+        // write header with new column
+        headers.push_field(name.as_bytes());
+        wtr.write_byte_record(&headers)?;
+        true
+    } else {
+        if args.flag_pretty {
+            return fail!("The --pretty option requires the --new-column option.");
+        }
+        false
+    };
+
     let mut column_index = 0_usize;
     if args.flag_url_template.is_none() {
         rconfig = rconfig.select(args.arg_column);
@@ -312,7 +325,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut dynfmt_url_template = String::from("");
     if let Some(ref url_template) = args.flag_url_template {
         if args.flag_no_headers {
-            return fail!("--url-template option requires headers.");
+            return fail!("--url-template option requires column headers.");
         }
         let str_headers = rdr.headers()?.clone();
         let mut dynfmt_fields = Vec::with_capacity(10); // 10 is a reasonable default to save allocs
@@ -341,7 +354,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let rate_limit = match args.flag_rate_limit {
         0 => NonZeroU32::new(u32::MAX).unwrap(),
         1..=1000 => NonZeroU32::new(args.flag_rate_limit).unwrap(),
-        _ => return fail!("Rate Limit should be between 1 to 1000 queries per second."),
+        _ => return fail!("Rate Limit should be between 0 to 1000 queries per second."),
     };
     info!("RATE LIMIT: {rate_limit}");
 
@@ -394,15 +407,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let limiter =
         RateLimiter::direct(Quota::per_second(rate_limit).allow_burst(NonZeroU32::new(5).unwrap()));
 
-    let include_existing_columns = if let Some(name) = args.flag_new_column {
-        // write header with new column
-        headers.push_field(name.as_bytes());
-        wtr.write_byte_record(&headers)?;
-        true
-    } else {
-        false
-    };
-
     // prep progress bars
     set_colors_enabled(true); // as error progress bar is red
     let multi_progress = MultiProgress::new();
@@ -453,7 +457,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // prepare report
     let report = match args.flag_report.to_lowercase().as_str() {
         "detailed" => ReportKind::Detailed,
-        "short" => ReportKind::Short,
         "none" => ReportKind::None,
         _ => ReportKind::Short, // defaults to short if kind is misspelled
     };
@@ -490,7 +493,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     #[allow(unused_assignments)]
     let mut record = csv::ByteRecord::new();
     #[allow(unused_assignments)]
-    let mut output_record = csv::ByteRecord::new();
+    let mut jsonl_record = csv::ByteRecord::new();
     #[allow(unused_assignments)]
     let mut report_record = csv::ByteRecord::new();
     #[allow(unused_assignments)]
@@ -578,7 +581,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             if was_cached {
                 redis_cache_hits += 1;
             }
-            final_response = serde_json::from_str(&intermediate_redis_value).unwrap();
+            final_response = serde_json::from_str(&intermediate_redis_value)
+                             .expect("Cannot deserialize Redis cache value. Try flushing the Redis cache with --flushdb.");
             if !args.flag_cache_error && final_response.status_code != 200 {
                 let key = format!(
                     "{}{:?}{}{}{}",
@@ -626,13 +630,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             record.push_field(final_value.as_bytes());
             wtr.write_byte_record(&record)?;
         } else {
-            output_record.clear();
+            jsonl_record.clear();
             if final_value.is_empty() {
-                output_record.push_field(b"{}");
+                jsonl_record.push_field(b"{}");
             } else {
-                output_record.push_field(final_value.as_bytes());
+                jsonl_record.push_field(final_value.as_bytes());
             }
-            wtr.write_byte_record(&output_record)?;
+            wtr.write_byte_record(&jsonl_record)?;
         }
 
         if report != ReportKind::None {
@@ -645,7 +649,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             if include_existing_columns {
                 report_record.push_field(final_value.as_bytes());
             } else {
-                report_record.push_field(output_record.as_slice());
+                report_record.push_field(jsonl_record.as_slice());
             }
             report_record.push_field(final_response.status_code.to_string().as_bytes());
             report_record.push_field(if was_cached { b"1" } else { b"0" });
@@ -686,8 +690,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let _ = multi_progress.join().unwrap();
 
         let end_msg = format!(
-            "{} records successfully fetched. {} errors.",
+            "{} records successfully fetched as {}. {} errors.",
             running_success_count.separate_with_commas(),
+            if include_existing_columns {
+                "CSV"
+            } else {
+                "JSONL"
+            },
             running_error_count.separate_with_commas()
         );
         info!("{end_msg}");
@@ -831,7 +840,6 @@ fn get_response(
     let mut final_value = String::new();
     let mut api_status;
     let mut api_respheader = HeaderMap::new();
-    let empty_headermap = HeaderMap::new();
 
     // request with --max-retries
     'retry: loop {
@@ -914,7 +922,7 @@ fn get_response(
             }
         } else {
             error_flag = true;
-            api_respheader.clone_from(&empty_headermap);
+            api_respheader.clear();
             api_status = reqwest::StatusCode::BAD_REQUEST;
         }
 
