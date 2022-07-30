@@ -322,7 +322,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if not_quiet {
         progress.set_message(format!(
             " validated {} records.",
-            progress.length().separate_with_commas()
+            progress.length().unwrap().separate_with_commas()
         ));
         util::finish_progress(&progress);
     }

@@ -6,7 +6,7 @@ use crate::config::{Config, Delimiter};
 use crate::CliResult;
 use docopt::Docopt;
 #[cfg(any(feature = "full", feature = "lite"))]
-use indicatif::{ProgressBar, ProgressStyle};
+use indicatif::{HumanCount, ProgressBar, ProgressStyle};
 #[allow(unused_imports)]
 use log::{debug, error, info, log_enabled, Level};
 #[cfg(any(feature = "apply", feature = "fetch", feature = "python"))]
@@ -14,8 +14,6 @@ use regex::Regex;
 use serde::de::{Deserialize, DeserializeOwned, Deserializer, Error};
 #[cfg(any(feature = "full", feature = "lite"))]
 use serde_json::json;
-#[cfg(any(feature = "full", feature = "lite"))]
-use thousands::Separable;
 
 #[macro_export]
 macro_rules! regex_once_cell {
@@ -159,17 +157,12 @@ pub fn prep_progress(progress: &ProgressBar, record_count: u64) {
     progress.set_style(
         ProgressStyle::default_bar()
             .template("[{elapsed_precise}] [{bar:25} {percent}%{msg}] ({per_sec} - {eta})")
+            .unwrap()
             .progress_chars("=>-"),
     );
-    progress.set_message(format!(
-        " of {} records",
-        record_count.separate_with_commas()
-    ));
+    progress.set_message(format!(" of {} records", HumanCount(record_count)));
     // draw progress bar for the first time using specified style
     progress.set_length(record_count);
-
-    // redraw every 1% of progress
-    progress.set_draw_delta(record_count / 100);
 
     if log_enabled!(Level::Info) {
         info!("Progress started... {record_count} records");
@@ -180,18 +173,18 @@ pub fn prep_progress(progress: &ProgressBar, record_count: u64) {
 pub fn finish_progress(progress: &ProgressBar) {
     let per_sec_rate = progress.per_sec();
 
-    let finish_template = format!(
-        "[{{elapsed_precise}}] [{{bar:25}} {{percent}}%{{msg}}] ({}/sec)",
-        per_sec_rate.separate_with_commas()
-    );
+    // let finish_template = format!(
+    //     "[{{elapsed_precise}}] [{{bar:25}} {{percent}}%{{msg}}] ({{per_sec}})"
+    // );
 
     progress.set_style(
         ProgressStyle::default_bar()
-            .template(&finish_template)
+            .template("[{elapsed_precise}] [{bar:25} {percent}%{msg}] ({per_sec})")
+            .unwrap()
             .progress_chars("=>-"),
     );
 
-    if progress.length() == progress.position() {
+    if progress.length().unwrap() == progress.position() {
         progress.finish();
         info!("Progress done... {per_sec_rate} records/sec");
     } else {
@@ -204,7 +197,7 @@ pub fn finish_progress(progress: &ProgressBar) {
 macro_rules! update_cache_info {
     ($progress:expr, $cache_instance:expr) => {
         use cached::Cached;
-        use thousands::Separable;
+        use indicatif::HumanCount;
 
         let cache_instance = $cache_instance.lock();
         match cache_instance {
@@ -216,7 +209,7 @@ macro_rules! update_cache_info {
                     let hit_ratio = (hits as f64 / (hits + misses) as f64) * 100.0;
                     $progress.set_message(format!(
                         " of {} records. Cache hit ratio: {hit_ratio:.2}%",
-                        $progress.length().separate_with_commas(),
+                        HumanCount($progress.length().unwrap()),
                     ));
                 }
             }
@@ -224,12 +217,12 @@ macro_rules! update_cache_info {
         }
     };
     ($progress:expr, $cache_hits:expr, $num_rows:expr) => {
-        use thousands::Separable;
+        use indicatif::HumanCount;
 
         let hit_ratio = ($cache_hits as f64 / $num_rows as f64) * 100.0;
         $progress.set_message(format!(
             " of {} records. Redis cache hit ratio: {hit_ratio:.2}%",
-            $progress.length().separate_with_commas(),
+            HumanCount($progress.length().unwrap()),
         ));
     };
 }

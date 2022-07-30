@@ -10,7 +10,7 @@ use dynfmt::Format;
 use governor::{
     clock::DefaultClock, middleware::NoOpMiddleware, state::direct::NotKeyed, state::InMemoryState,
 };
-use indicatif::{MultiProgress, ProgressBar, ProgressDrawTarget};
+use indicatif::{HumanCount, MultiProgress, ProgressBar, ProgressDrawTarget};
 use log::Level::{Debug, Info, Trace, Warn};
 use log::{debug, error, info, log_enabled, warn};
 use once_cell::sync::{Lazy, OnceCell};
@@ -22,7 +22,6 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::time::Instant;
 use std::{fs, thread, time};
-use thousands::Separable;
 use url::Url;
 
 static USAGE: &str = r#"
@@ -417,12 +416,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if args.flag_max_errors > 0 {
         error_progress.set_style(
             indicatif::ProgressStyle::default_bar()
-                .template("{bar:37.red/white} {percent}%{msg} ({per_sec})")
+                .template("{bar:37.red/white} {percent}%{msg} ({per_sec:7})")
+                .unwrap()
                 .progress_chars("##-"),
         );
         error_progress.set_message(format!(
             " of {} max errors",
-            args.flag_max_errors.separate_with_commas()
+            HumanCount(args.flag_max_errors)
         ));
     } else {
         error_progress.set_draw_target(ProgressDrawTarget::hidden());
@@ -434,10 +434,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         record_count = util::count_rows(&rconfig)?;
         util::prep_progress(&progress, record_count);
     }
-
-    // create a separate thread for the progress bars
-    let multi_progress = thread::spawn(move || multi_progress.join());
-    progress.enable_steady_tick(3_000);
 
     let not_quiet = !args.flag_quiet;
 
@@ -679,7 +675,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             thread::sleep(time::Duration::from_nanos(10));
             let abort_msg = format!(
                 "{} max errors. Fetch aborted.",
-                args.flag_max_errors.separate_with_commas()
+                HumanCount(args.flag_max_errors)
             );
             info!("{abort_msg}");
             eprintln!("{abort_msg}");
@@ -687,17 +683,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             error_progress.abandon();
         }
 
-        let _ = multi_progress.join().unwrap();
-
         let end_msg = format!(
             "{} records successfully fetched as {}. {} errors.",
-            running_success_count.separate_with_commas(),
+            HumanCount(running_success_count),
             if include_existing_columns {
                 "CSV"
             } else {
                 "JSONL"
             },
-            running_error_count.separate_with_commas()
+            HumanCount(running_error_count)
         );
         info!("{end_msg}");
         eprintln!("{end_msg}");
