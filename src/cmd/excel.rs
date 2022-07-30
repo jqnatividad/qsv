@@ -90,6 +90,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     let sheet_names = workbook.sheet_names();
+    if sheet_names.is_empty() {
+        return fail!("No sheets found.");
+    }
     let num_sheets = sheet_names.len();
 
     let mut wtr = Config::new(&args.flag_output)
@@ -120,14 +123,21 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // otherwise, if --sheet is a number, its a zero-based index, fetch it
         if let Ok(sheet_index) = args.flag_sheet.parse::<i32>() {
             if sheet_index >= 0 {
-                sheet_names[sheet_index as usize].to_string()
+                if sheet_index as usize <= sheet_names.len() {
+                    sheet_names[sheet_index as usize].to_string()
+                } else {
+                    return fail!(format!(
+                        "sheet index {sheet_index} is greater than number of sheets {}",
+                        sheet_names.len()
+                    ));
+                }
             } else {
                 // if its a negative number, start from the end
                 // i.e -1 is the last sheet; -2 = 2nd to last sheet
                 sheet_names[cmp::max(
                     0,
                     cmp::min(
-                        num_sheets,
+                        num_sheets - 1,
                         num_sheets.abs_diff(sheet_index.unsigned_abs() as usize),
                     ),
                 )]
