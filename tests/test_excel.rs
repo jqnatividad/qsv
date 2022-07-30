@@ -245,6 +245,34 @@ fn excel_last_sheet() {
 }
 
 #[test]
+fn excel_invalid_sheet_index() {
+    let wrk = Workdir::new("excel_invalid_sheet_index");
+
+    let xls_file = wrk.load_test_file("excel-xls.xls");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--sheet").arg("100").arg(xls_file);
+
+    let got = wrk.output_stderr(&mut cmd);
+    let expected = "sheet index 100 is greater than number of sheets 7\n".to_string();
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn excel_invalid_sheet_neg_index() {
+    let wrk = Workdir::new("excel_invalid_sheet_neg_index");
+
+    let xls_file = wrk.load_test_file("excel-xls.xls");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--sheet").arg("-100").arg(xls_file);
+
+    let got = wrk.output_stderr(&mut cmd);
+    let expected = "5 2-column rows exported from \"Last\"\n".to_string();
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn excel_sheet_name() {
     let wrk = Workdir::new("excel_sheet_name");
 
