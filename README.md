@@ -21,7 +21,7 @@
 </div>
 
 > ℹ️ **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's May 2018 release](https://github.com/BurntSushi/xsv/issues/267). It also has numerous new features & 54 additional commands/subcommands/operations (for a total of 74).
-See [FAQ](https://github.com/jqnatividad/qsv/wiki/FAQ) for more details.
+See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for more details.
 
 ## Available commands
 
@@ -230,10 +230,10 @@ qsv stats wcp.csv --output wcpstats.csv
 
 Several dependencies also have environment variables that influence qsv's performance & behavior:
 
-* Memory Management ([mimalloc](https://docs.rs/mimalloc/latest/mimalloc/))
+* Memory Management ([mimalloc](https://docs.rs/mimalloc/latest/mimalloc/))   
   When incorporating qsv into a data pipeline that runs in batch mode, particularly with very large CSV files using qsv commands that load entire CSV files into memory, you can
   [fine-tune Mimalloc's behavior using its environment variables](https://github.com/microsoft/mimalloc#environment-options).
-* Network Access ([reqwest](https://docs.rs/reqwest/latest/reqwest/))
+* Network Access ([reqwest](https://docs.rs/reqwest/latest/reqwest/))   
   qsv uses reqwest for its `fetch`, `validate` and `--update` functions and will honor [proxy settings](https://docs.rs/reqwest/latest/reqwest/index.html#proxies) set through `HTTP_PROXY`, `HTTPS_PROXY` and `NO_PROXY`.
   
 > ℹ️ **NOTE:** To get a list of all active qsv-relevant environment variables, run `qsv --envlist`.
