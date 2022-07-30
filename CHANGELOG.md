@@ -5,6 +5,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.61.0] - 2022-07-30
+### Added
+* `fetch`: add elapsed time, retries to reports; add --max-retries option https://github.com/jqnatividad/qsv/pull/395
+
+### Changed
+* `lua`: better error messages https://github.com/jqnatividad/qsv/pull/399
+* `python`: better error messages https://github.com/jqnatividad/qsv/pull/400
+* `fetch`: improved error handling https://github.com/jqnatividad/qsv/pull/402
+* `stats`: improve performance by using `unwrap_unchecked` in hot compute loop
+* Bump indicatif from 0.16.2 to 0.17.0 https://github.com/jqnatividad/qsv/pull/403
+* Bump mlua from 0.8.1 to 0.8.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/394
+* Bump console from 0.15.0 to 0.15.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/398
+* Bump grex from 1.3 to 1.4
+* Cargo update bump various dependencies
+* pin Rust nightly to 2022-07-29
+
+### Fixed
+* `excel`:  fixed --sheet option bounds checking https://github.com/jqnatividad/qsv/pull/401
+
 ## [0.60.0] - 2022-07-24
 ### Added
 * `fetch`: add redis --flushdb option https://github.com/jqnatividad/qsv/pull/387
