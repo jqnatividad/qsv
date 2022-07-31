@@ -1867,7 +1867,7 @@ checksum = "e8eda7c62d9ecaafdf8b62374c006de0adf61666ae96a96ba74a37134aa4e470"
 [[package]]
 name = "publicsuffix"
 version = "2.1.1"
-source = "git+https://github.com/jqnatividad/publicsuffix?branch=bump-hashbrown#ad9f228a243003fd62a424e35008a7c56edfbe92"
+source = "git+https://github.com/jqnatividad/publicsuffix?branch=bump-hashbrown#6ea3296531eaa3f3be60af23f8ea327d8af73614"
 dependencies = [
  "byteorder",
  "hashbrown",
@@ -2031,9 +2031,9 @@ dependencies = [
 
 [[package]]
 name = "qsv-stats"
-version = "0.3.7"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7de369fac8c8c66cb28018a3ac26507396397008a4e40fbf749c00ed1bf58dd9"
+checksum = "c8aa322b89ed2a52a820dbeb16c2d2505671b549c87bffe6b8409981cd0c4dcf"
 dependencies = [
  "ahash",
  "num-traits",
@@ -2588,9 +2588,9 @@ dependencies = [
 
 [[package]]
 name = "sysinfo"
-version = "0.25.0"
+version = "0.25.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "252a4e486cfea04683a1dc0c389d2fad2409bcf32d8958c92abab5b76ce334f4"
+checksum = "373e4bc9213f734126e2be3e2e118dbc9b909c37487d8d755822bc90f70ae62a"
 dependencies = [
  "cfg-if",
  "core-foundation-sys",
