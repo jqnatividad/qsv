@@ -153,6 +153,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         progress.set_draw_target(ProgressDrawTarget::hidden());
     } else {
         util::prep_progress(&progress, util::count_rows(&rconfig)?);
+        progress.set_draw_target(ProgressDrawTarget::stderr_with_hz(5));
     }
     let not_quiet = !args.flag_quiet;
 

@@ -198,6 +198,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         progress.set_draw_target(ProgressDrawTarget::hidden());
     } else {
         util::prep_progress(&progress, record_count);
+        progress.set_draw_target(ProgressDrawTarget::stderr_with_hz(5));
     }
     #[cfg(any(feature = "full", feature = "lite"))]
     let not_quiet = !args.flag_quiet;
