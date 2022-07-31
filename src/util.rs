@@ -161,6 +161,7 @@ pub fn prep_progress(progress: &ProgressBar, record_count: u64) {
             .progress_chars("=>-"),
     );
     progress.set_message(format!(" of {} records", HumanCount(record_count)));
+
     // draw progress bar for the first time using specified style
     progress.set_length(record_count);
 
@@ -172,10 +173,6 @@ pub fn prep_progress(progress: &ProgressBar, record_count: u64) {
 #[cfg(any(feature = "full", feature = "lite"))]
 pub fn finish_progress(progress: &ProgressBar) {
     let per_sec_rate = progress.per_sec();
-
-    // let finish_template = format!(
-    //     "[{{elapsed_precise}}] [{{bar:25}} {{percent}}%{{msg}}] ({{per_sec}})"
-    // );
 
     progress.set_style(
         ProgressStyle::default_bar()
