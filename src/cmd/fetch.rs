@@ -714,7 +714,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     "Short"
                 },
                 report_path
-            ).unwrap();
+            )
+            .unwrap();
         }
         info!("{end_msg}");
         eprintln!("{end_msg}");
