@@ -1206,8 +1206,7 @@ dependencies = [
 [[package]]
 name = "indicatif"
 version = "0.17.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fcc42b206e70d86ec03285b123e65a5458c92027d1fb2ae3555878b8113b3ddf"
+source = "git+https://github.com/jqnatividad/indicatif?branch=human_float_count-per_sec#a966badb159239e0bb6ebda1ae73e422e9fe20d2"
 dependencies = [
  "console",
  "number_prefix",
