@@ -146,7 +146,7 @@ Fetch options:
                                qsv_fetch_response.
                                fetch_url - URL used, fetch_status - HTTP status code, fetch_cache_hit - cached hit flag,
                                fetch_retries - retry attempts, fetch_elapsed - elapsed time & fetch_response - the response.
-                               The short report only has the six columns.
+                               The short report only has the six columns without the "qsv_fetch_" column name prefix.
                                [default: none ]
     --redis                    Use Redis to cache responses. It connects to "redis://127.0.0.1:6379/1"
                                with a connection pool size of 20, with a TTL of 28 days, and a cache hit 
@@ -201,6 +201,7 @@ static DEFAULT_REDIS_TTL_SECS: u64 = 60 * 60 * 24 * 28; // 28 days in seconds
 static DEFAULT_REDIS_POOL_SIZE: u32 = 20;
 static TIMEOUT_SECS: OnceCell<u64> = OnceCell::new();
 
+const FETCH_REPORT_PREFIX: &str = "qsv_fetch_";
 const FETCH_REPORT_SUFFIX: &str = ".fetch-report.tsv";
 
 // prioritize compression schemes. Brotli first, then gzip, then deflate, and * last
@@ -418,8 +419,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         error_progress.set_style(
             indicatif::ProgressStyle::default_bar()
                 .template("{bar:37.red/white} {percent}%{msg} ({per_sec:7})")
-                .unwrap()
-                .progress_chars("##-"),
+                .unwrap(),
         );
         error_progress.set_message(format!(
             " of {} max errors",
@@ -475,12 +475,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         } else {
             csv::ByteRecord::new()
         };
-        report_headers.push_field(b"qsv_fetch_url");
-        report_headers.push_field(b"qsv_fetch_status");
-        report_headers.push_field(b"qsv_fetch_cache_hit");
-        report_headers.push_field(b"qsv_fetch_retries");
-        report_headers.push_field(b"qsv_fetch_elapsed_ms");
-        report_headers.push_field(b"qsv_fetch_response");
+        let rptcol_prefix = if report == ReportKind::Detailed {
+            FETCH_REPORT_PREFIX
+        } else {
+            ""
+        };
+        report_headers.push_field(format!("{rptcol_prefix}url").as_bytes());
+        report_headers.push_field(format!("{rptcol_prefix}status").as_bytes());
+        report_headers.push_field(format!("{rptcol_prefix}cache_hit").as_bytes());
+        report_headers.push_field(format!("{rptcol_prefix}retries").as_bytes());
+        report_headers.push_field(format!("{rptcol_prefix}elapsed_ms").as_bytes());
+        report_headers.push_field(format!("{rptcol_prefix}response").as_bytes());
         report_wtr.write_byte_record(&report_headers)?;
     }
 
