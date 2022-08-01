@@ -142,11 +142,10 @@ Fetch options:
                                with the ".fetch-report" suffix. 
                                There are two kinds of report - "detailed" and "short". The detailed report has
                                the same columns as the input CSV with six additional columns - 
-                               qsv_fetch_url, qsv_fetch_result, qsv_fetch_status, qsv_fetch_cache_hit, qsv_fetch_retries &
-                               qsv_fetch_elapsed_ms.
-                               fetch_url - the URL used, fetch_response - the response, fetch_status - HTTP status code,
-                               fetch_cache_hit - cached result flag, fetch_retries - retry attempts & fetch_elapsed - 
-                               the elapsed time.
+                               qsv_fetch_url, qsv_fetch_status, qsv_fetch_cache_hit, qsv_fetch_retries, qsv_fetch_elapsed_ms &
+                               qsv_fetch_response.
+                               fetch_url - URL used, fetch_status - HTTP status code, fetch_cache_hit - cached hit flag,
+                               fetch_retries - retry attempts, fetch_elapsed - elapsed time & fetch_response - the response.
                                The short report only has the six columns.
                                [default: none ]
     --redis                    Use Redis to cache responses. It connects to "redis://127.0.0.1:6379/1"
@@ -202,6 +201,8 @@ static DEFAULT_REDIS_TTL_SECS: u64 = 60 * 60 * 24 * 28; // 28 days in seconds
 static DEFAULT_REDIS_POOL_SIZE: u32 = 20;
 static TIMEOUT_SECS: OnceCell<u64> = OnceCell::new();
 
+const FETCH_REPORT_SUFFIX: &str = ".fetch-report.tsv";
+
 // prioritize compression schemes. Brotli first, then gzip, then deflate, and * last
 static DEFAULT_ACCEPT_ENCODING: &str = "br;q=1.0, gzip;q=0.6, deflate;q=0.4, *;q=0.2";
 
@@ -210,9 +211,6 @@ impl From<reqwest::Error> for CliError {
         CliError::Other(err.to_string())
     }
 }
-
-// static GLOBAL_ERROR_COUNT: AtomicUsize = AtomicUsize::new(0);
-
 struct RedisConfig {
     conn_str: String,
     max_pool_size: u32,
@@ -252,6 +250,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     if args.flag_timeout > 3_600 {
         return fail!("Timeout cannot be more than 3,600 seconds (1 hour).");
+    } else if args.flag_timeout == 0 {
+        return fail!("Timeout cannot be zero.");
     }
     info!("TIMEOUT: {} secs", args.flag_timeout);
     TIMEOUT_SECS.set(args.flag_timeout).unwrap();
@@ -408,7 +408,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // prep progress bars
     set_colors_enabled(true); // as error progress bar is red
-    let multi_progress = MultiProgress::new();
+                              // create multi_progress to stderr with a maximum refresh of 5 per second
+    let multi_progress = MultiProgress::with_draw_target(ProgressDrawTarget::stderr_with_hz(5));
     let progress = multi_progress.add(ProgressBar::new(0));
     let mut record_count = 0;
 
@@ -427,9 +428,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } else {
         error_progress.set_draw_target(ProgressDrawTarget::hidden());
     }
+
     if args.flag_quiet {
-        progress.set_draw_target(ProgressDrawTarget::hidden());
-        error_progress.set_draw_target(ProgressDrawTarget::hidden());
+        multi_progress.set_draw_target(ProgressDrawTarget::hidden());
     } else {
         record_count = util::count_rows(&rconfig)?;
         util::prep_progress(&progress, record_count);
@@ -458,26 +459,28 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     let mut report_wtr;
+    let report_path;
     if report == ReportKind::None {
         report_wtr = Config::new(&Some("sink".to_string())).writer()?;
+        report_path = "".to_string();
     } else {
-        let input_path = args
+        report_path = args
             .arg_input
             .clone()
             .unwrap_or_else(|| "stdin.csv".to_string());
 
-        report_wtr = Config::new(&Some(input_path + ".fetch-report.tsv")).writer()?;
+        report_wtr = Config::new(&Some(report_path.clone() + FETCH_REPORT_SUFFIX)).writer()?;
         let mut report_headers = if report == ReportKind::Detailed {
             headers.clone()
         } else {
             csv::ByteRecord::new()
         };
         report_headers.push_field(b"qsv_fetch_url");
-        report_headers.push_field(b"qsv_fetch_response");
         report_headers.push_field(b"qsv_fetch_status");
         report_headers.push_field(b"qsv_fetch_cache_hit");
         report_headers.push_field(b"qsv_fetch_retries");
         report_headers.push_field(b"qsv_fetch_elapsed_ms");
+        report_headers.push_field(b"qsv_fetch_response");
         report_wtr.write_byte_record(&report_headers)?;
     }
 
@@ -642,21 +645,27 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 report_record.clear();
             }
             report_record.push_field(url.as_bytes());
+            report_record.push_field(final_response.status_code.to_string().as_bytes());
+            report_record.push_field(if was_cached { b"1" } else { b"0" });
+            report_record.push_field(final_response.retries.to_string().as_bytes());
+            report_record.push_field(now.elapsed().as_millis().to_string().as_bytes());
             if include_existing_columns {
                 report_record.push_field(final_value.as_bytes());
             } else {
                 report_record.push_field(jsonl_record.as_slice());
             }
-            report_record.push_field(final_response.status_code.to_string().as_bytes());
-            report_record.push_field(if was_cached { b"1" } else { b"0" });
-            report_record.push_field(final_response.retries.to_string().as_bytes());
-            report_record.push_field(now.elapsed().as_millis().to_string().as_bytes());
             report_wtr.write_byte_record(&report_record)?;
         }
 
         if args.flag_max_errors > 0 && running_error_count >= args.flag_max_errors {
             break;
         }
+    }
+
+    if report == ReportKind::None {
+        drop(report_wtr);
+    } else {
+        report_wtr.flush()?;
     }
 
     if not_quiet {
@@ -683,7 +692,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             error_progress.abandon();
         }
 
-        let end_msg = format!(
+        let mut end_msg = format!(
             "{} records successfully fetched as {}. {} errors.",
             HumanCount(running_success_count),
             if include_existing_columns {
@@ -693,15 +702,25 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             },
             HumanCount(running_error_count)
         );
+        if report != ReportKind::None {
+            use std::fmt::Write;
+
+            write!(
+                &mut end_msg,
+                " {} report created: \"{}{FETCH_REPORT_SUFFIX}\"",
+                if report == ReportKind::Detailed {
+                    "Detailed"
+                } else {
+                    "Short"
+                },
+                report_path
+            )
+            .unwrap();
+        }
         info!("{end_msg}");
         eprintln!("{end_msg}");
     }
 
-    if report == ReportKind::None {
-        drop(report_wtr);
-    } else {
-        report_wtr.flush()?;
-    }
     Ok(wtr.flush()?)
 }
 
