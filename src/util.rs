@@ -157,8 +157,7 @@ pub fn prep_progress(progress: &ProgressBar, record_count: u64) {
     progress.set_style(
         ProgressStyle::default_bar()
             .template("[{elapsed_precise}] [{bar:25} {percent}%{msg}] ({per_sec} - {eta})")
-            .unwrap()
-            .progress_chars("=>-"),
+            .unwrap(),
     );
     progress.set_message(format!(" of {} records", HumanCount(record_count)));
 
@@ -177,8 +176,7 @@ pub fn finish_progress(progress: &ProgressBar) {
     progress.set_style(
         ProgressStyle::default_bar()
             .template("[{elapsed_precise}] [{bar:25} {percent}%{msg}] ({per_sec})")
-            .unwrap()
-            .progress_chars("=>-"),
+            .unwrap(),
     );
 
     if progress.length().unwrap() == progress.position() {
