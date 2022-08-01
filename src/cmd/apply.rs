@@ -475,12 +475,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     // prep progress bar
-    let progress = ProgressBar::new(0);
+    let progress = ProgressBar::with_draw_target(None, ProgressDrawTarget::stderr_with_hz(5));
     if args.flag_quiet {
         progress.set_draw_target(ProgressDrawTarget::hidden());
     } else {
         util::prep_progress(&progress, util::count_rows(&rconfig)?);
-        progress.set_draw_target(ProgressDrawTarget::stderr_with_hz(5));
     }
     let not_quiet = !args.flag_quiet;
 
