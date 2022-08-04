@@ -253,6 +253,7 @@ pub fn many_configs(
             Config::new(&Some(p))
                 .delimiter(delim)
                 .no_headers(no_headers)
+                .checkutf8(false)
         })
         .collect::<Vec<_>>();
     errif_greater_one_stdin(&*confs)?;
