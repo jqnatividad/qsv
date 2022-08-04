@@ -26,6 +26,7 @@ struct Args {
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
     let conf = Config::new(&args.arg_input)
+        .checkutf8(false)
         .delimiter(args.flag_delimiter)
         .no_headers(false);
 
