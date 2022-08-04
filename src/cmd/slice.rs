@@ -108,6 +108,7 @@ impl Args {
 
     fn rconfig(&self) -> Config {
         Config::new(&self.arg_input)
+            .checkutf8(false)
             .delimiter(self.flag_delimiter)
             .no_headers(self.flag_no_headers)
     }

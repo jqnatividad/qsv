@@ -84,6 +84,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers)
+        .checkutf8(false)
         .select(args.arg_selection);
 
     let wconfig = Config::new(&args.flag_output);

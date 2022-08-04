@@ -96,6 +96,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let num_sheets = sheet_names.len();
 
     let mut wtr = Config::new(&args.flag_output)
+        .checkutf8(false)
         .flexible(args.flag_flexible)
         .writer()?;
     let mut record = csv::StringRecord::new();

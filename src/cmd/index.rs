@@ -54,7 +54,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         Some(p) => PathBuf::from(&p),
     };
 
-    let rconfig = Config::new(&Some(args.arg_input)).delimiter(args.flag_delimiter);
+    let rconfig = Config::new(&Some(args.arg_input))
+        .checkutf8(false)
+        .delimiter(args.flag_delimiter);
     let mut rdr = rconfig.reader_file()?;
     let mut wtr = io::BufWriter::new(fs::File::create(&pidx)?);
     RandomAccessSimple::create(&mut rdr, &mut wtr)?;
