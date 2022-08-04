@@ -316,7 +316,12 @@ impl Config {
                 // check if its utf8-encoded
                 if self.checkutf8 {
                     debug!("checking stdin encoding...");
-                    let s = std::str::from_utf8(&buffer);
+                    // get first 8k of buffer
+                    let buffer_check = buffer
+                        .chunks_exact(std::cmp::min(DEFAULT_UTF8_CHECK_BUFFER_LEN, buffer.len()))
+                        .next()
+                        .unwrap();
+                    let s = std::str::from_utf8(buffer_check);
                     if s.is_err() {
                         return Err(io::Error::new(
                             io::ErrorKind::InvalidData,
@@ -356,11 +361,7 @@ impl Config {
             };
 
             let fsize = f.metadata().unwrap().len() as usize;
-            let mut buffer_size = DEFAULT_UTF8_CHECK_BUFFER_LEN;
-            if fsize < buffer_size {
-                buffer_size = fsize;
-            }
-            let mut buffer = vec![0; buffer_size];
+            let mut buffer = vec![0; std::cmp::min(DEFAULT_UTF8_CHECK_BUFFER_LEN, fsize)];
             if f.read_exact(&mut buffer).is_ok() {
                 let s = std::str::from_utf8(&buffer);
                 return Ok(s.is_ok());
@@ -442,7 +443,11 @@ impl Config {
                     let mut buffer: Vec<u8> = Vec::new();
                     stdin_reader.lock().read_to_end(&mut buffer)?;
                     // check if its utf8-encoded
-                    let s = std::str::from_utf8(&buffer);
+                    let buffer_check = buffer
+                        .chunks_exact(std::cmp::min(DEFAULT_UTF8_CHECK_BUFFER_LEN, buffer.len()))
+                        .next()
+                        .unwrap();
+                    let s = std::str::from_utf8(buffer_check);
                     if s.is_err() {
                         return Err(io::Error::new(
                             io::ErrorKind::InvalidData,
