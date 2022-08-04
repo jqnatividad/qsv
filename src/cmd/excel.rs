@@ -168,7 +168,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } else {
         return fail!(format!("Cannot get sheet index for {sheet}"));
     };
-    let range = if let Ok(range) = workbook.worksheet_range_at(sheet_index).unwrap() {
+    let range = if let Ok(range) = workbook
+        .worksheet_range_at(sheet_index)
+        .unwrap_or_else(|| panic!("Cannot retrieve range from {sheet}"))
+    {
         range
     } else {
         return fail!(format!("Cannot get worksheet data from {sheet}"));
