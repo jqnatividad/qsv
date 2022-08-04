@@ -116,8 +116,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         return Ok(());
     }
 
+    // convert sheet_names to lowercase so we can do a case-insensitive compare
+    let mut lower_sheet_names: Vec<String> = Vec::with_capacity(num_sheets);
+    for s in sheet_names {
+        lower_sheet_names.push(s.to_lowercase());
+    }
+
     // if --sheet name was passed, see if its a valid sheet name.
-    let sheet = if sheet_names.contains(&args.flag_sheet) {
+    let mut sheet = if lower_sheet_names.contains(&args.flag_sheet.to_lowercase()) {
         args.flag_sheet
     } else {
         // otherwise, if --sheet is a number, its a zero-based index, fetch it
@@ -147,16 +153,28 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             // failing all else, get the first sheet
             let first_sheet = sheet_names[0].to_string();
             debug!(
-                "Invalid sheet \"{}\". Using the first sheet \"{}\" instead.",
+                r#"Invalid sheet "{}". Using the first sheet "{}" instead."#,
                 args.flag_sheet, first_sheet
             );
             first_sheet
         }
     };
-    let range = if let Ok(range) = workbook.worksheet_range(&sheet).unwrap() {
+    let lower_sheet = sheet.to_lowercase();
+    let sheet_index = if let Some(idx) = lower_sheet_names.iter().position(|s| *s == lower_sheet) {
+        // set to actual name of the sheet, not the one passed using the --sheet option,
+        // as we process the option case insensitively
+        sheet = sheet_names[idx].clone();
+        idx
+    } else {
+        return fail!(format!("Cannot get sheet index for {sheet}"));
+    };
+    let range = if let Ok(range) = workbook
+        .worksheet_range_at(sheet_index)
+        .unwrap_or_else(|| panic!("Cannot retrieve range from {sheet}"))
+    {
         range
     } else {
-        return fail!("Cannot get worksheet data from {sheet}");
+        return fail!(format!("Cannot get worksheet data from {sheet}"));
     };
 
     let whitelist_lower = args.flag_dates_whitelist.to_lowercase();

@@ -254,7 +254,7 @@ fn excel_invalid_sheet_index() {
     cmd.arg("--sheet").arg("100").arg(xls_file);
 
     let got = wrk.output_stderr(&mut cmd);
-    let expected = "sheet index 100 is greater than number of sheets 7\n".to_string();
+    let expected = "sheet index 100 is greater than number of sheets 8\n".to_string();
     assert_eq!(got, expected);
 }
 
@@ -294,6 +294,27 @@ fn excel_sheet_name() {
 }
 
 #[test]
+fn excel_case_insensitve_sheet_name() {
+    let wrk = Workdir::new("excel_case_insensitive_sheet_name");
+
+    let xls_file = wrk.load_test_file("excel-xls.xls");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--sheet").arg("miDDlE").arg(xls_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["Middle sheet col1", "Middle-2"],
+        svec!["z", "3.14"],
+        svec!["y", "42"],
+        svec!["x", "33"],
+        svec!["w", "7"],
+        svec!["v", "8"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn excel_list_sheets() {
     let wrk = Workdir::new("excel_list_sheets");
 
@@ -311,7 +332,8 @@ fn excel_list_sheets() {
         svec!["3", "Sheet1"],
         svec!["4", "trim test"],
         svec!["5", "date test"],
-        svec!["6", "Last"],
+        svec!["6", "NoData"],
+        svec!["7", "Last"],
     ];
     assert_eq!(got, expected);
 }
@@ -327,4 +349,17 @@ fn excel_message() {
 
     let got = wrk.output_stderr(&mut cmd);
     assert_eq!(got, "5 2-column rows exported from \"Middle\"\n");
+}
+
+#[test]
+fn excel_empty_sheet_message() {
+    let wrk = Workdir::new("excel_empty_sheet_message");
+
+    let xls_file = wrk.load_test_file("excel-xls.xls");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--sheet").arg("nodata").arg(xls_file);
+
+    let got = wrk.output_stderr(&mut cmd);
+    assert_eq!(got, "0 4-column rows exported from \"NoData\"\n");
 }
