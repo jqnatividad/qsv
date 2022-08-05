@@ -46,7 +46,7 @@ jobs:
             musl-prep: true
             use-cross: false
             addl-build-args: --features=apply,generate,lua,fetch,foreach,python
-            default-features:            
+            default-features: --no-default-features
           - os: ubuntu-latest
             os-name: linux
             target: i686-unknown-linux-gnu
@@ -136,7 +136,7 @@ jobs:
     - name: build prep for x86_64-unknown-linux-musl
       if: ${{ matrix.job.musl-prep }}
       run: |
-        sudo apt-get install musl-tools
+        sudo apt-get install musl-tools linux-musl-dev
     - name: Build qsv
       uses: actions-rs/cargo@v1
       with:
