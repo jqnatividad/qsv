@@ -41,7 +41,7 @@ jobs:
             architecture: x86_64
             musl-prep: true
             addl-build-args: --features=apply,generate,lua,fetch,foreach,python,nightly
-            default-features: --no-default-features 
+            default-features:
           - os: windows-latest
             os-name: windows
             target: x86_64-pc-windows-msvc

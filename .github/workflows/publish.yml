@@ -46,7 +46,7 @@ jobs:
             musl-prep: true
             use-cross: false
             addl-build-args: --features=apply,generate,lua,fetch,foreach,python
-            default-features: --no-default-features
+            default-features:
           - os: ubuntu-latest
             os-name: linux
             target: i686-unknown-linux-gnu
