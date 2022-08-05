@@ -81,8 +81,12 @@ pub fn version() -> String {
     #[cfg(all(feature = "lua", not(feature = "lite")))]
     enabled_features.push_str("lua;");
     #[cfg(all(feature = "python", not(feature = "lite")))]
-    enabled_features.push_str("python;");
-
+    {
+        enabled_features.push_str("python-");
+        let gil = pyo3::Python::acquire_gil();
+        let py = gil.python();
+        enabled_features.push_str(py.version());
+    }
     enabled_features.push('-');
 
     #[cfg(feature = "mimalloc")]
