@@ -5,6 +5,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.61.2] - 2022-08-04
+### Changed
+* `fetch`: Reformatted report so response is the last column; do not allow --timeout to be zero; progressbar refresh set at 5 times/sec; show name of generated report at the end. https://github.com/jqnatividad/qsv/pull/404
+* `fetch`: report improvements. Remove `qsv_fetch_` column prefix in short report; change progressbar format to default characters https://github.com/jqnatividad/qsv/pull/406
+* `excel`: make --sheet case-insensitve; better error-handling  https://github.com/jqnatividad/qsv/pull/416
+* `py`: add detected python version to --version option
+* Only do input utf8-encoding check for commands that need it. https://github.com/jqnatividad/qsv/pull/419
+* Bump cached from 0.37.0 to 0.38.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/407
+* Bump anyhow from 1.0.58 to 1.0.59 by @dependabot in https://github.com/jqnatividad/qsv/pull/408
+* Bump serde from 1.0.140 to 1.0.141 by @dependabot in https://github.com/jqnatividad/qsv/pull/409
+* Bump ryu from 1.0.10 to 1.0.11 by @dependabot in https://github.com/jqnatividad/qsv/pull/414
+* Bump anyhow from 1.0.59 to 1.0.60 by @dependabot in https://github.com/jqnatividad/qsv/pull/413
+* Bump mlua from 0.8.2 to 0.8.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/412
+* Bump actions/setup-python from 4.1.0 to 4.2.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/411
+* Bump flexi_logger from 0.22.5 to 0.22.6 by @dependabot in https://github.com/jqnatividad/qsv/pull/417
+* Bump chrono from 0.4.19 to 0.4.20
+* Bump qsv-dateparser from 0.4.2 to 0.4.3
+
+### Fixed
+* fixed double progressbars https://github.com/jqnatividad/qsv/pull/405
+* fix utf8 encoding check to resolve [#410](https://github.com/jqnatividad/qsv/issues/410) https://github.com/jqnatividad/qsv/pull/418
+
 ## [0.61.1] - 2022-07-30
 ### Added
 * `fetch`: add elapsed time, retries to reports; add --max-retries option https://github.com/jqnatividad/qsv/pull/395
