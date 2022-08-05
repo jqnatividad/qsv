@@ -80,7 +80,7 @@ dynfmt = { version = "0.1", default-features = false, features = [
 eudex = { version = "0.1", optional = true }
 ext-sort = { version = "0.1", features = ["memory-limit"] }
 filetime = "0.2"
-flexi_logger = { version = "0.22", features = [
+flexi_logger = { version = "0.23", features = [
     "compress",
 ], default-features = false }
 governor = { version = "0.4", optional = true }
