@@ -868,10 +868,12 @@ impl TypedMinMax {
                 self.floats.add(n as f64);
             }
             TDate | TDateTime => {
-                let tempstr = unsafe { str::from_utf8_unchecked(sample) };
                 let n = unsafe {
-                    parse_with_preference(tempstr, *DMY_PREFERENCE.get_unchecked())
-                        .unwrap_unchecked()
+                    parse_with_preference(
+                        str::from_utf8_unchecked(sample),
+                        *DMY_PREFERENCE.get_unchecked(),
+                    )
+                    .unwrap_unchecked()
                 };
                 self.dates.add(n.to_string());
             }
