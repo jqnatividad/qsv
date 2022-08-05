@@ -136,7 +136,7 @@ jobs:
     - name: build prep for x86_64-unknown-linux-musl
       if: ${{ matrix.job.musl-prep }}
       run: |
-        sudo apt-get install musl-tools linux-musl-dev
+        sudo apt-get install musl-tools
     - name: Build qsv
       uses: actions-rs/cargo@v1
       with:
