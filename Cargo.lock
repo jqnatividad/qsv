@@ -163,7 +163,7 @@ dependencies = [
  "serde_urlencoded",
  "smallvec",
  "socket2",
- "time 0.3.9",
+ "time 0.3.12",
  "url",
 ]
 
@@ -387,7 +387,7 @@ checksum = "3a4f925191b4367301851c6d99b09890311d74b0d43f274c0b34c86d308a3663"
 [[package]]
 name = "calamine"
 version = "0.18.0"
-source = "git+https://github.com/jqnatividad/calamine?branch=master#d8b7a5d595594b2a3d3cb45df750be16435bc95f"
+source = "git+https://github.com/jqnatividad/calamine?branch=master#f632e5bd899438b121dab58ab5274c326bfc09b8"
 dependencies = [
  "byteorder",
  "chrono",
@@ -423,15 +423,16 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "chrono"
-version = "0.4.19"
+version = "0.4.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "670ad68c9088c2a963aaa298cb369688cf3f9465ce5e2d4ca10e6e0098a1ce73"
+checksum = "6127248204b9aba09a362f6c930ef6a78f2c1b2215f8a7b398c06e1083f17af0"
 dependencies = [
- "libc",
+ "js-sys",
  "num-integer",
  "num-traits",
  "serde",
  "time 0.1.43",
+ "wasm-bindgen",
  "winapi",
 ]
 
@@ -481,7 +482,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94d4706de1b0fa5b132270cddffa8585166037822e260a944fe161acd137ca05"
 dependencies = [
  "percent-encoding",
- "time 0.3.9",
+ "time 0.3.12",
  "version_check",
 ]
 
@@ -497,7 +498,7 @@ dependencies = [
  "publicsuffix",
  "serde",
  "serde_json",
- "time 0.3.9",
+ "time 0.3.12",
  "url",
 ]
 
@@ -851,9 +852,9 @@ dependencies = [
 
 [[package]]
 name = "flexi_logger"
-version = "0.22.6"
+version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0c76a80dd14a27fc3d8bc696502132cb52b3f227256fd8601166c3a35e45f409"
+checksum = "f8790f70905b203171c21060222f18f1df5cba07317860215b7880b32aaef290"
 dependencies = [
  "flate2",
  "glob",
@@ -861,7 +862,7 @@ dependencies = [
  "log",
  "rustversion",
  "thiserror",
- "time 0.3.9",
+ "time 0.3.12",
 ]
 
 [[package]]
@@ -1302,7 +1303,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
- "time 0.3.9",
+ "time 0.3.12",
  "url",
  "uuid",
 ]
@@ -2002,9 +2003,9 @@ dependencies = [
 
 [[package]]
 name = "qsv-dateparser"
-version = "0.4.2"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eeeec95a05dc52d51ed37bab72e20ee292808d38af5f2cb14060d5f1b7d7e9a9"
+checksum = "d452c6644bcdb5c08b96154dbbab500de90493d294fd53aba59d4de460903a0e"
 dependencies = [
  "anyhow",
  "chrono",
@@ -2707,11 +2708,12 @@ dependencies = [
 
 [[package]]
 name = "time"
-version = "0.3.9"
+version = "0.3.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c2702e08a7a860f005826c6815dcac101b19b5eb330c27fe4a5928fec1d20ddd"
+checksum = "74b7cc93fc23ba97fde84f7eea56c55d1ba183f495c6715defdfc7b9cb8c870f"
 dependencies = [
  "itoa",
+ "js-sys",
  "libc",
  "num_threads",
  "time-macros",
@@ -3205,5 +3207,5 @@ dependencies = [
  "crc32fast",
  "crossbeam-utils",
  "flate2",
- "time 0.3.9",
+ "time 0.3.12",
 ]
