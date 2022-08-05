@@ -20,8 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Bump mlua from 0.8.2 to 0.8.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/412
 * Bump actions/setup-python from 4.1.0 to 4.2.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/411
 * Bump flexi_logger from 0.22.5 to 0.22.6 by @dependabot in https://github.com/jqnatividad/qsv/pull/417
+* Bump indicatif from 0.16.2 to 0.17.0
 * Bump chrono from 0.4.19 to 0.4.20
 * Bump qsv-dateparser from 0.4.2 to 0.4.3
+* pin Rust nightly to 2022-08-03
 
 ### Fixed
 * fixed double progressbars https://github.com/jqnatividad/qsv/pull/405
