@@ -88,7 +88,7 @@ jobs:
             architecture: aarch64
             build-prep: true
             use-cross: true
-            addl-build-args: --features=apply,generate,lua,fetch,foreach,python
+            addl-build-args: --features=apply,generate,lua,fetch,foreach
             default-features: --no-default-features
           - os: ubuntu-latest
             os-name: linux
