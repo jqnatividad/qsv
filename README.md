@@ -181,12 +181,11 @@ Click [here](https://docs.rs/csv-core/latest/csv_core/struct.Reader.html#rfc-418
 
 ### **UTF-8 Encoding**
 
-qsv requires UTF-8 encoded (of which ASCII is a subset) input files. On startup, it scans the input if it's UTF-8 encoded (for files, the first 8k; for stdin, the entire buffer), and will abort if its not unless `QSV_SKIPUTF8_CHECK` is set. On Linux and macOS, UTF-8 encoding is the default.
+The following commands require UTF-8 encoded input (of which ASCII is a subset) - `dedup`, `exclude`, `fetch`, `frequency`, `join`, `schema`, `sort`, `stats` & `validate`.
 
-Previously, several qsv commands worked with non utf-8 encoded files. But to increase performance, qsv versions since 0.38 make extensive use of `from_utf8_unchecked`
-so as not to pay the repetitive utf-8 validation penalty, no matter how small, even for already utf-8 encoded files.
+For these commands, qsv checks if the input is UTF-8 encoded by scanning the first 8k, and will abort if its not unless `QSV_SKIPUTF8_CHECK` is set. On Linux and macOS, UTF-8 encoding is the default.
 
-Only two commands still work with non utf-8 encoded files - `sniff` and `input`. `sniff` is meant to screen files and detect if a file is utf-8 encoded; and `input`, to prepare files for further qsv processing.
+This was done to increase performance of these commands, as they make extensive use of `from_utf8_unchecked` so as not to pay the repetitive utf-8 validation penalty, no matter how small, even for already utf-8 encoded files.
 
 Should you need to reencode CSV/TSV files, you can use the `input` command to transcode to UTF-8. It will replace all invalid UTF-8 sequences with `�`. Alternatively, there are several utilities you can use to do so on [Linux/macOS](https://stackoverflow.com/questions/805418/how-can-i-find-encoding-of-a-file-via-a-script-on-linux) and [Windows](https://superuser.com/questions/1163753/converting-text-file-to-utf-8-on-windows-command-prompt).
 
@@ -198,7 +197,7 @@ Unlike other modern operating systems, Windows' [default encoding is UTF16-LE](h
 qsv stats wcp.csv > wcpstats.csv
 ```
 
-Which is weird, since you would think [Microsoft Excel would properly recognize UTF16-LE encoded CSV files](https://answers.microsoft.com/en-us/msoffice/forum/all/opening-csv-file-with-utf16-encoding-in-excel-2010/ed522cb9-e88d-4b82-b88e-a2d4bd99f874?auth=1). Regardless, to create a properly UTF-8 encoded file, use the `--output` option instead:
+Which is weird, since you would think [Microsoft's own Excel would properly recognize UTF16-LE encoded CSV files](https://answers.microsoft.com/en-us/msoffice/forum/all/opening-csv-file-with-utf16-encoding-in-excel-2010/ed522cb9-e88d-4b82-b88e-a2d4bd99f874?auth=1). Regardless, to create a properly UTF-8 encoded file, use the `--output` option instead:
 
 ```
 qsv stats wcp.csv --output wcpstats.csv
@@ -218,7 +217,7 @@ qsv stats wcp.csv --output wcpstats.csv
 | `QSV_NO_UPDATE` | if set, prohibit self-update version check for the latest qsv release published on GitHub. |
 | `QSV_PREFER_DMY` | if set, date parsing will use DMY format. Otherwise, use MDY format (used with `apply datefmt`, `schema`, `sniff` & `stats` commands). |
 | `QSV_REGEX_UNICODE` | if set, makes `search`, `searchset` and `replace` commands unicode-aware. For increased performance, these commands are not unicode-aware and will ignore unicode values when matching and will panic when unicode characters are used in the regex. |
-| `QSV_SKIPUTF8_CHECK` | if set, skip UTF-8 encoding check. Otherwise, qsv scans the first 8k. |
+| `QSV_SKIPUTF8_CHECK` | if set, skip UTF-8 encoding check. Otherwise, for several commands that require UTF-8 encoded input (see [UTF8-Encoding](#utf-8-encoding)), qsv scans the first 8k. |
 | `QSV_RDR_BUFFER_CAPACITY` | reader buffer size (default (bytes): 16384) |
 | `QSV_WTR_BUFFER_CAPACITY` | writer buffer size (default (bytes): 65536) |
 | `QSV_LOG_LEVEL` | desired level (default - off; `error`, `warn`, `info`, `trace`, `debug`). |
