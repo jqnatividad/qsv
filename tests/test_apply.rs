@@ -956,7 +956,7 @@ fn apply_datefmt_prefer_dmy() {
         svec!["2005-07-04"],
         svec!["2021-05-01T01:17:02.604456+00:00"],
         svec!["1971-05-10"],
-        svec!["12/31/71"],
+        svec!["1971-12-31"], // will still parse obviously valid mdy dates that are not valid as dmy
         svec!["This is not a date and it will not be reformatted"],
     ];
     assert_eq!(got, expected);
@@ -992,7 +992,7 @@ fn apply_datefmt_prefer_dmy_env() {
         svec!["2005-07-04"],
         svec!["2021-05-01T01:17:02.604456+00:00"],
         svec!["1971-05-10"],
-        svec!["12/31/71"],
+        svec!["1971-12-31"], // will still parse obviously valid mdy dates that are not valid as dmy
         svec!["This is not a date and it will not be reformatted"],
     ];
     assert_eq!(got, expected);
