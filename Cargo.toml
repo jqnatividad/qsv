@@ -97,7 +97,7 @@ jql = { version = "4.0", default-features = false, optional = true }
 log = "0.4"
 mimalloc = { version = "0.1", default-features = false, optional = true }
 mlua = { version = "0.8", features = ["lua54", "vendored"], optional = true }
-once_cell = { version = "1.12", features = ["parking_lot"] }
+once_cell = { version = "1.13", features = ["parking_lot"] }
 pyo3 = { version = "0.16", features = [
     "abi3",
     "abi3-py38",
