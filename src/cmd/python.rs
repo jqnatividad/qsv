@@ -8,6 +8,8 @@ use crate::util;
 use crate::CliError;
 use crate::CliResult;
 use indicatif::{ProgressBar, ProgressDrawTarget};
+use log::Level::Debug;
+use log::{debug, log_enabled};
 use serde::Deserialize;
 
 const HELPERS: &str = r#"
@@ -126,8 +128,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut rdr = rconfig.reader()?;
     let mut wtr = Config::new(&args.flag_output).writer()?;
 
+    let not_quiet = !args.flag_quiet;
+
     let gil = Python::acquire_gil();
     let py = gil.python();
+
+    if not_quiet || log_enabled!(Debug) {
+        let msg = format!("Detected python={}", py.version());
+        eprintln!("{msg}");
+        debug!("{msg}");
+    }
 
     let helpers = PyModule::from_code(py, HELPERS, "qsv_helpers.py", "qsv_helpers")?;
     let globals = PyDict::new(py);
@@ -189,8 +199,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } else {
         util::prep_progress(&progress, util::count_rows(&rconfig)?);
     }
-    let not_quiet = !args.flag_quiet;
 
+    // ensure col/header names are valid and safe python variables
     let header_vec = util::safe_header_names(&headers, true);
 
     let mut record = csv::StringRecord::new();
@@ -203,19 +213,25 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let mut row_data: Vec<&str> = Vec::with_capacity(headers_len);
 
         for (i, key) in header_vec.iter().enumerate().take(headers_len) {
-            let cell_value = record.get(i).unwrap();
+            let cell_value = record.get(i).unwrap_or_default();
             locals.set_item(key, cell_value)?;
             row_data.push(cell_value);
         }
 
         py_row.call_method1("_update_underlying_data", (row_data,))?;
 
+        let mut result_err = false;
         let result = py
             .eval(&args.arg_script, Some(globals), Some(locals))
             .map_err(|e| {
+                result_err = true;
                 e.print_and_set_sys_last_vars(py);
                 "Evaluation of given expression failed with the above error!"
             })?;
+
+        if result_err && log_enabled!(Debug) {
+            debug!("{result:?}");
+        }
 
         if args.cmd_map {
             let result = helpers.getattr("cast_as_string")?.call1((result,))?;
