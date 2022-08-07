@@ -147,7 +147,7 @@ jobs:
       if: ${{ matrix.job.musl-prep }}
       run: |
         sudo apt-get install musl-tools
-   - name: Build qsv without python
+    - name: Build qsv without python
       if: ${{ matrix.job.build-nopython }}
       uses: actions-rs/cargo@v1
       with:
@@ -206,4 +206,5 @@ jobs:
         asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip
         overwrite: true
         tag: ${{ needs.analyze-tags.outputs.previous-tag }}    
+ 
  
