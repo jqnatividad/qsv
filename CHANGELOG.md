@@ -5,6 +5,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.61.3] - 2022-08-07
+### Changed
+* `py`: qsv uses the present working directory to find python shared library
+* `py`: show python version info on startup
+* publish qsvnp - another binary variant with all features except python
+* bumped once_cell from 1.12 to 1.13
+* use reqwest upstream with MSRV from 1.49 to 1.56; lazy_static to once_cell
+* update calamine fork with chrono time feature disabled
+* BetterTOML reformat cargo.toml
+* pin Rust nightly to 2022-08-06
+
+### Fixed
+* `excel`: remove unneeded checkutf8 for writer
+
 ## [0.61.2] - 2022-08-04
 ### Changed
 * `fetch`: Reformatted report so response is the last column; do not allow --timeout to be zero; progressbar refresh set at 5 times/sec; show name of generated report at the end. https://github.com/jqnatividad/qsv/pull/404
