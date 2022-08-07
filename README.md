@@ -128,6 +128,10 @@ cargo install qsv --features datapusher_plus
 
 # or when compiling from a local repo
 cargo build --release --features apply,generate,lua,fetch,foreach,python,full
+# shorthand
+cargo build --release --features all_full
+# all features EXCEPT python
+cargo build --release --features nopython_full
 # for qsvlite
 cargo build --release --features lite
 # for qsvdp
