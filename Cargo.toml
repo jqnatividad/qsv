@@ -168,6 +168,7 @@ publicsuffix = { git = "https://github.com/jqnatividad/publicsuffix", branch = "
 [features]
 default = ["mimalloc"]
 all_full = ["full", "apply", "fetch", "foreach", "generate", "lua", "python"]
+nopython_full = ["full", "apply", "fetch", "foreach", "generate", "lua"]
 apply = [
     "cached",
     "censor",
