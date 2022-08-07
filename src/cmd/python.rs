@@ -71,8 +71,13 @@ Some usage examples:
   Filter some lines based on numerical filtering
   $ qsv py filter "int(a) > 45"
 
-  Load a helper file with function to compute the Fibonacci sequence of the column "num_col"
+  Load helper file with function to compute Fibonacci sequence of the column "num_col"
   $ qsv py map --helper-file fibonacci.py fib qsv_uh.fibonacci(num_col) data.csv
+
+  NOTE: The py command requires Python 3.8+. If you wish qsv to use a specific 
+  Python version other than your system's default - either run it in a python 
+  virtual environment, or copy the shared library of the desired Python version 
+  in the same directory as qsv (libpython* on Linux/macOS, python*.dll on Windows).
 
 Usage:
     qsv py map [options] -n <script> [<input>]
