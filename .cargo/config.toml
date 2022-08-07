@@ -21,7 +21,7 @@ rustflags = "-C link-args=-Wl,-rpath,$ORIGIN"
 # for x86_64-apple-darwin,we also turn on CPU optimization by default
 # since there's only one kind of x86_64 CPU architecture for apple anyway
 [target.x86_64-apple-darwin]
-rustflags = "-C link-args=-Wl,-rpath,@loader_path target-cpu=native"
+rustflags = "-C link-args=-Wl,-rpath,@loader_path -C target-cpu=native"
 
 # sadly, we can't do the same for Apple Silicon, since GitHub's macOS action runners
 # are still x86_64, and the Apple Silicon binary is cross-compiled using the
