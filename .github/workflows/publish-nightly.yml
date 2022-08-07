@@ -83,6 +83,24 @@ jobs:
       if: ${{ matrix.job.musl-prep }}
       run: |
         sudo apt-get install musl-tools
+    - name: Setup Rust-cache
+      uses: Swatinem/rust-cache@v1
+      with:
+        key: qsv-cache
+    - name: Build qsv without python
+      if: ${{ matrix.job.build-nopython }}
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        use-cross: ${{ matrix.job.use-cross }}
+        toolchain: ${{ matrix.rust }}
+        args: --release --locked --bin qsv --target ${{ matrix.job.target }} --features=nopython_full ${{ matrix.job.default-features }}
+    - name: Rename qsv without python to qsvnp
+      if: ${{ matrix.job.build-nopython }} 
+      shell: bash
+      run: |
+        mv target/${{ matrix.job.target }}/release/qsv target/${{ matrix.job.target }}/release/qsvnp 2>/dev/null
+        mv target/${{ matrix.job.target }}/release/qsv.exe target/${{ matrix.job.target }}/release/qsvnp.exe 2>/dev/null
     - name: Build qsv-nightly
       uses: actions-rs/cargo@v1
       with:
