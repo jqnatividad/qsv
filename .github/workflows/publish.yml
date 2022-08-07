@@ -156,19 +156,11 @@ jobs:
         toolchain: ${{ matrix.rust }}
         args: --release --locked --bin qsv --target ${{ matrix.job.target }} --features=nopython_full ${{ matrix.job.default-features }}
     - name: Rename qsv without python to qsvnp
-      if: |
-        ${{ matrix.job.build-nopython }} 
-        && ${{ matrix.os != 'windows-latest' }}
+      if: ${{ matrix.job.build-nopython }} 
       shell: bash
       run: |
-        mv target/${{ matrix.job.target }}/release/qsv qsvnp
-    - name: Rename qsv without python to qsvnp in Windows
-      if: |
-        ${{ matrix.job.build-nopython }} 
-        && ${{ matrix.os == 'windows-latest' }}
-      shell: bash
-      run: |
-        mv target/${{ matrix.job.target }}/release/qsv.exe qsvnp.exe
+        mv target/${{ matrix.job.target }}/release/qsv target/${{ matrix.job.target }}/release/qsvnp 2>/dev/null
+        mv target/${{ matrix.job.target }}/release/qsv.exe target/${{ matrix.job.target }}/release/qsvnp.exe 2>/dev/null
     - name: Build qsv
       uses: actions-rs/cargo@v1
       with:
@@ -206,5 +198,4 @@ jobs:
         asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip
         overwrite: true
         tag: ${{ needs.analyze-tags.outputs.previous-tag }}    
- 
  
