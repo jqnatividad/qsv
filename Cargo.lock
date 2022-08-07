@@ -211,9 +211,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.59"
+version = "1.0.60"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c91f1f46651137be86f3a2b9a8359f9ab421d04d941c62b5982e1ca21113adf9"
+checksum = "c794e162a5eff65c72ef524dfe393eb923c354e350bb78b9c7383df13f3bc142"
 
 [[package]]
 name = "assert-json-diff"
@@ -387,7 +387,7 @@ checksum = "3a4f925191b4367301851c6d99b09890311d74b0d43f274c0b34c86d308a3663"
 [[package]]
 name = "calamine"
 version = "0.18.0"
-source = "git+https://github.com/jqnatividad/calamine?branch=master#f632e5bd899438b121dab58ab5274c326bfc09b8"
+source = "git+https://github.com/jqnatividad/calamine?branch=master#235685d3be93acbb322a0efc12326b158bbd5a79"
 dependencies = [
  "byteorder",
  "chrono",
@@ -883,9 +883,9 @@ dependencies = [
 
 [[package]]
 name = "fraction"
-version = "0.11.0"
+version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f4c42ca58f4e486c530d93c7f74ab469293b20d7f86b478ca9d702a2f95fed61"
+checksum = "317322288e76bb0c2dde9106975a0ba1f8a1ef18205ba2a5b8ef0ba6a638ca79"
 dependencies = [
  "lazy_static",
  "num",
