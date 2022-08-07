@@ -82,8 +82,8 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 
 Pre-built binaries for Windows, Linux and macOS are available [from GitHub](https://github.com/jqnatividad/qsv/releases/latest), including binaries compiled with [Rust Nightly/Unstable](https://stackoverflow.com/questions/70745970/rust-nightly-vs-beta-version) (click [here](https://github.com/jqnatividad/qsv/blob/master/docs/PERFORMANCE.md#nightly-release-builds) for more info).
 
-There are three versions of qsv. `qsv` enables all [features](#feature-flags) valid for the target platform[^6];
-`qsvlite` has all features disabled (half the size of `qsv`); `qsvdp` is optimized for use with [DataPusher+](https://github.com/dathere/datapusher-plus), with only DataPusher+ relevant commands and the self-update engine removed (a sixth of the size of `qsv`).
+There are four versions of qsv. `qsv` enables all [features](#feature-flags) valid for the target platform[^6];
+`qsvnp` enables all features EXCEPT python. `qsvlite` has all features disabled (half the size of `qsv`); `qsvdp` is optimized for use with [DataPusher+](https://github.com/dathere/datapusher-plus), with only DataPusher+ relevant commands and the self-update engine removed (a sixth of the size of `qsv`).
 
 Alternatively, you can compile from source by
 [installing Cargo](https://crates.io/install)
@@ -117,6 +117,10 @@ To enable optional features, use cargo `--features` (see [Feature Flags](#featur
 
 ```bash
 cargo install qsv --features apply,generate,lua,fetch,foreach,python,full
+# or shorthand
+cargo install qsv --features all_full
+# or to build all features EXCEPT python
+cargo install qsv --features nopython_full
 # or to build qsvlite
 cargo install qsv --features lite
 # or to build qsvdp
@@ -162,9 +166,9 @@ with the `QSV_DEFAULT_DELIMITER` environment variable or automatically detected 
 
 When using the `--output` option, note that qsv will UTF-8 encode the file and automatically change the delimiter used in the generated file based on the file extension - i.e. comma for `.csv`, tab for `.tsv` and `.tab` files.
 
-[JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/) files are also recognized and converted to CSV with the [`jsonl`](/src/cmd/jsonl.rs#L11) command.
+[JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/) files are also recognized and converted from/to CSV with the [`jsonl`](/src/cmd/jsonl.rs#L11) and [`tojsonl`](/src/cmd/tojsonl.rs#L12) commands.
 
-The `fetch` command also produces JSONL files when its invoked without the `--new-column` option.
+The `fetch` command also produces JSONL files when its invoked without the `--new-column` option, and TSV files with the `--report` option.
 
 The `sniff` and `validate` commands produce JSON files with their `--json` and `--pretty-json` options.
 
@@ -246,16 +250,18 @@ Several dependencies also have environment variables that influence qsv's perfor
 * `fetch` - enable `fetch` command.
 * `generate` - enable `generate` command.
 * `full` - enable to build qsv.
-* `all_full` - enable to build qsv with all features (apply,fetch,foreach,generate,lua,python)
+* `all_full` - enable to build qsv with all features (apply,fetch,foreach,generate,lua,python).
+* `nopython_full` - enable to build qsv with all features (apply,fetch,foreach,generate,lua) EXCEPT python.
 * `lite` - enable to build qsvlite.
 * `datapusher_plus` - enable to build qsvdp - the [DataPusher+](https://github.com/dathere/datapusher-plus) optimized qsv binary.
-* `nightly` - enable to turn on nightly/unstable features in the `rand` and `regex` creates when building with Rust nightly/unstable.
+* `nightly` - enable to turn on nightly/unstable features in the `rand`, `regex` and `pyo3` creates when building with Rust nightly/unstable.
 
 The following "power-user" commands can be abused and present "foot-shooting" scenarios.
 
 * `lua` - enable `lua` command. Embeds a [Lua 5.4.4](https://www.lua.org/manual/5.4/manual.html) interpreter into qsv.
 * `foreach` - enable `foreach` command (not valid for Windows).
-* `python` - enable `py` command (requires Python 3.8+). Note that qsv will automatically use the currently activated python version when running in a virtual environment.
+* `python` - enable `py` command (requires Python 3.8+). Note that qsv will automatically use the currently activated python version when running in a virtual environment unless
+there's a python library (libpython.* on Linux/macOS, python*.dll on Windows) in the directory where qsv is located.
 
 > ℹ️ **NOTE:** `qsvlite`, as the name implies, always has **non-default features disabled**. `qsv` can be built with any combination of the above features  using the cargo `--features` & `--no-default-features` flags. The pre-built `qsv` binaries has **all applicable features valid for the target platform**[^6].
 
