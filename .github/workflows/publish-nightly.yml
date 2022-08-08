@@ -94,15 +94,15 @@ jobs:
         command: build
         use-cross: ${{ matrix.job.use-cross }}
         toolchain: ${{ matrix.rust }}
-        args: release-nightly --locked --bin qsv -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --target ${{ matrix.job.target }} --features=nopython_full ${{ matrix.job.default-features }}
+        args: --profile release-nightly --bin qsv -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --target ${{ matrix.job.target }} --features=nopython_full ${{ matrix.job.default-features }}
     - name: Rename qsv without python to qsvnp
       if: ${{ matrix.job.build-nopython }}
       shell: bash
       run: |
          if [ "$RUNNER_OS" == "Windows" ]; then
-              mv target/${{ matrix.job.target }}/release/qsv.exe target/${{ matrix.job.target }}/release/qsvnp.exe
+              mv target/${{ matrix.job.target }}/release-nightly/qsv.exe target/${{ matrix.job.target }}/release-nightly/qsvnp.exe
          else
-              mv target/${{ matrix.job.target }}/release/qsv target/${{ matrix.job.target }}/release/qsvnp
+              mv target/${{ matrix.job.target }}/release-nightly/qsv target/${{ matrix.job.target }}/release-nightly/qsvnp
          fi
     - name: Build qsv-nightly
       uses: actions-rs/cargo@v1

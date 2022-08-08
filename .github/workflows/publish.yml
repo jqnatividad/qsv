@@ -163,11 +163,11 @@ jobs:
       if: ${{ matrix.job.build-nopython }}
       shell: bash
       run: |
-         if [ "$RUNNER_OS" == "Windows" ]; then
-              mv target/${{ matrix.job.target }}/release/qsv.exe target/${{ matrix.job.target }}/release/qsvnp.exe
-         else
+        if [ "$RUNNER_OS" == "Windows" ]; then
+             mv target/${{ matrix.job.target }}/release/qsv.exe target/${{ matrix.job.target }}/release/qsvnp.exe
+        else
               mv target/${{ matrix.job.target }}/release/qsv target/${{ matrix.job.target }}/release/qsvnp
-         fi
+        fi
     - name: Build qsv
       uses: actions-rs/cargo@v1
       with:
