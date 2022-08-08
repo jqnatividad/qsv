@@ -1,7 +1,7 @@
 use crate::config::Config;
 use crate::util;
 use crate::CliResult;
-use calamine::{open_workbook_auto, DataType, Reader};
+use calamine::{open_workbook_auto, DataType, Range, Reader};
 use log::{debug, info};
 use serde::Deserialize;
 use std::cmp;
@@ -168,13 +168,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } else {
         return fail!(format!("Cannot get sheet index for {sheet}"));
     };
-    let range = if let Ok(range) = workbook
-        .worksheet_range_at(sheet_index)
-        .unwrap_or_else(|| panic!("Cannot retrieve range from {sheet}"))
-    {
-        range
-    } else {
-        return fail!(format!("Cannot get worksheet data from {sheet}"));
+
+    let range = match workbook.worksheet_range_at(sheet_index) {
+        Some(result) => {
+            if let Ok(result) = result {
+                result
+            } else {
+                return fail!(format!("Cannot retrieve range from {sheet}"));
+            }
+        }
+        None => Range::empty(),
     };
 
     let whitelist_lower = args.flag_dates_whitelist.to_lowercase();
@@ -285,7 +288,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let end_msg = format!(
         "{} {}-column rows exported from \"{sheet}\"",
         // don't count the header in row count
-        (count - 1).separate_with_commas(),
+        count.saturating_sub(1).separate_with_commas(),
         record.len().separate_with_commas(),
     );
     info!("{end_msg}");
