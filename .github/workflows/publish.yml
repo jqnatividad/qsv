@@ -159,12 +159,16 @@ jobs:
         use-cross: ${{ matrix.job.use-cross }}
         toolchain: ${{ matrix.rust }}
         args: --release --locked --bin qsv --target ${{ matrix.job.target }} --features=nopython_full ${{ matrix.job.default-features }}
-    - name: Rename qsv without python to qsvnp
-      if: ${{ matrix.job.build-nopython }} 
+    - name: Rename qsv without python to qsvnp.exe in Windows
+      if: ${{ matrix.job.build-nopython }} && matrix.os == 'windows.latest'
       shell: bash
       run: |
-        mv target/${{ matrix.job.target }}/release/qsv target/${{ matrix.job.target }}/release/qsvnp 2>/dev/null
-        mv target/${{ matrix.job.target }}/release/qsv.exe target/${{ matrix.job.target }}/release/qsvnp.exe 2>/dev/null
+        mv target/${{ matrix.job.target }}/release/qsv.exe target/${{ matrix.job.target }}/release/qsvnp.exe
+    - name: Rename qsv without python to qsvnp in Linux/macOS
+      if: ${{ matrix.job.build-nopython }} && matrix.os != 'windows.latest'
+      shell: bash
+      run: |
+        mv target/${{ matrix.job.target }}/release/qsv target/${{ matrix.job.target }}/release/qsvnp
     - name: Build qsv
       uses: actions-rs/cargo@v1
       with:
