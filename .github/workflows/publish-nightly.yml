@@ -138,7 +138,7 @@ jobs:
              mv qsvlite.exe qsvlite_nightly.exe
              mv qsvdp.exe qsvdp_nightly.exe
         else
-             my qsvnp qsvnp_nightly
+             mv qsvnp qsvnp_nightly
              mv qsv qsv_nightly
              mv qsvlite qsvlite_nightly
              mv qsvdp qsvdp_nightly
