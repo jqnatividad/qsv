@@ -363,3 +363,16 @@ fn excel_empty_sheet_message() {
     let got = wrk.output_stderr(&mut cmd);
     assert_eq!(got, "0 4-column rows exported from \"NoData\"\n");
 }
+
+#[test]
+fn excel_empty_sheet2_message() {
+    let wrk = Workdir::new("excel_empty_sheet2_message");
+
+    let xls_file = wrk.load_test_file("excel-xls.xls");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--sheet").arg("Sheet1").arg(xls_file);
+
+    let got = wrk.output_stderr(&mut cmd);
+    assert_eq!(got, "0 0-column rows exported from \"Sheet1\"\n");
+}
