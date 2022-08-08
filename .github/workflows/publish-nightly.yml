@@ -94,13 +94,16 @@ jobs:
         command: build
         use-cross: ${{ matrix.job.use-cross }}
         toolchain: ${{ matrix.rust }}
-        args: --release --locked --bin qsv --target ${{ matrix.job.target }} --features=nopython_full ${{ matrix.job.default-features }}
+        args: release-nightly --locked --bin qsv -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --target ${{ matrix.job.target }} --features=nopython_full ${{ matrix.job.default-features }}
     - name: Rename qsv without python to qsvnp
-      if: ${{ matrix.job.build-nopython }} 
+      if: ${{ matrix.job.build-nopython }}
       shell: bash
       run: |
-        mv target/${{ matrix.job.target }}/release/qsv target/${{ matrix.job.target }}/release/qsvnp 2>/dev/null
-        mv target/${{ matrix.job.target }}/release/qsv.exe target/${{ matrix.job.target }}/release/qsvnp.exe 2>/dev/null
+         if [ "$RUNNER_OS" == "Windows" ]; then
+              mv target/${{ matrix.job.target }}/release/qsv.exe target/${{ matrix.job.target }}/release/qsvnp.exe
+         else
+              mv target/${{ matrix.job.target }}/release/qsv target/${{ matrix.job.target }}/release/qsvnp
+         fi
     - name: Build qsv-nightly
       uses: actions-rs/cargo@v1
       with:
@@ -130,10 +133,12 @@ jobs:
         cp target/${{ matrix.job.target }}/release-nightly/qsv* qsv-${{ needs.analyze-tags.outputs.previous-tag }}
         cd qsv-${{ needs.analyze-tags.outputs.previous-tag }}
         if [ "$RUNNER_OS" == "Windows"]; then
+             mv qsvnp.exe qsvnp_nightly.exe
              mv qsv.exe qsv_nightly.exe
              mv qsvlite.exe qsvlite_nightly.exe
              mv qsvdp.exe qsvdp_nightly.exe
         else
+             my qsvnp qsvnp_nightly
              mv qsv qsv_nightly
              mv qsvlite qsvlite_nightly
              mv qsvdp qsvdp_nightly
