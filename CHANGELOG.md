@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-## [0.61.3] - 2022-08-07
+## [0.61.4] - 2022-08-07
 ### Changed
 * `py`: qsv uses the present working directory to find python shared library
 * `py`: show python version info on startup

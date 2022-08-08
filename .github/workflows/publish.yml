@@ -150,7 +150,7 @@ jobs:
     - name: Setup Rust-cache
       uses: Swatinem/rust-cache@v1
       with:
-        key: qsv-cache
+        key: qsv-cache-${{ matrix.job.target }}
     - name: Build qsv without python
       if: ${{ matrix.job.build-nopython }}
       uses: actions-rs/cargo@v1
@@ -167,7 +167,6 @@ jobs:
               mv target/${{ matrix.job.target }}/release/qsv.exe target/${{ matrix.job.target }}/release/qsvnp.exe
          else
               mv target/${{ matrix.job.target }}/release/qsv target/${{ matrix.job.target }}/release/qsvnp
-
          fi
     - name: Build qsv
       uses: actions-rs/cargo@v1
