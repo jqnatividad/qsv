@@ -164,7 +164,6 @@ indicatif    = { git = "https://github.com/console-rs/indicatif", rev = "626ebdb
 jsonschema   = { git = "https://github.com/jqnatividad/jsonschema-rs", branch = "master" }
 redis        = { git = "https://github.com/redis-rs/redis-rs", rev = "3c91ce2ecda1933bd183113f1eda32dbb79acadc" }
 reqwest      = { git = "https://github.com/seanmonstar/reqwest", rev = "e9ba0a9dc79f63c3655f334df23b50b9a841e326" }
-publicsuffix = { git = "https://github.com/jqnatividad/publicsuffix", branch = "bump-hashbrown" }
 
 [features]
 default = ["mimalloc"]

@@ -457,9 +457,9 @@ dependencies = [
 
 [[package]]
 name = "combine"
-version = "4.6.4"
+version = "4.6.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2a604e93b79d1808327a6fca85a6f2d69de66461e7620f5a4cbf5fb4d1d7c948"
+checksum = "35ed6e9d84f0b51a7f52daf1c7d71dd136fd7a3f41a8462b8cdb8c78d920fad4"
 dependencies = [
  "bytes",
  "memchr",
@@ -1899,10 +1899,10 @@ checksum = "e8eda7c62d9ecaafdf8b62374c006de0adf61666ae96a96ba74a37134aa4e470"
 
 [[package]]
 name = "publicsuffix"
-version = "2.1.1"
-source = "git+https://github.com/jqnatividad/publicsuffix?branch=bump-hashbrown#6ea3296531eaa3f3be60af23f8ea327d8af73614"
+version = "2.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "21750be2a507741dc44725918ac23ecf118cac5c6c94bf9979efce180c5e661b"
 dependencies = [
- "byteorder",
  "hashbrown",
  "idna",
  "psl-types",
