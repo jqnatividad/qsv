@@ -91,7 +91,7 @@ jobs:
       uses: actions-rs/cargo@v1
       with:
         command: build
-        use-cross: ${{ matrix.job.use-cross }}
+        use-cross: false
         toolchain: ${{ matrix.rust }}
         args: --profile release-nightly --bin qsv -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --target ${{ matrix.job.target }} --features=nopython_full ${{ matrix.job.default-features }}
     - name: Rename qsv without python to qsvnp
