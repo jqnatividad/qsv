@@ -85,6 +85,7 @@ flexi_logger = { version = "0.23", features = [
 ], default-features = false }
 governor = { version = "0.4", optional = true }
 grex = { version = "1.4", default-features = false }
+hashbrown = "0.12"
 indicatif = "0.17"
 itertools = "0.10"
 itoa = "1"
@@ -203,4 +204,5 @@ nightly = [
     "rand/nightly",
     "rand/simd_support",
     "pyo3/nightly",
+    "hashbrown/nightly"
 ]

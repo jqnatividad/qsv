@@ -98,7 +98,7 @@ Pre-built binaries compiled using Rust Nightly/Unstable are also [available for 
   This is why we only have nightly release builds for select platforms (the platform of GitHub's action runners), as we need access to the "native hardware"
   and cannot cross-compile stdlib to other platforms.
 * set `panic=abort` - removing panic-handling/formatting and backtrace code, making for smaller binaries.
-* enables unstable/nightly features on `regex`, `rand` and `pyo3` crates, that unlock performance/SIMD features on those crates.
+* enables unstable/nightly features on `regex`, `rand`, `pyo3` and `hashbrown` crates, that unlock performance/SIMD features on those crates.
 
 Despite the 'unstable' label, these binaries are actually quite stable, given how [Rust is made](https://doc.rust-lang.org/book/appendix-07-nightly-rust.html),
 and the fact that qsv itself doesn't actually use any unstable feature flags, beyond activating the 'unstable' features in the `rand`, `regex` and `pyo3` crates, which is really more about performance (that's why we can still compile with Rust stable). You only really loose the backtrace messages when qsv panics.
