@@ -85,7 +85,7 @@ flexi_logger = { version = "0.23", features = [
 ], default-features = false }
 governor = { version = "0.4", optional = true }
 grex = { version = "1.4", default-features = false }
-hashbrown = "0.12"
+hashbrown = { version = "0.12", optional = true }
 indicatif = "0.17"
 itertools = "0.10"
 itoa = "1"
@@ -175,6 +175,7 @@ apply = [
     "censor",
     "dynfmt",
     "eudex",
+    "hashbrown",
     "qsv_currency",
     "reverse_geocoder",
     "strsim",
@@ -187,6 +188,7 @@ fetch = [
     "console",
     "dynfmt",
     "governor",
+    "hashbrown",
     "jql",
     "jsonxf",
     "redis",
