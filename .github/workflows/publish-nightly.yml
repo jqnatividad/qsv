@@ -98,9 +98,9 @@ jobs:
       shell: bash
       run: |
          if [ "$RUNNER_OS" == "Windows" ]; then
-              mv -v target/${{ matrix.job.target }}/release-nightly/qsv.exe target/${{ matrix.job.target }}/release-nightly/qsvnp.exe
+              mv -v -f target/${{ matrix.job.target }}/release-nightly/qsv.exe target/${{ matrix.job.target }}/release-nightly/qsvnp.exe
          else
-              mv -v target/${{ matrix.job.target }}/release-nightly/qsv target/${{ matrix.job.target }}/release-nightly/qsvnp
+              mv -v -f target/${{ matrix.job.target }}/release-nightly/qsv target/${{ matrix.job.target }}/release-nightly/qsvnp
          fi
     - name: Build qsv-nightly
       uses: actions-rs/cargo@v1
