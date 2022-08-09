@@ -163,7 +163,7 @@ dependencies = [
  "serde_urlencoded",
  "smallvec",
  "socket2",
- "time 0.3.12",
+ "time 0.3.13",
  "url",
 ]
 
@@ -482,7 +482,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94d4706de1b0fa5b132270cddffa8585166037822e260a944fe161acd137ca05"
 dependencies = [
  "percent-encoding",
- "time 0.3.12",
+ "time 0.3.13",
  "version_check",
 ]
 
@@ -498,7 +498,7 @@ dependencies = [
  "publicsuffix",
  "serde",
  "serde_json",
- "time 0.3.12",
+ "time 0.3.13",
  "url",
 ]
 
@@ -862,7 +862,7 @@ dependencies = [
  "log",
  "rustversion",
  "thiserror",
- "time 0.3.12",
+ "time 0.3.13",
 ]
 
 [[package]]
@@ -1261,9 +1261,9 @@ checksum = "6c8af84674fe1f223a982c933a0ee1086ac4d4052aa0fb8060c12c6ad838e754"
 
 [[package]]
 name = "jql"
-version = "4.0.6"
+version = "4.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ce87c69e86163fa9b3296222e7b05397d2f09b96657339ab0ae5a303f25db46c"
+checksum = "917a204cb6df52dd8aa69f842b8a88e804a36acb34c4783cf18fecd860b0c259"
 dependencies = [
  "anyhow",
  "pest",
@@ -1303,7 +1303,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
- "time 0.3.12",
+ "time 0.3.13",
  "url",
  "uuid",
 ]
@@ -2707,12 +2707,11 @@ dependencies = [
 
 [[package]]
 name = "time"
-version = "0.3.12"
+version = "0.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "74b7cc93fc23ba97fde84f7eea56c55d1ba183f495c6715defdfc7b9cb8c870f"
+checksum = "db76ff9fa4b1458b3c7f077f3ff9887394058460d21e634355b273aaf11eea45"
 dependencies = [
  "itoa",
- "js-sys",
  "libc",
  "num_threads",
  "time-macros",
@@ -3206,5 +3205,5 @@ dependencies = [
  "crc32fast",
  "crossbeam-utils",
  "flate2",
- "time 0.3.12",
+ "time 0.3.13",
 ]
