@@ -86,7 +86,7 @@ jobs:
     - name: Setup Rust-cache
       uses: Swatinem/rust-cache@v1
       with:
-        key: qsv-cache
+        key: qsv-cache-nightly
     - name: Build qsv without python
       uses: actions-rs/cargo@v1
       with:
@@ -98,6 +98,7 @@ jobs:
       shell: bash
       run: |
          if [ "$RUNNER_OS" == "Windows" ]; then
+              rm -f target/${{ matrix.job.target }}/release-nightly/qsvnp.exe
               mv -v -f target/${{ matrix.job.target }}/release-nightly/qsv.exe target/${{ matrix.job.target }}/release-nightly/qsvnp.exe
          else
               mv -v -f target/${{ matrix.job.target }}/release-nightly/qsv target/${{ matrix.job.target }}/release-nightly/qsvnp
