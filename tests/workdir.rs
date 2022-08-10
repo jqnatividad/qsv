@@ -210,6 +210,16 @@ impl Workdir {
         self.from_str::<String>(path.as_path())
     }
 
+    // returns absolute file path in resources/test directory
+    #[allow(dead_code)]
+    pub fn load_wrkdir_file_path(&self, filename: &str) -> String {
+        let mut path = PathBuf::new();
+        path.push(&self.dir);
+        path.push(filename);
+
+        path.into_os_string().into_string().unwrap()
+    }
+
     #[allow(clippy::wrong_self_convention)]
     pub fn from_str<T: FromStr>(&self, name: &Path) -> T {
         let mut o = String::new();
