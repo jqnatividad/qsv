@@ -80,9 +80,12 @@ fn fetch_simple_report() {
     let mut cmd = wrk.command("fetch");
     cmd.arg("URL").arg("data.csv").arg("--report").arg("short");
 
+    let mut cmd = wrk.command("index");
+    cmd.arg("data.csv.fetch-report.tsv");
+
     let mut cmd = wrk.command("select");
     cmd.arg("url,status,cache_hit,retries,response")
-        .arg(wrk.load_wrkdir_file_path("data.csv.fetch-report.tsv"));
+        .arg("data.csv.fetch-report.tsv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
