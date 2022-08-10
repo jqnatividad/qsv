@@ -25,7 +25,7 @@ use std::{fs, thread, time};
 use url::Url;
 
 static USAGE: &str = r#"
-Fetches HTML/data from web pages or web services for every row.
+Fetches HTML/data from web pages or web services for every row using HTTP Get.
 
 Fetch is integrated with `jql` to directly parse out values from an API JSON response.
 
@@ -136,18 +136,18 @@ Fetch options:
                                [default: 100 ]
     --store-error              On error, store error code/message instead of blank value.
     --cache-error              Cache error responses even if a request fails. If an identical URL is requested,
-                               the cached error is returned. Otherwise, the fetch is attempted again for --max-retries.
+                               the cached error is returned. Otherwise, the fetch is attempted again 
+                               for --max-retries.
     --cookies                  Allow cookies.
-    --report <kind>            Creates a report of the fetch job. The report has the same name as the input file
+    --report <d|s>             Creates a report of the fetch job. The report has the same name as the input file
                                with the ".fetch-report" suffix. 
-                               There are two kinds of report - "detailed" and "short". The detailed report has
-                               the same columns as the input CSV with six additional columns - 
-                               qsv_fetch_url, qsv_fetch_status, qsv_fetch_cache_hit, qsv_fetch_retries, qsv_fetch_elapsed_ms &
-                               qsv_fetch_response.
+                               There are two kinds of report - d for "detailed" & s for "short". The detailed report
+                               has the same columns as the input CSV with six additional columns - 
+                               qsv_fetch_url, qsv_fetch_status, qsv_fetch_cache_hit, qsv_fetch_retries, 
+                               qsv_fetch_elapsed_ms & qsv_fetch_response.
                                fetch_url - URL used, fetch_status - HTTP status code, fetch_cache_hit - cached hit flag,
                                fetch_retries - retry attempts, fetch_elapsed - elapsed time & fetch_response - the response.
                                The short report only has the six columns without the "qsv_fetch_" column name prefix.
-                               [default: none ]
     --redis                    Use Redis to cache responses. It connects to "redis://127.0.0.1:6379/1"
                                with a connection pool size of 20, with a TTL of 28 days, and a cache hit 
                                NOT renewing an entry's TTL.
@@ -184,7 +184,7 @@ struct Args {
     flag_store_error: bool,
     flag_cache_error: bool,
     flag_cookies: bool,
-    flag_report: String,
+    flag_report: Option<String>,
     flag_redis: bool,
     flag_flushdb: bool,
     flag_output: Option<String>,
@@ -429,14 +429,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         error_progress.set_draw_target(ProgressDrawTarget::hidden());
     }
 
-    if args.flag_quiet {
-        multi_progress.set_draw_target(ProgressDrawTarget::hidden());
-    } else {
+    let not_quiet = !args.flag_quiet; // minimize negations
+    if not_quiet {
         record_count = util::count_rows(&rconfig)?;
         util::prep_progress(&progress, record_count);
+    } else {
+        multi_progress.set_draw_target(ProgressDrawTarget::hidden());
     }
-
-    let not_quiet = !args.flag_quiet;
 
     let jql_selector: Option<String> = if let Some(jql_file) = args.flag_jqlfile {
         Some(fs::read_to_string(jql_file).expect("Cannot read jql file."))
@@ -452,15 +451,22 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     // prepare report
-    let report = match args.flag_report.to_lowercase().as_str() {
-        "detailed" => ReportKind::Detailed,
-        "none" => ReportKind::None,
-        _ => ReportKind::Short, // defaults to short if kind is misspelled
+    let report = if let Some(reportkind) = args.flag_report {
+        if reportkind.to_lowercase().starts_with("d") {
+            // if it starts with d, its a detailed report
+            ReportKind::Detailed
+        } else {
+            // defaults to short if --report option is anything else
+            ReportKind::Short
+        }
+    } else {
+        ReportKind::None
     };
 
     let mut report_wtr;
     let report_path;
     if report == ReportKind::None {
+        // no report, point report_wtr to /dev/null (AKA sink)
         report_wtr = Config::new(&Some("sink".to_string())).writer()?;
         report_path = "".to_string();
     } else {
@@ -667,11 +673,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     }
 
-    if report == ReportKind::None {
-        drop(report_wtr);
-    } else {
-        report_wtr.flush()?;
-    }
+    report_wtr.flush()?;
 
     if not_quiet {
         if args.flag_redis {
