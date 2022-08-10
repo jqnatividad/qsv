@@ -180,6 +180,7 @@ impl Workdir {
         }
     }
 
+    // returns contents of specified file in resources/test directory
     pub fn load_test_resource(&self, filename: &str) -> String {
         // locate resources/test relative to crate base dir
         let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
@@ -189,6 +190,7 @@ impl Workdir {
         self.from_str::<String>(path.as_path())
     }
 
+    // returns absolute file path in resources/test directory
     pub fn load_test_file(&self, filename: &str) -> String {
         // locate resources/test relative to crate base dir
         let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
@@ -196,6 +198,16 @@ impl Workdir {
         path.push(filename);
 
         path.into_os_string().into_string().unwrap()
+    }
+
+    // returns contents of file inside wrkdir
+    #[allow(dead_code)]
+    pub fn load_wrkdir_file(&self, filename: &str) -> String {
+        let mut path = PathBuf::new();
+        path.push(&self.dir);
+        path.push(filename);
+
+        self.from_str::<String>(path.as_path())
     }
 
     #[allow(clippy::wrong_self_convention)]
