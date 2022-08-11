@@ -1,3 +1,4 @@
+use crate::cmd::fetch::apply_jql;
 use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
 use crate::util;
@@ -17,7 +18,7 @@ use rand::Rng;
 use redis;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use serde::{Deserialize, Serialize};
-use serde_json::json;
+use serde_json::{json, Value};
 use std::time::Instant;
 use std::{fs, thread, time};
 use url::Url;
@@ -518,7 +519,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             now = Instant::now()
         };
 
-        // construct multipart/form-data body per the column-list
+        // construct body per the column-list
         form_body_jsonmap.clear();
         for col_idx in col_list.iter() {
             let header_key = String::from_utf8_lossy(headers.get(*col_idx).unwrap());
@@ -530,7 +531,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             );
         }
         debug!("{form_body_jsonmap:?}");
-        // form.
 
         if let Ok(s) = std::str::from_utf8(&record[column_index]) {
             url = s.to_owned();
@@ -662,7 +662,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             // sleep so we can dependably write eprintln without messing up progress bars
             thread::sleep(time::Duration::from_nanos(10));
             let abort_msg = format!(
-                "{} max errors. Fetch aborted.",
+                "{} max errors. Fetchpost aborted.",
                 HumanCount(args.flag_max_errors)
             );
             info!("{abort_msg}");
@@ -672,7 +672,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         let mut end_msg = format!(
-            "{} records successfully fetched as {}. {} errors.",
+            "{} records successfully fetchposted as {}. {} errors.",
             HumanCount(running_success_count),
             if include_existing_columns {
                 "CSV"
@@ -858,7 +858,6 @@ fn get_response(
         }
 
         // send the actual request
-        // if let Ok(resp) = client.get(&valid_url).send() {
         if let Ok(resp) = client.post(&valid_url).form(form_body_jsonmap).send() {
             // debug!("{resp:?}");
             api_respheader.clone_from(resp.headers());
@@ -1083,85 +1082,4 @@ ratelimit_reset:{ratelimit_reset:?} {ratelimit_reset_sec:?} retry_after:{retry_a
             retries,
         }
     }
-}
-
-use jql::groups_walker;
-use serde_json::{Deserializer, Value};
-
-use anyhow::{anyhow, Result};
-
-#[inline]
-fn apply_jql(json: &str, groups: &[jql::Group]) -> Result<String> {
-    // check if api returned valid JSON before applying JQL selector
-    if let Err(error) = serde_json::from_str::<Value>(json) {
-        return Err(anyhow!("Invalid json: {error:?}"));
-    }
-
-    let mut result: Result<String> = Ok(String::default());
-
-    Deserializer::from_str(json)
-        .into_iter::<Value>()
-        .for_each(|value| match value {
-            Ok(valid_json) => {
-                // Walk through the JSON content with the provided selectors as
-                // input.
-                match groups_walker(&valid_json, groups) {
-                    Ok(selection) => {
-                        fn get_value_string(v: &Value) -> String {
-                            if v.is_null() {
-                                "null".to_string()
-                            } else if v.is_boolean() {
-                                v.as_bool().unwrap().to_string()
-                            } else if v.is_f64() {
-                                v.as_f64().unwrap().to_string()
-                            } else if v.is_i64() {
-                                v.as_i64().unwrap().to_string()
-                            } else if v.is_u64() {
-                                v.as_u64().unwrap().to_string()
-                            } else if v.is_string() {
-                                v.as_str().unwrap().to_string()
-                            } else {
-                                v.to_string()
-                            }
-                        }
-
-                        match &selection {
-                            Value::Array(array) => {
-                                let mut concat_string = String::new();
-
-                                let mut values = array.iter();
-
-                                if let Some(v) = values.next() {
-                                    let str_val = get_value_string(v);
-                                    concat_string.push_str(&str_val);
-                                }
-
-                                for v in values {
-                                    let str_val = get_value_string(v);
-                                    concat_string.push_str(", ");
-                                    concat_string.push_str(&str_val);
-                                }
-
-                                result = Ok(concat_string);
-                            }
-                            Value::Object(_object) => {
-                                result = Err(anyhow!("Unsupported jql result type: OBJECT"));
-                            }
-                            _ => {
-                                result = Ok(get_value_string(&selection));
-                            }
-                        }
-                    }
-                    Err(error) => {
-                        result = Err(anyhow!(error));
-                    }
-                }
-            }
-            Err(error) => {
-                // shouldn't happen, but do same thing earlier when checking for invalid json
-                result = Err(anyhow!("Invalid json: {error:?}"));
-            }
-        });
-
-    result
 }

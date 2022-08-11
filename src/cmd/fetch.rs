@@ -1113,7 +1113,7 @@ use serde_json::{Deserializer, Value};
 use anyhow::{anyhow, Result};
 
 #[inline]
-fn apply_jql(json: &str, groups: &[jql::Group]) -> Result<String> {
+pub fn apply_jql(json: &str, groups: &[jql::Group]) -> Result<String> {
     // check if api returned valid JSON before applying JQL selector
     if let Err(error) = serde_json::from_str::<Value>(json) {
         return Err(anyhow!("Invalid json: {error:?}"));
