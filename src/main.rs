@@ -292,6 +292,8 @@ enum Command {
     ExtSort,
     #[cfg(all(feature = "fetch", not(feature = "lite")))]
     Fetch,
+    #[cfg(all(feature = "fetch", not(feature = "lite")))]
+    FetchPost,
     Fill,
     FixLengths,
     Flatten,
@@ -358,6 +360,8 @@ impl Command {
             Command::ExtSort => cmd::extsort::run(argv),
             #[cfg(all(feature = "fetch", not(feature = "lite")))]
             Command::Fetch => cmd::fetch::run(argv),
+            #[cfg(all(feature = "fetch", not(feature = "lite")))]
+            Command::FetchPost => cmd::fetchpost::run(argv),
             #[cfg(all(feature = "foreach", target_family = "unix", not(feature = "lite")))]
             Command::ForEach => cmd::foreach::run(argv),
             Command::Fill => cmd::fill::run(argv),
