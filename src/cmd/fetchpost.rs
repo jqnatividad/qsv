@@ -127,16 +127,15 @@ Fetch options:
     --cache-error              Cache error responses even if a request fails. If an identical URL is requested,
                                the cached error is returned. Otherwise, the fetch is attempted again for --max-retries.
     --cookies                  Allow cookies.
-    --report <kind>            Creates a report of the fetch job. The report has the same name as the input file
-                               with the ".fetch-report" suffix. 
-                               There are two kinds of report - "detailed" and "short". The detailed report has
-                               the same columns as the input CSV with six additional columns - 
-                               qsv_fetch_url, qsv_fetch_status, qsv_fetch_cache_hit, qsv_fetch_retries, qsv_fetch_elapsed_ms &
-                               qsv_fetch_response.
-                               fetch_url - URL used, fetch_status - HTTP status code, fetch_cache_hit - cached hit flag,
-                               fetch_retries - retry attempts, fetch_elapsed - elapsed time & fetch_response - the response.
-                               The short report only has the six columns without the "qsv_fetch_" column name prefix.
-                               [default: none ]
+    --report <d|s>             Creates a report of the fetchpost job. The report has the same name as the input file
+                               with the ".fetchpost-report" suffix. 
+                               There are two kinds of report - d for "detailed" & s for "short". The detailed report
+                               has the same columns as the input CSV with six additional columns - 
+                               qsv_fetchp_url, qsv_fetchp_status, qsv_fetchp_cache_hit, qsv_fetchp_retries, 
+                               qsv_fetchp_elapsed_ms & qsv_fetchp_response.
+                               fetchp_url - URL used, fetchp_status - HTTP status code, fetchp_cache_hit - cached hit flag,
+                               fetchp_retries - retry attempts, fetchp_elapsed - elapsed time & fetchp_response - the response.
+                               The short report only has the six columns without the "qsv_fetchp_" column name prefix.
     --redis                    Use Redis to cache responses. It connects to "redis://127.0.0.1:6379/2"
                                with a connection pool size of 20, with a TTL of 28 days, and a cache hit 
                                NOT renewing an entry's TTL.
@@ -172,7 +171,7 @@ struct Args {
     flag_store_error: bool,
     flag_cache_error: bool,
     flag_cookies: bool,
-    flag_report: String,
+    flag_report: Option<String>,
     flag_redis: bool,
     flag_flushdb: bool,
     flag_output: Option<String>,
@@ -190,7 +189,7 @@ static DEFAULT_FP_REDIS_TTL_SECS: u64 = 60 * 60 * 24 * 28; // 28 days in seconds
 static DEFAULT_FP_REDIS_POOL_SIZE: u32 = 20;
 static TIMEOUT_FP_SECS: OnceCell<u64> = OnceCell::new();
 
-const FETCHPOST_REPORT_PREFIX: &str = "qsv_fetchpost_";
+const FETCHPOST_REPORT_PREFIX: &str = "qsv_fetchp_";
 const FETCHPOST_REPORT_SUFFIX: &str = ".fetchpost-report.tsv";
 
 // prioritize compression schemes. Brotli first, then gzip, then deflate, and * last
@@ -415,10 +414,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     // prepare report
-    let report = match args.flag_report.to_lowercase().as_str() {
-        "detailed" => ReportKind::Detailed,
-        "none" => ReportKind::None,
-        _ => ReportKind::Short, // defaults to short if kind is misspelled
+    let report = if let Some(reportkind) = args.flag_report {
+        if reportkind.to_ascii_lowercase().starts_with("d") {
+            // if it starts with d, its a detailed report
+            ReportKind::Detailed
+        } else {
+            // defaults to short if --report option is anything else
+            ReportKind::Short
+        }
+    } else {
+        ReportKind::None
     };
 
     let mut report_wtr;
