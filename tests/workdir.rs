@@ -180,6 +180,7 @@ impl Workdir {
         }
     }
 
+    // returns contents of specified file in resources/test directory
     pub fn load_test_resource(&self, filename: &str) -> String {
         // locate resources/test relative to crate base dir
         let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
@@ -189,6 +190,7 @@ impl Workdir {
         self.from_str::<String>(path.as_path())
     }
 
+    // returns absolute file path in resources/test directory
     pub fn load_test_file(&self, filename: &str) -> String {
         // locate resources/test relative to crate base dir
         let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
