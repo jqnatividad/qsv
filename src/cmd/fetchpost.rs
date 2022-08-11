@@ -375,7 +375,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // prep progress bars
     set_colors_enabled(true); // as error progress bar is red
-    // create multi_progress to stderr with a maximum refresh of 5 per second
+                              // create multi_progress to stderr with a maximum refresh of 5 per second
     let multi_progress = MultiProgress::with_draw_target(ProgressDrawTarget::stderr_with_hz(5));
     let progress = multi_progress.add(ProgressBar::new(0));
     let mut record_count = 0;
@@ -474,8 +474,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut report_record = csv::ByteRecord::new();
     #[allow(unused_assignments)]
     let mut url = String::with_capacity(100);
-    #[allow(unused_assignments)]
-    let mut record_vec: Vec<String> = Vec::with_capacity(headers.len());
     let mut redis_cache_hits: u64 = 0;
     #[allow(unused_assignments)]
     let mut intermediate_redis_value: Return<String> = Return {
@@ -1166,101 +1164,4 @@ fn apply_jql(json: &str, groups: &[jql::Group]) -> Result<String> {
         });
 
     result
-}
-
-#[test]
-fn test_apply_jql_invalid_json() {
-    let json =
-        r#"<!doctype html><html lang="en"><meta charset=utf-8><title>shortest html5</title>"#;
-    let selectors = r#"."places"[0]."place name""#;
-
-    let jql_groups = jql::selectors_parser(selectors).unwrap();
-    let value: String = apply_jql(json, &jql_groups).unwrap_err().to_string();
-
-    assert_eq!(
-        "Invalid json: Error(\"expected value\", line: 1, column: 1)",
-        value
-    );
-}
-
-#[test]
-fn test_apply_jql_invalid_selector() {
-    let json = r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": "-118.4065", "state": "California", "state abbreviation": "CA", "latitude": "34.0901"}]}"#;
-    let selectors = r#"."place"[0]."place name""#;
-
-    let jql_groups = jql::selectors_parser(selectors).unwrap();
-    let value = apply_jql(json, &jql_groups).unwrap_err().to_string();
-
-    assert_eq!("Node \"place\" not found on the parent element", value);
-}
-
-#[test]
-fn test_apply_jql_string() {
-    let json = r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": "-118.4065", "state": "California", "state abbreviation": "CA", "latitude": "34.0901"}]}"#;
-    let selectors = r#"."places"[0]."place name""#;
-
-    let jql_groups = jql::selectors_parser(selectors).unwrap();
-    let value: String = apply_jql(json, &jql_groups).unwrap();
-
-    assert_eq!("Beverly Hills", value);
-}
-
-#[test]
-fn test_apply_jql_number() {
-    let json = r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": -118.4065, "state": "California", "state abbreviation": "CA", "latitude": 34.0901}]}"#;
-    let selectors = r#"."places"[0]."longitude""#;
-
-    let jql_groups = jql::selectors_parser(selectors).unwrap();
-    let value: String = apply_jql(json, &jql_groups).unwrap();
-
-    assert_eq!("-118.4065", value);
-}
-
-#[test]
-fn test_apply_jql_bool() {
-    let json = r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": -118.4065, "state": "California", "state abbreviation": "CA", "latitude": 34.0901, "expensive": true}]}"#;
-    let selectors = r#"."places"[0]."expensive""#;
-
-    let jql_groups = jql::selectors_parser(selectors).unwrap();
-    let value: String = apply_jql(json, &jql_groups).unwrap();
-
-    assert_eq!("true", value);
-}
-
-#[test]
-fn test_apply_jql_null() {
-    let json = r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": -118.4065, "state": "California", "state abbreviation": "CA", "latitude": 34.0901, "university":null}]}"#;
-    let selectors = r#"."places"[0]."university""#;
-
-    let jql_groups = jql::selectors_parser(selectors).unwrap();
-    let value: String = apply_jql(json, &jql_groups).unwrap();
-
-    assert_eq!("null", value);
-}
-
-#[test]
-fn test_apply_jql_array() {
-    let json = r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": -118.4065, "state": "California", "state abbreviation": "CA", "latitude": 34.0901}]}"#;
-    let selectors = r#"."places"[0]."longitude",."places"[0]."latitude""#;
-
-    let jql_groups = jql::selectors_parser(selectors).unwrap();
-    let value: String = apply_jql(json, &jql_groups).unwrap();
-
-    assert_eq!("-118.4065, 34.0901", value);
-}
-
-#[test]
-fn test_root_out_of_bounds() {
-    // test for out_of_bounds root element handling
-    // see https://github.com/yamafaktory/jql/issues/129
-    let json = r#"[{"page":1,"pages":1,"per_page":"50","total":1},[{"id":"BRA","iso2Code":"BR","name":"Brazil","region":{"id":"LCN","iso2code":"ZJ","value":"Latin America & Caribbean (all income levels)"},"adminregion":{"id":"LAC","iso2code":"XJ","value":"Latin America & Caribbean (developing only)"},"incomeLevel":{"id":"UMC","iso2code":"XT","value":"Upper middle income"},"lendingType":{"id":"IBD","iso2code":"XF","value":"IBRD"},"capitalCity":"Brasilia","longitude":"-47.9292","latitude":"-15.7801"}]]"#;
-    let selectors = r#"[2].[0]."incomeLevel"."value"'"#;
-
-    let jql_groups = jql::selectors_parser(selectors).unwrap();
-    let value = apply_jql(json, &jql_groups).unwrap_err().to_string();
-
-    assert_eq!(
-        "Index [2] is out of bound, root element has a length of 2",
-        value
-    );
 }
