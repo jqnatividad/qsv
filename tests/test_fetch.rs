@@ -70,10 +70,10 @@ fn fetch_simple_report() {
         "data.csv",
         vec![
             svec!["URL"],
-            svec!["https://api.zippopotam.us/us/99999"],
-            svec!["  http://api.zippopotam.us/us/90210      "],
+            svec!["https://api.zippopotam.us/us/07094"],
+            svec!["  https://api.zippopotam.us/us/90210      "],
             svec!["https://api.zippopotam.us/us/94105"],
-            svec!["http://api.zippopotam.us/us/92802      "],
+            svec!["https://api.zippopotam.us/us/92802      "],
             svec!["https://query.wikidata.org/sparql?query=SELECT%20?dob%20WHERE%20{wd:Q42%20wdt:P569%20?dob.}&format=json"],
         ],
     );
@@ -85,15 +85,15 @@ fn fetch_simple_report() {
 
     let mut cmd = wrk.command("select");
     cmd.arg("url,status,cache_hit,retries,response")
-        .arg("data.csv.fetch-report.tsv");
+        .arg(wrk.load_test_file("data.csv.fetch-report.tsv"));
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["url", "status", "cache_hit", "retries", "response"],
-        svec!["https://api.zippopotam.us/us/99999", "404", "0", "5", "{}"],
-        svec!["http://api.zippopotam.us/us/90210", "200", "0", "0", r#"{"post code":"90210","country":"United States","country abbreviation":"US","places":[{"place name":"Beverly Hills","longitude":"-118.4065","state":"California","state abbreviation":"CA","latitude":"34.0901"}]}"#],
+        svec!["https://api.zippopotam.us/us/07094", "200", "0", "5", "{}"],
+        svec!["https://api.zippopotam.us/us/90210", "200", "0", "0", r#"{"post code":"90210","country":"United States","country abbreviation":"US","places":[{"place name":"Beverly Hills","longitude":"-118.4065","state":"California","state abbreviation":"CA","latitude":"34.0901"}]}"#],
         svec!["https://api.zippopotam.us/us/94105", "200", "0", "0", r#"{"post code":"94105","country":"United States","country abbreviation":"US","places":[{"place name":"San Francisco","longitude":"-122.3892","state":"California","state abbreviation":"CA","latitude":"37.7864"}]}"#],
-        svec!["http://api.zippopotam.us/us/92802", "200", "0", "0", r#"{"post code":"92802","country":"United States","country abbreviation":"US","places":[{"place name":"Anaheim","longitude":"-117.9228","state":"California","state abbreviation":"CA","latitude":"33.8085"}]}"#],
+        svec!["https://api.zippopotam.us/us/92802", "200", "0", "0", r#"{"post code":"92802","country":"United States","country abbreviation":"US","places":[{"place name":"Anaheim","longitude":"-117.9228","state":"California","state abbreviation":"CA","latitude":"33.8085"}]}"#],
         svec!["https://query.wikidata.org/sparql?query=SELECT%20?dob%20WHERE%20{wd:Q42%20wdt:P569%20?dob.}&format=json", "200", "0", "0", r#"{"head":{"vars":["dob"]},"results":{"bindings":[{"dob":{"datatype":"http://www.w3.org/2001/XMLSchema#dateTime","type":"literal","value":"1952-03-11T00:00:00Z"}}]}}"#],
     ];
     assert_eq!(got, expected);
