@@ -300,10 +300,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         false
     };
 
-    // validate column list is a list of valid column names
-    let _selconfig = rconfig.select(args.arg_column_list);
-    let col_list = rconfig.selection(&headers)?;
-    debug!("{col_list:?}");
+    // validate column-list is a list of valid column names
+    let cl_config = Config::new(&args.arg_input)
+        .delimiter(args.flag_delimiter)
+        .trim(csv::Trim::All)
+        .no_headers(args.flag_no_headers)
+        .select(args.arg_column_list.clone());
+    let col_list = cl_config.selection(&headers)?;
+    debug!("column-list: {col_list:?}");
 
     rconfig = rconfig.select(args.arg_url_column);
     let sel = rconfig.selection(&headers)?;
@@ -415,7 +419,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // prepare report
     let report = if let Some(reportkind) = args.flag_report {
-        if reportkind.to_ascii_lowercase().starts_with("d") {
+        if reportkind.to_ascii_lowercase().starts_with('d') {
             // if it starts with d, its a detailed report
             ReportKind::Detailed
         } else {
@@ -504,6 +508,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut running_success_count = 0_u64;
     let mut was_cached;
     let mut now = Instant::now();
+    let mut form_body_jsonmap = serde_json::map::Map::with_capacity(col_list.len());
+    // let mut form = reqwest::blocking::multipart::Form::new();
 
     while rdr.read_byte_record(&mut record)? {
         if not_quiet {
@@ -513,6 +519,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         if report != ReportKind::None {
             now = Instant::now()
         };
+
+        // construct multipart/form-data body per the column-list
+        form_body_jsonmap.clear();
+        for col_idx in col_list.iter() {
+            let header_key = String::from_utf8_lossy(headers.get(*col_idx).unwrap());
+            let value_string =
+                unsafe { std::str::from_utf8_unchecked(&record[*col_idx]).to_string() };
+            form_body_jsonmap.insert(
+                header_key.to_string(),
+                serde_json::Value::String(value_string),
+            );
+        }
+        debug!("{form_body_jsonmap:?}");
+        // form.
 
         if let Ok(s) = std::str::from_utf8(&record[column_index]) {
             url = s.to_owned();
@@ -526,7 +546,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         } else if args.flag_redis {
             intermediate_redis_value = get_redis_response(
                 &url,
-                &args.arg_column_list,
+                &form_body_jsonmap,
                 &client,
                 &limiter,
                 &jql_selector,
@@ -560,7 +580,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         } else {
             intermediate_value = get_cached_response(
                 &url,
-                &args.arg_column_list,
+                &form_body_jsonmap,
                 &client,
                 &limiter,
                 &jql_selector,
@@ -668,7 +688,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
             write!(
                 &mut end_msg,
-                " {} report created: \"{}{FETCH_REPORT_SUFFIX}\"",
+                " {} report created: \"{}{FETCHPOST_REPORT_SUFFIX}\"",
                 if report == ReportKind::Detailed {
                     "Detailed"
                 } else {
@@ -690,12 +710,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 #[cached(
     size = 2_000_000,
     key = "String",
-    convert = r#"{ format!("{}", url) }"#,
+    convert = r#"{ format!("{:?}", form_body_jsonmap) }"#,
     with_cached_flag = true
 )]
 fn get_cached_response(
     url: &str,
-    column_list: &String,
+    form_body_jsonmap: &serde_json::Map<String, Value>,
     client: &reqwest::blocking::Client,
     limiter: &governor::RateLimiter<NotKeyed, InMemoryState, DefaultClock, NoOpMiddleware>,
     flag_jql: &Option<String>,
@@ -706,6 +726,7 @@ fn get_cached_response(
 ) -> cached::Return<FetchResponse> {
     Return::new(get_response(
         url,
+        form_body_jsonmap,
         client,
         limiter,
         flag_jql,
@@ -722,9 +743,9 @@ fn get_cached_response(
 #[io_cached(
     type = "cached::RedisCache<String, String>",
     key = "String",
-    convert = r#"{ format!("{}{:?}{}{}{}", url, flag_jql, flag_store_error, flag_pretty, include_existing_columns) }"#,
+    convert = r#"{ format!("{}{:?}{:?}{}{}{}", url, form_body_jsonmap, flag_jql, flag_store_error, flag_pretty, include_existing_columns) }"#,
     create = r##" {
-        RedisCache::new("f", REDISCONFIG.ttl_secs)
+        RedisCache::new("fp", REDISCONFIG.ttl_secs)
             .set_namespace("q")
             .set_refresh(REDISCONFIG.ttl_refresh)
             .set_connection_string(&REDISCONFIG.conn_str)
@@ -737,7 +758,7 @@ fn get_cached_response(
 )]
 fn get_redis_response(
     url: &str,
-    column_list: &String,
+    form_body_jsonmap: &serde_json::Map<String, Value>,
     client: &reqwest::blocking::Client,
     limiter: &governor::RateLimiter<NotKeyed, InMemoryState, DefaultClock, NoOpMiddleware>,
     flag_jql: &Option<String>,
@@ -749,6 +770,7 @@ fn get_redis_response(
     Ok(Return::new({
         serde_json::to_string(&get_response(
             url,
+            form_body_jsonmap,
             client,
             limiter,
             flag_jql,
@@ -764,6 +786,7 @@ fn get_redis_response(
 #[inline]
 fn get_response(
     url: &str,
+    form_body_jsonmap: &serde_json::Map<String, Value>,
     client: &reqwest::blocking::Client,
     limiter: &governor::RateLimiter<NotKeyed, InMemoryState, DefaultClock, NoOpMiddleware>,
     flag_jql: &Option<String>,
@@ -837,7 +860,8 @@ fn get_response(
         }
 
         // send the actual request
-        if let Ok(resp) = client.get(&valid_url).send() {
+        // if let Ok(resp) = client.get(&valid_url).send() {
+        if let Ok(resp) = client.post(&valid_url).form(form_body_jsonmap).send() {
             // debug!("{resp:?}");
             api_respheader.clone_from(resp.headers());
             api_status = resp.status();
