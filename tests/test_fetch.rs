@@ -90,7 +90,7 @@ fn fetch_simple_report() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["url", "status", "cache_hit", "retries", "response"],
-        svec!["https://api.zippopotam.us/us/07094", "200", "0", "5", "{}"],
+        svec!["https://api.zippopotam.us/us/07094", "200", "0", "5", r#"{"post code":"07094","country":"United States","country abbreviation":"US","places":[{"place name":"Secaucus","longitude":"-74.0634","state":"New Jersey","state abbreviation":"NJ","latitude":"40.791"}]}"#],
         svec!["https://api.zippopotam.us/us/90210", "200", "0", "0", r#"{"post code":"90210","country":"United States","country abbreviation":"US","places":[{"place name":"Beverly Hills","longitude":"-118.4065","state":"California","state abbreviation":"CA","latitude":"34.0901"}]}"#],
         svec!["https://api.zippopotam.us/us/94105", "200", "0", "0", r#"{"post code":"94105","country":"United States","country abbreviation":"US","places":[{"place name":"San Francisco","longitude":"-122.3892","state":"California","state abbreviation":"CA","latitude":"37.7864"}]}"#],
         svec!["https://api.zippopotam.us/us/92802", "200", "0", "0", r#"{"post code":"92802","country":"United States","country abbreviation":"US","places":[{"place name":"Anaheim","longitude":"-117.9228","state":"California","state abbreviation":"CA","latitude":"33.8085"}]}"#],
