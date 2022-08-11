@@ -457,7 +457,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // prepare report
     let report = if let Some(reportkind) = args.flag_report {
-        if reportkind.to_lowercase().starts_with("d") {
+        if reportkind.to_lowercase().starts_with('d') {
             // if it starts with d, its a detailed report
             ReportKind::Detailed
         } else {
