@@ -46,7 +46,7 @@ and cache hits NOT refreshing the TTL of cached values.
 Set the env vars QSV_REDIS_CONNECTION_STRING, QSV_REDIS_TTL_SECONDS and 
 QSV_REDIS_TTL_REFRESH to change default Redis settings.
 
-EXAMPLES USING THE COLUMN ARGUMENT:
+EXAMPLES USING THE URL-COLUMN ARGUMENT:
 
 data.csv
   URL
@@ -104,15 +104,20 @@ $ qsv fetch URL data.csv --http-header "X-Api-Key:TEST_KEY" --http-header "X-Api
 
 
 Usage:
-    qsv fetch [<column> | --url-template <template>] [--jql <selector> | --jqlfile <file>] [--http-header <k:v>...] [options] [<input>]
+    qsv fetch [<url-column> | --url-template <template>] [--jql <selector> | --jqlfile <file>] [--http-header <k:v>...] [options] [<input>]
 
 Fetch options:
+    <url-column>               URL column to use.
+                               Mutually exclusive with --url-template.
     --url-template <template>  URL template to use. Use column names enclosed with
                                curly braces to insert the CSV data for a record.
+                               Mutually exclusive with url-column.
     -c, --new-column <name>    Put the fetched values in a new column. Specifying this option
                                creates a new CSV file. Otherwise, the output is a JSONL file.
     --jql <selector>           Apply jql selector to API returned JSON value.
+                               Mutually exclusive with --jqlfile,
     --jqlfile <file>           Load jql selector from file instead.
+                               Mutually exclusive with --jql.
     --pretty                   Prettify JSON responses. Otherwise, they're minified.
                                If the response is not in JSON format, it's passed through.
                                Note that --pretty requires the --new-column option.
@@ -191,7 +196,7 @@ struct Args {
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
     flag_quiet: bool,
-    arg_column: SelectColumns,
+    arg_url_column: SelectColumns,
     arg_input: Option<String>,
 }
 
@@ -314,7 +319,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut column_index = 0_usize;
     if args.flag_url_template.is_none() {
-        rconfig = rconfig.select(args.arg_column);
+        rconfig = rconfig.select(args.arg_url_column);
         let sel = rconfig.selection(&headers)?;
         column_index = *sel.iter().next().unwrap();
         if sel.len() != 1 {
