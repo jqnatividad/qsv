@@ -594,3 +594,99 @@ fn fetch_complex_url_template() {
     println!("STOPPING Webserver");
     rt::System::new().block_on(server_handle.stop(true));
 }
+
+#[test]
+fn fetchpost_simple_test() {
+    let wrk = Workdir::new("fetch");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["URL", "col1", "number col", "bool_col"],
+            svec!["https://httpbin.org/post", "a", "42", "true"],
+            svec!["https://httpbin.org/post", "b", "3.14", "false"],
+            svec!["https://httpbin.org/post", "c", "666", "true"],
+            svec!["https://httpbin.org/post", "d", "33", "true"],
+            svec!["https://httpbin.org/post", "e", "0", "false"],
+        ],
+    );
+    let mut cmd = wrk.command("fetchpost");
+    cmd.arg("URL")
+        .arg("bool_col,col1,number col")
+        .arg("--jql")
+        .arg(r#""form""#)
+        .arg("--new-column")
+        .arg("response")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+
+    let mut got_parsed: Vec<Vec<String>> = Vec::new();
+    let mut record_parsed: Vec<String> = Vec::new();
+
+    for record in got.into_iter() {
+        record_parsed.clear();
+        record_parsed.push(record[1].to_string());
+        record_parsed.push(record[2].to_string());
+        record_parsed.push(record[3].to_string());
+        record_parsed.push(record[4].to_string());
+
+        got_parsed.push(record_parsed.clone());
+    }
+
+    let expected = vec![
+        svec!["col1", "number col", "bool_col", "response"],
+        svec!["a", "42", "true", "{\"bool_col\": String(\"true\"), \"col1\": String(\"a\"), \"number col\": String(\"42\")}"],
+        svec!["b", "3.14", "false", "{\"bool_col\": String(\"false\"), \"col1\": String(\"b\"), \"number col\": String(\"3.14\")}"],
+        svec!["c", "666", "true", "{\"bool_col\": String(\"true\"), \"col1\": String(\"c\"), \"number col\": String(\"666\")}"],
+        svec!["d", "33", "true", "{\"bool_col\": String(\"true\"), \"col1\": String(\"d\"), \"number col\": String(\"33\")}"],
+        svec!["e", "0", "false", "{\"bool_col\": String(\"false\"), \"col1\": String(\"e\"), \"number col\": String(\"0\")}"],
+    ];
+
+    assert_eq!(got_parsed, expected);
+}
+
+#[test]
+fn fetchpost_literalurl_test() {
+    let wrk = Workdir::new("fetch_literalurl_test");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["col1", "number col", "bool_col"],
+            svec!["a", "42", "true"],
+            svec!["b", "3.14", "false"],
+            svec!["c", "666", "true"],
+        ],
+    );
+    let mut cmd = wrk.command("fetchpost");
+    cmd.arg("https://httpbin.org/post")
+        .arg("bool_col,col1,number col")
+        .arg("--jql")
+        .arg(r#""form""#)
+        .arg("--new-column")
+        .arg("response")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+
+    let mut got_parsed: Vec<Vec<String>> = Vec::new();
+    let mut record_parsed: Vec<String> = Vec::new();
+
+    for record in got.into_iter() {
+        record_parsed.clear();
+        record_parsed.push(record[0].to_string());
+        record_parsed.push(record[1].to_string());
+        record_parsed.push(record[2].to_string());
+        record_parsed.push(record[3].to_string());
+
+        got_parsed.push(record_parsed.clone());
+    }
+
+    let expected = vec![
+        svec!["col1", "number col", "bool_col", "response"],
+        svec!["a", "42", "true", "{\"bool_col\": String(\"true\"), \"col1\": String(\"a\"), \"number col\": String(\"42\")}"],
+        svec!["b", "3.14", "false", "{\"bool_col\": String(\"false\"), \"col1\": String(\"b\"), \"number col\": String(\"3.14\")}"],
+        svec!["c", "666", "true", "{\"bool_col\": String(\"true\"), \"col1\": String(\"c\"), \"number col\": String(\"666\")}"],
+    ];
+
+    assert_eq!(got_parsed, expected);
+}
