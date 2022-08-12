@@ -1166,8 +1166,9 @@ pub fn apply_jql(json: &str, groups: &[jql::Group]) -> Result<String> {
 
                                 result = Ok(concat_string);
                             }
-                            Value::Object(_object) => {
-                                result = Err(anyhow!("Unsupported jql result type: OBJECT"));
+                            Value::Object(object) => {
+                                // if Value::Object, then just set to debug display of object
+                                result = Ok(format!("{object:?}"));
                             }
                             _ => {
                                 result = Ok(get_value_string(&selection));
