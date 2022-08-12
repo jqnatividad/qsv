@@ -102,7 +102,8 @@ macro_rules! command_list {
     exclude     Excludes the records in one CSV from another
     explode     Explode rows based on some column separator
     extsort     Sort arbitrarily large text file
-    fetch*      Create a new column or fetch values from a URL column/template
+    fetch*      Fetches data from web services for every row using HTTP Get.
+    fetchpost*  Fetches data from web services for every row using HTTP Post.
     fill        Fill empty values
     fixlengths  Makes all records have same length
     flatten     Show one field per line

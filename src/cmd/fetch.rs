@@ -25,7 +25,7 @@ use std::{fs, thread, time};
 use url::Url;
 
 static USAGE: &str = r#"
-Fetches HTML/data from web pages or web services for every row using HTTP Get.
+Fetches data from web services for every row using HTTP Get.
 
 Fetch is integrated with `jql` to directly parse out values from an API JSON response.
 
