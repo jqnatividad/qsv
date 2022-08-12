@@ -16,6 +16,7 @@ use log::{debug, error, info, log_enabled, warn};
 use once_cell::sync::{Lazy, OnceCell};
 use rand::Rng;
 use redis;
+use regex::Regex;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -29,54 +30,56 @@ As opposed to fetch, which uses HTTP Get.
 
 Fetchpost is integrated with `jql` to directly parse out values from an API JSON response.
 
-The URL column needs to be a fully qualified URL path. Alternatively, you can dynamically
-construct URLs for each CSV record with the --url-template option (see Examples below).
+The URL column needs to be a fully qualified URL path. It can be specified as a column name
+from which the URL value will be retrieved for each record, or as the URL literal itself.
 
 To use a proxy, please set env vars HTTP_PROXY and HTTPS_PROXY
 (e.g. export HTTPS_PROXY=socks5://127.0.0.1:1086).
 
-Fetch caches responses to minimize traffic and maximize performance. By default, it uses
-a non-persistent memoized cache for each fetch session.
+Fetchpost caches responses to minimize traffic and maximize performance. By default, it uses
+a non-persistent memoized cache for each fetchpost session.
 
 For persistent, inter-session caching, Redis is supported with the --redis flag. 
 By default, it will connect to a local Redis instance at redis://127.0.0.1:6379/2,
 with a cache expiry Time-to-Live (TTL) of 2,419,200 seconds (28 days),
 and cache hits NOT refreshing the TTL of cached values.
 
-Set the env vars QSV_FP_REDIS_CONNECTION_STRING, QSV_FP_REDIS_TTL_SECONDS and 
-QSV_FP_REDIS_TTL_REFRESH to change default Redis settings.
+Note that the default values are the same as the fetch command, except fetchpost creates the
+cache at database 2, as opposed to database 1 with fetch.
 
-EXAMPLES USING THE URL-COLUMN ARGUMENT:
+Set the env vars QSV_FP_REDIS_CONNECTION_STRING, QSV_FP_REDIS_TTL_SECONDS and 
+QSV_FP_REDIS_TTL_REFRESH respectively to change default Redis settings.
+
+EXAMPLES:
 
 data.csv
-  URL
-  https://api.zippopotam.us/us/90210
-  https://api.zippopotam.us/us/94105
-  https://api.zippopotam.us/us/92802
+  URL, zipcode, country
+  https://httpbin.org/post, 90210, USA
+  https://httpbin.org/post, 94105, USA
+  https://httpbin.org/post, 92802, USA
 
 Given the data.csv above, fetch the JSON response.
 
-  $ qsv fetchpost URL data.csv 
+  $ qsv fetchpost URL zipcode,country data.csv 
 
-Note the output will be a JSONL file - with a minified JSON response per line,
-not a CSV file.
+Note the output will be a JSONL file - with a minified JSON response per line, not a CSV file.
 
-Now, if we want to generate a CSV file with the parsed City and State, we use the 
-new-column and jql options.
+Now, if we want to generate a CSV file with a parsed response, we use the new-column and jql options.
 
-$ qsv fetchpost URL --new-column CityState --jql '"places"[0]."place name","places"[0]."state abbreviation"' 
-  data.csv > data_with_CityState.csv
+$ qsv fetchpost URL zipcode,country --new-column response --jql '"form"' data.csv > data_with_response.csv
 
-data_with_CityState.csv
-  URL, CityState,
-  https://api.zippopotam.us/us/90210, "Beverly Hills, CA"
-  https://api.zippopotam.us/us/94105, "San Francisco, CA"
-  https://api.zippopotam.us/us/92802, "Anaheim, CA"
+data_with_response.csv
+  URL,zipcode,country,response
+  https://httpbin.org/post,90210,USA,"{""country"": String(""USA""), ""zipcode"": String(""90210"")}"
+  https://httpbin.org/post,94105,USA,"{""country"": String(""USA""), ""zipcode"": String(""94105"")}"
+  https://httpbin.org/post,92802,USA,"{""country"": String(""USA""), ""zipcode"": String(""92802"")}"
 
-As you can see, entering jql selectors can quickly become cumbersome. Alternatively,
-the jql selector can be saved and loaded from a file using the --jqlfile option.
+Alternatively, since we're using the same URL for all the rows, we can just pass the url directly on the command-line.
 
-  $ qsv fetchpost URL --new-column CityState --jqlfile places.jql data.csv > datatest.csv
+  $ qsv fetchpost https://httpbin.org/post 2,3 --new-column response --jqlfile response.jql data.csv > data_with_response.csv
+
+Also note that for the column-list argument, we used the column index (2,3 for second & third column)
+instead of using the column names, and we loaded the jql selector from the response.jql file.
 
 USING THE HTTP-HEADER OPTION:
 
@@ -84,14 +87,15 @@ The --http-header option allows you to append arbitrary key value pairs (a valid
 to the HTTP header (to authenticate against an API, pass custom header fields, etc.). Note that you can 
 pass as many key-value pairs by using --http-header option repeatedly. For example:
 
-$ qsv fetchpost URL data.csv --http-header "X-Api-Key:TEST_KEY" --http-header "X-Api-Secret:ABC123XYZ" --http-header "Accept-Language: fr-FR"
+$ qsv fetchpost https://httpbin.org/post col1-col3 data.csv --http-header "X-Api-Key:TEST_KEY" --http-header "X-Api-Secret:ABC123XYZ"
 
 
 Usage:
     qsv fetchpost <url-column> <column-list> [--jql <selector> | --jqlfile <file>] [--http-header <k:v>...] [options] [<input>]
 
 Fetch options:
-    <url-column>               URL column to use in HTTP Post.
+    <url-column>               If the argument starts with `http`, the URL to use.
+                               Otherwise, the name of the column with the URL.
     <column-list>              Comma-delimited list of columns to insert into the HTTP Post body.
                                Columns can be referenced by index or by name if there is a header row
                                (duplicate column names can be disambiguated with more indexing).
@@ -196,11 +200,6 @@ const FETCHPOST_REPORT_SUFFIX: &str = ".fetchpost-report.tsv";
 // prioritize compression schemes. Brotli first, then gzip, then deflate, and * last
 static DEFAULT_ACCEPT_ENCODING: &str = "br;q=1.0, gzip;q=0.6, deflate;q=0.4, *;q=0.2";
 
-// impl From<reqwest::Error> for CliError {
-//     fn from(err: reqwest::Error) -> CliError {
-//         CliError::Other(err.to_string())
-//     }
-// }
 struct RedisConfig {
     conn_str: String,
     max_pool_size: u32,
@@ -310,11 +309,25 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let col_list = cl_config.selection(&headers)?;
     debug!("column-list: {col_list:?}");
 
-    rconfig = rconfig.select(args.arg_url_column);
-    let sel = rconfig.selection(&headers)?;
-    let column_index = *sel.iter().next().unwrap();
-    if sel.len() != 1 {
-        return fail!("Only a single URL column may be selected.");
+    // check if the url_column arg was passed as a URL literal
+    // or as a column selector
+    let url_column_str = format!("{:?}", args.arg_url_column);
+    let re = Regex::new(r"^IndexedName\((.*)\[0\]\)$").unwrap();
+    let literal_url = if let Some(caps) = re.captures(&url_column_str) {
+        caps[1].to_lowercase()
+    } else {
+        "".to_string()
+    };
+    let literal_url_used = literal_url.starts_with("http");
+
+    let mut column_index = 0;
+    if !literal_url_used {
+        rconfig = rconfig.select(args.arg_url_column);
+        let sel = rconfig.selection(&headers)?;
+        column_index = *sel.iter().next().unwrap();
+        if sel.len() != 1 {
+            return fail!("Only a single URL column may be selected.");
+        }
     }
 
     use std::num::NonZeroU32;
@@ -508,7 +521,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut was_cached;
     let mut now = Instant::now();
     let mut form_body_jsonmap = serde_json::map::Map::with_capacity(col_list.len());
-    // let mut form = reqwest::blocking::multipart::Form::new();
 
     while rdr.read_byte_record(&mut record)? {
         if not_quiet {
@@ -532,7 +544,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
         debug!("{form_body_jsonmap:?}");
 
-        if let Ok(s) = std::str::from_utf8(&record[column_index]) {
+        if literal_url_used {
+            url = literal_url.clone();
+        } else if let Ok(s) = std::str::from_utf8(&record[column_index]) {
             url = s.to_owned();
         } else {
             url = "".to_owned();
