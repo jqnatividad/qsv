@@ -5,6 +5,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.62.0] - 2022-08-12
+### Added
+* `fetchpost`: new command that uses HTTP POST, as opposed to `fetch` - which uses HTTP GET ([difference between HTTP GET & POST methods](https://www.geeksforgeeks.org/difference-between-http-get-and-post-methods/)) https://github.com/jqnatividad/qsv/pull/431
+* Added `qsvnp` binary variant to prebuilt binaries - qsv with all the features EXCEPT python
+
+### Changed
+* `fetch`: refactor report parameter processing https://github.com/jqnatividad/qsv/pull/426
+* Bump serde from 1.0.142 to 1.0.143 by @dependabot in https://github.com/jqnatividad/qsv/pull/423
+* Bump ahash from 0.7.6 to 0.8.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/425
+* Bump serial_test from 0.8.0 to 0.9.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/428
+* Bump anyhow from 1.0.60 to 1.0.61 by @dependabot in https://github.com/jqnatividad/qsv/pull/427
+* Bump sysinfo from 0.25.1 to 0.25.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/429
+* Bump actix-governor from 0.3.0 to 0.3.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/430
+* cargo update bump various indirect dependencies
+* pin Rust nightly to 2022-08-11
+* change MSRV to 1.63
+
+### Fixed
+* `excel`: fixed empty sheet handling https://github.com/jqnatividad/qsv/pull/422
+
 ## [0.61.4] - 2022-08-07
 ### Changed
 * `py`: qsv uses the present working directory to find python shared library
