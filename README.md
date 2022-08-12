@@ -144,7 +144,7 @@ access to a native python interpreter for those platforms (aarch64, i686, and ar
 
 ### Minimum Supported Rust Version
 
-Building qsv requires Rust stable - currently version 1.62.1.
+qsv's MSRV policy is to require [Rust stable](https://github.com/rust-lang/rust/blob/master/RELEASES.md) - currently version 1.63.
 
 ## Tab Completion
 
