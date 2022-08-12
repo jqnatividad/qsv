@@ -1,12 +1,12 @@
+use crate::cmd::fetch::apply_jql;
 use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
+use crate::util;
 use crate::CliError;
 use crate::CliResult;
-use crate::{regex_once_cell, util};
 use cached::proc_macro::{cached, io_cached};
 use cached::{Cached, IOCached, RedisCache, Return};
 use console::set_colors_enabled;
-use dynfmt::Format;
 use governor::{
     clock::DefaultClock, middleware::NoOpMiddleware, state::direct::NotKeyed, state::InMemoryState,
 };
@@ -19,80 +19,67 @@ use redis;
 use regex::Regex;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use serde::{Deserialize, Serialize};
-use serde_json::json;
+use serde_json::{json, Value};
 use std::time::Instant;
 use std::{fs, thread, time};
 use url::Url;
 
 static USAGE: &str = r#"
-Fetches HTML/data from web pages or web services for every row using HTTP Get.
+Fetchpost fetches HTML/data from web pages or web services for every row using HTTP Post.
+As opposed to fetch, which uses HTTP Get.
 
-Fetch is integrated with `jql` to directly parse out values from an API JSON response.
+Fetchpost is integrated with `jql` to directly parse out values from an API JSON response.
 
-The URL column needs to be a fully qualified URL path. Alternatively, you can dynamically
-construct URLs for each CSV record with the --url-template option (see Examples below).
+The URL column needs to be a fully qualified URL path. It can be specified as a column name
+from which the URL value will be retrieved for each record, or as the URL literal itself.
 
 To use a proxy, please set env vars HTTP_PROXY and HTTPS_PROXY
 (e.g. export HTTPS_PROXY=socks5://127.0.0.1:1086).
 
-Fetch caches responses to minimize traffic and maximize performance. By default, it uses
-a non-persistent memoized cache for each fetch session.
+Fetchpost caches responses to minimize traffic and maximize performance. By default, it uses
+a non-persistent memoized cache for each fetchpost session.
 
 For persistent, inter-session caching, Redis is supported with the --redis flag. 
-By default, it will connect to a local Redis instance at redis://127.0.0.1:6379/1,
+By default, it will connect to a local Redis instance at redis://127.0.0.1:6379/2,
 with a cache expiry Time-to-Live (TTL) of 2,419,200 seconds (28 days),
 and cache hits NOT refreshing the TTL of cached values.
 
-Set the env vars QSV_REDIS_CONNECTION_STRING, QSV_REDIS_TTL_SECONDS and 
-QSV_REDIS_TTL_REFRESH to change default Redis settings.
+Note that the default values are the same as the fetch command, except fetchpost creates the
+cache at database 2, as opposed to database 1 with fetch.
 
-EXAMPLES USING THE URL-COLUMN ARGUMENT:
+Set the env vars QSV_FP_REDIS_CONNECTION_STRING, QSV_FP_REDIS_TTL_SECONDS and 
+QSV_FP_REDIS_TTL_REFRESH respectively to change default Redis settings.
+
+EXAMPLES:
 
 data.csv
-  URL
-  https://api.zippopotam.us/us/90210
-  https://api.zippopotam.us/us/94105
-  https://api.zippopotam.us/us/92802
+  URL, zipcode, country
+  https://httpbin.org/post, 90210, USA
+  https://httpbin.org/post, 94105, USA
+  https://httpbin.org/post, 92802, USA
 
 Given the data.csv above, fetch the JSON response.
 
-  $ qsv fetch URL data.csv 
+  $ qsv fetchpost URL zipcode,country data.csv 
 
-Note the output will be a JSONL file - with a minified JSON response per line,
-not a CSV file.
+Note the output will be a JSONL file - with a minified JSON response per line, not a CSV file.
 
-Now, if we want to generate a CSV file with the parsed City and State, we use the 
-new-column and jql options.
+Now, if we want to generate a CSV file with a parsed response, we use the new-column and jql options.
 
-$ qsv fetch URL --new-column CityState --jql '"places"[0]."place name","places"[0]."state abbreviation"' 
-  data.csv > data_with_CityState.csv
+$ qsv fetchpost URL zipcode,country --new-column response --jql '"form"' data.csv > data_with_response.csv
 
-data_with_CityState.csv
-  URL, CityState,
-  https://api.zippopotam.us/us/90210, "Beverly Hills, CA"
-  https://api.zippopotam.us/us/94105, "San Francisco, CA"
-  https://api.zippopotam.us/us/92802, "Anaheim, CA"
+data_with_response.csv
+  URL,zipcode,country,response
+  https://httpbin.org/post,90210,USA,"{""country"": String(""USA""), ""zipcode"": String(""90210"")}"
+  https://httpbin.org/post,94105,USA,"{""country"": String(""USA""), ""zipcode"": String(""94105"")}"
+  https://httpbin.org/post,92802,USA,"{""country"": String(""USA""), ""zipcode"": String(""92802"")}"
 
-As you can see, entering jql selectors can quickly become cumbersome. Alternatively,
-the jql selector can be saved and loaded from a file using the --jqlfile option.
+Alternatively, since we're using the same URL for all the rows, we can just pass the url directly on the command-line.
 
-  $ qsv fetch URL --new-column CityState --jqlfile places.jql data.csv > datatest.csv
+  $ qsv fetchpost https://httpbin.org/post 2,3 --new-column response --jqlfile response.jql data.csv > data_with_response.csv
 
-EXAMPLES USING THE --URL-TEMPLATE OPTION:
-
-Geocode addresses in addr_data.csv, pass the latitude and longitude fields and store
-the response in a new column called response into enriched_addr_data.csv.
-
-$ qsv fetch --url-template "https://geocode.test/api/lookup.json?lat={latitude}&long={longitude}" 
-  addr_data.csv -c response > enriched_addr_data.csv
-
-Geocode addresses in addr_data.csv, pass the "street address" and "zip-code" fields
-and use jql to parse CityState from the JSON response into a new column in enriched.csv.
-Note how field name non-alphanumeric characters in the url-template were replace with _.
-
-$ qsv fetch --jql '"places"[0]."place name","places"[0]."state abbreviation"' 
-  addr_data.csv -c CityState --url-template "https://geocode.test/api/addr.json?addr={street_address}&zip={zip_code}"
-  > enriched.csv
+Also note that for the column-list argument, we used the column index (2,3 for second & third column)
+instead of using the column names, and we loaded the jql selector from the response.jql file.
 
 USING THE HTTP-HEADER OPTION:
 
@@ -100,22 +87,24 @@ The --http-header option allows you to append arbitrary key value pairs (a valid
 to the HTTP header (to authenticate against an API, pass custom header fields, etc.). Note that you can 
 pass as many key-value pairs by using --http-header option repeatedly. For example:
 
-$ qsv fetch URL data.csv --http-header "X-Api-Key:TEST_KEY" --http-header "X-Api-Secret:ABC123XYZ" --http-header "Accept-Language: fr-FR"
+$ qsv fetchpost https://httpbin.org/post col1-col3 data.csv --http-header "X-Api-Key:TEST_KEY" --http-header "X-Api-Secret:ABC123XYZ"
 
 
 Usage:
-    qsv fetch [<url-column> | --url-template <template>] [--jql <selector> | --jqlfile <file>] [--http-header <k:v>...] [options] [<input>]
+    qsv fetchpost <url-column> <column-list> [--jql <selector> | --jqlfile <file>] [--http-header <k:v>...] [options] [<input>]
 
 Fetch options:
-    <url-column>               URL column to use.
-                               Mutually exclusive with --url-template.
-    --url-template <template>  URL template to use. Use column names enclosed with
-                               curly braces to insert the CSV data for a record.
-                               Mutually exclusive with url-column.
+    <url-column>               If the argument starts with `http`, the URL to use.
+                               Otherwise, the name of the column with the URL.
+    <column-list>              Comma-delimited list of columns to insert into the HTTP Post body.
+                               Columns can be referenced by index or by name if there is a header row
+                               (duplicate column names can be disambiguated with more indexing).
+                               Column ranges can also be specified. Finally, columns can be
+                               selected using regular expressions.
     -c, --new-column <name>    Put the fetched values in a new column. Specifying this option
                                creates a new CSV file. Otherwise, the output is a JSONL file.
     --jql <selector>           Apply jql selector to API returned JSON value.
-                               Mutually exclusive with --jqlfile,
+                               Mutually exclusive with --jqlfile.
     --jqlfile <file>           Load jql selector from file instead.
                                Mutually exclusive with --jql.
     --pretty                   Prettify JSON responses. Otherwise, they're minified.
@@ -141,22 +130,21 @@ Fetch options:
                                [default: 100 ]
     --store-error              On error, store error code/message instead of blank value.
     --cache-error              Cache error responses even if a request fails. If an identical URL is requested,
-                               the cached error is returned. Otherwise, the fetch is attempted again 
-                               for --max-retries.
+                               the cached error is returned. Otherwise, the fetch is attempted again for --max-retries.
     --cookies                  Allow cookies.
-    --report <d|s>             Creates a report of the fetch job. The report has the same name as the input file
-                               with the ".fetch-report" suffix. 
+    --report <d|s>             Creates a report of the fetchpost job. The report has the same name as the input file
+                               with the ".fetchpost-report" suffix. 
                                There are two kinds of report - d for "detailed" & s for "short". The detailed report
                                has the same columns as the input CSV with six additional columns - 
-                               qsv_fetch_url, qsv_fetch_status, qsv_fetch_cache_hit, qsv_fetch_retries, 
-                               qsv_fetch_elapsed_ms & qsv_fetch_response.
-                               fetch_url - URL used, fetch_status - HTTP status code, fetch_cache_hit - cached hit flag,
-                               fetch_retries - retry attempts, fetch_elapsed - elapsed time & fetch_response - the response.
-                               The short report only has the six columns without the "qsv_fetch_" column name prefix.
-    --redis                    Use Redis to cache responses. It connects to "redis://127.0.0.1:6379/1"
+                               qsv_fetchp_url, qsv_fetchp_status, qsv_fetchp_cache_hit, qsv_fetchp_retries, 
+                               qsv_fetchp_elapsed_ms & qsv_fetchp_response.
+                               fetchp_url - URL used, fetchp_status - HTTP status code, fetchp_cache_hit - cached hit flag,
+                               fetchp_retries - retry attempts, fetchp_elapsed - elapsed time & fetchp_response - the response.
+                               The short report only has the six columns without the "qsv_fetchp_" column name prefix.
+    --redis                    Use Redis to cache responses. It connects to "redis://127.0.0.1:6379/2"
                                with a connection pool size of 20, with a TTL of 28 days, and a cache hit 
                                NOT renewing an entry's TTL.
-                               Adjust the QSV_REDIS_CONNECTION_STRING, QSV_REDIS_MAX_POOL_SIZE, 
+                               Adjust the QSV_FP_REDIS_CONNECTION_STRING, QSV_REDIS_MAX_POOL_SIZE, 
                                QSV_REDIS_TTL_SECONDS & QSV_REDIS_TTL_REFRESH respectively to
                                change Redis settings.
     --flushdb                  Flush all the keys in the current Redis database on startup.
@@ -176,7 +164,6 @@ Common options:
 
 #[derive(Deserialize, Debug)]
 struct Args {
-    flag_url_template: Option<String>,
     flag_new_column: Option<String>,
     flag_jql: Option<String>,
     flag_jqlfile: Option<String>,
@@ -197,26 +184,22 @@ struct Args {
     flag_delimiter: Option<Delimiter>,
     flag_quiet: bool,
     arg_url_column: SelectColumns,
+    arg_column_list: SelectColumns,
     arg_input: Option<String>,
 }
 
-// connect to Redis at localhost, using database 1 by default when --redis is enabled
-static DEFAULT_REDIS_CONN_STR: &str = "redis://127.0.0.1:6379/1";
-static DEFAULT_REDIS_TTL_SECS: u64 = 60 * 60 * 24 * 28; // 28 days in seconds
-static DEFAULT_REDIS_POOL_SIZE: u32 = 20;
-static TIMEOUT_SECS: OnceCell<u64> = OnceCell::new();
+// connect to Redis at localhost, using database 2 by default when --redis is enabled
+static DEFAULT_FP_REDIS_CONN_STR: &str = "redis://127.0.0.1:6379/2";
+static DEFAULT_FP_REDIS_TTL_SECS: u64 = 60 * 60 * 24 * 28; // 28 days in seconds
+static DEFAULT_FP_REDIS_POOL_SIZE: u32 = 20;
+static TIMEOUT_FP_SECS: OnceCell<u64> = OnceCell::new();
 
-const FETCH_REPORT_PREFIX: &str = "qsv_fetch_";
-const FETCH_REPORT_SUFFIX: &str = ".fetch-report.tsv";
+const FETCHPOST_REPORT_PREFIX: &str = "qsv_fetchp_";
+const FETCHPOST_REPORT_SUFFIX: &str = ".fetchpost-report.tsv";
 
 // prioritize compression schemes. Brotli first, then gzip, then deflate, and * last
 static DEFAULT_ACCEPT_ENCODING: &str = "br;q=1.0, gzip;q=0.6, deflate;q=0.4, *;q=0.2";
 
-impl From<reqwest::Error> for CliError {
-    fn from(err: reqwest::Error) -> CliError {
-        CliError::Other(err.to_string())
-    }
-}
 struct RedisConfig {
     conn_str: String,
     max_pool_size: u32,
@@ -226,16 +209,16 @@ struct RedisConfig {
 impl RedisConfig {
     fn load() -> Self {
         Self {
-            conn_str: std::env::var("QSV_REDIS_CONNECTION_STRING")
-                .unwrap_or_else(|_| DEFAULT_REDIS_CONN_STR.to_string()),
+            conn_str: std::env::var("QSV_FP_REDIS_CONNECTION_STRING")
+                .unwrap_or_else(|_| DEFAULT_FP_REDIS_CONN_STR.to_string()),
             max_pool_size: std::env::var("QSV_REDIS_MAX_POOL_SIZE")
-                .unwrap_or_else(|_| DEFAULT_REDIS_POOL_SIZE.to_string())
+                .unwrap_or_else(|_| DEFAULT_FP_REDIS_POOL_SIZE.to_string())
                 .parse()
-                .unwrap_or(DEFAULT_REDIS_POOL_SIZE),
+                .unwrap_or(DEFAULT_FP_REDIS_POOL_SIZE),
             ttl_secs: std::env::var("QSV_REDIS_TTL_SECS")
-                .unwrap_or_else(|_| DEFAULT_REDIS_TTL_SECS.to_string())
+                .unwrap_or_else(|_| DEFAULT_FP_REDIS_TTL_SECS.to_string())
                 .parse()
-                .unwrap_or(DEFAULT_REDIS_TTL_SECS),
+                .unwrap_or(DEFAULT_FP_REDIS_TTL_SECS),
             ttl_refresh: std::env::var("QSV_REDIS_TTL_REFRESH").is_ok(),
         }
     }
@@ -260,7 +243,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         return fail!("Timeout cannot be zero.");
     }
     info!("TIMEOUT: {} secs", args.flag_timeout);
-    TIMEOUT_SECS.set(args.flag_timeout).unwrap();
+    TIMEOUT_FP_SECS.set(args.flag_timeout).unwrap();
 
     if args.flag_redis {
         // check if redis connection is valid
@@ -317,42 +300,34 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         false
     };
 
-    let mut column_index = 0_usize;
-    if args.flag_url_template.is_none() {
+    // validate column-list is a list of valid column names
+    let cl_config = Config::new(&args.arg_input)
+        .delimiter(args.flag_delimiter)
+        .trim(csv::Trim::All)
+        .no_headers(args.flag_no_headers)
+        .select(args.arg_column_list.clone());
+    let col_list = cl_config.selection(&headers)?;
+    debug!("column-list: {col_list:?}");
+
+    // check if the url_column arg was passed as a URL literal
+    // or as a column selector
+    let url_column_str = format!("{:?}", args.arg_url_column);
+    let re = Regex::new(r"^IndexedName\((.*)\[0\]\)$").unwrap();
+    let literal_url = if let Some(caps) = re.captures(&url_column_str) {
+        caps[1].to_lowercase()
+    } else {
+        "".to_string()
+    };
+    let literal_url_used = literal_url.starts_with("http");
+
+    let mut column_index = 0;
+    if !literal_url_used {
         rconfig = rconfig.select(args.arg_url_column);
         let sel = rconfig.selection(&headers)?;
         column_index = *sel.iter().next().unwrap();
         if sel.len() != 1 {
             return fail!("Only a single URL column may be selected.");
         }
-    }
-
-    let mut dynfmt_url_template = String::from("");
-    if let Some(ref url_template) = args.flag_url_template {
-        if args.flag_no_headers {
-            return fail!("--url-template option requires column headers.");
-        }
-        let str_headers = rdr.headers()?.clone();
-        let mut dynfmt_fields = Vec::with_capacity(10); // 10 is a reasonable default to save allocs
-
-        dynfmt_url_template = url_template.to_string();
-        // first, get the fields used in the url template
-        let safe_headers = util::safe_header_names(&str_headers, false);
-        let formatstr_re: &'static Regex = regex_once_cell!(r"\{(?P<key>\w+)?\}");
-        for format_fields in formatstr_re.captures_iter(url_template) {
-            dynfmt_fields.push(format_fields.name("key").unwrap().as_str());
-        }
-        // we sort the fields so we can do binary_search
-        dynfmt_fields.sort_unstable();
-        // now, get the indices of the columns for the lookup vec
-        for (i, field) in safe_headers.into_iter().enumerate() {
-            if dynfmt_fields.binary_search(&field.as_str()).is_ok() {
-                let field_with_curly = format!("{{{field}}}");
-                let field_index = format!("{{{i}}}");
-                dynfmt_url_template = dynfmt_url_template.replace(&field_with_curly, &field_index);
-            }
-        }
-        debug!("dynfmt_fields: {dynfmt_fields:?}  url_template: {dynfmt_url_template}");
     }
 
     use std::num::NonZeroU32;
@@ -394,7 +369,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     use reqwest::blocking::Client;
 
-    let client_timeout = time::Duration::from_secs(*TIMEOUT_SECS.get().unwrap_or(&30));
+    let client_timeout = time::Duration::from_secs(*TIMEOUT_FP_SECS.get().unwrap_or(&30));
     let client = Client::builder()
         .user_agent(util::DEFAULT_USER_AGENT)
         .default_headers(http_headers)
@@ -434,7 +409,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         error_progress.set_draw_target(ProgressDrawTarget::hidden());
     }
 
-    let not_quiet = !args.flag_quiet; // minimize negations
+    let not_quiet = !args.flag_quiet;
+
     if not_quiet {
         record_count = util::count_rows(&rconfig)?;
         util::prep_progress(&progress, record_count);
@@ -457,7 +433,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // prepare report
     let report = if let Some(reportkind) = args.flag_report {
-        if reportkind.to_lowercase().starts_with('d') {
+        if reportkind.to_ascii_lowercase().starts_with('d') {
             // if it starts with d, its a detailed report
             ReportKind::Detailed
         } else {
@@ -471,7 +447,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut report_wtr;
     let report_path;
     if report == ReportKind::None {
-        // no report, point report_wtr to /dev/null (AKA sink)
         report_wtr = Config::new(&Some("sink".to_string())).writer()?;
         report_path = "".to_string();
     } else {
@@ -480,14 +455,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .clone()
             .unwrap_or_else(|| "stdin.csv".to_string());
 
-        report_wtr = Config::new(&Some(report_path.clone() + FETCH_REPORT_SUFFIX)).writer()?;
+        report_wtr = Config::new(&Some(report_path.clone() + FETCHPOST_REPORT_SUFFIX)).writer()?;
         let mut report_headers = if report == ReportKind::Detailed {
             headers.clone()
         } else {
             csv::ByteRecord::new()
         };
         let rptcol_prefix = if report == ReportKind::Detailed {
-            FETCH_REPORT_PREFIX
+            FETCHPOST_REPORT_PREFIX
         } else {
             ""
         };
@@ -513,8 +488,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut report_record = csv::ByteRecord::new();
     #[allow(unused_assignments)]
     let mut url = String::with_capacity(100);
-    #[allow(unused_assignments)]
-    let mut record_vec: Vec<String> = Vec::with_capacity(headers.len());
     let mut redis_cache_hits: u64 = 0;
     #[allow(unused_assignments)]
     let mut intermediate_redis_value: Return<String> = Return {
@@ -547,6 +520,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut running_success_count = 0_u64;
     let mut was_cached;
     let mut now = Instant::now();
+    let mut form_body_jsonmap = serde_json::map::Map::with_capacity(col_list.len());
 
     while rdr.read_byte_record(&mut record)? {
         if not_quiet {
@@ -557,21 +531,22 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             now = Instant::now()
         };
 
-        if args.flag_url_template.is_some() {
-            // we're using a URL template.
-            // let's dynamically construct the URL with it
-            record_vec.clear();
-            for field in &record {
-                record_vec.push(unsafe { std::str::from_utf8_unchecked(field).to_owned() });
-            }
-            if let Ok(formatted) =
-                dynfmt::SimpleCurlyFormat.format(&dynfmt_url_template, &*record_vec)
-            {
-                url = formatted.into_owned();
-            }
+        // construct body per the column-list
+        form_body_jsonmap.clear();
+        for col_idx in col_list.iter() {
+            let header_key = String::from_utf8_lossy(headers.get(*col_idx).unwrap());
+            let value_string =
+                unsafe { std::str::from_utf8_unchecked(&record[*col_idx]).to_string() };
+            form_body_jsonmap.insert(
+                header_key.to_string(),
+                serde_json::Value::String(value_string),
+            );
+        }
+        debug!("{form_body_jsonmap:?}");
+
+        if literal_url_used {
+            url = literal_url.clone();
         } else if let Ok(s) = std::str::from_utf8(&record[column_index]) {
-            // we're not using a URL template,
-            // just use the field as-is as the URL
             url = s.to_owned();
         } else {
             url = "".to_owned();
@@ -583,6 +558,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         } else if args.flag_redis {
             intermediate_redis_value = get_redis_response(
                 &url,
+                &form_body_jsonmap,
                 &client,
                 &limiter,
                 &jql_selector,
@@ -616,6 +592,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         } else {
             intermediate_value = get_cached_response(
                 &url,
+                &form_body_jsonmap,
                 &client,
                 &limiter,
                 &jql_selector,
@@ -678,7 +655,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     }
 
-    report_wtr.flush()?;
+    if report == ReportKind::None {
+        drop(report_wtr);
+    } else {
+        report_wtr.flush()?;
+    }
 
     if not_quiet {
         if args.flag_redis {
@@ -695,7 +676,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             // sleep so we can dependably write eprintln without messing up progress bars
             thread::sleep(time::Duration::from_nanos(10));
             let abort_msg = format!(
-                "{} max errors. Fetch aborted.",
+                "{} max errors. Fetchpost aborted.",
                 HumanCount(args.flag_max_errors)
             );
             info!("{abort_msg}");
@@ -705,7 +686,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         let mut end_msg = format!(
-            "{} records successfully fetched as {}. {} errors.",
+            "{} records successfully fetchposted as {}. {} errors.",
             HumanCount(running_success_count),
             if include_existing_columns {
                 "CSV"
@@ -719,7 +700,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
             write!(
                 &mut end_msg,
-                " {} report created: \"{}{FETCH_REPORT_SUFFIX}\"",
+                " {} report created: \"{}{FETCHPOST_REPORT_SUFFIX}\"",
                 if report == ReportKind::Detailed {
                     "Detailed"
                 } else {
@@ -741,11 +722,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 #[cached(
     size = 2_000_000,
     key = "String",
-    convert = r#"{ format!("{}", url) }"#,
+    convert = r#"{ format!("{:?}", form_body_jsonmap) }"#,
     with_cached_flag = true
 )]
 fn get_cached_response(
     url: &str,
+    form_body_jsonmap: &serde_json::Map<String, Value>,
     client: &reqwest::blocking::Client,
     limiter: &governor::RateLimiter<NotKeyed, InMemoryState, DefaultClock, NoOpMiddleware>,
     flag_jql: &Option<String>,
@@ -756,6 +738,7 @@ fn get_cached_response(
 ) -> cached::Return<FetchResponse> {
     Return::new(get_response(
         url,
+        form_body_jsonmap,
         client,
         limiter,
         flag_jql,
@@ -772,9 +755,9 @@ fn get_cached_response(
 #[io_cached(
     type = "cached::RedisCache<String, String>",
     key = "String",
-    convert = r#"{ format!("{}{:?}{}{}{}", url, flag_jql, flag_store_error, flag_pretty, include_existing_columns) }"#,
+    convert = r#"{ format!("{}{:?}{:?}{}{}{}", url, form_body_jsonmap, flag_jql, flag_store_error, flag_pretty, include_existing_columns) }"#,
     create = r##" {
-        RedisCache::new("f", REDISCONFIG.ttl_secs)
+        RedisCache::new("fp", REDISCONFIG.ttl_secs)
             .set_namespace("q")
             .set_refresh(REDISCONFIG.ttl_refresh)
             .set_connection_string(&REDISCONFIG.conn_str)
@@ -787,6 +770,7 @@ fn get_cached_response(
 )]
 fn get_redis_response(
     url: &str,
+    form_body_jsonmap: &serde_json::Map<String, Value>,
     client: &reqwest::blocking::Client,
     limiter: &governor::RateLimiter<NotKeyed, InMemoryState, DefaultClock, NoOpMiddleware>,
     flag_jql: &Option<String>,
@@ -798,6 +782,7 @@ fn get_redis_response(
     Ok(Return::new({
         serde_json::to_string(&get_response(
             url,
+            form_body_jsonmap,
             client,
             limiter,
             flag_jql,
@@ -813,6 +798,7 @@ fn get_redis_response(
 #[inline]
 fn get_response(
     url: &str,
+    form_body_jsonmap: &serde_json::Map<String, Value>,
     client: &reqwest::blocking::Client,
     limiter: &governor::RateLimiter<NotKeyed, InMemoryState, DefaultClock, NoOpMiddleware>,
     flag_jql: &Option<String>,
@@ -857,7 +843,7 @@ fn get_response(
     const MINIMUM_WAIT_MS: u64 = 10;
     const MIN_WAIT: time::Duration = time::Duration::from_millis(MINIMUM_WAIT_MS);
     let mut limiter_total_wait: u64;
-    let timeout_secs = unsafe { *TIMEOUT_SECS.get_unchecked() };
+    let timeout_secs = unsafe { *TIMEOUT_FP_SECS.get_unchecked() };
     let governor_timeout_ms = timeout_secs * 1_000;
 
     let mut retries = 0_u8;
@@ -886,7 +872,7 @@ fn get_response(
         }
 
         // send the actual request
-        if let Ok(resp) = client.get(&valid_url).send() {
+        if let Ok(resp) = client.post(&valid_url).form(form_body_jsonmap).send() {
             // debug!("{resp:?}");
             api_respheader.clone_from(resp.headers());
             api_status = resp.status();
@@ -1110,183 +1096,4 @@ ratelimit_reset:{ratelimit_reset:?} {ratelimit_reset_sec:?} retry_after:{retry_a
             retries,
         }
     }
-}
-
-use jql::groups_walker;
-use serde_json::{Deserializer, Value};
-
-use anyhow::{anyhow, Result};
-
-#[inline]
-pub fn apply_jql(json: &str, groups: &[jql::Group]) -> Result<String> {
-    // check if api returned valid JSON before applying JQL selector
-    if let Err(error) = serde_json::from_str::<Value>(json) {
-        return Err(anyhow!("Invalid json: {error:?}"));
-    }
-
-    let mut result: Result<String> = Ok(String::default());
-
-    Deserializer::from_str(json)
-        .into_iter::<Value>()
-        .for_each(|value| match value {
-            Ok(valid_json) => {
-                // Walk through the JSON content with the provided selectors as
-                // input.
-                match groups_walker(&valid_json, groups) {
-                    Ok(selection) => {
-                        fn get_value_string(v: &Value) -> String {
-                            if v.is_null() {
-                                "null".to_string()
-                            } else if v.is_boolean() {
-                                v.as_bool().unwrap().to_string()
-                            } else if v.is_f64() {
-                                v.as_f64().unwrap().to_string()
-                            } else if v.is_i64() {
-                                v.as_i64().unwrap().to_string()
-                            } else if v.is_u64() {
-                                v.as_u64().unwrap().to_string()
-                            } else if v.is_string() {
-                                v.as_str().unwrap().to_string()
-                            } else {
-                                v.to_string()
-                            }
-                        }
-
-                        match &selection {
-                            Value::Array(array) => {
-                                let mut concat_string = String::new();
-
-                                let mut values = array.iter();
-
-                                if let Some(v) = values.next() {
-                                    let str_val = get_value_string(v);
-                                    concat_string.push_str(&str_val);
-                                }
-
-                                for v in values {
-                                    let str_val = get_value_string(v);
-                                    concat_string.push_str(", ");
-                                    concat_string.push_str(&str_val);
-                                }
-
-                                result = Ok(concat_string);
-                            }
-                            Value::Object(object) => {
-                                // if Value::Object, then just set to debug display of object
-                                result = Ok(format!("{object:?}"));
-                            }
-                            _ => {
-                                result = Ok(get_value_string(&selection));
-                            }
-                        }
-                    }
-                    Err(error) => {
-                        result = Err(anyhow!(error));
-                    }
-                }
-            }
-            Err(error) => {
-                // shouldn't happen, but do same thing earlier when checking for invalid json
-                result = Err(anyhow!("Invalid json: {error:?}"));
-            }
-        });
-
-    result
-}
-
-#[test]
-fn test_apply_jql_invalid_json() {
-    let json =
-        r#"<!doctype html><html lang="en"><meta charset=utf-8><title>shortest html5</title>"#;
-    let selectors = r#"."places"[0]."place name""#;
-
-    let jql_groups = jql::selectors_parser(selectors).unwrap();
-    let value: String = apply_jql(json, &jql_groups).unwrap_err().to_string();
-
-    assert_eq!(
-        "Invalid json: Error(\"expected value\", line: 1, column: 1)",
-        value
-    );
-}
-
-#[test]
-fn test_apply_jql_invalid_selector() {
-    let json = r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": "-118.4065", "state": "California", "state abbreviation": "CA", "latitude": "34.0901"}]}"#;
-    let selectors = r#"."place"[0]."place name""#;
-
-    let jql_groups = jql::selectors_parser(selectors).unwrap();
-    let value = apply_jql(json, &jql_groups).unwrap_err().to_string();
-
-    assert_eq!("Node \"place\" not found on the parent element", value);
-}
-
-#[test]
-fn test_apply_jql_string() {
-    let json = r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": "-118.4065", "state": "California", "state abbreviation": "CA", "latitude": "34.0901"}]}"#;
-    let selectors = r#"."places"[0]."place name""#;
-
-    let jql_groups = jql::selectors_parser(selectors).unwrap();
-    let value: String = apply_jql(json, &jql_groups).unwrap();
-
-    assert_eq!("Beverly Hills", value);
-}
-
-#[test]
-fn test_apply_jql_number() {
-    let json = r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": -118.4065, "state": "California", "state abbreviation": "CA", "latitude": 34.0901}]}"#;
-    let selectors = r#"."places"[0]."longitude""#;
-
-    let jql_groups = jql::selectors_parser(selectors).unwrap();
-    let value: String = apply_jql(json, &jql_groups).unwrap();
-
-    assert_eq!("-118.4065", value);
-}
-
-#[test]
-fn test_apply_jql_bool() {
-    let json = r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": -118.4065, "state": "California", "state abbreviation": "CA", "latitude": 34.0901, "expensive": true}]}"#;
-    let selectors = r#"."places"[0]."expensive""#;
-
-    let jql_groups = jql::selectors_parser(selectors).unwrap();
-    let value: String = apply_jql(json, &jql_groups).unwrap();
-
-    assert_eq!("true", value);
-}
-
-#[test]
-fn test_apply_jql_null() {
-    let json = r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": -118.4065, "state": "California", "state abbreviation": "CA", "latitude": 34.0901, "university":null}]}"#;
-    let selectors = r#"."places"[0]."university""#;
-
-    let jql_groups = jql::selectors_parser(selectors).unwrap();
-    let value: String = apply_jql(json, &jql_groups).unwrap();
-
-    assert_eq!("null", value);
-}
-
-#[test]
-fn test_apply_jql_array() {
-    let json = r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": -118.4065, "state": "California", "state abbreviation": "CA", "latitude": 34.0901}]}"#;
-    let selectors = r#"."places"[0]."longitude",."places"[0]."latitude""#;
-
-    let jql_groups = jql::selectors_parser(selectors).unwrap();
-    let value: String = apply_jql(json, &jql_groups).unwrap();
-
-    assert_eq!("-118.4065, 34.0901", value);
-}
-
-#[test]
-fn test_root_out_of_bounds() {
-    // test for out_of_bounds root element handling
-    // see https://github.com/yamafaktory/jql/issues/129
-    let json = r#"[{"page":1,"pages":1,"per_page":"50","total":1},[{"id":"BRA","iso2Code":"BR","name":"Brazil","region":{"id":"LCN","iso2code":"ZJ","value":"Latin America & Caribbean (all income levels)"},"adminregion":{"id":"LAC","iso2code":"XJ","value":"Latin America & Caribbean (developing only)"},"incomeLevel":{"id":"UMC","iso2code":"XT","value":"Upper middle income"},"lendingType":{"id":"IBD","iso2code":"XF","value":"IBRD"},"capitalCity":"Brasilia","longitude":"-47.9292","latitude":"-15.7801"}]]"#;
-    let selectors = r#"[2].[0]."incomeLevel"."value"'"#;
-
-    let jql_groups = jql::selectors_parser(selectors).unwrap();
-    let value = apply_jql(json, &jql_groups).unwrap_err().to_string();
-
-    assert_eq!(
-        "Index [2] is out of bound, root element has a length of 2",
-        value
-    );
 }
