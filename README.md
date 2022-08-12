@@ -20,7 +20,7 @@
 
 </div>
 
-> ℹ️ **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's May 2018 release](https://github.com/BurntSushi/xsv/issues/267). It also has numerous new features & 54 additional commands/subcommands/operations (for a total of 74).
+> ℹ️ **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's May 2018 release](https://github.com/BurntSushi/xsv/issues/267). It also has numerous new features & 55 additional commands/subcommands/operations (for a total of 75).
 See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for more details.
 
 ## Available commands
@@ -37,7 +37,8 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [exclude](/src/cmd/exclude.rs#L18)[^2] | Removes a set of CSV data from another set based on the specified columns.  |
 | [explode](/src/cmd/explode.rs#L8-L9) | Explode rows into multiple ones by splitting a column value based on the given separator.  |
 | [extsort](/src/cmd/extsort.rs#L12)[^5] | Sort an arbitrarily large CSV/text file using a multithreaded [external merge sort](https://en.wikipedia.org/wiki/External_sorting) algorithm. |
-| [fetch](/src/cmd/fetch.rs#L28) | Fetches HTML/data from web pages or web services for every row. Comes with [jql](https://github.com/yamafaktory/jql#%EF%B8%8F-usage) JSON query language support, dynamic throttling ([RateLimit](https://tools.ietf.org/id/draft-polli-ratelimit-headers-00.html)) & caching with optional [Redis](https://redis.io/) support for persistent caching. |
+| [fetch](/src/cmd/fetch.rs#L28) | Fetches data from web services for every row using **HTTP Get**. Comes with [jql](https://github.com/yamafaktory/jql#%EF%B8%8F-usage) JSON query language support, dynamic throttling ([RateLimit](https://tools.ietf.org/id/draft-polli-ratelimit-headers-00.html)) & caching with optional [Redis](https://redis.io/) support for persistent caching. |
+| [fetchpost](/src/cmd/fetchpost.rs#L28-29) | Fetches data from web services for every row using **HTTP Post**. Comes with [jql](https://github.com/yamafaktory/jql#%EF%B8%8F-usage) JSON query language support, dynamic throttling ([RateLimit](https://tools.ietf.org/id/draft-polli-ratelimit-headers-00.html)) & caching with optional [Redis](https://redis.io/) support for persistent caching. |
 | [fill](/src/cmd/fill.rs#L13) | Fill empty values.  |
 | [fixlengths](/src/cmd/fixlengths.rs#L9-L11) | Force a CSV to have same-length records by either padding or truncating them. |
 | [flatten](/src/cmd/flatten.rs#L12-L15) | A flattened view of CSV records. Useful for viewing one record at a time.<br />e.g. `qsv slice -i 5 data.csv \| qsv flatten`. |
@@ -85,10 +86,8 @@ Pre-built binaries for Windows, Linux and macOS are available [from GitHub](http
 There are four versions of qsv. `qsv` enables all [features](#feature-flags) valid for the target platform[^6];
 `qsvnp` enables all features EXCEPT python. `qsvlite` has all features disabled (half the size of `qsv`); `qsvdp` is optimized for use with [DataPusher+](https://github.com/dathere/datapusher-plus), with only DataPusher+ relevant commands and the self-update engine removed (a sixth of the size of `qsv`).
 
-Alternatively, you can compile from source by
-[installing Cargo](https://crates.io/install)
-([Rust's](https://www.rust-lang.org/) package manager)
-and installing `qsv` using Cargo:
+Alternatively, you can install from source by [installing Cargo](https://crates.io/install)
+([Rust's](https://www.rust-lang.org/) package manager) and installing `qsv` using Cargo:
 
 ```bash
 cargo install qsv --features all_full
@@ -101,7 +100,9 @@ version of the dependencies qsv was built with by issuing:
 cargo install qsv --locked --features all_full
 ```
 
-Compiling from this repository also works similarly:
+The binary will be installed in `~/.cargo/bin`.
+
+Compiling from source also works similarly:
 
 ```bash
 git clone git@github.com:jqnatividad/qsv.git
@@ -172,7 +173,7 @@ When using the `--output` option, note that qsv will UTF-8 encode the file and a
 
 [JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/) files are also recognized and converted from/to CSV with the [`jsonl`](/src/cmd/jsonl.rs#L11) and [`tojsonl`](/src/cmd/tojsonl.rs#L12) commands.
 
-The `fetch` command also produces JSONL files when its invoked without the `--new-column` option, and TSV files with the `--report` option.
+The `fetch` & `fetchpost` commands also produces JSONL files when its invoked without the `--new-column` option, and TSV files with the `--report` option.
 
 The `sniff` and `validate` commands produce JSON files with their `--json` and `--pretty-json` options.
 
@@ -189,7 +190,7 @@ Click [here](https://docs.rs/csv-core/latest/csv_core/struct.Reader.html#rfc-418
 
 ### **UTF-8 Encoding**
 
-The following commands require UTF-8 encoded input (of which ASCII is a subset) - `dedup`, `exclude`, `fetch`, `frequency`, `join`, `schema`, `sort`, `stats` & `validate`.
+The following commands require UTF-8 encoded input (of which ASCII is a subset) - `dedup`, `exclude`, `fetch`, `fetchpost`, `frequency`, `join`, `schema`, `sort`, `stats` & `validate`.
 
 For these commands, qsv checks if the input is UTF-8 encoded by scanning the first 8k, and will abort if its not unless `QSV_SKIPUTF8_CHECK` is set. On Linux and macOS, UTF-8 encoding is the default.
 
@@ -199,7 +200,7 @@ Should you need to reencode CSV/TSV files, you can use the `input` command to tr
 
 ### **Windows Usage Note**
 
-Unlike other modern operating systems, Windows' [default encoding is UTF16-LE](https://stackoverflow.com/questions/66072117/why-does-windows-use-utf-16le). This will cause problems when redirecting qsv's output to a CSV file and trying to open it with Excel (which ignores the comma delimiter, with everything in the first column):
+Unlike other modern operating systems, Microsoft Windows' [default encoding is UTF16-LE](https://stackoverflow.com/questions/66072117/why-does-windows-use-utf-16le). This will cause problems when redirecting qsv's output to a CSV file and trying to open it with Excel (which ignores the comma delimiter, with everything in the first column):
 
 ```
 qsv stats wcp.csv > wcpstats.csv
@@ -231,6 +232,7 @@ qsv stats wcp.csv --output wcpstats.csv
 | `QSV_LOG_LEVEL` | desired level (default - off; `error`, `warn`, `info`, `trace`, `debug`). |
 | `QSV_LOG_DIR` | when logging is enabled, the directory where the log files will be stored. If the specified directory does not exist, qsv will attempt to create it. If not set, the log files are created in the directory where qsv was started. See [Logging](docs/Logging.md#logging) for more info. |
 | `QSV_REDIS_CONNECTION_STRING` | the `fetch` command can use [Redis](https://redis.io/) to cache responses. Set to connect to the desired Redis instance. (default: `redis:127.0.0.1:6379/1`). For more info on valid Redis connection string formats, see https://docs.rs/redis/latest/redis/#connection-parameters. |
+| `QSV_FP_REDIS_CONNECTION_STRING` | the `fetchpost` command also can use [Redis](https://redis.io/) to cache responses. Set to connect to the desired Redis instance. (default: `redis:127.0.0.1:6379/2`). Note that `fetchpost` connects to database 2, as opposed to `fetch` which connects to database 1. |
 | `QSV_REDIS_MAX_POOL_SIZE` | the maximum Redis connection pool size. (default: 20). |
 | `QSV_REDIS_TTL_SECONDS` | set time-to-live of Redis cached values (default (seconds): 2419200 (28 days)). |
 | `QSV_REDIS_TTL_REFRESH`| if set, enables cache hits to refresh TTL of cached values. |
@@ -251,14 +253,14 @@ Several dependencies also have environment variables that influence qsv's perfor
 
 * `mimalloc` (default) - use the mimalloc allocator (see [Memory Allocator](docs/PERFORMANCE.md#memory-allocator) for more info).
 * `apply` - enable `apply` command. This swiss-army knife of CSV transformations is very powerful, but it has a lot of dependencies that increases both compile time and binary size.
-* `fetch` - enable `fetch` command.
+* `fetch` - enables the `fetch` and `fetchpost` commands.
 * `generate` - enable `generate` command.
-* `full` - enable to build qsv.
-* `all_full` - enable to build qsv with all features (apply,fetch,foreach,generate,lua,python).
-* `nopython_full` - enable to build qsv with all features (apply,fetch,foreach,generate,lua) EXCEPT python.
-* `lite` - enable to build qsvlite.
-* `datapusher_plus` - enable to build qsvdp - the [DataPusher+](https://github.com/dathere/datapusher-plus) optimized qsv binary.
-* `nightly` - enable to turn on nightly/unstable features in the `rand`, `regex` and `pyo3` creates when building with Rust nightly/unstable.
+* `full` - enable to build qsv binary variant.
+* `all_full` - enable to build qsv binary variant with all features (apply,fetch,foreach,generate,lua,python).
+* `nopython_full` - enable to build qsvnp binary variant with all features (apply,fetch,foreach,generate,lua) EXCEPT python.
+* `lite` - enable to build qsvlite binary variant.
+* `datapusher_plus` - enable to build qsvdp binary variant - the [DataPusher+](https://github.com/dathere/datapusher-plus) optimized qsv binary.
+* `nightly` - enable to turn on nightly/unstable features in the `hashbrown`, `rand`, `regex` and `pyo3` crates when building with Rust nightly/unstable.
 
 The following "power-user" commands can be abused and present "foot-shooting" scenarios.
 
