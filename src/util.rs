@@ -93,24 +93,25 @@ pub fn version() -> String {
     let malloc_kind = "mimalloc".to_string();
     #[cfg(not(feature = "mimalloc"))]
     let malloc_kind = "standard".to_string();
-    let (qsvtype, maj, min, pat, pre) = (
+    let (qsvtype, maj, min, pat, pre, rustversion) = (
         option_env!("CARGO_BIN_NAME"),
         option_env!("CARGO_PKG_VERSION_MAJOR"),
         option_env!("CARGO_PKG_VERSION_MINOR"),
         option_env!("CARGO_PKG_VERSION_PATCH"),
         option_env!("CARGO_PKG_VERSION_PRE"),
+        option_env!("CARGO_PKG_RUST_VERSION"),
     );
-    match (qsvtype, maj, min, pat, pre) {
-        (Some(qsvtype), Some(maj), Some(min), Some(pat), Some(pre)) => {
+    match (qsvtype, maj, min, pat, pre, rustversion) {
+        (Some(qsvtype), Some(maj), Some(min), Some(pat), Some(pre), Some(rustversion)) => {
             if pre.is_empty() {
                 format!(
-                    "{qsvtype} {maj}.{min}.{pat}-{malloc_kind}-{enabled_features}{maxjobs}-{numcpus} ({TARGET})",
+                    "{qsvtype} {maj}.{min}.{pat}-{malloc_kind}-{enabled_features}{maxjobs}-{numcpus} ({TARGET} compiled with Rust {rustversion})",
                     maxjobs = max_jobs(),
                     numcpus = num_cpus()
                 )
             } else {
                 format!(
-                    "{qsvtype} {maj}.{min}.{pat}-{pre}-{malloc_kind}-{enabled_features}{maxjobs}-{numcpus} ({TARGET})",
+                    "{qsvtype} {maj}.{min}.{pat}-{pre}-{malloc_kind}-{enabled_features}{maxjobs}-{numcpus} ({TARGET} compiled with Rust {rustversion})",
                     maxjobs = max_jobs(),
                     numcpus = num_cpus(),
                 )
