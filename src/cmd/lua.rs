@@ -1,6 +1,3 @@
-use std::fs::File;
-use std::io::prelude::*;
-
 use crate::config::{Config, Delimiter};
 use crate::util;
 use crate::CliError;
@@ -9,6 +6,7 @@ use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::debug;
 use mlua::Lua;
 use serde::Deserialize;
+use std::fs;
 
 static USAGE: &str = r#"
 Create a new column, filter rows or compute aggregations by executing a Lua
@@ -130,11 +128,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     globals.set("cols", "{}")?;
 
     let lua_script = if args.flag_script_file {
-        let mut file = File::open(&args.arg_script).expect("Cannot load lua script file.");
-
-        let mut script_text = String::new();
-        file.read_to_string(&mut script_text)?;
-        script_text
+        fs::read_to_string(&args.arg_script).expect("Cannot load lua script file.")
     } else {
         args.arg_script
     };
