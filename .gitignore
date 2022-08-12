@@ -25,3 +25,4 @@ perf.data*
 *.bak
 *.code-workspace
 tmp/*
+*.icloud
