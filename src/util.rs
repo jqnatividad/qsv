@@ -498,7 +498,8 @@ pub fn qsv_check_for_update() {
 
     let mut updated = false;
     if latest_release > &curr_version.to_string() {
-        eprintln!("Update {latest_release} available. Current version is {curr_version}.",);
+        eprintln!("Update {latest_release} available. Current version is {curr_version}.");
+        eprintln!("Release notes: https://github.com/jqnatividad/qsv/releases/latest");
         match self_update::backends::github::Update::configure()
             .repo_owner("jqnatividad")
             .repo_name("qsv")
