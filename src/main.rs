@@ -2,10 +2,6 @@
 #![cfg_attr(
     feature = "cargo-clippy",
     allow(
-        // clippy bug: https://github.com/rust-lang/rust-clippy/issues/5704
-        clippy::unnested_or_patterns,
-        // clippy bug: https://github.com/rust-lang/rust-clippy/issues/7768
-        clippy::semicolon_if_nothing_returned,
         clippy::cast_possible_truncation,
         clippy::cast_possible_wrap,
         clippy::cast_sign_loss,

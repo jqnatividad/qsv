@@ -554,7 +554,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         if report != ReportKind::None {
-            now = Instant::now()
+            now = Instant::now();
         };
 
         if args.flag_url_template.is_some() {
