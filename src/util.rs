@@ -470,6 +470,9 @@ pub fn init_logger() {
 pub fn qsv_check_for_update() {
     use self_update::cargo_crate_version;
 
+    const GITHUB_RATELIMIT_MSG: &str =
+        "Github is rate-limiting self-update checks at the moment. Try again in an hour.";
+
     if env::var("QSV_NO_UPDATE").is_ok() {
         return;
     }
@@ -489,9 +492,9 @@ pub fn qsv_check_for_update() {
         .repo_owner("jqnatividad")
         .repo_name("qsv")
         .build()
-        .unwrap()
+        .expect(GITHUB_RATELIMIT_MSG)
         .fetch()
-        .unwrap();
+        .expect(GITHUB_RATELIMIT_MSG);
     let latest_release = &releases[0].version;
 
     info!("Current version: {curr_version} Latest Release: {latest_release}");
