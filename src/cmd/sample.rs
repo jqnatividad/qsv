@@ -135,7 +135,7 @@ fn sample_reservoir<R: io::Read>(
         None => StdRng::from_rng(rand::thread_rng()).unwrap(),
         // the non-cryptographic seed_from_u64 is sufficient for our use case
         // as we're optimizing for performance
-        Some(seed) => StdRng::seed_from_u64(seed as u64),
+        Some(seed) => StdRng::seed_from_u64(seed as u64), //DevSkim: ignore DS148264 
     };
 
     // Now do the sampling.

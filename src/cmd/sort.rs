@@ -83,7 +83,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         (_, _, true) => {
             // we don't need cryptographically strong RNGs for this
             if let Some(val) = seed {
-                let mut rng = StdRng::seed_from_u64(val);
+                let mut rng = StdRng::seed_from_u64(val); //DevSkim: ignore DS148264 
                 SliceRandom::shuffle(&mut *all, &mut rng);
             } else {
                 let mut rng = ::rand::thread_rng();
