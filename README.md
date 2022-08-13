@@ -67,7 +67,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [sniff](/src/cmd/sniff.rs#L10-L11)[^2] | Quickly sniff CSV metadata (delimiter, header row, preamble rows, quote character, flexible, is_utf8, number of records, number of fields, field names & data types). |
 | [sort](/src/cmd/sort.rs#L13)[^5] | Sorts CSV data in alphabetical, numerical, reverse or random (with optional seed) order.  |
 | [split](/src/cmd/split.rs#L14)[^2][^4] | Split one CSV file into many CSV files of N chunks. (Uses multithreading to go faster if an index is present.) |
-| [stats](/src/cmd/stats.rs#L25)[^2][^3][^4] | Infer data type & compute descriptive statistics for each column in a CSV (sum, min/max, min/max length, mean, stddev, variance, nullcount, quartiles, IQR, lower/upper fences, skewness, median, mode & cardinality). Uses multithreading to go faster if an index is present. |
+| [stats](/src/cmd/stats.rs#L25)[^2][^3][^4] | Infer data type (Null, String, Float, Integer, Date, DateTime) & compute descriptive statistics for each column in a CSV (sum, min/max, min/max length, mean, stddev, variance, nullcount, quartiles, IQR, lower/upper fences, skewness, median, mode & cardinality). Uses multithreading to go faster if an index is present. |
 | [table](/src/cmd/table.rs#L12)[^3] | Show aligned output of a CSV using [elastic tabstops](https://github.com/BurntSushi/tabwriter).  |
 | [tojsonl](/src/cmd/tojsonl.rs#L12)[^4] | Converts CSV to a newline-delimited JSON (JSONL/NDJSON). |
 | [transpose](/src/cmd/transpose.rs#L9)[^3] | Transpose rows/columns of a CSV.  |
@@ -83,8 +83,11 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 
 Pre-built binaries for Windows, Linux and macOS are available [from GitHub](https://github.com/jqnatividad/qsv/releases/latest), including binaries compiled with [Rust Nightly/Unstable](https://stackoverflow.com/questions/70745970/rust-nightly-vs-beta-version) (click [here](https://github.com/jqnatividad/qsv/blob/master/docs/PERFORMANCE.md#nightly-release-builds) for more info).
 
-There are four versions of qsv. `qsv` enables all [features](#feature-flags) valid for the target platform[^6];
-`qsvnp` enables all features EXCEPT python. `qsvlite` has all features disabled (half the size of `qsv`); `qsvdp` is optimized for use with [DataPusher+](https://github.com/dathere/datapusher-plus), with only DataPusher+ relevant commands and the self-update engine removed (a sixth of the size of `qsv`).
+There are four variants of qsv:
+ * `qsv` enables all [features](#feature-flags) valid for the target platform[^6]
+ * `qsvnp` enables all features EXCEPT python ("np" stands for "no python") 
+ * `qsvlite` has all features disabled (~half the size of `qsv`)
+ * `qsvdp` is optimized for use with [DataPusher+](https://github.com/dathere/datapusher-plus), with only DataPusher+ relevant commands and the self-update engine removed (~sixth of the size of `qsv`).
 
 Alternatively, you can install from source by [installing Cargo](https://crates.io/install)
 ([Rust's](https://www.rust-lang.org/) package manager) and installing `qsv` using Cargo:
@@ -93,7 +96,7 @@ Alternatively, you can install from source by [installing Cargo](https://crates.
 cargo install qsv --features all_full
 ```
 
-If you encounter compilation errors, ensure you're using the exact
+If you encounter compilation errors, ensure you have at least Python 3.8 installed and you're using the exact
 version of the dependencies qsv was built with by issuing:
 
 ```bash
@@ -140,7 +143,7 @@ cargo build --release --features datapusher_plus
 ```
 
 [^6]: The `foreach` feature is not available on Windows. The `python` feature is not enabled on cross-compiled pre-built binaries as we don't have
-access to a native python interpreter for those platforms (aarch64, i686, and arm) on GitHub's action runners. Compile natively on those platforms with Python 3.8+ installed, if you want to enable the `python` feature.
+access to a native python interpreter for those platforms (aarch64, i686, and arm) on GitHub's x86_64-based action runners. Compile natively on those platforms with Python 3.8+ installed, if you want to enable the `python` feature.
 
 ### Minimum Supported Rust Version
 
@@ -171,20 +174,20 @@ with the `QSV_DEFAULT_DELIMITER` environment variable or automatically detected 
 
 When using the `--output` option, note that qsv will UTF-8 encode the file and automatically change the delimiter used in the generated file based on the file extension - i.e. comma for `.csv`, tab for `.tsv` and `.tab` files.
 
-[JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/) files are also recognized and converted from/to CSV with the [`jsonl`](/src/cmd/jsonl.rs#L11) and [`tojsonl`](/src/cmd/tojsonl.rs#L12) commands.
+[JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/) files are also recognized and converted from/to CSV with the [`jsonl`](/src/cmd/jsonl.rs#L11) and [`tojsonl`](/src/cmd/tojsonl.rs#L12) commands respectively.
 
 The `fetch` & `fetchpost` commands also produces JSONL files when its invoked without the `--new-column` option, and TSV files with the `--report` option.
 
 The `sniff` and `validate` commands produce JSON files with their `--json` and `--pretty-json` options.
 
-The `schema` command produces [JSON Schema Validation (Draft 7)](https://json-schema.org/draft/2020-12/json-schema-validation.html) files with the ".schema.json" file extension, which can be used with the `validate` command.
+The `schema` command produces a [JSON Schema Validation (Draft 7)](https://json-schema.org/draft/2020-12/json-schema-validation.html) file with the ".schema.json" file extension, which can be used with the `validate` command.
 
 The `excel` command recognizes Excel and Open Document Spreadsheet(ODS) files (`.xls`, `.xlsx`, `.xlsm`, `.xlsb` and `.ods` files).
 
 ### RFC 4180
 
 qsv validates against the [RFC 4180](https://datatracker.ietf.org/doc/html/rfc4180) CSV standard. However IRL, CSV formats vary significantly and qsv is actually not strictly compliant with the specification so it can process "real-world" CSV files.
-qsv leverages the awesome [Rust CSV](https://docs.rs/csv/latest/csv/) library, which in turn, is built on top of the [csv-core](https://docs.rs/csv-core/latest/csv_core/index.html) library to read CSV files.
+qsv leverages the awesome [Rust CSV](https://docs.rs/csv/latest/csv/) library, which in turn, is built on top of the [csv-core](https://docs.rs/csv-core/latest/csv_core/index.html) library to read/write CSV files.
 
 Click [here](https://docs.rs/csv-core/latest/csv_core/struct.Reader.html#rfc-4180) to find out more about how qsv conforms to the standard with `csv-core`.
 
@@ -196,7 +199,7 @@ For these commands, qsv checks if the input is UTF-8 encoded by scanning the fir
 
 This was done to increase performance of these commands, as they make extensive use of `from_utf8_unchecked` so as not to pay the repetitive utf-8 validation penalty, no matter how small, even for already utf-8 encoded files.
 
-Should you need to reencode CSV/TSV files, you can use the `input` command to transcode to UTF-8. It will replace all invalid UTF-8 sequences with `�`. Alternatively, there are several utilities you can use to do so on [Linux/macOS](https://stackoverflow.com/questions/805418/how-can-i-find-encoding-of-a-file-via-a-script-on-linux) and [Windows](https://superuser.com/questions/1163753/converting-text-file-to-utf-8-on-windows-command-prompt).
+Should you need to re-encode CSV/TSV files, you can use the `input` command to transcode to UTF-8. It will replace all invalid UTF-8 sequences with `�`. Alternatively, there are several utilities you can use to do so on [Linux/macOS](https://stackoverflow.com/questions/805418/how-can-i-find-encoding-of-a-file-via-a-script-on-linux) and [Windows](https://superuser.com/questions/1163753/converting-text-file-to-utf-8-on-windows-command-prompt).
 
 ### **Windows Usage Note**
 
@@ -225,14 +228,14 @@ qsv stats wcp.csv --output wcpstats.csv
 | `QSV_MAX_JOBS` | number of jobs to use for multithreaded commands (currently `apply`, `dedup`, `extsort`, `frequency`, `schema`, `sort`, `split`, `stats` and `validate`). If not set, max_jobs is set to the detected number of logical processors.  See [Multithreading](docs/PERFORMANCE.md#multithreading) for more info. |
 | `QSV_NO_UPDATE` | if set, prohibit self-update version check for the latest qsv release published on GitHub. |
 | `QSV_PREFER_DMY` | if set, date parsing will use DMY format. Otherwise, use MDY format (used with `apply datefmt`, `schema`, `sniff` & `stats` commands). |
-| `QSV_REGEX_UNICODE` | if set, makes `search`, `searchset` and `replace` commands unicode-aware. For increased performance, these commands are not unicode-aware and will ignore unicode values when matching and will panic when unicode characters are used in the regex. |
+| `QSV_REGEX_UNICODE` | if set, makes `search`, `searchset` and `replace` commands unicode-aware. For increased performance, these commands are not unicode-aware by default and will ignore unicode values when matching and will panic when unicode characters are used in the regex. |
 | `QSV_SKIPUTF8_CHECK` | if set, skip UTF-8 encoding check. Otherwise, for several commands that require UTF-8 encoded input (see [UTF8-Encoding](#utf-8-encoding)), qsv scans the first 8k. |
 | `QSV_RDR_BUFFER_CAPACITY` | reader buffer size (default (bytes): 16384) |
 | `QSV_WTR_BUFFER_CAPACITY` | writer buffer size (default (bytes): 65536) |
 | `QSV_LOG_LEVEL` | desired level (default - off; `error`, `warn`, `info`, `trace`, `debug`). |
 | `QSV_LOG_DIR` | when logging is enabled, the directory where the log files will be stored. If the specified directory does not exist, qsv will attempt to create it. If not set, the log files are created in the directory where qsv was started. See [Logging](docs/Logging.md#logging) for more info. |
 | `QSV_REDIS_CONNECTION_STRING` | the `fetch` command can use [Redis](https://redis.io/) to cache responses. Set to connect to the desired Redis instance. (default: `redis:127.0.0.1:6379/1`). For more info on valid Redis connection string formats, see https://docs.rs/redis/latest/redis/#connection-parameters. |
-| `QSV_FP_REDIS_CONNECTION_STRING` | the `fetchpost` command also can use [Redis](https://redis.io/) to cache responses. Set to connect to the desired Redis instance. (default: `redis:127.0.0.1:6379/2`). Note that `fetchpost` connects to database 2, as opposed to `fetch` which connects to database 1. |
+| `QSV_FP_REDIS_CONNECTION_STRING` | the `fetchpost` command can also use Redis to cache responses (default: `redis:127.0.0.1:6379/2`). Note that `fetchpost` connects to database 2, as opposed to `fetch` which connects to database 1. |
 | `QSV_REDIS_MAX_POOL_SIZE` | the maximum Redis connection pool size. (default: 20). |
 | `QSV_REDIS_TTL_SECONDS` | set time-to-live of Redis cached values (default (seconds): 2419200 (28 days)). |
 | `QSV_REDIS_TTL_REFRESH`| if set, enables cache hits to refresh TTL of cached values. |
@@ -262,12 +265,11 @@ Several dependencies also have environment variables that influence qsv's perfor
 * `datapusher_plus` - enable to build qsvdp binary variant - the [DataPusher+](https://github.com/dathere/datapusher-plus) optimized qsv binary.
 * `nightly` - enable to turn on nightly/unstable features in the `hashbrown`, `rand`, `regex` and `pyo3` crates when building with Rust nightly/unstable.
 
-The following "power-user" commands can be abused and present "foot-shooting" scenarios.
+The following "power-user" features can be abused and present "foot-shooting" scenarios:
 
 * `lua` - enable `lua` command. Embeds a [Lua 5.4.4](https://www.lua.org/manual/5.4/manual.html) interpreter into qsv.
 * `foreach` - enable `foreach` command (not valid for Windows).
-* `python` - enable `py` command (requires Python 3.8+). Note that qsv will automatically use the currently activated python version when running in a virtual environment unless
-there's a python library (libpython.* on Linux/macOS, python*.dll on Windows) in the directory where qsv is located.
+* `python` - enable `py` command (requires Python 3.8+ development libraris). Note that qsv will automatically use the currently activated python version when running in a virtual environment unless there's a python library (libpython.* on Linux/macOS, python*.dll on Windows) in the directory where qsv is located.
 
 > ℹ️ **NOTE:** `qsvlite`, as the name implies, always has **non-default features disabled**. `qsv` can be built with any combination of the above features  using the cargo `--features` & `--no-default-features` flags. The pre-built `qsv` binaries has **all applicable features valid for the target platform**[^6].
 
