@@ -5,6 +5,7 @@ use std::fs;
 use std::io;
 use std::iter::repeat;
 use std::str::{self, FromStr};
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use itertools::Itertools;
 use stats::{merge_all, Commute, MinMax, OnlineStats, Unsorted};
@@ -34,13 +35,13 @@ sum, min/max values, min/max length, mean, stddev, variance & nullcount. The def
 set of statistics corresponds to statistics that can be computed efficiently on a stream
 of data (i.e., constant memory) and can work with arbitrarily large CSV files.
 
-The data type of each column is also inferred (Unknown, NULL, Integer, String, Float,
-Date and DateTime). Note that the Date and DateTime data types are only inferred with
-the --infer-dates option as its an expensive operation. The date formats recognized can be
-found at https://github.com/jqnatividad/belt/tree/main/dateparser#accepted-date-formats.
+Each column's data type is also inferred (NULL, Integer, String, Float, Date & DateTime). 
+Note that the Date and DateTime data types are only inferred with the --infer-dates option 
+as its an expensive operation. The date formats recognized can be found at 
+https://github.com/jqnatividad/belt/tree/main/dateparser#accepted-date-formats.
 
-Computing statistics on a large file can be made much faster if you create
-an index for it first with 'qsv index' to enable multithreading.
+Computing statistics on a large file can be made much faster if you create an index for it
+first with 'qsv index' to enable multithreading.
 
 Usage:
     qsv stats [options] [<input>]
@@ -113,7 +114,7 @@ pub struct Args {
 }
 
 static INFER_DATE_FLAGS: once_cell::sync::OnceCell<Vec<bool>> = OnceCell::new();
-static DMY_PREFERENCE: once_cell::sync::OnceCell<bool> = OnceCell::new();
+static DMY_PREFERENCE: AtomicBool = AtomicBool::new(false);
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
@@ -239,7 +240,7 @@ impl Args {
 
         // amortize allocation
         #[allow(unused_assignments)]
-        let mut record = csv::ByteRecord::new();
+        let mut record = csv::ByteRecord::with_capacity(100, sel.len());
         for row in it {
             record = unsafe { row.unwrap_unchecked() };
             for (i, field) in sel.select(&record).enumerate() {
@@ -342,9 +343,7 @@ fn init_date_inference(
 ) {
     if infer_dates {
         let dmy_preferred = prefer_dmy || std::env::var("QSV_PREFER_DMY").is_ok();
-        DMY_PREFERENCE
-            .set(dmy_preferred)
-            .expect("Cannot init date format preference");
+        DMY_PREFERENCE.store(dmy_preferred, Ordering::Relaxed);
 
         let whitelist_lower = flag_whitelist.to_lowercase();
         log::info!("inferring dates with date-whitelist: {whitelist_lower}");
@@ -679,7 +678,7 @@ impl FieldType {
         }
         if infer_dates {
             if let Ok(parsed_date) =
-                parse_with_preference(string, unsafe { *DMY_PREFERENCE.get_unchecked() })
+                parse_with_preference(string, DMY_PREFERENCE.load(Ordering::Relaxed))
             {
                 let rfc3339_date_str = parsed_date.to_string();
 
@@ -871,7 +870,7 @@ impl TypedMinMax {
                 let n = unsafe {
                     parse_with_preference(
                         str::from_utf8_unchecked(sample),
-                        *DMY_PREFERENCE.get_unchecked(),
+                        DMY_PREFERENCE.load(Ordering::Relaxed),
                     )
                     .unwrap_unchecked()
                 };
