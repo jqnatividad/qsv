@@ -258,10 +258,10 @@ Several dependencies also have environment variables that influence qsv's perfor
 * `apply` - enable `apply` command. This swiss-army knife of CSV transformations is very powerful, but it has a lot of dependencies that increases both compile time and binary size.
 * `fetch` - enables the `fetch` and `fetchpost` commands.
 * `generate` - enable `generate` command.
-* `full` - enable to build qsv binary variant.
-* `all_full` - enable to build qsv binary variant with all features (apply,fetch,foreach,generate,lua,python).
+* `full` - enable to build qsv binary variant which is feature-capable.
+* `all_full` - enable to build qsv binary variant with all features enabled (apply,fetch,foreach,generate,lua,python).
 * `nopython_full` - enable to build qsvnp binary variant with all features (apply,fetch,foreach,generate,lua) EXCEPT python.
-* `lite` - enable to build qsvlite binary variant.
+* `lite` - enable to build qsvlite binary variant with all features disabled.
 * `datapusher_plus` - enable to build qsvdp binary variant - the [DataPusher+](https://github.com/dathere/datapusher-plus) optimized qsv binary.
 * `nightly` - enable to turn on nightly/unstable features in the `hashbrown`, `rand`, `regex` and `pyo3` crates when building with Rust nightly/unstable.
 
