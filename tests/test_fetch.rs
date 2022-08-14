@@ -690,3 +690,44 @@ fn fetchpost_literalurl_test() {
 
     assert_eq!(got_parsed, expected);
 }
+
+#[test]
+fn fetchpost_simple_report() {
+    let wrk = Workdir::new("fetchpost_simple_report");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["col1", "number_col", "bool_col"],
+            svec!["a", "42", "true"],
+            svec!["b", "3.14", "false"],
+            svec!["c", "666", "true"],
+        ],
+    );
+    let mut cmd = wrk.command("fetchpost");
+    cmd.arg("https://httpbin.org/post")
+        .arg("bool_col,col1,number_col")
+        .arg("--jql")
+        .arg(r#""form""#)
+        .arg("--new-column")
+        .arg("response")
+        .arg("--report")
+        .arg("short")
+        .arg("data.csv");
+
+    let mut cmd = wrk.command("index");
+    cmd.arg("data.csv.fetchpost-report.tsv");
+
+    let mut cmd = wrk.command("select");
+    cmd.arg("url,form,status,cache_hit,retries,response")
+        .arg(wrk.load_test_file("data.csv.fetchpost-report.tsv"));
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["url", "form", "status", "cache_hit", "retries", "response"],
+        svec!["https://httpbin.org/post", "{\"bool_col\": String(\"true\"), \"col1\": String(\"a\"), \"number_col\": String(\"42\")}", "200", "0", "0", "{\"bool_col\": String(\"true\"), \"col1\": String(\"a\"), \"number_col\": String(\"42\")}"],
+        svec!["https://httpbin.org/post", "{\"bool_col\": String(\"false\"), \"col1\": String(\"b\"), \"number_col\": String(\"3.14\")}", "200", "0", "0", "{\"bool_col\": String(\"false\"), \"col1\": String(\"b\"), \"number_col\": String(\"3.14\")}"],
+        svec!["https://httpbin.org/post", "{\"bool_col\": String(\"true\"), \"col1\": String(\"c\"), \"number_col\": String(\"666\")}", "200", "0", "0", "{\"bool_col\": String(\"true\"), \"col1\": String(\"c\"), \"number_col\": String(\"666\")}"],
+    ];
+
+    assert_eq!(got, expected);
+}

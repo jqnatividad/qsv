@@ -1,0 +1,4 @@
+url	form	status	cache_hit	retries	elapsed_ms	response
+https://httpbin.org/post	"{""bool_col"": String(""true""), ""col1"": String(""a""), ""number_col"": String(""42"")}"	200	0	0	171	"{""bool_col"": String(""true""), ""col1"": String(""a""), ""number_col"": String(""42"")}"
+https://httpbin.org/post	"{""bool_col"": String(""false""), ""col1"": String(""b""), ""number_col"": String(""3.14"")}"	200	0	0	33	"{""bool_col"": String(""false""), ""col1"": String(""b""), ""number_col"": String(""3.14"")}"
+https://httpbin.org/post	"{""bool_col"": String(""true""), ""col1"": String(""c""), ""number_col"": String(""666"")}"	200	0	0	20	"{""bool_col"": String(""true""), ""col1"": String(""c""), ""number_col"": String(""666"")}"

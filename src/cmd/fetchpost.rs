@@ -135,12 +135,13 @@ Fetch options:
     --report <d|s>             Creates a report of the fetchpost job. The report has the same name as the input file
                                with the ".fetchpost-report" suffix. 
                                There are two kinds of report - d for "detailed" & s for "short". The detailed report
-                               has the same columns as the input CSV with six additional columns - 
-                               qsv_fetchp_url, qsv_fetchp_status, qsv_fetchp_cache_hit, qsv_fetchp_retries, 
-                               qsv_fetchp_elapsed_ms & qsv_fetchp_response.
-                               fetchp_url - URL used, fetchp_status - HTTP status code, fetchp_cache_hit - cached hit flag,
-                               fetchp_retries - retry attempts, fetchp_elapsed - elapsed time & fetchp_response - the response.
-                               The short report only has the six columns without the "qsv_fetchp_" column name prefix.
+                               has the same columns as the input CSV with seven additional columns - 
+                               qsv_fetchp_url, qsv_fetchp_form, qsv_fetchp_status, qsv_fetchp_cache_hit,
+                               qsv_fetchp_retries, qsv_fetchp_elapsed_ms & qsv_fetchp_response.
+                               fetchp_url - URL used, qsv_fetchp_form - form data sent, fetchp_status - HTTP status code, 
+                               fetchp_cache_hit - cached hit flag, fetchp_retries - retry attempts, 
+                               fetchp_elapsed - elapsed time & fetchp_response - the response.
+                               The short report only has the sevenn columns without the "qsv_fetchp_" column name prefix.
     --redis                    Use Redis to cache responses. It connects to "redis://127.0.0.1:6379/2"
                                with a connection pool size of 20, with a TTL of 28 days, and a cache hit 
                                NOT renewing an entry's TTL.
@@ -447,6 +448,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut report_wtr;
     let report_path;
     if report == ReportKind::None {
+        // no report, point report_wtr to /dev/null (AKA sink)
         report_wtr = Config::new(&Some("sink".to_string())).writer()?;
         report_path = "".to_string();
     } else {
@@ -467,6 +469,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             ""
         };
         report_headers.push_field(format!("{rptcol_prefix}url").as_bytes());
+        report_headers.push_field(format!("{rptcol_prefix}form").as_bytes());
         report_headers.push_field(format!("{rptcol_prefix}status").as_bytes());
         report_headers.push_field(format!("{rptcol_prefix}cache_hit").as_bytes());
         report_headers.push_field(format!("{rptcol_prefix}retries").as_bytes());
@@ -638,6 +641,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 report_record.clear();
             }
             report_record.push_field(url.as_bytes());
+            report_record.push_field(format!("{form_body_jsonmap:?}").as_bytes());
             report_record.push_field(final_response.status_code.to_string().as_bytes());
             report_record.push_field(if was_cached { b"1" } else { b"0" });
             report_record.push_field(final_response.retries.to_string().as_bytes());
@@ -655,11 +659,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     }
 
-    if report == ReportKind::None {
-        drop(report_wtr);
-    } else {
-        report_wtr.flush()?;
-    }
+    report_wtr.flush()?;
 
     if not_quiet {
         if args.flag_redis {
