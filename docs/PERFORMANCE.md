@@ -82,7 +82,7 @@ Shows that I'm running qsv version 0.59.0, with the `mimalloc` allocator (instea
 ## Caching
 The `apply geocode` command [memoizes](https://en.wikipedia.org/wiki/Memoization) otherwise expensive geocoding operations and will report its cache hit rate. `apply geocode` memoization, however, is not persistent across sessions.
 
-The `fetch` command also memoizes expensive REST API calls with its optional Redis support. It effectively has a persistent cache as the default time-to-live (TTL) before a Redis cache entry is expired is 28 days and Redis entries are persisted across restarts. Redis cache settings can be fine-tuned with the `QSV_REDIS_CONNECTION_STRING`, `QSV_REDIS_TTL_SECONDS` and `QSV_REDIS_TTL_REFRESH` environment variables.
+The `fetch` command also memoizes expensive REST API calls with its optional Redis support. It effectively has a persistent cache as the default time-to-live (TTL) before a Redis cache entry is expired is 28 days and Redis entries are persisted across restarts. Redis cache settings can be fine-tuned with the `QSV_REDIS_CONNSTR`, `QSV_REDIS_TTL_SECONDS` and `QSV_REDIS_TTL_REFRESH` environment variables.
 
 ## UTF-8 Encoding for Performance
 [Rust strings are utf-8 encoded](https://doc.rust-lang.org/std/string/struct.String.html). As a result, qsv **requires** UTF-8 encoded files, primarily, for performance. It makes extensive use of [`str::from_utf8_unchecked`](https://doc.rust-lang.org/stable/std/str/fn.from_utf8_unchecked.html) to skip utf-8 validation that [`str::from_utf8`](https://doc.rust-lang.org/stable/std/str/fn.from_utf8.html) will otherwise incur everytime raw bytes are converted to string, even if the file is already utf8-encoded.

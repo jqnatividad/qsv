@@ -43,7 +43,7 @@ By default, it will connect to a local Redis instance at redis://127.0.0.1:6379/
 with a cache expiry Time-to-Live (TTL) of 2,419,200 seconds (28 days),
 and cache hits NOT refreshing the TTL of cached values.
 
-Set the env vars QSV_REDIS_CONNECTION_STRING, QSV_REDIS_TTL_SECONDS and 
+Set the env vars QSV_REDIS_CONNSTR, QSV_REDIS_TTL_SECONDS and 
 QSV_REDIS_TTL_REFRESH to change default Redis settings.
 
 EXAMPLES USING THE URL-COLUMN ARGUMENT:
@@ -146,19 +146,18 @@ Fetch options:
     --cookies                  Allow cookies.
     --report <d|s>             Creates a report of the fetch job. The report has the same name as the input file
                                with the ".fetch-report" suffix. 
-                               There are two kinds of report - d for "detailed" & s for "short". The detailed report
-                               has the same columns as the input CSV with six additional columns - 
+                               There are two kinds of report - d for "detailed" & s for "short". The detailed
+                               report has the same columns as the input CSV with six additional columns - 
                                qsv_fetch_url, qsv_fetch_status, qsv_fetch_cache_hit, qsv_fetch_retries, 
                                qsv_fetch_elapsed_ms & qsv_fetch_response.
-                               fetch_url - URL used, fetch_status - HTTP status code, fetch_cache_hit - cached hit flag,
-                               fetch_retries - retry attempts, fetch_elapsed - elapsed time & fetch_response - the response.
-                               The short report only has the six columns without the "qsv_fetch_" column name prefix.
+                               fetch_url - URL used, fetch_status - HTTP code, fetch_cache_hit - cache hit flag,
+                               fetch_retries - retry attempts, fetch_elapsed - elapsed time & fetch_response.
+                               The short report only has the six columns without the "qsv_fetch_" prefix.
     --redis                    Use Redis to cache responses. It connects to "redis://127.0.0.1:6379/1"
                                with a connection pool size of 20, with a TTL of 28 days, and a cache hit 
                                NOT renewing an entry's TTL.
-                               Adjust the QSV_REDIS_CONNECTION_STRING, QSV_REDIS_MAX_POOL_SIZE, 
-                               QSV_REDIS_TTL_SECONDS & QSV_REDIS_TTL_REFRESH respectively to
-                               change Redis settings.
+                               Adjust the QSV_REDIS_CONNSTR, QSV_REDIS_MAX_POOL_SIZE, QSV_REDIS_TTL_SECONDS & 
+                               QSV_REDIS_TTL_REFRESH respectively to change Redis settings.
     --flushdb                  Flush all the keys in the current Redis database on startup.
                                This option is ignored if the --redis option is NOT enabled.
 
@@ -226,7 +225,7 @@ struct RedisConfig {
 impl RedisConfig {
     fn load() -> Self {
         Self {
-            conn_str: std::env::var("QSV_REDIS_CONNECTION_STRING")
+            conn_str: std::env::var("QSV_REDIS_CONNSTR")
                 .unwrap_or_else(|_| DEFAULT_REDIS_CONN_STR.to_string()),
             max_pool_size: std::env::var("QSV_REDIS_MAX_POOL_SIZE")
                 .unwrap_or_else(|_| DEFAULT_REDIS_POOL_SIZE.to_string())

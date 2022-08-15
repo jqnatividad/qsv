@@ -47,7 +47,7 @@ and cache hits NOT refreshing the TTL of cached values.
 Note that the default values are the same as the fetch command, except fetchpost creates the
 cache at database 2, as opposed to database 1 with fetch.
 
-Set the env vars QSV_FP_REDIS_CONNECTION_STRING, QSV_FP_REDIS_TTL_SECONDS and 
+Set the env vars QSV_FP_REDIS_CONNSTR, QSV_FP_REDIS_TTL_SECONDS and 
 QSV_FP_REDIS_TTL_REFRESH respectively to change default Redis settings.
 
 EXAMPLES:
@@ -130,24 +130,24 @@ Fetch options:
                                [default: 100 ]
     --store-error              On error, store error code/message instead of blank value.
     --cache-error              Cache error responses even if a request fails. If an identical URL is requested,
-                               the cached error is returned. Otherwise, the fetch is attempted again for --max-retries.
+                               the cached error is returned. Otherwise, the fetch is attempted again
+                               for --max-retries.
     --cookies                  Allow cookies.
-    --report <d|s>             Creates a report of the fetchpost job. The report has the same name as the input file
-                               with the ".fetchpost-report" suffix. 
-                               There are two kinds of report - d for "detailed" & s for "short". The detailed report
-                               has the same columns as the input CSV with seven additional columns - 
+    --report <d|s>             Creates a report of the fetchpost job. The report has the same name as the
+                               input file with the ".fetchpost-report" suffix. 
+                               There are two kinds of report - d for "detailed" & s for "short". The detailed
+                               report has the same columns as the input CSV with seven additional columns - 
                                qsv_fetchp_url, qsv_fetchp_form, qsv_fetchp_status, qsv_fetchp_cache_hit,
                                qsv_fetchp_retries, qsv_fetchp_elapsed_ms & qsv_fetchp_response.
-                               fetchp_url - URL used, qsv_fetchp_form - form data sent, fetchp_status - HTTP status code, 
+                               fetchp_url - URL used, qsv_fetchp_form - form data sent, fetchp_status - HTTP code, 
                                fetchp_cache_hit - cached hit flag, fetchp_retries - retry attempts, 
-                               fetchp_elapsed - elapsed time & fetchp_response - the response.
-                               The short report only has the sevenn columns without the "qsv_fetchp_" column name prefix.
+                               fetchp_elapsed - elapsed time & fetchp_response.
+                               The short report only has the sevenn columns without the "qsv_fetchp_" prefix.
     --redis                    Use Redis to cache responses. It connects to "redis://127.0.0.1:6379/2"
                                with a connection pool size of 20, with a TTL of 28 days, and a cache hit 
                                NOT renewing an entry's TTL.
-                               Adjust the QSV_FP_REDIS_CONNECTION_STRING, QSV_REDIS_MAX_POOL_SIZE, 
-                               QSV_REDIS_TTL_SECONDS & QSV_REDIS_TTL_REFRESH respectively to
-                               change Redis settings.
+                               Adjust the QSV_FP_REDIS_CONNSTR, QSV_REDIS_MAX_POOL_SIZE, QSV_REDIS_TTL_SECONDS & 
+                               QSV_REDIS_TTL_REFRESH respectively to change Redis settings.
     --flushdb                  Flush all the keys in the current Redis database on startup.
                                This option is ignored if the --redis option is NOT enabled.
 
@@ -210,7 +210,7 @@ struct RedisConfig {
 impl RedisConfig {
     fn load() -> Self {
         Self {
-            conn_str: std::env::var("QSV_FP_REDIS_CONNECTION_STRING")
+            conn_str: std::env::var("QSV_FP_REDIS_CONNSTR")
                 .unwrap_or_else(|_| DEFAULT_FP_REDIS_CONN_STR.to_string()),
             max_pool_size: std::env::var("QSV_REDIS_MAX_POOL_SIZE")
                 .unwrap_or_else(|_| DEFAULT_FP_REDIS_POOL_SIZE.to_string())
