@@ -64,22 +64,24 @@ Given the data.csv above, fetch the JSON response.
 
 Note the output will be a JSONL file - with a minified JSON response per line, not a CSV file.
 
-Now, if we want to generate a CSV file with a parsed response, we use the new-column and jql options.
+Now, if we want to generate a CSV file with a parsed response = getting only the "form" property,
+we use the new-column and jql options. (See https://github.com/yamafaktory/jql#jql for more info 
+on how to use the jql JSON Query Language)
 
-$ qsv fetchpost URL zipcode,country --new-column response --jql '"form"' data.csv > data_with_response.csv
+$ qsv fetchpost URL zipcode,country --new-column form --jql '"form"' data.csv > data_with_response.csv
 
 data_with_response.csv
-  URL,zipcode,country,response
+  URL,zipcode,country,form
   https://httpbin.org/post,90210,USA,"{""country"": String(""USA""), ""zipcode"": String(""90210"")}"
   https://httpbin.org/post,94105,USA,"{""country"": String(""USA""), ""zipcode"": String(""94105"")}"
   https://httpbin.org/post,92802,USA,"{""country"": String(""USA""), ""zipcode"": String(""92802"")}"
 
 Alternatively, since we're using the same URL for all the rows, we can just pass the url directly on the command-line.
 
-  $ qsv fetchpost https://httpbin.org/post 2,3 --new-column response --jqlfile response.jql data.csv > data_with_response.csv
+  $ qsv fetchpost https://httpbin.org/post 2,3 --new-column form --jqlfile form.jql data.csv > data_with_formdata.csv
 
 Also note that for the column-list argument, we used the column index (2,3 for second & third column)
-instead of using the column names, and we loaded the jql selector from the response.jql file.
+instead of using the column names, and we loaded the jql selector from the form.jql file.
 
 USING THE HTTP-HEADER OPTION:
 
@@ -97,26 +99,28 @@ Fetch options:
     <url-column>               If the argument starts with `http`, the URL to use.
                                Otherwise, the name of the column with the URL.
     <column-list>              Comma-delimited list of columns to insert into the HTTP Post body.
-                               Columns can be referenced by index or by name if there is a header row
-                               (duplicate column names can be disambiguated with more indexing).
-                               Column ranges can also be specified. Finally, columns can be
-                               selected using regular expressions.
+                               Uses `qsv select` syntax - i.e. Columns can be referenced by index or 
+                               by name if there is a header row (duplicate column names can be disambiguated
+                               with more indexing). Column ranges can also be specified. Finally, columns
+                               can be selected using regular expressions.
+                               See 'qsv select --help' for examples.
     -c, --new-column <name>    Put the fetched values in a new column. Specifying this option
-                               creates a new CSV file. Otherwise, the output is a JSONL file.
-    --jql <selector>           Apply jql selector to API returned JSON value.
+                               results in a CSV. Otherwise, the output is in JSONL format.
+    --jql <selector>           Apply jql selector to API returned JSON response.
                                Mutually exclusive with --jqlfile.
     --jqlfile <file>           Load jql selector from file instead.
                                Mutually exclusive with --jql.
     --pretty                   Prettify JSON responses. Otherwise, they're minified.
-                               If the response is not in JSON format, it's passed through.
+                               If the response is not in JSON format, it's passed through unchanged.
                                Note that --pretty requires the --new-column option.
     --rate-limit <qps>         Rate Limit in Queries Per Second (max: 1000). Note that fetch
                                dynamically throttles as well based on rate-limit and
                                retry-after response headers.
-                               Set to zero (0) to go as fast as possible, automatically
-                               down-throttling as required.
+                               Set to 0 to go as fast as possible, automatically down-throttling as required.
                                CAUTION: Only use zero for APIs that use RateLimit and/or Retry-After headers,
-                               otherwise your fetch job may look like a Denial Of Service attack.
+                               otherwise your fetchpost job may look like a Denial Of Service attack.
+                               Even though zero is the default, this is mitigated by --max-errors having a
+                               default of 100.
                                [default: 0 ]
     --timeout <seconds>        Timeout for each URL request.
                                [default: 15 ]
