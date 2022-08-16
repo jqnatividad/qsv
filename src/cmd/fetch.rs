@@ -58,11 +58,11 @@ Given the data.csv above, fetch the JSON response.
 
   $ qsv fetch URL data.csv 
 
-Note the output will be a JSONL file - with a minified JSON response per line,
-not a CSV file.
+Note the output will be a JSONL file - with a minified JSON response per line, not a CSV file.
 
 Now, if we want to generate a CSV file with the parsed City and State, we use the 
-new-column and jql options.
+new-column and jql options. (See https://github.com/yamafaktory/jql#jql for more info on
+how to use the jql JSON Query Language)
 
 $ qsv fetch URL --new-column CityState --jql '"places"[0]."place name","places"[0]."state abbreviation"' 
   data.csv > data_with_CityState.csv
@@ -113,7 +113,7 @@ Fetch options:
                                curly braces to insert the CSV data for a record.
                                Mutually exclusive with url-column.
     -c, --new-column <name>    Put the fetched values in a new column. Specifying this option
-                               creates a new CSV file. Otherwise, the output is a JSONL file.
+                               results in a CSV. Otherwise, the output is in JSONL format.
     --jql <selector>           Apply jql selector to API returned JSON value.
                                Mutually exclusive with --jqlfile,
     --jqlfile <file>           Load jql selector from file instead.
@@ -128,6 +128,8 @@ Fetch options:
                                down-throttling as required.
                                CAUTION: Only use zero for APIs that use RateLimit and/or Retry-After headers,
                                otherwise your fetch job may look like a Denial Of Service attack.
+                               Even though zero is the default, this is mitigated by --max-errors having a
+                               default of 100.
                                [default: 0 ]
     --timeout <seconds>        Timeout for each URL request.
                                [default: 15 ]
