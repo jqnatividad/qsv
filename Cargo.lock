@@ -1296,9 +1296,9 @@ checksum = "6c8af84674fe1f223a982c933a0ee1086ac4d4052aa0fb8060c12c6ad838e754"
 
 [[package]]
 name = "jql"
-version = "4.0.7"
+version = "5.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "917a204cb6df52dd8aa69f842b8a88e804a36acb34c4783cf18fecd860b0c259"
+checksum = "e5efedcd0cdefdc7c4b71a9fa84a2e6ddca078f3083a4815d774fac5ee05c31e"
 dependencies = [
  "anyhow",
  "pest",
