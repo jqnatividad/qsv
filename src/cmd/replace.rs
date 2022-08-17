@@ -33,7 +33,14 @@ replace options:
                            for the full syntax.
     -u, --unicode          Enable unicode support. When enabled, character classes
                            will match all unicode word characters instead of only
-                           ASCII word characters. Decreases performance.                            
+                           ASCII word characters. Decreases performance.
+    --size-limit <mb>      Set the approximate size limit (MB) of the compiled
+                           regular expression. If the compiled expression exceeds this 
+                           number, then a compilation error is returned.
+                           [default: 100]
+    --dfa-size-limit <mb>  Set the approximate size of the cache (MB) used by the regular
+                           expression engine's Discrete Finite Automata.
+                           [default: 10]
 
 Common options:
     -h, --help             Display this message
@@ -56,6 +63,8 @@ struct Args {
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
     flag_ignore_case: bool,
+    flag_size_limit: usize,
+    flag_dfa_size_limit: usize,
 }
 
 const NULL_VALUE: &str = "<NULL>";
@@ -69,6 +78,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let pattern = RegexBuilder::new(&*args.arg_pattern)
         .case_insensitive(args.flag_ignore_case)
         .unicode(regex_unicode)
+        .size_limit(args.flag_size_limit * (1 << 20))
+        .dfa_size_limit(args.flag_dfa_size_limit * (1 << 20))
         .build()?;
     let replacement = if args.arg_replacement == NULL_VALUE {
         b""
