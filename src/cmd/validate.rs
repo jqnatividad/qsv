@@ -61,7 +61,7 @@ Common options:
                                appear as the header row in the output.
     -d, --delimiter <arg>      The field delimiter for reading CSV data.
                                Must be a single character. [default: ,]
-    -q, --quiet                Don't show progress bars.
+    -p, --progressbar          Show progress bars. Not valid for stdin.
 ";
 
 #[allow(clippy::struct_excessive_bools)]
@@ -75,7 +75,7 @@ struct Args {
     flag_jobs: Option<usize>,
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
-    flag_quiet: bool,
+    flag_progressbar: bool,
     arg_input: Option<String>,
     arg_json_schema: Option<String>,
 }
@@ -188,19 +188,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     #[cfg(any(feature = "full", feature = "lite"))]
     let progress = ProgressBar::with_draw_target(None, ProgressDrawTarget::stderr_with_hz(5));
 
-    // for purpose of full file row count, prevent CSV reader to abort on inconsistent column count
-    rconfig = rconfig.flexible(true);
-    let record_count = util::count_rows(&rconfig)?;
-    rconfig = rconfig.flexible(false);
+    // prep progress bar
+    let show_progress =
+        (args.flag_progressbar || std::env::var("QSV_PROGRESSBAR").is_ok()) && !rconfig.is_stdin();
 
     #[cfg(any(feature = "full", feature = "lite"))]
-    if args.flag_quiet {
-        progress.set_draw_target(ProgressDrawTarget::hidden());
-    } else {
+    if show_progress {
+        // for purpose of full file row count, prevent CSV reader to abort on inconsistent column count
+        rconfig = rconfig.flexible(true);
+        let record_count = util::count_rows(&rconfig)?;
+        rconfig = rconfig.flexible(false);
         util::prep_progress(&progress, record_count);
+    } else {
+        progress.set_draw_target(ProgressDrawTarget::hidden());
     }
-    #[cfg(any(feature = "full", feature = "lite"))]
-    let not_quiet = !args.flag_quiet;
 
     // parse and compile supplied JSON Schema
     let (schema_json, schema_compiled): (Value, JSONSchema) =
@@ -240,7 +241,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // reuse batch buffer
     let mut batch = Vec::with_capacity(BATCH_SIZE);
     let mut validation_results = Vec::with_capacity(BATCH_SIZE);
-    let mut valid_flags: Vec<bool> = Vec::with_capacity(record_count as usize);
+    let mut valid_flags: Vec<bool> = Vec::with_capacity(BATCH_SIZE);
     let mut validation_error_messages: Vec<String> = Vec::with_capacity(50);
 
     // set RAYON_NUM_THREADS
@@ -307,7 +308,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         #[cfg(any(feature = "full", feature = "lite"))]
-        if not_quiet {
+        if show_progress {
             progress.inc(batch.len() as u64);
         }
         batch.clear();
@@ -319,7 +320,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } // end infinite loop
 
     #[cfg(any(feature = "full", feature = "lite"))]
-    if not_quiet {
+    if show_progress {
         progress.set_message(format!(
             " validated {} records.",
             progress.length().unwrap().separate_with_commas()

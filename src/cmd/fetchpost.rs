@@ -164,7 +164,7 @@ Common options:
                                appear as the header row in the output.
     -d, --delimiter <arg>      The field delimiter for reading CSV data.
                                Must be a single character. (default: ,)
-    -q, --quiet                Don't show progress bars.
+    -p, --progressbar          Show progress bars. Not valid for stdin.
 "#;
 
 #[derive(Deserialize, Debug)]
@@ -187,7 +187,7 @@ struct Args {
     flag_output: Option<String>,
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
-    flag_quiet: bool,
+    flag_progressbar: bool,
     arg_url_column: SelectColumns,
     arg_column_list: SelectColumns,
     arg_input: Option<String>,
@@ -393,14 +393,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         RateLimiter::direct(Quota::per_second(rate_limit).allow_burst(NonZeroU32::new(5).unwrap()));
 
     // prep progress bars
-    set_colors_enabled(true); // as error progress bar is red
-                              // create multi_progress to stderr with a maximum refresh of 5 per second
+    let show_progress =
+        (args.flag_progressbar || std::env::var("QSV_PROGRESSBAR").is_ok()) && !rconfig.is_stdin();
+
+    // create multi_progress to stderr with a maximum refresh of 5 per second
     let multi_progress = MultiProgress::with_draw_target(ProgressDrawTarget::stderr_with_hz(5));
     let progress = multi_progress.add(ProgressBar::new(0));
     let mut record_count = 0;
 
     let error_progress = multi_progress.add(ProgressBar::new(args.flag_max_errors as u64));
-    if args.flag_max_errors > 0 {
+    if args.flag_max_errors > 0 && show_progress {
+        set_colors_enabled(true); // as error progress bar is red
         error_progress.set_style(
             indicatif::ProgressStyle::default_bar()
                 .template("{bar:37.red/white} {percent}%{msg} ({per_sec:7})")
@@ -414,9 +417,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         error_progress.set_draw_target(ProgressDrawTarget::hidden());
     }
 
-    let not_quiet = !args.flag_quiet;
-
-    if not_quiet {
+    if show_progress {
         record_count = util::count_rows(&rconfig)?;
         util::prep_progress(&progress, record_count);
     } else {
@@ -530,7 +531,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut form_body_jsonmap = serde_json::map::Map::with_capacity(col_list.len());
 
     while rdr.read_byte_record(&mut record)? {
-        if not_quiet {
+        if show_progress {
             progress.inc(1);
         }
 
@@ -665,7 +666,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     report_wtr.flush()?;
 
-    if not_quiet {
+    if show_progress {
         if args.flag_redis {
             util::update_cache_info!(progress, redis_cache_hits, record_count);
         } else {
@@ -688,35 +689,35 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         } else {
             error_progress.abandon();
         }
-
-        let mut end_msg = format!(
-            "{} records successfully fetchposted as {}. {} errors.",
-            HumanCount(running_success_count),
-            if include_existing_columns {
-                "CSV"
-            } else {
-                "JSONL"
-            },
-            HumanCount(running_error_count)
-        );
-        if report != ReportKind::None {
-            use std::fmt::Write;
-
-            write!(
-                &mut end_msg,
-                " {} report created: \"{}{FETCHPOST_REPORT_SUFFIX}\"",
-                if report == ReportKind::Detailed {
-                    "Detailed"
-                } else {
-                    "Short"
-                },
-                report_path
-            )
-            .unwrap();
-        }
-        info!("{end_msg}");
-        eprintln!("{end_msg}");
     }
+
+    let mut end_msg = format!(
+        "{} records successfully fetchposted as {}. {} errors.",
+        HumanCount(running_success_count),
+        if include_existing_columns {
+            "CSV"
+        } else {
+            "JSONL"
+        },
+        HumanCount(running_error_count)
+    );
+    if report != ReportKind::None {
+        use std::fmt::Write;
+
+        write!(
+            &mut end_msg,
+            " {} report created: \"{}{FETCHPOST_REPORT_SUFFIX}\"",
+            if report == ReportKind::Detailed {
+                "Detailed"
+            } else {
+                "Short"
+            },
+            report_path
+        )
+        .unwrap();
+    }
+    info!("{end_msg}");
+    eprintln!("{end_msg}");
 
     Ok(wtr.flush()?)
 }

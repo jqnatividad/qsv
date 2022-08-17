@@ -75,7 +75,7 @@ Common options:
                            appear as the header row in the output.
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
-    -q, --quiet            Do not display progress bar.
+    -p, --progressbar      Show progress bars. Not valid for stdin.
 "#;
 
 #[derive(Deserialize)]
@@ -91,7 +91,7 @@ struct Args {
     flag_output: Option<String>,
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
-    flag_quiet: bool,
+    flag_progressbar: bool,
 }
 
 impl From<mlua::Error> for CliError {
@@ -142,18 +142,21 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     lua_program.push_str(&lua_script);
     debug!("lua program: {:?}", lua_program);
 
+    // prep progress bar
+    let show_progress =
+        (args.flag_progressbar || std::env::var("QSV_PROGRESSBAR").is_ok()) && !rconfig.is_stdin();
+
     let progress = ProgressBar::with_draw_target(None, ProgressDrawTarget::stderr_with_hz(5));
-    if args.flag_quiet {
-        progress.set_draw_target(ProgressDrawTarget::hidden());
-    } else {
+    if show_progress {
         util::prep_progress(&progress, util::count_rows(&rconfig)?);
+    } else {
+        progress.set_draw_target(ProgressDrawTarget::hidden());
     }
-    let not_quiet = !args.flag_quiet;
 
     let mut record = csv::StringRecord::new();
 
     while rdr.read_record(&mut record)? {
-        if not_quiet {
+        if show_progress {
             progress.inc(1);
         }
 
@@ -220,7 +223,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         }
     }
-    if not_quiet {
+    if show_progress {
         util::finish_progress(&progress);
     }
 
