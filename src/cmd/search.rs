@@ -27,7 +27,18 @@ search options:
     -v, --invert-match     Select only rows that did not match
     -u, --unicode          Enable unicode support. When enabled, character classes
                            will match all unicode word characters instead of only
-                           ASCII word characters. Decreases performance.    
+                           ASCII word characters. Decreases performance.
+    -f, --flag <column>    If given, the command will not filter rows
+                           but will instead flag the found rows in a new
+                           column named <column>, with the row numbers
+                           of the matched rows.
+    --size-limit <mb>      Set the approximate size limit (MB) of the compiled
+                           regular expression. If the compiled expression exceeds this 
+                           number, then a compilation error is returned.
+                           [default: 100]
+    --dfa-size-limit <mb>  Set the approximate size of the cache (MB) used by the regular
+                           expression engine's Discrete Finite Automata.
+                           [default: 10]
 
 Common options:
     -h, --help             Display this message
@@ -37,10 +48,6 @@ Common options:
                            sliced, etc.)
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
-    -f, --flag <column>    If given, the command will not filter rows
-                           but will instead flag the found rows in a new
-                           column named <column>, with the row numbers
-                           of the matched rows.
     -e, --exitcode         Return exit code 0 if there's a match.
                            Return exit code 1 if no match is found.
 ";
@@ -57,6 +64,8 @@ struct Args {
     flag_unicode: bool,
     flag_ignore_case: bool,
     flag_flag: Option<String>,
+    flag_size_limit: usize,
+    flag_dfa_size_limit: usize,
     flag_exitcode: bool,
 }
 
@@ -69,6 +78,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let pattern = RegexBuilder::new(&*args.arg_regex)
         .case_insensitive(args.flag_ignore_case)
         .unicode(regex_unicode)
+        .size_limit(args.flag_size_limit * (1 << 20))
+        .dfa_size_limit(args.flag_dfa_size_limit * (1 << 20))
         .build()?;
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
