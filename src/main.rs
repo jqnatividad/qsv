@@ -46,7 +46,7 @@ use std::borrow::ToOwned;
 use std::env;
 use std::fmt;
 use std::io;
-use std::process;
+use std::process::{ExitCode, Termination};
 use std::time::Instant;
 
 use docopt::Docopt;
@@ -166,6 +166,19 @@ Options:
 "
 );
 
+pub enum QsvExitCode {
+    Good = 0,
+    Bad = 1,
+    IncorrectUsage = 2,
+    Abort = 255,
+}
+
+impl Termination for QsvExitCode {
+    fn report(self) -> ExitCode {
+        ExitCode::from(self as u8)
+    }
+}
+
 #[derive(Deserialize)]
 struct Args {
     arg_command: Option<Command>,
@@ -179,13 +192,13 @@ fn check_python() -> bool {
     Python::with_gil(|py| py.version_info() >= (3, 8))
 }
 
-fn main() {
+fn main() -> QsvExitCode {
     util::init_logger();
 
     #[cfg(feature = "python")]
     if !check_python() {
         werr!("Python 3.8+ required.");
-        ::std::process::exit(1);
+        return QsvExitCode::IncorrectUsage;
     }
 
     let now = Instant::now();
@@ -206,16 +219,16 @@ fn main() {
     if args.flag_list {
         wout!(concat!("Installed commands:", command_list!()));
         log_end(qsv_args, now);
-        return;
+        return QsvExitCode::Good;
     } else if args.flag_envlist {
         util::show_env_vars();
         log_end(qsv_args, now);
-        return;
+        return QsvExitCode::Good;
     }
     if args.flag_update {
         util::qsv_check_for_update();
         log_end(qsv_args, now);
-        return;
+        return QsvExitCode::Good;
     }
     match args.arg_command {
         None => {
@@ -227,32 +240,36 @@ Please choose one of the following commands:",
             ));
             util::qsv_check_for_update();
             log_end(qsv_args, now);
-            ::std::process::exit(0);
+            QsvExitCode::Good
         }
         Some(cmd) => match cmd.run() {
             Ok(()) => {
                 log_end(qsv_args, now);
-                process::exit(0);
+                QsvExitCode::Good
             }
-            Err(CliError::Flag(err)) => err.exit(),
+            Err(CliError::Flag(err)) => {
+                werr!("{err}");
+                log_end(qsv_args, now);
+                QsvExitCode::IncorrectUsage
+            }
             Err(CliError::Csv(err)) => {
                 werr!("{err}");
                 log_end(qsv_args, now);
-                process::exit(1);
+                QsvExitCode::Bad
             }
             Err(CliError::Io(ref err)) if err.kind() == io::ErrorKind::BrokenPipe => {
                 log_end(qsv_args, now);
-                process::exit(0);
+                QsvExitCode::Good
             }
             Err(CliError::Io(err)) => {
                 werr!("{err}");
                 log_end(qsv_args, now);
-                process::exit(1);
+                QsvExitCode::Bad
             }
             Err(CliError::Other(msg)) => {
                 werr!("{msg}");
                 log_end(qsv_args, now);
-                process::exit(1);
+                QsvExitCode::IncorrectUsage
             }
         },
     }
@@ -464,6 +481,6 @@ impl<'a> From<&'a str> for CliError {
 
 impl From<regex::Error> for CliError {
     fn from(err: regex::Error) -> CliError {
-        CliError::Other(format!("{err:?}"))
+        CliError::Other(format!("Regex error: {err:?}"))
     }
 }
