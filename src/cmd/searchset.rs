@@ -59,6 +59,8 @@ Common options:
                            sliced, etc.)
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
+    -e, --exitcode         Return exit code 0 if there's a match.
+                           Return exit code 1 if no match is found.
 ";
 
 #[derive(Deserialize)]
@@ -75,6 +77,7 @@ struct Args {
     flag_flag: Option<String>,
     flag_size_limit: usize,
     flag_dfa_size_limit: usize,
+    flag_exitcode: bool,
 }
 
 fn read_regexset(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
@@ -127,6 +130,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut record = csv::ByteRecord::new();
     let mut flag_rowi: u64 = 1;
+    let mut match_found = false;
+
     // to save allocs
     #[allow(unused_assignments)]
     let mut matched_rows = String::with_capacity(20);
@@ -144,6 +149,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
             matched
         });
+        if !match_found && m {
+            match_found = true;
+        }
         if args.flag_invert_match {
             m = !m;
         }
@@ -166,5 +174,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             wtr.write_byte_record(&record)?;
         }
     }
-    Ok(wtr.flush()?)
+    wtr.flush()?;
+
+    if args.flag_exitcode {
+        if match_found {
+            std::process::exit(0);
+        } else {
+            std::process::exit(1);
+        }
+    }
+
+    Ok(())
 }
