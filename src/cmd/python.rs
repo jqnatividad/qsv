@@ -101,7 +101,7 @@ Common options:
                            appear as the header row in the output.
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
-    -q, --quiet            Do not display progress bar.
+    -p, --progressbar      Show progress bars. Not valid for stdin.
 "#;
 
 #[derive(Deserialize)]
@@ -115,7 +115,7 @@ struct Args {
     flag_output: Option<String>,
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
-    flag_quiet: bool,
+    flag_progressbar: bool,
 }
 
 impl From<PyErr> for CliError {
@@ -133,12 +133,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut rdr = rconfig.reader()?;
     let mut wtr = Config::new(&args.flag_output).writer()?;
 
-    let not_quiet = !args.flag_quiet;
-
     let gil = Python::acquire_gil();
     let py = gil.python();
 
-    if not_quiet || log_enabled!(Debug) {
+    if log_enabled!(Debug) {
         let msg = format!("Detected python={}", py.version());
         eprintln!("{msg}");
         debug!("{msg}");
@@ -198,11 +196,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         wtr.write_record(&headers)?;
     }
 
+    // prep progress bar
+    let show_progress =
+        (args.flag_progressbar || std::env::var("QSV_PROGRESSBAR").is_ok()) && !rconfig.is_stdin();
     let progress = ProgressBar::with_draw_target(None, ProgressDrawTarget::stderr_with_hz(5));
-    if args.flag_quiet {
-        progress.set_draw_target(ProgressDrawTarget::hidden());
-    } else {
+    if show_progress {
         util::prep_progress(&progress, util::count_rows(&rconfig)?);
+    } else {
+        progress.set_draw_target(ProgressDrawTarget::hidden());
     }
 
     // ensure col/header names are valid and safe python variables
@@ -210,7 +211,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut record = csv::StringRecord::new();
     while rdr.read_record(&mut record)? {
-        if not_quiet {
+        if show_progress {
             progress.inc(1);
         }
 
@@ -253,7 +254,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         }
     }
-    if not_quiet {
+    if show_progress {
         util::finish_progress(&progress);
     }
 

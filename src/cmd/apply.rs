@@ -229,7 +229,7 @@ Common options:
                                 as headers.
     -d, --delimiter <arg>       The field delimiter for reading CSV data.
                                 Must be a single character. (default: ,)
-    -q, --quiet                 Don't show progress bars.
+    -p, --progressbar           Show progress bars. Not valid for stdin.
 ";
 
 // number of CSV rows to process in a batch
@@ -284,7 +284,7 @@ struct Args {
     flag_output: Option<String>,
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
-    flag_quiet: bool,
+    flag_progressbar: bool,
 }
 
 static CENSOR: OnceCell<Censor> = OnceCell::new();
@@ -475,13 +475,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     // prep progress bar
+    let show_progress =
+        (args.flag_progressbar || std::env::var("QSV_PROGRESSBAR").is_ok()) && !rconfig.is_stdin();
+
     let progress = ProgressBar::with_draw_target(None, ProgressDrawTarget::stderr_with_hz(5));
-    if args.flag_quiet {
-        progress.set_draw_target(ProgressDrawTarget::hidden());
-    } else {
+    if show_progress {
         util::prep_progress(&progress, util::count_rows(&rconfig)?);
+    } else {
+        progress.set_draw_target(ProgressDrawTarget::hidden());
     }
-    let not_quiet = !args.flag_quiet;
 
     let prefer_dmy = args.flag_prefer_dmy || rconfig.get_dmy_preference();
 
@@ -596,14 +598,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             wtr.write_record(result_record)?;
         }
 
-        if not_quiet {
+        if show_progress {
             progress.inc(batch.len() as u64);
         }
 
         batch.clear();
     } // end infinite loop
 
-    if not_quiet {
+    if show_progress {
         if args.cmd_geocode {
             util::update_cache_info!(progress, SEARCH_CACHED);
         }

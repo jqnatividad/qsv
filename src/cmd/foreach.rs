@@ -45,7 +45,7 @@ Common options:
                            headers.
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
-    -q, --quiet            Do not display progress bar.
+    -p, --progressbar      Show progress bars. Not valid for stdin.
 ";
 
 #[derive(Deserialize)]
@@ -57,7 +57,7 @@ struct Args {
     flag_new_column: Option<String>,
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
-    flag_quiet: bool,
+    flag_progressbar: bool,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -84,16 +84,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut output_headers_written = false;
 
     // prep progress bar
+    let show_progress =
+        (args.flag_progressbar || std::env::var("QSV_PROGRESSBAR").is_ok()) && !rconfig.is_stdin();
+
     let progress = ProgressBar::with_draw_target(None, ProgressDrawTarget::stderr_with_hz(5));
-    if args.flag_quiet {
-        progress.set_draw_target(ProgressDrawTarget::hidden());
-    } else {
+    if show_progress {
         util::prep_progress(&progress, util::count_rows(&rconfig)?);
+    } else {
+        progress.set_draw_target(ProgressDrawTarget::hidden());
     }
-    let not_quiet = !args.flag_quiet;
 
     while rdr.read_byte_record(&mut record)? {
-        if not_quiet {
+        if show_progress {
             progress.inc(1);
         }
         let current_value = &record[column_index];
@@ -169,7 +171,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             cmd.wait().unwrap();
         }
     }
-    if not_quiet {
+    if show_progress {
         util::finish_progress(&progress);
     }
     Ok(())
