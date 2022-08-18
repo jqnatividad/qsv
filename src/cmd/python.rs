@@ -148,7 +148,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut helper_text = String::new();
     if let Some(helper_file) = args.flag_helper {
-        helper_text = fs::read_to_string(helper_file).expect("Cannot load python file.");
+        helper_text = match fs::read_to_string(helper_file) {
+            Ok(helper_file) => helper_file,
+            Err(e) => return fail!(format!("Cannot load python file: {e}")),
+        }
     }
     let user_helpers = match PyModule::from_code(py, &helper_text, "qsv_user_helpers.py", "qsv_uh")
     {

@@ -128,7 +128,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     globals.set("cols", "{}")?;
 
     let lua_script = if args.flag_script_file {
-        fs::read_to_string(&args.arg_script).expect("Cannot load lua script file.")
+        match fs::read_to_string(&args.arg_script) {
+            Ok(script_file) => script_file,
+            Err(e) => return fail!(format!("Cannot load lua file: {e}")),
+        }
     } else {
         args.arg_script
     };
