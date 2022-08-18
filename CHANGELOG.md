@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-## [0.63.1] - 2022-08-18
+## [0.63.2] - 2022-08-18
 ### Added
 * `fetchpost`: added formdata to report https://github.com/jqnatividad/qsv/pull/434
 * `search` & `searchset`: added Custom exit codes; --exitcode option https://github.com/jqnatividad/qsv/pull/439
