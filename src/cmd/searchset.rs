@@ -9,6 +9,8 @@ use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
 use crate::util;
 use crate::CliResult;
+use indicatif::{HumanCount, ProgressBar, ProgressDrawTarget};
+use log::debug;
 use serde::Deserialize;
 
 static USAGE: &str = "
@@ -44,12 +46,14 @@ search options:
                            is set to the row number of the row, followed by a
                            semicolon, then a list of the matching regexes.
     --size-limit <mb>      Set the approximate size limit (MB) of the compiled
-                           regular expression. If the compiled expression exceeds this 
+                           regular expressions. If the compiled expressions exceeds this 
                            number, then a compilation error is returned.
                            [default: 100]
     --dfa-size-limit <mb>  Set the approximate size of the cache (MB) used by the regular
                            expression engine's Discrete Finite Automata.
                            [default: 10]
+    -e, --exitcode         Return exit code 0 if there's a match.
+                           Return exit code 1 if no match is found.
 
 Common options:
     -h, --help             Display this message
@@ -59,8 +63,7 @@ Common options:
                            sliced, etc.)
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
-    -e, --exitcode         Return exit code 0 if there's a match.
-                           Return exit code 1 if no match is found.
+    -p, --progressbar      Show progress bars. Not valid for stdin.
 ";
 
 #[derive(Deserialize)]
@@ -78,6 +81,7 @@ struct Args {
     flag_size_limit: usize,
     flag_dfa_size_limit: usize,
     flag_exitcode: bool,
+    flag_progressbar: bool,
 }
 
 fn read_regexset(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
@@ -99,12 +103,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } else {
         args.flag_unicode
     };
+
+    debug!("Compiling {} regex set expressions...", regexset.len());
     let pattern = RegexSetBuilder::new(&regexset)
         .case_insensitive(args.flag_ignore_case)
         .unicode(regex_unicode)
         .size_limit(args.flag_size_limit * (1 << 20))
         .dfa_size_limit(args.flag_dfa_size_limit * (1 << 20))
         .build()?;
+    debug!("Successfully compiled regex set!");
+
     let rconfig = Config::new(&args.arg_input)
         .checkutf8(false)
         .delimiter(args.flag_delimiter)
@@ -125,12 +133,23 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         wtr.write_record(&headers)?;
     }
 
+    // prep progress bar
+    let show_progress =
+        (args.flag_progressbar || std::env::var("QSV_PROGRESSBAR").is_ok()) && !rconfig.is_stdin();
+    let progress = ProgressBar::with_draw_target(None, ProgressDrawTarget::stderr_with_hz(5));
+    if show_progress {
+        util::prep_progress(&progress, util::count_rows(&rconfig)?);
+    } else {
+        progress.set_draw_target(ProgressDrawTarget::hidden());
+    }
+
     let mut match_list: String = String::new();
     let do_match_list = args.flag_flag.is_some();
 
     let mut record = csv::ByteRecord::new();
     let mut flag_rowi: u64 = 1;
-    let mut match_found = false;
+    let mut match_row_ctr: u64 = 0;
+    let mut total_matches: u64 = 0;
 
     // to save allocs
     #[allow(unused_assignments)]
@@ -138,10 +157,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     #[allow(unused_assignments)]
     let mut match_list_with_row = String::with_capacity(20);
     while rdr.read_byte_record(&mut record)? {
+        if show_progress {
+            progress.inc(1);
+        }
         let mut m = sel.select(&record).any(|f| {
             let matched = pattern.is_match(f);
             if matched && do_match_list {
                 let mut matches: Vec<_> = pattern.matches(f).into_iter().collect();
+                total_matches += matches.len() as u64;
                 for j in &mut matches {
                     *j += 1; // so the list is human readable - i.e. not zero-based
                 }
@@ -149,8 +172,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
             matched
         });
-        if !match_found && m {
-            match_found = true;
+        if m {
+            match_row_ctr += 1;
         }
         if args.flag_invert_match {
             m = !m;
@@ -176,8 +199,26 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
     wtr.flush()?;
 
+    if show_progress {
+        if do_match_list {
+            progress.set_message(format!(
+                " - {} total matches in {} rows with matches found in {} records.",
+                HumanCount(total_matches),
+                HumanCount(match_row_ctr),
+                HumanCount(progress.length().unwrap()),
+            ))
+        } else {
+            progress.set_message(format!(
+                " - {} rows with matches found in {} records.",
+                HumanCount(match_row_ctr),
+                HumanCount(progress.length().unwrap()),
+            ))
+        }
+        util::finish_progress(&progress);
+    }
+
     if args.flag_exitcode {
-        if match_found {
+        if match_row_ctr > 0 {
             std::process::exit(0);
         } else {
             std::process::exit(1);

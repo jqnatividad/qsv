@@ -5,6 +5,8 @@ use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
 use crate::util;
 use crate::CliResult;
+use indicatif::{HumanCount, ProgressBar, ProgressDrawTarget};
+use log::debug;
 use serde::Deserialize;
 
 static USAGE: &str = "
@@ -39,6 +41,8 @@ search options:
     --dfa-size-limit <mb>  Set the approximate size of the cache (MB) used by the regular
                            expression engine's Discrete Finite Automata.
                            [default: 10]
+    -e, --exitcode         Return exit code 0 if there's a match.
+                           Return exit code 1 if no match is found.
 
 Common options:
     -h, --help             Display this message
@@ -48,8 +52,7 @@ Common options:
                            sliced, etc.)
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
-    -e, --exitcode         Return exit code 0 if there's a match.
-                           Return exit code 1 if no match is found.
+    -p, --progressbar      Show progress bars. Not valid for stdin.
 ";
 
 #[derive(Deserialize)]
@@ -67,6 +70,7 @@ struct Args {
     flag_size_limit: usize,
     flag_dfa_size_limit: usize,
     flag_exitcode: bool,
+    flag_progressbar: bool,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -75,12 +79,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         Ok(_) => true,
         Err(_) => args.flag_unicode,
     };
+
+    debug!("Compiling regular expression...");
     let pattern = RegexBuilder::new(&*args.arg_regex)
         .case_insensitive(args.flag_ignore_case)
         .unicode(regex_unicode)
         .size_limit(args.flag_size_limit * (1 << 20))
         .dfa_size_limit(args.flag_dfa_size_limit * (1 << 20))
         .build()?;
+    debug!("Successfully compiled regular expression!");
+
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers)
@@ -100,15 +108,30 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if !rconfig.no_headers {
         wtr.write_record(&headers)?;
     }
+
+    // prep progress bar
+    let show_progress =
+        (args.flag_progressbar || std::env::var("QSV_PROGRESSBAR").is_ok()) && !rconfig.is_stdin();
+    let progress = ProgressBar::with_draw_target(None, ProgressDrawTarget::stderr_with_hz(5));
+    if show_progress {
+        util::prep_progress(&progress, util::count_rows(&rconfig)?);
+    } else {
+        progress.set_draw_target(ProgressDrawTarget::hidden());
+    }
+
     let mut record = csv::ByteRecord::new();
     let mut flag_rowi: u64 = 1;
-    let mut match_found = false;
+    let mut match_ctr: u64 = 0;
+
     #[allow(unused_assignments)]
     let mut matched_rows = String::with_capacity(20); // to save on allocs
     while rdr.read_byte_record(&mut record)? {
+        if show_progress {
+            progress.inc(1);
+        }
         let mut m = sel.select(&record).any(|f| pattern.is_match(f));
-        if !match_found && m {
-            match_found = true;
+        if m {
+            match_ctr += 1;
         }
         if args.flag_invert_match {
             m = !m;
@@ -129,8 +152,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
     wtr.flush()?;
 
+    if show_progress {
+        progress.set_message(format!(
+            " - {} matches found in {} records.",
+            HumanCount(match_ctr),
+            HumanCount(progress.length().unwrap()),
+        ));
+        util::finish_progress(&progress);
+    }
+
     if args.flag_exitcode {
-        if match_found {
+        if match_ctr > 0 {
             std::process::exit(0);
         } else {
             std::process::exit(1);
