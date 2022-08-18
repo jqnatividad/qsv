@@ -5,6 +5,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.63.0] - 2022-08-18
+### Added
+* `fetchpost`: added formdata to report https://github.com/jqnatividad/qsv/pull/434
+* `search` & `searchset`: added Custom exit codes; --exitcode option https://github.com/jqnatividad/qsv/pull/439
+* `search` & `searchset`: added --progressbar option
+* progressbars are now optional by default; added QSV_PROGRESSBAR env var to override setting
+* `search`, `searchset` & `replace`: added mem-limit options for regex-powered commands https://github.com/jqnatividad/qsv/pull/440
+### Changed
+* Bump jql from 4.0.7 to 5.0.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/436
+* progressbars are now off by default, and are disabled with stdin input https://github.com/jqnatividad/qsv/pull/438
+* `lua` & `py`: improved error-handling when loading script files
+* `stats`: changed to using AtomicBool instead of OnceCell, use with_capacity in hot compute loop to minize allocs - hyperfine shows 18% perf increase with these changes
+* self-update now gives a proper error message when GitHub is rate-limiting updates
+* cargo update bump several dependencies
+* document MSRV policy
+* pin Rust Nightly to 2022-08-16
+
+### Fixed
+* fixed stdin input causing an error when progressbars are enabled https://github.com/jqnatividad/qsv/pull/438
+
 ## [0.62.0] - 2022-08-12
 ### Added
 * `fetchpost`: new command that uses HTTP POST, as opposed to `fetch` - which uses HTTP GET ([difference between HTTP GET & POST methods](https://www.geeksforgeeks.org/difference-between-http-get-and-post-methods/)) https://github.com/jqnatividad/qsv/pull/431
