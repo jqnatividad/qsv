@@ -9,6 +9,7 @@ use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
 use crate::util;
 use crate::CliResult;
+#[cfg(any(feature = "full", feature = "lite"))]
 use indicatif::{HumanCount, ProgressBar, ProgressDrawTarget};
 use log::debug;
 use serde::Deserialize;
@@ -136,7 +137,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // prep progress bar
     let show_progress =
         (args.flag_progressbar || std::env::var("QSV_PROGRESSBAR").is_ok()) && !rconfig.is_stdin();
+    #[cfg(any(feature = "full", feature = "lite"))]
     let progress = ProgressBar::with_draw_target(None, ProgressDrawTarget::stderr_with_hz(5));
+    #[cfg(any(feature = "full", feature = "lite"))]
     if show_progress {
         util::prep_progress(&progress, util::count_rows(&rconfig)?);
     } else {
@@ -157,6 +160,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     #[allow(unused_assignments)]
     let mut match_list_with_row = String::with_capacity(20);
     while rdr.read_byte_record(&mut record)? {
+        #[cfg(any(feature = "full", feature = "lite"))]
         if show_progress {
             progress.inc(1);
         }
@@ -199,6 +203,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
     wtr.flush()?;
 
+    #[cfg(any(feature = "full", feature = "lite"))]
     if show_progress {
         if do_match_list {
             progress.set_message(format!(
