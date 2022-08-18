@@ -93,7 +93,12 @@ struct RFC4180Struct {
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
+    #[cfg(any(feature = "full", feature = "lite"))]
     let mut rconfig = Config::new(&args.arg_input)
+        .delimiter(args.flag_delimiter)
+        .no_headers(args.flag_no_headers);
+    #[cfg(feature = "datapusher_plus")]
+    let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers);
 
@@ -188,7 +193,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     #[cfg(any(feature = "full", feature = "lite"))]
     let progress = ProgressBar::with_draw_target(None, ProgressDrawTarget::stderr_with_hz(5));
 
-    // prep progress bar
+    #[cfg(any(feature = "full", feature = "lite"))]
     let show_progress =
         (args.flag_progressbar || std::env::var("QSV_PROGRESSBAR").is_ok()) && !rconfig.is_stdin();
 

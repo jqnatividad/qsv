@@ -111,6 +111,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     // prep progress bar
+    #[cfg(any(feature = "full", feature = "lite"))]
     let show_progress =
         (args.flag_progressbar || std::env::var("QSV_PROGRESSBAR").is_ok()) && !rconfig.is_stdin();
     #[cfg(any(feature = "full", feature = "lite"))]
