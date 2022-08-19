@@ -80,19 +80,35 @@ the jql selector can be saved and loaded from a file using the --jqlfile option.
 
 EXAMPLES USING THE --URL-TEMPLATE OPTION:
 
+Instead of using hardcoded URLs, you can also dynamically construct the URL for each CSV row using CSV column
+values in that row.
+
+Exanple 1:
+For example, we have a CSV with four columns and we want to geocode against the geocode.earth API that expects 
+latitude and longitude passed as URL parameters.
+
+addr_data.csv
+  location, description, latitude, longitude
+  Home, "house is not a home when there's no one there", 40.68889829703977, -73.99589368107037
+  X, "marks the spot", 40.78576117777992, -73.96279560368552
+  work, "moolah", 40.70692672280804, -74.0112264146281
+  school, "exercise brain", 40.72916494539206, -73.99624185993626
+  gym, "exercise muscles", 40.73947342617386, -73.99039923885411
+
 Geocode addresses in addr_data.csv, pass the latitude and longitude fields and store
 the response in a new column called response into enriched_addr_data.csv.
 
-$ qsv fetch --url-template "https://geocode.test/api/lookup.json?lat={latitude}&long={longitude}" 
+$ qsv fetch --url-template "https://api.geocode.earth/v1/reverse?point.lat={latitude}&point.lon={longitude}" 
   addr_data.csv -c response > enriched_addr_data.csv
 
-Geocode addresses in addr_data.csv, pass the "street address" and "zip-code" fields
-and use jql to parse CityState from the JSON response into a new column in enriched.csv.
-Note how field name non-alphanumeric characters in the url-template were replace with _.
+Example 2:
+Geocode addresses in addresses.csv, pass the "street address" and "zip-code" fields
+and use jql to parse placename from the JSON response into a new column in addresses_with_placename.csv.
+Note how field name non-alphanumeric characters (space and hyphen) in the url-template were replaced with _.
 
-$ qsv fetch --jql '"places"[0]."place name","places"[0]."state abbreviation"' 
-  addr_data.csv -c CityState --url-template "https://geocode.test/api/addr.json?addr={street_address}&zip={zip_code}"
-  > enriched.csv
+$ qsv fetch --jql '"features"[0]."properties","name"' addresses.csv -c placename --url-template 
+  "https://api.geocode.earth/v1/search/structured?address={street_address}&postalcode={zip_code}"
+  > addresses_with_placename.csv
 
 USING THE HTTP-HEADER OPTION:
 
