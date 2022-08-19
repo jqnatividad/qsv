@@ -73,8 +73,8 @@ data_with_CityState.csv
   https://api.zippopotam.us/us/94105, "San Francisco, CA"
   https://api.zippopotam.us/us/92802, "Anaheim, CA"
 
-As you can see, entering jql selectors can quickly become cumbersome. Alternatively,
-the jql selector can be saved and loaded from a file using the --jqlfile option.
+As you can see, entering jql selectors on the command line is error prone and can quickly become cumbersome.
+Alternatively, the jql selector can be saved and loaded from a file using the --jqlfile option.
 
   $ qsv fetch URL --new-column CityState --jqlfile places.jql data.csv > datatest.csv
 
