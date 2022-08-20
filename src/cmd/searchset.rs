@@ -212,13 +212,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 HumanCount(total_matches),
                 HumanCount(match_row_ctr),
                 HumanCount(progress.length().unwrap()),
-            ))
+            ));
         } else {
             progress.set_message(format!(
                 " - {} rows with matches found in {} records.",
                 HumanCount(match_row_ctr),
                 HumanCount(progress.length().unwrap()),
-            ))
+            ));
         }
         util::finish_progress(&progress);
     }
