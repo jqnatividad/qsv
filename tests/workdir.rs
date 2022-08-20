@@ -155,7 +155,12 @@ impl Workdir {
         let o = cmd.output().unwrap();
         let o_utf8 = String::from_utf8_lossy(&o.stderr).to_string();
         if !o.status.success() || !o_utf8.is_empty() {
-            o_utf8
+            if o_utf8.is_empty() {
+                // if there is no stderr msg, just return the exitcode
+                o.status.to_string()
+            } else {
+                o_utf8
+            }
         } else {
             "No error".to_string()
         }
