@@ -20,6 +20,11 @@ fn regexset_file() -> Vec<Vec<String>> {
     rows
 }
 
+fn regexset_no_match_file() -> Vec<Vec<String>> {
+    let rows = vec![svec!["^blah"], svec!["bloop$"], svec!["joel"]];
+    rows
+}
+
 fn regexset_unicode_file() -> Vec<Vec<String>> {
     let rows = vec![svec!["^foo"], svec!["bar$"], svec!["waldo"], svec!["^Ḟoo"]];
     rows
@@ -45,6 +50,32 @@ fn searchset() {
         svec!["barfoo", "foobar"],
         svec!["is waldo here", "spot"],
     ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn searchset_exitcode_match() {
+    let wrk = Workdir::new("searchset_exitcode_match");
+    wrk.create("data.csv", data(true));
+    wrk.create("regexset.txt", regexset_file());
+    let mut cmd = wrk.command("searchset");
+    cmd.arg("regexset.txt").arg("--exitcode").arg("data.csv");
+
+    let got = wrk.output_stderr(&mut cmd);
+    let expected = "No error";
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn searchset_exitcode_nomatch() {
+    let wrk = Workdir::new("searchset_exitcode_nomatch");
+    wrk.create("data.csv", data(true));
+    wrk.create("regexset.txt", regexset_no_match_file());
+    let mut cmd = wrk.command("searchset");
+    cmd.arg("regexset.txt").arg("--exitcode").arg("data.csv");
+
+    let got = wrk.output_stderr(&mut cmd);
+    let expected = "exit status: 1";
     assert_eq!(got, expected);
 }
 

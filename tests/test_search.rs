@@ -30,6 +30,30 @@ fn search() {
 }
 
 #[test]
+fn search_exitcode_match() {
+    let wrk = Workdir::new("search_exitcode_match");
+    wrk.create("data.csv", data(true));
+    let mut cmd = wrk.command("search");
+    cmd.arg("^foo").arg("--exitcode").arg("data.csv");
+
+    let got = wrk.output_stderr(&mut cmd);
+    let expected = "No error";
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn search_exitcode_nomatch() {
+    let wrk = Workdir::new("search_exitcode_nomatch");
+    wrk.create("data.csv", data(true));
+    let mut cmd = wrk.command("search");
+    cmd.arg("waldo").arg("--exitcode").arg("data.csv");
+
+    let got = wrk.output_stderr(&mut cmd);
+    let expected = "exit status: 1";
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn search_empty() {
     let wrk = Workdir::new("search");
     wrk.create("data.csv", data(true));
