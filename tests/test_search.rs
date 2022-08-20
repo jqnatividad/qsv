@@ -49,8 +49,7 @@ fn search_exitcode_nomatch() {
     cmd.arg("waldo").arg("--exitcode").arg("data.csv");
 
     let got = wrk.output_stderr(&mut cmd);
-    let expected = "exit status: 1";
-    assert_eq!(got, expected);
+    assert!(got.ends_with(" 1"));
 }
 
 #[test]
