@@ -56,7 +56,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [pseudo](/src/cmd/pseudo.rs#L10-L11) | [Pseudonymise](https://en.wikipedia.org/wiki/Pseudonymization) the value of the given column by replacing them with an incremental identifier.  |
 | [py](/src/cmd/python.rs#L44-L45)[^1] | Evaluate a Python expression over CSV lines to transform, aggregate or filter them. Python's [f-strings](https://www.freecodecamp.org/news/python-f-strings-tutorial-how-to-use-f-strings-for-string-formatting/) is particularly useful for extended formatting (Python 3.8+ required).  |
 | [rename](/src/cmd/rename.rs#L7) |  Rename the columns of a CSV efficiently.  |
-| [replace](/src/cmd/replace.rs#L12) | Replace CSV data using a regex.  |
+| [replace](/src/cmd/replace.rs#L14) | Replace CSV data using a regex.  |
 | [reverse](/src/cmd/reverse.rs#L7)[^3] | Reverse order of rows in a CSV. Unlike the `sort --reverse` command, it preserves the order of rows with the same key.  |
 | [sample](/src/cmd/sample.rs#L13-L14)[^2] | Randomly draw rows (with optional seed) from a CSV using [reservoir sampling](https://en.wikipedia.org/wiki/Reservoir_sampling) (i.e., use memory proportional to the size of the sample).  |
 | [schema](/src/cmd/schema.rs#L24)[^4] | Infer schema from CSV data and output in [JSON Schema](https://json-schema.org/) format. Uses multithreading to go faster if an index is present. See `validate` command to use the generated JSON Schema to validate if similar CSVs comply with the schema. |
