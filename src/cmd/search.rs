@@ -38,7 +38,7 @@ search options:
     --size-limit <mb>      Set the approximate size limit (MB) of the compiled
                            regular expression. If the compiled expression exceeds this 
                            number, then a compilation error is returned.
-                           [default: 100]
+                           [default: 50]
     --dfa-size-limit <mb>  Set the approximate size of the cache (MB) used by the regular
                            expression engine's Discrete Finite Automata.
                            [default: 10]
@@ -145,7 +145,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         if args.flag_flag.is_some() {
             flag_rowi += 1;
             record.push_field(if m {
-                matched_rows = flag_rowi.to_string();
+                let mut buffer = itoa::Buffer::new();
+                matched_rows = buffer.format(flag_rowi).to_owned();
                 matched_rows.as_bytes()
             } else {
                 b"0"
