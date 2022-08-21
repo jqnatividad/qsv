@@ -176,8 +176,6 @@ pub fn prep_progress(progress: &ProgressBar, record_count: u64) {
 
 #[cfg(any(feature = "full", feature = "lite"))]
 pub fn finish_progress(progress: &ProgressBar) {
-    let per_sec_rate = progress.per_sec();
-
     progress.set_style(
         ProgressStyle::default_bar()
             .template("[{elapsed_precise}] [{bar:25} {percent}%{msg}] ({per_sec})")
@@ -186,10 +184,10 @@ pub fn finish_progress(progress: &ProgressBar) {
 
     if progress.length().unwrap() == progress.position() {
         progress.finish();
-        info!("Progress done... {per_sec_rate} records/sec");
+        info!("Progress done... {}", progress.message());
     } else {
         progress.abandon();
-        info!("Progress abandoned... {per_sec_rate} records/sec");
+        info!("Progress abandoned... {}", progress.message());
     }
 }
 
