@@ -28,6 +28,47 @@ fn replace() {
 }
 
 #[test]
+fn replace_exitcode_match() {
+    let wrk = Workdir::new("replace_exitcode_match");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["identifier", "color"],
+            svec!["164.0", "yellow"],
+            svec!["165.0", "yellow"],
+            svec!["166.0", "yellow"],
+            svec!["167.0", "yellow.0"],
+        ],
+    );
+    let mut cmd = wrk.command("replace");
+    cmd.arg("\\.0$").arg("").arg("--exitcode").arg("data.csv");
+
+    let got = wrk.output_stderr(&mut cmd);
+    let expected = "No error";
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn replace_exitcode_nomatch() {
+    let wrk = Workdir::new("replace_exitcode_nomatch");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["identifier", "color"],
+            svec!["164.5", "yellow"],
+            svec!["165.6", "yellow"],
+            svec!["166.7", "yellow"],
+            svec!["167.8", "yellow.1"],
+        ],
+    );
+    let mut cmd = wrk.command("replace");
+    cmd.arg("\\.0$").arg("").arg("--exitcode").arg("data.csv");
+
+    let got = wrk.output_stderr(&mut cmd);
+    assert!(got.ends_with(" 1"));
+}
+
+#[test]
 fn replace_null() {
     let wrk = Workdir::new("replace_null");
     wrk.create(
