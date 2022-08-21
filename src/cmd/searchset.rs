@@ -187,7 +187,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         if do_match_list {
             flag_rowi += 1;
             record.push_field(if m {
-                matched_rows = flag_rowi.to_string();
+                let mut buffer = itoa::Buffer::new();
+                matched_rows = buffer.format(flag_rowi).to_owned();
                 if args.flag_invert_match {
                     matched_rows.as_bytes()
                 } else {
