@@ -6,6 +6,8 @@ use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
 use crate::util;
 use crate::CliResult;
+#[cfg(any(feature = "full", feature = "lite"))]
+use indicatif::{HumanCount, ProgressBar, ProgressDrawTarget};
 use serde::Deserialize;
 
 static USAGE: &str = "
@@ -37,10 +39,12 @@ replace options:
     --size-limit <mb>      Set the approximate size limit (MB) of the compiled
                            regular expression. If the compiled expression exceeds this 
                            number, then a compilation error is returned.
-                           [default: 100]
+                           [default: 50]
     --dfa-size-limit <mb>  Set the approximate size of the cache (MB) used by the regular
                            expression engine's Discrete Finite Automata.
                            [default: 10]
+    -e, --exitcode         Return exit code 0 if there's a match that was replaced.
+                           Return exit code 1 if no match is found and nothing was replaced.
 
 Common options:
     -h, --help             Display this message
@@ -50,6 +54,8 @@ Common options:
                            sliced, etc.)
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
+    -p, --progressbar      Show progress bars. Not valid for stdin.
+
 ";
 
 #[derive(Deserialize)]
@@ -65,6 +71,8 @@ struct Args {
     flag_ignore_case: bool,
     flag_size_limit: usize,
     flag_dfa_size_limit: usize,
+    flag_exitcode: bool,
+    flag_progressbar: bool,
 }
 
 const NULL_VALUE: &str = "<NULL>";
@@ -105,14 +113,40 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if !rconfig.no_headers {
         wtr.write_record(&headers)?;
     }
+
+    // prep progress bar
+    #[cfg(any(feature = "full", feature = "lite"))]
+    let show_progress =
+        (args.flag_progressbar || std::env::var("QSV_PROGRESSBAR").is_ok()) && !rconfig.is_stdin();
+    #[cfg(any(feature = "full", feature = "lite"))]
+    let progress = ProgressBar::with_draw_target(None, ProgressDrawTarget::stderr_with_hz(5));
+    #[cfg(any(feature = "full", feature = "lite"))]
+    if show_progress {
+        util::prep_progress(&progress, util::count_rows(&rconfig)?);
+    } else {
+        progress.set_draw_target(ProgressDrawTarget::hidden());
+    }
+
     let mut record = csv::ByteRecord::new();
+    let mut total_match_ctr: u64 = 0;
+    let mut row_with_matches_ctr: u64 = 0;
 
     while rdr.read_byte_record(&mut record)? {
+        #[cfg(any(feature = "full", feature = "lite"))]
+        if show_progress {
+            progress.inc(1);
+        }
+
+        let mut match_found = false;
         record = record
             .into_iter()
             .enumerate()
             .map(|(i, v)| {
                 if sel_indices.contains(&i) {
+                    if (args.flag_exitcode || args.flag_progressbar) && pattern.is_match(v) {
+                        total_match_ctr += 1;
+                        match_found = true;
+                    }
                     pattern.replace_all(v, replacement)
                 } else {
                     Cow::Borrowed(v)
@@ -120,7 +154,33 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             })
             .collect();
 
+        if match_found {
+            row_with_matches_ctr += 1;
+        }
         wtr.write_byte_record(&record)?;
     }
-    Ok(wtr.flush()?)
+
+    wtr.flush()?;
+
+    #[cfg(any(feature = "full", feature = "lite"))]
+    if show_progress {
+        progress.set_message(format!(
+            r#" - {} total matches replaced with "{}" in {} out of {} records."#,
+            HumanCount(total_match_ctr),
+            args.arg_replacement,
+            HumanCount(row_with_matches_ctr),
+            HumanCount(progress.length().unwrap()),
+        ));
+        util::finish_progress(&progress);
+    }
+
+    if args.flag_exitcode {
+        if total_match_ctr > 0 {
+            std::process::exit(0);
+        } else {
+            std::process::exit(1);
+        }
+    }
+
+    Ok(())
 }
