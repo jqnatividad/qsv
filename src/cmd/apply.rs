@@ -75,10 +75,10 @@ Currently supported operations:
   * simjw: Jaro-Winkler similarity to --comparand (between 0.0 & 1.0)
   * simsd: Sørensen-Dice similarity to --comparand (between 0.0 & 1.0)
   * simhm: Hamming distance to --comparand. Num of positions characters differ.
-  * simod: OSA Distance to --comparand.
+  * simod: Optimal String Alignment (OSA) Distance to --comparand.
   * eudex: Multi-lingual sounds like --comparand (boolean)
   * sentiment: Normalized VADER sentiment score (English only - between -1.0 to 1.0).
-  * whatlang: Language Detection. For 87 supported languages, see
+  * whatlang: Language Detection for 87 supported languages, see
        https://github.com/greyblake/whatlang-rs/blob/master/SUPPORTED_LANGUAGES.md
 
 Examples:
