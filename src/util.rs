@@ -7,8 +7,7 @@ use crate::CliResult;
 use docopt::Docopt;
 #[cfg(any(feature = "full", feature = "lite"))]
 use indicatif::{HumanCount, ProgressBar, ProgressStyle};
-#[allow(unused_imports)]
-use log::{debug, error, info, log_enabled, Level};
+use log::{debug, error, info, log_enabled, warn, Level};
 #[cfg(any(feature = "apply", feature = "fetch", feature = "python"))]
 use regex::Regex;
 use serde::de::{Deserialize, DeserializeOwned, Deserializer, Error};
@@ -537,16 +536,21 @@ pub fn qsv_check_for_update() {
         info!("Up to date ({curr_version})... no update required.");
     };
 
-    send_hwsurvey(&bin_name, updated, latest_release, curr_version);
+    _ = send_hwsurvey(&bin_name, updated, latest_release, curr_version, false);
 }
 
-// TODO: Add --dry-run parameter, so we can test this in CI
 // the qsv hwsurvey allows us to keep a better
 // track of qsv's usage in the wild, so we can do a
 // better job of prioritizing platforms/features we support
 // no personally identifiable information is collected
 #[cfg(any(feature = "full", feature = "lite"))]
-fn send_hwsurvey(bin_name: &str, updated: bool, latest_release: &str, curr_version: &str) {
+fn send_hwsurvey(
+    bin_name: &str,
+    updated: bool,
+    latest_release: &str,
+    curr_version: &str,
+    dry_run: bool,
+) -> Result<reqwest::StatusCode, String> {
     use sysinfo::{CpuExt, System, SystemExt};
 
     const QSV_KIND: &str = match option_env!("QSV_KIND") {
@@ -599,25 +603,42 @@ fn send_hwsurvey(bin_name: &str, updated: bool, latest_release: &str, curr_versi
     );
     debug!("hwsurvey: {hwsurvey_json}");
 
-    let client = reqwest::blocking::Client::builder()
-        .user_agent(DEFAULT_USER_AGENT)
-        .brotli(true)
-        .gzip(true)
-        .deflate(true)
-        .http2_adaptive_window(true)
-        .build()
-        .unwrap();
-    if let Ok(resp) = client
-        .post(HW_SURVEY_URL)
-        .body(hwsurvey_json.to_string())
-        .header(reqwest::header::CONTENT_TYPE, "application/json")
-        .header(reqwest::header::HOST, "qsv.rs")
-        .send()
-    {
-        debug!("hw_survey response sent: {:?}", &resp);
+    let mut survey_done = true;
+    let mut status = reqwest::StatusCode::OK;
+    if !dry_run {
+        let client = reqwest::blocking::Client::builder()
+            .user_agent(DEFAULT_USER_AGENT)
+            .brotli(true)
+            .gzip(true)
+            .deflate(true)
+            .http2_adaptive_window(true)
+            .build()
+            .expect("Cannot build hw_survey reqwest client");
+
+        match client
+            .post(HW_SURVEY_URL)
+            .body(hwsurvey_json.to_string())
+            .header(reqwest::header::CONTENT_TYPE, "application/json")
+            .header(reqwest::header::HOST, "qsv.rs")
+            .send()
+        {
+            Ok(resp) => {
+                debug!("hw_survey response sent: {:?}", &resp);
+                status = resp.status();
+                survey_done = status.is_success();
+            }
+            Err(e) => {
+                warn!("Cannot send hw survey: {e}");
+                survey_done = false;
+                status = reqwest::StatusCode::BAD_REQUEST;
+            }
+        };
+    }
+    if survey_done {
+        Ok(status)
     } else {
-        error!("Cannot send hw survey");
-    };
+        Err("Cannot send hw survey".to_string())
+    }
 }
 
 #[cfg(any(feature = "apply", feature = "fetch", feature = "python"))]
@@ -636,4 +657,10 @@ pub fn safe_header_names(headers: &csv::StringRecord, check_first_char: bool) ->
     }
     debug!("safe header names: {name_vec:?}");
     name_vec
+}
+
+#[test]
+fn test_hw_survey() {
+    // we have this test primarily to exercise the sysinfo module
+    assert!(send_hwsurvey("qsv", false, "0.0.2", "0.0.1", true).is_ok());
 }
