@@ -19,7 +19,7 @@ line-by-line basis. If sorting a non-CSV file, be sure to set --no-headers,
 otherwise, the first line will not be included in the external sort.
 
 Usage:
-    qsv extsort [options] [<input>] [<output>]
+    qsv extsort [options] <input> <output>
 
 External sort option:
     -j, --jobs <arg>       The number of jobs to run in parallel.
@@ -62,22 +62,25 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut input_reader = io::BufReader::new(match fs::File::open(&args.arg_input) {
         Ok(f) => f,
-        Err(_) => return fail!("input file required."),
+        Err(e) => return fail!(format!("Cannot read input file {e}")),
     });
 
     let mut output_writer = io::BufWriter::new(match fs::File::create(&args.arg_output) {
         Ok(f) => f,
-        Err(_) => return fail!("output file required."),
+        Err(e) => return fail!(format!("Cannot create output file: {e}")),
     });
 
     let sorter: ExternalSorter<String, io::Error, MemoryLimitedBufferBuilder> =
-        ExternalSorterBuilder::new()
+        match ExternalSorterBuilder::new()
             .with_tmp_dir(path::Path::new("./"))
             .with_buffer(MemoryLimitedBufferBuilder::new(mem_limited_buffer))
             .with_rw_buf_size(RW_BUFFER_CAPACITY)
             .with_threads_number(util::njobs(args.flag_jobs))
             .build()
-            .unwrap();
+        {
+            Ok(sorter) => sorter,
+            Err(e) => return fail!(format!("cannot create external sorter: {e}")),
+        };
 
     let mut header = String::new();
     if !args.flag_no_headers {
