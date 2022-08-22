@@ -228,7 +228,7 @@ qsv stats wcp.csv --output wcpstats.csv
 | `QSV_MAX_JOBS` | number of jobs to use for multithreaded commands (currently `apply`, `dedup`, `extsort`, `frequency`, `schema`, `sort`, `split`, `stats` and `validate`). If not set, max_jobs is set to the detected number of logical processors.  See [Multithreading](docs/PERFORMANCE.md#multithreading) for more info. |
 | `QSV_NO_UPDATE` | if set, prohibit self-update version check for the latest qsv release published on GitHub. |
 | `QSV_PREFER_DMY` | if set, date parsing will use DMY format. Otherwise, use MDY format (used with `apply datefmt`, `schema`, `sniff` & `stats` commands). |
-| `QSV_REGEX_UNICODE` | if set, makes `search`, `searchset` and `replace` commands unicode-aware. For increased performance, these commands are not unicode-aware by default and will ignore unicode values when matching and will panic when unicode characters are used in the regex. |
+| `QSV_REGEX_UNICODE` | if set, makes `search`, `searchset` and `replace` commands unicode-aware. For increased performance, these commands are not unicode-aware by default and will ignore unicode values when matching and will abort when unicode characters are used in the regex. Note that the `apply operations regex_replace` operation is always unicode-aware. |
 | `QSV_SKIPUTF8_CHECK` | if set, skip UTF-8 encoding check. Otherwise, for several commands that require UTF-8 encoded input (see [UTF8-Encoding](#utf-8-encoding)), qsv scans the first 8k. |
 | `QSV_RDR_BUFFER_CAPACITY` | reader buffer size (default (bytes): 16384) |
 | `QSV_WTR_BUFFER_CAPACITY` | writer buffer size (default (bytes): 65536) |
