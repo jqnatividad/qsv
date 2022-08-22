@@ -30,6 +30,11 @@ Apply a series of transformation functions to a given CSV column. This can be us
 perform typical cleaning tasks and/or harmonize some values, etc.
 
 It has several subcommands:
+ * operations - 26 string, format, currency, regex & NLP operators.
+ * emptyreplace - replace empty cells with <--replacement> string.
+ * datefmt - Formats a recognized date column to a specified format using --formatstr.
+ * dynfmt - Dynamically constructs a new column from other columns using the --formatstr template.
+ * geocode - geocodes a WGS84 location against a static copy of the Geonames cities database.
 
 OPERATIONS
 The series of operations must be given separated by commas as such:
