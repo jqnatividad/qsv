@@ -76,6 +76,7 @@ macro_rules! werr {
     });
 }
 
+// TODO: format parameter so we don't need to do fail!(format!())
 macro_rules! fail {
     ($e:expr) => {{
         use log::error;

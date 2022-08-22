@@ -540,6 +540,7 @@ pub fn qsv_check_for_update() {
     send_hwsurvey(&bin_name, updated, latest_release, curr_version);
 }
 
+// TODO: Add --dry-run parameter, so we can test this in CI
 // the qsv hwsurvey allows us to keep a better
 // track of qsv's usage in the wild, so we can do a
 // better job of prioritizing platforms/features we support
