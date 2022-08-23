@@ -8,7 +8,7 @@ use crate::CliResult;
 use csv::ByteRecord;
 #[cfg(any(feature = "full", feature = "lite"))]
 use indicatif::{HumanCount, ProgressBar, ProgressDrawTarget};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::cmd::sort::iter_cmp;
 
@@ -16,15 +16,17 @@ static USAGE: &str = r#"
 Check if a CSV is sorted. The check is done on a streaming basis (i.e. constant memory).
 
 This command can be used in tandem with other qsv commands, to ensure that they also work
-on a stream of data, without having to load entire CSV files in to memory.
+on a stream of data, without loading entire CSV files in to memory.
 
-Doing a naive `dedup`, for instance, requires loading the entire CSV into memory to sort it
+For instance, a naive `dedup` requires loading the entire CSV into memory to sort it
 first before deduping. However, if you know a CSV is sorted beforehand, you can invoke
 `dedup` with the --sorted option, and it will be deduped on a streaming basis as well.
 
-`sort` also requires loading the entire CSV into memory. For simple "sorts" - (not numeric,
-reverse & random sorts) particularly of very large CSV files that will not fit in memory,
-`extsort` - a multi-threaded streaming sort, can possibly be used instead.
+`sort` also requires loading the entire CSV into memory. For simple "sorts" (not numeric,
+reverse & random sorts), particularly of very large CSV files that will not fit in memory,
+`extsort` - a multi-threaded streaming sort can be used instead.
+
+Simply put, sortcheck allows you to make informed choices on how to compose pipelines.
 
 Returns exit code 0 if a CSV is sorted, and exit code 1 otherwise.
 
@@ -34,7 +36,11 @@ Usage:
 sort options:
     -s, --select <arg>         Select a subset of columns to check for sort.
                                See 'qsv select --help' for the format details.
-    -C, --no-case              Compare strings disregarding case 
+    -C, --no-case              Compare strings disregarding case
+    --all                      Check all records. Do not stop the check on the
+                               first unsorted record.
+    --json                     Return results in JSON format.
+    --pretty-json              Return results in pretty JSON format.
 
 Common options:
     -h, --help                 Display this message
@@ -52,9 +58,20 @@ struct Args {
     arg_input: Option<String>,
     flag_select: SelectColumns,
     flag_no_case: bool,
+    flag_all: bool,
     flag_no_headers: bool,
     flag_delimiter: Option<Delimiter>,
     flag_progressbar: bool,
+    flag_json: bool,
+    flag_pretty_json: bool,
+}
+
+#[derive(Serialize, Deserialize)]
+struct SortCheckStruct {
+    sorted: bool,
+    record_count: u64,
+    unsorted_breaks: u64,
+    dupe_count: u64,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -85,20 +102,23 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         progress.set_draw_target(ProgressDrawTarget::hidden());
         0
     };
+    #[cfg(feature = "datapusher_plus")]
+    let mut record_count: u64 = 0;
 
     let mut record = ByteRecord::new();
     let mut next_record = ByteRecord::new();
     let mut sorted = true;
     let mut scan_ctr: u64 = 0;
     let mut dupe_count: u64 = 0;
+    let mut unsorted_breaks: u64 = 0;
 
     rdr.read_byte_record(&mut record)?;
     loop {
         #[cfg(any(feature = "full", feature = "lite"))]
         if show_progress {
             progress.inc(1);
-            scan_ctr += 1;
         }
+        scan_ctr += 1;
         let more_records = rdr.read_byte_record(&mut next_record)?;
         if !more_records {
             break;
@@ -120,10 +140,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
             cmp::Ordering::Greater => {
                 sorted = false;
-                break;
+                if args.flag_all {
+                    unsorted_breaks += 1;
+                    record.clone_from(&next_record);
+                } else {
+                    break;
+                }
             }
         }
     } // end loop
+
+    #[cfg(feature = "datapusher_plus")]
+    {
+        record_count = scan_ctr;
+    }
 
     #[cfg(any(feature = "full", feature = "lite"))]
     if show_progress {
@@ -131,6 +161,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             progress.set_message(format!(
                 " - ALL {} records checked. {} duplicates found. Sorted.",
                 HumanCount(record_count),
+                HumanCount(dupe_count),
+            ));
+        } else if args.flag_all {
+            progress.set_message(format!(
+                " - ALL {} records checked. {} unsorted breaks & {} duplicates found. NOT Sorted.",
+                HumanCount(record_count),
+                HumanCount(unsorted_breaks),
                 HumanCount(dupe_count),
             ));
         } else {
@@ -142,6 +179,28 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             ));
         }
         util::finish_progress(&progress);
+    }
+
+    if args.flag_json || args.flag_pretty_json {
+        let sortcheck_struct = SortCheckStruct {
+            sorted,
+            record_count: if record_count == 0 {
+                scan_ctr
+            } else {
+                record_count
+            },
+            unsorted_breaks,
+            dupe_count,
+        };
+        if args.flag_pretty_json {
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&sortcheck_struct).unwrap()
+            );
+        } else {
+            let json_result = serde_json::to_string(&sortcheck_struct).unwrap();
+            println!("{json_result}");
+        };
     }
 
     if sorted {
