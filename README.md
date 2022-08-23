@@ -38,7 +38,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [explode](/src/cmd/explode.rs#L8-L9) | Explode rows into multiple ones by splitting a column value based on the given separator.  |
 | [extsort](/src/cmd/extsort.rs#L12)[^5] | Sort an arbitrarily large CSV/text file using a multithreaded [external merge sort](https://en.wikipedia.org/wiki/External_sorting) algorithm. |
 | [fetch](/src/cmd/fetch.rs#L28) | Fetches data from web services for every row using **HTTP Get**. Comes with [jql](https://github.com/yamafaktory/jql#%EF%B8%8F-usage) JSON query language support, dynamic throttling ([RateLimit](https://tools.ietf.org/id/draft-polli-ratelimit-headers-00.html)) & caching with optional [Redis](https://redis.io/) support for persistent caching. |
-| [fetchpost](/src/cmd/fetchpost.rs#L28-29) | Similar to `fetch`, but uses **HTTP Post**. |
+| [fetchpost](/src/cmd/fetchpost.rs#L28-29) | Similar to `fetch`, but uses **HTTP Post**. ([HTTP GET vs POST methods](https://www.geeksforgeeks.org/difference-between-http-get-and-post-methods/)) |
 | [fill](/src/cmd/fill.rs#L13) | Fill empty values.  |
 | [fixlengths](/src/cmd/fixlengths.rs#L9-L11) | Force a CSV to have same-length records by either padding or truncating them. |
 | [flatten](/src/cmd/flatten.rs#L12-L15) | A flattened view of CSV records. Useful for viewing one record at a time.<br />e.g. `qsv slice -i 5 data.csv \| qsv flatten`. |
@@ -70,7 +70,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [split](/src/cmd/split.rs#L14)[^2][^4] | Split one CSV file into many CSV files of N chunks. (Uses multithreading to go faster if an index is present.) |
 | [stats](/src/cmd/stats.rs#L26)[^2][^3][^4] | Infer data type (Null, String, Float, Integer, Date, DateTime) & compute descriptive statistics for each column in a CSV (sum, min/max, min/max length, mean, stddev, variance, nullcount, quartiles, IQR, lower/upper fences, skewness, median, mode & cardinality). Uses multithreading to go faster if an index is present. |
 | [table](/src/cmd/table.rs#L12)[^3] | Show aligned output of a CSV using [elastic tabstops](https://github.com/BurntSushi/tabwriter).  |
-| [tojsonl](/src/cmd/tojsonl.rs#L12)[^4] | Converts CSV to a newline-delimited JSON (JSONL/NDJSON). See `jsonl` command to convert JSONL to CSV. |
+| [tojsonl](/src/cmd/tojsonl.rs#L14)[^4] | Converts CSV to a newline-delimited JSON (JSONL/NDJSON). See `jsonl` command to convert JSONL to CSV. |
 | [transpose](/src/cmd/transpose.rs#L9)[^3] | Transpose rows/columns of a CSV.  |
 | [validate](/src/cmd/validate.rs#L30-L31)[^2][^5] | Validate CSV data with a JSON Schema (See `schema` command). If no jsonschema file is provided, validates if a CSV conforms to the [RFC 4180 standard](https://datatracker.ietf.org/doc/html/rfc4180). |
 
