@@ -15,18 +15,21 @@ use crate::cmd::sort::iter_cmp;
 static USAGE: &str = r#"
 Check if a CSV is sorted. The check is done on a streaming basis (i.e. constant memory).
 
-This command can be used in tandem with other qsv commands, to ensure that they also work
-on a stream of data, without loading entire CSV files in to memory.
+This command can be used in tandem with other qsv commands to ensure that they also work
+on a stream of data, without loading entire CSV files into memory.
 
 For instance, a naive `dedup` requires loading the entire CSV into memory to sort it
 first before deduping. However, if you know a CSV is sorted beforehand, you can invoke
-`dedup` with the --sorted option, and it will be deduped on a streaming basis as well.
+`dedup` with the --sorted option, and it will skip loading entire CSV into memory to sort
+it first. It will just immediately dedupe on a streaming basis.
 
 `sort` also requires loading the entire CSV into memory. For simple "sorts" (not numeric,
 reverse & random sorts), particularly of very large CSV files that will not fit in memory,
-`extsort` - a multi-threaded streaming sort can be used instead.
+`extsort` - a multi-threaded streaming sort that is exponentially faster and can work with 
+arbitrarily large files, can be used instead.
 
-Simply put, sortcheck allows you to make informed choices on how to compose pipelines.
+Simply put, sortcheck allows you to make informed choices on how to compose pipelines that
+require sorted data.
 
 Returns exit code 0 if a CSV is sorted, and exit code 1 otherwise.
 
@@ -34,23 +37,26 @@ Usage:
     qsv sortcheck [options] [<input>]
 
 sort options:
-    -s, --select <arg>         Select a subset of columns to check for sort.
-                               See 'qsv select --help' for the format details.
-    -C, --no-case              Compare strings disregarding case
-    --all                      Check all records. Do not stop the check on the
-                               first unsorted record.
-    --json                     Return results in JSON format.
-    --pretty-json              Return results in pretty JSON format.
+    -s, --select <arg>      Select a subset of columns to check for sort.
+                            See 'qsv select --help' for the format details.
+    -C, --no-case           Compare strings disregarding case
+    --all                   Check all records. Do not stop the check on the
+                            first unsorted record.
+    --json                  Return results in JSON format. The JSON result has
+                            the following properties - sorted (boolean), 
+                            record_count (number), unsorted_breaks (number) &
+                            dupe_count (number).
+    --pretty-json           Return results in pretty JSON format.
 
 Common options:
-    -h, --help                 Display this message
-    -n, --no-headers           When set, the first row will not be interpreted
-                               as headers. That is, it will be sorted with the rest
-                               of the rows. Otherwise, the first row will always
-                               appear as the header row in the output.
-    -d, --delimiter <arg>      The field delimiter for reading CSV data.
-                               Must be a single character. (default: ,)
-    -p, --progressbar          Show progress bars. Not valid for stdin.
+    -h, --help              Display this message
+    -n, --no-headers        When set, the first row will not be interpreted
+                            as headers. That is, it will be sorted with the rest
+                            of the rows. Otherwise, the first row will always
+                            appear as the header row in the output.
+    -d, --delimiter <arg>   The field delimiter for reading CSV data.
+                            Must be a single character. (default: ,)
+    -p, --progressbar       Show progress bars. Not valid for stdin.
 "#;
 
 #[derive(Deserialize)]
