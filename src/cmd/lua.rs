@@ -43,6 +43,10 @@ Some usage examples:
         "if tonumber(Amount) < 0 then return 'debit' else return 'credit' end" | \
     qsv lua map AbsAmount "math.abs(tonumber(Amount))"
 
+  Filter some lines based on numerical filtering
+  $ qsv lua filter "tonumber(a) > 45"
+  $ qsv lua filter "tonumber(a) >= tonumber(b)"
+
   Typing long scripts at command line gets tiresome rather quickly,
   so -f should be used for non-trivial scripts to read them from a file
   $ qsv lua map Type -x -f debitcredit.lua
