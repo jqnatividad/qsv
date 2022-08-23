@@ -5,6 +5,8 @@ use crate::util;
 use crate::CliResult;
 use serde::Deserialize;
 use serde_json::{Map, Value};
+use std::env::temp_dir;
+use uuid::Uuid;
 
 use super::schema::infer_schema_from_stats;
 
@@ -27,7 +29,6 @@ Common options:
     -o, --output <file>    Write output to <file> instead of stdout.
 ";
 
-const STDIN_CSV: &str = "stdin.csv";
 #[derive(Deserialize, Clone)]
 struct Args {
     arg_input: Option<String>,
@@ -42,16 +43,19 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let conf = Config::new(&args.arg_input).delimiter(args.flag_delimiter);
     let mut is_stdin = false;
 
+    let stdin_fpath = format!("{}/{}.csv", temp_dir().to_string_lossy(), Uuid::new_v4());
+    let stdin_temp = stdin_fpath.clone();
+
     // if using stdin, we create a stdin.csv file as stdin is not seekable and we need to
     // open the file multiple times to compile stats/unique values, etc.
     let input_filename = if preargs.arg_input.is_none() {
-        let mut stdin_file = File::create(STDIN_CSV)?;
+        let mut stdin_file = File::create(stdin_fpath.clone())?;
         let stdin = std::io::stdin();
         let mut stdin_handle = stdin.lock();
         std::io::copy(&mut stdin_handle, &mut stdin_file)?;
-        args.arg_input = Some(STDIN_CSV.to_string());
+        args.arg_input = Some(stdin_fpath.clone());
         is_stdin = true;
-        STDIN_CSV.to_string()
+        stdin_fpath
     } else {
         let filename = Path::new(args.arg_input.as_ref().unwrap())
             .file_name()
@@ -84,7 +88,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         };
 
     let mut rdr = if is_stdin {
-        Config::new(&Some(STDIN_CSV.to_string()))
+        Config::new(&Some(stdin_temp))
             .delimiter(args.flag_delimiter)
             .reader()?
     } else {
