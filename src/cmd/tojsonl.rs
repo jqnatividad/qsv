@@ -40,6 +40,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let preargs: Args = util::get_args(USAGE, argv)?;
     let mut args = preargs.clone();
     let conf = Config::new(&args.arg_input).delimiter(args.flag_delimiter);
+    let mut is_stdin = false;
 
     // if using stdin, we create a stdin.csv file as stdin is not seekable and we need to
     // open the file multiple times to compile stats/unique values, etc.
@@ -49,6 +50,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let mut stdin_handle = stdin.lock();
         std::io::copy(&mut stdin_handle, &mut stdin_file)?;
         args.arg_input = Some(STDIN_CSV.to_string());
+        is_stdin = true;
         STDIN_CSV.to_string()
     } else {
         let filename = Path::new(args.arg_input.as_ref().unwrap())
@@ -58,7 +60,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .to_string();
         filename
     };
-
     // we're calling the schema command to infer data types and enums
     let schema_args = crate::cmd::schema::Args {
         flag_enum_threshold: 3, // we only do three, as we're only inferring boolean based on enum
@@ -72,7 +73,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         flag_delimiter: args.flag_delimiter,
         arg_input: args.arg_input.clone(),
     };
-
     // build schema for each field by their inferred type, min/max value/length, and unique values
     let properties_map: Map<String, Value> =
         match infer_schema_from_stats(&schema_args, &input_filename) {
@@ -83,7 +83,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         };
 
-    let mut rdr = conf.reader()?;
+    let mut rdr = if is_stdin {
+        Config::new(&Some(STDIN_CSV.to_string()))
+            .delimiter(args.flag_delimiter)
+            .reader()?
+    } else {
+        conf.reader()?
+    };
     let mut wtr = Config::new(&args.flag_output)
         .flexible(true)
         .no_headers(true)
