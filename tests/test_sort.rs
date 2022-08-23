@@ -60,6 +60,113 @@ fn sort_select() {
 }
 
 #[test]
+fn sortcheck_select_notsorted() {
+    let wrk = Workdir::new("sortcheck_select_notsorted");
+    wrk.create(
+        "in.csv",
+        vec![
+            svec!["1", "d"],
+            svec!["2", "c"],
+            svec!["3", "b"],
+            svec!["4", "a"],
+        ],
+    );
+
+    let mut cmd = wrk.command("sortcheck");
+    cmd.arg("--no-headers")
+        .args(&["--select", "2"])
+        .arg("in.csv");
+
+    let got = wrk.output_stderr(&mut cmd);
+    assert!(got.ends_with(" 1"));
+}
+
+#[test]
+fn sortcheck_select_sorted() {
+    let wrk = Workdir::new("sortcheck_select_sorted");
+    wrk.create(
+        "in.csv",
+        vec![
+            svec!["1", "d"],
+            svec!["2", "c"],
+            svec!["3", "b"],
+            svec!["4", "a"],
+        ],
+    );
+
+    let mut cmd = wrk.command("sortcheck");
+    cmd.arg("--no-headers")
+        .args(&["--select", "1"])
+        .arg("in.csv");
+
+    let got = wrk.output_stderr(&mut cmd);
+    assert_eq!(got, "No error");
+}
+
+#[test]
+fn sortcheck_select_unsorted() {
+    let wrk = Workdir::new("sortcheck_select_sorted");
+    wrk.create(
+        "in.csv",
+        vec![
+            svec!["1", "d"],
+            svec!["2", "c"],
+            svec!["3", "b"],
+            svec!["4", "a"],
+        ],
+    );
+
+    let mut cmd = wrk.command("sortcheck");
+    cmd.arg("--no-headers")
+        .args(&["--select", "2"])
+        .arg("in.csv");
+
+    let got = wrk.output_stderr(&mut cmd);
+    assert!(got.ends_with(" 1"));
+}
+
+#[test]
+fn sortcheck_simple_sorted() {
+    let wrk = Workdir::new("sortcheck_simple_sorted");
+    wrk.create(
+        "in.csv",
+        vec![
+            svec!["1", "d"],
+            svec!["2", "c"],
+            svec!["3", "b"],
+            svec!["4", "a"],
+        ],
+    );
+
+    let mut cmd = wrk.command("sortcheck");
+    cmd.arg("--no-headers").arg("in.csv");
+
+    let got = wrk.output_stderr(&mut cmd);
+    assert_eq!(got, "No error");
+}
+
+#[test]
+fn sortcheck_simple_unsorted() {
+    let wrk = Workdir::new("sortcheck_simple_unsorted");
+    wrk.create(
+        "in.csv",
+        vec![
+            svec!["col11", "col2"],
+            svec!["1", "d"],
+            svec!["5", "c"],
+            svec!["3", "b"],
+            svec!["4", "a"],
+        ],
+    );
+
+    let mut cmd = wrk.command("sortcheck");
+    cmd.arg("in.csv");
+
+    let got = wrk.output_stderr(&mut cmd);
+    assert!(got.ends_with(" 1"));
+}
+
+#[test]
 fn sort_numeric() {
     let wrk = Workdir::new("sort_numeric");
     wrk.create(

@@ -77,6 +77,7 @@ macro_rules! command_list {
     slice       Slice records from CSV
     sniff       Quickly sniff CSV metadata
     sort        Sort CSV data in alphabetical, numerical, reverse or random order
+    sortcheck   Check if a CSV is sorted
     split       Split CSV data into many files
     stats       Infer data types and compute descriptive statistics
     table       Align CSV data into columns
@@ -262,6 +263,7 @@ enum Command {
     Slice,
     Sniff,
     Sort,
+    SortCheck,
     Split,
     Stats,
     Table,
@@ -320,6 +322,7 @@ impl Command {
             Command::Slice => cmd::slice::run(argv),
             Command::Sniff => cmd::sniff::run(argv),
             Command::Sort => cmd::sort::run(argv),
+            Command::SortCheck => cmd::sortcheck::run(argv),
             Command::Split => cmd::split::run(argv),
             Command::Stats => cmd::stats::run(argv),
             Command::Table => cmd::table::run(argv),

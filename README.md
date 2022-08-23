@@ -20,7 +20,7 @@
 
 </div>
 
-> ℹ️ **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's May 2018 release](https://github.com/BurntSushi/xsv/issues/267). It also has numerous new features & 55 additional commands/subcommands/operations (for a total of 75).
+> ℹ️ **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's May 2018 release](https://github.com/BurntSushi/xsv/issues/267). It also has numerous new features & 56 additional commands/subcommands/operations (for a total of 76).
 See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for more details.
 
 ## Available commands
@@ -66,6 +66,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [slice](/src/cmd/slice.rs#L10-L11)[^2][^3] | Slice rows from any part of a CSV. When an index is present, this only has to parse the rows in the slice (instead of all rows leading up to the start of the slice).  |
 | [sniff](/src/cmd/sniff.rs#L10-L11)[^2] | Quickly sniff CSV metadata (delimiter, header row, preamble rows, quote character, flexible, is_utf8, number of records, number of fields, field names & data types). |
 | [sort](/src/cmd/sort.rs#L13)[^5] | Sorts CSV data in alphabetical, numerical, reverse or random (with optional seed) order.  |
+| [sortcheck](/src/cmd/sortcheck.rs#L16) | Check if a CSV is sorted. |
 | [split](/src/cmd/split.rs#L14)[^2][^4] | Split one CSV file into many CSV files of N chunks. (Uses multithreading to go faster if an index is present.) |
 | [stats](/src/cmd/stats.rs#L26)[^2][^3][^4] | Infer data type (Null, String, Float, Integer, Date, DateTime) & compute descriptive statistics for each column in a CSV (sum, min/max, min/max length, mean, stddev, variance, nullcount, quartiles, IQR, lower/upper fences, skewness, median, mode & cardinality). Uses multithreading to go faster if an index is present. |
 | [table](/src/cmd/table.rs#L12)[^3] | Show aligned output of a CSV using [elastic tabstops](https://github.com/BurntSushi/tabwriter).  |
@@ -234,7 +235,7 @@ qsv stats wcp.csv --output wcpstats.csv
 | `QSV_WTR_BUFFER_CAPACITY` | writer buffer size (default (bytes): 65536) |
 | `QSV_LOG_LEVEL` | desired level (default - off; `error`, `warn`, `info`, `trace`, `debug`). |
 | `QSV_LOG_DIR` | when logging is enabled, the directory where the log files will be stored. If the specified directory does not exist, qsv will attempt to create it. If not set, the log files are created in the directory where qsv was started. See [Logging](docs/Logging.md#logging) for more info. |
-| `QSV_PROGRESSBAR` | if set, enable the --progressbar option on the `apply`, `fetch`, `fetchpost`, `foreach`, `lua`, `py`, `search`, `searchset` and `validate` commands.  |
+| `QSV_PROGRESSBAR` | if set, enable the --progressbar option on the `apply`, `fetch`, `fetchpost`, `foreach`, `lua`, `py`, `search`, `searchset`, `sortcheck` and `validate` commands.  |
 | `QSV_REDIS_CONNSTR` | the `fetch` command can use [Redis](https://redis.io/) to cache responses. Set to connect to the desired Redis instance. (default: `redis:127.0.0.1:6379/1`). For more info on valid Redis connection string formats, see https://docs.rs/redis/latest/redis/#connection-parameters. |
 | `QSV_FP_REDIS_CONNSTR` | the `fetchpost` command can also use Redis to cache responses (default: `redis:127.0.0.1:6379/2`). Note that `fetchpost` connects to database 2, as opposed to `fetch` which connects to database 1. |
 | `QSV_REDIS_MAX_POOL_SIZE` | the maximum Redis connection pool size. (default: 20). |
