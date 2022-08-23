@@ -315,25 +315,31 @@ fn excel_case_insensitve_sheet_name() {
 }
 
 #[test]
-fn excel_list_sheets() {
-    let wrk = Workdir::new("excel_list_sheets");
+fn excel_metadata() {
+    let wrk = Workdir::new("excel_metadata");
 
     let xls_file = wrk.load_test_file("excel-xls.xls");
 
     let mut cmd = wrk.command("excel");
-    cmd.arg("--list-sheets").arg(xls_file);
+    cmd.arg("--metadata").arg(xls_file);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
-        svec!["index", "sheet_name"],
-        svec!["0", "First"],
-        svec!["1", "Flexibility Test"],
-        svec!["2", "Middle"],
-        svec!["3", "Sheet1"],
-        svec!["4", "trim test"],
-        svec!["5", "date test"],
-        svec!["6", "NoData"],
-        svec!["7", "Last"],
+        svec!["index", "sheet_name", "columns", "num_columns", "num_rows"],
+        svec!["0", "First", "URL;City", "2", "4"],
+        svec!["1", "Flexibility Test", "URL;City;", "3", "6"],
+        svec!["2", "Middle", "Middle sheet col1;Middle-2", "2", "6"],
+        svec!["3", "Sheet1", "", "0", "0"],
+        svec!["4", "trim test", "col1;   col2;col3", "3", "6"],
+        svec![
+            "5",
+            "date test",
+            "date_col;num_col;col_Petsa;just another col",
+            "4",
+            "6"
+        ],
+        svec!["6", "NoData", "col1;col2;col3;col4", "4", "1"],
+        svec!["7", "Last", "Last sheet col1;Last-2", "2", "6"],
     ];
     assert_eq!(got, expected);
 }
