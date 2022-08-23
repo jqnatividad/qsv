@@ -99,3 +99,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     output_writer.flush()?;
     Ok(())
 }
+
+#[test]
+fn test_mem_check() {
+    // check to see if sysinfo return meminfo without segfaulting
+    let mut sys = System::new_all();
+    sys.refresh_memory();
+    let mem10percent = (sys.total_memory() * 1000) / 10; // 10 percent of total memory
+    assert!(mem10percent > 0);
+}
