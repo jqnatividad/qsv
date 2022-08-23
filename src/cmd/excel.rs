@@ -32,7 +32,11 @@ Excel options:
                                Negative indices start from the end (-1 = last sheet). 
                                If the sheet cannot be found, qsv will read the first sheet.
                                [default: 0]
-    --list-sheets              Creates a CSV of sheet names with two columns - index & sheet_name.
+    --metadata                 Creates a CSV of workbook metadata with five columns - 
+                               index, sheet_name, columns, num_columns & num_rows.
+                               Note that columns is a semicolon-delimited list of the first row
+                               (which is presumably, but not necessarily the column names) and
+                               num_rows includes all rows, including the first row.
                                All other Excel options are ignored.
     --flexible                 Continue even if the number of columns is different 
                                from the previous record.
@@ -65,7 +69,7 @@ Common options:
 struct Args {
     arg_input: String,
     flag_sheet: String,
-    flag_list_sheets: bool,
+    flag_metadata: bool,
     flag_flexible: bool,
     flag_trim: bool,
     flag_dates_whitelist: String,
@@ -94,25 +98,60 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         return fail!("No sheets found.");
     }
     let num_sheets = sheet_names.len();
+    let sheet_vec = sheet_names.to_owned();
 
     let mut wtr = Config::new(&args.flag_output)
         .flexible(args.flag_flexible)
         .writer()?;
     let mut record = csv::StringRecord::new();
 
-    if args.flag_list_sheets {
+    if args.flag_metadata {
         record.push_field("index");
         record.push_field("sheet_name");
+        record.push_field("columns");
+        record.push_field("num_columns");
+        record.push_field("num_rows");
         wtr.write_record(&record)?;
         #[allow(clippy::needless_range_loop)]
         for i in 0..num_sheets {
             record.clear();
             record.push_field(&i.to_string());
-            record.push_field(&sheet_names[i]);
+            let sheet_name = sheet_vec[i].clone();
+            record.push_field(&sheet_name);
+
+            let range = match workbook.worksheet_range_at(i) {
+                Some(result) => {
+                    if let Ok(result) = result {
+                        result
+                    } else {
+                        return fail!(format!("Cannot retrieve range from {}", sheet_name));
+                    }
+                }
+                None => Range::empty(),
+            };
+
+            if range.is_empty() {
+                record.push_field("");
+                record.push_field("0");
+                record.push_field("0");
+            } else {
+                let (num_rows, num_columns) = range.get_size();
+                let mut sheet_rows = range.rows();
+                let first_row = sheet_rows.next().unwrap();
+                let first_row_str = first_row
+                    .iter()
+                    .map(std::string::ToString::to_string)
+                    .collect::<Vec<_>>()
+                    .join(";");
+                record.push_field(&first_row_str);
+                record.push_field(&num_columns.to_string());
+                record.push_field(&num_rows.to_string());
+            }
+
             wtr.write_record(&record)?;
         }
         wtr.flush()?;
-        log::info!("listed sheet names: {sheet_names:?}");
+        log::info!("listed sheet names: {sheet_vec:?}");
         return Ok(());
     }
 
