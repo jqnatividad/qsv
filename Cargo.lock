@@ -1242,7 +1242,7 @@ dependencies = [
 [[package]]
 name = "indicatif"
 version = "0.17.0"
-source = "git+https://github.com/console-rs/indicatif?rev=626ebdb00d3aa7edb66ea69a549f72a846255ff1#626ebdb00d3aa7edb66ea69a549f72a846255ff1"
+source = "git+https://github.com/console-rs/indicatif?rev=4afa0082bf1407a902c0f2cd422713d31d291443#4afa0082bf1407a902c0f2cd422713d31d291443"
 dependencies = [
  "console",
  "number_prefix",
@@ -2212,7 +2212,7 @@ dependencies = [
 [[package]]
 name = "redis"
 version = "0.21.5"
-source = "git+https://github.com/redis-rs/redis-rs?rev=3c91ce2ecda1933bd183113f1eda32dbb79acadc#3c91ce2ecda1933bd183113f1eda32dbb79acadc"
+source = "git+https://github.com/redis-rs/redis-rs?rev=dd3bb7c89ee1d27ebd2e6765cf3f9311db39d663#dd3bb7c89ee1d27ebd2e6765cf3f9311db39d663"
 dependencies = [
  "combine",
  "itoa",
