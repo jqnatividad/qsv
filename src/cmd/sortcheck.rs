@@ -15,8 +15,8 @@ use crate::cmd::sort::iter_cmp;
 static USAGE: &str = r#"
 Check if a CSV is sorted. The check is done on a streaming basis (i.e. constant memory).
 
-This command can be used in tandem with other qsv commands to ensure that they also work
-on a stream of data, without loading entire CSV files into memory.
+This command can be used in tandem with other qsv commands that sort or require sorted data
+to ensure that they also work on a stream of data - i.e. without loading an entire CSV into memory.
 
 For instance, a naive `dedup` requires loading the entire CSV into memory to sort it
 first before deduping. However, if you know a CSV is sorted beforehand, you can invoke
@@ -30,6 +30,9 @@ arbitrarily large files, can be used instead.
 
 Simply put, sortcheck allows you to make informed choices on how to compose pipelines that
 require sorted data.
+
+Apart from checking if a CSV is sorted, it also allows you to check a CSV's record count,
+sort breaks & dupe count with its --json options.
 
 Returns exit code 0 if a CSV is sorted, and exit code 1 otherwise.
 
