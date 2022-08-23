@@ -57,6 +57,7 @@ pub mod select;
 pub mod slice;
 pub mod sniff;
 pub mod sort;
+pub mod sortcheck;
 #[cfg(any(feature = "full", feature = "lite"))]
 pub mod split;
 pub mod stats;
