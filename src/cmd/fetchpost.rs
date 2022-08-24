@@ -147,6 +147,7 @@ Fetch options:
                                fetchp_cache_hit - cached hit flag, fetchp_retries - retry attempts, 
                                fetchp_elapsed - elapsed time & fetchp_response.
                                The short report only has the sevenn columns without the "qsv_fetchp_" prefix.
+                               [default: none]
     --redis                    Use Redis to cache responses. It connects to "redis://127.0.0.1:6379/2"
                                with a connection pool size of 20, with a TTL of 28 days, and a cache hit 
                                NOT renewing an entry's TTL.
@@ -181,7 +182,7 @@ struct Args {
     flag_store_error: bool,
     flag_cache_error: bool,
     flag_cookies: bool,
-    flag_report: Option<String>,
+    flag_report: String,
     flag_redis: bool,
     flag_flushdb: bool,
     flag_output: Option<String>,
@@ -438,14 +439,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     // prepare report
-    let report = if let Some(reportkind) = args.flag_report {
-        if reportkind.to_ascii_lowercase().starts_with('d') {
-            // if it starts with d, its a detailed report
-            ReportKind::Detailed
-        } else {
-            // defaults to short if --report option is anything else
-            ReportKind::Short
-        }
+    let report = if args.flag_report.to_lowercase().starts_with('d') {
+        // if it starts with d, its a detailed report
+        ReportKind::Detailed
+    } else if args.flag_report.to_lowercase().starts_with('s') {
+        // if it starts with s, its a short report
+        ReportKind::Short
     } else {
         ReportKind::None
     };
