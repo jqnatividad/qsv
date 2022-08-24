@@ -16,7 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `sortcheck` improvements https://github.com/jqnatividad/qsv/pull/447
 * `extsort`: improved error handling
 * progressbar messages are now logged
-* cargo update bump several dependencies
+* bump pyo3 from 0.16 to 0.17
+* bump reqwest & redis "patches" further upstream
+* cargo update bump several indirect dependencies
 * pin Rust nightly to 2022-08-22
 
 ### Fixed
