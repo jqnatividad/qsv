@@ -5,6 +5,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.64.0] - 2022-08-23
+### Added
+* added `sortcheck` command https://github.com/jqnatividad/qsv/pull/445
+* `replace`: added --exitcode and --progressbar options 
+
+### Changed
+* `apply`: improved usage text
+* `excel`: replace --list-sheets option with expanded --metadata option https://github.com/jqnatividad/qsv/pull/448
+* `sortcheck` improvements https://github.com/jqnatividad/qsv/pull/447
+* `extsort`: improved error handling
+* progressbar messages are now logged
+* cargo update bump several dependencies
+* pin Rust nightly to 2022-08-22
+
+### Fixed
+* `extsort`: fixed sysinfo segfault on Apple Silicon by pinning sysinfo to 0.25.2 https://github.com/jqnatividad/qsv/pull/446
+* `tojsonl`: fixed panic with stdin input
+
 ## [0.63.2] - 2022-08-18
 ### Added
 * `fetchpost`: added formdata to report https://github.com/jqnatividad/qsv/pull/434
