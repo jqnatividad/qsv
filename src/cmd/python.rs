@@ -133,6 +133,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut rdr = rconfig.reader()?;
     let mut wtr = Config::new(&args.flag_output).writer()?;
 
+    #[allow(deprecated)]
     let gil = Python::acquire_gil();
     let py = gil.python();
 
