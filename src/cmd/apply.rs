@@ -825,7 +825,6 @@ struct RenameColumnParser {
     pos: usize,
 }
 
-
 impl RenameColumnParser {
     pub fn new(s: &str) -> RenameColumnParser {
         RenameColumnParser {
