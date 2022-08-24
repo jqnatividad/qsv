@@ -485,6 +485,36 @@ fn apply_ops_chain() {
 }
 
 #[test]
+fn apply_ops_chain_on_multiple_columns() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["name", "surname"],
+            svec!["John", "Paul"],
+            svec!["Mary", "Jane"],
+            svec!["Mary","Sue"],
+            svec!["John","Hopkins"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("trim,upper")
+        .arg("name,surname")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["NAME", "SURNAME"],
+        svec!["JOHN", "PAUL"],
+        svec!["MARY", "JANE"],
+        svec!["MARY", "SUE"],
+        svec!["JOHN", "HOPKINS"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn apply_ops_mixed_case_chain() {
     let wrk = Workdir::new("apply");
     wrk.create(

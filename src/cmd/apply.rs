@@ -279,7 +279,7 @@ struct Args {
     cmd_emptyreplace: bool,
     cmd_geocode: bool,
     arg_input: Option<String>,
-    flag_rename: Option<String>,
+    flag_rename: String,
     flag_comparand: String,
     flag_replacement: String,
     flag_prefer_dmy: bool,
@@ -328,8 +328,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut headers = rdr.headers()?.clone();
 
-    if let Some(new_name) = args.flag_rename {
-        headers = replace_column_value(&headers, column_index, &new_name);
+    if args.flag_rename.len() > 0 {
+        let new_col_names : Vec<String> = RenameColumnParser::new(&args.flag_rename).parse().unwrap();
+        if new_col_names.len() != sel.len() {
+            return Err(CliError::Other(format!("Number of rename columns provided is not equal to number of columns selected."))); 
+        }
+        for col_index in sel.iter() {
+            headers = replace_column_value(&headers, *col_index, &new_col_names[*col_index]);
+        }
+       
     }
 
     if !rconfig.no_headers {
@@ -533,66 +540,68 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .par_iter()
             .map(|record_item| {
                 let mut record = record_item.clone();
-                let mut cell = record[column_index].to_owned();
+                for col_index in sel.iter() {
+                    let mut cell = record[*col_index].to_owned();
 
-                match apply_cmd {
-                    ApplySubCmd::Geocode => {
-                        if !cell.is_empty() {
-                            let search_result = search_cached(&cell, &args.flag_formatstr);
-                            if let Some(geocoded_result) = search_result {
-                                cell = geocoded_result;
-                            }
-                        }
-                    }
-                    ApplySubCmd::Operations => {
-                        apply_operations(
-                            &operations,
-                            &mut cell,
-                            &args.flag_comparand,
-                            &args.flag_replacement,
-                        );
-                    }
-                    ApplySubCmd::EmptyReplace => {
-                        if cell.trim().is_empty() {
-                            cell = args.flag_replacement.to_string();
-                        }
-                    }
-                    ApplySubCmd::DateFmt => {
-                        if !cell.is_empty() {
-                            let parsed_date = parse_with_preference(&cell, prefer_dmy);
-                            if let Ok(format_date) = parsed_date {
-                                let formatted_date =
-                                    format_date.format(&args.flag_formatstr).to_string();
-                                if formatted_date.ends_with("T00:00:00+00:00") {
-                                    cell = formatted_date[..10].to_string();
-                                } else {
-                                    cell = formatted_date;
+                    match apply_cmd {
+                        ApplySubCmd::Geocode => {
+                            if !cell.is_empty() {
+                                let search_result = search_cached(&cell, &args.flag_formatstr);
+                                if let Some(geocoded_result) = search_result {
+                                    cell = geocoded_result;
                                 }
                             }
                         }
-                    }
-                    ApplySubCmd::DynFmt => {
-                        if !cell.is_empty() {
-                            let mut record_vec: Vec<String> = Vec::with_capacity(record.len());
-                            for field in &record {
-                                record_vec.push(field.to_string());
-                            }
-                            if let Ok(formatted) =
-                                dynfmt::SimpleCurlyFormat.format(&dynfmt_template, record_vec)
-                            {
-                                cell = formatted.to_string();
+                        ApplySubCmd::Operations => {
+                            apply_operations(
+                                &operations,
+                                &mut cell,
+                                &args.flag_comparand,
+                                &args.flag_replacement,
+                            );
+                        }
+                        ApplySubCmd::EmptyReplace => {
+                            if cell.trim().is_empty() {
+                                cell = args.flag_replacement.to_string();
                             }
                         }
+                        ApplySubCmd::DateFmt => {
+                            if !cell.is_empty() {
+                                let parsed_date = parse_with_preference(&cell, prefer_dmy);
+                                if let Ok(format_date) = parsed_date {
+                                    let formatted_date =
+                                        format_date.format(&args.flag_formatstr).to_string();
+                                    if formatted_date.ends_with("T00:00:00+00:00") {
+                                        cell = formatted_date[..10].to_string();
+                                    } else {
+                                        cell = formatted_date;
+                                    }
+                                }
+                            }
+                        }
+                        ApplySubCmd::DynFmt => {
+                            if !cell.is_empty() {
+                                let mut record_vec: Vec<String> = Vec::with_capacity(record.len());
+                                for field in &record {
+                                    record_vec.push(field.to_string());
+                                }
+                                if let Ok(formatted) =
+                                    dynfmt::SimpleCurlyFormat.format(&dynfmt_template, record_vec)
+                                {
+                                    cell = formatted.to_string();
+                                }
+                            }
+                        }
+                        ApplySubCmd::Unknown => {
+                            unreachable!("apply subcommands are always known");
+                        }
                     }
-                    ApplySubCmd::Unknown => {
-                        unreachable!("apply subcommands are always known");
-                    }
-                }
 
-                if args.flag_new_column.is_some() {
-                    record.push_field(&cell);
-                } else {
-                    record = replace_column_value(&record, column_index, &cell);
+                    if args.flag_new_column.is_some() {
+                        record.push_field(&cell);
+                    } else {
+                        record = replace_column_value(&record, *col_index, &cell);
+                    }
                 }
                 record
             })
@@ -808,4 +817,92 @@ fn search_cached(cell: &str, formatstr: &str) -> Option<String> {
             None
         }
     })
+}
+
+#[derive(Debug)]
+struct RenameColumnParser {
+    chars: Vec<char>,
+    pos: usize,
+}
+
+
+impl RenameColumnParser {
+    pub fn new(s: &str) -> RenameColumnParser {
+        RenameColumnParser {
+            chars: s.chars().collect(),
+            pos: 0,
+        }
+    }
+
+    pub fn parse(&mut self) -> Result<Vec<String>, String> {
+        let mut cols = vec![];
+        loop {
+            if self.cur().is_none() {
+                break;
+            }
+            if self.cur() == Some('"') {
+                self.bump();
+                cols.push(self.parse_quoted_name()?);
+            } else {
+                cols.push(self.parse_name());
+            }
+            self.bump();
+        }
+        Ok(cols)
+    }
+
+    // ======================== Internal Helper Functions =================================//
+    fn cur(&self) -> Option<char> {
+        self.chars.get(self.pos).copied()
+    }
+
+    fn bump(&mut self) {
+        if self.pos < self.chars.len() {
+            self.pos += 1;
+        }
+    }
+
+    fn is_end_of_field(&self) -> bool {
+        self.cur().map_or(true, |c| c == ',')
+    }
+
+    fn parse_quoted_name(&mut self) -> Result<String, String> {
+        let mut name = String::new();
+        loop {
+            match self.cur() {
+                None => {
+                    return Err("Unclosed quote, missing closing \".".to_owned());
+                }
+                Some('"') => {
+                    self.bump();
+                    if self.cur() == Some('"') {
+                        // Not sure why do we do this. 
+                        // Just following on what is done for `Selector`
+                        self.bump();
+                        name.push('"');
+                        name.push('"');
+                        continue;
+                    }
+                    break;
+                }
+                Some(c) => {
+                    name.push(c);
+                    self.bump();
+                }
+            }
+        }
+        Ok(name)
+    }
+
+    fn parse_name(&mut self) -> String {
+        let mut name = String::new();
+        loop {
+            if self.is_end_of_field() {
+                break;
+            }
+            name.push(self.cur().unwrap());
+            self.bump();
+        }
+        name
+    }
 }
