@@ -200,10 +200,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     record.push_field(&string.to_string_lossy());
                 }
                 mlua::Value::Number(number) => {
-                    record.push_field(&number.to_string());
+                    let mut buffer = ryu::Buffer::new();
+                    record.push_field(buffer.format(number));
                 }
                 mlua::Value::Integer(number) => {
-                    record.push_field(&number.to_string());
+                    let mut buffer = itoa::Buffer::new();
+                    record.push_field(buffer.format(number));
                 }
                 mlua::Value::Boolean(boolean) => {
                     record.push_field(if boolean { "true" } else { "false" });
