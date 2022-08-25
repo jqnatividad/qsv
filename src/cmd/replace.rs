@@ -129,6 +129,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut record = csv::ByteRecord::new();
     let mut total_match_ctr: u64 = 0;
+    #[cfg(any(feature = "full", feature = "lite"))]
     let mut row_with_matches_ctr: u64 = 0;
 
     while rdr.read_byte_record(&mut record)? {
@@ -154,9 +155,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             })
             .collect();
 
+        #[cfg(any(feature = "full", feature = "lite"))]
         if match_found {
             row_with_matches_ctr += 1;
         }
+
         wtr.write_byte_record(&record)?;
     }
 

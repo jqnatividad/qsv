@@ -96,6 +96,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let headers = rdr.byte_headers()?.clone();
     let sel = rconfig.selection(&headers)?;
+    let record_count;
 
     // prep progress bar
     #[cfg(any(feature = "full", feature = "lite"))]
@@ -104,16 +105,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     #[cfg(any(feature = "full", feature = "lite"))]
     let progress = ProgressBar::with_draw_target(None, ProgressDrawTarget::stderr_with_hz(5));
     #[cfg(any(feature = "full", feature = "lite"))]
-    let record_count = if show_progress {
-        let count = util::count_rows(&rconfig)?;
-        util::prep_progress(&progress, count);
-        count
-    } else {
-        progress.set_draw_target(ProgressDrawTarget::hidden());
-        0
-    };
+    {
+        record_count = if show_progress {
+            let count = util::count_rows(&rconfig)?;
+            util::prep_progress(&progress, count);
+            count
+        } else {
+            progress.set_draw_target(ProgressDrawTarget::hidden());
+            0
+        };
+    }
     #[cfg(feature = "datapusher_plus")]
-    let mut record_count: u64 = 0;
+    {
+        record_count = 0;
+    }
 
     let mut record = ByteRecord::new();
     let mut next_record = ByteRecord::new();
@@ -159,11 +164,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         }
     } // end loop
-
-    #[cfg(feature = "datapusher_plus")]
-    {
-        record_count = scan_ctr;
-    }
 
     #[cfg(any(feature = "full", feature = "lite"))]
     if show_progress {

@@ -7,6 +7,7 @@ use crate::CliResult;
 use docopt::Docopt;
 #[cfg(any(feature = "full", feature = "lite"))]
 use indicatif::{HumanCount, ProgressBar, ProgressStyle};
+#[cfg(any(feature = "full", feature = "lite"))]
 use log::{debug, error, info, log_enabled, warn, Level};
 #[cfg(any(feature = "apply", feature = "fetch", feature = "python"))]
 use regex::Regex;
@@ -56,11 +57,11 @@ pub fn njobs(flag_jobs: Option<usize>) -> usize {
     flag_jobs.map_or(max_jobs, |jobs| {
         if jobs == 0 || jobs > max_jobs {
             env::set_var("RAYON_NUM_THREADS", max_jobs.to_string());
-            info!("Using {max_jobs} max processors...");
+            log::info!("Using {max_jobs} max processors...");
             max_jobs
         } else {
             env::set_var("RAYON_NUM_THREADS", jobs.to_string());
-            info!("Throttling to {max_jobs} processors...");
+            log::info!("Throttling to {max_jobs} processors...");
             jobs
         }
     })
@@ -184,10 +185,10 @@ pub fn finish_progress(progress: &ProgressBar) {
 
     if progress.length().unwrap() == progress.position() {
         progress.finish();
-        info!("Progress done... {}", progress.message());
+        log::info!("Progress done... {}", progress.message());
     } else {
         progress.abandon();
-        info!("Progress abandoned... {}", progress.message());
+        log::info!("Progress abandoned... {}", progress.message());
     }
 }
 
@@ -661,6 +662,7 @@ pub fn safe_header_names(headers: &csv::StringRecord, check_first_char: bool) ->
 }
 
 #[test]
+#[cfg(any(feature = "full", feature = "lite"))]
 fn test_hw_survey() {
     // we have this test primarily to exercise the sysinfo module
     assert!(send_hwsurvey("qsv", false, "0.0.2", "0.0.1", true).is_ok());
