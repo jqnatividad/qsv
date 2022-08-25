@@ -79,6 +79,9 @@ Some usage examples:
   virtual environment, or copy the shared library of the desired Python version 
   in the same directory as qsv (libpython* on Linux/macOS, python*.dll on Windows).
 
+  Also, the following Python modules are automatically loaded and available to the user -
+  builtsin, math and random. The user can import additional modules with the --helper option.
+
 Usage:
     qsv py map [options] -n <script> [<input>]
     qsv py map [options] <new-column> <script> [<input>]
@@ -137,7 +140,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let gil = Python::acquire_gil();
     let py = gil.python();
 
-    if log_enabled!(Debug) {
+    if log_enabled!(Debug) || args.flag_progressbar {
         let msg = format!("Detected python={}", py.version());
         eprintln!("{msg}");
         debug!("{msg}");
@@ -168,9 +171,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // Global imports
     let builtins = PyModule::import(py, "builtins")?;
     let math_module = PyModule::import(py, "math")?;
+    let random_module = PyModule::import(py, "random")?;
 
     globals.set_item("__builtins__", builtins)?;
     globals.set_item("math", math_module)?;
+    globals.set_item("random", random_module)?;
 
     let mut headers = rdr.headers()?.clone();
 
