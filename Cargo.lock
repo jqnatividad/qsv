@@ -163,7 +163,7 @@ dependencies = [
  "serde_urlencoded",
  "smallvec",
  "socket2",
- "time 0.3.13",
+ "time 0.3.14",
  "url",
 ]
 
@@ -504,7 +504,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94d4706de1b0fa5b132270cddffa8585166037822e260a944fe161acd137ca05"
 dependencies = [
  "percent-encoding",
- "time 0.3.13",
+ "time 0.3.14",
  "version_check",
 ]
 
@@ -520,7 +520,7 @@ dependencies = [
  "publicsuffix",
  "serde",
  "serde_json",
- "time 0.3.13",
+ "time 0.3.14",
  "url",
 ]
 
@@ -793,9 +793,9 @@ dependencies = [
 
 [[package]]
 name = "erased-serde"
-version = "0.3.22"
+version = "0.3.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "003000e712ad0f95857bd4d2ef8d1890069e06554101697d12050668b2f6f020"
+checksum = "54558e0ba96fbe24280072642eceb9d7d442e32c7ec0ea9e7ecd7b4ea2cf4e11"
 dependencies = [
  "serde",
 ]
@@ -884,7 +884,7 @@ dependencies = [
  "log",
  "rustversion",
  "thiserror",
- "time 0.3.13",
+ "time 0.3.14",
 ]
 
 [[package]]
@@ -1338,7 +1338,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
- "time 0.3.13",
+ "time 0.3.14",
  "url",
  "uuid",
 ]
@@ -1561,6 +1561,7 @@ dependencies = [
  "luajit-src",
  "num-traits",
  "once_cell",
+ "parking_lot",
  "pkg-config",
  "rustc-hash",
 ]
@@ -2007,6 +2008,7 @@ dependencies = [
  "mlua",
  "newline-converter",
  "once_cell",
+ "parking_lot",
  "pyo3",
  "qsv-dateparser",
  "qsv-sniffer",
@@ -2743,9 +2745,9 @@ dependencies = [
 
 [[package]]
 name = "time"
-version = "0.3.13"
+version = "0.3.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "db76ff9fa4b1458b3c7f077f3ff9887394058460d21e634355b273aaf11eea45"
+checksum = "3c3f9a28b618c3a6b9251b6908e9c99e04b9e5c02e6581ccbb67d59c34ef7f9b"
 dependencies = [
  "itoa",
  "libc",
@@ -3241,5 +3243,5 @@ dependencies = [
  "crc32fast",
  "crossbeam-utils",
  "flate2",
- "time 0.3.13",
+ "time 0.3.14",
 ]
