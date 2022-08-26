@@ -127,6 +127,8 @@ impl From<PyErr> for CliError {
     }
 }
 
+const BATCH_SIZE: usize = 30_000;
+
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
     let rconfig = Config::new(&args.arg_input)
@@ -136,19 +138,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut rdr = rconfig.reader()?;
     let mut wtr = Config::new(&args.flag_output).writer()?;
 
-    #[allow(deprecated)]
-    let gil = Python::acquire_gil();
-    let py = gil.python();
-
     if log_enabled!(Debug) || args.flag_progressbar {
-        let msg = format!("Detected python={}", py.version());
-        eprintln!("{msg}");
-        debug!("{msg}");
+        _ = Python::with_gil(|py| {
+            let msg = format!("Detected python={}", py.version());
+            eprintln!("{msg}");
+            debug!("{msg}");
+        });
     }
-
-    let helpers = PyModule::from_code(py, HELPERS, "qsv_helpers.py", "qsv_helpers")?;
-    let globals = PyDict::new(py);
-    let locals = PyDict::new(py);
 
     let mut helper_text = String::new();
     if let Some(helper_file) = args.flag_helper {
@@ -157,35 +153,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             Err(e) => return fail!(format!("Cannot load python file: {e}")),
         }
     }
-    let user_helpers = match PyModule::from_code(py, &helper_text, "qsv_user_helpers.py", "qsv_uh")
-    {
-        Ok(helper_code) => helper_code,
-        Err(e) => {
-            return fail!(format!(
-                "Cannot compile user module \"{helper_text}\".\n{e}"
-            ));
-        }
-    };
-    globals.set_item("qsv_uh", user_helpers)?;
-
-    // Global imports
-    let builtins = PyModule::import(py, "builtins")?;
-    let math_module = PyModule::import(py, "math")?;
-    let random_module = PyModule::import(py, "random")?;
-
-    globals.set_item("__builtins__", builtins)?;
-    globals.set_item("math", math_module)?;
-    globals.set_item("random", random_module)?;
 
     let mut headers = rdr.headers()?.clone();
-
     let headers_len = headers.len();
-
-    let py_row = helpers
-        .getattr("QSVRow")?
-        .call1((headers.iter().collect::<Vec<&str>>(),))?;
-
-    locals.set_item("row", py_row)?;
 
     if rconfig.no_headers {
         headers = csv::StringRecord::new();
@@ -218,51 +188,134 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // ensure col/header names are valid and safe python variables
     let header_vec = util::safe_header_names(&headers, true);
 
-    let mut record = csv::StringRecord::new();
-    while rdr.read_record(&mut record)? {
-        if show_progress {
-            progress.inc(1);
-        }
+    // amortize memory allocation by reusing record
+    #[allow(unused_assignments)]
+    let mut batch_record = csv::StringRecord::new();
 
-        // Initializing locals
-        let mut row_data: Vec<&str> = Vec::with_capacity(headers_len);
+    // reuse batch buffers
+    let mut batch = Vec::with_capacity(BATCH_SIZE);
 
-        for (i, key) in header_vec.iter().enumerate().take(headers_len) {
-            let cell_value = record.get(i).unwrap_or_default();
-            locals.set_item(key, cell_value)?;
-            row_data.push(cell_value);
-        }
-
-        py_row.call_method1("_update_underlying_data", (row_data,))?;
-
-        let mut result_err = false;
-        let result = py
-            .eval(&args.arg_script, Some(globals), Some(locals))
-            .map_err(|e| {
-                result_err = true;
-                e.print_and_set_sys_last_vars(py);
-                "Evaluation of given expression failed with the above error!"
-            })?;
-
-        if result_err && log_enabled!(Debug) {
-            debug!("{result:?}");
-        }
-
-        if args.cmd_map {
-            let result = helpers.getattr("cast_as_string")?.call1((result,))?;
-            let value: String = result.extract()?;
-
-            record.push_field(&value);
-            wtr.write_record(&record)?;
-        } else if args.cmd_filter {
-            let result = helpers.getattr("cast_as_bool")?.call1((result,))?;
-            let value: bool = result.extract()?;
-
-            if value {
-                wtr.write_record(&record)?;
+    // main loop to read CSV and construct batches.
+    // we batch python operations so that the GILPool does not get very large
+    // as we release the pool after each batch
+    // loop exits when batch is empty.
+    loop {
+        for _ in 0..BATCH_SIZE {
+            match rdr.read_record(&mut batch_record) {
+                Ok(has_data) => {
+                    if has_data {
+                        batch.push(batch_record.clone());
+                    } else {
+                        // nothing else to add to batch
+                        break;
+                    }
+                }
+                Err(e) => {
+                    return Err(CliError::Other(format!("Error reading file: {e}")));
+                }
             }
         }
-    }
+
+        if batch.is_empty() {
+            // break out of infinite loop when at EOF
+            break;
+        }
+
+        _ = Python::with_gil(|py| -> PyResult<()> {
+            {
+                let curr_batch = batch.clone();
+                let helpers = PyModule::from_code(py, HELPERS, "qsv_helpers.py", "qsv_helpers")?;
+                let globals = PyDict::new(py);
+                let locals = PyDict::new(py);
+
+                let user_helpers =
+                    match PyModule::from_code(py, &helper_text, "qsv_user_helpers.py", "qsv_uh") {
+                        Ok(helper_code) => helper_code,
+                        Err(e) => {
+                            eprintln!("Cannot compile user module \"{helper_text}\".\n{e}");
+                            panic!();
+                        }
+                    };
+                globals.set_item("qsv_uh", user_helpers)?;
+
+                // Global imports
+                let builtins = PyModule::import(py, "builtins")?;
+                let math_module = PyModule::import(py, "math")?;
+                let random_module = PyModule::import(py, "random")?;
+
+                globals.set_item("__builtins__", builtins)?;
+                globals.set_item("math", math_module)?;
+                globals.set_item("random", random_module)?;
+
+                let py_row = helpers
+                    .getattr("QSVRow")?
+                    .call1((headers.iter().collect::<Vec<&str>>(),))?;
+
+                locals.set_item("row", py_row)?;
+
+                for mut record in curr_batch {
+                    if show_progress {
+                        progress.inc(1);
+                    }
+
+                    // Initializing locals
+                    let mut row_data: Vec<&str> = Vec::with_capacity(headers_len);
+
+                    for (i, key) in header_vec.iter().enumerate().take(headers_len) {
+                        let cell_value = record.get(i).unwrap_or_default();
+                        locals.set_item(key, cell_value).expect("cannot set_item");
+                        row_data.push(cell_value);
+                    }
+
+                    py_row
+                        .call_method1("_update_underlying_data", (row_data,))
+                        .expect("cannot call method1");
+
+                    let mut result_err = false;
+                    let result = py
+                        .eval(&args.arg_script, Some(globals), Some(locals))
+                        .map_err(|e| {
+                            result_err = true;
+                            e.print_and_set_sys_last_vars(py);
+                            "Evaluation of given expression failed with the above error!"
+                        })
+                        .expect("cannot eval code");
+
+                    if result_err && log_enabled!(Debug) {
+                        debug!("{result:?}");
+                    }
+
+                    if args.cmd_map {
+                        let result = helpers
+                            .getattr("cast_as_string")
+                            .unwrap()
+                            .call1((result,))
+                            .expect("cannot get result");
+                        let value: String = result.extract().unwrap();
+
+                        record.push_field(&value);
+                        wtr.write_record(&record).expect("cannot write record");
+                    } else if args.cmd_filter {
+                        let result = helpers
+                            .getattr("cast_as_bool")
+                            .unwrap()
+                            .call1((result,))
+                            .expect("cannot get result");
+                        let value: bool = result.extract().unwrap();
+
+                        if value {
+                            wtr.write_record(&record).expect("cannot write record");
+                        }
+                    }
+                }
+
+                Ok(())
+            }
+        });
+
+        batch.clear();
+    } // end loop
+
     if show_progress {
         util::finish_progress(&progress);
     }
