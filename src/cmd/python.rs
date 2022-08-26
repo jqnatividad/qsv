@@ -255,15 +255,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 locals.set_item("row", py_row)?;
 
                 for mut record in curr_batch {
-
                     // Initializing locals
                     let mut row_data: Vec<&str> = Vec::with_capacity(headers_len);
 
-                    header_vec.iter().enumerate().take(headers_len).for_each(|(i, key)| {
-                        let cell_value = record.get(i).unwrap_or_default();
-                        locals.set_item(key, cell_value).expect("cannot set_item");
-                        row_data.push(cell_value);
-                    });
+                    header_vec
+                        .iter()
+                        .enumerate()
+                        .take(headers_len)
+                        .for_each(|(i, key)| {
+                            let cell_value = record.get(i).unwrap_or_default();
+                            locals.set_item(key, cell_value).expect("cannot set_item");
+                            row_data.push(cell_value);
+                        });
 
                     py_row
                         .call_method1(intern!(py, "_update_underlying_data"), (row_data,))
