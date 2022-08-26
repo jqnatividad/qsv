@@ -83,10 +83,9 @@ pub fn version() -> String {
     #[cfg(all(feature = "python", not(feature = "lite")))]
     {
         enabled_features.push_str("python-");
-        #[allow(deprecated)]
-        let gil = pyo3::Python::acquire_gil();
-        let py = gil.python();
-        enabled_features.push_str(py.version());
+        _ = pyo3::Python::with_gil(|py| {
+            enabled_features.push_str(py.version());
+        });
     }
     enabled_features.push('-');
 
