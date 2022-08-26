@@ -1,5 +1,6 @@
 use std::fs;
 
+use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 
@@ -139,7 +140,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut wtr = Config::new(&args.flag_output).writer()?;
 
     if log_enabled!(Debug) || args.flag_progressbar {
-        _ = Python::with_gil(|py| {
+        Python::with_gil(|py| {
             let msg = format!("Detected python={}", py.version());
             eprintln!("{msg}");
             debug!("{msg}");
@@ -236,39 +237,39 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             panic!();
                         }
                     };
-                globals.set_item("qsv_uh", user_helpers)?;
+                globals.set_item(intern!(py, "qsv_uh"), user_helpers)?;
 
                 // Global imports
                 let builtins = PyModule::import(py, "builtins")?;
                 let math_module = PyModule::import(py, "math")?;
                 let random_module = PyModule::import(py, "random")?;
 
-                globals.set_item("__builtins__", builtins)?;
-                globals.set_item("math", math_module)?;
-                globals.set_item("random", random_module)?;
+                globals.set_item(intern!(py, "__builtins__"), builtins)?;
+                globals.set_item(intern!(py, "math"), math_module)?;
+                globals.set_item(intern!(py, "random"), random_module)?;
 
                 let py_row = helpers
-                    .getattr("QSVRow")?
+                    .getattr(intern!(py, "QSVRow"))?
                     .call1((headers.iter().collect::<Vec<&str>>(),))?;
 
                 locals.set_item("row", py_row)?;
 
                 for mut record in curr_batch {
-                    if show_progress {
-                        progress.inc(1);
-                    }
-
                     // Initializing locals
                     let mut row_data: Vec<&str> = Vec::with_capacity(headers_len);
 
-                    for (i, key) in header_vec.iter().enumerate().take(headers_len) {
-                        let cell_value = record.get(i).unwrap_or_default();
-                        locals.set_item(key, cell_value).expect("cannot set_item");
-                        row_data.push(cell_value);
-                    }
+                    header_vec
+                        .iter()
+                        .enumerate()
+                        .take(headers_len)
+                        .for_each(|(i, key)| {
+                            let cell_value = record.get(i).unwrap_or_default();
+                            locals.set_item(key, cell_value).expect("cannot set_item");
+                            row_data.push(cell_value);
+                        });
 
                     py_row
-                        .call_method1("_update_underlying_data", (row_data,))
+                        .call_method1(intern!(py, "_update_underlying_data"), (row_data,))
                         .expect("cannot call method1");
 
                     let mut result_err = false;
@@ -287,17 +288,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
                     if args.cmd_map {
                         let result = helpers
-                            .getattr("cast_as_string")
+                            .getattr(intern!(py, "cast_as_string"))
                             .unwrap()
                             .call1((result,))
                             .expect("cannot get result");
-                        let value: String = result.extract().unwrap();
+                        let value: String = result.extract().expect("cannot extract value");
 
                         record.push_field(&value);
                         wtr.write_record(&record).expect("cannot write record");
                     } else if args.cmd_filter {
                         let result = helpers
-                            .getattr("cast_as_bool")
+                            .getattr(intern!(py, "cast_as_bool"))
                             .unwrap()
                             .call1((result,))
                             .expect("cannot get result");
@@ -312,6 +313,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 Ok(())
             }
         });
+        if show_progress {
+            progress.inc(batch.len() as u64);
+        }
 
         batch.clear();
     } // end loop
