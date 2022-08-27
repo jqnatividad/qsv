@@ -1,9 +1,8 @@
 #![allow(dead_code)]
 extern crate crossbeam_channel as channel;
 
-use std::borrow::ToOwned;
+use crate::clierror::CliError;
 use std::env;
-use std::fmt;
 use std::io;
 use std::process::{ExitCode, Termination};
 use std::time::Instant;
@@ -89,6 +88,7 @@ macro_rules! command_list {
 "
     };
 }
+mod clierror;
 mod cmd;
 mod config;
 mod index;
@@ -155,16 +155,16 @@ fn main() -> QsvExitCode {
         .unwrap_or_else(|e| e.exit());
     if args.flag_list {
         wout!(concat!("Installed commands:", command_list!()));
-        log_end(qsv_args, now);
+        util::log_end(qsv_args, now);
         return QsvExitCode::Good;
     } else if args.flag_envlist {
         util::show_env_vars();
-        log_end(qsv_args, now);
+        util::log_end(qsv_args, now);
         return QsvExitCode::Good;
     }
     if args.flag_update {
         util::qsv_check_for_update();
-        log_end(qsv_args, now);
+        util::log_end(qsv_args, now);
         return QsvExitCode::Good;
     }
     match args.arg_command {
@@ -176,54 +176,43 @@ Please choose one of the following commands:",
                 command_list!()
             ));
             util::qsv_check_for_update();
-            log_end(qsv_args, now);
+            util::log_end(qsv_args, now);
             return QsvExitCode::Good;
         }
         Some(cmd) => match cmd.run() {
             Ok(()) => {
-                log_end(qsv_args, now);
+                util::log_end(qsv_args, now);
                 QsvExitCode::Good
             }
             Err(CliError::Flag(err)) => {
                 werr!("{err}");
-                log_end(qsv_args, now);
+                util::log_end(qsv_args, now);
                 QsvExitCode::IncorrectUsage
             }
             Err(CliError::Csv(err)) => {
                 werr!("{err}");
-                log_end(qsv_args, now);
+                util::log_end(qsv_args, now);
                 QsvExitCode::Bad
             }
             Err(CliError::Io(ref err)) if err.kind() == io::ErrorKind::BrokenPipe => {
-                log_end(qsv_args, now);
+                util::log_end(qsv_args, now);
                 QsvExitCode::Good
             }
             Err(CliError::Io(err)) => {
                 werr!("{err}");
-                log_end(qsv_args, now);
+                util::log_end(qsv_args, now);
+                QsvExitCode::Bad
+            }
+            Err(CliError::NoMatch()) => {
+                util::log_end(qsv_args, now);
                 QsvExitCode::Bad
             }
             Err(CliError::Other(msg)) => {
                 werr!("{msg}");
-                log_end(qsv_args, now);
+                util::log_end(qsv_args, now);
                 QsvExitCode::IncorrectUsage
             }
         },
-    }
-}
-
-fn log_end(mut qsv_args: String, now: Instant) {
-    if log_enabled!(Level::Info) {
-        let ellipsis = if qsv_args.len() > 24 {
-            qsv_args.truncate(24);
-            "..."
-        } else {
-            ""
-        };
-        info!(
-            "END \"{qsv_args}{ellipsis}\" elapsed: {}",
-            now.elapsed().as_secs_f32()
-        );
     }
 }
 
@@ -334,64 +323,3 @@ impl Command {
 }
 
 pub type CliResult<T> = Result<T, CliError>;
-
-#[derive(Debug)]
-pub enum CliError {
-    Flag(docopt::Error),
-    Csv(csv::Error),
-    Io(io::Error),
-    Other(String),
-}
-
-impl fmt::Display for CliError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            CliError::Flag(ref e) => e.fmt(f),
-            CliError::Csv(ref e) => e.fmt(f),
-            CliError::Io(ref e) => e.fmt(f),
-            CliError::Other(ref s) => f.write_str(s),
-        }
-    }
-}
-
-impl From<docopt::Error> for CliError {
-    fn from(err: docopt::Error) -> CliError {
-        CliError::Flag(err)
-    }
-}
-
-impl From<csv::Error> for CliError {
-    fn from(err: csv::Error) -> CliError {
-        if !err.is_io_error() {
-            return CliError::Csv(err);
-        }
-        match err.into_kind() {
-            csv::ErrorKind::Io(v) => From::from(v),
-            _ => unreachable!(),
-        }
-    }
-}
-
-impl From<io::Error> for CliError {
-    fn from(err: io::Error) -> CliError {
-        CliError::Io(err)
-    }
-}
-
-impl From<String> for CliError {
-    fn from(err: String) -> CliError {
-        CliError::Other(err)
-    }
-}
-
-impl<'a> From<&'a str> for CliError {
-    fn from(err: &'a str) -> CliError {
-        CliError::Other(err.to_owned())
-    }
-}
-
-impl From<regex::Error> for CliError {
-    fn from(err: regex::Error) -> CliError {
-        CliError::Other(format!("Regex error: {err:?}"))
-    }
-}
