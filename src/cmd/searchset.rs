@@ -11,7 +11,7 @@ use crate::util;
 use crate::CliResult;
 #[cfg(any(feature = "full", feature = "lite"))]
 use indicatif::{HumanCount, ProgressBar, ProgressDrawTarget};
-use log::debug;
+use log::{debug, error, info};
 use serde::Deserialize;
 
 static USAGE: &str = "
@@ -24,9 +24,13 @@ The regexset-file is a plain text file with multiple regexes, with a regex on
 each line.
 
 The regex set is applied to each field in each row, and if any field matches,
-then the row is written to the output. The columns to search can be limited
-with the '--select' flag (but the full row is still written to the output if
-there is a match).
+then the row is written to the output, and the number of matches to stderr.
+
+The columns to search can be limited with the '--select' flag (but the full row
+is still written to the output if there is a match).
+
+However, when --quick is enabled, no output is produced and exitcode 0 is
+returned on the first match; exitcode 1 when no match is found. 
 
 Usage:
     qsv searchset [options] (<regexset-file>) [<input>]
@@ -53,8 +57,12 @@ search options:
     --dfa-size-limit <mb>  Set the approximate size of the cache (MB) used by the regular
                            expression engine's Discrete Finite Automata.
                            [default: 10]
-    -e, --exitcode         Return exit code 0 if there's a match.
+    -e, --exitcode         Return exit code 0 if there's a match and
+                           number of matches to stderr.
                            Return exit code 1 if no match is found.
+    -q, --quick            Return on first match with an exitcode of 0.
+                           Return exit code 1 if no match is found.
+                           No output is produced.
 
 Common options:
     -h, --help             Display this message
@@ -82,6 +90,7 @@ struct Args {
     flag_size_limit: usize,
     flag_dfa_size_limit: usize,
     flag_exitcode: bool,
+    flag_quick: bool,
     flag_progressbar: bool,
 }
 
@@ -130,7 +139,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         headers.push_field(column_name.as_bytes());
     }
 
-    if !rconfig.no_headers {
+    if !rconfig.no_headers && !args.flag_quick {
         wtr.write_record(&headers)?;
     }
 
@@ -177,11 +186,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
             matched
         });
-        if m {
-            match_row_ctr += 1;
-        }
         if args.flag_invert_match {
             m = !m;
+        }
+        if m {
+            match_row_ctr += 1;
+            if args.flag_quick {
+                break;
+            }
         }
 
         if do_match_list {
@@ -224,10 +236,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         util::finish_progress(&progress);
     }
 
-    if args.flag_exitcode {
+    if !args.flag_quick {
+        eprintln!("{match_row_ctr}");
+        info!("matches: {match_row_ctr}");
+    }
+
+    if args.flag_exitcode || args.flag_quick {
         if match_row_ctr > 0 {
+            info!("exit code: 0");
             std::process::exit(0);
         } else {
+            error!("exit code: 1");
             std::process::exit(1);
         }
     }
