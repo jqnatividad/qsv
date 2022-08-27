@@ -30,22 +30,30 @@ fn search() {
 }
 
 #[test]
-fn search_exitcode_match() {
-    let wrk = Workdir::new("search_exitcode_match");
+fn search_match() {
+    let wrk = Workdir::new("search_match");
     wrk.create("data.csv", data(true));
     let mut cmd = wrk.command("search");
-    cmd.arg("^foo").arg("--exitcode").arg("data.csv");
+    cmd.arg("^foo").arg("data.csv");
 
     assert!(cmd.status().unwrap().success());
 
-    let got = wrk.output_stderr(&mut cmd);
-    let expected = "2\n";
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["h1", "h2"],
+        svec!["foobar", "barfoo"],
+        svec!["barfoo", "foobar"],
+    ];
     assert_eq!(got, expected);
+
+    let got_err = wrk.output_stderr(&mut cmd);
+    let expected_err = "2\n";
+    assert_eq!(got_err, expected_err);
 }
 
 #[test]
-fn search_exitcode_match_quick() {
-    let wrk = Workdir::new("search_exitcode_match_quick");
+fn search_match_quick() {
+    let wrk = Workdir::new("search_match_quick");
     wrk.create("data.csv", data(true));
     let mut cmd = wrk.command("search");
     cmd.arg("^foo").arg("--quick").arg("data.csv");
@@ -54,11 +62,11 @@ fn search_exitcode_match_quick() {
 }
 
 #[test]
-fn search_exitcode_nomatch() {
-    let wrk = Workdir::new("search_exitcode_nomatch");
+fn search_nomatch() {
+    let wrk = Workdir::new("search_nomatch");
     wrk.create("data.csv", data(true));
     let mut cmd = wrk.command("search");
-    cmd.arg("waldo").arg("--exitcode").arg("data.csv");
+    cmd.arg("waldo").arg("data.csv");
 
     assert!(!cmd.status().unwrap().success());
 }
@@ -70,9 +78,7 @@ fn search_empty() {
     let mut cmd = wrk.command("search");
     cmd.arg("xxx").arg("data.csv");
 
-    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![svec!["h1", "h2"]];
-    assert_eq!(got, expected);
+    assert!(!cmd.status().unwrap().success());
 }
 
 #[test]
@@ -83,9 +89,7 @@ fn search_empty_no_headers() {
     cmd.arg("xxx").arg("data.csv");
     cmd.arg("--no-headers");
 
-    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected: Vec<Vec<String>> = vec![];
-    assert_eq!(got, expected);
+    assert!(!cmd.status().unwrap().success());
 }
 
 #[test]
