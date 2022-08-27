@@ -36,9 +36,21 @@ fn search_exitcode_match() {
     let mut cmd = wrk.command("search");
     cmd.arg("^foo").arg("--exitcode").arg("data.csv");
 
+    assert!(cmd.status().unwrap().success());
+
     let got = wrk.output_stderr(&mut cmd);
-    let expected = "No error";
+    let expected = "2\n";
     assert_eq!(got, expected);
+}
+
+#[test]
+fn search_exitcode_match_quick() {
+    let wrk = Workdir::new("search_exitcode_match_quick");
+    wrk.create("data.csv", data(true));
+    let mut cmd = wrk.command("search");
+    cmd.arg("^foo").arg("--quick").arg("data.csv");
+
+    assert!(cmd.status().unwrap().success());
 }
 
 #[test]
@@ -48,8 +60,7 @@ fn search_exitcode_nomatch() {
     let mut cmd = wrk.command("search");
     cmd.arg("waldo").arg("--exitcode").arg("data.csv");
 
-    let got = wrk.output_stderr(&mut cmd);
-    assert!(got.ends_with(" 1"));
+    assert!(!cmd.status().unwrap().success());
 }
 
 #[test]
@@ -174,6 +185,10 @@ fn search_invert_match() {
         svec!["a", "b"],
         svec!["Ḟooƀar", "ḃarḟoo"],
     ];
+    assert_eq!(got, expected);
+
+    let got = wrk.output_stderr(&mut cmd);
+    let expected = "2\n";
     assert_eq!(got, expected);
 }
 

@@ -61,9 +61,22 @@ fn searchset_exitcode_match() {
     let mut cmd = wrk.command("searchset");
     cmd.arg("regexset.txt").arg("--exitcode").arg("data.csv");
 
+    assert!(cmd.status().unwrap().success());
+
     let got = wrk.output_stderr(&mut cmd);
-    let expected = "No error";
+    let expected = "3\n";
     assert_eq!(got, expected);
+}
+
+#[test]
+fn searchset_quick() {
+    let wrk = Workdir::new("searchset_quick");
+    wrk.create("data.csv", data(true));
+    wrk.create("regexset.txt", regexset_file());
+    let mut cmd = wrk.command("searchset");
+    cmd.arg("regexset.txt").arg("--quick").arg("data.csv");
+
+    assert!(cmd.status().unwrap().success());
 }
 
 #[test]
@@ -74,8 +87,18 @@ fn searchset_exitcode_nomatch() {
     let mut cmd = wrk.command("searchset");
     cmd.arg("regexset.txt").arg("--exitcode").arg("data.csv");
 
-    let got = wrk.output_stderr(&mut cmd);
-    assert!(got.ends_with(" 1"));
+    assert!(!cmd.status().unwrap().success());
+}
+
+#[test]
+fn searchset_quick_nomatch() {
+    let wrk = Workdir::new("searchset_quick_nomatch");
+    wrk.create("data.csv", data(true));
+    wrk.create("regexset.txt", regexset_no_match_file());
+    let mut cmd = wrk.command("searchset");
+    cmd.arg("regexset.txt").arg("--quick").arg("data.csv");
+
+    assert!(!cmd.status().unwrap().success());
 }
 
 #[test]
