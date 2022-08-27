@@ -8,10 +8,11 @@ use std::path::Path;
 use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
 use crate::util;
+use crate::CliError;
 use crate::CliResult;
 #[cfg(any(feature = "full", feature = "lite"))]
 use indicatif::{HumanCount, ProgressBar, ProgressDrawTarget};
-use log::{debug, error, info};
+use log::{debug, info};
 use serde::Deserialize;
 
 static USAGE: &str = "
@@ -57,9 +58,6 @@ search options:
     --dfa-size-limit <mb>  Set the approximate size of the cache (MB) used by the regular
                            expression engine's Discrete Finite Automata.
                            [default: 10]
-    -e, --exitcode         Return exit code 0 if there's a match and
-                           number of matches to stderr.
-                           Return exit code 1 if no match is found.
     -q, --quick            Return on first match with an exitcode of 0.
                            Return exit code 1 if no match is found.
                            No output is produced.
@@ -89,7 +87,6 @@ struct Args {
     flag_flag: Option<String>,
     flag_size_limit: usize,
     flag_dfa_size_limit: usize,
-    flag_exitcode: bool,
     flag_quick: bool,
     flag_progressbar: bool,
 }
@@ -241,14 +238,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         info!("matches: {match_row_ctr}");
     }
 
-    if args.flag_exitcode || args.flag_quick {
-        if match_row_ctr > 0 {
-            info!("exit code: 0");
-            std::process::exit(0);
-        } else {
-            error!("exit code: 1");
-            std::process::exit(1);
-        }
+    if match_row_ctr == 0 {
+        return Err(CliError::NoMatch());
     }
 
     Ok(())
