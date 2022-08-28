@@ -15,6 +15,7 @@ use crate::cmd::sort::iter_cmp;
 
 static USAGE: &str = r#"
 Check if a CSV is sorted. The check is done on a streaming basis (i.e. constant memory).
+With the --json options, also retrieve record count, sort breaks & duplicate count.
 
 This command can be used in tandem with other qsv commands that sort or require sorted data
 to ensure that they also work on a stream of data - i.e. without loading an entire CSV into memory.
@@ -32,9 +33,6 @@ arbitrarily large files, can be used instead.
 Simply put, sortcheck allows you to make informed choices on how to compose pipelines that
 require sorted data.
 
-Apart from checking if a CSV is sorted, it also allows you to check a CSV's record count,
-sort breaks & dupe count with its --json options.
-
 Returns exit code 0 if a CSV is sorted, and exit code 1 otherwise.
 
 Usage:
@@ -46,11 +44,11 @@ sort options:
     -C, --no-case           Compare strings disregarding case
     --all                   Check all records. Do not stop the check on the
                             first unsorted record.
-    --json                  Return results in JSON format. The JSON result has
-                            the following properties - sorted (boolean), 
-                            record_count (number), unsorted_breaks (number) &
-                            dupe_count (number).
-    --pretty-json           Return results in pretty JSON format.
+    --json                  Return results in JSON format, scanning --all records. 
+                            The JSON result has the following properties - 
+                            sorted (boolean), record_count (number), 
+                            unsorted_breaks (number) & dupe_count (number).
+    --pretty-json           Same as --json but in pretty JSON format.
 
 Common options:
     -h, --help              Display this message
@@ -121,6 +119,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         record_count = 0;
     }
 
+    let do_json = args.flag_json | args.flag_pretty_json;
+
     let mut record = ByteRecord::new();
     let mut next_record = ByteRecord::new();
     let mut sorted = true;
@@ -156,7 +156,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
             cmp::Ordering::Greater => {
                 sorted = false;
-                if args.flag_all {
+                if args.flag_all || do_json {
                     unsorted_breaks += 1;
                     record.clone_from(&next_record);
                 } else {
@@ -192,7 +192,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         util::finish_progress(&progress);
     }
 
-    if args.flag_json || args.flag_pretty_json {
+    if do_json {
         let sortcheck_struct = SortCheckStruct {
             sorted,
             record_count: if record_count == 0 {
