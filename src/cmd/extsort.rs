@@ -3,6 +3,7 @@ use std::io::{self, prelude::*};
 use std::path;
 
 use crate::util;
+use crate::CliError;
 use crate::CliResult;
 use ext_sort::{buffer::mem::MemoryLimitedBufferBuilder, ExternalSorter, ExternalSorterBuilder};
 use serde::Deserialize;
@@ -79,7 +80,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .build()
         {
             Ok(sorter) => sorter,
-            Err(e) => return fail!(format!("cannot create external sorter: {e}")),
+            Err(e) => {
+                return Err(CliError::Other(format!(
+                    "cannot create external sorter: {e}"
+                )))
+            }
         };
 
     let mut header = String::new();
@@ -87,7 +92,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         input_reader.read_line(&mut header)?;
     }
 
-    let sorted = sorter.sort(input_reader.lines()).unwrap();
+    let sorted = if let Ok(ext_sorter) = sorter.sort(input_reader.lines()) {
+        ext_sorter
+    } else {
+        return Err(CliError::Other("cannot do external sort".to_string()));
+    };
 
     if !header.is_empty() {
         output_writer.write_all(format!("{}\n", header.trim_end()).as_bytes())?;
