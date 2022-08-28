@@ -218,6 +218,39 @@ fn sortcheck_simple_all_json() {
 }
 
 #[test]
+fn sortcheck_simple_json() {
+    let wrk = Workdir::new("sortcheck_simple_json");
+    wrk.create(
+        "in.csv",
+        vec![
+            svec!["col11", "col2"],
+            svec!["1", "d"],
+            svec!["5", "c"],
+            svec!["5", "c"],
+            svec!["3", "b"],
+            svec!["4", "a"],
+            svec!["6", "a"],
+            svec!["6", "a"],
+            svec!["2", "y"],
+            svec!["3", "z"],
+        ],
+    );
+
+    let mut cmd = wrk.command("sortcheck");
+    cmd.arg("--json").arg("in.csv");
+
+    let output = cmd.output().unwrap();
+    let got_stdout = std::str::from_utf8(&output.stdout).unwrap_or_default();
+
+    assert_eq!(
+        got_stdout,
+        r#"{"sorted":false,"record_count":9,"unsorted_breaks":2,"dupe_count":2}
+"#
+    );
+    wrk.assert_err(&mut cmd);
+}
+
+#[test]
 fn sortcheck_simple_all_json_progressbar() {
     let wrk = Workdir::new("sortcheck_simple_all_json_progessbar");
     wrk.create(
