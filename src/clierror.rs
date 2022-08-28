@@ -1,6 +1,48 @@
+#![macro_use]
 use std::borrow::ToOwned;
 use std::fmt;
 use std::io;
+use std::process::{ExitCode, Termination};
+
+macro_rules! wout {
+    ($($arg:tt)*) => ({
+        use std::io::Write;
+        (writeln!(&mut ::std::io::stdout(), $($arg)*)).unwrap();
+    });
+}
+
+macro_rules! werr {
+    ($($arg:tt)*) => ({
+        use std::io::Write;
+        use log::error;
+        error!("{}", $($arg)*);
+        (writeln!(&mut ::std::io::stderr(), $($arg)*)).unwrap();
+    });
+}
+
+// TODO: format parameter so we don't need to do fail!(format!())
+macro_rules! fail {
+    ($e:expr) => {{
+        use log::error;
+        let err = ::std::convert::From::from($e);
+        error!("{err}");
+        Err(err)
+    }};
+}
+
+#[repr(u8)]
+pub enum QsvExitCode {
+    Good = 0,
+    Bad = 1,
+    IncorrectUsage = 2,
+    Abort = 255,
+}
+
+impl Termination for QsvExitCode {
+    fn report(self) -> ExitCode {
+        ExitCode::from(self as u8)
+    }
+}
 
 #[derive(Debug)]
 pub enum CliError {
