@@ -92,7 +92,7 @@ For the most part, this shouldn't be a problem as UTF-8 is the de facto encoding
 ## Nightly Release Builds
 Pre-built binaries compiled using Rust Nightly/Unstable are also [available for download](https://github.com/jqnatividad/qsv/releases/latest). These binaries are optimized for size and speed:
 
-* compiled with the last known Rust nightly/unstable that can build qsv (presently nightly-2022-08-22).
+* compiled with the last known Rust nightly/unstable that can build qsv (presently nightly-2022-08-27).
 * stdlib is compiled from source, instead of using the pre-built stdlib. This ensures stdlib is compiled with all of qsv's release settings
   (link time optimization, opt-level, codegen-units, panic=abort, etc.), presenting more opportunities for Rust/LLVM to optimize the generated code.
   This is why we only have nightly release builds for select platforms (the platform of GitHub's action runners), as we need access to the "native hardware"
@@ -111,7 +111,7 @@ Doing so will ensure CPU features are tailored to your hardware and you're using
 For example, on Ubuntu 22.04 LTS Linux:
 
 ```
-rustup default nightly-2022-08-22
+rustup default nightly-2022-08-27
 rustup update
 export RUSTFLAGS='-C target-cpu=native'
 
