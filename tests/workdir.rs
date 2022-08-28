@@ -111,24 +111,7 @@ impl Workdir {
     }
 
     pub fn output(&self, cmd: &mut process::Command) -> process::Output {
-        debug!("[{}]: {:?}", self.dir.display(), cmd);
-        let o = cmd.output().unwrap();
-        if !o.status.success() {
-            panic!(
-                "\n\n===== {:?} =====\n\
-                    command failed but expected success!\
-                    \n\ncwd: {}\
-                    \n\nstatus: {}\
-                    \n\nstdout: {}\n\nstderr: {}\
-                    \n\n=====\n",
-                cmd,
-                self.dir.display(),
-                o.status,
-                String::from_utf8_lossy(&o.stdout),
-                String::from_utf8_lossy(&o.stderr)
-            )
-        }
-        o
+        cmd.output().unwrap()
     }
 
     pub fn run(&self, cmd: &mut process::Command) {
@@ -146,23 +129,36 @@ impl Workdir {
     }
 
     pub fn output_stderr(&self, cmd: &mut process::Command) -> String {
-        debug!("[{}]: {:?}", self.dir.display(), cmd);
-        // ensures stderr has been flushed before we run our cmd
         {
+            // ensures stderr has been flushed before we run our cmd
             let mut _stderr = io::stderr();
             _stderr.flush().unwrap();
         }
         let o = cmd.output().unwrap();
         let o_utf8 = String::from_utf8_lossy(&o.stderr).to_string();
         if !o.status.success() || !o_utf8.is_empty() {
-            if o_utf8.is_empty() {
-                // if there is no stderr msg, just return the exitcode
-                o.status.to_string()
-            } else {
-                o_utf8
-            }
+            o_utf8
         } else {
             "No error".to_string()
+        }
+    }
+
+    pub fn assert_success(&self, cmd: &mut process::Command) {
+        let o = cmd.output().unwrap();
+        if !o.status.success() {
+            panic!(
+                "\n\n===== {:?} =====\n\
+                    command failed but expected success!\
+                    \n\ncwd: {}\
+                    \n\nstatus: {}\
+                    \n\nstdout: {}\n\nstderr: {}\
+                    \n\n=====\n",
+                cmd,
+                self.dir.display(),
+                o.status,
+                String::from_utf8_lossy(&o.stdout),
+                String::from_utf8_lossy(&o.stderr)
+            )
         }
     }
 
