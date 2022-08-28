@@ -5,6 +5,7 @@ use std::env;
 use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
 use crate::util;
+use crate::CliError;
 use crate::CliResult;
 #[cfg(any(feature = "full", feature = "lite"))]
 use indicatif::{HumanCount, ProgressBar, ProgressDrawTarget};
@@ -43,8 +44,6 @@ replace options:
     --dfa-size-limit <mb>  Set the approximate size of the cache (MB) used by the regular
                            expression engine's Discrete Finite Automata.
                            [default: 10]
-    -e, --exitcode         Return exit code 0 if there's a match that was replaced.
-                           Return exit code 1 if no match is found and nothing was replaced.
 
 Common options:
     -h, --help             Display this message
@@ -71,7 +70,6 @@ struct Args {
     flag_ignore_case: bool,
     flag_size_limit: usize,
     flag_dfa_size_limit: usize,
-    flag_exitcode: bool,
     flag_progressbar: bool,
 }
 
@@ -138,17 +136,24 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             progress.inc(1);
         }
 
+        #[allow(unused_variables)]
+        #[allow(unused_mut)]
         let mut match_found = false;
         record = record
             .into_iter()
             .enumerate()
             .map(|(i, v)| {
                 if sel_indices.contains(&i) {
-                    if (args.flag_exitcode || args.flag_progressbar) && pattern.is_match(v) {
+                    if pattern.is_match(v) {
                         total_match_ctr += 1;
-                        match_found = true;
+                        #[cfg(any(feature = "full", feature = "lite"))]
+                        {
+                            match_found = true;
+                        }
+                        pattern.replace_all(v, replacement)
+                    } else {
+                        Cow::Borrowed(v)
                     }
-                    pattern.replace_all(v, replacement)
                 } else {
                     Cow::Borrowed(v)
                 }
@@ -177,12 +182,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         util::finish_progress(&progress);
     }
 
-    if args.flag_exitcode {
-        if total_match_ctr > 0 {
-            std::process::exit(0);
-        } else {
-            std::process::exit(1);
-        }
+    eprintln!("{total_match_ctr}");
+    if total_match_ctr == 0 {
+        return Err(CliError::NoMatch());
     }
 
     Ok(())

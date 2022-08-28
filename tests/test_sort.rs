@@ -77,8 +77,7 @@ fn sortcheck_select_notsorted() {
         .args(&["--select", "2"])
         .arg("in.csv");
 
-    let got = wrk.output_stderr(&mut cmd);
-    assert!(got.ends_with(" 1"));
+    wrk.assert_err(&mut cmd);
 }
 
 #[test]
@@ -99,8 +98,7 @@ fn sortcheck_select_sorted() {
         .args(&["--select", "1"])
         .arg("in.csv");
 
-    let got = wrk.output_stderr(&mut cmd);
-    assert_eq!(got, "No error");
+    wrk.assert_success(&mut cmd);
 }
 
 #[test]
@@ -121,8 +119,7 @@ fn sortcheck_select_unsorted() {
         .args(&["--select", "2"])
         .arg("in.csv");
 
-    let got = wrk.output_stderr(&mut cmd);
-    assert!(got.ends_with(" 1"));
+    wrk.assert_err(&mut cmd);
 }
 
 #[test]
@@ -141,8 +138,7 @@ fn sortcheck_simple_sorted() {
     let mut cmd = wrk.command("sortcheck");
     cmd.arg("--no-headers").arg("in.csv");
 
-    let got = wrk.output_stderr(&mut cmd);
-    assert_eq!(got, "No error");
+    wrk.assert_success(&mut cmd);
 }
 
 #[test]
@@ -162,8 +158,7 @@ fn sortcheck_simple_unsorted() {
     let mut cmd = wrk.command("sortcheck");
     cmd.arg("in.csv");
 
-    let got = wrk.output_stderr(&mut cmd);
-    assert!(got.ends_with(" 1"));
+    wrk.assert_err(&mut cmd);
 }
 
 #[test]
@@ -186,8 +181,7 @@ fn sortcheck_simple_all() {
     let mut cmd = wrk.command("sortcheck");
     cmd.arg("--all").arg("in.csv");
 
-    let got = wrk.output_stderr(&mut cmd);
-    assert!(got.ends_with(" 1"));
+    wrk.assert_err(&mut cmd);
 }
 
 #[test]
@@ -213,7 +207,6 @@ fn sortcheck_simple_all_json() {
     cmd.arg("--all").arg("--json").arg("in.csv");
 
     let output = cmd.output().unwrap();
-    let got_exitcode = output.status.to_string();
     let got_stdout = std::str::from_utf8(&output.stdout).unwrap_or_default();
 
     assert_eq!(
@@ -221,7 +214,7 @@ fn sortcheck_simple_all_json() {
         r#"{"sorted":false,"record_count":9,"unsorted_breaks":2,"dupe_count":2}
 "#
     );
-    assert!(got_exitcode.ends_with(" 1"));
+    wrk.assert_err(&mut cmd);
 }
 
 #[test]
@@ -250,7 +243,6 @@ fn sortcheck_simple_all_json_progressbar() {
         .arg("in.csv");
 
     let output = cmd.output().unwrap();
-    let got_exitcode = output.status.to_string();
     let got_stdout = std::str::from_utf8(&output.stdout).unwrap_or_default();
 
     assert_eq!(
@@ -258,7 +250,7 @@ fn sortcheck_simple_all_json_progressbar() {
         r#"{"sorted":false,"record_count":9,"unsorted_breaks":2,"dupe_count":2}
 "#
     );
-    assert!(got_exitcode.ends_with(" 1"));
+    wrk.assert_err(&mut cmd);
 }
 
 #[test]

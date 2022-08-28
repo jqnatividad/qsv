@@ -4,19 +4,24 @@ use std::env;
 use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
 use crate::util;
+use crate::CliError;
 use crate::CliResult;
 #[cfg(any(feature = "full", feature = "lite"))]
 use indicatif::{HumanCount, ProgressBar, ProgressDrawTarget};
-use log::debug;
+use log::{debug, info};
 use serde::Deserialize;
 
 static USAGE: &str = "
 Filters CSV data by whether the given regex matches a row.
 
 The regex is applied to each field in each row, and if any field matches,
-then the row is written to the output. The columns to search can be limited
-with the '--select' flag (but the full row is still written to the output if
-there is a match).
+then the row is written to the output, and the number of matches to stderr.
+
+The columns to search can be limited with the '--select' flag (but the full row
+is still written to the output if there is a match).
+
+However, when --quick is enabled, no output is produced and exitcode 0 is
+returned on the first match; exitcode 1 when no match is found.
 
 Usage:
     qsv search [options] <regex> [<input>]
@@ -42,9 +47,10 @@ search options:
     --dfa-size-limit <mb>  Set the approximate size of the cache (MB) used by the regular
                            expression engine's Discrete Finite Automata.
                            [default: 10]
-    -e, --exitcode         Return exit code 0 if there's a match.
+    -q, --quick            Return on first match with an exitcode of 0.
                            Return exit code 1 if no match is found.
-
+                           No output is produced.
+                           
 Common options:
     -h, --help             Display this message
     -o, --output <file>    Write output to <file> instead of stdout.
@@ -70,7 +76,7 @@ struct Args {
     flag_flag: Option<String>,
     flag_size_limit: usize,
     flag_dfa_size_limit: usize,
-    flag_exitcode: bool,
+    flag_quick: bool,
     flag_progressbar: bool,
 }
 
@@ -106,7 +112,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         headers.push_field(column_name.as_bytes());
     }
 
-    if !rconfig.no_headers {
+    if !rconfig.no_headers && !args.flag_quick {
         wtr.write_record(&headers)?;
     }
 
@@ -135,11 +141,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             progress.inc(1);
         }
         let mut m = sel.select(&record).any(|f| pattern.is_match(f));
-        if m {
-            match_ctr += 1;
-        }
         if args.flag_invert_match {
             m = !m;
+        }
+        if m {
+            match_ctr += 1;
+            if args.flag_quick {
+                break;
+            }
         }
 
         if args.flag_flag.is_some() {
@@ -168,12 +177,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         util::finish_progress(&progress);
     }
 
-    if args.flag_exitcode {
-        if match_ctr > 0 {
-            std::process::exit(0);
-        } else {
-            std::process::exit(1);
-        }
+    if !args.flag_quick {
+        eprintln!("{match_ctr}");
+        info!("matches: {match_ctr}");
+    }
+
+    if match_ctr == 0 {
+        return Err(CliError::NoMatch());
     }
 
     Ok(())

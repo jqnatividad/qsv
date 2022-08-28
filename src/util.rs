@@ -14,6 +14,7 @@ use regex::Regex;
 use serde::de::{Deserialize, DeserializeOwned, Deserializer, Error};
 #[cfg(any(feature = "full", feature = "lite"))]
 use serde_json::json;
+use std::time::Instant;
 
 #[macro_export]
 macro_rules! regex_once_cell {
@@ -658,6 +659,21 @@ pub fn safe_header_names(headers: &csv::StringRecord, check_first_char: bool) ->
     }
     debug!("safe header names: {name_vec:?}");
     name_vec
+}
+
+pub fn log_end(mut qsv_args: String, now: Instant) {
+    if log::log_enabled!(log::Level::Info) {
+        let ellipsis = if qsv_args.len() > 24 {
+            qsv_args.truncate(24);
+            "..."
+        } else {
+            ""
+        };
+        log::info!(
+            "END \"{qsv_args}{ellipsis}\" elapsed: {}",
+            now.elapsed().as_secs_f32()
+        );
+    }
 }
 
 #[test]
