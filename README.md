@@ -124,11 +124,11 @@ To enable optional features, use cargo `--features` (see [Feature Flags](#featur
 cargo install qsv --features apply,generate,lua,fetch,foreach,python,full
 # or shorthand
 cargo install qsv --features all_full
-# or to build all features EXCEPT python
+# or to install all features EXCEPT python
 cargo install qsv --features nopython_full
-# or to build qsvlite
+# or to install qsvlite
 cargo install qsv --features lite
-# or to build qsvdp
+# or to install qsvdp
 cargo install qsv --features datapusher_plus
 
 # or when compiling from a local repo
@@ -179,7 +179,7 @@ When using the `--output` option, note that qsv will UTF-8 encode the file and a
 
 The `fetch` & `fetchpost` commands also produces JSONL files when its invoked without the `--new-column` option, and TSV files with the `--report` option.
 
-The `sniff` and `validate` commands produce JSON files with their `--json` and `--pretty-json` options.
+The `sniff`, `sortcheck` and `validate` commands produce JSON files with their `--json` and `--pretty-json` options.
 
 The `schema` command produces a [JSON Schema Validation (Draft 7)](https://json-schema.org/draft/2020-12/json-schema-validation.html) file with the ".schema.json" file extension, which can be used with the `validate` command.
 
