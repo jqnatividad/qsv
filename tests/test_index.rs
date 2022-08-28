@@ -55,6 +55,10 @@ fn index_outdated_stats() {
     )
     .unwrap();
 
+    // sleep for a bit to ensure file system updates the file metadata properly
+    // as this test intermittently fails without the sleep
+    std::thread::sleep(std::time::Duration::from_millis(100));
+
     // stats should fail if the index is stale
     let mut cmd = wrk.command("stats");
     cmd.arg("in.csv");
