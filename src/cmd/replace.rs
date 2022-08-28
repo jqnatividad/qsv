@@ -21,6 +21,9 @@ backslash or by wrapping the replacement string into single quotes:
   $ qsv replace 'hel(lo)' 'hal$1' file.csv
   $ qsv replace \"hel(lo)\" \"hal\\$1\" file.csv
 
+Returns exitcode 0 when replacements are done, returning number of replacements to stderr.
+Returns exitcode 1 when no replacements are done.
+
 Usage:
     qsv replace [options] <pattern> <replacement> [<input>]
     qsv replace --help
@@ -128,7 +131,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut record = csv::ByteRecord::new();
     let mut total_match_ctr: u64 = 0;
     #[cfg(any(feature = "full", feature = "lite"))]
-    let mut row_with_matches_ctr: u64 = 0;
+    let mut rows_with_matches_ctr: u64 = 0;
 
     while rdr.read_byte_record(&mut record)? {
         #[cfg(any(feature = "full", feature = "lite"))]
@@ -162,7 +165,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         #[cfg(any(feature = "full", feature = "lite"))]
         if match_found {
-            row_with_matches_ctr += 1;
+            rows_with_matches_ctr += 1;
         }
 
         wtr.write_byte_record(&record)?;
@@ -176,7 +179,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             r#" - {} total matches replaced with "{}" in {} out of {} records."#,
             HumanCount(total_match_ctr),
             args.arg_replacement,
-            HumanCount(row_with_matches_ctr),
+            HumanCount(rows_with_matches_ctr),
             HumanCount(progress.length().unwrap()),
         ));
         util::finish_progress(&progress);

@@ -30,8 +30,11 @@ then the row is written to the output, and the number of matches to stderr.
 The columns to search can be limited with the '--select' flag (but the full row
 is still written to the output if there is a match).
 
-However, when --quick is enabled, no output is produced and exitcode 0 is
-returned on the first match; exitcode 1 when no match is found. 
+Returns exitcode 0 when matches are found, returning number of matches to stderr.
+Returns exitcode 1 when no match is found.
+
+When --quick is enabled, no output is produced and exitcode 0 is returned on 
+the first match.
 
 Usage:
     qsv searchset [options] (<regexset-file>) [<input>]
