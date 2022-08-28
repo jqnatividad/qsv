@@ -27,6 +27,7 @@ fn search() {
         svec!["barfoo", "foobar"],
     ];
     assert_eq!(got, expected);
+    wrk.assert_success(&mut cmd);
 }
 
 #[test]
@@ -36,7 +37,7 @@ fn search_match() {
     let mut cmd = wrk.command("search");
     cmd.arg("^foo").arg("data.csv");
 
-    assert!(cmd.status().unwrap().success());
+    wrk.assert_success(&mut cmd);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
@@ -47,8 +48,7 @@ fn search_match() {
     assert_eq!(got, expected);
 
     let got_err = wrk.output_stderr(&mut cmd);
-    let expected_err = "2\n";
-    assert_eq!(got_err, expected_err);
+    assert_eq!(got_err, "2\n");
 }
 
 #[test]
@@ -58,7 +58,7 @@ fn search_match_quick() {
     let mut cmd = wrk.command("search");
     cmd.arg("^foo").arg("--quick").arg("data.csv");
 
-    assert!(cmd.status().unwrap().success());
+    wrk.assert_success(&mut cmd);
 }
 
 #[test]
@@ -68,7 +68,7 @@ fn search_nomatch() {
     let mut cmd = wrk.command("search");
     cmd.arg("waldo").arg("data.csv");
 
-    assert!(!cmd.status().unwrap().success());
+    wrk.assert_err(&mut cmd);
 }
 
 #[test]
@@ -78,7 +78,7 @@ fn search_empty() {
     let mut cmd = wrk.command("search");
     cmd.arg("xxx").arg("data.csv");
 
-    assert!(!cmd.status().unwrap().success());
+    wrk.assert_err(&mut cmd);
 }
 
 #[test]
@@ -89,7 +89,7 @@ fn search_empty_no_headers() {
     cmd.arg("xxx").arg("data.csv");
     cmd.arg("--no-headers");
 
-    assert!(!cmd.status().unwrap().success());
+    wrk.assert_err(&mut cmd);
 }
 
 #[test]
@@ -107,6 +107,11 @@ fn search_ignore_case() {
         svec!["barfoo", "foobar"],
     ];
     assert_eq!(got, expected);
+
+    let got_err = wrk.output_stderr(&mut cmd);
+    assert_eq!(got_err, "2\n");
+
+    wrk.assert_success(&mut cmd);
 }
 
 #[test]
@@ -120,6 +125,11 @@ fn search_unicode() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![svec!["h1", "h2"], svec!["Ḟooƀar", "ḃarḟoo"]];
     assert_eq!(got, expected);
+
+    let got_err = wrk.output_stderr(&mut cmd);
+    assert_eq!(got_err, "1\n");
+
+    wrk.assert_success(&mut cmd);
 }
 
 #[test]
@@ -133,6 +143,11 @@ fn search_unicode_envvar() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![svec!["h1", "h2"], svec!["Ḟooƀar", "ḃarḟoo"]];
     assert_eq!(got, expected);
+
+    let got_err = wrk.output_stderr(&mut cmd);
+    assert_eq!(got_err, "1\n");
+
+    wrk.assert_success(&mut cmd);
 }
 
 #[test]
@@ -146,6 +161,11 @@ fn search_no_headers() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![svec!["foobar", "barfoo"], svec!["barfoo", "foobar"]];
     assert_eq!(got, expected);
+
+    let got_err = wrk.output_stderr(&mut cmd);
+    assert_eq!(got_err, "2\n");
+
+    wrk.assert_success(&mut cmd);
 }
 
 #[test]
@@ -159,6 +179,11 @@ fn search_select() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![svec!["h1", "h2"], svec!["barfoo", "foobar"]];
     assert_eq!(got, expected);
+
+    let got_err = wrk.output_stderr(&mut cmd);
+    assert_eq!(got_err, "1\n");
+
+    wrk.assert_success(&mut cmd);
 }
 
 #[test]
@@ -173,6 +198,11 @@ fn search_select_no_headers() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![svec!["barfoo", "foobar"]];
     assert_eq!(got, expected);
+
+    let got_err = wrk.output_stderr(&mut cmd);
+    assert_eq!(got_err, "1\n");
+
+    wrk.assert_success(&mut cmd);
 }
 
 #[test]
@@ -194,6 +224,7 @@ fn search_invert_match() {
     let got = wrk.output_stderr(&mut cmd);
     let expected = "2\n";
     assert_eq!(got, expected);
+    wrk.assert_success(&mut cmd);
 }
 
 #[test]
@@ -208,6 +239,11 @@ fn search_invert_match_no_headers() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![svec!["a", "b"], svec!["Ḟooƀar", "ḃarḟoo"]];
     assert_eq!(got, expected);
+
+    let got_err = wrk.output_stderr(&mut cmd);
+    assert_eq!(got_err, "2\n");
+
+    wrk.assert_success(&mut cmd);
 }
 
 #[test]
@@ -225,6 +261,7 @@ fn search_flag() {
         svec!["Ḟooƀar", "ḃarḟoo", "0"],
     ];
     assert_eq!(got, expected);
+    wrk.assert_success(&mut cmd);
 }
 
 #[test]
@@ -243,4 +280,9 @@ fn search_flag_invert_match() {
         svec!["Ḟooƀar", "ḃarḟoo", "4"],
     ];
     assert_eq!(got, expected);
+
+    let got_err = wrk.output_stderr(&mut cmd);
+    assert_eq!(got_err, "2\n");
+
+    wrk.assert_success(&mut cmd);
 }
