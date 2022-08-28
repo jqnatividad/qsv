@@ -5,6 +5,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.65.0] - 2022-08-28
+
+### Added
+* Major refactoring of main variants - removing redundant code and moving them to a new module - clitypes.rs. Added custom exit codes. 
+  Removed need to have --exitcode option in several commands as qsv now returns exit codes for ALL commands in a standard way. https://github.com/jqnatividad/qsv/pull/460
+* Major refactoring of CI test helpers in workdir.rs
+
+### Changed
+* `py`: use python interning to amortize allocs https://github.com/jqnatividad/qsv/pull/457
+* `search` & `searchset`: return num of matches to stderr; add --quick option; remove --exitcode option https://github.com/jqnatividad/qsv/pull/458
+* `extsort`: improved error handling
+* `fetch` & `fetchpost`: better --report option handling https://github.com/jqnatividad/qsv/pull/451
+* `lua`: faster number to string conversion using itoa and ryu
+* `replace`: removed --exitcode option
+* `sortcheck`: --json options now always cause full scan of CSV
+* `stats`: expanded usage text, explicitly listing stats that require loading the entire CSV into memory. Mentioned data type inferences are guaranteed.
+
+### Fixed
+* `py`: batched python processing refactor. Instead of using one GILpool for one session, `py` now processes in batches of 30,000 rows, releasing memory after each batch.  This resulted in memory consumption levelling out, instead of increasing to gigabytes of memory with very large files. As an added bonus, this made the `py` command ~30% faster in testing. :smile:  https://github.com/jqnatividad/qsv/pull/456
+
 ## [0.64.0] - 2022-08-23
 ### Added
 * added `sortcheck` command https://github.com/jqnatividad/qsv/pull/445
