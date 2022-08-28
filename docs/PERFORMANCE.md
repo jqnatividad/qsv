@@ -101,7 +101,7 @@ Pre-built binaries compiled using Rust Nightly/Unstable are also [available for 
 * enables unstable/nightly features on `regex`, `rand`, `pyo3` and `hashbrown` crates, that unlock performance/SIMD features on those crates.
 
 Despite the 'unstable' label, these binaries are actually quite stable, given how [Rust is made](https://doc.rust-lang.org/book/appendix-07-nightly-rust.html),
-and the fact that qsv itself doesn't actually use any unstable feature flags, beyond activating the 'unstable' features in the `rand`, `regex` and `pyo3` crates, which is really more about performance (that's why we can still compile with Rust stable). You only really loose the backtrace messages when qsv panics.
+and the fact that qsv itself doesn't actually use any unstable feature flags, beyond activating the 'unstable' features in the `rand`, `regex`, `hashbrown`, `parking_lot` and `pyo3` crates, which is really more about performance (that's why we can still compile with Rust stable). You only really loose the backtrace messages when qsv panics.
 
 If you need to maximize performance - use the nightly builds. If you prefer a "safer", rock-solid experience, use the stable builds.
 
