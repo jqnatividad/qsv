@@ -4,6 +4,7 @@ use crate::cmd::dedup;
 use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
 use crate::util;
+use crate::CliError;
 use crate::CliResult;
 use csv::ByteRecord;
 #[cfg(any(feature = "full", feature = "lite"))]
@@ -213,12 +214,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         };
     }
 
-    if sorted {
-        std::process::exit(0);
-    } else {
-        std::process::exit(1);
+    if !sorted {
+        return Err(CliError::Other("not sorted".to_string()));
     }
 
-    #[allow(unreachable_code)]
     Ok(())
 }
