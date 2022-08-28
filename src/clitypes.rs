@@ -44,6 +44,8 @@ impl Termination for QsvExitCode {
     }
 }
 
+pub type CliResult<T> = Result<T, CliError>;
+
 #[derive(Debug)]
 pub enum CliError {
     Flag(docopt::Error),
