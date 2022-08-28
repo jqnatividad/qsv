@@ -31,7 +31,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [behead](/src/cmd/behead.rs#L7) | Drop headers from a CSV.  |
 | [cat](/src/cmd/cat.rs#L7) | Concatenate CSV files by row or by column. |
 | [count](/src/cmd/count.rs#L8)[^2] | Count the rows in a CSV file. (Instantaneous with an index.) |
-| [dedup](/src/cmd/dedup.rs#L14)[^3][^5] | Remove redundant rows.  |
+| [dedup](/src/cmd/dedup.rs#L14)[^3][^5] | Remove redundant rows (See also `sortcheck` command). |
 | [enum](/src/cmd/enumerate.rs#L10-L12) | Add a new column enumerating rows by adding a column of incremental or uuid identifiers. Can also be used to copy a column or fill a new column with a constant value.  |
 | [excel](/src/cmd/excel.rs#L12) | Exports a specified Excel/ODS sheet to a CSV file. |
 | [exclude](/src/cmd/exclude.rs#L18)[^2] | Removes a set of CSV data from another set based on the specified columns.  |
@@ -60,13 +60,13 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [reverse](/src/cmd/reverse.rs#L7)[^3] | Reverse order of rows in a CSV. Unlike the `sort --reverse` command, it preserves the order of rows with the same key.  |
 | [sample](/src/cmd/sample.rs#L13-L14)[^2] | Randomly draw rows (with optional seed) from a CSV using [reservoir sampling](https://en.wikipedia.org/wiki/Reservoir_sampling) (i.e., use memory proportional to the size of the sample).  |
 | [schema](/src/cmd/schema.rs#L24)[^4] | Infer schema from CSV data and output in [JSON Schema](https://json-schema.org/) format. Uses multithreading to go faster if an index is present. See `validate` command to use the generated JSON Schema to validate if similar CSVs comply with the schema. |
-| [search](/src/cmd/search.rs#L14) | Run a regex over a CSV. Applies the regex to each field individually & shows only matching rows.  |
-| [searchset](/src/cmd/searchset.rs#L18) | **Run multiple regexes over a CSV in a single pass.** Applies the regexes to each field individually & shows only matching rows.  |
+| [search](/src/cmd/search.rs#L15) | Run a regex over a CSV. Applies the regex to each field individually & shows only matching rows.  |
+| [searchset](/src/cmd/searchset.rs#L19) | **Run multiple regexes over a CSV in a single pass.** Applies the regexes to each field individually & shows only matching rows.  |
 | [select](/src/cmd/select.rs#L8) | Select, re-order, duplicate or drop columns.  |
 | [slice](/src/cmd/slice.rs#L10-L11)[^2][^3] | Slice rows from any part of a CSV. When an index is present, this only has to parse the rows in the slice (instead of all rows leading up to the start of the slice).  |
 | [sniff](/src/cmd/sniff.rs#L10-L11)[^2] | Quickly sniff CSV metadata (delimiter, header row, preamble rows, quote character, flexible, is_utf8, number of records, number of fields, field names & data types). |
-| [sort](/src/cmd/sort.rs#L13)[^5] | Sorts CSV data in alphabetical, numerical, reverse or random (with optional seed) order.  |
-| [sortcheck](/src/cmd/sortcheck.rs#L16)[^2] | Check if a CSV is sorted. |
+| [sort](/src/cmd/sort.rs#L13)[^5] | Sorts CSV data in alphabetical, numerical, reverse or random (with optional seed) order (See also `extsort` & `sortcheck` commands).  |
+| [sortcheck](/src/cmd/sortcheck.rs#L17-L18)[^2] | Check if a CSV is sorted. With the --json options, also retrieve record count, sort breaks & duplicate count. |
 | [split](/src/cmd/split.rs#L14)[^2][^4] | Split one CSV file into many CSV files of N chunks. (Uses multithreading to go faster if an index is present.) |
 | [stats](/src/cmd/stats.rs#L26)[^2][^3][^4] | Infer data type (Null, String, Float, Integer, Date, DateTime) & compute descriptive statistics for each column in a CSV (sum, min/max, min/max length, mean, stddev, variance, nullcount, quartiles, IQR, lower/upper fences, skewness, median, mode & cardinality). Uses multithreading to go faster if an index is present. |
 | [table](/src/cmd/table.rs#L12)[^3] | Show aligned output of a CSV using [elastic tabstops](https://github.com/BurntSushi/tabwriter).  |
@@ -266,7 +266,7 @@ Relevant env vars are defined as anything that starts with `QSV_` and `MIMALLOC_
 * `nopython_full` - enable to build qsvnp binary variant with all features (apply,fetch,foreach,generate,lua) EXCEPT python.
 * `lite` - enable to build qsvlite binary variant with all features disabled.
 * `datapusher_plus` - enable to build qsvdp binary variant - the [DataPusher+](https://github.com/dathere/datapusher-plus) optimized qsv binary.
-* `nightly` - enable to turn on nightly/unstable features in the `hashbrown`, `rand`, `regex` and `pyo3` crates when building with Rust nightly/unstable.
+* `nightly` - enable to turn on nightly/unstable features in the `rand`, `regex`, `hashbrown`, `parking_lot` and `pyo3` crates when building with Rust nightly/unstable.
 
 The following "power-user" features can be abused and present "foot-shooting" scenarios:
 
