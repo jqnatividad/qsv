@@ -1,10 +1,9 @@
 #![allow(dead_code)]
 extern crate crossbeam_channel as channel;
 
-use crate::clierror::CliError;
+use crate::clitypes::{CliError, CliResult, QsvExitCode};
 use std::env;
 use std::io;
-use std::process::{ExitCode, Termination};
 use std::time::Instant;
 
 use docopt::Docopt;
@@ -14,31 +13,6 @@ use serde::Deserialize;
 #[cfg(feature = "mimalloc")]
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
-
-macro_rules! wout {
-    ($($arg:tt)*) => ({
-        use std::io::Write;
-        (writeln!(&mut ::std::io::stdout(), $($arg)*)).unwrap();
-    });
-}
-
-macro_rules! werr {
-    ($($arg:tt)*) => ({
-        use std::io::Write;
-        use log::error;
-        error!("{}", $($arg)*);
-        (writeln!(&mut ::std::io::stderr(), $($arg)*)).unwrap();
-    });
-}
-
-macro_rules! fail {
-    ($e:expr) => {{
-        use log::error;
-        let err = ::std::convert::From::from($e);
-        error!("{err}");
-        Err(err)
-    }};
-}
 
 macro_rules! command_list {
     () => {
@@ -70,7 +44,7 @@ macro_rules! command_list {
 "
     };
 }
-mod clierror;
+mod clitypes;
 mod cmd;
 mod config;
 mod index;
@@ -94,20 +68,6 @@ Options:
 * sponsored by datHere - Data Infrastructure Engineering
 "
 );
-
-pub enum QsvExitCode {
-    Good = 0,
-    Bad = 1,
-    IncorrectUsage = 2,
-    Abort = 255,
-}
-
-impl Termination for QsvExitCode {
-    fn report(self) -> ExitCode {
-        ExitCode::from(self as u8)
-    }
-}
-
 #[derive(Deserialize)]
 struct Args {
     arg_command: Option<Command>,
@@ -168,8 +128,9 @@ Please choose one of the following commands:",
                 QsvExitCode::Bad
             }
             Err(CliError::Io(ref err)) if err.kind() == io::ErrorKind::BrokenPipe => {
+                werr!("Broken pipe: {err}");
                 util::log_end(qsv_args, now);
-                QsvExitCode::Good
+                QsvExitCode::Abort
             }
             Err(CliError::Io(err)) => {
                 werr!("{err}");
@@ -257,5 +218,3 @@ impl Command {
         }
     }
 }
-
-pub type CliResult<T> = Result<T, CliError>;
