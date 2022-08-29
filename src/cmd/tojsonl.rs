@@ -1,15 +1,3 @@
-use std::{fs::File, path::Path};
-
-use crate::config::{Config, Delimiter};
-use crate::util;
-use crate::CliResult;
-use serde::Deserialize;
-use serde_json::{Map, Value};
-use std::env::temp_dir;
-use uuid::Uuid;
-
-use super::schema::infer_schema_from_stats;
-
 static USAGE: &str = "
 Converts CSV to a newline-delimited JSON (JSONL/NDJSON).
 
@@ -28,6 +16,16 @@ Common options:
                            Must be a single character. (default: ,)
     -o, --output <file>    Write output to <file> instead of stdout.
 ";
+
+use super::schema::infer_schema_from_stats;
+use crate::config::{Config, Delimiter};
+use crate::util;
+use crate::CliResult;
+use serde::Deserialize;
+use serde_json::{Map, Value};
+use std::env::temp_dir;
+use std::{fs::File, path::Path};
+use uuid::Uuid;
 
 #[derive(Deserialize, Clone)]
 struct Args {

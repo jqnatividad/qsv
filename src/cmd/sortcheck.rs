@@ -1,18 +1,3 @@
-use std::cmp;
-
-use crate::cmd::dedup;
-use crate::config::{Config, Delimiter};
-use crate::select::SelectColumns;
-use crate::util;
-use crate::CliError;
-use crate::CliResult;
-use csv::ByteRecord;
-#[cfg(any(feature = "full", feature = "lite"))]
-use indicatif::{HumanCount, ProgressBar, ProgressDrawTarget};
-use serde::{Deserialize, Serialize};
-
-use crate::cmd::sort::iter_cmp;
-
 static USAGE: &str = r#"
 Check if a CSV is sorted. The check is done on a streaming basis (i.e. constant memory).
 With the --json options, also retrieve record count, sort breaks & duplicate count.
@@ -60,6 +45,19 @@ Common options:
                             Must be a single character. (default: ,)
     -p, --progressbar       Show progress bars. Not valid for stdin.
 "#;
+
+use crate::cmd::dedup;
+use crate::cmd::sort::iter_cmp;
+use crate::config::{Config, Delimiter};
+use crate::select::SelectColumns;
+use crate::util;
+use crate::CliError;
+use crate::CliResult;
+use csv::ByteRecord;
+#[cfg(any(feature = "full", feature = "lite"))]
+use indicatif::{HumanCount, ProgressBar, ProgressDrawTarget};
+use serde::{Deserialize, Serialize};
+use std::cmp;
 
 #[derive(Deserialize)]
 struct Args {

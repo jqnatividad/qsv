@@ -1,13 +1,3 @@
-use std::borrow::Cow;
-use std::io::{self, Write};
-
-use tabwriter::TabWriter;
-
-use crate::config::{Config, Delimiter};
-use crate::util;
-use crate::CliResult;
-use serde::Deserialize;
-
 static USAGE: &str = "
 Prints flattened records such that fields are labeled separated by a new line.
 This mode is particularly useful for viewing one record at a time. Each
@@ -38,6 +28,14 @@ Common options:
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
 ";
+
+use crate::config::{Config, Delimiter};
+use crate::util;
+use crate::CliResult;
+use serde::Deserialize;
+use std::borrow::Cow;
+use std::io::{self, Write};
+use tabwriter::TabWriter;
 
 #[derive(Deserialize)]
 struct Args {

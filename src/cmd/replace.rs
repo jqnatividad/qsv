@@ -1,16 +1,3 @@
-use regex::bytes::RegexBuilder;
-use std::borrow::Cow;
-use std::env;
-
-use crate::config::{Config, Delimiter};
-use crate::select::SelectColumns;
-use crate::util;
-use crate::CliError;
-use crate::CliResult;
-#[cfg(any(feature = "full", feature = "lite"))]
-use indicatif::{HumanCount, ProgressBar, ProgressDrawTarget};
-use serde::Deserialize;
-
 static USAGE: &str = "
 Replace occurrences of a pattern across a CSV file.
 
@@ -59,6 +46,18 @@ Common options:
     -p, --progressbar      Show progress bars. Not valid for stdin.
 
 ";
+
+use crate::config::{Config, Delimiter};
+use crate::select::SelectColumns;
+use crate::util;
+use crate::CliError;
+use crate::CliResult;
+#[cfg(any(feature = "full", feature = "lite"))]
+use indicatif::{HumanCount, ProgressBar, ProgressDrawTarget};
+use regex::bytes::RegexBuilder;
+use serde::Deserialize;
+use std::borrow::Cow;
+use std::env;
 
 #[derive(Deserialize)]
 struct Args {

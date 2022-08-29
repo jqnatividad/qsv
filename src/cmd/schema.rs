@@ -1,25 +1,3 @@
-use crate::cmd::stats::Stats;
-use crate::config::{Config, Delimiter};
-use crate::select::SelectColumns;
-use crate::util;
-use crate::CliError;
-use crate::CliResult;
-use ahash::AHashMap;
-use csv::ByteRecord;
-use grex::RegExpBuilder;
-use itertools::Itertools;
-use log::{debug, error, info, warn};
-use serde::Deserialize;
-use serde_json::{json, value::Number, Map, Value};
-use stats::Frequencies;
-use std::{collections::HashSet, fs::File, io::Write, path::Path};
-
-macro_rules! fail {
-    ($mesg:expr) => {
-        return Err(CliError::Other($mesg));
-    };
-}
-
 static USAGE: &str = r#"
 Generate JSON Schema from CSV data.
 
@@ -67,6 +45,28 @@ Common options:
     -d, --delimiter <arg>      The field delimiter for reading CSV data.
                                Must be a single character. [default: ,]
 "#;
+
+use crate::cmd::stats::Stats;
+use crate::config::{Config, Delimiter};
+use crate::select::SelectColumns;
+use crate::util;
+use crate::CliError;
+use crate::CliResult;
+use ahash::AHashMap;
+use csv::ByteRecord;
+use grex::RegExpBuilder;
+use itertools::Itertools;
+use log::{debug, error, info, warn};
+use serde::Deserialize;
+use serde_json::{json, value::Number, Map, Value};
+use stats::Frequencies;
+use std::{collections::HashSet, fs::File, io::Write, path::Path};
+
+macro_rules! fail {
+    ($mesg:expr) => {
+        return Err(CliError::Other($mesg));
+    };
+}
 
 #[derive(Deserialize, Clone)]
 pub struct Args {

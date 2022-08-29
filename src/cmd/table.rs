@@ -1,13 +1,3 @@
-use std::borrow::Cow;
-use std::convert::From;
-
-use tabwriter::{Alignment, TabWriter};
-
-use crate::config::{Config, Delimiter};
-use crate::util;
-use crate::CliResult;
-use serde::Deserialize;
-
 static USAGE: &str = "
 Outputs CSV data as a table with columns in alignment.
 
@@ -39,6 +29,14 @@ Common options:
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
 ";
+
+use crate::config::{Config, Delimiter};
+use crate::util;
+use crate::CliResult;
+use serde::Deserialize;
+use std::borrow::Cow;
+use std::convert::From;
+use tabwriter::{Alignment, TabWriter};
 
 #[derive(Deserialize)]
 struct Args {

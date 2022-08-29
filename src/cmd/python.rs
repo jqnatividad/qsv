@@ -1,46 +1,3 @@
-use std::fs;
-
-use pyo3::intern;
-use pyo3::prelude::*;
-use pyo3::types::PyDict;
-
-use crate::config::{Config, Delimiter};
-use crate::util;
-use crate::CliError;
-use crate::CliResult;
-use indicatif::{ProgressBar, ProgressDrawTarget};
-use log::Level::Debug;
-use log::{debug, log_enabled};
-use serde::Deserialize;
-
-const HELPERS: &str = r#"
-def cast_as_string(value):
-    if isinstance(value, str):
-        return value
-    return str(value)
-
-def cast_as_bool(value):
-    return bool(value)
-
-class QSVRow(object):
-    def __init__(self, headers):
-        self.__data = None
-        self.__headers = headers
-        self.__mapping = {h: i for i, h in enumerate(headers)}
-
-    def _update_underlying_data(self, row_data):
-        self.__data = row_data
-
-    def __getitem__(self, key):
-        if isinstance(key, int):
-            return self.__data[key]
-
-        return self.__data[self.__mapping[key]]
-
-    def __getattr__(self, key):
-        return self.__data[self.__mapping[key]]
-"#;
-
 static USAGE: &str = r#"
 Create a new column, filter rows or compute aggregations by evaluating a python
 expression on every row of a CSV file.
@@ -106,6 +63,47 @@ Common options:
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
     -p, --progressbar      Show progress bars. Not valid for stdin.
+"#;
+
+use crate::config::{Config, Delimiter};
+use crate::util;
+use crate::CliError;
+use crate::CliResult;
+use indicatif::{ProgressBar, ProgressDrawTarget};
+use log::Level::Debug;
+use log::{debug, log_enabled};
+use pyo3::intern;
+use pyo3::prelude::*;
+use pyo3::types::PyDict;
+use serde::Deserialize;
+use std::fs;
+
+const HELPERS: &str = r#"
+def cast_as_string(value):
+    if isinstance(value, str):
+        return value
+    return str(value)
+
+def cast_as_bool(value):
+    return bool(value)
+
+class QSVRow(object):
+    def __init__(self, headers):
+        self.__data = None
+        self.__headers = headers
+        self.__mapping = {h: i for i, h in enumerate(headers)}
+
+    def _update_underlying_data(self, row_data):
+        self.__data = row_data
+
+    def __getitem__(self, key):
+        if isinstance(key, int):
+            return self.__data[key]
+
+        return self.__data[self.__mapping[key]]
+
+    def __getattr__(self, key):
+        return self.__data[self.__mapping[key]]
 "#;
 
 #[derive(Deserialize)]

@@ -1,11 +1,3 @@
-use ahash::AHashMap;
-
-use crate::config::{Config, Delimiter};
-use crate::select::SelectColumns;
-use crate::util;
-use crate::CliResult;
-use serde::Deserialize;
-
 static USAGE: &str = "
 Pseudonymise the value of the given column by replacing them by an
 incremental identifier.
@@ -22,6 +14,13 @@ Common options:
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
 ";
+
+use crate::config::{Config, Delimiter};
+use crate::select::SelectColumns;
+use crate::util;
+use crate::CliResult;
+use ahash::AHashMap;
+use serde::Deserialize;
 
 #[derive(Deserialize)]
 struct Args {

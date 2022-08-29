@@ -1,19 +1,3 @@
-use std::collections::hash_map::Entry;
-use std::fmt;
-use std::io;
-use std::iter::repeat;
-use std::str;
-
-use ahash::AHashMap;
-use byteorder::{BigEndian, WriteBytesExt};
-
-use crate::config::{Config, Delimiter, SeekRead};
-use crate::index::Indexed;
-use crate::select::{SelectColumns, Selection};
-use crate::util;
-use crate::CliResult;
-use serde::Deserialize;
-
 static USAGE: &str = "
 Joins two sets of CSV data on the specified columns.
 
@@ -80,6 +64,20 @@ Common options:
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
 ";
+
+use crate::config::{Config, Delimiter, SeekRead};
+use crate::index::Indexed;
+use crate::select::{SelectColumns, Selection};
+use crate::util;
+use crate::CliResult;
+use ahash::AHashMap;
+use byteorder::{BigEndian, WriteBytesExt};
+use serde::Deserialize;
+use std::collections::hash_map::Entry;
+use std::fmt;
+use std::io;
+use std::iter::repeat;
+use std::str;
 
 type ByteString = Vec<u8>;
 

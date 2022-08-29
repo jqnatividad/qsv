@@ -1,8 +1,3 @@
-use crate::config::{Config, Delimiter};
-use crate::util;
-use crate::CliResult;
-use serde::Deserialize;
-
 static USAGE: &str = "
 Drop a CSV file's header.
 
@@ -15,6 +10,11 @@ Common options:
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
 ";
+
+use crate::config::{Config, Delimiter};
+use crate::util;
+use crate::CliResult;
+use serde::Deserialize;
 
 #[derive(Deserialize)]
 struct Args {

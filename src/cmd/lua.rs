@@ -1,13 +1,3 @@
-use crate::config::{Config, Delimiter};
-use crate::util;
-use crate::CliError;
-use crate::CliResult;
-use indicatif::{ProgressBar, ProgressDrawTarget};
-use log::debug;
-use mlua::Lua;
-use serde::Deserialize;
-use std::fs;
-
 static USAGE: &str = r#"
 Create a new column, filter rows or compute aggregations by executing a Lua
 script of every line of a CSV file.
@@ -81,6 +71,16 @@ Common options:
                            Must be a single character. (default: ,)
     -p, --progressbar      Show progress bars. Not valid for stdin.
 "#;
+
+use crate::config::{Config, Delimiter};
+use crate::util;
+use crate::CliError;
+use crate::CliResult;
+use indicatif::{ProgressBar, ProgressDrawTarget};
+use log::debug;
+use mlua::Lua;
+use serde::Deserialize;
+use std::fs;
 
 #[derive(Deserialize)]
 struct Args {

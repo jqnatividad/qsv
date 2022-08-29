@@ -1,11 +1,3 @@
-use crate::config::Config;
-use crate::util;
-use crate::CliResult;
-use qsv_sniffer::{DatePreference, SampleSize, Sniffer};
-use serde::{Deserialize, Serialize};
-use serde_json::json;
-use thousands::Separable;
-
 static USAGE: &str = r#"
 Quickly sniff CSV metadata (delimiter, header row, preamble rows, quote character, 
 flexible, is_utf8, number of records, number of fields, field names & data types).
@@ -35,6 +27,14 @@ sniff options:
 Common options:
     -h, --help             Display this message
 "#;
+
+use crate::config::Config;
+use crate::util;
+use crate::CliResult;
+use qsv_sniffer::{DatePreference, SampleSize, Sniffer};
+use serde::{Deserialize, Serialize};
+use serde_json::json;
+use thousands::Separable;
 
 #[derive(Deserialize)]
 struct Args {

@@ -1,10 +1,3 @@
-use crate::config::{Config, Delimiter};
-use crate::util;
-use crate::CliResult;
-use csv::ByteRecord;
-use serde::Deserialize;
-use std::str;
-
 static USAGE: &str = "
 Transpose the rows/columns of CSV data.
 
@@ -28,6 +21,13 @@ Common options:
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
 ";
+
+use crate::config::{Config, Delimiter};
+use crate::util;
+use crate::CliResult;
+use csv::ByteRecord;
+use serde::Deserialize;
+use std::str;
 
 #[derive(Deserialize)]
 struct Args {

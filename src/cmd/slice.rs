@@ -1,11 +1,3 @@
-use std::fs;
-
-use crate::config::{Config, Delimiter};
-use crate::index::Indexed;
-use crate::util;
-use crate::CliResult;
-use serde::Deserialize;
-
 static USAGE: &str = "
 Returns the rows in the range specified (starting at 0, half-open interval).
 The range does not include headers.
@@ -41,6 +33,13 @@ Common options:
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
 ";
+
+use crate::config::{Config, Delimiter};
+use crate::index::Indexed;
+use crate::util;
+use crate::CliResult;
+use serde::Deserialize;
+use std::fs;
 
 #[derive(Deserialize)]
 struct Args {

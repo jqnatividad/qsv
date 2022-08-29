@@ -1,9 +1,3 @@
-use crate::config::{Config, Delimiter};
-use crate::select::SelectColumns;
-use crate::util;
-use crate::CliResult;
-use serde::Deserialize;
-
 static USAGE: &str = r#"
 Select columns from CSV data efficiently.
 
@@ -50,6 +44,12 @@ Common options:
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
 "#;
+
+use crate::config::{Config, Delimiter};
+use crate::select::SelectColumns;
+use crate::util;
+use crate::CliResult;
+use serde::Deserialize;
 
 #[derive(Deserialize)]
 struct Args {

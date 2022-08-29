@@ -1,14 +1,3 @@
-use std::fs;
-use std::io::{self, prelude::*};
-use std::path;
-
-use crate::util;
-use crate::CliError;
-use crate::CliResult;
-use ext_sort::{buffer::mem::MemoryLimitedBufferBuilder, ExternalSorter, ExternalSorterBuilder};
-use serde::Deserialize;
-use sysinfo::{System, SystemExt};
-
 static USAGE: &str = "
 Sort an arbitrarily large CSV/text file using a multithreaded external sort algorithm.
 
@@ -34,6 +23,16 @@ Common options:
                            of the rows. Otherwise, the first row will always
                            appear as the header row in the output.
 ";
+
+use crate::util;
+use crate::CliError;
+use crate::CliResult;
+use ext_sort::{buffer::mem::MemoryLimitedBufferBuilder, ExternalSorter, ExternalSorterBuilder};
+use serde::Deserialize;
+use std::fs;
+use std::io::{self, prelude::*};
+use std::path;
+use sysinfo::{System, SystemExt};
 
 #[derive(Deserialize)]
 struct Args {

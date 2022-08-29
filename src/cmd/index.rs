@@ -1,14 +1,3 @@
-use std::fs;
-use std::io;
-use std::path::{Path, PathBuf};
-
-use csv_index::RandomAccessSimple;
-
-use crate::config::{Config, Delimiter};
-use crate::util;
-use crate::CliResult;
-use serde::Deserialize;
-
 static USAGE: &str = "
 Creates an index of the given CSV data, which can make other operations like
 slicing, splitting and gathering statistics much faster.
@@ -38,6 +27,15 @@ Common options:
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
 ";
+
+use crate::config::{Config, Delimiter};
+use crate::util;
+use crate::CliResult;
+use csv_index::RandomAccessSimple;
+use serde::Deserialize;
+use std::fs;
+use std::io;
+use std::path::{Path, PathBuf};
 
 #[derive(Deserialize)]
 struct Args {

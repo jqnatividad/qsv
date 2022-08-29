@@ -1,9 +1,3 @@
-use crate::config::{Config, Delimiter};
-use crate::util;
-use crate::CliResult;
-use log::{debug, info};
-use serde::Deserialize;
-
 static USAGE: &str = "
 Prints a count of the number of records in the CSV data.
 
@@ -23,6 +17,12 @@ Common options:
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
 ";
+
+use crate::config::{Config, Delimiter};
+use crate::util;
+use crate::CliResult;
+use log::{debug, info};
+use serde::Deserialize;
 
 #[derive(Deserialize)]
 struct Args {

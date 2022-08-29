@@ -1,31 +1,3 @@
-use crate::config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY};
-use crate::util;
-use crate::CliError;
-use crate::CliResult;
-use anyhow::{anyhow, Result};
-use csv::ByteRecord;
-#[cfg(any(feature = "full", feature = "lite"))]
-use indicatif::{ProgressBar, ProgressDrawTarget};
-use itertools::Itertools;
-use jsonschema::paths::PathChunk;
-use jsonschema::{output::BasicOutput, JSONSchema};
-#[allow(unused_imports)]
-use log::{debug, info};
-use rayon::prelude::*;
-use serde::{Deserialize, Serialize};
-use serde_json::{json, value::Number, Map, Value};
-use std::{env, fs::File, io::BufReader, io::BufWriter, io::Read, io::Write, str};
-use thousands::Separable;
-
-macro_rules! fail {
-    ($mesg:expr) => {
-        Err(CliError::Other($mesg))
-    };
-}
-
-// number of CSV rows to process in a batch
-const BATCH_SIZE: usize = 24_000;
-
 static USAGE: &str = "
 Validate CSV data with JSON Schema, and put invalid records into a separate file.
 When run without JSON Schema, only a simple CSV check (RFC 4180) is performed.
@@ -63,6 +35,34 @@ Common options:
                                Must be a single character. [default: ,]
     -p, --progressbar          Show progress bars. Not valid for stdin.
 ";
+
+use crate::config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY};
+use crate::util;
+use crate::CliError;
+use crate::CliResult;
+use anyhow::{anyhow, Result};
+use csv::ByteRecord;
+#[cfg(any(feature = "full", feature = "lite"))]
+use indicatif::{ProgressBar, ProgressDrawTarget};
+use itertools::Itertools;
+use jsonschema::paths::PathChunk;
+use jsonschema::{output::BasicOutput, JSONSchema};
+#[allow(unused_imports)]
+use log::{debug, info};
+use rayon::prelude::*;
+use serde::{Deserialize, Serialize};
+use serde_json::{json, value::Number, Map, Value};
+use std::{env, fs::File, io::BufReader, io::BufWriter, io::Read, io::Write, str};
+use thousands::Separable;
+
+macro_rules! fail {
+    ($mesg:expr) => {
+        Err(CliError::Other($mesg))
+    };
+}
+
+// number of CSV rows to process in a batch
+const BATCH_SIZE: usize = 24_000;
 
 #[allow(clippy::struct_excessive_bools)]
 #[derive(Deserialize)]

@@ -1,29 +1,3 @@
-use crate::cmd::fetch::apply_jql;
-use crate::config::{Config, Delimiter};
-use crate::select::SelectColumns;
-use crate::util;
-use crate::CliError;
-use crate::CliResult;
-use cached::proc_macro::{cached, io_cached};
-use cached::{Cached, IOCached, RedisCache, Return};
-use console::set_colors_enabled;
-use governor::{
-    clock::DefaultClock, middleware::NoOpMiddleware, state::direct::NotKeyed, state::InMemoryState,
-};
-use indicatif::{HumanCount, MultiProgress, ProgressBar, ProgressDrawTarget};
-use log::Level::{Debug, Info, Trace, Warn};
-use log::{debug, error, info, log_enabled, warn};
-use once_cell::sync::{Lazy, OnceCell};
-use rand::Rng;
-use redis;
-use regex::Regex;
-use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
-use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
-use std::time::Instant;
-use std::{fs, thread, time};
-use url::Url;
-
 static USAGE: &str = r#"
 Fetchpost fetches data from web services for every row using HTTP Post.
 As opposed to fetch, which uses HTTP Get.
@@ -167,6 +141,32 @@ Common options:
                                Must be a single character. (default: ,)
     -p, --progressbar          Show progress bars. Not valid for stdin.
 "#;
+
+use crate::cmd::fetch::apply_jql;
+use crate::config::{Config, Delimiter};
+use crate::select::SelectColumns;
+use crate::util;
+use crate::CliError;
+use crate::CliResult;
+use cached::proc_macro::{cached, io_cached};
+use cached::{Cached, IOCached, RedisCache, Return};
+use console::set_colors_enabled;
+use governor::{
+    clock::DefaultClock, middleware::NoOpMiddleware, state::direct::NotKeyed, state::InMemoryState,
+};
+use indicatif::{HumanCount, MultiProgress, ProgressBar, ProgressDrawTarget};
+use log::Level::{Debug, Info, Trace, Warn};
+use log::{debug, error, info, log_enabled, warn};
+use once_cell::sync::{Lazy, OnceCell};
+use rand::Rng;
+use redis;
+use regex::Regex;
+use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
+use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
+use std::time::Instant;
+use std::{fs, thread, time};
+use url::Url;
 
 #[derive(Deserialize, Debug)]
 struct Args {

@@ -1,17 +1,4 @@
 #![cfg(target_family = "unix")]
-use regex::bytes::{NoExpand, Regex};
-use std::ffi::OsStr;
-use std::io::BufReader;
-use std::os::unix::ffi::OsStrExt;
-use std::process::{Command, Stdio};
-
-use crate::config::{Config, Delimiter};
-use crate::select::SelectColumns;
-use crate::util;
-use crate::CliResult;
-use indicatif::{ProgressBar, ProgressDrawTarget};
-use serde::Deserialize;
-
 static USAGE: &str = "
 Execute a bash command once per line in given CSV file. Works only in
 Unix-like environments.
@@ -47,6 +34,18 @@ Common options:
                            Must be a single character. (default: ,)
     -p, --progressbar      Show progress bars. Not valid for stdin.
 ";
+
+use crate::config::{Config, Delimiter};
+use crate::select::SelectColumns;
+use crate::util;
+use crate::CliResult;
+use indicatif::{ProgressBar, ProgressDrawTarget};
+use regex::bytes::{NoExpand, Regex};
+use serde::Deserialize;
+use std::ffi::OsStr;
+use std::io::BufReader;
+use std::os::unix::ffi::OsStrExt;
+use std::process::{Command, Stdio};
 
 #[derive(Deserialize)]
 struct Args {
