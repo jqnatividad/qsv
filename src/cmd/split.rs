@@ -1,15 +1,3 @@
-use std::fs;
-use std::io;
-use std::path::Path;
-
-use threadpool::ThreadPool;
-
-use crate::config::{Config, Delimiter};
-use crate::index::Indexed;
-use crate::util::{self, FilenameTemplate};
-use crate::CliResult;
-use serde::Deserialize;
-
 static USAGE: &str = "
 Splits the given CSV data into chunks.
 
@@ -46,6 +34,16 @@ Common options:
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
 ";
+
+use crate::config::{Config, Delimiter};
+use crate::index::Indexed;
+use crate::util::{self, FilenameTemplate};
+use crate::CliResult;
+use serde::Deserialize;
+use std::fs;
+use std::io;
+use std::path::Path;
+use threadpool::ThreadPool;
 
 #[derive(Clone, Deserialize)]
 struct Args {

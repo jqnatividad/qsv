@@ -1,14 +1,3 @@
-use std::cmp;
-
-use self::Number::{Float, Int};
-use crate::config::{Config, Delimiter};
-use crate::select::SelectColumns;
-use crate::util;
-use crate::CliResult;
-use rand::{rngs::StdRng, seq::SliceRandom, SeedableRng};
-use rayon::prelude::*;
-use serde::Deserialize;
-
 static USAGE: &str = "
 Sorts CSV data lexicographically.
 
@@ -42,6 +31,16 @@ Common options:
     -u, --uniq             When set, identical consecutive lines will be dropped
                            to keep only one line per sorted value.
 ";
+
+use self::Number::{Float, Int};
+use crate::config::{Config, Delimiter};
+use crate::select::SelectColumns;
+use crate::util;
+use crate::CliResult;
+use rand::{rngs::StdRng, seq::SliceRandom, SeedableRng};
+use rayon::prelude::*;
+use serde::Deserialize;
+use std::cmp;
 
 #[derive(Deserialize)]
 struct Args {

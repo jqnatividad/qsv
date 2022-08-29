@@ -1,27 +1,3 @@
-use std::borrow::ToOwned;
-use std::default::Default;
-use std::fmt;
-use std::fs;
-use std::io;
-use std::iter::repeat;
-use std::str::{self, FromStr};
-use std::sync::atomic::{AtomicBool, Ordering};
-
-use itertools::Itertools;
-use stats::{merge_all, Commute, MinMax, OnlineStats, Unsorted};
-use threadpool::ThreadPool;
-
-use crate::config::{Config, Delimiter};
-use crate::index::Indexed;
-use crate::select::{SelectColumns, Selection};
-use crate::util;
-use crate::CliResult;
-use once_cell::sync::OnceCell;
-use qsv_dateparser::parse_with_preference;
-use serde::Deserialize;
-
-use self::FieldType::{TDate, TDateTime, TFloat, TInteger, TNull, TString};
-
 static USAGE: &str = r#"
 Computes descriptive statistics on CSV data.
 
@@ -99,6 +75,27 @@ Common options:
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
 "#;
+
+use self::FieldType::{TDate, TDateTime, TFloat, TInteger, TNull, TString};
+use crate::config::{Config, Delimiter};
+use crate::index::Indexed;
+use crate::select::{SelectColumns, Selection};
+use crate::util;
+use crate::CliResult;
+use itertools::Itertools;
+use once_cell::sync::OnceCell;
+use qsv_dateparser::parse_with_preference;
+use serde::Deserialize;
+use stats::{merge_all, Commute, MinMax, OnlineStats, Unsorted};
+use std::borrow::ToOwned;
+use std::default::Default;
+use std::fmt;
+use std::fs;
+use std::io;
+use std::iter::repeat;
+use std::str::{self, FromStr};
+use std::sync::atomic::{AtomicBool, Ordering};
+use threadpool::ThreadPool;
 
 #[allow(clippy::unsafe_derive_deserialize)]
 #[derive(Clone, Deserialize)]

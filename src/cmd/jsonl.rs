@@ -1,12 +1,3 @@
-use serde_json::Value;
-use std::fs;
-use std::io::{self, BufRead, BufReader};
-
-use crate::config::Config;
-use crate::util;
-use crate::CliResult;
-use serde::Deserialize;
-
 static USAGE: &str = "
 Convert newline-delimited JSON (JSONL/NDJSON) to CSV.
 
@@ -25,6 +16,14 @@ Common options:
     -h, --help             Display this message
     -o, --output <file>    Write output to <file> instead of stdout.
 ";
+
+use crate::config::Config;
+use crate::util;
+use crate::CliResult;
+use serde::Deserialize;
+use serde_json::Value;
+use std::fs;
+use std::io::{self, BufRead, BufReader};
 
 #[derive(Deserialize)]
 struct Args {

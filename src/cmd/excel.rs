@@ -1,13 +1,3 @@
-use crate::config::Config;
-use crate::util;
-use crate::CliResult;
-use calamine::{open_workbook_auto, DataType, Range, Reader};
-use log::{debug, info};
-use serde::Deserialize;
-use std::cmp;
-use std::path::PathBuf;
-use thousands::Separable;
-
 static USAGE: &str = r#"
 Exports a specified Excel/ODS sheet to a CSV file.
 
@@ -64,6 +54,16 @@ Common options:
     -h, --help                 Display this message
     -o, --output <file>        Write output to <file> instead of stdout.
 "#;
+
+use crate::config::Config;
+use crate::util;
+use crate::CliResult;
+use calamine::{open_workbook_auto, DataType, Range, Reader};
+use log::{debug, info};
+use serde::Deserialize;
+use std::cmp;
+use std::path::PathBuf;
+use thousands::Separable;
 
 #[derive(Deserialize)]
 struct Args {

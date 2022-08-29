@@ -1,13 +1,3 @@
-use crate::config::{Config, Delimiter};
-use crate::util;
-use crate::CliResult;
-use serde::Deserialize;
-use std::env::temp_dir;
-use std::fs;
-use std::io::{self, Write};
-use test_data_generation::data_sample_parser::DataSampleParser;
-use uuid::Uuid;
-
 static USAGE: &str = r#"
 Generates test data by profiling a CSV using a Markov decision process
 machine learning algorithm.
@@ -58,6 +48,16 @@ Common options:
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
 "#;
+
+use crate::config::{Config, Delimiter};
+use crate::util;
+use crate::CliResult;
+use serde::Deserialize;
+use std::env::temp_dir;
+use std::fs;
+use std::io::{self, Write};
+use test_data_generation::data_sample_parser::DataSampleParser;
+use uuid::Uuid;
 
 #[derive(Deserialize)]
 struct Args {

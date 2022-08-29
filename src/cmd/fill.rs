@@ -1,14 +1,3 @@
-use ahash::AHashMap;
-use std::io;
-use std::iter;
-use std::ops;
-
-use crate::config::{Config, Delimiter};
-use crate::select::{SelectColumns, Selection};
-use crate::util;
-use crate::CliResult;
-use serde::Deserialize;
-
 static USAGE: &str = "
 Fill empty fields in selected columns of a CSV.
 
@@ -60,8 +49,17 @@ Common options:
                            Must be a single character. (default: ,)
 ";
 
-type ByteString = Vec<u8>;
+use crate::config::{Config, Delimiter};
+use crate::select::{SelectColumns, Selection};
+use crate::util;
+use crate::CliResult;
+use ahash::AHashMap;
+use serde::Deserialize;
+use std::io;
+use std::iter;
+use std::ops;
 
+type ByteString = Vec<u8>;
 type BoxedWriter = csv::Writer<Box<dyn io::Write + 'static>>;
 type BoxedReader = csv::Reader<Box<dyn io::Read + 'static>>;
 

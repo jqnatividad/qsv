@@ -1,15 +1,3 @@
-use std::cmp;
-
-use crate::config::{Config, Delimiter};
-use crate::select::SelectColumns;
-use crate::util;
-use crate::CliResult;
-use csv::ByteRecord;
-use rayon::prelude::*;
-use serde::Deserialize;
-
-use crate::cmd::sort::iter_cmp;
-
 static USAGE: &str = r#"
 Deduplicates CSV rows. 
 
@@ -56,6 +44,16 @@ Common options:
                                Must be a single character. (default: ,)
 "#;
 
+use crate::config::{Config, Delimiter};
+use crate::select::SelectColumns;
+use crate::util;
+use crate::CliResult;
+use csv::ByteRecord;
+use rayon::prelude::*;
+use serde::Deserialize;
+use std::cmp;
+
+use crate::cmd::sort::iter_cmp;
 #[derive(Deserialize)]
 struct Args {
     arg_input: Option<String>,

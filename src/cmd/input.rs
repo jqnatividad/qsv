@@ -1,9 +1,3 @@
-use crate::config::{Config, Delimiter};
-use crate::util;
-use crate::CliResult;
-use log::info;
-use serde::Deserialize;
-
 static USAGE: &str = r#"
 Read CSV data with special quoting, trimming, line-skipping & UTF-8 transcoding rules.
 
@@ -43,6 +37,12 @@ Common options:
     -d, --delimiter <arg>    The field delimiter for reading CSV data.
                              Must be a single character. (default: ,)
 "#;
+
+use crate::config::{Config, Delimiter};
+use crate::util;
+use crate::CliResult;
+use log::info;
+use serde::Deserialize;
 
 #[derive(Deserialize)]
 struct Args {

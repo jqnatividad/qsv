@@ -1,14 +1,3 @@
-use std::io;
-
-use rand::{self, rngs::StdRng, seq::SliceRandom, Rng, SeedableRng};
-
-use crate::config::{Config, Delimiter};
-use crate::index::Indexed;
-use crate::util;
-use crate::CliResult;
-use log::debug;
-use serde::Deserialize;
-
 static USAGE: &str = "
 Randomly samples CSV data uniformly using memory proportional to the size of
 the sample.
@@ -44,6 +33,15 @@ Common options:
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
 ";
+
+use crate::config::{Config, Delimiter};
+use crate::index::Indexed;
+use crate::util;
+use crate::CliResult;
+use log::debug;
+use rand::{self, rngs::StdRng, seq::SliceRandom, Rng, SeedableRng};
+use serde::Deserialize;
+use std::io;
 
 #[derive(Deserialize)]
 struct Args {

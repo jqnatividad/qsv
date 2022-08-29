@@ -1,18 +1,3 @@
-use ahash::AHashMap;
-use std::collections::hash_map::Entry;
-use std::collections::HashSet;
-use std::fs;
-use std::io;
-use std::path::Path;
-
-use regex::Regex;
-
-use crate::config::{Config, Delimiter};
-use crate::select::SelectColumns;
-use crate::util::{self, FilenameTemplate};
-use crate::CliResult;
-use serde::Deserialize;
-
 static USAGE: &str = "
 Partitions the given CSV data into chunks based on the value of a column
 
@@ -42,6 +27,19 @@ Common options:
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
 ";
+
+use crate::config::{Config, Delimiter};
+use crate::select::SelectColumns;
+use crate::util::{self, FilenameTemplate};
+use crate::CliResult;
+use ahash::AHashMap;
+use regex::Regex;
+use serde::Deserialize;
+use std::collections::hash_map::Entry;
+use std::collections::HashSet;
+use std::fs;
+use std::io;
+use std::path::Path;
 
 #[derive(Clone, Deserialize)]
 struct Args {

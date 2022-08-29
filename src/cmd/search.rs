@@ -1,16 +1,3 @@
-use regex::bytes::RegexBuilder;
-use std::env;
-
-use crate::config::{Config, Delimiter};
-use crate::select::SelectColumns;
-use crate::util;
-use crate::CliError;
-use crate::CliResult;
-#[cfg(any(feature = "full", feature = "lite"))]
-use indicatif::{HumanCount, ProgressBar, ProgressDrawTarget};
-use log::{debug, info};
-use serde::Deserialize;
-
 static USAGE: &str = "
 Filters CSV data by whether the given regex matches a row.
 
@@ -64,6 +51,18 @@ Common options:
                            Must be a single character. (default: ,)
     -p, --progressbar      Show progress bars. Not valid for stdin.
 ";
+
+use crate::config::{Config, Delimiter};
+use crate::select::SelectColumns;
+use crate::util;
+use crate::CliError;
+use crate::CliResult;
+#[cfg(any(feature = "full", feature = "lite"))]
+use indicatif::{HumanCount, ProgressBar, ProgressDrawTarget};
+use log::{debug, info};
+use regex::bytes::RegexBuilder;
+use serde::Deserialize;
+use std::env;
 
 #[derive(Deserialize)]
 struct Args {

@@ -1,9 +1,3 @@
-use crate::config::{Config, Delimiter};
-use crate::select::SelectColumns;
-use crate::util;
-use crate::CliResult;
-use serde::Deserialize;
-
 static USAGE: &str = "
 Explodes a row into multiple ones by splitting a column value based on the
 given separator.
@@ -37,6 +31,11 @@ Common options:
                            Must be a single character. (default: ,)
 ";
 
+use crate::config::{Config, Delimiter};
+use crate::select::SelectColumns;
+use crate::util;
+use crate::CliResult;
+use serde::Deserialize;
 #[derive(Deserialize)]
 struct Args {
     arg_column: SelectColumns,
