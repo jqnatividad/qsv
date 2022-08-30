@@ -690,10 +690,10 @@ pub struct ColumnNameParser {
 
 impl ColumnNameParser {
     pub fn new(s: &str) -> ColumnNameParser {
-       ColumnNameParser {
+        ColumnNameParser {
             chars: s.chars().collect(),
             pos: 0,
-       } 
+        }
     }
 
     pub fn parse(&mut self) -> Result<Vec<String>, String> {
@@ -751,7 +751,7 @@ impl ColumnNameParser {
             }
         }
         Ok(name)
-    } 
+    }
 
     fn parse_name(&mut self) -> String {
         let mut name = String::new();

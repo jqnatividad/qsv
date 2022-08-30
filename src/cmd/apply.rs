@@ -338,7 +338,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             headers = replace_column_value(&headers, *col_index, &new_col_names[i]);
             i += 1;
         }
-        
     }
 
     if !rconfig.no_headers {
@@ -630,7 +629,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     }
                 }
 
-                
                 record
             })
             .collect_into_vec(&mut batch_results);
