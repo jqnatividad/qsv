@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 static USAGE: &str = r#"
 Apply a series of transformation functions to a given CSV column. This can be used to
 perform typical data-wrangling tasks and/or to harmonize some values, etc.
