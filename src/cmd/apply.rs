@@ -1,30 +1,4 @@
 #![allow(dead_code)]
-use crate::config::{Config, Delimiter};
-use crate::select::SelectColumns;
-use crate::CliError;
-use crate::CliResult;
-use crate::{regex_once_cell, util};
-use cached::proc_macro::cached;
-use censor::{Censor, Sex, Zealous};
-use dynfmt::Format;
-use eudex::Hash;
-use indicatif::{ProgressBar, ProgressDrawTarget};
-use log::debug;
-use once_cell::sync::OnceCell;
-use qsv_currency::Currency;
-use qsv_dateparser::parse_with_preference;
-use rayon::prelude::*;
-use regex::Regex;
-use reverse_geocoder::{Locations, ReverseGeocoder};
-use serde::Deserialize;
-use strsim::{
-    damerau_levenshtein, hamming, jaro_winkler, normalized_damerau_levenshtein, osa_distance,
-    sorensen_dice,
-};
-use titlecase::titlecase;
-use vader_sentiment::SentimentIntensityAnalyzer;
-use whatlang::detect;
-
 static USAGE: &str = "
 Apply a series of transformation functions to a given CSV column. This can be used to
 perform typical cleaning tasks and/or harmonize some values, etc.
@@ -236,6 +210,32 @@ Common options:
                                 Must be a single character. (default: ,)
     -p, --progressbar           Show progress bars. Not valid for stdin.
 ";
+
+use crate::config::{Config, Delimiter};
+use crate::select::SelectColumns;
+use crate::CliError;
+use crate::CliResult;
+use crate::{regex_once_cell, util};
+use cached::proc_macro::cached;
+use censor::{Censor, Sex, Zealous};
+use dynfmt::Format;
+use eudex::Hash;
+use indicatif::{ProgressBar, ProgressDrawTarget};
+use log::debug;
+use once_cell::sync::OnceCell;
+use qsv_currency::Currency;
+use qsv_dateparser::parse_with_preference;
+use rayon::prelude::*;
+use regex::Regex;
+use reverse_geocoder::{Locations, ReverseGeocoder};
+use serde::Deserialize;
+use strsim::{
+    damerau_levenshtein, hamming, jaro_winkler, normalized_damerau_levenshtein, osa_distance,
+    sorensen_dice,
+};
+use titlecase::titlecase;
+use vader_sentiment::SentimentIntensityAnalyzer;
+use whatlang::detect;
 
 // number of CSV rows to process in a batch
 const BATCH_SIZE: usize = 24_000;
