@@ -1,13 +1,13 @@
 #![allow(dead_code)]
-static USAGE: &str = "
+static USAGE: &str = r#"
 Apply a series of transformation functions to a given CSV column. This can be used to
-perform typical cleaning tasks and/or harmonize some values, etc.
+perform typical data-wrangling tasks and/or to harmonize some values, etc.
 
 It has several subcommands:
  * operations - 26 string, format, currency, regex & NLP operators.
  * emptyreplace - replace empty cells with <--replacement> string.
- * datefmt - Formats a recognized date column to a specified format using --formatstr.
- * dynfmt - Dynamically constructs a new column from other columns using the --formatstr template.
+ * datefmt - Formats a recognized date column to a specified format using <--formatstr>.
+ * dynfmt - Dynamically constructs a new column from other columns using the <--formatstr> template.
  * geocode - geocodes a WGS84 location against a static copy of the Geonames cities database.
 
 OPERATIONS
@@ -70,6 +70,11 @@ save it to a new column named uppercase_clean_surname.
 
   $ qsv apply operations trim,upper surname -c uppercase_clean_surname file.csv
 
+Trim, then transform to uppercase the firstname and surname fields and
+rename the columns ufirstname and usurname.
+
+  $ qsv apply operations trim,upper firstname,surname -r ufirstname,usurname file.csv  
+
 Trim parentheses & brackets from the description field.
 
   $ qsv apply operations mtrim description --comparand '()<>' file.csv
@@ -87,12 +92,11 @@ Compute the Normalized Damerau-Levenshtein similarity of
 the neighborhood column to the string 'Roxbury' and save
 it to a new column named dln_roxbury_score.
 
-  $ qsv apply operations lower,simdln neighborhood --comparand roxbury \
-    -c dln_roxbury_score boston311.csv
+  $ qsv apply operations lower,simdln neighborhood --comparand roxbury -c dln_roxbury_score boston311.csv
 
 You can also use this subcommand command to make a copy of a column:
 
-$ qsv apply operations copy col_to_copy -c col_copy file.csv
+  $ qsv apply operations copy col_to_copy -c col_copy file.csv
 
 EMPTYREPLACE
 Replace empty cells with <--replacement> string.
@@ -109,10 +113,10 @@ Replace empty cells in file.csv Measurement column with 'Unknown'.
 $ qsv apply emptyreplace --replacement Unknown Measurement file.csv
 
 DATEFMT
-Formats a recognized date column to a specified format using --formatstr. 
+Formats a recognized date column to a specified format using <--formatstr>. 
 See https://github.com/jqnatividad/belt/tree/main/dateparser#accepted-date-formats for
 recognized date formats.
-See https://docs.rs/chrono/0.4.19/chrono/format/strftime/ for 
+See https://docs.rs/chrono/latest/chrono/format/strftime/ for 
 accepted date formats for --formatstr.
 Defaults to ISO 8601/RFC 3339 format when --formatstr is not specified.
 
@@ -121,16 +125,28 @@ Format dates in Open Date column to ISO 8601/RFC 3339 format:
 
   $ qsv apply datefmt 'Open Date' file.csv
 
+Format multiple date columns in file.csv to ISO 8601/RFC 3339 format:
+
+  $ qsv apply datefmt 'Open Date,Modified Date,Closed Data' file.csv
+
 Format dates in OpenDate column using '%Y-%m-%d' format:
 
   $ qsv apply datefmt OpenDate --formatstr '%Y-%m-%d' file.csv
 
-Get the week number and store it in the week_number column:
+Format multiple date columns using '%Y-%m-%d' format:
+
+  $ qsv apply datefmt OpenDate,CloseDate,ReopenDate --formatstr '%Y-%m-%d' file.csv
+
+Get the week number for OpenDate and store it in the week_number column:
 
   $ qsv apply dateformat OpenDate --formatstr '%V' --new-column week_number file.csv
 
+Get the day of the week for several date columns and store it in the corresponding weekday columns:
+
+  $ qsv apply dateformat OpenDate,CloseDate --formatstr '%u' --rename Open_weekday,Close_weekday file.csv
+
 DYNFMT
-Dynamically constructs a new column from other columns using the --formatstr template.
+Dynamically constructs a new column from other columns using the <--formatstr> template.
 The template can contain arbitrary characters. To insert a column value, enclose the
 column name in curly braces, replacing all non-alphanumeric characters with underscores.
 
@@ -146,7 +162,7 @@ Create a new column 'FullName' from 'FirstName', 'MI', and 'LastName' columns:
 GEOCODE
 Geocodes to the nearest city center point given a location column
 [i.e. a column which contains a latitude, longitude WGS84 coordinate] against
-an embedded copy of the geonames city database. 
+an embedded copy of the Geonames city database. 
 
 The geocoded information is formatted based on --formatstr, returning
 it in 'city-state' format if not specified.
@@ -172,6 +188,9 @@ qsv apply dynfmt --formatstr=<string> [options] --new-column=<name> [<input>]
 qsv apply geocode [--formatstr=<string>] [options] <column> [<input>]
 qsv apply --help
 
+The <column> argument can be a list of columns for the operations and datefmt subcommands.
+See 'qsv select --help' for the format details.
+
 apply options:
     -c, --new-column <name>     Put the transformed values in a new column instead.
     -r, --rename <name>         New name for the transformed column.
@@ -182,7 +201,8 @@ apply options:
     -f, --formatstr=<string>    This option is used by several subcommands:
 
                                 DATEFMT: The date format to use. For formats, see
-                                  https://docs.rs/chrono/0.4.19/chrono/format/strftime/index.html
+                                  https://docs.rs/chrono/latest/chrono/format/strftime/
+                                  Default to ISO 8601 / RFC 3339 date & time format.
                                   [default: %+]
 
                                 DYNFMT: the template to use to construct a new column.
@@ -209,7 +229,7 @@ Common options:
     -d, --delimiter <arg>       The field delimiter for reading CSV data.
                                 Must be a single character. (default: ,)
     -p, --progressbar           Show progress bars. Not valid for stdin.
-";
+"#;
 
 use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
