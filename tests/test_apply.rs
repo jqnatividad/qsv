@@ -237,7 +237,7 @@ fn apply_ops_titlecase() {
             svec!["THE quick brown fox jumped over the lazy dog."],
             svec!["twinkle, twinkle little star, how I wonder what you are"],
             svec!["a simple title to capitalize: an example"],
-            svec!["new york city police department"],
+            svec!["new york city police department - NYPD"],
             svec!["department of human services"],
         ],
     );
@@ -250,10 +250,10 @@ fn apply_ops_titlecase() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["description"],
-        svec!["THE Quick Brown Fox Jumped Over the Lazy Dog."],
+        svec!["The Quick Brown Fox Jumped Over the Lazy Dog."],
         svec!["Twinkle, Twinkle Little Star, How I Wonder What You Are"],
         svec!["A Simple Title to Capitalize: An Example"],
-        svec!["New York City Police Department"],
+        svec!["New York City Police Department - NYPD"],
         svec!["Department of Human Services"],
     ];
     assert_eq!(got, expected);
