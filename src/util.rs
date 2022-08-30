@@ -682,3 +682,86 @@ fn test_hw_survey() {
     // we have this test primarily to exercise the sysinfo module
     assert!(send_hwsurvey("qsv", false, "0.0.2", "0.0.1", true).is_ok());
 }
+
+pub struct ColumnNameParser {
+    chars: Vec<char>,
+    pos: usize,
+}
+
+impl ColumnNameParser {
+    pub fn new(s: &str) -> ColumnNameParser {
+        ColumnNameParser {
+            chars: s.chars().collect(),
+            pos: 0,
+        }
+    }
+
+    pub fn parse(&mut self) -> Result<Vec<String>, String> {
+        let mut new_cols_name = vec![];
+        loop {
+            if self.cur().is_none() {
+                break;
+            }
+            if self.cur() == Some('"') {
+                self.bump();
+                new_cols_name.push(self.parse_quoted_name()?);
+            } else {
+                new_cols_name.push(self.parse_name());
+            }
+            self.bump();
+        }
+        Ok(new_cols_name)
+    }
+
+    fn cur(&self) -> Option<char> {
+        self.chars.get(self.pos).copied()
+    }
+
+    fn bump(&mut self) {
+        if self.pos < self.chars.len() {
+            self.pos += 1;
+        }
+    }
+
+    fn is_end_of_field(&self) -> bool {
+        self.cur().map_or(true, |c| c == ',')
+    }
+
+    fn parse_quoted_name(&mut self) -> Result<String, String> {
+        let mut name = String::new();
+        loop {
+            match self.cur() {
+                None => {
+                    return Err("Unclose quote, missing \".".to_owned());
+                }
+                Some('"') => {
+                    self.bump();
+                    if self.cur() == Some('"') {
+                        self.bump();
+                        name.push('"');
+                        name.push('"');
+                        continue;
+                    }
+                    break;
+                }
+                Some(c) => {
+                    name.push(c);
+                    self.bump();
+                }
+            }
+        }
+        Ok(name)
+    }
+
+    fn parse_name(&mut self) -> String {
+        let mut name = String::new();
+        loop {
+            if self.is_end_of_field() {
+                break;
+            }
+            name.push(self.cur().unwrap());
+            self.bump();
+        }
+        name
+    }
+}

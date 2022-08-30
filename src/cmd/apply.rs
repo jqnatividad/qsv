@@ -329,7 +329,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut headers = rdr.headers()?.clone();
 
     if let Some(new_name) = args.flag_rename {
-        headers = replace_column_value(&headers, column_index, &new_name);
+        let new_col_names = util::ColumnNameParser::new(&new_name).parse()?;
+        if new_col_names.len() != sel.len() {
+            return fail!("Invalid arguments.");
+        }
+        let mut i = 0;
+        for col_index in sel.iter() {
+            headers = replace_column_value(&headers, *col_index, &new_col_names[i]);
+            i += 1;
+        }
     }
 
     if !rconfig.no_headers {
@@ -533,45 +541,72 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .par_iter()
             .map(|record_item| {
                 let mut record = record_item.clone();
-                let mut cell = record[column_index].to_owned();
-
                 match apply_cmd {
                     ApplySubCmd::Geocode => {
+                        let mut cell = record[column_index].to_owned();
                         if !cell.is_empty() {
                             let search_result = search_cached(&cell, &args.flag_formatstr);
                             if let Some(geocoded_result) = search_result {
                                 cell = geocoded_result;
                             }
                         }
+                        if args.flag_new_column.is_some() {
+                            record.push_field(&cell);
+                        } else {
+                            record = replace_column_value(&record, column_index, &cell);
+                        }
                     }
                     ApplySubCmd::Operations => {
-                        apply_operations(
-                            &operations,
-                            &mut cell,
-                            &args.flag_comparand,
-                            &args.flag_replacement,
-                        );
+                        for col_index in sel.iter() {
+                            let mut cell = record[*col_index].to_owned();
+                            apply_operations(
+                                &operations,
+                                &mut cell,
+                                &args.flag_comparand,
+                                &args.flag_replacement,
+                            );
+                            if args.flag_new_column.is_some() {
+                                record.push_field(&cell);
+                            } else {
+                                record = replace_column_value(&record, *col_index, &cell);
+                            }
+                        }
                     }
                     ApplySubCmd::EmptyReplace => {
+                        let mut cell = record[column_index].to_owned();
                         if cell.trim().is_empty() {
                             cell = args.flag_replacement.to_string();
                         }
+                        if args.flag_new_column.is_some() {
+                            record.push_field(&cell);
+                        } else {
+                            record = replace_column_value(&record, column_index, &cell);
+                        }
                     }
                     ApplySubCmd::DateFmt => {
-                        if !cell.is_empty() {
-                            let parsed_date = parse_with_preference(&cell, prefer_dmy);
-                            if let Ok(format_date) = parsed_date {
-                                let formatted_date =
-                                    format_date.format(&args.flag_formatstr).to_string();
-                                if formatted_date.ends_with("T00:00:00+00:00") {
-                                    cell = formatted_date[..10].to_string();
-                                } else {
-                                    cell = formatted_date;
+                        for col_index in sel.iter() {
+                            let mut cell = record[*col_index].to_owned();
+                            if !cell.is_empty() {
+                                let parsed_date = parse_with_preference(&cell, prefer_dmy);
+                                if let Ok(format_date) = parsed_date {
+                                    let formatted_date =
+                                        format_date.format(&args.flag_formatstr).to_string();
+                                    if formatted_date.ends_with("T00:00:00+00:00") {
+                                        cell = formatted_date[..10].to_string();
+                                    } else {
+                                        cell = formatted_date;
+                                    }
                                 }
+                            }
+                            if args.flag_new_column.is_some() {
+                                record.push_field(&cell);
+                            } else {
+                                record = replace_column_value(&record, *col_index, &cell);
                             }
                         }
                     }
                     ApplySubCmd::DynFmt => {
+                        let mut cell = record[column_index].to_owned();
                         if !cell.is_empty() {
                             let mut record_vec: Vec<String> = Vec::with_capacity(record.len());
                             for field in &record {
@@ -583,17 +618,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                                 cell = formatted.to_string();
                             }
                         }
+                        if args.flag_new_column.is_some() {
+                            record.push_field(&cell);
+                        } else {
+                            record = replace_column_value(&record, column_index, &cell);
+                        }
                     }
                     ApplySubCmd::Unknown => {
                         unreachable!("apply subcommands are always known");
                     }
                 }
 
-                if args.flag_new_column.is_some() {
-                    record.push_field(&cell);
-                } else {
-                    record = replace_column_value(&record, column_index, &cell);
-                }
                 record
             })
             .collect_into_vec(&mut batch_results);

@@ -23,26 +23,115 @@ fn apply_ops_upper() {
     wrk.create(
         "data.csv",
         vec![
-            svec!["name"],
-            svec!["John"],
-            svec!["Mary"],
-            svec!["Sue"],
-            svec!["Hopkins"],
+            svec!["name", "surname"],
+            svec!["John", "Cena"],
+            svec!["Mary", "Jane"],
+            svec!["Sue", "Bird"],
+            svec!["Hopkins", "Jade"],
         ],
     );
     let mut cmd = wrk.command("apply");
     cmd.arg("operations")
         .arg("upper")
-        .arg("name")
+        .arg("name,surname")
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
-        svec!["name"],
-        svec!["JOHN"],
-        svec!["MARY"],
-        svec!["SUE"],
-        svec!["HOPKINS"],
+        svec!["name", "surname"],
+        svec!["JOHN", "CENA"],
+        svec!["MARY", "JANE"],
+        svec!["SUE", "BIRD"],
+        svec!["HOPKINS", "JADE"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn apply_ops_upper_rename() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["name", "surname"],
+            svec!["John", "Cena"],
+            svec!["Mary", "Jane"],
+            svec!["Sue", "Bird"],
+            svec!["Hopkins", "Jade"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("upper")
+        .arg("name,surname")
+        .arg("--rename")
+        .arg("uname,usurname")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["uname", "usurname"],
+        svec!["JOHN", "CENA"],
+        svec!["MARY", "JANE"],
+        svec!["SUE", "BIRD"],
+        svec!["HOPKINS", "JADE"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn apply_ops_upper_rename_invalid() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["name", "surname"],
+            svec!["John", "Cena"],
+            svec!["Mary", "Jane"],
+            svec!["Sue", "Bird"],
+            svec!["Hopkins", "Jade"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("upper")
+        .arg("name,surname")
+        .arg("--rename")
+        .arg("uname")
+        .arg("data.csv");
+
+    let got: String = wrk.output_stderr(&mut cmd);
+    assert_eq!(got, "Invalid arguments.\n");
+}
+
+#[test]
+fn apply_ops_upper_index_params() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["name", "surname"],
+            svec!["John", "Cena"],
+            svec!["Mary", "Jane"],
+            svec!["Sue", "Bird"],
+            svec!["Hopkins", "Jade"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("upper")
+        .arg("1,2")
+        .arg("--rename")
+        .arg("uname,usurname")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["uname", "usurname"],
+        svec!["JOHN", "CENA"],
+        svec!["MARY", "JANE"],
+        svec!["SUE", "BIRD"],
+        svec!["HOPKINS", "JADE"],
     ];
     assert_eq!(got, expected);
 }
@@ -920,6 +1009,52 @@ fn apply_datefmt() {
         svec!["2005-07-04"],
         svec!["2021-05-01T01:17:02.604456+00:00"],
         svec!["This is not a date and it will not be reformatted"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn apply_datefmt_multiple_cols() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["Created Date", "End Date"],
+            svec![
+                "September 17, 2012 10:09am EST",
+                "September 18, 2012 10:09am EST"
+            ],
+            svec![
+                "Wed, 02 Jun 2021 06:31:39 GMT",
+                "Wed, 02 Jun 2021 08:31:39 GMT"
+            ],
+            svec!["2009-01-20 05:00 EST", "2009-01-21 05:00 EST"],
+            svec!["July 4, 2005", "July 5, 2005"],
+            svec!["2021-05-01T01:17:02.604456Z", "2021-05-02T01:17:02.604456Z"],
+            svec![
+                "This is not a date and it will not be reformatted",
+                "This is not a date and it will not be reformatted"
+            ],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("datefmt").arg("Created Date,End Date").arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["Created Date", "End Date"],
+        svec!["2012-09-17T15:09:00+00:00", "2012-09-18T15:09:00+00:00"],
+        svec!["2021-06-02T06:31:39+00:00", "2021-06-02T08:31:39+00:00"],
+        svec!["2009-01-20T10:00:00+00:00", "2009-01-21T10:00:00+00:00"],
+        svec!["2005-07-04", "2005-07-05"],
+        svec![
+            "2021-05-01T01:17:02.604456+00:00",
+            "2021-05-02T01:17:02.604456+00:00"
+        ],
+        svec![
+            "This is not a date and it will not be reformatted",
+            "This is not a date and it will not be reformatted"
+        ],
     ];
     assert_eq!(got, expected);
 }
