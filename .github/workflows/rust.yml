@@ -29,10 +29,5 @@ jobs:
       uses: Swatinem/rust-cache@v1
       with:
         key: qsv-cache
-    - name: Check formatting
-      uses: actions-rs/cargo@v1
-      with:
-        command: fmt
-        args: -- --check  
     - name: Run tests
       run: cargo test --verbose --locked --features=apply,fetch,foreach,generate,lua,python,full
