@@ -1062,6 +1062,55 @@ fn apply_datefmt_multiple_cols() {
 }
 
 #[test]
+fn apply_datefmt_multiple_cols_rename() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["Created Date", "End Date"],
+            svec![
+                "September 17, 2012 10:09am EST",
+                "September 18, 2012 10:09am EST"
+            ],
+            svec![
+                "Wed, 02 Jun 2021 06:31:39 GMT",
+                "Wed, 02 Jun 2021 08:31:39 GMT"
+            ],
+            svec!["2009-01-20 05:00 EST", "2009-01-21 05:00 EST"],
+            svec!["July 4, 2005", "July 5, 2005"],
+            svec!["2021-05-01T01:17:02.604456Z", "2021-05-02T01:17:02.604456Z"],
+            svec![
+                "This is not a date and it will not be reformatted",
+                "This is not a date and it will not be reformatted"
+            ],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("datefmt")
+        .arg("Created Date,End Date")
+        .arg("--formatstr")
+        .arg("%u")
+        .arg("--rename")
+        .arg("Created Weekday,End Weekday")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["Created Weekday", "End Weekday"],
+        svec!["1", "2"],
+        svec!["3", "3"],
+        svec!["2", "3"],
+        svec!["1", "2"],
+        svec!["6", "7"],
+        svec![
+            "This is not a date and it will not be reformatted",
+            "This is not a date and it will not be reformatted"
+        ],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn apply_datefmt_prefer_dmy() {
     let wrk = Workdir::new("apply_dmy");
     wrk.create(
