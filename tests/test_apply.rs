@@ -1038,7 +1038,9 @@ fn apply_datefmt_multiple_cols() {
         ],
     );
     let mut cmd = wrk.command("apply");
-    cmd.arg("datefmt").arg("Created Date,End Date").arg("data.csv");
+    cmd.arg("datefmt")
+        .arg("Created Date,End Date")
+        .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
