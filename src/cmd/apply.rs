@@ -353,10 +353,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         if new_col_names.len() != sel.len() {
             return fail!("Invalid arguments.");
         }
-        let mut i = 0;
-        for col_index in sel.iter() {
+        for (i, col_index) in sel.iter().enumerate() {
             headers = replace_column_value(&headers, *col_index, &new_col_names[i]);
-            i += 1;
         }
     }
 
