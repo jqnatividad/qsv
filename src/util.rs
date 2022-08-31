@@ -1,9 +1,9 @@
 #[cfg(any(feature = "full", feature = "lite"))]
 use std::borrow::Cow;
 use std::path::{Path, PathBuf};
-use std::{env, fs, io, str, thread};
 #[cfg(any(feature = "full", feature = "lite"))]
 use std::time;
+use std::{env, fs, io, str, thread};
 
 use crate::config::{Config, Delimiter};
 use crate::CliResult;
@@ -14,7 +14,7 @@ use indicatif::{HumanCount, ProgressBar, ProgressStyle};
 use log::{debug, error, info, log_enabled, warn, Level};
 #[cfg(any(feature = "apply", feature = "fetch", feature = "python"))]
 use regex::Regex;
-use serde::de::{DeserializeOwned};
+use serde::de::DeserializeOwned;
 #[cfg(any(feature = "full", feature = "lite"))]
 use serde::de::{Deserialize, Deserializer, Error};
 #[cfg(any(feature = "full", feature = "lite"))]
