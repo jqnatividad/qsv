@@ -389,7 +389,7 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
             }
             Some(idx) => {
                 info!("has index, triggering parallel stats");
-                stats_args.parallel_stats(&stats_args.flag_dates_whitelist, idx)
+                stats_args.parallel_stats(&stats_args.flag_dates_whitelist, &idx)
             }
         },
         Err(e) => {

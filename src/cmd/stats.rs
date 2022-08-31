@@ -131,10 +131,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 if num_jobs == 1 {
                     args.sequential_stats(&args.flag_dates_whitelist)
                 } else {
-                    args.parallel_stats(&args.flag_dates_whitelist, idx)
+                    args.parallel_stats(&args.flag_dates_whitelist, &idx)
                 }
             } else {
-                args.parallel_stats(&args.flag_dates_whitelist, idx)
+                args.parallel_stats(&args.flag_dates_whitelist, &idx)
             }
         }
     }?;
@@ -176,7 +176,7 @@ impl Args {
     pub fn parallel_stats(
         &self,
         whitelist: &str,
-        idx: Indexed<fs::File, fs::File>,
+        idx: &Indexed<fs::File, fs::File>,
     ) -> CliResult<(csv::ByteRecord, Vec<Stats>)> {
         // N.B. This method doesn't handle the case when the number of records
         // is zero correctly. So we use `sequential_stats` instead.

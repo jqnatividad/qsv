@@ -22,7 +22,6 @@
         clippy::result_unit_err,
         clippy::wildcard_imports,
         // not practical
-        clippy::needless_pass_by_value,
         clippy::similar_names,
         clippy::too_many_lines,
         clippy::struct_excessive_bools,
