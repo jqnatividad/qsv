@@ -62,7 +62,7 @@ dependencies = [
  "percent-encoding",
  "pin-project-lite",
  "rand",
- "sha1",
+ "sha1 0.10.2",
  "smallvec",
  "tracing",
 ]
@@ -258,6 +258,17 @@ dependencies = [
  "memchr",
  "pin-project-lite",
  "tokio",
+]
+
+[[package]]
+name = "async-trait"
+version = "0.1.57"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "76464446b8bc32758d7e88ee1a804d9914cd9b1cb264c029899680b0be29826f"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -2216,15 +2227,17 @@ dependencies = [
 
 [[package]]
 name = "redis"
-version = "0.21.5"
-source = "git+https://github.com/redis-rs/redis-rs?rev=dd3bb7c89ee1d27ebd2e6765cf3f9311db39d663#dd3bb7c89ee1d27ebd2e6765cf3f9311db39d663"
+version = "0.21.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "571c252c68d09a2ad3e49edd14e9ee48932f3e0f27b06b4ea4c9b2a706d31103"
 dependencies = [
+ "async-trait",
  "combine",
  "itoa",
  "percent-encoding",
  "r2d2",
  "ryu",
- "sha1_smol",
+ "sha1 0.6.1",
  "url",
 ]
 
@@ -2549,6 +2562,15 @@ dependencies = [
  "cfg-if",
  "cpufeatures",
  "digest",
+]
+
+[[package]]
+name = "sha1"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c1da05c97445caa12d05e848c4a4fcbbea29e748ac28f7e80e9b010392063770"
+dependencies = [
+ "sha1_smol",
 ]
 
 [[package]]
