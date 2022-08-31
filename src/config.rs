@@ -198,6 +198,7 @@ impl Config {
         self
     }
 
+    #[cfg(any(feature = "full", feature = "lite"))]
     pub const fn crlf(mut self, yes: bool) -> Config {
         if yes {
             self.terminator = csv::Terminator::CRLF;
@@ -207,6 +208,7 @@ impl Config {
         self
     }
 
+    #[cfg(any(feature = "full", feature = "lite"))]
     pub const fn terminator(mut self, term: csv::Terminator) -> Config {
         self.terminator = term;
         self
@@ -217,6 +219,7 @@ impl Config {
         self
     }
 
+    #[cfg(any(feature = "full", feature = "lite"))]
     pub const fn quote_style(mut self, style: csv::QuoteStyle) -> Config {
         self.quote_style = style;
         self
