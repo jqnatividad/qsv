@@ -1,10 +1,3 @@
-#[cfg(any(feature = "full", feature = "lite"))]
-use std::borrow::Cow;
-use std::path::{Path, PathBuf};
-#[cfg(any(feature = "full", feature = "lite"))]
-use std::time;
-use std::{env, fs, io, str, thread};
-
 use crate::config::{Config, Delimiter};
 use crate::CliResult;
 use docopt::Docopt;
@@ -19,7 +12,10 @@ use serde::de::DeserializeOwned;
 use serde::de::{Deserialize, Deserializer, Error};
 #[cfg(any(feature = "full", feature = "lite"))]
 use serde_json::json;
-use std::time::Instant;
+#[cfg(any(feature = "full", feature = "lite"))]
+use std::borrow::Cow;
+use std::path::{Path, PathBuf};
+use std::{env, fs, io, str, thread};
 
 #[macro_export]
 macro_rules! regex_once_cell {
@@ -384,7 +380,7 @@ fn create_dir_all_threadsafe(path: &Path) -> io::Result<()> {
         // We probably don't need to sleep at all, because the intermediate
         // directory is already created.  But let's attempt to back off a
         // bit and let the other thread finish.
-        thread::sleep(time::Duration::from_millis(25));
+        thread::sleep(std::time::Duration::from_millis(25));
     }
     // Try one last time, returning whatever happens.
     fs::create_dir_all(path)
@@ -671,7 +667,7 @@ pub fn safe_header_names(headers: &csv::StringRecord, check_first_char: bool) ->
     name_vec
 }
 
-pub fn log_end(mut qsv_args: String, now: Instant) {
+pub fn log_end(mut qsv_args: String, now: std::time::Instant) {
     if log::log_enabled!(log::Level::Info) {
         let ellipsis = if qsv_args.len() > 24 {
             qsv_args.truncate(24);
