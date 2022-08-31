@@ -59,6 +59,7 @@ use indicatif::{HumanCount, ProgressBar, ProgressDrawTarget};
 use serde::{Deserialize, Serialize};
 use std::cmp;
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 struct Args {
     arg_input: Option<String>,

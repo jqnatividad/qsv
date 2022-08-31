@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 extern crate crossbeam_channel as channel;
 
 use crate::clitypes::{CliError, CliResult, QsvExitCode};

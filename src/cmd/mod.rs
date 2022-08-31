@@ -12,6 +12,7 @@ pub mod excel;
 pub mod exclude;
 #[cfg(any(feature = "full", feature = "lite"))]
 pub mod explode;
+#[cfg(any(feature = "full", feature = "lite"))]
 pub mod extsort;
 #[cfg(all(feature = "fetch", not(feature = "lite")))]
 pub mod fetch;

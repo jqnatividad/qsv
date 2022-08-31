@@ -74,6 +74,7 @@ use std::fs::File;
 use std::io::{self, prelude::*, BufReader};
 use std::path::Path;
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 struct Args {
     arg_input: Option<String>,
