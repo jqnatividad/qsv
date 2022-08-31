@@ -20,13 +20,22 @@ macro_rules! werr {
     });
 }
 
-// TODO: format parameter so we don't need to do fail!(format!())
 macro_rules! fail {
     ($e:expr) => {{
         use log::error;
         let err = ::std::convert::From::from($e);
         error!("{err}");
         Err(err)
+    }};
+}
+
+macro_rules! fail_format {
+    ($($t:tt)*) => {{
+        use log::error;
+        use crate::CliError;
+        let err = format!($($t)*);
+        error!("{err}");
+        Err(CliError::Other(err))
     }};
 }
 
