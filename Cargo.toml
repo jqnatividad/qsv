@@ -166,7 +166,7 @@ csv-core   = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-t
 csv-index  = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
 docopt     = { git = "https://github.com/jqnatividad/docopt.rs", branch = "perf-clippy-2021" }
 ext-sort   = { git = "https://github.com/jqnatividad/ext-sort-rs", branch = "master" }
-indicatif  = { git = "https://github.com/console-rs/indicatif", rev = "4afa0082bf1407a902c0f2cd422713d31d291443" }
+indicatif  = { git = "https://github.com/console-rs/indicatif", rev = "81cca1eb71a849275f733e17439bda3a27a35f33" }
 jsonschema = { git = "https://github.com/jqnatividad/jsonschema-rs", branch = "master" }
 redis      = { git = "https://github.com/redis-rs/redis-rs", rev = "dd3bb7c89ee1d27ebd2e6765cf3f9311db39d663" }
 reqwest    = { git = "https://github.com/seanmonstar/reqwest", rev = "e9ba0a9dc79f63c3655f334df23b50b9a841e326" }
