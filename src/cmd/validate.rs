@@ -64,7 +64,7 @@ macro_rules! fail {
 // number of CSV rows to process in a batch
 const BATCH_SIZE: usize = 24_000;
 
-#[allow(clippy::struct_excessive_bools)]
+#[allow(dead_code)]
 #[derive(Deserialize)]
 struct Args {
     flag_fail_fast: bool,

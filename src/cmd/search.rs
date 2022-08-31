@@ -64,6 +64,7 @@ use regex::bytes::RegexBuilder;
 use serde::Deserialize;
 use std::env;
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 struct Args {
     arg_input: Option<String>,

@@ -59,6 +59,7 @@ use serde::Deserialize;
 use std::borrow::Cow;
 use std::env;
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 struct Args {
     arg_input: Option<String>,
