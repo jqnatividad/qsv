@@ -427,8 +427,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     use governor::{Quota, RateLimiter};
 
+    // set rate limiter with allow_burst set to 1 - see https://github.com/antifuchs/governor/issues/39
     let limiter =
-        RateLimiter::direct(Quota::per_second(rate_limit).allow_burst(NonZeroU32::new(5).unwrap()));
+        RateLimiter::direct(Quota::per_second(rate_limit).allow_burst(NonZeroU32::new(1).unwrap()));
 
     // prep progress bars
     let show_progress =
