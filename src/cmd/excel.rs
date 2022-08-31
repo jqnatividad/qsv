@@ -90,7 +90,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut workbook = match open_workbook_auto(path) {
         Ok(workbook) => workbook,
-        Err(e) => return fail!(format!("Cannot open workbook: {e}.")),
+        Err(e) => return fail_format!("Cannot open workbook: {e}."),
     };
 
     let sheet_names = workbook.sheet_names();
@@ -124,7 +124,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     if let Ok(result) = result {
                         result
                     } else {
-                        return fail!(format!("Cannot retrieve range from {}", sheet_name));
+                        return fail_format!("Cannot retrieve range from {}", sheet_name);
                     }
                 }
                 None => Range::empty(),
@@ -171,10 +171,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 if sheet_index as usize <= sheet_names.len() {
                     sheet_names[sheet_index as usize].to_string()
                 } else {
-                    return fail!(format!(
+                    return fail_format!(
                         "sheet index {sheet_index} is greater than number of sheets {}",
                         sheet_names.len()
-                    ));
+                    );
                 }
             } else {
                 // if its a negative number, start from the end
@@ -205,7 +205,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         sheet = sheet_names[idx].clone();
         idx
     } else {
-        return fail!(format!("Cannot get sheet index for {sheet}"));
+        return fail_format!("Cannot get sheet index for {sheet}");
     };
 
     let range = match workbook.worksheet_range_at(sheet_index) {
@@ -213,7 +213,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             if let Ok(result) = result {
                 result
             } else {
-                return fail!(format!("Cannot retrieve range from {sheet}"));
+                return fail_format!("Cannot retrieve range from {sheet}");
             }
         }
         None => Range::empty(),

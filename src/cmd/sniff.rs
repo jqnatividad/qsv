@@ -160,7 +160,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         "detail": e.to_string()
                     }]
                 });
-                return fail!(format!("{json_result}"));
+                return fail_format!("{json_result}");
             }
         }
     } else {
@@ -182,7 +182,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 println!("{disp}");
             }
             Err(e) => {
-                return fail!(format!("sniff error: {e}"));
+                return fail_format!("sniff error: {e}");
             }
         }
     }

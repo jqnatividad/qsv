@@ -135,7 +135,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         });
                         return fail!(header_error.to_string());
                     }
-                    return fail!(format!("Cannot read header ({e})."));
+                    return fail_format!("Cannot read header ({e}).");
                 }
             }
         }
@@ -152,9 +152,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     });
                     return fail!(validation_error.to_string());
                 }
-                return fail!(format!(
+                return fail_format!(
                     r#"Validation error: {e}. Try "qsv fixlengths" or "qsv fmt" to fix it."#
-                ));
+                );
             }
             record_count += 1;
         }
@@ -219,17 +219,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         match JSONSchema::options().compile(&json) {
                             Ok(schema) => (json, schema),
                             Err(e) => {
-                                return fail!(format!("Cannot compile schema json. error: {e}"));
+                                return fail_format!("Cannot compile schema json. error: {e}");
                             }
                         }
                     }
                     Err(e) => {
-                        return fail!(format!("Unable to parse schema json. error: {e}"));
+                        return fail_format!("Unable to parse schema json. error: {e}");
                     }
                 }
             }
             Err(e) => {
-                return fail!(format!("Unable to retrieve json. error: {e}"));
+                return fail_format!("Unable to retrieve json. error: {e}");
             }
         };
 

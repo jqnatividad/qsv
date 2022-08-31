@@ -258,11 +258,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         let mut redis_conn;
         match redis_client.get_connection() {
-            Err(e) => {
-                return fail!(format!(
-                    r#"Cannot connect to Redis using "{conn_str}": {e:?}"#
-                ))
-            }
+            Err(e) => return fail_format!(r#"Cannot connect to Redis using "{conn_str}": {e:?}"#),
             Ok(x) => redis_conn = x,
         }
 
@@ -350,7 +346,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let vals: Vec<&str> = header.split(':').collect();
 
             if vals.len() != 2 {
-                return fail!(format!("{vals:?} is not a valid key-value pair. Expecting a key and a value seperated by a colon."));
+                return fail_format!("{vals:?} is not a valid key-value pair. Expecting a key and a value seperated by a colon.");
             }
 
             // allocate new String for header key to put into map
