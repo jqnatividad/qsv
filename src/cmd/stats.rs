@@ -44,6 +44,9 @@ stats options:
     --quartiles               Show the quartiles, the IQR, the lower/upper inner/outer
                               fences and skewness.
                               This requires loading all CSV data in memory.
+    --round <decimal_places>  The number of decimal places. Rounding is done following
+                              Midpoint Nearest Even (aka "Bankers Rounding") rule.
+                              [default: 4]
     --nulls                   Include NULLs in the population size for computing
                               mean and standard deviation.
     --infer-dates             Infer date/datetime datatypes. This is an expensive
@@ -107,6 +110,7 @@ pub struct Args {
     pub flag_cardinality: bool,
     pub flag_median: bool,
     pub flag_quartiles: bool,
+    pub flag_round: u8,
     pub flag_nulls: bool,
     pub flag_infer_dates: bool,
     pub flag_dates_whitelist: String,
@@ -218,6 +222,7 @@ impl Args {
     }
 
     pub fn stats_to_records(&self, stats: Vec<Stats>) -> Vec<csv::StringRecord> {
+        let round_places = self.flag_round;
         let mut records = Vec::with_capacity(stats.len());
         records.extend(repeat(csv::StringRecord::new()).take(stats.len()));
         let pool = ThreadPool::new(util::njobs(self.flag_jobs));
@@ -226,7 +231,7 @@ impl Args {
             let (send, recv) = channel::bounded(0);
             results.push(recv);
             pool.execute(move || {
-                unsafe { send.send(stat.to_record()).unwrap_unchecked() };
+                unsafe { send.send(stat.to_record(round_places)).unwrap_unchecked() };
             });
         }
         for (i, recv) in results.into_iter().enumerate() {
@@ -421,6 +426,16 @@ pub struct Stats {
     which: WhichStats,
 }
 
+fn round_num(dec_f64: f64, places: u8) -> String {
+    use rust_decimal::prelude::*;
+
+    let dec_num = Decimal::from_f64(dec_f64).unwrap_or_default();
+    // round using "Bankers Rounding" rule
+    // https://docs.rs/rust_decimal/latest/rust_decimal/enum.RoundingStrategy.html#variant.MidpointNearestEven
+
+    dec_num.round_dp(places as u32).to_string()
+}
+
 impl Stats {
     fn new(which: WhichStats) -> Stats {
         let (mut sum, mut minmax, mut online, mut modes, mut median, mut quartiles) =
@@ -509,7 +524,7 @@ impl Stats {
     }
 
     #[allow(clippy::wrong_self_convention)]
-    pub fn to_record(&mut self) -> csv::StringRecord {
+    pub fn to_record(&mut self, round_places: u8) -> csv::StringRecord {
         let typ = self.typ;
         // we have 22 columns at most with --everything
         let mut pieces = Vec::with_capacity(22);
@@ -543,10 +558,9 @@ impl Stats {
             pieces.push(empty());
             pieces.push(empty());
         } else if let Some(ref v) = self.online {
-            let mut buffer = ryu::Buffer::new();
-            pieces.push(buffer.format(v.mean()).to_owned());
-            pieces.push(buffer.format(v.stddev()).to_owned());
-            pieces.push(buffer.format(v.variance()).to_owned());
+            pieces.push(round_num(v.mean(), round_places));
+            pieces.push(round_num(v.stddev(), round_places));
+            pieces.push(round_num(v.variance(), round_places));
         } else {
             pieces.push(empty());
             pieces.push(empty());
@@ -566,8 +580,7 @@ impl Stats {
                 }
             }
             Some(v) => {
-                let mut buffer = ryu::Buffer::new();
-                pieces.push(buffer.format(v).to_owned());
+                pieces.push(round_num(v, round_places));
             }
         }
         match self.quartiles.as_mut().and_then(|v| match self.typ {
@@ -589,27 +602,30 @@ impl Stats {
             }
             Some((q1, q2, q3)) => {
                 let iqr = q3 - q1;
-                let mut buffer = ryu::Buffer::new();
-                // lower outer and inner fence
-                pieces.push(buffer.format(q1 - (3.0 * iqr)).to_owned());
-                pieces.push(buffer.format(q1 - (1.5 * iqr)).to_owned());
 
-                pieces.push(buffer.format(q1).to_owned());
-                pieces.push(buffer.format(q2).to_owned());
-                pieces.push(buffer.format(q3).to_owned());
-                pieces.push(buffer.format(iqr).to_owned());
+                // lower_outer_fence
+                pieces.push(round_num(q1 - (3.0 * iqr), round_places));
+                // lower_inner_fence
+                pieces.push(round_num(q1 - (1.5 * iqr), round_places));
+
+                pieces.push(round_num(q1, round_places));
+                // q2_median
+                pieces.push(round_num(q2, round_places));
+                pieces.push(round_num(q3, round_places));
+                pieces.push(round_num(iqr, round_places));
 
                 // the fused multiply_add below calculates the upper inner fence and
                 // is equivalent to "q3 + (1.5 * iqr)"
                 // fused mul_add is more performant if the target architecture
                 // has a dedicated `fma` CPU instruction
-                pieces.push(buffer.format(1.5_f64.mul_add(iqr, q3)).to_owned());
-                // upper outer fence
-                pieces.push(buffer.format(3.0_f64.mul_add(iqr, q3)).to_owned());
+                pieces.push(round_num(1.5_f64.mul_add(iqr, q3), round_places));
+
+                // upper_outer_fence
+                pieces.push(round_num(3.0_f64.mul_add(iqr, q3), round_places));
 
                 // calculate skewness using Quantile-based measures
                 // https://en.wikipedia.org/wiki/Skewness#Quantile-based_measures
-                pieces.push(buffer.format((q3 - (2.0 * q2) + q1) / iqr).to_owned());
+                pieces.push(round_num((q3 - (2.0 * q2) + q1) / iqr, round_places));
             }
         }
         match self.modes.as_mut() {
