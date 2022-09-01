@@ -91,7 +91,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     debug!("Compiling regular expression...");
-    let pattern = RegexBuilder::new(&*args.arg_regex)
+    let pattern = RegexBuilder::new(&args.arg_regex)
         .case_insensitive(args.flag_ignore_case)
         .unicode(regex_unicode)
         .size_limit(args.flag_size_limit * (1 << 20))

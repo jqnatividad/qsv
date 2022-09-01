@@ -378,7 +378,7 @@ impl Config {
             let path_clone = path_buf.clone();
             let path_str = path_clone.into_os_string().into_string().unwrap();
             let index_argv: Vec<&str> = vec!["", "index", &path_str];
-            crate::cmd::index::run(&*index_argv).unwrap();
+            crate::cmd::index::run(&index_argv).unwrap();
             debug!("autoindex for {path_str} created");
         }
     }

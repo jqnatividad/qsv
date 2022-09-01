@@ -84,7 +84,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         Ok(_) => true,
         Err(_) => args.flag_unicode,
     };
-    let pattern = RegexBuilder::new(&*args.arg_pattern)
+    let pattern = RegexBuilder::new(&args.arg_pattern)
         .case_insensitive(args.flag_ignore_case)
         .unicode(regex_unicode)
         .size_limit(args.flag_size_limit * (1 << 20))

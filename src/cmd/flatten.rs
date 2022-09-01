@@ -70,7 +70,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 wtr.write_all(header)?;
             }
             wtr.write_all(b"\t")?;
-            wtr.write_all(&*util::condense(Cow::Borrowed(field), args.flag_condense))?;
+            wtr.write_all(&util::condense(Cow::Borrowed(field), args.flag_condense))?;
             wtr.write_all(b"\n")?;
         }
     }
