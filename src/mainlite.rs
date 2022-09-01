@@ -137,7 +137,7 @@ Please choose one of the following commands:",
             ));
             util::qsv_check_for_update();
             util::log_end(qsv_args, now);
-            return QsvExitCode::Good;
+            QsvExitCode::Good
         }
         Some(cmd) => match cmd.run() {
             Ok(()) => {

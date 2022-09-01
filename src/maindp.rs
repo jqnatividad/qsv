@@ -109,7 +109,7 @@ fn main() -> QsvExitCode {
 Please choose one of the following commands:",
                 command_list!()
             ));
-            return QsvExitCode::Good;
+            QsvExitCode::Good
         }
         Some(cmd) => match cmd.run() {
             Ok(()) => {
