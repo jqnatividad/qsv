@@ -171,7 +171,7 @@ Please choose one of the following commands:",
             Err(CliError::Other(msg)) => {
                 werr!("{msg}");
                 util::log_end(qsv_args, now);
-                QsvExitCode::IncorrectUsage
+                QsvExitCode::Bad
             }
         },
     }
