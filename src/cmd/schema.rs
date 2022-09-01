@@ -222,7 +222,7 @@ pub fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<M
         let header_string = convert_to_string(header_byte_slice)?;
 
         // grab stats record for current column
-        let stats_record = csv_stats.get(i).unwrap().clone().to_record();
+        let stats_record = csv_stats.get(i).unwrap().clone().to_record(4);
 
         debug!("stats[{header_string}]: {stats_record:?}");
 
@@ -372,6 +372,7 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
         flag_median: false,
         flag_quartiles: false,
         flag_nulls: false,
+        flag_round: 4,
         flag_infer_dates: true,
         flag_dates_whitelist: args.flag_dates_whitelist.to_string(),
         flag_prefer_dmy: args.flag_prefer_dmy,
@@ -426,7 +427,7 @@ fn build_low_cardinality_column_selector_arg(
     // identify low cardinality columns
     for i in 0..csv_fields.len() {
         // grab stats record for current column
-        let stats_record = csv_stats.get(i).unwrap().clone().to_record();
+        let stats_record = csv_stats.get(i).unwrap().clone().to_record(4);
 
         // get Cardinality
         let col_cardinality = match stats_record.get(stats_col_index_map["cardinality"]) {
