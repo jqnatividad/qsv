@@ -544,7 +544,7 @@ pub fn qsv_check_for_update() {
         info!("Up to date ({curr_version})... no update required.");
     };
 
-    _ = send_hwsurvey(&bin_name, updated, latest_release, curr_version, false);
+    let _temp = send_hwsurvey(&bin_name, updated, latest_release, curr_version, false);
 }
 
 // the qsv hwsurvey allows us to keep a better
