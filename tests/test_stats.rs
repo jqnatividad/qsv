@@ -425,20 +425,10 @@ stats_tests!(stats_len_min_null, "min_length", &["", "aa", "a"], "0");
 stats_tests!(stats_len_max_null, "max_length", &["a", "aa", ""], "2");
 
 stats_tests!(stats_mean, "mean", &["5", "15", "10"], "10");
-stats_tests!(
-    stats_stddev,
-    "stddev",
-    &["1", "2", "3"],
-    "0.816496580927726"
-);
+stats_tests!(stats_stddev, "stddev", &["1", "2", "3"], "0.8165");
 stats_tests!(stats_variance, "variance", &["3", "5", "7", "9", "11"], "8");
 stats_tests!(stats_mean_null, "mean", &["", "5", "15", "10"], "10");
-stats_tests!(
-    stats_stddev_null,
-    "stddev",
-    &["1", "2", "3", ""],
-    "0.816496580927726"
-);
+stats_tests!(stats_stddev_null, "stddev", &["1", "2", "3", ""], "0.8165");
 stats_tests!(
     stats_variance_null,
     "variance",
@@ -446,12 +436,7 @@ stats_tests!(
     "6"
 );
 stats_tests!(stats_mean_mix, "mean", &["5", "15.1", "9.9"], "10");
-stats_tests!(
-    stats_stddev_mix,
-    "stddev",
-    &["1", "2.1", "2.9"],
-    "0.7788880963698614"
-);
+stats_tests!(stats_stddev_mix, "stddev", &["1", "2.1", "2.9"], "0.7789");
 stats_tests!(
     stats_variance_mix,
     "variance",
@@ -476,31 +461,31 @@ stats_tests!(
     stats_quartiles,
     "quartiles",
     &["1", "2", "3"],
-    "-5.0,-2.0,1.0,2.0,3.0,2.0,6.0,9.0"
+    "-5,-2,1,2,3,2,6,9"
 );
 stats_tests!(
     stats_quartiles_null,
     "quartiles",
     &["", "1", "2", "3"],
-    "-5.0,-2.0,1.0,2.0,3.0,2.0,6.0,9.0"
+    "-5,-2,1,2,3,2,6,9"
 );
 stats_tests!(
     stats_quartiles_even,
     "quartiles",
     &["1", "2", "3", "4"],
-    "-4.5,-1.5,1.5,2.5,3.5,2.0,6.5,9.5"
+    "-4.5,-1.5,1.5,2.5,3.5,2,6.5,9.5"
 );
 stats_tests!(
     stats_quartiles_even_null,
     "quartiles",
     &["", "1", "2", "3", "4"],
-    "-4.5,-1.5,1.5,2.5,3.5,2.0,6.5,9.5"
+    "-4.5,-1.5,1.5,2.5,3.5,2,6.5,9.5"
 );
 stats_tests!(
     stats_quartiles_mix,
     "quartiles",
     &["1", "2.0", "3", "4"],
-    "-4.5,-1.5,1.5,2.5,3.5,2.0,6.5,9.5"
+    "-4.5,-1.5,1.5,2.5,3.5,2,6.5,9.5"
 );
 stats_tests!(stats_quartiles_null_empty, "quartiles", &[""], "");
 
@@ -579,6 +564,24 @@ fn stats_prefer_mdy() {
     let got: String = wrk.stdout(&mut cmd);
 
     let expected = wrk.load_test_resource("boston311-100-stats.csv");
+
+    assert_eq!(got, expected.replace("\r\n", "\n").trim_end());
+}
+
+#[test]
+fn stats_rounding() {
+    let wrk = Workdir::new("stats_prefer_mdy");
+    let test_file = wrk.load_test_file("boston311-100.csv");
+
+    let mut cmd = wrk.command("stats");
+    cmd.arg("--everything")
+        .arg("--round")
+        .arg("8")
+        .arg(test_file);
+
+    let got: String = wrk.stdout(&mut cmd);
+
+    let expected = wrk.load_test_resource("boston311-100-everything-8places-stats.csv");
 
     assert_eq!(got, expected.replace("\r\n", "\n").trim_end());
 }
