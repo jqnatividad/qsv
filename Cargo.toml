@@ -108,6 +108,7 @@ pyo3 = { version = "0.17", features = [
     "abi3",
     "abi3-py38",
     "auto-initialize",
+    "generate-import-lib",
 ], optional = true }
 qsv-dateparser = "0.4"
 qsv-stats = "0.4"

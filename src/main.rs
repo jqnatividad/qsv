@@ -50,7 +50,7 @@ use docopt::Docopt;
 use log::{info, log_enabled, Level};
 use serde::Deserialize;
 
-#[cfg(feature = "python")]
+#[cfg(all(feature = "python", not(feature = "lite")))]
 use pyo3::Python;
 
 #[cfg(feature = "mimalloc")]
@@ -148,7 +148,7 @@ struct Args {
     flag_update: bool,
 }
 
-#[cfg(feature = "python")]
+#[cfg(all(feature = "python", not(feature = "lite")))]
 fn check_python() -> bool {
     Python::with_gil(|py| py.version_info() >= (3, 8))
 }
@@ -156,7 +156,7 @@ fn check_python() -> bool {
 fn main() -> QsvExitCode {
     util::init_logger();
 
-    #[cfg(feature = "python")]
+    #[cfg(all(feature = "python", not(feature = "lite")))]
     if !check_python() {
         werr!("Python 3.8+ required.");
         return QsvExitCode::Abort;
