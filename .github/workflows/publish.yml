@@ -157,6 +157,8 @@ jobs:
       uses: actions-rs/cargo@v1
       with:
         command: build
+        env:
+          RUSTFLAGS: --emit=asm
         use-cross: ${{ matrix.job.use-cross }}
         toolchain: ${{ matrix.rust }}
         args: --release --locked --bin qsv --target ${{ matrix.job.target }} --features=nopython_full ${{ matrix.job.default-features }}
@@ -173,6 +175,8 @@ jobs:
       uses: actions-rs/cargo@v1
       with:
         command: build
+        env:
+          RUSTFLAGS: --emit=asm
         use-cross: ${{ matrix.job.use-cross }}
         toolchain: ${{ matrix.rust }}
         args: --release --locked --bin qsv --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }},full ${{ matrix.job.default-features }}
@@ -180,6 +184,8 @@ jobs:
       uses: actions-rs/cargo@v1
       with:
         command: build
+        env:
+          RUSTFLAGS: --emit=asm
         use-cross: ${{ matrix.job.use-cross }}
         toolchain: ${{ matrix.rust }}
         args: --release --locked --bin qsvlite --features=lite --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}
@@ -187,6 +193,8 @@ jobs:
       uses: actions-rs/cargo@v1
       with:
         command: build
+        env:
+          RUSTFLAGS: --emit=asm
         use-cross: ${{ matrix.job.use-cross }}
         toolchain: ${{ matrix.rust }}
         args: --release --locked --bin qsvdp --features=datapusher_plus --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}
