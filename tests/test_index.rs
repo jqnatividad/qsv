@@ -61,7 +61,7 @@ fn index_outdated_stats() {
 
     // stats should fail if the index is stale
     let mut cmd = wrk.command("stats");
-    cmd.arg("in.csv");
+    cmd.env_clear().arg("in.csv");
 
     wrk.assert_err(&mut cmd);
 }
