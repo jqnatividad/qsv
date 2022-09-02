@@ -88,6 +88,8 @@ jobs:
       with:
         key: qsv-cache-nightly
     - name: Build qsv without python
+      env:
+        RUSTFLAGS: --emit=asm
       uses: actions-rs/cargo@v1
       with:
         command: build
@@ -104,6 +106,8 @@ jobs:
               mv -v -f target/${{ matrix.job.target }}/release-nightly/qsv target/${{ matrix.job.target }}/release-nightly/qsvnp
          fi
     - name: Build qsv-nightly
+      env:
+        RUSTFLAGS: --emit=asm
       uses: actions-rs/cargo@v1
       with:
         command: build
@@ -111,6 +115,8 @@ jobs:
         toolchain: ${{ matrix.rust }}
         args: --profile release-nightly --bin qsv -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }},full ${{ matrix.job.default-features }}
     - name: Build qsvlite-nightly
+      env:
+        RUSTFLAGS: --emit=asm
       uses: actions-rs/cargo@v1   
       with:
         command: build
@@ -118,6 +124,8 @@ jobs:
         toolchain: ${{ matrix.rust }}
         args: --profile release-nightly --bin qsvlite -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --features=lite --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}
     - name: Build qsvdp-nightly
+      env:
+        RUSTFLAGS: --emit=asm
       uses: actions-rs/cargo@v1
       with:
         command: build
