@@ -5,6 +5,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.66.0] - 2022-09-01
+
+### Added
+* `apply`: added Multi-column subcommands by @udsamani in https://github.com/jqnatividad/qsv/pull/462
+* `stats`:  added --round option https://github.com/jqnatividad/qsv/pull/474
+* created `fail_format!` macro for more concise error handling in https://github.com/jqnatividad/qsv/pull/471
+
+### Changed
+* Move command usage text to beginning of cmd source code, so we don't need to move around deeplinks to usage texts from README https://github.com/jqnatividad/qsv/pull/467
+* Optimize conditional compilation of various qsv binary variants, removing dead code https://github.com/jqnatividad/qsv/pull/473
+* `fetch` & `fetchpost`: removed initial burst of requests, making the commands "friendlier" to rate-limited APIs
+* `search`, `searchset` & `replace`: minor performance optimizations
+* created dedicated rustfmt GitHub action workflow to ensure code is always rust formatted. Previously, rustfmt check was in Linux workflow.
+* applied some clippy recommendations
+* Bump actix-governor from 0.3.1 to 0.3.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/461
+* cargo update bumped several dependencies
+* pin Rust nightly to 2022-08-31
+
+### Fixed
+* `extsort` code was being compiled for qsvdp even if it was not enabled
+* bump sysinfo from 0.25.2 to 0.26.0, fixing segfault on Apple Silicon
+* fixed qsvnp on Windows so it doesn't look for python shared libraries even if python is not enabled
+* fixed CliError::Other so it returns bad exitcode (exitcode 1) instead of incorrect_usage (exit code 2)
+
+## New Contributors
+* @udsamani made their first contribution in https://github.com/jqnatividad/qsv/pull/462
+
 ## [0.65.0] - 2022-08-28
 
 ### Added
