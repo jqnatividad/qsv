@@ -111,9 +111,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut headers = rdr.byte_headers()?.clone();
     let sel = rconfig.selection(&headers)?;
 
-    if let Some(column_name) = args.flag_flag.clone() {
+    let flag = if let Some(column_name) = args.flag_flag.clone() {
         headers.push_field(column_name.as_bytes());
-    }
+        true
+    } else {
+        false
+    };
 
     if !rconfig.no_headers && !args.flag_quick {
         wtr.write_record(&headers)?;
@@ -154,7 +157,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         }
 
-        if args.flag_flag.is_some() {
+        if flag {
             flag_rowi += 1;
             record.push_field(if m {
                 let mut buffer = itoa::Buffer::new();
