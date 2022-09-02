@@ -111,12 +111,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut headers = rdr.byte_headers()?.clone();
     let sel = rconfig.selection(&headers)?;
 
-    let flag = if let Some(column_name) = args.flag_flag.clone() {
+    let flag = args.flag_flag.map_or(false, |column_name| {
         headers.push_field(column_name.as_bytes());
         true
-    } else {
-        false
-    };
+    });
 
     if !rconfig.no_headers && !args.flag_quick {
         wtr.write_record(&headers)?;
