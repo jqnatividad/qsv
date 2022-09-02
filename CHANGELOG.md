@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Bump actix-governor from 0.3.1 to 0.3.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/461
 * cargo update bumped several dependencies
 * pin Rust nightly to 2022-08-31
+* set RUSTFLAGS to emit=asm when compiling pre-built binaries for performance
+  see http://likebike.com/posts/How_To_Write_Fast_Rust_Code.html#emit-asm
 
 ### Fixed
 * `extsort` code was being compiled for qsvdp even if it was not enabled
