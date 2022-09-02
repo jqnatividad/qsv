@@ -134,9 +134,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut headers = rdr.byte_headers()?.clone();
     let sel = rconfig.selection(&headers)?;
 
-    if let Some(column_name) = args.flag_flag.clone() {
+    let mut match_list: String = String::new();
+    let do_match_list = if let Some(column_name) = args.flag_flag.clone() {
         headers.push_field(column_name.as_bytes());
-    }
+        true
+    } else {
+        false
+    };
 
     if !rconfig.no_headers && !args.flag_quick {
         wtr.write_record(&headers)?;
@@ -154,9 +158,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } else {
         progress.set_draw_target(ProgressDrawTarget::hidden());
     }
-
-    let mut match_list: String = String::new();
-    let do_match_list = args.flag_flag.is_some();
 
     let mut record = csv::ByteRecord::new();
     let mut flag_rowi: u64 = 1;
