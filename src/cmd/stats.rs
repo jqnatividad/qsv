@@ -44,7 +44,7 @@ stats options:
     --quartiles               Show the quartiles, the IQR, the lower/upper inner/outer
                               fences and skewness.
                               This requires loading all CSV data in memory.
-    --round <decimal_places>  The number of decimal places. Rounding is done following
+    --round <decimal_places>  Round statistics to <decimal_places>. Rounding is done following
                               Midpoint Nearest Even (aka "Bankers Rounding") rule.
                               [default: 4]
     --nulls                   Include NULLs in the population size for computing
@@ -90,14 +90,9 @@ use once_cell::sync::OnceCell;
 use qsv_dateparser::parse_with_preference;
 use serde::Deserialize;
 use stats::{merge_all, Commute, MinMax, OnlineStats, Unsorted};
-use std::borrow::ToOwned;
-use std::default::Default;
-use std::fmt;
-use std::fs;
-use std::io;
-use std::iter::repeat;
 use std::str::{self, FromStr};
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::{borrow::ToOwned, default::Default, fmt, fs, io, iter::repeat};
 use threadpool::ThreadPool;
 
 #[allow(clippy::unsafe_derive_deserialize)]
