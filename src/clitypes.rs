@@ -1,8 +1,6 @@
 #![macro_use]
-use std::borrow::ToOwned;
-use std::fmt;
-use std::io;
 use std::process::{ExitCode, Termination};
+use std::{borrow::ToOwned, fmt, io};
 
 macro_rules! wout {
     ($($arg:tt)*) => ({

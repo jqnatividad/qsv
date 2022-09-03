@@ -40,18 +40,13 @@
 )]
 
 extern crate crossbeam_channel as channel;
-
 use crate::clitypes::{CliError, CliResult, QsvExitCode};
-use std::env;
-use std::io;
-use std::time::Instant;
-
 use docopt::Docopt;
 use log::{info, log_enabled, Level};
-use serde::Deserialize;
-
 #[cfg(all(feature = "python", not(feature = "lite")))]
 use pyo3::Python;
+use serde::Deserialize;
+use std::{env, io, time::Instant};
 
 #[cfg(feature = "mimalloc")]
 #[global_allocator]
