@@ -666,7 +666,7 @@ mod tests_for_csv_to_json_conversion {
             json!({
                 "A": "hello",
                 "B": 3.1415,
-                "C": 300000000,
+                "C": 300_000_000,
                 "D": true,
                 "E": null,
                 "F": null,
@@ -674,7 +674,7 @@ mod tests_for_csv_to_json_conversion {
                 "H": null,
                 "I": "hello",
                 "J": 3.1415,
-                "K": 300000000,
+                "K": 300_000_000,
                 "L": true,
             })
         );
