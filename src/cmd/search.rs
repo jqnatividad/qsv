@@ -37,7 +37,8 @@ search options:
     --dfa-size-limit <mb>  Set the approximate size of the cache (MB) used by the regular
                            expression engine's Discrete Finite Automata.
                            [default: 10]
-    -q, --quick            Return on first match with an exitcode of 0.
+    -q, --quick            Return on first match with an exitcode of 0, returning
+                           the row number of the first match to stderr.
                            Return exit code 1 if no match is found.
                            No output is produced.
                            
@@ -136,10 +137,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut record = csv::ByteRecord::new();
     let mut flag_rowi: u64 = 1;
     let mut match_ctr: u64 = 0;
+    let mut row_ctr: u64 = 0;
 
     #[allow(unused_assignments)]
     let mut matched_rows = String::with_capacity(20); // to save on allocs
     while rdr.read_byte_record(&mut record)? {
+        row_ctr += 1;
         #[cfg(any(feature = "full", feature = "lite"))]
         if show_progress {
             progress.inc(1);
@@ -188,6 +191,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     if match_ctr == 0 {
         return Err(CliError::NoMatch());
+    } else if args.flag_quick {
+        eprintln!("{row_ctr}");
+        info!("quick search first match at {row_ctr}");
     }
 
     Ok(())
