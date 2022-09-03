@@ -528,7 +528,7 @@ impl Stats {
         let typ = self.typ;
         // we have 22 columns at most with --everything
         let mut pieces = Vec::with_capacity(22);
-        let empty = || "".to_owned();
+        let empty = String::new;
 
         pieces.push(self.typ.to_string());
         if let Some(sum) = self.sum.as_ref().and_then(|sum| sum.show(typ)) {
