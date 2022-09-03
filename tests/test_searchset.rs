@@ -78,7 +78,11 @@ fn searchset_quick() {
     let mut cmd = wrk.command("searchset");
     cmd.arg("regexset.txt").arg("--quick").arg("data.csv");
 
+    let got_err = wrk.output_stderr(&mut cmd);
+    assert_eq!(got_err, "1\n");
     wrk.assert_success(&mut cmd);
+    let got: String = wrk.stdout(&mut cmd);
+    assert_eq!(got, "");
 }
 
 #[test]

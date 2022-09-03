@@ -56,9 +56,13 @@ fn search_match_quick() {
     let wrk = Workdir::new("search_match_quick");
     wrk.create("data.csv", data(true));
     let mut cmd = wrk.command("search");
-    cmd.arg("^foo").arg("--quick").arg("data.csv");
+    cmd.arg("^a").arg("--quick").arg("data.csv");
 
+    let got_err = wrk.output_stderr(&mut cmd);
+    assert_eq!(got_err, "2\n");
     wrk.assert_success(&mut cmd);
+    let got: String = wrk.stdout(&mut cmd);
+    assert_eq!(got, "");
 }
 
 #[test]
