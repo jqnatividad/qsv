@@ -125,20 +125,20 @@ impl CsvRecord {
 impl ops::Deref for CsvRecord {
     type Target = [String];
     fn deref<'a>(&'a self) -> &'a [String] {
-        &*self.0
+        &self.0
     }
 }
 
 #[allow(clippy::needless_lifetimes)]
 impl ops::DerefMut for CsvRecord {
     fn deref_mut<'a>(&'a mut self) -> &'a mut [String] {
-        &mut *self.0
+        &mut self.0
     }
 }
 
 impl fmt::Debug for CsvRecord {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let bytes: Vec<_> = self.iter().map(|s| s.as_bytes()).collect();
+        let bytes: Vec<_> = self.iter().map(std::string::String::as_bytes).collect();
         write!(f, "{:?}", bytes)
     }
 }
@@ -180,7 +180,7 @@ impl CsvData {
     }
 
     fn len(&self) -> usize {
-        (&**self).len()
+        (**self).len()
     }
 
     fn is_empty(&self) -> bool {
@@ -192,7 +192,7 @@ impl CsvData {
 impl ops::Deref for CsvData {
     type Target = [CsvRecord];
     fn deref<'a>(&'a self) -> &'a [CsvRecord] {
-        &*self.data
+        &self.data
     }
 }
 

@@ -51,7 +51,7 @@ fn sort_select() {
 
     let mut cmd = wrk.command("sort");
     cmd.arg("--no-headers")
-        .args(&["--select", "2"])
+        .args(["--select", "2"])
         .arg("in.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
@@ -74,7 +74,7 @@ fn sortcheck_select_notsorted() {
 
     let mut cmd = wrk.command("sortcheck");
     cmd.arg("--no-headers")
-        .args(&["--select", "2"])
+        .args(["--select", "2"])
         .arg("in.csv");
 
     wrk.assert_err(&mut cmd);
@@ -95,7 +95,7 @@ fn sortcheck_select_sorted() {
 
     let mut cmd = wrk.command("sortcheck");
     cmd.arg("--no-headers")
-        .args(&["--select", "1"])
+        .args(["--select", "1"])
         .arg("in.csv");
 
     wrk.assert_success(&mut cmd);
@@ -116,7 +116,7 @@ fn sortcheck_select_unsorted() {
 
     let mut cmd = wrk.command("sortcheck");
     cmd.arg("--no-headers")
-        .args(&["--select", "2"])
+        .args(["--select", "2"])
         .arg("in.csv");
 
     wrk.assert_err(&mut cmd);
@@ -380,7 +380,7 @@ fn sort_uniq() {
 
     let mut cmd = wrk.command("sort");
     cmd.arg("-u")
-        .args(&["-s", "number"])
+        .args(["-s", "number"])
         .arg("-N")
         .arg("in.csv");
 
@@ -411,7 +411,7 @@ fn sort_random() {
     );
 
     let mut cmd = wrk.command("sort");
-    cmd.arg("--random").args(&["--seed", "42"]).arg("in.csv");
+    cmd.arg("--random").args(["--seed", "42"]).arg("in.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![

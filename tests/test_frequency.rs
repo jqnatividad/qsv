@@ -32,8 +32,8 @@ fn setup(name: &str) -> (Workdir, process::Command) {
 #[test]
 fn frequency_no_headers() {
     let (wrk, mut cmd) = setup("frequency_no_headers");
-    cmd.args(&["--limit", "0"])
-        .args(&["--select", "1"])
+    cmd.args(["--limit", "0"])
+        .args(["--select", "1"])
         .arg("--no-headers");
 
     let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
@@ -53,8 +53,8 @@ fn frequency_no_headers() {
 fn frequency_no_nulls() {
     let (wrk, mut cmd) = setup("frequency_no_nulls");
     cmd.arg("--no-nulls")
-        .args(&["--limit", "0"])
-        .args(&["--select", "h1"]);
+        .args(["--limit", "0"])
+        .args(["--select", "h1"]);
 
     let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     got.sort();
@@ -70,7 +70,7 @@ fn frequency_no_nulls() {
 #[test]
 fn frequency_nulls() {
     let (wrk, mut cmd) = setup("frequency_nulls");
-    cmd.args(&["--limit", "0"]).args(&["--select", "h1"]);
+    cmd.args(["--limit", "0"]).args(["--select", "h1"]);
 
     let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     got.sort();
@@ -87,7 +87,7 @@ fn frequency_nulls() {
 #[test]
 fn frequency_limit() {
     let (wrk, mut cmd) = setup("frequency_limit");
-    cmd.args(&["--limit", "1"]);
+    cmd.args(["--limit", "1"]);
 
     let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     got.sort();
@@ -102,8 +102,8 @@ fn frequency_limit() {
 #[test]
 fn frequency_asc() {
     let (wrk, mut cmd) = setup("frequency_asc");
-    cmd.args(&["--limit", "1"])
-        .args(&["--select", "h2"])
+    cmd.args(["--limit", "1"])
+        .args(["--select", "h2"])
         .arg("--asc");
 
     let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
@@ -115,7 +115,7 @@ fn frequency_asc() {
 #[test]
 fn frequency_select() {
     let (wrk, mut cmd) = setup("frequency_select");
-    cmd.args(&["--limit", "0"]).args(&["--select", "h2"]);
+    cmd.args(["--limit", "0"]).args(["--select", "h2"]);
 
     let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     got.sort();
@@ -154,7 +154,7 @@ fn frequency_bom() {
     let rows = CsvData {
         data: vec![
             crate::CsvRecord(vec!["\u{FEFF}".to_string()]),
-            crate::CsvRecord(vec!["".to_string()]),
+            crate::CsvRecord(vec![String::new()]),
         ],
     };
     assert!(param_prop_frequency("prop_frequency", rows, false))
@@ -184,7 +184,7 @@ fn param_prop_frequency(name: &str, rows: CsvData, idx: bool) -> bool {
     }
 
     let mut cmd = wrk.command("frequency");
-    cmd.arg("in.csv").args(&["-j", "4"]).args(&["--limit", "0"]);
+    cmd.arg("in.csv").args(["-j", "4"]).args(["--limit", "0"]);
 
     let stdout = wrk.stdout::<String>(&mut cmd);
     let got_ftables = ftables_from_csv_string(stdout);
@@ -209,10 +209,10 @@ fn ftables_from_rows<T: Csv>(rows: T) -> FTables {
 
     let header = rows.remove(0);
     let mut ftables = AHashMap::new();
-    for field in header.iter() {
+    for field in &header {
         ftables.insert(field.clone(), Frequencies::new());
     }
-    for row in rows.into_iter() {
+    for row in rows {
         for (i, mut field) in row.into_iter().enumerate() {
             field = field.trim().to_owned();
             if field.is_empty() {

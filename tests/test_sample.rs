@@ -19,7 +19,7 @@ fn sample_seed() {
     );
 
     let mut cmd = wrk.command("sample");
-    cmd.args(&["--seed", "42"]).arg("5").arg("in.csv");
+    cmd.args(["--seed", "42"]).arg("5").arg("in.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![

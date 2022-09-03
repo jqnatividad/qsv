@@ -106,7 +106,7 @@ fn excel_date_whitelist_xls() {
     let mut cmd = wrk.command("excel");
     cmd.arg("--sheet")
         .arg("date test")
-        .args(&["--dates-whitelist", "date,petsa"])
+        .args(["--dates-whitelist", "date,petsa"])
         .arg(xls_file);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
@@ -135,7 +135,7 @@ fn excel_date_whitelist_none_xls() {
     let mut cmd = wrk.command("excel");
     cmd.arg("--sheet")
         .arg("date test")
-        .args(&["--dates-whitelist", "none"])
+        .args(["--dates-whitelist", "none"])
         .arg(xls_file);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
@@ -165,7 +165,7 @@ fn excel_colidx_date_whitelist_xls() {
     let mut cmd = wrk.command("excel");
     cmd.arg("--sheet")
         .arg("date test")
-        .args(&["--dates-whitelist", "0,2"])
+        .args(["--dates-whitelist", "0,2"])
         .arg(xls_file);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);

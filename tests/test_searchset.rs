@@ -291,7 +291,7 @@ fn searchset_flag() {
     let mut cmd = wrk.command("searchset");
     cmd.arg("regexset.txt")
         .arg("data.csv")
-        .args(&["--flag", "flagged"]);
+        .args(["--flag", "flagged"]);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
@@ -314,7 +314,7 @@ fn searchset_flag_invert_match() {
     let mut cmd = wrk.command("searchset");
     cmd.arg("regexset.txt")
         .arg("data.csv")
-        .args(&["--flag", "flagged"]);
+        .args(["--flag", "flagged"]);
     cmd.arg("--invert-match");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);

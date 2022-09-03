@@ -178,7 +178,7 @@ fn join_inner_issue11() {
     wrk.create("b.csv", b);
 
     let mut cmd = wrk.command("join");
-    cmd.args(&["1,2", "a.csv", "2,1", "b.csv"]);
+    cmd.args(["1,2", "a.csv", "2,1", "b.csv"]);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
@@ -203,7 +203,7 @@ fn join_cross() {
 
     let mut cmd = wrk.command("join");
     cmd.arg("--cross")
-        .args(&["", "letters.csv", "", "numbers.csv"]);
+        .args(["", "letters.csv", "", "numbers.csv"]);
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["h1", "h2", "h3", "h4"],
@@ -224,7 +224,7 @@ fn join_cross_no_headers() {
     let mut cmd = wrk.command("join");
     cmd.arg("--cross")
         .arg("--no-headers")
-        .args(&["", "letters.csv", "", "numbers.csv"]);
+        .args(["", "letters.csv", "", "numbers.csv"]);
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["a", "b", "1", "2"],

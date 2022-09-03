@@ -190,7 +190,7 @@ fn get_field_value(wrk: &Workdir, cmd: &mut process::Command, field: &str) -> St
     let mut rows: Vec<Vec<String>> = wrk.read_stdout(cmd);
     let headers = rows.remove(0);
     let mut sequence: Vec<&str> = vec![];
-    for row in rows.iter() {
+    for row in &rows {
         for (h, val) in headers.iter().zip(row.iter()) {
             match field {
                 "quartiles" => match &**h {

@@ -623,7 +623,7 @@ fn fetchpost_simple_test() {
     let mut got_parsed: Vec<Vec<String>> = Vec::new();
     let mut record_parsed: Vec<String> = Vec::new();
 
-    for record in got.into_iter() {
+    for record in got {
         record_parsed.clear();
         record_parsed.push(record[1].to_string());
         record_parsed.push(record[2].to_string());
@@ -671,7 +671,7 @@ fn fetchpost_literalurl_test() {
     let mut got_parsed: Vec<Vec<String>> = Vec::new();
     let mut record_parsed: Vec<String> = Vec::new();
 
-    for record in got.into_iter() {
+    for record in got {
         record_parsed.clear();
         record_parsed.push(record[0].to_string());
         record_parsed.push(record[1].to_string());
