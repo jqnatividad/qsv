@@ -55,12 +55,6 @@ use serde_json::{json, value::Number, Map, Value};
 use std::{env, fs::File, io::BufReader, io::BufWriter, io::Read, io::Write, str};
 use thousands::Separable;
 
-macro_rules! fail {
-    ($mesg:expr) => {
-        Err(CliError::Other($mesg))
-    };
-}
-
 // number of CSV rows to process in a batch
 const BATCH_SIZE: usize = 24_000;
 
