@@ -161,7 +161,7 @@ fn main() -> QsvExitCode {
     let qsv_args: String = if log_enabled!(Level::Info) {
         env::args().skip(1).collect::<Vec<_>>().join(" ")
     } else {
-        "".to_string()
+        String::new()
     };
     info!("START: {qsv_args}");
 

@@ -341,7 +341,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     }
 
-    let mut dynfmt_url_template = String::from("");
+    let mut dynfmt_url_template = String::new();
     if let Some(ref url_template) = args.flag_url_template {
         if args.flag_no_headers {
             return fail!("--url-template option requires column headers.");
@@ -488,7 +488,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if report == ReportKind::None {
         // no report, point report_wtr to /dev/null (AKA sink)
         report_wtr = Config::new(&Some("sink".to_string())).writer()?;
-        report_path = "".to_string();
+        report_path = String::new();
     } else {
         report_path = args
             .arg_input
@@ -589,7 +589,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             // just use the field as-is as the URL
             url = s.to_owned();
         } else {
-            url = "".to_owned();
+            url = String::new();
         }
 
         if url.is_empty() {
@@ -856,7 +856,7 @@ fn get_response(
                     format!("{json_error}")
                 }
             } else {
-                "".to_string()
+                String::new()
             };
             error!("Invalid URL: Store_error: {flag_store_error} - {url_invalid_err}");
             return FetchResponse {

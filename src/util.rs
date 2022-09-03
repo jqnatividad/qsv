@@ -70,7 +70,7 @@ pub fn njobs(flag_jobs: Option<usize>) -> usize {
 }
 
 pub fn version() -> String {
-    let mut enabled_features = "".to_string();
+    let mut enabled_features = String::new();
 
     #[cfg(all(feature = "apply", not(feature = "lite")))]
     enabled_features.push_str("apply;");
@@ -119,7 +119,7 @@ pub fn version() -> String {
                 )
             }
         }
-        _ => "".to_owned(),
+        _ => String::new(),
     }
 }
 

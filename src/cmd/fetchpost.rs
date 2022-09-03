@@ -318,7 +318,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let literal_url = if let Some(caps) = re.captures(&url_column_str) {
         caps[1].to_lowercase()
     } else {
-        "".to_string()
+        String::new()
     };
     let literal_url_used = literal_url.starts_with("http");
 
@@ -451,7 +451,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if report == ReportKind::None {
         // no report, point report_wtr to /dev/null (AKA sink)
         report_wtr = Config::new(&Some("sink".to_string())).writer()?;
-        report_path = "".to_string();
+        report_path = String::new();
     } else {
         report_path = args
             .arg_input
@@ -553,7 +553,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         } else if let Ok(s) = std::str::from_utf8(&record[column_index]) {
             url = s.to_owned();
         } else {
-            url = "".to_owned();
+            url = String::new();
         }
 
         if url.is_empty() {
@@ -828,7 +828,7 @@ fn get_response(
                     format!("{json_error}")
                 }
             } else {
-                "".to_string()
+                String::new()
             };
             error!("Invalid URL: Store_error: {flag_store_error} - {url_invalid_err}");
             return FetchResponse {
