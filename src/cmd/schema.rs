@@ -50,7 +50,6 @@ use crate::cmd::stats::Stats;
 use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
 use crate::util;
-use crate::CliError;
 use crate::CliResult;
 use ahash::AHashMap;
 use csv::ByteRecord;
@@ -61,12 +60,6 @@ use serde::Deserialize;
 use serde_json::{json, value::Number, Map, Value};
 use stats::Frequencies;
 use std::{collections::HashSet, fs::File, io::Write, path::Path};
-
-macro_rules! fail {
-    ($mesg:expr) => {
-        return Err(CliError::Other($mesg));
-    };
-}
 
 #[derive(Deserialize, Clone)]
 pub struct Args {
@@ -115,8 +108,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         match infer_schema_from_stats(&args, &input_filename) {
             Ok(map) => map,
             Err(e) => {
-                let msg = format!("Failed to infer schema via stats and frequency: {e}");
-                fail!(msg);
+                return fail_format!("Failed to infer schema via stats and frequency: {e}");
             }
         };
 
@@ -523,10 +515,7 @@ fn convert_to_string(byte_slice: &[u8]) -> CliResult<String> {
         Ok(s) => s.to_string(),
         Err(e) => {
             let lossy_string = String::from_utf8_lossy(byte_slice);
-            let msg =
-                format!("Can't convert byte slice to utf8 string. slice={byte_slice:?}, error={e}: {lossy_string}");
-            error!("{msg}");
-            fail!(msg);
+            return fail_format!("Can't convert byte slice to utf8 string. slice={byte_slice:?}, error={e}: {lossy_string}");
         }
     };
 
