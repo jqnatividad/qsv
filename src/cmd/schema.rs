@@ -614,7 +614,7 @@ fn generate_string_patterns(
 // only emit "pattern" constraint for String fields without enum constraint
 fn should_emit_pattern_constraint(field_def: &Value) -> bool {
     let type_list = field_def[&"type"].as_array().unwrap();
-    let has_enum = field_def.get(&"enum").is_some();
+    let has_enum = field_def.get("enum").is_some();
 
     type_list.contains(&Value::String("string".to_string())) && !has_enum
 }
