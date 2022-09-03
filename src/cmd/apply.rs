@@ -232,7 +232,6 @@ Common options:
 
 use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
-use crate::CliError;
 use crate::CliResult;
 use crate::{regex_once_cell, util};
 use cached::proc_macro::cached;
@@ -543,7 +542,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     }
                 }
                 Err(e) => {
-                    return Err(CliError::Other(format!("Error reading file: {e}")));
+                    return fail_format!("Error reading file: {e}");
                 }
             }
         }

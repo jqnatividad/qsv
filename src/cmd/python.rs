@@ -210,7 +210,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     }
                 }
                 Err(e) => {
-                    return Err(CliError::Other(format!("Error reading file: {e}")));
+                    return fail_format!("Error reading file: {e}");
                 }
             }
         }

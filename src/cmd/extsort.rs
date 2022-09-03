@@ -25,7 +25,6 @@ Common options:
 ";
 
 use crate::util;
-use crate::CliError;
 use crate::CliResult;
 use ext_sort::{buffer::mem::MemoryLimitedBufferBuilder, ExternalSorter, ExternalSorterBuilder};
 use serde::Deserialize;
@@ -80,9 +79,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         {
             Ok(sorter) => sorter,
             Err(e) => {
-                return Err(CliError::Other(format!(
-                    "cannot create external sorter: {e}"
-                )))
+                return fail_format!("cannot create external sorter: {e}");
             }
         };
 
@@ -94,7 +91,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let sorted = if let Ok(ext_sorter) = sorter.sort(input_reader.lines()) {
         ext_sorter
     } else {
-        return Err(CliError::Other("cannot do external sort".to_string()));
+        return fail!("cannot do external sort");
     };
 
     if !header.is_empty() {
