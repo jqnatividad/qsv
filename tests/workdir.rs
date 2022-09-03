@@ -1,16 +1,7 @@
-use std::env;
-use std::fmt;
-use std::fs;
-use std::fs::File;
-use std::io::Write;
-use std::io::{self, Read};
-use std::path::{Path, PathBuf};
-use std::process;
-use std::str::FromStr;
-use std::sync::atomic;
-use std::time::Duration;
-
 use crate::Csv;
+use std::io::{self, Read, Write};
+use std::path::{Path, PathBuf};
+use std::{env, fmt, fs, fs::File, process, str::FromStr, sync::atomic, time::Duration};
 
 static QSV_INTEGRATION_TEST_DIR: &str = "xit";
 
@@ -62,7 +53,7 @@ impl Workdir {
             .delimiter(delim)
             .from_path(&self.path(name))
             .unwrap();
-        for row in rows.to_vecs().into_iter() {
+        for row in rows.to_vecs() {
             wtr.write_record(row).unwrap();
         }
         wtr.flush().unwrap();
@@ -95,7 +86,7 @@ impl Workdir {
             .collect::<Result<Vec<csv::StringRecord>, _>>()
             .unwrap()
             .into_iter()
-            .map(|r| r.iter().map(|f| f.to_string()).collect())
+            .map(|r| r.iter().map(std::string::ToString::to_string).collect())
             .collect();
         Csv::from_vecs(records)
     }
@@ -145,40 +136,38 @@ impl Workdir {
 
     pub fn assert_success(&self, cmd: &mut process::Command) {
         let o = cmd.output().unwrap();
-        if !o.status.success() {
-            panic!(
-                "\n\n===== {:?} =====\n\
+        assert!(
+            o.status.success(),
+            "\n\n===== {:?} =====\n\
                     command failed but expected success!\
                     \n\ncwd: {}\
                     \n\nstatus: {}\
                     \n\nstdout: {}\n\nstderr: {}\
                     \n\n=====\n",
-                cmd,
-                self.dir.display(),
-                o.status,
-                String::from_utf8_lossy(&o.stdout),
-                String::from_utf8_lossy(&o.stderr)
-            )
-        }
+            cmd,
+            self.dir.display(),
+            o.status,
+            String::from_utf8_lossy(&o.stdout),
+            String::from_utf8_lossy(&o.stderr)
+        );
     }
 
     pub fn assert_err(&self, cmd: &mut process::Command) {
         let o = cmd.output().unwrap();
-        if o.status.success() {
-            panic!(
-                "\n\n===== {:?} =====\n\
+        assert!(
+            !o.status.success(),
+            "\n\n===== {:?} =====\n\
                     command succeeded but expected failure!\
                     \n\ncwd: {}\
                     \n\nstatus: {}\
                     \n\nstdout: {}\n\nstderr: {}\
                     \n\n=====\n",
-                cmd,
-                self.dir.display(),
-                o.status,
-                String::from_utf8_lossy(&o.stdout),
-                String::from_utf8_lossy(&o.stderr)
-            );
-        }
+            cmd,
+            self.dir.display(),
+            o.status,
+            String::from_utf8_lossy(&o.stdout),
+            String::from_utf8_lossy(&o.stderr)
+        );
     }
 
     // returns contents of specified file in resources/test directory
