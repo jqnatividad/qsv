@@ -133,7 +133,7 @@ self_update = { version = "0.31", features = [
     "archive-zip",
     "compression-zip-deflate",
     "rustls",
-], default-features = false }
+], default-features = false, optional = true}
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 strsim = { version = "0.10", optional = true }
@@ -204,7 +204,7 @@ lua = ["mlua"]
 python = ["pyo3"]
 lite = []
 datapusher_plus = []
-full = []
+full = ["self_update"]
 nightly = [
     "regex/unstable",
     "rand/nightly",
@@ -213,4 +213,3 @@ nightly = [
     "pyo3/nightly",
     "hashbrown/nightly",
 ]
-no_self_update = []
