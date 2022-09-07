@@ -119,9 +119,18 @@ fn main() -> QsvExitCode {
         return QsvExitCode::Good;
     }
     if args.flag_update {
-        util::qsv_check_for_update();
-        util::log_end(qsv_args, now);
-        return QsvExitCode::Good;
+        #[cfg(feature = "no_self_update")]
+        {
+            werr!("Self update engine disabled.");
+            util::log_end(qsv_args, now);
+            return QsvExitCode::IncorrectUsage;
+        }
+        #[cfg(not(feature = "no_self_update"))]
+        {
+            util::qsv_check_for_update();
+            util::log_end(qsv_args, now);
+            return QsvExitCode::Good;
+        }
     }
     match args.arg_command {
         None => {

@@ -213,3 +213,4 @@ nightly = [
     "pyo3/nightly",
     "hashbrown/nightly",
 ]
+no_self_update = []
