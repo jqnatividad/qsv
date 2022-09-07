@@ -121,7 +121,7 @@ The compiled binary will end up in `./target/release/`.
 To enable optional features, use cargo `--features` (see [Feature Flags](#feature-flags) for more info):
 
 ```bash
-cargo install qsv --features apply,generate,lua,fetch,foreach,python,full
+cargo install qsv --features apply,generate,lua,fetch,foreach,python,self_update,full
 # or shorthand
 cargo install qsv --features all_full
 # or to install all features EXCEPT python
@@ -132,7 +132,7 @@ cargo install qsv --features lite
 cargo install qsv --features datapusher_plus
 
 # or when compiling from a local repo
-cargo build --release --features apply,generate,lua,fetch,foreach,python,full
+cargo build --release --features apply,generate,lua,fetch,foreach,python,self_update,full
 # shorthand
 cargo build --release --features all_full
 # all features EXCEPT python
@@ -267,6 +267,7 @@ Relevant env vars are defined as anything that starts with `QSV_` and `MIMALLOC_
 * `lite` - enable to build qsvlite binary variant with all features disabled.
 * `datapusher_plus` - enable to build qsvdp binary variant - the [DataPusher+](https://github.com/dathere/datapusher-plus) optimized qsv binary.
 * `nightly` - enable to turn on nightly/unstable features in the `rand`, `regex`, `hashbrown`, `parking_lot` and `pyo3` crates when building with Rust nightly/unstable.
+* `self_update` - enable self-update engine, checking GitHub for the latest release.
 
 The following "power-user" features can be abused and present "foot-shooting" scenarios:
 
