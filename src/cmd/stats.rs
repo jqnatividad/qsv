@@ -363,7 +363,7 @@ fn init_date_inference(
                 .map(|s| s.trim().to_string())
                 .collect_vec();
 
-            let mut infer_date_flag = Vec::with_capacity(headers.len());
+            let mut infer_date_flags: Vec<bool> = Vec::with_capacity(headers.len());
             for header in headers {
                 let header_str = from_bytes::<String>(header).to_lowercase();
                 let mut date_found = false;
@@ -376,10 +376,10 @@ fn init_date_inference(
                         break;
                     }
                 }
-                infer_date_flag.push(date_found);
+                infer_date_flags.push(date_found);
             }
             INFER_DATE_FLAGS
-                .set(infer_date_flag)
+                .set(infer_date_flags)
                 .expect("Cannot init date inference flags");
         }
     } else {
@@ -425,7 +425,7 @@ fn round_num(dec_f64: f64, places: u8) -> String {
     use rust_decimal::prelude::*;
 
     let dec_num = Decimal::from_f64(dec_f64).unwrap_or_default();
-    // round using "Bankers Rounding" rule
+    // round using Midpoint Nearest Even Rounding Strategy AKA "Bankers Rounding."
     // https://docs.rs/rust_decimal/latest/rust_decimal/enum.RoundingStrategy.html#variant.MidpointNearestEven
 
     dec_num.round_dp(places as u32).to_string()
@@ -514,6 +514,7 @@ impl Stats {
                     });
                 }
             }
+            // process Date/DateTime types like String
             _ => {}
         }
     }
@@ -521,6 +522,7 @@ impl Stats {
     #[allow(clippy::wrong_self_convention)]
     pub fn to_record(&mut self, round_places: u8) -> csv::StringRecord {
         let typ = self.typ;
+        // prealloc memory for performance
         // we have 22 columns at most with --everything
         let mut pieces = Vec::with_capacity(22);
         let empty = String::new;
