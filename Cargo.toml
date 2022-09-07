@@ -172,8 +172,8 @@ reqwest    = { git = "https://github.com/seanmonstar/reqwest", rev = "e9ba0a9dc7
 
 [features]
 default = ["mimalloc"]
-all_full = ["full", "apply", "fetch", "foreach", "generate", "lua", "python"]
-nopython_full = ["full", "apply", "fetch", "foreach", "generate", "lua"]
+all_full = ["full", "apply", "fetch", "foreach", "generate", "lua", "python", "self_update"]
+nopython_full = ["full", "apply", "fetch", "foreach", "generate", "lua", "self_update"]
 apply = [
     "cached",
     "censor",
@@ -204,7 +204,7 @@ lua = ["mlua"]
 python = ["pyo3"]
 lite = []
 datapusher_plus = []
-full = ["self_update"]
+full = []
 nightly = [
     "regex/unstable",
     "rand/nightly",
