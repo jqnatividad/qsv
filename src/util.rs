@@ -87,8 +87,11 @@ pub fn version() -> String {
         enabled_features.push_str("python-");
         pyo3::Python::with_gil(|py| {
             enabled_features.push_str(py.version());
+            enabled_features.push(';');
         });
     }
+    #[cfg(feature = "self_update")]
+    enabled_features.push_str("self_update");
     enabled_features.push('-');
 
     #[cfg(feature = "mimalloc")]
@@ -471,17 +474,12 @@ pub fn init_logger() {
         .unwrap();
 }
 
-#[cfg(any(feature = "full", feature = "lite"))]
+#[cfg(feature = "self_update")]
 pub fn qsv_check_for_update() {
     use self_update::cargo_crate_version;
 
     const GITHUB_RATELIMIT_MSG: &str =
         "Github is rate-limiting self-update checks at the moment. Try again in an hour.";
-
-    #[cfg(feature = "no_self_update")]
-    {
-        return;
-    }
 
     if env::var("QSV_NO_UPDATE").is_ok() {
         return;
@@ -552,14 +550,16 @@ pub fn qsv_check_for_update() {
     let _temp = send_hwsurvey(&bin_name, updated, latest_release, curr_version, false);
 }
 
+#[cfg(not(feature = "self_update"))]
+pub fn qsv_check_for_update() {
+    return;
+}
+
 // the qsv hwsurvey allows us to keep a better
 // track of qsv's usage in the wild, so we can do a
 // better job of prioritizing platforms/features we support
 // no personally identifiable information is collected
-#[cfg(all(
-    any(feature = "full", feature = "lite"),
-    not(feature = "no_self_update")
-))]
+#[cfg(feature = "self_update")]
 fn send_hwsurvey(
     bin_name: &str,
     updated: bool,
