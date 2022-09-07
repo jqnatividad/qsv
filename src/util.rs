@@ -556,7 +556,10 @@ pub fn qsv_check_for_update() {
 // track of qsv's usage in the wild, so we can do a
 // better job of prioritizing platforms/features we support
 // no personally identifiable information is collected
-#[cfg(any(feature = "full", feature = "lite"))]
+#[cfg(all(
+    any(feature = "full", feature = "lite"),
+    not(feature = "no_self_update")
+))]
 fn send_hwsurvey(
     bin_name: &str,
     updated: bool,
