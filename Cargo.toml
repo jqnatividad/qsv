@@ -144,7 +144,7 @@ thousands = "0.2"
 threadpool = "1.8"
 titlecase = { version = "2", optional = true }
 uuid = { version = "1", features = ["v4"] }
-url = { version = "2.2", optional = true }
+url = { version = "2.3", optional = true }
 vader_sentiment = { version = "0.1", optional = true }
 whatlang = { version = "0.16", optional = true }
 
