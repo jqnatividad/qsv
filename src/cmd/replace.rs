@@ -132,6 +132,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut total_match_ctr: u64 = 0;
     #[cfg(any(feature = "full", feature = "lite"))]
     let mut rows_with_matches_ctr: u64 = 0;
+    #[cfg(any(feature = "full", feature = "lite"))]
     let mut match_found;
 
     while rdr.read_byte_record(&mut record)? {
@@ -140,7 +141,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             progress.inc(1);
         }
 
-        match_found = false;
+        #[cfg(any(feature = "full", feature = "lite"))]
+        {
+            match_found = false;
+        }
         record = record
             .into_iter()
             .enumerate()
