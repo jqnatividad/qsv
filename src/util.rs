@@ -3,15 +3,11 @@ use crate::CliResult;
 use docopt::Docopt;
 #[cfg(any(feature = "full", feature = "lite"))]
 use indicatif::{HumanCount, ProgressBar, ProgressStyle};
-#[cfg(any(feature = "full", feature = "lite"))]
-use log::{debug, error, info, log_enabled, warn, Level};
 #[cfg(any(feature = "apply", feature = "fetch", feature = "python"))]
 use regex::Regex;
 use serde::de::DeserializeOwned;
 #[cfg(any(feature = "full", feature = "lite"))]
 use serde::de::{Deserialize, Deserializer, Error};
-#[cfg(any(feature = "full", feature = "lite"))]
-use serde_json::json;
 #[cfg(any(feature = "full", feature = "lite"))]
 use std::borrow::Cow;
 use std::path::{Path, PathBuf};
@@ -174,9 +170,7 @@ pub fn prep_progress(progress: &ProgressBar, record_count: u64) {
     // draw progress bar for the first time using specified style
     progress.set_length(record_count);
 
-    if log_enabled!(Level::Info) {
-        info!("Progress started... {record_count} records");
-    }
+    log::info!("Progress started... {record_count} records");
 }
 
 #[cfg(any(feature = "full", feature = "lite"))]
@@ -493,7 +487,7 @@ pub fn qsv_check_for_update() {
         .into_owned();
 
     eprintln!("Checking GitHub for updates...");
-    info!("Checking GitHub for updates...");
+    log::info!("Checking GitHub for updates...");
 
     let curr_version = cargo_crate_version!();
     let releases = self_update::backends::github::ReleaseList::configure()
@@ -505,7 +499,7 @@ pub fn qsv_check_for_update() {
         .expect(GITHUB_RATELIMIT_MSG);
     let latest_release = &releases[0].version;
 
-    info!("Current version: {curr_version} Latest Release: {latest_release}");
+    log::info!("Current version: {curr_version} Latest Release: {latest_release}");
 
     let mut updated = false;
     if latest_release > &curr_version.to_string() {
@@ -530,26 +524,27 @@ pub fn qsv_check_for_update() {
                         status.version()
                     );
                     eprintln!("{update_status}");
-                    info!("{update_status}");
+                    log::info!("{update_status}");
                 }
                 Err(e) => {
                     eprintln!("Update job error: {e}");
-                    error!("Update job error: {e}");
+                    log::error!("Update job error: {e}");
                 }
             },
             Err(e) => {
                 eprintln!("Update builder error: {e}");
-                error!("Update builder error: {e}");
+                log::error!("Update builder error: {e}");
             }
         };
     } else {
         eprintln!("Up to date ({curr_version})... no update required.");
-        info!("Up to date ({curr_version})... no update required.");
+        log::info!("Up to date ({curr_version})... no update required.");
     };
 
     let _temp = send_hwsurvey(&bin_name, updated, latest_release, curr_version, false);
 }
 
+#[allow(dead_code)]
 #[cfg(not(feature = "self_update"))]
 pub fn qsv_check_for_update() {
     return;
@@ -567,6 +562,7 @@ fn send_hwsurvey(
     curr_version: &str,
     dry_run: bool,
 ) -> Result<reqwest::StatusCode, String> {
+    use serde_json::json;
     use sysinfo::{CpuExt, System, SystemExt};
 
     const QSV_KIND: &str = match option_env!("QSV_KIND") {
@@ -617,7 +613,7 @@ fn send_hwsurvey(
             "target": TARGET,
         }
     );
-    debug!("hwsurvey: {hwsurvey_json}");
+    log::debug!("hwsurvey: {hwsurvey_json}");
 
     let mut survey_done = true;
     let mut status = reqwest::StatusCode::OK;
@@ -639,12 +635,12 @@ fn send_hwsurvey(
             .send()
         {
             Ok(resp) => {
-                debug!("hw_survey response sent: {:?}", &resp);
+                log::debug!("hw_survey response sent: {:?}", &resp);
                 status = resp.status();
                 survey_done = status.is_success();
             }
             Err(e) => {
-                warn!("Cannot send hw survey: {e}");
+                log::warn!("Cannot send hw survey: {e}");
                 survey_done = false;
                 status = reqwest::StatusCode::BAD_REQUEST;
             }
@@ -671,7 +667,7 @@ pub fn safe_header_names(headers: &csv::StringRecord, check_first_char: bool) ->
         }
         name_vec.push(safe_name);
     }
-    debug!("safe header names: {name_vec:?}");
+    log::debug!("safe header names: {name_vec:?}");
     name_vec
 }
 
@@ -691,7 +687,7 @@ pub fn log_end(mut qsv_args: String, now: std::time::Instant) {
 }
 
 #[test]
-#[cfg(any(feature = "full", feature = "lite"))]
+#[cfg(feature = "self_update")]
 fn test_hw_survey() {
     // we have this test primarily to exercise the sysinfo module
     assert!(send_hwsurvey("qsv", false, "0.0.2", "0.0.1", true).is_ok());
