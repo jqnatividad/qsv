@@ -478,6 +478,11 @@ pub fn qsv_check_for_update() {
     const GITHUB_RATELIMIT_MSG: &str =
         "Github is rate-limiting self-update checks at the moment. Try again in an hour.";
 
+    #[cfg(feature = "no_self_update")]
+    {
+        return;
+    }
+
     if env::var("QSV_NO_UPDATE").is_ok() {
         return;
     }
