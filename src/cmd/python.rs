@@ -52,6 +52,11 @@ Usage:
 py options:
     -f, --helper <file>    File containing Python code that's loaded
                            into the qsv_uh Python module.
+    -b, --batch <size>     The number of rows per batch to process before
+                           releasing memory and acquiring a new GILpool.
+                           See https://pyo3.rs/v0.17.1/memory.html#gil-bound-memory
+                           for more info.
+                           [default: 30000]
 
 Common options:
     -h, --help             Display this message
@@ -112,6 +117,7 @@ struct Args {
     cmd_filter: bool,
     arg_new_column: Option<String>,
     arg_script: String,
+    flag_batch: u32,
     flag_helper: Option<String>,
     arg_input: Option<String>,
     flag_output: Option<String>,
@@ -125,8 +131,6 @@ impl From<PyErr> for CliError {
         CliError::Other(err.to_string())
     }
 }
-
-const BATCH_SIZE: usize = 30_000;
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
@@ -192,14 +196,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut batch_record = csv::StringRecord::new();
 
     // reuse batch buffers
-    let mut batch = Vec::with_capacity(BATCH_SIZE);
+    let mut batch = Vec::with_capacity(args.flag_batch as usize);
 
     // main loop to read CSV and construct batches.
     // we batch python operations so that the GILPool does not get very large
     // as we release the pool after each batch
     // loop exits when batch is empty.
+    // see https://pyo3.rs/v0.17.1/memory.html#gil-bound-memory for more info.
     loop {
-        for _ in 0..BATCH_SIZE {
+        for _ in 0..args.flag_batch {
             match rdr.read_record(&mut batch_record) {
                 Ok(has_data) => {
                     if has_data {
