@@ -133,7 +133,7 @@ self_update = { version = "0.31", features = [
     "archive-zip",
     "compression-zip-deflate",
     "rustls",
-], default-features = false, optional = true}
+], default-features = false, optional = true }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 strsim = { version = "0.10", optional = true }
@@ -172,8 +172,25 @@ reqwest    = { git = "https://github.com/seanmonstar/reqwest", rev = "e9ba0a9dc7
 
 [features]
 default = ["mimalloc"]
-all_full = ["full", "apply", "fetch", "foreach", "generate", "lua", "python", "self_update"]
-nopython_full = ["full", "apply", "fetch", "foreach", "generate", "lua", "self_update"]
+all_full = [
+    "full",
+    "apply",
+    "fetch",
+    "foreach",
+    "generate",
+    "lua",
+    "python",
+    "self_update",
+]
+nopython_full = [
+    "full",
+    "apply",
+    "fetch",
+    "foreach",
+    "generate",
+    "lua",
+    "self_update",
+]
 apply = [
     "cached",
     "censor",
