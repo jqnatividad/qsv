@@ -5,6 +5,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.67.0] - 2022-09-09
+### Added
+* added `self_update` feature, so users can build qsv without self-update engine https://github.com/jqnatividad/qsv/pull/483 and https://github.com/jqnatividad/qsv/pull/484
+
+### Changed
+* `search` & `searchset`: --quick option returns first match row to stderr https://github.com/jqnatividad/qsv/pull/475
+* `python`: make --batch size configurable https://github.com/jqnatividad/qsv/pull/485
+* `stats`: added more implementation comments; standardize string creation
+* `replace`: add conditional compilation to eliminate dead_code warning
+* `lua`: when filtering, non-zero integers are true
+* refactored `workdir.rs` test helpers
+* refactored `util:init_logger()` to log command-line arguments
+* Bump url from 2.3.0 to 2.3.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/489
+* Bump anyhow from 1.0.63 to 1.0.64 by @dependabot in https://github.com/jqnatividad/qsv/pull/478
+* Bump sysinfo from 0.26.1 to 0.26.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/477
+* Bump robinraju/release-downloader from 1.4 to 1.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/481
+* cargo update bump indirect dependencies
+* pin Rust nightly to 2022-09-07
+
 ## [0.66.0] - 2022-09-01
 
 ### Added
