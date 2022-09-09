@@ -233,3 +233,33 @@ fn lua_filter() {
     ];
     assert_eq!(got, expected);
 }
+
+#[test]
+fn lua_filter_int() {
+    let wrk = Workdir::new("lua");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["letter", "number"],
+            svec!["a", "13"],
+            svec!["b", "24"],
+            svec!["c", "72"],
+            svec!["d", "-7"],
+            svec!["e", "0"],
+            svec!["f", "42"],
+        ],
+    );
+    let mut cmd = wrk.command("lua");
+    cmd.arg("filter").arg("tonumber(number)").arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["letter", "number"],
+        svec!["a", "13"],
+        svec!["b", "24"],
+        svec!["c", "72"],
+        svec!["d", "-7"],
+        svec!["f", "42"],
+    ];
+    assert_eq!(got, expected);
+}

@@ -53,7 +53,7 @@ lua options:
     -x, --exec         exec[ute] Lua script, instead of the default eval[uate].
                        eval (default) expects just a single Lua expression,
                        while exec expects one or more statements, allowing
-                       to create Lua programs.
+                       full-fledged Lua programs.
     -f, --script-file  <script> is a file name containing Lua script.
                        By default (no -f) <script> is the script text.
     -g, --no-globals   Don't create Lua global variables for each column, only col.
@@ -224,6 +224,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 mlua::Value::String(strval) => !strval.to_string_lossy().is_empty(),
                 mlua::Value::Boolean(boolean) => boolean,
                 mlua::Value::Nil => false,
+                mlua::Value::Integer(intval) => intval != 0,
                 _ => true,
             };
 
