@@ -235,7 +235,7 @@ fn lua_filter() {
 }
 
 #[test]
-fn lua_filter_int() {
+fn lua_filter_num() {
     let wrk = Workdir::new("lua");
     wrk.create(
         "data.csv",
@@ -247,6 +247,11 @@ fn lua_filter_int() {
             svec!["d", "-7"],
             svec!["e", "0"],
             svec!["f", "42"],
+            svec!["g", "0.0"],
+            svec!["h", "3.14"],
+            svec!["i", "0.000123"],
+            svec!["j", "-7.01"],
+            svec!["k", "0.0000"],
         ],
     );
     let mut cmd = wrk.command("lua");
@@ -260,6 +265,9 @@ fn lua_filter_int() {
         svec!["c", "72"],
         svec!["d", "-7"],
         svec!["f", "42"],
+        svec!["h", "3.14"],
+        svec!["i", "0.000123"],
+        svec!["j", "-7.01"],
     ];
     assert_eq!(got, expected);
 }

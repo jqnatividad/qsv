@@ -225,6 +225,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 mlua::Value::Boolean(boolean) => boolean,
                 mlua::Value::Nil => false,
                 mlua::Value::Integer(intval) => intval != 0,
+                mlua::Value::Number(fltval) => {
+                    let mut buffer = ryu::Buffer::new();
+                    buffer.format(fltval) != "0.0"
+                }
                 _ => true,
             };
 
