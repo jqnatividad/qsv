@@ -443,7 +443,7 @@ impl<'de> Deserialize<'de> for FilenameTemplate {
     }
 }
 
-pub fn init_logger() {
+pub fn init_logger() -> String {
     use flexi_logger::{Cleanup, Criterion, FileSpec, Logger, Naming};
 
     let qsv_log_env = env::var("QSV_LOG_LEVEL").unwrap_or_else(|_| "off".to_string());
@@ -466,6 +466,14 @@ pub fn init_logger() {
         )
         .start()
         .unwrap();
+
+    let qsv_args: String = if log::log_enabled!(log::Level::Info) {
+        env::args().skip(1).collect::<Vec<_>>().join(" ")
+    } else {
+        String::new()
+    };
+    log::info!("START: {qsv_args}");
+    qsv_args
 }
 
 #[cfg(feature = "self_update")]
