@@ -33,32 +33,32 @@ jobs:
             os-name: linux
             target: x86_64-unknown-linux-gnu
             architecture: x86_64
-            addl-build-args: --features=apply,generate,lua,fetch,foreach,python,nightly
+            addl-build-args: --features=apply,generate,lua,fetch,foreach,python,nightly,self_update
             default-features:
           - os: ubuntu-latest
             os-name: linux
             target: x86_64-unknown-linux-musl
             architecture: x86_64
             musl-prep: true
-            addl-build-args: --features=apply,generate,lua,fetch,foreach,python,nightly
+            addl-build-args: --features=apply,generate,lua,fetch,foreach,python,nightly,self_update
             default-features:
           - os: windows-latest
             os-name: windows
             target: x86_64-pc-windows-msvc
             architecture: x86_64
-            addl-build-args: --features=apply,generate,lua,fetch,python,nightly
+            addl-build-args: --features=apply,generate,lua,fetch,python,nightly,self_update
             default-features:
           - os: windows-latest
             os-name: windows
             target: x86_64-pc-windows-gnu
             architecture: x86_64
-            addl-build-args: --features=apply,generate,lua,fetch,python,nightly
+            addl-build-args: --features=apply,generate,lua,fetch,python,nightly,self_update
             default-features: --no-default-features 
           - os: macos-latest
             os-name: macos
             target: x86_64-apple-darwin
             architecture: x86_64
-            addl-build-args: --features=apply,generate,lua,fetch,foreach,python,nightly
+            addl-build-args: --features=apply,generate,lua,fetch,foreach,python,nightly,self_update
             default-features: --no-default-features 
 
     steps:
