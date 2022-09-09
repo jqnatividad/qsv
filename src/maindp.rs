@@ -1,7 +1,6 @@
 extern crate crossbeam_channel as channel;
 use crate::clitypes::{CliError, CliResult, QsvExitCode};
 use docopt::Docopt;
-use log::{error, info, log_enabled, Level};
 use serde::Deserialize;
 use std::{env, io, time::Instant};
 
@@ -71,15 +70,8 @@ struct Args {
 }
 
 fn main() -> QsvExitCode {
-    util::init_logger();
-
     let now = Instant::now();
-    let qsv_args: String = if log_enabled!(Level::Info) {
-        env::args().skip(1).collect::<Vec<_>>().join(" ")
-    } else {
-        "".to_string()
-    };
-    info!("START: {qsv_args}");
+    let qsv_args = util::init_logger();
 
     let args: Args = Docopt::new(USAGE)
         .and_then(|d| {
