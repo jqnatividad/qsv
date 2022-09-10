@@ -558,7 +558,9 @@ pub fn qsv_check_for_update() -> Result<bool, String> {
 }
 
 #[cfg(all(any(feature = "full", feature = "lite"), not(feature = "self_update")))]
-pub fn qsv_check_for_update() {}
+pub fn qsv_check_for_update() -> Result<bool, String> {
+    Ok(true)
+}
 
 // the qsv hwsurvey allows us to keep a better
 // track of qsv's usage in the wild, so we can do a
