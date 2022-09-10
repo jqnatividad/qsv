@@ -18,6 +18,15 @@ macro_rules! werr {
     });
 }
 
+macro_rules! winfo {
+    ($($arg:tt)*) => ({
+        use std::io::Write;
+        use log::info;
+        info!("{}", $($arg)*);
+        (writeln!(&mut ::std::io::stderr(), $($arg)*)).unwrap();
+    });
+}
+
 macro_rules! fail {
     ($e:expr) => {{
         use log::error;
