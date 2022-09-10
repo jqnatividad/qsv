@@ -476,7 +476,7 @@ pub fn init_logger() -> String {
     qsv_args
 }
 
-#[cfg(feature = "self_update")]
+#[cfg(all(any(feature = "full", feature = "lite"), feature = "self_update"))]
 pub fn qsv_check_for_update() {
     use self_update::cargo_crate_version;
 
@@ -552,17 +552,14 @@ pub fn qsv_check_for_update() {
     let _temp = send_hwsurvey(&bin_name, updated, latest_release, curr_version, false);
 }
 
-#[allow(dead_code)]
-#[cfg(not(feature = "self_update"))]
-pub fn qsv_check_for_update() {
-    return;
-}
+#[cfg(all(any(feature = "full", feature = "lite"), not(feature = "self_update")))]
+pub fn qsv_check_for_update() {}
 
 // the qsv hwsurvey allows us to keep a better
 // track of qsv's usage in the wild, so we can do a
 // better job of prioritizing platforms/features we support
 // no personally identifiable information is collected
-#[cfg(feature = "self_update")]
+#[cfg(all(any(feature = "full", feature = "lite"), feature = "self_update"))]
 fn send_hwsurvey(
     bin_name: &str,
     updated: bool,
