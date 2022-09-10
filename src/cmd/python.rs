@@ -232,13 +232,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 let locals = PyDict::new(py);
 
                 let user_helpers =
-                    match PyModule::from_code(py, &helper_text, "qsv_user_helpers.py", "qsv_uh") {
-                        Ok(helper_code) => helper_code,
-                        Err(e) => {
-                            eprintln!("Cannot compile user module \"{helper_text}\".\n{e}");
-                            panic!();
-                        }
-                    };
+                    PyModule::from_code(py, &helper_text, "qsv_user_helpers.py", "qsv_uh")?;
                 globals.set_item(intern!(py, "qsv_uh"), user_helpers)?;
 
                 // Global imports
