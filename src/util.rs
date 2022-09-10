@@ -476,15 +476,10 @@ pub fn init_logger() -> String {
     qsv_args
 }
 
-#[cfg(feature = "self_update")]
-pub fn qsv_check_for_update() {
-    use self_update::cargo_crate_version;
-
-    const GITHUB_RATELIMIT_MSG: &str =
-        "Github is rate-limiting self-update checks at the moment. Try again in an hour.";
-
+#[cfg(all(any(feature = "full", feature = "lite"), feature = "self_update"))]
+pub fn qsv_check_for_update() -> Result<bool, String> {
     if env::var("QSV_NO_UPDATE").is_ok() {
-        return;
+        return Ok(false);
     }
 
     let bin_name = std::env::current_exe()
@@ -494,17 +489,27 @@ pub fn qsv_check_for_update() {
         .to_string_lossy()
         .into_owned();
 
-    eprintln!("Checking GitHub for updates...");
-    log::info!("Checking GitHub for updates...");
+    winfo!("Checking GitHub for updates...");
+
+    use self_update::cargo_crate_version;
+    const GITHUB_RATELIMIT_MSG: &str =
+        "Github is rate-limiting self-update checks at the moment. Try again in an hour.";
 
     let curr_version = cargo_crate_version!();
-    let releases = self_update::backends::github::ReleaseList::configure()
-        .repo_owner("jqnatividad")
-        .repo_name("qsv")
-        .build()
-        .expect(GITHUB_RATELIMIT_MSG)
-        .fetch()
-        .expect(GITHUB_RATELIMIT_MSG);
+    let releases = if let Ok(releases_list) =
+        self_update::backends::github::ReleaseList::configure()
+            .repo_owner("jqnatividad")
+            .repo_name("qsv")
+            .build()
+    {
+        if let Ok(releases) = releases_list.fetch() {
+            releases
+        } else {
+            return Err(GITHUB_RATELIMIT_MSG.to_string());
+        }
+    } else {
+        return Err(GITHUB_RATELIMIT_MSG.to_string());
+    };
     let latest_release = &releases[0].version;
 
     log::info!("Current version: {curr_version} Latest Release: {latest_release}");
@@ -512,7 +517,7 @@ pub fn qsv_check_for_update() {
     let mut updated = false;
     if latest_release > &curr_version.to_string() {
         eprintln!("Update {latest_release} available. Current version is {curr_version}.");
-        eprintln!("Release notes: https://github.com/jqnatividad/qsv/releases/latest");
+        eprintln!("Release notes: https://github.com/jqnatividad/qsv/releases/latest\n");
         match self_update::backends::github::Update::configure()
             .repo_owner("jqnatividad")
             .repo_name("qsv")
@@ -531,8 +536,7 @@ pub fn qsv_check_for_update() {
                         bin_name,
                         status.version()
                     );
-                    eprintln!("{update_status}");
-                    log::info!("{update_status}");
+                    winfo!("{update_status}");
                 }
                 Err(e) => {
                     eprintln!("Update job error: {e}");
@@ -545,24 +549,24 @@ pub fn qsv_check_for_update() {
             }
         };
     } else {
-        eprintln!("Up to date ({curr_version})... no update required.");
-        log::info!("Up to date ({curr_version})... no update required.");
+        winfo!("Up to date ({curr_version})... no update required.");
     };
 
     let _temp = send_hwsurvey(&bin_name, updated, latest_release, curr_version, false);
+
+    Ok(updated)
 }
 
-#[allow(dead_code)]
-#[cfg(not(feature = "self_update"))]
-pub fn qsv_check_for_update() {
-    return;
+#[cfg(all(any(feature = "full", feature = "lite"), not(feature = "self_update")))]
+pub fn qsv_check_for_update() -> Result<bool, String> {
+    Ok(true)
 }
 
 // the qsv hwsurvey allows us to keep a better
 // track of qsv's usage in the wild, so we can do a
 // better job of prioritizing platforms/features we support
 // no personally identifiable information is collected
-#[cfg(feature = "self_update")]
+#[cfg(all(any(feature = "full", feature = "lite"), feature = "self_update"))]
 fn send_hwsurvey(
     bin_name: &str,
     updated: bool,
