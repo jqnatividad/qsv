@@ -680,8 +680,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 "{} max errors. Fetchpost aborted.",
                 HumanCount(args.flag_max_errors)
             );
-            info!("{abort_msg}");
-            eprintln!("{abort_msg}");
+            winfo!("{abort_msg}");
         } else {
             error_progress.abandon();
         }
@@ -712,8 +711,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         )
         .unwrap();
     }
-    info!("{end_msg}");
-    eprintln!("{end_msg}");
+    winfo!("{end_msg}");
 
     Ok(wtr.flush()?)
 }

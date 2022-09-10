@@ -144,8 +144,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if log_enabled!(Debug) || args.flag_progressbar {
         Python::with_gil(|py| {
             let msg = format!("Detected python={}", py.version());
-            eprintln!("{msg}");
-            debug!("{msg}");
+            winfo!("{msg}");
         });
     }
 
