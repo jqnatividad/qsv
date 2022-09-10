@@ -111,18 +111,12 @@ fn main() -> QsvExitCode {
         return QsvExitCode::Good;
     }
     if args.flag_update {
-        #[cfg(not(feature = "self_update"))]
-        {
-            werr!("Self update engine disabled.");
-            util::log_end(qsv_args, now);
-            return QsvExitCode::IncorrectUsage;
-        }
-        #[cfg(feature = "self_update")]
-        {
-            util::qsv_check_for_update();
-            util::log_end(qsv_args, now);
+        let update_checked = util::qsv_check_for_update();
+        util::log_end(qsv_args, now);
+        if update_checked.is_ok() {
             return QsvExitCode::Good;
         }
+        return QsvExitCode::Bad;
     }
     match args.arg_command {
         None => {
@@ -132,7 +126,7 @@ fn main() -> QsvExitCode {
 Please choose one of the following commands:",
                 command_list!()
             ));
-            util::qsv_check_for_update();
+            _ = util::qsv_check_for_update();
             util::log_end(qsv_args, now);
             QsvExitCode::Good
         }
@@ -249,7 +243,7 @@ impl Command {
             Command::Headers => cmd::headers::run(argv),
             Command::Help => {
                 wout!("{USAGE}");
-                util::qsv_check_for_update();
+                _ = util::qsv_check_for_update();
                 Ok(())
             }
             Command::Index => cmd::index::run(argv),
