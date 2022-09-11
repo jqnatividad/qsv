@@ -54,7 +54,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [lua](/src/cmd/lua.rs#L2)[^1] | Execute a [Lua](https://www.lua.org/about.html) 5.4.4 script over CSV lines to transform, aggregate or filter them.  |
 | [partition](/src/cmd/partition.rs#L2) | Partition a CSV based on a column value. |
 | [pseudo](/src/cmd/pseudo.rs#L2) | [Pseudonymise](https://en.wikipedia.org/wiki/Pseudonymization) the value of the given column by replacing them with an incremental identifier.  |
-| [py](/src/cmd/python.rs#L2)[^1] | Evaluate a Python expression over CSV lines to transform, aggregate or filter them. Python's [f-strings](https://www.freecodecamp.org/news/python-f-strings-tutorial-how-to-use-f-strings-for-string-formatting/) is particularly useful for extended formatting (Python 3.8+ required).  |
+| [py](/src/cmd/python.rs#L2)[^1] | Evaluate a Python expression over CSV lines to transform, aggregate or filter them. Python's [f-strings](https://www.freecodecamp.org/news/python-f-strings-tutorial-how-to-use-f-strings-for-string-formatting/) is particularly useful for extended formatting ([Python 3.6 and up supported, with Python 3.10 required on prebuilt qsv](#python)).  |
 | [rename](/src/cmd/rename.rs#L2) |  Rename the columns of a CSV efficiently.  |
 | [replace](/src/cmd/replace.rs#L2) | Replace CSV data using a regex.  |
 | [reverse](/src/cmd/reverse.rs#L2)[^3] | Reverse order of rows in a CSV. Unlike the `sort --reverse` command, it preserves the order of rows with the same key.  |
@@ -90,14 +90,19 @@ There are four variants of qsv:
  * `qsvlite` has all features disabled (~half the size of `qsv`)
  * `qsvdp` is optimized for use with [DataPusher+](https://github.com/dathere/datapusher-plus), with only DataPusher+ relevant commands and the self-update engine removed (~sixth of the size of `qsv`).
 
-Alternatively, you can install from source by [installing Cargo](https://crates.io/install)
-([Rust's](https://www.rust-lang.org/) package manager) and installing `qsv` using Cargo:
+Alternatively, you can install from source by [installing Rust](https://www.rust-lang.org/tools/install)
+and installing `qsv` using Rust's cargo command[^6]:
+
+[^6]: Of course, you'll also need a linker and a C compiler. Linux users should generally install GCC or Clang, according to their distribution’s documentation.
+For example, if you use Ubuntu, you can install the `build-essential` package. On macOS, you can get a C compiler by running `$ xcode-select --install`.
+For Windows, this means installing [Visual Studio 2022](https://visualstudio.microsoft.com/downloads/). When prompted for workloads, include "Desktop Development with C++",
+the Windows 10 or 11 SDK, and the English language pack, along with any other language packs your require.
 
 ```bash
 cargo install qsv --features all_full
 ```
 
-If you encounter compilation errors, ensure you have at least Python 3.8 installed and you're using the exact
+If you encounter compilation errors, ensure you have the Python development libraries installed and you're using the exact
 version of the dependencies qsv was built with by issuing:
 
 ```bash
@@ -144,7 +149,7 @@ cargo build --release --features datapusher_plus
 ```
 
 [^6]: The `foreach` feature is not available on Windows. The `python` feature is not enabled on cross-compiled pre-built binaries as we don't have
-access to a native python interpreter for those platforms (aarch64, i686, and arm) on GitHub's x86_64-based action runners. Compile natively on those platforms with Python 3.8+ installed, if you want to enable the `python` feature.
+access to a native python interpreter for those platforms (aarch64, i686, and arm) on GitHub's x86_64-based action runners. Compile natively on those platforms with Python 3.6+ development environment installed, if you want to enable the `python` feature.
 
 ### Minimum Supported Rust Version
 
@@ -215,6 +220,25 @@ Which is weird, since you would think [Microsoft's own Excel would properly reco
 ```
 qsv stats wcp.csv --output wcpstats.csv
 ```
+
+## Python
+
+With the `python` feature, `qsv` will look for Python shared libraries (libpython* on Linux/macOS, python*.dll on Windows) against which it was compiled, 
+and abort with an error if not found, detailing the Python library it was looking for.
+
+Note that this will happen as soon as the qsv binary is invoked, even if you're not running the `py` command.
+
+If you don't need to run the `py` command, simply use `qsvnp` ("np" stands for "no python"), `qsvlite`, or `qsvdp`.
+
+If you need the `py` command, the [prebuilt qsv binary](https://github.com/jqnatividad/qsv/releases/latest) is compiled, as a policy,
+using the latest stable Python minor version (currently Python 3.10).
+
+If you require a different Python version (Python 3.6 and up are supported), you'll need to install/compile from source, making sure you have
+the development libraries for the desired Python version installed when doing so. [PyO3](https://pyo3.rs) - the underlying crate that enables the `python` feature,
+uses a build script to determine the Python version and set the correct linker arguments. By default it uses the python3 executable.
+You can override the Python interpreter by setting `PYO3_PYTHON`, e.g., `PYO3_PYTHON=python3.6`.
+
+See the [PyO3 User Guide](https://pyo3.rs/v0.17.1/building_and_distribution.html) for more information.
 
 ## Environment Variables
 

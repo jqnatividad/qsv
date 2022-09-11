@@ -42,8 +42,6 @@
 extern crate crossbeam_channel as channel;
 use crate::clitypes::{CliError, CliResult, QsvExitCode};
 use docopt::Docopt;
-#[cfg(all(feature = "python", not(feature = "lite")))]
-use pyo3::Python;
 use serde::Deserialize;
 use std::{env, io, time::Instant};
 
@@ -142,20 +140,9 @@ struct Args {
     flag_update: bool,
 }
 
-#[cfg(all(feature = "python", not(feature = "lite")))]
-fn check_python() -> bool {
-    Python::with_gil(|py| py.version_info() >= (3, 8))
-}
-
 fn main() -> QsvExitCode {
     let now = Instant::now();
     let qsv_args = util::init_logger();
-
-    #[cfg(all(feature = "python", not(feature = "lite")))]
-    if !check_python() {
-        werr!("Python 3.8+ required. Either upgrade python, use a python virtual environment with Python 3.8+ or use qsvnp/qsvlite.");
-        return QsvExitCode::Abort;
-    }
 
     let args: Args = Docopt::new(USAGE)
         .and_then(|d| {
