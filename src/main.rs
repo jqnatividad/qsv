@@ -1,4 +1,3 @@
-#![allow(unknown_lints)]
 #![cfg_attr(
     feature = "cargo-clippy",
     allow(
@@ -8,15 +7,12 @@
         // things are often more readable this way
         clippy::cast_lossless,
         clippy::module_name_repetitions,
-        clippy::option_if_let_else,
         clippy::single_match_else,
         clippy::type_complexity,
-        clippy::use_self,
         clippy::zero_prefixed_literal,
         // correctly used
         clippy::derive_partial_eq_without_eq,
         clippy::enum_glob_use,
-        clippy::explicit_auto_deref,
         clippy::let_underscore_drop,
         clippy::map_err_ignore,
         clippy::result_unit_err,
@@ -25,7 +21,6 @@
         clippy::similar_names,
         clippy::too_many_lines,
         clippy::struct_excessive_bools,
-        clippy::cognitive_complexity,
         // preference
         clippy::doc_markdown,
         clippy::unseparated_literal_suffix,
