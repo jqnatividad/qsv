@@ -106,6 +106,7 @@ impl Args {
         Config::new(&self.arg_input)
             .delimiter(self.flag_delimiter)
             .no_headers(self.flag_no_headers)
+            .checkutf8(false)
             .select(self.flag_select.clone())
     }
 
