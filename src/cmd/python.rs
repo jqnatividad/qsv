@@ -32,10 +32,11 @@ Some usage examples:
   Load helper file with function to compute Fibonacci sequence of the column "num_col"
   $ qsv py map --helper-file fibonacci.py fib qsv_uh.fibonacci(num_col) data.csv
 
-  NOTE: The py command requires Python 3.8+. If you wish qsv to use a specific 
-  Python version other than your system's default - either run it in a python 
-  virtual environment, or copy the shared library of the desired Python version 
-  in the same directory as qsv (libpython* on Linux/macOS, python*.dll on Windows).
+  NOTE: The prebuilt qsv binaries are linked against Python 3.10 and will require access
+  to the Python 3.10 shared libraries (libpython* on Linux/macOS, python*.dll on Windows)
+  during runtime for the py command to run. 
+  
+  If you wish qsv to use another Python version, you'll need to install/compile qsv from source.
 
   Also, the following Python modules are automatically loaded and available to the user -
   builtsin, math and random. The user can import additional modules with the --helper option.
