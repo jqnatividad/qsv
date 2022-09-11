@@ -102,7 +102,7 @@ mlua = { version = "0.8", features = [
     "vendored",
     "parking_lot",
 ], optional = true }
-once_cell = { version = "1.13", features = ["parking_lot"] }
+once_cell = { version = "1.14", features = ["parking_lot"] }
 parking_lot = { version = "0.12", features = ["hardware-lock-elision"] }
 pyo3 = { version = "0.17", features = [
     "abi3",
