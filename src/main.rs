@@ -42,8 +42,6 @@
 extern crate crossbeam_channel as channel;
 use crate::clitypes::{CliError, CliResult, QsvExitCode};
 use docopt::Docopt;
-#[cfg(all(feature = "python", not(feature = "lite")))]
-use pyo3::Python;
 use serde::Deserialize;
 use std::{env, io, time::Instant};
 
