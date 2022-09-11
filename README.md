@@ -148,7 +148,7 @@ cargo build --release --features lite
 cargo build --release --features datapusher_plus
 ```
 
-[^6]: The `foreach` feature is not available on Windows. The `python` feature is not enabled on cross-compiled pre-built binaries as we don't have
+[^7]: The `foreach` feature is not available on Windows. The `python` feature is not enabled on cross-compiled pre-built binaries as we don't have
 access to a native python interpreter for those platforms (aarch64, i686, and arm) on GitHub's x86_64-based action runners. Compile natively on those platforms with Python 3.6+ development environment installed, if you want to enable the `python` feature.
 
 ### Minimum Supported Rust Version
@@ -302,7 +302,7 @@ The following "power-user" features can be abused and present "foot-shooting" sc
 * `foreach` - enable `foreach` command (not valid for Windows).
 * `python` - enable `py` command (requires Python 3.6+ shared library). Note that qsv will look for the Python shared library (libpython.* on Linux/macOS, python*.dll on Windows) for the Python version it was compiled against and will abort if the library is not found, even if you're not using the `py` command. Check [Python](#python) section for more info.
 
-> ℹ️ **NOTE:** `qsvlite`, as the name implies, always has **non-default features disabled**. `qsv` can be built with any combination of the above features  using the cargo `--features` & `--no-default-features` flags. The pre-built `qsv` binaries has **all applicable features valid for the target platform**[^6].
+> ℹ️ **NOTE:** `qsvlite`, as the name implies, always has **non-default features disabled**. `qsv` can be built with any combination of the above features  using the cargo `--features` & `--no-default-features` flags. The pre-built `qsv` binaries has **all applicable features valid for the target platform**[^7].
 
 ## License
 
