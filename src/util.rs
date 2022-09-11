@@ -36,6 +36,10 @@ const TARGET: &str = match option_env!("TARGET") {
     Some(target) => target,
     None => "Unknown_target",
 };
+const QSV_KIND: &str = match option_env!("QSV_KIND") {
+    Some(kind) => kind,
+    None => "installed",
+};
 
 pub fn max_jobs() -> usize {
     let num_cpus = num_cpus();
@@ -106,13 +110,13 @@ pub fn version() -> String {
         (Some(qsvtype), Some(maj), Some(min), Some(pat), Some(pre), Some(rustversion)) => {
             if pre.is_empty() {
                 format!(
-                    "{qsvtype} {maj}.{min}.{pat}-{malloc_kind}-{enabled_features}{maxjobs}-{numcpus} ({TARGET} compiled with Rust {rustversion})",
+                    "{qsvtype} {maj}.{min}.{pat}-{malloc_kind}-{enabled_features}{maxjobs}-{numcpus} ({TARGET} compiled with Rust {rustversion}) {QSV_KIND}",
                     maxjobs = max_jobs(),
                     numcpus = num_cpus()
                 )
             } else {
                 format!(
-                    "{qsvtype} {maj}.{min}.{pat}-{pre}-{malloc_kind}-{enabled_features}{maxjobs}-{numcpus} ({TARGET} compiled with Rust {rustversion})",
+                    "{qsvtype} {maj}.{min}.{pat}-{pre}-{malloc_kind}-{enabled_features}{maxjobs}-{numcpus} ({TARGET} compiled with Rust {rustversion}) {QSV_KIND}",
                     maxjobs = max_jobs(),
                     numcpus = num_cpus(),
                 )
@@ -518,36 +522,44 @@ pub fn qsv_check_for_update() -> Result<bool, String> {
     if latest_release > &curr_version.to_string() {
         eprintln!("Update {latest_release} available. Current version is {curr_version}.");
         eprintln!("Release notes: https://github.com/jqnatividad/qsv/releases/latest\n");
-        match self_update::backends::github::Update::configure()
-            .repo_owner("jqnatividad")
-            .repo_name("qsv")
-            .bin_name(&bin_name)
-            .show_download_progress(true)
-            .show_output(false)
-            .no_confirm(false)
-            .current_version(curr_version)
-            .build()
-        {
-            Ok(update_job) => match update_job.update() {
-                Ok(status) => {
-                    updated = true;
-                    let update_status = format!(
-                        "Update successful for {}: `{}`!",
-                        bin_name,
-                        status.version()
-                    );
-                    winfo!("{update_status}");
-                }
+        if QSV_KIND.starts_with("prebuilt") {
+            match self_update::backends::github::Update::configure()
+                .repo_owner("jqnatividad")
+                .repo_name("qsv")
+                .bin_name(&bin_name)
+                .show_download_progress(true)
+                .show_output(false)
+                .no_confirm(false)
+                .current_version(curr_version)
+                .build()
+            {
+                Ok(update_job) => match update_job.update() {
+                    Ok(status) => {
+                        updated = true;
+                        let update_status = format!(
+                            "Update successful for {}: `{}`!",
+                            bin_name,
+                            status.version()
+                        );
+                        winfo!("{update_status}");
+                    }
+                    Err(e) => {
+                        eprintln!("Update job error: {e}");
+                        log::error!("Update job error: {e}");
+                    }
+                },
                 Err(e) => {
-                    eprintln!("Update job error: {e}");
-                    log::error!("Update job error: {e}");
+                    eprintln!("Update builder error: {e}");
+                    log::error!("Update builder error: {e}");
                 }
-            },
-            Err(e) => {
-                eprintln!("Update builder error: {e}");
-                log::error!("Update builder error: {e}");
-            }
-        };
+            };
+        } else {
+            // we don't want to overwrite manually curated/configured qsv installations.
+            // Just inform the user of the new release, and let them rebuild their qsvs the
+            // way they like it, instead of overwriting it with our pre-built binaries.
+            winfo!("qsv self-update does not work for manually installed/compiled versions.\n
+            If you wish to update to the latest version of qsv, manually install/compile from source.");
+        }
     } else {
         winfo!("Up to date ({curr_version})... no update required.");
     };
@@ -577,10 +589,6 @@ fn send_hwsurvey(
     use serde_json::json;
     use sysinfo::{CpuExt, System, SystemExt};
 
-    const QSV_KIND: &str = match option_env!("QSV_KIND") {
-        Some(kind) => kind,
-        None => "installed",
-    };
     static HW_SURVEY_URL: &str =
         "https://4dhmneehnl.execute-api.us-east-1.amazonaws.com/dev/qsv-hwsurvey";
 
