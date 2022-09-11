@@ -892,9 +892,9 @@ dependencies = [
 
 [[package]]
 name = "flexi_logger"
-version = "0.23.2"
+version = "0.23.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "69139e86394985dfc6ba76eb4e8a0b3dd6c1de2b5a7e6971af63e2f539bd8084"
+checksum = "f4a12e3b5a8775259ee83ac38aea8cdf9c3a1667c02178d207378c0837808fa9"
 dependencies = [
  "flate2",
  "glob",
@@ -1956,7 +1956,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc4cf18c20f4f09995f3554e6bcf9b09bd5e4d6b67c562fdfaafa644526ba479"
 dependencies = [
  "once_cell",
- "python3-dll-a",
  "target-lexicon",
 ]
 
@@ -1991,15 +1990,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
-]
-
-[[package]]
-name = "python3-dll-a"
-version = "0.2.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a915bd72824962bf190bbd3e8a044cccb695d1409f73ff5493712eda5136c7a8"
-dependencies = [
- "cc",
 ]
 
 [[package]]
