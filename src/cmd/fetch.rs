@@ -383,7 +383,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let vals: Vec<&str> = header.split(':').collect();
 
             if vals.len() != 2 {
-                return fail_format!("{vals:?} is not a valid key-value pair. Expecting a key and a value seperated by a colon.");
+                return fail_format!("{vals:?} is not a valid key-value pair. Expecting a key and a value separated by a colon.");
             }
 
             // allocate new String for header key to put into map

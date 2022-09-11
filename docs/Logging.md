@@ -13,7 +13,7 @@ To keep things simple:
 
 ## Enable Logging
 
-Set enviroment variable `QSV_LOG_LEVEL` to desired level. Default is `off`.
+Set environment variable `QSV_LOG_LEVEL` to desired level. Default is `off`.
 * off - no logging
 * error
 * warn

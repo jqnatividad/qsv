@@ -361,7 +361,7 @@ pub fn range(start: Idx, end: Idx, len: Idx, index: Idx) -> Result<(usize, usize
     }
 }
 
-/// Create a directory recursively, avoiding the race conditons fixed by
+/// Create a directory recursively, avoiding the race conditions fixed by
 /// https://github.com/rust-lang/rust/pull/39799.
 #[cfg(any(feature = "full", feature = "lite"))]
 fn create_dir_all_threadsafe(path: &Path) -> io::Result<()> {

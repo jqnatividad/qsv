@@ -332,7 +332,7 @@ pub fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<M
         }
 
         if col_null_count > 0 && enum_list.len() > 0 {
-            // for fields that are not mandatory and actualy have enum list generated,
+            // for fields that are not mandatory and actually have enum list generated,
             // having JSON NULL indicates that missing value is allowed
             enum_list.push(Value::Null);
         }
@@ -445,7 +445,7 @@ fn build_low_cardinality_column_selector_arg(
 }
 
 /// get frequency tables from `cmd::stats`
-/// returns map of unique valules keyed by header
+/// returns map of unique values keyed by header
 fn get_unique_values(
     args: &Args,
     column_select_arg: &str,

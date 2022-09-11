@@ -153,7 +153,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 * `fetch`: Reformatted report so response is the last column; do not allow --timeout to be zero; progressbar refresh set at 5 times/sec; show name of generated report at the end. https://github.com/jqnatividad/qsv/pull/404
 * `fetch`: report improvements. Remove `qsv_fetch_` column prefix in short report; change progressbar format to default characters https://github.com/jqnatividad/qsv/pull/406
-* `excel`: make --sheet case-insensitve; better error-handling  https://github.com/jqnatividad/qsv/pull/416
+* `excel`: make --sheet case-insensitive; better error-handling  https://github.com/jqnatividad/qsv/pull/416
 * `py`: add detected python version to --version option
 * Only do input utf8-encoding check for commands that need it. https://github.com/jqnatividad/qsv/pull/419
 * Bump cached from 0.37.0 to 0.38.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/407
@@ -247,7 +247,7 @@ but aborting after 100 errors. Also added a separate error progress bar. https:/
 ## [0.58.1] - 2022-07-02
 ### Changed
 * Universal clippy handling. Added allow clippy hint section in main for clippy lints we allow/ignore, and added exceptions as needed throughout the codebase.
-This means clippy, even in pedantic/nursery/perf mode willl have no warnings. https://github.com/jqnatividad/qsv/pull/365
+This means clippy, even in pedantic/nursery/perf mode will have no warnings. https://github.com/jqnatividad/qsv/pull/365
 * reqwest deflate compression support https://github.com/jqnatividad/qsv/pull/366
 * `fetch`: expanded --http-header explanation/example
 * `fetch`: refactored --timeout processing https://github.com/jqnatividad/qsv/commit/3454ed068f0f243473a0f66520f90f55ece4bf49
@@ -771,7 +771,7 @@ use the patches. This should also result in smaller binaries.
 * `fetch`: argument parsing refactor, removing need for dummy argument in https://github.com/jqnatividad/qsv/pull/222
 * applied select pedantic clippy recommendations in https://github.com/jqnatividad/qsv/pull/224
 * simplified multithreading - removed jobs div by three heuristic in https://github.com/jqnatividad/qsv/pull/225
-* use qsv-dateparser fork of dateparser for incresed performance of `stats`, `schema` and `apply` in https://github.com/jqnatividad/qsv/pull/230
+* use qsv-dateparser fork of dateparser for increased performance of `stats`, `schema` and `apply` in https://github.com/jqnatividad/qsv/pull/230
 * Bump actions/checkout from 2.3.3 to 3 by @dependabot in https://github.com/jqnatividad/qsv/pull/228
 * Bump actions/stale from 3 to 5 by @dependabot in https://github.com/jqnatividad/qsv/pull/227
 * Bump actions/setup-python from 2 to 3.1.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/226

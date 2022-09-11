@@ -174,7 +174,7 @@ echo "complete -F _docopt_wordlist_commands qsv" >> $HOME/.bash_completion
 
 ## File formats
 
-qsv recognizes UTF-8/ASCII encoded, CSV (`.csv`) and TSV files (`.tsv` and `.tab`). CSV files are assummed to have "," (comma) as a delimiter,
+qsv recognizes UTF-8/ASCII encoded, CSV (`.csv`) and TSV files (`.tsv` and `.tab`). CSV files are assumed to have "," (comma) as a delimiter,
 and TSV files, "\t" (tab) as a delimiter. The delimiter is a single ascii character that can be set either by the `--delimiter` command-line option or
 with the `QSV_DEFAULT_DELIMITER` environment variable or automatically detected when `QSV_SNIFF_DELIMITER` is set.
 
@@ -297,7 +297,7 @@ The following "power-user" features can be abused and present "foot-shooting" sc
 
 * `lua` - enable `lua` command. Embeds a [Lua 5.4.4](https://www.lua.org/manual/5.4/manual.html) interpreter into qsv.
 * `foreach` - enable `foreach` command (not valid for Windows).
-* `python` - enable `py` command (requires Python 3.8+ development libraris). Note that qsv will automatically use the currently activated python version when running in a virtual environment unless there's a python library (libpython.* on Linux/macOS, python*.dll on Windows) in the directory where qsv is located.
+* `python` - enable `py` command (requires Python 3.8+ development libraries). Note that qsv will automatically use the currently activated python version when running in a virtual environment unless there's a python library (libpython.* on Linux/macOS, python*.dll on Windows) in the directory where qsv is located.
 
 > ℹ️ **NOTE:** `qsvlite`, as the name implies, always has **non-default features disabled**. `qsv` can be built with any combination of the above features  using the cargo `--features` & `--no-default-features` flags. The pre-built `qsv` binaries has **all applicable features valid for the target platform**[^6].
 
