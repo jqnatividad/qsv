@@ -34,7 +34,7 @@ enum options:
     --copy <column>          Name of a column to copy.
                              Changes the default column name to "{column}_copy".
     --uuid                   When set, the column will be populated with
-                             uuids (v4) instead of the incremental identifer.
+                             uuids (v4) instead of the incremental identifier.
                              Changes the default column name to "uuid".
 
 Common options:

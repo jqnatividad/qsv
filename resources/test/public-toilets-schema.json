@@ -140,7 +140,7 @@
         },
         "Notes":
         {
-        "description": "Notes on reporting, accesibility, hours or anything else",
+        "description": "Notes on reporting, accessibility, hours or anything else",
         "type": ["string", "null"]
         },
         "UPRN":
@@ -160,7 +160,7 @@
         },
         "GeoAreaURI":
         {
-        "description": "A predefined spatial area that the application is contained in.  Note that these can be derived from X/Y co-ordinates. Comma delimit in spreadsheet where there is more than one",
+        "description": "A predefined spatial area that the application is contained in.  Note that these can be derived from X/Y coordinates. Comma delimit in spreadsheet where there is more than one",
         "type": ["string", "null"]
         },
         "GeoAreaLabel":

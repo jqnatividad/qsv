@@ -731,7 +731,7 @@ fn validate_json_instance(
                 })
                 .collect(),
             BasicOutput::Valid(_annotations) => {
-                // shouln't happen
+                // shouldn't happen
                 unreachable!("Unexpected error.");
             }
         };
