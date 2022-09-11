@@ -238,6 +238,9 @@ the development libraries for the desired Python version installed when doing so
 uses a build script to determine the Python version and set the correct linker arguments. By default it uses the python3 executable.
 You can override the Python interpreter by setting `PYO3_PYTHON`, e.g., `PYO3_PYTHON=python3.6`.
 
+If you're distributing `python`-enabled qsv, you can also "bundle" the Python shared library by including it in the same directory as the qsv binary. qsv will automatically use
+the "bundled" library instead of the default Python version in the environment.
+
 See the [PyO3 User Guide](https://pyo3.rs/v0.17.1/building_and_distribution.html) for more information.
 
 ## Environment Variables
@@ -297,7 +300,7 @@ The following "power-user" features can be abused and present "foot-shooting" sc
 
 * `lua` - enable `lua` command. Embeds a [Lua 5.4.4](https://www.lua.org/manual/5.4/manual.html) interpreter into qsv.
 * `foreach` - enable `foreach` command (not valid for Windows).
-* `python` - enable `py` command (requires Python 3.8+ development libraries). Note that qsv will automatically use the currently activated python version when running in a virtual environment unless there's a python library (libpython.* on Linux/macOS, python*.dll on Windows) in the directory where qsv is located.
+* `python` - enable `py` command (requires Python 3.6+ shared library). Note that qsv will look for the Python shared library (libpython.* on Linux/macOS, python*.dll on Windows) for the Python version it was compiled against and will abort if the library is not found, even if you're not using the `py` command. Check [Python](#python) section for more info.
 
 > ℹ️ **NOTE:** `qsvlite`, as the name implies, always has **non-default features disabled**. `qsv` can be built with any combination of the above features  using the cargo `--features` & `--no-default-features` flags. The pre-built `qsv` binaries has **all applicable features valid for the target platform**[^6].
 
