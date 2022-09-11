@@ -147,7 +147,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     lua_program.push_str(&lua_script);
-    debug!("lua program: {:?}", lua_program);
+    debug!("lua program: {lua_program:?}");
 
     // prep progress bar
     let show_progress =
@@ -229,7 +229,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     let mut buffer = ryu::Buffer::new();
                     buffer.format(fltval) != "0.0"
                 }
-                _ => true,
+                _ => false,
             };
 
             if must_keep_line {
