@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 env:
-  QSV_KIND: prebuilt
+  QSV_KIND: prebuilt-nightly
 
 jobs:
   analyze-tags:
