@@ -236,12 +236,10 @@ using the latest stable Python minor version (currently Python 3.10).
 If you require a different Python version (Python 3.6 and up are supported), you'll need to install/compile from source, making sure you have
 the development libraries for the desired Python version installed when doing so. [PyO3](https://pyo3.rs) - the underlying crate that enables the `python` feature,
 uses a build script to determine the Python version and set the correct linker arguments. By default it uses the python3 executable.
-You can override the Python interpreter by setting `PYO3_PYTHON`, e.g., `PYO3_PYTHON=python3.6`.
+You can override the Python interpreter by setting `PYO3_PYTHON`, e.g., `PYO3_PYTHON=python3.6`. See the [PyO3 User Guide](https://pyo3.rs/v0.17.1/building_and_distribution.html) for more information.
 
 If you're distributing `python`-enabled qsv, you can also "bundle" the Python shared library by including it in the same directory as the qsv binary. qsv will automatically use
 the "bundled" library instead of the default Python version in the environment.
-
-See the [PyO3 User Guide](https://pyo3.rs/v0.17.1/building_and_distribution.html) for more information.
 
 ## Environment Variables
 
