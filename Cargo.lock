@@ -892,9 +892,9 @@ dependencies = [
 
 [[package]]
 name = "flexi_logger"
-version = "0.23.1"
+version = "0.23.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b9907f32995cb751ef3e4451ffdbd9f0aa6f503365fdbb9feed9e2ae087cb50d"
+checksum = "69139e86394985dfc6ba76eb4e8a0b3dd6c1de2b5a7e6971af63e2f539bd8084"
 dependencies = [
  "flate2",
  "glob",
@@ -1318,9 +1318,9 @@ checksum = "72167d68f5fce3b8655487b8038691a3c9984ee769590f93f2a631f4ad64e4f5"
 
 [[package]]
 name = "jql"
-version = "5.0.1"
+version = "5.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ccd288d24f75c408bdfac52b818e74e1adbd85c7f5bad6bfb4623a1f5607176d"
+checksum = "6ff8b6a5f658a994c411169f23047b848728fb88458a44fc808ad998ce58269b"
 dependencies = [
  "anyhow",
  "pest",
