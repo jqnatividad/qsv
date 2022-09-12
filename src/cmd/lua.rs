@@ -41,6 +41,9 @@ Some usage examples:
   so -f should be used for non-trivial scripts to read them from a file
   $ qsv lua map Type -x -f debitcredit.lua
 
+  With "lua map", if a LuaJIT script is invalid, "<ERROR>" is returned.
+  With "lua filter", if a LuaJIT script is invalid, no filtering is done.
+
 Usage:
     qsv lua map [options] -n <script> [<input>]
     qsv lua map [options] <new-column> <script> [<input>]
@@ -160,6 +163,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         progress.set_draw_target(ProgressDrawTarget::hidden());
     }
 
+    let error_result: mlua::Value = lua.load("return \"<ERROR>\";").eval().unwrap();
+    let mut error_flag;
+
     let mut record = csv::StringRecord::new();
 
     while rdr.read_record(&mut record)? {
@@ -189,9 +195,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         }
 
+        error_flag = false;
         let computed_value: mlua::Value = match lua.load(&lua_program).eval() {
             Ok(computed) => computed,
-            Err(e) => return fail_format!("Cannot evaluate \"{lua_program}\".\n{e}"),
+            Err(e) => {
+                log::error!("Cannot evaluate \"{lua_program}\".\n{e}");
+                error_flag = true;
+                error_result.clone()
+            }
         };
 
         if args.cmd_map {
@@ -220,16 +231,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
             wtr.write_record(&record)?;
         } else if args.cmd_filter {
-            let must_keep_line: bool = match computed_value {
-                mlua::Value::String(strval) => !strval.to_string_lossy().is_empty(),
-                mlua::Value::Boolean(boolean) => boolean,
-                mlua::Value::Nil => false,
-                mlua::Value::Integer(intval) => intval != 0,
-                mlua::Value::Number(fltval) => {
-                    let mut buffer = ryu::Buffer::new();
-                    buffer.format(fltval) != "0.0"
+            let must_keep_line = if error_flag {
+                true
+            } else {
+                match computed_value {
+                    mlua::Value::String(strval) => !strval.to_string_lossy().is_empty(),
+                    mlua::Value::Boolean(boolean) => boolean,
+                    mlua::Value::Nil => false,
+                    mlua::Value::Integer(intval) => intval != 0,
+                    mlua::Value::Number(fltval) => {
+                        let mut buffer = ryu::Buffer::new();
+                        buffer.format(fltval) != "0.0"
+                    }
+                    _ => true,
                 }
-                _ => false,
             };
 
             if must_keep_line {
