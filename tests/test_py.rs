@@ -381,6 +381,35 @@ fn py_filter() {
 }
 
 #[test]
+fn py_filter_error() {
+    let wrk = Workdir::new("py");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["letter", "number"],
+            svec!["a", "13"],
+            svec!["b", "24"],
+            svec!["c", "72"],
+            svec!["d", "7"],
+        ],
+    );
+    let mut cmd = wrk.command("py");
+    cmd.arg("filter")
+        .arg("integerthis(number) > 14")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["letter", "number"],
+        svec!["a", "13"],
+        svec!["b", "24"],
+        svec!["c", "72"],
+        svec!["d", "7"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn py_format() {
     let wrk = Workdir::new("py");
     wrk.create(
