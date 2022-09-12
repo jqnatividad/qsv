@@ -31,6 +31,36 @@ fn py_map() {
 }
 
 #[test]
+fn py_map_error() {
+    let wrk = Workdir::new("py");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["letter", "number"],
+            svec!["a", "13"],
+            svec!["b", "24"],
+            svec!["c", "72"],
+            svec!["d", "7"],
+        ],
+    );
+    let mut cmd = wrk.command("py");
+    cmd.arg("map")
+        .arg("inc")
+        .arg("integerthis(number) + 1")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["letter", "number", "inc"],
+        svec!["a", "13", "<ERROR>"],
+        svec!["b", "24", "<ERROR>"],
+        svec!["c", "72", "<ERROR>"],
+        svec!["d", "7", "<ERROR>"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn py_map_builtins() {
     let wrk = Workdir::new("py");
     wrk.create(
