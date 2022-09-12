@@ -41,6 +41,9 @@ Some usage examples:
   Also, the following Python modules are automatically loaded and available to the user -
   builtsin, math and random. The user can import additional modules with the --helper option.
 
+  With "py map", if a python expression is invalid, "<ERROR>" is returned.
+  With "py filter", if a python expression is invalid, false is returned.
+
 Usage:
     qsv py map [options] -n <script> [<input>]
     qsv py map [options] <new-column> <script> [<input>]
@@ -56,8 +59,7 @@ py options:
     -b, --batch <size>     The number of rows per batch to process before
                            releasing memory and acquiring a new GILpool.
                            See https://pyo3.rs/v0.17.1/memory.html#gil-bound-memory
-                           for more info.
-                           [default: 30000]
+                           for more info. [default: 30000]
 
 Common options:
     -h, --help             Display this message
@@ -76,8 +78,7 @@ use crate::util;
 use crate::CliError;
 use crate::CliResult;
 use indicatif::{ProgressBar, ProgressDrawTarget};
-use log::Level::Debug;
-use log::{debug, log_enabled};
+use log::{error, log_enabled, Level::Debug};
 use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
@@ -241,15 +242,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 let math_module = PyModule::import(py, "math")?;
                 let random_module = PyModule::import(py, "random")?;
 
-                globals.set_item(intern!(py, "__builtins__"), builtins)?;
-                globals.set_item(intern!(py, "math"), math_module)?;
-                globals.set_item(intern!(py, "random"), random_module)?;
+                globals.set_item("__builtins__", builtins)?;
+                globals.set_item("math", math_module)?;
+                globals.set_item("random", random_module)?;
 
                 let py_row = helpers
-                    .getattr(intern!(py, "QSVRow"))?
+                    .getattr("QSVRow")?
                     .call1((headers.iter().collect::<Vec<&str>>(),))?;
 
                 locals.set_item("row", py_row)?;
+
+                let error_result = intern!(py, "<ERROR>");
 
                 for mut record in curr_batch {
                     // Initializing locals
@@ -265,44 +268,46 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             row_data.push(cell_value);
                         });
 
-                    py_row
-                        .call_method1(intern!(py, "_update_underlying_data"), (row_data,))
-                        .expect("cannot call method1");
+                    py_row.call_method1(intern!(py, "_update_underlying_data"), (row_data,))?;
 
-                    let mut result_err = false;
                     let result = py
                         .eval(&args.arg_script, Some(globals), Some(locals))
                         .map_err(|e| {
-                            result_err = true;
                             e.print_and_set_sys_last_vars(py);
+                            if log_enabled!(Debug) {
+                                error!("{e:?}");
+                            }
                             "Evaluation of given expression failed with the above error!"
                         })
-                        .expect("cannot eval code");
-
-                    if result_err && log_enabled!(Debug) {
-                        debug!("{result:?}");
-                    }
+                        .unwrap_or(error_result);
 
                     if args.cmd_map {
                         let result = helpers
-                            .getattr(intern!(py, "cast_as_string"))
-                            .unwrap()
-                            .call1((result,))
-                            .expect("cannot get result");
-                        let value: String = result.extract().expect("cannot extract value");
+                            .getattr(intern!(py, "cast_as_string"))?
+                            .call1((result,))?;
+                        let value: String = result.extract()?;
 
                         record.push_field(&value);
-                        wtr.write_record(&record).expect("cannot write record");
+                        if let Err(e) = wtr.write_record(&record) {
+                            // we do this since we cannot use the ? operator here
+                            // since this closure returns a PyResult
+                            // this is converted to a CliError::Other anyway
+                            return Err(pyo3::PyErr::new::<pyo3::exceptions::PyIOError, _>(
+                                format!("cannot write record ({e})"),
+                            ));
+                        }
                     } else if args.cmd_filter {
                         let result = helpers
-                            .getattr(intern!(py, "cast_as_bool"))
-                            .unwrap()
-                            .call1((result,))
-                            .expect("cannot get result");
-                        let value: bool = result.extract().unwrap();
+                            .getattr(intern!(py, "cast_as_bool"))?
+                            .call1((result,))?;
+                        let value: bool = result.extract().unwrap_or(false);
 
                         if value {
-                            wtr.write_record(&record).expect("cannot write record");
+                            if let Err(e) = wtr.write_record(&record) {
+                                return Err(pyo3::PyErr::new::<pyo3::exceptions::PyIOError, _>(
+                                    format!("cannot write record ({e})"),
+                                ));
+                            }
                         }
                     }
                 }
