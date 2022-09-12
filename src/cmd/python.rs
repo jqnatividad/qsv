@@ -42,7 +42,7 @@ Some usage examples:
   builtsin, math and random. The user can import additional modules with the --helper option.
 
   With "py map", if a python expression is invalid, "<ERROR>" is returned.
-  With "py filter", if a python expression is invalid, false is returned.
+  With "py filter", if a python expression is invalid, no filtering is done.
 
 Usage:
     qsv py map [options] -n <script> [<input>]
