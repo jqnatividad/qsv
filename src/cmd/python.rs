@@ -41,7 +41,8 @@ Some usage examples:
   Also, the following Python modules are automatically loaded and available to the user -
   builtsin, math and random. The user can import additional modules with the --helper option.
 
-  If a python expression cannot be evaluated, "<ERROR>" is returned.
+  With "py map", if a python expression is invalid, "<ERROR>" is returned.
+  With "py filter", if a python expression is invalid, false is returned.
 
 Usage:
     qsv py map [options] -n <script> [<input>]
@@ -299,7 +300,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         let result = helpers
                             .getattr(intern!(py, "cast_as_bool"))?
                             .call1((result,))?;
-                        let value: bool = result.extract()?;
+                        let value: bool = result.extract().unwrap_or(false);
 
                         if value {
                             if let Err(e) = wtr.write_record(&record) {
