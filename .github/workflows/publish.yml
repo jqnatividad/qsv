@@ -51,15 +51,15 @@ jobs:
             build-nopython: true
             default-features:
             python_library_path: /opt/hostedtoolcache/Python/3.10.6/x64/lib/libpython3.10
-          - os: ubuntu-latest
-            os-name: linux
-            target: i686-unknown-linux-gnu
-            architecture: i686
-            use-cross: true
-            addl-build-args: --features=apply,generate,lua,fetch,foreach,self_update
-            build-nopython: false
-            default-features:
-            python_library_path:
+          # - os: ubuntu-latest
+          #   os-name: linux
+          #   target: i686-unknown-linux-gnu
+          #   architecture: i686
+          #   use-cross: true
+          #   addl-build-args: --features=apply,generate,lua,fetch,foreach,self_update
+          #   build-nopython: false
+          #   default-features:
+          #   python_library_path:
           - os: windows-latest
             os-name: windows
             target: x86_64-pc-windows-msvc
