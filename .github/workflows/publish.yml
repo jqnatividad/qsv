@@ -40,7 +40,7 @@ jobs:
             addl-build-args: --features=apply,generate,lua,fetch,foreach,python,self_update
             build-nopython: true
             default-features:
-            python_library_path: /usr/share/doc/libpython3.10
+            python_library_path: /opt/hostedtoolcache/Python/3.10.6/x64/lib/libpython3.10
           - os: ubuntu-latest
             os-name: linux
             target: x86_64-unknown-linux-musl
@@ -50,7 +50,7 @@ jobs:
             addl-build-args: --features=apply,generate,lua,fetch,foreach,python,self_update
             build-nopython: true
             default-features:
-            python_library_path: /usr/share/doc/libpython3.10
+            python_library_path: /opt/hostedtoolcache/Python/3.10.6/x64/lib/libpython3.10
           - os: ubuntu-latest
             os-name: linux
             target: i686-unknown-linux-gnu
