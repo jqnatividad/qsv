@@ -40,6 +40,7 @@ jobs:
             addl-build-args: --features=apply,generate,lua,fetch,foreach,python,self_update
             build-nopython: true
             default-features:
+            python_library_path: /usr/share/doc/libpython3.10
           - os: ubuntu-latest
             os-name: linux
             target: x86_64-unknown-linux-musl
@@ -49,6 +50,7 @@ jobs:
             addl-build-args: --features=apply,generate,lua,fetch,foreach,python,self_update
             build-nopython: true
             default-features:
+            python_library_path: /usr/share/doc/libpython3.10
           - os: ubuntu-latest
             os-name: linux
             target: i686-unknown-linux-gnu
@@ -57,6 +59,7 @@ jobs:
             addl-build-args: --features=apply,generate,lua,fetch,foreach,self_update
             build-nopython: false
             default-features:
+            python_library_path:
           - os: windows-latest
             os-name: windows
             target: x86_64-pc-windows-msvc
@@ -65,6 +68,7 @@ jobs:
             addl-build-args: --features=apply,generate,lua,fetch,python,self_update
             build-nopython: true
             default-features:
+            python_library_path: c:\Windows\System\python310.dll
           - os: windows-latest
             os-name: windows
             target: i686-pc-windows-msvc
@@ -73,6 +77,7 @@ jobs:
             addl-build-args: --features=apply,generate,lua,fetch,self_update
             build-nopython: false
             default-features:
+            python_library_path:
           - os: windows-latest
             os-name: windows
             target: x86_64-pc-windows-gnu
@@ -80,7 +85,8 @@ jobs:
             use-cross: false
             addl-build-args: --features=apply,generate,lua,fetch,python,self_update
             build-nopython: true
-            default-features: --no-default-features 
+            default-features: --no-default-features
+            python_library_path: c:\Windows\System\python310.dll
           - os: macos-latest
             os-name: macos
             target: x86_64-apple-darwin
@@ -88,7 +94,8 @@ jobs:
             use-cross: false
             addl-build-args: --features=apply,generate,lua,fetch,foreach,python,self_update
             build-nopython: true
-            default-features: --no-default-features 
+            default-features: --no-default-features
+            python_library_path: /Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10
           - os: macos-latest
             os-name: macos
             target: aarch64-apple-darwin
@@ -98,6 +105,7 @@ jobs:
             addl-build-args: --features=apply,generate,lua,fetch,foreach,self_update
             build-nopython: false
             default-features: --no-default-features
+            python_library_path:
           - os: ubuntu-latest
             os-name: linux
             target: aarch64-unknown-linux-gnu
@@ -106,6 +114,7 @@ jobs:
             addl-build-args: --features=apply,generate,lua,fetch,foreach,self_update
             build-nopython: false
             default-features:
+            python_library_path:
           - os: ubuntu-latest
             os-name: linux
             target: arm-unknown-linux-gnueabihf
@@ -114,6 +123,7 @@ jobs:
             addl-build-args: --features=apply,generate,lua,fetch,foreach,self_update
             build-nopython: false
             default-features: --no-default-features
+            python_library_path:
           - os: ubuntu-latest
             os-name: linux
             target: arm-unknown-linux-musleabihf
@@ -122,6 +132,7 @@ jobs:
             addl-build-args: --features=apply,generate,lua,fetch,foreach,self_update
             build-nopython: false
             default-features: --no-default-features
+            python_library_path:
 
     steps:
     - name: Installing Rust toolchain
@@ -204,8 +215,12 @@ jobs:
         mkdir qsv-${{ needs.analyze-tags.outputs.previous-tag }}
         rm target/${{ matrix.job.target }}/release/*.d 
         cp -v target/${{ matrix.job.target }}/release/qsv* qsv-${{ needs.analyze-tags.outputs.previous-tag }}
+    - name: bundle python shared library
+      if: ${{ matrix.job.build-nopython }}
+      run: |
+        cp -v ${{ matrix.job.python_library_path }} qsv-${{ needs.analyze-tags.outputs.previous-tag }}
     - name: zip up binaries
-      run: 7z a -tzip qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/qsv* -mx=9 -mmt=on
+      run: 7z a -tzip qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/* -mx=9 -mmt=on
     - name: Upload zipped binaries to release
       uses: svenstaro/upload-release-action@v2
       with:
