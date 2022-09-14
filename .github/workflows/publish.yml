@@ -95,7 +95,7 @@ jobs:
             addl-build-args: --features=apply,generate,lua,fetch,foreach,python,self_update
             build-nopython: true
             default-features: --no-default-features
-            python_library_path: /Library/Frameworks/Python.framework/Versions/3.10/lib/libpython3.10.dylib
+            python_library_path: /opt/hostedtoolcache/Python/3.10.6/x64/lib/libpython3.10*
           # - os: macos-latest
           #   os-name: macos
           #   target: aarch64-apple-darwin
@@ -155,6 +155,10 @@ jobs:
       run: |
         sudo xcode-select -s "/Applications/Xcode_12.5.1.app"
         sudo rm -Rf /Library/Developer/CommandLineTools/SDKs/*
+        ls -lh /opt/hostedtoolcache/Python/
+        ls -lh /opt/hostedtoolcache/Python/3.10.6/
+        ls -lh /opt/hostedtoolcache/Python/3.10.6/x64/
+        ls -lh /opt/hostedtoolcache/Python/3.10.6/x64/lib/
     - name: build prep for x86_64-unknown-linux-musl
       if: ${{ matrix.job.musl-prep }}
       run: |
