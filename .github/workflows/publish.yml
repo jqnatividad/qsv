@@ -86,7 +86,7 @@ jobs:
             addl-build-args: --features=apply,generate,lua,fetch,python,self_update
             build-nopython: true
             default-features: --no-default-features
-            python_library_path: c:\Windows\System\python310.dll
+            python_library_path: 'c:\Program Files\Python310\python310*.dll'
           - os: macos-latest
             os-name: macos
             target: x86_64-apple-darwin
