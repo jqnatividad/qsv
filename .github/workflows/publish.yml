@@ -159,10 +159,6 @@ jobs:
       if: ${{ matrix.job.musl-prep }}
       run: |
         sudo apt-get install musl-tools
-    - name: Setup Rust-cache
-      uses: Swatinem/rust-cache@v1
-      with:
-        key: qsv-cache
     - name: Build qsv without python
       if: ${{ matrix.job.build-nopython }}
       env:
