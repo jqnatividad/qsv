@@ -1,0 +1,229 @@
+name: Publish-Testing
+
+on:
+  workflow_dispatch:
+
+env:
+  QSV_KIND: prebuilt-testing
+
+jobs:
+  analyze-tags:
+    runs-on: ubuntu-latest
+    outputs:
+      previous-tag: ${{ steps.previoustag.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      #▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼#
+      - name: Get previous tag
+        id: previoustag
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+      #▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲#
+
+  publish:
+    name: Publish for ${{ matrix.job.target }}
+    needs: analyze-tags
+    runs-on: ${{ matrix.job.os }}
+    strategy:
+      matrix:
+        rust: [stable]
+        job:
+          - os: ubuntu-latest
+            os-name: linux
+            target: x86_64-unknown-linux-gnu
+            architecture: x86_64
+            use-cross: false
+            addl-build-args: --features=apply,generate,lua,fetch,foreach,python,self_update
+            build-nopython: true
+            default-features:
+            python_library_path: $Python3_ROOT_DIR/lib/libpython3*
+          - os: ubuntu-latest
+            os-name: linux
+            target: x86_64-unknown-linux-musl
+            architecture: x86_64
+            musl-prep: true
+            use-cross: false
+            addl-build-args: --features=apply,generate,lua,fetch,foreach,python,self_update
+            build-nopython: true
+            default-features:
+            python_library_path: $Python3_ROOT_DIR/lib/libpython3*
+          - os: ubuntu-latest
+            os-name: linux
+            target: i686-unknown-linux-gnu
+            architecture: i686
+            use-cross: true
+            addl-build-args: --features=apply,generate,lua,fetch,foreach,self_update
+            build-nopython: false
+            default-features:
+            python_library_path:
+          - os: windows-latest
+            os-name: windows
+            target: x86_64-pc-windows-msvc
+            architecture: x86_64
+            use-cross: false
+            addl-build-args: --features=apply,generate,lua,fetch,python,self_update
+            build-nopython: true
+            default-features:
+            python_library_path: $env:Python3_ROOT_DIR/lib/python3*.dll
+          - os: windows-latest
+            os-name: windows
+            target: i686-pc-windows-msvc
+            architecture: i686
+            use-cross: true
+            addl-build-args: --features=apply,generate,lua,fetch,self_update
+            build-nopython: false
+            default-features:
+            python_library_path:
+          - os: windows-latest
+            os-name: windows
+            target: x86_64-pc-windows-gnu
+            architecture: x86_64
+            use-cross: false
+            addl-build-args: --features=apply,generate,lua,fetch,python,self_update
+            build-nopython: true
+            default-features: --no-default-features
+            python_library_path: $env:Python3_ROOT_DIR/lib/python3*.dll
+          - os: macos-latest
+            os-name: macos
+            target: x86_64-apple-darwin
+            architecture: x86_64
+            use-cross: false
+            addl-build-args: --features=apply,generate,lua,fetch,foreach,python,self_update
+            build-nopython: true
+            default-features: --no-default-features
+            python_library_path: $Python3_ROOT_DIR/lib/libpython3*
+          - os: macos-latest
+            os-name: macos
+            target: aarch64-apple-darwin
+            architecture: aarch64
+            build-prep: true
+            use-cross: true
+            addl-build-args: --features=apply,generate,lua,fetch,foreach,self_update
+            build-nopython: false
+            default-features: --no-default-features
+            python_library_path:
+          - os: ubuntu-latest
+            os-name: linux
+            target: aarch64-unknown-linux-gnu
+            architecture: aarch64
+            use-cross: true
+            addl-build-args: --features=apply,generate,lua,fetch,foreach,self_update
+            build-nopython: false
+            default-features:
+            python_library_path:
+          - os: ubuntu-latest
+            os-name: linux
+            target: arm-unknown-linux-gnueabihf
+            architecture: arm
+            use-cross: true
+            addl-build-args: --features=apply,generate,lua,fetch,foreach,self_update
+            build-nopython: false
+            default-features: --no-default-features
+            python_library_path:
+          - os: ubuntu-latest
+            os-name: linux
+            target: arm-unknown-linux-musleabihf
+            architecture: arm
+            use-cross: true
+            addl-build-args: --features=apply,generate,lua,fetch,foreach,self_update
+            build-nopython: false
+            default-features: --no-default-features
+            python_library_path:
+
+    steps:
+    - name: Installing Rust toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: ${{ matrix.rust }}
+        profile: minimal
+        target: ${{ matrix.job.target }}
+        override: true
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        submodules: recursive
+        ref: ${{ needs.analyze-tags.outputs.previous-tag }}
+    - uses: actions/setup-python@v4.2.0
+      with:
+        python-version: '3.10'
+    - name: build prep for aarch64-apple-darwin
+      if: ${{ matrix.job.build-prep }}
+      run: |
+        sudo xcode-select -s "/Applications/Xcode_12.5.1.app"
+        sudo rm -Rf /Library/Developer/CommandLineTools/SDKs/*
+    - name: build prep for x86_64-unknown-linux-musl
+      if: ${{ matrix.job.musl-prep }}
+      run: |
+        sudo apt-get install musl-tools
+    - name: Setup Rust-cache
+      uses: Swatinem/rust-cache@v1
+      with:
+        key: qsv-cache
+    - name: Build qsv without python
+      if: ${{ matrix.job.build-nopython }}
+      env:
+        RUSTFLAGS: --emit=asm
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        use-cross: ${{ matrix.job.use-cross }}
+        toolchain: ${{ matrix.rust }}
+        args: --release --locked --bin qsv --target ${{ matrix.job.target }} --features=nopython_full ${{ matrix.job.default-features }}
+    - name: Rename qsv without python to qsvnp
+      if: ${{ matrix.job.build-nopython }}
+      shell: bash
+      run: |
+        if [ "$RUNNER_OS" == "Windows" ]; then
+            mv -v target/${{ matrix.job.target }}/release/qsv.exe target/${{ matrix.job.target }}/release/qsvnp.exe
+        else
+            mv -v target/${{ matrix.job.target }}/release/qsv target/${{ matrix.job.target }}/release/qsvnp
+        fi
+    - name: Build qsv
+      env:
+        RUSTFLAGS: --emit=asm
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        use-cross: ${{ matrix.job.use-cross }}
+        toolchain: ${{ matrix.rust }}
+        args: --release --locked --bin qsv --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }},full ${{ matrix.job.default-features }}
+    - name: Build qsvlite
+      env:
+        RUSTFLAGS: --emit=asm
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        use-cross: ${{ matrix.job.use-cross }}
+        toolchain: ${{ matrix.rust }}
+        args: --release --locked --bin qsvlite --features=lite,self_update --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}
+    - name: Build qsvdp
+      env:
+        RUSTFLAGS: --emit=asm
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        use-cross: ${{ matrix.job.use-cross }}
+        toolchain: ${{ matrix.rust }}
+        args: --release --locked --bin qsvdp --features=datapusher_plus --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}
+    - name: Copy binaries to working dir
+      shell: bash
+      run: |
+        mkdir qsv-${{ needs.analyze-tags.outputs.previous-tag }}
+        rm target/${{ matrix.job.target }}/release/*.d 
+        cp -v target/${{ matrix.job.target }}/release/qsv* qsv-${{ needs.analyze-tags.outputs.previous-tag }}
+    - name: bundle python shared library
+      if: ${{ matrix.job.build-nopython }}
+      run: |
+        cp -v ${{ matrix.job.python_library_path }} qsv-${{ needs.analyze-tags.outputs.previous-tag }}
+    - name: zip up binaries
+      run: 7z a -tzip qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/* -mx=9 -mmt=on
+    - name: Upload zipped binaries to release
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip
+        asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}-testing.zip
+        overwrite: true
+        tag: ${{ needs.analyze-tags.outputs.previous-tag }}    
+ 
