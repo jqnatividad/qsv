@@ -86,7 +86,7 @@ jobs:
             addl-build-args: --features=apply,generate,lua,fetch,python,self_update
             build-nopython: true
             default-features: --no-default-features
-            python_library_path: C:\Users\runneradmin\hostedtoolcache\Python\3.10.7\x64\lib\python310*.dll
+            python_library_path: $env:Python3_ROOT_DIR\lib\python3*.dll
           - os: macos-latest
             os-name: macos
             target: x86_64-apple-darwin
@@ -95,7 +95,7 @@ jobs:
             addl-build-args: --features=apply,generate,lua,fetch,foreach,python,self_update
             build-nopython: true
             default-features: --no-default-features
-            python_library_path: $Python3_ROOT_DIR/libpython3*
+            python_library_path: $Python3_ROOT_DIR/lib/libpython3*
           # - os: macos-latest
           #   os-name: macos
           #   target: aarch64-apple-darwin
