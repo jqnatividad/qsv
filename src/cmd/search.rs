@@ -86,12 +86,13 @@ struct Args {
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
-    let regex_unicode = match env::var("QSV_REGEX_UNICODE") {
-        Ok(_) => true,
-        Err(_) => args.flag_unicode,
+    let regex_unicode = if env::var("QSV_REGEX_UNICODE").is_ok() {
+        true
+    } else {
+        args.flag_unicode
     };
 
-    debug!("Compiling regular expression...");
+    debug!("Compiling regular expression <{}>", args.arg_regex);
     let pattern = RegexBuilder::new(&args.arg_regex)
         .case_insensitive(args.flag_ignore_case)
         .unicode(regex_unicode)
