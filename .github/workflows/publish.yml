@@ -86,7 +86,7 @@ jobs:
             addl-build-args: --features=apply,generate,lua,fetch,python,self_update
             build-nopython: true
             default-features: --no-default-features
-            python_library_path: $env:Programfiles\Python310\python310*.dll
+            python_library_path: C:\Users\runneradmin\hostedtoolcache\Python\3.10.7\x64\lib\python310*.dll
           - os: macos-latest
             os-name: macos
             target: x86_64-apple-darwin
@@ -163,25 +163,25 @@ jobs:
       uses: Swatinem/rust-cache@v1
       with:
         key: qsv-cache
-    - name: Build qsv without python
-      if: ${{ matrix.job.build-nopython }}
-      env:
-        RUSTFLAGS: --emit=asm
-      uses: actions-rs/cargo@v1
-      with:
-        command: build
-        use-cross: ${{ matrix.job.use-cross }}
-        toolchain: ${{ matrix.rust }}
-        args: --release --locked --bin qsv --target ${{ matrix.job.target }} --features=nopython_full ${{ matrix.job.default-features }}
-    - name: Rename qsv without python to qsvnp
-      if: ${{ matrix.job.build-nopython }}
-      shell: bash
-      run: |
-        if [ "$RUNNER_OS" == "Windows" ]; then
-            mv -v target/${{ matrix.job.target }}/release/qsv.exe target/${{ matrix.job.target }}/release/qsvnp.exe
-        else
-            mv -v target/${{ matrix.job.target }}/release/qsv target/${{ matrix.job.target }}/release/qsvnp
-        fi
+    # - name: Build qsv without python
+    #   if: ${{ matrix.job.build-nopython }}
+    #   env:
+    #     RUSTFLAGS: --emit=asm
+    #   uses: actions-rs/cargo@v1
+    #   with:
+    #     command: build
+    #     use-cross: ${{ matrix.job.use-cross }}
+    #     toolchain: ${{ matrix.rust }}
+    #     args: --release --locked --bin qsv --target ${{ matrix.job.target }} --features=nopython_full ${{ matrix.job.default-features }}
+    # - name: Rename qsv without python to qsvnp
+    #   if: ${{ matrix.job.build-nopython }}
+    #   shell: bash
+    #   run: |
+    #     if [ "$RUNNER_OS" == "Windows" ]; then
+    #         mv -v target/${{ matrix.job.target }}/release/qsv.exe target/${{ matrix.job.target }}/release/qsvnp.exe
+    #     else
+    #         mv -v target/${{ matrix.job.target }}/release/qsv target/${{ matrix.job.target }}/release/qsvnp
+    #     fi
     - name: Build qsv
       env:
         RUSTFLAGS: --emit=asm
@@ -191,24 +191,24 @@ jobs:
         use-cross: ${{ matrix.job.use-cross }}
         toolchain: ${{ matrix.rust }}
         args: --release --locked --bin qsv --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }},full ${{ matrix.job.default-features }}
-    - name: Build qsvlite
-      env:
-        RUSTFLAGS: --emit=asm
-      uses: actions-rs/cargo@v1
-      with:
-        command: build
-        use-cross: ${{ matrix.job.use-cross }}
-        toolchain: ${{ matrix.rust }}
-        args: --release --locked --bin qsvlite --features=lite,self_update --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}
-    - name: Build qsvdp
-      env:
-        RUSTFLAGS: --emit=asm
-      uses: actions-rs/cargo@v1
-      with:
-        command: build
-        use-cross: ${{ matrix.job.use-cross }}
-        toolchain: ${{ matrix.rust }}
-        args: --release --locked --bin qsvdp --features=datapusher_plus --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}
+    # - name: Build qsvlite
+    #   env:
+    #     RUSTFLAGS: --emit=asm
+    #   uses: actions-rs/cargo@v1
+    #   with:
+    #     command: build
+    #     use-cross: ${{ matrix.job.use-cross }}
+    #     toolchain: ${{ matrix.rust }}
+    #     args: --release --locked --bin qsvlite --features=lite,self_update --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}
+    # - name: Build qsvdp
+    #   env:
+    #     RUSTFLAGS: --emit=asm
+    #   uses: actions-rs/cargo@v1
+    #   with:
+    #     command: build
+    #     use-cross: ${{ matrix.job.use-cross }}
+    #     toolchain: ${{ matrix.rust }}
+    #     args: --release --locked --bin qsvdp --features=datapusher_plus --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}
     - name: Copy binaries to working dir
       shell: bash
       run: |
