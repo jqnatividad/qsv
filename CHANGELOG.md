@@ -5,6 +5,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.68.0] - 2022-09-16
+### Changed
+* Simplify python support. For prebuilt binaries, Python 3.10 is now required and the python 3.10 shared libraries are bundled for select platforms.
+If you require an earlier version of Python (3.6 and up), you'll have to install/compile from source. https://github.com/jqnatividad/qsv/pull/492
+* Smarter self update. --update can still be explicitly invoked even when self-update feature has been disabled. Further, if you compiled qsv from source,
+self-update will only notify you of new releases, instead of proceeding with self-update. https://github.com/jqnatividad/qsv/pull/490 and https://github.com/jqnatividad/qsv/pull/493
+* `lua`: switch from Lua 5.4 to LuaJIT 2.1, primarily for performance https://github.com/jqnatividad/qsv/pull/495
+* `lua`: when filtering using floats, "0.0" is false
+* `join`: removed unneeded utf8 check
+* `search`: simplify regex_unicode check
+* `fetch` & `fetchpost`: optimize imports; remove unneeded utf8 check
+* Bump anyhow from 1.0.64 to 1.0.65 by @dependabot in https://github.com/jqnatividad/qsv/pull/498
+* Bump self_update from 0.31.0 to 0.32.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/499
+* add additional copyright holder to MIT License
+* Improved publishing workflow for prebuilt binaries
+* cargo update bumped several dependencies
+* pin Rust nightly to 2022-09-14
+
+### Fixed
+* fix typos by @kianmeng in https://github.com/jqnatividad/qsv/pull/491
+* `python`: better error handling. When mapping/filtering, python expression errors no longer cause a panic, but instead fail to map/filter as expected (when mapping, "\<ERROR\>" is returned, when filtering, the filter is not applied), and continue processing. Also, other errors are properly propagated instead of panicking. https://github.com/jqnatividad/qsv/pull/496
+* `lua`: better error handling. When mapping/filtering, Lua errors no longer cause a panic, but instead fail to map/filter as expected (when mapping, "\<ERROR\>" is returned, when filtering, the filter is not applied), and continue processing. https://github.com/jqnatividad/qsv/pull/497
+
 ## [0.67.0] - 2022-09-09
 ### Added
 * added `self_update` feature, so users can build qsv without self-update engine https://github.com/jqnatividad/qsv/pull/483 and https://github.com/jqnatividad/qsv/pull/484
