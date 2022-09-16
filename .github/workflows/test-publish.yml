@@ -197,6 +197,7 @@ jobs:
       if: ${{ matrix.job.build-nopython }}
       run: |
         cp -v ${{ matrix.job.python_library_path }} qsv-publish-testing
+        ls -lh $env:Python3_ROOT_DIR
         cp -v $env:Python3_ROOT_DIR/LICENSE.txt qsv-${{ needs.analyze-tags.outputs.previous-tag }}/PYTHON-LICENSE.TXT
     - name: zip up binaries
       run: 7z a -tzip qsv-publish-testing-${{ matrix.job.target }}.zip ./qsv-publish-testing/* -mx=9 -mmt=on
