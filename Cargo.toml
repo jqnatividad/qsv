@@ -120,7 +120,7 @@ reqwest = { version = "0.11", features = [
 reverse_geocoder = { version = "3", optional = true }
 rust_decimal = "1.26"
 ryu = "1"
-self_update = { version = "0.31", features = [
+self_update = { version = "0.32", features = [
     "archive-zip",
     "compression-zip-deflate",
     "rustls",
