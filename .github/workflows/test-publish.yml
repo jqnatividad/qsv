@@ -50,7 +50,7 @@ jobs:
             addl-build-args: --features=apply,generate,lua,fetch,python,self_update
             build-nopython: true
             default-features:
-            python_library_path: $env:Python3_ROOT_DIR/*.dll
+            python_library_path: $env:Python3_ROOT_DIR/python*.dll
           # - os: windows-latest
           #   os-name: windows
           #   target: i686-pc-windows-msvc
@@ -68,7 +68,7 @@ jobs:
             addl-build-args: --features=apply,generate,lua,fetch,python,self_update
             build-nopython: true
             default-features: --no-default-features
-            python_library_path: $env:Python3_ROOT_DIR/*.*
+            python_library_path: $env:Python3_ROOT_DIR/python*.dll
           # - os: macos-latest
           #   os-name: macos
           #   target: x86_64-apple-darwin
@@ -197,6 +197,7 @@ jobs:
       if: ${{ matrix.job.build-nopython }}
       run: |
         cp -v ${{ matrix.job.python_library_path }} qsv-master
+        cp -v $env:Python3_ROOT_DIR/LICENSE.txt qsv-${{ needs.analyze-tags.outputs.previous-tag }}/PYTHON-LICENSE.TXT
     - name: zip up binaries
       run: 7z a -tzip qsv-master-${{ matrix.job.target }}.zip ./qsv-master/* -mx=9 -mmt=on
     - name: Upload zipped binaries to release
