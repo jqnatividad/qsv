@@ -195,17 +195,8 @@ jobs:
         cp -v target/${{ matrix.job.target }}/release/qsv* qsv-publish-testing
     - name: bundle python shared library
       if: ${{ matrix.job.build-nopython }}
-      shell: bash
       run: |
-        if [ "$RUNNER_OS" == "Windows" ]; then
-            cp -v ${{ matrix.job.python_library_path }} qsv-publish-testing
-            ls -lh $env:Python3_ROOT_DIR
-            cp -v $env:Python3_ROOT_DIR/LICENSE.txt qsv-${{ needs.analyze-tags.outputs.previous-tag }}/PYTHON-LICENSE.TXT
-        else
-            cp -v ${{ matrix.job.python_library_path }} qsv-publish-testing
-            ls -lh $Python3_ROOT_DIR
-            cp -v $Python3_ROOT_DIR/LICENSE.txt qsv-${{ needs.analyze-tags.outputs.previous-tag }}/PYTHON-LICENSE.TXT    
-        fi
+        cp -v ${{ matrix.job.python_library_path }} qsv-publish-testing
     - name: zip up binaries
       run: 7z a -tzip qsv-publish-testing-${{ matrix.job.target }}.zip ./qsv-publish-testing/* -mx=9 -mmt=on
     - name: Upload zipped binaries to release
