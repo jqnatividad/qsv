@@ -173,7 +173,6 @@ use crate::CliResult;
 use crate::{regex_once_cell, util};
 use cached::proc_macro::{cached, io_cached};
 use cached::{Cached, IOCached, RedisCache, Return};
-use console::set_colors_enabled;
 use dynfmt::Format;
 use governor::{
     clock::DefaultClock, middleware::NoOpMiddleware, state::direct::NotKeyed, state::InMemoryState,
@@ -188,7 +187,6 @@ use regex::Regex;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::time::Instant;
 use std::{fs, thread, time};
 use url::Url;
 
@@ -300,6 +298,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
         .trim(csv::Trim::All)
+        .checkutf8(false)
         .no_headers(args.flag_no_headers);
 
     let mut rdr = rconfig.reader()?;
@@ -438,7 +437,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let error_progress = multi_progress.add(ProgressBar::new(args.flag_max_errors as u64));
     if args.flag_max_errors > 0 && show_progress {
-        set_colors_enabled(true); // as error progress bar is red
+        console::set_colors_enabled(true); // as error progress bar is red
         error_progress.set_style(
             indicatif::ProgressStyle::default_bar()
                 .template("{bar:37.red/white} {percent}%{msg} ({per_sec:7})")
@@ -561,7 +560,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut running_error_count = 0_u64;
     let mut running_success_count = 0_u64;
     let mut was_cached;
-    let mut now = Instant::now();
+    let mut now = time::Instant::now();
 
     while rdr.read_byte_record(&mut record)? {
         if show_progress {
@@ -569,7 +568,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         if report != ReportKind::None {
-            now = Instant::now();
+            now = time::Instant::now();
         };
 
         if args.flag_url_template.is_some() {
