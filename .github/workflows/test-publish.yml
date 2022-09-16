@@ -7,23 +7,8 @@ env:
   QSV_KIND: prebuilt-testing
 
 jobs:
-  analyze-tags:
-    runs-on: ubuntu-latest
-    outputs:
-      previous-tag: ${{ steps.previoustag.outputs.tag }}
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      #▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼#
-      - name: Get previous tag
-        id: previoustag
-        uses: "WyriHaximus/github-action-get-previous-tag@v1"
-      #▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲#
-
   publish:
     name: Publish for ${{ matrix.job.target }}
-    needs: analyze-tags
     runs-on: ${{ matrix.job.os }}
     strategy:
       matrix:
@@ -65,7 +50,7 @@ jobs:
             addl-build-args: --features=apply,generate,lua,fetch,python,self_update
             build-nopython: true
             default-features:
-            python_library_path: $env:Python3_ROOT_DIR/lib/*.*
+            python_library_path: $env:Python3_ROOT_DIR/*.dll
           # - os: windows-latest
           #   os-name: windows
           #   target: i686-pc-windows-msvc
@@ -143,7 +128,7 @@ jobs:
       uses: actions/checkout@v3
       with:
         submodules: recursive
-        ref: ${{ needs.analyze-tags.outputs.previous-tag }}
+        ref: 'master'
     - uses: actions/setup-python@v4.2.0
       with:
         python-version: '3.10.7'
@@ -205,21 +190,21 @@ jobs:
     - name: Copy binaries to working dir
       shell: bash
       run: |
-        mkdir qsv-${{ needs.analyze-tags.outputs.previous-tag }}
+        mkdir qsv-master
         rm target/${{ matrix.job.target }}/release/*.d 
-        cp -v target/${{ matrix.job.target }}/release/qsv* qsv-${{ needs.analyze-tags.outputs.previous-tag }}
+        cp -v target/${{ matrix.job.target }}/release/qsv* qsv-master
     - name: bundle python shared library
       if: ${{ matrix.job.build-nopython }}
       run: |
-        cp -v ${{ matrix.job.python_library_path }} qsv-${{ needs.analyze-tags.outputs.previous-tag }}
+        cp -v ${{ matrix.job.python_library_path }} qsv-master
     - name: zip up binaries
-      run: 7z a -tzip qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/* -mx=9 -mmt=on
+      run: 7z a -tzip qsv-master-${{ matrix.job.target }}.zip ./qsv-master/* -mx=9 -mmt=on
     - name: Upload zipped binaries to release
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip
-        asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}-testing.zip
+        file: qsv-master-${{ matrix.job.target }}.zip
+        asset_name: qsv-master-${{ matrix.job.target }}-testing.zip
         overwrite: true
-        tag: ${{ needs.analyze-tags.outputs.previous-tag }}    
+        tag: master    
  
