@@ -115,24 +115,24 @@ jobs:
             build-nopython: false
             default-features:
             python_library_path:
-          - os: ubuntu-latest
-            os-name: linux
-            target: arm-unknown-linux-gnueabihf
-            architecture: arm
-            use-cross: true
-            addl-build-args: --features=apply,generate,lua,fetch,foreach,self_update
-            build-nopython: false
-            default-features: --no-default-features
-            python_library_path:
-          - os: ubuntu-latest
-            os-name: linux
-            target: arm-unknown-linux-musleabihf
-            architecture: arm
-            use-cross: true
-            addl-build-args: --features=apply,generate,lua,fetch,foreach,self_update
-            build-nopython: false
-            default-features: --no-default-features
-            python_library_path:
+          # - os: ubuntu-latest
+          #   os-name: linux
+          #   target: arm-unknown-linux-gnueabihf
+          #   architecture: arm
+          #   use-cross: true
+          #   addl-build-args: --features=apply,generate,lua,fetch,foreach,self_update
+          #   build-nopython: false
+          #   default-features: --no-default-features
+          #   python_library_path:
+          # - os: ubuntu-latest
+          #   os-name: linux
+          #   target: arm-unknown-linux-musleabihf
+          #   architecture: arm
+          #   use-cross: true
+          #   addl-build-args: --features=apply,generate,lua,fetch,foreach,self_update
+          #   build-nopython: false
+          #   default-features: --no-default-features
+          #   python_library_path:
 
     steps:
     - name: Installing Rust toolchain
