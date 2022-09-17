@@ -51,7 +51,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [input](/src/cmd/input.rs#L2)[^2] | Read CSV data with special quoting, trimming, line-skipping and UTF-8 transcoding rules. Typically used to "normalize" a CSV for further processing with other qsv commands. |
 | [join](/src/cmd/join.rs#L2)[^2] | Inner, outer, cross, anti & semi joins. Uses a simple hash index to make it fast.  |
 | [jsonl](/src/cmd/jsonl.rs#L2) | Convert newline-delimited JSON ([JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/)) to CSV. See `tojsonl` command to convert CSV to JSONL.
-| [lua](/src/cmd/lua.rs#L2)[^1] | Execute a [LuaJIT](https://luajit.org/luajit.html) 2.1 script over CSV lines to transform, aggregate or filter them.  |
+| [lua](/src/cmd/lua.rs#L2)[^1] | Execute a [Lua](https://www.lua.org/about.html) 5.4 script over CSV lines to transform, aggregate or filter them.  |
 | [partition](/src/cmd/partition.rs#L2) | Partition a CSV based on a column value. |
 | [pseudo](/src/cmd/pseudo.rs#L2) | [Pseudonymise](https://en.wikipedia.org/wiki/Pseudonymization) the value of the given column by replacing them with an incremental identifier.  |
 | [py](/src/cmd/python.rs#L2)[^1] | Evaluate a Python expression over CSV lines to transform, aggregate or filter them. Python's [f-strings](https://www.freecodecamp.org/news/python-f-strings-tutorial-how-to-use-f-strings-for-string-formatting/) is particularly useful for extended formatting ([Python 3.6 and up supported, with Python 3.10 required on prebuilt qsv](#python)).  |
@@ -297,7 +297,7 @@ Relevant env vars are defined as anything that starts with `QSV_` and `MIMALLOC_
 
 The following "power-user" features can be abused and present "foot-shooting" scenarios:
 
-* `lua` - enable `lua` command. Embeds a [LuaJIT 2.1](https://luajit.org/luajit.html) interpreter into qsv.
+* `lua` - enable `lua` command. Embeds a [Lua 5.4](https://www.lua.org/about.html) interpreter into qsv.
 * `foreach` - enable `foreach` command (not valid for Windows).
 * `python` - enable `py` command (requires Python 3.6+ shared library). Note that qsv will look for the Python shared library (libpython.* on Linux/macOS, python*.dll on Windows) for the Python version it was compiled against and will abort if the library is not found, even if you're not using the `py` command. Check [Python](#python) section for more info.
 

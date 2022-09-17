@@ -1,8 +1,8 @@
 static USAGE: &str = r#"
-Create a new column, filter rows or compute aggregations by executing a LuaJIT
+Create a new column, filter rows or compute aggregations by executing a Lua
 script of every line of a CSV file.
 
-The executed LuaJIT has 3 ways to reference row columns (as strings):
+The executed Lua has 3 ways to reference row columns (as strings):
   1. Directly by using column name (e.g. Amount), can be disabled with -g
   2. Indexing col variable by column name: col.Amount or col["Total Balance"]
   3. Indexing col variable by column 1-based index: col[1], col[2], etc.
@@ -18,7 +18,7 @@ Some usage examples:
   $ qsv lua map c "col[1] + col[2]"
 
   There is some magic in the previous example as 'a' and 'b' are passed in
-  as strings (not numbers), but LuaJIT still manages to add them up.
+  as strings (not numbers), but Lua still manages to add them up.
   A more explicit way of doing it, is by using tonumber
   $ qsv lua map c "tonumber(a) + tonumber(b)"
 
@@ -41,8 +41,8 @@ Some usage examples:
   so -f should be used for non-trivial scripts to read them from a file
   $ qsv lua map Type -x -f debitcredit.lua
 
-  With "lua map", if a LuaJIT script is invalid, "<ERROR>" is returned.
-  With "lua filter", if a LuaJIT script is invalid, no filtering is done.
+  With "lua map", if a Lua script is invalid, "<ERROR>" is returned.
+  With "lua filter", if a Lua script is invalid, no filtering is done.
 
 Usage:
     qsv lua map [options] -n <script> [<input>]
@@ -53,15 +53,15 @@ Usage:
     qsv lua --help
 
 lua options:
-    -x, --exec         exec[ute] LuaJIT script, instead of the default eval[uate].
-                       eval (default) expects just a single LuaJIT expression,
+    -x, --exec         exec[ute] Lua script, instead of the default eval[uate].
+                       eval (default) expects just a single Lua expression,
                        while exec expects one or more statements, allowing
-                       full-fledged LuaJIT programs.
-    -f, --script-file  <script> is a file name containing LuaJIT script.
+                       full-fledged Lua programs.
+    -f, --script-file  <script> is a file name containing Lua script.
                        By default (no -f) <script> is the script text.
-    -g, --no-globals   Don't create LuaJIT global variables for each column, only col.
-                       Useful when some column names mask standard LuaJIT globals.
-                       Note: access to LuaJIT globals thru _G remains even without -g.
+    -g, --no-globals   Don't create Lua global variables for each column, only col.
+                       Useful when some column names mask standard Lua globals.
+                       Note: access to Lua globals thru _G remains even without -g.
 
 Common options:
     -h, --help             Display this message
@@ -137,7 +137,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let lua_script = if args.flag_script_file {
         match fs::read_to_string(&args.arg_script) {
             Ok(script_file) => script_file,
-            Err(e) => return fail_format!("Cannot load LuaJIT file: {e}"),
+            Err(e) => return fail_format!("Cannot load Lua file: {e}"),
         }
     } else {
         args.arg_script
@@ -150,7 +150,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     lua_program.push_str(&lua_script);
-    debug!("LuaJIT program: {lua_program:?}");
+    debug!("Lua program: {lua_program:?}");
 
     // prep progress bar
     let show_progress =
@@ -225,7 +225,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     record.push_field("");
                 }
                 _ => {
-                    return fail_format!("Unexpected value type returned by provided LuaJIT expression. {computed_value:?}");
+                    return fail_format!("Unexpected value type returned by provided Lua expression. {computed_value:?}");
                 }
             }
 
