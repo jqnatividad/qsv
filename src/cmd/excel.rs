@@ -330,8 +330,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         count.saturating_sub(1).separate_with_commas(),
         record.len().separate_with_commas(),
     );
-    info!("{end_msg}");
-    eprintln!("{end_msg}");
+    winfo!("{end_msg}");
 
     Ok(())
 }
