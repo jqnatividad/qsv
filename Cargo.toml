@@ -98,6 +98,7 @@ jql = { version = "5.0", default-features = false, optional = true }
 log = "0.4"
 mimalloc = { version = "0.1", default-features = false, optional = true }
 mlua = { version = "0.8", features = ["lua54", "vendored"], optional = true }
+mluajit = { package="mlua", version = "0.8", features = ["luajit", "vendored"], optional = true }
 once_cell = { version = "1.14", features = ["parking_lot"] }
 parking_lot = { version = "0.12", features = ["hardware-lock-elision"] }
 pyo3 = { version = "0.17", features = ["auto-initialize"], optional = true }
@@ -168,7 +169,7 @@ all_full = [
     "fetch",
     "foreach",
     "generate",
-    "lua",
+    "luajit",
     "python",
     "self_update",
 ]
@@ -208,6 +209,7 @@ fetch = [
 foreach = []
 generate = ["test-data-generation"]
 lua = ["mlua"]
+luajit = ["mluajit"]
 python = ["pyo3"]
 lite = []
 datapusher_plus = []
