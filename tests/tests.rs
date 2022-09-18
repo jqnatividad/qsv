@@ -61,6 +61,8 @@ mod test_join;
 mod test_jsonl;
 #[cfg(feature = "lua")]
 mod test_lua;
+#[cfg(feature = "luajit")]
+mod test_luajit;
 mod test_partition;
 mod test_pseudo;
 #[cfg(feature = "python")]
