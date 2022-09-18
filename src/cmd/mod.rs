@@ -40,6 +40,8 @@ pub mod join;
 pub mod jsonl;
 #[cfg(all(feature = "lua", not(feature = "lite")))]
 pub mod lua;
+#[cfg(all(feature = "luajit", not(feature = "lite")))]
+pub mod luajit;
 #[cfg(any(feature = "full", feature = "lite"))]
 pub mod partition;
 pub mod pseudo;
