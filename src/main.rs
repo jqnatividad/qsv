@@ -72,7 +72,8 @@ macro_rules! command_list {
     input       Read CSVs w/ special quoting, skipping, trimming & transcoding rules
     join        Join CSV files
     jsonl       Convert newline-delimited JSON files to CSV
-    lua*        Execute Lua script on CSV data
+    lua*        Execute Lua 5.4 script on CSV data
+    luajit*     Execute LuaJIT 2.1 script on CSV data
     partition   Partition CSV data based on a column value
     pseudo      Pseudonymise the values of a column
     py*         Evaluate a Python expression on CSV data
@@ -248,6 +249,8 @@ enum Command {
     Jsonl,
     #[cfg(all(feature = "lua", not(feature = "lite")))]
     Lua,
+    #[cfg(all(feature = "luajit", not(feature = "lite")))]
+    LuaJIT,
     Partition,
     Pseudo,
     #[cfg(all(feature = "python", not(feature = "lite")))]
@@ -321,6 +324,8 @@ impl Command {
             Command::Jsonl => cmd::jsonl::run(argv),
             #[cfg(all(feature = "lua", not(feature = "lite")))]
             Command::Lua => cmd::lua::run(argv),
+            #[cfg(all(feature = "luajit", not(feature = "lite")))]
+            Command::LuaJIT => cmd::luajit::run(argv),
             Command::Partition => cmd::partition::run(argv),
             Command::Pseudo => cmd::pseudo::run(argv),
             #[cfg(all(feature = "python", not(feature = "lite")))]

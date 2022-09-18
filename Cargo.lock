@@ -923,9 +923,9 @@ dependencies = [
 
 [[package]]
 name = "fraction"
-version = "0.11.1"
+version = "0.11.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "317322288e76bb0c2dde9106975a0ba1f8a1ef18205ba2a5b8ef0ba6a638ca79"
+checksum = "ad18174c73e668720cf9961281ea94a10a8c4003c2b2ad7117252109e5423a3f"
 dependencies = [
  "lazy_static",
  "num",
@@ -1479,9 +1479,9 @@ dependencies = [
 
 [[package]]
 name = "luajit-src"
-version = "210.4.2+resty89d53e9"
+version = "210.4.3+resty8384278"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fd4c3831d8260be847f12b46a3936b9b8f72be20b2e43559fb0c3e2a9c8eb361"
+checksum = "19ee5d5afddf1ec76ffa55ca7c3001f2f8a703834beba53c56a38ea6641cef44"
 dependencies = [
  "cc",
 ]
