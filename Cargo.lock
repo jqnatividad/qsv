@@ -28,7 +28,7 @@ dependencies = [
  "actix-http",
  "actix-web",
  "futures",
- "governor",
+ "governor 0.4.2",
 ]
 
 [[package]]
@@ -1080,6 +1080,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "governor"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "de1b4626e87b9eb1d603ed23067ba1e29ec1d0b35325a2b96c3fe1cf20871f56"
+dependencies = [
+ "cfg-if",
+ "dashmap",
+ "futures",
+ "futures-timer",
+ "no-std-compat",
+ "nonzero_ext",
+ "parking_lot",
+ "quanta",
+ "rand",
+ "smallvec",
+]
+
+[[package]]
 name = "grex"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2017,7 +2035,7 @@ dependencies = [
  "ext-sort",
  "filetime",
  "flexi_logger",
- "governor",
+ "governor 0.5.0",
  "grex",
  "hashbrown",
  "indicatif",
