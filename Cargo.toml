@@ -83,7 +83,7 @@ filetime = "0.2"
 flexi_logger = { version = "0.23", features = [
     "compress",
 ], default-features = false }
-governor = { version = "0.4", optional = true }
+governor = { version = "0.5", optional = true }
 grex = { version = "1.4", default-features = false }
 hashbrown = { version = "0.12", optional = true }
 indicatif = "0.17"
@@ -99,7 +99,7 @@ log = "0.4"
 mimalloc = { version = "0.1", default-features = false, optional = true }
 mlua = { version = "0.8", features = ["lua54", "vendored"], optional = true }
 mluajit = { package="mlua", version = "0.8", features = ["luajit", "vendored"], optional = true }
-once_cell = { version = "1.14", features = ["parking_lot"] }
+once_cell = { version = "1.15", features = ["parking_lot"] }
 parking_lot = { version = "0.12", features = ["hardware-lock-elision"] }
 pyo3 = { version = "0.17", features = ["auto-initialize"], optional = true }
 qsv-dateparser = "0.4"
@@ -159,7 +159,6 @@ csv-index  = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-t
 docopt     = { git = "https://github.com/jqnatividad/docopt.rs", branch = "perf-clippy-2021" }
 ext-sort   = { git = "https://github.com/jqnatividad/ext-sort-rs", branch = "master" }
 jsonschema = { git = "https://github.com/jqnatividad/jsonschema-rs", branch = "master" }
-reqwest    = { git = "https://github.com/seanmonstar/reqwest", rev = "e9ba0a9dc79f63c3655f334df23b50b9a841e326" }
 
 [features]
 default = ["mimalloc"]
