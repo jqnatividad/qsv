@@ -1035,12 +1035,11 @@ ratelimit_reset:{ratelimit_reset:?} {ratelimit_reset_sec:?} retry_after:{retry_a
                     if let Some(ratelimit_reset_sec) = ratelimit_reset_sec {
                         let reset_sec_str = ratelimit_reset_sec.to_str().unwrap();
                         reset_sec_str.parse::<u64>().unwrap_or(1)
-                    } else if error_flag {
-                        // sleep for at least 1 second if we get an API error,
-                        // even if there is no ratelimit_reset header
-                        1_u64
                     } else {
-                        0_u64
+                        // sleep for at least 1 second if we get an API error,
+                        // even if there is no ratelimit_reset header,
+                        // otherwise return 0
+                        u64::from(error_flag)
                     }
                 },
                 |ratelimit_reset| {
