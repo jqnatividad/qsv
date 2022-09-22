@@ -4,7 +4,8 @@ expression on every row of a CSV file.
 
 The executed Python has 4 ways to reference cell values (as strings):
   1. Directly by using column name (e.g. amount) as a local variable. If a column
-     name has spaces, they are replaced with underscores (e.g. "unit cost" -> unit_cost)
+     name has spaces and other special characters, they are replaced with underscores
+     (e.g. "unit cost" -> unit_cost, "test-units/sec" -> test_units_sec)
   2. Indexing cell value by column name as an attribute: row.amount
   3. Indexing cell value by column name as a key: row["amount"]
   4. Indexing cell value by column position: row[0]
@@ -30,11 +31,41 @@ Some usage examples:
   $ qsv py filter "int(a) > 45"
 
   Load helper file with function to compute Fibonacci sequence of the column "num_col"
-  $ qsv py map --helper-file fibonacci.py fib qsv_uh.fibonacci(num_col) data.csv
+  $ qsv py map --helper fibonacci.py fib qsv_uh.fibonacci(num_col) data.csv
+
+  Below is a detailed example of the --helper option:
+
+  Use case:
+  Need to calculate checksum/md5sum of some columns. First column (c1) is "id", and do md5sum of
+  the rest of the columns (c2, c3 and c4).
+
+  Given test.csv:
+    c1,c2,c3,c4
+    1,a2,a3,a4
+    2,b2,b3,b4
+    3,c2,c3,c4
+
+  and hashhelper.py:
+    import hashlib
+    def md5hash (*args):
+        s = ",".join(args)
+        return(hashlib.md5(s.encode('utf-8')).hexdigest())
+
+  with the following command:
+  $ qsv py map --helper hashhelper.py hashcol 'qsv_uh.md5hash(c2,c3,c4)' test.csv
+
+  we get:
+  c1,c2,c3,c4,hashcol
+  1,a2,a3,a4,cb675342ed940908eef0844d17c35fab
+  2,b2,b3,b4,7d594b33f82bdcbc1cfa6f924a84c4cd
+  3,c2,c3,c4,6eabbfdbfd9ab6ae7737fb2b82f6a1af
 
   NOTE: The prebuilt qsv binaries are linked against Python 3.10 and will require access
   to the Python 3.10 shared libraries (libpython* on Linux/macOS, python*.dll on Windows)
-  during runtime for the py command to run. 
+  during runtime for the py command to run.
+  
+  Note that qsv with the `python` feature enabled will panic on startup even if you're not
+  using the `py` command if Python's shared libraries are not found.
   
   If you wish qsv to use another Python version, you'll need to install/compile qsv from source.
 
@@ -54,8 +85,11 @@ Usage:
     qsv py --help
 
 py options:
-    -f, --helper <file>    File containing Python code that's loaded
-                           into the qsv_uh Python module.
+    -f, --helper <file>    File containing Python code that's loaded into the 
+                           qsv_uh Python module. Functions with a return statement
+                           in the file can be called with the prefix "qsv_uh".
+                           The returned value is used in the map or filter operation.
+
     -b, --batch <size>     The number of rows per batch to process before
                            releasing memory and acquiring a new GILpool.
                            See https://pyo3.rs/v0.17.1/memory.html#gil-bound-memory
@@ -143,7 +177,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut rdr = rconfig.reader()?;
     let mut wtr = Config::new(&args.flag_output).writer()?;
 
-    if log_enabled!(Debug) || args.flag_progressbar {
+    if log_enabled!(Debug) {
         Python::with_gil(|py| {
             let msg = format!("Detected python={}", py.version());
             winfo!("{msg}");
