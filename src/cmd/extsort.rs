@@ -10,6 +10,7 @@ otherwise, the first line will not be included in the external sort.
 
 Usage:
     qsv extsort [options] <input> <output>
+    qsv extsort --help
 
 External sort option:
     -j, --jobs <arg>       The number of jobs to run in parallel.
