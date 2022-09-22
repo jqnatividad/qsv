@@ -4,7 +4,8 @@ expression on every row of a CSV file.
 
 The executed Python has 4 ways to reference cell values (as strings):
   1. Directly by using column name (e.g. amount) as a local variable. If a column
-     name has spaces, they are replaced with underscores (e.g. "unit cost" -> unit_cost)
+     name has spaces and other special characters, they are replaced with underscores
+     (e.g. "unit cost" -> unit_cost, "test-units/sec" -> test_units_sec)
   2. Indexing cell value by column name as an attribute: row.amount
   3. Indexing cell value by column name as a key: row["amount"]
   4. Indexing cell value by column position: row[0]
@@ -61,7 +62,10 @@ Some usage examples:
 
   NOTE: The prebuilt qsv binaries are linked against Python 3.10 and will require access
   to the Python 3.10 shared libraries (libpython* on Linux/macOS, python*.dll on Windows)
-  during runtime for the py command to run. 
+  during runtime for the py command to run.
+  
+  Note that qsv with the `python` feature enabled will panic on startup even if you're not
+  using the `py` command if Python's shared libraries are not found.
   
   If you wish qsv to use another Python version, you'll need to install/compile qsv from source.
 
