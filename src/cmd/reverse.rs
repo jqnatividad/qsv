@@ -8,6 +8,7 @@ Note that this requires reading all of the CSV data into memory.
 
 Usage:
     qsv reverse [options] [<input>]
+    qsv reverse --help
 
 Common options:
     -h, --help             Display this message

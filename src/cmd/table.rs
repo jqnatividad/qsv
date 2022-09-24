@@ -9,6 +9,7 @@ CSV data before formatting it with this command.
 
 Usage:
     qsv table [options] [<input>]
+    qsv table --help
 
 table options:
     -w, --width <arg>      The minimum width of each column.

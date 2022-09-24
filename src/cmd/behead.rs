@@ -3,6 +3,7 @@ Drop a CSV file's header.
 
 Usage:
     qsv behead [options] [<input>]
+    qsv behead --help
 
 Common options:
     -h, --help             Display this message

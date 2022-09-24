@@ -32,6 +32,7 @@ Usage:
     qsv generate [options] [--rows=<count>] <input>
     qsv generate [options] [--rows=<count>] (--indsp=<file>)
     qsv generate [options] (--outdsp=<file>) [<input>]
+    qsv generate --help
 
 generate options:
     -r, --rows=<count>     Number of rows of test data to generate.

@@ -22,6 +22,7 @@ Returns exit code 0 if a CSV is sorted, and exit code 1 otherwise.
 
 Usage:
     qsv sortcheck [options] [<input>]
+    qsv sortcheck --help
 
 sort options:
     -s, --select <arg>      Select a subset of columns to check for sort.

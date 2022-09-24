@@ -9,6 +9,7 @@ contents of each field to provide a summary view.
 
 Usage:
     qsv flatten [options] [<input>]
+    qsv flatten --help
 
 flatten options:
     -c, --condense <arg>  Limits the length of each field to the value

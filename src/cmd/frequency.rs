@@ -14,6 +14,7 @@ cardinality of each column is required.
 
 Usage:
     qsv frequency [options] [<input>]
+    qsv frequency --help
 
 frequency options:
     -s, --select <arg>     Select a subset of columns to compute frequencies

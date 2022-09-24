@@ -28,6 +28,7 @@ first with 'qsv index' to enable multithreading.
 
 Usage:
     qsv stats [options] [<input>]
+    qsv stats --help
 
 stats options:
     -s, --select <arg>        Select a subset of columns to compute stats for.

@@ -7,6 +7,7 @@ extsort command instead.
 
 Usage:
     qsv sort [options] [<input>]
+    qsv sort --help
 
 sort options:
     -s, --select <arg>     Select a subset of columns to sort.

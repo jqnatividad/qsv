@@ -16,6 +16,7 @@ not all columns with numeric values.
 
 Usage:
     qsv excel [options] [<input>]
+    qsv excel --help
 
 Excel options:
     -s, --sheet <name/index>   Name or zero-based index of sheet to export.

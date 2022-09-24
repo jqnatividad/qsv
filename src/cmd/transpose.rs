@@ -6,6 +6,7 @@ unless --multipass is given.
 
 Usage:
     qsv transpose [options] [<input>]
+    qsv transpose --help
 
 transpose options:
     -m, --multipass        Process the transpose by making multiple

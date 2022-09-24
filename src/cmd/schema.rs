@@ -16,6 +16,7 @@ Note that `stdin.csv` will be overwritten if it already exists.
 
 Usage:
     qsv schema [options] [<input>]
+    qsv schema --help
 
 Schema options:
     --enum-threshold NUM       Cardinality threshold for adding enum

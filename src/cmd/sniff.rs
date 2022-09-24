@@ -10,7 +10,8 @@ If you want more robust, guaranteed schemata, use the "schema" or "stats" comman
 instead as they scan the entire file.
 
 Usage:
-    qsv sniff [options] [<input>] 
+    qsv sniff [options] [<input>]
+    qsv sniff --help
 
 sniff options:
     --sample <size>        First n rows to sample to sniff out the metadata.

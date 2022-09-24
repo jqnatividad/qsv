@@ -17,6 +17,7 @@ for further processing with other qsv commands.
 
 Usage:
     qsv input [options] [<input>]
+    qsv input --help
 
 input options:
     --quote <arg>            The quote character to use. [default: "]

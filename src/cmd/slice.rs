@@ -15,6 +15,7 @@ parsed.
 
 Usage:
     qsv slice [options] [<input>]
+    qsv slice --help
 
 slice options:
     -s, --start <arg>      The index of the record to slice from.

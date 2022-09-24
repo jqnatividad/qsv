@@ -95,6 +95,7 @@ $ qsv fetch URL data.csv --http-header "X-Api-Key:TEST_KEY" --http-header "X-Api
 
 Usage:
     qsv fetch [<url-column> | --url-template <template>] [--jql <selector> | --jqlfile <file>] [--http-header <k:v>...] [options] [<input>]
+    qsv fetch --help
 
 Fetch options:
     <url-column>               URL column to use.

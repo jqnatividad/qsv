@@ -9,6 +9,7 @@ the --intersect flag.
 
 Usage:
     qsv headers [options] [<input>...]
+    qsv headers --help
 
 headers options:
     -j, --just-names       Only show the header names (hide column index).

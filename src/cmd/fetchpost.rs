@@ -68,6 +68,7 @@ $ qsv fetchpost https://httpbin.org/post col1-col3 data.csv --http-header "X-Api
 
 Usage:
     qsv fetchpost <url-column> <column-list> [--jql <selector> | --jqlfile <file>] [--http-header <k:v>...] [options] [<input>]
+    qsv fetchpost --help
 
 Fetch options:
     <url-column>               If the argument starts with `http`, the URL to use.

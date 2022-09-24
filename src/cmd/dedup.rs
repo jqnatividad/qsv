@@ -14,6 +14,7 @@ A duplicate count will also be sent to <stderr>.
 
 Usage:
     qsv dedup [options] [<input>]
+    qsv dedup --help
 
 sort options:
     -s, --select <arg>         Select a subset of columns to dedup.

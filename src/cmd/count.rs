@@ -6,6 +6,7 @@ given).
 
 Usage:
     qsv count [options] [<input>]
+    qsv count --help
 
 count options:
     -H, --human-readable   Comma separate row count.

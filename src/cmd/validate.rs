@@ -12,6 +12,7 @@ JSON Schema can be a local file or a URL.
 
 Usage:
     qsv validate [options] [<input>] [<json-schema>]
+    qsv validate --help
 
 Validate options:
     --fail-fast                Stops on first error.

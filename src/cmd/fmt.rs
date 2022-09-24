@@ -9,6 +9,7 @@ useful.
 
 Usage:
     qsv fmt [options] [<input>]
+    qsv fmt --help
 
 fmt options:
     -t, --out-delimiter <arg>  The field delimiter for writing CSV data.
