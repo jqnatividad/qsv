@@ -1127,16 +1127,14 @@ ratelimit_reset:{ratelimit_reset:?} {ratelimit_reset_sec:?} retry_after:{retry_a
 use jql::groups_walker;
 use serde_json::{Deserializer, Value};
 
-use anyhow::{anyhow, Result};
-
 #[inline]
-pub fn apply_jql(json: &str, groups: &[jql::Group]) -> Result<String> {
+pub fn apply_jql(json: &str, groups: &[jql::Group]) -> Result<String, String> {
     // check if api returned valid JSON before applying JQL selector
     if let Err(error) = serde_json::from_str::<Value>(json) {
-        return Err(anyhow!("Invalid json: {error:?}"));
+        return Err(format!("Invalid json: {error:?}"));
     }
 
-    let mut result: Result<String> = Ok(String::default());
+    let mut result: Result<String, _> = Ok(String::default());
 
     Deserializer::from_str(json)
         .into_iter::<Value>()
@@ -1193,13 +1191,13 @@ pub fn apply_jql(json: &str, groups: &[jql::Group]) -> Result<String> {
                         }
                     }
                     Err(error) => {
-                        result = Err(anyhow!(error));
+                        result = Err(format!("{error:?}"));
                     }
                 }
             }
             Err(error) => {
                 // shouldn't happen, but do same thing earlier when checking for invalid json
-                result = Err(anyhow!("Invalid json: {error:?}"));
+                result = Err(format!("Invalid json: {error:?}"));
             }
         });
 
@@ -1227,9 +1225,9 @@ fn test_apply_jql_invalid_selector() {
     let selectors = r#"."place"[0]."place name""#;
 
     let jql_groups = jql::selectors_parser(selectors).unwrap();
-    let value = apply_jql(json, &jql_groups).unwrap_err().to_string();
+    let value = apply_jql(json, &jql_groups).unwrap_err();
 
-    assert_eq!("Node \"place\" not found on the parent element", value);
+    assert_eq!(r#""Node \"place\" not found on the parent element""#, value);
 }
 
 #[test]
@@ -1295,10 +1293,10 @@ fn test_root_out_of_bounds() {
     let selectors = r#"[2].[0]."incomeLevel"."value"'"#;
 
     let jql_groups = jql::selectors_parser(selectors).unwrap();
-    let value = apply_jql(json, &jql_groups).unwrap_err().to_string();
+    let value = apply_jql(json, &jql_groups).unwrap_err();
 
     assert_eq!(
-        "Index [2] is out of bound, root element has a length of 2",
+        r#""Index [2] is out of bound, root element has a length of 2""#,
         value
     );
 }
