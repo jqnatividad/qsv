@@ -41,7 +41,6 @@ use crate::config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY};
 use crate::util;
 use crate::CliError;
 use crate::CliResult;
-use anyhow::{anyhow, Result};
 use csv::ByteRecord;
 #[cfg(any(feature = "full", feature = "lite"))]
 use indicatif::{ProgressBar, ProgressDrawTarget};
@@ -491,11 +490,14 @@ fn to_json_instance(
     headers_len: usize,
     record: &ByteRecord,
     schema: &Value,
-) -> Result<Value> {
+) -> Result<Value, String> {
     // make sure schema has expected structure
-    let schema_properties = schema
-        .get("properties")
-        .expect("JSON Schema missing 'properties' object");
+    let schema_properties = match schema.get("properties") {
+        Some(properties) => properties,
+        None => {
+            return Err("JSON Schema missing 'properties' object".to_string());
+        }
+    };
 
     // map holds individual CSV fields converted as serde_json::Value
     // we use with_capacity to minimize allocs
@@ -529,7 +531,12 @@ fn to_json_instance(
                         // keep looking
                         continue;
                     }
-                    return_val = val.as_str().expect("type info should be a JSON string");
+                    return_val = match val.as_str() {
+                        Some(s) => s,
+                        None => {
+                            return Err("type info should be a JSON string".to_string());
+                        }
+                    };
                 }
 
                 return_val
@@ -559,7 +566,7 @@ fn to_json_instance(
                         Value::Number(Number::from_f64(float).expect("not a valid f64 float")),
                     );
                 } else {
-                    return Err(anyhow!(
+                    return Err(format!(
                         "Can't cast into Float. header: {header_string}, value: {value_string}, json type: {json_type}"
                     ));
                 }
@@ -568,7 +575,7 @@ fn to_json_instance(
                 if let Ok(int) = value_string.parse::<i64>() {
                     json_object_map.insert(header_string, Value::Number(Number::from(int)));
                 } else {
-                    return Err(anyhow!(
+                    return Err(format!(
                         "Can't cast into Integer. header: {header_string}, value: {value_string}, json type: {json_type}"
                     ));
                 }
@@ -577,13 +584,13 @@ fn to_json_instance(
                 if let Ok(boolean) = value_string.parse::<bool>() {
                     json_object_map.insert(header_string, Value::Bool(boolean));
                 } else {
-                    return Err(anyhow!(
+                    return Err(format!(
                         "Can't cast into Boolean. header: {header_string}, value: {value_string}, json type: {json_type}"
                     ));
                 }
             }
             _ => {
-                return Err(anyhow!(
+                return Err(format!(
                     "Unsupported JSON type. header: {header_string}, value: {value_string}, json type: {json_type}"
                 ));
             }
@@ -663,7 +670,7 @@ mod tests_for_csv_to_json_conversion {
 
         assert_eq!(
             to_json_instance(&headers, headers.len(), &record, &schema_json())
-                .expect("can convert csv to json instance"),
+                .expect("can't convert csv to json instance"),
             json!({
                 "A": "hello",
                 "B": 3.1415,
@@ -775,7 +782,7 @@ mod tests_for_schema_validation {
     fn compiled_schema() -> JSONSchema {
         JSONSchema::options()
             .compile(&schema_json())
-            .expect("A valid schema")
+            .expect("Invalid schema")
     }
 
     #[test]
@@ -821,32 +828,42 @@ mod tests_for_schema_validation {
     }
 }
 
-fn load_json(uri: &str) -> Result<String> {
+fn load_json(uri: &str) -> Result<String, String> {
     let json_string = match uri {
         url if url.starts_with("http") => {
-            // dbg!(&url);
             use reqwest::blocking::Client;
-            let client = Client::builder()
+            let client = match Client::builder()
                 .user_agent(util::DEFAULT_USER_AGENT)
                 .brotli(true)
                 .gzip(true)
                 .deflate(true)
                 .http2_adaptive_window(true)
                 .build()
-                .unwrap();
+            {
+                Ok(c) => c,
+                Err(e) => {
+                    return Err(format!("Cannot build reqwest client - {e}."));
+                }
+            };
 
-            let response = client.get(url).send()?;
-            response.text()?
+            match client.get(url).send() {
+                Ok(response) => response.text().unwrap_or_default(),
+                Err(e) => return Err(format!("Cannot read JSON at url {url} - {e}.")),
+            }
         }
         path => {
-            // dbg!(&_path);
             let mut buffer = String::new();
-            BufReader::new(File::open(path)?).read_to_string(&mut buffer)?;
+            match File::open(path) {
+                Ok(p) => {
+                    BufReader::new(p)
+                        .read_to_string(&mut buffer)
+                        .unwrap_or_default();
+                }
+                Err(e) => return Err(format!("Cannot read JSON file {path} - {e}.")),
+            }
             buffer
         }
     };
-
-    // dbg!(&json_string);
 
     Ok(json_string)
 }
