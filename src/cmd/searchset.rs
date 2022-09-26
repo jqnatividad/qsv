@@ -73,7 +73,6 @@ use serde::Deserialize;
 use std::env;
 use std::fs::File;
 use std::io::{self, prelude::*, BufReader};
-use std::path::Path;
 
 #[allow(dead_code)]
 #[derive(Deserialize)]
@@ -94,12 +93,12 @@ struct Args {
     flag_progressbar: bool,
 }
 
-fn read_regexset(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
+fn read_regexset(filename: &String) -> io::Result<Vec<String>> {
     match File::open(filename) {
         Ok(f) => BufReader::new(f).lines().collect(),
-        Err(_) => Err(io::Error::new(
+        Err(e) => Err(io::Error::new(
             io::ErrorKind::NotFound,
-            "Cannot open regexset file.",
+            format!("Cannot open regexset file {filename} - {e}"),
         )),
     }
 }
@@ -107,7 +106,7 @@ fn read_regexset(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
-    let regexset = read_regexset(&*args.arg_regexset_file)?;
+    let regexset = read_regexset(&args.arg_regexset_file)?;
     let regex_unicode = if env::var("QSV_REGEX_UNICODE").is_ok() {
         true
     } else {
