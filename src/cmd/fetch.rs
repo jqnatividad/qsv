@@ -1211,7 +1211,7 @@ fn test_apply_jql_invalid_json() {
     let selectors = r#"."places"[0]."place name""#;
 
     let jql_groups = jql::selectors_parser(selectors).unwrap();
-    let value: String = apply_jql(json, &jql_groups).unwrap_err().to_string();
+    let value: String = apply_jql(json, &jql_groups).unwrap_err();
 
     assert_eq!(
         "Invalid json: Error(\"expected value\", line: 1, column: 1)",
