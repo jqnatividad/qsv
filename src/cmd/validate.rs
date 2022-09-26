@@ -49,6 +49,7 @@ use jsonschema::paths::PathChunk;
 use jsonschema::{output::BasicOutput, JSONSchema};
 #[allow(unused_imports)]
 use log::{debug, info};
+use once_cell::sync::OnceCell;
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, value::Number, Map, Value};
@@ -57,6 +58,9 @@ use thousands::Separable;
 
 // number of CSV rows to process in a batch
 const BATCH_SIZE: usize = 24_000;
+
+// to save on repeated init/allocs
+static NULL_TYPE: once_cell::sync::OnceCell<Value> = OnceCell::new();
 
 #[allow(dead_code)]
 #[derive(Deserialize)]
@@ -503,7 +507,7 @@ fn to_json_instance(
     // we use with_capacity to minimize allocs
     let mut json_object_map: Map<String, Value> = Map::with_capacity(headers_len);
 
-    let null_type: Value = Value::String("null".to_string());
+    let null_type = NULL_TYPE.get_or_init(|| Value::String("null".to_string()));
 
     // iterate over each CSV field and convert to JSON type
     for (i, header) in headers.iter().enumerate() {
@@ -527,7 +531,7 @@ fn to_json_instance(
 
                 // grab the first entry that's not a "null", since it just means value is optional
                 for val in vec {
-                    if *val == null_type {
+                    if *val == *null_type {
                         // keep looking
                         continue;
                     }
@@ -706,7 +710,7 @@ mod tests_for_csv_to_json_conversion {
         let error = result.err().unwrap();
         assert_eq!(
             "Can't cast into Integer. header: C, value: 3.0e8, json type: integer",
-            error.to_string()
+            error
         );
     }
 }
