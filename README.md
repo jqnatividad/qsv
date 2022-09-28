@@ -299,6 +299,7 @@ Relevant env vars are defined as anything that starts with `QSV_` and `MIMALLOC_
 The following "power-user" features can be abused and present "foot-shooting" scenarios:
 
 * `lua` - enable `lua` command. Embeds a [Lua 5.4](https://www.lua.org/about.html) interpreter into qsv.
+* `luajit` - enable `luajit` command. Embeds a [LuaJIT 2.0](https://luajit.org/luajit.html) interpreter into qsv. LuaJIT is a Just-In-Time compiler for the Lua 5.1 language and is thus much faster than Lua. Note that the `lua` and `luajit` interpreters are mutually exclusive features.
 * `foreach` - enable `foreach` command (not valid for Windows).
 * `python` - enable `py` command (requires Python 3.6+ shared library). Note that qsv will look for the Python shared library (libpython.* on Linux/macOS, python*.dll on Windows) for the Python version it was compiled against and will abort if the library is not found, even if you're not using the `py` command. Check [Python](#python) section for more info.
 
