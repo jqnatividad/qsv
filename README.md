@@ -194,9 +194,9 @@ The `excel` command recognizes Excel and Open Document Spreadsheet(ODS) files (`
 ### RFC 4180
 
 qsv validates against the [RFC 4180](https://datatracker.ietf.org/doc/html/rfc4180) CSV standard. However IRL, CSV formats vary significantly and qsv is actually not strictly compliant with the specification so it can process "real-world" CSV files.
-qsv leverages the awesome [Rust CSV](https://docs.rs/csv/latest/csv/) library, which in turn, is built on top of the [csv-core](https://docs.rs/csv-core/latest/csv_core/index.html) library to read/write CSV files.
+qsv leverages the awesome [Rust CSV](https://docs.rs/csv/latest/csv/) crate to read/write CSV files.
 
-Click [here](https://docs.rs/csv-core/latest/csv_core/struct.Reader.html#rfc-4180) to find out more about how qsv conforms to the standard with `csv-core`.
+Click [here](https://docs.rs/csv-core/latest/csv_core/struct.Reader.html#rfc-4180) to find out more about how qsv conforms to the standard using this crate.
 
 ### **UTF-8 Encoding**
 
