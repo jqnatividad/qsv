@@ -5,6 +5,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.69.0] - 2022-09-28
+
+### Added
+* `luajit`: new command using LuaJIT, which is much faster than Lua https://github.com/jqnatividad/qsv/pull/500
+
+### Changed
+* `python`: tweaks. Expanded usage text. Only show python version when logging is on.  https://github.com/jqnatividad/qsv/pull/507
+* `fetch` & `fetchpost`: apply clippy recommendation https://github.com/jqnatividad/qsv/commit/dd7220bce2811d9e8248c379af5d5c38da3b02d5
+* `excel`: use `winfo!` macro https://github.com/jqnatividad/qsv/commit/7211ff214a58394d68c8c7484e8ef4505d75b482
+* Removed anyhow dependency https://github.com/jqnatividad/qsv/pull/508
+* Bump actions/stale from 5 to 6 by @dependabot in https://github.com/jqnatividad/qsv/pull/505
+* Bump sysinfo from 0.26.3 to 0.26.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/510
+* Cargo update bump several indirect dependencies
+* include Python 3.10 shared libraries when publishing for select platforms
+* bump MSRV to Rust 1.64.0
+* Pin Rust nightly to 2022-09-26
+
+### Fixed
+* `python`: corrected erroneous --helper example. Included hashhelper.py example.
+* `extsort`: fixed --help bug (https://github.com/jqnatividad/qsv/issues/506)
+
 ## [0.68.0] - 2022-09-16
 ### Changed
 * Simplify python support. For prebuilt binaries, Python 3.10 is now required and the python 3.10 shared libraries are bundled for select platforms.
