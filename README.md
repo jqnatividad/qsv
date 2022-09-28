@@ -219,6 +219,10 @@ qsv stats wcp.csv > wcpstats.csv
 Which is weird, since you would think [Microsoft's own Excel would properly recognize UTF16-LE encoded CSV files](https://answers.microsoft.com/en-us/msoffice/forum/all/opening-csv-file-with-utf16-encoding-in-excel-2010/ed522cb9-e88d-4b82-b88e-a2d4bd99f874?auth=1). Regardless, to create a properly UTF-8 encoded file, use the `--output` option instead:
 
 ```
+# so instead of redirecting stdout to a file
+qsv stats wcp.csv > wcpstats.csv
+
+# do this instead
 qsv stats wcp.csv --output wcpstats.csv
 ```
 
