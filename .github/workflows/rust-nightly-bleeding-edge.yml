@@ -34,3 +34,5 @@ jobs:
         default: true
     - name: Run tests
       run: cargo test --verbose --locked --features=apply,fetch,foreach,generate,lua,python,full,nightly
+    - name: Run luajit tests separately as its mutually exclusive with lua feature
+      run: cargo test luajit --verbose --locked --features=luajit,full
