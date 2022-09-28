@@ -82,6 +82,8 @@ pub fn version() -> String {
     enabled_features.push_str("generate;");
     #[cfg(all(feature = "lua", not(feature = "lite")))]
     enabled_features.push_str("lua;");
+    #[cfg(all(feature = "luajit", not(feature = "lite")))]
+    enabled_features.push_str("luajit;");
     #[cfg(all(feature = "python", not(feature = "lite")))]
     {
         enabled_features.push_str("python-");
