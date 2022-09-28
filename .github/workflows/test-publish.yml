@@ -19,7 +19,7 @@ jobs:
             target: x86_64-unknown-linux-gnu
             architecture: x86_64
             use-cross: false
-            addl-build-args: --features=apply,generate,lua,fetch,foreach,python,self_update
+            addl-build-args: --features=apply,generate,luajit,fetch,foreach,python,self_update
             build-nopython: true
             default-features:
             python_library_path: $Python3_ROOT_DIR/lib/libpython3*
@@ -29,7 +29,7 @@ jobs:
             architecture: x86_64
             musl-prep: true
             use-cross: false
-            addl-build-args: --features=apply,generate,lua,fetch,foreach,python,self_update
+            addl-build-args: --features=apply,generate,luajit,fetch,foreach,python,self_update
             build-nopython: true
             default-features:
             python_library_path: $Python3_ROOT_DIR/lib/libpython3*
@@ -47,7 +47,7 @@ jobs:
             target: x86_64-pc-windows-msvc
             architecture: x86_64
             use-cross: false
-            addl-build-args: --features=apply,generate,lua,fetch,python,self_update
+            addl-build-args: --features=apply,generate,luajit,fetch,python,self_update
             build-nopython: true
             default-features:
             python_library_path: $env:Python3_ROOT_DIR/python*.dll
@@ -65,7 +65,7 @@ jobs:
             target: x86_64-pc-windows-gnu
             architecture: x86_64
             use-cross: false
-            addl-build-args: --features=apply,generate,lua,fetch,python,self_update
+            addl-build-args: --features=apply,generate,luajit,fetch,python,self_update
             build-nopython: true
             default-features: --no-default-features
             python_library_path: $env:Python3_ROOT_DIR/python*.dll
@@ -74,7 +74,7 @@ jobs:
             target: x86_64-apple-darwin
             architecture: x86_64
             use-cross: false
-            addl-build-args: --features=apply,generate,lua,fetch,foreach,python,self_update
+            addl-build-args: --features=apply,generate,luajit,fetch,foreach,python,self_update
             build-nopython: true
             default-features: --no-default-features
             python_library_path: $Python3_ROOT_DIR/lib/libpython3*
