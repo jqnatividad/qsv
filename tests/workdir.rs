@@ -1,7 +1,8 @@
-use crate::Csv;
 use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
 use std::{env, fmt, fs, fs::File, process, str::FromStr, sync::atomic, time::Duration};
+
+use crate::Csv;
 
 static QSV_INTEGRATION_TEST_DIR: &str = "xit";
 

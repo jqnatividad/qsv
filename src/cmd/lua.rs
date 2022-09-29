@@ -75,15 +75,17 @@ Common options:
     -p, --progressbar      Show progress bars. Not valid for stdin.
 "#;
 
-use crate::config::{Config, Delimiter};
-use crate::util;
-use crate::CliError;
-use crate::CliResult;
+use std::fs;
+
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::debug;
 use mlua::Lua;
 use serde::Deserialize;
-use std::fs;
+
+use crate::config::{Config, Delimiter};
+use crate::util;
+use crate::CliError;
+use crate::CliResult;
 
 #[derive(Deserialize)]
 struct Args {

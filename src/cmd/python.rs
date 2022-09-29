@@ -107,17 +107,19 @@ Common options:
     -p, --progressbar      Show progress bars. Not valid for stdin.
 "#;
 
-use crate::config::{Config, Delimiter};
-use crate::util;
-use crate::CliError;
-use crate::CliResult;
+use std::fs;
+
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::{error, log_enabled, Level::Debug};
 use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use serde::Deserialize;
-use std::fs;
+
+use crate::config::{Config, Delimiter};
+use crate::util;
+use crate::CliError;
+use crate::CliResult;
 
 const HELPERS: &str = r#"
 def cast_as_string(value):

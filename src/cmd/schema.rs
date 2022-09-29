@@ -47,11 +47,8 @@ Common options:
                                Must be a single character. [default: ,]
 "#;
 
-use crate::cmd::stats::Stats;
-use crate::config::{Config, Delimiter};
-use crate::select::SelectColumns;
-use crate::util;
-use crate::CliResult;
+use std::{collections::HashSet, fs::File, io::Write, path::Path};
+
 use ahash::AHashMap;
 use csv::ByteRecord;
 use grex::RegExpBuilder;
@@ -60,7 +57,12 @@ use log::{debug, error, info, warn};
 use serde::Deserialize;
 use serde_json::{json, value::Number, Map, Value};
 use stats::Frequencies;
-use std::{collections::HashSet, fs::File, io::Write, path::Path};
+
+use crate::cmd::stats::Stats;
+use crate::config::{Config, Delimiter};
+use crate::select::SelectColumns;
+use crate::util;
+use crate::CliResult;
 
 #[derive(Deserialize, Clone)]
 pub struct Args {

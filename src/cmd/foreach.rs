@@ -35,17 +35,19 @@ Common options:
     -p, --progressbar      Show progress bars. Not valid for stdin.
 ";
 
-use crate::config::{Config, Delimiter};
-use crate::select::SelectColumns;
-use crate::util;
-use crate::CliResult;
-use indicatif::{ProgressBar, ProgressDrawTarget};
-use regex::bytes::{NoExpand, Regex};
-use serde::Deserialize;
 use std::ffi::OsStr;
 use std::io::BufReader;
 use std::os::unix::ffi::OsStrExt;
 use std::process::{Command, Stdio};
+
+use indicatif::{ProgressBar, ProgressDrawTarget};
+use regex::bytes::{NoExpand, Regex};
+use serde::Deserialize;
+
+use crate::config::{Config, Delimiter};
+use crate::select::SelectColumns;
+use crate::util;
+use crate::CliResult;
 
 #[derive(Deserialize)]
 struct Args {

@@ -53,17 +53,19 @@ Common options:
     -p, --progressbar      Show progress bars. Not valid for stdin.
 ";
 
-use crate::config::{Config, Delimiter};
-use crate::select::SelectColumns;
-use crate::util;
-use crate::CliError;
-use crate::CliResult;
+use std::env;
+
 #[cfg(any(feature = "full", feature = "lite"))]
 use indicatif::{HumanCount, ProgressBar, ProgressDrawTarget};
 use log::{debug, info};
 use regex::bytes::RegexBuilder;
 use serde::Deserialize;
-use std::env;
+
+use crate::config::{Config, Delimiter};
+use crate::select::SelectColumns;
+use crate::util;
+use crate::CliError;
+use crate::CliResult;
 
 #[allow(dead_code)]
 #[derive(Deserialize)]

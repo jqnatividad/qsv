@@ -167,11 +167,8 @@ Common options:
     -p, --progressbar          Show progress bars. Not valid for stdin.
 "#;
 
-use crate::config::{Config, Delimiter};
-use crate::select::SelectColumns;
-use crate::CliError;
-use crate::CliResult;
-use crate::{regex_once_cell, util};
+use std::{fs, thread, time};
+
 use cached::proc_macro::{cached, io_cached};
 use cached::{Cached, IOCached, RedisCache, Return};
 use dynfmt::Format;
@@ -188,8 +185,13 @@ use regex::Regex;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::{fs, thread, time};
 use url::Url;
+
+use crate::config::{Config, Delimiter};
+use crate::select::SelectColumns;
+use crate::CliError;
+use crate::CliResult;
+use crate::{regex_once_cell, util};
 
 #[derive(Deserialize, Debug)]
 struct Args {

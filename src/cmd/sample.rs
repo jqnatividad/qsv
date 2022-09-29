@@ -34,14 +34,16 @@ Common options:
                            Must be a single character. (default: ,)
 ";
 
+use std::io;
+
+use log::debug;
+use rand::{self, rngs::StdRng, seq::SliceRandom, Rng, SeedableRng};
+use serde::Deserialize;
+
 use crate::config::{Config, Delimiter};
 use crate::index::Indexed;
 use crate::util;
 use crate::CliResult;
-use log::debug;
-use rand::{self, rngs::StdRng, seq::SliceRandom, Rng, SeedableRng};
-use serde::Deserialize;
-use std::io;
 
 #[derive(Deserialize)]
 struct Args {

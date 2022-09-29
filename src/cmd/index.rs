@@ -28,14 +28,16 @@ Common options:
                            Must be a single character. (default: ,)
 ";
 
-use crate::config::{Config, Delimiter};
-use crate::util;
-use crate::CliResult;
-use csv_index::RandomAccessSimple;
-use serde::Deserialize;
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
+
+use csv_index::RandomAccessSimple;
+use serde::Deserialize;
+
+use crate::config::{Config, Delimiter};
+use crate::util;
+use crate::CliResult;
 
 #[derive(Deserialize)]
 struct Args {

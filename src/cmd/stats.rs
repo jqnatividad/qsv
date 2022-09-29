@@ -80,21 +80,23 @@ Common options:
                            Must be a single character. (default: ,)
 "#;
 
+use std::str::{self, FromStr};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::{borrow::ToOwned, default::Default, fmt, fs, io, iter::repeat};
+
+use itertools::Itertools;
+use once_cell::sync::OnceCell;
+use qsv_dateparser::parse_with_preference;
+use serde::Deserialize;
+use stats::{merge_all, Commute, MinMax, OnlineStats, Unsorted};
+use threadpool::ThreadPool;
+
 use self::FieldType::{TDate, TDateTime, TFloat, TInteger, TNull, TString};
 use crate::config::{Config, Delimiter};
 use crate::index::Indexed;
 use crate::select::{SelectColumns, Selection};
 use crate::util;
 use crate::CliResult;
-use itertools::Itertools;
-use once_cell::sync::OnceCell;
-use qsv_dateparser::parse_with_preference;
-use serde::Deserialize;
-use stats::{merge_all, Commute, MinMax, OnlineStats, Unsorted};
-use std::str::{self, FromStr};
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::{borrow::ToOwned, default::Default, fmt, fs, io, iter::repeat};
-use threadpool::ThreadPool;
 
 #[allow(clippy::unsafe_derive_deserialize)]
 #[derive(Clone, Deserialize)]

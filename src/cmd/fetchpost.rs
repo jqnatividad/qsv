@@ -143,12 +143,8 @@ Common options:
     -p, --progressbar          Show progress bars. Not valid for stdin.
 "#;
 
-use crate::cmd::fetch::apply_jql;
-use crate::config::{Config, Delimiter};
-use crate::select::SelectColumns;
-use crate::util;
-use crate::CliError;
-use crate::CliResult;
+use std::{fs, thread, time};
+
 use cached::proc_macro::{cached, io_cached};
 use cached::{Cached, IOCached, RedisCache, Return};
 use governor::{
@@ -164,8 +160,14 @@ use regex::Regex;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use std::{fs, thread, time};
 use url::Url;
+
+use crate::cmd::fetch::apply_jql;
+use crate::config::{Config, Delimiter};
+use crate::select::SelectColumns;
+use crate::util;
+use crate::CliError;
+use crate::CliResult;
 
 #[derive(Deserialize, Debug)]
 struct Args {

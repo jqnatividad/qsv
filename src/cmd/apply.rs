@@ -230,10 +230,6 @@ Common options:
     -p, --progressbar           Show progress bars. Not valid for stdin.
 "#;
 
-use crate::config::{Config, Delimiter};
-use crate::select::SelectColumns;
-use crate::CliResult;
-use crate::{regex_once_cell, util};
 use cached::proc_macro::cached;
 use censor::{Censor, Sex, Zealous};
 use dynfmt::Format;
@@ -254,6 +250,11 @@ use strsim::{
 use titlecase::titlecase;
 use vader_sentiment::SentimentIntensityAnalyzer;
 use whatlang::detect;
+
+use crate::config::{Config, Delimiter};
+use crate::select::SelectColumns;
+use crate::CliResult;
+use crate::{regex_once_cell, util};
 
 // number of CSV rows to process in a batch
 const BATCH_SIZE: usize = 24_000;

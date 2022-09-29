@@ -1,5 +1,6 @@
-use crate::workdir::Workdir;
 use newline_converter::dos2unix;
+
+use crate::workdir::Workdir;
 
 #[test]
 fn extsort() {

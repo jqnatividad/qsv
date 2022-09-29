@@ -19,11 +19,12 @@ Common options:
                            Must be a single character. (default: ,)
 ";
 
+use log::{debug, info};
+use serde::Deserialize;
+
 use crate::config::{Config, Delimiter};
 use crate::util;
 use crate::CliResult;
-use log::{debug, info};
-use serde::Deserialize;
 
 #[derive(Deserialize)]
 struct Args {

@@ -25,14 +25,16 @@ Common options:
                            appear as the header row in the output.
 ";
 
-use crate::util;
-use crate::CliResult;
-use ext_sort::{buffer::mem::MemoryLimitedBufferBuilder, ExternalSorter, ExternalSorterBuilder};
-use serde::Deserialize;
 use std::fs;
 use std::io::{self, prelude::*};
 use std::path;
+
+use ext_sort::{buffer::mem::MemoryLimitedBufferBuilder, ExternalSorter, ExternalSorterBuilder};
+use serde::Deserialize;
 use sysinfo::{System, SystemExt};
+
+use crate::util;
+use crate::CliResult;
 
 #[derive(Deserialize)]
 struct Args {

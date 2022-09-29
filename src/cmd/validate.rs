@@ -37,10 +37,8 @@ Common options:
     -p, --progressbar          Show progress bars. Not valid for stdin.
 ";
 
-use crate::config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY};
-use crate::util;
-use crate::CliError;
-use crate::CliResult;
+use std::{env, fs::File, io::BufReader, io::BufWriter, io::Read, io::Write, str};
+
 use csv::ByteRecord;
 #[cfg(any(feature = "full", feature = "lite"))]
 use indicatif::{ProgressBar, ProgressDrawTarget};
@@ -53,8 +51,12 @@ use once_cell::sync::OnceCell;
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, value::Number, Map, Value};
-use std::{env, fs::File, io::BufReader, io::BufWriter, io::Read, io::Write, str};
 use thousands::Separable;
+
+use crate::config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY};
+use crate::util;
+use crate::CliError;
+use crate::CliResult;
 
 // number of CSV rows to process in a batch
 const BATCH_SIZE: usize = 24_000;
@@ -609,8 +611,9 @@ fn to_json_instance(
 #[cfg(test)]
 mod tests_for_csv_to_json_conversion {
 
-    use super::*;
     use serde_json::json;
+
+    use super::*;
 
     /// get schema used for unit tests
     fn schema_json() -> Value {

@@ -17,13 +17,15 @@ Common options:
     -o, --output <file>    Write output to <file> instead of stdout.
 ";
 
+use std::fs;
+use std::io::{self, BufRead, BufReader};
+
+use serde::Deserialize;
+use serde_json::Value;
+
 use crate::config::Config;
 use crate::util;
 use crate::CliResult;
-use serde::Deserialize;
-use serde_json::Value;
-use std::fs;
-use std::io::{self, BufRead, BufReader};
 
 #[derive(Deserialize)]
 struct Args {

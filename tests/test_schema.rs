@@ -1,7 +1,9 @@
-use crate::workdir::Workdir;
+use std::path::Path;
+
 use assert_json_diff::assert_json_eq;
 use serde_json::Value;
-use std::path::Path;
+
+use crate::workdir::Workdir;
 
 #[test]
 fn generate_schema_with_defaults_and_validate_with_no_errors() {
