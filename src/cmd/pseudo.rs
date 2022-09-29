@@ -15,12 +15,13 @@ Common options:
                            Must be a single character. (default: ,)
 ";
 
+use ahash::AHashMap;
+use serde::Deserialize;
+
 use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
 use crate::util;
 use crate::CliResult;
-use ahash::AHashMap;
-use serde::Deserialize;
 
 #[derive(Deserialize)]
 struct Args {

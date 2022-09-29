@@ -1,5 +1,6 @@
-use crate::workdir::Workdir;
 use serial_test::serial;
+
+use crate::workdir::Workdir;
 
 #[test]
 fn fetch_simple() {
@@ -345,7 +346,6 @@ use std::{sync::mpsc, thread};
 use actix_web::{
     dev::ServerHandle, middleware, rt, web, App, HttpRequest, HttpServer, Responder, Result,
 };
-
 use serde::Serialize;
 #[derive(Serialize)]
 struct MyObj {

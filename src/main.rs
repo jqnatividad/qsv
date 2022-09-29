@@ -35,10 +35,12 @@
 )]
 
 extern crate crossbeam_channel as channel;
-use crate::clitypes::{CliError, CliResult, QsvExitCode};
+use std::{env, io, time::Instant};
+
 use docopt::Docopt;
 use serde::Deserialize;
-use std::{env, io, time::Instant};
+
+use crate::clitypes::{CliError, CliResult, QsvExitCode};
 
 #[cfg(feature = "mimalloc")]
 #[global_allocator]

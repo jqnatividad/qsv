@@ -1,5 +1,4 @@
 use crate::workdir::Workdir;
-
 use crate::{qcheck, Csv, CsvData};
 
 fn prop_reverse(name: &str, rows: CsvData, headers: bool) -> bool {

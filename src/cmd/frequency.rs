@@ -46,16 +46,18 @@ Common options:
                            Must be a single character. (default: ,)
 ";
 
+use std::fs;
+use std::io;
+
+use serde::Deserialize;
+use stats::{merge_all, Frequencies};
+use threadpool::ThreadPool;
+
 use crate::config::{Config, Delimiter};
 use crate::index::Indexed;
 use crate::select::{SelectColumns, Selection};
 use crate::util;
 use crate::CliResult;
-use serde::Deserialize;
-use stats::{merge_all, Frequencies};
-use std::fs;
-use std::io;
-use threadpool::ThreadPool;
 
 #[derive(Clone, Deserialize)]
 pub struct Args {

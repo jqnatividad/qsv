@@ -24,12 +24,14 @@ Common options:
                            Must be a single character. (default: ,)
 ";
 
+use std::io;
+
+use serde::Deserialize;
+use tabwriter::TabWriter;
+
 use crate::config::Delimiter;
 use crate::util;
 use crate::CliResult;
-use serde::Deserialize;
-use std::io;
-use tabwriter::TabWriter;
 
 #[derive(Deserialize)]
 struct Args {

@@ -26,11 +26,13 @@ Common options:
                            Must be a single character. (default: ,)
 ";
 
+use std::cmp;
+
+use serde::Deserialize;
+
 use crate::config::{Config, Delimiter};
 use crate::util;
 use crate::CliResult;
-use serde::Deserialize;
-use std::cmp;
 
 #[derive(Deserialize)]
 struct Args {

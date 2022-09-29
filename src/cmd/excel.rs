@@ -56,15 +56,17 @@ Common options:
     -o, --output <file>        Write output to <file> instead of stdout.
 "#;
 
-use crate::config::Config;
-use crate::util;
-use crate::CliResult;
+use std::cmp;
+use std::path::PathBuf;
+
 use calamine::{open_workbook_auto, DataType, Range, Reader};
 use log::{debug, info};
 use serde::Deserialize;
-use std::cmp;
-use std::path::PathBuf;
 use thousands::Separable;
+
+use crate::config::Config;
+use crate::util;
+use crate::CliResult;
 
 #[derive(Deserialize)]
 struct Args {

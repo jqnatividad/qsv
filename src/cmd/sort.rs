@@ -33,15 +33,17 @@ Common options:
                            to keep only one line per sorted value.
 ";
 
+use std::cmp;
+
+use rand::{rngs::StdRng, seq::SliceRandom, SeedableRng};
+use rayon::prelude::*;
+use serde::Deserialize;
+
 use self::Number::{Float, Int};
 use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
 use crate::util;
 use crate::CliResult;
-use rand::{rngs::StdRng, seq::SliceRandom, SeedableRng};
-use rayon::prelude::*;
-use serde::Deserialize;
-use std::cmp;
 
 #[derive(Deserialize)]
 struct Args {

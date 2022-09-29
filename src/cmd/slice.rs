@@ -35,12 +35,14 @@ Common options:
                            Must be a single character. (default: ,)
 ";
 
+use std::fs;
+
+use serde::Deserialize;
+
 use crate::config::{Config, Delimiter};
 use crate::index::Indexed;
 use crate::util;
 use crate::CliResult;
-use serde::Deserialize;
-use std::fs;
 
 #[derive(Deserialize)]
 struct Args {

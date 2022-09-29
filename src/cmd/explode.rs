@@ -31,11 +31,12 @@ Common options:
                            Must be a single character. (default: ,)
 ";
 
+use serde::Deserialize;
+
 use crate::config::{Config, Delimiter};
 use crate::select::SelectColumns;
 use crate::util;
 use crate::CliResult;
-use serde::Deserialize;
 #[derive(Deserialize)]
 struct Args {
     arg_column: SelectColumns,

@@ -23,12 +23,14 @@ Common options:
                            Must be a single character. (default: ,)
 ";
 
+use std::str;
+
+use csv::ByteRecord;
+use serde::Deserialize;
+
 use crate::config::{Config, Delimiter};
 use crate::util;
 use crate::CliResult;
-use csv::ByteRecord;
-use serde::Deserialize;
-use std::str;
 
 #[derive(Deserialize)]
 struct Args {

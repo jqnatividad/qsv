@@ -1,5 +1,8 @@
-use crate::config::{Config, Delimiter};
-use crate::CliResult;
+#[cfg(any(feature = "full", feature = "lite"))]
+use std::borrow::Cow;
+use std::path::{Path, PathBuf};
+use std::{env, fs, io, str, thread};
+
 use docopt::Docopt;
 #[cfg(any(feature = "full", feature = "lite"))]
 use indicatif::{HumanCount, ProgressBar, ProgressStyle};
@@ -8,10 +11,9 @@ use regex::Regex;
 use serde::de::DeserializeOwned;
 #[cfg(any(feature = "full", feature = "lite"))]
 use serde::de::{Deserialize, Deserializer, Error};
-#[cfg(any(feature = "full", feature = "lite"))]
-use std::borrow::Cow;
-use std::path::{Path, PathBuf};
-use std::{env, fs, io, str, thread};
+
+use crate::config::{Config, Delimiter};
+use crate::CliResult;
 
 #[macro_export]
 macro_rules! regex_once_cell {
