@@ -488,12 +488,13 @@ pub fn qsv_check_for_update() -> Result<bool, String> {
         return Ok(false);
     }
 
-    let bin_name = std::env::current_exe()
-        .expect("Can't get the exec path")
-        .file_stem()
-        .expect("Can't get the exec stem name")
-        .to_string_lossy()
-        .into_owned();
+    let bin_name = match std::env::current_exe() {
+        Ok(pb) => match pb.file_stem() {
+            Some(fs) => fs.to_string_lossy().into_owned(),
+            None => return Err("Can't get the exec stem name".to_string()),
+        },
+        Err(e) => return Err(format!("Can't get the exec path - {e}")),
+    };
 
     winfo!("Checking GitHub for updates...");
 
@@ -545,15 +546,9 @@ pub fn qsv_check_for_update() -> Result<bool, String> {
                         );
                         winfo!("{update_status}");
                     }
-                    Err(e) => {
-                        eprintln!("Update job error: {e}");
-                        log::error!("Update job error: {e}");
-                    }
+                    Err(e) => werr!("Update job error: {e}"),
                 },
-                Err(e) => {
-                    eprintln!("Update builder error: {e}");
-                    log::error!("Update builder error: {e}");
-                }
+                Err(e) => werr!("Update builder error: {e}"),
             };
         } else {
             // we don't want to overwrite manually curated/configured qsv installations.
