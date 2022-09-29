@@ -1,1 +1,1 @@
-# this project uses rustfmt defaults
+group_imports = "StdExternalCrate"
