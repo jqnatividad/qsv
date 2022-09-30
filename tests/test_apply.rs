@@ -610,10 +610,10 @@ fn apply_ops_squeeze0() {
         "data.csv",
         vec![
             svec!["name"],
-            svec!["   John       Paul   "],
-            svec!["Mary"],
-            svec!["  Mary    Sue"],
-            svec!["Hopkins"],
+            svec!["   John   \t    Paul   "],
+            svec!["    Mary \t   "],
+            svec!["  Mary    \n  Sue"],
+            svec!["John\r\nHopkins"],
         ],
     );
     let mut cmd = wrk.command("apply");
@@ -628,7 +628,7 @@ fn apply_ops_squeeze0() {
         svec!["JohnPaul"],
         svec!["Mary"],
         svec!["MarySue"],
-        svec!["Hopkins"],
+        svec!["JohnHopkins"],
     ];
     assert_eq!(got, expected);
 }
