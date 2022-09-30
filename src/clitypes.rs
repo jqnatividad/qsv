@@ -51,10 +51,10 @@ macro_rules! fail_format {
 
 #[repr(u8)]
 pub enum QsvExitCode {
-    Good = 0,
-    Bad = 1,
+    Good           = 0,
+    Bad            = 1,
     IncorrectUsage = 2,
-    Abort = 255,
+    Abort          = 255,
 }
 
 impl Termination for QsvExitCode {

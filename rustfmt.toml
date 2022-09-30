@@ -1,2 +1,3 @@
 group_imports = "StdExternalCrate"
 imports_granularity = "Crate"
+enum_discrim_align_threshold = 20
