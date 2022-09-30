@@ -55,11 +55,11 @@ use crate::{
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input: Option<String>,
-    arg_selection: SelectColumns,
-    flag_output: Option<String>,
+    arg_input:       Option<String>,
+    arg_selection:   SelectColumns,
+    flag_output:     Option<String>,
     flag_no_headers: bool,
-    flag_delimiter: Option<Delimiter>,
+    flag_delimiter:  Option<Delimiter>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {

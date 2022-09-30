@@ -16,8 +16,8 @@ static QSV_INTEGRATION_TEST_DIR: &str = "xit";
 static NEXT_ID: atomic::AtomicUsize = atomic::AtomicUsize::new(0);
 
 pub struct Workdir {
-    root: PathBuf,
-    dir: PathBuf,
+    root:     PathBuf,
+    dir:      PathBuf,
     flexible: bool,
 }
 

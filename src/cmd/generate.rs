@@ -67,11 +67,11 @@ use crate::{
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input: Option<String>,
-    flag_rows: u32,
-    flag_output: Option<String>,
-    flag_outdsp: Option<String>,
-    flag_indsp: Option<String>,
+    arg_input:      Option<String>,
+    flag_rows:      u32,
+    flag_output:    Option<String>,
+    flag_outdsp:    Option<String>,
+    flag_indsp:     Option<String>,
     flag_delimiter: Option<Delimiter>,
 }
 

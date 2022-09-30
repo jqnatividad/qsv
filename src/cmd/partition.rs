@@ -47,14 +47,14 @@ use crate::{
 
 #[derive(Clone, Deserialize)]
 struct Args {
-    arg_column: SelectColumns,
-    arg_input: Option<String>,
-    arg_outdir: String,
-    flag_filename: FilenameTemplate,
+    arg_column:         SelectColumns,
+    arg_input:          Option<String>,
+    arg_outdir:         String,
+    flag_filename:      FilenameTemplate,
     flag_prefix_length: Option<usize>,
-    flag_drop: bool,
-    flag_no_headers: bool,
-    flag_delimiter: Option<Delimiter>,
+    flag_drop:          bool,
+    flag_no_headers:    bool,
+    flag_delimiter:     Option<Delimiter>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -146,9 +146,9 @@ type BoxedWriter = csv::Writer<Box<dyn io::Write + 'static>>;
 
 /// Generates unique filenames based on CSV values.
 struct WriterGenerator {
-    template: FilenameTemplate,
-    counter: usize,
-    used: HashSet<String>,
+    template:      FilenameTemplate,
+    counter:       usize,
+    used:          HashSet<String>,
     non_word_char: Regex,
 }
 

@@ -81,20 +81,20 @@ use crate::{
 #[allow(dead_code)]
 #[derive(Deserialize)]
 struct Args {
-    arg_input: Option<String>,
-    arg_regexset_file: String,
-    flag_select: SelectColumns,
-    flag_output: Option<String>,
-    flag_no_headers: bool,
-    flag_delimiter: Option<Delimiter>,
-    flag_invert_match: bool,
-    flag_unicode: bool,
-    flag_ignore_case: bool,
-    flag_flag: Option<String>,
-    flag_size_limit: usize,
+    arg_input:           Option<String>,
+    arg_regexset_file:   String,
+    flag_select:         SelectColumns,
+    flag_output:         Option<String>,
+    flag_no_headers:     bool,
+    flag_delimiter:      Option<Delimiter>,
+    flag_invert_match:   bool,
+    flag_unicode:        bool,
+    flag_ignore_case:    bool,
+    flag_flag:           Option<String>,
+    flag_size_limit:     usize,
     flag_dfa_size_limit: usize,
-    flag_quick: bool,
-    flag_progressbar: bool,
+    flag_quick:          bool,
+    flag_progressbar:    bool,
 }
 
 fn read_regexset(filename: &String) -> io::Result<Vec<String>> {

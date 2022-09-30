@@ -13,7 +13,7 @@ use serde::de::{Deserialize, Deserializer, Error};
 #[derive(Clone)]
 pub struct SelectColumns {
     selectors: Vec<Selector>,
-    invert: bool,
+    invert:    bool,
 }
 
 impl SelectColumns {
@@ -89,14 +89,14 @@ impl<'de> Deserialize<'de> for SelectColumns {
 
 struct SelectorParser {
     chars: Vec<char>,
-    pos: usize,
+    pos:   usize,
 }
 
 impl SelectorParser {
     fn new(s: &str) -> SelectorParser {
         SelectorParser {
             chars: s.chars().collect(),
-            pos: 0,
+            pos:   0,
         }
     }
 

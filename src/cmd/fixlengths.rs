@@ -37,9 +37,9 @@ use crate::{
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input: Option<String>,
-    flag_length: Option<usize>,
-    flag_output: Option<String>,
+    arg_input:      Option<String>,
+    flag_length:    Option<usize>,
+    flag_output:    Option<String>,
     flag_delimiter: Option<Delimiter>,
 }
 

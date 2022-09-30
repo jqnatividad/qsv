@@ -21,9 +21,9 @@ use crate::{
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input: Option<String>,
+    arg_input:      Option<String>,
     flag_delimiter: Option<Delimiter>,
-    flag_output: Option<String>,
+    flag_output:    Option<String>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {

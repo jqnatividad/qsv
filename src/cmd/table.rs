@@ -43,13 +43,13 @@ use crate::{
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input: Option<String>,
-    flag_width: usize,
-    flag_pad: usize,
-    flag_output: Option<String>,
+    arg_input:      Option<String>,
+    flag_width:     usize,
+    flag_pad:       usize,
+    flag_output:    Option<String>,
     flag_delimiter: Option<Delimiter>,
-    flag_align: Align,
-    flag_condense: Option<usize>,
+    flag_align:     Align,
+    flag_condense:  Option<usize>,
 }
 
 #[derive(Deserialize, Clone, Copy)]

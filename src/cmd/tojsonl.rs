@@ -31,10 +31,10 @@ use crate::{
 
 #[derive(Deserialize, Clone)]
 struct Args {
-    arg_input: Option<String>,
-    flag_jobs: Option<usize>,
+    arg_input:      Option<String>,
+    flag_jobs:      Option<usize>,
     flag_delimiter: Option<Delimiter>,
-    flag_output: Option<String>,
+    flag_output:    Option<String>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -66,16 +66,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
     // we're calling the schema command to infer data types and enums
     let schema_args = crate::cmd::schema::Args {
-        flag_enum_threshold: 3, // we only do three, as we're only inferring boolean based on enum
-        flag_strict_dates: false,
+        flag_enum_threshold:  3, // we only do three, as we're only inferring boolean based on enum
+        flag_strict_dates:    false,
         flag_pattern_columns: crate::select::SelectColumns::parse("").unwrap(),
         flag_dates_whitelist: "none".to_string(), // json doesn't have a date type, so don't infer dates
-        flag_prefer_dmy: false,
-        flag_stdout: false,
-        flag_jobs: Some(util::njobs(args.flag_jobs)),
-        flag_no_headers: false,
-        flag_delimiter: args.flag_delimiter,
-        arg_input: args.arg_input.clone(),
+        flag_prefer_dmy:      false,
+        flag_stdout:          false,
+        flag_jobs:            Some(util::njobs(args.flag_jobs)),
+        flag_no_headers:      false,
+        flag_delimiter:       args.flag_delimiter,
+        arg_input:            args.arg_input.clone(),
     };
     // build schema for each field by their inferred type, min/max value/length, and unique values
     let properties_map: Map<String, Value> =

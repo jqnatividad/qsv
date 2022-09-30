@@ -38,16 +38,16 @@ use crate::{
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input: Option<String>,
+    arg_input:          Option<String>,
     flag_out_delimiter: Option<Delimiter>,
-    flag_crlf: bool,
-    flag_ascii: bool,
-    flag_output: Option<String>,
-    flag_delimiter: Option<Delimiter>,
-    flag_quote: Delimiter,
-    flag_quote_always: bool,
-    flag_quote_never: bool,
-    flag_escape: Option<Delimiter>,
+    flag_crlf:          bool,
+    flag_ascii:         bool,
+    flag_output:        Option<String>,
+    flag_delimiter:     Option<Delimiter>,
+    flag_quote:         Delimiter,
+    flag_quote_always:  bool,
+    flag_quote_never:   bool,
+    flag_escape:        Option<Delimiter>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {

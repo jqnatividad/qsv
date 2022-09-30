@@ -89,17 +89,17 @@ use crate::{
 
 #[derive(Deserialize)]
 struct Args {
-    cmd_map: bool,
-    cmd_filter: bool,
-    arg_new_column: Option<String>,
-    arg_script: String,
-    arg_input: Option<String>,
-    flag_exec: bool,
+    cmd_map:          bool,
+    cmd_filter:       bool,
+    arg_new_column:   Option<String>,
+    arg_script:       String,
+    arg_input:        Option<String>,
+    flag_exec:        bool,
     flag_script_file: bool,
-    flag_no_globals: bool,
-    flag_output: Option<String>,
-    flag_no_headers: bool,
-    flag_delimiter: Option<Delimiter>,
+    flag_no_globals:  bool,
+    flag_output:      Option<String>,
+    flag_no_headers:  bool,
+    flag_delimiter:   Option<Delimiter>,
     flag_progressbar: bool,
 }
 

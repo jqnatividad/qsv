@@ -54,13 +54,13 @@ use crate::{
 
 #[derive(Deserialize)]
 struct Args {
-    arg_column: SelectColumns,
-    arg_command: String,
-    arg_input: Option<String>,
-    flag_unify: bool,
-    flag_new_column: Option<String>,
-    flag_no_headers: bool,
-    flag_delimiter: Option<Delimiter>,
+    arg_column:       SelectColumns,
+    arg_command:      String,
+    arg_input:        Option<String>,
+    flag_unify:       bool,
+    flag_new_column:  Option<String>,
+    flag_no_headers:  bool,
+    flag_delimiter:   Option<Delimiter>,
     flag_progressbar: bool,
 }
 

@@ -86,10 +86,10 @@ Options:
 
 #[derive(Deserialize)]
 struct Args {
-    arg_command: Option<Command>,
-    flag_list: bool,
+    arg_command:  Option<Command>,
+    flag_list:    bool,
     flag_envlist: bool,
-    flag_update: bool,
+    flag_update:  bool,
 }
 
 fn main() -> QsvExitCode {

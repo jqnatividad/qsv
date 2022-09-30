@@ -67,16 +67,16 @@ use crate::{
 
 #[derive(Deserialize, Clone)]
 pub struct Args {
-    pub flag_enum_threshold: usize,
-    pub flag_strict_dates: bool,
+    pub flag_enum_threshold:  usize,
+    pub flag_strict_dates:    bool,
     pub flag_pattern_columns: SelectColumns,
     pub flag_dates_whitelist: String,
-    pub flag_prefer_dmy: bool,
-    pub flag_stdout: bool,
-    pub flag_jobs: Option<usize>,
-    pub flag_no_headers: bool,
-    pub flag_delimiter: Option<Delimiter>,
-    pub arg_input: Option<String>,
+    pub flag_prefer_dmy:      bool,
+    pub flag_stdout:          bool,
+    pub flag_jobs:            Option<usize>,
+    pub flag_no_headers:      bool,
+    pub flag_delimiter:       Option<Delimiter>,
+    pub arg_input:            Option<String>,
 }
 
 const STDIN_CSV: &str = "stdin.csv";
@@ -360,22 +360,22 @@ pub fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<M
 /// returns tuple (`csv_fields`, `csv_stats`, `stats_col_index_map`)
 fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap<String, usize>)> {
     let stats_args = crate::cmd::stats::Args {
-        arg_input: args.arg_input.clone(),
-        flag_select: crate::select::SelectColumns::parse("").unwrap(),
-        flag_everything: false,
-        flag_mode: false,
-        flag_cardinality: true,
-        flag_median: false,
-        flag_quartiles: false,
-        flag_nulls: false,
-        flag_round: 4,
-        flag_infer_dates: true,
+        arg_input:            args.arg_input.clone(),
+        flag_select:          crate::select::SelectColumns::parse("").unwrap(),
+        flag_everything:      false,
+        flag_mode:            false,
+        flag_cardinality:     true,
+        flag_median:          false,
+        flag_quartiles:       false,
+        flag_nulls:           false,
+        flag_round:           4,
+        flag_infer_dates:     true,
         flag_dates_whitelist: args.flag_dates_whitelist.to_string(),
-        flag_prefer_dmy: args.flag_prefer_dmy,
-        flag_jobs: Some(util::njobs(args.flag_jobs)),
-        flag_output: None,
-        flag_no_headers: args.flag_no_headers,
-        flag_delimiter: args.flag_delimiter,
+        flag_prefer_dmy:      args.flag_prefer_dmy,
+        flag_jobs:            Some(util::njobs(args.flag_jobs)),
+        flag_output:          None,
+        flag_no_headers:      args.flag_no_headers,
+        flag_delimiter:       args.flag_delimiter,
     };
 
     let (csv_fields, csv_stats) = match stats_args.rconfig().indexed() {
@@ -456,15 +456,15 @@ fn get_unique_values(
 ) -> CliResult<AHashMap<String, Vec<String>>> {
     // prepare arg for invoking cmd::frequency
     let freq_args = crate::cmd::frequency::Args {
-        arg_input: args.arg_input.clone(),
-        flag_select: crate::select::SelectColumns::parse(column_select_arg).unwrap(),
-        flag_limit: args.flag_enum_threshold,
-        flag_asc: false,
-        flag_no_nulls: true,
-        flag_jobs: Some(util::njobs(args.flag_jobs)),
-        flag_output: None,
+        arg_input:       args.arg_input.clone(),
+        flag_select:     crate::select::SelectColumns::parse(column_select_arg).unwrap(),
+        flag_limit:      args.flag_enum_threshold,
+        flag_asc:        false,
+        flag_no_nulls:   true,
+        flag_jobs:       Some(util::njobs(args.flag_jobs)),
+        flag_output:     None,
         flag_no_headers: args.flag_no_headers,
-        flag_delimiter: args.flag_delimiter,
+        flag_delimiter:  args.flag_delimiter,
     };
 
     let (headers, ftables) = match freq_args.rconfig().indexed()? {

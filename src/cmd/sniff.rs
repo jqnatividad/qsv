@@ -38,25 +38,25 @@ use crate::{config::Config, util, CliResult};
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input: Option<String>,
-    flag_sample: f64,
-    flag_prefer_dmy: bool,
-    flag_json: bool,
+    arg_input:        Option<String>,
+    flag_sample:      f64,
+    flag_prefer_dmy:  bool,
+    flag_json:        bool,
     flag_pretty_json: bool,
 }
 
 #[derive(Serialize, Deserialize)]
 struct SniffStruct {
     delimiter_char: char,
-    header_row: bool,
-    preamble_rows: usize,
-    quote_char: String,
-    flexible: bool,
-    is_utf8: bool,
-    num_records: u64,
-    num_fields: usize,
-    fields: Vec<String>,
-    types: Vec<String>,
+    header_row:     bool,
+    preamble_rows:  usize,
+    quote_char:     String,
+    flexible:       bool,
+    is_utf8:        bool,
+    num_records:    u64,
+    num_fields:     usize,
+    fields:         Vec<String>,
+    types:          Vec<String>,
 }
 
 const fn rowcount(metadata: &qsv_sniffer::metadata::Metadata, rowcount: u64) -> u64 {
@@ -133,18 +133,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
                 let sniffed = SniffStruct {
                     delimiter_char: metadata.dialect.delimiter as char,
-                    header_row: metadata.dialect.header.has_header_row,
-                    preamble_rows: metadata.dialect.header.num_preamble_rows,
-                    quote_char: match metadata.dialect.quote {
+                    header_row:     metadata.dialect.header.has_header_row,
+                    preamble_rows:  metadata.dialect.header.num_preamble_rows,
+                    quote_char:     match metadata.dialect.quote {
                         qsv_sniffer::metadata::Quote::Some(chr) => format!("{}", char::from(chr)),
                         qsv_sniffer::metadata::Quote::None => "none".into(),
                     },
-                    flexible: metadata.dialect.flexible,
-                    is_utf8: metadata.dialect.is_utf8,
-                    num_records: rowcount(&metadata, n_rows),
-                    num_fields: metadata.num_fields,
-                    fields: sniffedfields,
-                    types: sniffedtypes,
+                    flexible:       metadata.dialect.flexible,
+                    is_utf8:        metadata.dialect.is_utf8,
+                    num_records:    rowcount(&metadata, n_rows),
+                    num_fields:     metadata.num_fields,
+                    fields:         sniffedfields,
+                    types:          sniffedtypes,
                 };
                 if args.flag_pretty_json {
                     println!("{}", serde_json::to_string_pretty(&sniffed).unwrap());

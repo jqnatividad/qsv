@@ -149,16 +149,16 @@ class QSVRow(object):
 
 #[derive(Deserialize)]
 struct Args {
-    cmd_map: bool,
-    cmd_filter: bool,
-    arg_new_column: Option<String>,
-    arg_script: String,
-    flag_batch: u32,
-    flag_helper: Option<String>,
-    arg_input: Option<String>,
-    flag_output: Option<String>,
-    flag_no_headers: bool,
-    flag_delimiter: Option<Delimiter>,
+    cmd_map:          bool,
+    cmd_filter:       bool,
+    arg_new_column:   Option<String>,
+    arg_script:       String,
+    flag_batch:       u32,
+    flag_helper:      Option<String>,
+    arg_input:        Option<String>,
+    flag_output:      Option<String>,
+    flag_no_headers:  bool,
+    flag_delimiter:   Option<Delimiter>,
     flag_progressbar: bool,
 }
 

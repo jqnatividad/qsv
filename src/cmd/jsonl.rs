@@ -29,7 +29,7 @@ use crate::{config::Config, util, CliResult};
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input: Option<String>,
+    arg_input:   Option<String>,
     flag_output: Option<String>,
 }
 

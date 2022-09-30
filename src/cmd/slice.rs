@@ -47,14 +47,14 @@ use crate::{
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input: Option<String>,
-    flag_start: Option<isize>,
-    flag_end: Option<usize>,
-    flag_len: Option<usize>,
-    flag_index: Option<usize>,
-    flag_output: Option<String>,
+    arg_input:       Option<String>,
+    flag_start:      Option<isize>,
+    flag_end:        Option<usize>,
+    flag_len:        Option<usize>,
+    flag_index:      Option<usize>,
+    flag_output:     Option<String>,
     flag_no_headers: bool,
-    flag_delimiter: Option<Delimiter>,
+    flag_delimiter:  Option<Delimiter>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {

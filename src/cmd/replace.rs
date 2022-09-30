@@ -63,18 +63,18 @@ use crate::{
 #[allow(dead_code)]
 #[derive(Deserialize)]
 struct Args {
-    arg_input: Option<String>,
-    arg_pattern: String,
-    arg_replacement: String,
-    flag_select: SelectColumns,
-    flag_unicode: bool,
-    flag_output: Option<String>,
-    flag_no_headers: bool,
-    flag_delimiter: Option<Delimiter>,
-    flag_ignore_case: bool,
-    flag_size_limit: usize,
+    arg_input:           Option<String>,
+    arg_pattern:         String,
+    arg_replacement:     String,
+    flag_select:         SelectColumns,
+    flag_unicode:        bool,
+    flag_output:         Option<String>,
+    flag_no_headers:     bool,
+    flag_delimiter:      Option<Delimiter>,
+    flag_ignore_case:    bool,
+    flag_size_limit:     usize,
     flag_dfa_size_limit: usize,
-    flag_progressbar: bool,
+    flag_progressbar:    bool,
 }
 
 const NULL_VALUE: &str = "<NULL>";

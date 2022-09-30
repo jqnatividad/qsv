@@ -49,14 +49,14 @@ use crate::{
 
 #[derive(Clone, Deserialize)]
 struct Args {
-    arg_input: Option<String>,
-    arg_outdir: String,
-    flag_size: usize,
-    flag_jobs: Option<usize>,
-    flag_filename: FilenameTemplate,
-    flag_pad: usize,
+    arg_input:       Option<String>,
+    arg_outdir:      String,
+    flag_size:       usize,
+    flag_jobs:       Option<usize>,
+    flag_filename:   FilenameTemplate,
+    flag_pad:        usize,
     flag_no_headers: bool,
-    flag_delimiter: Option<Delimiter>,
+    flag_delimiter:  Option<Delimiter>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {

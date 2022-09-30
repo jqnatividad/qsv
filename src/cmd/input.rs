@@ -49,17 +49,17 @@ use crate::{
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input: Option<String>,
-    flag_output: Option<String>,
-    flag_delimiter: Option<Delimiter>,
-    flag_quote: Delimiter,
-    flag_escape: Option<Delimiter>,
-    flag_no_quoting: bool,
-    flag_skip_lines: Option<u64>,
+    arg_input:           Option<String>,
+    flag_output:         Option<String>,
+    flag_delimiter:      Option<Delimiter>,
+    flag_quote:          Delimiter,
+    flag_escape:         Option<Delimiter>,
+    flag_no_quoting:     bool,
+    flag_skip_lines:     Option<u64>,
     flag_skip_lastlines: Option<u64>,
-    flag_auto_skip: bool,
-    flag_trim_headers: bool,
-    flag_trim_fields: bool,
+    flag_auto_skip:      bool,
+    flag_trim_headers:   bool,
+    flag_trim_fields:    bool,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {

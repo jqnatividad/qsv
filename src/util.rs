@@ -720,7 +720,7 @@ fn test_hw_survey() {
 #[cfg(feature = "apply")]
 pub struct ColumnNameParser {
     chars: Vec<char>,
-    pos: usize,
+    pos:   usize,
 }
 
 #[cfg(feature = "apply")]
@@ -728,7 +728,7 @@ impl ColumnNameParser {
     pub fn new(s: &str) -> ColumnNameParser {
         ColumnNameParser {
             chars: s.chars().collect(),
-            pos: 0,
+            pos:   0,
         }
     }
 

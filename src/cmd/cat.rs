@@ -41,13 +41,13 @@ use crate::{
 
 #[derive(Deserialize)]
 struct Args {
-    cmd_rows: bool,
-    cmd_columns: bool,
-    arg_input: Vec<String>,
-    flag_pad: bool,
-    flag_output: Option<String>,
+    cmd_rows:        bool,
+    cmd_columns:     bool,
+    arg_input:       Vec<String>,
+    flag_pad:        bool,
+    flag_output:     Option<String>,
     flag_no_headers: bool,
-    flag_delimiter: Option<Delimiter>,
+    flag_delimiter:  Option<Delimiter>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {

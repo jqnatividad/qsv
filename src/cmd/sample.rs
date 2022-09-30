@@ -48,12 +48,12 @@ use crate::{
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input: Option<String>,
+    arg_input:       Option<String>,
     arg_sample_size: f64,
-    flag_output: Option<String>,
+    flag_output:     Option<String>,
     flag_no_headers: bool,
-    flag_delimiter: Option<Delimiter>,
-    flag_seed: Option<usize>,
+    flag_delimiter:  Option<Delimiter>,
+    flag_seed:       Option<usize>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {

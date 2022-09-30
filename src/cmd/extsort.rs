@@ -39,9 +39,9 @@ use crate::{util, CliResult};
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input: String,
-    arg_output: String,
-    flag_jobs: Option<usize>,
+    arg_input:       String,
+    arg_output:      String,
+    flag_jobs:       Option<usize>,
     flag_no_headers: bool,
 }
 

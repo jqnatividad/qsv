@@ -59,14 +59,14 @@ const NULL_VALUE: &str = "<NULL>";
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input: Option<String>,
+    arg_input:       Option<String>,
     flag_new_column: Option<String>,
-    flag_constant: Option<String>,
-    flag_copy: Option<SelectColumns>,
-    flag_uuid: bool,
-    flag_output: Option<String>,
+    flag_constant:   Option<String>,
+    flag_copy:       Option<SelectColumns>,
+    flag_uuid:       bool,
+    flag_output:     Option<String>,
     flag_no_headers: bool,
-    flag_delimiter: Option<Delimiter>,
+    flag_delimiter:  Option<Delimiter>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {

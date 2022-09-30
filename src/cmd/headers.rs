@@ -33,10 +33,10 @@ use crate::{config::Delimiter, util, CliResult};
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input: Vec<String>,
+    arg_input:       Vec<String>,
     flag_just_names: bool,
-    flag_intersect: bool,
-    flag_delimiter: Option<Delimiter>,
+    flag_intersect:  bool,
+    flag_delimiter:  Option<Delimiter>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {

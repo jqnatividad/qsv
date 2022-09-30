@@ -64,23 +64,23 @@ use crate::{
 #[allow(dead_code)]
 #[derive(Deserialize)]
 struct Args {
-    arg_input: Option<String>,
-    flag_select: SelectColumns,
-    flag_no_case: bool,
-    flag_all: bool,
-    flag_no_headers: bool,
-    flag_delimiter: Option<Delimiter>,
+    arg_input:        Option<String>,
+    flag_select:      SelectColumns,
+    flag_no_case:     bool,
+    flag_all:         bool,
+    flag_no_headers:  bool,
+    flag_delimiter:   Option<Delimiter>,
     flag_progressbar: bool,
-    flag_json: bool,
+    flag_json:        bool,
     flag_pretty_json: bool,
 }
 
 #[derive(Serialize, Deserialize)]
 struct SortCheckStruct {
-    sorted: bool,
-    record_count: u64,
+    sorted:          bool,
+    record_count:    u64,
     unsorted_breaks: u64,
-    dupe_count: u64,
+    dupe_count:      u64,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {

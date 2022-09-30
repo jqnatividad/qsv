@@ -67,13 +67,13 @@ use crate::{config::Config, util, CliResult};
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input: String,
-    flag_sheet: String,
-    flag_metadata: bool,
-    flag_flexible: bool,
-    flag_trim: bool,
+    arg_input:            String,
+    flag_sheet:           String,
+    flag_metadata:        bool,
+    flag_flexible:        bool,
+    flag_trim:            bool,
     flag_dates_whitelist: String,
-    flag_output: Option<String>,
+    flag_output:          Option<String>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {

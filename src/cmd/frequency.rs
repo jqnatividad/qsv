@@ -61,15 +61,15 @@ use crate::{
 
 #[derive(Clone, Deserialize)]
 pub struct Args {
-    pub arg_input: Option<String>,
-    pub flag_select: SelectColumns,
-    pub flag_limit: usize,
-    pub flag_asc: bool,
-    pub flag_no_nulls: bool,
-    pub flag_jobs: Option<usize>,
-    pub flag_output: Option<String>,
+    pub arg_input:       Option<String>,
+    pub flag_select:     SelectColumns,
+    pub flag_limit:      usize,
+    pub flag_asc:        bool,
+    pub flag_no_nulls:   bool,
+    pub flag_jobs:       Option<usize>,
+    pub flag_output:     Option<String>,
     pub flag_no_headers: bool,
-    pub flag_delimiter: Option<Delimiter>,
+    pub flag_delimiter:  Option<Delimiter>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
