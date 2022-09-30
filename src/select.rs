@@ -1,10 +1,11 @@
-use std::cmp::Ordering;
-use std::collections::HashSet;
-use std::fmt;
-use std::iter::{self, repeat};
-use std::ops;
-use std::slice;
-use std::str::FromStr;
+use std::{
+    cmp::Ordering,
+    collections::HashSet,
+    fmt,
+    iter::{self, repeat},
+    ops, slice,
+    str::FromStr,
+};
 
 use regex::bytes::Regex;
 use serde::de::{Deserialize, Deserializer, Error};

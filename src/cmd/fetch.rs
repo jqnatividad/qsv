@@ -169,15 +169,21 @@ Common options:
 
 use std::{fs, thread, time};
 
-use cached::proc_macro::{cached, io_cached};
-use cached::{Cached, IOCached, RedisCache, Return};
+use cached::{
+    proc_macro::{cached, io_cached},
+    Cached, IOCached, RedisCache, Return,
+};
 use dynfmt::Format;
 use governor::{
-    clock::DefaultClock, middleware::NoOpMiddleware, state::direct::NotKeyed, state::InMemoryState,
+    clock::DefaultClock,
+    middleware::NoOpMiddleware,
+    state::{direct::NotKeyed, InMemoryState},
 };
 use indicatif::{HumanCount, MultiProgress, ProgressBar, ProgressDrawTarget};
-use log::Level::{Debug, Info, Trace, Warn};
-use log::{debug, error, info, log_enabled, warn};
+use log::{
+    debug, error, info, log_enabled, warn,
+    Level::{Debug, Info, Trace, Warn},
+};
 use once_cell::sync::{Lazy, OnceCell};
 use rand::Rng;
 use redis;
@@ -187,11 +193,12 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use url::Url;
 
-use crate::config::{Config, Delimiter};
-use crate::select::SelectColumns;
-use crate::CliError;
-use crate::CliResult;
-use crate::{regex_once_cell, util};
+use crate::{
+    config::{Config, Delimiter},
+    regex_once_cell,
+    select::SelectColumns,
+    util, CliError, CliResult,
+};
 
 #[derive(Deserialize, Debug)]
 struct Args {

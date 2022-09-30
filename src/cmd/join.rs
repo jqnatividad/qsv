@@ -65,21 +65,18 @@ Common options:
                            Must be a single character. (default: ,)
 ";
 
-use std::collections::hash_map::Entry;
-use std::fmt;
-use std::io;
-use std::iter::repeat;
-use std::str;
+use std::{collections::hash_map::Entry, fmt, io, iter::repeat, str};
 
 use ahash::AHashMap;
 use byteorder::{BigEndian, WriteBytesExt};
 use serde::Deserialize;
 
-use crate::config::{Config, Delimiter, SeekRead};
-use crate::index::Indexed;
-use crate::select::{SelectColumns, Selection};
-use crate::util;
-use crate::CliResult;
+use crate::{
+    config::{Config, Delimiter, SeekRead},
+    index::Indexed,
+    select::{SelectColumns, Selection},
+    util, CliResult,
+};
 
 type ByteString = Vec<u8>;
 

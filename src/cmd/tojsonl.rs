@@ -17,17 +17,17 @@ Common options:
     -o, --output <file>    Write output to <file> instead of stdout.
 ";
 
-use std::env::temp_dir;
-use std::{fs::File, path::Path};
+use std::{env::temp_dir, fs::File, path::Path};
 
 use serde::Deserialize;
 use serde_json::{Map, Value};
 use uuid::Uuid;
 
 use super::schema::infer_schema_from_stats;
-use crate::config::{Config, Delimiter};
-use crate::util;
-use crate::CliResult;
+use crate::{
+    config::{Config, Delimiter},
+    util, CliResult,
+};
 
 #[derive(Deserialize, Clone)]
 struct Args {

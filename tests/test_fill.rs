@@ -1,5 +1,4 @@
-use crate::workdir::Workdir;
-use crate::CsvRecord;
+use crate::{workdir::Workdir, CsvRecord};
 
 fn compare_column(got: &[CsvRecord], expected: &[String], column: usize, skip_header: bool) {
     for (value, value_expected) in got

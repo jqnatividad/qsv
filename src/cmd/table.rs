@@ -31,15 +31,15 @@ Common options:
                            Must be a single character. (default: ,)
 ";
 
-use std::borrow::Cow;
-use std::convert::From;
+use std::{borrow::Cow, convert::From};
 
 use serde::Deserialize;
 use tabwriter::{Alignment, TabWriter};
 
-use crate::config::{Config, Delimiter};
-use crate::util;
-use crate::CliResult;
+use crate::{
+    config::{Config, Delimiter},
+    util, CliResult,
+};
 
 #[derive(Deserialize)]
 struct Args {

@@ -251,10 +251,12 @@ use titlecase::titlecase;
 use vader_sentiment::SentimentIntensityAnalyzer;
 use whatlang::detect;
 
-use crate::config::{Config, Delimiter};
-use crate::select::SelectColumns;
-use crate::CliResult;
-use crate::{regex_once_cell, util};
+use crate::{
+    config::{Config, Delimiter},
+    regex_once_cell,
+    select::SelectColumns,
+    util, CliResult,
+};
 
 // number of CSV rows to process in a batch
 const BATCH_SIZE: usize = 24_000;

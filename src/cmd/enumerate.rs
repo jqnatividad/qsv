@@ -49,10 +49,11 @@ Common options:
 use serde::Deserialize;
 use uuid::Uuid;
 
-use crate::config::{Config, Delimiter};
-use crate::select::SelectColumns;
-use crate::util;
-use crate::CliResult;
+use crate::{
+    config::{Config, Delimiter},
+    select::SelectColumns,
+    util, CliResult,
+};
 
 const NULL_VALUE: &str = "<NULL>";
 

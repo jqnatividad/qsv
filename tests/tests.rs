@@ -7,10 +7,7 @@ extern crate quickcheck;
 extern crate rand;
 extern crate stats;
 
-use std::env;
-use std::fmt;
-use std::mem::transmute;
-use std::ops;
+use std::{env, fmt, mem::transmute, ops};
 
 use quickcheck::{Arbitrary, Gen, QuickCheck, Testable};
 use rand::{thread_rng, Rng};

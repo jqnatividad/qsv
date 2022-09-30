@@ -29,9 +29,7 @@ use std::io;
 use serde::Deserialize;
 use tabwriter::TabWriter;
 
-use crate::config::Delimiter;
-use crate::util;
-use crate::CliResult;
+use crate::{config::Delimiter, util, CliResult};
 
 #[derive(Deserialize)]
 struct Args {

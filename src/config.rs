@@ -1,17 +1,19 @@
-use std::borrow::ToOwned;
-use std::env;
-use std::fs;
-use std::io::{self, Read};
-use std::path::PathBuf;
+use std::{
+    borrow::ToOwned,
+    env, fs,
+    io::{self, Read},
+    path::PathBuf,
+};
 
 use log::{debug, info, warn};
 use qsv_sniffer::{SampleSize, Sniffer};
 use serde::de::{Deserialize, Deserializer, Error};
 
-use crate::index::Indexed;
-use crate::select::{SelectColumns, Selection};
-use crate::util;
-use crate::CliResult;
+use crate::{
+    index::Indexed,
+    select::{SelectColumns, Selection},
+    util, CliResult,
+};
 
 // rdr default is 8k in csv crate, we're doubling it
 const DEFAULT_RDR_BUFFER_CAPACITY: usize = 16 * (1 << 10);

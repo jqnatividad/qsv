@@ -1,7 +1,6 @@
 use std::cmp;
 
-use crate::workdir::Workdir;
-use crate::{qcheck, Csv, CsvData};
+use crate::{qcheck, workdir::Workdir, Csv, CsvData};
 
 fn prop_sort(name: &str, rows: CsvData, headers: bool) -> bool {
     let wrk = Workdir::new(name);

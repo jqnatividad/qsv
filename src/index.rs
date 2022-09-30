@@ -1,5 +1,4 @@
-use std::io;
-use std::ops;
+use std::{io, ops};
 
 use csv_index::RandomAccessSimple;
 

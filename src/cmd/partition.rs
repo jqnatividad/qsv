@@ -28,20 +28,22 @@ Common options:
                            Must be a single character. (default: ,)
 ";
 
-use std::collections::hash_map::Entry;
-use std::collections::HashSet;
-use std::fs;
-use std::io;
-use std::path::Path;
+use std::{
+    collections::{hash_map::Entry, HashSet},
+    fs, io,
+    path::Path,
+};
 
 use ahash::AHashMap;
 use regex::Regex;
 use serde::Deserialize;
 
-use crate::config::{Config, Delimiter};
-use crate::select::SelectColumns;
-use crate::util::{self, FilenameTemplate};
-use crate::CliResult;
+use crate::{
+    config::{Config, Delimiter},
+    select::SelectColumns,
+    util::{self, FilenameTemplate},
+    CliResult,
+};
 
 #[derive(Clone, Deserialize)]
 struct Args {

@@ -39,10 +39,11 @@ use std::fs;
 
 use serde::Deserialize;
 
-use crate::config::{Config, Delimiter};
-use crate::index::Indexed;
-use crate::util;
-use crate::CliResult;
+use crate::{
+    config::{Config, Delimiter},
+    index::Indexed,
+    util, CliResult,
+};
 
 #[derive(Deserialize)]
 struct Args {

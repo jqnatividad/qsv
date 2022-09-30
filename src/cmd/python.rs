@@ -111,15 +111,13 @@ use std::fs;
 
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::{error, log_enabled, Level::Debug};
-use pyo3::intern;
-use pyo3::prelude::*;
-use pyo3::types::PyDict;
+use pyo3::{intern, prelude::*, types::PyDict};
 use serde::Deserialize;
 
-use crate::config::{Config, Delimiter};
-use crate::util;
-use crate::CliError;
-use crate::CliResult;
+use crate::{
+    config::{Config, Delimiter},
+    util, CliError, CliResult,
+};
 
 const HELPERS: &str = r#"
 def cast_as_string(value):

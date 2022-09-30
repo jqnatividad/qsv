@@ -82,10 +82,10 @@ use log::debug;
 use mlua::Lua;
 use serde::Deserialize;
 
-use crate::config::{Config, Delimiter};
-use crate::util;
-use crate::CliError;
-use crate::CliResult;
+use crate::{
+    config::{Config, Delimiter},
+    util, CliError, CliResult,
+};
 
 #[derive(Deserialize)]
 struct Args {

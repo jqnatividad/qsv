@@ -40,10 +40,11 @@ use rayon::prelude::*;
 use serde::Deserialize;
 
 use self::Number::{Float, Int};
-use crate::config::{Config, Delimiter};
-use crate::select::SelectColumns;
-use crate::util;
-use crate::CliResult;
+use crate::{
+    config::{Config, Delimiter},
+    select::SelectColumns,
+    util, CliResult,
+};
 
 #[derive(Deserialize)]
 struct Args {

@@ -35,17 +35,17 @@ Common options:
                            Must be a single character. (default: ,)
 ";
 
-use std::fs;
-use std::io;
-use std::path::Path;
+use std::{fs, io, path::Path};
 
 use serde::Deserialize;
 use threadpool::ThreadPool;
 
-use crate::config::{Config, Delimiter};
-use crate::index::Indexed;
-use crate::util::{self, FilenameTemplate};
-use crate::CliResult;
+use crate::{
+    config::{Config, Delimiter},
+    index::Indexed,
+    util::{self, FilenameTemplate},
+    CliResult,
+};
 
 #[derive(Clone, Deserialize)]
 struct Args {

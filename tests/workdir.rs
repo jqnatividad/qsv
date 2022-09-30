@@ -1,6 +1,13 @@
-use std::io::{self, Read, Write};
-use std::path::{Path, PathBuf};
-use std::{env, fmt, fs, fs::File, process, str::FromStr, sync::atomic, time::Duration};
+use std::{
+    env, fmt, fs,
+    fs::File,
+    io::{self, Read, Write},
+    path::{Path, PathBuf},
+    process,
+    str::FromStr,
+    sync::atomic,
+    time::Duration,
+};
 
 use crate::Csv;
 

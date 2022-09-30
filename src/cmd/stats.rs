@@ -80,9 +80,14 @@ Common options:
                            Must be a single character. (default: ,)
 "#;
 
-use std::str::{self, FromStr};
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::{borrow::ToOwned, default::Default, fmt, fs, io, iter::repeat};
+use std::{
+    borrow::ToOwned,
+    default::Default,
+    fmt, fs, io,
+    iter::repeat,
+    str::{self, FromStr},
+    sync::atomic::{AtomicBool, Ordering},
+};
 
 use itertools::Itertools;
 use once_cell::sync::OnceCell;
@@ -92,11 +97,12 @@ use stats::{merge_all, Commute, MinMax, OnlineStats, Unsorted};
 use threadpool::ThreadPool;
 
 use self::FieldType::{TDate, TDateTime, TFloat, TInteger, TNull, TString};
-use crate::config::{Config, Delimiter};
-use crate::index::Indexed;
-use crate::select::{SelectColumns, Selection};
-use crate::util;
-use crate::CliResult;
+use crate::{
+    config::{Config, Delimiter},
+    index::Indexed,
+    select::{SelectColumns, Selection},
+    util, CliResult,
+};
 
 #[allow(clippy::unsafe_derive_deserialize)]
 #[derive(Clone, Deserialize)]

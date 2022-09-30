@@ -58,11 +58,12 @@ use serde::Deserialize;
 use serde_json::{json, value::Number, Map, Value};
 use stats::Frequencies;
 
-use crate::cmd::stats::Stats;
-use crate::config::{Config, Delimiter};
-use crate::select::SelectColumns;
-use crate::util;
-use crate::CliResult;
+use crate::{
+    cmd::stats::Stats,
+    config::{Config, Delimiter},
+    select::SelectColumns,
+    util, CliResult,
+};
 
 #[derive(Deserialize, Clone)]
 pub struct Args {

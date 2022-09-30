@@ -37,14 +37,18 @@ Common options:
     -p, --progressbar          Show progress bars. Not valid for stdin.
 ";
 
-use std::{env, fs::File, io::BufReader, io::BufWriter, io::Read, io::Write, str};
+use std::{
+    env,
+    fs::File,
+    io::{BufReader, BufWriter, Read, Write},
+    str,
+};
 
 use csv::ByteRecord;
 #[cfg(any(feature = "full", feature = "lite"))]
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use itertools::Itertools;
-use jsonschema::paths::PathChunk;
-use jsonschema::{output::BasicOutput, JSONSchema};
+use jsonschema::{output::BasicOutput, paths::PathChunk, JSONSchema};
 #[allow(unused_imports)]
 use log::{debug, info};
 use once_cell::sync::OnceCell;
@@ -53,10 +57,10 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, value::Number, Map, Value};
 use thousands::Separable;
 
-use crate::config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY};
-use crate::util;
-use crate::CliError;
-use crate::CliResult;
+use crate::{
+    config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY},
+    util, CliError, CliResult,
+};
 
 // number of CSV rows to process in a batch
 const BATCH_SIZE: usize = 24_000;

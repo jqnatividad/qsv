@@ -54,13 +54,12 @@ use csv::ByteRecord;
 use indicatif::{HumanCount, ProgressBar, ProgressDrawTarget};
 use serde::{Deserialize, Serialize};
 
-use crate::cmd::dedup;
-use crate::cmd::sort::iter_cmp;
-use crate::config::{Config, Delimiter};
-use crate::select::SelectColumns;
-use crate::util;
-use crate::CliError;
-use crate::CliResult;
+use crate::{
+    cmd::{dedup, sort::iter_cmp},
+    config::{Config, Delimiter},
+    select::SelectColumns,
+    util, CliError, CliResult,
+};
 
 #[allow(dead_code)]
 #[derive(Deserialize)]

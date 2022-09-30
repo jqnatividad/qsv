@@ -49,17 +49,16 @@ Common options:
                            Must be a single character. (default: ,)
 ";
 
-use std::io;
-use std::iter;
-use std::ops;
+use std::{io, iter, ops};
 
 use ahash::AHashMap;
 use serde::Deserialize;
 
-use crate::config::{Config, Delimiter};
-use crate::select::{SelectColumns, Selection};
-use crate::util;
-use crate::CliResult;
+use crate::{
+    config::{Config, Delimiter},
+    select::{SelectColumns, Selection},
+    util, CliResult,
+};
 
 type ByteString = Vec<u8>;
 type BoxedWriter = csv::Writer<Box<dyn io::Write + 'static>>;

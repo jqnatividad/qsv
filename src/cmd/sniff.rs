@@ -34,9 +34,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use thousands::Separable;
 
-use crate::config::Config;
-use crate::util;
-use crate::CliResult;
+use crate::{config::Config, util, CliResult};
 
 #[derive(Deserialize)]
 struct Args {
