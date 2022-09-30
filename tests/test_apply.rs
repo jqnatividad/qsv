@@ -574,6 +574,68 @@ fn apply_ops_chain() {
 }
 
 #[test]
+fn apply_ops_chain_squeeze0() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["name"],
+            svec!["   John       Paul   "],
+            svec!["Mary"],
+            svec!["  Mary    Sue"],
+            svec!["Hopkins"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("trim,upper,squeeze0")
+        .arg("name")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["name"],
+        svec!["JOHNPAUL"],
+        svec!["MARY"],
+        svec!["MARYSUE"],
+        svec!["HOPKINS"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn apply_ops_chain_strip() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["name"],
+            svec!["Doctor   John       Paul   "],
+            svec!["DocTor Mary"],
+            svec!["  Mary    Sue"],
+            svec!["doctor Hopkins"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("squeeze,upper,strip_prefix,trim")
+        .arg("name")
+        .arg("--comparand")
+        .arg("DOCTOR")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["name"],
+        svec!["JOHN PAUL"],
+        svec!["MARY"],
+        svec!["MARY SUE"],
+        svec!["HOPKINS"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn apply_ops_mixed_case_chain() {
     let wrk = Workdir::new("apply");
     wrk.create(
