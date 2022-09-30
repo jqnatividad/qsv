@@ -178,7 +178,7 @@ nopython_full = [
     "fetch",
     "foreach",
     "generate",
-    "lua",
+    "luajit",
     "self_update",
 ]
 apply = [
