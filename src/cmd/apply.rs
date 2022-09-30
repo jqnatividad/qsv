@@ -3,7 +3,7 @@ Apply a series of transformation functions to a given CSV column. This can be us
 perform typical data-wrangling tasks and/or to harmonize some values, etc.
 
 It has several subcommands:
- * operations - 26 string, format, currency, regex & NLP operators.
+ * operations - 29 string, format, currency, regex & NLP operators.
  * emptyreplace - replace empty cells with <--replacement> string.
  * datefmt - Formats a recognized date column to a specified format using <--formatstr>.
  * dynfmt - Dynamically constructs a new column from other columns using the <--formatstr> template.
@@ -23,12 +23,15 @@ Currently supported operations:
   * lower: Transform to lowercase
   * upper: Transform to uppercase
   * squeeze: Compress consecutive whitespaces
+  * squeeze0: Remove embedded whitespaces
   * trim: Trim (drop whitespace left & right of the string)
   * ltrim: Left trim whitespace
   * rtrim: Right trim whitespace
   * mtrim: Trims --comparand matches left & right of the string (Rust trim_matches)
   * mltrim: Left trim --comparand matches (Rust trim_start_matches)
   * mrtrim: Right trim --comparand matches (Rust trim_end_matches)
+  * strip_prefix: Removes specified prefix in --comparand
+  * strip_suffix: Remove specified suffix in --comparand
   * replace: Replace all matches of a pattern (using --comparand)
       with a string (using --replacement) (Rust replace)
   * regex_replace: Replace all regex matches in --comparand w/ --replacement.
@@ -179,6 +182,8 @@ set the geocoded value a new column named City.
 
 $ qsv apply geocode Location --formatstr city-state --new-column City file.csv
 
+For more extensive examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_apply.rs.
+
 Usage:
 qsv apply operations <operations> [options] <column> [<input>]
 qsv apply emptyreplace --replacement=<string> [options] <column> [<input>]
@@ -266,12 +271,15 @@ static OPERATIONS: &[&str] = &[
     "lower",
     "upper",
     "squeeze",
+    "squeeze0",
     "trim",
     "rtrim",
     "ltrim",
     "mtrim",
     "mltrim",
     "mrtrim",
+    "strip_prefix",
+    "strip_suffix",
     "titlecase",
     "replace",
     "regex_replace",
@@ -367,12 +375,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     // validate specified operations
-    let mut censor_invokes = 0_usize;
-    let mut replace_invokes = 0_usize;
-    let mut regex_replace_invokes = 0_usize;
-    let mut sim_invokes = 0_usize;
-    let mut eudex_invokes = 0_usize;
-    let mut sentiment_invokes = 0_usize;
+    let mut censor_invokes = 0_u8;
+    let mut replace_invokes = 0_u8;
+    let mut regex_replace_invokes = 0_u8;
+    let mut sim_invokes = 0_u8;
+    let mut strip_invokes = 0_u8;
+    let mut eudex_invokes = 0_u8;
+    let mut sentiment_invokes = 0_u8;
     let operations_lowercase = args.arg_operations.to_lowercase();
     let operations: Vec<&str> = operations_lowercase.split(',').collect();
     if args.cmd_operations {
@@ -414,6 +423,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         return fail!("--comparand (-C) is required for match trim operations.");
                     }
                 }
+                "strip_prefix" | "strip_suffix" => {
+                    if args.flag_comparand.is_empty() {
+                        return fail!("--comparand (-C) is required for strip operations.");
+                    }
+                    strip_invokes += 1;
+                }
                 "simdl" | "simdln" | "simjw" | "simsd" | "simhm" | "simod" => {
                     if args.flag_new_column.is_none() {
                         return fail!("--new_column (-c) is required for similarity operations.");
@@ -449,8 +464,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         || sim_invokes > 1
         || eudex_invokes > 1
         || sentiment_invokes > 1
+        || strip_invokes > 1
     {
-        return fail!("you can only use censor, replace, regex_replace, similarity, eudex or sentiment ONCE per operation series.");
+        return fail!("you can only use censor, replace, regex_replace, strip, similarity, eudex or sentiment ONCE per operation series.");
     };
 
     // for dynfmt, safe_headers are the "safe" version of colnames - alphanumeric only,
@@ -691,6 +707,10 @@ fn apply_operations(operations: &[&str], cell: &mut String, comparand: &str, rep
                 let squeezer: &'static Regex = regex_once_cell!(r"\s+");
                 *cell = squeezer.replace_all(cell, " ").to_string();
             }
+            "squeeze0" => {
+                let squeezer: &'static Regex = regex_once_cell!(r"\s+");
+                *cell = squeezer.replace_all(cell, "").to_string();
+            }
             "trim" => {
                 *cell = String::from(cell.trim());
             }
@@ -709,6 +729,16 @@ fn apply_operations(operations: &[&str], cell: &mut String, comparand: &str, rep
             }
             "mrtrim" => {
                 *cell = String::from(cell.trim_end_matches(comparand));
+            }
+            "strip_prefix" => {
+                if let Some(stripped) = cell.strip_prefix(comparand) {
+                    *cell = String::from(stripped);
+                }
+            }
+            "strip_suffix" => {
+                if let Some(stripped) = cell.strip_suffix(comparand) {
+                    *cell = String::from(stripped);
+                }
             }
             "titlecase" => {
                 *cell = titlecase(cell);
