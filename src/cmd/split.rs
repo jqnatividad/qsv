@@ -35,28 +35,28 @@ Common options:
                            Must be a single character. (default: ,)
 ";
 
-use std::fs;
-use std::io;
-use std::path::Path;
+use std::{fs, io, path::Path};
 
 use serde::Deserialize;
 use threadpool::ThreadPool;
 
-use crate::config::{Config, Delimiter};
-use crate::index::Indexed;
-use crate::util::{self, FilenameTemplate};
-use crate::CliResult;
+use crate::{
+    config::{Config, Delimiter},
+    index::Indexed,
+    util::{self, FilenameTemplate},
+    CliResult,
+};
 
 #[derive(Clone, Deserialize)]
 struct Args {
-    arg_input: Option<String>,
-    arg_outdir: String,
-    flag_size: usize,
-    flag_jobs: Option<usize>,
-    flag_filename: FilenameTemplate,
-    flag_pad: usize,
+    arg_input:       Option<String>,
+    arg_outdir:      String,
+    flag_size:       usize,
+    flag_jobs:       Option<usize>,
+    flag_filename:   FilenameTemplate,
+    flag_pad:        usize,
     flag_no_headers: bool,
-    flag_delimiter: Option<Delimiter>,
+    flag_delimiter:  Option<Delimiter>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {

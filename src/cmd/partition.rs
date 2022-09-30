@@ -28,31 +28,33 @@ Common options:
                            Must be a single character. (default: ,)
 ";
 
-use std::collections::hash_map::Entry;
-use std::collections::HashSet;
-use std::fs;
-use std::io;
-use std::path::Path;
+use std::{
+    collections::{hash_map::Entry, HashSet},
+    fs, io,
+    path::Path,
+};
 
 use ahash::AHashMap;
 use regex::Regex;
 use serde::Deserialize;
 
-use crate::config::{Config, Delimiter};
-use crate::select::SelectColumns;
-use crate::util::{self, FilenameTemplate};
-use crate::CliResult;
+use crate::{
+    config::{Config, Delimiter},
+    select::SelectColumns,
+    util::{self, FilenameTemplate},
+    CliResult,
+};
 
 #[derive(Clone, Deserialize)]
 struct Args {
-    arg_column: SelectColumns,
-    arg_input: Option<String>,
-    arg_outdir: String,
-    flag_filename: FilenameTemplate,
+    arg_column:         SelectColumns,
+    arg_input:          Option<String>,
+    arg_outdir:         String,
+    flag_filename:      FilenameTemplate,
     flag_prefix_length: Option<usize>,
-    flag_drop: bool,
-    flag_no_headers: bool,
-    flag_delimiter: Option<Delimiter>,
+    flag_drop:          bool,
+    flag_no_headers:    bool,
+    flag_delimiter:     Option<Delimiter>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -144,9 +146,9 @@ type BoxedWriter = csv::Writer<Box<dyn io::Write + 'static>>;
 
 /// Generates unique filenames based on CSV values.
 struct WriterGenerator {
-    template: FilenameTemplate,
-    counter: usize,
-    used: HashSet<String>,
+    template:      FilenameTemplate,
+    counter:       usize,
+    used:          HashSet<String>,
     non_word_char: Regex,
 }
 

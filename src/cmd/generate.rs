@@ -50,25 +50,28 @@ Common options:
                            Must be a single character. (default: ,)
 "#;
 
-use std::env::temp_dir;
-use std::fs;
-use std::io::{self, Write};
+use std::{
+    env::temp_dir,
+    fs,
+    io::{self, Write},
+};
 
 use serde::Deserialize;
 use test_data_generation::data_sample_parser::DataSampleParser;
 use uuid::Uuid;
 
-use crate::config::{Config, Delimiter};
-use crate::util;
-use crate::CliResult;
+use crate::{
+    config::{Config, Delimiter},
+    util, CliResult,
+};
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input: Option<String>,
-    flag_rows: u32,
-    flag_output: Option<String>,
-    flag_outdsp: Option<String>,
-    flag_indsp: Option<String>,
+    arg_input:      Option<String>,
+    flag_rows:      u32,
+    flag_output:    Option<String>,
+    flag_outdsp:    Option<String>,
+    flag_indsp:     Option<String>,
     flag_delimiter: Option<Delimiter>,
 }
 

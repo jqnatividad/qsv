@@ -30,23 +30,26 @@ Common options:
                            Must be a single character. (default: ,)
 ";
 
-use std::borrow::Cow;
-use std::io::{self, Write};
+use std::{
+    borrow::Cow,
+    io::{self, Write},
+};
 
 use serde::Deserialize;
 use tabwriter::TabWriter;
 
-use crate::config::{Config, Delimiter};
-use crate::util;
-use crate::CliResult;
+use crate::{
+    config::{Config, Delimiter},
+    util, CliResult,
+};
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input: Option<String>,
-    flag_condense: Option<usize>,
-    flag_separator: String,
+    arg_input:       Option<String>,
+    flag_condense:   Option<usize>,
+    flag_separator:  String,
     flag_no_headers: bool,
-    flag_delimiter: Option<Delimiter>,
+    flag_delimiter:  Option<Delimiter>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {

@@ -1,7 +1,10 @@
 #[cfg(any(feature = "full", feature = "lite"))]
 use std::borrow::Cow;
-use std::path::{Path, PathBuf};
-use std::{env, fs, io, str, thread};
+use std::{
+    env, fs, io,
+    path::{Path, PathBuf},
+    str, thread,
+};
 
 use docopt::Docopt;
 #[cfg(any(feature = "full", feature = "lite"))]
@@ -12,8 +15,10 @@ use serde::de::DeserializeOwned;
 #[cfg(any(feature = "full", feature = "lite"))]
 use serde::de::{Deserialize, Deserializer, Error};
 
-use crate::config::{Config, Delimiter};
-use crate::CliResult;
+use crate::{
+    config::{Config, Delimiter},
+    CliResult,
+};
 
 #[macro_export]
 macro_rules! regex_once_cell {
@@ -715,7 +720,7 @@ fn test_hw_survey() {
 #[cfg(feature = "apply")]
 pub struct ColumnNameParser {
     chars: Vec<char>,
-    pos: usize,
+    pos:   usize,
 }
 
 #[cfg(feature = "apply")]
@@ -723,7 +728,7 @@ impl ColumnNameParser {
     pub fn new(s: &str) -> ColumnNameParser {
         ColumnNameParser {
             chars: s.chars().collect(),
-            pos: 0,
+            pos:   0,
         }
     }
 

@@ -61,29 +61,29 @@ use log::{debug, info};
 use regex::bytes::RegexBuilder;
 use serde::Deserialize;
 
-use crate::config::{Config, Delimiter};
-use crate::select::SelectColumns;
-use crate::util;
-use crate::CliError;
-use crate::CliResult;
+use crate::{
+    config::{Config, Delimiter},
+    select::SelectColumns,
+    util, CliError, CliResult,
+};
 
 #[allow(dead_code)]
 #[derive(Deserialize)]
 struct Args {
-    arg_input: Option<String>,
-    arg_regex: String,
-    flag_select: SelectColumns,
-    flag_output: Option<String>,
-    flag_no_headers: bool,
-    flag_delimiter: Option<Delimiter>,
-    flag_invert_match: bool,
-    flag_unicode: bool,
-    flag_ignore_case: bool,
-    flag_flag: Option<String>,
-    flag_size_limit: usize,
+    arg_input:           Option<String>,
+    arg_regex:           String,
+    flag_select:         SelectColumns,
+    flag_output:         Option<String>,
+    flag_no_headers:     bool,
+    flag_delimiter:      Option<Delimiter>,
+    flag_invert_match:   bool,
+    flag_unicode:        bool,
+    flag_ignore_case:    bool,
+    flag_flag:           Option<String>,
+    flag_size_limit:     usize,
     flag_dfa_size_limit: usize,
-    flag_quick: bool,
-    flag_progressbar: bool,
+    flag_quick:          bool,
+    flag_progressbar:    bool,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {

@@ -1,5 +1,4 @@
-use std::io;
-use std::ops;
+use std::{io, ops};
 
 use csv_index::RandomAccessSimple;
 
@@ -8,7 +7,7 @@ use crate::CliResult;
 /// Indexed composes a CSV reader with a simple random access index.
 pub struct Indexed<R, I> {
     csv_rdr: csv::Reader<R>,
-    idx: RandomAccessSimple<I>,
+    idx:     RandomAccessSimple<I>,
 }
 
 impl<R, I> ops::Deref for Indexed<R, I> {

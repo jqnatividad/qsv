@@ -24,17 +24,18 @@ Common options:
 
 use serde::Deserialize;
 
-use crate::config::{Config, Delimiter};
-use crate::util;
-use crate::CliResult;
+use crate::{
+    config::{Config, Delimiter},
+    util, CliResult,
+};
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input: Option<String>,
-    arg_headers: String,
-    flag_output: Option<String>,
+    arg_input:       Option<String>,
+    arg_headers:     String,
+    flag_output:     Option<String>,
     flag_no_headers: bool,
-    flag_delimiter: Option<Delimiter>,
+    flag_delimiter:  Option<Delimiter>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {

@@ -28,21 +28,23 @@ Common options:
                            Must be a single character. (default: ,)
 ";
 
-use std::fs;
-use std::io;
-use std::path::{Path, PathBuf};
+use std::{
+    fs, io,
+    path::{Path, PathBuf},
+};
 
 use csv_index::RandomAccessSimple;
 use serde::Deserialize;
 
-use crate::config::{Config, Delimiter};
-use crate::util;
-use crate::CliResult;
+use crate::{
+    config::{Config, Delimiter},
+    util, CliResult,
+};
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input: String,
-    flag_output: Option<String>,
+    arg_input:      String,
+    flag_output:    Option<String>,
     flag_delimiter: Option<Delimiter>,
 }
 

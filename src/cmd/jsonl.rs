@@ -17,19 +17,19 @@ Common options:
     -o, --output <file>    Write output to <file> instead of stdout.
 ";
 
-use std::fs;
-use std::io::{self, BufRead, BufReader};
+use std::{
+    fs,
+    io::{self, BufRead, BufReader},
+};
 
 use serde::Deserialize;
 use serde_json::Value;
 
-use crate::config::Config;
-use crate::util;
-use crate::CliResult;
+use crate::{config::Config, util, CliResult};
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input: Option<String>,
+    arg_input:   Option<String>,
     flag_output: Option<String>,
 }
 

@@ -37,14 +37,18 @@ Common options:
     -p, --progressbar          Show progress bars. Not valid for stdin.
 ";
 
-use std::{env, fs::File, io::BufReader, io::BufWriter, io::Read, io::Write, str};
+use std::{
+    env,
+    fs::File,
+    io::{BufReader, BufWriter, Read, Write},
+    str,
+};
 
 use csv::ByteRecord;
 #[cfg(any(feature = "full", feature = "lite"))]
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use itertools::Itertools;
-use jsonschema::paths::PathChunk;
-use jsonschema::{output::BasicOutput, JSONSchema};
+use jsonschema::{output::BasicOutput, paths::PathChunk, JSONSchema};
 #[allow(unused_imports)]
 use log::{debug, info};
 use once_cell::sync::OnceCell;
@@ -53,10 +57,10 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, value::Number, Map, Value};
 use thousands::Separable;
 
-use crate::config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY};
-use crate::util;
-use crate::CliError;
-use crate::CliResult;
+use crate::{
+    config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY},
+    util, CliError, CliResult,
+};
 
 // number of CSV rows to process in a batch
 const BATCH_SIZE: usize = 24_000;
@@ -67,27 +71,27 @@ static NULL_TYPE: once_cell::sync::OnceCell<Value> = OnceCell::new();
 #[allow(dead_code)]
 #[derive(Deserialize)]
 struct Args {
-    flag_fail_fast: bool,
-    flag_valid: Option<String>,
-    flag_invalid: Option<String>,
-    flag_json: bool,
+    flag_fail_fast:   bool,
+    flag_valid:       Option<String>,
+    flag_invalid:     Option<String>,
+    flag_json:        bool,
     flag_pretty_json: bool,
-    flag_jobs: Option<usize>,
-    flag_no_headers: bool,
-    flag_delimiter: Option<Delimiter>,
+    flag_jobs:        Option<usize>,
+    flag_no_headers:  bool,
+    flag_delimiter:   Option<Delimiter>,
     flag_progressbar: bool,
-    arg_input: Option<String>,
-    arg_json_schema: Option<String>,
+    arg_input:        Option<String>,
+    arg_json_schema:  Option<String>,
 }
 
 #[derive(Serialize, Deserialize)]
 struct RFC4180Struct {
     delimiter_char: char,
-    header_row: bool,
-    quote_char: char,
-    num_records: u64,
-    num_fields: usize,
-    fields: Vec<String>,
+    header_row:     bool,
+    quote_char:     char,
+    num_records:    u64,
+    num_fields:     usize,
+    fields:         Vec<String>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -162,11 +166,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let msg = if args.flag_json || args.flag_pretty_json {
             let rfc4180 = RFC4180Struct {
                 delimiter_char: rconfig.get_delimiter() as char,
-                header_row: !rconfig.no_headers,
-                quote_char: rconfig.quote as char,
-                num_records: record_count,
-                num_fields: header_len,
-                fields: field_vec,
+                header_row:     !rconfig.no_headers,
+                quote_char:     rconfig.quote as char,
+                num_records:    record_count,
+                num_fields:     header_len,
+                fields:         field_vec,
             };
 
             if args.flag_pretty_json {

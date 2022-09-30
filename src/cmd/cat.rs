@@ -34,19 +34,20 @@ Common options:
 
 use serde::Deserialize;
 
-use crate::config::{Config, Delimiter};
-use crate::util;
-use crate::CliResult;
+use crate::{
+    config::{Config, Delimiter},
+    util, CliResult,
+};
 
 #[derive(Deserialize)]
 struct Args {
-    cmd_rows: bool,
-    cmd_columns: bool,
-    arg_input: Vec<String>,
-    flag_pad: bool,
-    flag_output: Option<String>,
+    cmd_rows:        bool,
+    cmd_columns:     bool,
+    arg_input:       Vec<String>,
+    flag_pad:        bool,
+    flag_output:     Option<String>,
     flag_no_headers: bool,
-    flag_delimiter: Option<Delimiter>,
+    flag_delimiter:  Option<Delimiter>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {

@@ -1,6 +1,9 @@
 #![macro_use]
-use std::process::{ExitCode, Termination};
-use std::{borrow::ToOwned, fmt, io};
+use std::{
+    borrow::ToOwned,
+    fmt, io,
+    process::{ExitCode, Termination},
+};
 
 macro_rules! wout {
     ($($arg:tt)*) => ({
@@ -48,10 +51,10 @@ macro_rules! fail_format {
 
 #[repr(u8)]
 pub enum QsvExitCode {
-    Good = 0,
-    Bad = 1,
+    Good           = 0,
+    Bad            = 1,
     IncorrectUsage = 2,
-    Abort = 255,
+    Abort          = 255,
 }
 
 impl Termination for QsvExitCode {

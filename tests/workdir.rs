@@ -1,6 +1,13 @@
-use std::io::{self, Read, Write};
-use std::path::{Path, PathBuf};
-use std::{env, fmt, fs, fs::File, process, str::FromStr, sync::atomic, time::Duration};
+use std::{
+    env, fmt, fs,
+    fs::File,
+    io::{self, Read, Write},
+    path::{Path, PathBuf},
+    process,
+    str::FromStr,
+    sync::atomic,
+    time::Duration,
+};
 
 use crate::Csv;
 
@@ -9,8 +16,8 @@ static QSV_INTEGRATION_TEST_DIR: &str = "xit";
 static NEXT_ID: atomic::AtomicUsize = atomic::AtomicUsize::new(0);
 
 pub struct Workdir {
-    root: PathBuf,
-    dir: PathBuf,
+    root:     PathBuf,
+    dir:      PathBuf,
     flexible: bool,
 }
 

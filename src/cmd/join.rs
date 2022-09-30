@@ -65,41 +65,38 @@ Common options:
                            Must be a single character. (default: ,)
 ";
 
-use std::collections::hash_map::Entry;
-use std::fmt;
-use std::io;
-use std::iter::repeat;
-use std::str;
+use std::{collections::hash_map::Entry, fmt, io, iter::repeat, str};
 
 use ahash::AHashMap;
 use byteorder::{BigEndian, WriteBytesExt};
 use serde::Deserialize;
 
-use crate::config::{Config, Delimiter, SeekRead};
-use crate::index::Indexed;
-use crate::select::{SelectColumns, Selection};
-use crate::util;
-use crate::CliResult;
+use crate::{
+    config::{Config, Delimiter, SeekRead},
+    index::Indexed,
+    select::{SelectColumns, Selection},
+    util, CliResult,
+};
 
 type ByteString = Vec<u8>;
 
 #[derive(Deserialize)]
 struct Args {
-    arg_columns1: SelectColumns,
-    arg_input1: String,
-    arg_columns2: SelectColumns,
-    arg_input2: String,
-    flag_left: bool,
-    flag_left_anti: bool,
-    flag_left_semi: bool,
-    flag_right: bool,
-    flag_full: bool,
-    flag_cross: bool,
-    flag_output: Option<String>,
+    arg_columns1:    SelectColumns,
+    arg_input1:      String,
+    arg_columns2:    SelectColumns,
+    arg_input2:      String,
+    flag_left:       bool,
+    flag_left_anti:  bool,
+    flag_left_semi:  bool,
+    flag_right:      bool,
+    flag_full:       bool,
+    flag_cross:      bool,
+    flag_output:     Option<String>,
     flag_no_headers: bool,
-    flag_no_case: bool,
-    flag_nulls: bool,
-    flag_delimiter: Option<Delimiter>,
+    flag_no_case:    bool,
+    flag_nulls:      bool,
+    flag_delimiter:  Option<Delimiter>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -146,14 +143,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 }
 
 struct IoState<R, W: io::Write> {
-    wtr: csv::Writer<W>,
-    rdr1: csv::Reader<R>,
-    sel1: Selection,
-    rdr2: csv::Reader<R>,
-    sel2: Selection,
+    wtr:        csv::Writer<W>,
+    rdr1:       csv::Reader<R>,
+    sel1:       Selection,
+    rdr2:       csv::Reader<R>,
+    sel2:       Selection,
     no_headers: bool,
-    casei: bool,
-    nulls: bool,
+    casei:      bool,
+    nulls:      bool,
 }
 
 impl<R: io::Read + io::Seek, W: io::Write> IoState<R, W> {
@@ -380,8 +377,8 @@ impl Args {
 
 struct ValueIndex<R> {
     // This maps tuples of values to corresponding rows.
-    values: AHashMap<Vec<ByteString>, Vec<usize>>,
-    idx: Indexed<R, io::Cursor<Vec<u8>>>,
+    values:   AHashMap<Vec<ByteString>, Vec<usize>>,
+    idx:      Indexed<R, io::Cursor<Vec<u8>>>,
     num_rows: usize,
 }
 

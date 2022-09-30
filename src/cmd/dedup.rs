@@ -51,23 +51,24 @@ use csv::ByteRecord;
 use rayon::prelude::*;
 use serde::Deserialize;
 
-use crate::cmd::sort::iter_cmp;
-use crate::config::{Config, Delimiter};
-use crate::select::SelectColumns;
-use crate::util;
-use crate::CliResult;
+use crate::{
+    cmd::sort::iter_cmp,
+    config::{Config, Delimiter},
+    select::SelectColumns,
+    util, CliResult,
+};
 #[derive(Deserialize)]
 struct Args {
-    arg_input: Option<String>,
-    flag_select: SelectColumns,
-    flag_no_case: bool,
-    flag_sorted: bool,
-    flag_dupes_output: Option<String>,
-    flag_output: Option<String>,
-    flag_no_headers: bool,
-    flag_delimiter: Option<Delimiter>,
+    arg_input:           Option<String>,
+    flag_select:         SelectColumns,
+    flag_no_case:        bool,
+    flag_sorted:         bool,
+    flag_dupes_output:   Option<String>,
+    flag_output:         Option<String>,
+    flag_no_headers:     bool,
+    flag_delimiter:      Option<Delimiter>,
     flag_human_readable: bool,
-    flag_jobs: Option<usize>,
+    flag_jobs:           Option<usize>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {

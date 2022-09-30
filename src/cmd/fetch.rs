@@ -169,15 +169,21 @@ Common options:
 
 use std::{fs, thread, time};
 
-use cached::proc_macro::{cached, io_cached};
-use cached::{Cached, IOCached, RedisCache, Return};
+use cached::{
+    proc_macro::{cached, io_cached},
+    Cached, IOCached, RedisCache, Return,
+};
 use dynfmt::Format;
 use governor::{
-    clock::DefaultClock, middleware::NoOpMiddleware, state::direct::NotKeyed, state::InMemoryState,
+    clock::DefaultClock,
+    middleware::NoOpMiddleware,
+    state::{direct::NotKeyed, InMemoryState},
 };
 use indicatif::{HumanCount, MultiProgress, ProgressBar, ProgressDrawTarget};
-use log::Level::{Debug, Info, Trace, Warn};
-use log::{debug, error, info, log_enabled, warn};
+use log::{
+    debug, error, info, log_enabled, warn,
+    Level::{Debug, Info, Trace, Warn},
+};
 use once_cell::sync::{Lazy, OnceCell};
 use rand::Rng;
 use redis;
@@ -187,36 +193,37 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use url::Url;
 
-use crate::config::{Config, Delimiter};
-use crate::select::SelectColumns;
-use crate::CliError;
-use crate::CliResult;
-use crate::{regex_once_cell, util};
+use crate::{
+    config::{Config, Delimiter},
+    regex_once_cell,
+    select::SelectColumns,
+    util, CliError, CliResult,
+};
 
 #[derive(Deserialize, Debug)]
 struct Args {
     flag_url_template: Option<String>,
-    flag_new_column: Option<String>,
-    flag_jql: Option<String>,
-    flag_jqlfile: Option<String>,
-    flag_pretty: bool,
-    flag_rate_limit: u32,
-    flag_timeout: u64,
-    flag_http_header: Vec<String>,
-    flag_max_retries: u8,
-    flag_max_errors: u64,
-    flag_store_error: bool,
-    flag_cache_error: bool,
-    flag_cookies: bool,
-    flag_report: String,
-    flag_redis: bool,
-    flag_flushdb: bool,
-    flag_output: Option<String>,
-    flag_no_headers: bool,
-    flag_delimiter: Option<Delimiter>,
-    flag_progressbar: bool,
-    arg_url_column: SelectColumns,
-    arg_input: Option<String>,
+    flag_new_column:   Option<String>,
+    flag_jql:          Option<String>,
+    flag_jqlfile:      Option<String>,
+    flag_pretty:       bool,
+    flag_rate_limit:   u32,
+    flag_timeout:      u64,
+    flag_http_header:  Vec<String>,
+    flag_max_retries:  u8,
+    flag_max_errors:   u64,
+    flag_store_error:  bool,
+    flag_cache_error:  bool,
+    flag_cookies:      bool,
+    flag_report:       String,
+    flag_redis:        bool,
+    flag_flushdb:      bool,
+    flag_output:       Option<String>,
+    flag_no_headers:   bool,
+    flag_delimiter:    Option<Delimiter>,
+    flag_progressbar:  bool,
+    arg_url_column:    SelectColumns,
+    arg_input:         Option<String>,
 }
 
 // connect to Redis at localhost, using database 1 by default when --redis is enabled
@@ -237,34 +244,34 @@ impl From<reqwest::Error> for CliError {
     }
 }
 struct RedisConfig {
-    conn_str: String,
+    conn_str:      String,
     max_pool_size: u32,
-    ttl_secs: u64,
-    ttl_refresh: bool,
+    ttl_secs:      u64,
+    ttl_refresh:   bool,
 }
 impl RedisConfig {
     fn load() -> Self {
         Self {
-            conn_str: std::env::var("QSV_REDIS_CONNSTR")
+            conn_str:      std::env::var("QSV_REDIS_CONNSTR")
                 .unwrap_or_else(|_| DEFAULT_REDIS_CONN_STR.to_string()),
             max_pool_size: std::env::var("QSV_REDIS_MAX_POOL_SIZE")
                 .unwrap_or_else(|_| DEFAULT_REDIS_POOL_SIZE.to_string())
                 .parse()
                 .unwrap_or(DEFAULT_REDIS_POOL_SIZE),
-            ttl_secs: std::env::var("QSV_REDIS_TTL_SECS")
+            ttl_secs:      std::env::var("QSV_REDIS_TTL_SECS")
                 .unwrap_or_else(|_| DEFAULT_REDIS_TTL_SECS.to_string())
                 .parse()
                 .unwrap_or(DEFAULT_REDIS_TTL_SECS),
-            ttl_refresh: std::env::var("QSV_REDIS_TTL_REFRESH").is_ok(),
+            ttl_refresh:   std::env::var("QSV_REDIS_TTL_REFRESH").is_ok(),
         }
     }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct FetchResponse {
-    response: String,
+    response:    String,
     status_code: u16,
-    retries: u8,
+    retries:     u8,
 }
 
 static REDISCONFIG: Lazy<RedisConfig> = Lazy::new(RedisConfig::load);
@@ -536,29 +543,29 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     #[allow(unused_assignments)]
     let mut intermediate_redis_value: Return<String> = Return {
         was_cached: false,
-        value: String::new(),
+        value:      String::new(),
     };
     #[allow(unused_assignments)]
     let mut intermediate_value: Return<FetchResponse> = Return {
         was_cached: false,
-        value: FetchResponse {
-            response: String::new(),
+        value:      FetchResponse {
+            response:    String::new(),
             status_code: 0_u16,
-            retries: 0_u8,
+            retries:     0_u8,
         },
     };
     #[allow(unused_assignments)]
     let mut final_value = String::with_capacity(150);
     #[allow(unused_assignments)]
     let mut final_response = FetchResponse {
-        response: String::new(),
+        response:    String::new(),
         status_code: 0_u16,
-        retries: 0_u8,
+        retries:     0_u8,
     };
     let empty_response = FetchResponse {
-        response: String::new(),
+        response:    String::new(),
         status_code: 0_u16,
-        retries: 0_u8,
+        retries:     0_u8,
     };
     let mut running_error_count = 0_u64;
     let mut running_success_count = 0_u64;
@@ -860,9 +867,9 @@ fn get_response(
             };
             error!("Invalid URL: Store_error: {flag_store_error} - {url_invalid_err}");
             return FetchResponse {
-                response: url_invalid_err,
+                response:    url_invalid_err,
                 status_code: reqwest::StatusCode::NOT_FOUND.as_u16(),
-                retries: 0_u8,
+                retries:     0_u8,
             };
         }
     };

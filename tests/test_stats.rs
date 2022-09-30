@@ -1,6 +1,4 @@
-use std::borrow::ToOwned;
-use std::cmp;
-use std::process;
+use std::{borrow::ToOwned, cmp, process};
 
 use crate::workdir::Workdir;
 

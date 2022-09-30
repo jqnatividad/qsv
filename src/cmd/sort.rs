@@ -40,24 +40,25 @@ use rayon::prelude::*;
 use serde::Deserialize;
 
 use self::Number::{Float, Int};
-use crate::config::{Config, Delimiter};
-use crate::select::SelectColumns;
-use crate::util;
-use crate::CliResult;
+use crate::{
+    config::{Config, Delimiter},
+    select::SelectColumns,
+    util, CliResult,
+};
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input: Option<String>,
-    flag_select: SelectColumns,
-    flag_numeric: bool,
-    flag_reverse: bool,
-    flag_random: bool,
-    flag_seed: Option<u64>,
-    flag_jobs: Option<usize>,
-    flag_output: Option<String>,
+    arg_input:       Option<String>,
+    flag_select:     SelectColumns,
+    flag_numeric:    bool,
+    flag_reverse:    bool,
+    flag_random:     bool,
+    flag_seed:       Option<u64>,
+    flag_jobs:       Option<usize>,
+    flag_output:     Option<String>,
     flag_no_headers: bool,
-    flag_delimiter: Option<Delimiter>,
-    flag_uniq: bool,
+    flag_delimiter:  Option<Delimiter>,
+    flag_uniq:       bool,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {

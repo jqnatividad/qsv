@@ -1,13 +1,10 @@
-use std::borrow::ToOwned;
-use std::collections::hash_map::Entry;
-use std::process;
+use std::{borrow::ToOwned, collections::hash_map::Entry, process};
 
 use ahash::AHashMap;
 use serde::Deserialize;
 use stats::Frequencies;
 
-use crate::workdir::Workdir;
-use crate::{qcheck_sized, Csv, CsvData};
+use crate::{qcheck_sized, workdir::Workdir, Csv, CsvData};
 
 fn setup(name: &str) -> (Workdir, process::Command) {
     let rows = vec![

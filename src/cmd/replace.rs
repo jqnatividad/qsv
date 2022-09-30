@@ -47,35 +47,34 @@ Common options:
 
 ";
 
-use std::borrow::Cow;
-use std::env;
+use std::{borrow::Cow, env};
 
 #[cfg(any(feature = "full", feature = "lite"))]
 use indicatif::{HumanCount, ProgressBar, ProgressDrawTarget};
 use regex::bytes::RegexBuilder;
 use serde::Deserialize;
 
-use crate::config::{Config, Delimiter};
-use crate::select::SelectColumns;
-use crate::util;
-use crate::CliError;
-use crate::CliResult;
+use crate::{
+    config::{Config, Delimiter},
+    select::SelectColumns,
+    util, CliError, CliResult,
+};
 
 #[allow(dead_code)]
 #[derive(Deserialize)]
 struct Args {
-    arg_input: Option<String>,
-    arg_pattern: String,
-    arg_replacement: String,
-    flag_select: SelectColumns,
-    flag_unicode: bool,
-    flag_output: Option<String>,
-    flag_no_headers: bool,
-    flag_delimiter: Option<Delimiter>,
-    flag_ignore_case: bool,
-    flag_size_limit: usize,
+    arg_input:           Option<String>,
+    arg_pattern:         String,
+    arg_replacement:     String,
+    flag_select:         SelectColumns,
+    flag_unicode:        bool,
+    flag_output:         Option<String>,
+    flag_no_headers:     bool,
+    flag_delimiter:      Option<Delimiter>,
+    flag_ignore_case:    bool,
+    flag_size_limit:     usize,
     flag_dfa_size_limit: usize,
-    flag_progressbar: bool,
+    flag_progressbar:    bool,
 }
 
 const NULL_VALUE: &str = "<NULL>";

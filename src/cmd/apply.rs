@@ -251,10 +251,12 @@ use titlecase::titlecase;
 use vader_sentiment::SentimentIntensityAnalyzer;
 use whatlang::detect;
 
-use crate::config::{Config, Delimiter};
-use crate::select::SelectColumns;
-use crate::CliResult;
-use crate::{regex_once_cell, util};
+use crate::{
+    config::{Config, Delimiter},
+    regex_once_cell,
+    select::SelectColumns,
+    util, CliResult,
+};
 
 // number of CSV rows to process in a batch
 const BATCH_SIZE: usize = 24_000;
@@ -290,24 +292,24 @@ static OPERATIONS: &[&str] = &[
 
 #[derive(Deserialize, Debug)]
 struct Args {
-    arg_column: SelectColumns,
-    cmd_operations: bool,
-    arg_operations: String,
-    cmd_datefmt: bool,
-    cmd_dynfmt: bool,
+    arg_column:       SelectColumns,
+    cmd_operations:   bool,
+    arg_operations:   String,
+    cmd_datefmt:      bool,
+    cmd_dynfmt:       bool,
     cmd_emptyreplace: bool,
-    cmd_geocode: bool,
-    arg_input: Option<String>,
-    flag_rename: Option<String>,
-    flag_comparand: String,
+    cmd_geocode:      bool,
+    arg_input:        Option<String>,
+    flag_rename:      Option<String>,
+    flag_comparand:   String,
     flag_replacement: String,
-    flag_prefer_dmy: bool,
-    flag_formatstr: String,
-    flag_jobs: Option<usize>,
-    flag_new_column: Option<String>,
-    flag_output: Option<String>,
-    flag_no_headers: bool,
-    flag_delimiter: Option<Delimiter>,
+    flag_prefer_dmy:  bool,
+    flag_formatstr:   String,
+    flag_jobs:        Option<usize>,
+    flag_new_column:  Option<String>,
+    flag_output:      Option<String>,
+    flag_no_headers:  bool,
+    flag_delimiter:   Option<Delimiter>,
     flag_progressbar: bool,
 }
 

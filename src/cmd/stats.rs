@@ -80,9 +80,14 @@ Common options:
                            Must be a single character. (default: ,)
 "#;
 
-use std::str::{self, FromStr};
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::{borrow::ToOwned, default::Default, fmt, fs, io, iter::repeat};
+use std::{
+    borrow::ToOwned,
+    default::Default,
+    fmt, fs, io,
+    iter::repeat,
+    str::{self, FromStr},
+    sync::atomic::{AtomicBool, Ordering},
+};
 
 use itertools::Itertools;
 use once_cell::sync::OnceCell;
@@ -92,31 +97,32 @@ use stats::{merge_all, Commute, MinMax, OnlineStats, Unsorted};
 use threadpool::ThreadPool;
 
 use self::FieldType::{TDate, TDateTime, TFloat, TInteger, TNull, TString};
-use crate::config::{Config, Delimiter};
-use crate::index::Indexed;
-use crate::select::{SelectColumns, Selection};
-use crate::util;
-use crate::CliResult;
+use crate::{
+    config::{Config, Delimiter},
+    index::Indexed,
+    select::{SelectColumns, Selection},
+    util, CliResult,
+};
 
 #[allow(clippy::unsafe_derive_deserialize)]
 #[derive(Clone, Deserialize)]
 pub struct Args {
-    pub arg_input: Option<String>,
-    pub flag_select: SelectColumns,
-    pub flag_everything: bool,
-    pub flag_mode: bool,
-    pub flag_cardinality: bool,
-    pub flag_median: bool,
-    pub flag_quartiles: bool,
-    pub flag_round: u8,
-    pub flag_nulls: bool,
-    pub flag_infer_dates: bool,
+    pub arg_input:            Option<String>,
+    pub flag_select:          SelectColumns,
+    pub flag_everything:      bool,
+    pub flag_mode:            bool,
+    pub flag_cardinality:     bool,
+    pub flag_median:          bool,
+    pub flag_quartiles:       bool,
+    pub flag_round:           u8,
+    pub flag_nulls:           bool,
+    pub flag_infer_dates:     bool,
     pub flag_dates_whitelist: String,
-    pub flag_prefer_dmy: bool,
-    pub flag_jobs: Option<usize>,
-    pub flag_output: Option<String>,
-    pub flag_no_headers: bool,
-    pub flag_delimiter: Option<Delimiter>,
+    pub flag_prefer_dmy:      bool,
+    pub flag_jobs:            Option<usize>,
+    pub flag_output:          Option<String>,
+    pub flag_no_headers:      bool,
+    pub flag_delimiter:       Option<Delimiter>,
 }
 
 static INFER_DATE_FLAGS: once_cell::sync::OnceCell<Vec<bool>> = OnceCell::new();
@@ -285,13 +291,13 @@ impl Args {
         stats.extend(
             repeat(Stats::new(WhichStats {
                 include_nulls: self.flag_nulls,
-                sum: true,
-                range: true,
-                dist: true,
-                cardinality: self.flag_everything || self.flag_cardinality,
-                median: !self.flag_everything && self.flag_median && !self.flag_quartiles,
-                quartiles: self.flag_everything || self.flag_quartiles,
-                mode: self.flag_everything || self.flag_mode,
+                sum:           true,
+                range:         true,
+                dist:          true,
+                cardinality:   self.flag_everything || self.flag_cardinality,
+                median:        !self.flag_everything && self.flag_median && !self.flag_quartiles,
+                quartiles:     self.flag_everything || self.flag_quartiles,
+                mode:          self.flag_everything || self.flag_mode,
             }))
             .take(record_len),
         );
@@ -395,13 +401,13 @@ fn init_date_inference(
 #[derive(Clone, Debug, Eq, PartialEq)]
 struct WhichStats {
     include_nulls: bool,
-    sum: bool,
-    range: bool,
-    dist: bool,
-    cardinality: bool,
-    median: bool,
-    quartiles: bool,
-    mode: bool,
+    sum:           bool,
+    range:         bool,
+    dist:          bool,
+    cardinality:   bool,
+    median:        bool,
+    quartiles:     bool,
+    mode:          bool,
 }
 
 impl Commute for WhichStats {
@@ -413,15 +419,15 @@ impl Commute for WhichStats {
 
 #[derive(Clone)]
 pub struct Stats {
-    typ: FieldType,
-    sum: Option<TypedSum>,
-    minmax: Option<TypedMinMax>,
-    online: Option<OnlineStats>,
+    typ:       FieldType,
+    sum:       Option<TypedSum>,
+    minmax:    Option<TypedMinMax>,
+    online:    Option<OnlineStats>,
     nullcount: u64,
-    modes: Option<Unsorted<Vec<u8>>>,
-    median: Option<Unsorted<f64>>,
+    modes:     Option<Unsorted<Vec<u8>>>,
+    median:    Option<Unsorted<f64>>,
     quartiles: Option<Unsorted<f64>>,
-    which: WhichStats,
+    which:     WhichStats,
 }
 
 fn round_num(dec_f64: f64, places: u8) -> String {
@@ -776,7 +782,7 @@ impl fmt::Debug for FieldType {
 #[derive(Clone, Default)]
 struct TypedSum {
     integer: i64,
-    float: Option<f64>,
+    float:   Option<f64>,
 }
 
 impl TypedSum {
@@ -846,11 +852,11 @@ impl Commute for TypedSum {
 /// where min/max makes sense.
 #[derive(Clone, Default)]
 struct TypedMinMax {
-    strings: MinMax<Vec<u8>>,
-    str_len: MinMax<usize>,
+    strings:  MinMax<Vec<u8>>,
+    str_len:  MinMax<usize>,
     integers: MinMax<i64>,
-    floats: MinMax<f64>,
-    dates: MinMax<String>,
+    floats:   MinMax<f64>,
+    dates:    MinMax<String>,
 }
 
 impl TypedMinMax {

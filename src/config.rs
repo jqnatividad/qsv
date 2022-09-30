@@ -1,17 +1,19 @@
-use std::borrow::ToOwned;
-use std::env;
-use std::fs;
-use std::io::{self, Read};
-use std::path::PathBuf;
+use std::{
+    borrow::ToOwned,
+    env, fs,
+    io::{self, Read},
+    path::PathBuf,
+};
 
 use log::{debug, info, warn};
 use qsv_sniffer::{SampleSize, Sniffer};
 use serde::de::{Deserialize, Deserializer, Error};
 
-use crate::index::Indexed;
-use crate::select::{SelectColumns, Selection};
-use crate::util;
-use crate::CliResult;
+use crate::{
+    index::Indexed,
+    select::{SelectColumns, Selection},
+    util, CliResult,
+};
 
 // rdr default is 8k in csv crate, we're doubling it
 const DEFAULT_RDR_BUFFER_CAPACITY: usize = 16 * (1 << 10);
@@ -69,23 +71,23 @@ impl<'de> Deserialize<'de> for Delimiter {
 #[allow(clippy::struct_excessive_bools)]
 #[derive(Debug)]
 pub struct Config {
-    path: Option<PathBuf>, // None implies <stdin>
-    idx_path: Option<PathBuf>,
-    select_columns: Option<SelectColumns>,
-    delimiter: u8,
-    pub no_headers: bool,
-    flexible: bool,
-    terminator: csv::Terminator,
-    pub quote: u8,
-    quote_style: csv::QuoteStyle,
-    double_quote: bool,
-    escape: Option<u8>,
-    quoting: bool,
+    path:              Option<PathBuf>, // None implies <stdin>
+    idx_path:          Option<PathBuf>,
+    select_columns:    Option<SelectColumns>,
+    delimiter:         u8,
+    pub no_headers:    bool,
+    flexible:          bool,
+    terminator:        csv::Terminator,
+    pub quote:         u8,
+    quote_style:       csv::QuoteStyle,
+    double_quote:      bool,
+    escape:            Option<u8>,
+    quoting:           bool,
     pub preamble_rows: u64,
-    trim: csv::Trim,
-    autoindex: bool,
-    checkutf8: bool,
-    prefer_dmy: bool,
+    trim:              csv::Trim,
+    autoindex:         bool,
+    checkutf8:         bool,
+    prefer_dmy:        bool,
 }
 
 // Empty trait as an alias for Seek and Read that avoids auto trait errors

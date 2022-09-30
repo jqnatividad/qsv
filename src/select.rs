@@ -1,10 +1,11 @@
-use std::cmp::Ordering;
-use std::collections::HashSet;
-use std::fmt;
-use std::iter::{self, repeat};
-use std::ops;
-use std::slice;
-use std::str::FromStr;
+use std::{
+    cmp::Ordering,
+    collections::HashSet,
+    fmt,
+    iter::{self, repeat},
+    ops, slice,
+    str::FromStr,
+};
 
 use regex::bytes::Regex;
 use serde::de::{Deserialize, Deserializer, Error};
@@ -12,7 +13,7 @@ use serde::de::{Deserialize, Deserializer, Error};
 #[derive(Clone)]
 pub struct SelectColumns {
     selectors: Vec<Selector>,
-    invert: bool,
+    invert:    bool,
 }
 
 impl SelectColumns {
@@ -88,14 +89,14 @@ impl<'de> Deserialize<'de> for SelectColumns {
 
 struct SelectorParser {
     chars: Vec<char>,
-    pos: usize,
+    pos:   usize,
 }
 
 impl SelectorParser {
     fn new(s: &str) -> SelectorParser {
         SelectorParser {
             chars: s.chars().collect(),
-            pos: 0,
+            pos:   0,
         }
     }
 
