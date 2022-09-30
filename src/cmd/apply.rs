@@ -23,7 +23,7 @@ Currently supported operations:
   * lower: Transform to lowercase
   * upper: Transform to uppercase
   * squeeze: Compress consecutive whitespaces
-  * squeeze0: Remove embedded whitespaces
+  * squeeze0: Remove whitespaces
   * trim: Trim (drop whitespace left & right of the string)
   * ltrim: Left trim whitespace
   * rtrim: Right trim whitespace
