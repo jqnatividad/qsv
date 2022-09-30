@@ -22,5 +22,6 @@ jobs:
     - name: Check formatting
       uses: actions-rs/cargo@v1
       with:
+        toolchain: nightly
         command: fmt
         args: -- --check
