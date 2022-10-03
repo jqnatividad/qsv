@@ -247,7 +247,7 @@ You can override the Python interpreter by setting `PYO3_PYTHON` (e.g., `PYO3_PY
 If you're distributing `python`-enabled qsv, you can also "bundle" the Python shared library by including it in the same directory as the qsv binary. qsv will automatically use
 the "bundled" library instead of the default Python version in the environment.
 
-Also, consider using the `lua`/`luajit` commands instead of the `py` command if the mapping/filtering operation you're trying to do can be done with `lua`/`luajit`. [Lua is much faster than Python](https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/lua-python3.html), and [LuaJIT is even faster still](https://luajit.org/performance_x86.html).
+Also, consider using the `lua`/`luajit` commands instead of the `py` command if the mapping/filtering operation you're trying to do can be done with `lua`/`luajit`. [Lua is much faster than Python](https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/lua-python3.html) and [LuaJIT is even faster still](https://luajit.org/performance_x86.html). In addition, Lua/LuaJIT is embedded into qsv and has no external dependencies, unlike Python. 
 
 ## Environment Variables
 
