@@ -51,11 +51,11 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [input](/src/cmd/input.rs#L2)[^2] | Read CSV data with special quoting, trimming, line-skipping and UTF-8 transcoding rules. Typically used to "normalize" a CSV for further processing with other qsv commands. |
 | [join](/src/cmd/join.rs#L2)[^2] | Inner, outer, cross, anti & semi joins. Uses a simple hash index to make it fast.  |
 | [jsonl](/src/cmd/jsonl.rs#L2) | Convert newline-delimited JSON ([JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/)) to CSV. See `tojsonl` command to convert CSV to JSONL.
-| [lua](/src/cmd/lua.rs#L2)[^1] | Execute a [Lua](https://www.lua.org/about.html) 5.4 script over CSV lines to transform, aggregate or filter them.  |
-| [luajit](/src/cmd/luajit.rs#L2)[^1] | Execute a [LuaJIT](https://luajit.org/luajit.html) 2.0 (a Just-In-Time compiler for Lua 5.1) script over CSV lines to transform, aggregate or filter them. [LuaJIT is much faster than Lua](https://luajit.org/performance_x86.html). |
+| [lua](/src/cmd/lua.rs#L2)[^1] | Execute a [Lua](https://www.lua.org/about.html) 5.4 script over CSV lines to transform, aggregate or filter them. [Lua is much faster than Python](https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/lua-python3.html)  |
+| [luajit](/src/cmd/luajit.rs#L2)[^1] | Execute a [LuaJIT](https://luajit.org/luajit.html) 2.0 (a Just-In-Time compiler for Lua 5.1) script over CSV lines to transform, aggregate or filter them. [LuaJIT is even faster still than Lua](https://luajit.org/performance_x86.html). |
 | [partition](/src/cmd/partition.rs#L2) | Partition a CSV based on a column value. |
 | [pseudo](/src/cmd/pseudo.rs#L2) | [Pseudonymise](https://en.wikipedia.org/wiki/Pseudonymization) the value of the given column by replacing them with an incremental identifier.  |
-| [py](/src/cmd/python.rs#L2)[^1] | Evaluate a Python expression over CSV lines to transform, aggregate or filter them. Python's [f-strings](https://www.freecodecamp.org/news/python-f-strings-tutorial-how-to-use-f-strings-for-string-formatting/) is particularly useful for extended formatting ([Python 3.6 and up supported, with Python 3.10 required on prebuilt qsv](#python)).  |
+| [py](/src/cmd/python.rs#L2)[^1] | Evaluate a Python expression over CSV lines to transform, aggregate or filter them. Python's [f-strings](https://www.freecodecamp.org/news/python-f-strings-tutorial-how-to-use-f-strings-for-string-formatting/) is particularly useful for extended formatting ([Python 3.6 and up supported, with Python 3.10 required on prebuilt qsv](#python)). Consider using the `lua`/`luajit` commands instead if you're having Python version issues as `lua`/`luajit` are embedded and require no external dependencies. |
 | [rename](/src/cmd/rename.rs#L2) |  Rename the columns of a CSV efficiently.  |
 | [replace](/src/cmd/replace.rs#L2) | Replace CSV data using a regex.  |
 | [reverse](/src/cmd/reverse.rs#L2)[^3] | Reverse order of rows in a CSV. Unlike the `sort --reverse` command, it preserves the order of rows with the same key.  |
@@ -247,6 +247,8 @@ You can override the Python interpreter by setting `PYO3_PYTHON` (e.g., `PYO3_PY
 If you're distributing `python`-enabled qsv, you can also "bundle" the Python shared library by including it in the same directory as the qsv binary. qsv will automatically use
 the "bundled" library instead of the default Python version in the environment.
 
+Also, consider using the `lua`/`luajit` commands instead of the `py` command if the mapping/filtering operation you're trying to do can be done with lua/luajit. Lua is much faster than Python (https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/lua-python3.html), and [LuaJIT is even faster still](https://luajit.org/performance_x86.html).
+
 ## Environment Variables
 
 | Variable | Description |
@@ -293,8 +295,8 @@ Relevant env vars are defined as anything that starts with `QSV_` and `MIMALLOC_
 * `fetch` - enables the `fetch` and `fetchpost` commands.
 * `generate` - enable `generate` command.
 * `full` - enable to build qsv binary variant which is feature-capable.
-* `all_full` - enable to build qsv binary variant with all features enabled (apply,fetch,foreach,generate,lua,python).
-* `nopython_full` - enable to build qsvnp binary variant with all features (apply,fetch,foreach,generate,lua) EXCEPT python.
+* `all_full` - enable to build qsv binary variant with all features enabled (apply,fetch,foreach,generate,luajit,python).
+* `nopython_full` - enable to build qsvnp binary variant with all features (apply,fetch,foreach,generate,luajit) EXCEPT python.
 * `lite` - enable to build qsvlite binary variant with all features disabled.
 * `datapusher_plus` - enable to build qsvdp binary variant - the [DataPusher+](https://github.com/dathere/datapusher-plus) optimized qsv binary.
 * `nightly` - enable to turn on nightly/unstable features in the `rand`, `regex`, `hashbrown`, `parking_lot` and `pyo3` crates when building with Rust nightly/unstable.
