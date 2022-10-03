@@ -142,7 +142,7 @@ fn excel_date_whitelist_none_xls() {
     let expected = vec![
         svec!["date_col", "num_col", "col_Petsa", "just another col"],
         svec!["37250", "1", "33423", "foo"],
-        svec!["37145.354166666664", "3", "44202", "bar"],
+        svec!["37145.35416", "3", "44202", "bar"],
         svec![
             "This is not a date and will be passed through",
             "5",
@@ -215,10 +215,40 @@ fn excel_open_xlsx() {
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
-        svec!["URL", "City"],
-        svec!["http://api.zippopotam.us/us/90210", "Beverly Hills"],
-        svec!["http://api.zippopotam.us/us/94105", "San Francisco"],
-        svec!["http://api.zippopotam.us/us/92802", "Anaheim"],
+        svec!["URL", "City", "number", "date"],
+        svec![
+            "http://api.zippopotam.us/us/90210",
+            "Beverly Hills",
+            "42",
+            "2001-09-11 08:30:00"
+        ],
+        svec![
+            "http://api.zippopotam.us/us/94105",
+            "San Francisco",
+            "3.14",
+            "not a date"
+        ],
+        svec![
+            "http://api.zippopotam.us/us/92802",
+            "Anaheim",
+            "3.14159265358979",
+            "2021-01-06"
+        ],
+        svec![
+            "http://api.zippopotam.us/us/10013",
+            "Manhattan",
+            "1.5",
+            "1900-05-02 10:48:00"
+        ],
+        svec![
+            "google.com",
+            "Mountain View",
+            "20.02",
+            "2021-07-04 22:02:59.999"
+        ],
+        svec!["apple.com", "Cupertino", "37", "Wednesday, March 14, 2012"],
+        svec!["amazon.com", "Seattle", "14.23", "2012-03-14"],
+        svec!["microsoft.com", "Redmond", "14.201", "2012-03-14 15:30:00"],
     ];
     assert_eq!(got, expected);
 }
@@ -284,11 +314,11 @@ fn excel_sheet_name() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["Middle sheet col1", "Middle-2"],
-        svec!["z", "3.14"],
+        svec!["z", "3.14159"],
         svec!["y", "42"],
         svec!["x", "33"],
         svec!["w", "7"],
-        svec!["v", "8"],
+        svec!["v", "3.14159"],
     ];
     assert_eq!(got, expected);
 }
@@ -305,11 +335,11 @@ fn excel_case_insensitve_sheet_name() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["Middle sheet col1", "Middle-2"],
-        svec!["z", "3.14"],
+        svec!["z", "3.14159"],
         svec!["y", "42"],
         svec!["x", "33"],
         svec!["w", "7"],
-        svec!["v", "8"],
+        svec!["v", "3.14159"],
     ];
     assert_eq!(got, expected);
 }
