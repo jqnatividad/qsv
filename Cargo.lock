@@ -163,7 +163,7 @@ dependencies = [
  "serde_urlencoded",
  "smallvec",
  "socket2",
- "time 0.3.14",
+ "time 0.3.15",
  "url",
 ]
 
@@ -521,7 +521,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "344adc371239ef32293cb1c4fe519592fcf21206c79c02854320afcdf3ab4917"
 dependencies = [
  "percent-encoding",
- "time 0.3.14",
+ "time 0.3.15",
  "version_check",
 ]
 
@@ -537,7 +537,7 @@ dependencies = [
  "publicsuffix",
  "serde",
  "serde_json",
- "time 0.3.14",
+ "time 0.3.15",
  "url",
 ]
 
@@ -894,7 +894,7 @@ dependencies = [
  "log",
  "rustversion",
  "thiserror",
- "time 0.3.14",
+ "time 0.3.15",
 ]
 
 [[package]]
@@ -1370,7 +1370,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
- "time 0.3.14",
+ "time 0.3.15",
  "url",
  "uuid",
 ]
@@ -2787,9 +2787,9 @@ dependencies = [
 
 [[package]]
 name = "time"
-version = "0.3.14"
+version = "0.3.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3c3f9a28b618c3a6b9251b6908e9c99e04b9e5c02e6581ccbb67d59c34ef7f9b"
+checksum = "d634a985c4d4238ec39cacaed2e7ae552fbd3c476b552c1deac3021b7d7eaf0c"
 dependencies = [
  "itoa",
  "libc",
@@ -3284,5 +3284,5 @@ dependencies = [
  "crc32fast",
  "crossbeam-utils",
  "flate2",
- "time 0.3.14",
+ "time 0.3.15",
 ]
