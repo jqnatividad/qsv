@@ -93,7 +93,7 @@ jsonschema = { version = "0.16", features = [
     "resolve-http",
 ], default-features = false }
 jsonxf = { version = "1", optional = true }
-jql = { version = "5.0", default-features = false, optional = true }
+jql = { version = "5.1", default-features = false, optional = true }
 log = "0.4"
 mimalloc = { version = "0.1", default-features = false, optional = true }
 mlua = { version = "0.8", features = ["lua54", "vendored"], optional = true }
