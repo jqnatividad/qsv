@@ -160,7 +160,7 @@ pub fn count_rows(conf: &Config) -> Result<u64, io::Error> {
         Ok(idx.count())
     } else {
         // index does not exist or is stale,
-        // count records manually
+        // count records by iterating through records
         let mut rdr = conf.reader()?;
         let mut count = 0u64;
         let mut record = csv::ByteRecord::new();
@@ -561,8 +561,9 @@ pub fn qsv_check_for_update() -> Result<bool, String> {
             // we don't want to overwrite manually curated/configured qsv installations.
             // Just inform the user of the new release, and let them rebuild their qsvs the
             // way they like it, instead of overwriting it with our pre-built binaries.
-            winfo!("qsv self-update does not work for manually installed/compiled versions.\n
-            If you wish to update to the latest version of qsv, manually install/compile from source.");
+            winfo!("This qsv was {QSV_KIND}. self-update does not work for manually {QSV_KIND} binaries.\n
+            If you wish to update to the latest version of qsv, manually install/compile from source\n
+            or download the pre-built binaries from GitHub.");
         }
     } else {
         winfo!("Up to date ({curr_version})... no update required.");
