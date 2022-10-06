@@ -48,6 +48,7 @@ search options:
                            the row number of the first match to stderr.
                            Return exit code 1 if no match is found.
                            No output is produced.
+    -c, --count            Return number of matches to stderr.
 
 Common options:
     -h, --help             Display this message
@@ -94,6 +95,7 @@ struct Args {
     flag_size_limit:     usize,
     flag_dfa_size_limit: usize,
     flag_quick:          bool,
+    flag_count:          bool,
     flag_progressbar:    bool,
 }
 
@@ -240,7 +242,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         util::finish_progress(&progress);
     }
 
-    if !args.flag_quick {
+    if args.flag_count {
         eprintln!("{match_row_ctr}");
         info!("matches: {match_row_ctr}");
     }

@@ -46,6 +46,24 @@ fn search_match() {
         svec!["barfoo", "foobar"],
     ];
     assert_eq!(got, expected);
+}
+
+#[test]
+fn search_match_with_count() {
+    let wrk = Workdir::new("search_match");
+    wrk.create("data.csv", data(true));
+    let mut cmd = wrk.command("search");
+    cmd.arg("^foo").arg("--count").arg("data.csv");
+
+    wrk.assert_success(&mut cmd);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["h1", "h2"],
+        svec!["foobar", "barfoo"],
+        svec!["barfoo", "foobar"],
+    ];
+    assert_eq!(got, expected);
 
     let got_err = wrk.output_stderr(&mut cmd);
     assert_eq!(got_err, "2\n");
@@ -112,6 +130,25 @@ fn search_ignore_case() {
     ];
     assert_eq!(got, expected);
 
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn search_ignore_case_count() {
+    let wrk = Workdir::new("search");
+    wrk.create("data.csv", data(true));
+    let mut cmd = wrk.command("search");
+    cmd.arg("^FoO").arg("--count").arg("data.csv");
+    cmd.arg("--ignore-case");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["h1", "h2"],
+        svec!["foobar", "barfoo"],
+        svec!["barfoo", "foobar"],
+    ];
+    assert_eq!(got, expected);
+
     let got_err = wrk.output_stderr(&mut cmd);
     assert_eq!(got_err, "2\n");
 
@@ -124,6 +161,21 @@ fn search_unicode() {
     wrk.create("data.csv", data(true));
     let mut cmd = wrk.command("search");
     cmd.arg("^Ḟoo").arg("data.csv");
+    cmd.arg("--unicode");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![svec!["h1", "h2"], svec!["Ḟooƀar", "ḃarḟoo"]];
+    assert_eq!(got, expected);
+
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn search_unicode_count() {
+    let wrk = Workdir::new("search");
+    wrk.create("data.csv", data(true));
+    let mut cmd = wrk.command("search");
+    cmd.arg("^Ḟoo").arg("--count").arg("data.csv");
     cmd.arg("--unicode");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
@@ -148,6 +200,21 @@ fn search_unicode_envvar() {
     let expected = vec![svec!["h1", "h2"], svec!["Ḟooƀar", "ḃarḟoo"]];
     assert_eq!(got, expected);
 
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn search_unicode_envvar_count() {
+    let wrk = Workdir::new("search");
+    wrk.create("data.csv", data(true));
+    let mut cmd = wrk.command("search");
+    cmd.env("QSV_REGEX_UNICODE", "1");
+    cmd.arg("^Ḟoo").arg("--count").arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![svec!["h1", "h2"], svec!["Ḟooƀar", "ḃarḟoo"]];
+    assert_eq!(got, expected);
+
     let got_err = wrk.output_stderr(&mut cmd);
     assert_eq!(got_err, "1\n");
 
@@ -160,6 +227,21 @@ fn search_no_headers() {
     wrk.create("data.csv", data(false));
     let mut cmd = wrk.command("search");
     cmd.arg("^foo").arg("data.csv");
+    cmd.arg("--no-headers");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![svec!["foobar", "barfoo"], svec!["barfoo", "foobar"]];
+    assert_eq!(got, expected);
+
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn search_no_headers_count() {
+    let wrk = Workdir::new("search_no_headers");
+    wrk.create("data.csv", data(false));
+    let mut cmd = wrk.command("search");
+    cmd.arg("^foo").arg("--count").arg("data.csv");
     cmd.arg("--no-headers");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
@@ -184,6 +266,21 @@ fn search_select() {
     let expected = vec![svec!["h1", "h2"], svec!["barfoo", "foobar"]];
     assert_eq!(got, expected);
 
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn search_select_count() {
+    let wrk = Workdir::new("search_select");
+    wrk.create("data.csv", data(true));
+    let mut cmd = wrk.command("search");
+    cmd.arg("^foo").arg("--count").arg("data.csv");
+    cmd.arg("--select").arg("h2");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![svec!["h1", "h2"], svec!["barfoo", "foobar"]];
+    assert_eq!(got, expected);
+
     let got_err = wrk.output_stderr(&mut cmd);
     assert_eq!(got_err, "1\n");
 
@@ -196,6 +293,22 @@ fn search_select_no_headers() {
     wrk.create("data.csv", data(false));
     let mut cmd = wrk.command("search");
     cmd.arg("^foo").arg("data.csv");
+    cmd.arg("--select").arg("2");
+    cmd.arg("--no-headers");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![svec!["barfoo", "foobar"]];
+    assert_eq!(got, expected);
+
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn search_select_no_headers_count() {
+    let wrk = Workdir::new("search_select_no_headers");
+    wrk.create("data.csv", data(false));
+    let mut cmd = wrk.command("search");
+    cmd.arg("^foo").arg("--count").arg("data.csv");
     cmd.arg("--select").arg("2");
     cmd.arg("--no-headers");
 
@@ -225,6 +338,25 @@ fn search_invert_match() {
     ];
     assert_eq!(got, expected);
 
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn search_invert_match_count() {
+    let wrk = Workdir::new("search_invert_match");
+    wrk.create("data.csv", data(false));
+    let mut cmd = wrk.command("search");
+    cmd.arg("^foo").arg("--count").arg("data.csv");
+    cmd.arg("--invert-match");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["foobar", "barfoo"],
+        svec!["a", "b"],
+        svec!["Ḟooƀar", "ḃarḟoo"],
+    ];
+    assert_eq!(got, expected);
+
     let got = wrk.output_stderr(&mut cmd);
     let expected = "2\n";
     assert_eq!(got, expected);
@@ -237,6 +369,22 @@ fn search_invert_match_no_headers() {
     wrk.create("data.csv", data(false));
     let mut cmd = wrk.command("search");
     cmd.arg("^foo").arg("data.csv");
+    cmd.arg("--invert-match");
+    cmd.arg("--no-headers");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![svec!["a", "b"], svec!["Ḟooƀar", "ḃarḟoo"]];
+    assert_eq!(got, expected);
+
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn search_invert_match_no_headers_count() {
+    let wrk = Workdir::new("search_invert_match");
+    wrk.create("data.csv", data(false));
+    let mut cmd = wrk.command("search");
+    cmd.arg("^foo").arg("--count").arg("data.csv");
     cmd.arg("--invert-match");
     cmd.arg("--no-headers");
 
@@ -274,6 +422,29 @@ fn search_flag_invert_match() {
     wrk.create("data.csv", data(false));
     let mut cmd = wrk.command("search");
     cmd.arg("^foo").arg("data.csv").args(["--flag", "flagged"]);
+    cmd.arg("--invert-match");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["foobar", "barfoo", "flagged"],
+        svec!["a", "b", "2"],
+        svec!["barfoo", "foobar", "0"],
+        svec!["Ḟooƀar", "ḃarḟoo", "4"],
+    ];
+    assert_eq!(got, expected);
+
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn search_flag_invert_match_count() {
+    let wrk = Workdir::new("search_flag");
+    wrk.create("data.csv", data(false));
+    let mut cmd = wrk.command("search");
+    cmd.arg("^foo")
+        .arg("--count")
+        .arg("data.csv")
+        .args(["--flag", "flagged"]);
     cmd.arg("--invert-match");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);

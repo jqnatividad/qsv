@@ -64,9 +64,23 @@ fn searchset_match() {
 
     wrk.assert_success(&mut cmd);
 
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn searchset_match_count() {
+    let wrk = Workdir::new("searchset_match");
+    wrk.create("data.csv", data(true));
+    wrk.create("regexset.txt", regexset_file());
+    let mut cmd = wrk.command("searchset");
+    cmd.arg("regexset.txt").arg("--count").arg("data.csv");
+
+    wrk.assert_success(&mut cmd);
+
     let got = wrk.output_stderr(&mut cmd);
     let expected = "3\n";
     assert_eq!(got, expected);
+
     wrk.assert_success(&mut cmd);
 }
 
@@ -190,6 +204,33 @@ fn searchset_ignore_case() {
         svec!["bleh", "no, Waldo is there"],
     ];
     assert_eq!(got, expected);
+
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn searchset_ignore_case_count() {
+    let wrk = Workdir::new("searchset");
+    wrk.create("data.csv", data(true));
+    wrk.create("regexset.txt", regexset_file());
+    let mut cmd = wrk.command("searchset");
+    cmd.arg("regexset.txt").arg("--count").arg("data.csv");
+    cmd.arg("--ignore-case");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["h1", "h2"],
+        svec!["foobar", "barfoo"],
+        svec!["barfoo", "foobar"],
+        svec!["is waldo here", "spot"],
+        svec!["bleh", "no, Waldo is there"],
+    ];
+    assert_eq!(got, expected);
+
+    let got = wrk.output_stderr(&mut cmd);
+    let expected = "4\n";
+    assert_eq!(got, expected);
+
     wrk.assert_success(&mut cmd);
 }
 
