@@ -1018,8 +1018,10 @@ fn get_response(
             let retry_after = api_respheader.get("retry-after");
 
             if log_enabled!(Debug) {
+                let rapidapi_proxy_response = api_respheader.get("X-RapidAPI-Proxy-Response");
+
                 debug!("api_status:{api_status:?} rate_limit_remaining:{ratelimit_remaining:?} {ratelimit_remaining_sec:?} \
-ratelimit_reset:{ratelimit_reset:?} {ratelimit_reset_sec:?} retry_after:{retry_after:?}");
+ratelimit_reset:{ratelimit_reset:?} {ratelimit_reset_sec:?} retry_after:{retry_after:?} rapid_api_proxy_response:{rapidapi_proxy_response:?}");
             }
 
             // if there's a ratelimit_remaining field in the response header, get it
