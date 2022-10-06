@@ -244,7 +244,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         util::finish_progress(&progress);
     }
 
-    if args.flag_count {
+    if args.flag_count && !args.flag_quick {
         eprintln!("{match_row_ctr}");
         info!("matches: {match_row_ctr}");
     }
