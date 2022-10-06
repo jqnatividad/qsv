@@ -643,14 +643,18 @@ fn send_hwsurvey(
     let mut survey_done = true;
     let mut status = reqwest::StatusCode::OK;
     if !dry_run {
-        let client = reqwest::blocking::Client::builder()
+        let client = match reqwest::blocking::Client::builder()
             .user_agent(DEFAULT_USER_AGENT)
             .brotli(true)
             .gzip(true)
             .deflate(true)
+            .use_rustls_tls()
             .http2_adaptive_window(true)
             .build()
-            .expect("Cannot build hw_survey reqwest client");
+        {
+            Ok(c) => c,
+            Err(e) => return Err(format!("Cannot build hw_survey reqwest client - {e}")),
+        };
 
         match client
             .post(HW_SURVEY_URL)

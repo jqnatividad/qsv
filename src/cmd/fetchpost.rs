@@ -387,6 +387,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .brotli(true)
         .gzip(true)
         .deflate(true)
+        .use_rustls_tls()
         .http2_adaptive_window(true)
         .connection_verbose(log_enabled!(Debug) || log_enabled!(Trace))
         .timeout(client_timeout)

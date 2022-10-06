@@ -848,6 +848,7 @@ fn load_json(uri: &str) -> Result<String, String> {
                 .brotli(true)
                 .gzip(true)
                 .deflate(true)
+                .use_rustls_tls()
                 .http2_adaptive_window(true)
                 .build()
             {
