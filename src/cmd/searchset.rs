@@ -37,18 +37,20 @@ search options:
                            column named <column>. For each found row, <column>
                            is set to the row number of the row, followed by a
                            semicolon, then a list of the matching regexes.
-    --size-limit <mb>      Set the approximate size limit (MB) of the compiled
-                           regular expressions. If the compiled expressions exceeds this 
-                           number, then a compilation error is returned.
-                           [default: 100]
-    --dfa-size-limit <mb>  Set the approximate size of the cache (MB) used by the regular
-                           expression engine's Discrete Finite Automata.
-                           [default: 10]
     -q, --quick            Return on first match with an exitcode of 0, returning
                            the row number of the first match to stderr.
                            Return exit code 1 if no match is found.
                            No output is produced.
     -c, --count            Return number of matches to stderr.
+    --size-limit <mb>      Set the approximate size limit (MB) of the compiled
+                           regular expression. If the compiled expression exceeds this 
+                           number, then a compilation error is returned.
+                           Modify this only if you're getting regular expression
+                           compilation errors. [default: 50]
+    --dfa-size-limit <mb>  Set the approximate size of the cache (MB) used by the regular
+                           expression engine's Discrete Finite Automata.
+                           Modify this only if you're getting regular expression
+                           compilation errors. [default: 10]
 
 Common options:
     -h, --help             Display this message
