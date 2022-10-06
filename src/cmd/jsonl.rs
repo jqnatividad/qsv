@@ -12,6 +12,9 @@ Usage:
     qsv jsonl [options] [<input>]
     qsv jsonl --help
 
+jsonl options:
+    --ignore-errors        Skip malformed input lines.
+
 Common options:
     -h, --help             Display this message
     -o, --output <file>    Write output to <file> instead of stdout.
@@ -29,8 +32,9 @@ use crate::{config::Config, util, CliResult};
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input:   Option<String>,
-    flag_output: Option<String>,
+    arg_input:          Option<String>,
+    flag_output:        Option<String>,
+    flag_ignore_errors: bool,
 }
 
 #[allow(clippy::needless_pass_by_value)]
@@ -136,8 +140,22 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut headers: Vec<Vec<String>> = Vec::new();
     let mut headers_emitted: bool = false;
 
-    for line in rdr.lines() {
-        let value: Value = serde_json::from_str(&line?).expect("Could not parse line as JSON!");
+    for (rowidx, line) in rdr.lines().enumerate() {
+        let value: Value = match serde_json::from_str(&line?) {
+            Ok(v) => v,
+            Err(e) => {
+                if args.flag_ignore_errors {
+                    continue;
+                } else {
+                    let human_idx = rowidx + 1; // not zero based
+                    return fail_format!(
+                        r#"Could not parse line {human_idx} as JSON! - {e}
+Use `--ignore-errors` option to skip malformed input lines.
+Use `tojsonl` command to convert _to_ jsonl instead of _from_ jsonl."#,
+                    );
+                }
+            }
+        };
 
         if !headers_emitted {
             if let Some(h) = infer_headers(&value) {
