@@ -68,7 +68,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let schema_args = crate::cmd::schema::Args {
         flag_enum_threshold:  3, // we only do three, as we're only inferring boolean based on enum
         flag_strict_dates:    false,
-        flag_pattern_columns: crate::select::SelectColumns::parse("").unwrap(),
+        flag_pattern_columns: crate::select::SelectColumns::parse("")?,
         flag_dates_whitelist: "none".to_string(), // json doesn't have a date type, so don't infer dates
         flag_prefer_dmy:      false,
         flag_stdout:          false,
@@ -105,7 +105,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // create a vec lookup about inferred field data types
     let mut field_type_vec: Vec<String> = Vec::with_capacity(headers.len());
     for (_field_name, field_def) in properties_map.iter() {
-        let field_map = field_def.as_object().unwrap();
+        let field_map = match field_def.as_object() {
+            Some(m) => m,
+            None => return fail!("Cannot create field map"),
+        };
         let prelim_type = field_map.get("type").unwrap();
         let field_values_enum = field_map.get("enum");
 
