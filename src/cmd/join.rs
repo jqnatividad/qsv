@@ -5,7 +5,7 @@ The default join operation is an 'inner' join. This corresponds to the
 intersection of rows on the keys specified.
 
 Joins are always done by ignoring leading and trailing whitespace. By default,
-joins are done case sensitively, but this can be disabled with the --no-case
+joins are done case sensitively, but this can be disabled with the --ignore-case
 flag.
 
 The columns arguments specify the columns to join for each input. Columns can
@@ -23,7 +23,7 @@ input parameters:
     e.g. 'qsv frequency -s Agency nyc311.csv | qsv join value - id nycagencyinfo.csv'
 
 join options:
-    --no-case              When set, joins are done case insensitively.
+    -i, --ignore-case      When set, joins are done case insensitively.
     --left                 Do a 'left outer' join. This returns all rows in
                            first CSV data set, including rows with no
                            corresponding row in the second data set. When no
@@ -82,21 +82,21 @@ type ByteString = Vec<u8>;
 
 #[derive(Deserialize)]
 struct Args {
-    arg_columns1:    SelectColumns,
-    arg_input1:      String,
-    arg_columns2:    SelectColumns,
-    arg_input2:      String,
-    flag_left:       bool,
-    flag_left_anti:  bool,
-    flag_left_semi:  bool,
-    flag_right:      bool,
-    flag_full:       bool,
-    flag_cross:      bool,
-    flag_output:     Option<String>,
-    flag_no_headers: bool,
-    flag_no_case:    bool,
-    flag_nulls:      bool,
-    flag_delimiter:  Option<Delimiter>,
+    arg_columns1:     SelectColumns,
+    arg_input1:       String,
+    arg_columns2:     SelectColumns,
+    arg_input2:       String,
+    flag_left:        bool,
+    flag_left_anti:   bool,
+    flag_left_semi:   bool,
+    flag_right:       bool,
+    flag_full:        bool,
+    flag_cross:       bool,
+    flag_output:      Option<String>,
+    flag_no_headers:  bool,
+    flag_ignore_case: bool,
+    flag_nulls:       bool,
+    flag_delimiter:   Option<Delimiter>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -346,7 +346,7 @@ impl Args {
             rdr2,
             sel2,
             no_headers: rconf1.no_headers,
-            casei: self.flag_no_case,
+            casei: self.flag_ignore_case,
             nulls: self.flag_nulls,
         })
     }

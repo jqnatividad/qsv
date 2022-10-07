@@ -42,7 +42,7 @@ fn dedup_no_case() {
     );
 
     let mut cmd = wrk.command("dedup");
-    cmd.arg("-C").arg("in.csv");
+    cmd.arg("-i").arg("in.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![svec!["N", "S"], svec!["10", "a"], svec!["2", "b"]];
@@ -126,7 +126,7 @@ fn dedup_sorted_nocase() {
     );
 
     let mut cmd = wrk.command("dedup");
-    cmd.arg("--sorted").arg("--no-case").arg("in.csv");
+    cmd.arg("--sorted").arg("--ignore-case").arg("in.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
@@ -162,7 +162,7 @@ fn dedup_alreadysorted_nocase() {
     );
 
     let mut cmd = wrk.command("dedup");
-    cmd.arg("--no-case").arg("in.csv");
+    cmd.arg("--ignore-case").arg("in.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
