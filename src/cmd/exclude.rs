@@ -4,7 +4,7 @@ Removes a set of CSV data from another set based on the specified columns.
 Also can compute the intersection of two CSV sets with the -v flag.
 
 Matching is always done by ignoring leading and trailing whitespace. By default,
-matching is done case sensitively, but this can be disabled with the --no-case
+matching is done case sensitively, but this can be disabled with the --ignore-case
 flag.
 
 The columns arguments specify the columns to match for each input. Columns can
@@ -18,7 +18,7 @@ Usage:
     qsv exclude --help
 
 exclude options:
-    --no-case              When set, matching is done case insensitively.
+    -i, --ignore-case      When set, matching is done case insensitively.
     -v                     When set, matching rows will be the only ones included,
                            forming set intersection, instead of the ones discarded.
 
@@ -49,15 +49,15 @@ type ByteString = Vec<u8>;
 
 #[derive(Deserialize)]
 struct Args {
-    arg_columns1:    SelectColumns,
-    arg_input1:      String,
-    arg_columns2:    SelectColumns,
-    arg_input2:      String,
-    flag_v:          bool,
-    flag_output:     Option<String>,
-    flag_no_headers: bool,
-    flag_no_case:    bool,
-    flag_delimiter:  Option<Delimiter>,
+    arg_columns1:     SelectColumns,
+    arg_input1:       String,
+    arg_columns2:     SelectColumns,
+    arg_input2:       String,
+    flag_v:           bool,
+    flag_output:      Option<String>,
+    flag_no_headers:  bool,
+    flag_ignore_case: bool,
+    flag_delimiter:   Option<Delimiter>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -133,7 +133,7 @@ impl Args {
             rdr2,
             sel2,
             no_headers: rconf1.no_headers,
-            casei: self.flag_no_case,
+            casei: self.flag_ignore_case,
         })
     }
 
