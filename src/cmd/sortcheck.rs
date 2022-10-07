@@ -27,7 +27,7 @@ Usage:
 sort options:
     -s, --select <arg>      Select a subset of columns to check for sort.
                             See 'qsv select --help' for the format details.
-    -C, --no-case           Compare strings disregarding case
+    -i, --ignore-case       Compare strings disregarding case
     --all                   Check all records. Do not stop the check on the
                             first unsorted record.
     --json                  Return results in JSON format, scanning --all records. 
@@ -66,7 +66,7 @@ use crate::{
 struct Args {
     arg_input:        Option<String>,
     flag_select:      SelectColumns,
-    flag_no_case:     bool,
+    flag_ignore_case: bool,
     flag_all:         bool,
     flag_no_headers:  bool,
     flag_delimiter:   Option<Delimiter>,
@@ -85,7 +85,7 @@ struct SortCheckStruct {
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
-    let no_case = args.flag_no_case;
+    let ignore_case = args.flag_ignore_case;
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers)
@@ -142,8 +142,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         };
         let a = sel.select(&record);
         let b = sel.select(&next_record);
-        let comparison = if no_case {
-            dedup::iter_cmp_no_case(a, b)
+        let comparison = if ignore_case {
+            dedup::iter_cmp_ignore_case(a, b)
         } else {
             iter_cmp(a, b)
         };
