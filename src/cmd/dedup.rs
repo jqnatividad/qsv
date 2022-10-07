@@ -21,7 +21,7 @@ sort options:
                                Note that the outputs will remain at the full width
                                of the CSV.
                                See 'qsv select --help' for the format details.
-    -C, --no-case              Compare strings disregarding case 
+    -i, --ignore-case          Compare strings disregarding case.
     --sorted                   The input is already sorted. Do not load the CSV into
                                memory to sort it first. Meant to be used in tandem and
                                after an extsort.
@@ -61,7 +61,7 @@ use crate::{
 struct Args {
     arg_input:           Option<String>,
     flag_select:         SelectColumns,
-    flag_no_case:        bool,
+    flag_ignore_case:    bool,
     flag_sorted:         bool,
     flag_dupes_output:   Option<String>,
     flag_output:         Option<String>,
@@ -73,7 +73,7 @@ struct Args {
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
-    let no_case = args.flag_no_case;
+    let ignore_case = args.flag_ignore_case;
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers)
@@ -106,8 +106,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             };
             let a = sel.select(&record);
             let b = sel.select(&next_record);
-            let comparison = if no_case {
-                iter_cmp_no_case(a, b)
+            let comparison = if ignore_case {
+                iter_cmp_ignore_case(a, b)
             } else {
                 iter_cmp(a, b)
             };
@@ -143,8 +143,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         while current + 1 < all.len() {
             let a = sel.select(&all[current]);
             let b = sel.select(&all[current + 1]);
-            if no_case {
-                if iter_cmp_no_case(a, b) == cmp::Ordering::Equal {
+            if ignore_case {
+                if iter_cmp_ignore_case(a, b) == cmp::Ordering::Equal {
                     dupe_count += 1;
                     if dupes_output {
                         dupewtr.write_byte_record(&all[current])?;
@@ -180,7 +180,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
 /// Try comparing `a` and `b` ignoring the case
 #[inline]
-pub fn iter_cmp_no_case<'a, L, R>(mut a: L, mut b: R) -> cmp::Ordering
+pub fn iter_cmp_ignore_case<'a, L, R>(mut a: L, mut b: R) -> cmp::Ordering
 where
     L: Iterator<Item = &'a [u8]>,
     R: Iterator<Item = &'a [u8]>,
