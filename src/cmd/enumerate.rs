@@ -99,8 +99,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         } else if args.flag_constant.is_some() {
             headers.push_field(b"constant");
         } else if copy_operation {
-            let current_header = String::from_utf8(headers[copy_index].to_vec())
-                .expect("Could not parse cell as utf-8!");
+            let current_header = match String::from_utf8(headers[copy_index].to_vec()) {
+                Ok(s) => s,
+                Err(e) => return fail_format!("Could not parse cell as utf-8! - {e}"),
+            };
             headers.push_field(format!("{current_header}_copy").as_bytes());
         } else {
             headers.push_field(b"index");

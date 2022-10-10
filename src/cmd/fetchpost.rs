@@ -585,8 +585,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             if was_cached {
                 redis_cache_hits += 1;
             }
-            final_response = serde_json::from_str(&intermediate_redis_value)
-                             .expect("Cannot deserialize Redis cache value. Try flushing the Redis cache with --flushdb.");
+            final_response = match serde_json::from_str(&intermediate_redis_value) {
+                Ok(r) => r,
+                Err(e)=> return fail_format!("Cannot deserialize Redis cache value. Try flushing the Redis cache with --flushdb - {e}"),
+            };
             if !args.flag_cache_error && final_response.status_code != 200 {
                 let key = format!(
                     "{}{:?}{}{}{}",
