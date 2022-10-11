@@ -129,7 +129,7 @@ jobs:
       with:
         submodules: recursive
         ref: 'master'
-    - uses: actions/setup-python@v4.2.0
+    - uses: actions/setup-python@v4.3.0
       with:
         python-version: '3.10.7'
     - name: build prep for aarch64-apple-darwin
