@@ -346,8 +346,17 @@ version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ba3569f383e8f1598449f1a423e72e99569137b47740b1da11ef19af3d5c3223"
 dependencies = [
- "lazy_static",
  "memchr",
+]
+
+[[package]]
+name = "bstr"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fca0852af221f458706eb0725c03e4ed6c46af9ac98e6a689d5e634215d594dd"
+dependencies = [
+ "memchr",
+ "once_cell",
  "regex-automata",
  "serde",
 ]
@@ -655,9 +664,9 @@ dependencies = [
 [[package]]
 name = "csv"
 version = "1.1.6"
-source = "git+https://github.com/jqnatividad/rust-csv?branch=perf-tweaks#4caaf305d6fb835f9276001344dbacdec2e9a948"
+source = "git+https://github.com/jqnatividad/rust-csv?branch=perf-tweaks#2be7d5d4a9669c73939489cbf92a1d8e8c90af37"
 dependencies = [
- "bstr",
+ "bstr 1.0.1",
  "csv-core",
  "itoa",
  "ryu",
@@ -667,7 +676,7 @@ dependencies = [
 [[package]]
 name = "csv-core"
 version = "0.1.10"
-source = "git+https://github.com/jqnatividad/rust-csv?branch=perf-tweaks#4caaf305d6fb835f9276001344dbacdec2e9a948"
+source = "git+https://github.com/jqnatividad/rust-csv?branch=perf-tweaks#2be7d5d4a9669c73939489cbf92a1d8e8c90af37"
 dependencies = [
  "memchr",
 ]
@@ -675,7 +684,7 @@ dependencies = [
 [[package]]
 name = "csv-index"
 version = "0.1.6"
-source = "git+https://github.com/jqnatividad/rust-csv?branch=perf-tweaks#4caaf305d6fb835f9276001344dbacdec2e9a948"
+source = "git+https://github.com/jqnatividad/rust-csv?branch=perf-tweaks#2be7d5d4a9669c73939489cbf92a1d8e8c90af37"
 dependencies = [
  "byteorder",
  "csv",
@@ -1661,7 +1670,7 @@ version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "86b8fdab73969938b10159fb7e4fee45e96f386baadd8eaa6150e3161f28dfe2"
 dependencies = [
- "bstr",
+ "bstr 0.2.17",
  "cc",
  "lua-src",
  "luajit-src",
