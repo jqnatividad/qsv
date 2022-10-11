@@ -116,7 +116,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .map(|piece| {
                 let clean_piece = cleaner_pattern.replace_all(piece.as_bytes(), NoExpand(b""));
 
-                String::from_utf8(clean_piece.into_owned()).expect("encoding error")
+                String::from_utf8(clean_piece.into_owned()).unwrap_or_default()
             })
             .collect();
 
@@ -125,8 +125,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 .args(cmd_args)
                 .stdout(Stdio::piped())
                 .stderr(Stdio::inherit())
-                .spawn()
-                .unwrap();
+                .spawn()?;
 
             {
                 let stdout = cmd.stdout.as_mut().unwrap();
