@@ -150,7 +150,7 @@ fn sample_reservoir<R: io::Read>(
 }
 
 fn do_random_access(sample_size: u64, total: u64) -> bool {
-    let raflag = sample_size <= (total / 10) as u64;
+    let raflag = sample_size <= (total / 10);
     debug!("sample_size: {sample_size}, total: {total}, raflag: {raflag}");
     raflag
 }
