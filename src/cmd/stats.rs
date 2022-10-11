@@ -174,7 +174,7 @@ impl Args {
             self.flag_prefer_dmy,
             &headers,
             whitelist,
-        );
+        )?;
 
         let stats = self.compute(&sel, rdr.byte_records())?;
         Ok((headers, stats))
@@ -200,7 +200,7 @@ impl Args {
             self.flag_prefer_dmy,
             &headers,
             whitelist,
-        );
+        )?;
 
         let chunk_size = util::chunk_size(idx.count() as usize, util::njobs(self.flag_jobs));
         let nchunks = util::num_of_chunks(idx.count() as usize, chunk_size);
@@ -353,7 +353,7 @@ fn init_date_inference(
     prefer_dmy: bool,
     headers: &csv::ByteRecord,
     flag_whitelist: &str,
-) {
+) -> Result<(), String> {
     if infer_dates {
         let dmy_preferred = prefer_dmy || std::env::var("QSV_PREFER_DMY").is_ok();
         DMY_PREFERENCE.store(dmy_preferred, Ordering::Relaxed);
@@ -363,9 +363,14 @@ fn init_date_inference(
 
         if whitelist_lower == "all" {
             log::info!("inferring dates for ALL fields with DMY preference: {dmy_preferred}");
-            INFER_DATE_FLAGS
-                .set(vec![true; headers.len()])
-                .expect("Cannot init date inference flags for ALL fields");
+            match INFER_DATE_FLAGS.set(vec![true; headers.len()]) {
+                Ok(_) => (),
+                Err(e) => {
+                    return Err(format!(
+                        "Cannot init date inference flags for ALL fields - {e:?}"
+                    ))
+                }
+            };
         } else {
             let whitelist = whitelist_lower
                 .split(',')
@@ -387,15 +392,18 @@ fn init_date_inference(
                 }
                 infer_date_flags.push(date_found);
             }
-            INFER_DATE_FLAGS
-                .set(infer_date_flags)
-                .expect("Cannot init date inference flags");
+            match INFER_DATE_FLAGS.set(infer_date_flags) {
+                Ok(_) => (),
+                Err(e) => return Err(format!("Cannot init date inference flags - {e:?}")),
+            };
         }
     } else {
-        INFER_DATE_FLAGS
-            .set(vec![false; headers.len()])
-            .expect("Cannot init empty date inference flags");
+        match INFER_DATE_FLAGS.set(vec![false; headers.len()]) {
+            Ok(_) => (),
+            Err(e) => return Err(format!("Cannot init empty date inference flags - {e:?}")),
+        };
     }
+    Ok(())
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
