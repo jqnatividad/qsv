@@ -142,30 +142,25 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         "required": Value::Array(required_fields)
     });
 
-    let schema_pretty = serde_json::to_string_pretty(&schema).expect("prettify schema json");
+    let schema_pretty = match serde_json::to_string_pretty(&schema) {
+        Ok(s) => s,
+        Err(e) => return fail_format!("Cannot prettify schema json - {e}"),
+    };
 
     if args.flag_stdout {
         let stdout = std::io::stdout();
         let mut handle = stdout.lock();
 
-        handle
-            .write_all(schema_pretty.as_bytes())
-            .expect("unable to write schema file to stdout");
-
-        handle.flush().unwrap();
+        handle.write_all(schema_pretty.as_bytes())?;
+        handle.flush()?;
 
         info!("Schema written to stdout");
     } else {
         let schema_output_filename = input_path + ".schema.json";
-        let mut schema_output_file =
-            File::create(&schema_output_filename).expect("unable to create schema output file");
+        let mut schema_output_file = File::create(&schema_output_filename)?;
 
-        schema_output_file
-            .write_all(schema_pretty.as_bytes())
-            .expect("unable to write schema file");
-
-        // flush error report; file gets closed automagically when out-of-scope
-        schema_output_file.flush().unwrap();
+        schema_output_file.write_all(schema_pretty.as_bytes())?;
+        schema_output_file.flush()?;
 
         println!("Schema written to {schema_output_filename}");
         info!("Schema written to {schema_output_filename}");
