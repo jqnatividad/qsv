@@ -166,7 +166,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } else {
         match sniff_results {
             Ok(metadata) => {
-                let full_metadata = format!("{}", metadata);
+                let full_metadata = format!("{metadata}");
                 // show otherwise invisible tab character as "tab"
                 let mut disp = full_metadata.replace("\tDelimiter: \t", "\tDelimiter: tab");
                 // remove Dialect header

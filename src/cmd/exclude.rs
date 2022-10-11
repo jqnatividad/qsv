@@ -237,7 +237,7 @@ impl<R> fmt::Debug for ValueIndex<R> {
                 .iter()
                 .map(|k| String::from_utf8(k.clone()).unwrap())
                 .collect::<Vec<_>>();
-            writeln!(f, "({}) => {:?}", keys.join(", "), rows)?;
+            writeln!(f, "({}) => {rows:?}", keys.join(", "))?;
         }
         Ok(())
     }

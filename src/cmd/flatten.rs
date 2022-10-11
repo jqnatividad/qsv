@@ -71,7 +71,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let r = r?;
         for (i, (header, field)) in headers.iter().zip(&r).enumerate() {
             if rconfig.no_headers {
-                write!(&mut wtr, "{}", i)?;
+                write!(&mut wtr, "{i}")?;
             } else {
                 wtr.write_all(header)?;
             }

@@ -370,7 +370,7 @@ impl Config {
             let mut f = match fs::File::open(path_buf) {
                 Ok(x) => x,
                 Err(err) => {
-                    let msg = format!("failed to open {}: {}", path_buf.display(), err);
+                    let msg = format!("failed to open {}: {err}", path_buf.display());
                     return Err(io::Error::new(io::ErrorKind::NotFound, msg));
                 }
             };
@@ -494,7 +494,7 @@ impl Config {
                 match fs::File::open(p) {
                     Ok(x) => Box::new(x),
                     Err(err) => {
-                        let msg = format!("failed to open {}: {}", p.display(), err);
+                        let msg = format!("failed to open {}: {err}", p.display());
                         return Err(io::Error::new(io::ErrorKind::NotFound, msg));
                     }
                 }

@@ -164,7 +164,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 "null" => "null".to_string(),
                 _ => "unknown".to_string(),
             };
-            let _ = write!(temp_str, r#""{}":{},"#, &headers[idx], field_val);
+            let _ = write!(temp_str, r#""{}":{field_val},"#, &headers[idx]);
         }
         temp_str.pop(); // remove last comma
         temp_str.push('}');
