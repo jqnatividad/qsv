@@ -446,7 +446,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let progress = multi_progress.add(ProgressBar::new(0));
     let mut record_count = 0;
 
-    let error_progress = multi_progress.add(ProgressBar::new(args.flag_max_errors as u64));
+    let error_progress = multi_progress.add(ProgressBar::new(args.flag_max_errors));
     if args.flag_max_errors > 0 && show_progress {
         console::set_colors_enabled(true); // as error progress bar is red
         error_progress.set_style(
@@ -470,7 +470,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     let jql_selector: Option<String> = if let Some(jql_file) = args.flag_jqlfile {
-        Some(fs::read_to_string(jql_file).expect("Cannot read jql file."))
+        Some(match fs::read_to_string(jql_file) {
+            Ok(s) => s,
+            Err(e) => return fail_format!("Cannot read jql file - {e}"),
+        })
     } else {
         args.flag_jql.as_ref().map(std::string::ToString::to_string)
     };
