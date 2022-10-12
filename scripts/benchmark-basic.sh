@@ -101,7 +101,8 @@ function run {
   fi
 }
 
-binver=$("$bin_name" --version)
+binver1=$("$bin_name" --version)
+binver=$(echo ${binver1:4:6})
 current_time=$(date "+%Y-%m-%d-%H-%M-%S")
 benchmarkfile=$bin_name-bench-$binver-$current_time.tsv
 printf "%-27s%-11s%-12s%-12s\n" BENCHMARK TIME_SECS MB_PER_SEC RECS_PER_SEC
