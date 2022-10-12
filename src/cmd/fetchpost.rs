@@ -57,6 +57,11 @@ Alternatively, since we're using the same URL for all the rows, we can just pass
 Also note that for the column-list argument, we used the column index (2,3 for second & third column)
 instead of using the column names, and we loaded the jql selector from the form.jql file.
 
+The form.jql file simply contains the string literal "form", including the enclosing double quotes:
+
+form.jql
+  "form"
+
 USING THE HTTP-HEADER OPTION:
 
 The --http-header option allows you to append arbitrary key value pairs (a valid pair is a key and value separated by a colon) 
