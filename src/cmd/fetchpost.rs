@@ -431,13 +431,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         multi_progress.set_draw_target(ProgressDrawTarget::hidden());
     }
 
-    let jql_selector: Option<String> = if let Some(jql_file) = args.flag_jqlfile {
-        Some(match fs::read_to_string(jql_file) {
-            Ok(s) => s,
-            Err(e) => return fail_format!("Cannot read jql file - {e}"),
-        })
-    } else {
-        args.flag_jql.as_ref().map(std::string::ToString::to_string)
+    let jql_selector: Option<String> = match args.flag_jqlfile {
+        Some(ref jql_file) => Some(fs::read_to_string(jql_file)?),
+        None => args.flag_jql.as_ref().map(std::string::ToString::to_string),
     };
 
     #[derive(PartialEq)]
