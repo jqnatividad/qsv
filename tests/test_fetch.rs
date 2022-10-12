@@ -257,8 +257,7 @@ fn fetch_jqlfile_doesnotexist_error() {
         ))
         .arg("data.csv");
 
-    let got: String = wrk.output_stderr(&mut cmd);
-    assert!(got.starts_with("No such file"));
+    wrk.assert_err(&mut cmd);
 }
 
 #[test]
@@ -698,8 +697,7 @@ fn fetchpost_jqlfile_doesnotexist_error() {
         .arg("response")
         .arg("data.csv");
 
-    let got: String = wrk.output_stderr(&mut cmd);
-    assert!(got.starts_with("No such file"));
+    wrk.assert_err(&mut cmd);
 }
 
 #[test]
