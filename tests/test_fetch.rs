@@ -235,6 +235,33 @@ fn fetch_jql_single_file() {
 }
 
 #[test]
+fn fetch_jqlfile_doesnotexist_error() {
+    let wrk = Workdir::new("fetch");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["URL"],
+            svec!["http://api.zippopotam.us/us/90210"],
+            svec!["http://api.zippopotam.us/us/94105"],
+            svec!["https://api.zippopotam.us/us/92802"],
+        ],
+    );
+    let mut cmd = wrk.command("fetch");
+    cmd.arg("URL")
+        .arg("--new-column")
+        .arg("City")
+        .arg("--jqlfile")
+        .arg(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/resources/test/doesnotexist.jql"
+        ))
+        .arg("data.csv");
+
+    let got: String = wrk.output_stderr(&mut cmd);
+    assert!(got.starts_with("No such file"));
+}
+
+#[test]
 fn fetch_jql_jqlfile_error() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -643,6 +670,36 @@ fn fetchpost_simple_test() {
     ];
 
     assert_eq!(got_parsed, expected);
+}
+
+#[test]
+fn fetchpost_jqlfile_doesnotexist_error() {
+    let wrk = Workdir::new("fetch");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["URL", "col1", "number col", "bool_col"],
+            svec!["https://httpbin.org/post", "a", "42", "true"],
+            svec!["https://httpbin.org/post", "b", "3.14", "false"],
+            svec!["https://httpbin.org/post", "c", "666", "true"],
+            svec!["https://httpbin.org/post", "d", "33", "true"],
+            svec!["https://httpbin.org/post", "e", "0", "false"],
+        ],
+    );
+    let mut cmd = wrk.command("fetchpost");
+    cmd.arg("URL")
+        .arg("bool_col,col1,number col")
+        .arg("--jqlfile")
+        .arg(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/resources/test/doesnotexist.jql"
+        ))
+        .arg("--new-column")
+        .arg("response")
+        .arg("data.csv");
+
+    let got: String = wrk.output_stderr(&mut cmd);
+    assert!(got.starts_with("No such file"));
 }
 
 #[test]
