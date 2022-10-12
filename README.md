@@ -236,7 +236,7 @@ Note that this will happen as soon as the qsv binary is invoked, even if you're 
 If you don't need to run the `py` command, simply use `qsvnp` ("np" stands for "no python"), `qsvlite`, or `qsvdp`.
 
 If you need the `py` command, the [prebuilt qsv binary](https://github.com/jqnatividad/qsv/releases/latest) is compiled, as a policy,
-using the latest stable Python minor version (currently Python 3.10).
+using the current stable Python minor version (currently Python 3.10) at the time of release.
 
 If you require a different Python version (Python 3.6 and up are supported), you'll need to install/compile from source, making sure you have
 the development libraries for the desired Python version installed when doing so.   
