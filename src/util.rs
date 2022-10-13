@@ -351,7 +351,7 @@ pub type Idx = Option<usize>;
 pub fn range(start: Idx, end: Idx, len: Idx, index: Idx) -> Result<(usize, usize), String> {
     match (start, end, len, index) {
         (None, None, None, Some(i)) => Ok((i, i + 1)),
-        (_, _, _, Some(_)) => Err("--index cannot be used with --start, --end or --len".to_owned()),
+        (_, _, _, Some(_)) => fail!("--index cannot be used with --start, --end or --len"),
         (_, Some(_), Some(_), None) => {
             fail!("--end and --len cannot be used at the same time.")
         }
@@ -678,7 +678,7 @@ fn send_hwsurvey(
     if survey_done {
         Ok(status)
     } else {
-        Err("Cannot send hw survey".to_string())
+        fail!("Cannot send hw survey")
     }
 }
 
