@@ -168,7 +168,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         progress.set_draw_target(ProgressDrawTarget::hidden());
     }
 
-    let error_result: mluajit::Value = lua.load("return \"<ERROR>\";").eval().unwrap();
+    let error_result: mluajit::Value = lua.load("return \"<ERROR>\";").eval()?;
     let mut error_flag;
 
     let mut record = csv::StringRecord::new();
