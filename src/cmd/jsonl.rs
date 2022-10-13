@@ -70,7 +70,6 @@ fn recurse_to_infer_headers(value: &Value, headers: &mut Vec<Vec<String>>, path:
     }
 }
 
-#[allow(clippy::unnecessary_wraps)]
 fn infer_headers(value: &Value) -> Option<Vec<Vec<String>>> {
     let mut headers: Vec<Vec<String>> = Vec::new();
 
@@ -146,14 +145,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             Err(e) => {
                 if args.flag_ignore_errors {
                     continue;
-                } else {
-                    let human_idx = rowidx + 1; // not zero based
-                    return fail_format!(
-                        r#"Could not parse line {human_idx} as JSON! - {e}
+                }
+                let human_idx = rowidx + 1; // not zero based, for readability
+                return fail_format!(
+                    r#"Could not parse line {human_idx} as JSON! - {e}
 Use `--ignore-errors` option to skip malformed input lines.
 Use `tojsonl` command to convert _to_ jsonl instead of _from_ jsonl."#,
-                    );
-                }
+                );
             }
         };
 
