@@ -147,7 +147,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     continue;
                 }
                 let human_idx = rowidx + 1; // not zero based, for readability
-                return fail_format!(
+                return fail_clierror!(
                     r#"Could not parse line {human_idx} as JSON! - {e}
 Use `--ignore-errors` option to skip malformed input lines.
 Use `tojsonl` command to convert _to_ jsonl instead of _from_ jsonl."#,

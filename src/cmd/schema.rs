@@ -112,7 +112,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         match infer_schema_from_stats(&args, &input_filename) {
             Ok(map) => map,
             Err(e) => {
-                return fail_format!("Failed to infer schema via stats and frequency: {e}");
+                return fail_clierror!("Failed to infer schema via stats and frequency: {e}");
             }
         };
 
@@ -144,7 +144,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let schema_pretty = match serde_json::to_string_pretty(&schema) {
         Ok(s) => s,
-        Err(e) => return fail_format!("Cannot prettify schema json - {e}"),
+        Err(e) => return fail_clierror!("Cannot prettify schema json - {e}"),
     };
 
     if args.flag_stdout {
@@ -514,7 +514,7 @@ fn convert_to_string(byte_slice: &[u8]) -> CliResult<String> {
         Ok(s) => s.to_string(),
         Err(e) => {
             let lossy_string = String::from_utf8_lossy(byte_slice);
-            return fail_format!("Can't convert byte slice to utf8 string. slice={byte_slice:?}, error={e}: {lossy_string}");
+            return fail_clierror!("Can't convert byte slice to utf8 string. slice={byte_slice:?}, error={e}: {lossy_string}");
         }
     };
 

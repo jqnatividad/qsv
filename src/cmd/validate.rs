@@ -139,7 +139,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         });
                         return fail!(header_error.to_string());
                     }
-                    return fail_format!("Cannot read header ({e}).");
+                    return fail_clierror!("Cannot read header ({e}).");
                 }
             }
         }
@@ -156,7 +156,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     });
                     return fail!(validation_error.to_string());
                 }
-                return fail_format!(
+                return fail_clierror!(
                     r#"Validation error: {e}. Try "qsv fixlengths" or "qsv fmt" to fix it."#
                 );
             }
@@ -223,17 +223,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         match JSONSchema::options().compile(&json) {
                             Ok(schema) => (json, schema),
                             Err(e) => {
-                                return fail_format!("Cannot compile schema json. error: {e}");
+                                return fail_clierror!("Cannot compile schema json. error: {e}");
                             }
                         }
                     }
                     Err(e) => {
-                        return fail_format!("Unable to parse schema json. error: {e}");
+                        return fail_clierror!("Unable to parse schema json. error: {e}");
                     }
                 }
             }
             Err(e) => {
-                return fail_format!("Unable to retrieve json. error: {e}");
+                return fail_clierror!("Unable to retrieve json. error: {e}");
             }
         };
 
@@ -505,7 +505,7 @@ fn to_json_instance(
     let schema_properties = match schema.get("properties") {
         Some(properties) => properties,
         None => {
-            return Err("JSON Schema missing 'properties' object".to_string());
+            return fail!("JSON Schema missing 'properties' object");
         }
     };
 
@@ -544,7 +544,7 @@ fn to_json_instance(
                     return_val = match val.as_str() {
                         Some(s) => s,
                         None => {
-                            return Err("type info should be a JSON string".to_string());
+                            return fail!("type info should be a JSON string");
                         }
                     };
                 }
@@ -576,33 +576,33 @@ fn to_json_instance(
                         Value::Number(Number::from_f64(float).expect("not a valid f64 float")),
                     );
                 } else {
-                    return Err(format!(
+                    return fail_format!(
                         "Can't cast into Float. header: {header_string}, value: {value_string}, json type: {json_type}"
-                    ));
+                    );
                 }
             }
             "integer" => {
                 if let Ok(int) = value_string.parse::<i64>() {
                     json_object_map.insert(header_string, Value::Number(Number::from(int)));
                 } else {
-                    return Err(format!(
+                    return fail_format!(
                         "Can't cast into Integer. header: {header_string}, value: {value_string}, json type: {json_type}"
-                    ));
+                    );
                 }
             }
             "boolean" => {
                 if let Ok(boolean) = value_string.parse::<bool>() {
                     json_object_map.insert(header_string, Value::Bool(boolean));
                 } else {
-                    return Err(format!(
+                    return fail_format!(
                         "Can't cast into Boolean. header: {header_string}, value: {value_string}, json type: {json_type}"
-                    ));
+                    );
                 }
             }
             _ => {
-                return Err(format!(
+                return fail_format!(
                     "Unsupported JSON type. header: {header_string}, value: {value_string}, json type: {json_type}"
-                ));
+                );
             }
         }
     }
@@ -854,13 +854,13 @@ fn load_json(uri: &str) -> Result<String, String> {
             {
                 Ok(c) => c,
                 Err(e) => {
-                    return Err(format!("Cannot build reqwest client - {e}."));
+                    return fail_format!("Cannot build reqwest client - {e}.");
                 }
             };
 
             match client.get(url).send() {
                 Ok(response) => response.text().unwrap_or_default(),
-                Err(e) => return Err(format!("Cannot read JSON at url {url} - {e}.")),
+                Err(e) => return fail_format!("Cannot read JSON at url {url} - {e}."),
             }
         }
         path => {
@@ -871,7 +871,7 @@ fn load_json(uri: &str) -> Result<String, String> {
                         .read_to_string(&mut buffer)
                         .unwrap_or_default();
                 }
-                Err(e) => return Err(format!("Cannot read JSON file {path} - {e}.")),
+                Err(e) => return fail_format!("Cannot read JSON file {path} - {e}."),
             }
             buffer
         }

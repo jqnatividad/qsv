@@ -278,7 +278,7 @@ pub fn many_configs(
 pub fn errif_greater_one_stdin(inps: &[Config]) -> Result<(), String> {
     let nstd = inps.iter().filter(|inp| inp.is_stdin()).count();
     if nstd > 1 {
-        return Err("At most one <stdin> input is allowed.".to_owned());
+        return fail!("At most one <stdin> input is allowed.");
     }
     Ok(())
 }
@@ -353,16 +353,16 @@ pub fn range(start: Idx, end: Idx, len: Idx, index: Idx) -> Result<(usize, usize
         (None, None, None, Some(i)) => Ok((i, i + 1)),
         (_, _, _, Some(_)) => Err("--index cannot be used with --start, --end or --len".to_owned()),
         (_, Some(_), Some(_), None) => {
-            Err("--end and --len cannot be used at the same time.".to_owned())
+            fail!("--end and --len cannot be used at the same time.")
         }
         (_, None, None, None) => Ok((start.unwrap_or(0), ::std::usize::MAX)),
         (_, Some(e), None, None) => {
             let s = start.unwrap_or(0);
             if s > e {
-                Err(format!(
+                fail_format!(
                     "The end of the range ({e}) must be greater than or\n\
                              equal to the start of the range ({s})."
-                ))
+                )
             } else {
                 Ok((s, e))
             }
@@ -498,9 +498,9 @@ pub fn qsv_check_for_update() -> Result<bool, String> {
     let bin_name = match std::env::current_exe() {
         Ok(pb) => match pb.file_stem() {
             Some(fs) => fs.to_string_lossy().into_owned(),
-            None => return Err("Can't get the exec stem name".to_string()),
+            None => return fail!("Can't get the exec stem name"),
         },
-        Err(e) => return Err(format!("Can't get the exec path - {e}")),
+        Err(e) => return fail_format!("Can't get the exec path - {e}"),
     };
 
     winfo!("Checking GitHub for updates...");
@@ -519,10 +519,10 @@ pub fn qsv_check_for_update() -> Result<bool, String> {
         if let Ok(releases) = releases_list.fetch() {
             releases
         } else {
-            return Err(GITHUB_RATELIMIT_MSG.to_string());
+            return fail!(GITHUB_RATELIMIT_MSG);
         }
     } else {
-        return Err(GITHUB_RATELIMIT_MSG.to_string());
+        return fail!(GITHUB_RATELIMIT_MSG);
     };
     let latest_release = &releases[0].version;
 
@@ -653,7 +653,7 @@ fn send_hwsurvey(
             .build()
         {
             Ok(c) => c,
-            Err(e) => return Err(format!("Cannot build hw_survey reqwest client - {e}")),
+            Err(e) => return fail_format!("Cannot build hw_survey reqwest client - {e}"),
         };
 
         match client
@@ -773,7 +773,7 @@ impl ColumnNameParser {
         loop {
             match self.cur() {
                 None => {
-                    return Err("Unclose quote, missing \".".to_owned());
+                    return fail!("Unclosed quote, missing \".");
                 }
                 Some('"') => {
                     self.bump();

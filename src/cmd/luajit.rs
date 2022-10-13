@@ -142,7 +142,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let lua_script = if args.flag_script_file {
         match fs::read_to_string(&args.arg_script) {
             Ok(script_file) => script_file,
-            Err(e) => return fail_format!("Cannot load LuaJIT file: {e}"),
+            Err(e) => return fail_clierror!("Cannot load LuaJIT file: {e}"),
         }
     } else {
         args.arg_script
@@ -230,7 +230,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     record.push_field("");
                 }
                 _ => {
-                    return fail_format!("Unexpected value type returned by provided LuaJIT expression. {computed_value:?}");
+                    return fail_clierror!("Unexpected value type returned by provided LuaJIT expression. {computed_value:?}");
                 }
             }
 

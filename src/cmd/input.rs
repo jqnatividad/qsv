@@ -100,7 +100,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if let Some(skip_llines) = args.flag_skip_lastlines {
         let row_count = util::count_rows(&rconfig)?;
         if skip_llines > row_count {
-            return fail_format!(
+            return fail_clierror!(
                 "--skip-lastlines: {skip_llines} is greater than row_count: {row_count}."
             );
         }

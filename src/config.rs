@@ -44,16 +44,16 @@ impl Delimiter {
         }
 
         if s.len() != 1 {
-            return Err(format!(
+            return fail_format!(
                 "Could not convert '{s}' to a single ASCII character."
-            ));
+            );
         }
 
         let c = s.chars().next().unwrap();
         if c.is_ascii() {
             Ok(Delimiter(c as u8))
         } else {
-            Err(format!("Could not convert '{c}' to ASCII delimiter."))
+            fail_format!("Could not convert '{c}' to ASCII delimiter.")
         }
     }
 }

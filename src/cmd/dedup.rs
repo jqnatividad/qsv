@@ -123,7 +123,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     record.clone_from(&next_record);
                 }
                 cmp::Ordering::Greater => {
-                    return fail_format!(
+                    return fail_clierror!(
                         "Aborting! Input not sorted! {record:?} is greater than {next_record:?}"
                     );
                 }

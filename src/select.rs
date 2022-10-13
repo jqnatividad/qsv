@@ -103,15 +103,15 @@ impl SelectorParser {
     fn parse(&mut self) -> Result<Vec<Selector>, String> {
         if (self.chars.first(), self.chars.last()) == (Some(&'/'), Some(&'/')) {
             if self.chars.len() == 2 {
-                return Err(format!(
+                return fail_format!(
                     "Empty regex: {}",
                     self.chars.iter().collect::<String>()
-                ));
+                );
             }
             let re: String = self.chars[1..(self.chars.len() - 1)].iter().collect();
             let regex = match Regex::new(&re) {
                 Ok(r) => r,
-                Err(_) => return Err(format!("Invalid regex: {re}")),
+                Err(_) => return fail_format!("Invalid regex: {re}"),
             };
             return Ok(vec![Selector::Regex(regex)]);
         }
@@ -137,10 +137,10 @@ impl SelectorParser {
                 None
             };
             if !self.is_end_of_selector() {
-                return Err(format!(
+                return fail_format!(
                     "Expected end of field but got '{}' instead.",
                     self.cur().unwrap()
-                ));
+                );
             }
             sels.push(match f2 {
                 Some(end) => Selector::Range(f1, end),
@@ -186,7 +186,7 @@ impl SelectorParser {
         loop {
             match self.cur() {
                 None => {
-                    return Err("Unclosed quote, missing closing \".".to_owned());
+                    return fail!("Unclosed quote, missing closing \".");
                 }
                 Some('"') => {
                     self.bump();
@@ -215,7 +215,7 @@ impl SelectorParser {
         loop {
             match self.cur() {
                 None => {
-                    return Err("Unclosed index bracket, missing closing ].".to_owned());
+                    return fail!("Unclosed index bracket, missing closing ].");
                 }
                 Some(']') => {
                     self.bump();
@@ -298,10 +298,10 @@ impl Selector {
                     .map(|(i, _)| i)
                     .collect();
                 if inds.is_empty() {
-                    return Err(format!(
+                    return fail_format!(
                         "Selector regex '{re}' does not match \
                                         any columns in the CSV header."
-                    ));
+                    );
                 }
                 Ok(inds)
             }
@@ -320,15 +320,15 @@ impl OneSelector {
             }),
             OneSelector::Index(i) => {
                 if first_record.is_empty() {
-                    return Err("Input is empty.".to_string());
+                    return fail!("Input is empty.");
                 }
                 if i < 1 || i > first_record.len() {
-                    Err(format!(
+                    fail_format!(
                         "Selector index {i} is out of \
                                  bounds. Index must be >= 1 \
                                  and <= {}.",
                         first_record.len()
-                    ))
+                    )
                 } else {
                     // Indices given by user are 1-offset. Convert them here!
                     Ok(i - 1)
@@ -336,10 +336,10 @@ impl OneSelector {
             }
             OneSelector::IndexedName(ref s, sidx) => {
                 if !use_names {
-                    return Err(format!(
+                    return fail_format!(
                         "Cannot use names ('{s}') in selection \
                                         with --no-headers set."
-                    ));
+                    );
                 }
                 let mut num_found = 0;
                 for (i, field) in first_record.iter().enumerate() {
@@ -351,17 +351,17 @@ impl OneSelector {
                     }
                 }
                 if num_found == 0 {
-                    Err(format!(
+                    fail_format!(
                         "Selector name '{s}' does not exist \
                                  as a named header in the given CSV \
                                  data."
-                    ))
+                    )
                 } else {
-                    Err(format!(
+                    fail_format!(
                         "Selector index '{sidx}' for name '{s}' is \
                                  out of bounds. Must be >= 0 and <= {}.",
                         num_found - 1
-                    ))
+                    )
                 }
             }
         }

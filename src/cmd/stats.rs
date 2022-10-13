@@ -366,9 +366,9 @@ fn init_date_inference(
             match INFER_DATE_FLAGS.set(vec![true; headers.len()]) {
                 Ok(_) => (),
                 Err(e) => {
-                    return Err(format!(
+                    return fail_format!(
                         "Cannot init date inference flags for ALL fields - {e:?}"
-                    ))
+                    )
                 }
             };
         } else {
@@ -394,13 +394,13 @@ fn init_date_inference(
             }
             match INFER_DATE_FLAGS.set(infer_date_flags) {
                 Ok(_) => (),
-                Err(e) => return Err(format!("Cannot init date inference flags - {e:?}")),
+                Err(e) => return fail_format!("Cannot init date inference flags - {e:?}"),
             };
         }
     } else {
         match INFER_DATE_FLAGS.set(vec![false; headers.len()]) {
             Ok(_) => (),
-            Err(e) => return Err(format!("Cannot init empty date inference flags - {e:?}")),
+            Err(e) => return fail_format!("Cannot init empty date inference flags - {e:?}"),
         };
     }
     Ok(())

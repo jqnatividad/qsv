@@ -65,12 +65,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut input_reader = io::BufReader::new(match fs::File::open(&args.arg_input) {
         Ok(f) => f,
-        Err(e) => return fail_format!("Cannot read input file {e}"),
+        Err(e) => return fail_clierror!("Cannot read input file {e}"),
     });
 
     let mut output_writer = io::BufWriter::new(match fs::File::create(&args.arg_output) {
         Ok(f) => f,
-        Err(e) => return fail_format!("Cannot create output file: {e}"),
+        Err(e) => return fail_clierror!("Cannot create output file: {e}"),
     });
 
     let sorter: ExternalSorter<String, io::Error, MemoryLimitedBufferBuilder> =
@@ -83,7 +83,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         {
             Ok(sorter) => sorter,
             Err(e) => {
-                return fail_format!("cannot create external sorter: {e}");
+                return fail_clierror!("cannot create external sorter: {e}");
             }
         };
 

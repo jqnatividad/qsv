@@ -54,7 +54,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let new_headers = new_rdr.byte_headers()?;
 
     if headers.len() != new_headers.len() {
-        return fail_format!(
+        return fail_clierror!(
             "The length of the CSV headers ({}) is different from the provided one ({}).",
             headers.len(),
             new_headers.len()
