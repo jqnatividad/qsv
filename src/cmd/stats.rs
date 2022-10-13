@@ -617,24 +617,25 @@ impl Stats {
             Some((q1, q2, q3)) => {
                 let iqr = q3 - q1;
 
-                // lower_outer_fence
-                pieces.push(round_num(q1 - (3.0 * iqr), round_places));
-                // lower_inner_fence
-                pieces.push(round_num(q1 - (1.5 * iqr), round_places));
+                // use fused multiply add (mul_add) when possible
+                // fused mul_add is more accurate & may be more performant if the
+                // target architecture has a dedicated `fma` CPU instruction
+                // https://doc.rust-lang.org/std/primitive.f64.html#method.mul_add
+
+                // lower_outer_fence = "q1 - (3.0 * iqr)"
+                pieces.push(round_num(3.0f64.mul_add(-iqr, q1), round_places));
+                // lower_inner_fence = "q1 - (1.5 * iqr)"
+                pieces.push(round_num(1.5f64.mul_add(-iqr, q1), round_places));
 
                 pieces.push(round_num(q1, round_places));
-                // q2_median
-                pieces.push(round_num(q2, round_places));
+                pieces.push(round_num(q2, round_places)); // q2 = median
                 pieces.push(round_num(q3, round_places));
                 pieces.push(round_num(iqr, round_places));
 
-                // the fused multiply_add below calculates the upper inner fence and
-                // is equivalent to "q3 + (1.5 * iqr)"
-                // fused mul_add is more performant if the target architecture
-                // has a dedicated `fma` CPU instruction
+                // upper inner fence = "q3 + (1.5 * iqr)"
                 pieces.push(round_num(1.5_f64.mul_add(iqr, q3), round_places));
 
-                // upper_outer_fence
+                // upper_outer_fence = "q3 + (3.0 * iqr)"
                 pieces.push(round_num(3.0_f64.mul_add(iqr, q3), round_places));
 
                 // calculate skewness using Quantile-based measures
