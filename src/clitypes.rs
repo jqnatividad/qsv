@@ -39,13 +39,22 @@ macro_rules! fail {
     }};
 }
 
-macro_rules! fail_format {
+macro_rules! fail_clierror {
     ($($t:tt)*) => {{
         use log::error;
         use crate::CliError;
         let err = format!($($t)*);
         error!("{err}");
         Err(CliError::Other(err))
+    }};
+}
+
+macro_rules! fail_format {
+    ($($t:tt)*) => {{
+        use log::error;
+        let err = format!($($t)*);
+        error!("{err}");
+        Err(err)
     }};
 }
 
