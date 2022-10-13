@@ -96,7 +96,7 @@ Fetch options:
     --rate-limit <qps>         Rate Limit in Queries Per Second (max: 1000). Note that fetch
                                dynamically throttles as well based on rate-limit and
                                retry-after response headers.
-                               Set to 0 to go as fast as possible, automatically down-throttling as required.
+                               Set to 0 to go as fast as possible, automatically throttling as required.
                                CAUTION: Only use zero for APIs that use RateLimit and/or Retry-After headers,
                                otherwise your fetchpost job may look like a Denial Of Service attack.
                                Even though zero is the default, this is mitigated by --max-errors having a
@@ -126,7 +126,7 @@ Fetch options:
                                fetchp_url - URL used, qsv_fetchp_form - form data sent, fetchp_status - HTTP code, 
                                fetchp_cache_hit - cached hit flag, fetchp_retries - retry attempts, 
                                fetchp_elapsed - elapsed time & fetchp_response.
-                               The short report only has the sevenn columns without the "qsv_fetchp_" prefix.
+                               The short report only has the seven columns without the "qsv_fetchp_" prefix.
                                [default: none]
     --redis                    Use Redis to cache responses. It connects to "redis://127.0.0.1:6379/2"
                                with a connection pool size of 20, with a TTL of 28 days, and a cache hit 
