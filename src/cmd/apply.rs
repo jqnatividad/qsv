@@ -387,7 +387,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if args.cmd_operations {
         for op in &operations {
             if !OPERATIONS.contains(op) {
-                return fail_format!("Unknown '{op}' operation");
+                return fail_clierror!("Unknown '{op}' operation");
             }
             #[allow(clippy::useless_asref)]
             match op.as_ref() {
@@ -561,7 +561,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     }
                 }
                 Err(e) => {
-                    return fail_format!("Error reading file: {e}");
+                    return fail_clierror!("Error reading file: {e}");
                 }
             }
         }

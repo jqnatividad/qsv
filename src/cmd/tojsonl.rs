@@ -82,7 +82,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         match infer_schema_from_stats(&schema_args, &input_filename) {
             Ok(map) => map,
             Err(e) => {
-                return fail_format!("Failed to infer field types via stats and frequency: {e}");
+                return fail_clierror!("Failed to infer field types via stats and frequency: {e}");
             }
         };
 

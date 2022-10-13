@@ -366,9 +366,7 @@ fn init_date_inference(
             match INFER_DATE_FLAGS.set(vec![true; headers.len()]) {
                 Ok(_) => (),
                 Err(e) => {
-                    return Err(format!(
-                        "Cannot init date inference flags for ALL fields - {e:?}"
-                    ))
+                    return fail_format!("Cannot init date inference flags for ALL fields - {e:?}")
                 }
             };
         } else {
@@ -394,13 +392,13 @@ fn init_date_inference(
             }
             match INFER_DATE_FLAGS.set(infer_date_flags) {
                 Ok(_) => (),
-                Err(e) => return Err(format!("Cannot init date inference flags - {e:?}")),
+                Err(e) => return fail_format!("Cannot init date inference flags - {e:?}"),
             };
         }
     } else {
         match INFER_DATE_FLAGS.set(vec![false; headers.len()]) {
             Ok(_) => (),
-            Err(e) => return Err(format!("Cannot init empty date inference flags - {e:?}")),
+            Err(e) => return fail_format!("Cannot init empty date inference flags - {e:?}"),
         };
     }
     Ok(())
@@ -641,7 +639,10 @@ impl Stats {
                 // calculate skewness using Quantile-based measures
                 // https://en.wikipedia.org/wiki/Skewness#Quantile-based_measures
                 // skewness = (q3 - (2.0 * q2) + q1) / iqr
-                pieces.push(round_num((2.0f64.mul_add(-q2, q3) + q1) / iqr, round_places));
+                pieces.push(round_num(
+                    (2.0f64.mul_add(-q2, q3) + q1) / iqr,
+                    round_places,
+                ));
             }
         }
         match self.modes.as_mut() {

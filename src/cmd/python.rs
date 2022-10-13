@@ -188,7 +188,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if let Some(helper_file) = args.flag_helper {
         helper_text = match fs::read_to_string(helper_file) {
             Ok(helper_file) => helper_file,
-            Err(e) => return fail_format!("Cannot load python file: {e}"),
+            Err(e) => return fail_clierror!("Cannot load python file: {e}"),
         }
     }
 
@@ -250,7 +250,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     }
                 }
                 Err(e) => {
-                    return fail_format!("Error reading file: {e}");
+                    return fail_clierror!("Error reading file: {e}");
                 }
             }
         }

@@ -101,7 +101,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         } else if copy_operation {
             let current_header = match String::from_utf8(headers[copy_index].to_vec()) {
                 Ok(s) => s,
-                Err(e) => return fail_format!("Could not parse cell as utf-8! - {e}"),
+                Err(e) => return fail_clierror!("Could not parse cell as utf-8! - {e}"),
             };
             headers.push_field(format!("{current_header}_copy").as_bytes());
         } else {

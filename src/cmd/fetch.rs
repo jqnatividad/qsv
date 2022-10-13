@@ -295,7 +295,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         let mut redis_conn;
         match redis_client.get_connection() {
-            Err(e) => return fail_format!(r#"Cannot connect to Redis using "{conn_str}": {e:?}"#),
+            Err(e) => {
+                return fail_clierror!(r#"Cannot connect to Redis using "{conn_str}": {e:?}"#)
+            }
             Ok(x) => redis_conn = x,
         }
 
@@ -392,7 +394,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let vals: Vec<&str> = header.split(':').collect();
 
             if vals.len() != 2 {
-                return fail_format!("{vals:?} is not a valid key-value pair. Expecting a key and a value separated by a colon.");
+                return fail_clierror!("{vals:?} is not a valid key-value pair. Expecting a key and a value separated by a colon.");
             }
 
             // allocate new String for header key to put into map
@@ -622,7 +624,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
             final_response = match serde_json::from_str(&intermediate_redis_value) {
                 Ok(r) => r,
-                Err(e)=> return fail_format!("Cannot deserialize Redis cache value. Try flushing the Redis cache with --flushdb - {e}"),
+                Err(e)=> return fail_clierror!("Cannot deserialize Redis cache value. Try flushing the Redis cache with --flushdb - {e}"),
             };
             if !args.flag_cache_error && final_response.status_code != 200 {
                 let key = format!(
@@ -1144,7 +1146,7 @@ use serde_json::{Deserializer, Value};
 pub fn apply_jql(json: &str, groups: &[jql::Group]) -> Result<String, String> {
     // check if api returned valid JSON before applying JQL selector
     if let Err(error) = serde_json::from_str::<Value>(json) {
-        return Err(format!("Invalid json: {error:?}"));
+        return fail_format!("Invalid json: {error:?}");
     }
 
     let mut result: Result<String, _> = Ok(String::default());
