@@ -327,21 +327,17 @@ impl Config {
                             io::ErrorKind::InvalidData,
                             "<stdin> is empty!".to_string(),
                         ));
-                    } else {
-                        let buffer_check = buffer
-                            .chunks_exact(std::cmp::min(
-                                DEFAULT_UTF8_CHECK_BUFFER_LEN,
-                                buffer.len(),
-                            ))
-                            .next()
-                            .unwrap();
-                        let s = std::str::from_utf8(buffer_check);
-                        if s.is_err() {
-                            return Err(io::Error::new(
-                                io::ErrorKind::InvalidData,
-                                format!("<stdin> {UTF8_ERROR_MSG}"),
-                            ));
-                        }
+                    }
+                    let buffer_check = buffer
+                        .chunks_exact(std::cmp::min(DEFAULT_UTF8_CHECK_BUFFER_LEN, buffer.len()))
+                        .next()
+                        .unwrap();
+                    let s = std::str::from_utf8(buffer_check);
+                    if s.is_err() {
+                        return Err(io::Error::new(
+                            io::ErrorKind::InvalidData,
+                            format!("<stdin> {UTF8_ERROR_MSG}"),
+                        ));
                     }
                 }
                 self.from_reader(Box::new(io::Cursor::new(buffer)))
@@ -462,24 +458,20 @@ impl Config {
                             io::ErrorKind::InvalidData,
                             "<stdin> is empty!".to_string(),
                         ));
-                    } else {
-                        // check if its utf8-encoded
-                        let buffer_check = buffer
-                            .chunks_exact(std::cmp::min(
-                                DEFAULT_UTF8_CHECK_BUFFER_LEN,
-                                buffer.len(),
-                            ))
-                            .next()
-                            .unwrap();
-                        let s = std::str::from_utf8(buffer_check);
-                        if s.is_err() {
-                            return Err(io::Error::new(
-                                io::ErrorKind::InvalidData,
-                                format!("<stdin> {UTF8_ERROR_MSG}"),
-                            ));
-                        }
-                        Box::new(io::Cursor::new(buffer))
                     }
+                    // check if its utf8-encoded
+                    let buffer_check = buffer
+                        .chunks_exact(std::cmp::min(DEFAULT_UTF8_CHECK_BUFFER_LEN, buffer.len()))
+                        .next()
+                        .unwrap();
+                    let s = std::str::from_utf8(buffer_check);
+                    if s.is_err() {
+                        return Err(io::Error::new(
+                            io::ErrorKind::InvalidData,
+                            format!("<stdin> {UTF8_ERROR_MSG}"),
+                        ));
+                    }
+                    Box::new(io::Cursor::new(buffer))
                 } else {
                     Box::new(io::stdin())
                 }
