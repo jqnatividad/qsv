@@ -103,10 +103,7 @@ impl SelectorParser {
     fn parse(&mut self) -> Result<Vec<Selector>, String> {
         if (self.chars.first(), self.chars.last()) == (Some(&'/'), Some(&'/')) {
             if self.chars.len() == 2 {
-                return fail_format!(
-                    "Empty regex: {}",
-                    self.chars.iter().collect::<String>()
-                );
+                return fail_format!("Empty regex: {}", self.chars.iter().collect::<String>());
             }
             let re: String = self.chars[1..(self.chars.len() - 1)].iter().collect();
             let regex = match Regex::new(&re) {

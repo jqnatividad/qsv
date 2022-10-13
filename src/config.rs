@@ -44,9 +44,7 @@ impl Delimiter {
         }
 
         if s.len() != 1 {
-            return fail_format!(
-                "Could not convert '{s}' to a single ASCII character."
-            );
+            return fail_format!("Could not convert '{s}' to a single ASCII character.");
         }
 
         let c = s.chars().next().unwrap();

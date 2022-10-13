@@ -295,7 +295,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         let mut redis_conn;
         match redis_client.get_connection() {
-            Err(e) => return fail_clierror!(r#"Cannot connect to Redis using "{conn_str}": {e:?}"#),
+            Err(e) => {
+                return fail_clierror!(r#"Cannot connect to Redis using "{conn_str}": {e:?}"#)
+            }
             Ok(x) => redis_conn = x,
         }
 
