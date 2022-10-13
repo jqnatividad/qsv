@@ -640,7 +640,8 @@ impl Stats {
 
                 // calculate skewness using Quantile-based measures
                 // https://en.wikipedia.org/wiki/Skewness#Quantile-based_measures
-                pieces.push(round_num((q3 - (2.0 * q2) + q1) / iqr, round_places));
+                // skewness = (q3 - (2.0 * q2) + q1) / iqr
+                pieces.push(round_num((2.0f64.mul_add(-q2, q3) + q1) / iqr, round_places));
             }
         }
         match self.modes.as_mut() {
