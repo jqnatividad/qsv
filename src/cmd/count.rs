@@ -15,38 +15,30 @@ Common options:
     -h, --help             Display this message
     -n, --no-headers       When set, the first row will be included in
                            the count.
-    -d, --delimiter <arg>  The field delimiter for reading CSV data.
-                           Must be a single character. (default: ,)
 ";
 
 use log::{debug, info};
 use serde::Deserialize;
 
-use crate::{
-    config::{Config, Delimiter},
-    util, CliResult,
-};
+use crate::{config::Config, util, CliResult};
 
 #[derive(Deserialize)]
 struct Args {
     arg_input:           Option<String>,
     flag_human_readable: bool,
     flag_no_headers:     bool,
-    flag_delimiter:      Option<Delimiter>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
     let conf = Config::new(&args.arg_input)
         .checkutf8(false)
-        .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers);
 
     debug!(
-        "input: {:?}, no_header: {}, delimiter: {:?}",
+        "input: {:?}, no_header: {}",
         (args.arg_input).clone().unwrap(),
         &args.flag_no_headers,
-        &args.flag_delimiter
     );
 
     let count = if let Some(idx) = conf.indexed().unwrap_or_else(|_| {
@@ -56,7 +48,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         info!("index used");
         idx.count()
     } else {
-        info!(r#"counting..."#);
+        info!("counting...");
         let mut rdr = conf.reader()?;
         let mut count = 0u64;
         let mut record = csv::ByteRecord::new();
