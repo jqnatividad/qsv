@@ -8,29 +8,22 @@ Usage:
 Common options:
     -h, --help             Display this message
     -o, --output <file>    Write output to <file> instead of stdout.
-    -d, --delimiter <arg>  The field delimiter for reading CSV data.
-                           Must be a single character. (default: ,)
 ";
 
 use serde::Deserialize;
 
-use crate::{
-    config::{Config, Delimiter},
-    util, CliResult,
-};
+use crate::{config::Config, util, CliResult};
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input:      Option<String>,
-    flag_delimiter: Option<Delimiter>,
-    flag_output:    Option<String>,
+    arg_input:   Option<String>,
+    flag_output: Option<String>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
     let conf = Config::new(&args.arg_input)
         .checkutf8(false)
-        .delimiter(args.flag_delimiter)
         .no_headers(false);
 
     let mut rdr = conf.reader()?;
