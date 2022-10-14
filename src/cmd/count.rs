@@ -56,7 +56,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         info!("index used");
         idx.count()
     } else {
-        info!(r#"counting "manually"..."#);
+        info!(r#"counting..."#);
         let mut rdr = conf.reader()?;
         let mut count = 0u64;
         let mut record = csv::ByteRecord::new();
