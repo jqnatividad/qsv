@@ -381,7 +381,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let v: String = String::from(vals[1].trim());
             let header_val: HeaderValue = match HeaderValue::from_str(v.as_str()) {
                 Ok(v) => v,
-                Err(e) => return fail_clierror!("Invalid header value = {e}"),
+                Err(e) => return fail_clierror!("Invalid header value - {e}"),
             };
 
             map.append(header_name, header_val);
