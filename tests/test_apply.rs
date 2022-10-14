@@ -506,6 +506,32 @@ fn apply_ops_regex_replace() {
 }
 
 #[test]
+fn apply_ops_regex_replace_error() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["description"],
+            svec!["My SSN is 078-05-1120. Please do not share it."],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("regex_replace")
+        .arg("description")
+        .arg("--comparand")
+        .arg("(?:?)") // invalid regular expression
+        .arg("--replacement")
+        .arg("SSN")
+        .arg("data.csv");
+
+    wrk.assert_err(&mut cmd);
+
+    let got: String = wrk.output_stderr(&mut cmd);
+    assert!(got.starts_with("regex_replace expression error"));
+}
+
+#[test]
 fn apply_ops_mtrim() {
     let wrk = Workdir::new("apply");
     wrk.create(

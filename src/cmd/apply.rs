@@ -257,6 +257,7 @@ use vader_sentiment::SentimentIntensityAnalyzer;
 use whatlang::detect;
 
 use crate::{
+    clitypes::CliError,
     config::{Config, Delimiter},
     regex_once_cell,
     select::SelectColumns,
@@ -404,6 +405,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         return fail!(
                             "--comparand (-C) and --replacement (-R) are required for regex_replace operation."
                         );
+                    }
+                    if regex_replace_invokes == 0 {
+                        let re = match regex::Regex::new(&args.flag_comparand) {
+                            Ok(re) => re,
+                            Err(err) => {
+                                return Err(CliError::Other(format!(
+                                    "regex_replace expression error: {err:?}"
+                                )))
+                            }
+                        };
+                        let _ = REGEX_REPLACE.set(re);
                     }
                     regex_replace_invokes += 1;
                 }
@@ -747,8 +759,7 @@ fn apply_operations(operations: &[&str], cell: &mut String, comparand: &str, rep
                 *cell = cell.replace(comparand, replacement);
             }
             "regex_replace" => {
-                let regexreplace =
-                    REGEX_REPLACE.get_or_init(|| regex::Regex::new(comparand).unwrap());
+                let regexreplace = REGEX_REPLACE.get().unwrap();
                 *cell = regexreplace.replace_all(cell, replacement).to_string();
             }
             "censor_check" | "censor" => {
