@@ -290,7 +290,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if args.flag_redis {
         // check if redis connection is valid
         let conn_str = &REDISCONFIG.conn_str;
-        let redis_client = redis::Client::open(conn_str.to_string()).unwrap();
+        let redis_client = match redis::Client::open(conn_str.to_string()) {
+            Ok(rc) => rc,
+            Err(e) => {
+                return fail_clierror!(r#"Invalid Redis connection string "{conn_str}": {e:?}"#)
+            }
+        };
 
         let mut redis_conn;
         match redis_client.get_connection() {
@@ -615,8 +620,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 args.flag_pretty,
                 include_existing_columns,
                 args.flag_max_retries,
-            )
-            .unwrap();
+            )?;
             was_cached = intermediate_redis_value.was_cached;
             if was_cached {
                 redis_cache_hits += 1;
@@ -655,7 +659,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             was_cached = intermediate_value.was_cached;
             if !args.flag_cache_error && final_response.status_code != 200 {
                 let mut cache = GET_CACHED_RESPONSE.lock().unwrap();
-                cache.cache_remove(&url).unwrap();
+                cache.cache_remove(&url);
             }
         };
 
