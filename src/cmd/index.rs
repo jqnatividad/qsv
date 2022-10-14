@@ -24,8 +24,6 @@ index options:
 
 Common options:
     -h, --help             Display this message
-    -d, --delimiter <arg>  The field delimiter for reading CSV data.
-                           Must be a single character. (default: ,)
 ";
 
 use std::{
@@ -36,16 +34,12 @@ use std::{
 use csv_index::RandomAccessSimple;
 use serde::Deserialize;
 
-use crate::{
-    config::{Config, Delimiter},
-    util, CliResult,
-};
+use crate::{config::Config, util, CliResult};
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input:      String,
-    flag_output:    Option<String>,
-    flag_delimiter: Option<Delimiter>,
+    arg_input:   String,
+    flag_output: Option<String>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -56,9 +50,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         Some(p) => PathBuf::from(&p),
     };
 
-    let rconfig = Config::new(&Some(args.arg_input))
-        .checkutf8(false)
-        .delimiter(args.flag_delimiter);
+    let rconfig = Config::new(&Some(args.arg_input)).checkutf8(false);
     let mut rdr = rconfig.reader_file()?;
     let mut wtr = io::BufWriter::new(fs::File::create(&pidx)?);
     RandomAccessSimple::create(&mut rdr, &mut wtr)?;
