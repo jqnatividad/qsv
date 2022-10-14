@@ -372,11 +372,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             // allocate new String for header key to put into map
             let k: String = String::from(vals[0].trim());
             let header_name: HeaderName =
-                HeaderName::from_lowercase(k.to_lowercase().as_bytes()).unwrap();
+                match HeaderName::from_lowercase(k.to_lowercase().as_bytes()) {
+                    Ok(h) => h,
+                    Err(e) => return fail_clierror!("Invalid header name - {e}"),
+                };
 
             // allocate new String for header value to put into map
             let v: String = String::from(vals[1].trim());
-            let header_val: HeaderValue = HeaderValue::from_str(v.as_str()).unwrap();
+            let header_val: HeaderValue = match HeaderValue::from_str(v.as_str()) {
+                Ok(v) => v,
+                Err(e) => return fail_clierror!("Invalid header value = {e}"),
+            };
 
             map.append(header_name, header_val);
         }
