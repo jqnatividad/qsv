@@ -280,6 +280,8 @@ fn fetch_jql_jqlfile_error() {
 
     let got: String = wrk.output_stderr(&mut cmd);
     assert!(got.starts_with("Invalid arguments."));
+
+    wrk.assert_err(&mut cmd);
 }
 
 #[test]
@@ -365,6 +367,92 @@ fn fetch_custom_header() {
     let got = wrk.stdout::<String>(&mut cmd);
     let expected = "DEMO_KEY, ABC123XYZ";
     assert_eq!(got, expected);
+}
+
+#[test]
+fn fetch_custom_invalid_header_error() {
+    let wrk = Workdir::new("fetch");
+    wrk.create(
+        "data.csv",
+        vec![svec!["URL"], svec!["http://httpbin.org/get"]],
+    );
+    let mut cmd = wrk.command("fetch");
+    cmd.arg("URL")
+        .arg("--http-header")
+        .arg("X-Api-\tSecret :ABC123XYZ") // embedded tab is not valid
+        .arg("data.csv");
+
+    let got: String = wrk.output_stderr(&mut cmd);
+    assert!(got.starts_with("Invalid header name"));
+
+    wrk.assert_err(&mut cmd);
+}
+
+#[test]
+fn fetch_custom_invalid_value_error() {
+    let wrk = Workdir::new("fetch");
+    wrk.create(
+        "data.csv",
+        vec![svec!["URL"], svec!["http://httpbin.org/get"]],
+    );
+    let mut cmd = wrk.command("fetch");
+    cmd.arg("URL")
+        .arg("--http-header")
+        .arg("X-Api-Secret :ABC123\r\nXYZ") // non-visible ascii not valid
+        .arg("data.csv");
+
+    let got: String = wrk.output_stderr(&mut cmd);
+    assert!(got.starts_with("Invalid header value"));
+
+    wrk.assert_err(&mut cmd);
+}
+
+#[test]
+fn fetchpost_custom_invalid_header_error() {
+    let wrk = Workdir::new("fetch");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["URL", "col1", "number col", "bool_col"],
+            svec!["https://httpbin.org/post", "a", "42", "true"],
+            svec!["https://httpbin.org/post", "b", "3.14", "false"],
+        ],
+    );
+    let mut cmd = wrk.command("fetchpost");
+    cmd.arg("URL")
+        .arg("bool_col,col1,number col")
+        .arg("--http-header")
+        .arg("X-Api-\tSecret :ABC123XYZ") // non-visible ascii not valid
+        .arg("data.csv");
+
+    let got: String = wrk.output_stderr(&mut cmd);
+    assert!(got.starts_with("Invalid header name"));
+
+    wrk.assert_err(&mut cmd);
+}
+
+#[test]
+fn fetchpost_custom_invalid_value_error() {
+    let wrk = Workdir::new("fetch");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["URL", "col1", "number col", "bool_col"],
+            svec!["https://httpbin.org/post", "a", "42", "true"],
+            svec!["https://httpbin.org/post", "b", "3.14", "false"],
+        ],
+    );
+    let mut cmd = wrk.command("fetchpost");
+    cmd.arg("URL")
+        .arg("bool_col,col1,number col")
+        .arg("--http-header")
+        .arg("X-Api-Secret :ABC123\r\nXYZ") // non-visible ascii not valid
+        .arg("data.csv");
+
+    let got: String = wrk.output_stderr(&mut cmd);
+    assert!(got.starts_with("Invalid header value"));
+
+    wrk.assert_err(&mut cmd);
 }
 
 use std::{sync::mpsc, thread};
