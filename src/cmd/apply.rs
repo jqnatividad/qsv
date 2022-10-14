@@ -2,7 +2,7 @@ static USAGE: &str = r#"
 Apply a series of transformation functions to a given CSV column. This can be used to
 perform typical data-wrangling tasks and/or to harmonize some values, etc.
 
-It has several subcommands:
+It has five subcommands:
  * operations - 29 string, format, currency, regex & NLP operators.
  * emptyreplace - replace empty cells with <--replacement> string.
  * datefmt - Formats a recognized date column to a specified format using <--formatstr>.
