@@ -28,6 +28,37 @@ fn lua_map() {
 }
 
 #[test]
+fn lua_aggregation() {
+    let wrk = Workdir::new("lua");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["letter", "Amount"],
+            svec!["a", "13"],
+            svec!["b", "24"],
+            svec!["c", "72"],
+            svec!["d", "7"],
+        ],
+    );
+    let mut cmd = wrk.command("lua");
+    cmd.arg("map")
+        .arg("Total")
+        .arg("-x")
+        .arg("tot = (tot or 0) + Amount; return tot")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["letter", "Amount", "Total"],
+        svec!["a", "13", "13"],
+        svec!["b", "24", "37"],
+        svec!["c", "72", "109"],
+        svec!["d", "7", "116"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn lua_map_math() {
     let wrk = Workdir::new("lua");
     wrk.create(
