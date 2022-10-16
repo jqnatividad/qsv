@@ -264,27 +264,27 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             {
                 let curr_batch = batch.clone();
                 let helpers = PyModule::from_code(py, HELPERS, "qsv_helpers.py", "qsv_helpers")?;
-                let globals = PyDict::new(py);
-                let locals = PyDict::new(py);
+                let batch_globals = PyDict::new(py);
+                let batch_locals = PyDict::new(py);
 
                 let user_helpers =
                     PyModule::from_code(py, &helper_text, "qsv_user_helpers.py", "qsv_uh")?;
-                globals.set_item(intern!(py, "qsv_uh"), user_helpers)?;
+                batch_globals.set_item(intern!(py, "qsv_uh"), user_helpers)?;
 
                 // Global imports
                 let builtins = PyModule::import(py, "builtins")?;
                 let math_module = PyModule::import(py, "math")?;
                 let random_module = PyModule::import(py, "random")?;
 
-                globals.set_item("__builtins__", builtins)?;
-                globals.set_item("math", math_module)?;
-                globals.set_item("random", random_module)?;
+                batch_globals.set_item("__builtins__", builtins)?;
+                batch_globals.set_item("math", math_module)?;
+                batch_globals.set_item("random", random_module)?;
 
                 let py_row = helpers
                     .getattr("QSVRow")?
                     .call1((headers.iter().collect::<Vec<&str>>(),))?;
 
-                locals.set_item("row", py_row)?;
+                batch_locals.set_item("row", py_row)?;
 
                 let error_result = intern!(py, "<ERROR>");
 
@@ -298,14 +298,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         .take(headers_len)
                         .for_each(|(i, key)| {
                             let cell_value = record.get(i).unwrap_or_default();
-                            locals.set_item(key, cell_value).expect("cannot set_item");
+                            batch_locals.set_item(key, cell_value).expect("cannot set_item");
                             row_data.push(cell_value);
                         });
 
                     py_row.call_method1(intern!(py, "_update_underlying_data"), (row_data,))?;
 
                     let result = py
-                        .eval(&args.arg_script, Some(globals), Some(locals))
+                        .eval(&args.arg_script, Some(batch_globals), Some(batch_locals))
                         .map_err(|e| {
                             e.print_and_set_sys_last_vars(py);
                             if log_enabled!(Debug) {
