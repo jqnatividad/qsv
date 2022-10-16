@@ -55,7 +55,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [luajit](/src/cmd/luajit.rs#L2)[^1] | Execute a [LuaJIT](https://luajit.org/luajit.html) 2.0 (a Just-In-Time compiler for Lua 5.1) script over CSV lines to transform, aggregate or filter them. [LuaJIT is even faster still than Lua](https://luajit.org/performance_x86.html). |
 | [partition](/src/cmd/partition.rs#L2) | Partition a CSV based on a column value. |
 | [pseudo](/src/cmd/pseudo.rs#L2) | [Pseudonymise](https://en.wikipedia.org/wiki/Pseudonymization) the value of the given column by replacing them with an incremental identifier.  |
-| [py](/src/cmd/python.rs#L2)[^1] | Evaluate a Python expression over CSV lines to transform or filter them. Python's [f-strings](https://www.freecodecamp.org/news/python-f-strings-tutorial-how-to-use-f-strings-for-string-formatting/) is particularly useful for extended formatting ([Python 3.6 and up supported, with Python 3.10 required on prebuilt qsv](#python)).<br />Consider using the `lua`/`luajit` commands instead if you're having Python version issues as it's much faster, embedded & require no external dependencies. |
+| [py](/src/cmd/python.rs#L2)[^1] | Evaluate a Python expression over CSV lines to transform or filter them. Python's [f-strings](https://www.freecodecamp.org/news/python-f-strings-tutorial-how-to-use-f-strings-for-string-formatting/) is particularly useful for extended formatting ([Python 3.6 and up supported, with Python 3.10 required on prebuilt qsv](#python)).<br />Consider using the `lua`/`luajit` commands instead if you're having Python version issues as it's much faster, embedded, can do aggregations & require no external dependencies. |
 | [rename](/src/cmd/rename.rs#L2) |  Rename the columns of a CSV efficiently.  |
 | [replace](/src/cmd/replace.rs#L2) | Replace CSV data using a regex.  |
 | [reverse](/src/cmd/reverse.rs#L2)[^3] | Reverse order of rows in a CSV. Unlike the `sort --reverse` command, it preserves the order of rows with the same key.  |
@@ -247,7 +247,11 @@ You can override the Python interpreter by setting `PYO3_PYTHON` (e.g., `PYO3_PY
 If you're distributing `python`-enabled qsv, you can also "bundle" the Python shared library by including it in the same directory as the qsv binary. qsv will automatically use
 the "bundled" library instead of the default Python version in the environment.
 
-Also, consider using the `lua`/`luajit` commands instead of the `py` command if the mapping/filtering operation you're trying to do can be done with `lua`/`luajit`. [Lua is much faster than Python](https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/lua-python3.html) and [LuaJIT is even faster still](https://luajit.org/performance_x86.html). In addition, Lua/LuaJIT is embedded into qsv and has no external dependencies, unlike Python. 
+Also, consider using the `lua`/`luajit` commands instead of the `py` command if the mapping/filtering operation you're trying to do can be done with `lua`/`luajit`. [Lua is much faster than Python](https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/lua-python3.html) and [LuaJIT is even faster still](https://luajit.org/performance_x86.html). In addition, Lua/LuaJIT is embedded into qsv, can do aggregations & has no external dependencies, unlike Python.
+
+The `py` command cannot do aggregations because [PyO3's GIL-bound memory](https://pyo3.rs/v0.17.2/memory.html#gil-bound-memory) limitations will quickly consume a lot of memory (see [issue 449](https://github.com/jqnatividad/qsv/issues/449#issuecomment-1226095316) for details).
+To prevent this, the `py` command processes CSVs in batches (default: 30,000 records), with a GIL pool for each batch, so no globals are available across batches.
+
 
 ## Environment Variables
 
