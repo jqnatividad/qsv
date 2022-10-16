@@ -1,6 +1,6 @@
 static USAGE: &str = r#"
-Create a new column, filter rows or compute aggregations by executing a Lua
-script of every line of a CSV file.
+Create a new computed column, filter rows or compute aggregations by executing a
+Lua script of every line of a CSV file.
 
 The executed Lua has 3 ways to reference row columns (as strings):
   1. Directly by using column name (e.g. Amount), can be disabled with -g

@@ -1,6 +1,6 @@
 static USAGE: &str = r#"
-Create a new column, filter rows or compute aggregations by executing a LuaJIT
-script of every line of a CSV file.
+Create a new computed column, filter rows or compute aggregations by executing a
+LuaJIT script of every line of a CSV file.
 
 LuaJIT is a Just-In-Time (JIT) for the Lua 5.1 language and is much faster than Lua
 (up to 134x faster - see https://luajit.org/performance.html).
