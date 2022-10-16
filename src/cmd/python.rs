@@ -1,6 +1,6 @@
 static USAGE: &str = r#"
-Create a new column, filter rows or compute aggregations by evaluating a python
-expression on every row of a CSV file.
+Create a new computed column or filter rows by evaluating a python expression on 
+every row of a CSV file.
 
 The executed Python has 4 ways to reference cell values (as strings):
   1. Directly by using column name (e.g. amount) as a local variable. If a column
