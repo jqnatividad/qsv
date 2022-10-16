@@ -298,7 +298,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         .take(headers_len)
                         .for_each(|(i, key)| {
                             let cell_value = record.get(i).unwrap_or_default();
-                            batch_locals.set_item(key, cell_value).expect("cannot set_item");
+                            batch_locals
+                                .set_item(key, cell_value)
+                                .expect("cannot set_item");
                             row_data.push(cell_value);
                         });
 
