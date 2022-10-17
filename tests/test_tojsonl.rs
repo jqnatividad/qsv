@@ -33,6 +33,12 @@ fn tojsonl_nested() {
             svec!["1", "Mark", "Charlotte", "\"Tom\""],
             svec!["2", "John", "Ann", "\"Jessika\",\"Antony\",\"Jack\""],
             svec!["3", "Bob", "Monika", "\"Jerry\",\"Karol\""],
+            svec![
+                "4",
+                "John\nSmith",
+                "Jane \"Smiley\" Doe",
+                "\"Jack\",\"Jill\r\n \"Climber\""
+            ],
         ],
     );
 
@@ -40,9 +46,10 @@ fn tojsonl_nested() {
     cmd.arg("in.csv");
 
     let got: String = wrk.stdout(&mut cmd);
-    let expected = r#"{"id":1,"father":"Mark","mother":"Charlotte","children":""Tom""}
-{"id":2,"father":"John","mother":"Ann","children":""Jessika","Antony","Jack""}
-{"id":3,"father":"Bob","mother":"Monika","children":""Jerry","Karol""}"#;
+    let expected = r#"{"id":1,"father":"Mark","mother":"Charlotte","children":"\"Tom\""}
+{"id":2,"father":"John","mother":"Ann","children":"\"Jessika\",\"Antony\",\"Jack\""}
+{"id":3,"father":"Bob","mother":"Monika","children":"\"Jerry\",\"Karol\""}
+{"id":4,"father":"John\nSmith","mother":"Jane \"Smiley\" Doe","children":"\"Jack\",\"Jill\r\n \"Climber\""}"#;
 
     assert_eq!(got, expected);
 }
