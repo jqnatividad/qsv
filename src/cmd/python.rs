@@ -22,7 +22,13 @@ Some usage examples:
 
   Use Python f-strings to calculate using multiple columns (qty, fruit & "unit cost") 
     and format into a new column 'formatted'
-  $ qsv py map formatted "f'{qty} {fruit} cost ${(float(unit_cost) * float(qty)):.2f}'"
+  $ qsv py map formatted 'f"{qty} {fruit} cost ${(float(unit_cost) * float(qty)):.2f}"'
+
+  You can even have conditionals in your f-string:
+  $ qsv py map formatted 'f"""{qty} {fruit} cost ${(float(unit_cost) * float(qty)):.2f}. Its quite {"cheap" if ((float(unit_cost) * float(qty)) < 20.0) else "expensive"}!"""'
+
+  Note how we needed to use triple double quotes for the f-string, so we can use the literals
+  "cheap" and "expensive" in the f-string expression.
 
   Strip and prefix cell values
   $ qsv py map prefixed "'clean_' + a.strip()"
