@@ -100,7 +100,7 @@ Fetch options:
                                CAUTION: Only use zero for APIs that use RateLimit and/or Retry-After headers,
                                otherwise your fetchpost job may look like a Denial Of Service attack.
                                Even though zero is the default, this is mitigated by --max-errors having a
-                               default of 100.
+                               default of 10.
                                [default: 0 ]
     --timeout <seconds>        Timeout for each URL request.
                                [default: 15 ]
@@ -111,7 +111,7 @@ Fetch options:
                                [default: 5]
     --max-errors <count>       Maximum number of errors before aborting.
                                Set to zero (0) to continue despite errors.
-                               [default: 100 ]
+                               [default: 10 ]
     --store-error              On error, store error code/message instead of blank value.
     --cache-error              Cache error responses even if a request fails. If an identical URL is requested,
                                the cached error is returned. Otherwise, the fetch is attempted again
