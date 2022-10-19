@@ -438,6 +438,49 @@ fn py_format() {
 }
 
 #[test]
+fn py_format_with_conditionals() {
+    let wrk = Workdir::new("py");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["qty", "fruit", "unit cost"],
+            svec!["20.5", "mangoes", "5"],
+            svec!["10", "bananas", "20"],
+            svec!["3", "strawberries", "3.50"],
+        ],
+    );
+    let mut cmd = wrk.command("py");
+    cmd.arg("map")
+        .arg("formatted")
+        .arg(r#"f"""{qty} {fruit} cost ${(float(unit_cost) * float(qty)):.2f}. Its quite {"cheap" if ((float(unit_cost) * float(qty)) < 20.0) else "expensive"}!""""#)
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["qty", "fruit", "unit cost", "formatted"],
+        svec![
+            "20.5",
+            "mangoes",
+            "5",
+            "20.5 mangoes cost $102.50. Its quite expensive!"
+        ],
+        svec![
+            "10",
+            "bananas",
+            "20",
+            "10 bananas cost $200.00. Its quite expensive!"
+        ],
+        svec![
+            "3",
+            "strawberries",
+            "3.50",
+            "3 strawberries cost $10.50. Its quite cheap!"
+        ],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn py_format_header_with_invalid_chars() {
     let wrk = Workdir::new("py");
     wrk.create(
