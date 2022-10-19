@@ -25,7 +25,8 @@ macro_rules! winfo {
     ($($arg:tt)*) => ({
         use std::io::Write;
         use log::info;
-        info!("{}", $($arg)*);
+        let info = format!($($arg)*);
+        info!("{info}");
         (writeln!(&mut ::std::io::stderr(), $($arg)*)).unwrap();
     });
 }
