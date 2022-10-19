@@ -51,7 +51,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [input](/src/cmd/input.rs#L2)[^2] | Read CSV data with special quoting, trimming, line-skipping and UTF-8 transcoding rules. Typically used to "normalize" a CSV for further processing with other qsv commands. |
 | [join](/src/cmd/join.rs#L2)[^2] | Inner, outer, cross, anti & semi joins. Uses a simple hash index to make it fast.  |
 | [jsonl](/src/cmd/jsonl.rs#L2) | Convert newline-delimited JSON ([JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/)) to CSV. See `tojsonl` command to convert CSV to JSONL.
-| [lua](/src/cmd/lua.rs#L2)[^1] | Execute a [Lua](https://www.lua.org/about.html) 5.4 script over CSV lines to transform, aggregate or filter them. [Lua is much faster than Python](https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/lua-python3.html)  |
+| [lua](/src/cmd/lua.rs#L2)[^1] | Execute a [Lua](https://www.lua.org/about.html) 5.4 script over CSV lines to transform, aggregate or filter them. [Lua is much faster than Python](https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/lua-python3.html). |
 | [luajit](/src/cmd/luajit.rs#L2)[^1] | Execute a [LuaJIT](https://luajit.org/luajit.html) 2.0 (a Just-In-Time compiler for Lua 5.1) script over CSV lines to transform, aggregate or filter them. [LuaJIT is even faster still than Lua](https://luajit.org/performance_x86.html). |
 | [partition](/src/cmd/partition.rs#L2) | Partition a CSV based on a column value. |
 | [pseudo](/src/cmd/pseudo.rs#L2) | [Pseudonymise](https://en.wikipedia.org/wiki/Pseudonymization) the value of the given column by replacing them with an incremental identifier.  |
