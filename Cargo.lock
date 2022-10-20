@@ -406,7 +406,7 @@ dependencies = [
  "instant",
  "once_cell",
  "r2d2",
- "redis",
+ "redis 0.21.6",
  "serde",
  "serde_json",
  "thiserror",
@@ -2131,7 +2131,7 @@ dependencies = [
  "quickcheck",
  "rand",
  "rayon",
- "redis",
+ "redis 0.22.1",
  "regex",
  "reqwest",
  "reverse_geocoder",
@@ -2349,6 +2349,19 @@ dependencies = [
  "r2d2",
  "ryu",
  "sha1 0.6.1",
+ "url",
+]
+
+[[package]]
+name = "redis"
+version = "0.22.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "513b3649f1a111c17954296e4a3b9eecb108b766c803e2b99f179ebe27005985"
+dependencies = [
+ "combine",
+ "itoa",
+ "percent-encoding",
+ "ryu",
  "url",
 ]
 
