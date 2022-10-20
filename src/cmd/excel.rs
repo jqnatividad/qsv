@@ -81,9 +81,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let path = &args.arg_input;
 
     let sce = PathBuf::from(path.to_ascii_lowercase());
-    let xls_flag = match sce.extension().and_then(std::ffi::OsStr::to_str) {
-        Some("xls") => true,
-        Some("xlsx" | "xlsm" | "xlsb" | "ods") => false,
+    match sce.extension().and_then(std::ffi::OsStr::to_str) {
+        Some("xls" | "xlsx" | "xlsm" | "xlsb" | "ods") => (),
         _ => {
             return fail!("Expecting an Excel/ODS file.");
         }
@@ -299,14 +298,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             });
                         };
                     } else {
-                        // temporary workaround https://github.com/jqnatividad/qsv/issues/516
-                        // for handling floats with xls file, we just do up to 5 decimal places
-                        // for now until calamine xls float handling is fixed
-                        if xls_flag {
-                            record.push_field(&round_tozero(*f, 5));
-                        } else {
-                            record.push_field(&f.to_string());
-                        }
+                        record.push_field(&f.to_string());
                     }
                 }
                 DataType::Int(ref i) => record.push_field(&i.to_string()),
@@ -341,17 +333,4 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     winfo!("{end_msg}");
 
     Ok(())
-}
-
-#[inline]
-fn round_tozero(dec_f64: f64, places: u8) -> String {
-    use rust_decimal::prelude::*;
-
-    let dec_num = Decimal::from_f64(dec_f64).unwrap_or_default();
-    // round using ToZero strategy - The number is always rounded toward zero. e.g. -6.8 -> -6, 6.8 -> 6
-    // https://docs.rs/rust_decimal/latest/rust_decimal/enum.RoundingStrategy.html#variant.ToZero
-
-    dec_num
-        .round_dp_with_strategy(places as u32, RoundingStrategy::ToZero)
-        .to_string()
 }
