@@ -142,7 +142,7 @@ fn excel_date_whitelist_none_xls() {
     let expected = vec![
         svec!["date_col", "num_col", "col_Petsa", "just another col"],
         svec!["37250", "1", "33423", "foo"],
-        svec!["37145.35416", "3", "44202", "bar"],
+        svec!["37145.354166666664", "3", "44202", "bar"],
         svec![
             "This is not a date and will be passed through",
             "5",
@@ -314,11 +314,32 @@ fn excel_sheet_name() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["Middle sheet col1", "Middle-2"],
-        svec!["z", "3.14159"],
+        svec!["z", "3.14159265358979"],
         svec!["y", "42"],
         svec!["x", "33"],
         svec!["w", "7"],
-        svec!["v", "3.14159"],
+        svec!["v", "3.14159265358979"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn excel_xls_float_handling_516() {
+    let wrk = Workdir::new("excel_float_handling");
+
+    let xls_file = wrk.load_test_file("testexcel-issue-516.xls");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--sheet").arg("Middle").arg(xls_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["id", "amount", "color"],
+        svec!["1", "20.02", "green"],
+        svec!["2", "37", "red"],
+        svec!["3", "14.23", "blue"],
+        svec!["4", "14.2", "pink"],
+        svec!["5", "14.201", "grey"],
     ];
     assert_eq!(got, expected);
 }
@@ -335,11 +356,11 @@ fn excel_case_insensitve_sheet_name() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["Middle sheet col1", "Middle-2"],
-        svec!["z", "3.14159"],
+        svec!["z", "3.14159265358979"],
         svec!["y", "42"],
         svec!["x", "33"],
         svec!["w", "7"],
-        svec!["v", "3.14159"],
+        svec!["v", "3.14159265358979"],
     ];
     assert_eq!(got, expected);
 }
