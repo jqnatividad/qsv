@@ -242,7 +242,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut trimmed_record = csv::StringRecord::new();
     let mut date_flag: Vec<bool> = Vec::new();
-    let mut count = 0_u32; // use u32 as Excel can only hold 1m rows anyways, ODS - only 32k
+    let mut row_count = 0_u32; // use u32 as Excel can only hold 1m rows anyways, ODS - only 32k
 
     for (row_idx, row) in range.rows().enumerate() {
         record.clear();
@@ -320,14 +320,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         } else {
             wtr.write_record(&record)?;
         }
-        count += 1;
+        row_count += 1;
     }
     wtr.flush()?;
 
     let end_msg = format!(
         "{} {}-column rows exported from \"{sheet}\"",
         // don't count the header in row count
-        count.saturating_sub(1).separate_with_commas(),
+        row_count.saturating_sub(1).separate_with_commas(),
         record.len().separate_with_commas(),
     );
     winfo!("{end_msg}");
