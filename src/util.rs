@@ -569,7 +569,10 @@ pub fn qsv_check_for_update() -> Result<bool, String> {
         winfo!("Up to date ({curr_version})... no update required.");
     };
 
-    let _temp = send_hwsurvey(&bin_name, updated, latest_release, curr_version, false);
+    if let Ok(status_code) = send_hwsurvey(&bin_name, updated, latest_release, curr_version, false)
+    {
+        log::info!("Survey sent. Status code: {status_code}");
+    }
 
     Ok(updated)
 }
@@ -640,9 +643,11 @@ fn send_hwsurvey(
     );
     log::debug!("hwsurvey: {hwsurvey_json}");
 
-    let mut survey_done = true;
+    let mut survey_done = false;
     let mut status = reqwest::StatusCode::OK;
-    if !dry_run {
+    if dry_run {
+        log::info!("Survey dry run. hw survey compiled successfully, but not sent.");
+    } else {
         let client = match reqwest::blocking::Client::builder()
             .user_agent(DEFAULT_USER_AGENT)
             .brotli(true)
@@ -670,15 +675,14 @@ fn send_hwsurvey(
             }
             Err(e) => {
                 log::warn!("Cannot send hw survey: {e}");
-                survey_done = false;
                 status = reqwest::StatusCode::BAD_REQUEST;
             }
         };
     }
-    if survey_done {
+    if survey_done || dry_run {
         Ok(status)
     } else {
-        fail!("Cannot send hw survey")
+        fail!("hw survey failed.")
     }
 }
 
