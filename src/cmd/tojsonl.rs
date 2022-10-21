@@ -197,7 +197,7 @@ fn jsonl_escape(input: &str) -> Cow<str> {
 }
 
 #[inline]
-fn escape_char(ch: char) -> Option<&'static str> {
+const fn escape_char(ch: char) -> Option<&'static str> {
     match ch {
         '\n' => Some(r#"\n"#),
         '\r' => Some(r#"\r"#),
