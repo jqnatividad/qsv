@@ -84,13 +84,21 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     match sce.extension().and_then(std::ffi::OsStr::to_str) {
         Some("xls" | "xlsx" | "xlsm" | "xlsb" | "ods") => (),
         _ => {
-            return fail_clierror!("Expecting an Excel/ODS file.");
+            return fail_clierror!("The excel command supports the following workbook formats - xls, xlsx, xlsm, xlsb and ods.");
         }
     };
 
     let mut workbook = match open_workbook_auto(path) {
         Ok(workbook) => workbook,
-        Err(e) => return fail_clierror!("Cannot open workbook: {e}."),
+        Err(e) => {
+            if e.to_string()
+                .starts_with("Xlsx error: Zip error: invalid Zip archive")
+            {
+                return fail_clierror!("qsv cannot process password-protected workbooks: {e}.");
+            } else {
+                return fail_clierror!("Cannot open workbook: {e}.");
+            }
+        }
     };
 
     let sheet_names = workbook.sheet_names();

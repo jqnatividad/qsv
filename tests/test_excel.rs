@@ -20,6 +20,20 @@ fn excel_open_xls() {
 }
 
 #[test]
+fn excel_open_xlsx_readpassword() {
+    let wrk = Workdir::new("excel_open_xlsx_readpassword");
+
+    let xlsx_file = wrk.load_test_file("password-protected-password123.xlsx");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg(xlsx_file);
+
+    let got = wrk.output_stderr(&mut cmd);
+    assert!(got.starts_with("qsv cannot process password-protected workbooks"));
+    wrk.assert_err(&mut cmd);
+}
+
+#[test]
 fn excel_open_flexible_xls() {
     let wrk = Workdir::new("excel_open_flexible_xls");
 
