@@ -84,7 +84,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     match sce.extension().and_then(std::ffi::OsStr::to_str) {
         Some("xls" | "xlsx" | "xlsm" | "xlsb" | "ods") => (),
         _ => {
-            return fail!("Expecting an Excel/ODS file.");
+            return fail_clierror!("Expecting an Excel/ODS file.");
         }
     };
 
@@ -95,7 +95,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let sheet_names = workbook.sheet_names();
     if sheet_names.is_empty() {
-        return fail!("No sheets found.");
+        return fail_clierror!("No sheets found.");
     }
     let num_sheets = sheet_names.len();
     let sheet_vec = sheet_names.to_owned();
@@ -105,6 +105,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .writer()?;
     let mut record = csv::StringRecord::new();
 
+    // create the metadata report CSV to stdout then exit
     if args.flag_metadata {
         record.push_field("index");
         record.push_field("sheet_name");
@@ -242,7 +243,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut trimmed_record = csv::StringRecord::new();
     let mut date_flag: Vec<bool> = Vec::new();
-    let mut row_count = 0_u32; // use u32 as Excel can only hold 1m rows anyways, ODS - only 32k
+    // use u32 as Excel/ODS can only handle 1,048,576 rows anyway
+    // https://support.microsoft.com/en-us/office/excel-specifications-and-limits-1672b34d-7043-467e-8e27-269d656771c3
+    // https://wiki.documentfoundation.org/Faq/Calc/022
+    let mut row_count = 0_u32;
 
     for (row_idx, row) in range.rows().enumerate() {
         record.clear();
