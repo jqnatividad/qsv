@@ -50,34 +50,31 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .delimiter(args.flag_delimiter)
         .no_headers(true)
         .flexible(true);
-    let length = match args.flag_length {
-        Some(length) => {
-            if length == 0 {
-                return fail!("Length must be greater than 0.");
-            }
-            length
+    let length = if let Some(length) = args.flag_length {
+        if length == 0 {
+            return fail!("Length must be greater than 0.");
         }
-        None => {
-            if config.is_stdin() {
-                return fail!(
-                    "<stdin> cannot be used in this command. \
+        length
+    } else {
+        if config.is_stdin() {
+            return fail!(
+                "<stdin> cannot be used in this command. \
                               Please specify a file path."
-                );
-            }
-            let mut maxlen = 0usize;
-            let mut rdr = config.reader()?;
-            let mut record = csv::ByteRecord::new();
-            while rdr.read_byte_record(&mut record)? {
-                let mut nonempty_count = 0;
-                for (index, field) in record.iter().enumerate() {
-                    if index == 0 || !field.is_empty() {
-                        nonempty_count = index + 1;
-                    }
-                }
-                maxlen = cmp::max(maxlen, nonempty_count);
-            }
-            maxlen
+            );
         }
+        let mut maxlen = 0usize;
+        let mut rdr = config.reader()?;
+        let mut record = csv::ByteRecord::new();
+        while rdr.read_byte_record(&mut record)? {
+            let mut nonempty_count = 0;
+            for (index, field) in record.iter().enumerate() {
+                if index == 0 || !field.is_empty() {
+                    nonempty_count = index + 1;
+                }
+            }
+            maxlen = cmp::max(maxlen, nonempty_count);
+        }
+        maxlen
     };
 
     let mut rdr = config.reader()?;
