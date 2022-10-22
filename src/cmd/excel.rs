@@ -81,8 +81,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let path = &args.arg_input;
 
     let sce = PathBuf::from(path.to_ascii_lowercase());
+    let mut ods_flag = false;
     match sce.extension().and_then(std::ffi::OsStr::to_str) {
-        Some("xls" | "xlsx" | "xlsm" | "xlsb" | "ods") => (),
+        Some("xls" | "xlsx" | "xlsm" | "xlsb") => (),
+        Some("ods") => ods_flag = true,
         _ => {
             return fail_clierror!("The excel command supports the following workbook formats - xls, xlsx, xlsm, xlsb and ods.");
         }
@@ -91,10 +93,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut workbook = match open_workbook_auto(path) {
         Ok(workbook) => workbook,
         Err(e) => {
-            if e.to_string()
-                .starts_with("Xlsx error: Zip error: invalid Zip archive")
+            let es = e.to_string();
+            // password protected errors come in different flavors
+            if es.starts_with("Xls error: Cfb error") // xls gives this error
+                || es.starts_with("Xlsx error: Zip error: invalid Zip archive")
+            // xlsx this one
             {
-                return fail_clierror!("qsv cannot process password-protected workbooks: {e}.");
+                return fail_clierror!("{path} may be a password-protected workbook: {e}.");
             } else {
                 return fail_clierror!("Cannot open workbook: {e}.");
             }
@@ -103,6 +108,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let sheet_names = workbook.sheet_names();
     if sheet_names.is_empty() {
+        if ods_flag {
+            return fail_clierror!("{path} may be password protected.");
+        };
         return fail_clierror!("No sheets found.");
     }
     let num_sheets = sheet_names.len();

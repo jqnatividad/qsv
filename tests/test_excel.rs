@@ -29,7 +29,10 @@ fn excel_open_xlsx_readpassword() {
     cmd.arg(xlsx_file);
 
     let got = wrk.output_stderr(&mut cmd);
-    assert!(got.starts_with("qsv cannot process password-protected workbooks"));
+    assert!(got
+        .matches("password-protected-password123.xlsx may be a password-protected workbook:")
+        .min()
+        .is_some());
     wrk.assert_err(&mut cmd);
 }
 
