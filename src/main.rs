@@ -32,6 +32,9 @@
         clippy::missing_errors_doc,
         clippy::must_use_candidate,
         clippy::use_self,
+        clippy::similar_names,
+        clippy::too_many_lines,
+        clippy::struct_excessive_bools,
     )
 )]
 
