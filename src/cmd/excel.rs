@@ -94,15 +94,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         Ok(workbook) => workbook,
         Err(e) => {
             let es = e.to_string();
-            // password protected errors come in different flavors
-            if es.starts_with("Xls error: Cfb error") // xls gives this error
+            // password protected errors come in different flavors for Excel
+            if es.starts_with("Xls error: Cfb error")
                 || es.starts_with("Xlsx error: Zip error: invalid Zip archive")
-            // xlsx this one
             {
                 return fail_clierror!("{path} may be a password-protected workbook: {e}.");
-            } else {
-                return fail_clierror!("Cannot open workbook: {e}.");
             }
+            return fail_clierror!("Cannot open workbook: {e}.");
         }
     };
 
