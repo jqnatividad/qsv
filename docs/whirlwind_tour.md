@@ -1,5 +1,9 @@
 ### A whirlwind tour
 
+> ℹ️ **NOTE:** This tour is primarily targeted to Linux and macOS users. Though qsv works on Windows, the tour
+assumes basic knowledge of command-line piping and redirection and uses other command-line tools (curl, tee, head, etc.)
+that are not installed by default on Windows,
+
 Let's say you're playing with some data from the
 [Data Science Toolkit](https://github.com/petewarden/dstkdata), which contains
 several CSV files. Maybe you're interested in the population counts of each
@@ -9,7 +13,6 @@ city in the world. So grab the 124MB, 2.7M row CSV file and start examining it:
 # there are no headers in the original repo, so let's download a prepared CSV with headers
 $ curl -LO https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/wcp.zip
 $ unzip wcp.zip
-# on Windows Powershell, do `Expand-Archive wcp.zip`
 $ qsv headers wcp.csv
 1   Country
 2   City
@@ -230,8 +233,6 @@ part of the CSV, that **starts with the character** we set it to.
 
 ```
 $ export QSV_COMMENT_CHAR='#'
-# on Windows Powershell
-$ $env:QSV_COMMENT_CHAR='#'
 
 $ qsv headers country_continent.csv
 1   continent
