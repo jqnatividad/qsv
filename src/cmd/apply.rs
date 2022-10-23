@@ -8,6 +8,7 @@ It has five subcommands:
  * datefmt - Formats a recognized date column to a specified format using <--formatstr>.
  * dynfmt - Dynamically constructs a new column from other columns using the <--formatstr> template.
  * geocode - geocodes a WGS84 location against a static copy of the Geonames cities database.
+ * calcconv - parse and evaluate math expressions, with support for units and conversions.
 
 OPERATIONS
 The series of operations must be given separated by commas as such:
@@ -182,7 +183,28 @@ set the geocoded value a new column named City.
 
 $ qsv apply geocode Location --formatstr city-state --new-column City file.csv
 
-For more extensive examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_apply.rs.
+CALCCONV
+Parse and evaluate math expressions into a new column, with support for units and conversions.
+The math expression is built dynamically using the <--formatstr> template, similar to the DYNFMT
+subcommand, with the addition that if the literal '<UNIT>' is found at the end of the template, the
+inferred unit will be appended to the result.
+
+Examples:
+$ qsv apply calconv --formatstr '{col1} + {col2} * {col3}' -c result file.csv
+
+$ qsv apply calcconv --formatstr '{col1} % 3' -c modulo file.csv
+
+$ qsv apply calcconv --formatstr '({col1} + {col2})km to light years <UNIT>' -c light_years file.csv
+
+$ qsv apply calcconv --formatstr '{col1}m/{col2}s * {col3} trillion s' -c meters_per_sec file.csv
+
+$ qsv apply calcconv --formatstr '{col1}m/s * {col2}mi/h in kilometers per h' -c kms_per_h file.csv
+
+$ qsv apply calcconv --formatstr 'round(sqrt{col1}^4)! liters' -c liters file.csv
+
+$ qsv apply calcconv --formatstr '10% of abs(sin(pi)) horsepower to watts' -c watts file.csv
+
+For more extensive subcommand examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_apply.rs.
 
 Usage:
 qsv apply operations <operations> [options] <column> [<input>]
@@ -190,6 +212,7 @@ qsv apply emptyreplace --replacement=<string> [options] <column> [<input>]
 qsv apply datefmt [--formatstr=<string>] [options] <column> [<input>]
 qsv apply dynfmt --formatstr=<string> [options] --new-column=<name> [<input>]
 qsv apply geocode [--formatstr=<string>] [options] <column> [<input>]
+qsv apply calcconv --formatstr=<string> [options] --new-column=<name> [<input>]
 qsv apply --help
 
 The <column> argument can be a list of columns for the operations and datefmt subcommands.
@@ -237,6 +260,7 @@ Common options:
 
 use cached::proc_macro::cached;
 use censor::{Censor, Sex, Zealous};
+use cpc::{eval, units::Unit};
 use dynfmt::Format;
 use eudex::Hash;
 use indicatif::{ProgressBar, ProgressDrawTarget};
@@ -308,6 +332,7 @@ struct Args {
     cmd_dynfmt:       bool,
     cmd_emptyreplace: bool,
     cmd_geocode:      bool,
+    cmd_calcconv:     bool,
     arg_input:        Option<String>,
     flag_rename:      Option<String>,
     flag_comparand:   String,
@@ -382,9 +407,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // so SimpleCurlyFormat is performant
     let mut dynfmt_fields = Vec::with_capacity(10); // 10 is a reasonable default to save allocs
     let mut dynfmt_template = args.flag_formatstr.clone();
-    if args.cmd_dynfmt {
+    if args.cmd_dynfmt || args.cmd_calcconv {
         if args.flag_no_headers {
-            return fail!("dynfmt operation requires headers.");
+            return fail!("dynfmt/calcconv subcommand requires headers.");
         }
         // first, get the fields used in the dynfmt template
         let safe_headers = util::safe_header_names(&headers, false);
@@ -411,6 +436,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         DynFmt,
         Geocode,
         EmptyReplace,
+        CalcConv,
         Unknown,
     }
 
@@ -527,6 +553,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         ApplySubCmd::DynFmt
     } else if args.cmd_emptyreplace {
         ApplySubCmd::EmptyReplace
+    } else if args.cmd_calcconv {
+        ApplySubCmd::CalcConv
     } else {
         ApplySubCmd::Unknown
     };
@@ -666,6 +694,48 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             record.push_field(&cell);
                         } else {
                             record = replace_column_value(&record, column_index, &cell);
+                        }
+                    }
+                    ApplySubCmd::CalcConv => {
+                        let result = if record[column_index].is_empty() {
+                            String::new()
+                        } else {
+                            let mut cell = record[column_index].to_owned();
+                            let mut record_vec: Vec<String> = Vec::with_capacity(record.len());
+                            for field in &record {
+                                record_vec.push(field.to_string());
+                            }
+                            if let Ok(formatted) =
+                                dynfmt::SimpleCurlyFormat.format(&dynfmt_template, record_vec)
+                            {
+                                cell = formatted.to_string();
+                            }
+
+                            let mut append_unit = false;
+                            let cell_for_eval = if cell.ends_with("<UNIT>") {
+                                append_unit = true;
+                                cell.trim_end_matches("<UNIT>")
+                            } else {
+                                &cell
+                            };
+                            match eval(cell_for_eval, true, Unit::Celsius, false) {
+                                Ok(answer) => {
+                                    if append_unit {
+                                        format!("{} {:?}", answer.value, answer.unit)
+                                    } else {
+                                        answer.value.to_string()
+                                    }
+                                }
+                                Err(e) => {
+                                    format!("ERROR: {e}")
+                                }
+                            }
+                        };
+
+                        if args.flag_new_column.is_some() {
+                            record.push_field(&result);
+                        } else {
+                            record = replace_column_value(&record, column_index, &result);
                         }
                     }
                     ApplySubCmd::Unknown => {
