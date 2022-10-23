@@ -201,6 +201,132 @@ fn apply_dynfmt() {
 }
 
 #[test]
+fn apply_calcconv() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["qty-fruit/day", "fruit", "calories", "unit cost usd"],
+            svec!["20.5", "mangoes", "200", "2"],
+            svec!["10", "bananas", "120", "0.50"],
+            svec!["3", "strawberries", "20", "0.10"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("calcconv")
+        .arg("--formatstr")
+        .arg("{qty_fruit_day} * {calories} calories to watt hours")
+        .arg("--new-column")
+        .arg("watthours")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec![
+            "qty-fruit/day",
+            "fruit",
+            "calories",
+            "unit cost usd",
+            "watthours",
+        ],
+        svec!["20.5", "mangoes", "200", "2", "4.7683000"],
+        svec!["10", "bananas", "120", "0.50", "1.395600"],
+        svec!["3", "strawberries", "20", "0.10", "0.069780"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn apply_calcconv_invalid() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["qty-fruit/day", "fruit", "calories", "unit cost usd"],
+            svec!["20.5", "mangoes", "200", "2"],
+            svec!["10", "bananas", "120", "0.50"],
+            svec!["3", "strawberries", "20", "0.10"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("calcconv")
+        .arg("--formatstr")
+        .arg("{qty_fruit_day} * {calories} calories to bitcoins per sec")
+        .arg("--new-column")
+        .arg("watthours")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec![
+            "qty-fruit/day",
+            "fruit",
+            "calories",
+            "unit cost usd",
+            "watthours",
+        ],
+        svec![
+            "20.5",
+            "mangoes",
+            "200",
+            "2",
+            "ERROR: Lexing error: Invalid string: bitcoins"
+        ],
+        svec![
+            "10",
+            "bananas",
+            "120",
+            "0.50",
+            "ERROR: Lexing error: Invalid string: bitcoins"
+        ],
+        svec![
+            "3",
+            "strawberries",
+            "20",
+            "0.10",
+            "ERROR: Lexing error: Invalid string: bitcoins"
+        ],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn apply_calcconv_units() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["qty-fruit/day", "fruit", "calories", "unit cost usd"],
+            svec!["20.5", "mangoes", "200", "2"],
+            svec!["10", "bananas", "120", "0.50"],
+            svec!["3", "strawberries", "20", "0.10"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("calcconv")
+        .arg("--formatstr")
+        .arg("{qty_fruit_day} * {calories} calories to watt hours <UNIT>")
+        .arg("--new-column")
+        .arg("watthours")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec![
+            "qty-fruit/day",
+            "fruit",
+            "calories",
+            "unit cost usd",
+            "watthours",
+        ],
+        svec!["20.5", "mangoes", "200", "2", "4.7683000 WattHour"],
+        svec!["10", "bananas", "120", "0.50", "1.395600 WattHour"],
+        svec!["3", "strawberries", "20", "0.10", "0.069780 WattHour"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn apply_ops_empty_shortcircuit() {
     let wrk = Workdir::new("apply");
     wrk.create(
