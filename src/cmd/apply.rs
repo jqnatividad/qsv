@@ -375,17 +375,56 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         wtr.write_record(&headers)?;
     }
 
-    // validate specified operations
-    let mut censor_invokes = 0_u8;
-    let mut replace_invokes = 0_u8;
-    let mut regex_replace_invokes = 0_u8;
-    let mut sim_invokes = 0_u8;
-    let mut strip_invokes = 0_u8;
-    let mut eudex_invokes = 0_u8;
-    let mut sentiment_invokes = 0_u8;
-    let operations_lowercase = args.arg_operations.to_lowercase();
-    let operations: Vec<&str> = operations_lowercase.split(',').collect();
-    if args.cmd_operations {
+    // for dynfmt, safe_headers are the "safe" version of colnames - alphanumeric only,
+    // all other chars replaced with underscore
+    // dynfmt_fields are the columns used in the dynfmt --formatstr option
+    // we prep it so we only populate the lookup vec with the index of these columns
+    // so SimpleCurlyFormat is performant
+    let mut dynfmt_fields = Vec::with_capacity(10); // 10 is a reasonable default to save allocs
+    let mut dynfmt_template = args.flag_formatstr.clone();
+    if args.cmd_dynfmt {
+        if args.flag_no_headers {
+            return fail!("dynfmt operation requires headers.");
+        }
+        // first, get the fields used in the dynfmt template
+        let safe_headers = util::safe_header_names(&headers, false);
+        let formatstr_re: &'static Regex = crate::regex_once_cell!(r"\{(?P<key>\w+)?\}");
+        for format_fields in formatstr_re.captures_iter(&args.flag_formatstr) {
+            dynfmt_fields.push(format_fields.name("key").unwrap().as_str());
+        }
+        // we sort the fields so we can do binary_search
+        dynfmt_fields.sort_unstable();
+        // now, get the indices of the columns for the lookup vec
+        for (i, field) in safe_headers.into_iter().enumerate() {
+            if dynfmt_fields.binary_search(&field.as_str()).is_ok() {
+                let field_with_curly = format!("{{{field}}}");
+                let field_index = format!("{{{i}}}");
+                dynfmt_template = dynfmt_template.replace(&field_with_curly, &field_index);
+            }
+        }
+        debug!("dynfmt_fields: {dynfmt_fields:?}  dynfmt_template: {dynfmt_template}");
+    }
+
+    pub enum ApplySubCmd {
+        Operations,
+        DateFmt,
+        DynFmt,
+        Geocode,
+        EmptyReplace,
+        Unknown,
+    }
+
+    let lower_operations = args.arg_operations.to_lowercase();
+    let operations: Vec<&str> = lower_operations.split(',').collect();
+    let apply_cmd = if args.cmd_operations {
+        // validate specified operations
+        let mut censor_invokes = 0_u8;
+        let mut replace_invokes = 0_u8;
+        let mut regex_replace_invokes = 0_u8;
+        let mut sim_invokes = 0_u8;
+        let mut strip_invokes = 0_u8;
+        let mut eudex_invokes = 0_u8;
+        let mut sentiment_invokes = 0_u8;
         for op in &operations {
             if !OPERATIONS.contains(op) {
                 return fail_clierror!("Unknown '{op}' operation");
@@ -469,58 +508,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 _ => {}
             }
         }
-    }
-    if censor_invokes > 1
-        || replace_invokes > 1
-        || regex_replace_invokes > 1
-        || sim_invokes > 1
-        || eudex_invokes > 1
-        || sentiment_invokes > 1
-        || strip_invokes > 1
-    {
-        return fail!("you can only use censor, replace, regex_replace, strip, similarity, eudex or sentiment ONCE per operation series.");
-    };
-
-    // for dynfmt, safe_headers are the "safe" version of colnames - alphanumeric only,
-    // all other chars replaced with underscore
-    // dynfmt_fields are the columns used in the dynfmt --formatstr option
-    // we prep it so we only populate the lookup vec with the index of these columns
-    // so SimpleCurlyFormat is performant
-    let mut dynfmt_fields = Vec::with_capacity(10); // 10 is a reasonable default to save allocs
-    let mut dynfmt_template = args.flag_formatstr.clone();
-    if args.cmd_dynfmt {
-        if args.flag_no_headers {
-            return fail!("dynfmt operation requires headers.");
-        }
-        // first, get the fields used in the dynfmt template
-        let safe_headers = util::safe_header_names(&headers, false);
-        let formatstr_re: &'static Regex = crate::regex_once_cell!(r"\{(?P<key>\w+)?\}");
-        for format_fields in formatstr_re.captures_iter(&args.flag_formatstr) {
-            dynfmt_fields.push(format_fields.name("key").unwrap().as_str());
-        }
-        // we sort the fields so we can do binary_search
-        dynfmt_fields.sort_unstable();
-        // now, get the indices of the columns for the lookup vec
-        for (i, field) in safe_headers.into_iter().enumerate() {
-            if dynfmt_fields.binary_search(&field.as_str()).is_ok() {
-                let field_with_curly = format!("{{{field}}}");
-                let field_index = format!("{{{i}}}");
-                dynfmt_template = dynfmt_template.replace(&field_with_curly, &field_index);
-            }
-        }
-        debug!("dynfmt_fields: {dynfmt_fields:?}  dynfmt_template: {dynfmt_template}");
-    }
-
-    pub enum ApplySubCmd {
-        Operations,
-        DateFmt,
-        DynFmt,
-        Geocode,
-        EmptyReplace,
-        Unknown,
-    }
-
-    let apply_cmd = if args.cmd_operations {
+        if censor_invokes > 1
+            || replace_invokes > 1
+            || regex_replace_invokes > 1
+            || sim_invokes > 1
+            || eudex_invokes > 1
+            || sentiment_invokes > 1
+            || strip_invokes > 1
+        {
+            return fail!("you can only use censor, replace, regex_replace, strip, similarity, eudex or sentiment ONCE per operation series.");
+        };
         ApplySubCmd::Operations
     } else if args.cmd_geocode {
         ApplySubCmd::Geocode
