@@ -189,20 +189,25 @@ The math expression is built dynamically using the <--formatstr> template, simil
 subcommand, with the addition that if the literal '<UNIT>' is found at the end of the template, the
 inferred unit will be appended to the result.
 
-Examples:
-$ qsv apply calconv --formatstr '{col1} + {col2} * {col3}' -c result file.csv
+For a complete list of supported units, constants, operators and functions, see https://docs.rs/cpc
 
-$ qsv apply calcconv --formatstr '{col1} % 3' -c modulo file.csv
+Examples:
+$ qsv apply calcconv --formatstr '{col1} + {col2} * {col3}' -c result file.csv
+
+$ qsv apply calcconv --formatstr '{col1} % 3' -c remainder file.csv
+
+$ qsv apply calcconv --formatstr '{col1}mb in gigabytes' -c gb file.csv
+
+$ qsv apply calcconv --formatstr '{col1}km + {col2}mi in meters' -c gb file.csv
 
 $ qsv apply calcconv --formatstr '({col1} + {col2})km to light years <UNIT>' -c light_years file.csv
 
-$ qsv apply calcconv --formatstr '{col1}m/{col2}s * {col3} trillion s' -c meters_per_sec file.csv
-
 $ qsv apply calcconv --formatstr '{col1}m/s * {col2}mi/h in kilometers per h' -c kms_per_h file.csv
 
-$ qsv apply calcconv --formatstr 'round(sqrt{col1}^4)! liters' -c liters file.csv
+$ qsv apply calcconv --formatstr 'round(sqrt{col1}^4)! liters <UNIT>' -c liters file.csv
 
 $ qsv apply calcconv --formatstr '10% of abs(sin(pi)) horsepower to watts' -c watts file.csv
+
 
 For more extensive subcommand examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_apply.rs.
 
