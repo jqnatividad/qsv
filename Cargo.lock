@@ -62,7 +62,7 @@ dependencies = [
  "percent-encoding",
  "pin-project-lite",
  "rand",
- "sha1 0.10.5",
+ "sha1",
  "smallvec",
  "tracing",
 ]
@@ -267,17 +267,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "async-trait"
-version = "0.1.58"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e805d94e6b5001b651426cf4cd446b1ab5f319d27bab5c644f61de0a804360c"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "autocfg"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -396,9 +385,9 @@ dependencies = [
 
 [[package]]
 name = "cached"
-version = "0.39.0"
+version = "0.40.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f3e27085975166ffaacbd04527132e1cf5906fa612991f9b4fea08e787da2961"
+checksum = "72b4147cd94d5fbdc2ab71b11d50a2f45493625576b3bb70257f59eedea69f3d"
 dependencies = [
  "cached_proc_macro",
  "cached_proc_macro_types",
@@ -406,7 +395,7 @@ dependencies = [
  "instant",
  "once_cell",
  "r2d2",
- "redis 0.21.6",
+ "redis",
  "serde",
  "serde_json",
  "thiserror",
@@ -1963,7 +1952,7 @@ checksum = "4c8717927f9b79515e565a64fe46c38b8cd0427e64c40680b14a7365ab09ac8d"
 dependencies = [
  "once_cell",
  "pest",
- "sha1 0.10.5",
+ "sha1",
 ]
 
 [[package]]
@@ -2162,7 +2151,7 @@ dependencies = [
  "quickcheck",
  "rand",
  "rayon",
- "redis 0.22.1",
+ "redis",
  "regex",
  "reqwest",
  "reverse_geocoder",
@@ -2369,22 +2358,6 @@ dependencies = [
 
 [[package]]
 name = "redis"
-version = "0.21.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "571c252c68d09a2ad3e49edd14e9ee48932f3e0f27b06b4ea4c9b2a706d31103"
-dependencies = [
- "async-trait",
- "combine",
- "itoa",
- "percent-encoding",
- "r2d2",
- "ryu",
- "sha1 0.6.1",
- "url",
-]
-
-[[package]]
-name = "redis"
 version = "0.22.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "513b3649f1a111c17954296e4a3b9eecb108b766c803e2b99f179ebe27005985"
@@ -2392,7 +2365,9 @@ dependencies = [
  "combine",
  "itoa",
  "percent-encoding",
+ "r2d2",
  "ryu",
+ "sha1_smol",
  "url",
 ]
 
@@ -2730,15 +2705,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
-]
-
-[[package]]
-name = "sha1"
-version = "0.6.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c1da05c97445caa12d05e848c4a4fcbbea29e748ac28f7e80e9b010392063770"
-dependencies = [
- "sha1_smol",
 ]
 
 [[package]]
