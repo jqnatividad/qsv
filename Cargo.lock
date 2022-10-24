@@ -1184,9 +1184,9 @@ dependencies = [
 
 [[package]]
 name = "h2"
-version = "0.3.14"
+version = "0.3.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5ca32592cf21ac7ccab1825cd87f6c9b3d9022c44d086172ed0966bec8af30be"
+checksum = "5f9f29bc9dda355256b2916cf526ab02ce0aeaaaf2bad60d65ef3f12f11dd0f4"
 dependencies = [
  "bytes",
  "fnv",
@@ -2106,7 +2106,7 @@ dependencies = [
 
 [[package]]
 name = "qsv"
-version = "0.69.0"
+version = "0.70.0"
 dependencies = [
  "actix-governor",
  "actix-web",
