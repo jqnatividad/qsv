@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Use rustfmt nightly to take advantage of advanced features like StdExternalCrate https://github.com/jqnatividad/qsv/pull/514 & https://github.com/jqnatividad/qsv/pull/517
 * Update benchmark-basic.sh by @minhajuddin2510 in https://github.com/jqnatividad/qsv/pull/542
 * Use fail macros more consistently https://github.com/jqnatividad/qsv/pull/545
+* Use Redis `ahash` feature for performance
 * Added wix file for future Windows Installer by @minhajuddin2510 in https://github.com/jqnatividad/qsv/pull/546
 * Bump console from 0.15.1 to 0.15.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/512
 * Bump pyo3 from 0.17.1 to 0.17.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/522
