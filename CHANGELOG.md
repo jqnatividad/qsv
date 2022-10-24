@@ -5,6 +5,55 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.70.0] - 2022-10-24
+
+### Added
+* `apply`: additional operations - `squeeze0`, `strip_prefix` and `strip_suffix` https://github.com/jqnatividad/qsv/pull/518 & https://github.com/jqnatividad/qsv/pull/519
+* `apply`: add `calcconv` subcommand, which parses & evaluate math expressions, with support for units & conversions. https://github.com/jqnatividad/qsv/pull/560
+
+### Changed
+* `search` & `searchset`: make match count optional https://github.com/jqnatividad/qsv/pull/526
+* `jsonl`: remove panic and do proper error handling; add  --ignore-errors option https://github.com/jqnatividad/qsv/pull/531
+* `py`: py command does not do aggregations (reduce) operations https://github.com/jqnatividad/qsv/pull/548
+* `lua` & `luajit` can do aggregations across CSV rows and `py` cannot https://github.com/jqnatividad/qsv/pull/549
+* `py`: add more complex f-string formatting example https://github.com/jqnatividad/qsv/pull/556
+* Standardize ignore case option https://github.com/jqnatividad/qsv/pull/535
+* Use rustfmt nightly to take advantage of advanced features like StdExternalCrate https://github.com/jqnatividad/qsv/pull/514 & https://github.com/jqnatividad/qsv/pull/517
+* Update benchmark-basic.sh by @minhajuddin2510 in https://github.com/jqnatividad/qsv/pull/542
+* Use fail macros more consistently https://github.com/jqnatividad/qsv/pull/545
+* Added wix file for future Windows Installer by @minhajuddin2510 in https://github.com/jqnatividad/qsv/pull/546
+* Bump console from 0.15.1 to 0.15.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/512
+* Bump pyo3 from 0.17.1 to 0.17.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/522
+* Bump jql from 5.0.2 to 5.1.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/521
+* Bump titlecase from 2.2.0 to 2.2.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/534
+* Bump itoa from 1.0.3 to 1.0.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/533
+* Bump sysinfo from 0.26.4 to 0.26.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/554
+* Bump mlua from 0.8.3 to 0.8.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/540
+* Bump uuid from 1.1.2 to 1.2.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/539
+* Bump flexi_logger from 0.23.3 to 0.24.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/538
+* Bump serde_json from 1.0.85 to 1.0.86 by @dependabot in https://github.com/jqnatividad/qsv/pull/537
+* Bump actions/setup-python from 4.2.0 to 4.3.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/541
+* Bump filetime from 0.2.17 to 0.2.18 by @dependabot in https://github.com/jqnatividad/qsv/pull/559
+* Bump redis from 0.21.6 to 0.22.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/555
+* Bump cached from 0.39.0 to 0.40.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/561
+* Bump whatlang from 0.16.1 to 0.16.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/562
+* cargo update bump several indirect dependencies
+* Pin Rust nightly to 2022-10-22
+
+
+### Fixed
+* `excel`: xls float temporary workaround for #516 that was ultimately fixed in PR 558 https://github.com/jqnatividad/qsv/pull/520
+* `tojsonl`: escape newlines and double quotes. Fixes #552 https://github.com/jqnatividad/qsv/pull/553
+* `tojsonl`: better error handling; when checking stdin for utf8, make sure its not empty. Fixes #536 https://github.com/jqnatividad/qsv/pull/536
+
+### Removed
+* `excel`: removed xls float workaround now that calamine crate has been fixed. Fixes #516 removing need for PR 520 workaround. https://github.com/jqnatividad/qsv/pull/558
+* removed obsolete Rust Nightly workflow https://github.com/jqnatividad/qsv/commit/2a99318242040300130c323dc3e7df504a6e3b2e
+
+
+## New Contributors
+* @minhajuddin2510 made their first contribution in https://github.com/jqnatividad/qsv/pull/542
+
 ## [0.69.0] - 2022-09-28
 
 ### Added
