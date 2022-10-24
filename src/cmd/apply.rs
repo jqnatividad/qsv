@@ -192,13 +192,13 @@ inferred unit will be appended to the result.
 For a complete list of supported units, constants, operators and functions, see https://docs.rs/cpc
 
 Examples:
-$ qsv apply calcconv --formatstr '{col1} + {col2} * {col3}' -c result file.csv
+$ qsv apply calcconv --formatstr '{col1} + {col2} * {col3}' --new-column result file.csv
 
-$ qsv apply calcconv --formatstr '{col1} % 3' -c remainder file.csv
+$ qsv apply calcconv --formatstr '{col1} % 3' --new-column remainder file.csv
 
 $ qsv apply calcconv --formatstr '{col1}mb in gigabytes' -c gb file.csv
 
-$ qsv apply calcconv --formatstr '{col1}km + {col2}mi in meters' -c gb file.csv
+$ qsv apply calcconv --formatstr '{col1}km + {col2}mi in meters' -c meters file.csv
 
 $ qsv apply calcconv --formatstr '({col1} + {col2})km to light years <UNIT>' -c light_years file.csv
 
