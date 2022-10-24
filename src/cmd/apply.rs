@@ -460,8 +460,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             if !OPERATIONS.contains(op) {
                 return fail_clierror!("Unknown '{op}' operation");
             }
-            #[allow(clippy::useless_asref)]
-            match op.as_ref() {
+            match *op {
                 "replace" => {
                     if args.flag_comparand.is_empty() || args.flag_replacement.is_empty() {
                         return fail!(
