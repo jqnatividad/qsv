@@ -111,7 +111,7 @@ qsv_currency = { version = "0.5", optional = true }
 qsv-sniffer = { version = "0.5", features = ["runtime-dispatch-simd"] }
 rand = "0.8"
 rayon = "1.5"
-redis = { version = "0.21", default-features = false, optional = true }
+redis = { version = "0.22", default-features = false, optional = true }
 regex = "1"
 reqwest = { version = "0.11", features = [
     "blocking",
