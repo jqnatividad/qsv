@@ -111,9 +111,9 @@ Replace empty cells in file.csv Measurement column with 'None'.
 
 $ qsv apply emptyreplace Measurement --replacement None file.csv
 
-Replace empty cells in file.csv Measurement column with 'Unknown'.
+Replace empty cells in file.csv Measurement column with 'Unknown Measurement'.
 
-$ qsv apply emptyreplace --replacement Unknown Measurement file.csv
+$ qsv apply emptyreplace --replacement 'Unknown Measurement' file.csv
 
 DATEFMT
 Formats a recognized date column to a specified format using <--formatstr>. 
@@ -160,7 +160,7 @@ Create a new column 'mailing address' from 'house number', 'street', 'city' and 
 
 Create a new column 'FullName' from 'FirstName', 'MI', and 'LastName' columns:
 
-  $ qsv apply dynfmt --formatstr 'Sir/Madam {FirstName} {MI}. {LastName}' -c 'FullName' file.csv
+  $ qsv apply dynfmt --formatstr 'Sir/Madam {FirstName} {MI}. {LastName}' -c FullName file.csv
 
 GEOCODE
 Geocodes to the nearest city center point given a location column
