@@ -387,6 +387,45 @@ fn fetch_custom_invalid_header_error() {
 
     wrk.assert_err(&mut cmd);
 }
+#[test]
+fn fetch_custom_invalid_user_agent_error() {
+    let wrk = Workdir::new("fetch");
+    wrk.create(
+        "data.csv",
+        vec![svec!["URL"], svec!["http://httpbin.org/get"]],
+    );
+    let mut cmd = wrk.command("fetch");
+    cmd.arg("URL")
+        .arg("--user_agent")
+        .arg("Mozilla/5.0\t (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxversion") // embedded tab is not valid
+        .arg("data.csv");
+
+    let got: String = wrk.output_stderr(&mut cmd);
+    assert!(got.starts_with("Invalid header name"));
+
+    wrk.assert_err(&mut cmd);
+}
+
+#[test]
+fn fetch_custom_user_agent() {
+    let wrk = Workdir::new("fetch");
+    wrk.create(
+        "data.csv",
+        vec![svec!["URL"], svec!["http://httpbin.org/get"]],
+    );
+    let mut cmd = wrk.command("fetch");
+    cmd.arg("URL")
+        .arg("--user_agent")
+        .arg("Mozilla/5.0\t (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxversion")
+        .arg("--jql")
+        .arg(r#""headers"."user_agent""#)
+        .arg("data.csv");
+
+    let got = wrk.stdout::<String>(&mut cmd);
+    let expected =
+        "Mozilla/5.0\t (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxversion";
+    assert_eq!(got, expected);
+}
 
 #[test]
 fn fetch_custom_invalid_value_error() {
