@@ -101,7 +101,10 @@ fn apply_ops_upper_rename_invalid() {
         .arg("data.csv");
 
     let got: String = wrk.output_stderr(&mut cmd);
-    assert_eq!(got, "Invalid arguments.\n");
+    assert_eq!(
+        got,
+        "Number of new columns does not match input column selection.\n"
+    );
 }
 
 #[test]

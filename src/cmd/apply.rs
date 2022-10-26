@@ -404,7 +404,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if let Some(new_name) = args.flag_rename {
         let new_col_names = util::ColumnNameParser::new(&new_name).parse()?;
         if new_col_names.len() != sel.len() {
-            return fail!("Invalid arguments.");
+            return fail!("Number of new columns does not match input column selection.");
         }
         for (i, col_index) in sel.iter().enumerate() {
             headers = replace_column_value(&headers, *col_index, &new_col_names[i]);
@@ -693,7 +693,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     Ok(wtr.flush()?)
 }
 
-// validatte apply operations for required options
+// validate apply operations for required options
 fn validate_operations(
     operations: &Vec<&str>,
     flag_comparand: &String,
