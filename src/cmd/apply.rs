@@ -11,12 +11,18 @@ It has six subcommands:
  * calcconv - parse and evaluate math expressions, with support for units and conversions.
 
 OPERATIONS
-The series of operations must be given separated by commas as such:
+Multiple operations can be applied, with the comma-delimited operation series
+applied in order:
 
   trim => Trim the cell
   trim,upper => Trim the cell, then transform to uppercase
   lower,simdln => Lowercase the cell, then compute the normalized 
       Damerau-Levenshtein similarity to --comparand
+
+Operations support multi-column transformations. Just make sure the
+number of transformed columns with the --rename option is the same. e.g.:
+
+$ qsv apply operations trim,upper col1,col2,col3 -r newcol1,newcol2,newcol3 file.csv  
 
 Currently supported operations:
 
@@ -116,6 +122,8 @@ recognized date formats.
 See https://docs.rs/chrono/latest/chrono/format/strftime/ for 
 accepted date formats for --formatstr.
 Defaults to ISO 8601/RFC 3339 format when --formatstr is not specified.
+
+Datefmt also supports multi-column formatting.
 
 Examples:
 Format dates in Open Date column to ISO 8601/RFC 3339 format:
