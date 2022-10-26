@@ -192,22 +192,32 @@ inferred unit will be appended to the result.
 For a complete list of supported units, constants, operators and functions, see https://docs.rs/cpc
 
 Examples:
+Do simple arithmetic:
 $ qsv apply calcconv --formatstr '{col1} + {col2} * {col3}' --new-column result file.csv
 
+With support for operators like % and ^:
 $ qsv apply calcconv --formatstr '{col1} % 3' --new-column remainder file.csv
 
+Convert from one unit to another:
 $ qsv apply calcconv --formatstr '{col1}mb in gigabytes' -c gb file.csv
 
+Mix units and conversions are automatically done for you:
 $ qsv apply calcconv --formatstr '{col1}km + {col2}mi in meters' -c meters file.csv
 
+You can append the inferred unit at the end of the result by ending the expression with '<UNIT>':
 $ qsv apply calcconv --formatstr '({col1} + {col2})km to light years <UNIT>' -c light_years file.csv
 
-$ qsv apply calcconv --formatstr '{col1}m/s * {col2}mi/h in kilometers per h' -c kms_per_h file.csv
+You can even do complex temporal unit conversions:
+$ qsv apply calcconv --formatstr '{col1}m/s + {col2}mi/h in kilometers per h' -c kms_per_h file.csv
 
+Use functions - see https://docs.rs/cpc/latest/cpc/enum.FunctionIdentifier.html for list of functions:
 $ qsv apply calcconv --formatstr 'round(sqrt{col1}^4)! liters <UNIT>' -c liters file.csv
 
+Use percentages:
 $ qsv apply calcconv --formatstr '10% of abs(sin(pi)) horsepower to watts' -c watts file.csv
 
+And use very large numbers:
+$ qsv apply calcconv --formatstr '{col1} Billion Trillion * {col2} quadrillion vigintillion' -c num_atoms file.csv 
 
 For more extensive subcommand examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_apply.rs.
 
