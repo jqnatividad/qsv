@@ -200,6 +200,7 @@ $ qsv apply calcconv --formatstr '{col1} % 3' --new-column remainder file.csv
 
 Convert from one unit to another:
 $ qsv apply calcconv --formatstr '{col1}mb in gigabytes' -c gb file.csv
+$ qsv apply calcconv --formatstr '{col1} Fahrenheit in Celsius" -c metric_temperature file.csv
 
 Mix units and conversions are automatically done for you:
 $ qsv apply calcconv --formatstr '{col1}km + {col2}mi in meters' -c meters file.csv
