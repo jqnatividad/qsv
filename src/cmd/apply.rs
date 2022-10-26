@@ -40,15 +40,13 @@ Currently supported operations:
       https://daringfireball.net/2008/05/title_case 
   * censor_check: check if profanity is detected (boolean).
       Add additional comma-delimited profanities with -comparand. 
-  * censor: profanity filter. Add additional comma-delimited profanities 
-      with --comparand.
+  * censor: profanity filter. Add additional comma-delimited profanities with --comparand.
   * currencytonum: Gets the numeric value of a currency. Supports currency symbols
       (e.g. $,¥,£,€,֏,₱,₽,₪,₩,ƒ,฿,₫) and strings (e.g. USD, EUR, RMB, JPY, etc.). 
       Recognizes point, comma and space separators.
   * copy: Mark a column for copying
   * simdl: Damerau-Levenshtein similarity to --comparand
-  * simdln: Normalized Damerau-Levenshtein similarity to --comparand 
-     (between 0.0 & 1.0)
+  * simdln: Normalized Damerau-Levenshtein similarity to --comparand (between 0.0 & 1.0)
   * simjw: Jaro-Winkler similarity to --comparand (between 0.0 & 1.0)
   * simsd: Sørensen-Dice similarity to --comparand (between 0.0 & 1.0)
   * simhm: Hamming distance to --comparand. Num of positions characters differ.
@@ -63,8 +61,7 @@ Trim, then transform to uppercase the surname field.
 
   $ qsv apply operations trim,upper surname file.csv
 
-Trim, then transform to uppercase the surname field and
-rename the column uppercase_clean_surname.
+Trim, then transform to uppercase the surname field and rename the column uppercase_clean_surname.
 
   $ qsv apply operations trim,upper surname -r uppercase_clean_surname file.csv
 
@@ -82,18 +79,16 @@ Trim parentheses & brackets from the description field.
 
   $ qsv apply operations mtrim description --comparand '()<>' file.csv
 
-Replace ' and ' with ' & ' in the description field.u64
+Replace ' and ' with ' & ' in the description field.
 
   $ qsv apply replace description --comparand ' and ' --replacement ' & ' file.csv
 
-Extract the numeric value of the Salary column in a new
-column named Salary_num.
+Extract the numeric value of the Salary column in a new column named Salary_num.
 
   $ qsv apply operations currencytonum Salary -c Salary_num file.csv
 
-Compute the Normalized Damerau-Levenshtein similarity of
-the neighborhood column to the string 'Roxbury' and save
-it to a new column named dln_roxbury_score.
+Compute the Normalized Damerau-Levenshtein similarity of the neighborhood column to the string 'Roxbury'
+and save it to a new column named dln_roxbury_score.
 
   $ qsv apply operations lower,simdln neighborhood --comparand roxbury -c dln_roxbury_score boston311.csv
 
@@ -103,8 +98,7 @@ You can also use this subcommand command to make a copy of a column:
 
 EMPTYREPLACE
 Replace empty cells with <--replacement> string.
-Non-empty cells are not modified. See the `fill` command for more
-complex empty field operations.
+Non-empty cells are not modified. See the `fill` command for more complex empty field operations.
 
 Examples:
 Replace empty cells in file.csv Measurement column with 'None'.
@@ -212,7 +206,7 @@ You can even do complex temporal unit conversions:
 $ qsv apply calcconv --formatstr '{col1}m/s + {col2}mi/h in kilometers per h' -c kms_per_h file.csv
 
 Use functions - see https://docs.rs/cpc/latest/cpc/enum.FunctionIdentifier.html for list of functions:
-$ qsv apply calcconv --formatstr 'round(sqrt{col1}^4)! liters <UNIT>' -c liters file.csv
+$ qsv apply calcconv --formatstr 'round(sqrt{col1}^4)! liters' -c liters file.csv
 
 Use percentages:
 $ qsv apply calcconv --formatstr '10% of abs(sin(pi)) horsepower to watts' -c watts file.csv
