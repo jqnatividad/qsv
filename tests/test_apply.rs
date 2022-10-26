@@ -596,6 +596,33 @@ fn apply_ops_replace() {
 }
 
 #[test]
+fn apply_ops_replace_validation_error() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["description"],
+            svec!["THE quick brown fox jumped over the lazy dog."],
+            svec!["twinkle, twinkle brownie star, how I wonder what you are"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("replace")
+        .arg("description")
+        .arg("--replacement")
+        .arg("silver")
+        .arg("data.csv");
+
+    let got = wrk.output_stderr(&mut cmd);
+    assert_eq!(
+        got,
+        "--comparand (-C) and --replacement (-R) are required for replace operation.\n"
+    );
+    wrk.assert_err(&mut cmd);
+}
+
+#[test]
 fn apply_ops_regex_replace() {
     let wrk = Workdir::new("apply");
     wrk.create(
@@ -629,6 +656,33 @@ fn apply_ops_regex_replace() {
         svec!["Just enter SSN when prompted. Also try SSN if it doesn't work."],
     ];
     assert_eq!(got, expected);
+}
+
+#[test]
+fn apply_ops_regex_replace_validation_error() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["description"],
+            svec!["My SSN is 078-05-1120. Please do not share it."],
+            svec!["twinkle, twinkle brownie star, how I wonder what you are"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("regex_replace")
+        .arg("description")
+        .arg("--comparand")
+        .arg("(?:\\d{3}-\\d{2}-\\d{4})")
+        .arg("data.csv");
+
+    let got = wrk.output_stderr(&mut cmd);
+    assert_eq!(
+        got,
+        "--comparand (-C) and --replacement (-R) are required for regex_replace operation.\n"
+    );
+    wrk.assert_err(&mut cmd);
 }
 
 #[test]
@@ -723,6 +777,51 @@ fn apply_ops_chain() {
         svec!["HOPKINS"],
     ];
     assert_eq!(got, expected);
+}
+
+#[test]
+fn apply_ops_chain_validation_error() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![svec!["name"], svec!["   John       Paul   "], svec!["Mary"]],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("trim,upper,squeeze,simdl,simod")
+        .arg("name")
+        .arg("--comparand")
+        .arg("Joe")
+        .arg("-c")
+        .arg("new_column")
+        .arg("data.csv");
+
+    let got = wrk.output_stderr(&mut cmd);
+    assert_eq!(got, "you can only use censor, replace, regex_replace, strip, similarity, eudex or sentiment ONCE per operation series.\n");
+    wrk.assert_err(&mut cmd);
+}
+
+#[test]
+fn apply_ops_chain_validation_error_missing_comparand() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![svec!["name"], svec!["   John       Paul   "], svec!["Mary"]],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("trim,upper,squeeze,simdl,simod")
+        .arg("name")
+        .arg("-c")
+        .arg("new_column")
+        .arg("data.csv");
+
+    let got = wrk.output_stderr(&mut cmd);
+    assert_eq!(
+        got,
+        "--comparand (-C) and --new_column (-c) is required for similarity operations.\n"
+    );
+    wrk.assert_err(&mut cmd);
 }
 
 #[test]

@@ -435,7 +435,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         debug!("dynfmt_fields: {dynfmt_fields:?}  dynfmt_template: {dynfmt_template}");
     }
 
-    pub enum ApplySubCmd {
+    enum ApplySubCmd {
         Operations,
         DateFmt,
         DynFmt,
@@ -448,106 +448,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let lower_operations = args.arg_operations.to_lowercase();
     let operations: Vec<&str> = lower_operations.split(',').collect();
     let apply_cmd = if args.cmd_operations {
-        // validate specified operations
-        let mut censor_invokes = 0_u8;
-        let mut replace_invokes = 0_u8;
-        let mut regex_replace_invokes = 0_u8;
-        let mut sim_invokes = 0_u8;
-        let mut strip_invokes = 0_u8;
-        let mut eudex_invokes = 0_u8;
-        let mut sentiment_invokes = 0_u8;
-        for op in &operations {
-            if !OPERATIONS.contains(op) {
-                return fail_clierror!("Unknown '{op}' operation");
-            }
-            match *op {
-                "replace" => {
-                    if args.flag_comparand.is_empty() || args.flag_replacement.is_empty() {
-                        return fail!(
-                            "--comparand (-C) and --replacement (-R) are required for replace operation."
-                        );
-                    }
-                    replace_invokes += 1;
-                }
-                "regex_replace" => {
-                    if args.flag_comparand.is_empty() || args.flag_replacement.is_empty() {
-                        return fail!(
-                            "--comparand (-C) and --replacement (-R) are required for regex_replace operation."
-                        );
-                    }
-                    if regex_replace_invokes == 0 {
-                        let re = match regex::Regex::new(&args.flag_comparand) {
-                            Ok(re) => re,
-                            Err(err) => {
-                                return Err(CliError::Other(format!(
-                                    "regex_replace expression error: {err:?}"
-                                )))
-                            }
-                        };
-                        let _ = REGEX_REPLACE.set(re);
-                    }
-                    regex_replace_invokes += 1;
-                }
-                "copy" => {
-                    if args.flag_new_column.is_none() {
-                        return fail!("--new_column (-c) is required for copy operation.");
-                    }
-                }
-                "censor" | "censor_check" => {
-                    if args.flag_new_column.is_none() {
-                        return fail!("--new_column (-c) is required for censor operations.");
-                    }
-                    censor_invokes += 1;
-                }
-                "mtrim" | "mltrim" | "mrtrim" => {
-                    if args.flag_comparand.is_empty() {
-                        return fail!("--comparand (-C) is required for match trim operations.");
-                    }
-                }
-                "strip_prefix" | "strip_suffix" => {
-                    if args.flag_comparand.is_empty() {
-                        return fail!("--comparand (-C) is required for strip operations.");
-                    }
-                    strip_invokes += 1;
-                }
-                "simdl" | "simdln" | "simjw" | "simsd" | "simhm" | "simod" => {
-                    if args.flag_new_column.is_none() {
-                        return fail!("--new_column (-c) is required for similarity operations.");
-                    }
-                    sim_invokes += 1;
-                }
-                "eudex" => {
-                    if args.flag_new_column.is_none() {
-                        return fail!("--new_column (-c) is required for eudex.");
-                    }
-                    eudex_invokes += 1;
-                }
-                "sentiment" => {
-                    if args.flag_new_column.is_none() {
-                        return fail!("--new_column (-c) is required for sentiment operation.");
-                    }
-                    sentiment_invokes += 1;
-                }
-                "whatlang" => {
-                    if args.flag_new_column.is_none() {
-                        return fail!(
-                            "--new_column (-c) is required for whatlang language detection."
-                        );
-                    }
-                }
-                _ => {}
-            }
+        if let Some(validation_error) = validate_operations(
+            &operations,
+            &args.flag_comparand,
+            &args.flag_replacement,
+            &args.flag_new_column,
+        ) {
+            return validation_error;
         }
-        if censor_invokes > 1
-            || replace_invokes > 1
-            || regex_replace_invokes > 1
-            || sim_invokes > 1
-            || eudex_invokes > 1
-            || sentiment_invokes > 1
-            || strip_invokes > 1
-        {
-            return fail!("you can only use censor, replace, regex_replace, strip, similarity, eudex or sentiment ONCE per operation series.");
-        };
         ApplySubCmd::Operations
     } else if args.cmd_geocode {
         ApplySubCmd::Geocode
@@ -770,6 +678,127 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         util::finish_progress(&progress);
     }
     Ok(wtr.flush()?)
+}
+
+// validatte apply operations for required options
+fn validate_operations(
+    operations: &Vec<&str>,
+    flag_comparand: &String,
+    flag_replacement: &String,
+    flag_new_column: &Option<String>,
+) -> Option<Result<(), CliError>> {
+    let mut censor_invokes = 0_u8;
+    let mut replace_invokes = 0_u8;
+    let mut regex_replace_invokes = 0_u8;
+    let mut sim_invokes = 0_u8;
+    let mut strip_invokes = 0_u8;
+    let mut eudex_invokes = 0_u8;
+    let mut sentiment_invokes = 0_u8;
+    for op in operations {
+        if !OPERATIONS.contains(op) {
+            return Some(fail_clierror!("Unknown '{op}' operation"));
+        }
+        match *op {
+            "replace" => {
+                if flag_comparand.is_empty() || flag_replacement.is_empty() {
+                    return Some(fail!(
+                        "--comparand (-C) and --replacement (-R) are required for replace operation."
+                    ));
+                }
+                replace_invokes += 1;
+            }
+            "regex_replace" => {
+                if flag_comparand.is_empty() || flag_replacement.is_empty() {
+                    return Some(fail!(
+                        "--comparand (-C) and --replacement (-R) are required for regex_replace operation."
+                    ));
+                }
+                if regex_replace_invokes == 0 {
+                    let re = match regex::Regex::new(flag_comparand) {
+                        Ok(re) => re,
+                        Err(err) => {
+                            return Some(Err(CliError::Other(format!(
+                                "regex_replace expression error: {err:?}"
+                            ))))
+                        }
+                    };
+                    let _ = REGEX_REPLACE.set(re);
+                }
+                regex_replace_invokes += 1;
+            }
+            "copy" => {
+                if flag_new_column.is_none() {
+                    return Some(fail!("--new_column (-c) is required for copy operation."));
+                }
+            }
+            "censor" | "censor_check" => {
+                if flag_new_column.is_none() {
+                    return Some(fail!(
+                        "--new_column (-c) is required for censor operations."
+                    ));
+                }
+                censor_invokes += 1;
+            }
+            "mtrim" | "mltrim" | "mrtrim" => {
+                if flag_comparand.is_empty() {
+                    return Some(fail!(
+                        "--comparand (-C) is required for match trim operations."
+                    ));
+                }
+            }
+            "strip_prefix" | "strip_suffix" => {
+                if flag_comparand.is_empty() {
+                    return Some(fail!("--comparand (-C) is required for strip operations."));
+                }
+                strip_invokes += 1;
+            }
+            "simdl" | "simdln" | "simjw" | "simsd" | "simhm" | "simod" => {
+                if flag_comparand.is_empty() || flag_new_column.is_none() {
+                    return Some(fail!(
+                        "--comparand (-C) and --new_column (-c) is required for similarity operations."
+                    ));
+                }
+                sim_invokes += 1;
+            }
+            "eudex" => {
+                if flag_comparand.is_empty() || flag_new_column.is_none() {
+                    return Some(fail!(
+                        "--comparand (-C) and --new_column (-c) is required for eudex."
+                    ));
+                }
+                eudex_invokes += 1;
+            }
+            "sentiment" => {
+                if flag_new_column.is_none() {
+                    return Some(fail!(
+                        "--new_column (-c) is required for sentiment operation."
+                    ));
+                }
+                sentiment_invokes += 1;
+            }
+            "whatlang" => {
+                if flag_new_column.is_none() {
+                    return Some(fail!(
+                        "--new_column (-c) is required for whatlang language detection."
+                    ));
+                }
+            }
+            _ => {
+                // other operations have no required options
+            }
+        }
+    }
+    if censor_invokes > 1
+        || replace_invokes > 1
+        || regex_replace_invokes > 1
+        || sim_invokes > 1
+        || eudex_invokes > 1
+        || sentiment_invokes > 1
+        || strip_invokes > 1
+    {
+        return Some(fail!("you can only use censor, replace, regex_replace, strip, similarity, eudex or sentiment ONCE per operation series."));
+    };
+    None // no validation errors
 }
 
 #[inline]
