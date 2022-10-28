@@ -394,11 +394,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
     info!("RATE LIMIT: {rate_limit}");
 
-    let user_agent: Option<String> = match args.flag_user_agent {
-        Some(ua)=> Some(ua),
-        None => Some(util::DEFAULT_USER_AGENT.to_string()),
+    let user_agent: String = match args.flag_user_agent {
+        Some(ua) => ua,
+        None => util::DEFAULT_USER_AGENT.to_string(),
     };
-
 
     let http_headers: HeaderMap = {
         let mut map = HeaderMap::with_capacity(args.flag_http_header.len() + 1);

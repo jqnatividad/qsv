@@ -416,14 +416,14 @@ fn fetch_custom_user_agent() {
     let mut cmd = wrk.command("fetch");
     cmd.arg("URL")
         .arg("--user_agent")
-        .arg("Mozilla/5.0\t (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxversion")
+        .arg("Mozilla/5.0 (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxversion")
         .arg("--jql")
         .arg(r#""headers"."user_agent""#)
         .arg("data.csv");
 
     let got = wrk.stdout::<String>(&mut cmd);
     let expected =
-        "Mozilla/5.0\t (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxversion";
+        "Mozilla/5.0 (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxversion";
     assert_eq!(got, expected);
 }
 
