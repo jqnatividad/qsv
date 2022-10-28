@@ -83,7 +83,7 @@ impl fmt::Debug for SelectColumns {
 impl<'de> Deserialize<'de> for SelectColumns {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<SelectColumns, D::Error> {
         let raw = String::deserialize(d)?;
-        SelectColumns::parse(&raw).map_err(|e| D::Error::custom(&e))
+        SelectColumns::parse(&raw).map_err(D::Error::custom)
     }
 }
 
