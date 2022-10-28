@@ -73,6 +73,7 @@ crossbeam-channel = "0.5"
 csv = "1.1"
 csv-core = "0.1"
 csv-index = "0.1"
+data-encoding = { version = "2.3", optional = true}
 docopt = "1"
 dynfmt = { version = "0.1", default-features = false, features = [
     "curly",
@@ -190,6 +191,7 @@ apply = [
     "cached",
     "censor",
     "cpc",
+    "data-encoding",
     "dynfmt",
     "eudex",
     "hashbrown",
