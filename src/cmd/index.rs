@@ -52,7 +52,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let rconfig = Config::new(&Some(args.arg_input)).checkutf8(false);
     let mut rdr = rconfig.reader_file()?;
-    let mut wtr = io::BufWriter::new(fs::File::create(&pidx)?);
+    let mut wtr = io::BufWriter::new(fs::File::create(pidx)?);
     RandomAccessSimple::create(&mut rdr, &mut wtr)?;
     Ok(())
 }
