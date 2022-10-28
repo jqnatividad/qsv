@@ -106,7 +106,7 @@ fn read_regexset(filename: &String) -> io::Result<Vec<String>> {
         Ok(f) => BufReader::new(f).lines().collect(),
         Err(e) => Err(io::Error::new(
             io::ErrorKind::NotFound,
-            format!("Cannot open regexset file {filename} - {e}"),
+            format!("Cannot open regexset file {filename}: {e}"),
         )),
     }
 }

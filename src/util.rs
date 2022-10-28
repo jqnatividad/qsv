@@ -500,7 +500,7 @@ pub fn qsv_check_for_update() -> Result<bool, String> {
             Some(fs) => fs.to_string_lossy().into_owned(),
             None => return fail!("Can't get the exec stem name"),
         },
-        Err(e) => return fail_format!("Can't get the exec path - {e}"),
+        Err(e) => return fail_format!("Can't get the exec path: {e}"),
     };
 
     winfo!("Checking GitHub for updates...");
@@ -658,7 +658,7 @@ fn send_hwsurvey(
             .build()
         {
             Ok(c) => c,
-            Err(e) => return fail_format!("Cannot build hw_survey reqwest client - {e}"),
+            Err(e) => return fail_format!("Cannot build hw_survey reqwest client: {e}"),
         };
 
         match client

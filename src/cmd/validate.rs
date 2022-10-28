@@ -854,13 +854,13 @@ fn load_json(uri: &str) -> Result<String, String> {
             {
                 Ok(c) => c,
                 Err(e) => {
-                    return fail_format!("Cannot build reqwest client - {e}.");
+                    return fail_format!("Cannot build reqwest client: {e}.");
                 }
             };
 
             match client.get(url).send() {
                 Ok(response) => response.text().unwrap_or_default(),
-                Err(e) => return fail_format!("Cannot read JSON at url {url} - {e}."),
+                Err(e) => return fail_format!("Cannot read JSON at url {url}: {e}."),
             }
         }
         path => {
@@ -871,7 +871,7 @@ fn load_json(uri: &str) -> Result<String, String> {
                         .read_to_string(&mut buffer)
                         .unwrap_or_default();
                 }
-                Err(e) => return fail_format!("Cannot read JSON file {path} - {e}."),
+                Err(e) => return fail_format!("Cannot read JSON file {path}: {e}."),
             }
             buffer
         }

@@ -374,14 +374,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let header_name: HeaderName =
                 match HeaderName::from_lowercase(k.to_lowercase().as_bytes()) {
                     Ok(h) => h,
-                    Err(e) => return fail_clierror!("Invalid header name - {e}"),
+                    Err(e) => return fail_clierror!("Invalid header name: {e}"),
                 };
 
             // allocate new String for header value to put into map
             let v: String = String::from(vals[1].trim());
             let header_val: HeaderValue = match HeaderValue::from_str(v.as_str()) {
                 Ok(v) => v,
-                Err(e) => return fail_clierror!("Invalid header value - {e}"),
+                Err(e) => return fail_clierror!("Invalid header value: {e}"),
             };
 
             map.append(header_name, header_val);
@@ -603,7 +603,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
             final_response = match serde_json::from_str(&intermediate_redis_value) {
                 Ok(r) => r,
-                Err(e)=> return fail_clierror!("Cannot deserialize Redis cache value. Try flushing the Redis cache with --flushdb - {e}"),
+                Err(e)=> return fail_clierror!("Cannot deserialize Redis cache value. Try flushing the Redis cache with --flushdb: {e}"),
             };
             if !args.flag_cache_error && final_response.status_code != 200 {
                 let key = format!(
