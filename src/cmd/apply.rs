@@ -3,7 +3,7 @@ Apply a series of transformation functions to a given CSV column. This can be us
 perform typical data-wrangling tasks and/or to harmonize some values, etc.
 
 It has six subcommands:
- * operations - 29 string, format, currency, regex & NLP operators.
+ * operations - 31 string, format, currency, regex & NLP operators.
  * emptyreplace - replace empty cells with <--replacement> string.
  * datefmt - Formats a recognized date column to a specified format using <--formatstr>.
  * dynfmt - Dynamically constructs a new column from other columns using the <--formatstr> template.
