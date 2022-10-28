@@ -396,7 +396,7 @@ fn fetch_custom_invalid_user_agent_error() {
     );
     let mut cmd = wrk.command("fetch");
     cmd.arg("URL")
-        .arg("--user_agent")
+        .arg("--user-agent")
         .arg("Mozilla/5.0\t (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxversion") // embedded tab is not valid
         .arg("data.csv");
 
@@ -415,7 +415,7 @@ fn fetch_custom_user_agent() {
     );
     let mut cmd = wrk.command("fetch");
     cmd.arg("URL")
-        .arg("--user_agent")
+        .arg("--user-agent")
         .arg("Mozilla/5.0 (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxversion")
         .arg("--jql")
         .arg(r#""headers"."user_agent""#)
