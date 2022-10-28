@@ -140,6 +140,98 @@ fn apply_ops_upper_index_params() {
 }
 
 #[test]
+fn apply_ops_encode() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["name", "surname"],
+            svec!["John", "Cena"],
+            svec!["Mary", "Jane"],
+            svec!["Sue", "Bird"],
+            svec!["Hopkins", "Jade"],
+            svec![
+                "Long",
+                "the quick brown fox jumped over the lazy by the zigzag quarry site."
+            ],
+            svec!["With extended characters", "Y así mismo, aunque no son tan ágiles en el suelo como el vampiro común, son muy competentes al escalar por las ramas."],
+            svec!["Japanese", "Rust（ラスト）は並列かつマルチパラダイムのプログラミング言語である"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("encode")
+        .arg("surname")
+        .arg("--new-column")
+        .arg("encoded_surname")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["name", "surname", "encoded_surname"],
+        svec!["John", "Cena", "Q2VuYQ=="],
+        svec!["Mary", "Jane", "SmFuZQ=="],
+        svec!["Sue", "Bird", "QmlyZA=="],
+        svec!["Hopkins", "Jade", "SmFkZQ=="],
+        svec!["Long", "the quick brown fox jumped over the lazy by the zigzag quarry site.", 
+            "dGhlIHF1aWNrIGJyb3duIGZveCBqdW1wZWQgb3ZlciB0aGUgbGF6eSBieSB0aGUgemlnemFnIHF1YXJyeSBzaXRlLg=="],
+        svec!["With extended characters", "Y así mismo, aunque no son tan ágiles en el suelo como el vampiro común, son muy competentes al escalar por las ramas.", 
+            "WSBhc8OtIG1pc21vLCBhdW5xdWUgbm8gc29uIHRhbiDDoWdpbGVzIGVuIGVsIHN1ZWxvIGNvbW8gZWwgdmFtcGlybyBjb23Dum4sIHNvbiBtdXkgY29tcGV0ZW50ZXMgYWwgZXNjYWxhciBwb3IgbGFzIHJhbWFzLg=="],
+        svec!["Japanese", "Rust（ラスト）は並列かつマルチパラダイムのプログラミング言語である", 
+            "UnVzdO+8iOODqeOCueODiO+8ieOBr+S4puWIl+OBi+OBpOODnuODq+ODgeODkeODqeODgOOCpOODoOOBruODl+ODreOCsOODqeODn+ODs+OCsOiogOiqnuOBp+OBguOCiw=="],
+
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn apply_ops_decode() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["name", "surname", "encoded_surname"],
+            svec!["John", "Cena", "Q2VuYQ=="],
+            svec!["Mary", "Jane", "SmFuZQ=="],
+            svec!["Sue", "Bird", "QmlyZA=="],
+            svec!["Hopkins", "Jade", "SmFkZQ=="],
+            svec!["Long", "the quick brown fox jumped over the lazy by the zigzag quarry site.", 
+                "dGhlIHF1aWNrIGJyb3duIGZveCBqdW1wZWQgb3ZlciB0aGUgbGF6eSBieSB0aGUgemlnemFnIHF1YXJyeSBzaXRlLg=="],
+            svec!["With extended characters", "Y así mismo, aunque no son tan ágiles en el suelo como el vampiro común, son muy competentes al escalar por las ramas.", 
+                "WSBhc8OtIG1pc21vLCBhdW5xdWUgbm8gc29uIHRhbiDDoWdpbGVzIGVuIGVsIHN1ZWxvIGNvbW8gZWwgdmFtcGlybyBjb23Dum4sIHNvbiBtdXkgY29tcGV0ZW50ZXMgYWwgZXNjYWxhciBwb3IgbGFzIHJhbWFzLg=="],
+            svec!["Japanese", "Rust（ラスト）は並列かつマルチパラダイムのプログラミング言語である", 
+                "UnVzdO+8iOODqeOCueODiO+8ieOBr+S4puWIl+OBi+OBpOODnuODq+ODgeODkeODqeODgOOCpOODoOOBruODl+ODreOCsOODqeODn+ODs+OCsOiogOiqnuOBp+OBguOCiw=="],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("decode")
+        .arg("encoded_surname")
+        .arg("--new-column")
+        .arg("decoded_surname")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["name", "surname", "encoded_surname", "decoded_surname"],
+        svec!["John", "Cena", "Q2VuYQ==", "Cena"],
+        svec!["Mary", "Jane", "SmFuZQ==", "Jane"],
+        svec!["Sue", "Bird", "QmlyZA==", "Bird"],
+        svec!["Hopkins", "Jade", "SmFkZQ==", "Jade"],
+        svec!["Long", "the quick brown fox jumped over the lazy by the zigzag quarry site.", 
+            "dGhlIHF1aWNrIGJyb3duIGZveCBqdW1wZWQgb3ZlciB0aGUgbGF6eSBieSB0aGUgemlnemFnIHF1YXJyeSBzaXRlLg==",
+            "the quick brown fox jumped over the lazy by the zigzag quarry site."],
+        svec!["With extended characters", "Y así mismo, aunque no son tan ágiles en el suelo como el vampiro común, son muy competentes al escalar por las ramas.", 
+            "WSBhc8OtIG1pc21vLCBhdW5xdWUgbm8gc29uIHRhbiDDoWdpbGVzIGVuIGVsIHN1ZWxvIGNvbW8gZWwgdmFtcGlybyBjb23Dum4sIHNvbiBtdXkgY29tcGV0ZW50ZXMgYWwgZXNjYWxhciBwb3IgbGFzIHJhbWFzLg==",
+            "Y así mismo, aunque no son tan ágiles en el suelo como el vampiro común, son muy competentes al escalar por las ramas."],
+        svec!["Japanese", "Rust（ラスト）は並列かつマルチパラダイムのプログラミング言語である", 
+            "UnVzdO+8iOODqeOCueODiO+8ieOBr+S4puWIl+OBi+OBpOODnuODq+ODgeODkeODqeODgOOCpOODoOOBruODl+ODreOCsOODqeODn+ODs+OCsOiogOiqnuOBp+OBguOCiw==",
+            "Rust（ラスト）は並列かつマルチパラダイムのプログラミング言語である"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn apply_dynfmt() {
     let wrk = Workdir::new("apply");
     wrk.create(

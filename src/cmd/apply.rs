@@ -3,7 +3,7 @@ Apply a series of transformation functions to a given CSV column. This can be us
 perform typical data-wrangling tasks and/or to harmonize some values, etc.
 
 It has six subcommands:
- * operations - 29 string, format, currency, regex & NLP operators.
+ * operations - 31 string, format, currency, regex & NLP operators.
  * emptyreplace - replace empty cells with <--replacement> string.
  * datefmt - Formats a recognized date column to a specified format using <--formatstr>.
  * dynfmt - Dynamically constructs a new column from other columns using the <--formatstr> template.
@@ -61,6 +61,8 @@ Currently supported operations:
   * sentiment: Normalized VADER sentiment score (English only - between -1.0 to 1.0).
   * whatlang: Language Detection for 87 supported languages, see
        https://github.com/greyblake/whatlang-rs/blob/master/SUPPORTED_LANGUAGES.md
+  * encode64: base64 encode
+  * decode64: base64 decode
 
 Examples:
 Trim, then transform to uppercase the surname field.
@@ -92,6 +94,11 @@ Replace ' and ' with ' & ' in the description field.
 Extract the numeric value of the Salary column in a new column named Salary_num.
 
   $ qsv apply operations currencytonum Salary -c Salary_num file.csv
+
+Base64 encode the plaintext_col column and save the encoded value into new column named encoded_col
+and then decode it.
+
+  $ qsv apply operations encode plaintext_col -c encoded_col file.csv | qsv apply operations decode encode_col
 
 Compute the Normalized Damerau-Levenshtein similarity of the neighborhood column to the string 'Roxbury'
 and save it to a new column named dln_roxbury_score.
@@ -279,6 +286,7 @@ Common options:
 use cached::proc_macro::cached;
 use censor::{Censor, Sex, Zealous};
 use cpc::{eval, units::Unit};
+use data_encoding::BASE64;
 use dynfmt::Format;
 use eudex::Hash;
 use indicatif::{ProgressBar, ProgressDrawTarget};
@@ -339,6 +347,8 @@ static OPERATIONS: &[&str] = &[
     "eudex",
     "sentiment",
     "whatlang",
+    "encode",
+    "decode",
 ];
 
 #[derive(Deserialize, Debug)]
@@ -854,6 +864,16 @@ fn apply_operations(operations: &[&str], cell: &mut String, comparand: &str, rep
             }
             "mrtrim" => {
                 *cell = String::from(cell.trim_end_matches(comparand));
+            }
+            "encode" => {
+                *cell = BASE64.encode(cell.as_bytes());
+            }
+            "decode" => {
+                let mut output = vec![0; BASE64.decode_len(cell.len()).unwrap()];
+                *cell = match BASE64.decode_mut(cell.as_bytes(), &mut output) {
+                    Ok(len) => String::from_utf8(output[0..len].to_vec()).unwrap(),
+                    Err(e) => format!("decoding error: {e:?}"),
+                };
             }
             "strip_prefix" => {
                 if let Some(stripped) = cell.strip_prefix(comparand) {
