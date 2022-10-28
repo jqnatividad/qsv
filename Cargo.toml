@@ -73,7 +73,7 @@ crossbeam-channel = "0.5"
 csv = "1.1"
 csv-core = "0.1"
 csv-index = "0.1"
-data-encoding = { version = "2.3", optional = true}
+data-encoding = { version = "2.3", optional = true }
 docopt = "1"
 dynfmt = { version = "0.1", default-features = false, features = [
     "curly",
@@ -163,7 +163,6 @@ csv-core   = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-t
 csv-index  = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
 docopt     = { git = "https://github.com/jqnatividad/docopt.rs", branch = "perf-clippy-2021" }
 ext-sort   = { git = "https://github.com/jqnatividad/ext-sort-rs", branch = "master" }
-jsonschema = { git = "https://github.com/Stranger6667/jsonschema-rs", rev = "8ee79c57b3526b3318677e2010be50a8b44dba92" }
 tabwriter  = { git = "https://github.com/jqnatividad/tabwriter", branch = "tweaks" }
 
 [features]
