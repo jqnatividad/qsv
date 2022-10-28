@@ -3,7 +3,7 @@ Fetches data from web services for every row using HTTP Get.
 
 Fetch is integrated with `jql` to directly parse out values from an API JSON response.
 
-The URL column needs to be a fully qualified URL path. Alternatively, you can dynamically
+<url-column> needs to be a fully qualified URL path. Alternatively, you can dynamically
 construct URLs for each CSV record with the --url-template option (see Examples below).
 
 To use a proxy, please set env vars HTTP_PROXY and HTTPS_PROXY
@@ -17,7 +17,7 @@ By default, it will connect to a local Redis instance at redis://127.0.0.1:6379/
 with a cache expiry Time-to-Live (TTL) of 2,419,200 seconds (28 days),
 and cache hits NOT refreshing the TTL of cached values.
 
-Set the env vars QSV_REDIS_CONNSTR, QSV_REDIS_TTL_SECONDS and 
+Set the environment variables QSV_REDIS_CONNSTR, QSV_REDIS_TTL_SECONDS and 
 QSV_REDIS_TTL_REFRESH to change default Redis settings.
 
 EXAMPLES USING THE URL-COLUMN ARGUMENT:
@@ -98,7 +98,7 @@ Usage:
     qsv fetch --help
 
 Fetch options:
-    <url-column>               URL column to use.
+    <url-column>               Name of the column with the URL.
                                Mutually exclusive with --url-template.
     --url-template <template>  URL template to use. Use column names enclosed with
                                curly braces to insert the CSV data for a record.

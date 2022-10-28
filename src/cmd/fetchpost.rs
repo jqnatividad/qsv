@@ -4,7 +4,7 @@ As opposed to fetch, which uses HTTP Get.
 
 Fetchpost is integrated with `jql` to directly parse out values from an API JSON response.
 
-The URL column needs to be a fully qualified URL path. It can be specified as a column name
+<url-column> needs to be a fully qualified URL path. It can be specified as a column name
 from which the URL value will be retrieved for each record, or as the URL literal itself.
 
 To use a proxy, please set env vars HTTP_PROXY and HTTPS_PROXY
@@ -21,7 +21,7 @@ and cache hits NOT refreshing the TTL of cached values.
 Note that the default values are the same as the fetch command, except fetchpost creates the
 cache at database 2, as opposed to database 1 with fetch.
 
-Set the env vars QSV_FP_REDIS_CONNSTR, QSV_FP_REDIS_TTL_SECONDS and 
+Set the environment variables QSV_FP_REDIS_CONNSTR, QSV_FP_REDIS_TTL_SECONDS and 
 QSV_FP_REDIS_TTL_REFRESH respectively to change default Redis settings.
 
 EXAMPLES:
@@ -76,8 +76,8 @@ Usage:
     qsv fetchpost --help
 
 Fetch options:
-    <url-column>               If the argument starts with `http`, the URL to use.
-                               Otherwise, the name of the column with the URL.
+    <url-column>               Name of the column with the URL.
+                               Otherwise, if the argument starts with `http`, the URL to use.
     <column-list>              Comma-delimited list of columns to insert into the HTTP Post body.
                                Uses `qsv select` syntax - i.e. Columns can be referenced by index or 
                                by name if there is a header row (duplicate column names can be disambiguated
