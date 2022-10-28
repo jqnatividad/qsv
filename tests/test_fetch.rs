@@ -424,7 +424,7 @@ fn fetch_custom_user_agent() {
     let got = wrk.stdout::<String>(&mut cmd);
     let expected =
         "Mozilla/5.0 (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxversion";
-        wrk.assert_success(&mut cmd);
+    wrk.assert_success(&mut cmd);
 }
 
 #[test]
