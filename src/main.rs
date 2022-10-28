@@ -35,6 +35,8 @@
         clippy::similar_names,
         clippy::too_many_lines,
         clippy::struct_excessive_bools,
+        clippy::cognitive_complexity,
+        clippy::option_if_let_else,
     )
 )]
 
