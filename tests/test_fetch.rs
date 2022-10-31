@@ -417,8 +417,6 @@ fn fetch_custom_user_agent() {
     cmd.arg("URL")
         .arg("--user-agent")
         .arg("Mozilla/5.0 (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxversion")
-        .arg("--jql")
-        .arg(r#""headers"."user_agent""#)
         .arg("data.csv");
 
     let got = wrk.stdout::<String>(&mut cmd);
