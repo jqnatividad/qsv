@@ -397,8 +397,8 @@ fn fetch_custom_invalid_user_agent_error() {
     let mut cmd = wrk.command("fetch");
     cmd.arg("URL")
         .arg("--user-agent")
-        // ð, è and /n are invalid characters for header values
-        .arg("Mðzilla/5.0\n (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxvèrsion") 
+        // ð, è and \n are invalid characters for header values
+        .arg("Mðzilla/5.0\n (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxvèrsion")
         .arg("data.csv");
 
     let got: String = wrk.output_stderr(&mut cmd);
@@ -421,8 +421,6 @@ fn fetch_custom_user_agent() {
         .arg("data.csv");
 
     let got = wrk.stdout::<String>(&mut cmd);
-    // let expected =
-    //     "Mozilla/5.0 (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxversion";
     assert!(got.contains(
         "Mozilla/5.0 (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxversion"
     ));
