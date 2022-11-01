@@ -136,6 +136,7 @@ Fetch options:
                                the cached error is returned. Otherwise, the fetch is attempted again 
                                for --max-retries.
     --cookies                  Allow cookies.
+    --user-agent               Specify a custom user-agent 
     --report <d|s>             Creates a report of the fetch job. The report has the same name as the input file
                                with the ".fetch-report" suffix. 
                                There are two kinds of report - d for "detailed" & s for "short". The detailed
@@ -214,6 +215,7 @@ struct Args {
     flag_store_error:  bool,
     flag_cache_error:  bool,
     flag_cookies:      bool,
+    flag_user_agent:   Option<String>,
     flag_report:       String,
     flag_redis:        bool,
     flag_flushdb:      bool,
@@ -392,6 +394,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
     info!("RATE LIMIT: {rate_limit}");
 
+    let user_agent: String = match args.flag_user_agent {
+        Some(ua) => ua,
+        None => util::DEFAULT_USER_AGENT.to_string(),
+    };
+
     let http_headers: HeaderMap = {
         let mut map = HeaderMap::with_capacity(args.flag_http_header.len() + 1);
         for header in args.flag_http_header {
@@ -431,7 +438,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let client_timeout = time::Duration::from_secs(*TIMEOUT_SECS.get().unwrap_or(&30));
     let client = Client::builder()
-        .user_agent(util::DEFAULT_USER_AGENT)
+        .user_agent(user_agent)
         .default_headers(http_headers)
         .cookie_store(args.flag_cookies)
         .brotli(true)
