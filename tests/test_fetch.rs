@@ -494,6 +494,56 @@ fn fetchpost_custom_invalid_value_error() {
     wrk.assert_err(&mut cmd);
 }
 
+#[test]
+fn fetchpost_custom_invalid_user_agent_error() {
+    let wrk = Workdir::new("fetch");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["URL", "col1", "number col", "bool_col"],
+            svec!["https://httpbin.org/post", "a", "42", "true"],
+            svec!["https://httpbin.org/post", "b", "3.14", "false"],
+        ],
+    );
+    let mut cmd = wrk.command("fetchpost");
+    cmd.arg("URL")
+        .arg("1,2")
+        .arg("--user-agent")
+        // ð, è and \n are invalid characters for header values
+        .arg("Mðzilla/5.0\n (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxvèrsion")
+        .arg("data.csv");
+
+    let got: String = wrk.output_stderr(&mut cmd);
+    assert!(got.starts_with("Invalid user-agent"));
+
+    wrk.assert_err(&mut cmd);
+}
+
+#[test]
+fn fetchpost_custom_user_agent() {
+    let wrk = Workdir::new("fetch");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["URL", "col1", "number col", "bool_col"],
+            svec!["https://httpbin.org/post", "a", "42", "true"],
+            svec!["https://httpbin.org/post", "b", "3.14", "false"],
+        ],
+    );
+    let mut cmd = wrk.command("fetchpost");
+    cmd.arg("URL")
+        .arg("1,2")
+        .arg("--user-agent")
+        .arg("Mozilla/5.0 (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxversion")
+        .arg("data.csv");
+
+    let got = wrk.stdout::<String>(&mut cmd);
+    assert!(got.contains(
+        "Mozilla/5.0 (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxversion"
+    ));
+    wrk.assert_success(&mut cmd);
+}
+
 use std::{sync::mpsc, thread};
 
 use actix_web::{

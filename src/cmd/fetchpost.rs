@@ -72,7 +72,7 @@ $ qsv fetchpost https://httpbin.org/post col1-col3 data.csv --http-header "X-Api
 
 
 Usage:
-    qsv fetchpost <url-column> <column-list> [--jql <selector> | --jqlfile <file>] [--http-header <k:v>...] [options] [<input>]
+    qsv fetchpost (<url-column> <column-list>) [--jql <selector> | --jqlfile <file>] [--http-header <k:v>...] [options] [<input>]
     qsv fetchpost --help
 
 Fetch options:
@@ -117,6 +117,8 @@ Fetch options:
                                the cached error is returned. Otherwise, the fetch is attempted again
                                for --max-retries.
     --cookies                  Allow cookies.
+    --user-agent <agent>       Specify a custom user agent. Try to follow the syntax here -
+                               https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
     --report <d|s>             Creates a report of the fetchpost job. The report has the same name as the
                                input file with the ".fetchpost-report" suffix. 
                                There are two kinds of report - d for "detailed" & s for "short". The detailed
@@ -194,6 +196,7 @@ struct Args {
     flag_store_error: bool,
     flag_cache_error: bool,
     flag_cookies:     bool,
+    flag_user_agent:  Option<String>,
     flag_report:      String,
     flag_redis:       bool,
     flag_flushdb:     bool,
@@ -360,6 +363,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
     info!("RATE LIMIT: {rate_limit}");
 
+    let user_agent = match args.flag_user_agent {
+        Some(ua) => match HeaderValue::from_str(ua.as_str()) {
+            Ok(_) => ua,
+            Err(e) => return fail_clierror!("Invalid user-agent value: {e}"),
+        },
+        None => util::DEFAULT_USER_AGENT.to_string(),
+    };
+    info!("USER-AGENT: {user_agent}");
+
     let http_headers: HeaderMap = {
         let mut map = HeaderMap::with_capacity(args.flag_http_header.len() + 1);
         for header in args.flag_http_header {
@@ -399,7 +411,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let client_timeout = time::Duration::from_secs(*TIMEOUT_FP_SECS.get().unwrap_or(&30));
     let client = Client::builder()
-        .user_agent(util::DEFAULT_USER_AGENT)
+        .user_agent(user_agent)
         .default_headers(http_headers)
         .cookie_store(args.flag_cookies)
         .brotli(true)
