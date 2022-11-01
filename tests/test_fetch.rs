@@ -397,11 +397,12 @@ fn fetch_custom_invalid_user_agent_error() {
     let mut cmd = wrk.command("fetch");
     cmd.arg("URL")
         .arg("--user-agent")
-        .arg("Mozilla/5.0\t (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxversion") // embedded tab is not valid
+        // ð, è and /n are invalid characters for header values
+        .arg("Mðzilla/5.0\n (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxvèrsion") 
         .arg("data.csv");
 
     let got: String = wrk.output_stderr(&mut cmd);
-    //#assert!(got.starts_with("Invalid header name"));
+    assert!(got.starts_with("Invalid user-agent"));
 
     wrk.assert_err(&mut cmd);
 }
@@ -420,8 +421,11 @@ fn fetch_custom_user_agent() {
         .arg("data.csv");
 
     let got = wrk.stdout::<String>(&mut cmd);
-    let expected =
-        "Mozilla/5.0 (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxversion";
+    // let expected =
+    //     "Mozilla/5.0 (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxversion";
+    assert!(got.contains(
+        "Mozilla/5.0 (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxversion"
+    ));
     wrk.assert_success(&mut cmd);
 }
 

@@ -136,7 +136,8 @@ Fetch options:
                                the cached error is returned. Otherwise, the fetch is attempted again 
                                for --max-retries.
     --cookies                  Allow cookies.
-    --user-agent               Specify a custom user-agent 
+    --user-agent <agent>       Specify a custom user agent. Try to follow the syntax here -
+                               https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
     --report <d|s>             Creates a report of the fetch job. The report has the same name as the input file
                                with the ".fetch-report" suffix. 
                                There are two kinds of report - d for "detailed" & s for "short". The detailed
@@ -394,10 +395,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
     info!("RATE LIMIT: {rate_limit}");
 
-    let user_agent: String = match args.flag_user_agent {
-        Some(ua) => ua,
+    let user_agent = match args.flag_user_agent {
+        Some(ua) => match HeaderValue::from_str(ua.as_str()) {
+            Ok(_) => ua,
+            Err(e) => return fail_clierror!("Invalid user-agent value: {e}"),
+        },
         None => util::DEFAULT_USER_AGENT.to_string(),
     };
+    info!("USER-AGENT: {user_agent}");
 
     let http_headers: HeaderMap = {
         let mut map = HeaderMap::with_capacity(args.flag_http_header.len() + 1);
