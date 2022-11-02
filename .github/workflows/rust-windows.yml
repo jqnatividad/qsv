@@ -25,6 +25,9 @@ jobs:
       uses: Swatinem/rust-cache@v1
       with:
         key: qsv-cache
+    - name: make empty DLLs directory to prevent spurious python warning
+      run: |
+        mkdir DLLs   
     - name: Run tests
       run: cargo test --verbose --locked --features=apply,fetch,foreach,generate,lua,python,full
     - name: Run luajit tests separately as its mutually exclusive with lua feature
