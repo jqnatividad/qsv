@@ -550,9 +550,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // amortize memory allocations
     // why optimize for mem & speed, when we're just doing single-threaded, throttled URL fetches?
-    // we still optimize since fetch is backed by a memoized cache
-    // (in memory or Redis, when --redis is used),
-    // so we want to return responses as fast as possible as we bypass the network request with a cache hit
+    // we still optimize since fetch is backed by a memoized cache (in memory or Redis, when --redis
+    // is used), so we want to return responses as fast as possible as we bypass the network
+    // request with a cache hit
     #[allow(unused_assignments)]
     let mut record = csv::ByteRecord::new();
     #[allow(unused_assignments)]
@@ -1000,8 +1000,8 @@ fn get_response(
 
         // debug!("final value: {final_value}");
 
-        // check if there's an API error (likely 503-service not available or 493-too many requests) or
-        // if the API has ratelimits and we need to do dynamic throttling to respect the limits
+        // check if there's an API error (likely 503-service not available or 493-too many requests)
+        // or if the API has ratelimits and we need to do dynamic throttling to respect limits
         if error_flag
             || (!api_respheader.is_empty()
                 && (api_respheader.contains_key("ratelimit-limit")
@@ -1103,8 +1103,8 @@ ratelimit_reset:{ratelimit_reset:?} {ratelimit_reset_sec:?} retry_after:{retry_a
                 break 'retry;
             }
 
-            // if there is only one more remaining call per our ratelimit quota or
-            // reset is greater than or equal to 1, dynamically throttle and sleep for ~reset seconds
+            // if there is only one more remaining call per our ratelimit quota or reset >= 1,
+            // dynamically throttle and sleep for ~reset seconds
             if remaining <= 1 || reset_secs >= 1 {
                 // we add a small random delta to how long fetch sleeps
                 // as we need to add a little jitter as per the spec to avoid thundering herd issues

@@ -66,10 +66,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
     // we're calling the schema command to infer data types and enums
     let schema_args = crate::cmd::schema::Args {
-        flag_enum_threshold:  3, // we only do three, as we're only inferring boolean based on enum
+        // we only do three, as we're only inferring boolean based on enum
+        flag_enum_threshold:  3,
         flag_strict_dates:    false,
         flag_pattern_columns: crate::select::SelectColumns::parse("")?,
-        flag_dates_whitelist: "none".to_string(), // json doesn't have a date type, so don't infer dates
+        // json doesn't have a date type, so don't infer dates
+        flag_dates_whitelist: "none".to_string(),
         flag_prefer_dmy:      false,
         flag_stdout:          false,
         flag_jobs:            Some(util::njobs(args.flag_jobs)),

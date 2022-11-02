@@ -169,8 +169,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     Ok(())
 }
 
-/// Builds JSON MAP object that corresponds to the "properties" object of JSON Schema (Draft 7) by looking at CSV value stats
-/// Supported JSON Schema validation vocabularies:
+/// Builds JSON MAP object that corresponds to the "properties" object of JSON Schema (Draft 7) by
+/// looking at CSV value stats Supported JSON Schema validation vocabularies:
 ///  * type
 ///  * enum
 ///  * minLength
@@ -554,7 +554,8 @@ fn generate_string_patterns(
 
     // return empty pattern map when:
     //  * no columns are selected
-    //  * all columns are selected (by default, all columns are selected when no columns are explicitly specified)
+    //  * all columns are selected (by default, all columns are selected when no columns are
+    //    explicitly specified)
     if sel.len() == 0 || sel.len() == headers.len() {
         debug!("no pattern columns selected");
         return Ok(pattern_map);

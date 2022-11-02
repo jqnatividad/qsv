@@ -203,7 +203,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     #[cfg(any(feature = "full", feature = "lite"))]
     if show_progress {
-        // for purpose of full file row count, prevent CSV reader to abort on inconsistent column count
+        // for full row count, prevent CSV reader from aborting on inconsistent column count
         rconfig = rconfig.flexible(true);
         let record_count = util::count_rows(&rconfig)?;
         rconfig = rconfig.flexible(false);
@@ -267,7 +267,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         row_number += 1;
                         record.push_field(row_number.to_string().as_bytes());
                         // non-allocating trimming in place is much faster on the record level
-                        // with our csv fork than doing field-by-field std::str::trim which is allocating
+                        // with our csv fork than doing per field std::str::trim which is allocating
                         record.trim();
                         batch.push(record.clone());
                     } else {
@@ -304,7 +304,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .collect_into_vec(&mut validation_results);
 
         // write to validation error report, but keep Vec<bool> to gen valid/invalid files later
-        // because Rayon collect() guaranteeds original order, can sequentially append results to vector with each batch
+        // because Rayon collect() guaranteeds original order, can sequentially append results to
+        // vector with each batch
         for result in &validation_results {
             if let Some(validation_error_msg) = result {
                 invalid_count += 1;
@@ -338,7 +339,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     // only write out invalid/valid/errors output files if there are actually invalid records.
-    // if 100% invalid, then valid file is not needed. but this is rare so live with creating empty file.
+    // if 100% invalid, valid file is not needed, but this is rare so OK with creating empty file.
     if invalid_count > 0 {
         let msg = "Writing invalid/valid/error files...";
         info!("{msg}");
@@ -448,7 +449,8 @@ fn write_error_report(input_path: &str, validation_error_messages: Vec<String>) 
     // write out error report
     for error_msg in validation_error_messages {
         output_writer.write_all(error_msg.as_bytes())?;
-        // since writer is buffered, it's more efficient to do additional write than append Newline to message
+        // since writer is buffered, it's more efficient to do additional write than append Newline
+        // to message
         output_writer.write_all(&[b'\n'])?;
     }
 
@@ -519,7 +521,7 @@ fn to_json_instance(
     for (i, header) in headers.iter().enumerate() {
         // convert csv header to string
         let header_string = unsafe { std::str::from_utf8_unchecked(header).to_string() };
-        // convert csv value to string; no trimming is done as that's done on the record level beforehand
+        // convert csv value to string; no trimming reqd as it's done on the record level beforehand
         let value_string = unsafe { std::str::from_utf8_unchecked(&record[i]).to_string() };
 
         // get json type from schema; defaults to STRING if not specified
