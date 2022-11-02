@@ -78,7 +78,7 @@ jobs:
         ref: ${{ needs.analyze-tags.outputs.previous-tag }}
     - uses: actions/setup-python@v4.3.0
       with:
-        python-version: '3.10'
+        python-version: '3.11'
     - name: build prep for x86_64-unknown-linux-musl
       if: ${{ matrix.job.musl-prep }}
       run: |
