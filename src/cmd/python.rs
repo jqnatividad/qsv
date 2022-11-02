@@ -66,8 +66,8 @@ Some usage examples:
   2,b2,b3,b4,7d594b33f82bdcbc1cfa6f924a84c4cd
   3,c2,c3,c4,6eabbfdbfd9ab6ae7737fb2b82f6a1af
 
-  NOTE: The prebuilt qsv binaries are linked against Python 3.10 and will require access
-  to the Python 3.10 shared libraries (libpython* on Linux/macOS, python*.dll on Windows)
+  NOTE: The prebuilt qsv binaries are linked against Python 3.11 and will require access
+  to the Python 3.11 shared libraries (libpython* on Linux/macOS, python*.dll on Windows)
   during runtime for the py command to run.
   
   Note that qsv with the `python` feature enabled will panic on startup even if you're not

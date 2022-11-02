@@ -55,7 +55,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [luajit](/src/cmd/luajit.rs#L2)[^1] | Execute a [LuaJIT](https://luajit.org/luajit.html) 2.0 (a Just-In-Time compiler for Lua 5.1) script over CSV lines to transform, aggregate or filter them. [LuaJIT is even faster still than Lua](https://luajit.org/performance_x86.html). |
 | [partition](/src/cmd/partition.rs#L2) | Partition a CSV based on a column value. |
 | [pseudo](/src/cmd/pseudo.rs#L2) | [Pseudonymise](https://en.wikipedia.org/wiki/Pseudonymization) the value of the given column by replacing them with an incremental identifier.  |
-| [py](/src/cmd/python.rs#L2)[^1] | Evaluate a Python expression over CSV lines to transform or filter them. Python's [f-strings](https://www.freecodecamp.org/news/python-f-strings-tutorial-how-to-use-f-strings-for-string-formatting/) is particularly useful for extended formatting, [with the ability to evaluate Python expressions as well](https://github.com/jqnatividad/qsv/blob/4cd00dca88addf0d287247fa27d40563b6d46985/src/cmd/python.rs#L23-L31).<br />Consider using the `lua`/`luajit` commands instead if you're having Python version issues ([Python 3.6 and up supported, with Python 3.10 required on prebuilt qsv](#python)) as it's much faster, embedded, can do aggregations & has no external dependencies. |
+| [py](/src/cmd/python.rs#L2)[^1] | Evaluate a Python expression over CSV lines to transform or filter them. Python's [f-strings](https://www.freecodecamp.org/news/python-f-strings-tutorial-how-to-use-f-strings-for-string-formatting/) is particularly useful for extended formatting, [with the ability to evaluate Python expressions as well](https://github.com/jqnatividad/qsv/blob/4cd00dca88addf0d287247fa27d40563b6d46985/src/cmd/python.rs#L23-L31).<br />Consider using the `lua`/`luajit` commands instead if you're having Python version issues ([Python 3.6 and up supported, with Python 3.11 required on prebuilt qsv](#python)) as it's much faster, embedded, can do aggregations & has no external dependencies. |
 | [rename](/src/cmd/rename.rs#L2) |  Rename the columns of a CSV efficiently.  |
 | [replace](/src/cmd/replace.rs#L2) | Replace CSV data using a regex.  |
 | [reverse](/src/cmd/reverse.rs#L2)[^3] | Reverse order of rows in a CSV. Unlike the `sort --reverse` command, it preserves the order of rows with the same key.  |
@@ -236,7 +236,7 @@ Note that this will happen as soon as the qsv binary is invoked, even if you're 
 If you don't need to run the `py` command, simply use `qsvnp` ("np" stands for "no python"), `qsvlite`, or `qsvdp`.
 
 If you need the `py` command, the [prebuilt qsv binary](https://github.com/jqnatividad/qsv/releases/latest) is compiled, as a policy,
-using the current stable Python minor version (currently Python 3.10) at the time of release.
+using the current stable Python minor version (currently Python 3.11) at the time of release.
 
 If you require a different Python version (Python 3.6 and up are supported), you'll need to install/compile from source, making sure you have
 the development libraries for the desired Python version installed when doing so.   
