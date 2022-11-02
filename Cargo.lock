@@ -186,9 +186,9 @@ dependencies = [
 
 [[package]]
 name = "ahash"
-version = "0.8.0"
+version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "57e6e951cfbb2db8de1828d49073a113a29fd7117b1596caa781a258c7e38d72"
+checksum = "464b3811b747f8f7ebc8849c9c728c39f6ac98a055edad93baf9eb330e3f8f9d"
 dependencies = [
  "cfg-if",
  "getrandom",
@@ -1126,8 +1126,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c05aeb6a22b8f62540c194aac980f2115af067bfe15a0734d7277a768d396b31"
 dependencies = [
  "cfg-if",
+ "js-sys",
  "libc",
  "wasi 0.11.0+wasi-snapshot-preview1",
+ "wasm-bindgen",
 ]
 
 [[package]]
@@ -1448,7 +1450,7 @@ version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6ca9e2b45609132ae2214d50482c03aeee78826cd6fd53a8940915b81acedf16"
 dependencies = [
- "ahash 0.8.0",
+ "ahash 0.8.1",
  "anyhow",
  "base64",
  "bytecount",
@@ -2117,7 +2119,7 @@ version = "0.70.0"
 dependencies = [
  "actix-governor",
  "actix-web",
- "ahash 0.8.0",
+ "ahash 0.8.1",
  "assert-json-diff",
  "byteorder",
  "cached",
@@ -2216,7 +2218,7 @@ version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "42430dc3eb41bb9d62cb2122cd9932711dc9cd8c2ea656f35a37cbc366991e3e"
 dependencies = [
- "ahash 0.8.0",
+ "ahash 0.8.1",
  "num-traits",
 ]
 
