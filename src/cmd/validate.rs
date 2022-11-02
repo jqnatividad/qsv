@@ -579,7 +579,8 @@ fn to_json_instance(
                     );
                 } else {
                     return fail_format!(
-                        "Can't cast into Float. header: {header_string}, value: {value_string}, json type: {json_type}"
+                        "Can't cast into Float. header: {header_string}, value: {value_string}, \
+                         json type: {json_type}"
                     );
                 }
             }
@@ -588,7 +589,8 @@ fn to_json_instance(
                     json_object_map.insert(header_string, Value::Number(Number::from(int)));
                 } else {
                     return fail_format!(
-                        "Can't cast into Integer. header: {header_string}, value: {value_string}, json type: {json_type}"
+                        "Can't cast into Integer. header: {header_string}, value: {value_string}, \
+                         json type: {json_type}"
                     );
                 }
             }
@@ -597,13 +599,15 @@ fn to_json_instance(
                     json_object_map.insert(header_string, Value::Bool(boolean));
                 } else {
                     return fail_format!(
-                        "Can't cast into Boolean. header: {header_string}, value: {value_string}, json type: {json_type}"
+                        "Can't cast into Boolean. header: {header_string}, value: {value_string}, \
+                         json type: {json_type}"
                     );
                 }
             }
             _ => {
                 return fail_format!(
-                    "Unsupported JSON type. header: {header_string}, value: {value_string}, json type: {json_type}"
+                    "Unsupported JSON type. header: {header_string}, value: {value_string}, json \
+                     type: {json_type}"
                 );
             }
         }

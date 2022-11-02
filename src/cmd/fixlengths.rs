@@ -57,10 +57,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         length
     } else {
         if config.is_stdin() {
-            return fail!(
-                "<stdin> cannot be used in this command. \
-                              Please specify a file path."
-            );
+            return fail!("<stdin> cannot be used in this command. Please specify a file path.");
         }
         let mut maxlen = 0usize;
         let mut rdr = config.reader()?;

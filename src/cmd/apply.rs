@@ -725,7 +725,8 @@ fn validate_operations(
             "replace" => {
                 if flag_comparand.is_empty() || flag_replacement.is_empty() {
                     return Some(fail!(
-                        "--comparand (-C) and --replacement (-R) are required for replace operation."
+                        "--comparand (-C) and --replacement (-R) are required for replace \
+                         operation."
                     ));
                 }
                 replace_invokes += 1;
@@ -733,7 +734,8 @@ fn validate_operations(
             "regex_replace" => {
                 if flag_comparand.is_empty() || flag_replacement.is_empty() {
                     return Some(fail!(
-                        "--comparand (-C) and --replacement (-R) are required for regex_replace operation."
+                        "--comparand (-C) and --replacement (-R) are required for regex_replace \
+                         operation."
                     ));
                 }
                 if regex_replace_invokes == 0 {
@@ -778,7 +780,8 @@ fn validate_operations(
             "simdl" | "simdln" | "simjw" | "simsd" | "simhm" | "simod" => {
                 if flag_comparand.is_empty() || flag_new_column.is_none() {
                     return Some(fail!(
-                        "--comparand (-C) and --new_column (-c) is required for similarity operations."
+                        "--comparand (-C) and --new_column (-c) is required for similarity \
+                         operations."
                     ));
                 }
                 sim_invokes += 1;
@@ -819,7 +822,10 @@ fn validate_operations(
         || sentiment_invokes > 1
         || strip_invokes > 1
     {
-        return Some(fail!("you can only use censor, replace, regex_replace, strip, similarity, eudex or sentiment ONCE per operation series."));
+        return Some(fail!(
+            "you can only use censor, replace, regex_replace, strip, similarity, eudex or \
+             sentiment ONCE per operation series."
+        ));
     };
     None // no validation errors
 }

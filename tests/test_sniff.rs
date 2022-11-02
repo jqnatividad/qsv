@@ -3,8 +3,7 @@ use crate::workdir::Workdir;
 static EXPECTED_TABLE: &str = "\
 h1       h2  h3
 abcdefg  1   a
-a        2   z\
-";
+a        2   z";
 
 fn data() -> Vec<Vec<String>> {
     vec![

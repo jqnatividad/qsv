@@ -838,11 +838,41 @@ fn fetchpost_simple_test() {
 
     let expected = vec![
         svec!["col1", "number col", "bool_col", "response"],
-        svec!["a", "42", "true", "{\"bool_col\": String(\"true\"), \"col1\": String(\"a\"), \"number col\": String(\"42\")}"],
-        svec!["b", "3.14", "false", "{\"bool_col\": String(\"false\"), \"col1\": String(\"b\"), \"number col\": String(\"3.14\")}"],
-        svec!["c", "666", "true", "{\"bool_col\": String(\"true\"), \"col1\": String(\"c\"), \"number col\": String(\"666\")}"],
-        svec!["d", "33", "true", "{\"bool_col\": String(\"true\"), \"col1\": String(\"d\"), \"number col\": String(\"33\")}"],
-        svec!["e", "0", "false", "{\"bool_col\": String(\"false\"), \"col1\": String(\"e\"), \"number col\": String(\"0\")}"],
+        svec![
+            "a",
+            "42",
+            "true",
+            "{\"bool_col\": String(\"true\"), \"col1\": String(\"a\"), \"number col\": \
+             String(\"42\")}"
+        ],
+        svec![
+            "b",
+            "3.14",
+            "false",
+            "{\"bool_col\": String(\"false\"), \"col1\": String(\"b\"), \"number col\": \
+             String(\"3.14\")}"
+        ],
+        svec![
+            "c",
+            "666",
+            "true",
+            "{\"bool_col\": String(\"true\"), \"col1\": String(\"c\"), \"number col\": \
+             String(\"666\")}"
+        ],
+        svec![
+            "d",
+            "33",
+            "true",
+            "{\"bool_col\": String(\"true\"), \"col1\": String(\"d\"), \"number col\": \
+             String(\"33\")}"
+        ],
+        svec![
+            "e",
+            "0",
+            "false",
+            "{\"bool_col\": String(\"false\"), \"col1\": String(\"e\"), \"number col\": \
+             String(\"0\")}"
+        ],
     ];
 
     assert_eq!(got_parsed, expected);
@@ -915,9 +945,27 @@ fn fetchpost_literalurl_test() {
 
     let expected = vec![
         svec!["col1", "number col", "bool_col", "response"],
-        svec!["a", "42", "true", "{\"bool_col\": String(\"true\"), \"col1\": String(\"a\"), \"number col\": String(\"42\")}"],
-        svec!["b", "3.14", "false", "{\"bool_col\": String(\"false\"), \"col1\": String(\"b\"), \"number col\": String(\"3.14\")}"],
-        svec!["c", "666", "true", "{\"bool_col\": String(\"true\"), \"col1\": String(\"c\"), \"number col\": String(\"666\")}"],
+        svec![
+            "a",
+            "42",
+            "true",
+            "{\"bool_col\": String(\"true\"), \"col1\": String(\"a\"), \"number col\": \
+             String(\"42\")}"
+        ],
+        svec![
+            "b",
+            "3.14",
+            "false",
+            "{\"bool_col\": String(\"false\"), \"col1\": String(\"b\"), \"number col\": \
+             String(\"3.14\")}"
+        ],
+        svec![
+            "c",
+            "666",
+            "true",
+            "{\"bool_col\": String(\"true\"), \"col1\": String(\"c\"), \"number col\": \
+             String(\"666\")}"
+        ],
     ];
 
     assert_eq!(got_parsed, expected);
@@ -956,9 +1004,36 @@ fn fetchpost_simple_report() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["url", "form", "status", "cache_hit", "retries", "response"],
-        svec!["https://httpbin.org/post", "{\"bool_col\": String(\"true\"), \"col1\": String(\"a\"), \"number_col\": String(\"42\")}", "200", "0", "0", "{\"bool_col\": String(\"true\"), \"col1\": String(\"a\"), \"number_col\": String(\"42\")}"],
-        svec!["https://httpbin.org/post", "{\"bool_col\": String(\"false\"), \"col1\": String(\"b\"), \"number_col\": String(\"3.14\")}", "200", "0", "0", "{\"bool_col\": String(\"false\"), \"col1\": String(\"b\"), \"number_col\": String(\"3.14\")}"],
-        svec!["https://httpbin.org/post", "{\"bool_col\": String(\"true\"), \"col1\": String(\"c\"), \"number_col\": String(\"666\")}", "200", "0", "0", "{\"bool_col\": String(\"true\"), \"col1\": String(\"c\"), \"number_col\": String(\"666\")}"],
+        svec![
+            "https://httpbin.org/post",
+            "{\"bool_col\": String(\"true\"), \"col1\": String(\"a\"), \"number_col\": \
+             String(\"42\")}",
+            "200",
+            "0",
+            "0",
+            "{\"bool_col\": String(\"true\"), \"col1\": String(\"a\"), \"number_col\": \
+             String(\"42\")}"
+        ],
+        svec![
+            "https://httpbin.org/post",
+            "{\"bool_col\": String(\"false\"), \"col1\": String(\"b\"), \"number_col\": \
+             String(\"3.14\")}",
+            "200",
+            "0",
+            "0",
+            "{\"bool_col\": String(\"false\"), \"col1\": String(\"b\"), \"number_col\": \
+             String(\"3.14\")}"
+        ],
+        svec![
+            "https://httpbin.org/post",
+            "{\"bool_col\": String(\"true\"), \"col1\": String(\"c\"), \"number_col\": \
+             String(\"666\")}",
+            "200",
+            "0",
+            "0",
+            "{\"bool_col\": String(\"true\"), \"col1\": String(\"c\"), \"number_col\": \
+             String(\"666\")}"
+        ],
     ];
 
     assert_eq!(got, expected);

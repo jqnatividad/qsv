@@ -86,7 +86,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         Some("xls" | "xlsx" | "xlsm" | "xlsb") => (),
         Some("ods") => ods_flag = true,
         _ => {
-            return fail_clierror!("The excel command supports the following workbook formats - xls, xlsx, xlsm, xlsb and ods.");
+            return fail_clierror!(
+                "The excel command supports the following workbook formats - xls, xlsx, xlsm, \
+                 xlsb and ods."
+            );
         }
     };
 

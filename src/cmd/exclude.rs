@@ -151,8 +151,8 @@ impl Args {
         let select2 = rconf2.selection(headers2)?;
         if select1.len() != select2.len() {
             return fail_clierror!(
-                "Column selections must have the same number of columns, \
-                 but found column selections with {} and {} columns.",
+                "Column selections must have the same number of columns, but found column \
+                 selections with {} and {} columns.",
                 select1.len(),
                 select2.len()
             );

@@ -146,12 +146,8 @@ impl Workdir {
         let o = cmd.output().unwrap();
         assert!(
             o.status.success(),
-            "\n\n===== {:?} =====\n\
-                    command failed but expected success!\
-                    \n\ncwd: {}\
-                    \n\nstatus: {}\
-                    \n\nstdout: {}\n\nstderr: {}\
-                    \n\n=====\n",
+            "\n\n===== {:?} =====\ncommand failed but expected success!\n\ncwd: {}\n\nstatus: \
+             {}\n\nstdout: {}\n\nstderr: {}\n\n=====\n",
             cmd,
             self.dir.display(),
             o.status,
@@ -164,12 +160,8 @@ impl Workdir {
         let o = cmd.output().unwrap();
         assert!(
             !o.status.success(),
-            "\n\n===== {:?} =====\n\
-                    command succeeded but expected failure!\
-                    \n\ncwd: {}\
-                    \n\nstatus: {}\
-                    \n\nstdout: {}\n\nstderr: {}\
-                    \n\n=====\n",
+            "\n\n===== {:?} =====\ncommand succeeded but expected failure!\n\ncwd: {}\n\nstatus: \
+             {}\n\nstdout: {}\n\nstderr: {}\n\n=====\n",
             cmd,
             self.dir.display(),
             o.status,

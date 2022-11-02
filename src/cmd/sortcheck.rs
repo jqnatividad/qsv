@@ -184,7 +184,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             ));
         } else {
             progress.set_message(format!(
-                " - {} of {} records checked before aborting. {} duplicates found so far. NOT sorted.",
+                " - {} of {} records checked before aborting. {} duplicates found so far. NOT \
+                 sorted.",
                 HumanCount(scan_ctr),
                 HumanCount(record_count),
                 HumanCount(dupe_count),

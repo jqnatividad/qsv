@@ -211,8 +211,7 @@ fn get_field_value(wrk: &Workdir, cmd: &mut process::Command, field: &str) -> St
         }
     }
     panic!(
-        "BUG: Could not find field '{}' in headers '{:?}' \
-            for command '{:?}'.",
+        "BUG: Could not find field '{}' in headers '{:?}' for command '{:?}'.",
         field, headers, cmd
     );
 }

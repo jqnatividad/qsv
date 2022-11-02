@@ -119,13 +119,17 @@ pub fn version() -> String {
         (Some(qsvtype), Some(maj), Some(min), Some(pat), Some(pre), Some(rustversion)) => {
             if pre.is_empty() {
                 format!(
-                    "{qsvtype} {maj}.{min}.{pat}-{malloc_kind}-{enabled_features}{maxjobs}-{numcpus} ({TARGET} compiled with Rust {rustversion}) {QSV_KIND}",
+                    "{qsvtype} {maj}.{min}.\
+                     {pat}-{malloc_kind}-{enabled_features}{maxjobs}-{numcpus} ({TARGET} compiled \
+                     with Rust {rustversion}) {QSV_KIND}",
                     maxjobs = max_jobs(),
                     numcpus = num_cpus()
                 )
             } else {
                 format!(
-                    "{qsvtype} {maj}.{min}.{pat}-{pre}-{malloc_kind}-{enabled_features}{maxjobs}-{numcpus} ({TARGET} compiled with Rust {rustversion}) {QSV_KIND}",
+                    "{qsvtype} {maj}.{min}.\
+                     {pat}-{pre}-{malloc_kind}-{enabled_features}{maxjobs}-{numcpus} ({TARGET} \
+                     compiled with Rust {rustversion}) {QSV_KIND}",
                     maxjobs = max_jobs(),
                     numcpus = num_cpus(),
                 )
@@ -360,8 +364,8 @@ pub fn range(start: Idx, end: Idx, len: Idx, index: Idx) -> Result<(usize, usize
             let s = start.unwrap_or(0);
             if s > e {
                 fail_format!(
-                    "The end of the range ({e}) must be greater than or\n\
-                             equal to the start of the range ({s})."
+                    "The end of the range ({e}) must be greater than or\nequal to the start of \
+                     the range ({s})."
                 )
             } else {
                 Ok((s, e))
@@ -561,9 +565,13 @@ pub fn qsv_check_for_update() -> Result<bool, String> {
             // we don't want to overwrite manually curated/configured qsv installations.
             // Just inform the user of the new release, and let them rebuild their qsvs the
             // way they like it, instead of overwriting it with our pre-built binaries.
-            winfo!("This qsv was {QSV_KIND}. self-update does not work for manually {QSV_KIND} binaries.\n
-            If you wish to update to the latest version of qsv, manually install/compile from source\n
-            or download the pre-built binaries from GitHub.");
+            winfo!(
+                "This qsv was {QSV_KIND}. self-update does not work for manually {QSV_KIND} \
+                 binaries.\n
+            If you wish to update to the latest version of qsv, manually install/compile from \
+                 source\n
+            or download the pre-built binaries from GitHub."
+            );
         }
     } else {
         winfo!("Up to date ({curr_version})... no update required.");

@@ -227,7 +227,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     record.push_field("");
                 }
                 _ => {
-                    return fail_clierror!("Unexpected value type returned by provided Lua expression. {computed_value:?}");
+                    return fail_clierror!(
+                        "Unexpected value type returned by provided Lua expression. \
+                         {computed_value:?}"
+                    );
                 }
             }
 

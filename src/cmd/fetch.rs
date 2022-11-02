@@ -410,7 +410,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let vals: Vec<&str> = header.split(':').collect();
 
             if vals.len() != 2 {
-                return fail_clierror!("{vals:?} is not a valid key-value pair. Expecting a key and a value separated by a colon.");
+                return fail_clierror!(
+                    "{vals:?} is not a valid key-value pair. Expecting a key and a value \
+                     separated by a colon."
+                );
             }
 
             // allocate new String for header key to put into map
@@ -645,7 +648,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
             final_response = match serde_json::from_str(&intermediate_redis_value) {
                 Ok(r) => r,
-                Err(e)=> return fail_clierror!("Cannot deserialize Redis cache value. Try flushing the Redis cache with --flushdb: {e}"),
+                Err(e) => {
+                    return fail_clierror!(
+                        "Cannot deserialize Redis cache value. Try flushing the Redis cache with \
+                         --flushdb: {e}"
+                    )
+                }
             };
             if !args.flag_cache_error && final_response.status_code != 200 {
                 let key = format!(
@@ -969,8 +977,9 @@ fn get_response(
                         }
                         Err(e) => {
                             error!(
-                        "jql error. json: {api_value:?}, selectors: {selectors:?}, error: {e:?}"
-                    );
+                                "jql error. json: {api_value:?}, selectors: {selectors:?}, error: \
+                                 {e:?}"
+                            );
 
                             if flag_store_error {
                                 final_value = e.to_string();
@@ -1044,8 +1053,12 @@ fn get_response(
             if log_enabled!(Debug) {
                 let rapidapi_proxy_response = api_respheader.get("X-RapidAPI-Proxy-Response");
 
-                debug!("api_status:{api_status:?} rate_limit_remaining:{ratelimit_remaining:?} {ratelimit_remaining_sec:?} \
-ratelimit_reset:{ratelimit_reset:?} {ratelimit_reset_sec:?} retry_after:{retry_after:?} rapid_api_proxy_response:{rapidapi_proxy_response:?}");
+                debug!(
+                    "api_status:{api_status:?} rate_limit_remaining:{ratelimit_remaining:?} \
+                     {ratelimit_remaining_sec:?} ratelimit_reset:{ratelimit_reset:?} \
+                     {ratelimit_reset_sec:?} retry_after:{retry_after:?} \
+                     rapid_api_proxy_response:{rapidapi_proxy_response:?}"
+                );
             }
 
             // if there's a ratelimit_remaining field in the response header, get it

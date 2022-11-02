@@ -27,8 +27,7 @@ h1  abcdef
 h2  ghijkl
 #
 h1  mnopqr
-h2  stuvwx\
-";
+h2  stuvwx";
     assert_eq!(got, expected.to_string());
 }
 
@@ -46,8 +45,7 @@ fn flatten_no_headers() {
 1   ghijkl
 #
 0   mnopqr
-1   stuvwx\
-";
+1   stuvwx";
     assert_eq!(got, expected.to_string());
 }
 
@@ -62,8 +60,7 @@ h1  abcdef
 h2  ghijkl
 !mysep!
 h1  mnopqr
-h2  stuvwx\
-";
+h2  stuvwx";
     assert_eq!(got, expected.to_string());
 }
 
@@ -78,7 +75,6 @@ h1  ab...
 h2  gh...
 #
 h1  mn...
-h2  st...\
-";
+h2  st...";
     assert_eq!(got, expected.to_string());
 }

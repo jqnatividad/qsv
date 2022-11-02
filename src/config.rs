@@ -426,8 +426,7 @@ impl Config {
             } else {
                 return Err(io::Error::new(
                     io::ErrorKind::Other,
-                    "The CSV file was modified after the index file. \
-                 Please re-create the index.",
+                    "The CSV file was modified after the index file. Please re-create the index.",
                 ));
             }
         }

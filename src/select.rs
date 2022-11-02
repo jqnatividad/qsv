@@ -296,8 +296,7 @@ impl Selector {
                     .collect();
                 if inds.is_empty() {
                     return fail_format!(
-                        "Selector regex '{re}' does not match \
-                                        any columns in the CSV header."
+                        "Selector regex '{re}' does not match any columns in the CSV header."
                     );
                 }
                 Ok(inds)
@@ -321,9 +320,7 @@ impl OneSelector {
                 }
                 if i < 1 || i > first_record.len() {
                     fail_format!(
-                        "Selector index {i} is out of \
-                                 bounds. Index must be >= 1 \
-                                 and <= {}.",
+                        "Selector index {i} is out of bounds. Index must be >= 1 and <= {}.",
                         first_record.len()
                     )
                 } else {
@@ -334,8 +331,7 @@ impl OneSelector {
             OneSelector::IndexedName(ref s, sidx) => {
                 if !use_names {
                     return fail_format!(
-                        "Cannot use names ('{s}') in selection \
-                                        with --no-headers set."
+                        "Cannot use names ('{s}') in selection with --no-headers set."
                     );
                 }
                 let mut num_found = 0;
@@ -349,14 +345,13 @@ impl OneSelector {
                 }
                 if num_found == 0 {
                     fail_format!(
-                        "Selector name '{s}' does not exist \
-                                 as a named header in the given CSV \
-                                 data."
+                        "Selector name '{s}' does not exist as a named header in the given CSV \
+                         data."
                     )
                 } else {
                     fail_format!(
-                        "Selector index '{sidx}' for name '{s}' is \
-                                 out of bounds. Must be >= 0 and <= {}.",
+                        "Selector index '{sidx}' for name '{s}' is out of bounds. Must be >= 0 \
+                         and <= {}.",
                         num_found - 1
                     )
                 }

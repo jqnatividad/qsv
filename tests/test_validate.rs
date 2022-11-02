@@ -128,11 +128,11 @@ fn validate_bad_csv_json() {
 }
 
 fn adur_errors() -> &'static str {
-    "row_number\tfield\terror\n\
-    1\tExtractDate\tnull is not of type \"string\"\n\
-    1\tOrganisationLabel\tnull is not of type \"string\"\n\
-    3\tCoordinateReferenceSystem\t\"OSGB3\" does not match \"(WGS84|OSGB36)\"\n\
-    3\tCategory\t\"Mens\" does not match \"(Female|Male|Female and Male|Unisex|Male urinal|Children only|None)\"\n"
+    "row_number\tfield\terror\n1\tExtractDate\tnull is not of type \
+     \"string\"\n1\tOrganisationLabel\tnull is not of type \
+     \"string\"\n3\tCoordinateReferenceSystem\t\"OSGB3\" does not match \
+     \"(WGS84|OSGB36)\"\n3\tCategory\t\"Mens\" does not match \"(Female|Male|Female and \
+     Male|Unisex|Male urinal|Children only|None)\"\n"
 }
 
 // invalid records with index from original csv

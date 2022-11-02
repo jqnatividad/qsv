@@ -154,8 +154,15 @@ fn apply_ops_encode() {
                 "Long",
                 "the quick brown fox jumped over the lazy by the zigzag quarry site."
             ],
-            svec!["With extended characters", "Y así mismo, aunque no son tan ágiles en el suelo como el vampiro común, son muy competentes al escalar por las ramas."],
-            svec!["Japanese", "Rust（ラスト）は並列かつマルチパラダイムのプログラミング言語である"],
+            svec![
+                "With extended characters",
+                "Y así mismo, aunque no son tan ágiles en el suelo como el vampiro común, son muy \
+                 competentes al escalar por las ramas."
+            ],
+            svec![
+                "Japanese",
+                "Rust（ラスト）は並列かつマルチパラダイムのプログラミング言語である"
+            ],
         ],
     );
     let mut cmd = wrk.command("apply");
@@ -252,7 +259,10 @@ fn apply_dynfmt() {
     let mut cmd = wrk.command("apply");
     cmd.arg("dynfmt")
         .arg("--formatstr")
-        .arg("{qty_fruit_day} helpings of {1fruit} is good for you, even if it costs ${unit_cost_usd} each. {1fruit}, all {qty_fruit_day} - is just worth it!")
+        .arg(
+            "{qty_fruit_day} helpings of {1fruit} is good for you, even if it costs \
+             ${unit_cost_usd} each. {1fruit}, all {qty_fruit_day} - is just worth it!",
+        )
         .arg("--new-column")
         .arg("saying")
         .arg("data.csv");
@@ -273,7 +283,8 @@ fn apply_dynfmt() {
             "a",
             "5",
             "z",
-            "20.5 helpings of mangoes is good for you, even if it costs $5 each. mangoes, all 20.5 - is just worth it!"
+            "20.5 helpings of mangoes is good for you, even if it costs $5 each. mangoes, all \
+             20.5 - is just worth it!"
         ],
         svec![
             "10",
@@ -281,7 +292,8 @@ fn apply_dynfmt() {
             "b",
             "20",
             "y",
-            "10 helpings of bananas is good for you, even if it costs $20 each. bananas, all 10 - is just worth it!"
+            "10 helpings of bananas is good for you, even if it costs $20 each. bananas, all 10 - \
+             is just worth it!"
         ],
         svec![
             "3",
@@ -289,7 +301,8 @@ fn apply_dynfmt() {
             "c",
             "3.50",
             "x",
-            "3 helpings of strawberries is good for you, even if it costs $3.50 each. strawberries, all 3 - is just worth it!"
+            "3 helpings of strawberries is good for you, even if it costs $3.50 each. \
+             strawberries, all 3 - is just worth it!"
         ],
     ];
     assert_eq!(got, expected);
@@ -892,7 +905,11 @@ fn apply_ops_chain_validation_error() {
         .arg("data.csv");
 
     let got = wrk.output_stderr(&mut cmd);
-    assert_eq!(got, "you can only use censor, replace, regex_replace, strip, similarity, eudex or sentiment ONCE per operation series.\n");
+    assert_eq!(
+        got,
+        "you can only use censor, replace, regex_replace, strip, similarity, eudex or sentiment \
+         ONCE per operation series.\n"
+    );
     wrk.assert_err(&mut cmd);
 }
 
@@ -1321,7 +1338,10 @@ fn apply_ops_sentiment() {
         vec![
             svec!["customer comment"],
             svec!["This is ridiculous! I will never buy from this company again!"],
-            svec!["Josephina was awesome! She was very helpful and patient. I wish more customer service folks are like her!"],
+            svec![
+                "Josephina was awesome! She was very helpful and patient. I wish more customer \
+                 service folks are like her!"
+            ],
             svec!["I can't believe that garbage is still out there. That is so false!"],
             svec!["5 stars! Highly recommended!"],
             svec!["What were they thinking!?!"],
@@ -1338,9 +1358,19 @@ fn apply_ops_sentiment() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["customer comment", "sentiment_score"],
-        svec!["This is ridiculous! I will never buy from this company again!", "-0.47384376462380107"],
-        svec!["Josephina was awesome! She was very helpful and patient. I wish more customer service folks are like her!", "0.9227060290926788"],
-        svec!["I can't believe that garbage is still out there. That is so false!", "-0.07518070500292766"],
+        svec![
+            "This is ridiculous! I will never buy from this company again!",
+            "-0.47384376462380107"
+        ],
+        svec![
+            "Josephina was awesome! She was very helpful and patient. I wish more customer \
+             service folks are like her!",
+            "0.9227060290926788"
+        ],
+        svec![
+            "I can't believe that garbage is still out there. That is so false!",
+            "-0.07518070500292766"
+        ],
         svec!["5 stars! Highly recommended!", "0.3973495344831422"],
         svec!["What were they thinking!?!", "-0.19353437967075598"],
     ];
@@ -1352,17 +1382,35 @@ fn apply_ops_whatlang() {
     let wrk = Workdir::new("apply");
     wrk.create(
         "data.csv",
-       vec![
+        vec![
             svec!["description"],
-            svec!["Y así mismo, aunque no son tan ágiles en el suelo como el vampiro común, son muy competentes al escalar por las ramas."],
+            svec![
+                "Y así mismo, aunque no son tan ágiles en el suelo como el vampiro común, son muy \
+                 competentes al escalar por las ramas."
+            ],
             svec!["See notes."],
-            svec!["Aquest és l’honor més gran que he rebut a la meva vida. La pau ha estat sempre la meva més gran preocupació."],
+            svec![
+                "Aquest és l’honor més gran que he rebut a la meva vida. La pau ha estat sempre \
+                 la meva més gran preocupació."
+            ],
             svec![""],
-            svec!["Showing that even in the modern warfare of the 1930s and 1940s, the dilapidated fortifications still had defensive usefulness."],
-            svec!["民國卅八年（ 1949年 ）， 從南京經 廣州 、 香港返回 香日德。 1950年6月 ，受十世班禪派遣， 前往西安代表班禪向彭德懷投誠 。"],
+            svec![
+                "Showing that even in the modern warfare of the 1930s and 1940s, the dilapidated \
+                 fortifications still had defensive usefulness."
+            ],
+            svec![
+                "民國卅八年（ 1949年 ）， 從南京經 廣州 、 香港返回 香日德。 1950年6月 \
+                 ，受十世班禪派遣， 前往西安代表班禪向彭德懷投誠 。"
+            ],
             svec!["Rust（ラスト）は並列かつマルチパラダイムのプログラミング言語である"],
-            svec!["Мой дядя самых честных правил, Когда не в шутку занемог, Он уважать себя заставил И лучше выдумать не мог."],
-            svec!["Kamusta na, pare!?! Matagal na tayong di nagkita! Ilang taon na since high school?!"],
+            svec![
+                "Мой дядя самых честных правил, Когда не в шутку занемог, Он уважать себя \
+                 заставил И лучше выдумать не мог."
+            ],
+            svec![
+                "Kamusta na, pare!?! Matagal na tayong di nagkita! Ilang taon na since high \
+                 school?!"
+            ],
         ],
     );
     let mut cmd = wrk.command("apply");
@@ -1376,16 +1424,42 @@ fn apply_ops_whatlang() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["description", "language"],
-        svec!["Y así mismo, aunque no son tan ágiles en el suelo como el vampiro común, son muy competentes al escalar por las ramas.", "Spa"],
+        svec![
+            "Y así mismo, aunque no son tan ágiles en el suelo como el vampiro común, son muy \
+             competentes al escalar por las ramas.",
+            "Spa"
+        ],
         svec!["See notes.", "Cat?"],
-        svec!["Aquest és l’honor més gran que he rebut a la meva vida. La pau ha estat sempre la meva més gran preocupació.", "Cat"],
+        svec![
+            "Aquest és l’honor més gran que he rebut a la meva vida. La pau ha estat sempre la \
+             meva més gran preocupació.",
+            "Cat"
+        ],
         svec!["", ""],
-        svec!["Showing that even in the modern warfare of the 1930s and 1940s, the dilapidated fortifications still had defensive usefulness.", "Eng"],
-        svec!["民國卅八年（ 1949年 ）， 從南京經 廣州 、 香港返回 香日德。 1950年6月 ，受十世班禪派遣， 前往西安代表班禪向彭德懷投誠 。", "Cmn"],
-        svec!["Rust（ラスト）は並列かつマルチパラダイムのプログラミング言語である", "Jpn"],
-        svec!["Мой дядя самых честных правил, Когда не в шутку занемог, Он уважать себя заставил И лучше выдумать не мог.", "Rus"],
-        svec!["Kamusta na, pare!?! Matagal na tayong di nagkita! Ilang taon na since high school?!", "Tgl"],
-  ];
+        svec![
+            "Showing that even in the modern warfare of the 1930s and 1940s, the dilapidated \
+             fortifications still had defensive usefulness.",
+            "Eng"
+        ],
+        svec![
+            "民國卅八年（ 1949年 ）， 從南京經 廣州 、 香港返回 香日德。 1950年6月 \
+             ，受十世班禪派遣， 前往西安代表班禪向彭德懷投誠 。",
+            "Cmn"
+        ],
+        svec![
+            "Rust（ラスト）は並列かつマルチパラダイムのプログラミング言語である",
+            "Jpn"
+        ],
+        svec![
+            "Мой дядя самых честных правил, Когда не в шутку занемог, Он уважать себя заставил И \
+             лучше выдумать не мог.",
+            "Rus"
+        ],
+        svec![
+            "Kamusta na, pare!?! Matagal na tayong di nagkita! Ilang taon na since high school?!",
+            "Tgl"
+        ],
+    ];
     assert_eq!(got, expected);
 }
 
@@ -1736,9 +1810,15 @@ fn apply_geocode() {
             svec!["(  40.819342, -73.9532127    )"],
             svec!["< 40.819342,-73.9532127 >"],
             svec!["This is not a Location and it will not be geocoded"],
-            svec!["The treasure is at these coordinates 40.66472342, -73.93867227. This should be geocoded."],
+            svec![
+                "The treasure is at these coordinates 40.66472342, -73.93867227. This should be \
+                 geocoded."
+            ],
             svec!["95.213424, 190,1234565"], // invalid lat, long
-            svec!["The coordinates are 40.66472342 latitude, -73.93867227 longitudue. This should NOT be geocoded."],
+            svec![
+                "The coordinates are 40.66472342 latitude, -73.93867227 longitudue. This should \
+                 NOT be geocoded."
+            ],
         ],
     );
     let mut cmd = wrk.command("apply");
@@ -1755,7 +1835,10 @@ fn apply_geocode() {
         svec!["This is not a Location and it will not be geocoded"],
         svec!["Brooklyn, New York"],
         svec!["95.213424, 190,1234565"], // invalid lat, long
-        svec!["The coordinates are 40.66472342 latitude, -73.93867227 longitudue. This should NOT be geocoded."],
+        svec![
+            "The coordinates are 40.66472342 latitude, -73.93867227 longitudue. This should NOT \
+             be geocoded."
+        ],
     ];
     assert_eq!(got, expected);
 }
