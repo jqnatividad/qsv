@@ -1,5 +1,8 @@
-static USAGE: &str = "
-Converts CSV to a newline-delimited JSON (JSONL/NDJSON).
+static USAGE: &str = r#"
+Smartly converts CSV to a newline-delimited JSON (JSONL/NDJSON).
+
+By scanning the CSV first, it "smartly" infers the appropriate JSON data type
+for each column. 
 
 Usage:
     qsv tojsonl [options] [<input>]
@@ -15,7 +18,7 @@ Common options:
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
     -o, --output <file>    Write output to <file> instead of stdout.
-";
+"#;
 
 use std::{borrow::Cow, env::temp_dir, fs::File, path::Path};
 

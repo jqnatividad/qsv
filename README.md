@@ -73,7 +73,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [split](/src/cmd/split.rs#L2)[^2][^4] | Split one CSV file into many CSV files of N chunks. (Uses multithreading to go faster if an index is present.) |
 | [stats](/src/cmd/stats.rs#L2)[^2][^3][^4] | Infer data type (Null, String, Float, Integer, Date, DateTime) & compute descriptive statistics for each column in a CSV (sum, min/max, min/max length, mean, stddev, variance, nullcount, quartiles, IQR, lower/upper fences, skewness, median, mode & cardinality). Uses multithreading to go faster if an index is present. |
 | [table](/src/cmd/table.rs#L2)[^3] | Show aligned output of a CSV using [elastic tabstops](https://github.com/BurntSushi/tabwriter).  |
-| [tojsonl](/src/cmd/tojsonl.rs#L2)[^4] | Converts CSV to a newline-delimited JSON (JSONL/NDJSON). See `jsonl` command to convert JSONL to CSV. |
+| [tojsonl](/src/cmd/tojsonl.rs#L2)[^4] | Smartly converts CSV to a newline-delimited JSON ([JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/)). By scanning the CSV first, it "smartly" infers the appropriate JSON data type for each column. See `jsonl` command to convert JSONL to CSV. |
 | [transpose](/src/cmd/transpose.rs#L2)[^3] | Transpose rows/columns of a CSV.  |
 | [validate](/src/cmd/validate.rs#L2)[^2][^5] | Validate CSV data with a JSON Schema (See `schema` command). If no jsonschema file is provided, validates if a CSV conforms to the [RFC 4180 standard](https://datatracker.ietf.org/doc/html/rfc4180). |
 
