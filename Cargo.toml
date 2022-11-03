@@ -103,6 +103,7 @@ mluajit = { package = "mlua", version = "0.8", features = [
     "luajit",
     "vendored",
 ], optional = true }
+num_cpus = "1"
 once_cell = { version = "1.16", features = ["parking_lot"] }
 parking_lot = { version = "0.12", features = ["hardware-lock-elision"] }
 pyo3 = { version = "0.17", features = ["auto-initialize"], optional = true }

@@ -30,7 +30,7 @@ macro_rules! regex_once_cell {
 
 #[inline]
 pub fn num_cpus() -> usize {
-    thread::available_parallelism().unwrap().get()
+    num_cpus::get()
 }
 
 pub static DEFAULT_USER_AGENT: &str = concat!(
