@@ -3,7 +3,7 @@ use crate::{workdir::Workdir, CsvRecord};
 fn compare_column(got: &[CsvRecord], expected: &[String], column: usize, skip_header: bool) {
     for (value, value_expected) in got
         .iter()
-        .skip(if skip_header { 1 } else { 0 })
+        .skip(usize::from(skip_header))
         .map(|row| &row[column])
         .zip(expected.iter())
     {
