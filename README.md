@@ -85,7 +85,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 
 ## Installation
 
-For macOS and Linux (64-bit), you can quickly install qsv with Homebrew:
+For [macOS and Linux (64-bit)](https://formulae.brew.sh/formula/qsv), you can quickly install qsv with [Homebrew](https://brew.sh):
 
 `brew install qsv`
 
