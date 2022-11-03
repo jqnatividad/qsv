@@ -12,7 +12,7 @@
 [![HomeBrew Installs](https://img.shields.io/homebrew/installs/dy/qsv?label=installs&logo=homebrew)](https://formulae.brew.sh/formula/qsv)
 [![Crates.io](https://img.shields.io/crates/v/qsv.svg?logo=crates.io)](https://crates.io/crates/qsv)
 [![Crates.io downloads](https://img.shields.io/crates/d/qsv?color=orange&label=crates.io%20downloads)](https://crates.io/crates/qsv)
-[![Minimum supported Rust version](https://img.shields.io/badge/Rust-1.64-red?logo=rust)](#minimum-supported-rust-version)
+[![Minimum supported Rust version](https://img.shields.io/badge/Rust-1.65-red?logo=rust)](#minimum-supported-rust-version)
 
 <div align="center">
 
@@ -160,7 +160,7 @@ access to a native python interpreter for those platforms (aarch64, i686, and ar
 
 ### Minimum Supported Rust Version
 
-qsv's MSRV policy is to require [Rust stable](https://github.com/rust-lang/rust/blob/master/RELEASES.md) - currently version 1.64.
+qsv's MSRV policy is to require [Rust stable](https://github.com/rust-lang/rust/blob/master/RELEASES.md) - currently version 1.65.
 
 ## Tab Completion
 
