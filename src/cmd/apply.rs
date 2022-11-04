@@ -388,7 +388,8 @@ static REGEX_REPLACE: OnceCell<Regex> = OnceCell::new();
 static SENTIMENT_ANALYZER: OnceCell<SentimentIntensityAnalyzer> = OnceCell::new();
 static WHATLANG_CONFIDENCE_THRESHOLD: OnceCell<f64> = OnceCell::new();
 
-const DEFAULT_WL_CON_THRESHOLD: f64 = 0.9;
+// default confidence threshold for whatlang language detection - 90% confidence
+const DEFAULT_THRESHOLD: f64 = 0.9;
 
 #[inline]
 pub fn replace_column_value(
@@ -818,7 +819,7 @@ fn validate_operations(
                 }
                 WHATLANG_CONFIDENCE_THRESHOLD
                     .set(if flag_comparand.is_empty() {
-                        DEFAULT_WL_CON_THRESHOLD
+                        DEFAULT_THRESHOLD
                     } else {
                         let preparsed_threshold;
                         let show_confidence = if flag_comparand.ends_with('?') {
@@ -830,11 +831,14 @@ fn validate_operations(
                         };
                         let desired_threshold = preparsed_threshold
                             .parse::<f64>()
-                            .unwrap_or(DEFAULT_WL_CON_THRESHOLD);
+                            .unwrap_or(DEFAULT_THRESHOLD);
+                        // desired threshold can be 0.0 to 1.0
                         let final_threshold = if (0.0..=1.0).contains(&desired_threshold) {
                             desired_threshold
                         } else {
-                            DEFAULT_WL_CON_THRESHOLD
+                            // its outside the valid range
+                            // just set it to the default threshold
+                            DEFAULT_THRESHOLD
                         };
                         if show_confidence {
                             final_threshold * -1.0
@@ -1012,9 +1016,9 @@ fn apply_operations(operations: &[&str], cell: &mut String, comparand: &str, rep
                             *cell = format!("{lang:?}({lang_confidence:.3})");
                         }
                     } else {
-                        // if confidence < confidence_threshold and is_reliable() is false,
-                        // do best-guessed language, confidence to 3 decimal places enclosed in
-                        // parens and end with a question mark
+                        // if confidence < confidence_threshold; show best-guessed language,
+                        // confidence to 3 decimal places enclosed in parens and
+                        // end with a question mark
                         *cell = format!("{lang:?}({lang_confidence:.3})?");
                     }
                 }
