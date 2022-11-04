@@ -22,10 +22,13 @@ pat="$1"
 bin_name=qsv
 datazip=/tmp/NYC_311_SR_2010-2020-sample-1M.7z
 data=NYC_311_SR_2010-2020-sample-1M.csv
+schema=NYC_311_SR_2010-2020-sample-1M.csv.schema.json
 commboarddata=communityboards.csv
 data_idx=NYC_311_SR_2010-2020-sample-1M.csv.idx
 data_to_exclude=data_to_exclude.csv
 searchset_patterns=searchset_patterns.txt
+urltemplate="http://localhost:4000/v1/search?text={Street Name}, {City}"
+jql='"features".[0]."properties"."label"'
 if [ ! -r "$data" ]; then
   printf "Downloading benchmarking data...\n"
   curl -sS https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/NYC_311_SR_2010-2020-sample-1M.7z > "$datazip"
@@ -170,3 +173,8 @@ run --index stats_everything_index "$bin_name" stats "$data" --everything
 run --index stats_everything_index_j1 "$bin_name" stats "$data" --everything -j 1
 run table "$bin_name" table "$data"
 run transpose "$bin_name" transpose "$data"
+run extsort "$bin_name" transpose "$data" test.csv
+run schema "$bin_name" schema "$data"
+run validate "$bin_name" validate "$data" "$schema"
+run fetch "$bin_name" fetch --url-template {$urltemplate} \--jql {$jql} ----max-retries 0 -c response 
+run luajit "$bin_name" luajit map location_empty "tonumber\(Location\)==nil" "$data" 
