@@ -907,8 +907,8 @@ fn apply_ops_chain_validation_error() {
     let got = wrk.output_stderr(&mut cmd);
     assert_eq!(
         got,
-        "you can only use censor, replace, regex_replace, strip, similarity, eudex or sentiment \
-         ONCE per operation series.\n"
+        "you can only use censor, replace, regex_replace, strip, similarity, eudex, sentiment and \
+         whatlang ONCE per operation series.\n"
     );
     wrk.assert_err(&mut cmd);
 }

@@ -726,6 +726,8 @@ fn validate_operations(
     let mut strip_invokes = 0_u8;
     let mut eudex_invokes = 0_u8;
     let mut sentiment_invokes = 0_u8;
+    let mut whatlang_invokes = 0_u8;
+
     for op in operations {
         if !OPERATIONS.contains(op) {
             return Some(fail_clierror!("Unknown '{op}' operation"));
@@ -751,9 +753,7 @@ fn validate_operations(
                     let re = match regex::Regex::new(flag_comparand) {
                         Ok(re) => re,
                         Err(err) => {
-                            return Some(Err(CliError::Other(format!(
-                                "regex_replace expression error: {err:?}"
-                            ))))
+                            return Some(fail_clierror!("regex_replace expression error: {err:?}"));
                         }
                     };
                     let _ = REGEX_REPLACE.set(re);
@@ -817,36 +817,40 @@ fn validate_operations(
                         "--new_column (-c) is required for whatlang language detection."
                     ));
                 }
-                WHATLANG_CONFIDENCE_THRESHOLD
-                    .set(if flag_comparand.is_empty() {
-                        DEFAULT_THRESHOLD
-                    } else {
-                        let preparsed_threshold;
-                        let show_confidence = if flag_comparand.ends_with('?') {
-                            preparsed_threshold = flag_comparand.trim_end_matches('?');
-                            true
-                        } else {
-                            preparsed_threshold = flag_comparand;
-                            false
-                        };
-                        let desired_threshold = preparsed_threshold
-                            .parse::<f64>()
-                            .unwrap_or(DEFAULT_THRESHOLD);
-                        // desired threshold can be 0.0 to 1.0
-                        let final_threshold = if (0.0..=1.0).contains(&desired_threshold) {
-                            desired_threshold
-                        } else {
-                            // its outside the valid range
-                            // just set it to the default threshold
+                whatlang_invokes += 1;
+
+                if whatlang_invokes == 1 {
+                    WHATLANG_CONFIDENCE_THRESHOLD
+                        .set(if flag_comparand.is_empty() {
                             DEFAULT_THRESHOLD
-                        };
-                        if show_confidence {
-                            final_threshold * -1.0
                         } else {
-                            final_threshold
-                        }
-                    })
-                    .unwrap();
+                            let preparsed_threshold;
+                            let show_confidence = if flag_comparand.ends_with('?') {
+                                preparsed_threshold = flag_comparand.trim_end_matches('?');
+                                true
+                            } else {
+                                preparsed_threshold = flag_comparand;
+                                false
+                            };
+                            let desired_threshold = preparsed_threshold
+                                .parse::<f64>()
+                                .unwrap_or(DEFAULT_THRESHOLD);
+                            // desired threshold can be 0.0 to 1.0
+                            let final_threshold = if (0.0..=1.0).contains(&desired_threshold) {
+                                desired_threshold
+                            } else {
+                                // its outside the valid range
+                                // just set it to the default threshold
+                                DEFAULT_THRESHOLD
+                            };
+                            if show_confidence {
+                                final_threshold * -1.0
+                            } else {
+                                final_threshold
+                            }
+                        })
+                        .unwrap();
+                }
             }
             _ => {
                 // other operations have no required options
@@ -860,10 +864,11 @@ fn validate_operations(
         || eudex_invokes > 1
         || sentiment_invokes > 1
         || strip_invokes > 1
+        || whatlang_invokes > 1
     {
         return Some(fail!(
-            "you can only use censor, replace, regex_replace, strip, similarity, eudex or \
-             sentiment ONCE per operation series."
+            "you can only use censor, replace, regex_replace, strip, similarity, eudex, sentiment \
+             and whatlang ONCE per operation series."
         ));
     };
     None // no validation errors
