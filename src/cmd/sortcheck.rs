@@ -28,12 +28,16 @@ sort options:
     -s, --select <arg>      Select a subset of columns to check for sort.
                             See 'qsv select --help' for the format details.
     -i, --ignore-case       Compare strings disregarding case
-    --all                   Check all records. Do not stop the check on the
-                            first unsorted record.
+    --all                   Check all records. Do not stop/short-circuit the check 
+                            on the first unsorted record.
     --json                  Return results in JSON format, scanning --all records. 
                             The JSON result has the following properties - 
                             sorted (boolean), record_count (number), 
                             unsorted_breaks (number) & dupe_count (number).
+                            Unsorted breaks count the number of times two consecutive
+                            rows are unsorted (i.e. n row > n+1 row).
+                            Dupe count is the number of times two consecutive
+                            rows are equal.
     --pretty-json           Same as --json but in pretty JSON format.
 
 Common options:
@@ -58,7 +62,7 @@ use crate::{
     cmd::{dedup, sort::iter_cmp},
     config::{Config, Delimiter},
     select::SelectColumns,
-    util, CliError, CliResult,
+    util, CliResult,
 };
 
 #[allow(dead_code)]
@@ -217,7 +221,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     if !sorted {
-        return Err(CliError::Other("not sorted".to_string()));
+        return fail_clierror!("not sorted");
     }
 
     Ok(())
