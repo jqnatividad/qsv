@@ -221,7 +221,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     if !sorted {
-        return fail_clierror!("not sorted");
+        return fail!("not sorted");
     }
 
     Ok(())

@@ -86,7 +86,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         Some("xls" | "xlsx" | "xlsm" | "xlsb") => (),
         Some("ods") => ods_flag = true,
         _ => {
-            return fail_clierror!(
+            return fail!(
                 "The excel command supports the following workbook formats - xls, xlsx, xlsm, \
                  xlsb and ods."
             );
@@ -112,7 +112,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         if ods_flag {
             return fail_clierror!("{path} may be password protected.");
         };
-        return fail_clierror!("No sheets found.");
+        return fail!("No sheets found.");
     }
     let num_sheets = sheet_names.len();
     let sheet_vec = sheet_names.to_owned();
