@@ -1429,13 +1429,189 @@ fn apply_ops_whatlang() {
              competentes al escalar por las ramas.",
             "Spa"
         ],
-        svec!["See notes.", "Cat?"],
+        svec!["See notes.", "Cat(0.031)?"],
         svec![
             "Aquest és l’honor més gran que he rebut a la meva vida. La pau ha estat sempre la \
              meva més gran preocupació.",
             "Cat"
         ],
         svec!["", ""],
+        svec![
+            "Showing that even in the modern warfare of the 1930s and 1940s, the dilapidated \
+             fortifications still had defensive usefulness.",
+            "Eng"
+        ],
+        svec![
+            "民國卅八年（ 1949年 ）， 從南京經 廣州 、 香港返回 香日德。 1950年6月 \
+             ，受十世班禪派遣， 前往西安代表班禪向彭德懷投誠 。",
+            "Cmn"
+        ],
+        svec![
+            "Rust（ラスト）は並列かつマルチパラダイムのプログラミング言語である",
+            "Jpn"
+        ],
+        svec![
+            "Мой дядя самых честных правил, Когда не в шутку занемог, Он уважать себя заставил И \
+             лучше выдумать не мог.",
+            "Rus"
+        ],
+        svec![
+            "Kamusta na, pare!?! Matagal na tayong di nagkita! Ilang taon na since high school?!",
+            "Tgl"
+        ],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn apply_ops_whatlang_high_confidence_threshold() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["description"],
+            svec![
+                "Y así mismo, aunque no son tan ágiles en el suelo como el vampiro común, son muy \
+                 competentes al escalar por las ramas."
+            ],
+            svec!["See notes."],
+            svec![
+                "Aquest és l’honor més gran que he rebut a la meva vida. La pau ha estat sempre \
+                 la meva més gran preocupació."
+            ],
+            svec!["amikor a Fafnir "],
+            svec![
+                "Showing that even in the modern warfare of the 1930s and 1940s, the dilapidated \
+                 fortifications still had defensive usefulness."
+            ],
+            svec![
+                "民國卅八年（ 1949年 ）， 從南京經 廣州 、 香港返回 香日德。 1950年6月 \
+                 ，受十世班禪派遣， 前往西安代表班禪向彭德懷投誠 。"
+            ],
+            svec!["Rust（ラスト）は並列かつマルチパラダイムのプログラミング言語である"],
+            svec![
+                "Мой дядя самых честных правил, Когда не в шутку занемог, Он уважать себя \
+                 заставил И лучше выдумать не мог."
+            ],
+            svec![
+                "Kamusta na, pare!?! Matagal na tayong di nagkita! Ilang taon na since high \
+                 school?!"
+            ],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("whatlang")
+        .arg("description")
+        .arg("--comparand")
+        .arg("0.95?")
+        .arg("--new-column")
+        .arg("language")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["description", "language"],
+        svec![
+            "Y así mismo, aunque no son tan ágiles en el suelo como el vampiro común, son muy \
+             competentes al escalar por las ramas.",
+            "Spa(1.000)"
+        ],
+        svec!["See notes.", "Cat(0.031)?"],
+        svec![
+            "Aquest és l’honor més gran que he rebut a la meva vida. La pau ha estat sempre la \
+             meva més gran preocupació.",
+            "Cat(1.000)"
+        ],
+        svec!["amikor a Fafnir ", "Por(0.011)?"],
+        svec![
+            "Showing that even in the modern warfare of the 1930s and 1940s, the dilapidated \
+             fortifications still had defensive usefulness.",
+            "Eng(1.000)"
+        ],
+        svec![
+            "民國卅八年（ 1949年 ）， 從南京經 廣州 、 香港返回 香日德。 1950年6月 \
+             ，受十世班禪派遣， 前往西安代表班禪向彭德懷投誠 。",
+            "Cmn(1.000)"
+        ],
+        svec![
+            "Rust（ラスト）は並列かつマルチパラダイムのプログラミング言語である",
+            "Jpn(1.000)"
+        ],
+        svec![
+            "Мой дядя самых честных правил, Когда не в шутку занемог, Он уважать себя заставил И \
+             лучше выдумать не мог.",
+            "Rus(1.000)"
+        ],
+        svec![
+            "Kamusta na, pare!?! Matagal na tayong di nagkita! Ilang taon na since high school?!",
+            "Tgl(1.000)"
+        ],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn apply_ops_whatlang_low_confidence_threshold() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["description"],
+            svec![
+                "Y así mismo, aunque no son tan ágiles en el suelo como el vampiro común, son muy \
+                 competentes al escalar por las ramas."
+            ],
+            svec!["See notes."],
+            svec![
+                "Aquest és l’honor més gran que he rebut a la meva vida. La pau ha estat sempre \
+                 la meva més gran preocupació."
+            ],
+            svec!["amikor a Fafnir "],
+            svec![
+                "Showing that even in the modern warfare of the 1930s and 1940s, the dilapidated \
+                 fortifications still had defensive usefulness."
+            ],
+            svec![
+                "民國卅八年（ 1949年 ）， 從南京經 廣州 、 香港返回 香日德。 1950年6月 \
+                 ，受十世班禪派遣， 前往西安代表班禪向彭德懷投誠 。"
+            ],
+            svec!["Rust（ラスト）は並列かつマルチパラダイムのプログラミング言語である"],
+            svec![
+                "Мой дядя самых честных правил, Когда не в шутку занемог, Он уважать себя \
+                 заставил И лучше выдумать не мог."
+            ],
+            svec![
+                "Kamusta na, pare!?! Matagal na tayong di nagkita! Ilang taon na since high \
+                 school?!"
+            ],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("whatlang")
+        .arg("description")
+        .arg("--comparand")
+        .arg("0.03")
+        .arg("--new-column")
+        .arg("language")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["description", "language"],
+        svec![
+            "Y así mismo, aunque no son tan ágiles en el suelo como el vampiro común, son muy \
+             competentes al escalar por las ramas.",
+            "Spa"
+        ],
+        svec!["See notes.", "Cat"],
+        svec![
+            "Aquest és l’honor més gran que he rebut a la meva vida. La pau ha estat sempre la \
+             meva més gran preocupació.",
+            "Cat"
+        ],
+        svec!["amikor a Fafnir ", "Por(0.011)?"],
         svec![
             "Showing that even in the modern warfare of the 1930s and 1940s, the dilapidated \
              fortifications still had defensive usefulness.",

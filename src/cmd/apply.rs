@@ -59,7 +59,12 @@ Currently supported operations:
   * simod: Optimal String Alignment (OSA) Distance to --comparand.
   * eudex: Multi-lingual sounds like --comparand (boolean)
   * sentiment: Normalized VADER sentiment score (English only - between -1.0 to 1.0).
-  * whatlang: Language Detection for 87 supported languages, see
+  * whatlang: Language Detection for 87 supported languages, with default confidence threshold
+       of 0.9, which can be overriden by assigning 0.0 to 1.0 to --comparand.
+       If language detection confidence is below the threshold, it will still show the best language
+       guess, followed by the confidence score, ending with a question mark.
+       If you want to always displays the confidence score, end the --comparand value with a
+       question mark (e.g. 0.9?)
        https://github.com/greyblake/whatlang-rs/blob/master/SUPPORTED_LANGUAGES.md
   * encode64: base64 encode
   * decode64: base64 decode
@@ -381,6 +386,9 @@ static GEOCODER: OnceCell<ReverseGeocoder> = OnceCell::new();
 static EUDEX_COMPARAND_HASH: OnceCell<eudex::Hash> = OnceCell::new();
 static REGEX_REPLACE: OnceCell<Regex> = OnceCell::new();
 static SENTIMENT_ANALYZER: OnceCell<SentimentIntensityAnalyzer> = OnceCell::new();
+static WHATLANG_CONFIDENCE_THRESHOLD: OnceCell<f64> = OnceCell::new();
+
+const DEFAULT_WL_CON_THRESHOLD: f64 = 0.9;
 
 #[inline]
 pub fn replace_column_value(
@@ -808,6 +816,33 @@ fn validate_operations(
                         "--new_column (-c) is required for whatlang language detection."
                     ));
                 }
+                WHATLANG_CONFIDENCE_THRESHOLD
+                    .set(if flag_comparand.is_empty() {
+                        DEFAULT_WL_CON_THRESHOLD
+                    } else {
+                        let preparsed_threshold;
+                        let show_confidence = if flag_comparand.ends_with('?') {
+                            preparsed_threshold = flag_comparand.trim_end_matches('?');
+                            true
+                        } else {
+                            preparsed_threshold = flag_comparand;
+                            false
+                        };
+                        let desired_threshold = preparsed_threshold
+                            .parse::<f64>()
+                            .unwrap_or(DEFAULT_WL_CON_THRESHOLD);
+                        let final_threshold = if (0.0..=1.0).contains(&desired_threshold) {
+                            desired_threshold
+                        } else {
+                            DEFAULT_WL_CON_THRESHOLD
+                        };
+                        if show_confidence {
+                            final_threshold * -1.0
+                        } else {
+                            final_threshold
+                        }
+                    })
+                    .unwrap();
             }
             _ => {
                 // other operations have no required options
@@ -966,12 +1001,21 @@ fn apply_operations(operations: &[&str], cell: &mut String, comparand: &str, rep
             "whatlang" => {
                 let lang_info = detect(cell);
                 if let Some(lang_info) = lang_info {
-                    if lang_info.is_reliable() && lang_info.confidence() >= 0.5 {
-                        *cell = format!("{:?}", lang_info.lang());
+                    let whatlang_confidence_threshold =
+                        *WHATLANG_CONFIDENCE_THRESHOLD.get().unwrap();
+                    let lang_confidence = lang_info.confidence();
+                    let lang = lang_info.lang();
+                    if lang_confidence >= whatlang_confidence_threshold.abs() {
+                        if whatlang_confidence_threshold >= 0.0 {
+                            *cell = format!("{lang:?}");
+                        } else {
+                            *cell = format!("{lang:?}({lang_confidence:.3})");
+                        }
                     } else {
-                        // if confidence < 0.5 and !is_reliable(),
-                        // do best-guessed language and add a question mark
-                        *cell = format!("{:?}?", lang_info.lang());
+                        // if confidence < confidence_threshold and is_reliable() is false,
+                        // do best-guessed language, confidence to 3 decimal places enclosed in
+                        // parens and end with a question mark
+                        *cell = format!("{lang:?}({lang_confidence:.3})?");
                     }
                 }
             }
@@ -998,7 +1042,7 @@ fn search_cached(cell: &str, formatstr: &str) -> Option<String> {
     loccaps.and_then(|loccaps| {
         let lat = loccaps[1].to_string().parse::<f64>().unwrap_or_default();
         let long = loccaps[2].to_string().parse::<f64>().unwrap_or_default();
-        if (-90.0..=90.00).contains(&lat) && (-180.0..=180.0).contains(&long) {
+        if (-90.0..=90.0).contains(&lat) && (-180.0..=180.0).contains(&long) {
             let search_result = geocoder.search((lat, long));
             search_result.map(|locdetails| {
                 #[allow(clippy::match_same_arms)]
