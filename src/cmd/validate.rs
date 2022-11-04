@@ -59,7 +59,7 @@ use thousands::Separable;
 
 use crate::{
     config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY},
-    util, CliError, CliResult,
+    util, CliResult,
 };
 
 // number of CSV rows to process in a batch
@@ -276,9 +276,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     }
                 }
                 Err(e) => {
-                    return Err(CliError::Other(format!(
-                        "Error reading row: {row_number}: {e}"
-                    )));
+                    return fail_clierror!("Error reading row: {row_number}: {e}");
                 }
             }
         }
