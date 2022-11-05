@@ -12,7 +12,7 @@ options. Similarly, --skip-lastlines allows epilog lines to be skipped.
 Finally, non-UTF8 encoded files are transcoded to UTF-8 with this command, replacing all
 invalid UTF-8 sequences with �.
 
-This command is typically used in the beginning of a data pipeline to prepare CSVs
+This command is typically used in the beginning of a data pipeline to normalize & prepare CSVs
 for further processing with other qsv commands.
 
 Usage:
