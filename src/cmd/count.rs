@@ -48,7 +48,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // );
 
     let (count, width) = if args.flag_width {
-        count_input(conf, args.flag_width)?
+        count_input(&conf, args.flag_width)?
     } else {
         match conf.indexed().unwrap_or_else(|_| {
             info!("index is stale");
@@ -58,7 +58,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 info!("index used");
                 (idx.count(), 0)
             }
-            None => count_input(conf, args.flag_width)?,
+            None => count_input(&conf, args.flag_width)?,
         }
     };
 
@@ -83,7 +83,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 }
 
 fn count_input(
-    conf: Config,
+    conf: &Config,
     compute_width: bool,
 ) -> Result<(u64, usize), crate::clitypes::CliError> {
     info!("counting...");
