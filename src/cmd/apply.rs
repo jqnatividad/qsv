@@ -591,7 +591,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     ApplySubCmd::EmptyReplace => {
                         let mut cell = record[column_index].to_owned();
                         if cell.trim().is_empty() {
-                            cell = args.flag_replacement.to_owned();
+                            cell = args.flag_replacement.clone();
                         }
                         if args.flag_new_column.is_some() {
                             record.push_field(&cell);
