@@ -164,7 +164,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 }
 
 impl Args {
-    #[allow(clippy::unnecessary_wraps)]
     pub fn sequential_stats(&self, whitelist: &str) -> CliResult<(csv::ByteRecord, Vec<Stats>)> {
         let mut rdr = self.rconfig().reader()?;
         let (headers, sel) = self.sel_headers(&mut rdr)?;
@@ -180,7 +179,6 @@ impl Args {
         Ok((headers, stats))
     }
 
-    #[allow(clippy::unnecessary_wraps)]
     pub fn parallel_stats(
         &self,
         whitelist: &str,
@@ -286,7 +284,6 @@ impl Args {
 
     #[inline]
     fn new_stats(&self, record_len: usize) -> Vec<Stats> {
-        #[allow(unused_assignments)]
         let mut stats: Vec<Stats> = Vec::with_capacity(record_len);
         stats.extend(
             repeat(Stats::new(WhichStats {
@@ -480,7 +477,6 @@ impl Stats {
         }
     }
 
-    #[allow(clippy::option_map_unit_fn)]
     #[inline]
     fn add(&mut self, sample: &[u8], infer_dates: bool) {
         let sample_type = FieldType::from_sample(infer_dates, sample);
@@ -499,7 +495,6 @@ impl Stats {
         if sample_type == TNull {
             self.nullcount += 1;
         }
-        #[allow(clippy::match_same_arms)]
         match self.typ {
             TNull => {
                 if self.which.include_nulls {
@@ -508,7 +503,6 @@ impl Stats {
                     };
                 }
             }
-            TString => {}
             TFloat | TInteger => {
                 if sample_type == TNull {
                     if self.which.include_nulls {
@@ -518,18 +512,18 @@ impl Stats {
                     }
                 } else {
                     let n = from_bytes::<f64>(sample);
-                    self.median.as_mut().map(|v| {
+                    if let Some(v) = self.median.as_mut() {
                         v.add(n);
-                    });
-                    self.quartiles.as_mut().map(|v| {
+                    }
+                    if let Some(v) = self.quartiles.as_mut() {
                         v.add(n);
-                    });
-                    self.online.as_mut().map(|v| {
+                    }
+                    if let Some(v) = self.online.as_mut() {
                         v.add(n);
-                    });
+                    }
                 }
             }
-            // process Date/DateTime types like String
+            // do nothing for String and Date/DateTime types
             _ => {}
         }
     }
@@ -689,7 +683,7 @@ impl Commute for Stats {
 }
 
 #[allow(clippy::enum_variant_names)]
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum FieldType {
     TNull,
     TString,
@@ -848,11 +842,10 @@ impl TypedSum {
 impl Commute for TypedSum {
     #[inline]
     fn merge(&mut self, other: TypedSum) {
+        #[allow(clippy::cast_precision_loss)]
         match (self.float, other.float) {
             (Some(f1), Some(f2)) => self.float = Some(f1 + f2),
-            #[allow(clippy::cast_precision_loss)]
             (Some(f1), None) => self.float = Some(f1 + (other.integer as f64)),
-            #[allow(clippy::cast_precision_loss)]
             (None, Some(f2)) => self.float = Some((self.integer as f64) + f2),
             (None, None) => self.integer = self.integer.saturating_add(other.integer),
         }
@@ -889,7 +882,6 @@ impl TypedMinMax {
                 };
 
                 self.floats.add(n);
-                #[allow(clippy::cast_precision_loss)]
                 self.integers.add(n as i64);
             }
             TInteger => {
@@ -933,11 +925,11 @@ impl TypedMinMax {
         match typ {
             TNull => None,
             TString => match (self.strings.min(), self.strings.max()) {
-                (Some(min), Some(max)) => unsafe {
-                    let min = String::from_utf8_unchecked((**min).to_vec());
-                    let max = String::from_utf8_unchecked((**max).to_vec());
+                (Some(min), Some(max)) => {
+                    let min = String::from_utf8_lossy(min).to_string();
+                    let max = String::from_utf8_lossy(max).to_string();
                     Some((min, max))
-                },
+                }
                 _ => None,
             },
             TInteger => match (self.integers.min(), self.integers.max()) {
@@ -979,12 +971,8 @@ impl Commute for TypedMinMax {
     }
 }
 
-#[allow(clippy::inline_always)]
-#[inline(always)]
-fn from_bytes<T: FromStr>(bytes: &[u8]) -> T
-where
-    <T as FromStr>::Err: std::fmt::Debug,
-{
+#[inline]
+fn from_bytes<T: FromStr>(bytes: &[u8]) -> T {
     // we don't need to do UTF-8 validation as qsv requires UTF-8 encoding
     unsafe { str::from_utf8_unchecked(bytes).parse().unwrap_unchecked() }
 }
