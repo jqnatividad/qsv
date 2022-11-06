@@ -40,7 +40,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // we also want to count the quotes when computing width
         .quoting(!args.flag_width);
 
-    // thie comment left here for Logging.md example
+    // this comment left here for Logging.md example
     // log::debug!(
     //     "input: {:?}, no_header: {}",
     //     (args.arg_input).clone().unwrap(),
