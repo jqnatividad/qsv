@@ -102,6 +102,21 @@ fn count_input(
             }
         }
     }
+    if compute_width {
+        while rdr.read_byte_record(&mut record)? {
+            count += 1;
+
+            let curr_width = record.as_slice().len();
+            if curr_width > max_width {
+                record_numfields = record.len();
+                max_width = curr_width;
+            }
+        }
+    } else {
+        while rdr.read_byte_record(&mut record)? {
+            count += 1;
+        }
+    }
     // record_numfields is a count of the delimiters
     // which we also want to count when returning width
     Ok((count, max_width + record_numfields))
