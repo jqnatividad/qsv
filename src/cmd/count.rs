@@ -92,16 +92,7 @@ fn count_input(
     let mut max_width = 0usize;
     let mut record_numfields = 0usize;
     let mut record = csv::ByteRecord::new();
-    while rdr.read_byte_record(&mut record)? {
-        count += 1;
-        if compute_width {
-            let curr_width = record.as_slice().len();
-            if curr_width > max_width {
-                record_numfields = record.len();
-                max_width = curr_width;
-            }
-        }
-    }
+
     if compute_width {
         while rdr.read_byte_record(&mut record)? {
             count += 1;
