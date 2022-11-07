@@ -225,7 +225,7 @@ $ qsv apply calcconv --formatstr '({col1} + {col2})km to light years <UNIT>' -c 
 You can even do complex temporal unit conversions:
 $ qsv apply calcconv --formatstr '{col1}m/s + {col2}mi/h in kilometers per h' -c kms_per_h file.csv
 
-Use functions - see https://docs.rs/cpc/latest/cpc/enum.FunctionIdentifier.html for list of functions:
+Use math functions - see https://docs.rs/cpc/latest/cpc/enum.FunctionIdentifier.html for list of functions:
 $ qsv apply calcconv --formatstr 'round(sqrt{col1}^4)! liters' -c liters file.csv
 
 Use percentages:
@@ -322,38 +322,39 @@ use crate::{
 // number of CSV rows to process in a batch
 const BATCH_SIZE: usize = 24_000;
 
+// ensure this is always sorted, as we do a binary_search on it
 static OPERATIONS: &[&str] = &[
+    "censor",
+    "censor_check",
+    "copy",
+    "currencytonum",
+    "decode",
+    "encode",
+    "eudex",
     "len",
     "lower",
-    "upper",
-    "squeeze",
-    "squeeze0",
-    "trim",
-    "rtrim",
     "ltrim",
-    "mtrim",
     "mltrim",
     "mrtrim",
+    "mtrim",
+    "regex_replace",
+    "replace",
+    "rtrim",
+    "sentiment",
+    "simdl",
+    "simdln",
+    "simhm",
+    "simjw",
+    "simod",
+    "simsd",
+    "squeeze",
+    "squeeze0",
     "strip_prefix",
     "strip_suffix",
     "titlecase",
-    "replace",
-    "regex_replace",
-    "censor_check",
-    "censor",
-    "currencytonum",
-    "copy",
-    "simdl",
-    "simdln",
-    "simjw",
-    "simsd",
-    "simhm",
-    "simod",
-    "eudex",
-    "sentiment",
+    "trim",
+    "upper",
     "whatlang",
-    "encode",
-    "decode",
 ];
 
 #[derive(Deserialize, Debug)]
@@ -729,7 +730,7 @@ fn validate_operations(
     let mut whatlang_invokes = 0_u8;
 
     for op in operations {
-        if !OPERATIONS.contains(op) {
+        if OPERATIONS.binary_search(op).is_err() {
             return Some(fail_clierror!("Unknown '{op}' operation"));
         }
         match *op {
