@@ -7,16 +7,13 @@
         // things are often more readable this way
         clippy::cast_lossless,
         clippy::module_name_repetitions,
-        clippy::single_match_else,
         clippy::type_complexity,
         clippy::zero_prefixed_literal,
         // correctly used
         clippy::derive_partial_eq_without_eq,
         clippy::enum_glob_use,
         clippy::let_underscore_drop,
-        clippy::map_err_ignore,
         clippy::result_unit_err,
-        clippy::wildcard_imports,
         // not practical
         clippy::similar_names,
         clippy::too_many_lines,
@@ -33,8 +30,6 @@
         clippy::must_use_candidate,
         clippy::use_self,
         clippy::similar_names,
-        clippy::too_many_lines,
-        clippy::struct_excessive_bools,
         clippy::cognitive_complexity,
         clippy::option_if_let_else,
     )
