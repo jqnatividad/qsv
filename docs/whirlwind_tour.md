@@ -246,7 +246,7 @@ $ qsv headers country_continent.csv
 That's more like it. We can now do a join to see which countries and continents these are:
 
 ```
-$ qsv join --no-case Country sample.csv iso2 country_continent.csv  | qsv table
+$ qsv join --ignore-case Country sample.csv iso2 country_continent.csv  | qsv table
 Country  AccentCity         Population  continent      code  country                                             iso2  iso3  number
 it       Isernia            21409       Europe         EU    Italy, Italian Republic                             IT    ITA   380
 lt       Ramygala           1637        Europe         EU    Lithuania, Republic of                              LT    LTU   440
@@ -275,7 +275,7 @@ No worries. Let's use the `select` (so we only get the columns we need, in the o
 `dedup` (so we only get unique County/City combinations) and `rename` (columns in titlecase) commands: 
 
 ```
-$ qsv join --no-case Country sample.csv iso2 country_continent.csv |
+$ qsv join --ignore-case Country sample.csv iso2 country_continent.csv |
     qsv select 'AccentCity,Population,country,continent' |
     qsv dedup --select 'country,AccentCity' |
     qsv rename City,Population,Country,Continent |
@@ -304,7 +304,7 @@ Indeed we can — because `qsv` is designed for speed - written in [Rust](https:
 performance-focused [mimalloc](https://github.com/microsoft/mimalloc) allocator.
 
 ```
-$ qsv join --no-case Country wcp.csv iso2 country_continent.csv |
+$ qsv join --ignore-case Country wcp.csv iso2 country_continent.csv |
     qsv search --select Population '[0-9]' |
     qsv select 'AccentCity,Population,country,continent,Latitude,Longitude' |
     qsv dedup --select 'country,AccentCity,Latitude,Longitude' --dupes-output wcp_dupes.csv |
