@@ -31,6 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Bump pyo3 from 0.17.2 to 0.17.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/573
 * Bump jql from 5.1.1 to 5.1.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/577
 * Bump num_cpus from 1.13.1 to 1.14.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/580
+* Bump mimalloc from 0.1.30 to 0.1.31
+* Bump indicatif from 0.17.1 to 0.17.2
 * cargo update bump several indirect dependencies
 * updated rustfmt.toml with comment and string formatting options
 * bump MSRV to 1.65.0
