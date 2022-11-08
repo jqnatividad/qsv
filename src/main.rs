@@ -29,7 +29,6 @@
         clippy::missing_errors_doc,
         clippy::must_use_candidate,
         clippy::use_self,
-        clippy::similar_names,
         clippy::cognitive_complexity,
         clippy::option_if_let_else,
     )
@@ -47,11 +46,45 @@ use crate::clitypes::{CliError, CliResult, QsvExitCode};
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-macro_rules! command_list {
-    () => {
-        "
-    apply*      Apply series of transformations to a column
-    behead      Drop header from CSV file
+mod clitypes;
+mod cmd;
+mod config;
+mod index;
+mod select;
+mod util;
+
+static USAGE: &str = "
+Usage:
+    qsv <command> [<args>...]
+    qsv [options]
+
+Options:
+    --list               List all commands available.
+    --envlist            List all qsv-relevant environment variables.
+    -u, --update         Update qsv to the latest release from GitHub.
+    -h, --help           Display this message
+    <command> -h         Display the command help message
+    -v, --version        Print version info, mem allocator, features installed, 
+                         max_jobs, num_cpus then exit
+
+* sponsored by datHere - Data Infrastructure Engineering
+";
+
+#[derive(Deserialize)]
+struct Args {
+    arg_command:  Option<Command>,
+    flag_list:    bool,
+    flag_envlist: bool,
+    flag_update:  bool,
+}
+
+fn main() -> QsvExitCode {
+    let mut enabled_commands = String::new();
+    #[cfg(all(feature = "apply", not(feature = "lite")))]
+    enabled_commands.push_str("    apply       Apply series of transformations to a column\n");
+
+    enabled_commands.push_str(
+        "    behead      Drop header from CSV file
     cat         Concatenate by row or column
     count       Count records
     dedup       Remove redundant rows
@@ -59,28 +92,56 @@ macro_rules! command_list {
     excel       Exports an Excel sheet to a CSV
     exclude     Excludes the records in one CSV from another
     explode     Explode rows based on some column separator
-    extsort     Sort arbitrarily large text file
-    fetch*      Fetches data from web services for every row using HTTP Get.
-    fetchpost*  Fetches data from web services for every row using HTTP Post.
-    fill        Fill empty values
+    extsort     Sort arbitrarily large text file\n",
+    );
+
+    #[cfg(all(feature = "fetch", not(feature = "lite")))]
+    enabled_commands.push_str(
+        "    fetch       Fetches data from web services for every row using HTTP Get.
+    fetchpost   Fetches data from web services for every row using HTTP Post.\n",
+    );
+
+    enabled_commands.push_str(
+        "    fill        Fill empty values
     fixlengths  Makes all records have same length
     flatten     Show one field per line
-    fmt         Format CSV output (change field delimiter)
-    foreach*    Loop over a CSV file to execute bash commands (*nix only)
-    frequency   Show frequency tables
-    generate*   Generate test data by profiling a CSV
-    headers     Show header names
+    fmt         Format CSV output (change field delimiter)\n",
+    );
+
+    #[cfg(all(feature = "foreach", not(feature = "lite")))]
+    enabled_commands
+        .push_str("    foreach     Loop over a CSV file to execute bash commands (*nix only)\n");
+
+    enabled_commands.push_str("    frequency   Show frequency tables\n");
+
+    #[cfg(all(feature = "generate", not(feature = "lite")))]
+    enabled_commands.push_str("    generate    Generate test data by profiling a CSV\n");
+
+    enabled_commands.push_str(
+        "    headers     Show header names
     help        Show this usage message
     index       Create CSV index for faster access
     input       Read CSVs w/ special quoting, skipping, trimming & transcoding rules
     join        Join CSV files
-    jsonl       Convert newline-delimited JSON files to CSV
-    lua*        Execute Lua 5.4 script on CSV data
-    luajit*     Execute LuaJIT 2.1 script on CSV data
-    partition   Partition CSV data based on a column value
-    pseudo      Pseudonymise the values of a column
-    py*         Evaluate a Python expression on CSV data
-    rename      Rename the columns of CSV data efficiently
+    jsonl       Convert newline-delimited JSON files to CSV\n",
+    );
+
+    #[cfg(all(feature = "lua", not(feature = "lite")))]
+    enabled_commands.push_str("    lua         Execute Lua 5.4 script on CSV data\n");
+
+    #[cfg(all(feature = "luajit", not(feature = "lite")))]
+    enabled_commands.push_str("    luajit      Execute LuaJIT 2.1 script on CSV data\n");
+
+    enabled_commands.push_str(
+        "    partition   Partition CSV data based on a column value
+    pseudo      Pseudonymise the values of a column\n",
+    );
+
+    #[cfg(all(feature = "python", not(feature = "lite")))]
+    enabled_commands.push_str("    py          Evaluate a Python expression on CSV data\n");
+
+    enabled_commands.push_str(
+        "    rename      Rename the columns of CSV data efficiently
     replace     Replace patterns in CSV data
     reverse     Reverse rows of CSV data
     sample      Randomly sample CSV data
@@ -97,49 +158,10 @@ macro_rules! command_list {
     table       Align CSV data into columns
     tojsonl     Convert CSV to newline-delimited JSON
     transpose   Transpose rows/columns of CSV data
-    validate    Validate CSV data for RFC4180-compliance or with JSON Schema
+    validate    Validate CSV data for RFC4180-compliance or with JSON Schema",
+    );
+    let num_commands = enabled_commands.split('\n').count();
 
-    * optional feature
-
-    sponsored by datHere - Data Infrastructure Engineering
-"
-    };
-}
-mod clitypes;
-mod cmd;
-mod config;
-mod index;
-mod select;
-mod util;
-
-static USAGE: &str = concat!(
-    "
-Usage:
-    qsv <command> [<args>...]
-    qsv [options]
-
-Options:
-    --list               List all commands available.
-    --envlist            List all qsv-relevant environment variables.
-    -u, --update         Update qsv to the latest release from GitHub.
-    -h, --help           Display this message
-    <command> -h         Display the command help message
-    -v, --version        Print version info, mem allocator, features installed, 
-                         max_jobs, num_cpus then exit
-
-* sponsored by datHere - Data Infrastructure Engineering
-"
-);
-
-#[derive(Deserialize)]
-struct Args {
-    arg_command:  Option<Command>,
-    flag_list:    bool,
-    flag_envlist: bool,
-    flag_update:  bool,
-}
-
-fn main() -> QsvExitCode {
     let now = Instant::now();
     let qsv_args = util::init_logger();
 
@@ -151,7 +173,12 @@ fn main() -> QsvExitCode {
         })
         .unwrap_or_else(|e| e.exit());
     if args.flag_list {
-        wout!(concat!("Installed commands:", command_list!()));
+        wout!("Installed commands ({num_commands}):");
+        wout!(
+            "{enabled_commands}\n
+sponsored by datHere - Data Infrastructure Engineering
+        "
+        );
         util::log_end(qsv_args, now);
         return QsvExitCode::Good;
     } else if args.flag_envlist {
@@ -169,12 +196,13 @@ fn main() -> QsvExitCode {
     }
     match args.arg_command {
         None => {
-            werr!(concat!(
+            werr!(
                 "qsv is a suite of CSV command line utilities.
 
-Please choose one of the following commands:",
-                command_list!()
-            ));
+Please choose one of the following {num_commands} commands:\n{enabled_commands}\n
+sponsored by datHere - Data Infrastructure Engineering
+"
+            );
             _ = util::qsv_check_for_update();
             util::log_end(qsv_args, now);
             QsvExitCode::Good
