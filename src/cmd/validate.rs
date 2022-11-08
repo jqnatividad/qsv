@@ -108,6 +108,25 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut rdr = rconfig.reader()?;
 
+    // prep progress bar
+    #[cfg(any(feature = "full", feature = "lite"))]
+    let progress = ProgressBar::with_draw_target(None, ProgressDrawTarget::stderr_with_hz(5));
+
+    #[cfg(any(feature = "full", feature = "lite"))]
+    let show_progress =
+        (args.flag_progressbar || std::env::var("QSV_PROGRESSBAR").is_ok()) && !rconfig.is_stdin();
+
+    #[cfg(any(feature = "full", feature = "lite"))]
+    if show_progress {
+        // for full row count, prevent CSV reader from aborting on inconsistent column count
+        rconfig = rconfig.flexible(true);
+        let record_count = util::count_rows(&rconfig)?;
+        rconfig = rconfig.flexible(false);
+        util::prep_progress(&progress, record_count);
+    } else {
+        progress.set_draw_target(ProgressDrawTarget::hidden());
+    }
+
     // if no json schema supplied, only let csv reader RFC4180-validate csv file
     if args.arg_json_schema.is_none() {
         // just read csv file and let csv reader report problems
@@ -146,6 +165,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         let mut record_count: u64 = 0;
         for result in rdr.records() {
+            #[cfg(any(feature = "full", feature = "lite"))]
+            if show_progress {
+                progress.inc(1);
+            }
+
             if let Err(e) = result {
                 if args.flag_json || args.flag_pretty_json {
                     let validation_error = json!({
@@ -161,6 +185,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 );
             }
             record_count += 1;
+        }
+
+        #[cfg(any(feature = "full", feature = "lite"))]
+        if show_progress {
+            progress.set_message(format!(
+                " validated {} records.",
+                progress.length().unwrap().separate_with_commas()
+            ));
+            util::finish_progress(&progress);
         }
 
         let msg = if args.flag_json || args.flag_pretty_json {
@@ -192,25 +225,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let headers = rdr.byte_headers()?.clone();
     let headers_len = headers.len();
-
-    // prep progress bar
-    #[cfg(any(feature = "full", feature = "lite"))]
-    let progress = ProgressBar::with_draw_target(None, ProgressDrawTarget::stderr_with_hz(5));
-
-    #[cfg(any(feature = "full", feature = "lite"))]
-    let show_progress =
-        (args.flag_progressbar || std::env::var("QSV_PROGRESSBAR").is_ok()) && !rconfig.is_stdin();
-
-    #[cfg(any(feature = "full", feature = "lite"))]
-    if show_progress {
-        // for full row count, prevent CSV reader from aborting on inconsistent column count
-        rconfig = rconfig.flexible(true);
-        let record_count = util::count_rows(&rconfig)?;
-        rconfig = rconfig.flexible(false);
-        util::prep_progress(&progress, record_count);
-    } else {
-        progress.set_draw_target(ProgressDrawTarget::hidden());
-    }
 
     // parse and compile supplied JSON Schema
     let (schema_json, schema_compiled): (Value, JSONSchema) =
