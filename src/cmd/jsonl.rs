@@ -70,12 +70,12 @@ fn recurse_to_infer_headers(value: &Value, headers: &mut Vec<Vec<String>>, path:
     }
 }
 
-fn infer_headers(value: &Value) -> Option<Vec<Vec<String>>> {
+fn infer_headers(value: &Value) -> Vec<Vec<String>> {
     let mut headers: Vec<Vec<String>> = Vec::new();
 
     recurse_to_infer_headers(value, &mut headers, Vec::new());
 
-    Some(headers)
+    headers
 }
 
 fn get_value_at_path(value: &Value, path: &[String]) -> Option<Value> {
@@ -156,14 +156,11 @@ Use `tojsonl` command to convert _to_ jsonl instead of _from_ jsonl."#,
         };
 
         if !headers_emitted {
-            if let Some(h) = infer_headers(&value) {
-                headers = h;
+            headers = infer_headers(&value);
 
-                let headers_formatted =
-                    headers.iter().map(|v| v.join(".")).collect::<Vec<String>>();
-                let headers_record = csv::StringRecord::from(headers_formatted);
-                wtr.write_record(&headers_record)?;
-            }
+            let headers_formatted = headers.iter().map(|v| v.join(".")).collect::<Vec<String>>();
+            let headers_record = csv::StringRecord::from(headers_formatted);
+            wtr.write_record(&headers_record)?;
 
             headers_emitted = true;
         }

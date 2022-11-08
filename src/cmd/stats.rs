@@ -175,7 +175,7 @@ impl Args {
             whitelist,
         )?;
 
-        let stats = self.compute(&sel, rdr.byte_records())?;
+        let stats = self.compute(&sel, rdr.byte_records());
         Ok((headers, stats))
     }
 
@@ -215,8 +215,7 @@ impl Args {
                     .unwrap_unchecked();
                 idx.seek((i * chunk_size) as u64).unwrap_unchecked();
                 let it = idx.byte_records().take(chunk_size);
-                send.send(args.compute(&sel, it).unwrap_unchecked())
-                    .unwrap_unchecked();
+                send.send(args.compute(&sel, it)).unwrap_unchecked();
             });
         }
         drop(send);
@@ -243,7 +242,7 @@ impl Args {
     }
 
     #[inline]
-    fn compute<I>(&self, sel: &Selection, it: I) -> CliResult<Vec<Stats>>
+    fn compute<I>(&self, sel: &Selection, it: I) -> Vec<Stats>
     where
         I: Iterator<Item = csv::Result<csv::ByteRecord>>,
     {
@@ -263,7 +262,7 @@ impl Args {
                 }
             }
         }
-        Ok(stats)
+        stats
     }
 
     fn sel_headers<R: io::Read>(
