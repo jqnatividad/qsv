@@ -38,7 +38,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .checkutf8(false)
         .no_headers(args.flag_no_headers)
         // we also want to count the quotes when computing width
-        .quoting(!args.flag_width);
+        .quoting(!args.flag_width)
+        // and ignore differing column counts as well
+        .flexible(args.flag_width);
 
     // this comment left here for Logging.md example
     // log::debug!(
