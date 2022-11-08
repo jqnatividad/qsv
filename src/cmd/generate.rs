@@ -122,14 +122,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     if args.flag_rows > 0 {
         let mut send_to_stdout: bool = false;
-        let testdata_out = match args.flag_output {
-            Some(path) => path,
-            None => {
-                send_to_stdout = true;
-                let fname = format!("{}.csv", Uuid::new_v4());
-                let fpath = tdir.join(fname);
-                fpath.into_os_string().into_string().unwrap_or_default()
-            }
+        let testdata_out = if let Some(path) = args.flag_output {
+            path
+        } else {
+            send_to_stdout = true;
+            let fname = format!("{}.csv", Uuid::new_v4());
+            let fpath = tdir.join(fname);
+            fpath.into_os_string().into_string().unwrap_or_default()
         };
 
         dsp.generate_csv(args.flag_rows, &testdata_out, Some(conf.get_delimiter()))
