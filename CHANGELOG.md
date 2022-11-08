@@ -5,6 +5,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.71.0] - 2022-11-08
+### Added
+* `apply`: new `encode` and  `decode` operations in https://github.com/jqnatividad/qsv/pull/569
+* `apply`: add ability to show confidence to whatlang language detection. in https://github.com/jqnatividad/qsv/pull/579
+* `count`: add --width option in https://github.com/jqnatividad/qsv/pull/582
+* `fetch` & `fetchpost`: Added --user_agent option by @minhajuddin2510 in https://github.com/jqnatividad/qsv/pull/565 and https://github.com/jqnatividad/qsv/commit/f59bd8591079f22df3c40e5f036c5e2ff83e77f8
+* Documented Homebrew installer :rocket: created by @FnControlOption
+
+### Changed
+* `apply`: refactor operations validation in https://github.com/jqnatividad/qsv/pull/564 and https://github.com/jqnatividad/qsv/commit/f83ec6f7e7fa7bed9bcc2b5e55516a61e5154b52
+* `sortcheck`: expand usage text and use fail_clierror macro https://github.com/jqnatividad/qsv/commit/8513b53eaac594d20106b3f77f73f3d1b63e227d
+* `stats`: minor refactoring https://github.com/jqnatividad/qsv/commit/38795134e3ed66bf0816eeee2a68aa9b557c4908
+* `tojsonl`: it does "smart" conversion of CSV to JSONL https://github.com/jqnatividad/qsv/commit/af98290bf1803ae5ab3e01df5f20f5b007912e02
+* `validate`: also show --progressbar when doing schemaless validation https://github.com/jqnatividad/qsv/commit/aae550aa0b1042e205689ae40d19c0532e7ae584
+* only show enabled commands in command list in https://github.com/jqnatividad/qsv/pull/583
+* Updated the benchmark script by @minhajuddin2510 in https://github.com/jqnatividad/qsv/pull/581
+* Switch back to using num_cpus for detecting parallelism https://github.com/jqnatividad/qsv/commit/b7dbed88f7d931e03a835ca4a929328c2c4a34b6
+* qsv now links against Python 3.11 for the `py` command in https://github.com/jqnatividad/qsv/pull/576
+* Bump robinraju/release-downloader from 1.5 to 1.6 by @dependabot in https://github.com/jqnatividad/qsv/pull/568
+* Bump newline-converter from 0.2.0 to 0.2.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/567
+* Bump sysinfo from 0.26.5 to 0.26.7 by @dependabot in https://github.com/jqnatividad/qsv/pull/566 and https://github.com/jqnatividad/qsv/pull/572
+* Bump ahash from 0.8.0 to 0.8.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/575
+* Bump flexi_logger from 0.24.0 to 0.24.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/574
+* Bump pyo3 from 0.17.2 to 0.17.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/573
+* Bump jql from 5.1.1 to 5.1.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/577
+* Bump num_cpus from 1.13.1 to 1.14.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/580
+* cargo update bump several indirect dependencies
+* updated rustfmt.toml with comment and string formatting options
+* bump MSRV to 1.65.0
+* pin Rust Nightly to 2022-11-07
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.70.0...0.71.0
+
 ## [0.70.0] - 2022-10-24
 
 ### Added
