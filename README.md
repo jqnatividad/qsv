@@ -91,11 +91,10 @@ For [macOS and Linux (64-bit)](https://formulae.brew.sh/formula/qsv), you can qu
 
 Pre-built binaries for Windows, Linux and macOS are also available [for download](https://github.com/jqnatividad/qsv/releases/latest), including binaries compiled with [Rust Nightly/Unstable](https://stackoverflow.com/questions/70745970/rust-nightly-vs-beta-version) ([more info](https://github.com/jqnatividad/qsv/blob/master/docs/PERFORMANCE.md#nightly-release-builds)).
 
-There are four variants of qsv:
- * `qsv` enables all [features](#feature-flags) valid for the target platform[^7]
- * `qsvnp` enables all features EXCEPT python ("np" stands for "no python") 
- * `qsvlite` has all features disabled (~half the size of `qsv`)
- * `qsvdp` is optimized for use with [DataPusher+](https://github.com/dathere/datapusher-plus), with only DataPusher+ relevant commands and the self-update engine removed (~sixth of the size of `qsv`).
+There are three variants of qsv:
+ * `qsv` - [feature](#feature-flags) capable, with the [prebuilt binaries](https://github.com/jqnatividad/qsv/releases/latest) enabling all features except Python [^7]
+ * `qsvlite` - all features disabled (~half the size of `qsv`)
+ * `qsvdp` - optimized for use with [DataPusher+](https://github.com/dathere/datapusher-plus), with only DataPusher+ relevant commands and the self-update engine removed (~sixth of the size of `qsv`).
 
 Alternatively, you can install from source by [installing Rust](https://www.rust-lang.org/tools/install)
 and installing `qsv` using Rust's cargo command[^6]:
@@ -104,13 +103,6 @@ and installing `qsv` using Rust's cargo command[^6]:
 For example, if you use Ubuntu, you can install the `build-essential` package. On macOS, you can get a C compiler by running `$ xcode-select --install`.
 For Windows, this means installing [Visual Studio 2022](https://visualstudio.microsoft.com/downloads/). When prompted for workloads, include "Desktop Development with C++",
 the Windows 10 or 11 SDK, and the English language pack, along with any other language packs your require.
-
-```bash
-cargo install qsv --features all_full
-```
-
-If you encounter compilation errors, ensure you have the Python development libraries installed and you're using the exact
-version of the dependencies qsv was built with by issuing:
 
 ```bash
 cargo install qsv --locked --features all_full
@@ -123,8 +115,6 @@ Compiling from source also works similarly:
 ```bash
 git clone git@github.com:jqnatividad/qsv.git
 cd qsv
-cargo build --release --features all_full
-# or if you encounter compilation errors
 cargo build --release --locked --features all_full
 ```
 
@@ -133,30 +123,29 @@ The compiled binary will end up in `./target/release/`.
 To enable optional features, use cargo `--features` (see [Feature Flags](#feature-flags) for more info):
 
 ```bash
-cargo install qsv --features apply,generate,lua,fetch,foreach,python,self_update,full
+cargo install qsv --locked --features apply,generate,lua,fetch,foreach,python,self_update,full
 # or shorthand
-cargo install qsv --features all_full
+cargo install qsv --locked --features all_full
 # or to install all features EXCEPT python
-cargo install qsv --features nopython_full
+cargo install qsv --locked --features nopython_full
 # or to install qsvlite
-cargo install qsv --features lite
+cargo install qsv --locked --features lite
 # or to install qsvdp
-cargo install qsv --features datapusher_plus
+cargo install qsv --locked --features datapusher_plus
 
 # or when compiling from a local repo
-cargo build --release --features apply,generate,lua,fetch,foreach,python,self_update,full
+cargo build --release --locked --features apply,generate,lua,fetch,foreach,python,self_update,full
 # shorthand
-cargo build --release --features all_full
+cargo build --release --locked --features all_full
 # all features EXCEPT python
-cargo build --release --features nopython_full
+cargo build --release --locked --features nopython_full
 # for qsvlite
-cargo build --release --features lite
+cargo build --release --locked --features lite
 # for qsvdp
-cargo build --release --features datapusher_plus
+cargo build --release --locked --features datapusher_plus
 ```
 
-[^7]: The `foreach` feature is not available on Windows. The `python` feature is not enabled on cross-compiled pre-built binaries as we don't have
-access to a native python interpreter for those platforms (aarch64, i686, and arm) on GitHub's x86_64-based action runners. Compile natively on those platforms with Python 3.6+ development environment installed, if you want to enable the `python` feature.
+[^7]: The `foreach` feature is not available on Windows. The `python` feature is not enabled pre-built binaries. Compile with Python 3.6+ development environment installed, if you want to enable the `python` feature. Lua support is enabled by default on the prebuilt binaries, with preference for `luajit` for platforms that support it, with `lua` as a fallback.  
 
 ### Minimum Supported Rust Version
 
@@ -234,24 +223,16 @@ qsv stats wcp.csv --output wcpstats.csv
 
 ## Python
 
-With the `python` feature, `qsv` will look for Python shared libraries (libpython* on Linux/macOS, python*.dll on Windows) against which it was compiled, 
-and abort with an error if not found, detailing the Python library it was looking for.
+The `python` feature is NOT enabled by default on the pre-built binaries, as doing so requires it to statically link to python, which presents distribution issues, as various operating systems have differing bundled Python versions.
+
+If you wish to enable the `python` feature - you'll just have to install/compile from source, making sure you have the development libraries for the desired Python version (Python 3.6 and up are supported) installed when doing so.
+
+Note that if you plan to distribute your manually built `qsv` with the `python` feature, `qsv` will look for Python shared libraries (libpython* on Linux/macOS, python*.dll on Windows) against which it was compiled starting with the current directory, and abort with an error if not found, detailing the Python library it was looking for. 
 
 Note that this will happen as soon as the qsv binary is invoked, even if you're not running the `py` command.
 
-If you don't need to run the `py` command, simply use `qsvnp` ("np" stands for "no python"), `qsvlite`, or `qsvdp`.
-
-If you need the `py` command, the [prebuilt qsv binary](https://github.com/jqnatividad/qsv/releases/latest) is compiled, as a policy,
-using the current stable Python minor version (currently Python 3.11) at the time of release.
-
-If you require a different Python version (Python 3.6 and up are supported), you'll need to install/compile from source, making sure you have
-the development libraries for the desired Python version installed when doing so.   
-
 [PyO3](https://pyo3.rs) - the underlying crate that enables the `python` feature, uses a build script to determine the Python version and set the correct linker arguments. By default it uses the python3 executable.
 You can override the Python interpreter by setting `PYO3_PYTHON` (e.g., `PYO3_PYTHON=python3.6`), before installing/compiling qsv. See the [PyO3 User Guide](https://pyo3.rs/v0.17.1/building_and_distribution.html) for more information.
-
-If you're distributing `python`-enabled qsv, you can also "bundle" the Python shared library by including it in the same directory as the qsv binary. qsv will automatically use
-the "bundled" library instead of the default Python version in the environment.
 
 Also, consider using the `lua`/`luajit` commands instead of the `py` command if the mapping/filtering operation you're trying to do can be done with `lua`/`luajit`. [Lua is much faster than Python](https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/lua-python3.html) and [LuaJIT is even faster still](https://luajit.org/performance_x86.html). In addition, Lua/LuaJIT is embedded into qsv, can do aggregations & has no external dependencies, unlike Python.
 
@@ -303,23 +284,25 @@ Relevant env vars are defined as anything that starts with `QSV_` and `MIMALLOC_
 * `mimalloc` (default) - use the mimalloc allocator (see [Memory Allocator](docs/PERFORMANCE.md#memory-allocator) for more info).
 * `apply` - enable `apply` command. This swiss-army knife of CSV transformations is very powerful, but it has a lot of dependencies that increases both compile time and binary size.
 * `fetch` - enables the `fetch` and `fetchpost` commands.
+* `foreach` - enable `foreach` command (not valid for Windows).
 * `generate` - enable `generate` command.
+* `lua` - enable `lua` command. Embeds a [Lua 5.4](https://www.lua.org/about.html) interpreter into qsv.
+* `luajit` - enable `luajit` command. Embeds a [LuaJIT 2.0](https://luajit.org/luajit.html) interpreter into qsv. LuaJIT is a Just-In-Time compiler for the Lua 5.1 language and is thus much faster than Lua. Note that the `lua` and `luajit` interpreters are mutually exclusive features.
+* `python` - enable `py` command (requires Python 3.6+ shared library). Note that qsv will look for the Python shared library (libpython.* on Linux/macOS, python*.dll on Windows) for the Python version it was compiled against and will abort if the library is not found, even if you're not using the `py` command. Check [Python](#python) section for more info.
+* `self_update` - enable self-update engine, checking GitHub for the latest release. Note that `self-update` will only check for new releases if you manually built qsv.
+It will only offer the choice to update itself for the prebuilt binaries published on GitHub. In this way, you don't need to worry that your manually built qsv will be overwritten by a self-update.
+
 * `full` - enable to build qsv binary variant which is feature-capable.
-* `all_full` - enable to build qsv binary variant with all features enabled (apply,fetch,foreach,generate,luajit,python).
-* `nopython_full` - enable to build qsvnp binary variant with all features (apply,fetch,foreach,generate,luajit) EXCEPT python.
+* `all_full` - enable to build qsv binary variant with all features enabled (apply,fetch,foreach,generate,luajit,python,self_update).
+* `nopython_full` - enable to build qsv binary variant with all features (apply,fetch,foreach,generate,luajit,self_update) EXCEPT python.
 * `lite` - enable to build qsvlite binary variant with all features disabled.
 * `datapusher_plus` - enable to build qsvdp binary variant - the [DataPusher+](https://github.com/dathere/datapusher-plus) optimized qsv binary.
 * `nightly` - enable to turn on nightly/unstable features in the `rand`, `regex`, `hashbrown`, `parking_lot` and `pyo3` crates when building with Rust nightly/unstable.
-* `self_update` - enable self-update engine, checking GitHub for the latest release.
 
-The following "power-user" features can be abused and present "foot-shooting" scenarios:
 
-* `lua` - enable `lua` command. Embeds a [Lua 5.4](https://www.lua.org/about.html) interpreter into qsv.
-* `luajit` - enable `luajit` command. Embeds a [LuaJIT 2.0](https://luajit.org/luajit.html) interpreter into qsv. LuaJIT is a Just-In-Time compiler for the Lua 5.1 language and is thus much faster than Lua. Note that the `lua` and `luajit` interpreters are mutually exclusive features.
-* `foreach` - enable `foreach` command (not valid for Windows).
-* `python` - enable `py` command (requires Python 3.6+ shared library). Note that qsv will look for the Python shared library (libpython.* on Linux/macOS, python*.dll on Windows) for the Python version it was compiled against and will abort if the library is not found, even if you're not using the `py` command. Check [Python](#python) section for more info.
 
-> ℹ️ **NOTE:** `qsvlite`, as the name implies, always has **non-default features disabled**. `qsv` can be built with any combination of the above features  using the cargo `--features` & `--no-default-features` flags. The pre-built `qsv` binaries has **all applicable features valid for the target platform**[^7].
+
+> ℹ️ **NOTE:** `qsvlite`, as the name implies, always has **non-default features disabled**. `qsv` can be built with any combination of the above features using the cargo `--features` & `--no-default-features` flags. The pre-built `qsv` binaries has **all applicable features valid for the target platform**[^7].
 
 ## License
 
