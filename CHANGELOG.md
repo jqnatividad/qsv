@@ -5,6 +5,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.71.1] - 2022-11-09
+
+### Changed
+* `python` feature is no longer enabled in the prebuilt binaries to avoid distribution issues and qsv panicking if the exact python version it was statically linked against
+is not available. If you require the `python` feature, you'll have to install/build for source.
+
+### Fixed
+* whirlwind tour: `join`'s `--no-case` option has been replaced by `--ignore-case` by @alperyilmaz in https://github.com/jqnatividad/qsv/pull/585
+
+## New Contributors
+* @alperyilmaz made their first contribution in https://github.com/jqnatividad/qsv/pull/585
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.71.0...0.71.1
+
 ## [0.71.0] - 2022-11-08
 ### Added
 * `apply`: new `encode` and  `decode` operations in https://github.com/jqnatividad/qsv/pull/569
