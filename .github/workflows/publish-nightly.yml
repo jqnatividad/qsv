@@ -33,32 +33,32 @@ jobs:
             os-name: linux
             target: x86_64-unknown-linux-gnu
             architecture: x86_64
-            addl-build-args: --features=apply,generate,luajit,fetch,foreach,python,nightly,self_update
+            addl-build-args: --features=apply,generate,luajit,fetch,foreach,nightly,self_update
             default-features:
           - os: ubuntu-latest
             os-name: linux
             target: x86_64-unknown-linux-musl
             architecture: x86_64
             musl-prep: true
-            addl-build-args: --features=apply,generate,luajit,fetch,foreach,python,nightly,self_update
+            addl-build-args: --features=apply,generate,luajit,fetch,foreach,nightly,self_update
             default-features:
           - os: windows-latest
             os-name: windows
             target: x86_64-pc-windows-msvc
             architecture: x86_64
-            addl-build-args: --features=apply,generate,luajit,fetch,python,nightly,self_update
+            addl-build-args: --features=apply,generate,luajit,fetch,nightly,self_update
             default-features:
           - os: windows-latest
             os-name: windows
             target: x86_64-pc-windows-gnu
             architecture: x86_64
-            addl-build-args: --features=apply,generate,luajit,fetch,python,nightly,self_update
+            addl-build-args: --features=apply,generate,luajit,fetch,nightly,self_update
             default-features: --no-default-features 
           - os: macos-latest
             os-name: macos
             target: x86_64-apple-darwin
             architecture: x86_64
-            addl-build-args: --features=apply,generate,luajit,fetch,foreach,python,nightly,self_update
+            addl-build-args: --features=apply,generate,luajit,fetch,foreach,nightly,self_update
             default-features: --no-default-features 
 
     steps:
@@ -76,31 +76,10 @@ jobs:
       with:
         submodules: recursive
         ref: ${{ needs.analyze-tags.outputs.previous-tag }}
-    - uses: actions/setup-python@v4.3.0
-      with:
-        python-version: '3.11'
     - name: build prep for x86_64-unknown-linux-musl
       if: ${{ matrix.job.musl-prep }}
       run: |
         sudo apt-get install musl-tools
-    - name: Build qsv without python
-      env:
-        RUSTFLAGS: --emit=asm
-      uses: actions-rs/cargo@v1
-      with:
-        command: build
-        use-cross: false
-        toolchain: ${{ matrix.rust }}
-        args: --profile release-nightly --bin qsv -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --target ${{ matrix.job.target }} --features=nopython_full ${{ matrix.job.default-features }}
-    - name: Rename qsv without python to qsvnp
-      shell: bash
-      run: |
-         if [ "$RUNNER_OS" == "Windows" ]; then
-              rm -f target/${{ matrix.job.target }}/release-nightly/qsvnp.exe
-              mv -v -f target/${{ matrix.job.target }}/release-nightly/qsv.exe target/${{ matrix.job.target }}/release-nightly/qsvnp.exe
-         else
-              mv -v -f target/${{ matrix.job.target }}/release-nightly/qsv target/${{ matrix.job.target }}/release-nightly/qsvnp
-         fi
     - name: Build qsv-nightly
       env:
         RUSTFLAGS: --emit=asm
@@ -136,12 +115,10 @@ jobs:
         cp target/${{ matrix.job.target }}/release-nightly/qsv* qsv-${{ needs.analyze-tags.outputs.previous-tag }}
         cd qsv-${{ needs.analyze-tags.outputs.previous-tag }}
         if [ "$RUNNER_OS" == "Windows"]; then
-             mv qsvnp.exe qsvnp_nightly.exe
              mv qsv.exe qsv_nightly.exe
              mv qsvlite.exe qsvlite_nightly.exe
              mv qsvdp.exe qsvdp_nightly.exe
         else
-             mv qsvnp qsvnp_nightly
              mv qsv qsv_nightly
              mv qsvlite qsvlite_nightly
              mv qsvdp qsvdp_nightly
