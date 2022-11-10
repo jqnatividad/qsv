@@ -47,6 +47,8 @@ Some usage examples:
   With "luajit map", if a LuaJIT script is invalid, "<ERROR>" is returned.
   With "luajit filter", if a LuaJIT script is invalid, no filtering is done.
 
+  For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_luajit.rs.
+
 Usage:
     qsv luajit map [options] -n <script> [<input>]
     qsv luajit map [options] <new-column> <script> [<input>]

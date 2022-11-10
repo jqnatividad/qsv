@@ -1,4 +1,4 @@
-static USAGE: &str = "
+static USAGE: &str = r#"
 Filters CSV data by whether the given regex set matches a row.
 
 Unlike the search operation, this allows regex matching of multiple regexes 
@@ -18,6 +18,8 @@ Returns exitcode 1 when no match is found.
 
 When --quick is enabled, no output is produced and exitcode 0 is returned on 
 the first match.
+
+For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_searchset.rs.
 
 Usage:
     qsv searchset [options] (<regexset-file>) [<input>]
@@ -61,7 +63,7 @@ Common options:
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
     -p, --progressbar      Show progress bars. Not valid for stdin.
-";
+"#;
 
 use std::{
     env,

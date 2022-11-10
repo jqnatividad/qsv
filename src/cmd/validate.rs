@@ -1,4 +1,4 @@
-static USAGE: &str = "
+static USAGE: &str = r#"
 Validate CSV data with JSON Schema, and put invalid records into a separate file.
 When run without JSON Schema, only a simple CSV check (RFC 4180) is performed.
 
@@ -9,6 +9,8 @@ Example output files from `mydata.csv`. If piped from stdin, then filename is `s
 * mydata.csv.validation-errors.tsv
 
 JSON Schema can be a local file or a URL.
+
+For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_validate.rs.
 
 Usage:
     qsv validate [options] [<input>] [<json-schema>]
@@ -35,7 +37,7 @@ Common options:
     -d, --delimiter <arg>      The field delimiter for reading CSV data.
                                Must be a single character. [default: ,]
     -p, --progressbar          Show progress bars. Not valid for stdin.
-";
+"#;
 
 use std::{
     env,

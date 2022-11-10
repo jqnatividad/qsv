@@ -92,6 +92,7 @@ pass as many key-value pairs by using --http-header option repeatedly. For examp
 
 $ qsv fetch URL data.csv --http-header "X-Api-Key:TEST_KEY" --http-header "X-Api-Secret:ABC123XYZ" --http-header "Accept-Language: fr-FR"
 
+For more extensive examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_fetch.rs.
 
 Usage:
     qsv fetch [<url-column> | --url-template <template>] [--jql <selector> | --jqlfile <file>] [--http-header <k:v>...] [options] [<input>]

@@ -14,6 +14,8 @@ fractional components (e.g. 40729 is 2011-07-05, 37145.354166666664 is 2001-09-1
 We need a whitelist so we know to only do this date conversions for date fields and
 not all columns with numeric values.
 
+For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_excel.rs.
+
 Usage:
     qsv excel [options] [<input>]
     qsv excel --help

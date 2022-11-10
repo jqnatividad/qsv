@@ -1,4 +1,4 @@
-static USAGE: &str = "
+static USAGE: &str = r#"
 Replace occurrences of a pattern across a CSV file.
 
 You can of course match groups using parentheses and use those in
@@ -6,10 +6,12 @@ the replacement string. But don't forget to escape your $ in bash by using a
 backslash or by wrapping the replacement string into single quotes:
 
   $ qsv replace 'hel(lo)' 'hal$1' file.csv
-  $ qsv replace \"hel(lo)\" \"hal\\$1\" file.csv
+  $ qsv replace "hel(lo)" "hal\$1" file.csv
 
 Returns exitcode 0 when replacements are done, returning number of replacements to stderr.
 Returns exitcode 1 when no replacements are done.
+
+For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_replace.rs.
 
 Usage:
     qsv replace [options] <pattern> <replacement> [<input>]
@@ -45,7 +47,7 @@ Common options:
                            Must be a single character. (default: ,)
     -p, --progressbar      Show progress bars. Not valid for stdin.
 
-";
+"#;
 
 use std::{borrow::Cow, env};
 

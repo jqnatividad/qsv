@@ -1,4 +1,4 @@
-static USAGE: &str = "
+static USAGE: &str = r#"
 Joins two sets of CSV data on the specified columns.
 
 The default join operation is an 'inner' join. This corresponds to the
@@ -13,6 +13,8 @@ be referenced by name or index, starting at 1. Specify multiple columns by
 separating them with a comma. Specify a range of columns with `-`. Both
 columns1 and columns2 must specify exactly the same number of columns.
 (See 'qsv select --help' for the full syntax.)
+
+For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_join.rs.
 
 Usage:
     qsv join [options] <columns1> <input1> <columns2> <input2>
@@ -63,7 +65,7 @@ Common options:
                            sliced, etc.)
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
-";
+"#;
 
 use std::{collections::hash_map::Entry, fmt, io, iter::repeat, str};
 

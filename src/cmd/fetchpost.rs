@@ -70,6 +70,7 @@ pass as many key-value pairs by using --http-header option repeatedly. For examp
 
 $ qsv fetchpost https://httpbin.org/post col1-col3 data.csv --http-header "X-Api-Key:TEST_KEY" --http-header "X-Api-Secret:ABC123XYZ"
 
+For more extensive examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_fetch.rs.
 
 Usage:
     qsv fetchpost (<url-column> <column-list>) [--jql <selector> | --jqlfile <file>] [--http-header <k:v>...] [options] [<input>]

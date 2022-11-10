@@ -44,6 +44,8 @@ Some usage examples:
   With "lua map", if a Lua script is invalid, "<ERROR>" is returned.
   With "lua filter", if a Lua script is invalid, no filtering is done.
 
+  For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_lua.rs.
+
 Usage:
     qsv lua map [options] -n <script> [<input>]
     qsv lua map [options] <new-column> <script> [<input>]
