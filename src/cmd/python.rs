@@ -65,21 +65,17 @@ Some usage examples:
   1,a2,a3,a4,cb675342ed940908eef0844d17c35fab
   2,b2,b3,b4,7d594b33f82bdcbc1cfa6f924a84c4cd
   3,c2,c3,c4,6eabbfdbfd9ab6ae7737fb2b82f6a1af
-
-  NOTE: The prebuilt qsv binaries are linked against Python 3.11 and will require access
-  to the Python 3.11 shared libraries (libpython* on Linux/macOS, python*.dll on Windows)
-  during runtime for the py command to run.
   
   Note that qsv with the `python` feature enabled will panic on startup even if you're not
   using the `py` command if Python's shared libraries are not found.
   
-  If you wish qsv to use another Python version, you'll need to install/compile qsv from source.
-
   Also, the following Python modules are automatically loaded and available to the user -
   builtsin, math and random. The user can import additional modules with the --helper option.
 
   With "py map", if a python expression is invalid, "<ERROR>" is returned.
   With "py filter", if a python expression is invalid, no filtering is done.
+
+  For more extensive examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_py.rs.
 
 Usage:
     qsv py map [options] -n <script> [<input>]
