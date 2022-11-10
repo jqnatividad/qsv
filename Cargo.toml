@@ -178,15 +178,6 @@ all_full = [
     "python",
     "self_update",
 ]
-nopython_full = [
-    "full",
-    "apply",
-    "fetch",
-    "foreach",
-    "generate",
-    "luajit",
-    "self_update",
-]
 apply = [
     "cached",
     "censor",
