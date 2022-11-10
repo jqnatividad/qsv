@@ -141,25 +141,25 @@ jobs:
       if: ${{ matrix.job.musl-prep }}
       run: |
         sudo apt-get install musl-tools
-    - name: Build qsv without python
-      if: ${{ matrix.job.build-nopython }}
-      env:
-        RUSTFLAGS: --emit=asm
-      uses: actions-rs/cargo@v1
-      with:
-        command: build
-        use-cross: ${{ matrix.job.use-cross }}
-        toolchain: ${{ matrix.rust }}
-        args: --release --locked --bin qsv --target ${{ matrix.job.target }} --features=nopython_full ${{ matrix.job.default-features }}
-    - name: Rename qsv without python to qsvnp
-      if: ${{ matrix.job.build-nopython }}
-      shell: bash
-      run: |
-        if [ "$RUNNER_OS" == "Windows" ]; then
-            mv -v target/${{ matrix.job.target }}/release/qsv.exe target/${{ matrix.job.target }}/release/qsvnp.exe
-        else
-            mv -v target/${{ matrix.job.target }}/release/qsv target/${{ matrix.job.target }}/release/qsvnp
-        fi
+    # - name: Build qsv without python
+    #   if: ${{ matrix.job.build-nopython }}
+    #   env:
+    #     RUSTFLAGS: --emit=asm
+    #   uses: actions-rs/cargo@v1
+    #   with:
+    #     command: build
+    #     use-cross: ${{ matrix.job.use-cross }}
+    #     toolchain: ${{ matrix.rust }}
+    #     args: --release --locked --bin qsv --target ${{ matrix.job.target }} --features=nopython_full ${{ matrix.job.default-features }}
+    # - name: Rename qsv without python to qsvnp
+    #   if: ${{ matrix.job.build-nopython }}
+    #   shell: bash
+    #   run: |
+    #     if [ "$RUNNER_OS" == "Windows" ]; then
+    #         mv -v target/${{ matrix.job.target }}/release/qsv.exe target/${{ matrix.job.target }}/release/qsvnp.exe
+    #     else
+    #         mv -v target/${{ matrix.job.target }}/release/qsv target/${{ matrix.job.target }}/release/qsvnp
+    #     fi
     - name: Build qsv
       env:
         RUSTFLAGS: --emit=asm
