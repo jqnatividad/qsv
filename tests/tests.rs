@@ -54,6 +54,7 @@ mod test_foreach;
 mod test_frequency;
 mod test_headers;
 mod test_index;
+mod test_input;
 mod test_join;
 mod test_jsonl;
 #[cfg(feature = "lua")]
