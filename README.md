@@ -128,8 +128,6 @@ To enable optional features, use cargo `--features` (see [Feature Flags](#featur
 cargo install qsv --locked --features apply,generate,lua,fetch,foreach,python,self_update,full
 # or shorthand
 cargo install qsv --locked --features all_full
-# or to install all features EXCEPT python
-cargo install qsv --locked --features nopython_full
 # or to install qsvlite
 cargo install qsv --locked --features lite
 # or to install qsvdp
@@ -139,15 +137,13 @@ cargo install qsv --locked --features datapusher_plus
 cargo build --release --locked --features apply,generate,lua,fetch,foreach,python,self_update,full
 # shorthand
 cargo build --release --locked --features all_full
-# all features EXCEPT python
-cargo build --release --locked --features nopython_full
 # for qsvlite
 cargo build --release --locked --features lite
 # for qsvdp
 cargo build --release --locked --features datapusher_plus
 ```
 
-[^7]: The `foreach` feature is not available on Windows. The `python` feature is not enabled pre-built binaries. Compile with Python 3.6+ development environment installed, if you want to enable the `python` feature. Lua support is enabled by default on the prebuilt binaries, with preference for `luajit` for platforms that support it, with `lua` as a fallback.  
+[^7]: The `foreach` feature is not available on Windows. The `python` feature is not enabled on the pre-built binaries. Compile with Python 3.6+ development environment installed if you want to enable the `python` feature. Lua support is enabled by default on the prebuilt binaries, with preference for `luajit` for platforms that support it, with `lua` as a fallback.  
 
 ### Minimum Supported Rust Version
 
@@ -290,18 +286,15 @@ Relevant env vars are defined as anything that starts with `QSV_` and `MIMALLOC_
 * `generate` - enable `generate` command.
 * `lua` - enable `lua` command. Embeds a [Lua 5.4](https://www.lua.org/about.html) interpreter into qsv.
 * `luajit` - enable `luajit` command. Embeds a [LuaJIT 2.0](https://luajit.org/luajit.html) interpreter into qsv. LuaJIT is a Just-In-Time compiler for the Lua 5.1 language and is thus much faster than Lua. Note that the `lua` and `luajit` interpreters are mutually exclusive features.
-* `python` - enable `py` command (requires Python 3.6+ shared library). Note that qsv will look for the Python shared library (libpython.* on Linux/macOS, python*.dll on Windows) for the Python version it was compiled against and will abort if the library is not found, even if you're not using the `py` command. Check [Python](#python) section for more info.
+* `python` - enable `py` command. Note that qsv will look for the shared library for the Python version (Python 3.6 and above supported) it was compiled against and will abort if the library is not found, even if you're not using the `py` command. Check [Python](#python) section for more info.
 * `self_update` - enable self-update engine, checking GitHub for the latest release. Note that `self-update` will only check for new releases if you manually built qsv.
 It will only offer the choice to update itself for the prebuilt binaries published on GitHub. In this way, you don't need to worry that your manually built qsv will be overwritten by a self-update.
 
 * `full` - enable to build qsv binary variant which is feature-capable.
 * `all_full` - enable to build qsv binary variant with all features enabled (apply,fetch,foreach,generate,luajit,python,self_update).
-* `nopython_full` - enable to build qsv binary variant with all features (apply,fetch,foreach,generate,luajit,self_update) EXCEPT python.
 * `lite` - enable to build qsvlite binary variant with all features disabled.
 * `datapusher_plus` - enable to build qsvdp binary variant - the [DataPusher+](https://github.com/dathere/datapusher-plus) optimized qsv binary.
 * `nightly` - enable to turn on nightly/unstable features in the `rand`, `regex`, `hashbrown`, `parking_lot` and `pyo3` crates when building with Rust nightly/unstable.
-
-
 
 
 > ℹ️ **NOTE:** `qsvlite`, as the name implies, always has **non-default features disabled**. `qsv` can be built with any combination of the above features using the cargo `--features` & `--no-default-features` flags. The pre-built `qsv` binaries has **all applicable features valid for the target platform**[^7].
