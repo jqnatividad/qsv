@@ -85,7 +85,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 
 ## Installation
 
-For [macOS and Linux (64-bit)](https://formulae.brew.sh/formula/qsv), you can quickly install qsv with [Homebrew](https://brew.sh). However, only the `apply` feature is enabled.
+For [macOS and Linux (64-bit)](https://formulae.brew.sh/formula/qsv), you can quickly install qsv with [Homebrew](https://brew.sh). However, only the `apply` [feature](#feature-flags) is enabled.
 
 ```
 brew install qsv
@@ -287,8 +287,8 @@ Relevant env vars are defined as anything that starts with `QSV_` and `MIMALLOC_
 * `lua` - enable `lua` command. Embeds a [Lua 5.4](https://www.lua.org/about.html) interpreter into qsv.
 * `luajit` - enable `luajit` command. Embeds a [LuaJIT 2.0](https://luajit.org/luajit.html) interpreter into qsv. LuaJIT is a Just-In-Time compiler for the Lua 5.1 language and is thus much faster than Lua. Note that the `lua` and `luajit` interpreters are mutually exclusive features.
 * `python` - enable `py` command. Note that qsv will look for the shared library for the Python version (Python 3.6 and above supported) it was compiled against and will abort if the library is not found, even if you're not using the `py` command. Check [Python](#python) section for more info.
-* `self_update` - enable self-update engine, checking GitHub for the latest release. Note that `self-update` will only check for new releases if you manually built qsv.
-It will only offer the choice to update itself for the prebuilt binaries published on GitHub. In this way, you don't need to worry that your manually built qsv will be overwritten by a self-update.
+* `self_update` - enable self-update engine, checking GitHub for the latest release. Note that if you manually built qsv, `self-update` will only check for new releases.
+It will NOT offer the choice to update itself to the prebuilt binaries published on GitHub. You need not worry that your manually built qsv will be overwritten by a self-update.
 
 * `full` - enable to build qsv binary variant which is feature-capable.
 * `all_full` - enable to build qsv binary variant with all features enabled (apply,fetch,foreach,generate,luajit,python,self_update).
