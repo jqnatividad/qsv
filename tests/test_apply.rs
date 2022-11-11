@@ -1702,6 +1702,40 @@ fn apply_datefmt() {
 }
 
 #[test]
+fn apply_datefmt_keep_zero_time() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["Created Date"],
+            svec!["September 17, 2012 10:09am EST"],
+            svec!["Wed, 02 Jun 2021 06:31:39 GMT"],
+            svec!["2009-01-20 05:00 EST"],
+            svec!["July 4, 2005"],
+            svec!["2021-05-01T01:17:02.604456Z"],
+            svec!["This is not a date and it will not be reformatted"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("datefmt")
+        .arg("Created Date")
+        .arg("--keep-zero-time")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["Created Date"],
+        svec!["2012-09-17T15:09:00+00:00"],
+        svec!["2021-06-02T06:31:39+00:00"],
+        svec!["2009-01-20T10:00:00+00:00"],
+        svec!["2005-07-04T00:00:00+00:00"],
+        svec!["2021-05-01T01:17:02.604456+00:00"],
+        svec!["This is not a date and it will not be reformatted"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn apply_datefmt_multiple_cols() {
     let wrk = Workdir::new("apply");
     wrk.create(
@@ -1737,6 +1771,55 @@ fn apply_datefmt_multiple_cols() {
         svec!["2021-06-02T06:31:39+00:00", "2021-06-02T08:31:39+00:00"],
         svec!["2009-01-20T10:00:00+00:00", "2009-01-21T10:00:00+00:00"],
         svec!["2005-07-04", "2005-07-05"],
+        svec![
+            "2021-05-01T01:17:02.604456+00:00",
+            "2021-05-02T01:17:02.604456+00:00"
+        ],
+        svec![
+            "This is not a date and it will not be reformatted",
+            "This is not a date and it will not be reformatted"
+        ],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn apply_datefmt_multiple_cols_keep_zero_time() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["Created Date", "End Date"],
+            svec![
+                "September 17, 2012 10:09am EST",
+                "September 18, 2012 10:09am EST"
+            ],
+            svec![
+                "Wed, 02 Jun 2021 06:31:39 GMT",
+                "Wed, 02 Jun 2021 08:31:39 GMT"
+            ],
+            svec!["2009-01-20 05:00 EST", "2009-01-21 05:00 EST"],
+            svec!["July 4, 2005", "July 5, 2005"],
+            svec!["2021-05-01T01:17:02.604456Z", "2021-05-02T01:17:02.604456Z"],
+            svec![
+                "This is not a date and it will not be reformatted",
+                "This is not a date and it will not be reformatted"
+            ],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("datefmt")
+        .arg("Created Date,End Date")
+        .arg("--keep-zero-time")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["Created Date", "End Date"],
+        svec!["2012-09-17T15:09:00+00:00", "2012-09-18T15:09:00+00:00"],
+        svec!["2021-06-02T06:31:39+00:00", "2021-06-02T08:31:39+00:00"],
+        svec!["2009-01-20T10:00:00+00:00", "2009-01-21T10:00:00+00:00"],
+        svec!["2005-07-04T00:00:00+00:00", "2005-07-05T00:00:00+00:00"],
         svec![
             "2021-05-01T01:17:02.604456+00:00",
             "2021-05-02T01:17:02.604456+00:00"
