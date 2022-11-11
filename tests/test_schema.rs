@@ -49,6 +49,7 @@ fn generate_schema_with_defaults_and_validate_with_no_errors() {
     assert!(!Path::new(validation_error_path).exists());
     assert!(!Path::new(&wrk.path("adur-public-toilets.csv.valid")).exists());
     assert!(!Path::new(&wrk.path("adur-public-toilets.csv.invalid")).exists());
+    wrk.assert_success(&mut cmd);
 }
 
 #[test]
@@ -130,6 +131,7 @@ fn generate_schema_with_optional_flags_and_validate_with_errors() {
         validation_errors_expected.to_string(),
         validation_error_output
     );
+    wrk.assert_err(&mut cmd2);
 }
 
 #[test]
