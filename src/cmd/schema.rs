@@ -2,7 +2,7 @@ static USAGE: &str = r#"
 Generate JSON Schema from CSV data.
 
 This command generates reference JSON Schema (Draft 7) from CSV data, 
-including validation rules based on input data range.
+including validation rules based on data type and input data domain/range.
 
 Running `validate` command on original input CSV with generated schema 
 should not flag any invalid records.
