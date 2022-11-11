@@ -85,13 +85,13 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 
 ## Installation
 
-For [macOS and Linux (64-bit)](https://formulae.brew.sh/formula/qsv), you can quickly install qsv with [Homebrew](https://brew.sh):
+For [macOS and Linux (64-bit)](https://formulae.brew.sh/formula/qsv), you can quickly install qsv with [Homebrew](https://brew.sh). However, only the `apply` feature is enabled.
 
 ```
 brew install qsv
 ```
 
-Pre-built binaries for Windows, Linux and macOS are also available [for download](https://github.com/jqnatividad/qsv/releases/latest), including binaries compiled with [Rust Nightly/Unstable](https://stackoverflow.com/questions/70745970/rust-nightly-vs-beta-version) ([more info](https://github.com/jqnatividad/qsv/blob/master/docs/PERFORMANCE.md#nightly-release-builds)).
+Pre-built binaries with more enabled features for Windows, Linux and macOS are also available [for download](https://github.com/jqnatividad/qsv/releases/latest), including binaries compiled with [Rust Nightly/Unstable](https://stackoverflow.com/questions/70745970/rust-nightly-vs-beta-version) ([more info](https://github.com/jqnatividad/qsv/blob/master/docs/PERFORMANCE.md#nightly-release-builds)).
 
 There are three variants of qsv:
  * `qsv` - [feature](#feature-flags) capable, with the [prebuilt binaries](https://github.com/jqnatividad/qsv/releases/latest) enabling all features except Python [^7]
