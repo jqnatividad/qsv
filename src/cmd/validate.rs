@@ -10,6 +10,8 @@ Example output files from `mydata.csv`. If piped from stdin, then filename is `s
 
 JSON Schema can be a local file or a URL.
 
+Returns exitcode 0 when the CSV file is valid, exitcode 1 otherwise.
+
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_validate.rs.
 
 Usage:
@@ -380,23 +382,23 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     // done with validation; print output
-    if args.flag_fail_fast {
-        let msg = format!(
-            "fail-fast enabled. stopped after row {}.\n{} out of {} records invalid.",
-            row_number.separate_with_commas(),
+    if invalid_count > 0 {
+        let fail_fast_msg = if args.flag_fail_fast {
+            format!(
+                "fail-fast enabled. stopped after row {}.\n",
+                row_number.separate_with_commas()
+            )
+        } else {
+            String::new()
+        };
+
+        return fail_clierror!(
+            "{fail_fast_msg}{} out of {} records invalid.",
             invalid_count.separate_with_commas(),
             row_number.separate_with_commas()
         );
-        info!("{msg}");
-        println!("{msg}");
     } else {
-        let msg = format!(
-            "{} out of {} records invalid.",
-            invalid_count.separate_with_commas(),
-            row_number.separate_with_commas()
-        );
-        info!("{msg}");
-        println!("{msg}");
+        winfo!("All {} records valid.", row_number.separate_with_commas());
     }
 
     Ok(())

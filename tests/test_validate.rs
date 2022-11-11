@@ -171,6 +171,7 @@ fn validate_adur_public_toilets_dataset_with_json_schema() {
 
     let validation_error_output: String = wrk.from_str(&wrk.path("data.csv.validation-errors.tsv"));
     assert_eq!(adur_errors(), validation_error_output);
+    wrk.assert_err(&mut cmd);
 }
 
 #[test]
@@ -194,4 +195,5 @@ fn validate_adur_public_toilets_dataset_with_json_schema_url() {
 
     let validation_error_output: String = wrk.from_str(&wrk.path("data.csv.validation-errors.tsv"));
     assert_eq!(adur_errors(), validation_error_output);
+    wrk.assert_err(&mut cmd);
 }
