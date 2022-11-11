@@ -58,6 +58,9 @@ Currently supported operations:
   * simhm: Hamming distance to --comparand. Num of positions characters differ.
   * simod: Optimal String Alignment (OSA) Distance to --comparand.
   * eudex: Multi-lingual sounds like --comparand (boolean)
+       Tested on English, Catalan, German, Spanish, Swedish and Italian dictionaries.
+       It supports all C1 letters (e.g. ü, ö, æ, ß, é, etc.) and takes their sound into account.
+       It should work on other European languages that use the Latin alphabet.
   * sentiment: Normalized VADER sentiment score (English only - between -1.0 to 1.0).
   * whatlang: Language Detection for 87 supported languages, with default confidence threshold
        of 0.9, which can be overriden by assigning 0.0 to 1.0 to --comparand.
