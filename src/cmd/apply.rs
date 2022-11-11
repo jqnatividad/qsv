@@ -255,6 +255,8 @@ apply options:
     -R, --replacement=<string>  The string to use for the replace & emptyreplace operations.
     --prefer-dmy                Prefer to parse dates in dmy format. Otherwise, use mdy format.
                                 Only used with the DATEFMT subcommand.
+    --keep-zero-time            If a formatted date ends with "T00:00:00+00:00", keep the time
+                                instead of removing it. Only used with the DATEFMT subcommand.
     -f, --formatstr=<string>    This option is used by several subcommands:
 
                                 DATEFMT: The date format to use. For formats, see
@@ -359,26 +361,27 @@ static OPERATIONS: &[&str] = &[
 
 #[derive(Deserialize, Debug)]
 struct Args {
-    arg_column:       SelectColumns,
-    cmd_operations:   bool,
-    arg_operations:   String,
-    cmd_datefmt:      bool,
-    cmd_dynfmt:       bool,
-    cmd_emptyreplace: bool,
-    cmd_geocode:      bool,
-    cmd_calcconv:     bool,
-    arg_input:        Option<String>,
-    flag_rename:      Option<String>,
-    flag_comparand:   String,
-    flag_replacement: String,
-    flag_prefer_dmy:  bool,
-    flag_formatstr:   String,
-    flag_jobs:        Option<usize>,
-    flag_new_column:  Option<String>,
-    flag_output:      Option<String>,
-    flag_no_headers:  bool,
-    flag_delimiter:   Option<Delimiter>,
-    flag_progressbar: bool,
+    arg_column:          SelectColumns,
+    cmd_operations:      bool,
+    arg_operations:      String,
+    cmd_datefmt:         bool,
+    cmd_dynfmt:          bool,
+    cmd_emptyreplace:    bool,
+    cmd_geocode:         bool,
+    cmd_calcconv:        bool,
+    arg_input:           Option<String>,
+    flag_rename:         Option<String>,
+    flag_comparand:      String,
+    flag_replacement:    String,
+    flag_prefer_dmy:     bool,
+    flag_keep_zero_time: bool,
+    flag_formatstr:      String,
+    flag_jobs:           Option<usize>,
+    flag_new_column:     Option<String>,
+    flag_output:         Option<String>,
+    flag_no_headers:     bool,
+    flag_delimiter:      Option<Delimiter>,
+    flag_progressbar:    bool,
 }
 
 static CENSOR: OnceCell<Censor> = OnceCell::new();
@@ -531,7 +534,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // main loop to read CSV and construct batches for parallel processing.
     // each batch is processed via Rayon parallel iterator.
     // loop exits when batch is empty.
-    loop {
+    'batch_loop: loop {
         for _ in 0..BATCH_SIZE {
             match rdr.read_record(&mut batch_record) {
                 Ok(has_data) => {
@@ -550,7 +553,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         if batch.is_empty() {
             // break out of infinite loop when at EOF
-            break;
+            break 'batch_loop;
         }
 
         // do actual apply command via Rayon parallel iterator
@@ -608,7 +611,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                                 if let Ok(format_date) = parsed_date {
                                     let formatted_date =
                                         format_date.format(&args.flag_formatstr).to_string();
-                                    if formatted_date.ends_with("T00:00:00+00:00") {
+                                    if !args.flag_keep_zero_time
+                                        && formatted_date.ends_with("T00:00:00+00:00")
+                                    {
                                         cell = formatted_date[..10].to_string();
                                     } else {
                                         cell = formatted_date;
@@ -702,7 +707,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         batch.clear();
-    } // end infinite loop
+    } // end batch loop
 
     if show_progress {
         if args.cmd_geocode {
