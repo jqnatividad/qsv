@@ -303,6 +303,7 @@ fn excel_invalid_sheet_index() {
     let got = wrk.output_stderr(&mut cmd);
     let expected = "sheet index 100 is greater than number of sheets 8\n".to_string();
     assert_eq!(got, expected);
+    wrk.assert_err(&mut cmd);
 }
 
 #[test]
@@ -410,6 +411,7 @@ fn excel_metadata() {
         svec!["7", "Last", "Last sheet col1;Last-2", "2", "6"],
     ];
     assert_eq!(got, expected);
+    wrk.assert_success(&mut cmd);
 }
 
 #[test]
