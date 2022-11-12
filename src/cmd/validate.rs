@@ -397,10 +397,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             invalid_count.separate_with_commas(),
             row_number.separate_with_commas()
         );
-    } else {
-        winfo!("All {} records valid.", row_number.separate_with_commas());
     }
 
+    winfo!("All {} records valid.", row_number.separate_with_commas());
     Ok(())
 }
 
