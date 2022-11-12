@@ -59,6 +59,78 @@ fn lua_aggregation() {
 }
 
 #[test]
+fn lua_aggregration_with_prologue() {
+    let wrk = Workdir::new("lua");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["letter", "Amount"],
+            svec!["a", "13"],
+            svec!["b", "24"],
+            svec!["c", "72"],
+            svec!["d", "7"],
+        ],
+    );
+    let mut cmd = wrk.command("lua");
+    cmd.arg("map")
+        .arg("Total")
+        .arg("--prologue")
+        .arg("tot = 0")
+        .arg("-x")
+        .arg("tot = tot + Amount; return tot")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["letter", "Amount", "Total"],
+        svec!["a", "13", "13"],
+        svec!["b", "24", "37"],
+        svec!["c", "72", "109"],
+        svec!["d", "7", "116"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn lua_aggregration_with_prologue_epilogue() {
+    let wrk = Workdir::new("lua");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["letter", "Amount"],
+            svec!["a", "13"],
+            svec!["b", "24"],
+            svec!["c", "72"],
+            svec!["d", "7"],
+        ],
+    );
+    let mut cmd = wrk.command("lua");
+    cmd.arg("map")
+        .arg("Total")
+        .arg("--prologue")
+        .arg("tot = 0; gtotal = 0")
+        .arg("-x")
+        .arg("tot = tot + Amount; gtotal = gtotal + tot; return tot")
+        .arg("--epilogue")
+        .arg("return gtotal")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["letter", "Amount", "Total"],
+        svec!["a", "13", "13"],
+        svec!["b", "24", "37"],
+        svec!["c", "72", "109"],
+        svec!["d", "7", "116"],
+    ];
+    assert_eq!(got, expected);
+
+    let epilogue = wrk.output_stderr(&mut cmd);
+    let expected_epilogue = "275\n".to_string();
+    assert_eq!(epilogue, expected_epilogue);
+}
+
+#[test]
 fn lua_map_math() {
     let wrk = Workdir::new("lua");
     wrk.create(

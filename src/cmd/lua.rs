@@ -64,6 +64,10 @@ lua options:
     -g, --no-globals   Don't create Lua global variables for each column, only col.
                        Useful when some column names mask standard Lua globals.
                        Note: access to Lua globals thru _G remains even without -g.
+    --prologue <arg1>  LuaJIT statements to execute before processing the CSV.
+                       Use this to initialize global variables.
+    --epilogue <arg2>  LuaJit statements to execute after processing the CSV.
+                       The output of the epilogue is sent to stderr.
 
 Common options:
     -h, --help             Display this message
@@ -99,6 +103,8 @@ struct Args {
     flag_exec:        bool,
     flag_script_file: bool,
     flag_no_globals:  bool,
+    flag_prologue:    Option<String>,
+    flag_epilogue:    Option<String>,
     flag_output:      Option<String>,
     flag_no_headers:  bool,
     flag_delimiter:   Option<Delimiter>,
@@ -137,6 +143,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let lua = Lua::new();
     let globals = lua.globals();
     globals.set("cols", "{}")?;
+
+    if let Some(prologue) = args.flag_prologue {
+        match lua.load(&prologue).exec() {
+            Ok(_) => (),
+            Err(e) => {
+                return fail_clierror!("Prologue error: Failed to execute \"{prologue}\".\n{e}")
+            }
+        }
+    }
 
     let lua_script = if args.flag_script_file {
         match fs::read_to_string(&args.arg_script) {
@@ -259,8 +274,33 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         }
     }
+
     if show_progress {
         util::finish_progress(&progress);
+    }
+
+    if let Some(epilogue) = args.flag_epilogue {
+        let epilogue_value: mlua::Value = match lua.load(&epilogue).eval() {
+            Ok(computed) => computed,
+            Err(e) => {
+                log::error!("Epilogue error: Cannot evaluate \"{epilogue}\".\n{e}");
+                error_result.clone()
+            }
+        };
+        let epilogue_string = match epilogue_value {
+            mlua::Value::String(string) => string.to_string_lossy().to_string(),
+            mlua::Value::Number(number) => number.to_string(),
+            mlua::Value::Integer(number) => number.to_string(),
+            mlua::Value::Boolean(boolean) => (if boolean { "true" } else { "false" }).to_string(),
+            mlua::Value::Nil => String::new(),
+            _ => {
+                return fail_clierror!(
+                    "Unexpected epilogue value type returned by provided Lua expression. \
+                     {epilogue_value:?}"
+                );
+            }
+        };
+        winfo!("{epilogue_string}");
     }
 
     Ok(wtr.flush()?)
