@@ -1609,6 +1609,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "luau0-src"
+version = "0.4.1+luau553"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a3f3726bd892d911c595d2a12ea93affc65c7be3a303f54b1271c0e135b624c5"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "mach"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1705,6 +1714,7 @@ dependencies = [
  "cc",
  "lua-src",
  "luajit-src",
+ "luau0-src",
  "num-traits",
  "once_cell",
  "pkg-config",

@@ -38,7 +38,7 @@ pub mod input;
 pub mod join;
 #[cfg(any(feature = "full", feature = "lite"))]
 pub mod jsonl;
-#[cfg(all(feature = "lua", not(feature = "lite")))]
+#[cfg(all(feature = "luau", not(feature = "lite")))]
 pub mod lua;
 #[cfg(all(feature = "luajit", not(feature = "lite")))]
 pub mod luajit;

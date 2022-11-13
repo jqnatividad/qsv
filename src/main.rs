@@ -126,8 +126,8 @@ fn main() -> QsvExitCode {
     jsonl       Convert newline-delimited JSON files to CSV\n",
     );
 
-    #[cfg(all(feature = "lua", not(feature = "lite")))]
-    enabled_commands.push_str("    lua         Execute Lua 5.4 script on CSV data\n");
+    #[cfg(all(feature = "luau", not(feature = "lite")))]
+    enabled_commands.push_str("    luau        Execute Lua 5.4 script on CSV data\n");
 
     #[cfg(all(feature = "luajit", not(feature = "lite")))]
     enabled_commands.push_str("    luajit      Execute LuaJIT 2.1 script on CSV data\n");
@@ -278,8 +278,8 @@ enum Command {
     Input,
     Join,
     Jsonl,
-    #[cfg(all(feature = "lua", not(feature = "lite")))]
-    Lua,
+    #[cfg(all(feature = "luau", not(feature = "lite")))]
+    Luau,
     #[cfg(all(feature = "luajit", not(feature = "lite")))]
     LuaJIT,
     Partition,
@@ -353,8 +353,8 @@ impl Command {
             Command::Input => cmd::input::run(argv),
             Command::Join => cmd::join::run(argv),
             Command::Jsonl => cmd::jsonl::run(argv),
-            #[cfg(all(feature = "lua", not(feature = "lite")))]
-            Command::Lua => cmd::lua::run(argv),
+            #[cfg(all(feature = "luau", not(feature = "lite")))]
+            Command::Luau => cmd::lua::run(argv),
             #[cfg(all(feature = "luajit", not(feature = "lite")))]
             Command::LuaJIT => cmd::luajit::run(argv),
             Command::Partition => cmd::partition::run(argv),
