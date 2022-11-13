@@ -49,20 +49,20 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [frequency](/src/cmd/frequency.rs#L2)[^2][^4] | Build [frequency tables](https://statisticsbyjim.com/basics/frequency-table/) of each column. (Uses multithreading to go faster if an index is present.) |
 | [generate](/src/cmd/generate.rs#L2)[^1] | Generate test data by profiling a CSV using [Markov decision process](https://crates.io/crates/test-data-generation) machine learning.  |
 | [headers](/src/cmd/headers.rs#L2) | Show the headers of a CSV. Or show the intersection of all headers between many CSV files. |
-| [index](/src/cmd/index.rs#L2) | Create an index for a CSV. This is very quick & provides constant time indexing into the CSV file. Also enables multithreading for `frequency`, `split`, `stats` and `schema` commands. |
-| [input](/src/cmd/input.rs#L2)[^2] | Read CSV data with special quoting, trimming, line-skipping and UTF-8 transcoding rules. Typically used to "normalize" a CSV for further processing with other qsv commands. |
+| [index](/src/cmd/index.rs#L2) | Create an index for a CSV. This is very quick & provides constant time indexing into the CSV file. Also enables multithreading for `frequency`, `split`, `stats` & `schema` commands. |
+| [input](/src/cmd/input.rs#L2)[^2] | Read CSV data with special quoting, trimming, line-skipping & UTF-8 transcoding rules. Typically used to "normalize" a CSV for further processing with other qsv commands. |
 | [join](/src/cmd/join.rs#L2)[^2] | Inner, outer, cross, anti & semi joins. Uses a simple hash index to make it fast.  |
 | [jsonl](/src/cmd/jsonl.rs#L2) | Convert newline-delimited JSON ([JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/)) to CSV. See `tojsonl` command to convert CSV to JSONL.
-| [luau](/src/cmd/lua.rs#L2)[^1] | Execute a Roblox [Luau](https://luau-lang.org) 0.548 script over CSV lines to transform, aggregate or filter them. [Luau, like Lua is much faster than Python](https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/lua-python3.html), and extended by [Roblox with sandboxing, type-checking and even more performance](https://luau-lang.org/2022/11/04/luau-origins-and-evolution.html). |
+| [luau](/src/cmd/lua.rs#L2)[^1] | Execute a [Luau](https://luau-lang.org) 0.548 script over CSV lines to transform, aggregate or filter them. [Luau, like Lua is much faster than Python](https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/lua-python3.html) & extended by [Roblox with sandboxing, type-checking & even more performance](https://luau-lang.org/2022/11/04/luau-origins-and-evolution.html). |
 | [luajit](/src/cmd/luajit.rs#L2)[^1] | Execute a [LuaJIT](https://luajit.org/luajit.html) (a Just-In-Time compiler for Lua, with partial compatibility with Lua 5.2) script over CSV lines to transform, aggregate or filter them. [LuaJIT is even faster still than Lua/Luau](https://luajit.org/performance_x86.html). |
 | [partition](/src/cmd/partition.rs#L2) | Partition a CSV based on a column value. |
 | [pseudo](/src/cmd/pseudo.rs#L2) | [Pseudonymise](https://en.wikipedia.org/wiki/Pseudonymization) the value of the given column by replacing them with an incremental identifier.  |
-| [py](/src/cmd/python.rs#L2)[^1] | Evaluate a Python expression over CSV lines to transform or filter them. Python's [f-strings](https://www.freecodecamp.org/news/python-f-strings-tutorial-how-to-use-f-strings-for-string-formatting/) is particularly useful for extended formatting, [with the ability to evaluate Python expressions as well](https://github.com/jqnatividad/qsv/blob/4cd00dca88addf0d287247fa27d40563b6d46985/src/cmd/python.rs#L23-L31).<br />You need to compile from source to enable this command with the `python` feature enabled. Consider using the `lua`/`luajit` commands instead if you're having Python version issues ([Python 3.6 and up supported](#python)) as it's much faster, embedded, can do aggregations & has no external dependencies. |
+| [py](/src/cmd/python.rs#L2)[^1] | Evaluate a Python expression over CSV lines to transform or filter them. Python's [f-strings](https://www.freecodecamp.org/news/python-f-strings-tutorial-how-to-use-f-strings-for-string-formatting/) is particularly useful for extended formatting, [with the ability to evaluate Python expressions as well](https://github.com/jqnatividad/qsv/blob/4cd00dca88addf0d287247fa27d40563b6d46985/src/cmd/python.rs#L23-L31).<br />You need to compile from source to enable this command with the `python` feature enabled. Consider using the `lua`/`luajit` commands instead if you're having Python version issues ([Python 3.6 & up supported](#python)) as it's much faster, embedded, can do aggregations & has no external dependencies. |
 | [rename](/src/cmd/rename.rs#L2) |  Rename the columns of a CSV efficiently.  |
 | [replace](/src/cmd/replace.rs#L2) | Replace CSV data using a regex.  |
 | [reverse](/src/cmd/reverse.rs#L2)[^3] | Reverse order of rows in a CSV. Unlike the `sort --reverse` command, it preserves the order of rows with the same key.  |
 | [sample](/src/cmd/sample.rs#L2)[^2] | Randomly draw rows (with optional seed) from a CSV using [reservoir sampling](https://en.wikipedia.org/wiki/Reservoir_sampling) (i.e., use memory proportional to the size of the sample).  |
-| [schema](/src/cmd/schema.rs#L2)[^4] | Infer schema from CSV data, replete with data type and domain/range validation, and output in [JSON Schema](https://json-schema.org/) format. Uses multithreading to go faster if an index is present. See `validate` command to use the generated JSON Schema to validate if similar CSVs comply with the schema. |
+| [schema](/src/cmd/schema.rs#L2)[^4] | Infer schema from CSV data, replete with data type & domain/range validation & output in [JSON Schema](https://json-schema.org/) format. Uses multithreading to go faster if an index is present. See `validate` command to use the generated JSON Schema to validate if similar CSVs comply with the schema. |
 | [search](/src/cmd/search.rs#L2) | Run a regex over a CSV. Applies the regex to each field individually & shows only matching rows.  |
 | [searchset](/src/cmd/searchset.rs#L2) | **Run multiple regexes over a CSV in a single pass.** Applies the regexes to each field individually & shows only matching rows.  |
 | [select](/src/cmd/select.rs#L2) | Select, re-order, duplicate or drop columns.  |
@@ -75,7 +75,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [table](/src/cmd/table.rs#L2)[^3] | Show aligned output of a CSV using [elastic tabstops](https://github.com/BurntSushi/tabwriter).  |
 | [tojsonl](/src/cmd/tojsonl.rs#L2)[^4] | Smartly converts CSV to a newline-delimited JSON ([JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/)). By scanning the CSV first, it "smartly" infers the appropriate JSON data type for each column. See `jsonl` command to convert JSONL to CSV. |
 | [transpose](/src/cmd/transpose.rs#L2)[^3] | Transpose rows/columns of a CSV.  |
-| [validate](/src/cmd/validate.rs#L2)[^2][^5] | Validate CSV data with JSON Schema (See `schema` command), and put invalid records into a separate file and a validation error report file. If no jsonschema file is provided, validates if a CSV conforms to the [RFC 4180 standard](https://datatracker.ietf.org/doc/html/rfc4180). |
+| [validate](/src/cmd/validate.rs#L2)[^2][^5] | Validate CSV data with JSON Schema (See `schema` command) & put invalid records into a separate file & a validation error report file. If no jsonschema file is provided, validates if a CSV conforms to the [RFC 4180 standard](https://datatracker.ietf.org/doc/html/rfc4180). |
 
 [^1]: enabled by optional feature flag. Not available on `qsvlite` & `qsvdp`.
 [^2]: uses an index when available.   
@@ -96,15 +96,15 @@ Pre-built binaries with more enabled features for Windows, Linux and macOS are a
 There are three variants of qsv:
  * `qsv` - [feature](#feature-flags) capable, with the [prebuilt binaries](https://github.com/jqnatividad/qsv/releases/latest) enabling all features except Python [^7]
  * `qsvlite` - all features disabled (~half the size of `qsv`)
- * `qsvdp` - optimized for use with [DataPusher+](https://github.com/dathere/datapusher-plus), with only DataPusher+ relevant commands and the self-update engine removed (~sixth of the size of `qsv`).
+ * `qsvdp` - optimized for use with [DataPusher+](https://github.com/dathere/datapusher-plus), with only DataPusher+ relevant commands & the self-update engine removed (~sixth of the size of `qsv`).
 
 Alternatively, you can install from source by [installing Rust](https://www.rust-lang.org/tools/install)
 and installing `qsv` using Rust's cargo command[^6]:
 
-[^6]: Of course, you'll also need a linker and a C compiler. Linux users should generally install GCC or Clang, according to their distribution’s documentation.
+[^6]: Of course, you'll also need a linker & a C compiler. Linux users should generally install GCC or Clang, according to their distribution’s documentation.
 For example, if you use Ubuntu, you can install the `build-essential` package. On macOS, you can get a C compiler by running `$ xcode-select --install`.
 For Windows, this means installing [Visual Studio 2022](https://visualstudio.microsoft.com/downloads/). When prompted for workloads, include "Desktop Development with C++",
-the Windows 10 or 11 SDK, and the English language pack, along with any other language packs your require.
+the Windows 10 or 11 SDK & the English language pack, along with any other language packs your require.
 
 ```bash
 cargo install qsv --locked --features all_full
@@ -168,25 +168,25 @@ echo "complete -F _docopt_wordlist_commands qsv" >> $HOME/.bash_completion
 
 ## File formats
 
-qsv recognizes UTF-8/ASCII encoded, CSV (`.csv`) and TSV files (`.tsv` and `.tab`). CSV files are assumed to have "," (comma) as a delimiter,
+qsv recognizes UTF-8/ASCII encoded, CSV (`.csv`) & TSV files (`.tsv` & `.tab`). CSV files are assumed to have "," (comma) as a delimiter,
 and TSV files, "\t" (tab) as a delimiter. The delimiter is a single ascii character that can be set either by the `--delimiter` command-line option or
 with the `QSV_DEFAULT_DELIMITER` environment variable or automatically detected when `QSV_SNIFF_DELIMITER` is set.
 
-When using the `--output` option, note that qsv will UTF-8 encode the file and automatically change the delimiter used in the generated file based on the file extension - i.e. comma for `.csv`, tab for `.tsv` and `.tab` files.
+When using the `--output` option, note that qsv will UTF-8 encode the file & automatically change the delimiter used in the generated file based on the file extension - i.e. comma for `.csv`, tab for `.tsv` & `.tab` files.
 
-[JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/) files are also recognized and converted from/to CSV with the [`jsonl`](/src/cmd/jsonl.rs#L11) and [`tojsonl`](/src/cmd/tojsonl.rs#L12) commands respectively.
+[JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/) files are also recognized & converted from/to CSV with the [`jsonl`](/src/cmd/jsonl.rs#L11) and [`tojsonl`](/src/cmd/tojsonl.rs#L12) commands respectively.
 
-The `fetch` & `fetchpost` commands also produces JSONL files when its invoked without the `--new-column` option, and TSV files with the `--report` option.
+The `fetch` & `fetchpost` commands also produces JSONL files when its invoked without the `--new-column` option & TSV files with the `--report` option.
 
-The `sniff`, `sortcheck` and `validate` commands produce JSON files with their `--json` and `--pretty-json` options.
+The `sniff`, `sortcheck` & `validate` commands produce JSON files with their `--json` & `--pretty-json` options.
 
 The `schema` command produces a [JSON Schema Validation (Draft 7)](https://json-schema.org/draft/2020-12/json-schema-validation.html) file with the ".schema.json" file extension, which can be used with the `validate` command.
 
-The `excel` command recognizes Excel and Open Document Spreadsheet(ODS) files (`.xls`, `.xlsx`, `.xlsm`, `.xlsb` and `.ods` files).
+The `excel` command recognizes Excel & Open Document Spreadsheet(ODS) files (`.xls`, `.xlsx`, `.xlsm`, `.xlsb` & `.ods` files).
 
 ### RFC 4180
 
-qsv validates against the [RFC 4180](https://datatracker.ietf.org/doc/html/rfc4180) CSV standard. However IRL, CSV formats vary significantly and qsv is actually not strictly compliant with the specification so it can process "real-world" CSV files.
+qsv validates against the [RFC 4180](https://datatracker.ietf.org/doc/html/rfc4180) CSV standard. However IRL, CSV formats vary significantly & qsv is actually not strictly compliant with the specification so it can process "real-world" CSV files.
 qsv leverages the awesome [Rust CSV](https://docs.rs/csv/latest/csv/) crate to read/write CSV files.
 
 Click [here](https://docs.rs/csv-core/latest/csv_core/struct.Reader.html#rfc-4180) to find out more about how qsv conforms to the standard using this crate.
@@ -195,15 +195,15 @@ Click [here](https://docs.rs/csv-core/latest/csv_core/struct.Reader.html#rfc-418
 
 The following commands require UTF-8 encoded input (of which ASCII is a subset) - `dedup`, `exclude`, `fetch`, `fetchpost`, `frequency`, `join`, `schema`, `sort`, `stats` & `validate`.
 
-For these commands, qsv checks if the input is UTF-8 encoded by scanning the first 8k, and will abort if its not unless `QSV_SKIPUTF8_CHECK` is set. On Linux and macOS, UTF-8 encoding is the default.
+For these commands, qsv checks if the input is UTF-8 encoded by scanning the first 8k & will abort if its not unless `QSV_SKIPUTF8_CHECK` is set. On Linux & macOS, UTF-8 encoding is the default.
 
 This was done to increase performance of these commands, as they make extensive use of `from_utf8_unchecked` so as not to pay the repetitive utf-8 validation penalty, no matter how small, even for already utf-8 encoded files.
 
-Should you need to re-encode CSV/TSV files, you can use the `input` command to transcode to UTF-8. It will replace all invalid UTF-8 sequences with `�`. Alternatively, there are several utilities you can use to do so on [Linux/macOS](https://stackoverflow.com/questions/805418/how-can-i-find-encoding-of-a-file-via-a-script-on-linux) and [Windows](https://superuser.com/questions/1163753/converting-text-file-to-utf-8-on-windows-command-prompt).
+Should you need to re-encode CSV/TSV files, you can use the `input` command to transcode to UTF-8. It will replace all invalid UTF-8 sequences with `�`. Alternatively, there are several utilities you can use to do so on [Linux/macOS](https://stackoverflow.com/questions/805418/how-can-i-find-encoding-of-a-file-via-a-script-on-linux) & [Windows](https://superuser.com/questions/1163753/converting-text-file-to-utf-8-on-windows-command-prompt).
 
 ### **Windows Usage Note**
 
-Unlike other modern operating systems, Microsoft Windows' [default encoding is UTF16-LE](https://stackoverflow.com/questions/66072117/why-does-windows-use-utf-16le). This will cause problems when redirecting qsv's output to a CSV file and trying to open it with Excel (which ignores the comma delimiter, with everything in the first column):
+Unlike other modern operating systems, Microsoft Windows' [default encoding is UTF16-LE](https://stackoverflow.com/questions/66072117/why-does-windows-use-utf-16le). This will cause problems when redirecting qsv's output to a CSV file & trying to open it with Excel (which ignores the comma delimiter, with everything in the first column):
 
 ```
 qsv stats wcp.csv > wcpstats.csv
@@ -223,16 +223,16 @@ qsv stats wcp.csv --output wcpstats.csv
 
 The `python` feature is NOT enabled by default on the pre-built binaries, as doing so requires it to statically link to python, which presents distribution issues, as various operating systems have differing bundled Python versions.
 
-If you wish to enable the `python` feature - you'll just have to install/compile from source, making sure you have the development libraries for the desired Python version (Python 3.6 and up are supported) installed when doing so.
+If you wish to enable the `python` feature - you'll just have to install/compile from source, making sure you have the development libraries for the desired Python version (Python 3.6 & up are supported) installed when doing so.
 
-Note that if you plan to distribute your manually built `qsv` with the `python` feature, `qsv` will look for Python shared libraries (libpython* on Linux/macOS, python*.dll on Windows) against which it was compiled starting with the current directory, and abort with an error if not found, detailing the Python library it was looking for. 
+Note that if you plan to distribute your manually built `qsv` with the `python` feature, `qsv` will look for Python shared libraries (libpython* on Linux/macOS, python*.dll on Windows) against which it was compiled starting with the current directory & abort with an error if not found, detailing the Python library it was looking for. 
 
 Note that this will happen as soon as the qsv binary is invoked, even if you're not running the `py` command.
 
-[PyO3](https://pyo3.rs) - the underlying crate that enables the `python` feature, uses a build script to determine the Python version and set the correct linker arguments. By default it uses the python3 executable.
+[PyO3](https://pyo3.rs) - the underlying crate that enables the `python` feature, uses a build script to determine the Python version & set the correct linker arguments. By default it uses the python3 executable.
 You can override the Python interpreter by setting `PYO3_PYTHON` (e.g., `PYO3_PYTHON=python3.6`), before installing/compiling qsv. See the [PyO3 User Guide](https://pyo3.rs/v0.17.1/building_and_distribution.html) for more information.
 
-Also, consider using the `luau`/`luajit` commands instead of the `py` command if the mapping/filtering operation you're trying to do can be done with `luau`/`luajit`. [Lua/Luau is much faster than Python](https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/lua-python3.html) and [LuaJIT is even faster still](https://luajit.org/performance_x86.html). In addition, Luau/LuaJIT is embedded into qsv, can do aggregations & has no external dependencies, unlike Python.
+Also, consider using the `luau`/`luajit` commands instead of the `py` command if the mapping/filtering operation you're trying to do can be done with `luau`/`luajit`. [Lua/Luau is much faster than Python](https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/lua-python3.html) & [LuaJIT is even faster still](https://luajit.org/performance_x86.html). In addition, Luau/LuaJIT is embedded into qsv, can do aggregations & has no external dependencies, unlike Python.
 
 The `py` command cannot do aggregations because [PyO3's GIL-bound memory](https://pyo3.rs/v0.17.2/memory.html#gil-bound-memory) limitations will quickly consume a lot of memory (see [issue 449](https://github.com/jqnatividad/qsv/issues/449#issuecomment-1226095316) for details).
 To prevent this, the `py` command processes CSVs in batches (default: 30,000 records), with a GIL pool for each batch, so no globals are available across batches.
@@ -242,22 +242,22 @@ To prevent this, the `py` command processes CSVs in batches (default: 30,000 rec
 
 | Variable | Description |
 | --- | --- |
-| `QSV_DEFAULT_DELIMITER` | single ascii character to use as delimiter.  Overrides `--delimeter` option. Defaults to "," (comma) for CSV files and "\t" (tab) for TSV files when not set. Note that this will also set the delimiter for qsv's output to stdout.<br>However, using the `--output` option, regardless of this environment variable, will automatically change the delimiter used in the generated file based on the file extension - i.e. comma for `.csv`, tab for `.tsv` and `.tab` files. |
-| `QSV_SNIFF_DELIMITER` | if set, the delimiter is automatically detected. Overrides `QSV_DEFAULT_DELIMITER` and `--delimiter` option. Note that this does not work with stdin. |
+| `QSV_DEFAULT_DELIMITER` | single ascii character to use as delimiter.  Overrides `--delimeter` option. Defaults to "," (comma) for CSV files & "\t" (tab) for TSV files when not set. Note that this will also set the delimiter for qsv's output to stdout.<br>However, using the `--output` option, regardless of this environment variable, will automatically change the delimiter used in the generated file based on the file extension - i.e. comma for `.csv`, tab for `.tsv` & `.tab` files. |
+| `QSV_SNIFF_DELIMITER` | if set, the delimiter is automatically detected. Overrides `QSV_DEFAULT_DELIMITER` & `--delimiter` option. Note that this does not work with stdin. |
 | `QSV_NO_HEADERS` | if set, the first row will **NOT** be interpreted as headers. Supersedes `QSV_TOGGLE_HEADERS`. |
-| `QSV_TOGGLE_HEADERS` | if set to `1`, toggles header setting - i.e. inverts qsv header behavior, with no headers being the default, and setting `--no-headers` will actually mean headers will not be ignored. |
+| `QSV_TOGGLE_HEADERS` | if set to `1`, toggles header setting - i.e. inverts qsv header behavior, with no headers being the default, & setting `--no-headers` will actually mean headers will not be ignored. |
 | `QSV_AUTOINDEX` | if set, automatically create an index when none is detected. Also automatically update stale indices. |
 | `QSV_COMMENT_CHAR` | set to an ascii character. If set, any lines(including the header) that start with this character are ignored. |
-| `QSV_MAX_JOBS` | number of jobs to use for multithreaded commands (currently `apply`, `dedup`, `extsort`, `frequency`, `schema`, `sort`, `split`, `stats`, `tojsonl` and `validate`). If not set, max_jobs is set to the detected number of logical processors.  See [Multithreading](docs/PERFORMANCE.md#multithreading) for more info. |
+| `QSV_MAX_JOBS` | number of jobs to use for multithreaded commands (currently `apply`, `dedup`, `extsort`, `frequency`, `schema`, `sort`, `split`, `stats`, `tojsonl` & `validate`). If not set, max_jobs is set to the detected number of logical processors.  See [Multithreading](docs/PERFORMANCE.md#multithreading) for more info. |
 | `QSV_NO_UPDATE` | if set, prohibit self-update version check for the latest qsv release published on GitHub. |
 | `QSV_PREFER_DMY` | if set, date parsing will use DMY format. Otherwise, use MDY format (used with `apply datefmt`, `schema`, `sniff` & `stats` commands). |
-| `QSV_REGEX_UNICODE` | if set, makes `search`, `searchset` and `replace` commands unicode-aware. For increased performance, these commands are not unicode-aware by default and will ignore unicode values when matching and will abort when unicode characters are used in the regex. Note that the `apply operations regex_replace` operation is always unicode-aware. |
+| `QSV_REGEX_UNICODE` | if set, makes `search`, `searchset` & `replace` commands unicode-aware. For increased performance, these commands are not unicode-aware by default & will ignore unicode values when matching & will abort when unicode characters are used in the regex. Note that the `apply operations regex_replace` operation is always unicode-aware. |
 | `QSV_SKIPUTF8_CHECK` | if set, skip UTF-8 encoding check. Otherwise, for several commands that require UTF-8 encoded input (see [UTF8-Encoding](#utf-8-encoding)), qsv scans the first 8k. |
 | `QSV_RDR_BUFFER_CAPACITY` | reader buffer size (default (bytes): 16384) |
 | `QSV_WTR_BUFFER_CAPACITY` | writer buffer size (default (bytes): 65536) |
 | `QSV_LOG_LEVEL` | desired level (default - off; `error`, `warn`, `info`, `trace`, `debug`). |
 | `QSV_LOG_DIR` | when logging is enabled, the directory where the log files will be stored. If the specified directory does not exist, qsv will attempt to create it. If not set, the log files are created in the directory where qsv was started. See [Logging](docs/Logging.md#logging) for more info. |
-| `QSV_PROGRESSBAR` | if set, enable the --progressbar option on the `apply`, `fetch`, `fetchpost`, `foreach`, `lua`, `py`, `replace`, `search`, `searchset`, `sortcheck` and `validate` commands.  |
+| `QSV_PROGRESSBAR` | if set, enable the --progressbar option on the `apply`, `fetch`, `fetchpost`, `foreach`, `lua`, `py`, `replace`, `search`, `searchset`, `sortcheck` & `validate` commands.  |
 | `QSV_REDIS_CONNSTR` | the `fetch` command can use [Redis](https://redis.io/) to cache responses. Set to connect to the desired Redis instance. (default: `redis:127.0.0.1:6379/1`). For more info on valid Redis connection string formats, see https://docs.rs/redis/latest/redis/#connection-parameters. |
 | `QSV_FP_REDIS_CONNSTR` | the `fetchpost` command can also use Redis to cache responses (default: `redis:127.0.0.1:6379/2`). Note that `fetchpost` connects to database 2, as opposed to `fetch` which connects to database 1. |
 | `QSV_REDIS_MAX_POOL_SIZE` | the maximum Redis connection pool size. (default: 20). |
@@ -270,10 +270,10 @@ Several dependencies also have environment variables that influence qsv's perfor
   When incorporating qsv into a data pipeline that runs in batch mode, particularly with very large CSV files using qsv commands that load entire CSV files into memory, you can
   [fine-tune Mimalloc's behavior using its environment variables](https://github.com/microsoft/mimalloc#environment-options).
 * Network Access ([reqwest](https://docs.rs/reqwest/latest/reqwest/))   
-  qsv uses reqwest for its `fetch`, `validate` and `--update` functions and will honor [proxy settings](https://docs.rs/reqwest/latest/reqwest/index.html#proxies) set through the `HTTP_PROXY`, `HTTPS_PROXY` and `NO_PROXY` environment variables.
+  qsv uses reqwest for its `fetch`, `validate` & `--update` functions & will honor [proxy settings](https://docs.rs/reqwest/latest/reqwest/index.html#proxies) set through the `HTTP_PROXY`, `HTTPS_PROXY` & `NO_PROXY` environment variables.
   
 > ℹ️ **NOTE:** To get a list of all active qsv-relevant environment variables, run `qsv --envlist`.
-Relevant env vars are defined as anything that starts with `QSV_` and `MIMALLOC_`, and the proxy variables listed above.
+Relevant env vars are defined as anything that starts with `QSV_` & `MIMALLOC_` & the proxy variables listed above.
 
 ## Feature Flags
 
@@ -281,12 +281,12 @@ Relevant env vars are defined as anything that starts with `QSV_` and `MIMALLOC_
 
 * `mimalloc` (default) - use the mimalloc allocator (see [Memory Allocator](docs/PERFORMANCE.md#memory-allocator) for more info).
 * `apply` - enable `apply` command. This swiss-army knife of CSV transformations is very powerful, but it has a lot of dependencies that increases both compile time and binary size.
-* `fetch` - enables the `fetch` and `fetchpost` commands.
+* `fetch` - enables the `fetch` & `fetchpost` commands.
 * `foreach` - enable `foreach` command (not valid for Windows).
 * `generate` - enable `generate` command.
 * `luau` - enable `luau` command. Embeds a [Roblox Luau](https://luau-lang.org) interpreter into qsv.
-* `luajit` - enable `luajit` command. Embeds a [LuaJIT 2.0](https://luajit.org/luajit.html) interpreter into qsv. LuaJIT is a Just-In-Time compiler for the Lua 5.2 language and is thus much faster than Lua. Note that the `lua` and `luajit` interpreters are mutually exclusive features.
-* `python` - enable `py` command. Note that qsv will look for the shared library for the Python version (Python 3.6 and above supported) it was compiled against and will abort if the library is not found, even if you're not using the `py` command. Check [Python](#python) section for more info.
+* `luajit` - enable `luajit` command. Embeds a [LuaJIT 2.0](https://luajit.org/luajit.html) interpreter into qsv. LuaJIT is a Just-In-Time compiler for the Lua 5.2 language & is thus much faster than Lua. Note that the `lua` & `luajit` interpreters are mutually exclusive features.
+* `python` - enable `py` command. Note that qsv will look for the shared library for the Python version (Python 3.6 & above supported) it was compiled against & will abort if the library is not found, even if you're not using the `py` command. Check [Python](#python) section for more info.
 * `self_update` - enable self-update engine, checking GitHub for the latest release. Note that if you manually built qsv, `self-update` will only check for new releases.
 It will NOT offer the choice to update itself to the prebuilt binaries published on GitHub. You need not worry that your manually built qsv will be overwritten by a self-update.
 
@@ -294,7 +294,7 @@ It will NOT offer the choice to update itself to the prebuilt binaries published
 * `all_full` - enable to build qsv binary variant with all features enabled (apply,fetch,foreach,generate,luajit,python,self_update).
 * `lite` - enable to build qsvlite binary variant with all features disabled.
 * `datapusher_plus` - enable to build qsvdp binary variant - the [DataPusher+](https://github.com/dathere/datapusher-plus) optimized qsv binary.
-* `nightly` - enable to turn on nightly/unstable features in the `rand`, `regex`, `hashbrown`, `parking_lot` and `pyo3` crates when building with Rust nightly/unstable.
+* `nightly` - enable to turn on nightly/unstable features in the `rand`, `regex`, `hashbrown`, `parking_lot` & `pyo3` crates when building with Rust nightly/unstable.
 
 
 > ℹ️ **NOTE:** `qsvlite`, as the name implies, always has **non-default features disabled**. `qsv` can be built with any combination of the above features using the cargo `--features` & `--no-default-features` flags. The pre-built `qsv` binaries has **all applicable features valid for the target platform**[^7].
