@@ -28,6 +28,10 @@ Some usage examples:
   Add running total column for Amount
   $ qsv luajit map Total -x "tot = (tot or 0) + Amount; return tot"
 
+  Or use the prologue and epilogue options to compute the running & grand totals
+  $ qsv luajit map Total --prologue "tot = 0; gtotal = 0" -x \
+        "tot = tot + Amount; gtotal = gtotal + tot; return tot" --epilogue "return gtotal"
+
   Add running total column for Amount when previous balance was 900
   $ qsv luajit map Total -x "tot = (tot or 900) + Amount; return tot"
 
@@ -47,7 +51,14 @@ Some usage examples:
   With "luajit map", if a LuaJIT script is invalid, "<ERROR>" is returned.
   With "luajit filter", if a LuaJIT script is invalid, no filtering is done.
 
-  For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_luajit.rs.
+There are also special variables named "_idx" that is set to the current row number; and
+"_rowcount" which is zero during the prologue and the main script, and set to the rowcount
+during the epilogue.
+
+Note that with the judicious use of the prologue and the _idx variable, one can create arrays
+that can be used for complex aggregation operations in the epilogue.
+
+For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_luajit.rs.
 
 Usage:
     qsv luajit map [options] -n <script> [<input>]
@@ -68,7 +79,7 @@ lua options:
                        Useful when some column names mask standard LuaJIT globals.
                        Note: access to LuaJIT globals thru _G remains even without -g.
     --prologue <arg1>  LuaJIT statements to execute before processing the CSV.
-                       Use this to initialize global variables.
+                       Normally used to initialize global variables.
     --epilogue <arg2>  LuaJit statements to execute after processing the CSV.
                        The output of the epilogue is sent to stderr.
 
@@ -147,13 +158,28 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let globals = lua.globals();
     globals.set("cols", "{}")?;
 
+    let mut idx_used = false;
+    let mut idx = 0_usize;
+
+    // check if a prologue was specified
     if let Some(prologue) = args.flag_prologue {
+        idx_used = prologue.contains("_idx");
+        if idx_used {
+            globals.set("_idx", 0)?;
+            globals.set("_rowcount", 0)?;
+        }
+
         match lua.load(&prologue).exec() {
             Ok(_) => (),
             Err(e) => {
                 return fail_clierror!("Prologue error: Failed to execute \"{prologue}\".\n{e}")
             }
         }
+    }
+
+    // check if the prologue uses _idx or _rowcount
+    if let Some(ref epilogue) = args.flag_epilogue {
+        idx_used = idx_used || epilogue.contains("_idx") || epilogue.contains("_rowcount");
     }
 
     let lua_script = if args.flag_script_file {
@@ -188,11 +214,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let error_result: mluajit::Value = lua.load("return \"<ERROR>\";").eval()?;
     let mut error_flag;
 
+    // check if _idx or _rowcount was used in the main script
+    idx_used = idx_used || lua_program.contains("_idx") || lua_program.contains("_rowcount");
+
     let mut record = csv::StringRecord::new();
 
     while rdr.read_record(&mut record)? {
         if show_progress {
             progress.inc(1);
+        }
+
+        // _idx is used, be sure to keep _idx set to current row number
+        if idx_used {
+            idx += 1;
+            globals.set("_idx", idx)?;
         }
 
         // Updating col
@@ -283,6 +318,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     if let Some(epilogue) = args.flag_epilogue {
+        // if idx_used, also set a convenience variable named _rowcount;
+        // true, _rowcount is equal to _idx at this point, but this
+        // should make for more readable epilogues.
+        // Also, _rowcount is zero during the main script, and only set
+        // to _idx during the epilogue.
+        if idx_used {
+            globals.set("_rowcount", idx)?;
+        }
+
         let epilogue_value: mluajit::Value = match lua.load(&epilogue).eval() {
             Ok(computed) => computed,
             Err(e) => {
