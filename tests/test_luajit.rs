@@ -28,6 +28,36 @@ fn luajit_map() {
 }
 
 #[test]
+fn luajit_map_idx() {
+    let wrk = Workdir::new("luajit");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["letter", "number"],
+            svec!["a", "13"],
+            svec!["b", "24"],
+            svec!["c", "72"],
+            svec!["d", "7"],
+        ],
+    );
+    let mut cmd = wrk.command("luajit");
+    cmd.arg("map")
+        .arg("inc")
+        .arg("number * _idx")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["letter", "number", "inc"],
+        svec!["a", "13", "13"],
+        svec!["b", "24", "48"],
+        svec!["c", "72", "216"],
+        svec!["d", "7", "28"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn luajit_aggregration() {
     let wrk = Workdir::new("lua");
     wrk.create(
@@ -108,11 +138,11 @@ fn luajit_aggregration_with_prologue_epilogue() {
     cmd.arg("map")
         .arg("Total")
         .arg("--prologue")
-        .arg("tot = 0; gtotal = 0")
+        .arg("tot = 0; gtotal = 0; amt_array = {}")
         .arg("-x")
-        .arg("tot = tot + Amount; gtotal = gtotal + tot; return tot")
+        .arg("amt_array[_idx] = Amount; tot = tot + Amount; gtotal = gtotal + tot; return tot")
         .arg("--epilogue")
-        .arg("return gtotal")
+        .arg(r#"return ("Min/Max: " .. math.min(unpack(amt_array)) .. "/" .. math.max(unpack(amt_array)) .. " Grand total of " .. _rowcount .. " rows: " .. gtotal)"#)
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
@@ -126,8 +156,10 @@ fn luajit_aggregration_with_prologue_epilogue() {
     assert_eq!(got, expected);
 
     let epilogue = wrk.output_stderr(&mut cmd);
-    let expected_epilogue = "275\n".to_string();
+    let expected_epilogue = "Min/Max: 7/72 Grand total of 4 rows: 275\n".to_string();
     assert_eq!(epilogue, expected_epilogue);
+
+    wrk.assert_success(&mut cmd);
 }
 
 #[test]

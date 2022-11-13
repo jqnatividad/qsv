@@ -1,8 +1,8 @@
 use crate::workdir::Workdir;
 
 #[test]
-fn lua_map() {
-    let wrk = Workdir::new("lua");
+fn luau_map() {
+    let wrk = Workdir::new("luau");
     wrk.create(
         "data.csv",
         vec![
@@ -13,7 +13,7 @@ fn lua_map() {
             svec!["d", "7"],
         ],
     );
-    let mut cmd = wrk.command("lua");
+    let mut cmd = wrk.command("luau");
     cmd.arg("map").arg("inc").arg("number + 1").arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
@@ -28,8 +28,38 @@ fn lua_map() {
 }
 
 #[test]
-fn lua_aggregation() {
-    let wrk = Workdir::new("lua");
+fn luau_map_idx() {
+    let wrk = Workdir::new("luau");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["letter", "number"],
+            svec!["a", "13"],
+            svec!["b", "24"],
+            svec!["c", "72"],
+            svec!["d", "7"],
+        ],
+    );
+    let mut cmd = wrk.command("luau");
+    cmd.arg("map")
+        .arg("inc")
+        .arg("number * _idx")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["letter", "number", "inc"],
+        svec!["a", "13", "13"],
+        svec!["b", "24", "48"],
+        svec!["c", "72", "216"],
+        svec!["d", "7", "28"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn luau_aggregation() {
+    let wrk = Workdir::new("luau");
     wrk.create(
         "data.csv",
         vec![
@@ -40,7 +70,7 @@ fn lua_aggregation() {
             svec!["d", "7"],
         ],
     );
-    let mut cmd = wrk.command("lua");
+    let mut cmd = wrk.command("luau");
     cmd.arg("map")
         .arg("Total")
         .arg("-x")
@@ -59,8 +89,8 @@ fn lua_aggregation() {
 }
 
 #[test]
-fn lua_aggregration_with_prologue() {
-    let wrk = Workdir::new("lua");
+fn luau_aggregration_with_prologue() {
+    let wrk = Workdir::new("luau");
     wrk.create(
         "data.csv",
         vec![
@@ -71,7 +101,7 @@ fn lua_aggregration_with_prologue() {
             svec!["d", "7"],
         ],
     );
-    let mut cmd = wrk.command("lua");
+    let mut cmd = wrk.command("luau");
     cmd.arg("map")
         .arg("Total")
         .arg("--prologue")
@@ -92,8 +122,8 @@ fn lua_aggregration_with_prologue() {
 }
 
 #[test]
-fn lua_aggregration_with_prologue_epilogue() {
-    let wrk = Workdir::new("lua");
+fn luau_aggregration_with_prologue_epilogue() {
+    let wrk = Workdir::new("luau");
     wrk.create(
         "data.csv",
         vec![
@@ -104,15 +134,15 @@ fn lua_aggregration_with_prologue_epilogue() {
             svec!["d", "7"],
         ],
     );
-    let mut cmd = wrk.command("lua");
+    let mut cmd = wrk.command("luau");
     cmd.arg("map")
         .arg("Total")
         .arg("--prologue")
-        .arg("tot = 0; gtotal = 0")
+        .arg("tot = 0; gtotal = 0; amt_array = {}")
         .arg("-x")
-        .arg("tot = tot + Amount; gtotal = gtotal + tot; return tot")
+        .arg("amt_array[_idx] = Amount; tot = tot + Amount; gtotal = gtotal + tot; return tot")
         .arg("--epilogue")
-        .arg("return gtotal")
+        .arg(r#"return ("Min/Max: " .. math.min(unpack(amt_array)) .. "/" .. math.max(unpack(amt_array)) .. " Grand total of " .. _rowcount .. " rows: " .. gtotal)"#)
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
@@ -126,13 +156,15 @@ fn lua_aggregration_with_prologue_epilogue() {
     assert_eq!(got, expected);
 
     let epilogue = wrk.output_stderr(&mut cmd);
-    let expected_epilogue = "275\n".to_string();
+    let expected_epilogue = "Min/Max: 7/72 Grand total of 4 rows: 275\n".to_string();
     assert_eq!(epilogue, expected_epilogue);
+
+    wrk.assert_success(&mut cmd);
 }
 
 #[test]
-fn lua_map_math() {
-    let wrk = Workdir::new("lua");
+fn luau_map_math() {
+    let wrk = Workdir::new("luau");
     wrk.create(
         "data.csv",
         vec![
@@ -143,7 +175,7 @@ fn lua_map_math() {
             svec!["d", "7"],
         ],
     );
-    let mut cmd = wrk.command("lua");
+    let mut cmd = wrk.command("luau");
     cmd.arg("map")
         .arg("div")
         .arg("math.floor(number / 2)")
@@ -161,8 +193,8 @@ fn lua_map_math() {
 }
 
 #[test]
-fn lua_map_error() {
-    let wrk = Workdir::new("lua");
+fn luau_map_error() {
+    let wrk = Workdir::new("luau");
     wrk.create(
         "data.csv",
         vec![
@@ -173,7 +205,7 @@ fn lua_map_error() {
             svec!["d", "7"],
         ],
     );
-    let mut cmd = wrk.command("lua");
+    let mut cmd = wrk.command("luau");
     cmd.arg("map")
         .arg("div")
         .arg("math.dancefloor(number / 2)")
@@ -191,8 +223,8 @@ fn lua_map_error() {
 }
 
 #[test]
-fn lua_map_header_with_nonalphanumeric_chars() {
-    let wrk = Workdir::new("lua");
+fn luau_map_header_with_nonalphanumeric_chars() {
+    let wrk = Workdir::new("luau");
     wrk.create(
         "data.csv",
         vec![
@@ -203,7 +235,7 @@ fn lua_map_header_with_nonalphanumeric_chars() {
             svec!["d", "7"],
         ],
     );
-    let mut cmd = wrk.command("lua");
+    let mut cmd = wrk.command("luau");
     cmd.arg("map")
         .arg(r#"div/column"#)
         .arg(r#"col["letter-column"] .. math.floor(col["number column"] / 2)"#)
@@ -221,8 +253,8 @@ fn lua_map_header_with_nonalphanumeric_chars() {
 }
 
 #[test]
-fn lua_map_no_headers() {
-    let wrk = Workdir::new("lua");
+fn luau_map_no_headers() {
+    let wrk = Workdir::new("luau");
     wrk.create(
         "data.csv",
         vec![
@@ -232,7 +264,7 @@ fn lua_map_no_headers() {
             svec!["d", "7"],
         ],
     );
-    let mut cmd = wrk.command("lua");
+    let mut cmd = wrk.command("luau");
     cmd.arg("map")
         .arg("col[2] + 1")
         .arg("--no-headers")
@@ -249,8 +281,8 @@ fn lua_map_no_headers() {
 }
 
 #[test]
-fn lua_map_exec() {
-    let wrk = Workdir::new("lua");
+fn luau_map_exec() {
+    let wrk = Workdir::new("luau");
     wrk.create(
         "data.csv",
         vec![
@@ -261,7 +293,7 @@ fn lua_map_exec() {
             svec!["d", "7"],
         ],
     );
-    let mut cmd = wrk.command("lua");
+    let mut cmd = wrk.command("luau");
     cmd.arg("map")
         .arg("running_total")
         .arg("-x")
@@ -280,8 +312,8 @@ fn lua_map_exec() {
 }
 
 #[test]
-fn lua_map_no_globals() {
-    let wrk = Workdir::new("lua");
+fn luau_map_no_globals() {
+    let wrk = Workdir::new("luau");
     wrk.create(
         "data.csv",
         vec![
@@ -292,7 +324,7 @@ fn lua_map_no_globals() {
             svec!["4", "7"],
         ],
     );
-    let mut cmd = wrk.command("lua");
+    let mut cmd = wrk.command("luau");
     cmd.arg("map")
         .arg("z")
         .arg("-g")
@@ -311,8 +343,8 @@ fn lua_map_no_globals() {
 }
 
 #[test]
-fn lua_map_boolean() {
-    let wrk = Workdir::new("lua");
+fn luau_map_boolean() {
+    let wrk = Workdir::new("luau");
     wrk.create(
         "data.csv",
         vec![
@@ -323,7 +355,7 @@ fn lua_map_boolean() {
             svec!["d", "7"],
         ],
     );
-    let mut cmd = wrk.command("lua");
+    let mut cmd = wrk.command("luau");
     cmd.arg("map")
         .arg("test")
         .arg("tonumber(number) > 14")
@@ -341,8 +373,8 @@ fn lua_map_boolean() {
 }
 
 #[test]
-fn lua_filter() {
-    let wrk = Workdir::new("lua");
+fn luau_filter() {
+    let wrk = Workdir::new("luau");
     wrk.create(
         "data.csv",
         vec![
@@ -353,7 +385,7 @@ fn lua_filter() {
             svec!["d", "7"],
         ],
     );
-    let mut cmd = wrk.command("lua");
+    let mut cmd = wrk.command("luau");
     cmd.arg("filter")
         .arg("tonumber(number) > 14")
         .arg("data.csv");
@@ -368,8 +400,8 @@ fn lua_filter() {
 }
 
 #[test]
-fn lua_filter_error() {
-    let wrk = Workdir::new("lua");
+fn luau_filter_error() {
+    let wrk = Workdir::new("luau");
     wrk.create(
         "data.csv",
         vec![
@@ -380,7 +412,7 @@ fn lua_filter_error() {
             svec!["d", "7"],
         ],
     );
-    let mut cmd = wrk.command("lua");
+    let mut cmd = wrk.command("luau");
     cmd.arg("filter")
         .arg("tothedancenumber(number) > 14")
         .arg("data.csv");
@@ -397,8 +429,8 @@ fn lua_filter_error() {
 }
 
 #[test]
-fn lua_filter_num() {
-    let wrk = Workdir::new("lua");
+fn luau_filter_num() {
+    let wrk = Workdir::new("luau");
     wrk.create(
         "data.csv",
         vec![
@@ -416,7 +448,7 @@ fn lua_filter_num() {
             svec!["k", "0.0000"],
         ],
     );
-    let mut cmd = wrk.command("lua");
+    let mut cmd = wrk.command("luau");
     cmd.arg("filter").arg("tonumber(number)").arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
