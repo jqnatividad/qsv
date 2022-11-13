@@ -89,7 +89,7 @@ fn luau_aggregation() {
 }
 
 #[test]
-fn luau_aggregration_with_prologue() {
+fn luau_aggregation_with_prologue() {
     let wrk = Workdir::new("luau");
     wrk.create(
         "data.csv",
@@ -122,7 +122,7 @@ fn luau_aggregration_with_prologue() {
 }
 
 #[test]
-fn luau_aggregration_with_prologue_epilogue() {
+fn luau_aggregation_with_prologue_epilogue() {
     let wrk = Workdir::new("luau");
     wrk.create(
         "data.csv",

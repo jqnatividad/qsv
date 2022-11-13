@@ -58,7 +58,7 @@ fn luajit_map_idx() {
 }
 
 #[test]
-fn luajit_aggregration() {
+fn luajit_aggregation() {
     let wrk = Workdir::new("lua");
     wrk.create(
         "data.csv",
@@ -89,7 +89,7 @@ fn luajit_aggregration() {
 }
 
 #[test]
-fn luajit_aggregration_with_prologue() {
+fn luajit_aggregation_with_prologue() {
     let wrk = Workdir::new("lua");
     wrk.create(
         "data.csv",
@@ -122,7 +122,7 @@ fn luajit_aggregration_with_prologue() {
 }
 
 #[test]
-fn luajit_aggregration_with_prologue_epilogue() {
+fn luajit_aggregation_with_prologue_epilogue() {
     let wrk = Workdir::new("lua");
     wrk.create(
         "data.csv",
