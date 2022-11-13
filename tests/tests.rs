@@ -57,10 +57,10 @@ mod test_index;
 mod test_input;
 mod test_join;
 mod test_jsonl;
-#[cfg(feature = "luau")]
-mod test_luau;
 #[cfg(feature = "luajit")]
 mod test_luajit;
+#[cfg(feature = "luau")]
+mod test_luau;
 mod test_partition;
 mod test_pseudo;
 #[cfg(feature = "python")]
