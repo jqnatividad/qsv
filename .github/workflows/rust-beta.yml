@@ -23,6 +23,6 @@ jobs:
         rustup update beta
         rustup default beta
     - name: Run tests
-      run: cargo test --verbose --features full,apply,fetch,generate,foreach,python,lua
-    - name: Run luajit tests separately as its mutually exclusive with lua feature
+      run: cargo test --verbose --features full,apply,fetch,generate,foreach,python,luau
+    - name: Run luajit tests separately as its mutually exclusive with luau feature
       run: cargo test luajit --verbose --locked --features=luajit,full

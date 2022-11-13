@@ -52,7 +52,7 @@ jobs:
             target: i686-unknown-linux-gnu
             architecture: i686
             use-cross: true
-            addl-build-args: --features=apply,generate,lua,fetch,foreach,self_update
+            addl-build-args: --features=apply,generate,luau,fetch,foreach,self_update
             default-features:
           - os: windows-latest
             os-name: windows
@@ -88,28 +88,28 @@ jobs:
             architecture: aarch64
             build-prep: true
             use-cross: true
-            addl-build-args: --features=apply,generate,lua,fetch,foreach,self_update
+            addl-build-args: --features=apply,generate,luau,fetch,foreach,self_update
             default-features: --no-default-features
           - os: ubuntu-latest
             os-name: linux
             target: aarch64-unknown-linux-gnu
             architecture: aarch64
             use-cross: true
-            addl-build-args: --features=apply,generate,lua,fetch,foreach,self_update
+            addl-build-args: --features=apply,generate,luau,fetch,foreach,self_update
             default-features:
           # - os: ubuntu-latest
           #   os-name: linux
           #   target: arm-unknown-linux-gnueabihf
           #   architecture: arm
           #   use-cross: true
-          #   addl-build-args: --features=apply,generate,lua,fetch,foreach,self_update
+          #   addl-build-args: --features=apply,generate,luau,fetch,foreach,self_update
           #   default-features: --no-default-features
           # - os: ubuntu-latest
           #   os-name: linux
           #   target: arm-unknown-linux-musleabihf
           #   architecture: arm
           #   use-cross: true
-          #   addl-build-args: --features=apply,generate,lua,fetch,foreach,self_update
+          #   addl-build-args: --features=apply,generate,luau,fetch,foreach,self_update
           #   default-features: --no-default-features
 
     steps:
