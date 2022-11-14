@@ -53,11 +53,11 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [input](/src/cmd/input.rs#L2)[^2] | Read CSV data with special quoting, trimming, line-skipping & UTF-8 transcoding rules. Typically used to "normalize" a CSV for further processing with other qsv commands. |
 | [join](/src/cmd/join.rs#L2)[^2] | Inner, outer, cross, anti & semi joins. Uses a simple hash index to make it fast.  |
 | [jsonl](/src/cmd/jsonl.rs#L2) | Convert newline-delimited JSON ([JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/)) to CSV. See `tojsonl` command to convert CSV to JSONL.
-| [luau](/src/cmd/lua.rs#L2)[^1] | Execute a [Luau](https://luau-lang.org) 0.548 script over CSV lines to transform, aggregate or filter them. [Luau, like Lua is much faster than Python](https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/lua-python3.html) & extended by [Roblox with sandboxing, type-checking & even more performance](https://luau-lang.org/2022/11/04/luau-origins-and-evolution.html). |
-| [luajit](/src/cmd/luajit.rs#L2)[^1] | Execute a [LuaJIT](https://luajit.org/luajit.html) (a Just-In-Time compiler for Lua, with partial compatibility with Lua 5.2) script over CSV lines to transform, aggregate or filter them. [LuaJIT is even faster still than Lua/Luau](https://luajit.org/performance_x86.html). |
+| [luau](/src/cmd/lua.rs#L2)[^1] | Execute a [Luau](https://luau-lang.org) script over CSV lines to transform, aggregate or filter them. |
+| [luajit](/src/cmd/luajit.rs#L2)[^1] | Execute a [LuaJIT](https://luajit.org/luajit.html) (a Just-In-Time compiler for Lua, with partial compatibility with Lua 5.2) script over CSV lines to transform, aggregate or filter them. |
 | [partition](/src/cmd/partition.rs#L2) | Partition a CSV based on a column value. |
 | [pseudo](/src/cmd/pseudo.rs#L2) | [Pseudonymise](https://en.wikipedia.org/wiki/Pseudonymization) the value of the given column by replacing them with an incremental identifier.  |
-| [py](/src/cmd/python.rs#L2)[^1] | Evaluate a Python expression over CSV lines to transform or filter them. Python's [f-strings](https://www.freecodecamp.org/news/python-f-strings-tutorial-how-to-use-f-strings-for-string-formatting/) is particularly useful for extended formatting, [with the ability to evaluate Python expressions as well](https://github.com/jqnatividad/qsv/blob/4cd00dca88addf0d287247fa27d40563b6d46985/src/cmd/python.rs#L23-L31).<br />You need to compile from source to enable this command with the `python` feature enabled. Consider using the `lua`/`luajit` commands instead if you're having Python version issues ([Python 3.6 & up supported](#python)) as it's much faster, embedded, can do aggregations & has no external dependencies. |
+| [py](/src/cmd/python.rs#L2)[^1] | Evaluate a Python expression over CSV lines to transform or filter them. Python's [f-strings](https://www.freecodecamp.org/news/python-f-strings-tutorial-how-to-use-f-strings-for-string-formatting/) is particularly useful for extended formatting, [with the ability to evaluate Python expressions as well](https://github.com/jqnatividad/qsv/blob/4cd00dca88addf0d287247fa27d40563b6d46985/src/cmd/python.rs#L23-L31). |
 | [rename](/src/cmd/rename.rs#L2) |  Rename the columns of a CSV efficiently.  |
 | [replace](/src/cmd/replace.rs#L2) | Replace CSV data using a regex.  |
 | [reverse](/src/cmd/reverse.rs#L2)[^3] | Reverse order of rows in a CSV. Unlike the `sort --reverse` command, it preserves the order of rows with the same key.  |
@@ -91,7 +91,7 @@ For [macOS and Linux (64-bit)](https://formulae.brew.sh/formula/qsv), you can qu
 brew install qsv
 ```
 
-Pre-built binaries with more enabled features for Windows, Linux and macOS are also available [for download](https://github.com/jqnatividad/qsv/releases/latest), including binaries compiled with [Rust Nightly/Unstable](https://stackoverflow.com/questions/70745970/rust-nightly-vs-beta-version) ([more info](https://github.com/jqnatividad/qsv/blob/master/docs/PERFORMANCE.md#nightly-release-builds)).
+Prebuilt binary variants with more enabled features for Windows, Linux & macOS are also available [for download](https://github.com/jqnatividad/qsv/releases/latest), including binaries compiled with [Rust Nightly/Unstable](https://stackoverflow.com/questions/70745970/rust-nightly-vs-beta-version) ([more info](https://github.com/jqnatividad/qsv/blob/master/docs/PERFORMANCE.md#nightly-release-builds)).
 
 There are three variants of qsv:
  * `qsv` - [feature](#feature-flags) capable, with the [prebuilt binaries](https://github.com/jqnatividad/qsv/releases/latest) enabling all features except Python [^7]
@@ -125,7 +125,7 @@ The compiled binary will end up in `./target/release/`.
 To enable optional features, use cargo `--features` (see [Feature Flags](#feature-flags) for more info):
 
 ```bash
-cargo install qsv --locked --features apply,generate,lua,fetch,foreach,python,self_update,full
+cargo install qsv --locked --features apply,generate,luau,fetch,foreach,python,self_update,full
 # or shorthand
 cargo install qsv --locked --features all_full
 # or to install qsvlite
@@ -134,7 +134,7 @@ cargo install qsv --locked --features lite
 cargo install qsv --locked --features datapusher_plus
 
 # or when compiling from a local repo
-cargo build --release --locked --features apply,generate,lua,fetch,foreach,python,self_update,full
+cargo build --release --locked --features apply,generate,luau,fetch,foreach,python,self_update,full
 # shorthand
 cargo build --release --locked --features all_full
 # for qsvlite
@@ -143,7 +143,7 @@ cargo build --release --locked --features lite
 cargo build --release --locked --features datapusher_plus
 ```
 
-[^7]: The `foreach` feature is not available on Windows. The `python` feature is not enabled on the pre-built binaries. Compile with Python 3.6+ development environment installed if you want to enable the `python` feature. Lua support is enabled by default on the prebuilt binaries, with preference for `luajit` for platforms that support it, with `lua` as a fallback.  
+[^7]: The `foreach` feature is not available on Windows. The `python` feature is not enabled on the prebuilt binaries. Compile with Python 3.6+ development environment installed if you want to enable the `python` feature. Lua support is enabled by default on the prebuilt binaries, with preference for `luajit` for platforms that support it, with `lua` as a fallback.  
 
 ### Minimum Supported Rust Version
 
@@ -219,9 +219,11 @@ qsv stats wcp.csv > wcpstats.csv
 qsv stats wcp.csv --output wcpstats.csv
 ```
 
-## Python
 
-The `python` feature is NOT enabled by default on the pre-built binaries, as doing so requires it to statically link to python, which presents distribution issues, as various operating systems have differing bundled Python versions.
+## Interpreters
+### Python
+
+The `python` feature is NOT enabled by default on the prebuilt binaries, as doing so requires it to statically link to python, which presents distribution issues, as various operating systems have differing bundled Python versions.
 
 If you wish to enable the `python` feature - you'll just have to install/compile from source, making sure you have the development libraries for the desired Python version (Python 3.6 & up are supported) installed when doing so.
 
@@ -232,11 +234,20 @@ Note that this will happen as soon as the qsv binary is invoked, even if you're 
 [PyO3](https://pyo3.rs) - the underlying crate that enables the `python` feature, uses a build script to determine the Python version & set the correct linker arguments. By default it uses the python3 executable.
 You can override the Python interpreter by setting `PYO3_PYTHON` (e.g., `PYO3_PYTHON=python3.6`), before installing/compiling qsv. See the [PyO3 User Guide](https://pyo3.rs/v0.17.1/building_and_distribution.html) for more information.
 
-Also, consider using the `luau`/`luajit` commands instead of the `py` command if the mapping/filtering operation you're trying to do can be done with `luau`/`luajit`. [Lua/Luau is much faster than Python](https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/lua-python3.html) & [LuaJIT is even faster still](https://luajit.org/performance_x86.html). In addition, Luau/LuaJIT is embedded into qsv, can do aggregations & has no external dependencies, unlike Python.
+### Luau/LuaJIT
+
+Consider using the `luau`/`luajit` commands instead of the `py` command if the mapping/filtering operation you're trying to do can be done with `luau`/`luajit`. [Lua/Luau is much faster than Python](https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/lua-python3.html) & [LuaJIT is even faster still](https://luajit.org/performance_x86.html). In addition, Luau/LuaJIT is embedded into qsv, can do aggregations with its `--prologue` & `--epilogue` options & has no external dependencies unlike Python.
 
 The `py` command cannot do aggregations because [PyO3's GIL-bound memory](https://pyo3.rs/v0.17.2/memory.html#gil-bound-memory) limitations will quickly consume a lot of memory (see [issue 449](https://github.com/jqnatividad/qsv/issues/449#issuecomment-1226095316) for details).
 To prevent this, the `py` command processes CSVs in batches (default: 30,000 records), with a GIL pool for each batch, so no globals are available across batches.
 
+Note however, that `luau` & `luajit` are mutually exclusive features.
+
+Choose `luau` if you want to take advantage of its [sandboxing](https://luau-lang.org/sandbox), [type-checking](https://luau-lang.org/typecheck), [additional operators](https://luau-lang.org/syntax) & [various other improvements](https://luau-lang.org/2022/11/04/luau-origins-and-evolution.html) over Lua.
+
+Choose `luajit` if its increased performance over `luau` is a priority and you don't need `luau`'s additional features.
+
+`luau` is the default for the prebuilt binaries, with `luajit` as the fallback if `luau` cannot be built for the target architecture.
 
 ## Environment Variables
 
@@ -284,8 +295,8 @@ Relevant env vars are defined as anything that starts with `QSV_` & `MIMALLOC_` 
 * `fetch` - enables the `fetch` & `fetchpost` commands.
 * `foreach` - enable `foreach` command (not valid for Windows).
 * `generate` - enable `generate` command.
-* `luau` - enable `luau` command. Embeds a [Roblox Luau](https://luau-lang.org) interpreter into qsv.
-* `luajit` - enable `luajit` command. Embeds a [LuaJIT 2.0](https://luajit.org/luajit.html) interpreter into qsv. LuaJIT is a Just-In-Time compiler for the Lua 5.2 language & is thus much faster than Lua. Note that the `lua` & `luajit` interpreters are mutually exclusive features.
+* `luau` - enable `luau` command. Embeds a [Luau](https://luau-lang.org) interpreter into qsv. [Luau has type-checking, sandboxing, additional language operators, increased performance & other improvements](https://luau-lang.org/2022/11/04/luau-origins-and-evolution.html) over Lua.
+* `luajit` - enable `luajit` command. Embeds a [LuaJIT](https://luajit.org/luajit.html) interpreter into qsv. LuaJIT is a Just-In-Time compiler for the Lua 5.2 language & is thus [faster than Luau](https://luajit.org/performance_x86.html). Note that the `luau` & `luajit` interpreters are mutually exclusive features.
 * `python` - enable `py` command. Note that qsv will look for the shared library for the Python version (Python 3.6 & above supported) it was compiled against & will abort if the library is not found, even if you're not using the `py` command. Check [Python](#python) section for more info.
 * `self_update` - enable self-update engine, checking GitHub for the latest release. Note that if you manually built qsv, `self-update` will only check for new releases.
 It will NOT offer the choice to update itself to the prebuilt binaries published on GitHub. You need not worry that your manually built qsv will be overwritten by a self-update.
@@ -297,7 +308,7 @@ It will NOT offer the choice to update itself to the prebuilt binaries published
 * `nightly` - enable to turn on nightly/unstable features in the `rand`, `regex`, `hashbrown`, `parking_lot` & `pyo3` crates when building with Rust nightly/unstable.
 
 
-> ℹ️ **NOTE:** `qsvlite`, as the name implies, always has **non-default features disabled**. `qsv` can be built with any combination of the above features using the cargo `--features` & `--no-default-features` flags. The pre-built `qsv` binaries has **all applicable features valid for the target platform**[^7].
+> ℹ️ **NOTE:** `qsvlite`, as the name implies, always has **non-default features disabled**. `qsv` can be built with any combination of the above features using the cargo `--features` & `--no-default-features` flags. The prebuilt `qsv` binaries has **all applicable features valid for the target platform**[^7].
 
 ## License
 
