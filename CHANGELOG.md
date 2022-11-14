@@ -5,6 +5,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.72.0] - 2022-11-14
+
+### Added
+* `apply`: added --keep-zero-time option in https://github.com/jqnatividad/qsv/pull/590
+* `lua` and `luajit`: added  --prologue & --epilogue options in https://github.com/jqnatividad/qsv/pull/592
+* `luau` & `luajit`: switched from Lua to Luau; added special vars _idx and _rowcount in https://github.com/jqnatividad/qsv/pull/593
+* `luau` & `luajit`: return exitcode 1 if interpretation error is encountered https://github.com/jqnatividad/qsv/commit/655041b86c86c3ce0024d1e20599c98dfab28658
+
+### Changed
+* `schema` & `validate`: expand description/usage text in https://github.com/jqnatividad/qsv/commit/60dfebc9f401045467417b2065481b657ff82c92
+* `validate`: return exitcode 0 if CSV is valid; exitcode 1 otherwise in https://github.com/jqnatividad/qsv/pull/591
+* Bump hashbrown from 0.12.3 to 0.13.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/586
+* cargo bump update indirect dependencies, notably chrono from 0.4.22 to 0.4.23
+* Shortened command descriptions for `luau` & `luajit` and added salient notes to new interpreter section
+* adjust GitHub Actions workflows to use `luau` feature
+* pin Rust nightly to 2022-11-14
+
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.71.1...0.72.0
+
 ## [0.71.1] - 2022-11-09
 
 ### Changed
