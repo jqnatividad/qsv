@@ -302,7 +302,7 @@ Relevant env vars are defined as anything that starts with `QSV_` & `MIMALLOC_` 
 It will NOT offer the choice to update itself to the prebuilt binaries published on GitHub. You need not worry that your manually built qsv will be overwritten by a self-update.
 
 * `full` - enable to build qsv binary variant which is feature-capable.
-* `all_full` - enable to build qsv binary variant with all features enabled (apply,fetch,foreach,generate,luajit,python,self_update).
+* `all_full` - enable to build qsv binary variant with all features enabled (apply,fetch,foreach,generate,luau,python,self_update).
 * `lite` - enable to build qsvlite binary variant with all features disabled.
 * `datapusher_plus` - enable to build qsvdp binary variant - the [DataPusher+](https://github.com/dathere/datapusher-plus) optimized qsv binary.
 * `nightly` - enable to turn on nightly/unstable features in the `rand`, `regex`, `hashbrown`, `parking_lot` & `pyo3` crates when building with Rust nightly/unstable.
