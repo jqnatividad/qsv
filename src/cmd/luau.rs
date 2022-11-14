@@ -45,8 +45,9 @@ Some usage examples:
   so -f should be used for non-trivial scripts to read them from a file
   $ qsv luau map Type -x -f debitcredit.lua
 
-  With "luau map", if a Lua script is invalid, "<ERROR>" is returned.
-  With "luau filter", if a Lua script is invalid, no filtering is done.
+With "luau map", if a LuaJIT script is invalid, "<ERROR>" is returned.
+With "luau filter", if a LuaJIT script is invalid, no filtering is done.
+Invalid scripts will also result in an exitcode of 1.
 
 There are also special variables named "_idx" that is set to the current row number; and
 "_rowcount" which is zero during the prologue and the main script, and set to the rowcount
@@ -214,6 +215,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let error_result: mlua::Value = luau.load("return \"<ERROR>\";").eval()?;
     let mut error_flag;
+    let mut global_error_flag = false;
 
     // check if _idx or _rowcount was used in the main script
     idx_used = idx_used || luau_program.contains("_idx") || luau_program.contains("_rowcount");
@@ -259,6 +261,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             Err(e) => {
                 log::error!("Cannot evaluate \"{luau_program}\".\n{e}");
                 error_flag = true;
+                global_error_flag = true;
                 error_result.clone()
             }
         };
@@ -351,5 +354,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         winfo!("{epilogue_string}");
     }
 
-    Ok(wtr.flush()?)
+    wtr.flush()?;
+
+    if global_error_flag {
+        return fail!("Luau errors encountered.");
+    }
+    Ok(())
 }
