@@ -82,8 +82,9 @@ lua options:
                        Useful when some column names mask standard LuaJIT globals.
                        Note: access to LuaJIT globals thru _G remains even without -g.
     --prologue <arg1>  LuaJIT statements to execute before processing the CSV.
-                       Normally used to initialize global variables.
+                       Typically used to initialize global variables.
     --epilogue <arg2>  LuaJit statements to execute after processing the CSV.
+                       Typically used for aggregations.
                        The output of the epilogue is sent to stderr.
 
 Common options:
