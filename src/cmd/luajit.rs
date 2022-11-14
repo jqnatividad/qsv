@@ -2,7 +2,7 @@ static USAGE: &str = r#"
 Create a new computed column, filter rows or compute aggregations by executing a
 LuaJIT script of every line of a CSV file.
 
-LuaJIT is a Just-In-Time (JIT) for the Lua 5.1 language and is much faster than Lua
+LuaJIT is a Just-In-Time (JIT) for the Lua 5.2 language and is much faster than Lua
 (up to 134x faster - see https://luajit.org/performance.html).
 
 The executed LuaJIT has 3 ways to reference row columns (as strings):
@@ -57,6 +57,9 @@ during the epilogue.
 
 Note that with the judicious use of the prologue and the _idx variable, one can create arrays
 that can be used for complex aggregation operations in the epilogue.
+
+When debugging luajit, be sure to set the environment variable QSV_LOG_LEVEL=debug to see
+detailed error messages in the logfile.
 
 For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_luajit.rs.
 

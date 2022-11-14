@@ -55,6 +55,9 @@ during the epilogue.
 Note that with the judicious use of the prologue and the _idx variable, one can create arrays
 that can be used for complex aggregation operations in the epilogue.
 
+When debugging luau, be sure to set the environment variable QSV_LOG_LEVEL=debug to see
+detailed error messages in the logfile.
+
 For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_lua.rs.
 
 Usage:
