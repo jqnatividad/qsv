@@ -19,7 +19,7 @@ jobs:
             target: x86_64-unknown-linux-gnu
             architecture: x86_64
             use-cross: false
-            addl-build-args: --features=apply,generate,luajit,fetch,foreach,python,self_update
+            addl-build-args: --features=apply,generate,luau,fetch,foreach,python,self_update
             build-nopython: true
             default-features:
             python_library_path: $Python3_ROOT_DIR/lib/libpython3*
@@ -29,7 +29,7 @@ jobs:
             architecture: x86_64
             musl-prep: true
             use-cross: false
-            addl-build-args: --features=apply,generate,luajit,fetch,foreach,python,self_update
+            addl-build-args: --features=apply,generate,luau,fetch,foreach,python,self_update
             build-nopython: true
             default-features:
             python_library_path: $Python3_ROOT_DIR/lib/libpython3*
@@ -38,7 +38,7 @@ jobs:
           #   target: i686-unknown-linux-gnu
           #   architecture: i686
           #   use-cross: true
-          #   addl-build-args: --features=apply,generate,lua,fetch,foreach,self_update
+          #   addl-build-args: --features=apply,generate,luau,fetch,foreach,self_update
           #   build-nopython: false
           #   default-features:
           #   python_library_path:
@@ -47,7 +47,7 @@ jobs:
             target: x86_64-pc-windows-msvc
             architecture: x86_64
             use-cross: false
-            addl-build-args: --features=apply,generate,luajit,fetch,python,self_update
+            addl-build-args: --features=apply,generate,luau,fetch,python,self_update
             build-nopython: true
             default-features:
             python_library_path: $env:Python3_ROOT_DIR/python*.dll
@@ -56,7 +56,7 @@ jobs:
           #   target: i686-pc-windows-msvc
           #   architecture: i686
           #   use-cross: true
-          #   addl-build-args: --features=apply,generate,lua,fetch,self_update
+          #   addl-build-args: --features=apply,generate,luau,fetch,self_update
           #   build-nopython: false
           #   default-features:
           #   python_library_path:
@@ -65,7 +65,7 @@ jobs:
             target: x86_64-pc-windows-gnu
             architecture: x86_64
             use-cross: false
-            addl-build-args: --features=apply,generate,luajit,fetch,python,self_update
+            addl-build-args: --features=apply,generate,luau,fetch,python,self_update
             build-nopython: true
             default-features: --no-default-features
             python_library_path: $env:Python3_ROOT_DIR/python*.dll
@@ -74,7 +74,7 @@ jobs:
             target: x86_64-apple-darwin
             architecture: x86_64
             use-cross: false
-            addl-build-args: --features=apply,generate,luajit,fetch,foreach,python,self_update
+            addl-build-args: --features=apply,generate,luau,fetch,foreach,python,self_update
             build-nopython: true
             default-features: --no-default-features
             python_library_path: $Python3_ROOT_DIR/lib/libpython3*
@@ -84,7 +84,7 @@ jobs:
             architecture: aarch64
             build-prep: true
             use-cross: true
-            addl-build-args: --features=apply,generate,lua,fetch,foreach,self_update
+            addl-build-args: --features=apply,generate,luau,fetch,foreach,self_update
             build-nopython: false
             default-features: --no-default-features
             python_library_path:
@@ -93,7 +93,7 @@ jobs:
           #   target: aarch64-unknown-linux-gnu
           #   architecture: aarch64
           #   use-cross: true
-          #   addl-build-args: --features=apply,generate,lua,fetch,foreach,self_update
+          #   addl-build-args: --features=apply,generate,luau,fetch,foreach,self_update
           #   build-nopython: false
           #   default-features:
           #   python_library_path:
@@ -102,7 +102,7 @@ jobs:
           #   target: arm-unknown-linux-gnueabihf
           #   architecture: arm
           #   use-cross: true
-          #   addl-build-args: --features=apply,generate,lua,fetch,foreach,self_update
+          #   addl-build-args: --features=apply,generate,luau,fetch,foreach,self_update
           #   build-nopython: false
           #   default-features: --no-default-features
           #   python_library_path:
@@ -111,7 +111,7 @@ jobs:
           #   target: arm-unknown-linux-musleabihf
           #   architecture: arm
           #   use-cross: true
-          #   addl-build-args: --features=apply,generate,lua,fetch,foreach,self_update
+          #   addl-build-args: --features=apply,generate,luau,fetch,foreach,self_update
           #   build-nopython: false
           #   default-features: --no-default-features
           #   python_library_path:
