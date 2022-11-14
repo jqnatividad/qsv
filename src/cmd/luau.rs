@@ -151,8 +151,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         wtr.write_record(&headers)?;
     }
 
-    let lua = Lua::new();
-    let globals = lua.globals();
+    let luau = Lua::new();
+    let globals = luau.globals();
     globals.set("cols", "{}")?;
 
     let mut idx_used = false;
@@ -166,7 +166,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             globals.set("_rowcount", 0)?;
         }
 
-        match lua.load(&prologue).exec() {
+        match luau.load(&prologue).exec() {
             Ok(_) => (),
             Err(e) => {
                 return fail_clierror!("Prologue error: Failed to execute \"{prologue}\".\n{e}")
@@ -179,23 +179,23 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         idx_used = idx_used || epilogue.contains("_idx") || epilogue.contains("_rowcount");
     }
 
-    let lua_script = if args.flag_script_file {
+    let luau_script = if args.flag_script_file {
         match fs::read_to_string(&args.arg_script) {
             Ok(script_file) => script_file,
-            Err(e) => return fail_clierror!("Cannot load Lua file: {e}"),
+            Err(e) => return fail_clierror!("Cannot load Luau file: {e}"),
         }
     } else {
         args.arg_script
     };
 
-    let mut lua_program = if args.flag_exec {
+    let mut luau_program = if args.flag_exec {
         String::new()
     } else {
         String::from("return ")
     };
 
-    lua_program.push_str(&lua_script);
-    debug!("Lua program: {lua_program:?}");
+    luau_program.push_str(&luau_script);
+    debug!("Luau program: {luau_program:?}");
 
     // prep progress bar
     let show_progress =
@@ -208,11 +208,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         progress.set_draw_target(ProgressDrawTarget::hidden());
     }
 
-    let error_result: mlua::Value = lua.load("return \"<ERROR>\";").eval()?;
+    let error_result: mlua::Value = luau.load("return \"<ERROR>\";").eval()?;
     let mut error_flag;
 
     // check if _idx or _rowcount was used in the main script
-    idx_used = idx_used || lua_program.contains("_idx") || lua_program.contains("_rowcount");
+    idx_used = idx_used || luau_program.contains("_idx") || luau_program.contains("_rowcount");
 
     let mut record = csv::StringRecord::new();
 
@@ -229,7 +229,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         // Updating col
         {
-            let col = lua.create_table()?;
+            let col = luau.create_table()?;
 
             for (i, v) in record.iter().enumerate() {
                 col.set(i + 1, v)?;
@@ -250,10 +250,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         error_flag = false;
-        let computed_value: mlua::Value = match lua.load(&lua_program).eval() {
+        let computed_value: mlua::Value = match luau.load(&luau_program).eval() {
             Ok(computed) => computed,
             Err(e) => {
-                log::error!("Cannot evaluate \"{lua_program}\".\n{e}");
+                log::error!("Cannot evaluate \"{luau_program}\".\n{e}");
                 error_flag = true;
                 error_result.clone()
             }
@@ -280,7 +280,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 }
                 _ => {
                     return fail_clierror!(
-                        "Unexpected value type returned by provided Lua expression. \
+                        "Unexpected value type returned by provided Luau expression. \
                          {computed_value:?}"
                     );
                 }
@@ -324,7 +324,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             globals.set("_rowcount", idx)?;
         }
 
-        let epilogue_value: mlua::Value = match lua.load(&epilogue).eval() {
+        let epilogue_value: mlua::Value = match luau.load(&epilogue).eval() {
             Ok(computed) => computed,
             Err(e) => {
                 log::error!("Epilogue error: Cannot evaluate \"{epilogue}\".\n{e}");
@@ -339,7 +339,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             mlua::Value::Nil => String::new(),
             _ => {
                 return fail_clierror!(
-                    "Unexpected epilogue value type returned by provided Lua expression. \
+                    "Unexpected epilogue value type returned by provided Luau expression. \
                      {epilogue_value:?}"
                 );
             }
