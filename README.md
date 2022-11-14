@@ -53,7 +53,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [input](/src/cmd/input.rs#L2)[^2] | Read CSV data with special quoting, trimming, line-skipping & UTF-8 transcoding rules. Typically used to "normalize" a CSV for further processing with other qsv commands. |
 | [join](/src/cmd/join.rs#L2)[^2] | Inner, outer, cross, anti & semi joins. Uses a simple hash index to make it fast.  |
 | [jsonl](/src/cmd/jsonl.rs#L2) | Convert newline-delimited JSON ([JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/)) to CSV. See `tojsonl` command to convert CSV to JSONL.
-| [luajit](/src/cmd/luajit.rs#L2)[^1] | Execute a [LuaJIT](https://luajit.org/luajit.html) (a Just-In-Time compiler for Lua, with partial compatibility with Lua 5.2) script over CSV lines to transform, filter or aggregate them. |
+| [luajit](/src/cmd/luajit.rs#L2)[^1] | Execute a [LuaJIT](https://luajit.org/luajit.html) script over CSV lines to transform, filter or aggregate them. |
 | [luau](/src/cmd/luau.rs#L2)[^1] | Execute a [Luau](https://luau-lang.org) script over CSV lines to transform, filter or aggregate them. |
 | [partition](/src/cmd/partition.rs#L2) | Partition a CSV based on a column value. |
 | [pseudo](/src/cmd/pseudo.rs#L2) | [Pseudonymise](https://en.wikipedia.org/wiki/Pseudonymization) the value of the given column by replacing them with an incremental identifier.  |
@@ -236,6 +236,10 @@ You can override the Python interpreter by setting `PYO3_PYTHON` (e.g., `PYO3_PY
 
 ### Luau/LuaJIT
 
+Luau is a fast, small, safe, gradually typed embeddable scripting language derived from [Lua](https://www.lua.org/about.html) at the [heart of Roblox technology](https://luau-lang.org/2022/11/04/luau-origins-and-evolution.html).
+
+[LuaJIT](https://luajit.org) is a Just-In-Time compiler for Lua, with partial compatibility with Lua 5.2.
+
 Consider using the `luau`/`luajit` commands instead of the `py` command if the mapping/filtering operation you're trying to do can be done with `luau`/`luajit`. [Lua/Luau is much faster than Python](https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/lua-python3.html) & [LuaJIT is even faster still](https://luajit.org/performance_x86.html). In addition, Luau/LuaJIT is embedded into qsv, can do aggregations with its `--prologue` & `--epilogue` options & has no external dependencies unlike Python.
 
 The `py` command cannot do aggregations because [PyO3's GIL-bound memory](https://pyo3.rs/v0.17.2/memory.html#gil-bound-memory) limitations will quickly consume a lot of memory (see [issue 449](https://github.com/jqnatividad/qsv/issues/449#issuecomment-1226095316) for details).
@@ -243,7 +247,7 @@ To prevent this, the `py` command processes CSVs in batches (default: 30,000 rec
 
 Note however, that `luau` & `luajit` are mutually exclusive features.
 
-Choose `luau` if you want to take advantage of its [sandboxing](https://luau-lang.org/sandbox), [type-checking](https://luau-lang.org/typecheck), [additional operators](https://luau-lang.org/syntax) & [various other improvements](https://luau-lang.org/2022/11/04/luau-origins-and-evolution.html) over Lua.
+Choose `luau` if you want to take advantage of its [sandboxing](https://luau-lang.org/sandbox), [type-checking](https://luau-lang.org/typecheck), [additional operators](https://luau-lang.org/syntax) & [performance innovations](https://luau-lang.org/performance) while [maintaining compatibility with Lua](https://luau-lang.org/compatibility).
 
 Choose `luajit` if its increased performance over `luau` is a priority and you don't need `luau`'s additional features.
 
