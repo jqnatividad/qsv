@@ -163,6 +163,48 @@ fn luajit_aggregation_with_prologue_epilogue() {
 }
 
 #[test]
+fn luajit_aggregation_with_prologue_epilogue_and_luau_syntax_error() {
+    let wrk = Workdir::new("lua");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["letter", "Amount"],
+            svec!["a", "13"],
+            svec!["b", "-24"],
+            svec!["c", "-72"],
+            svec!["d", "7"],
+        ],
+    );
+    let mut cmd = wrk.command("luajit");
+    cmd.arg("map")
+        .arg("Total")
+        .arg("--prologue")
+        .arg("tot = 0; gtotal = 0; amt_array = {}")
+        .arg("-x")
+        .arg("amt_array[_idx] = Amount; tot += if tonumber(Amount) < 0 then Amount * -1 else Amount; gtotal += tot; return tot")
+        .arg("--epilogue")
+        .arg(r#"return ("Min/Max: " .. math.min(unpack(amt_array)) .. "/" .. math.max(unpack(amt_array)) .. " Grand total of " .. _rowcount .. " rows: " .. gtotal)"#)
+        .arg("data.csv");
+
+    // we used Luau syntax (+= operator; if then else expression) that is not valid for LuaJIT
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["letter", "Amount", "Total"],
+        svec!["a", "13", "<ERROR>"],
+        svec!["b", "-24", "<ERROR>"],
+        svec!["c", "-72", "<ERROR>"],
+        svec!["d", "7", "<ERROR>"],
+    ];
+    assert_eq!(got, expected);
+
+    let epilogue = wrk.output_stderr(&mut cmd);
+    let expected_epilogue = "<ERROR>\nLuaJIT errors encountered.\n".to_string();
+    assert_eq!(epilogue, expected_epilogue);
+
+    wrk.assert_err(&mut cmd);
+}
+
+#[test]
 fn luajit_map_math() {
     let wrk = Workdir::new("luajit");
     wrk.create(
