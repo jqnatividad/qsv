@@ -28,3 +28,5 @@ rustflags = "-C link-args=-Wl,-rpath,@loader_path -C target-cpu=native"
 # macOS Intel runner 
 [target.aarch64-apple-darwin]
 rustflags = "-C link-args=-Wl,-rpath,@loader_path"
+[target.x86_64-unknown-linux-musl]
+linker = "x86_64-linux-musl-gcc"
