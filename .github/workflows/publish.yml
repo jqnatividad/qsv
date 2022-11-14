@@ -52,7 +52,7 @@ jobs:
             target: i686-unknown-linux-gnu
             architecture: i686
             use-cross: true
-            addl-build-args: --features=apply,generate,luau,fetch,foreach,self_update
+            addl-build-args: --features=apply,generate,luajit,fetch,foreach,self_update
             default-features:
           - os: windows-latest
             os-name: windows
