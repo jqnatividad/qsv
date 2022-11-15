@@ -127,10 +127,10 @@ fn main() -> QsvExitCode {
     );
 
     #[cfg(all(feature = "luajit", not(feature = "lite")))]
-    enabled_commands.push_str("    luajit      Execute LuaJIT 2.1 script on CSV data\n");
+    enabled_commands.push_str("    luajit      Execute LuaJIT script on CSV data\n");
 
     #[cfg(all(feature = "luau", not(feature = "lite")))]
-    enabled_commands.push_str("    luau        Execute Lua 5.4 script on CSV data\n");
+    enabled_commands.push_str("    luau        Execute Luau script on CSV data\n");
 
     enabled_commands.push_str(
         "    partition   Partition CSV data based on a column value
