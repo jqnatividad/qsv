@@ -39,6 +39,8 @@ Currently supported operations:
   * mrtrim: Right trim --comparand matches (Rust trim_end_matches)
   * strip_prefix: Removes specified prefix in --comparand
   * strip_suffix: Remove specified suffix in --comparand
+  * encode64: base64 encode
+  * decode64: base64 decode
   * replace: Replace all matches of a pattern (using --comparand)
       with a string (using --replacement) (Rust replace)
   * regex_replace: Replace all regex matches in --comparand w/ --replacement.
@@ -69,8 +71,6 @@ Currently supported operations:
        If you want to always displays the confidence score, end the --comparand value with a
        question mark (e.g. 0.9?)
        https://github.com/greyblake/whatlang-rs/blob/master/SUPPORTED_LANGUAGES.md
-  * encode64: base64 encode
-  * decode64: base64 decode
 
 Examples:
 Trim, then transform to uppercase the surname field.
@@ -729,12 +729,13 @@ fn validate_operations(
     flag_new_column: &Option<String>,
 ) -> Option<Result<(), CliError>> {
     let mut censor_invokes = 0_u8;
-    let mut replace_invokes = 0_u8;
+    let mut copy_invokes = 0_u8;
+    let mut eudex_invokes = 0_u8;
     let mut regex_replace_invokes = 0_u8;
+    let mut replace_invokes = 0_u8;
+    let mut sentiment_invokes = 0_u8;
     let mut sim_invokes = 0_u8;
     let mut strip_invokes = 0_u8;
-    let mut eudex_invokes = 0_u8;
-    let mut sentiment_invokes = 0_u8;
     let mut whatlang_invokes = 0_u8;
 
     for op in operations {
@@ -742,14 +743,34 @@ fn validate_operations(
             return Some(fail_clierror!("Unknown '{op}' operation"));
         }
         match *op {
-            "replace" => {
-                if flag_comparand.is_empty() || flag_replacement.is_empty() {
+            "censor" | "censor_check" => {
+                if flag_new_column.is_none() {
                     return Some(fail!(
-                        "--comparand (-C) and --replacement (-R) are required for replace \
-                         operation."
+                        "--new_column (-c) is required for censor operations."
                     ));
                 }
-                replace_invokes += 1;
+                censor_invokes = censor_invokes.saturating_add(1);
+            }
+            "copy" => {
+                if flag_new_column.is_none() {
+                    return Some(fail!("--new_column (-c) is required for copy operation."));
+                }
+                copy_invokes = copy_invokes.saturating_add(1);
+            }
+            "eudex" => {
+                if flag_comparand.is_empty() || flag_new_column.is_none() {
+                    return Some(fail!(
+                        "--comparand (-C) and --new_column (-c) is required for eudex."
+                    ));
+                }
+                eudex_invokes = eudex_invokes.saturating_add(1);
+            }
+            "mtrim" | "mltrim" | "mrtrim" => {
+                if flag_comparand.is_empty() {
+                    return Some(fail!(
+                        "--comparand (-C) is required for match trim operations."
+                    ));
+                }
             }
             "regex_replace" => {
                 if flag_comparand.is_empty() || flag_replacement.is_empty() {
@@ -767,33 +788,24 @@ fn validate_operations(
                     };
                     let _ = REGEX_REPLACE.set(re);
                 }
-                regex_replace_invokes += 1;
+                regex_replace_invokes = regex_replace_invokes.saturating_add(1);
             }
-            "copy" => {
-                if flag_new_column.is_none() {
-                    return Some(fail!("--new_column (-c) is required for copy operation."));
-                }
-            }
-            "censor" | "censor_check" => {
-                if flag_new_column.is_none() {
+            "replace" => {
+                if flag_comparand.is_empty() || flag_replacement.is_empty() {
                     return Some(fail!(
-                        "--new_column (-c) is required for censor operations."
+                        "--comparand (-C) and --replacement (-R) are required for replace \
+                         operation."
                     ));
                 }
-                censor_invokes += 1;
+                replace_invokes = replace_invokes.saturating_add(1);
             }
-            "mtrim" | "mltrim" | "mrtrim" => {
-                if flag_comparand.is_empty() {
+            "sentiment" => {
+                if flag_new_column.is_none() {
                     return Some(fail!(
-                        "--comparand (-C) is required for match trim operations."
+                        "--new_column (-c) is required for sentiment operation."
                     ));
                 }
-            }
-            "strip_prefix" | "strip_suffix" => {
-                if flag_comparand.is_empty() {
-                    return Some(fail!("--comparand (-C) is required for strip operations."));
-                }
-                strip_invokes += 1;
+                sentiment_invokes = sentiment_invokes.saturating_add(1);
             }
             "simdl" | "simdln" | "simjw" | "simsd" | "simhm" | "simod" => {
                 if flag_comparand.is_empty() || flag_new_column.is_none() {
@@ -802,23 +814,13 @@ fn validate_operations(
                          operations."
                     ));
                 }
-                sim_invokes += 1;
+                sim_invokes = sim_invokes.saturating_add(1);
             }
-            "eudex" => {
-                if flag_comparand.is_empty() || flag_new_column.is_none() {
-                    return Some(fail!(
-                        "--comparand (-C) and --new_column (-c) is required for eudex."
-                    ));
+            "strip_prefix" | "strip_suffix" => {
+                if flag_comparand.is_empty() {
+                    return Some(fail!("--comparand (-C) is required for strip operations."));
                 }
-                eudex_invokes += 1;
-            }
-            "sentiment" => {
-                if flag_new_column.is_none() {
-                    return Some(fail!(
-                        "--new_column (-c) is required for sentiment operation."
-                    ));
-                }
-                sentiment_invokes += 1;
+                strip_invokes = strip_invokes.saturating_add(1);
             }
             "whatlang" => {
                 if flag_new_column.is_none() {
@@ -826,9 +828,8 @@ fn validate_operations(
                         "--new_column (-c) is required for whatlang language detection."
                     ));
                 }
-                whatlang_invokes += 1;
 
-                if whatlang_invokes == 1 {
+                if whatlang_invokes == 0 {
                     WHATLANG_CONFIDENCE_THRESHOLD
                         .set(if flag_comparand.is_empty() {
                             DEFAULT_THRESHOLD
@@ -860,6 +861,7 @@ fn validate_operations(
                         })
                         .unwrap();
                 }
+                whatlang_invokes = whatlang_invokes.saturating_add(1);
             }
             _ => {
                 // other operations have no required options
@@ -867,19 +869,24 @@ fn validate_operations(
         }
     }
     if censor_invokes > 1
-        || replace_invokes > 1
-        || regex_replace_invokes > 1
-        || sim_invokes > 1
+        || copy_invokes > 1
         || eudex_invokes > 1
+        || regex_replace_invokes > 1
+        || replace_invokes > 1
         || sentiment_invokes > 1
+        || sim_invokes > 1
         || strip_invokes > 1
         || whatlang_invokes > 1
     {
-        return Some(fail!(
-            "you can only use censor, replace, regex_replace, strip, similarity, eudex, sentiment \
-             and whatlang ONCE per operation series."
+        return Some(fail_clierror!(
+            "you can only use censor({censor_invokes}), copy({copy_invokes}), \
+             eudex({eudex_invokes}), regex_replace({regex_replace_invokes}), \
+             replace({replace_invokes}), sentiment({sentiment_invokes}), \
+             similarity({sim_invokes}), strip({strip_invokes}), and whatlang({whatlang_invokes}) \
+             ONCE per operation series."
         ));
     };
+
     None // no validation errors
 }
 
