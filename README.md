@@ -236,7 +236,7 @@ You can override the Python interpreter by setting `PYO3_PYTHON` (e.g., `PYO3_PY
 
 ### Luau/LuaJIT
 
-Luau is a fast, small, safe, gradually typed embeddable scripting language derived from [Lua](https://www.lua.org/about.html) at the [heart of Roblox technology](https://luau-lang.org/2022/11/04/luau-origins-and-evolution.html).
+[Luau](https://luau-lang.org) is a fast, small, safe, gradually typed embeddable scripting language derived from [Lua](https://www.lua.org/about.html) at the [heart of Roblox technology](https://luau-lang.org/2022/11/04/luau-origins-and-evolution.html).
 
 [LuaJIT](https://luajit.org) is a Just-In-Time compiler for Lua, with partial compatibility with Lua 5.2.
 
