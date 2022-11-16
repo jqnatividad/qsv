@@ -85,16 +85,16 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 
 ## Installation
 
-For [macOS and Linux (64-bit)](https://formulae.brew.sh/formula/qsv), you can quickly install qsv with [Homebrew](https://brew.sh). However, only the `apply` [feature](#feature-flags) is enabled.
+For [macOS and Linux (64-bit)](https://formulae.brew.sh/formula/qsv), you can quickly install qsv with [Homebrew](https://brew.sh). However, only the `apply` [feature](#feature-flags) is enabled and its qsv v0.70.0.
 
 ```
 brew install qsv
 ```
 
-Prebuilt binary variants with more enabled features for Windows, Linux & macOS are also available [for download](https://github.com/jqnatividad/qsv/releases/latest), including binaries compiled with [Rust Nightly/Unstable](https://stackoverflow.com/questions/70745970/rust-nightly-vs-beta-version) ([more info](https://github.com/jqnatividad/qsv/blob/master/docs/PERFORMANCE.md#nightly-release-builds)).
+Prebuilt binary variants of the latest qsv version with more enabled features for Windows, Linux & macOS are also available [for download](https://github.com/jqnatividad/qsv/releases/latest), including binaries compiled with [Rust Nightly/Unstable](https://stackoverflow.com/questions/70745970/rust-nightly-vs-beta-version) ([more info](https://github.com/jqnatividad/qsv/blob/master/docs/PERFORMANCE.md#nightly-release-builds)).
 
 There are three variants of qsv:
- * `qsv` - [feature](#feature-flags) capable, with the [prebuilt binaries](https://github.com/jqnatividad/qsv/releases/latest) enabling all features except Python [^7]
+ * `qsv` - [feature](#feature-flags) capable, with the [prebuilt binaries](https://github.com/jqnatividad/qsv/releases/latest) enabling all applicable features except Python [^7]
  * `qsvlite` - all features disabled (~half the size of `qsv`)
  * `qsvdp` - optimized for use with [DataPusher+](https://github.com/dathere/datapusher-plus), with only DataPusher+ relevant commands & the self-update engine removed (~sixth of the size of `qsv`).
 
@@ -143,7 +143,7 @@ cargo build --release --locked --features lite
 cargo build --release --locked --features datapusher_plus
 ```
 
-[^7]: The `foreach` feature is not available on Windows. The `python` feature is not enabled on the prebuilt binaries. Compile with Python 3.6+ development environment installed if you want to enable the `python` feature. Lua support is enabled by default on the prebuilt binaries, with preference for `luajit` for platforms that support it, with `lua` as a fallback.  
+[^7]: The `foreach` feature is not available on Windows. The `python` feature is not enabled on the prebuilt binaries. Compile with Python 3.6 and above development environment installed if you want to enable the `python` feature. Lua support is enabled by default on the prebuilt binaries, with preference for `luau` for platforms that support it, with `luajit` as a fallback.  
 
 ### Minimum Supported Rust Version
 
@@ -174,7 +174,7 @@ with the `QSV_DEFAULT_DELIMITER` environment variable or automatically detected 
 
 When using the `--output` option, note that qsv will UTF-8 encode the file & automatically change the delimiter used in the generated file based on the file extension - i.e. comma for `.csv`, tab for `.tsv` & `.tab` files.
 
-[JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/) files are also recognized & converted from/to CSV with the [`jsonl`](/src/cmd/jsonl.rs#L11) and [`tojsonl`](/src/cmd/tojsonl.rs#L12) commands respectively.
+[JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/) files are also recognized & converted to/from CSV with the [`jsonl`](/src/cmd/jsonl.rs#L11) and [`tojsonl`](/src/cmd/tojsonl.rs#L12) commands respectively.
 
 The `fetch` & `fetchpost` commands also produces JSONL files when its invoked without the `--new-column` option & TSV files with the `--report` option.
 
@@ -240,7 +240,7 @@ You can override the Python interpreter by setting `PYO3_PYTHON` (e.g., `PYO3_PY
 
 [LuaJIT](https://luajit.org) is a Just-In-Time compiler for Lua, with partial compatibility with Lua 5.2.
 
-Consider using the `luau`/`luajit` commands instead of the `py` command if the mapping/filtering operation you're trying to do can be done with `luau`/`luajit`. [Lua/Luau is much faster than Python](https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/lua-python3.html) & [LuaJIT is even faster still](https://luajit.org/performance_x86.html). In addition, Luau/LuaJIT is embedded into qsv, can do aggregations with its `--prologue` & `--epilogue` options & has no external dependencies unlike Python.
+Consider using the `luau`/`luajit` commands instead of the `py` command if the operation you're trying to do can be done with `luau`/`luajit`. [Lua/Luau is much faster than Python](https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/lua-python3.html) & [LuaJIT is even faster still](https://luajit.org/performance_x86.html). In addition, Luau/LuaJIT is embedded into qsv, can do aggregations with its `--prologue` & `--epilogue` options & has no external dependencies unlike Python.
 
 The `py` command cannot do aggregations because [PyO3's GIL-bound memory](https://pyo3.rs/v0.17.2/memory.html#gil-bound-memory) limitations will quickly consume a lot of memory (see [issue 449](https://github.com/jqnatividad/qsv/issues/449#issuecomment-1226095316) for details).
 To prevent this, the `py` command processes CSVs in batches (default: 30,000 records), with a GIL pool for each batch, so no globals are available across batches.
@@ -261,7 +261,7 @@ Choose `luajit` if its increased performance over `luau` is a priority and you d
 | `QSV_SNIFF_DELIMITER` | if set, the delimiter is automatically detected. Overrides `QSV_DEFAULT_DELIMITER` & `--delimiter` option. Note that this does not work with stdin. |
 | `QSV_NO_HEADERS` | if set, the first row will **NOT** be interpreted as headers. Supersedes `QSV_TOGGLE_HEADERS`. |
 | `QSV_TOGGLE_HEADERS` | if set to `1`, toggles header setting - i.e. inverts qsv header behavior, with no headers being the default, & setting `--no-headers` will actually mean headers will not be ignored. |
-| `QSV_AUTOINDEX` | if set, automatically create an index when none is detected. Also automatically update stale indices. |
+| `QSV_AUTOINDEX` | if set, automatically create an index when none is detected. Also automatically updates stale indices. |
 | `QSV_COMMENT_CHAR` | set to an ascii character. If set, any lines(including the header) that start with this character are ignored. |
 | `QSV_MAX_JOBS` | number of jobs to use for multithreaded commands (currently `apply`, `dedup`, `extsort`, `frequency`, `schema`, `sort`, `split`, `stats`, `tojsonl` & `validate`). If not set, max_jobs is set to the detected number of logical processors.  See [Multithreading](docs/PERFORMANCE.md#multithreading) for more info. |
 | `QSV_NO_UPDATE` | if set, prohibit self-update version check for the latest qsv release published on GitHub. |
@@ -272,7 +272,7 @@ Choose `luajit` if its increased performance over `luau` is a priority and you d
 | `QSV_WTR_BUFFER_CAPACITY` | writer buffer size (default (bytes): 65536) |
 | `QSV_LOG_LEVEL` | desired level (default - off; `error`, `warn`, `info`, `trace`, `debug`). |
 | `QSV_LOG_DIR` | when logging is enabled, the directory where the log files will be stored. If the specified directory does not exist, qsv will attempt to create it. If not set, the log files are created in the directory where qsv was started. See [Logging](docs/Logging.md#logging) for more info. |
-| `QSV_PROGRESSBAR` | if set, enable the --progressbar option on the `apply`, `fetch`, `fetchpost`, `foreach`, `lua`, `py`, `replace`, `search`, `searchset`, `sortcheck` & `validate` commands.  |
+| `QSV_PROGRESSBAR` | if set, enable the --progressbar option on the `apply`, `fetch`, `fetchpost`, `foreach`, `luau`, `luajit`, `py`, `replace`, `search`, `searchset`, `sortcheck` & `validate` commands.  |
 | `QSV_REDIS_CONNSTR` | the `fetch` command can use [Redis](https://redis.io/) to cache responses. Set to connect to the desired Redis instance. (default: `redis:127.0.0.1:6379/1`). For more info on valid Redis connection string formats, see https://docs.rs/redis/latest/redis/#connection-parameters. |
 | `QSV_FP_REDIS_CONNSTR` | the `fetchpost` command can also use Redis to cache responses (default: `redis:127.0.0.1:6379/2`). Note that `fetchpost` connects to database 2, as opposed to `fetch` which connects to database 1. |
 | `QSV_REDIS_MAX_POOL_SIZE` | the maximum Redis connection pool size. (default: 20). |
