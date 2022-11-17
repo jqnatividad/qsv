@@ -9,7 +9,6 @@ use std::{
 use docopt::Docopt;
 #[cfg(any(feature = "full", feature = "lite"))]
 use indicatif::{HumanCount, ProgressBar, ProgressStyle};
-#[cfg(any(feature = "apply", feature = "fetch", feature = "python"))]
 use regex::Regex;
 use serde::de::DeserializeOwned;
 #[cfg(any(feature = "full", feature = "lite"))]
@@ -694,19 +693,25 @@ fn send_hwsurvey(
     }
 }
 
-#[cfg(any(feature = "apply", feature = "fetch", feature = "python"))]
 pub fn safe_header_names(headers: &csv::StringRecord, check_first_char: bool) -> Vec<String> {
-    // Create "safe" var/key names - to support dynfmt/url-template and valid python vars
-    // Replace whitespace/invalid chars with _.
-    // If name starts with a number, replace it with an _ as well (for python vars)
-    let re = Regex::new(r"[^A-Za-z0-9]").unwrap();
+    // Create "safe" var/key names - to support dynfmt/url-template, valid python vars & db-safe
+    // column names. Replace whitespace/non-alphanumeric) with _.
+    // If name starts with a number & check_first_char is true, replace it with an _ as well.
+    // Finally, if a column with the same name already exists, append a sequence suffix (e.g. _n)
+    let safename_regex = Regex::new(r"[^A-Za-z0-9]").unwrap();
     let mut name_vec: Vec<String> = Vec::with_capacity(headers.len());
     for h in headers {
-        let mut safe_name = re.replace_all(h, "_").to_string();
+        let mut safe_name = safename_regex.replace_all(h, "_").to_string();
         if check_first_char && safe_name.as_bytes()[0].is_ascii_digit() {
             safe_name.replace_range(0..1, "_");
         }
-        name_vec.push(safe_name);
+        let mut sequence_suffix = 1_u16;
+        let mut candidate_name = safe_name.clone();
+        while name_vec.contains(&candidate_name) {
+            candidate_name = format!("{safe_name}_{sequence_suffix}");
+            sequence_suffix += 1;
+        }
+        name_vec.push(candidate_name);
     }
     log::debug!("safe header names: {name_vec:?}");
     name_vec
