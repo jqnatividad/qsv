@@ -68,7 +68,7 @@ The --http-header option allows you to append arbitrary key value pairs (a valid
 to the HTTP header (to authenticate against an API, pass custom header fields, etc.). Note that you can 
 pass as many key-value pairs by using --http-header option repeatedly. For example:
 
-$ qsv fetchpost https://httpbin.org/post col1-col3 data.csv --http-header "X-Api-Key:TEST_KEY" --http-header "X-Api-Secret:ABC123XYZ"
+$ qsv fetchpost https://httpbin.org/post col1-col3 data.csv -H "X-Api-Key:TEST_KEY" -H "X-Api-Secret:ABC123XYZ"
 
 For more extensive examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_fetch.rs.
 
@@ -105,7 +105,7 @@ Fetch options:
                                [default: 0 ]
     --timeout <seconds>        Timeout for each URL request.
                                [default: 15 ]
-    --http-header <key:value>  Append custom header(s) to the HTTP header. Pass multiple key-value pairs
+    -H, --http-header <k:v>    Append custom header(s) to the HTTP header. Pass multiple key-value pairs
                                by adding this option multiple times, once for each pair. The key and value 
                                should be separated by a colon.
     --max-retries <count>      Maximum number of retries per record before an error is raised.
@@ -126,9 +126,6 @@ Fetch options:
                                report has the same columns as the input CSV with seven additional columns - 
                                qsv_fetchp_url, qsv_fetchp_form, qsv_fetchp_status, qsv_fetchp_cache_hit,
                                qsv_fetchp_retries, qsv_fetchp_elapsed_ms & qsv_fetchp_response.
-                               fetchp_url - URL used, qsv_fetchp_form - form data sent, fetchp_status - HTTP code, 
-                               fetchp_cache_hit - cached hit flag, fetchp_retries - retry attempts, 
-                               fetchp_elapsed - elapsed time & fetchp_response.
                                The short report only has the seven columns without the "qsv_fetchp_" prefix.
                                [default: none]
     --redis                    Use Redis to cache responses. It connects to "redis://127.0.0.1:6379/2"
@@ -511,6 +508,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         } else {
             ""
         };
+        // the fetchpost report has the following columns:
+        // url - URL used, form - form data sent, status - HTTP status code,
+        // cache_hit - cache hit flag, retries - retry attempts,
+        // elapsed - elapsed time (milliseconds) & response.
         report_headers.push_field(format!("{rptcol_prefix}url").as_bytes());
         report_headers.push_field(format!("{rptcol_prefix}form").as_bytes());
         report_headers.push_field(format!("{rptcol_prefix}status").as_bytes());

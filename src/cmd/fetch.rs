@@ -90,7 +90,7 @@ The --http-header option allows you to append arbitrary key value pairs (a valid
 to the HTTP header (to authenticate against an API, pass custom header fields, etc.). Note that you can 
 pass as many key-value pairs by using --http-header option repeatedly. For example:
 
-$ qsv fetch URL data.csv --http-header "X-Api-Key:TEST_KEY" --http-header "X-Api-Secret:ABC123XYZ" --http-header "Accept-Language: fr-FR"
+$ qsv fetch URL data.csv --http-header "X-Api-Key:TEST_KEY" -H "X-Api-Secret:ABC123XYZ" -H "Accept-Language: fr-FR"
 
 For more extensive examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_fetch.rs.
 
@@ -124,7 +124,7 @@ Fetch options:
                                [default: 0 ]
     --timeout <seconds>        Timeout for each URL request.
                                [default: 15 ]
-    --http-header <key:value>  Append custom header(s) to the HTTP header. Pass multiple key-value pairs
+    -H, --http-header <k:v>    Append custom header(s) to the HTTP header. Pass multiple key-value pairs
                                by adding this option multiple times, once for each pair. The key and value 
                                should be separated by a colon.
     --max-retries <count>      Maximum number of retries per record before an error is raised.
@@ -145,8 +145,6 @@ Fetch options:
                                report has the same columns as the input CSV with six additional columns - 
                                qsv_fetch_url, qsv_fetch_status, qsv_fetch_cache_hit, qsv_fetch_retries, 
                                qsv_fetch_elapsed_ms & qsv_fetch_response.
-                               fetch_url - URL used, fetch_status - HTTP code, fetch_cache_hit - cache hit flag,
-                               fetch_retries - retry attempts, fetch_elapsed - elapsed time & fetch_response.
                                The short report only has the six columns without the "qsv_fetch_" prefix.
                                [default: none]
     --redis                    Use Redis to cache responses. It connects to "redis://127.0.0.1:6379/1"
@@ -543,6 +541,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         } else {
             ""
         };
+        // the fetch report has the following columns:
+        // url - URL used, status - HTTP status code, cache_hit - cache hit flag,
+        // retries - retry attempts, elapsed - elapsed time (milliseconds) & response.
         report_headers.push_field(format!("{rptcol_prefix}url").as_bytes());
         report_headers.push_field(format!("{rptcol_prefix}status").as_bytes());
         report_headers.push_field(format!("{rptcol_prefix}cache_hit").as_bytes());
