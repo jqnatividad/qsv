@@ -3,7 +3,7 @@ Apply a series of transformation functions to a given CSV column. This can be us
 perform typical data-wrangling tasks and/or to harmonize some values, etc.
 
 It has six subcommands:
- * operations - 32 string, format, currency, regex & NLP operators.
+ * operations - 33 string, format, currency, regex & NLP operators.
  * emptyreplace - replace empty cells with <--replacement> string.
  * datefmt - Formats a recognized date column to a specified format using <--formatstr>.
  * dynfmt - Dynamically constructs a new column from other columns using the <--formatstr> template.
@@ -24,7 +24,7 @@ number of transformed columns with the --rename option is the same. e.g.:
 
 $ qsv apply operations trim,upper col1,col2,col3 -r newcol1,newcol2,newcol3 file.csv  
 
-It has 32 supported operations:
+It has 33 supported operations:
 
   * len: Return string length
   * lower: Transform to lowercase
@@ -39,6 +39,7 @@ It has 32 supported operations:
   * mrtrim: Right trim --comparand matches (Rust trim_end_matches)
   * strip_prefix: Removes specified prefix in --comparand
   * strip_suffix: Remove specified suffix in --comparand
+  * escape - escape (Rust escape_default)
   * encode64: base64 encode
   * decode64: base64 decode
   * replace: Replace all matches of a pattern (using --comparand)
@@ -338,6 +339,7 @@ static OPERATIONS: &[&str] = &[
     "currencytonum",
     "decode",
     "encode",
+    "escape",
     "eudex",
     "len",
     "lower",
@@ -944,6 +946,9 @@ fn apply_operations(operations: &[&str], cell: &mut String, comparand: &str, rep
                     Ok(len) => String::from_utf8(output[0..len].to_vec()).unwrap(),
                     Err(e) => format!("decoding error: {e:?}"),
                 };
+            }
+            "escape" => {
+                *cell = cell.escape_default().to_string();
             }
             "strip_prefix" => {
                 if let Some(stripped) = cell.strip_prefix(comparand) {
