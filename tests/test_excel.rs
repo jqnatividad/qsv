@@ -271,6 +271,84 @@ fn excel_open_xlsx() {
 }
 
 #[test]
+fn excel_xlsx_safe_column_name() {
+    let wrk = Workdir::new("excel_xlsx_safe_column_name");
+
+    let xlsx_file = wrk.load_test_file("excel-xlsx.xlsx");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--sheet")
+        .arg("safe_column_name_test")
+        .arg("--safe-column-names")
+        .arg(xlsx_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec![
+            "col1",
+            "col_with_leading_and_trailing_spaces_",
+            "_23_starts_with_123",
+            "With_____special_____Characters_",
+            "col1_1",
+            "col1_2",
+            "The_quick_BROWN_fox_with_a_very_long_column_name_is_now_jump",
+            "___date___"
+        ],
+        svec![
+            "1",
+            "a",
+            "a",
+            "1.5",
+            "5",
+            "e",
+            "   This is some text. With whitespaces.  ",
+            "2001-09-11"
+        ],
+        svec![
+            "2",
+            "b",
+            "ba",
+            "2.3",
+            "4",
+            "d",
+            "jumped over the lazy dog",
+            "1968-07-04"
+        ],
+        svec![
+            "3",
+            "c",
+            "ka",
+            "3.4",
+            "3",
+            "c",
+            "     by the zigzag\r\nquarry site.   ",
+            "not a date"
+        ],
+        svec![
+            "4",
+            "d",
+            "da",
+            "3.14",
+            "2",
+            "b",
+            "lorem ipsum dolorem",
+            "1902-10-31"
+        ],
+        svec![
+            "5",
+            "e",
+            "e",
+            "0.00012",
+            "1",
+            "a",
+            "Joel was here",
+            "1901-10-15 08:09:36"
+        ],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn excel_last_sheet() {
     let wrk = Workdir::new("excel_last_sheet");
 

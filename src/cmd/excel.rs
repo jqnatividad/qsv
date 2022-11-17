@@ -35,6 +35,12 @@ Excel options:
                                from the previous record.
     --trim                     Trim all fields so that leading & trailing whitespaces are removed.
                                Also removes embedded linebreaks.
+    --safe-column-names        Make database-safe column names - i.e. duplicate column names will 
+                               have a sequential suffix (_n) appended.
+                               Leading/trailing spaces will be trimmed.
+                               Whitespace/non-alphanumeric characters will be replaced with _.
+                               If a column name starts with a digit, the digit is replaced with a _.
+                               Maximum length is 60 characters.
     --dates-whitelist <list>   The case-insensitive patterns to look for when 
                                shortlisting columns for date processing.
                                i.e. if the column's name has any of these patterns,
@@ -69,13 +75,14 @@ use crate::{config::Config, util, CliResult};
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input:            String,
-    flag_sheet:           String,
-    flag_metadata:        bool,
-    flag_flexible:        bool,
-    flag_trim:            bool,
-    flag_dates_whitelist: String,
-    flag_output:          Option<String>,
+    arg_input:              String,
+    flag_sheet:             String,
+    flag_metadata:          bool,
+    flag_flexible:          bool,
+    flag_trim:              bool,
+    flag_safe_column_names: bool,
+    flag_dates_whitelist:   String,
+    flag_output:            Option<String>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -329,6 +336,26 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 DataType::Bool(ref b) => record.push_field(&b.to_string()),
             };
         }
+
+        // if this is the header/column row and --safe-column-names option is true
+        if row_count == 0 && args.flag_safe_column_names {
+            record.trim();
+            let mut temp_record = csv::StringRecord::new();
+            for column in &record {
+                // maximum length is 60 characters
+                // we do 60 even though postgresql can do up to 63
+                // just in case we have duplicate column names
+                // and safe_header_names appends a sequence suffix
+                temp_record
+                    .push_field(&column[..column.chars().map(char::len_utf8).take(60).sum()]);
+            }
+            let safe_columns = util::safe_header_names(&temp_record, true);
+            record.clear();
+            for column_name in safe_columns {
+                record.push_field(&column_name);
+            }
+        }
+
         if args.flag_trim {
             record.trim();
             trimmed_record.clear();
