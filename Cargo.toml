@@ -66,7 +66,7 @@ cached = { version = "0.40", default-features = false, features = [
     "redis_ahash",
 ], optional = true }
 calamine = { version = "0.19", features = ["dates"] }
-censor = { version = "0.2", optional = true }
+censor = { version = "0.3", optional = true }
 console = { version = "0.15", optional = true }
 cpc = { version = "1.8", optional = true }
 crossbeam-channel = "0.5"
