@@ -356,9 +356,9 @@ fn fetch_custom_header() {
     );
     let mut cmd = wrk.command("fetch");
     cmd.arg("URL")
-        .arg("--http-header")
+        .arg("-H")
         .arg(" X-Api-Key :  DEMO_KEY")
-        .arg("--http-header")
+        .arg("-H")
         .arg("X-Api-Secret :ABC123XYZ")
         .arg("--jql")
         .arg(r#""headers"."X-Api-Key","headers"."X-Api-Secret""#)
@@ -460,7 +460,7 @@ fn fetchpost_custom_invalid_header_error() {
     let mut cmd = wrk.command("fetchpost");
     cmd.arg("URL")
         .arg("bool_col,col1,number col")
-        .arg("--http-header")
+        .arg("-H")
         .arg("X-Api-\tSecret :ABC123XYZ") // non-visible ascii not valid
         .arg("data.csv");
 
