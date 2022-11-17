@@ -509,8 +509,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             ""
         };
         // the fetchpost report has the following columns:
-        // url - URL used, form - form data sent, status - HTTP status code, 
-        // cache_hit - cache hit flag, retries - retry attempts, 
+        // url - URL used, form - form data sent, status - HTTP status code,
+        // cache_hit - cache hit flag, retries - retry attempts,
         // elapsed - elapsed time (milliseconds) & response.
         report_headers.push_field(format!("{rptcol_prefix}url").as_bytes());
         report_headers.push_field(format!("{rptcol_prefix}form").as_bytes());

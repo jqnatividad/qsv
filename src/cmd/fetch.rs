@@ -542,7 +542,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             ""
         };
         // the fetch report has the following columns:
-        // url - URL used, status - HTTP status code, cache_hit - cache hit flag, 
+        // url - URL used, status - HTTP status code, cache_hit - cache hit flag,
         // retries - retry attempts, elapsed - elapsed time (milliseconds) & response.
         report_headers.push_field(format!("{rptcol_prefix}url").as_bytes());
         report_headers.push_field(format!("{rptcol_prefix}status").as_bytes());
