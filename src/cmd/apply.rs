@@ -3,7 +3,7 @@ Apply a series of transformation functions to a given CSV column. This can be us
 perform typical data-wrangling tasks and/or to harmonize some values, etc.
 
 It has six subcommands:
- * operations - 31 string, format, currency, regex & NLP operators.
+ * operations - 32 string, format, currency, regex & NLP operators.
  * emptyreplace - replace empty cells with <--replacement> string.
  * datefmt - Formats a recognized date column to a specified format using <--formatstr>.
  * dynfmt - Dynamically constructs a new column from other columns using the <--formatstr> template.
@@ -24,7 +24,7 @@ number of transformed columns with the --rename option is the same. e.g.:
 
 $ qsv apply operations trim,upper col1,col2,col3 -r newcol1,newcol2,newcol3 file.csv  
 
-Currently supported operations:
+It has 32 supported operations:
 
   * len: Return string length
   * lower: Transform to lowercase
@@ -45,10 +45,12 @@ Currently supported operations:
       with a string (using --replacement) (Rust replace)
   * regex_replace: Replace all regex matches in --comparand w/ --replacement.
   * titlecase - capitalizes English text using Daring Fireball titlecase style
-      https://daringfireball.net/2008/05/title_case 
+      https://daringfireball.net/2008/05/title_case
+  * censor: profanity filter. Add additional comma-delimited profanities with --comparand.
   * censor_check: check if profanity is detected (boolean).
       Add additional comma-delimited profanities with -comparand. 
-  * censor: profanity filter. Add additional comma-delimited profanities with --comparand.
+  * censor_count: count of profanities detected.
+      Add additional comma-delimited profanities with -comparand. 
   * currencytonum: Gets the numeric value of a currency. Supports currency symbols
       (e.g. $,¥,£,€,֏,₱,₽,₪,₩,ƒ,฿,₫) and strings (e.g. USD, EUR, RMB, JPY, etc.). 
       Recognizes point, comma and space separators.
@@ -237,7 +239,7 @@ $ qsv apply calcconv --formatstr '10% of abs(sin(pi)) horsepower to watts' -c wa
 And use very large numbers:
 $ qsv apply calcconv --formatstr '{col1} Billion Trillion * {col2} quadrillion vigintillion' -c num_atoms file.csv 
 
-For more extensive subcommand examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_apply.rs.
+For more extensive examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_apply.rs.
 
 Usage:
 qsv apply operations <operations> [options] <column> [<input>]
@@ -331,6 +333,7 @@ const BATCH_SIZE: usize = 24_000;
 static OPERATIONS: &[&str] = &[
     "censor",
     "censor_check",
+    "censor_count",
     "copy",
     "currencytonum",
     "decode",
@@ -744,7 +747,7 @@ fn validate_operations(
             return Some(fail_clierror!("Unknown '{op}' operation"));
         }
         match *op {
-            "censor" | "censor_check" => {
+            "censor" | "censor_check" | "censor_count" => {
                 if flag_new_column.is_none() {
                     return Some(fail!(
                         "--new_column (-c) is required for censor operations."
@@ -962,7 +965,7 @@ fn apply_operations(operations: &[&str], cell: &mut String, comparand: &str, rep
                 let regexreplace = REGEX_REPLACE.get().unwrap();
                 *cell = regexreplace.replace_all(cell, replacement).to_string();
             }
-            "censor_check" | "censor" => {
+            "censor" | "censor_check" | "censor_count" => {
                 let censor = CENSOR.get_or_init(|| {
                     let mut censored_words = Censor::Standard + Zealous + Sex;
                     for word in comparand.split(',') {
@@ -972,6 +975,8 @@ fn apply_operations(operations: &[&str], cell: &mut String, comparand: &str, rep
                 });
                 if *op == "censor_check" {
                     *cell = censor.check(cell).to_string();
+                } else if *op == "censor_count" {
+                    *cell = censor.count(cell).to_string();
                 } else {
                     *cell = censor.censor(cell);
                 }

@@ -532,6 +532,44 @@ fn apply_ops_censor_check() {
 }
 
 #[test]
+fn apply_ops_censor_count() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["description"],
+            svec!["fuck"],
+            svec!["FUCK"],
+            svec!["fμ¢κ you!"],
+            svec!["F_u c_K"],
+            svec!["fuuuuuuuck"],
+            svec!["fluff truck"],
+            svec!["fukushima"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("censor_count")
+        .arg("description")
+        .arg("--new-column")
+        .arg("profanity_count")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["description", "profanity_count"],
+        svec!["fuck", "1"],
+        svec!["FUCK", "1"],
+        svec!["fμ¢κ you!", "1"],
+        svec!["F_u c_K", "4"],
+        svec!["fuuuuuuuck", "1"],
+        svec!["fluff truck", "0"],
+        svec!["fukushima", "0"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn apply_ops_censor() {
     let wrk = Workdir::new("apply");
     wrk.create(
@@ -663,6 +701,52 @@ fn apply_ops_censor_addlwords() {
             "ding dong the bitch is dead!",
             "ding **** the ***** is dead!"
         ],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn apply_ops_censor_count_addlwords() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["description"],
+            svec!["fuck"],
+            svec!["FUCK"],
+            svec!["fμ¢κ that shit, faggot!"],
+            svec!["F_u c_K that blowjoboobies"],
+            svec!["fuuuuuuuck yooooouuuu"],
+            svec!["kiss my ass!"],
+            svec!["shittitties"],
+            svec!["move your shlllooooonng!!!"],
+            svec!["that cameltoe is so penistracting!"],
+            svec!["ding dong the bitch is dead!"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("censor_count")
+        .arg("description")
+        .arg("--comparand")
+        .arg("shlong, dong, cameltoe, bitch")
+        .arg("--new-column")
+        .arg("profanity_count")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["description", "profanity_count"],
+        svec!["fuck", "1"],
+        svec!["FUCK", "1"],
+        svec!["fμ¢κ that shit, faggot!", "3"],
+        svec!["F_u c_K that blowjoboobies", "5"],
+        svec!["fuuuuuuuck yooooouuuu", "1"],
+        svec!["kiss my ass!", "1"],
+        svec!["shittitties", "1"],
+        svec!["move your shlllooooonng!!!", "1"],
+        svec!["that cameltoe is so penistracting!", "2"],
+        svec!["ding dong the bitch is dead!", "2"],
     ];
     assert_eq!(got, expected);
 }
