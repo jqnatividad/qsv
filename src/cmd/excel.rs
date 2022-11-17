@@ -40,7 +40,7 @@ Excel options:
                                Leading/trailing spaces will be trimmed.
                                Whitespace/non-alphanumeric characters will be replaced with _.
                                If a column name starts with a digit, the digit is replaced with a _.
-                               Maximum length is 60 characters
+                               Maximum length is 60 characters.
     --dates-whitelist <list>   The case-insensitive patterns to look for when 
                                shortlisting columns for date processing.
                                i.e. if the column's name has any of these patterns,
