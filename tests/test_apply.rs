@@ -48,6 +48,36 @@ fn apply_ops_upper() {
 }
 
 #[test]
+fn apply_ops_escape() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["name", "surname"],
+            svec!["John😁", "😡Cena"],
+            svec!["Mary☎", "Janë"],
+            svec!["Sue", "Bird🐦"],
+            svec!["Hopękins", "Jæde"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("escape")
+        .arg("name,surname")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["name", "surname"],
+        svec!["John\\u{1f601}", "\\u{1f621}Cena"],
+        svec!["Mary\\u{260e}", "Jan\\u{eb}"],
+        svec!["Sue", "Bird\\u{1f426}"],
+        svec!["Hop\\u{119}kins", "J\\u{e6}de"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn apply_ops_upper_rename() {
     let wrk = Workdir::new("apply");
     wrk.create(
