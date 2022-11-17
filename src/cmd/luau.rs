@@ -1,6 +1,6 @@
 static USAGE: &str = r#"
 Create a new computed column, filter rows or compute aggregations by executing a
-Luau script of every line of a CSV file.
+Luau script for every line of a CSV file.
 
 The executed Luau has 3 ways to reference row columns (as strings):
   1. Directly by using column name (e.g. Amount), can be disabled with -g
@@ -45,8 +45,8 @@ Some usage examples:
   so -f should be used for non-trivial scripts to read them from a file
   $ qsv luau map Type -x -f debitcredit.lua
 
-With "luau map", if a LuaJIT script is invalid, "<ERROR>" is returned.
-With "luau filter", if a LuaJIT script is invalid, no filtering is done.
+With "luau map", if a Luau script is invalid, "<ERROR>" is returned.
+With "luau filter", if a Luau script is invalid, no filtering is done.
 Invalid scripts will also result in an exitcode of 1.
 
 There are also special variables named "_idx" that is set to the current row number; and
@@ -59,7 +59,7 @@ that can be used for complex aggregation operations in the epilogue.
 When debugging luau, be sure to set the environment variable QSV_LOG_LEVEL=debug to see
 detailed error messages in the logfile.
 
-For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_lua.rs.
+For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_luau.rs.
 
 Usage:
     qsv luau map [options] -n <script> [<input>]
@@ -79,9 +79,9 @@ luau options:
     -g, --no-globals   Don't create Luau global variables for each column, only col.
                        Useful when some column names mask standard Luau globals.
                        Note: access to Luau globals thru _G remains even without -g.
-    --prologue <arg1>  Luau statements to execute before processing the CSV.
+    --prologue <arg1>  Luau statements to execute BEFORE processing the CSV.
                        Typically used to initialize global variables.
-    --epilogue <arg2>  Luau statements to execute after processing the CSV.
+    --epilogue <arg2>  Luau statements to execute AFTER processing the CSV.
                        Typically used for aggregations.
                        The output of the epilogue is sent to stderr.
 

@@ -1,6 +1,6 @@
 static USAGE: &str = r#"
 Create a new computed column, filter rows or compute aggregations by executing a
-LuaJIT script of every line of a CSV file.
+LuaJIT script for every line of a CSV file.
 
 LuaJIT is a Just-In-Time (JIT) for the Lua 5.2 language and is much faster than Lua
 (up to 134x faster - see https://luajit.org/performance.html).
@@ -82,9 +82,9 @@ lua options:
     -g, --no-globals   Don't create LuaJIT global variables for each column, only col.
                        Useful when some column names mask standard LuaJIT globals.
                        Note: access to LuaJIT globals thru _G remains even without -g.
-    --prologue <arg1>  LuaJIT statements to execute before processing the CSV.
+    --prologue <arg1>  LuaJIT statements to execute BEFORE processing the CSV.
                        Typically used to initialize global variables.
-    --epilogue <arg2>  LuaJit statements to execute after processing the CSV.
+    --epilogue <arg2>  LuaJIT statements to execute AFTER processing the CSV.
                        Typically used for aggregations.
                        The output of the epilogue is sent to stderr.
 
