@@ -35,7 +35,7 @@ impl Workdir {
         let dir = root
             .join(QSV_INTEGRATION_TEST_DIR)
             .join(name)
-            .join(&format!("test-{}", id));
+            .join(format!("test-{}", id));
         if let Err(err) = create_dir_all(&dir) {
             panic!("Could not create '{:?}': {}", dir, err);
         }
@@ -59,7 +59,7 @@ impl Workdir {
         let mut wtr = csv::WriterBuilder::new()
             .flexible(self.flexible)
             .delimiter(delim)
-            .from_path(&self.path(name))
+            .from_path(self.path(name))
             .unwrap();
         for row in rows.to_vecs() {
             wtr.write_record(row).unwrap();
@@ -100,7 +100,7 @@ impl Workdir {
     }
 
     pub fn command(&self, sub_command: &str) -> process::Command {
-        let mut cmd = process::Command::new(&self.qsv_bin());
+        let mut cmd = process::Command::new(self.qsv_bin());
         if sub_command.is_empty() {
             cmd.current_dir(&self.dir);
         } else {

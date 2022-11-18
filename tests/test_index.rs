@@ -16,9 +16,9 @@ fn index_outdated_count() {
         ],
     );
 
-    let md = fs::metadata(&wrk.path("in.csv.idx")).unwrap();
+    let md = fs::metadata(wrk.path("in.csv.idx")).unwrap();
     set_file_times(
-        &wrk.path("in.csv"),
+        wrk.path("in.csv"),
         future_time(FileTime::from_last_modification_time(&md)),
         future_time(FileTime::from_last_access_time(&md)),
     )
@@ -49,9 +49,9 @@ fn index_outdated_stats() {
         ],
     );
 
-    let md = fs::metadata(&wrk.path("in.csv.idx")).unwrap();
+    let md = fs::metadata(wrk.path("in.csv.idx")).unwrap();
     set_file_times(
-        &wrk.path("in.csv"),
+        wrk.path("in.csv"),
         future_time(FileTime::from_last_modification_time(&md)),
         future_time(FileTime::from_last_access_time(&md)),
     )
