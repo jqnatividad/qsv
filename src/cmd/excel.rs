@@ -14,6 +14,9 @@ fractional components (e.g. 40729 is 2011-07-05, 37145.354166666664 is 2001-09-1
 We need a whitelist so we know to only do this date conversions for date fields and
 not all columns with numeric values.
 
+Note however that with XLSX files, qsv will automatically process a cell as a date, even if its
+not its not in the --dates-whitelist, if the cell's format has been explicitly set to date.
+
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_excel.rs.
 
 Usage:
@@ -26,16 +29,16 @@ Excel options:
                                If the sheet cannot be found, qsv will read the first sheet.
                                [default: 0]
     --metadata                 Creates a CSV of workbook metadata with five columns - 
-                               index, sheet_name, columns, num_columns & num_rows.
-                               Note that columns is a semicolon-delimited list of the first row
-                               (which is presumably, but not necessarily the column names) and
-                               num_rows includes all rows, including the first row.
+                               index, sheet_name, headers, num_columns & num_rows.
+                               Note that headers is a semicolon-delimited list of the first row
+                               (which is presumably, but not necessarily the header/column names)
+                               and num_rows includes all rows, including the first row.
                                All other Excel options are ignored.
     --flexible                 Continue even if the number of columns is different 
                                from the previous record.
     --trim                     Trim all fields so that leading & trailing whitespaces are removed.
                                Also removes embedded linebreaks.
-    --safe-column-names        Make database-safe column names - i.e. duplicate column names will 
+    --safe-header-names        Make database-safe header names - i.e. duplicate header names will 
                                have a sequential suffix (_n) appended.
                                Leading/trailing spaces will be trimmed.
                                Whitespace/non-alphanumeric characters will be replaced with _.
@@ -80,7 +83,7 @@ struct Args {
     flag_metadata:          bool,
     flag_flexible:          bool,
     flag_trim:              bool,
-    flag_safe_column_names: bool,
+    flag_safe_header_names: bool,
     flag_dates_whitelist:   String,
     flag_output:            Option<String>,
 }
@@ -135,7 +138,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if args.flag_metadata {
         record.push_field("index");
         record.push_field("sheet_name");
-        record.push_field("columns");
+        record.push_field("headers");
         record.push_field("num_columns");
         record.push_field("num_rows");
         wtr.write_record(&record)?;
@@ -269,6 +272,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut trimmed_record = csv::StringRecord::new();
     let mut date_flag: Vec<bool> = Vec::new();
+    let mut cell_date_flag;
+    let mut float_val = 0_f64;
+    let mut float_flag;
     // use u32 as Excel/ODS can only handle 1,048,576 rows anyway
     // https://support.microsoft.com/en-us/office/excel-specifications-and-limits-1672b34d-7043-467e-8e27-269d656771c3
     // https://wiki.documentfoundation.org/Faq/Calc/022
@@ -307,52 +313,68 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 }
                 continue;
             }
+            cell_date_flag = false;
+            float_flag = false;
             match *cell {
                 DataType::Empty => record.push_field(""),
                 DataType::String(ref s) => record.push_field(s),
-                DataType::Float(ref f) | DataType::DateTime(ref f) => {
-                    if date_flag[col_idx] {
-                        if f.fract() > 0.0 {
-                            record.push_field({
-                                &cell.as_datetime().map_or_else(
-                                    || format!("ERROR: Cannot convert {f} to datetime"),
-                                    |dt| format!("{dt}"),
-                                )
-                            });
-                        } else {
-                            record.push_field({
-                                &cell.as_date().map_or_else(
-                                    || format!("ERROR: Cannot convert {f} to date"),
-                                    |d| format!("{d}"),
-                                )
-                            });
-                        };
-                    } else {
-                        record.push_field(&f.to_string());
-                    }
+                DataType::DateTime(ref f) => {
+                    float_val = *f;
+                    float_flag = true;
+                    cell_date_flag = true;
+                }
+                DataType::Float(ref f) => {
+                    float_val = *f;
+                    float_flag = true;
+                    cell_date_flag = date_flag[col_idx];
                 }
                 DataType::Int(ref i) => record.push_field(&i.to_string()),
                 DataType::Error(ref e) => record.push_field(&format!("{e:?}")),
                 DataType::Bool(ref b) => record.push_field(&b.to_string()),
             };
+            // dates are stored as numbers in Excel
+            // that's why we need the --dates-whitelist, so we can convert the number to a date.
+            // however, with the XLSX format, we can get a cell's format as an attribute. So we can
+            // automatically process a cell as a date, even if its column is NOT in the whitelist
+            if float_flag {
+                if cell_date_flag {
+                    if float_val.fract() > 0.0 {
+                        record.push_field({
+                            &cell.as_datetime().map_or_else(
+                                || format!("ERROR: Cannot convert {float_val} to datetime"),
+                                |dt| format!("{dt}"),
+                            )
+                        });
+                    } else {
+                        record.push_field({
+                            &cell.as_date().map_or_else(
+                                || format!("ERROR: Cannot convert {float_val} to date"),
+                                |d| format!("{d}"),
+                            )
+                        });
+                    };
+                } else {
+                    record.push_field(&float_val.to_string());
+                }
+            }
         }
 
-        // if this is the header/column row and --safe-column-names option is true
-        if row_count == 0 && args.flag_safe_column_names {
+        // if this is the header/column row and --safe-header-names option is true
+        if row_count == 0 && args.flag_safe_header_names {
             record.trim();
             let mut temp_record = csv::StringRecord::new();
-            for column in &record {
+            for header in &record {
                 // maximum length is 60 characters
                 // we do 60 even though postgresql can do up to 63
-                // just in case we have duplicate column names
+                // just in case we have duplicate header names
                 // and safe_header_names appends a sequence suffix
                 temp_record
-                    .push_field(&column[..column.chars().map(char::len_utf8).take(60).sum()]);
+                    .push_field(&header[..header.chars().map(char::len_utf8).take(60).sum()]);
             }
-            let safe_columns = util::safe_header_names(&temp_record, true);
+            let safe_headers = util::safe_header_names(&temp_record, true);
             record.clear();
-            for column_name in safe_columns {
-                record.push_field(&column_name);
+            for header_name in safe_headers {
+                record.push_field(&header_name);
             }
         }
 
