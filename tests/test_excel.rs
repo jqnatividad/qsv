@@ -115,6 +115,35 @@ fn excel_date_xls() {
 }
 
 #[test]
+fn excel_date_xlsx() {
+    let wrk = Workdir::new("excel_date_xlsx");
+
+    let xlsx_file = wrk.load_test_file("excel-xlsx.xlsx");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--sheet").arg("date_test").arg(xlsx_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["date", "plaincol"],
+        svec![
+            "1980-12-25",
+            "it will still parse the dates below as date even if plaincol is not in the default \
+             --dates-whitelist because the cell format was set to date"
+        ],
+        svec!["2001-09-11 08:30:00", "2001-09-11"],
+        svec!["not a date", "2001-09-11 08:30:00"],
+        svec![
+            "Wednesday, Mar-14-2012",
+            "the date below is not parsed as a date coz we didn't explicitly set the cell format \
+             to a date format and \"plaincol\" is not in the --dates-whitelist"
+        ],
+        svec!["2001-09-11", "9/11/01 8:30 am"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn excel_date_whitelist_xls() {
     let wrk = Workdir::new("excel_date_whitelist_xls");
 
@@ -271,15 +300,15 @@ fn excel_open_xlsx() {
 }
 
 #[test]
-fn excel_xlsx_safe_column_name() {
-    let wrk = Workdir::new("excel_xlsx_safe_column_name");
+fn excel_xlsx_safe_header_name() {
+    let wrk = Workdir::new("excel_xlsx_safe_header_name");
 
     let xlsx_file = wrk.load_test_file("excel-xlsx.xlsx");
 
     let mut cmd = wrk.command("excel");
     cmd.arg("--sheet")
-        .arg("safe_column_name_test")
-        .arg("--safe-column-names")
+        .arg("safe_header_name_test")
+        .arg("--safe-header-names")
         .arg(xlsx_file);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
@@ -472,7 +501,7 @@ fn excel_metadata() {
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
-        svec!["index", "sheet_name", "columns", "num_columns", "num_rows"],
+        svec!["index", "sheet_name", "headers", "num_columns", "num_rows"],
         svec!["0", "First", "URL;City", "2", "4"],
         svec!["1", "Flexibility Test", "URL;City;", "3", "6"],
         svec!["2", "Middle", "Middle sheet col1;Middle-2", "2", "6"],
