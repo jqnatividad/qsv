@@ -492,10 +492,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         Geocode,
         EmptyReplace,
         CalcConv,
-        Unknown,
     }
 
-    let mut ops_vec: Vec<Operations> = Vec::new();
+    let mut ops_vec: Vec<Operations> = Vec::with_capacity(10);
 
     let apply_cmd = if args.cmd_operations {
         match validate_operations(
@@ -519,7 +518,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } else if args.cmd_calcconv {
         ApplySubCmd::CalcConv
     } else {
-        ApplySubCmd::Unknown
+        return fail!("Unknown apply subcommand.");
     };
 
     // prep progress bar
@@ -702,9 +701,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         } else {
                             record = replace_column_value(&record, column_index, &result);
                         }
-                    }
-                    ApplySubCmd::Unknown => {
-                        unreachable!("apply subcommands are always known");
                     }
                 }
 
