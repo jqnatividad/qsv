@@ -136,6 +136,8 @@ self_update = { version = "0.32", features = [
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 strsim = { version = "0.10", optional = true }
+strum = { version = "0.24", optional = true }
+strum_macros = { version = "0.24", optional = true }
 sysinfo = "0.26"
 tabwriter = "1.2"
 test-data-generation = { version = "0.3", optional = true }
@@ -189,6 +191,8 @@ apply = [
     "qsv_currency",
     "reverse_geocoder",
     "strsim",
+    "strum",
+    "strum_macros",
     "titlecase",
     "vader_sentiment",
     "whatlang",
