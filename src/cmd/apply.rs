@@ -762,8 +762,8 @@ fn validate_operations(
                 if flag_new_column.is_none() {
                     return fail!("--new_column (-c) is required for censor operations.");
                 }
-                if censor_invokes == 0 {
-                    CENSOR
+                if censor_invokes == 0
+                    && CENSOR
                         .set({
                             let mut censored_words = Censor::Standard + Zealous + Sex;
                             for word in flag_comparand.split(',') {
@@ -771,7 +771,9 @@ fn validate_operations(
                             }
                             censored_words
                         })
-                        .unwrap();
+                        .is_err()
+                {
+                    return fail!("Cannot initialize Censor engine.");
                 }
                 censor_invokes = censor_invokes.saturating_add(1);
             }
@@ -785,10 +787,12 @@ fn validate_operations(
                 if flag_comparand.is_empty() || flag_new_column.is_none() {
                     return fail!("--comparand (-C) and --new_column (-c) is required for eudex.");
                 }
-                if eudex_invokes == 0 {
-                    EUDEX_COMPARAND_HASH
+                if eudex_invokes == 0
+                    && EUDEX_COMPARAND_HASH
                         .set(eudex::Hash::new(flag_comparand))
-                        .unwrap();
+                        .is_err()
+                {
+                    return fail!("Cannot initialize Eudex.");
                 }
                 eudex_invokes = eudex_invokes.saturating_add(1);
             }
@@ -855,8 +859,8 @@ fn validate_operations(
                     return fail!("--new_column (-c) is required for whatlang language detection.");
                 }
 
-                if whatlang_invokes == 0 {
-                    WHATLANG_CONFIDENCE_THRESHOLD
+                if whatlang_invokes == 0
+                    && WHATLANG_CONFIDENCE_THRESHOLD
                         .set(if flag_comparand.is_empty() {
                             DEFAULT_THRESHOLD
                         } else {
@@ -885,7 +889,9 @@ fn validate_operations(
                                 final_threshold
                             }
                         })
-                        .unwrap();
+                        .is_err()
+                {
+                    return fail!("cannot initialize WhatLang language detection.");
                 }
                 whatlang_invokes = whatlang_invokes.saturating_add(1);
             }
