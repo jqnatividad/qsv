@@ -22,7 +22,7 @@ jobs:
     - name: Update Rust
       run: rustup update
     - name: Setup Rust-cache
-      uses: Swatinem/rust-cache@v1
+      uses: Swatinem/rust-cache@v2
       with:
         key: qsv-cache
     - name: Run tests
