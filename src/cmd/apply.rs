@@ -296,6 +296,8 @@ Common options:
     -p, --progressbar           Show progress bars. Not valid for stdin.
 "#;
 
+use std::str::FromStr;
+
 use cached::proc_macro::cached;
 use censor::{Censor, Sex, Zealous};
 use cpc::{eval, units::Unit};
@@ -315,6 +317,7 @@ use strsim::{
     damerau_levenshtein, hamming, jaro_winkler, normalized_damerau_levenshtein, osa_distance,
     sorensen_dice,
 };
+use strum_macros::EnumString;
 use titlecase::titlecase;
 use vader_sentiment::SentimentIntensityAnalyzer;
 use whatlang::detect;
@@ -330,42 +333,44 @@ use crate::{
 // number of CSV rows to process in a batch
 const BATCH_SIZE: usize = 24_000;
 
-// ensure this is always sorted, as we do a binary_search on it
-static OPERATIONS: &[&str] = &[
-    "censor",
-    "censor_check",
-    "censor_count",
-    "copy",
-    "currencytonum",
-    "decode",
-    "encode",
-    "escape",
-    "eudex",
-    "len",
-    "lower",
-    "ltrim",
-    "mltrim",
-    "mrtrim",
-    "mtrim",
-    "regex_replace",
-    "replace",
-    "rtrim",
-    "sentiment",
-    "simdl",
-    "simdln",
-    "simhm",
-    "simjw",
-    "simod",
-    "simsd",
-    "squeeze",
-    "squeeze0",
-    "strip_prefix",
-    "strip_suffix",
-    "titlecase",
-    "trim",
-    "upper",
-    "whatlang",
-];
+#[derive(EnumString)]
+#[strum(ascii_case_insensitive)]
+#[allow(non_camel_case_types)]
+enum Operations {
+    Censor,
+    Censor_Check,
+    Censor_Count,
+    Copy,
+    Currencytonum,
+    Decode,
+    Encode,
+    Escape,
+    Eudex,
+    Len,
+    Lower,
+    Ltrim,
+    Mltrim,
+    Mrtrim,
+    Mtrim,
+    Regex_Replace,
+    Replace,
+    Rtrim,
+    Sentiment,
+    Simdl,
+    Simdln,
+    Simhm,
+    Simjw,
+    Simod,
+    Simsd,
+    Squeeze,
+    Squeeze0,
+    Strip_Prefix,
+    Strip_Suffix,
+    Titlecase,
+    Trim,
+    Upper,
+    Whatlang,
+}
 
 #[derive(Deserialize, Debug)]
 struct Args {
@@ -490,16 +495,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         Unknown,
     }
 
-    let lower_operations = args.arg_operations.to_lowercase();
-    let operations: Vec<&str> = lower_operations.split(',').collect();
+    let mut ops_vec: Vec<Operations> = Vec::new();
+
     let apply_cmd = if args.cmd_operations {
-        if let Some(validation_error) = validate_operations(
-            &operations,
+        match validate_operations(
+            &args.arg_operations.to_lowercase().split(',').collect(),
             &args.flag_comparand,
             &args.flag_replacement,
             &args.flag_new_column,
         ) {
-            return validation_error;
+            Ok(operations_vec) => ops_vec = operations_vec,
+            Err(e) => return Err(e),
         }
         ApplySubCmd::Operations
     } else if args.cmd_geocode {
@@ -589,7 +595,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         for col_index in sel.iter() {
                             let mut cell = record[*col_index].to_owned();
                             apply_operations(
-                                &operations,
+                                &ops_vec,
                                 &mut cell,
                                 &args.flag_comparand,
                                 &args.flag_replacement,
@@ -728,12 +734,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 }
 
 // validate apply operations for required options
+// and prepare operations enum vec
 fn validate_operations(
     operations: &Vec<&str>,
     flag_comparand: &String,
     flag_replacement: &String,
     flag_new_column: &Option<String>,
-) -> Option<Result<(), CliError>> {
+) -> Result<Vec<Operations>, CliError> {
     let mut censor_invokes = 0_u8;
     let mut copy_invokes = 0_u8;
     let mut eudex_invokes = 0_u8;
@@ -744,95 +751,108 @@ fn validate_operations(
     let mut strip_invokes = 0_u8;
     let mut whatlang_invokes = 0_u8;
 
+    let mut ops_vec: Vec<Operations> = Vec::with_capacity(operations.len());
+
     for op in operations {
-        if OPERATIONS.binary_search(op).is_err() {
-            return Some(fail_clierror!("Unknown '{op}' operation"));
-        }
-        match *op {
-            "censor" | "censor_check" | "censor_count" => {
+        let Ok(operation) = Operations::from_str(op) else {
+            return fail_clierror!("Unknown '{op}' operation");
+        };
+        match operation {
+            Operations::Censor | Operations::Censor_Check | Operations::Censor_Count => {
                 if flag_new_column.is_none() {
-                    return Some(fail!(
-                        "--new_column (-c) is required for censor operations."
-                    ));
+                    return fail!("--new_column (-c) is required for censor operations.");
+                }
+                if censor_invokes == 0 {
+                    CENSOR
+                        .set({
+                            let mut censored_words = Censor::Standard + Zealous + Sex;
+                            for word in flag_comparand.split(',') {
+                                censored_words += word.trim();
+                            }
+                            censored_words
+                        })
+                        .unwrap();
                 }
                 censor_invokes = censor_invokes.saturating_add(1);
             }
-            "copy" => {
+            Operations::Copy => {
                 if flag_new_column.is_none() {
-                    return Some(fail!("--new_column (-c) is required for copy operation."));
+                    return fail!("--new_column (-c) is required for copy operation.");
                 }
                 copy_invokes = copy_invokes.saturating_add(1);
             }
-            "eudex" => {
+            Operations::Eudex => {
                 if flag_comparand.is_empty() || flag_new_column.is_none() {
-                    return Some(fail!(
-                        "--comparand (-C) and --new_column (-c) is required for eudex."
-                    ));
+                    return fail!("--comparand (-C) and --new_column (-c) is required for eudex.");
+                }
+                if eudex_invokes == 0 {
+                    EUDEX_COMPARAND_HASH
+                        .set(eudex::Hash::new(flag_comparand))
+                        .unwrap();
                 }
                 eudex_invokes = eudex_invokes.saturating_add(1);
             }
-            "mtrim" | "mltrim" | "mrtrim" => {
+            Operations::Mtrim | Operations::Mltrim | Operations::Mrtrim => {
                 if flag_comparand.is_empty() {
-                    return Some(fail!(
-                        "--comparand (-C) is required for match trim operations."
-                    ));
+                    return fail!("--comparand (-C) is required for match trim operations.");
                 }
             }
-            "regex_replace" => {
+            Operations::Regex_Replace => {
                 if flag_comparand.is_empty() || flag_replacement.is_empty() {
-                    return Some(fail!(
+                    return fail!(
                         "--comparand (-C) and --replacement (-R) are required for regex_replace \
                          operation."
-                    ));
+                    );
                 }
                 if regex_replace_invokes == 0 {
                     let re = match regex::Regex::new(flag_comparand) {
                         Ok(re) => re,
                         Err(err) => {
-                            return Some(fail_clierror!("regex_replace expression error: {err:?}"));
+                            return fail_clierror!("regex_replace expression error: {err:?}");
                         }
                     };
                     let _ = REGEX_REPLACE.set(re);
                 }
                 regex_replace_invokes = regex_replace_invokes.saturating_add(1);
             }
-            "replace" => {
+            Operations::Replace => {
                 if flag_comparand.is_empty() || flag_replacement.is_empty() {
-                    return Some(fail!(
+                    return fail!(
                         "--comparand (-C) and --replacement (-R) are required for replace \
                          operation."
-                    ));
+                    );
                 }
                 replace_invokes = replace_invokes.saturating_add(1);
             }
-            "sentiment" => {
+            Operations::Sentiment => {
                 if flag_new_column.is_none() {
-                    return Some(fail!(
-                        "--new_column (-c) is required for sentiment operation."
-                    ));
+                    return fail!("--new_column (-c) is required for sentiment operation.");
                 }
                 sentiment_invokes = sentiment_invokes.saturating_add(1);
             }
-            "simdl" | "simdln" | "simjw" | "simsd" | "simhm" | "simod" => {
+            Operations::Simdl
+            | Operations::Simdln
+            | Operations::Simjw
+            | Operations::Simsd
+            | Operations::Simhm
+            | Operations::Simod => {
                 if flag_comparand.is_empty() || flag_new_column.is_none() {
-                    return Some(fail!(
+                    return fail!(
                         "--comparand (-C) and --new_column (-c) is required for similarity \
                          operations."
-                    ));
+                    );
                 }
                 sim_invokes = sim_invokes.saturating_add(1);
             }
-            "strip_prefix" | "strip_suffix" => {
+            Operations::Strip_Prefix | Operations::Strip_Suffix => {
                 if flag_comparand.is_empty() {
-                    return Some(fail!("--comparand (-C) is required for strip operations."));
+                    return fail!("--comparand (-C) is required for strip operations.");
                 }
                 strip_invokes = strip_invokes.saturating_add(1);
             }
-            "whatlang" => {
+            Operations::Whatlang => {
                 if flag_new_column.is_none() {
-                    return Some(fail!(
-                        "--new_column (-c) is required for whatlang language detection."
-                    ));
+                    return fail!("--new_column (-c) is required for whatlang language detection.");
                 }
 
                 if whatlang_invokes == 0 {
@@ -869,10 +889,9 @@ fn validate_operations(
                 }
                 whatlang_invokes = whatlang_invokes.saturating_add(1);
             }
-            _ => {
-                // other operations have no required options
-            }
+            _ => {}
         }
+        ops_vec.push(operation);
     }
     if censor_invokes > 1
         || copy_invokes > 1
@@ -884,109 +903,109 @@ fn validate_operations(
         || strip_invokes > 1
         || whatlang_invokes > 1
     {
-        return Some(fail_clierror!(
+        return fail_clierror!(
             "you can only use censor({censor_invokes}), copy({copy_invokes}), \
              eudex({eudex_invokes}), regex_replace({regex_replace_invokes}), \
              replace({replace_invokes}), sentiment({sentiment_invokes}), \
              similarity({sim_invokes}), strip({strip_invokes}), and whatlang({whatlang_invokes}) \
              ONCE per operation series."
-        ));
+        );
     };
 
-    None // no validation errors
+    Ok(ops_vec) // no validation errors
 }
 
 #[inline]
-fn apply_operations(operations: &[&str], cell: &mut String, comparand: &str, replacement: &str) {
-    for op in operations {
-        #[allow(clippy::useless_asref)]
-        match op.as_ref() {
-            "len" => {
+fn apply_operations(
+    ops_vec: &Vec<Operations>,
+    cell: &mut String,
+    comparand: &str,
+    replacement: &str,
+) {
+    for op in ops_vec {
+        match op {
+            Operations::Len => {
                 *cell = cell.len().to_string();
             }
-            "lower" => {
+            Operations::Lower => {
                 *cell = cell.to_lowercase();
             }
-            "upper" => {
+            Operations::Upper => {
                 *cell = cell.to_uppercase();
             }
-            "squeeze" => {
+            Operations::Squeeze => {
                 let squeezer: &'static Regex = regex_once_cell!(r"\s+");
                 *cell = squeezer.replace_all(cell, " ").to_string();
             }
-            "squeeze0" => {
+            Operations::Squeeze0 => {
                 let squeezer: &'static Regex = regex_once_cell!(r"\s+");
                 *cell = squeezer.replace_all(cell, "").to_string();
             }
-            "trim" => {
+            Operations::Trim => {
                 *cell = String::from(cell.trim());
             }
-            "ltrim" => {
+            Operations::Ltrim => {
                 *cell = String::from(cell.trim_start());
             }
-            "rtrim" => {
+            Operations::Rtrim => {
                 *cell = String::from(cell.trim_end());
             }
-            "mtrim" => {
+            Operations::Mtrim => {
                 let chars_to_trim: &[char] = &comparand.chars().collect::<Vec<_>>();
                 *cell = String::from(cell.trim_matches(chars_to_trim));
             }
-            "mltrim" => {
+            Operations::Mltrim => {
                 *cell = String::from(cell.trim_start_matches(comparand));
             }
-            "mrtrim" => {
+            Operations::Mrtrim => {
                 *cell = String::from(cell.trim_end_matches(comparand));
             }
-            "encode" => {
+            Operations::Encode => {
                 *cell = BASE64.encode(cell.as_bytes());
             }
-            "decode" => {
+            Operations::Decode => {
                 let mut output = vec![0; BASE64.decode_len(cell.len()).unwrap()];
                 *cell = match BASE64.decode_mut(cell.as_bytes(), &mut output) {
                     Ok(len) => String::from_utf8(output[0..len].to_vec()).unwrap(),
                     Err(e) => format!("decoding error: {e:?}"),
                 };
             }
-            "escape" => {
+            Operations::Escape => {
                 *cell = cell.escape_default().to_string();
             }
-            "strip_prefix" => {
+            Operations::Strip_Prefix => {
                 if let Some(stripped) = cell.strip_prefix(comparand) {
                     *cell = String::from(stripped);
                 }
             }
-            "strip_suffix" => {
+            Operations::Strip_Suffix => {
                 if let Some(stripped) = cell.strip_suffix(comparand) {
                     *cell = String::from(stripped);
                 }
             }
-            "titlecase" => {
+            Operations::Titlecase => {
                 *cell = titlecase(cell);
             }
-            "replace" => {
+            Operations::Replace => {
                 *cell = cell.replace(comparand, replacement);
             }
-            "regex_replace" => {
+            Operations::Regex_Replace => {
                 let regexreplace = REGEX_REPLACE.get().unwrap();
                 *cell = regexreplace.replace_all(cell, replacement).to_string();
             }
-            "censor" | "censor_check" | "censor_count" => {
-                let censor = CENSOR.get_or_init(|| {
-                    let mut censored_words = Censor::Standard + Zealous + Sex;
-                    for word in comparand.split(',') {
-                        censored_words += word.trim();
-                    }
-                    censored_words
-                });
-                if *op == "censor_check" {
-                    *cell = censor.check(cell).to_string();
-                } else if *op == "censor_count" {
-                    *cell = censor.count(cell).to_string();
-                } else {
-                    *cell = censor.censor(cell);
-                }
+            Operations::Censor => {
+                let censor = CENSOR.get().unwrap();
+                *cell = censor.censor(cell);
             }
-            "currencytonum" => {
+            Operations::Censor_Check => {
+                let censor = CENSOR.get().unwrap();
+                *cell = censor.check(cell).to_string();
+            }
+            Operations::Censor_Count => {
+                let censor = CENSOR.get().unwrap();
+                *cell = censor.count(cell).to_string();
+            }
+            Operations::Currencytonum => {
                 let currency_value = Currency::from_str(cell);
                 if let Ok(currency_val) = currency_value {
                     // its kludgy as currency is stored as BigInt, with
@@ -1002,39 +1021,38 @@ fn apply_operations(operations: &[&str], cell: &mut String, comparand: &str, rep
                     }
                 }
             }
-            "simdl" => {
+            Operations::Simdl => {
                 *cell = damerau_levenshtein(cell, comparand).to_string();
             }
-            "simdln" => {
+            Operations::Simdln => {
                 *cell = normalized_damerau_levenshtein(cell, comparand).to_string();
             }
-            "simjw" => {
+            Operations::Simjw => {
                 *cell = jaro_winkler(cell, comparand).to_string();
             }
-            "simsd" => {
+            Operations::Simsd => {
                 *cell = sorensen_dice(cell, comparand).to_string();
             }
-            "simhm" => {
+            Operations::Simhm => {
                 let ham_val = hamming(cell, comparand);
                 match ham_val {
                     Ok(val) => *cell = val.to_string(),
                     Err(_) => *cell = String::from("ERROR: Different lengths"),
                 }
             }
-            "simod" => *cell = osa_distance(cell, comparand).to_string(),
-            "eudex" => {
-                let eudex_comparand_hash =
-                    EUDEX_COMPARAND_HASH.get_or_init(|| eudex::Hash::new(comparand));
+            Operations::Simod => *cell = osa_distance(cell, comparand).to_string(),
+            Operations::Eudex => {
+                let eudex_comparand_hash = EUDEX_COMPARAND_HASH.get().unwrap();
                 let cell_hash = Hash::new(cell);
                 *cell = format!("{}", (cell_hash - *eudex_comparand_hash).similar());
             }
-            "sentiment" => {
+            Operations::Sentiment => {
                 let sentiment_analyzer = SENTIMENT_ANALYZER
                     .get_or_init(vader_sentiment::SentimentIntensityAnalyzer::new);
                 let sentiment_scores = sentiment_analyzer.polarity_scores(cell);
                 *cell = sentiment_scores.get("compound").unwrap_or(&0.0).to_string();
             }
-            "whatlang" => {
+            Operations::Whatlang => {
                 let lang_info = detect(cell);
                 if let Some(lang_info) = lang_info {
                     let whatlang_confidence_threshold =
@@ -1055,7 +1073,7 @@ fn apply_operations(operations: &[&str], cell: &mut String, comparand: &str, rep
                     }
                 }
             }
-            _ => {} // this also handles copy, which is a noop
+            Operations::Copy => {} // copy is a noop
         }
     }
 }
