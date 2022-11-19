@@ -79,7 +79,9 @@ dynfmt = { version = "0.1", default-features = false, features = [
     "curly",
 ], optional = true }
 eudex = { version = "0.1", optional = true }
-ext-sort = { version = "0.1", features = ["memory-limit"] }
+ext-sort = { version = "0.1", features = [
+    "memory-limit",
+], default-features = false }
 filetime = "0.2"
 flexi_logger = { version = "0.24", features = [
     "compress",
@@ -112,7 +114,7 @@ qsv-stats = "0.4"
 qsv_currency = { version = "0.5", optional = true }
 qsv-sniffer = { version = "0.5", features = ["runtime-dispatch-simd"] }
 rand = "0.8"
-rayon = "1.5"
+rayon = "1.6"
 redis = { version = "0.22", features = [
     "ahash",
 ], default-features = false, optional = true }
@@ -161,12 +163,12 @@ quickcheck = { version = "1", default-features = false }
 serial_test = "0.9"
 
 [patch.crates-io]
-csv        = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
-csv-core   = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
-csv-index  = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
-docopt     = { git = "https://github.com/jqnatividad/docopt.rs", branch = "perf-clippy-2021" }
-ext-sort   = { git = "https://github.com/jqnatividad/ext-sort-rs", branch = "master" }
-tabwriter  = { git = "https://github.com/jqnatividad/tabwriter", branch = "tweaks" }
+csv       = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
+csv-core  = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
+csv-index = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
+docopt    = { git = "https://github.com/jqnatividad/docopt.rs", branch = "perf-clippy-2021" }
+ext-sort  = { git = "https://github.com/jqnatividad/ext-sort-rs", branch = "perf-tweaks" }
+tabwriter = { git = "https://github.com/jqnatividad/tabwriter", branch = "tweaks" }
 
 [features]
 default = ["mimalloc"]
