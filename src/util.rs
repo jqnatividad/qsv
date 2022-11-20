@@ -693,18 +693,36 @@ fn send_hwsurvey(
     }
 }
 
-pub fn safe_header_names(headers: &csv::StringRecord, check_first_char: bool) -> Vec<String> {
+pub fn safe_header_names(
+    headers: &csv::StringRecord,
+    check_first_char: bool,
+    conditional: bool,
+) -> Vec<String> {
     // Create "safe" var/key names - to support dynfmt/url-template, valid python vars & db-safe
-    // column names. Replace whitespace/non-alphanumeric) with _.
-    // If name starts with a number & check_first_char is true, replace it with an _ as well.
-    // Finally, if a column with the same name already exists, append a sequence suffix (e.g. _n)
+    // column names. Trim leading & trailing whitespace. Replace whitespace/non-alphanumeric) with
+    // _. If name starts with a number & check_first_char is true, replace it with an _ as well.
+    // If a column with the same name already exists, append a sequence suffix (e.g. _n).
+    // Finally, names are limited to 60 characters in length.
+    // If conditional = true, only rename the header if its not already safe as embedded spaces
+    // in certain circumstances (postgresql allows embeded spaces in names, but not python, dynfmt
+    // and url-template)
     let safename_regex = Regex::new(r"[^A-Za-z0-9]").unwrap();
     let mut name_vec: Vec<String> = Vec::with_capacity(headers.len());
     for h in headers {
-        let mut safe_name = safename_regex.replace_all(h, "_").to_string();
-        if check_first_char && safe_name.as_bytes()[0].is_ascii_digit() {
-            safe_name.replace_range(0..1, "_");
-        }
+        let safe_name = if conditional && is_safe_name(h) {
+            h.to_string()
+        } else {
+            let mut safe_name_always = if h.is_empty() {
+                "_".to_string()
+            } else {
+                safename_regex.replace_all(h.trim(), "_").to_string()
+            };
+            if check_first_char && safe_name_always.as_bytes()[0].is_ascii_digit() {
+                safe_name_always.replace_range(0..1, "_");
+            }
+            safe_name_always[..safe_name_always.chars().map(char::len_utf8).take(60).sum()]
+                .to_string()
+        };
         let mut sequence_suffix = 1_u16;
         let mut candidate_name = safe_name.clone();
         while name_vec.contains(&candidate_name) {
@@ -715,6 +733,19 @@ pub fn safe_header_names(headers: &csv::StringRecord, check_first_char: bool) ->
     }
     log::debug!("safe header names: {name_vec:?}");
     name_vec
+}
+
+#[inline]
+fn is_safe_name(header_name: &str) -> bool {
+    if header_name.is_empty() || header_name.len() > 60 {
+        return false;
+    }
+    let first_character = header_name.as_bytes()[0];
+    if first_character.is_ascii_digit() || first_character.is_ascii_whitespace() {
+        return false;
+    }
+    let safename_re = regex_once_cell!(r"^[\w\-\s]+$");
+    safename_re.is_match(header_name)
 }
 
 pub fn log_end(mut qsv_args: String, now: std::time::Instant) {
