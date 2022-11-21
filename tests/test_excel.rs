@@ -308,7 +308,8 @@ fn excel_xlsx_safe_header_name() {
     let mut cmd = wrk.command("excel");
     cmd.arg("--sheet")
         .arg("safe_header_name_test")
-        .arg("--safe-header-names")
+        .arg("--safe-names")
+        .arg("conditional")
         .arg(xlsx_file);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
@@ -318,8 +319,8 @@ fn excel_xlsx_safe_header_name() {
             "col_with_leading_and_trailing_spaces_",
             "_23_starts_with_123",
             "With_____special_____Characters_",
-            "col1_1",
             "col1_2",
+            "col1_3",
             "The_quick_BROWN_fox_with_a_very_long_column_name_is_now_jump",
             "___date___"
         ],
