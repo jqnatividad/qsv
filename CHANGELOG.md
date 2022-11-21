@@ -5,6 +5,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.73.0] - 2022-11-21
+### Added
+* `safenames`: new command to modify header names to db-safe names in https://github.com/jqnatividad/qsv/pull/606
+* `apply`: added `censor-count` operation in https://github.com/jqnatividad/qsv/pull/599
+* `apply`: added `escape` operation in https://github.com/jqnatividad/qsv/pull/600
+* `excel`: added `--safe-names` option in https://github.com/jqnatividad/qsv/pull/598
+
+### Changed
+* `apply`: refactored to use enums instead of strings for operations in https://github.com/jqnatividad/qsv/pull/601
+* `fetch` & `fetchpost`: --http-header -H shortcut in https://github.com/jqnatividad/qsv/pull/596
+* `excel`: smarter date parsing for XLSX files; rename --safe-column-names to --safe-names in https://github.com/jqnatividad/qsv/pull/603
+* Smarter safe names in https://github.com/jqnatividad/qsv/pull/605
+* Bump uuid from 1.2.1 to 1.2.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/594
+* Bump mimalloc from 0.1.31 to 0.1.32 by @dependabot in https://github.com/jqnatividad/qsv/pull/595
+* Bump censor from 0.2.0 to 0.3.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/597
+* Bump Swatinem/rust-cache from 1 to 2 by @dependabot in https://github.com/jqnatividad/qsv/pull/602
+* cargo update bump several indirect dependencies
+* pin Rust nightly to 2022-11-19
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.72.0...0.73.0
+
 ## [0.72.0] - 2022-11-14
 
 ### Added
