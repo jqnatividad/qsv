@@ -18,6 +18,8 @@ pub mod extsort;
 pub mod fetch;
 #[cfg(all(feature = "fetch", not(feature = "lite")))]
 pub mod fetchpost;
+#[cfg(all(feature = "fetch", not(feature = "lite")))]
+pub mod fetchpostj;
 #[cfg(any(feature = "full", feature = "lite"))]
 pub mod fill;
 #[cfg(any(feature = "full", feature = "lite"))]

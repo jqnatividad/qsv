@@ -98,7 +98,8 @@ fn main() -> QsvExitCode {
     #[cfg(all(feature = "fetch", not(feature = "lite")))]
     enabled_commands.push_str(
         "    fetch       Fetches data from web services for every row using HTTP Get.
-    fetchpost   Fetches data from web services for every row using HTTP Post.\n",
+    fetchpost   Fetches data from web services for every row using HTTP Post.
+    fetchpostj  Like fetchpost, but using JSON input.\n",
     );
 
     enabled_commands.push_str(
@@ -264,6 +265,8 @@ enum Command {
     Fetch,
     #[cfg(all(feature = "fetch", not(feature = "lite")))]
     FetchPost,
+    #[cfg(all(feature = "fetch", not(feature = "lite")))]
+    FetchPostj,
     Fill,
     FixLengths,
     Flatten,
@@ -336,6 +339,8 @@ impl Command {
             Command::Fetch => cmd::fetch::run(argv),
             #[cfg(all(feature = "fetch", not(feature = "lite")))]
             Command::FetchPost => cmd::fetchpost::run(argv),
+            #[cfg(all(feature = "fetch", not(feature = "lite")))]
+            Command::FetchPostj => cmd::fetchpostj::run(argv),
             #[cfg(all(feature = "foreach", target_family = "unix", not(feature = "lite")))]
             Command::ForEach => cmd::foreach::run(argv),
             Command::Fill => cmd::fill::run(argv),
