@@ -1,4 +1,4 @@
-static USAGE: &str = "
+static USAGE: &str = r#"
 Rename the columns of CSV data efficiently.
 
 This command lets you rename the columns in CSV data. You must specify
@@ -8,7 +8,7 @@ all of the headers, and separate them by a comma.
   $ qsv rename id,name,title
 
   Use column names that contains commas and conflict with the separator:
-  $ qsv rename '\"Date - Opening\",\"Date - Actual Closing\"'
+  $ qsv rename '"Date - Opening","Date - Actual Closing"'
 
 Usage:
     qsv rename [options] [--] <headers> [<input>]
@@ -20,7 +20,7 @@ Common options:
     -n, --no-headers       When set, the header will be inserted on top.    
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
-";
+"#;
 
 use serde::Deserialize;
 

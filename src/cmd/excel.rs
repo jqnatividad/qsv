@@ -38,12 +38,16 @@ Excel options:
                                from the previous record.
     --trim                     Trim all fields so that leading & trailing whitespaces are removed.
                                Also removes embedded linebreaks.
-    --safe-header-names        Make database-safe header names - i.e. duplicate header names will 
-                               have a sequential suffix (_n) appended.
-                               Leading/trailing spaces will be trimmed.
-                               Whitespace/non-alphanumeric characters will be replaced with _.
-                               If a column name starts with a digit, the digit is replaced with a _.
-                               Maximum length is 60 characters.
+    --safe-names <a|c>         Rename header names to "safe" names - i.e. guaranteed "database-ready"
+                               names where - duplicate header names will have a sequential suffix 
+                               (_n) appended; Leading/trailing whitespaces will be trimmed;
+                               Whitespace/non-alphanumeric characters will be replaced with _;
+                               If a column name starts with a digit, the digit is replaced with a _;
+                               and maximum length is 60 characters.
+                               It has two modes - Always & Conditional.
+                               Always - goes ahead and renames all headers without checking if they're 
+                               already "safe". Conditional - check first before renaming.
+                               [default: none]
     --dates-whitelist <list>   The case-insensitive patterns to look for when 
                                shortlisting columns for date processing.
                                i.e. if the column's name has any of these patterns,
@@ -78,14 +82,21 @@ use crate::{config::Config, util, CliResult};
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input:              String,
-    flag_sheet:             String,
-    flag_metadata:          bool,
-    flag_flexible:          bool,
-    flag_trim:              bool,
-    flag_safe_header_names: bool,
-    flag_dates_whitelist:   String,
-    flag_output:            Option<String>,
+    arg_input:            String,
+    flag_sheet:           String,
+    flag_metadata:        bool,
+    flag_flexible:        bool,
+    flag_trim:            bool,
+    flag_safe_names:      String,
+    flag_dates_whitelist: String,
+    flag_output:          Option<String>,
+}
+
+#[derive(PartialEq)]
+enum SafeNameKind {
+    Always,
+    Conditional,
+    None,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -184,6 +195,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         log::info!("listed sheet names: {sheet_vec:?}");
         return Ok(());
     }
+
+    // set Safe Name Mode
+    let first_letter = args.flag_safe_names.to_lowercase();
+    let safename = if first_letter.starts_with('a') {
+        // if it starts with a, Always mode
+        SafeNameKind::Always
+    } else if first_letter.starts_with('c') {
+        // if it starts with c, its Conditional
+        SafeNameKind::Conditional
+    } else {
+        SafeNameKind::None
+    };
 
     // convert sheet_names to lowercase so we can do a case-insensitive compare
     let mut lower_sheet_names: Vec<String> = Vec::with_capacity(num_sheets);
@@ -359,19 +382,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         }
 
-        // if this is the header/column row and --safe-header-names option is true
-        if row_count == 0 && args.flag_safe_header_names {
-            record.trim();
+        // if this is the header/column row and --safe-names option is not None
+        if row_count == 0 && safename != SafeNameKind::None {
             let mut temp_record = csv::StringRecord::new();
             for header in &record {
-                // maximum length is 60 characters
-                // we do 60 even though postgresql can do up to 63
-                // just in case we have duplicate header names
-                // and safe_header_names appends a sequence suffix
-                temp_record
-                    .push_field(&header[..header.chars().map(char::len_utf8).take(60).sum()]);
+                temp_record.push_field(header);
             }
-            let safe_headers = util::safe_header_names(&temp_record, true);
+            let (safe_headers, _) =
+                util::safe_header_names(&temp_record, true, safename == SafeNameKind::Conditional);
             record.clear();
             for header_name in safe_headers {
                 record.push_field(&header_name);
