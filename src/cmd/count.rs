@@ -1,4 +1,4 @@
-static USAGE: &str = "
+static USAGE: &str = r#"
 Prints a count of the number of records in the CSV data.
 
 Note that the count will not include the header row (unless --no-headers is
@@ -17,7 +17,7 @@ Common options:
     -h, --help             Display this message
     -n, --no-headers       When set, the first row will be included in
                            the count.
-";
+"#;
 
 use log::info;
 use serde::Deserialize;

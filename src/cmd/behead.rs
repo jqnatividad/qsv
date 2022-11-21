@@ -1,4 +1,4 @@
-static USAGE: &str = "
+static USAGE: &str = r#"
 Drop a CSV file's header.
 
 Usage:
@@ -8,7 +8,7 @@ Usage:
 Common options:
     -h, --help             Display this message
     -o, --output <file>    Write output to <file> instead of stdout.
-";
+"#;
 
 use serde::Deserialize;
 

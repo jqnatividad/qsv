@@ -1,4 +1,4 @@
-static USAGE: &str = "
+static USAGE: &str = r#"
 Outputs CSV data as a table with columns in alignment.
 
 This will not work well if the CSV data contains large fields.
@@ -17,7 +17,7 @@ table options:
     -p, --pad <arg>        The minimum number of spaces between each column.
                            [default: 2]
     -a, --align <arg>      How entries should be aligned in a column.
-                           Options: \"left\", \"right\", \"center\".
+                           Options: "left", "right", "center".
                            [default: left]
     -c, --condense <arg>   Limits the length of each field to the value
                            specified. If the field is UTF-8 encoded, then
@@ -29,7 +29,7 @@ Common options:
     -o, --output <file>    Write output to <file> instead of stdout.
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
-";
+"#;
 
 use std::{borrow::Cow, convert::From};
 

@@ -1,4 +1,4 @@
-static USAGE: &str = "
+static USAGE: &str = r#"
 Reverses rows of CSV data.
 
 Useful for cases when there is no column that can be used for sorting in reverse order,
@@ -19,7 +19,7 @@ Common options:
                            appear as the header row in the output.
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
-";
+"#;
 
 use serde::Deserialize;
 

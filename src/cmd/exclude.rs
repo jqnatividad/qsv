@@ -1,4 +1,4 @@
-static USAGE: &str = "
+static USAGE: &str = r#"
 Removes a set of CSV data from another set based on the specified columns.
 
 Also can compute the intersection of two CSV sets with the -v flag.
@@ -30,7 +30,7 @@ Common options:
                            sliced, etc.)
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
-";
+"#;
 
 use std::{collections::hash_map::Entry, fmt, fs, io, str};
 

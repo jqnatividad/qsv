@@ -1,4 +1,4 @@
-static USAGE: &str = "
+static USAGE: &str = r#"
 Explodes a row into multiple ones by splitting a column value based on the
 given separator.
 
@@ -8,7 +8,7 @@ name,colors
 John,blue|yellow
 Mary,red
 
-Can be exploded on the \"colors\" <column> based on the \"|\" <separator> to:
+Can be exploded on the "colors" <column> based on the "|" <separator> to:
 
 name,colors
 John,blue
@@ -29,7 +29,7 @@ Common options:
                            as headers.
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
-";
+"#;
 
 use serde::Deserialize;
 

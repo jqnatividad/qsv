@@ -1,4 +1,4 @@
-static USAGE: &str = "
+static USAGE: &str = r#"
 Partitions the given CSV data into chunks based on the value of a column
 
 The files are written to the output directory with filenames based on the
@@ -26,7 +26,7 @@ Common options:
                            appear in all chunks as the header row.
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
-";
+"#;
 
 use std::{
     collections::{hash_map::Entry, HashSet},

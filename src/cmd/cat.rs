@@ -1,4 +1,4 @@
-static USAGE: &str = "
+static USAGE: &str = r#"
 Concatenates CSV data by column or by row.
 
 When concatenating by column, the columns will be written in the same order as
@@ -30,7 +30,7 @@ Common options:
                            concatenating columns.
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
-";
+"#;
 
 use serde::Deserialize;
 

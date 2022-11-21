@@ -1,4 +1,4 @@
-static USAGE: &str = "
+static USAGE: &str = r#"
 Prints flattened records such that fields are labeled separated by a new line.
 This mode is particularly useful for viewing one record at a time. Each
 record is separated by a special '#' character (on a line by itself), which
@@ -28,7 +28,7 @@ Common options:
                            will be its index.
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
-";
+"#;
 
 use std::{
     borrow::Cow,

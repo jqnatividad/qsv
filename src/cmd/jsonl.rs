@@ -1,4 +1,4 @@
-static USAGE: &str = "
+static USAGE: &str = r#"
 Convert newline-delimited JSON (JSONL/NDJSON) to CSV.
 
 The command tries to do its best but since it is not possible to
@@ -18,7 +18,7 @@ jsonl options:
 Common options:
     -h, --help             Display this message
     -o, --output <file>    Write output to <file> instead of stdout.
-";
+"#;
 
 use std::{
     fs,

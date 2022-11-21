@@ -1,4 +1,4 @@
-static USAGE: &str = "
+static USAGE: &str = r#"
 Compute a frequency table on CSV data.
 
 The frequency table is formatted as CSV data:
@@ -44,7 +44,7 @@ Common options:
                            names.
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
-";
+"#;
 
 use std::{fs, io};
 

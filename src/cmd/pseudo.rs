@@ -1,4 +1,4 @@
-static USAGE: &str = "
+static USAGE: &str = r#"
 Pseudonymise the value of the given column by replacing them by an
 incremental identifier.
 
@@ -13,7 +13,7 @@ Common options:
                            as headers.
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
-";
+"#;
 
 use ahash::AHashMap;
 use serde::Deserialize;

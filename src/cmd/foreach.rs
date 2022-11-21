@@ -1,5 +1,5 @@
 #![cfg(target_family = "unix")]
-static USAGE: &str = "
+static USAGE: &str = r#"
 Execute a bash command once per line in given CSV file. Works only in
 Unix-like environments.
 
@@ -33,7 +33,7 @@ Common options:
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
     -p, --progressbar      Show progress bars. Not valid for stdin.
-";
+"#;
 
 use std::{
     ffi::OsStr,

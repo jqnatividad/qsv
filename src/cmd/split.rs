@@ -1,4 +1,4 @@
-static USAGE: &str = "
+static USAGE: &str = r#"
 Splits the given CSV data into chunks.
 
 The files are written to the directory given with the name '{start}.csv',
@@ -33,7 +33,7 @@ Common options:
                            appear in all chunks as the header row.
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
-";
+"#;
 
 use std::{fs, io, path::Path};
 

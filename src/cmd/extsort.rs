@@ -1,4 +1,4 @@
-static USAGE: &str = "
+static USAGE: &str = r#"
 Sort an arbitrarily large CSV/text file using a multithreaded external sort algorithm.
 
 This command does not work with <stdin>/<stdout>. Valid input, and output
@@ -23,7 +23,7 @@ Common options:
                            as headers and will be sorted with the rest
                            of the rows. Otherwise, the first row will always
                            appear as the header row in the output.
-";
+"#;
 
 use std::{
     fs,

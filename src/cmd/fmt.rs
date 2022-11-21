@@ -1,4 +1,4 @@
-static USAGE: &str = "
+static USAGE: &str = r#"
 Formats CSV data with a custom delimiter or CRLF line endings.
 
 Generally, all commands in qsv output CSV data in a default format, which is
@@ -14,9 +14,9 @@ Usage:
 fmt options:
     -t, --out-delimiter <arg>  The field delimiter for writing CSV data.
                                [default: ,]
-    --crlf                     Use '\\r\\n' line endings in the output.
+    --crlf                     Use '\r\n' line endings in the output.
     --ascii                    Use ASCII field and record separators.
-    --quote <arg>              The quote character to use. [default: \"]
+    --quote <arg>              The quote character to use. [default: "]
     --quote-always             Put quotes around every value.
     --quote-never              Never put quotes around any value.
     --escape <arg>             The escape character to use. When not specified,
@@ -27,7 +27,7 @@ Common options:
     -o, --output <file>    Write output to <file> instead of stdout.
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
-";
+"#;
 
 use serde::Deserialize;
 

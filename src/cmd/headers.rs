@@ -1,4 +1,4 @@
-static USAGE: &str = "
+static USAGE: &str = r#"
 Prints the fields of the first row in the CSV data.
 
 These names can be used in commands like 'select' to refer to columns in the
@@ -22,7 +22,7 @@ Common options:
     -h, --help             Display this message
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
-";
+"#;
 
 use std::io;
 

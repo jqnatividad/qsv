@@ -1,4 +1,4 @@
-static USAGE: &str = "
+static USAGE: &str = r#"
 Fill empty fields in selected columns of a CSV.
 
 This command fills empty fields in the selected column
@@ -47,7 +47,7 @@ Common options:
                            sliced, etc.)
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
-";
+"#;
 
 use std::{io, iter, ops};
 

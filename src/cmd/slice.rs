@@ -1,4 +1,4 @@
-static USAGE: &str = "
+static USAGE: &str = r#"
 Returns the rows in the range specified (starting at 0, half-open interval).
 The range does not include headers.
 
@@ -33,7 +33,7 @@ Common options:
                            appear in the output as the header row.
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
-";
+"#;
 
 use std::fs;
 

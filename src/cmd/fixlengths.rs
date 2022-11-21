@@ -1,4 +1,4 @@
-static USAGE: &str = "
+static USAGE: &str = r#"
 Transforms CSV data so that all records have the same length. The length is
 the length of the longest record in the data (not counting trailing empty fields,
 but at least 1). Records with smaller lengths are padded with empty fields.
@@ -24,7 +24,7 @@ Common options:
     -o, --output <file>    Write output to <file> instead of stdout.
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
-";
+"#;
 
 use std::cmp;
 
