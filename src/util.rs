@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use std::{
     env, fs, io,
     path::{Path, PathBuf},
-    str, thread,
+    str,
 };
 
 use docopt::Docopt;
@@ -380,6 +380,8 @@ pub fn range(start: Idx, end: Idx, len: Idx, index: Idx) -> Result<(usize, usize
 /// https://github.com/rust-lang/rust/pull/39799.
 #[cfg(any(feature = "full", feature = "lite"))]
 fn create_dir_all_threadsafe(path: &Path) -> io::Result<()> {
+    use std::thread;
+
     // Try 20 times. This shouldn't theoretically need to be any larger
     // than the number of nested directories we need to create.
     for _ in 0..20 {
