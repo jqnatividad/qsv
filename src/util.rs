@@ -9,7 +9,6 @@ use std::{
 use docopt::Docopt;
 #[cfg(any(feature = "full", feature = "lite"))]
 use indicatif::{HumanCount, ProgressBar, ProgressStyle};
-use regex::Regex;
 use serde::de::DeserializeOwned;
 #[cfg(any(feature = "full", feature = "lite"))]
 use serde::de::{Deserialize, Deserializer, Error};
@@ -697,7 +696,7 @@ pub fn safe_header_names(
     headers: &csv::StringRecord,
     check_first_char: bool,
     conditional: bool,
-) -> Vec<String> {
+) -> (Vec<String>, u16) {
     // Create "safe" var/key names - to support dynfmt/url-template, valid python vars & db-safe
     // column names. Trim leading & trailing whitespace. Replace whitespace/non-alphanumeric) with
     // _. If name starts with a number & check_first_char is true, replace it with an _ as well.
@@ -706,16 +705,19 @@ pub fn safe_header_names(
     // If conditional = true, only rename the header if its not already safe as embedded spaces
     // in certain circumstances (postgresql allows embeded spaces in names, but not python, dynfmt
     // and url-template)
-    let safename_regex = Regex::new(r"[^A-Za-z0-9]").unwrap();
+    let safename_regex = regex_once_cell!(r"[^A-Za-z0-9]");
+    let mut changed_count = 0_u16;
     let mut name_vec: Vec<String> = Vec::with_capacity(headers.len());
-    for h in headers {
-        let safe_name = if conditional && is_safe_name(h) {
-            h.to_string()
+    for header_name in headers {
+        let safe_name = if conditional && is_safe_name(header_name) {
+            header_name.to_string()
         } else {
-            let mut safe_name_always = if h.is_empty() {
+            let mut safe_name_always = if header_name.is_empty() {
                 "_".to_string()
             } else {
-                safename_regex.replace_all(h.trim(), "_").to_string()
+                safename_regex
+                    .replace_all(header_name.trim(), "_")
+                    .to_string()
             };
             if check_first_char && safe_name_always.as_bytes()[0].is_ascii_digit() {
                 safe_name_always.replace_range(0..1, "_");
@@ -723,16 +725,19 @@ pub fn safe_header_names(
             safe_name_always[..safe_name_always.chars().map(char::len_utf8).take(60).sum()]
                 .to_string()
         };
-        let mut sequence_suffix = 1_u16;
+        let mut sequence_suffix = 2_u16;
         let mut candidate_name = safe_name.clone();
         while name_vec.contains(&candidate_name) {
             candidate_name = format!("{safe_name}_{sequence_suffix}");
             sequence_suffix += 1;
         }
+        if candidate_name.ne(header_name) {
+            changed_count += 1;
+        }
         name_vec.push(candidate_name);
     }
     log::debug!("safe header names: {name_vec:?}");
-    name_vec
+    (name_vec, changed_count)
 }
 
 #[inline]
