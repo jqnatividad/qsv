@@ -76,7 +76,7 @@ Usage:
     qsv fetchpost (<url-column> <column-list>) [--jql <selector> | --jqlfile <file>] [--http-header <k:v>...] [options] [<input>]
     qsv fetchpost --help
 
-Fetch options:
+Fetchpost options:
     <url-column>               Name of the column with the URL.
                                Otherwise, if the argument starts with `http`, the URL to use.
     <column-list>              Comma-delimited list of columns to insert into the HTTP Post body.
