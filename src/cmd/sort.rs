@@ -1,4 +1,4 @@
-static USAGE: &str = "
+static USAGE: &str = r#"
 Sorts CSV data lexicographically.
 
 Note that this requires reading all of the CSV data into memory. If
@@ -31,7 +31,7 @@ Common options:
                            Must be a single character. (default: ,)
     -u, --uniq             When set, identical consecutive lines will be dropped
                            to keep only one line per sorted value.
-";
+"#;
 
 use std::cmp;
 
@@ -87,10 +87,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             // we don't need cryptographically strong RNGs for this
             if let Some(val) = seed {
                 let mut rng = StdRng::seed_from_u64(val); //DevSkim: ignore DS148264
-                SliceRandom::shuffle(&mut *all, &mut rng);
+                SliceRandom::shuffle(&mut *all, &mut rng); //DevSkim: ignore DS148264
             } else {
                 let mut rng = ::rand::thread_rng();
-                SliceRandom::shuffle(&mut *all, &mut rng);
+                SliceRandom::shuffle(&mut *all, &mut rng); //DevSkim: ignore DS148264
             }
         }
         (false, false, false) => all.par_sort_unstable_by(|r1, r2| {

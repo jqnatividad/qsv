@@ -1,4 +1,4 @@
-static USAGE: &str = "
+static USAGE: &str = r#"
 Randomly samples CSV data uniformly using memory proportional to the size of
 the sample.
 
@@ -32,7 +32,7 @@ Common options:
                            in the output.)
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
-";
+"#;
 
 use std::io;
 
@@ -107,7 +107,7 @@ where
     let mut rng = ::rand::thread_rng();
     // this non-cryptographic shuffle is sufficient for our use case
     // as we're optimizing for performance
-    SliceRandom::shuffle(&mut *all_indices, &mut rng);
+    SliceRandom::shuffle(&mut *all_indices, &mut rng); //DevSkim: ignore DS148264
 
     let mut sampled = Vec::with_capacity(sample_size as usize);
     for i in all_indices.into_iter().take(sample_size as usize) {
