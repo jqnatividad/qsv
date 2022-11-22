@@ -1,8 +1,8 @@
 use crate::workdir::Workdir;
 
 #[test]
-fn safename() {
-    let wrk = Workdir::new("safename");
+fn safenames() {
+    let wrk = Workdir::new("safenames");
     wrk.create(
         "in.csv",
         vec![
@@ -20,7 +20,7 @@ fn safename() {
         ],
     );
 
-    let mut cmd = wrk.command("safename");
+    let mut cmd = wrk.command("safenames");
     cmd.arg("in.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
@@ -45,8 +45,8 @@ fn safename() {
 }
 
 #[test]
-fn safename_always() {
-    let wrk = Workdir::new("safename");
+fn safenames_always() {
+    let wrk = Workdir::new("safenames");
     wrk.create(
         "in.csv",
         vec![
@@ -64,7 +64,7 @@ fn safename_always() {
         ],
     );
 
-    let mut cmd = wrk.command("safename");
+    let mut cmd = wrk.command("safenames");
     cmd.arg("--mode").arg("always").arg("in.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
@@ -89,8 +89,8 @@ fn safename_always() {
 }
 
 #[test]
-fn safename_ignore_invalid_mode() {
-    let wrk = Workdir::new("safename");
+fn safenames_ignore_invalid_mode() {
+    let wrk = Workdir::new("safenames");
     wrk.create(
         "in.csv",
         vec![
@@ -108,7 +108,7 @@ fn safename_ignore_invalid_mode() {
         ],
     );
 
-    let mut cmd = wrk.command("safename");
+    let mut cmd = wrk.command("safenames");
     cmd.arg("--mode").arg("invalidmode").arg("in.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
