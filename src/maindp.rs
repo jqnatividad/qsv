@@ -25,7 +25,7 @@ macro_rules! command_list {
     pseudo      Pseudonymise the values of a column
     rename      Rename the columns of CSV data efficiently
     replace     Replace patterns in CSV data
-    safename    Modify a CSV's header names to db-safe names
+    safenames   Modify a CSV's header names to db-safe names
     sample      Randomly sample CSV data
     search      Search CSV data with a regex
     searchset   Search CSV data with a regex set
@@ -155,7 +155,7 @@ enum Command {
     Pseudo,
     Rename,
     Replace,
-    Safename,
+    Safenames,
     Sample,
     Search,
     SearchSet,
@@ -196,7 +196,7 @@ impl Command {
             Command::Pseudo => cmd::pseudo::run(argv),
             Command::Rename => cmd::rename::run(argv),
             Command::Replace => cmd::replace::run(argv),
-            Command::Safename => cmd::safename::run(argv),
+            Command::Safenames => cmd::safenames::run(argv),
             Command::Sample => cmd::sample::run(argv),
             Command::Search => cmd::search::run(argv),
             Command::SearchSet => cmd::searchset::run(argv),

@@ -51,7 +51,7 @@ pub mod rename;
 pub mod replace;
 #[cfg(any(feature = "full", feature = "lite"))]
 pub mod reverse;
-pub mod safename;
+pub mod safenames;
 pub mod sample;
 #[cfg(any(feature = "full", feature = "lite"))]
 pub mod schema;

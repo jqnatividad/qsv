@@ -1,7 +1,7 @@
 static USAGE: &str = r#"
 Modify headers of a CSV to only have "safe" names - guaranteed "database-ready" names. 
 
-Trim leading & trailing whitespace. Replace whitespace/non-alphanumeric characters with _.
+Trim leading & trailing whitespaces. Replace whitespace/non-alphanumeric characters with _.
 If a column with the same name already exists, append a sequence suffix (e.g. _n).
 If name starts with a number, replace it with an _ as well.
 Finally, names are limited to 60 characters in length.
@@ -10,13 +10,13 @@ Returns exitcode 0 when headers are modified, returning number of modified heade
 Returns exitcode 1 when no headers are modified.
 
   Change the name of the columns:
-  $ qsv safename data.csv
+  $ qsv safenames data.csv
 
 Usage:
-    qsv safename [options] [<input>]
-    qsv safename --help
+    qsv safenames [options] [<input>]
+    qsv safenames --help
 
-safename options:
+safenames options:
     --mode <a|c>           Rename header names to "safe" names - i.e.
                            guaranteed "database-ready" names.
                            It has two modes - Always & Conditional.
