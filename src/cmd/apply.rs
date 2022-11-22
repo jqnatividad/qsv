@@ -494,7 +494,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         CalcConv,
     }
 
-    let mut ops_vec: Vec<Operations> = Vec::with_capacity(10);
+    let mut ops_vec: Vec<Operations> = Vec::new();
 
     let apply_cmd = if args.cmd_operations {
         match validate_operations(
