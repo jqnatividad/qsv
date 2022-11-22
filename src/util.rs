@@ -743,7 +743,7 @@ pub fn safe_header_names(
 }
 
 #[inline]
-fn is_safe_name(header_name: &str) -> bool {
+pub fn is_safe_name(header_name: &str) -> bool {
     if header_name.is_empty() || header_name.len() > 60 {
         return false;
     }
