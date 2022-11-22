@@ -68,7 +68,7 @@ mod test_py;
 mod test_rename;
 mod test_replace;
 mod test_reverse;
-mod test_safename;
+mod test_safenames;
 mod test_sample;
 mod test_schema;
 mod test_search;
