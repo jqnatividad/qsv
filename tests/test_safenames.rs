@@ -47,7 +47,7 @@ fn safenames() {
     assert_eq!(got, expected);
 
     let changed_headers = wrk.output_stderr(&mut cmd);
-    let expected_count = "5\n";
+    let expected_count = "7\n";
     assert_eq!(changed_headers, expected_count);
 }
 
