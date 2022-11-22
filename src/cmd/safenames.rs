@@ -12,6 +12,8 @@ Returns exitcode 1 when no headers are modified.
   Change the name of the columns:
   $ qsv safenames data.csv
 
+For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_safenames.rs.
+
 Usage:
     qsv safenames [options] [<input>]
     qsv safenames --help

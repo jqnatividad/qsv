@@ -10,6 +10,8 @@ all of the headers, and separate them by a comma.
   Use column names that contains commas and conflict with the separator:
   $ qsv rename '"Date - Opening","Date - Actual Closing"'
 
+For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_rename.rs.
+
 Usage:
     qsv rename [options] [--] <headers> [<input>]
     qsv rename --help

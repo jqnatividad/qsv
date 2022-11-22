@@ -12,6 +12,8 @@ respectively.
 Since this computes an exact frequency table, memory proportional to the
 cardinality of each column is required.
 
+For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_frequency.rs.
+
 Usage:
     qsv frequency [options] [<input>]
     qsv frequency --help

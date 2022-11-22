@@ -9,6 +9,8 @@ to adjust).
 If you want more robust, guaranteed schemata, use the "schema" or "stats" commands
 instead as they scan the entire file.
 
+For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_sniff.rs.
+
 Usage:
     qsv sniff [options] [<input>]
     qsv sniff --help

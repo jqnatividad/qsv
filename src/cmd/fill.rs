@@ -29,6 +29,8 @@ CSV is not sorted by the `--groupby` columns, rows may be
 re-ordered during output due to the buffering of rows
 collected before the first valid value.
 
+For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_fill.rs.
+
 Usage:
     qsv fill [options] [--] <selection> [<input>]
     qsv fill --help

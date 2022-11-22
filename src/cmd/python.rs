@@ -75,7 +75,7 @@ Some usage examples:
   With "py map", if a python expression is invalid, "<ERROR>" is returned.
   With "py filter", if a python expression is invalid, no filtering is done.
 
-  For more extensive examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_py.rs.
+For more extensive examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_py.rs.
 
 Usage:
     qsv py map [options] -n <script> [<input>]

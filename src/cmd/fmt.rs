@@ -7,6 +7,8 @@ pipe multiple qsv commands together. However, you may want the final result to
 have a specific delimiter or record separator, and this is where 'qsv fmt' is
 useful.
 
+For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_fmt.rs.
+
 Usage:
     qsv fmt [options] [<input>]
     qsv fmt --help

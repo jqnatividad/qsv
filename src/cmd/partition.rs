@@ -4,6 +4,8 @@ Partitions the given CSV data into chunks based on the value of a column
 The files are written to the output directory with filenames based on the
 values in the partition column and the `--filename` flag.
 
+For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_partition.rs.
+
 Usage:
     qsv partition [options] <column> <outdir> [<input>]
     qsv partition --help

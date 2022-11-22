@@ -2,6 +2,8 @@ static USAGE: &str = r#"
 Pseudonymise the value of the given column by replacing them by an
 incremental identifier.
 
+For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_pseudo.rs.
+
 Usage:
     qsv pseudo [options] <column> [<input>]
     qsv pseudo --help

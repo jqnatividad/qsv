@@ -13,6 +13,8 @@ separating them with a comma. Specify a range of columns with `-`. Both
 columns1 and columns2 must specify exactly the same number of columns.
 (See 'qsv select --help' for the full syntax.)
 
+For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_exclude.rs.
+
 Usage:
     qsv exclude [options] <columns1> <input1> <columns2> <input2>
     qsv exclude --help
