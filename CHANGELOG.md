@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.73.2] - 2022-11-22
+
+## Changed:
+* Link to tests as examples from usage text in https://github.com/jqnatividad/qsv/pull/608
+* Bump serde_json from 1.0.88 to 1.0.89 by @dependabot in https://github.com/jqnatividad/qsv/pull/607
+* cargo update bump to get latest crossbeam crates to replace yanked crates https://github.com/jqnatividad/qsv/commit/5108a87b0f5e2d5a7cfef3f60f4cd6b3659bce7d
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.73.1...0.73.2
+
 ## [0.73.1] - 2022-11-21
 ### Changed:
 * rename `safename` command to `safenames` for consistency
