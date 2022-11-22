@@ -14,6 +14,8 @@ a `stdin.csv` file will created with stdin's contents as well.
 
 Note that `stdin.csv` will be overwritten if it already exists.
 
+For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_schema.rs.
+
 Usage:
     qsv schema [options] [<input>]
     qsv schema --help

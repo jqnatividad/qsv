@@ -15,6 +15,8 @@ invalid UTF-8 sequences with �.
 This command is typically used in the beginning of a data pipeline to normalize & prepare CSVs
 for further processing with other qsv commands.
 
+For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_input.rs.
+
 Usage:
     qsv input [options] [<input>]
     qsv input --help

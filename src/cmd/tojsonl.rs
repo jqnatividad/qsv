@@ -2,7 +2,9 @@ static USAGE: &str = r#"
 Smartly converts CSV to a newline-delimited JSON (JSONL/NDJSON).
 
 By scanning the CSV first, it "smartly" infers the appropriate JSON data type
-for each column. 
+for each column.
+
+For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_tojsonl.rs.
 
 Usage:
     qsv tojsonl [options] [<input>]

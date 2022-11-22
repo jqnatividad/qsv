@@ -16,6 +16,8 @@ once, which is necessary to provide a uniform random sample. If you wish to
 limit the number of records visited, use the 'qsv slice' command to pipe into
 'qsv sample'.
 
+For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_sample.rs.
+
 Usage:
     qsv sample [options] <sample-size> [<input>]
     qsv sample --help
