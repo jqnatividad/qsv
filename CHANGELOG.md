@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.73.1] - 2022-11-21
+### Changed:
+* rename `safename` command to `safenames` for consistency
+* cargo update bump indirect dependencies
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.73.0...0.73.1
+
 ## [0.73.0] - 2022-11-21
 ### Added
 * `safenames`: new command to modify header names to db-safe names in https://github.com/jqnatividad/qsv/pull/606
