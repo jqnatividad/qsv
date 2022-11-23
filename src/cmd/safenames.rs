@@ -55,7 +55,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
     #[derive(PartialEq)]
-    enum SafeNameKind {
+    enum SafeNameMode {
         Always,
         Conditional,
         Verify,
@@ -65,9 +65,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut first_letter = args.flag_mode.chars().next().unwrap_or_default();
     first_letter.make_ascii_lowercase();
     let safenames_mode = match first_letter {
-        'a' => SafeNameKind::Always,
-        'c' => SafeNameKind::Conditional,
-        'v' => SafeNameKind::Verify,
+        'a' => SafeNameMode::Always,
+        'c' => SafeNameMode::Conditional,
+        'v' => SafeNameMode::Verify,
         _ => {
             return fail_clierror!("Invalid mode: {}", args.flag_mode);
         }
@@ -83,25 +83,25 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut changed_count = 0_u16;
     let mut unsafe_count = 0_u16;
 
-    let mut new_headers = csv::StringRecord::from_byte_record_lossy(old_headers.clone());
+    let mut headers = csv::StringRecord::from_byte_record_lossy(old_headers.clone());
     match safenames_mode {
-        SafeNameKind::Always | SafeNameKind::Conditional => {
+        SafeNameMode::Always | SafeNameMode::Conditional => {
             let (safe_headers, changed) = util::safe_header_names(
-                &new_headers,
+                &headers,
                 true,
-                safenames_mode == SafeNameKind::Conditional,
+                safenames_mode == SafeNameMode::Conditional,
             );
             changed_count = changed;
-            new_headers.clear();
+            headers.clear();
             for header_name in safe_headers {
-                new_headers.push_field(&header_name);
+                headers.push_field(&header_name);
             }
-            wtr.write_record(new_headers.as_byte_record())?;
+            wtr.write_record(headers.as_byte_record())?;
         }
-        SafeNameKind::Verify => {
-            let mut checkednames_vec: Vec<String> = Vec::with_capacity(new_headers.len());
+        SafeNameMode::Verify => {
+            let mut checkednames_vec: Vec<String> = Vec::with_capacity(old_headers.len());
             let mut unsafe_flag;
-            for header_name in new_headers.iter() {
+            for header_name in headers.iter() {
                 unsafe_flag = false;
                 if !util::is_safe_name(header_name) {
                     unsafe_count += 1;
@@ -124,7 +124,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     wtr.flush()?;
 
-    if safenames_mode == SafeNameKind::Verify {
+    if safenames_mode == SafeNameMode::Verify {
         eprintln!("{unsafe_count}");
     } else {
         eprintln!("{changed_count}");
