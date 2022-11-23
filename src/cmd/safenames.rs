@@ -83,21 +83,25 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut changed_count = 0_u16;
     let mut unsafe_count = 0_u16;
 
-    let mut record = csv::StringRecord::from_byte_record_lossy(old_headers.clone());
+    let mut new_headers = csv::StringRecord::from_byte_record_lossy(old_headers.clone());
     match safenames_mode {
         SafeNameKind::Always | SafeNameKind::Conditional => {
-            let (safe_headers, changed) =
-                util::safe_header_names(&record, true, safenames_mode == SafeNameKind::Conditional);
+            let (safe_headers, changed) = util::safe_header_names(
+                &new_headers,
+                true,
+                safenames_mode == SafeNameKind::Conditional,
+            );
             changed_count = changed;
-            record.clear();
+            new_headers.clear();
             for header_name in safe_headers {
-                record.push_field(&header_name);
+                new_headers.push_field(&header_name);
             }
+            wtr.write_record(new_headers.as_byte_record())?;
         }
         SafeNameKind::Verify => {
-            let mut checkednames_vec: Vec<String> = Vec::with_capacity(record.len());
+            let mut checkednames_vec: Vec<String> = Vec::with_capacity(new_headers.len());
             let mut unsafe_flag;
-            for header_name in record.iter() {
+            for header_name in new_headers.iter() {
                 unsafe_flag = false;
                 if !util::is_safe_name(header_name) {
                     unsafe_count += 1;
@@ -109,10 +113,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     checkednames_vec.push(header_name.to_string());
                 }
             }
+            wtr.write_record(old_headers)?;
         }
     }
-
-    wtr.write_record(record.as_byte_record())?;
 
     let mut record = csv::ByteRecord::new();
     while rdr.read_byte_record(&mut record)? {
