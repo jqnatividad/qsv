@@ -1,5 +1,6 @@
 static USAGE: &str = r#"
 Exports a specified Excel/ODS sheet to a CSV file.
+The first row of a sheet is assummed to be the header row.
 
 NOTE: Excel stores dates as number of days since 1900.
 https://support.microsoft.com/en-us/office/date-systems-in-excel-e7fe7167-48a9-4b96-bb53-5612a800b487
@@ -28,17 +29,18 @@ Excel options:
                                Negative indices start from the end (-1 = last sheet). 
                                If the sheet cannot be found, qsv will read the first sheet.
                                [default: 0]
-    --metadata                 Creates a CSV of workbook metadata with five columns - 
-                               index, sheet_name, headers, num_columns & num_rows.
-                               Note that headers is a semicolon-delimited list of the first row
-                               (which is presumably, but not necessarily the header/column names)
-                               and num_rows includes all rows, including the first row.
+    --metadata                 Creates a CSV of workbook metadata with six columns - 
+                               index, sheet_name, headers, num_columns, num_rows & unsafe_headers.
+                               headers is a semicolon-delimited list of the first row
+                               which is presumed to be the header row.
+                               num_rows includes all rows, including the first row.
+                               unsafe_headers is a count of headers with unsafe names.
                                All other Excel options are ignored.
     --flexible                 Continue even if the number of columns is different 
                                from the previous record.
     --trim                     Trim all fields so that leading & trailing whitespaces are removed.
                                Also removes embedded linebreaks.
-    --safe-names <a|c>         Rename header names to "safe" names - i.e. guaranteed "database-ready"
+    --safenames <a|c>          Rename header names to "safe" names - i.e. guaranteed "database-ready"
                                names where - duplicate header names will have a sequential suffix 
                                (_n) appended; Leading/trailing whitespaces will be trimmed;
                                Whitespace/non-alphanumeric characters will be replaced with _;
@@ -87,13 +89,13 @@ struct Args {
     flag_metadata:        bool,
     flag_flexible:        bool,
     flag_trim:            bool,
-    flag_safe_names:      String,
+    flag_safenames:       String,
     flag_dates_whitelist: String,
     flag_output:          Option<String>,
 }
 
 #[derive(PartialEq)]
-enum SafeNameKind {
+enum SafeNameMode {
     Always,
     Conditional,
     None,
@@ -152,6 +154,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         record.push_field("headers");
         record.push_field("num_columns");
         record.push_field("num_rows");
+        record.push_field("unsafe_headers");
         wtr.write_record(&record)?;
         #[allow(clippy::needless_range_loop)]
         for i in 0..num_sheets {
@@ -175,18 +178,43 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 record.push_field("");
                 record.push_field("0");
                 record.push_field("0");
+                record.push_field("0");
             } else {
                 let (num_rows, num_columns) = range.get_size();
                 let mut sheet_rows = range.rows();
                 let first_row = sheet_rows.next().unwrap();
+
+                let mut checkednames_vec: Vec<String> = Vec::with_capacity(sheet_rows.len());
+                let mut unsafe_count = 0_u16;
+
                 let first_row_str = first_row
                     .iter()
-                    .map(std::string::ToString::to_string)
+                    .map(|h| {
+                        let header = h.to_string();
+
+                        let mut unsafe_flag = false;
+                        if !util::is_safe_name(&header) {
+                            unsafe_count += 1;
+                            unsafe_flag = true;
+                        }
+
+                        // check for duplicate headers/columns
+                        // we use the unsafe_flag so we dont' double unsafe count
+                        // an already unsafe header that's also a duplicate
+                        if !unsafe_flag && checkednames_vec.contains(&header) {
+                            unsafe_count += 1;
+                        } else {
+                            checkednames_vec.push(header.to_owned());
+                        }
+
+                        header
+                    })
                     .collect::<Vec<_>>()
                     .join(";");
                 record.push_field(&first_row_str);
                 record.push_field(&num_columns.to_string());
                 record.push_field(&num_rows.to_string());
+                record.push_field(&unsafe_count.to_string());
             }
 
             wtr.write_record(&record)?;
@@ -197,15 +225,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     // set Safe Name Mode
-    let first_letter = args.flag_safe_names.to_lowercase();
-    let safename = if first_letter.starts_with('a') {
-        // if it starts with a, Always mode
-        SafeNameKind::Always
-    } else if first_letter.starts_with('c') {
-        // if it starts with c, its Conditional
-        SafeNameKind::Conditional
-    } else {
-        SafeNameKind::None
+    let mut first_letter = args.flag_safenames.chars().next().unwrap_or_default();
+    first_letter.make_ascii_lowercase();
+    let safename = match first_letter {
+        'c' => SafeNameMode::Conditional,
+        'a' => SafeNameMode::Always,
+        _ => SafeNameMode::None,
     };
 
     // convert sheet_names to lowercase so we can do a case-insensitive compare
@@ -302,6 +327,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // https://support.microsoft.com/en-us/office/excel-specifications-and-limits-1672b34d-7043-467e-8e27-269d656771c3
     // https://wiki.documentfoundation.org/Faq/Calc/022
     let mut row_count = 0_u32;
+    let mut header_names_changed = 0_u16;
 
     for (row_idx, row) in range.rows().enumerate() {
         record.clear();
@@ -383,13 +409,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         // if this is the header/column row and --safe-names option is not None
-        if row_count == 0 && safename != SafeNameKind::None {
+        if row_count == 0 && safename != SafeNameMode::None {
             let mut temp_record = csv::StringRecord::new();
             for header in &record {
                 temp_record.push_field(header);
             }
-            let (safe_headers, _) =
-                util::safe_header_names(&temp_record, true, safename == SafeNameKind::Conditional);
+            let (safe_headers, changed) =
+                util::safe_header_names(&temp_record, true, safename == SafeNameMode::Conditional);
+            header_names_changed = changed;
             record.clear();
             for header_name in safe_headers {
                 record.push_field(&header_name);
@@ -414,12 +441,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
     wtr.flush()?;
 
-    let end_msg = format!(
+    let mut end_msg = format!(
         "{} {}-column rows exported from \"{sheet}\"",
         // don't count the header in row count
         row_count.saturating_sub(1).separate_with_commas(),
         record.len().separate_with_commas(),
     );
+    if header_names_changed > 0 {
+        end_msg.push_str(&format!(
+            ". {header_names_changed} unsafe header/s modified."
+        ));
+    }
+
     winfo!("{end_msg}");
 
     Ok(())
