@@ -396,7 +396,7 @@ impl Config {
                     "Cannot use <stdin> with indexes",
                 ));
             }
-            (&Some(ref p), &None) => {
+            (Some(p), &None) => {
                 // We generally don't want to report an error here, since we're
                 // passively trying to find an index, so we just log the warning...
                 let idx_file = match fs::File::open(util::idx_path(p)) {
@@ -412,7 +412,7 @@ impl Config {
                 };
                 (fs::File::open(p)?, idx_file)
             }
-            (&Some(ref p), &Some(ref ip)) => (fs::File::open(p)?, fs::File::open(ip)?),
+            (Some(p), Some(ip)) => (fs::File::open(p)?, fs::File::open(ip)?),
         };
         // If the CSV data was last modified after the index file was last
         // modified, then return an error and demand the user regenerate the

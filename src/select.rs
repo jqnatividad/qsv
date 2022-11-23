@@ -402,7 +402,7 @@ impl Selection {
     }
 
     pub fn normal(&self) -> NormalSelection {
-        let &Selection(ref inds) = self;
+        let Selection(inds) = self;
         if inds.is_empty() {
             return NormalSelection(vec![]);
         }
