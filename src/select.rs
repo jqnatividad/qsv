@@ -106,10 +106,7 @@ impl SelectorParser {
                 return fail_format!("Empty regex: {}", self.chars.iter().collect::<String>());
             }
             let re: String = self.chars[1..(self.chars.len() - 1)].iter().collect();
-            let regex = match Regex::new(&re) {
-                Ok(r) => r,
-                Err(_) => return fail_format!("Invalid regex: {re}"),
-            };
+            let Ok(regex) = Regex::new(&re) else { return fail_format!("Invalid regex: {re}") };
             return Ok(vec![Selector::Regex(regex)]);
         }
 

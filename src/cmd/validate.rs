@@ -519,12 +519,9 @@ fn to_json_instance(
     schema: &Value,
 ) -> Result<Value, String> {
     // make sure schema has expected structure
-    let schema_properties = match schema.get("properties") {
-        Some(properties) => properties,
-        None => {
-            return fail!("JSON Schema missing 'properties' object");
-        }
-    };
+    let Some(schema_properties) = schema.get("properties") else {
+                     return fail!("JSON Schema missing 'properties' object");
+                 };
 
     // map holds individual CSV fields converted as serde_json::Value
     // we use with_capacity to minimize allocs

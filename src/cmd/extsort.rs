@@ -92,11 +92,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         input_reader.read_line(&mut header)?;
     }
 
-    let sorted = if let Ok(ext_sorter) = sorter.sort(input_reader.lines()) {
-        ext_sorter
-    } else {
-        return fail!("cannot do external sort");
-    };
+    let Ok(sorted) = sorter.sort(input_reader.lines()) else {
+                 return fail!("cannot do external sort");
+             };
 
     if !header.is_empty() {
         output_writer.write_all(format!("{}\n", header.trim_end()).as_bytes())?;

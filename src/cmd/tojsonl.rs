@@ -112,10 +112,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // create a vec lookup about inferred field data types
     let mut field_type_vec: Vec<String> = Vec::with_capacity(headers.len());
     for (_field_name, field_def) in properties_map.iter() {
-        let field_map = match field_def.as_object() {
-            Some(m) => m,
-            None => return fail!("Cannot create field map"),
-        };
+        let Some(field_map) = field_def.as_object() else { return fail!("Cannot create field map") };
         let prelim_type = field_map.get("type").unwrap();
         let field_values_enum = field_map.get("enum");
 
