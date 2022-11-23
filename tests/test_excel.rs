@@ -308,7 +308,7 @@ fn excel_xlsx_safe_header_name() {
     let mut cmd = wrk.command("excel");
     cmd.arg("--sheet")
         .arg("safe_header_name_test")
-        .arg("--safe-names")
+        .arg("--safenames")
         .arg("conditional")
         .arg(xlsx_file);
 
@@ -502,21 +502,29 @@ fn excel_metadata() {
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
-        svec!["index", "sheet_name", "headers", "num_columns", "num_rows"],
-        svec!["0", "First", "URL;City", "2", "4"],
-        svec!["1", "Flexibility Test", "URL;City;", "3", "6"],
-        svec!["2", "Middle", "Middle sheet col1;Middle-2", "2", "6"],
-        svec!["3", "Sheet1", "", "0", "0"],
-        svec!["4", "trim test", "col1;   col2;col3", "3", "6"],
+        svec![
+            "index",
+            "sheet_name",
+            "headers",
+            "num_columns",
+            "num_rows",
+            "unsafe_headers"
+        ],
+        svec!["0", "First", "URL;City", "2", "4", "0"],
+        svec!["1", "Flexibility Test", "URL;City;", "3", "6", "1"],
+        svec!["2", "Middle", "Middle sheet col1;Middle-2", "2", "6", "0"],
+        svec!["3", "Sheet1", "", "0", "0", "0"],
+        svec!["4", "trim test", "col1;   col2;col3", "3", "6", "1"],
         svec![
             "5",
             "date test",
             "date_col;num_col;col_Petsa;just another col",
             "4",
-            "6"
+            "6",
+            "0"
         ],
-        svec!["6", "NoData", "col1;col2;col3;col4", "4", "1"],
-        svec!["7", "Last", "Last sheet col1;Last-2", "2", "6"],
+        svec!["6", "NoData", "col1;col2;col3;col4", "4", "1", "0"],
+        svec!["7", "Last", "Last sheet col1;Last-2", "2", "6", "0"],
     ];
     assert_eq!(got, expected);
     wrk.assert_success(&mut cmd);
@@ -546,6 +554,26 @@ fn excel_empty_sheet_message() {
 
     let got = wrk.output_stderr(&mut cmd);
     assert_eq!(got, "0 4-column rows exported from \"NoData\"\n");
+}
+
+#[test]
+fn excel_unsafename_detected() {
+    let wrk = Workdir::new("excel_unsafename_detected");
+
+    let xls_file = wrk.load_test_file("excel-xls.xls");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--sheet")
+        .arg("trim test")
+        .arg("--safenames")
+        .arg("conditional")
+        .arg(xls_file);
+
+    let got = wrk.output_stderr(&mut cmd);
+    assert_eq!(
+        got,
+        "5 3-column rows exported from \"trim test\". 1 unsafe header/s modified.\n"
+    );
 }
 
 #[test]
