@@ -192,11 +192,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     .map(|h| {
                         let header = h.to_string();
 
-                        let mut unsafe_flag = false;
-                        if !util::is_safe_name(&header) {
+                        let unsafe_flag = if util::is_safe_name(&header) {
+                            false
+                        } else {
                             unsafe_count += 1;
-                            unsafe_flag = true;
-                        }
+                            true
+                        };
 
                         // check for duplicate headers/columns
                         // we use the unsafe_flag so we dont' double unsafe count
