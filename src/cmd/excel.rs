@@ -204,7 +204,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         if !unsafe_flag && checkednames_vec.contains(&header) {
                             unsafe_count += 1;
                         } else {
-                            checkednames_vec.push(header.to_owned());
+                            checkednames_vec.push(header.clone());
                         }
 
                         header
