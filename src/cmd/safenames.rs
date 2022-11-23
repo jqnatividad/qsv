@@ -65,8 +65,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut first_letter = args.flag_mode.chars().next().unwrap_or_default();
     first_letter.make_ascii_lowercase();
     let safenames_mode = match first_letter {
-        'a' => SafeNameMode::Always,
         'c' => SafeNameMode::Conditional,
+        'a' => SafeNameMode::Always,
         'v' => SafeNameMode::Verify,
         _ => {
             return fail_clierror!("Invalid mode: {}", args.flag_mode);
@@ -80,54 +80,50 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut rdr = rconfig.reader()?;
     let mut wtr = Config::new(&args.flag_output).writer()?;
     let old_headers = rdr.byte_headers()?;
-    let mut changed_count = 0_u16;
-    let mut unsafe_count = 0_u16;
 
     let mut headers = csv::StringRecord::from_byte_record_lossy(old_headers.clone());
-    match safenames_mode {
-        SafeNameMode::Always | SafeNameMode::Conditional => {
-            let (safe_headers, changed) = util::safe_header_names(
-                &headers,
-                true,
-                safenames_mode == SafeNameMode::Conditional,
-            );
-            changed_count = changed;
-            headers.clear();
-            for header_name in safe_headers {
-                headers.push_field(&header_name);
-            }
-            wtr.write_record(headers.as_byte_record())?;
+    if let SafeNameMode::Conditional | SafeNameMode::Always = safenames_mode {
+        let (safe_headers, changed_count) =
+            util::safe_header_names(&headers, true, safenames_mode == SafeNameMode::Conditional);
+
+        headers.clear();
+        for header_name in safe_headers {
+            headers.push_field(&header_name);
         }
-        SafeNameMode::Verify => {
-            let mut checkednames_vec: Vec<String> = Vec::with_capacity(old_headers.len());
-            let mut unsafe_flag;
-            for header_name in headers.iter() {
-                unsafe_flag = false;
-                if !util::is_safe_name(header_name) {
-                    unsafe_count += 1;
-                    unsafe_flag = true;
-                }
-                if !unsafe_flag && checkednames_vec.contains(&header_name.to_string()) {
-                    unsafe_count += 1;
-                } else {
-                    checkednames_vec.push(header_name.to_string());
-                }
-            }
-            wtr.write_record(old_headers)?;
+
+        // write CSV with safe headers
+        wtr.write_record(headers.as_byte_record())?;
+        let mut record = csv::ByteRecord::new();
+        while rdr.read_byte_record(&mut record)? {
+            wtr.write_record(&record)?;
         }
-    }
+        wtr.flush()?;
 
-    let mut record = csv::ByteRecord::new();
-    while rdr.read_byte_record(&mut record)? {
-        wtr.write_record(&record)?;
-    }
-
-    wtr.flush()?;
-
-    if safenames_mode == SafeNameMode::Verify {
-        eprintln!("{unsafe_count}");
-    } else {
         eprintln!("{changed_count}");
+    } else {
+        // Verify Mode
+        let mut checkednames_vec: Vec<String> = Vec::with_capacity(old_headers.len());
+        let mut unsafe_flag;
+        let mut unsafe_count = 0_u16;
+
+        for header_name in headers.iter() {
+            unsafe_flag = false;
+            if !util::is_safe_name(header_name) {
+                unsafe_count += 1;
+                unsafe_flag = true;
+            }
+
+            // check for duplicate headers/columns
+            // we use the unsafe_flag so we dont' double unsafe count
+            // an already unsafe header that's also a duplicate
+            if !unsafe_flag && checkednames_vec.contains(&header_name.to_string()) {
+                unsafe_count += 1;
+            } else {
+                checkednames_vec.push(header_name.to_string());
+            }
+        }
+
+        eprintln!("{unsafe_count}");
     }
 
     Ok(())
