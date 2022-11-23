@@ -12,7 +12,7 @@
         // correctly used
         clippy::derive_partial_eq_without_eq,
         clippy::enum_glob_use,
-        clippy::let_underscore_drop,
+        let_underscore_drop,
         clippy::result_unit_err,
         // not practical
         clippy::similar_names,
