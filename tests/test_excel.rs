@@ -318,10 +318,10 @@ fn excel_xlsx_safe_header_name() {
             "col1",
             "col_with_leading_and_trailing_spaces_",
             "_23_starts_with_123",
-            "With_____special_____Characters_",
+            "with_____special_____characters_",
             "col1_2",
             "col1_3",
-            "The_quick_BROWN_fox_with_a_very_long_column_name_is_now_jump",
+            "the_quick_brown_fox_with_a_very_long_column_name_is_now_jump",
             "___date___"
         ],
         svec![
