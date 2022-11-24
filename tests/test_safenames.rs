@@ -1,7 +1,7 @@
 use crate::workdir::Workdir;
 
 #[test]
-fn safenames() {
+fn safenames_conditional() {
     let wrk = Workdir::new("safenames");
     wrk.create(
         "in.csv",
@@ -10,7 +10,7 @@ fn safenames() {
                 "col1",
                 " This is a column with invalid chars!# and leading & trailing spaces ",
                 "",
-                "this is already a postgres safe column",
+                "this is already a Postgres Safe Column",
                 "1starts with 1",
                 "col1",
                 "col1",
@@ -23,16 +23,20 @@ fn safenames() {
     );
 
     let mut cmd = wrk.command("safenames");
-    cmd.arg("in.csv");
+    cmd.arg("--mode").arg("c").arg("in.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec![
             "col1",
-            "This_is_a_column_with_invalid_chars___and_leading___trailing",
+            "this_is_a_column_with_invalid_chars___and_leading___trailing",
             // null column names are not allowed in postgres
             "_",
-            "this is already a postgres safe column",
+            // though this is "safe", it's generally discouraged
+            // to have embedded spaces and mixed case column names
+            // as you will have to use quotes to refer to these columns
+            // in Postgres
+            "this is already a Postgres Safe Column",
             // a column cannot start with a digit
             "_starts_with_1",
             // duplicate cols are not allowed in one table in postgres
@@ -63,7 +67,7 @@ fn safenames_always() {
                 " This is a column with invalid chars!# and leading & trailing spaces ",
                 "",
                 // postgres allows for embedded spaces
-                "this is already a postgres safe column",
+                "this is already a Postgres Safe Column",
                 "1starts with 1",
                 "col1",
                 "col1"
@@ -80,7 +84,7 @@ fn safenames_always() {
     let expected = vec![
         svec![
             "col1",
-            "This_is_a_column_with_invalid_chars___and_leading___trailing",
+            "this_is_a_column_with_invalid_chars___and_leading___trailing",
             "_",
             // we were using Always mode, so even though the
             // original header name was already valid,
@@ -110,7 +114,7 @@ fn safenames_verify() {
                 "col1",
                 " This is a column with invalid chars!# and leading & trailing spaces ",
                 "",
-                "this is already a postgres safe column",
+                "this is already a Postgres Safe Column",
                 "1starts with 1",
                 "col1",
                 "col1",
@@ -133,7 +137,45 @@ fn safenames_verify() {
 }
 
 #[test]
-fn safenames_ignore_invalid_mode() {
+fn safenames_verify_verbose() {
+    let wrk = Workdir::new("safenames");
+    wrk.create(
+        "in.csv",
+        vec![
+            svec![
+                "col1",
+                " This is a column with invalid chars!# and leading & trailing spaces ",
+                "",
+                "this is already a Postgres Safe Column",
+                "1starts with 1",
+                "col1",
+                "col1",
+                "col1",
+                "",
+                "",
+                "",
+                "col1"
+            ],
+            svec!["1", "b", "33", "1", "b", "33", "34", "z", "42", "3", "2", "1"],
+        ],
+    );
+
+    let mut cmd = wrk.command("safenames");
+    cmd.arg("--mode").arg("V").arg("in.csv");
+
+    let changed_headers = wrk.output_stderr(&mut cmd);
+    let expected_count = r#"12 header/s
+8 unsafe header/s: ["col1", " This is a column with invalid chars!# and leading & trailing spaces ", "", "this is already a Postgres Safe Column", "1starts with 1", "", "", ""]
+2 safe header/s: ["col1", "this is already a Postgres Safe Column"]
+7 duplicate/s
+"#;
+    assert_eq!(changed_headers, expected_count);
+
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn safenames_invalid_mode() {
     let wrk = Workdir::new("safenames");
     wrk.create(
         "in.csv",

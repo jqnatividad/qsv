@@ -700,10 +700,12 @@ pub fn safe_header_names(
     conditional: bool,
 ) -> (Vec<String>, u16) {
     // Create "safe" var/key names - to support dynfmt/url-template, valid python vars & db-safe
-    // column names. Trim leading & trailing whitespace. Replace whitespace/non-alphanumeric) with
-    // _. If name starts with a number & check_first_char is true, replace it with an _ as well.
-    // If a column with the same name already exists, append a sequence suffix (e.g. _n).
-    // Finally, names are limited to 60 characters in length.
+    // column names. Fold to lowercase. Trim leading & trailing whitespace.
+    // Replace whitespace/non-alphanumeric) with _. If name starts with a number & check_first_char
+    // is true, replace it with an _ as well. If a column with the same name already exists,
+    // append a sequence suffix (e.g. _n). Names are limited to 60 characters in length.
+    // Empty names are replaced with _ as well.
+
     // If conditional = true, only rename the header if its not already safe as embedded spaces
     // in certain circumstances (postgresql allows embeded spaces in names, but not python, dynfmt
     // and url-template)
@@ -725,7 +727,7 @@ pub fn safe_header_names(
                 safe_name_always.replace_range(0..1, "_");
             }
             safe_name_always[..safe_name_always.chars().map(char::len_utf8).take(60).sum()]
-                .to_string()
+                .to_lowercase()
         };
         let mut sequence_suffix = 2_u16;
         let mut candidate_name = safe_name.clone();
@@ -744,7 +746,7 @@ pub fn safe_header_names(
 
 #[inline]
 pub fn is_safe_name(header_name: &str) -> bool {
-    if header_name.is_empty() || header_name.len() > 60 {
+    if header_name.trim().is_empty() || header_name.len() > 60 {
         return false;
     }
     let first_character = header_name.as_bytes()[0];
