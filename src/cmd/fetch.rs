@@ -136,7 +136,7 @@ Fetch options:
     --cache-error              Cache error responses even if a request fails. If an identical URL is requested,
                                the cached error is returned. Otherwise, the fetch is attempted again 
                                for --max-retries.
-    --cookies                  Allow cookies.
+    --cookies <jsonfile>       Use cookies and store them in this file.
     --user-agent <agent>       Specify a custom user agent. Try to follow the syntax here -
                                https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
     --report <d|s>             Creates a report of the fetch job. The report has the same name as the input file
@@ -167,7 +167,7 @@ Common options:
     -p, --progressbar          Show progress bars. Not valid for stdin.
 "#;
 
-use std::{fs, thread, time};
+use std::{fs, fs::OpenOptions, thread, time};
 
 use cached::{
     proc_macro::{cached, io_cached},
@@ -214,7 +214,7 @@ struct Args {
     flag_max_errors:   u64,
     flag_store_error:  bool,
     flag_cache_error:  bool,
-    flag_cookies:      bool,
+    flag_cookies:      Option<String>,
     flag_user_agent:   Option<String>,
     flag_report:       String,
     flag_redis:        bool,
@@ -244,6 +244,7 @@ impl From<reqwest::Error> for CliError {
         CliError::Other(err.to_string())
     }
 }
+
 struct RedisConfig {
     conn_str:      String,
     max_pool_size: u32,
@@ -312,6 +313,29 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             info!("flushed Redis database.");
         }
     }
+
+    // use cookies if --cookies option is set
+    let cookie_jar_path;
+    let cookie_store = if let Some(cookie_jar) = args.flag_cookies {
+        cookie_jar_path = cookie_jar.clone();
+
+        let file = OpenOptions::new()
+            .write(true)
+            .create(true)
+            .open(cookie_jar)
+            .map(std::io::BufReader::new)?;
+
+        // use re-exported version of `CookieStore` for crate compatibility
+        match reqwest_cookie_store::CookieStore::load_json(file) {
+            Ok(cs) => cs,
+            Err(_) => reqwest_cookie_store::CookieStore::default(),
+        }
+    } else {
+        cookie_jar_path = String::new();
+        reqwest_cookie_store::CookieStore::default()
+    };
+    let cookie_store = reqwest_cookie_store::CookieStoreMutex::new(cookie_store);
+    let cookie_store = std::sync::Arc::new(cookie_store);
 
     let mut rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
@@ -447,7 +471,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let client = Client::builder()
         .user_agent(user_agent)
         .default_headers(http_headers)
-        .cookie_store(args.flag_cookies)
+        .cookie_provider(std::sync::Arc::clone(&cookie_store))
+        // .cookie_store(true) // !cookie_jar_path.is_empty())
         .brotli(true)
         .gzip(true)
         .deflate(true)
@@ -790,7 +815,25 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
     winfo!("{end_msg}");
 
-    Ok(wtr.flush()?)
+    wtr.flush()?;
+
+    // Write cookies back to disk
+    if !cookie_jar_path.is_empty() {
+        debug!("writing cookie");
+        let mut writer = OpenOptions::new()
+            .write(true)
+            .create(true)
+            .open(cookie_jar_path.clone())
+            .map(std::io::BufWriter::new)?;
+
+        let store = cookie_store.lock().unwrap();
+        if store.save_json(&mut writer).is_err() {
+            warn!("Cannot save cookies to \"{cookie_jar_path}\"");
+        }
+        debug!("{store:?}");
+    }
+
+    Ok(())
 }
 
 // we only need url in the cache key

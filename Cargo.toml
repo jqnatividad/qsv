@@ -127,6 +127,7 @@ reqwest = { version = "0.11", features = [
     "gzip",
     "rustls-tls",
 ], default-features = false }
+reqwest_cookie_store = {version = "0.4", optional = true}
 reverse_geocoder = { version = "3", optional = true }
 rust_decimal = "1.26"
 ryu = "1"
@@ -152,7 +153,9 @@ vader_sentiment = { version = "0.1", optional = true }
 whatlang = { version = "0.16", optional = true }
 
 [dev-dependencies]
+actix-identity = "0.5"
 actix-governor = "0.3"
+actix-session = { version = "0.7", features = ["cookie-session"] }
 actix-web = { version = "4.2", default-features = false, features = [
     "compress-brotli",
     "compress-gzip",
@@ -208,6 +211,7 @@ fetch = [
     "jql",
     "jsonxf",
     "redis",
+    "reqwest_cookie_store",
     "url",
 ]
 foreach = []

@@ -30,6 +30,35 @@ fn fetch_simple() {
 }
 
 #[test]
+fn fetch_with_cookies() {
+    let wrk = Workdir::new("fetch");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["URL"],
+            svec!["https://httpbin.org/cookies/set?freeform=testcookie"],
+            svec!["https://httpbin.org/cookies/set/qsv/eatscsvsforbreakfast"],
+            svec!["https://httpbin.org/cookies"],
+        ],
+    );
+    let mut cmd = wrk.command("fetch");
+    cmd.arg("URL")
+        .arg("--cookies")
+        .arg("/tmp/qsvcookiejar.json")
+        .arg("-H")
+        .arg("cookie:foo=bar")
+        .arg("data.csv")
+        .arg("--store-error");
+
+    let got = wrk.stdout::<String>(&mut cmd);
+
+    let expected = r#"{"cookies":{"freeform":"testcookie"}}
+{"cookies":{"freeform":"testcookie","qsv":"eatscsvsforbreakfast"}}
+{"cookies":{"freeform":"testcookie","qsv":"eatscsvsforbreakfast"}}"#;
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn fetch_simple_new_col() {
     let wrk = Workdir::new("fetch_simple_new_col");
     wrk.create(
@@ -546,8 +575,11 @@ fn fetchpost_custom_user_agent() {
 
 use std::{sync::mpsc, thread};
 
+use actix_identity::{Identity, IdentityMiddleware};
+use actix_session::{storage::CookieSessionStore, SessionMiddleware};
 use actix_web::{
-    dev::ServerHandle, middleware, rt, web, App, HttpRequest, HttpServer, Responder, Result,
+    cookie::Key, dev::ServerHandle, middleware, rt, web, App, HttpMessage as _, HttpRequest,
+    HttpResponse, HttpServer, Responder, Result,
 };
 use serde::Serialize;
 #[derive(Serialize)]
@@ -555,8 +587,27 @@ struct MyObj {
     fullname: String,
 }
 
-async fn index() -> impl Responder {
-    "Hello world!"
+async fn index(id: Identity) -> String {
+    format!(
+        "Hello {}",
+        id.id().unwrap_or_else(|_| "Anonymous".to_owned())
+    )
+}
+
+async fn login(req: HttpRequest) -> HttpResponse {
+    Identity::login(&req.extensions(), "user1".to_owned()).unwrap();
+
+    HttpResponse::Found()
+        .insert_header(("location", "/"))
+        .finish()
+}
+
+async fn logout(id: Identity) -> HttpResponse {
+    id.logout();
+
+    HttpResponse::Found()
+        .insert_header(("location", "/"))
+        .finish()
 }
 
 /// handler with path parameters like `/user/{name}/`
@@ -596,15 +647,26 @@ async fn run_webserver(tx: mpsc::Sender<ServerHandle>) -> std::io::Result<()> {
         .finish()
         .unwrap();
 
+    let secret_key = Key::generate();
+
     // server is server controller type, `dev::ServerHandle`
     let server = HttpServer::new(move || {
         App::new()
+            .wrap(IdentityMiddleware::default())
+            .wrap(
+                SessionMiddleware::builder(CookieSessionStore::default(), secret_key.clone())
+                    .cookie_name("auth-example".to_owned())
+                    .cookie_secure(false)
+                    .build(),
+            )
             // enable logger
             .wrap(middleware::Logger::default())
             .wrap(middleware::Compress::default())
             .wrap(Governor::new(&governor_conf))
             .service(web::resource("/user/{name}").route(web::get().to(get_fullname)))
-            .service(web::resource("/").to(index))
+            .service(web::resource("/login").route(web::post().to(login)))
+            .service(web::resource("/logout").to(logout))
+            .service(web::resource("/").route(web::get().to(index)))
     })
     .bind(test_server!())?
     .run();
