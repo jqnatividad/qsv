@@ -166,8 +166,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         if safenames_mode == SafeNameMode::VerifyVerbose {
             eprintln!(
-                "{} header/s\n{unsafe_count} unsafe header/s: {unsafenames_vec:?}\n{} safe header/s: \
-                 {safenames_vec:?}\n{dupe_count} duplicate/s",
+                "{} header/s\n{unsafe_count} unsafe header/s: {unsafenames_vec:?}\n{} safe \
+                 header/s: {safenames_vec:?}\n{dupe_count} duplicate/s",
                 headers.len(),
                 safenames_vec.len()
             );
