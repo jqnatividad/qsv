@@ -283,7 +283,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 Ok(has_data) => {
                     if has_data {
                         row_number += 1;
-                        record.push_field(row_number.to_string().as_bytes());
+                        let mut buffer = itoa::Buffer::new();
+                        record.push_field(buffer.format(row_number).as_bytes());
+
                         // non-allocating trimming in place is much faster on the record level
                         // with our csv fork than doing per field std::str::trim which is allocating
                         record.trim();
@@ -379,10 +381,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             &valid_suffix,
             &invalid_suffix,
         )?;
-    }
 
-    // done with validation; print output
-    if invalid_count > 0 {
+        // done with validation; print output
         let fail_fast_msg = if args.flag_fail_fast {
             format!(
                 "fail-fast enabled. stopped after row {}.\n",
@@ -536,6 +536,12 @@ fn to_json_instance(
         // convert csv value to string; no trimming reqd as it's done on the record level beforehand
         let value_string = unsafe { std::str::from_utf8_unchecked(&record[i]).to_string() };
 
+        // if value_string is empty, then just put an empty JSON String
+        if value_string.is_empty() {
+            json_object_map.insert(header_string, Value::Null);
+            continue;
+        }
+
         // get json type from schema; defaults to STRING if not specified
         let field_def: &Value = schema_properties
             .get(&header_string)
@@ -572,12 +578,6 @@ fn to_json_instance(
         };
 
         // dbg!(i, &header_string, &value_string, &json_type);
-
-        // if value_string is empty, then just put an empty JSON String
-        if value_string.is_empty() {
-            json_object_map.insert(header_string, Value::Null);
-            continue;
-        }
 
         match json_type {
             "string" => {
