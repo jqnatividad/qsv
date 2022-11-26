@@ -230,7 +230,7 @@ If you wish to enable the `python` feature - you'll just have to install/compile
 
 Note that if you plan to distribute your manually built `qsv` with the `python` feature, `qsv` will look for Python shared libraries (libpython* on Linux/macOS, python*.dll on Windows) against which it was compiled starting with the current directory & abort with an error if not found, detailing the Python library it was looking for. 
 
-Note that this will happen as soon as the qsv binary is invoked, even if you're not running the `py` command.
+Note that this will happen on qsv startup, even if you're not running the `py` command.
 
 [PyO3](https://pyo3.rs) - the underlying crate that enables the `python` feature, uses a build script to determine the Python version & set the correct linker arguments. By default it uses the python3 executable.
 You can override the Python interpreter by setting `PYO3_PYTHON` (e.g., `PYO3_PYTHON=python3.6`), before installing/compiling qsv. See the [PyO3 User Guide](https://pyo3.rs/v0.17.1/building_and_distribution.html) for more information.
