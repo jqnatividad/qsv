@@ -258,9 +258,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // debug!("compiled schema: {:?}", &schema_compiled);
 
     // how many rows read and processed as batches
-    let mut row_number: usize = 0;
+    let mut row_number: u32 = 0;
     // how many invalid rows found
-    let mut invalid_count: usize = 0;
+    let mut invalid_count: u32 = 0;
 
     // amortize memory allocation by reusing record
     #[allow(unused_assignments)]
@@ -273,6 +273,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // set RAYON_NUM_THREADS
     util::njobs(args.flag_jobs);
+
+    NULL_TYPE.set(Value::String("null".to_string())).unwrap();
 
     // main loop to read CSV and construct batches for parallel processing.
     // each batch is processed via Rayon parallel iterator.
@@ -512,6 +514,7 @@ fn do_json_validation(
 }
 
 /// convert CSV Record into JSON instance by referencing Type from Schema
+#[inline]
 fn to_json_instance(
     headers: &ByteRecord,
     headers_len: usize,
@@ -527,7 +530,7 @@ fn to_json_instance(
     // we use with_capacity to minimize allocs
     let mut json_object_map: Map<String, Value> = Map::with_capacity(headers_len);
 
-    let null_type = NULL_TYPE.get_or_init(|| Value::String("null".to_string()));
+    let null_type = unsafe { NULL_TYPE.get_unchecked() };
 
     // iterate over each CSV field and convert to JSON type
     for (i, header) in headers.iter().enumerate() {
@@ -561,11 +564,10 @@ fn to_json_instance(
                         // keep looking
                         continue;
                     }
-                    return_val = match val.as_str() {
-                        Some(s) => s,
-                        None => {
-                            return fail!("type info should be a JSON string");
-                        }
+                    return_val = if let Some(s) = val.as_str() {
+                        s
+                    } else {
+                        return fail!("type info should be a JSON string");
                     };
                 }
 
@@ -689,6 +691,7 @@ mod tests_for_csv_to_json_conversion {
     #[test]
     #[allow(clippy::approx_constant)]
     fn test_to_json_instance() {
+        let _ = NULL_TYPE.get_or_init(|| Value::String("null".to_string()));
         let csv = "A,B,C,D,E,F,G,H,I,J,K,L
         hello,3.1415,300000000,true,,,,,hello,3.1415,300000000,true";
 
@@ -719,6 +722,7 @@ mod tests_for_csv_to_json_conversion {
 
     #[test]
     fn test_to_json_instance_cast_integer_error() {
+        let _ = NULL_TYPE.get_or_init(|| Value::String("null".to_string()));
         let csv = "A,B,C,D,E,F,G,H
         hello,3.1415,3.0e8,true,,,,";
 
@@ -742,6 +746,7 @@ mod tests_for_csv_to_json_conversion {
 
 /// Validate JSON instance against compiled JSON schema
 /// If invalid, returns Some(Vec<(String,String)>) holding the error messages
+#[inline]
 fn validate_json_instance(
     instance: &Value,
     schema_compiled: &JSONSchema,
@@ -816,6 +821,7 @@ mod tests_for_schema_validation {
 
     #[test]
     fn test_validate_with_no_errors() {
+        let _ = NULL_TYPE.get_or_init(|| Value::String("null".to_string()));
         let csv = "title,name,age
         Professor,Xaviers,60";
 
@@ -833,6 +839,7 @@ mod tests_for_schema_validation {
 
     #[test]
     fn test_validate_with_error() {
+        let _ = NULL_TYPE.get_or_init(|| Value::String("null".to_string()));
         let csv = "title,name,age
         Professor,X,60";
 
