@@ -53,8 +53,7 @@ use csv::ByteRecord;
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use itertools::Itertools;
 use jsonschema::{output::BasicOutput, paths::PathChunk, JSONSchema};
-#[allow(unused_imports)]
-use log::{debug, info};
+use log::info;
 use once_cell::sync::OnceCell;
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -72,7 +71,6 @@ const BATCH_SIZE: usize = 24_000;
 // to save on repeated init/allocs
 static NULL_TYPE: once_cell::sync::OnceCell<Value> = OnceCell::new();
 
-#[allow(dead_code)]
 #[derive(Deserialize)]
 struct Args {
     flag_fail_fast:   bool,
@@ -263,7 +261,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut invalid_count: u32 = 0;
 
     // amortize memory allocation by reusing record
-    #[allow(unused_assignments)]
     let mut record = csv::ByteRecord::new();
     // reuse batch buffer
     let mut batch = Vec::with_capacity(BATCH_SIZE);
@@ -279,7 +276,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // main loop to read CSV and construct batches for parallel processing.
     // each batch is processed via Rayon parallel iterator.
     // loop exits when batch is empty.
-    loop {
+    'batch_loop: loop {
         for _ in 0..BATCH_SIZE {
             match rdr.read_byte_record(&mut record) {
                 Ok(has_data) => {
@@ -305,7 +302,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         if batch.is_empty() {
             // break out of infinite loop when at EOF
-            break;
+            break 'batch_loop;
         }
 
         // do actual validation via Rayon parallel iterator
@@ -345,9 +342,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         // for fail-fast, exit loop if batch has any error
         if args.flag_fail_fast && invalid_count > 0 {
-            break;
+            break 'batch_loop;
         }
-    } // end infinite loop
+    } // end batch loop
 
     #[cfg(any(feature = "full", feature = "lite"))]
     if show_progress {
