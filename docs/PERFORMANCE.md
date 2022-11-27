@@ -76,7 +76,7 @@ To find out your jobs setting, call `qsv --version`. The second to the last numb
 The `--version` option shows a lot of information about qsv. It displays:
  * qsv version
  * the memory allocator (`standard` or `mimalloc`)
- * all enabled features (`apply`, `fetch`, `foreach`, `generate`, `luau`, `luajit`, `python` & `self_update`)
+ * all enabled features (`apply`, `fetch`, `foreach`, `generate`, `luau`, `python` & `self_update`)
  * Python version linked if the `python` feature was enabled
  * the number of processors to use for multi-threading commands
  * the number of logical processors detected
@@ -88,10 +88,10 @@ The `--version` option shows a lot of information about qsv. It displays:
 
 ```
 $ qsv --version
-qsv 0.69.0-mimalloc-apply;fetch;foreach;generate;luajit;python-3.10.5 (v3.10.5:f377153967, Jun  6 2022, 12:36:10) [Clang 13.0.0 (clang-1300.0.29.30)];self_update-8-8 (aarch64-apple-darwin compiled with Rust 1.64) compiled
+qsv 0.69.0-mimalloc-apply;fetch;foreach;generate;luau;python-3.10.5 (v3.10.5:f377153967, Jun  6 2022, 12:36:10) [Clang 13.0.0 (clang-1300.0.29.30)];self_update-8-8 (aarch64-apple-darwin compiled with Rust 1.64) compiled
 ```
 
-Shows that I'm running qsv version 0.69.0, with the `mimalloc` allocator (instead of `standard`), and I have the `apply`, `fetch`, `foreach`, `generate`, `luajit`, `python` and `self_update` features enabled, and qsv will be using 8 logical processors out of 8 detected when running multithreaded commands, and the qsv binary was built to target the aarch64-apple-darwin platform (Apple Silicon), compiled using Rust 1.64. The binary was `compiled` using `cargo build`.
+Shows that I'm running qsv version 0.69.0, with the `mimalloc` allocator (instead of `standard`), and I have the `apply`, `fetch`, `foreach`, `generate`, `luau`, `python` and `self_update` features enabled, and qsv will be using 8 logical processors out of 8 detected when running multithreaded commands, and the qsv binary was built to target the aarch64-apple-darwin platform (Apple Silicon), compiled using Rust 1.64. The binary was `compiled` using `cargo build`.
 
 ## Caching
 The `apply geocode` command [memoizes](https://en.wikipedia.org/wiki/Memoization) otherwise expensive geocoding operations and will report its cache hit rate. `apply geocode` memoization, however, is not persistent across sessions.
