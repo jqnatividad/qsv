@@ -86,7 +86,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     #[allow(clippy::cast_precision_loss)]
     if sample_size < 1.0 {
         sample_size *= n_rows as f64;
-    } else if (sample_size - 0.0).abs() < f64::EPSILON {
+    } else if (sample_size).abs() < f64::EPSILON {
         // its zero, the epsilon bit is because comparing a float
         // is really not precise - see https://floating-point-gui.de/errors/comparison/
         sample_all = true;
