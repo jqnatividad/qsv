@@ -6,12 +6,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.74.0] - 2022-11-27
+
+### Added:
+* `safenames`: added --verify and --verbose modes in https://github.com/jqnatividad/qsv/pull/610 and https://github.com/jqnatividad/qsv/pull/615
+
+### Changed:
+* `excel`: align --safenames option to `safenames` command in https://github.com/jqnatividad/qsv/pull/611 and https://github.com/jqnatividad/qsv/pull/616
+* `luau`: Now precompiles main script to bytecode; now allow loading luau script from file for main, prologue and epilogue scripts in https://github.com/jqnatividad/qsv/pull/619
+* `sniff`: increase default sample size from 100 to 1000 in https://github.com/jqnatividad/qsv/commit/40d52cf0c67e39d645a1c76a26ae234999317b0b
+* `validate`: applied various optimizations in https://github.com/jqnatividad/qsv/commit/bfed127f28c4ccf6e9a18a5998588396594831d2 and https://github.com/jqnatividad/qsv/commit/06c109a0335326f57d903211334b4f2fb1ab7ccc
+* updated Github Actions workflows to reflect removal of luajit feature
+* Bump sysinfo from 0.26.7 to 0.26.8 by @dependabot in https://github.com/jqnatividad/qsv/pull/614
+* Bump rust_decimal from 1.26.1 to 1.27.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/617
+* cargo bump update several indirect dependencies
+* applied various clippy recommendations
+* pin Rust nightly to 2022-11-25
+
+### Removed:
+* `luajit`: removed as its been deprecated by optimized `luau` command which now support precompiling to bytecode, largely obviating the main feature of LuaJIT - Just-in-Time compilation in https://github.com/jqnatividad/qsv/pull/619
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.73.2...0.74.0
+
 ## [0.73.2] - 2022-11-22
 
-## Changed:
+### Changed:
 * Link to tests as examples from usage text in https://github.com/jqnatividad/qsv/pull/608
 * Bump serde_json from 1.0.88 to 1.0.89 by @dependabot in https://github.com/jqnatividad/qsv/pull/607
-* cargo update bump to get latest crossbeam crates to replace yanked crates https://github.com/jqnatividad/qsv/commit/5108a87b0f5e2d5a7cfef3f60f4cd6b3659bce7d
+* cargo update bump to get latest crossbeam crates to replace yanked crates https://github.com/jqnatividad/qsv/commit/5108a87b0f5e2d5a7cfef3f60f4cd6b3659bce7d 
 
 **Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.73.1...0.73.2
 
