@@ -21,7 +21,7 @@ sniff options:
                            it is treated as a percentage of the CSV to sample
                            (e.g. 0.20 is 20 percent).
                            When it is zero, the entire file will be sampled.
-                           [default: 100]
+                           [default: 1000]
     --prefer-dmy           Prefer to parse dates in dmy format.
                            Otherwise, use mdy format.
     --json                 Return results in JSON format.
