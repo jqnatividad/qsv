@@ -101,10 +101,6 @@ jql = { version = "5.1", default-features = false, optional = true }
 log = "0.4"
 mimalloc = { version = "0.1", default-features = false, optional = true }
 mlua = { version = "0.8", features = ["luau"], optional = true }
-mluajit = { package = "mlua", version = "0.8", features = [
-    "luajit52",
-    "vendored",
-], optional = true }
 num_cpus = "1"
 once_cell = { version = "1.16", features = ["parking_lot"] }
 parking_lot = { version = "0.12", features = ["hardware-lock-elision"] }
@@ -213,7 +209,6 @@ fetch = [
 foreach = []
 generate = ["test-data-generation"]
 luau = ["mlua"]
-luajit = ["mluajit"]
 python = ["pyo3"]
 lite = []
 datapusher_plus = []

@@ -134,7 +134,7 @@ run frequency_selregex "$bin_name" frequency -s /^R/ "$data"
 run frequency_j1 "$bin_name" frequency -j 1 "$data"
 run index "$bin_name" index "$data"
 run join "$bin_name" join --no-case 'Community Board' "$data" community_board "$commboarddata"
-run lua "$bin_name" lua map location_empty "tonumber\(Location\)==nil" -q "$data"
+run lua "$bin_name" luau map location_empty "tonumber\(Location\)==nil" -q "$data"
 run partition "$bin_name" partition 'Community Board' /tmp/partitioned "$data"
 run pseudo "$bin_name" pseudo 'Unique Key' "$data"
 run rename "$bin_name" rename 'unique_key,created_date,closed_date,agency,agency_name,complaint_type,descriptor,loctype,zip,addr1,street,xstreet1,xstreet2,inter1,inter2,addrtype,city,landmark,facility_type,status,due_date,res_desc,res_act_date,comm_board,bbl,boro,xcoord,ycoord,opendata_type,parkname,parkboro,vehtype,taxi_boro,taxi_loc,bridge_hwy_name,bridge_hwy_dir,ramp,bridge_hwy_seg,lat,long,loc' "$data"
@@ -177,4 +177,3 @@ run extsort "$bin_name" transpose "$data" test.csv
 run schema "$bin_name" schema "$data"
 run validate "$bin_name" validate "$data" "$schema"
 run fetch "$bin_name" fetch --url-template {$urltemplate} \--jql {$jql} ----max-retries 0 -c response 
-run luajit "$bin_name" luajit map location_empty "tonumber\(Location\)==nil" "$data" 

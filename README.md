@@ -22,7 +22,7 @@
 
 </div>
 
-> ℹ️ **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's May 2018 release](https://github.com/BurntSushi/xsv/issues/267). On top of xsv's 20 commands, it adds numerous new features, 28 additional commands, 6 `apply` subcommands & 33 `apply` operations (for a total of 87).
+> ℹ️ **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's May 2018 release](https://github.com/BurntSushi/xsv/issues/267). On top of xsv's 20 commands, it adds numerous new features, 27 additional commands, 6 `apply` subcommands & 33 `apply` operations (for a total of 86).
 See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for more details.
 
 ## Available commands
@@ -53,7 +53,6 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [input](/src/cmd/input.rs#L2)[^2] | Read CSV data with special quoting, trimming, line-skipping & UTF-8 transcoding rules. Typically used to "normalize" a CSV for further processing with other qsv commands. |
 | [join](/src/cmd/join.rs#L2)[^2] | Inner, outer, cross, anti & semi joins. Uses a simple hash index to make it fast.  |
 | [jsonl](/src/cmd/jsonl.rs#L2) | Convert newline-delimited JSON ([JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/)) to CSV. See `tojsonl` command to convert CSV to JSONL.
-| [luajit](/src/cmd/luajit.rs#L2)[^1] | Execute a [LuaJIT](https://luajit.org/luajit.html) script over CSV lines to transform, filter or aggregate them. |
 | [luau](/src/cmd/luau.rs#L2)[^1] | Execute a [Luau](https://luau-lang.org) script over CSV lines to transform, filter or aggregate them. |
 | [partition](/src/cmd/partition.rs#L2) | Partition a CSV based on a column value. |
 | [pseudo](/src/cmd/pseudo.rs#L2) | [Pseudonymise](https://en.wikipedia.org/wiki/Pseudonymization) the value of the given column by replacing them with an incremental identifier.  |
@@ -144,7 +143,7 @@ cargo build --release --locked --features lite
 cargo build --release --locked --features datapusher_plus
 ```
 
-[^7]: The `foreach` feature is not available on Windows. The `python` feature is not enabled on the prebuilt binaries. Compile with Python 3.6 and above development environment installed if you want to enable the `python` feature. Lua support is enabled by default on the prebuilt binaries, with preference for `luau` for platforms that support it, with `luajit` as a fallback.  
+[^7]: The `foreach` feature is not available on Windows. The `python` feature is not enabled on the prebuilt binaries. Compile with Python 3.6 and above development environment installed if you want to enable the `python` feature. Lua support is enabled by default on the prebuilt binaries, with preference for `luau` for platforms that support it.  
 
 ### Minimum Supported Rust Version
 
@@ -235,24 +234,14 @@ Note that this will happen on qsv startup, even if you're not running the `py` c
 [PyO3](https://pyo3.rs) - the underlying crate that enables the `python` feature, uses a build script to determine the Python version & set the correct linker arguments. By default it uses the python3 executable.
 You can override the Python interpreter by setting `PYO3_PYTHON` (e.g., `PYO3_PYTHON=python3.6`), before installing/compiling qsv. See the [PyO3 User Guide](https://pyo3.rs/v0.17.1/building_and_distribution.html) for more information.
 
-### Luau/LuaJIT
+### Luau
 
-[Luau](https://luau-lang.org) is a fast, small, safe, gradually typed embeddable scripting language derived from [Lua](https://www.lua.org/about.html) at the [heart of Roblox technology](https://luau-lang.org/2022/11/04/luau-origins-and-evolution.html).
+[Luau](https://luau-lang.org) is a fast, small, safe, gradually typed embeddable scripting language derived from [Lua](https://www.lua.org/about.html) at the [heart of Roblox technology](https://luau-lang.org/2022/11/04/luau-origins-and-evolution.html). Compared to Lua, Luau has [sandboxing](https://luau-lang.org/sandbox), [type-checking](https://luau-lang.org/typecheck), [additional operators](https://luau-lang.org/syntax) & [performance innovations](https://luau-lang.org/performance) while [maintaining compatibility with Lua](https://luau-lang.org/compatibility).
 
-[LuaJIT](https://luajit.org) is a Just-In-Time compiler for Lua, with partial compatibility with Lua 5.2.
-
-Consider using the `luau`/`luajit` commands instead of the `py` command if the operation you're trying to do can be done with `luau`/`luajit`. [Lua/Luau is much faster than Python](https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/lua-python3.html) & [LuaJIT is even faster still](https://luajit.org/performance_x86.html). In addition, Luau/LuaJIT is embedded into qsv, can do aggregations with its `--prologue` & `--epilogue` options & has no external dependencies unlike Python.
+Consider using the `luau` commands instead of the `py` command if the operation you're trying to do can be done with `luau`. [Lua is much faster than Python](https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/lua-python3.html), and Luau is even faster still, more so, as we precompile Luau scripts into bytecode. In addition, Luau is embedded into qsv, can do aggregations with its `--prologue` & `--epilogue` options & has no external dependencies unlike Python.
 
 The `py` command cannot do aggregations because [PyO3's GIL-bound memory](https://pyo3.rs/v0.17.2/memory.html#gil-bound-memory) limitations will quickly consume a lot of memory (see [issue 449](https://github.com/jqnatividad/qsv/issues/449#issuecomment-1226095316) for details).
 To prevent this, the `py` command processes CSVs in batches (default: 30,000 records), with a GIL pool for each batch, so no globals are available across batches.
-
-Note however, that `luau` & `luajit` are mutually exclusive features.
-
-Choose `luau` if you want to take advantage of its [sandboxing](https://luau-lang.org/sandbox), [type-checking](https://luau-lang.org/typecheck), [additional operators](https://luau-lang.org/syntax) & [performance innovations](https://luau-lang.org/performance) while [maintaining compatibility with Lua](https://luau-lang.org/compatibility).
-
-Choose `luajit` if its increased performance over `luau` is a priority and you don't need `luau`'s additional features.
-
-`luau` is the default for the prebuilt binaries, with `luajit` as the fallback if `luau` cannot be built for the target architecture.
 
 ## Environment Variables
 
@@ -273,7 +262,7 @@ Choose `luajit` if its increased performance over `luau` is a priority and you d
 | `QSV_WTR_BUFFER_CAPACITY` | writer buffer size (default (bytes): 65536) |
 | `QSV_LOG_LEVEL` | desired level (default - off; `error`, `warn`, `info`, `trace`, `debug`). |
 | `QSV_LOG_DIR` | when logging is enabled, the directory where the log files will be stored. If the specified directory does not exist, qsv will attempt to create it. If not set, the log files are created in the directory where qsv was started. See [Logging](docs/Logging.md#logging) for more info. |
-| `QSV_PROGRESSBAR` | if set, enable the --progressbar option on the `apply`, `fetch`, `fetchpost`, `foreach`, `luau`, `luajit`, `py`, `replace`, `search`, `searchset`, `sortcheck` & `validate` commands.  |
+| `QSV_PROGRESSBAR` | if set, enable the --progressbar option on the `apply`, `fetch`, `fetchpost`, `foreach`, `luau`, `py`, `replace`, `search`, `searchset`, `sortcheck` & `validate` commands.  |
 | `QSV_REDIS_CONNSTR` | the `fetch` command can use [Redis](https://redis.io/) to cache responses. Set to connect to the desired Redis instance. (default: `redis:127.0.0.1:6379/1`). For more info on valid Redis connection string formats, see https://docs.rs/redis/latest/redis/#connection-parameters. |
 | `QSV_FP_REDIS_CONNSTR` | the `fetchpost` command can also use Redis to cache responses (default: `redis:127.0.0.1:6379/2`). Note that `fetchpost` connects to database 2, as opposed to `fetch` which connects to database 1. |
 | `QSV_REDIS_MAX_POOL_SIZE` | the maximum Redis connection pool size. (default: 20). |
@@ -301,7 +290,6 @@ Relevant env vars are defined as anything that starts with `QSV_` & `MIMALLOC_` 
 * `foreach` - enable `foreach` command (not valid for Windows).
 * `generate` - enable `generate` command.
 * `luau` - enable `luau` command. Embeds a [Luau](https://luau-lang.org) interpreter into qsv. [Luau has type-checking, sandboxing, additional language operators, increased performance & other improvements](https://luau-lang.org/2022/11/04/luau-origins-and-evolution.html) over Lua.
-* `luajit` - enable `luajit` command. Embeds a [LuaJIT](https://luajit.org/luajit.html) interpreter into qsv. LuaJIT is a Just-In-Time compiler for the Lua 5.2 language & is thus [faster than Luau](https://luajit.org/performance_x86.html). Note that the `luau` & `luajit` interpreters are mutually exclusive features.
 * `python` - enable `py` command. Note that qsv will look for the shared library for the Python version (Python 3.6 & above supported) it was compiled against & will abort if the library is not found, even if you're not using the `py` command. Check [Python](#python) section for more info.
 * `self_update` - enable self-update engine, checking GitHub for the latest release. Note that if you manually built qsv, `self-update` will only check for new releases.
 It will NOT offer the choice to update itself to the prebuilt binaries published on GitHub. You need not worry that your manually built qsv will be overwritten by a self-update.

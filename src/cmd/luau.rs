@@ -41,9 +41,9 @@ Some usage examples:
   $ qsv luau filter "tonumber(a) > 45"
   $ qsv luau filter "tonumber(a) >= tonumber(b)"
 
-  Typing long scripts at command line gets tiresome rather quickly,
-  so -f should be used for non-trivial scripts to read them from a file
-  $ qsv luau map Type -x -f debitcredit.lua
+  Typing long scripts at command line gets tiresome rather quickly, so use the
+  "file:" prefix to read non-trivial scripts from a file
+  $ qsv luau map Type -P "file:init.lua" -x "file:debitcredit.lua" -E "file:end.lua"
 
 With "luau map", if a Luau script is invalid, "<ERROR>" is returned.
 With "luau filter", if a Luau script is invalid, no filtering is done.
@@ -69,21 +69,23 @@ Usage:
     qsv luau filter --help
     qsv luau --help
 
+All <script> arguments/options can either be the Luau code, or if it starts with "file:",
+the filepath from which to load the script. 
+
 luau options:
-    -x, --exec         exec[ute] Luau script, instead of the default eval[uate].
-                       eval (default) expects just a single Luau expression,
-                       while exec expects one or more statements, allowing
-                       full-fledged Luau programs.
-    -f, --script-file  <script> is a file name containing Luau script.
-                       By default (no -f) <script> is the script text.
-    -g, --no-globals   Don't create Luau global variables for each column, only col.
-                       Useful when some column names mask standard Luau globals.
-                       Note: access to Luau globals thru _G remains even without -g.
-    --prologue <arg1>  Luau statements to execute BEFORE processing the CSV.
-                       Typically used to initialize global variables.
-    --epilogue <arg2>  Luau statements to execute AFTER processing the CSV.
-                       Typically used for aggregations.
-                       The output of the epilogue is sent to stderr.
+    -x, --exec               exec[ute] Luau script, instead of the default eval[uate].
+                             eval (default) expects just a single Luau expression,
+                             while exec expects one or more statements, allowing
+                             full-fledged Luau programs. This only applies to the main script
+                             argument, not the prologue & epilogue scripts.
+    -g, --no-globals         Don't create Luau global variables for each column, only col.
+                             Useful when some column names mask standard Luau globals.
+                             Note: access to Luau globals thru _G remains even without -g.
+    -P, --prologue <script>  Luau script to execute BEFORE processing the CSV.
+                             Typically used to initialize global variables.
+    -E, --epilogue <script>  Luau script to execute AFTER processing the CSV.
+                             Typically used for aggregations.
+                             The output of the epilogue is sent to stderr.
 
 Common options:
     -h, --help             Display this message
@@ -100,7 +102,7 @@ Common options:
 use std::fs;
 
 use indicatif::{ProgressBar, ProgressDrawTarget};
-use log::debug;
+use log::{debug, info, log_enabled};
 use mlua::Lua;
 use serde::Deserialize;
 
@@ -117,7 +119,6 @@ struct Args {
     arg_script:       String,
     arg_input:        Option<String>,
     flag_exec:        bool,
-    flag_script_file: bool,
     flag_no_globals:  bool,
     flag_prologue:    Option<String>,
     flag_epilogue:    Option<String>,
@@ -164,35 +165,75 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut idx_used = false;
     let mut idx = 0_usize;
 
+    // check if an epilogue was specified. We check it first for two reasons:
+    // 1) so we don't run the main script only to err out on an invalid epilogue file not found.
+    // 2) to see if _idx or _rowcount is used, even if they're not used in the prologue,
+    //    so we can init the _idx and _rowcount global vars.
+    let epilogue_script = if let Some(ref epilogue) = args.flag_epilogue {
+        if let Some(epilogue_filepath) = epilogue.strip_prefix("file:") {
+            match fs::read_to_string(epilogue_filepath) {
+                Ok(epilogue) => {
+                    // check if the epilogue uses _idx or _rowcount
+                    idx_used = epilogue.contains("_idx") || epilogue.contains("_rowcount");
+                    if idx_used {
+                        globals.set("_idx", 0)?;
+                        globals.set("_rowcount", 0)?;
+                    }
+                    epilogue
+                }
+                Err(e) => return fail_clierror!("Cannot load Luau epilogue file: {e}"),
+            }
+        } else {
+            epilogue.to_string()
+        }
+    } else {
+        String::new()
+    };
+
     // check if a prologue was specified
     if let Some(prologue) = args.flag_prologue {
-        idx_used = prologue.contains("_idx");
+        let prologue_script = if let Some(prologue_filepath) = prologue.strip_prefix("file:") {
+            match fs::read_to_string(prologue_filepath) {
+                Ok(file_contents) => file_contents,
+                Err(e) => return fail_clierror!("Cannot load Luau prologue file: {e}"),
+            }
+        } else {
+            prologue
+        };
+
+        idx_used =
+            idx_used || prologue_script.contains("_idx") || prologue_script.contains("_rowcount");
         if idx_used {
             globals.set("_idx", 0)?;
             globals.set("_rowcount", 0)?;
         }
 
-        match luau.load(&prologue).exec() {
+        info!("Executing prologue. _idx used: {idx_used}");
+        match luau.load(&prologue_script).exec() {
             Ok(_) => (),
             Err(e) => {
-                return fail_clierror!("Prologue error: Failed to execute \"{prologue}\".\n{e}")
+                return fail_clierror!(
+                    "Prologue error: Failed to execute \"{prologue_script}\".\n{e}"
+                )
             }
         }
+        info!("Prologue executed.");
     }
 
-    // check if the prologue uses _idx or _rowcount
-    if let Some(ref epilogue) = args.flag_epilogue {
-        idx_used = idx_used || epilogue.contains("_idx") || epilogue.contains("_rowcount");
-    }
-
-    let luau_script = if args.flag_script_file {
-        match fs::read_to_string(&args.arg_script) {
-            Ok(script_file) => script_file,
+    let luau_script = if let Some(script_filepath) = args.arg_script.strip_prefix("file:") {
+        match fs::read_to_string(script_filepath) {
+            Ok(file_contents) => file_contents,
             Err(e) => return fail_clierror!("Cannot load Luau file: {e}"),
         }
     } else {
         args.arg_script
     };
+
+    idx_used = idx_used || luau_script.contains("_idx") || luau_script.contains("_rowcount");
+    if idx_used {
+        globals.set("_idx", 0)?;
+        globals.set("_rowcount", 0)?;
+    }
 
     let mut luau_program = if args.flag_exec {
         String::new()
@@ -220,6 +261,23 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // check if _idx or _rowcount was used in the main script
     idx_used = idx_used || luau_program.contains("_idx") || luau_program.contains("_rowcount");
+
+    // pre-compile main script into bytecode
+    // see https://docs.rs/mlua/latest/mlua/struct.Compiler.html
+    let luau_compiler = if log_enabled!(log::Level::Debug) {
+        // set more debugging friendly compiler settings if QSV_LOG_LEVEL=debug
+        mlua::Compiler::new()
+            .set_optimization_level(0)
+            .set_debug_level(2)
+            .set_coverage_level(2)
+    } else {
+        // use more performant compiler settings
+        mlua::Compiler::new()
+            .set_optimization_level(2)
+            .set_debug_level(1)
+            .set_coverage_level(0)
+    };
+    let bytecode = luau_compiler.compile(&luau_program);
 
     let mut record = csv::StringRecord::new();
 
@@ -257,7 +315,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         error_flag = false;
-        let computed_value: mlua::Value = match luau.load(&luau_program).eval() {
+        let computed_value: mlua::Value = match luau
+            .load(&bytecode)
+            .set_mode(mlua::ChunkMode::Binary)
+            .eval()
+        {
             Ok(computed) => computed,
             Err(e) => {
                 log::error!("Cannot evaluate \"{luau_program}\".\n{e}");
@@ -304,10 +366,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     mlua::Value::Boolean(boolean) => boolean,
                     mlua::Value::Nil => false,
                     mlua::Value::Integer(intval) => intval != 0,
-                    mlua::Value::Number(fltval) => {
-                        let mut buffer = ryu::Buffer::new();
-                        buffer.format(fltval) != "0.0"
-                    }
+                    mlua::Value::Number(fltval) => (fltval).abs() > f64::EPSILON,
                     _ => true,
                 }
             };
@@ -322,7 +381,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         util::finish_progress(&progress);
     }
 
-    if let Some(epilogue) = args.flag_epilogue {
+    if !epilogue_script.is_empty() {
         // if idx_used, also set a convenience variable named _rowcount;
         // true, _rowcount is equal to _idx at this point, but this
         // should make for more readable epilogues.
@@ -332,10 +391,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             globals.set("_rowcount", idx)?;
         }
 
-        let epilogue_value: mlua::Value = match luau.load(&epilogue).eval() {
+        info!("Executing epilogue. _idx used: {idx_used}, _rowcount: {idx}");
+        let epilogue_value: mlua::Value = match luau.load(&epilogue_script).eval() {
             Ok(computed) => computed,
             Err(e) => {
-                log::error!("Epilogue error: Cannot evaluate \"{epilogue}\".\n{e}");
+                log::error!("Epilogue error: Cannot evaluate \"{epilogue_script}\".\n{e}");
                 error_result.clone()
             }
         };

@@ -57,8 +57,6 @@ mod test_index;
 mod test_input;
 mod test_join;
 mod test_jsonl;
-#[cfg(feature = "luajit")]
-mod test_luajit;
 #[cfg(feature = "luau")]
 mod test_luau;
 mod test_partition;

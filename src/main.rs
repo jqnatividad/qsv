@@ -126,9 +126,6 @@ fn main() -> QsvExitCode {
     jsonl       Convert newline-delimited JSON files to CSV\n",
     );
 
-    #[cfg(all(feature = "luajit", not(feature = "lite")))]
-    enabled_commands.push_str("    luajit      Execute LuaJIT script on CSV data\n");
-
     #[cfg(all(feature = "luau", not(feature = "lite")))]
     enabled_commands.push_str("    luau        Execute Luau script on CSV data\n");
 
@@ -279,8 +276,6 @@ enum Command {
     Input,
     Join,
     Jsonl,
-    #[cfg(all(feature = "luajit", not(feature = "lite")))]
-    LuaJIT,
     #[cfg(all(feature = "luau", not(feature = "lite")))]
     Luau,
     Partition,
@@ -355,8 +350,6 @@ impl Command {
             Command::Input => cmd::input::run(argv),
             Command::Join => cmd::join::run(argv),
             Command::Jsonl => cmd::jsonl::run(argv),
-            #[cfg(all(feature = "luajit", not(feature = "lite")))]
-            Command::LuaJIT => cmd::luajit::run(argv),
             #[cfg(all(feature = "luau", not(feature = "lite")))]
             Command::Luau => cmd::luau::run(argv),
             Command::Partition => cmd::partition::run(argv),
