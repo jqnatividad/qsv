@@ -7,9 +7,12 @@ characters with _. If the first character is a digit, replace the digit with _.
 If a header with the same name already exists, append a sequence suffix (e.g. c1, c1_2, c1_3).
 Names are limited to 60 characters in length. Empty names are replaced with _.
 
-In Always and Conditional mode, returns number of modified headers to stderr.
+In Always and Conditional mode, returns number of modified headers to stderr, and sends
+CSV with safe headers output to stdout.
+
 In Verify Mode, returns number of unsafe headers to stderr.
 In Verbose Mode, returns number of headers; unsafe & safe headers; and duplicate count to stderr.
+No stdout output is generated in Verify and Verbose mode.
 
 Given data.csv:
  c1,12_col,Col with Embedded Spaces,,Column!@Invalid+Chars,c1
@@ -60,7 +63,8 @@ safenames options:
 Common options:
     -h, --help             Display this message
     -o, --output <file>    Write output to <file> instead of stdout.
-                           Note that no output is generated for 
+                           Note that no output is generated for Verify and
+                           Verbose modes.
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
 "#;
