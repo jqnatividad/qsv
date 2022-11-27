@@ -384,7 +384,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             };
             // dates are stored as numbers in Excel
             // that's why we need the --dates-whitelist, so we can convert the number to a date.
-            // however, with the XLSX format, we can get a cell's format as an attribute. So we can
+            // However, with the XLSX format, we can get a cell's format as an attribute. So we can
             // automatically process a cell as a date, even if its column is NOT in the whitelist
             if float_flag {
                 if cell_date_flag {
@@ -410,6 +410,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         // if this is the header/column row and --safe-names option is not None
+        // check header names for "unsafe" names
         if row_count == 0 && safename != SafeNameMode::None {
             let mut temp_record = csv::StringRecord::new();
             for header in &record {
