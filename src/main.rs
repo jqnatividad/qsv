@@ -350,8 +350,6 @@ impl Command {
             Command::Input => cmd::input::run(argv),
             Command::Join => cmd::join::run(argv),
             Command::Jsonl => cmd::jsonl::run(argv),
-            #[cfg(all(feature = "luajit", not(feature = "lite")))]
-            Command::LuaJIT => cmd::luajit::run(argv),
             #[cfg(all(feature = "luau", not(feature = "lite")))]
             Command::Luau => cmd::luau::run(argv),
             Command::Partition => cmd::partition::run(argv),
