@@ -41,11 +41,11 @@ Excel options:
     --trim                     Trim all fields so that leading & trailing whitespaces are removed.
                                Also removes embedded linebreaks.
     --safenames <a|c>          Rename header names to "safe" names - i.e. guaranteed "database-ready"
-                               names where - duplicate header names will have a sequential suffix 
-                               (_n) appended; Leading/trailing whitespaces will be trimmed;
-                               Whitespace/non-alphanumeric characters will be replaced with _;
+                               names where - names are lowercase; duplicate header names have a
+                               sequential suffix (_n) appended; Leading/trailing whitespaces are trimmed;
+                               Whitespace/non-alphanumeric characters are replaced with _;
                                If a column name starts with a digit, the digit is replaced with a _;
-                               and maximum length is 60 characters.
+                               maximum length is 60 characters; and empty header names are set to _.
                                It has two modes - Always & Conditional.
                                Always - goes ahead and renames all headers without checking if they're 
                                already "safe". Conditional - check first before renaming.
