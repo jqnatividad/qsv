@@ -175,10 +175,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 Ok(epilogue) => {
                     // check if the epilogue uses _idx or _rowcount
                     idx_used = epilogue.contains("_idx") || epilogue.contains("_rowcount");
-                    if idx_used {
-                        globals.set("_idx", 0)?;
-                        globals.set("_rowcount", 0)?;
-                    }
                     epilogue
                 }
                 Err(e) => return fail_clierror!("Cannot load Luau epilogue file: {e}"),
@@ -204,6 +200,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         idx_used =
             idx_used || prologue_script.contains("_idx") || prologue_script.contains("_rowcount");
         if idx_used {
+            // we set _idx and _rowcount here just in case they're
+            // used in the prologue script
             globals.set("_idx", 0)?;
             globals.set("_rowcount", 0)?;
         }
@@ -230,10 +228,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     idx_used = idx_used || luau_script.contains("_idx") || luau_script.contains("_rowcount");
-    if idx_used {
-        globals.set("_idx", 0)?;
-        globals.set("_rowcount", 0)?;
-    }
 
     let mut luau_program = if args.flag_exec {
         String::new()
@@ -259,8 +253,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut error_flag;
     let mut global_error_flag = false;
 
-    // check if _idx or _rowcount was used in the main script
-    idx_used = idx_used || luau_program.contains("_idx") || luau_program.contains("_rowcount");
+    // we init/reset _idx and _rowcount right before the main loop
+    if idx_used {
+        globals.set("_idx", 0)?;
+        globals.set("_rowcount", 0)?;
+    }
 
     // pre-compile main script into bytecode
     // see https://docs.rs/mlua/latest/mlua/struct.Compiler.html
