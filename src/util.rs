@@ -491,8 +491,8 @@ pub fn init_logger() -> String {
     qsv_args
 }
 
-#[cfg(all(any(feature = "full", feature = "lite"), feature = "self_update"))]
-pub fn qsv_check_for_update() -> Result<bool, String> {
+#[cfg(feature = "self_update")]
+pub fn qsv_check_for_update(check_only: bool) -> Result<bool, String> {
     if env::var("QSV_NO_UPDATE").is_ok() {
         return Ok(false);
     }
@@ -534,7 +534,7 @@ pub fn qsv_check_for_update() -> Result<bool, String> {
     if latest_release > &curr_version.to_string() {
         eprintln!("Update {latest_release} available. Current version is {curr_version}.");
         eprintln!("Release notes: https://github.com/jqnatividad/qsv/releases/latest\n");
-        if QSV_KIND.starts_with("prebuilt") {
+        if QSV_KIND.starts_with("prebuilt") && !check_only {
             match self_update::backends::github::Update::configure()
                 .repo_owner("jqnatividad")
                 .repo_name("qsv")
@@ -563,13 +563,15 @@ pub fn qsv_check_for_update() -> Result<bool, String> {
             // we don't want to overwrite manually curated/configured qsv installations.
             // Just inform the user of the new release, and let them rebuild their qsvs the
             // way they like it, instead of overwriting it with our pre-built binaries.
-            winfo!(
-                "This qsv was {QSV_KIND}. self-update does not work for manually {QSV_KIND} \
-                 binaries.\n
-            If you wish to update to the latest version of qsv, manually install/compile from \
-                 source\n
-            or download the pre-built binaries from GitHub."
-            );
+            if check_only {
+                winfo!("Use the --update option to upgrade {bin_name} to the latest release.")
+            } else {
+                winfo!(
+                    r#"This qsv was {QSV_KIND}. self-update does not work for manually {QSV_KIND} binaries.
+If you wish to update to the latest version of qsv, manually install/compile from source
+or download the pre-built binaries from GitHub."#
+                );
+            }
         }
     } else {
         winfo!("Up to date ({curr_version})... no update required.");
@@ -583,8 +585,8 @@ pub fn qsv_check_for_update() -> Result<bool, String> {
     Ok(updated)
 }
 
-#[cfg(all(any(feature = "full", feature = "lite"), not(feature = "self_update")))]
-pub fn qsv_check_for_update() -> Result<bool, String> {
+#[cfg(not(feature = "self_update"))]
+pub fn qsv_check_for_update(_check_only: bool) -> Result<bool, String> {
     Ok(true)
 }
 
@@ -592,7 +594,7 @@ pub fn qsv_check_for_update() -> Result<bool, String> {
 // track of qsv's usage in the wild, so we can do a
 // better job of prioritizing platforms/features we support
 // no personally identifiable information is collected
-#[cfg(all(any(feature = "full", feature = "lite"), feature = "self_update"))]
+#[cfg(feature = "self_update")]
 fn send_hwsurvey(
     bin_name: &str,
     updated: bool,

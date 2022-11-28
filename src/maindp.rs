@@ -57,6 +57,7 @@ Usage:
 Options:
     --list               List all commands available.
     --envlist            List all qsv-relevant environment variables.
+    -u, --update         Check for the latest qsv release.
     -h, --help           Display this message
     <command> -h         Display the command help message
     -v, --version        Print version info, mem allocator, features installed, 
@@ -70,6 +71,7 @@ struct Args {
     arg_command:  Option<Command>,
     flag_list:    bool,
     flag_envlist: bool,
+    flag_update:  bool,
 }
 
 fn main() -> QsvExitCode {
@@ -92,6 +94,14 @@ fn main() -> QsvExitCode {
         util::log_end(qsv_args, now);
         return QsvExitCode::Good;
     }
+    if args.flag_update {
+        let update_checked = util::qsv_check_for_update(false);
+        util::log_end(qsv_args, now);
+        if update_checked.is_ok() {
+            return QsvExitCode::Good;
+        }
+        return QsvExitCode::Bad;
+    }
     match args.arg_command {
         None => {
             werr!(concat!(
@@ -100,6 +110,8 @@ fn main() -> QsvExitCode {
 Please choose one of the following commands:",
                 command_list!()
             ));
+            _ = util::qsv_check_for_update(true);
+            util::log_end(qsv_args, now);
             QsvExitCode::Good
         }
         Some(cmd) => match cmd.run() {
@@ -189,6 +201,7 @@ impl Command {
             Command::Headers => cmd::headers::run(argv),
             Command::Help => {
                 wout!("{USAGE}");
+                _ = util::qsv_check_for_update(true);
                 Ok(())
             }
             Command::Index => cmd::index::run(argv),
