@@ -2,7 +2,7 @@ use std::{
     borrow::ToOwned,
     env, fs,
     io::{self, Read},
-    path::PathBuf,
+    path::{Path, PathBuf},
 };
 
 use log::{debug, info, warn};
@@ -378,12 +378,17 @@ impl Config {
     }
 
     fn autoindex_file(&self) {
-        if let Some(path_buf) = &self.path {
-            let path_clone = path_buf.clone();
-            let path_str = path_clone.into_os_string().into_string().unwrap();
-            let index_argv: Vec<&str> = vec!["", "index", &path_str];
-            crate::cmd::index::run(&index_argv).unwrap();
-            debug!("autoindex for {path_str} created");
+        // autoindex should never panic. It should silently fail as its a "convenience fn"
+        // that's why we have a lot of let-else returns, in lieu of unwraps
+        let Some(path_buf) = &self.path else { return };
+        let Ok(mut rdr) = self.reader_file() else { return };
+
+        let pidx = util::idx_path(Path::new(path_buf));
+        let Ok(idxfile) = fs::File::create(pidx) else { return };
+        let mut wtr = io::BufWriter::new(idxfile);
+        match csv_index::RandomAccessSimple::create(&mut rdr, &mut wtr) {
+            Ok(_) => debug!("autoindex of {path_buf:?} successful."),
+            Err(e) => debug!("autoindex of {path_buf:?} failed: {e}"),
         }
     }
 
