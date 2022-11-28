@@ -84,9 +84,9 @@ fn index_outdated_stats_autoindex() {
     )
     .unwrap();
 
-    // stats should fail if the index is stale
+    // stats should NOT fail if the index is stale
     let mut cmd = wrk.command("stats");
-    cmd.env_clear().env("QSV_AUTOINDEX", "1").arg("in.csv");
+    cmd.env("QSV_AUTOINDEX", "1").arg("in.csv");
 
     wrk.assert_success(&mut cmd);
 }
