@@ -37,8 +37,6 @@ fn index_outdated_count() {
 fn index_outdated_stats() {
     let wrk = Workdir::new("index_outdated_stats");
 
-    std::env::remove_var("QSV_AUTOINDEX");
-
     wrk.create_indexed(
         "in.csv",
         vec![
@@ -62,6 +60,35 @@ fn index_outdated_stats() {
     cmd.env_clear().arg("in.csv");
 
     wrk.assert_err(&mut cmd);
+}
+
+#[test]
+fn index_outdated_stats_autoindex() {
+    let wrk = Workdir::new("index_outdated_stats");
+
+    wrk.create_indexed(
+        "in.csv",
+        vec![
+            svec!["letter", "number"],
+            svec!["a", "1"],
+            svec!["b", "2"],
+            svec!["c", "3"],
+        ],
+    );
+
+    let md = fs::metadata(wrk.path("in.csv.idx")).unwrap();
+    set_file_times(
+        wrk.path("in.csv"),
+        future_time(FileTime::from_last_modification_time(&md)),
+        future_time(FileTime::from_last_access_time(&md)),
+    )
+    .unwrap();
+
+    // stats should fail if the index is stale
+    let mut cmd = wrk.command("stats");
+    cmd.env_clear().env("QSV_AUTOINDEX", "1").arg("in.csv");
+
+    wrk.assert_success(&mut cmd);
 }
 
 fn future_time(ft: FileTime) -> FileTime {
