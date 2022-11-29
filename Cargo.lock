@@ -1221,9 +1221,9 @@ dependencies = [
 
 [[package]]
 name = "governor"
-version = "0.5.0"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "de1b4626e87b9eb1d603ed23067ba1e29ec1d0b35325a2b96c3fe1cf20871f56"
+checksum = "c390a940a5d157878dd057c78680a33ce3415bcd05b4799509ea44210914b4d5"
 dependencies = [
  "cfg-if",
  "dashmap",
@@ -2256,7 +2256,7 @@ dependencies = [
  "ext-sort",
  "filetime",
  "flexi_logger",
- "governor 0.5.0",
+ "governor 0.5.1",
  "grex",
  "hashbrown 0.13.1",
  "indicatif",
@@ -3181,9 +3181,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-macros"
-version = "1.8.1"
+version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5ec8ecbbb74d42a8dd0ce8ea9bfc38ad13e2ed5203c4f272dbe144f4e17d70ac"
+checksum = "9724f9a975fb987ef7a3cd9be0350edcbe130698af5b8f7a631e23d42d052484"
 dependencies = [
  "proc-macro2",
  "quote",
