@@ -11,6 +11,7 @@ Example output files from `mydata.csv`. If piped from stdin, then filename is `s
 JSON Schema can be a local file or a URL.
 
 Returns exitcode 0 when the CSV file is valid, exitcode 1 otherwise.
+If all records are valid, no output files are produced.
 
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_validate.rs.
 
