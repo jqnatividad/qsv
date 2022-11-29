@@ -498,10 +498,13 @@ pub fn qsv_check_for_update(check_only: bool) -> Result<bool, String> {
     }
 
     let bin_name = match std::env::current_exe() {
-        Ok(pb) => match pb.file_stem() {
-            Some(fs) => fs.to_string_lossy().into_owned(),
-            None => return fail!("Can't get the exec stem name"),
-        },
+        Ok(pb) => {
+            if let Some(fs) = pb.file_stem() {
+                fs.to_string_lossy().into_owned()
+            } else {
+                return fail!("Can't get the exec stem name");
+            }
+        }
         Err(e) => return fail_format!("Can't get the exec path: {e}"),
     };
 
@@ -559,19 +562,18 @@ pub fn qsv_check_for_update(check_only: bool) -> Result<bool, String> {
                 },
                 Err(e) => werr!("Update builder error: {e}"),
             };
+        } else if check_only {
+            winfo!("Use the --update option to upgrade {bin_name} to the latest release.");
         } else {
             // we don't want to overwrite manually curated/configured qsv installations.
-            // Just inform the user of the new release, and let them rebuild their qsvs the
-            // way they like it, instead of overwriting it with our pre-built binaries.
-            if check_only {
-                winfo!("Use the --update option to upgrade {bin_name} to the latest release.")
-            } else {
-                winfo!(
-                    r#"This qsv was {QSV_KIND}. self-update does not work for manually {QSV_KIND} binaries.
+            // If QSV_KIND is not "prebuilt", just inform the user of the new release, and let them
+            // rebuild their qsvs the way they like it, instead of overwriting it with
+            // our prebuilt binaries.
+            winfo!(
+                r#"This qsv was {QSV_KIND}. self-update does not work for manually {QSV_KIND} binaries.
 If you wish to update to the latest version of qsv, manually install/compile from source
-or download the pre-built binaries from GitHub."#
-                );
-            }
+or download the prebuilt binaries from GitHub."#
+            );
         }
     } else {
         winfo!("Up to date ({curr_version})... no update required.");
