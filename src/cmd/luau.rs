@@ -41,19 +41,21 @@ Some usage examples:
   $ qsv luau filter "tonumber(a) > 45"
   $ qsv luau filter "tonumber(a) >= tonumber(b)"
 
-  Typing long scripts at command line gets tiresome rather quickly, so use the
-  "file:" prefix to read non-trivial scripts from a file
-  $ qsv luau map Type -P "file:init.lua" -x "file:debitcredit.lua" -E "file:end.lua"
+  Typing long scripts on the command line gets tiresome rather quickly, so use the
+  "file:" prefix to read non-trivial scripts from the filesystem.
+  $ qsv luau map Type -P "file:init.luau" -x "file:debitcredit.luau" -E "file:end.luau"
 
-With "luau map", if a Luau script is invalid, "<ERROR>" is returned.
-With "luau filter", if a Luau script is invalid, no filtering is done.
-Invalid scripts will also result in an exitcode of 1.
+The main-script is evaluated on a per record basis.
+With "luau map", if the main-script is invalid for a record, "<ERROR>" is returned for that record.
+With "luau filter", if the main-script is invalid for a record, that record is not filtered.
+
+If any record resulted in an invalid script result, an exitcode of 1 is also returned.
 
 There are also special variables named "_idx" that is set to the current row number; and
 "_rowcount" which is zero during the prologue and the main script, and set to the rowcount
 during the epilogue.
 
-Note that with the judicious use of the prologue and the _idx variable, one can create arrays
+With the judicious use of the prologue and the _idx variable, one can create variables/arrays
 that can be used for complex aggregation operations in the epilogue.
 
 When debugging luau, be sure to set the environment variable QSV_LOG_LEVEL=debug to see
@@ -62,9 +64,9 @@ detailed error messages in the logfile.
 For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_luau.rs.
 
 Usage:
-    qsv luau map [options] -n <script> [<input>]
-    qsv luau map [options] <new-column> <script> [<input>]
-    qsv luau filter [options] <script> [<input>]
+    qsv luau map [options] -n <main-script> [<input>]
+    qsv luau map [options] <new-column> <main-script> [<input>]
+    qsv luau filter [options] <main-script> [<input>]
     qsv luau map --help
     qsv luau filter --help
     qsv luau --help
@@ -76,14 +78,14 @@ luau options:
     -x, --exec               exec[ute] Luau script, instead of the default eval[uate].
                              eval (default) expects just a single Luau expression,
                              while exec expects one or more statements, allowing
-                             full-fledged Luau programs. This only applies to the main script
+                             full-fledged Luau programs. This only applies to the main-script
                              argument, not the prologue & epilogue scripts.
     -g, --no-globals         Don't create Luau global variables for each column, only col.
                              Useful when some column names mask standard Luau globals.
                              Note: access to Luau globals thru _G remains even without -g.
-    -P, --prologue <script>  Luau script to execute BEFORE processing the CSV.
+    -P, --prologue <script>  Luau script to execute BEFORE processing the CSV with the main-scriot.
                              Typically used to initialize global variables.
-    -E, --epilogue <script>  Luau script to execute AFTER processing the CSV.
+    -E, --epilogue <script>  Luau script to execute AFTER processing the CSV with the main-script.
                              Typically used for aggregations.
                              The output of the epilogue is sent to stderr.
 
@@ -116,7 +118,7 @@ struct Args {
     cmd_map:          bool,
     cmd_filter:       bool,
     arg_new_column:   Option<String>,
-    arg_script:       String,
+    arg_main_script:  String,
     arg_input:        Option<String>,
     flag_exec:        bool,
     flag_no_globals:  bool,
@@ -218,13 +220,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         info!("Prologue executed.");
     }
 
-    let luau_script = if let Some(script_filepath) = args.arg_script.strip_prefix("file:") {
+    let luau_script = if let Some(script_filepath) = args.arg_main_script.strip_prefix("file:") {
         match fs::read_to_string(script_filepath) {
             Ok(file_contents) => file_contents,
             Err(e) => return fail_clierror!("Cannot load Luau file: {e}"),
         }
     } else {
-        args.arg_script
+        args.arg_main_script
     };
 
     idx_used = idx_used || luau_script.contains("_idx") || luau_script.contains("_rowcount");
