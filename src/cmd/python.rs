@@ -240,7 +240,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // as we release the pool after each batch
     // loop exits when batch is empty.
     // see https://pyo3.rs/v0.17.1/memory.html#gil-bound-memory for more info.
-    loop {
+    'batch_loop: loop {
         for _ in 0..args.flag_batch {
             match rdr.read_record(&mut batch_record) {
                 Ok(has_data) => {
@@ -259,106 +259,106 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         if batch.is_empty() {
             // break out of infinite loop when at EOF
-            break;
+            break 'batch_loop;
         }
 
-        _ = Python::with_gil(|py| -> PyResult<()> {
-            {
-                let curr_batch = batch.clone();
-                let helpers = PyModule::from_code(py, HELPERS, "qsv_helpers.py", "qsv_helpers")?;
-                let batch_globals = PyDict::new(py);
-                let batch_locals = PyDict::new(py);
+        Python::with_gil(|py| -> PyResult<()> {
+            let curr_batch = batch.clone();
+            let helpers = PyModule::from_code(py, HELPERS, "qsv_helpers.py", "qsv_helpers")?;
+            let batch_globals = PyDict::new(py);
+            let batch_locals = PyDict::new(py);
 
-                let user_helpers =
-                    PyModule::from_code(py, &helper_text, "qsv_user_helpers.py", "qsv_uh")?;
-                batch_globals.set_item(intern!(py, "qsv_uh"), user_helpers)?;
+            let user_helpers =
+                PyModule::from_code(py, &helper_text, "qsv_user_helpers.py", "qsv_uh")?;
+            batch_globals.set_item(intern!(py, "qsv_uh"), user_helpers)?;
 
-                // Global imports
-                let builtins = PyModule::import(py, "builtins")?;
-                let math_module = PyModule::import(py, "math")?;
-                let random_module = PyModule::import(py, "random")?;
+            // Global imports
+            let builtins = PyModule::import(py, "builtins")?;
+            let math_module = PyModule::import(py, "math")?;
+            let random_module = PyModule::import(py, "random")?;
+            let datetime_module = PyModule::import(py, "datetime")?;
 
-                batch_globals.set_item("__builtins__", builtins)?;
-                batch_globals.set_item("math", math_module)?;
-                batch_globals.set_item("random", random_module)?;
+            batch_globals.set_item("__builtins__", builtins)?;
+            batch_globals.set_item("math", math_module)?;
+            batch_globals.set_item("random", random_module)?;
+            batch_globals.set_item("datetime", datetime_module)?;
 
-                let py_row = helpers
-                    .getattr("QSVRow")?
-                    .call1((headers.iter().collect::<Vec<&str>>(),))?;
+            let py_row = helpers
+                .getattr("QSVRow")?
+                .call1((headers.iter().collect::<Vec<&str>>(),))?;
 
-                batch_locals.set_item("row", py_row)?;
+            batch_locals.set_item("row", py_row)?;
 
-                let error_result = intern!(py, "<ERROR>");
+            let error_result = intern!(py, "<ERROR>");
 
-                for mut record in curr_batch {
-                    // Initializing locals
-                    let mut row_data: Vec<&str> = Vec::with_capacity(headers_len);
+            for mut record in curr_batch {
+                // Initializing locals
+                let mut row_data: Vec<&str> = Vec::with_capacity(headers_len);
 
-                    header_vec
-                        .iter()
-                        .enumerate()
-                        .take(headers_len)
-                        .for_each(|(i, key)| {
-                            let cell_value = record.get(i).unwrap_or_default();
-                            batch_locals
-                                .set_item(key, cell_value)
-                                .expect("cannot set_item");
-                            row_data.push(cell_value);
-                        });
+                header_vec
+                    .iter()
+                    .enumerate()
+                    .take(headers_len)
+                    .for_each(|(i, key)| {
+                        let cell_value = record.get(i).unwrap_or_default();
+                        batch_locals
+                            .set_item(key, cell_value)
+                            .expect("cannot set_item");
+                        row_data.push(cell_value);
+                    });
 
-                    py_row.call_method1(intern!(py, "_update_underlying_data"), (row_data,))?;
+                py_row.call_method1(intern!(py, "_update_underlying_data"), (row_data,))?;
 
-                    let result = py
-                        .eval(&args.arg_script, Some(batch_globals), Some(batch_locals))
-                        .map_err(|e| {
-                            e.print_and_set_sys_last_vars(py);
-                            if log_enabled!(Debug) {
-                                error!("{e:?}");
-                            }
-                            "Evaluation of given expression failed with the above error!"
-                        })
-                        .unwrap_or(error_result);
+                let result = py
+                    .eval(&args.arg_script, Some(batch_globals), Some(batch_locals))
+                    .map_err(|e| {
+                        e.print_and_set_sys_last_vars(py);
+                        if log_enabled!(Debug) {
+                            error!("{e:?}");
+                        }
+                        "Evaluation of given expression failed with the above error!"
+                    })
+                    .unwrap_or(error_result);
 
-                    if args.cmd_map {
-                        let result = helpers
-                            .getattr(intern!(py, "cast_as_string"))?
-                            .call1((result,))?;
-                        let value: String = result.extract()?;
+                if args.cmd_map {
+                    let result = helpers
+                        .getattr(intern!(py, "cast_as_string"))?
+                        .call1((result,))?;
+                    let value: String = result.extract()?;
 
-                        record.push_field(&value);
+                    record.push_field(&value);
+                    if let Err(e) = wtr.write_record(&record) {
+                        // we do this since we cannot use the ? operator here
+                        // since this closure returns a PyResult
+                        // this is converted to a CliError::Other anyway
+                        return Err(pyo3::PyErr::new::<pyo3::exceptions::PyIOError, _>(format!(
+                            "cannot write record ({e})"
+                        )));
+                    }
+                } else if args.cmd_filter {
+                    let result = helpers
+                        .getattr(intern!(py, "cast_as_bool"))?
+                        .call1((result,))?;
+                    let include_record: bool = result.extract().unwrap_or(false);
+
+                    if include_record {
                         if let Err(e) = wtr.write_record(&record) {
-                            // we do this since we cannot use the ? operator here
-                            // since this closure returns a PyResult
-                            // this is converted to a CliError::Other anyway
                             return Err(pyo3::PyErr::new::<pyo3::exceptions::PyIOError, _>(
                                 format!("cannot write record ({e})"),
                             ));
                         }
-                    } else if args.cmd_filter {
-                        let result = helpers
-                            .getattr(intern!(py, "cast_as_bool"))?
-                            .call1((result,))?;
-                        let value: bool = result.extract().unwrap_or(false);
-
-                        if value {
-                            if let Err(e) = wtr.write_record(&record) {
-                                return Err(pyo3::PyErr::new::<pyo3::exceptions::PyIOError, _>(
-                                    format!("cannot write record ({e})"),
-                                ));
-                            }
-                        }
                     }
                 }
-
-                Ok(())
             }
-        });
+
+            Ok(())
+        })?;
         if show_progress {
             progress.inc(batch.len() as u64);
         }
 
         batch.clear();
-    } // end loop
+    } // end batch loop
 
     if show_progress {
         util::finish_progress(&progress);

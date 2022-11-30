@@ -121,6 +121,36 @@ fn py_map_math() {
 }
 
 #[test]
+fn py_map_datetime() {
+    let wrk = Workdir::new("py");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["letter", "datecol"],
+            svec!["a", "2019-12-04"],
+            svec!["b", "2001-01-03"],
+            svec!["c", "19910704"],
+            svec!["d", "2021-W01-1"],
+        ],
+    );
+    let mut cmd = wrk.command("py");
+    cmd.arg("map")
+        .arg("fivedaysago")
+        .arg("datetime.date.fromisoformat(datecol) - datetime.timedelta(days=5)")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["letter", "datecol", "fivedaysago"],
+        svec!["a", "2019-12-04", "2019-11-29"],
+        svec!["b", "2001-01-03", "2000-12-29"],
+        svec!["c", "19910704", "1991-06-29"],
+        svec!["d", "2021-W01-1", "2020-12-30"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn py_map_userhelper() {
     let wrk = Workdir::new("py");
     wrk.create(
