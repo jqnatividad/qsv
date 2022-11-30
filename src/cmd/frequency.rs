@@ -199,7 +199,6 @@ impl Args {
         let headers = rdr.byte_headers()?;
         let sel = self.rconfig().selection(headers)?;
         Ok((sel.select(headers).map(<[u8]>::to_vec).collect(), sel))
-
     }
 }
 
