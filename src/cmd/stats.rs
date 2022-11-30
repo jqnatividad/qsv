@@ -472,7 +472,7 @@ impl Stats {
 
     #[inline]
     fn add(&mut self, sample: &[u8], infer_dates: bool) {
-        let sample_type = FieldType::from_sample(infer_dates, sample);
+        let sample_type = FieldType::from_sample(infer_dates, sample, self.typ);
         self.typ.merge(sample_type);
 
         let t = self.typ;
@@ -688,19 +688,36 @@ pub enum FieldType {
 
 impl FieldType {
     #[inline]
-    pub fn from_sample(infer_dates: bool, sample: &[u8]) -> FieldType {
+    pub fn from_sample(infer_dates: bool, sample: &[u8], current_type: FieldType) -> FieldType {
         if sample.is_empty() {
             return TNull;
         }
+        // no need to do type checking if current_type is already a String
+        if current_type == FieldType::TString {
+            return FieldType::TString;
+        }
+
         // we skip utf8 validation since we say we only work with utf8
         let string = unsafe { str::from_utf8_unchecked(sample) };
-        if string.parse::<i64>().is_ok() {
-            return TInteger;
+
+        if current_type == FieldType::TFloat
+            || current_type == FieldType::TInteger
+            || current_type == FieldType::TNull
+        {
+            if string.parse::<i64>().is_ok() {
+                return TInteger;
+            }
+
+            if string.parse::<f64>().is_ok() {
+                return TFloat;
+            }
         }
-        if string.parse::<f64>().is_ok() {
-            return TFloat;
-        }
-        if infer_dates {
+
+        if infer_dates
+            && (current_type == FieldType::TDate
+                || current_type == FieldType::TDateTime
+                || current_type == FieldType::TNull)
+        {
             if let Ok(parsed_date) =
                 parse_with_preference(string, DMY_PREFERENCE.load(Ordering::Relaxed))
             {
