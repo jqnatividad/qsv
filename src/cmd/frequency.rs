@@ -158,7 +158,7 @@ impl Args {
 
         let pool = ThreadPool::new(util::njobs(self.flag_jobs));
         let (send, recv) = channel::bounded(0);
-        for i in 0..nchunks {
+        (0..nchunks).for_each(|i| {
             let (send, args, sel) = (send.clone(), self.clone(), sel.clone());
             pool.execute(move || {
                 let mut idx = args.rconfig().indexed().unwrap().unwrap();
@@ -166,7 +166,7 @@ impl Args {
                 let it = idx.byte_records().take(chunk_size);
                 send.send(args.ftables(&sel, it).unwrap()).unwrap();
             });
-        }
+        });
         drop(send);
         Ok((headers, merge_all(recv.iter()).unwrap()))
     }
@@ -198,13 +198,15 @@ impl Args {
     ) -> CliResult<(csv::ByteRecord, Selection)> {
         let headers = rdr.byte_headers()?;
         let sel = self.rconfig().selection(headers)?;
-        #[allow(clippy::redundant_closure_for_method_calls)]
-        Ok((sel.select(headers).map(|h| h.to_vec()).collect(), sel))
+        Ok((sel.select(headers).map(<[u8]>::to_vec).collect(), sel))
+
     }
 }
 
 #[inline]
 fn trim(bs: ByteString) -> ByteString {
-    let s = unsafe { String::from_utf8_unchecked(bs) };
-    s.trim().as_bytes().to_vec()
+    match String::from_utf8(bs) {
+        Ok(s) => s.trim().as_bytes().to_vec(),
+        Err(bs) => bs.into_bytes(),
+    }
 }
