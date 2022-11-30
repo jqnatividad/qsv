@@ -188,6 +188,23 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         String::new()
     };
 
+    // prepare the Luau compiler, so we can compile the scripts into bytecode
+    // see https://docs.rs/mlua/latest/mlua/struct.Compiler.html for more info
+    let luau_compiler = if log_enabled!(log::Level::Debug) {
+        // debuggin is on, set more debugging friendly compiler settings
+        mlua::Compiler::new()
+            .set_optimization_level(0)
+            .set_debug_level(2)
+            .set_coverage_level(2)
+    } else {
+        // use more performant compiler settings
+        mlua::Compiler::new()
+            .set_optimization_level(2)
+            .set_debug_level(1)
+            .set_coverage_level(0)
+    };
+    luau.set_compiler(luau_compiler.clone());
+
     // check if a prologue was specified
     if let Some(prologue) = args.flag_prologue {
         let prologue_script = if let Some(prologue_filepath) = prologue.strip_prefix("file:") {
@@ -208,14 +225,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             globals.set("_rowcount", 0)?;
         }
 
-        info!("Executing prologue. _idx used: {idx_used}");
-        match luau.load(&prologue_script).exec() {
-            Ok(_) => (),
-            Err(e) => {
-                return fail_clierror!(
-                    "Prologue error: Failed to execute \"{prologue_script}\".\n{e}"
-                )
-            }
+        info!("Compiling and executing prologue. _idx used: {idx_used}");
+        let prologue_bytecode = luau_compiler.compile(&prologue_script);
+        if let Err(e) = luau
+            .load(&prologue_bytecode)
+            .set_mode(mlua::ChunkMode::Binary)
+            .exec()
+        {
+            return fail_clierror!("Prologue error: Failed to execute \"{prologue_script}\".\n{e}");
         }
         info!("Prologue executed.");
     }
@@ -262,21 +279,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     // pre-compile main script into bytecode
-    // see https://docs.rs/mlua/latest/mlua/struct.Compiler.html
-    let luau_compiler = if log_enabled!(log::Level::Debug) {
-        // set more debugging friendly compiler settings if QSV_LOG_LEVEL=debug
-        mlua::Compiler::new()
-            .set_optimization_level(0)
-            .set_debug_level(2)
-            .set_coverage_level(2)
-    } else {
-        // use more performant compiler settings
-        mlua::Compiler::new()
-            .set_optimization_level(2)
-            .set_debug_level(1)
-            .set_coverage_level(0)
-    };
-    let bytecode = luau_compiler.compile(&luau_program);
+    let main_bytecode = luau_compiler.compile(&luau_program);
 
     let mut record = csv::StringRecord::new();
 
@@ -315,7 +318,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         error_flag = false;
         let computed_value: mlua::Value = match luau
-            .load(&bytecode)
+            .load(&main_bytecode)
             .set_mode(mlua::ChunkMode::Binary)
             .eval()
         {
@@ -390,8 +393,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             globals.set("_rowcount", idx)?;
         }
 
-        info!("Executing epilogue. _idx used: {idx_used}, _rowcount: {idx}");
-        let epilogue_value: mlua::Value = match luau.load(&epilogue_script).eval() {
+        info!("Compiling and executing epilogue. _idx used: {idx_used}, _rowcount: {idx}");
+        let epilogue_bytecode = luau_compiler.compile(&epilogue_script);
+        let epilogue_value: mlua::Value = match luau
+            .load(&epilogue_bytecode)
+            .set_mode(mlua::ChunkMode::Binary)
+            .eval()
+        {
             Ok(computed) => computed,
             Err(e) => {
                 log::error!("Epilogue error: Cannot evaluate \"{epilogue_script}\".\n{e}");
