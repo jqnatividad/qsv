@@ -191,7 +191,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // prepare the Luau compiler, so we can compile the scripts into bytecode
     // see https://docs.rs/mlua/latest/mlua/struct.Compiler.html for more info
     let luau_compiler = if log_enabled!(log::Level::Debug) {
-        // debuggin is on, set more debugging friendly compiler settings
+        // debugging is on, set more debugging friendly compiler settings
+
+        // TODO: set Luau debugger hook, so we can get more debug info from Luau while
+        // in debug mode. Create a <INPUT>-luau_debug.csv file with the debug info per record
+        // https://docs.rs/mlua/latest/mlua/struct.Lua.html#method.set_hook
         mlua::Compiler::new()
             .set_optimization_level(0)
             .set_debug_level(2)
