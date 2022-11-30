@@ -114,7 +114,7 @@ pub struct Args {
     pub flag_cardinality:     bool,
     pub flag_median:          bool,
     pub flag_quartiles:       bool,
-    pub flag_round:           u8,
+    pub flag_round:           u32,
     pub flag_nulls:           bool,
     pub flag_infer_dates:     bool,
     pub flag_dates_whitelist: String,
@@ -250,18 +250,18 @@ impl Args {
 
         // amortize allocation
         #[allow(unused_assignments)]
-        let mut record = csv::ByteRecord::with_capacity(100, sel.len());
-        for row in it {
+        let mut record = csv::ByteRecord::with_capacity(1000, sel.len());
+        it.for_each(|row| {
             record = unsafe { row.unwrap_unchecked() };
-            for (i, field) in sel.select(&record).enumerate() {
+            sel.select(&record).enumerate().for_each(|(i, field)| {
                 unsafe {
                     // we use unchecked here so we skip unnecessary bounds checking
                     stats
                         .get_unchecked_mut(i)
                         .add(field, *INFER_DATE_FLAGS.get_unchecked().get_unchecked(i));
                 }
-            }
-        }
+            });
+        });
         stats
     }
 
@@ -359,11 +359,8 @@ fn init_date_inference(
 
         if whitelist_lower == "all" {
             log::info!("inferring dates for ALL fields with DMY preference: {dmy_preferred}");
-            match INFER_DATE_FLAGS.set(vec![true; headers.len()]) {
-                Ok(_) => (),
-                Err(e) => {
-                    return fail_format!("Cannot init date inference flags for ALL fields: {e:?}")
-                }
+            if let Err(e) = INFER_DATE_FLAGS.set(vec![true; headers.len()]) {
+                return fail_format!("Cannot init date inference flags for ALL fields: {e:?}");
             };
         } else {
             let whitelist = whitelist_lower
@@ -386,16 +383,13 @@ fn init_date_inference(
                 }
                 infer_date_flags.push(date_found);
             }
-            match INFER_DATE_FLAGS.set(infer_date_flags) {
-                Ok(_) => (),
-                Err(e) => return fail_format!("Cannot init date inference flags: {e:?}"),
+            if let Err(e) = INFER_DATE_FLAGS.set(infer_date_flags) {
+                return fail_format!("Cannot init date inference flags: {e:?}");
             };
         }
-    } else {
-        match INFER_DATE_FLAGS.set(vec![false; headers.len()]) {
-            Ok(_) => (),
-            Err(e) => return fail_format!("Cannot init empty date inference flags: {e:?}"),
-        };
+    // we're not inferring dates, set INFER_DATE_FLAGS to all false
+    } else if let Err(e) = INFER_DATE_FLAGS.set(vec![false; headers.len()]) {
+        return fail_format!("Cannot init empty date inference flags: {e:?}");
     }
     Ok(())
 }
@@ -432,14 +426,14 @@ pub struct Stats {
     which:     WhichStats,
 }
 
-fn round_num(dec_f64: f64, places: u8) -> String {
+fn round_num(dec_f64: f64, places: u32) -> String {
     use rust_decimal::prelude::*;
 
     let dec_num = Decimal::from_f64(dec_f64).unwrap_or_default();
     // round using Midpoint Nearest Even Rounding Strategy AKA "Bankers Rounding."
     // https://docs.rs/rust_decimal/latest/rust_decimal/enum.RoundingStrategy.html#variant.MidpointNearestEven
 
-    dec_num.round_dp(places as u32).to_string()
+    dec_num.round_dp(places).to_string()
 }
 
 impl Stats {
@@ -528,7 +522,7 @@ impl Stats {
     }
 
     #[allow(clippy::wrong_self_convention)]
-    pub fn to_record(&mut self, round_places: u8) -> csv::StringRecord {
+    pub fn to_record(&mut self, round_places: u32) -> csv::StringRecord {
         let typ = self.typ;
         // prealloc memory for performance
         // we have 22 columns at most with --everything
