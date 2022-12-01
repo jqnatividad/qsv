@@ -25,7 +25,8 @@ Some usage examples:
   $ qsv py map formatted 'f"{qty} {fruit} cost ${(float(unit_cost) * float(qty)):.2f}"'
 
   You can even have conditionals in your f-string:
-  $ qsv py map formatted 'f"""{qty} {fruit} cost ${(float(unit_cost) * float(qty)):.2f}. Its quite {"cheap" if ((float(unit_cost) * float(qty)) < 20.0) else "expensive"}!"""'
+  $ qsv py map formatted \
+   'f"""{qty} {fruit} cost ${(float(unit_cost) * float(qty)):.2f}. Its quite {"cheap" if ((float(unit_cost) * float(qty)) < 20.0) else "expensive"}!"""'
 
   Note how we needed to use triple double quotes for the f-string, so we can use the literals
   "cheap" and "expensive" in the f-string expression.
@@ -70,10 +71,12 @@ Some usage examples:
   using the `py` command if Python's shared libraries are not found.
   
   Also, the following Python modules are automatically loaded and available to the user -
-  builtsin, math and random. The user can import additional modules with the --helper option.
+  builtsin, math, random & datetime. The user can import additional modules with the --helper option,
+  with the ability to use any python module that's installed in the current python virtualenv. 
 
-  With "py map", if a python expression is invalid, "<ERROR>" is returned.
-  With "py filter", if a python expression is invalid, no filtering is done.
+  The python expression is evaluated on a per record basis.
+  With "py map", if the expression is invalid for a record, "<ERROR>" is returned for that record.
+  With "py filter", if the expression is invalid for a record, that record is not filtered.
 
 For more extensive examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_py.rs.
 
