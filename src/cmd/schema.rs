@@ -32,7 +32,7 @@ Schema options:
                                it is shortlisted for date inferencing.
                                Set to "all" to inspect ALL fields for
                                date/datetime types.
-                               [default: date,time,due,opened,closed]
+                               [default: date,time,due,open,close,created]
     --prefer-dmy               Prefer to parse dates in dmy format. Otherwise, use mdy format.
     --stdout                   Send generated JSON schema file to stdout instead.
     -j, --jobs <arg>           The number of jobs to run in parallel.

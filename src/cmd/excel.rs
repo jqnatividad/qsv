@@ -66,7 +66,7 @@ Excel options:
 
                                If the list is all integers, its interpreted as the zero-based
                                index of all the date columns for date processing.
-                               [default: date,time,due,opened,closed]                               
+                               [default: date,time,due,open,close,created]                               
 
 Common options:
     -h, --help                 Display this message

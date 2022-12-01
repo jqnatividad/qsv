@@ -61,7 +61,7 @@ stats options:
                               it is shortlisted for date inferencing.
                               Set to "all" to inspect ALL fields for
                               date/datetime types. Ignored if --infer-dates is false.
-                              [default: date,time,due,opened,closed]
+                              [default: date,time,due,open,close,created]
     --prefer-dmy              Parse dates in dmy format. Otherwise, use mdy format.
                               Ignored if --infer-dates is false.
     -j, --jobs <arg>          The number of jobs to run in parallel.
