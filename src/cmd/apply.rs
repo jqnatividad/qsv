@@ -150,7 +150,7 @@ Format dates in Open Date column to ISO 8601/RFC 3339 format:
 
 Format multiple date columns in file.csv to ISO 8601/RFC 3339 format:
 
-  $ qsv apply datefmt 'Open Date,Modified Date,Closed Data' file.csv
+  $ qsv apply datefmt 'Open Date,Modified Date,Closed Date' file.csv
 
 Format dates in OpenDate column using '%Y-%m-%d' format:
 
