@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `luau`: Now precompiles all scripts, including the `--prologue` & `--epilogue` scripts, into bytecode https://github.com/jqnatividad/qsv/commit/e97c2caf81316bcf655875a9bee4c78dac5a8b70
 * `frequency`: remove unsafe from_utf8_unchecked https://github.com/jqnatividad/qsv/commit/16642e8ee3364309c1a774142976f6207ba5c594
 * More robust autoindexing in https://github.com/jqnatividad/qsv/pull/623
+* minor clippy performance tweaks to [rust-csv fork](https://github.com/jqnatividad/rust-csv/tree/perf-tweaks)
 * Bump serde from 1.0.147 to 1.0.148 by @dependabot in https://github.com/jqnatividad/qsv/pull/620
 * cargo update bump several indirect dependencies
 * improved README; use :sparkle: to indicate commands behind a feature flag
