@@ -27,7 +27,7 @@ jobs:
     runs-on: ${{ matrix.job.os }}
     strategy:
       matrix:
-        rust: [nightly-2022-11-25]
+        rust: [nightly-2022-11-30]
         job:
           - os: ubuntu-latest
             os-name: linux
