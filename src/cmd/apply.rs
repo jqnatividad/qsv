@@ -173,6 +173,9 @@ Dynamically constructs a new column from other columns using the <--formatstr> t
 The template can contain arbitrary characters. To insert a column value, enclose the
 column name in curly braces, replacing all non-alphanumeric characters with underscores.
 
+If you need to dynamically construct a column with more complex formatting requirements and
+computed values, check out the py command to take advantage of Python's f-string formatting.
+
 Examples:
 Create a new column 'mailing address' from 'house number', 'street', 'city' and 'zip-code' columns:
 
