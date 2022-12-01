@@ -6,6 +6,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.75.0] - 2022-12-01
+
+### Added:
+* `py`: added python datetime module by default in https://github.com/jqnatividad/qsv/pull/629
+* `qsvdp` ([Datapusher+](https://github.com/dathere/datapusher-plus) optimized binary variant): added self-update. However, unlike `qsv` and `qsvlite` binary variants, `qsvdp` will not automatically prompt for a self-update, and will only inform the user if there is a new release. The user will need to invoke the `--update` option explicitly. https://github.com/jqnatividad/qsv/pull/622
+
+### Changed:
+* `stats`: Speedup type checking by @kindly in https://github.com/jqnatividad/qsv/pull/625
+* `validate`: Added a useful note about validate output by @aborruso in https://github.com/jqnatividad/qsv/pull/624
+* `luau`: Now precompiles all scripts, including the `--prologue` & `--epilogue` scripts, into bytecode https://github.com/jqnatividad/qsv/commit/e97c2caf81316bcf655875a9bee4c78dac5a8b70
+* `frequency`: remove unsafe from_utf8_unchecked https://github.com/jqnatividad/qsv/commit/16642e8ee3364309c1a774142976f6207ba5c594
+* More robust autoindexing in https://github.com/jqnatividad/qsv/pull/623
+* Bump serde from 1.0.147 to 1.0.148 by @dependabot in https://github.com/jqnatividad/qsv/pull/620
+* cargo update bump several indirect dependencies
+* improved README; use :sparkle: to indicate commands behind a feature flag
+* pin Rust nightly to 2022-11-30
+
+## New Contributors
+* @aborruso made their first contribution in https://github.com/jqnatividad/qsv/pull/624
+* @kindly made their first contribution in https://github.com/jqnatividad/qsv/pull/625
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.74.0...0.75.0
+
 ## [0.74.0] - 2022-11-27
 
 ### Added:
