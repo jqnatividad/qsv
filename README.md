@@ -172,7 +172,7 @@ qsv recognizes UTF-8/ASCII encoded, CSV (`.csv`) & TSV files (`.tsv` & `.tab`). 
 and TSV files, "\t" (tab) as a delimiter. The delimiter is a single ascii character that can be set either by the `--delimiter` command-line option or
 with the `QSV_DEFAULT_DELIMITER` environment variable or automatically detected when `QSV_SNIFF_DELIMITER` is set.
 
-When using the `--output` option, note that qsv will UTF-8 encode the file & automatically change the delimiter used in the generated file based on the file extension - i.e. comma for `.csv`, tab for `.tsv` & `.tab` files.
+When using the `--output` option, qsv will UTF-8 encode the file & automatically change the delimiter used in the generated file based on the file extension - i.e. comma for `.csv`, tab for `.tsv` & `.tab` files.
 
 [JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/) files are also recognized & converted to/from CSV with the [`jsonl`](/src/cmd/jsonl.rs#L11) and [`tojsonl`](/src/cmd/tojsonl.rs#L12) commands respectively.
 
@@ -209,7 +209,7 @@ Unlike other modern operating systems, Microsoft Windows' [default encoding is U
 qsv stats wcp.csv > wcpstats.csv
 ```
 
-Which is weird, since you would think [Microsoft's own Excel would properly recognize UTF16-LE encoded CSV files](https://answers.microsoft.com/en-us/msoffice/forum/all/opening-csv-file-with-utf16-encoding-in-excel-2010/ed522cb9-e88d-4b82-b88e-a2d4bd99f874?auth=1). Regardless, to create a properly UTF-8 encoded file, use the `--output` option instead:
+Which is weird, since you would think [Microsoft's own Excel would properly recognize UTF16-LE encoded CSV files](https://answers.microsoft.com/en-us/msoffice/forum/all/opening-csv-file-with-utf16-encoding-in-excel-2010/ed522cb9-e88d-4b82-b88e-a2d4bd99f874?auth=1). Regardless, to create a properly UTF-8 encoded file on Windows, use the `--output` option instead:
 
 ```
 # so instead of redirecting stdout to a file
@@ -232,20 +232,20 @@ Note that if you plan to distribute your manually built `qsv` with the `python` 
 Note that this will happen on qsv startup, even if you're not running the `py` command.
 
 [PyO3](https://pyo3.rs) - the underlying crate that enables the `python` feature, uses a build script to determine the Python version & set the correct linker arguments. By default it uses the python3 executable.
-You can override the Python interpreter by setting `PYO3_PYTHON` (e.g., `PYO3_PYTHON=python3.6`), before installing/compiling qsv. See the [PyO3 User Guide](https://pyo3.rs/v0.17.1/building_and_distribution.html) for more information.
+You can override this by setting `PYO3_PYTHON` (e.g., `PYO3_PYTHON=python3.6`), before installing/compiling qsv. See the [PyO3 User Guide](https://pyo3.rs/v0.17.1/building_and_distribution.html) for more information.
 
-Consider using the `luau` commands instead of the `py` command if the operation you're trying to do can be done with `luau` - as `luau` is faster than `py` and can do aggregations. 
+Consider using the [`luau`](/src/cmd/luau.rs#L2) command instead of the [`py`]((/src/cmd/python.rs#L2)) command if the operation you're trying to do can be done with `luau` - as `luau` is faster than `py` and can do aggregations. 
 
 The `py` command cannot do aggregations because [PyO3's GIL-bound memory](https://pyo3.rs/v0.17.2/memory.html#gil-bound-memory) limitations will quickly consume a lot of memory (see [issue 449](https://github.com/jqnatividad/qsv/issues/449#issuecomment-1226095316) for details).
 To prevent this, the `py` command processes CSVs in batches (default: 30,000 records), with a GIL pool for each batch, so no globals are available across batches.
 
 ### Luau
 
-[Luau](https://luau-lang.org) is a fast, small, safe, gradually typed embeddable scripting language derived from [Lua](https://www.lua.org/about.html). It lies at the [heart of Roblox technology](https://luau-lang.org/2022/11/04/luau-origins-and-evolution.html) - powering all it's user generated content, with [Roblox](https://en.wikipedia.org/wiki/Roblox)'s internal code having more than 2 millions lines of Luau. 
+[Luau](https://luau-lang.org) is a fast, small, safe, gradually typed embeddable scripting language derived from [Lua](https://www.lua.org/about.html). It lies at the [heart of Roblox technology](https://luau-lang.org/2022/11/04/luau-origins-and-evolution.html) - powering all it's user generated content, with [Roblox](https://en.wikipedia.org/wiki/Roblox)'s own internal code having more than 2 millions lines of Luau. 
 
 It has [sandboxing](https://luau-lang.org/sandbox), [type-checking](https://luau-lang.org/typecheck), [additional operators](https://luau-lang.org/syntax) & [increased performance](https://luau-lang.org/performance) while [maintaining compatibility with Lua](https://luau-lang.org/compatibility).
 
-[Lua is much faster than Python](https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/lua-python3.html), and Luau is even faster still - more so, as qsv precompiles Luau scripts into bytecode. In addition, Luau is embedded into qsv, can do aggregations with its `--prologue` & `--epilogue` options & has no external dependencies unlike Python.
+[Lua is much faster than Python](https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/lua-python3.html), and Luau is even faster still - more so, as qsv precompiles Luau scripts into bytecode. In addition, [`luau`](/src/cmd/luau.rs#L2) is embedded into qsv, can do aggregations with its `--prologue` & `--epilogue` options & has no external dependencies unlike the `py` command.
 
 ## Environment Variables
 
