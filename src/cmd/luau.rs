@@ -49,7 +49,7 @@ The main-script is evaluated on a per record basis.
 With "luau map", if the main-script is invalid for a record, "<ERROR>" is returned for that record.
 With "luau filter", if the main-script is invalid for a record, that record is not filtered.
 
-If any record resulted in an invalid script result, an exitcode of 1 is also returned.
+If any record has an invalid result, an exitcode of 1 is returned along with an error count to stderr.
 
 There are also special variables named "_idx" that is set to the current row number; and
 "_rowcount" which is zero during the prologue and the main script, and set to the rowcount
@@ -57,9 +57,6 @@ during the epilogue.
 
 With the judicious use of the prologue and the _idx variable, one can create variables/arrays
 that can be used for complex aggregation operations in the epilogue.
-
-When debugging luau, be sure to set the environment variable QSV_LOG_LEVEL=debug to see
-detailed error messages in the logfile.
 
 For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_luau.rs.
 
@@ -72,7 +69,10 @@ Usage:
     qsv luau --help
 
 All <script> arguments/options can either be the Luau code, or if it starts with "file:",
-the filepath from which to load the script. 
+the filepath from which to load the script.
+
+While the main script is being executed, the _idx variable is set to the current record number.
+The _rowcount variable is held at zero.
 
 luau options:
     -x, --exec               exec[ute] Luau script, instead of the default eval[uate].
@@ -83,9 +83,13 @@ luau options:
     -g, --no-globals         Don't create Luau global variables for each column, only col.
                              Useful when some column names mask standard Luau globals.
                              Note: access to Luau globals thru _G remains even without -g.
-    -P, --prologue <script>  Luau script to execute BEFORE processing the CSV with the main-scriot.
+    -P, --prologue <script>  Luau script to execute BEFORE processing the CSV with the main-script.
+                             The variables _idx and _rowcount are set to zero before invoking
+                             the prologue script.
                              Typically used to initialize global variables.
     -E, --epilogue <script>  Luau script to execute AFTER processing the CSV with the main-script.
+                             Both _idx and _rowcount variables are set to the rowcount before invoking
+                             the epilogue script.
                              Typically used for aggregations.
                              The output of the epilogue is sent to stderr.
 
@@ -192,10 +196,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // see https://docs.rs/mlua/latest/mlua/struct.Compiler.html for more info
     let luau_compiler = if log_enabled!(log::Level::Debug) {
         // debugging is on, set more debugging friendly compiler settings
-
-        // TODO: set Luau debugger hook, so we can get more debug info from Luau while
-        // in debug mode. Create a <INPUT>-luau_debug.csv file with the debug info per record
-        // https://docs.rs/mlua/latest/mlua/struct.Lua.html#method.set_hook
         mlua::Compiler::new()
             .set_optimization_level(0)
             .set_debug_level(2)
@@ -274,7 +274,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let error_result: mlua::Value = luau.load("return \"<ERROR>\";").eval()?;
     let mut error_flag;
-    let mut global_error_flag = false;
 
     // we init/reset _idx and _rowcount right before the main loop
     if idx_used {
@@ -286,6 +285,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let main_bytecode = luau_compiler.compile(&luau_program);
 
     let mut record = csv::StringRecord::new();
+    let mut error_count = 0_usize;
 
     while rdr.read_record(&mut record)? {
         if show_progress {
@@ -328,9 +328,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         {
             Ok(computed) => computed,
             Err(e) => {
-                log::error!("Cannot evaluate \"{luau_program}\".\n{e}");
+                log::error!("{e:?}");
                 error_flag = true;
-                global_error_flag = true;
+                error_count += 1;
                 error_result.clone()
             }
         };
@@ -372,6 +372,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     mlua::Value::Boolean(boolean) => boolean,
                     mlua::Value::Nil => false,
                     mlua::Value::Integer(intval) => intval != 0,
+                    // we compare to f64::EPSILON as float comparison to zero
+                    // unlike int, where we can say intval != 0, we cannot do fltval !=0
+                    // https://doc.rust-lang.org/std/primitive.f64.html#associatedconstant.EPSILON
                     mlua::Value::Number(fltval) => (fltval).abs() > f64::EPSILON,
                     _ => true,
                 }
@@ -428,8 +431,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     wtr.flush()?;
 
-    if global_error_flag {
-        return fail!("Luau errors encountered.");
+    if error_count > 0 {
+        return fail_clierror!("Luau errors encountered: {error_count}");
     }
     Ok(())
 }
