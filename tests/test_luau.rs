@@ -261,6 +261,10 @@ fn luau_map_error() {
         svec!["d", "7", "<ERROR>"],
     ];
     assert_eq!(got, expected);
+
+    wrk.assert_err(&mut cmd);
+    let stderr_string = wrk.output_stderr(&mut cmd);
+    assert!(stderr_string.ends_with("Luau errors encountered: 4\n"));
 }
 
 #[test]
