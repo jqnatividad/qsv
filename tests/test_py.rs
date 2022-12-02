@@ -437,6 +437,10 @@ fn py_filter_error() {
         svec!["d", "7"],
     ];
     assert_eq!(got, expected);
+
+    wrk.assert_err(&mut cmd);
+    let stderr_string = wrk.output_stderr(&mut cmd);
+    assert!(stderr_string.ends_with("Python errors encountered: 4\n"));
 }
 
 #[test]
