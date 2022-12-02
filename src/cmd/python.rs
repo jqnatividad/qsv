@@ -78,6 +78,8 @@ Some usage examples:
   With "py map", if the expression is invalid for a record, "<ERROR>" is returned for that record.
   With "py filter", if the expression is invalid for a record, that record is not filtered.
 
+  If any record has an invalid result, an exitcode of 1 is returned along with an error count to stderr.
+
 For more extensive examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_py.rs.
 
 Usage:
@@ -234,6 +236,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // amortize memory allocation by reusing record
     #[allow(unused_assignments)]
     let mut batch_record = csv::StringRecord::new();
+    let mut error_count = 0_usize;
 
     // reuse batch buffers
     let mut batch = Vec::with_capacity(args.flag_batch as usize);
@@ -316,6 +319,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     .eval(&args.arg_script, Some(batch_globals), Some(batch_locals))
                     .map_err(|e| {
                         e.print_and_set_sys_last_vars(py);
+                        error_count += 1;
                         if log_enabled!(Debug) {
                             error!("{e:?}");
                         }
@@ -367,5 +371,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         util::finish_progress(&progress);
     }
 
-    Ok(wtr.flush()?)
+    wtr.flush()?;
+
+    if error_count > 0 {
+        return fail_clierror!("Python errors encountered: {error_count}");
+    }
+
+    Ok(())
 }
