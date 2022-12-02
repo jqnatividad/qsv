@@ -45,7 +45,7 @@ Excel options:
                                sequential suffix (_n) appended; Leading/trailing whitespaces are trimmed;
                                Whitespace/non-alphanumeric characters are replaced with _;
                                If a column name starts with a digit, the digit is replaced with a _;
-                               maximum length is 60 characters; and empty header names are set to _.
+                               maximum length is 60 characters; and empty header names are set to "_blank".
                                It has two modes - Always & Conditional.
                                Always - goes ahead and renames all headers without checking if they're 
                                already "safe". Conditional - check first before renaming.

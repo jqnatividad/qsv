@@ -5,7 +5,7 @@ Modify headers of a CSV to only have "safe" names - guaranteed "database-ready" 
 Fold to lowercase. Trim leading & trailing whitespaces. Replace whitespace/non-alphanumeric
 characters with _. If the first character is a digit, replace the digit with _.
 If a header with the same name already exists, append a sequence suffix (e.g. c1, c1_2, c1_3).
-Names are limited to 60 characters in length. Empty names are replaced with _.
+Names are limited to 60 characters in length. Empty names are replaced with "_blank".
 
 In Always and Conditional mode, returns number of modified headers to stderr, and sends
 CSV with safe headers output to stdout.
@@ -39,6 +39,10 @@ Given data.csv:
   5 unsafe header/s: ["c1", "12_col", "Col with Embedded Spaces", "", "Column!@Invalid+Chars"]
   2 safe header/s: ["c1", "Col with Embedded Spaces"]
   1 duplicate/s found.
+
+Note how "Col with Embedded Spaces" is both safe and unsafe. This is because it can be created 
+"safely" as a "quoted identifier" in PostgreSQL. However, it is also unsafe because the embedded
+spaces can cause problems later on (see https://lerner.co.il/2013/11/30/quoting-postgresql/).
 
 For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_safenames.rs.
 
