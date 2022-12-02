@@ -158,7 +158,7 @@ impl Args {
 
         let pool = ThreadPool::new(util::njobs(self.flag_jobs));
         let (send, recv) = channel::bounded(0);
-        (0..nchunks).for_each(|i| {
+        for i in 0..nchunks {
             let (send, args, sel) = (send.clone(), self.clone(), sel.clone());
             pool.execute(move || {
                 let mut idx = args.rconfig().indexed().unwrap().unwrap();
@@ -166,7 +166,7 @@ impl Args {
                 let it = idx.byte_records().take(chunk_size);
                 send.send(args.ftables(&sel, it).unwrap()).unwrap();
             });
-        });
+        }
         drop(send);
         Ok((headers, merge_all(recv.iter()).unwrap()))
     }
