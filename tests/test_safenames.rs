@@ -31,7 +31,7 @@ fn safenames_conditional() {
             "col1",
             "this_is_a_column_with_invalid_chars___and_leading___trailing",
             // null column names are not allowed in postgres
-            "_",
+            "_blank",
             // though this is "safe", it's generally discouraged
             // to have embedded spaces and mixed case column names
             // as you will have to use quotes to refer to these columns
@@ -42,8 +42,8 @@ fn safenames_conditional() {
             // duplicate cols are not allowed in one table in postgres
             "col1_2",
             "col1_3",
-            "__2",
-            "__3"
+            "_blank_2",
+            "_blank_3"
         ],
         svec!["1", "b", "33", "1", "b", "33", "34", "z", "42"],
         svec!["2", "c", "34", "3", "d", "31", "3", "y", "3.14"],
@@ -85,7 +85,7 @@ fn safenames_always() {
         svec![
             "col1",
             "this_is_a_column_with_invalid_chars___and_leading___trailing",
-            "_",
+            "_blank",
             // we were using Always mode, so even though the
             // original header name was already valid,
             // we replaced spaces with _ regardless
