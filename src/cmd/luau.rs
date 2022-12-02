@@ -51,12 +51,12 @@ With "luau filter", if the main-script is invalid for a record, that record is n
 
 If any record has an invalid result, an exitcode of 1 is returned along with an error count to stderr.
 
-There are also special variables named "_idx" that is set to the current row number; and
-"_rowcount" which is zero during the prologue and the main script, and set to the rowcount
-during the epilogue.
+There are also special variables - "_idx" that is zero during the prologue, and set to the current 
+row number during the main script; and "_rowcount" which is zero during the prologue and the main script,
+and set to the rowcount during the epilogue.
 
-With the judicious use of the prologue and the _idx variable, one can create variables/arrays
-that can be used for complex aggregation operations in the epilogue.
+With the judicious use of the prologue and the "_idx"/"_rowcount" variables, one can create
+variables/tables/arrays that can be used for complex aggregation operations in the epilogue.
 
 For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_luau.rs.
 
