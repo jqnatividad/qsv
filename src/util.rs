@@ -706,7 +706,7 @@ pub fn safe_header_names(
     // Replace whitespace/non-alphanumeric) with _. If name starts with a number & check_first_char
     // is true, replace it with an _ as well. If a column with the same name already exists,
     // append a sequence suffix (e.g. _n). Names are limited to 60 characters in length.
-    // Empty names are replaced with _ as well.
+    // Empty names are replaced with _blank as well.
 
     // If conditional = true, only rename the header if its not already safe as embedded spaces
     // in certain circumstances (postgresql allows embeded spaces in names, but not python, dynfmt
@@ -719,7 +719,7 @@ pub fn safe_header_names(
             header_name.to_string()
         } else {
             let mut safe_name_always = if header_name.is_empty() {
-                "_".to_string()
+                "_blank".to_string()
             } else {
                 safename_regex
                     .replace_all(header_name.trim(), "_")
