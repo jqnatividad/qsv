@@ -126,11 +126,7 @@ impl Args {
         width: usize,
     ) -> CliResult<csv::Writer<Box<dyn io::Write + 'static>>> {
         let dir = Path::new(&self.arg_outdir);
-        let path = dir.join(self.flag_filename.filename(&format!(
-            "{:0>width$}",
-            start,
-            width = width
-        )));
+        let path = dir.join(self.flag_filename.filename(&format!("{start:0>width$}")));
         let spath = Some(path.display().to_string());
         let mut wtr = Config::new(&spath).writer()?;
         if !self.rconfig().no_headers {
