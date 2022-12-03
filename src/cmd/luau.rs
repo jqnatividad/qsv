@@ -55,10 +55,17 @@ There are also special variables - "_idx" that is zero during the prologue, and 
 row number during the main script; and "_rowcount" which is zero during the prologue and the main script,
 and set to the rowcount during the epilogue.
 
-With the judicious use of the prologue and the "_idx"/"_rowcount" variables, one can create
+In addition, the user can load luau modules using luau's "require" function from the LUAU_PATH.
+Note that the LuaDate library is preloaded. See https://tieske.github.io/date/#date-id96473 for info on 
+how to use the LuaDate library.
+
+With the judicious use of require and the prologue and the "_idx"/"_rowcount" variables, one can create
 variables/tables/arrays that can be used for complex aggregation operations in the epilogue.
 
-For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_luau.rs.
+TIP: When developing luau scripts, be sure to set QSV_LOG_LEVEL=debug so you can see the detailed Luau
+errors in the logfile.
+
+For more detailed examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_luau.rs.
 
 Usage:
     qsv luau map [options] -n <main-script> [<input>]
@@ -71,9 +78,6 @@ Usage:
 All <script> arguments/options can either be the Luau code, or if it starts with "file:",
 the filepath from which to load the script.
 
-While the main script is being executed, the _idx variable is set to the current record number.
-The _rowcount variable is held at zero.
-
 luau options:
     -x, --exec               exec[ute] Luau script, instead of the default eval[uate].
                              eval (default) expects just a single Luau expression,
@@ -83,15 +87,19 @@ luau options:
     -g, --no-globals         Don't create Luau global variables for each column, only col.
                              Useful when some column names mask standard Luau globals.
                              Note: access to Luau globals thru _G remains even without -g.
-    -P, --prologue <script>  Luau script to execute BEFORE processing the CSV with the main-script.
+    -P, --prologue <script>  Luau script/file to execute BEFORE processing the CSV with the main-script.
                              The variables _idx and _rowcount are set to zero before invoking
                              the prologue script.
                              Typically used to initialize global variables.
-    -E, --epilogue <script>  Luau script to execute AFTER processing the CSV with the main-script.
+    -E, --epilogue <script>  Luau script/file to execute AFTER processing the CSV with the main-script.
                              Both _idx and _rowcount variables are set to the rowcount before invoking
                              the epilogue script.
                              Typically used for aggregations.
                              The output of the epilogue is sent to stderr.
+    --luau-path <pattern>    The LUAU_PATH pattern to use from which the scripts 
+                             can "require" lua/luau library files from.
+                             See https://www.lua.org/pil/8.1.html
+                             [default: ?;?.luau;?.lua]
 
 Common options:
     -h, --help             Display this message
@@ -105,12 +113,13 @@ Common options:
     -p, --progressbar      Show progress bars. Not valid for stdin.
 "#;
 
-use std::fs;
+use std::{env, fs};
 
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::{debug, info, log_enabled};
 use mlua::Lua;
 use serde::Deserialize;
+use tempfile;
 
 use crate::{
     config::{Config, Delimiter},
@@ -128,6 +137,7 @@ struct Args {
     flag_no_globals:  bool,
     flag_prologue:    Option<String>,
     flag_epilogue:    Option<String>,
+    flag_luau_path:   String,
     flag_output:      Option<String>,
     flag_no_headers:  bool,
     flag_delimiter:   Option<Delimiter>,
@@ -171,10 +181,25 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut idx_used = false;
     let mut idx = 0_usize;
 
+    // setup LUAU_PATH; create a temporary directory and add it to LUAU_PATH and copy date.lua
+    // there so qsv luau users can just `local date = require "date"` in their scripts,
+    // as well as load other lua/luau libraries as needed.
+    let luadate_library = include_bytes!("../../resources/luau/vendor/luadate/date.lua");
+    let Ok(temp_dir) = tempfile::tempdir() else {
+        return fail!("Cannot create temporary directory to copy luadate library to.");
+    };
+    let luadate_path = temp_dir.path().join("date.lua");
+    fs::write(luadate_path.clone(), luadate_library)?;
+    let mut luau_path = args.flag_luau_path;
+    luau_path.push_str(&format!(";{}", luadate_path.as_os_str().to_string_lossy()));
+    env::set_var("LUAU_PATH", luau_path.clone());
+    info!(r#"set LUAU_PATH to "{luau_path}""#);
+
     // check if an epilogue was specified. We check it first for two reasons:
     // 1) so we don't run the main script only to err out on an invalid epilogue file not found.
     // 2) to see if _idx or _rowcount is used, even if they're not used in the prologue,
-    //    so we can init the _idx and _rowcount global vars.
+    //    so we can init the _idx and _rowcount global vars in the beginning, if the epilogue
+    //    referred to the special vars & they're not referenced in the prologue & main scripts.
     let epilogue_script = if let Some(ref epilogue) = args.flag_epilogue {
         if let Some(epilogue_filepath) = epilogue.strip_prefix("file:") {
             match fs::read_to_string(epilogue_filepath) {
@@ -196,6 +221,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // see https://docs.rs/mlua/latest/mlua/struct.Compiler.html for more info
     let luau_compiler = if log_enabled!(log::Level::Debug) {
         // debugging is on, set more debugging friendly compiler settings
+        // so we can see more error details in the logfile
         mlua::Compiler::new()
             .set_optimization_level(0)
             .set_debug_level(2)
@@ -207,6 +233,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .set_debug_level(1)
             .set_coverage_level(0)
     };
+    // set it as the default compiler
     luau.set_compiler(luau_compiler.clone());
 
     // check if a prologue was specified

@@ -234,6 +234,84 @@ fn luau_map_math() {
 }
 
 #[test]
+fn luau_map_require_luadate() {
+    let wrk = Workdir::new("luau");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["letter", "number", "date_col"],
+            svec!["a", "13", "2001-09-11"],
+            svec!["b", "24", "1989-11-09"],
+            svec!["c", "72", "2008-11-04"],
+            svec!["d", "7", "2020-03-11"],
+        ],
+    );
+    let mut cmd = wrk.command("luau");
+    cmd.arg("map")
+        .arg("days_added")
+        .arg("-x")
+        .arg(r#"local date = require "date";local t_date = date(date_col):adddays(tonumber(number)); return tostring(t_date:fmt("${iso}"))"#)
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["letter", "number", "date_col", "days_added"],
+        svec!["a", "13", "2001-09-11", "2001-09-24T00:00:00"],
+        svec!["b", "24", "1989-11-09", "1989-12-03T00:00:00"],
+        svec!["c", "72", "2008-11-04", "2009-01-15T00:00:00"],
+        svec!["d", "7", "2020-03-11", "2020-03-18T00:00:00"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn luau_map_require() {
+    let wrk = Workdir::new("luau");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["letter", "number1", "number2"],
+            svec!["a", "13", "43"],
+            svec!["b", "24", "3.14"],
+            svec!["c", "72", "42"],
+            svec!["d", "7", "6.5"],
+        ],
+    );
+
+    let mintest_luau = r#"
+local mintest = {}
+
+function mintest.mymin(n1, n2)
+    if (tonumber(n1) < tonumber(n2)) then
+        return n1;
+    else
+        return n2;
+    end
+end
+
+return mintest"#;
+
+    wrk.create_from_string("mintest.luau", mintest_luau);
+
+    let mut cmd = wrk.command("luau");
+    cmd.arg("map")
+        .arg("min")
+        .arg("-x")
+        .arg(r#"local mintest = require "mintest";local t_min = mintest.mymin(number1,number2); return t_min"#)
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["letter", "number1", "number2", "min"],
+        svec!["a", "13", "43", "13"],
+        svec!["b", "24", "3.14", "3.14"],
+        svec!["c", "72", "42", "42"],
+        svec!["d", "7", "6.5", "6.5"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn luau_map_error() {
     let wrk = Workdir::new("luau");
     wrk.create(

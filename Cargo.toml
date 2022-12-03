@@ -138,6 +138,7 @@ strum = { version = "0.24", optional = true }
 strum_macros = { version = "0.24", optional = true }
 sysinfo = "0.26"
 tabwriter = "1.2"
+tempfile = "3"
 test-data-generation = { version = "0.3", optional = true }
 thousands = "0.2"
 threadpool = "1.8"
