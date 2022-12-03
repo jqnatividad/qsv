@@ -429,7 +429,7 @@ pub struct Stats {
 fn round_num(dec_f64: f64, places: u32) -> String {
     use rust_decimal::prelude::*;
 
-    let dec_num = Decimal::from_f64(dec_f64).unwrap_or_default();
+    let dec_num = Decimal::try_from(dec_f64).unwrap_or_default();
     // round using Midpoint Nearest Even Rounding Strategy AKA "Bankers Rounding."
     // https://docs.rs/rust_decimal/latest/rust_decimal/enum.RoundingStrategy.html#variant.MidpointNearestEven
 
