@@ -289,19 +289,19 @@ Relevant env vars are defined as anything that starts with `QSV_` & `MIMALLOC_` 
 `qsv` has several features:
 
 * `mimalloc` (default) - use the mimalloc allocator (see [Memory Allocator](docs/PERFORMANCE.md#memory-allocator) for more info).
-* `apply` - enable `apply` command. This swiss-army knife of CSV transformations is very powerful, but it has a lot of dependencies that increases both compile time and binary size.
-* `fetch` - enables the `fetch` & `fetchpost` commands.
+* `apply` (default) - enable `apply` command. This swiss-army knife of CSV transformations is very powerful, but it has a lot of dependencies that increases both compile time and binary size.
+* `fetch` (default) - enables the `fetch` & `fetchpost` commands.
 * `foreach` - enable `foreach` command (not valid for Windows).
 * `generate` - enable `generate` command.
 * `luau` - enable `luau` command. Embeds a [Luau](https://luau-lang.org) interpreter into qsv. [Luau has type-checking, sandboxing, additional language operators, increased performance & other improvements](https://luau-lang.org/2022/11/04/luau-origins-and-evolution.html) over Lua.
-* `python` - enable `py` command. Note that qsv will look for the shared library for the Python version (Python 3.6 & above supported) it was compiled against & will abort if the library is not found, even if you're not using the `py` command. Check [Python](#python) section for more info.
+* `python` - enable `py` command. Note that qsv will look for the shared library for the Python version (Python 3.6 & above supported) it was compiled against & will abort on startup if the library is not found, even if you're not using the `py` command. Check [Python](#python) section for more info.
 * `self_update` - enable self-update engine, checking GitHub for the latest release. Note that if you manually built qsv, `self-update` will only check for new releases.
 It will NOT offer the choice to update itself to the prebuilt binaries published on GitHub. You need not worry that your manually built qsv will be overwritten by a self-update.
 
-* `full` - enable to build qsv binary variant which is feature-capable.
-* `all_full` - enable to build qsv binary variant with all features enabled (apply,fetch,foreach,generate,luau,python,self_update).
-* `lite` - enable to build qsvlite binary variant with all features disabled.
-* `datapusher_plus` - enable to build qsvdp binary variant - the [DataPusher+](https://github.com/dathere/datapusher-plus) optimized qsv binary.
+* `full` - enable to build `qsv` binary variant which is feature-capable.
+* `all_full` - enable to build `qsv` binary variant with all features enabled (apply,fetch,foreach,generate,luau,python,self_update).
+* `lite` - enable to build `qsvlite` binary variant with all features disabled.
+* `datapusher_plus` - enable to build `qsvdp` binary variant - the [DataPusher+](https://github.com/dathere/datapusher-plus) optimized qsv binary.
 * `nightly` - enable to turn on nightly/unstable features in the `rand`, `regex`, `hashbrown`, `parking_lot` & `pyo3` crates when building with Rust nightly/unstable.
 
 
