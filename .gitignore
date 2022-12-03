@@ -6,7 +6,6 @@ target
 ctags.rust
 *.csv*
 *.tsv*
-*.lua
 main
 *.idx
 builds
