@@ -115,6 +115,7 @@ Common options:
 
 use std::{env, fs};
 
+#[cfg(any(feature = "full", feature = "lite"))]
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::{debug, info, log_enabled};
 use mlua::Lua;
@@ -289,10 +290,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     debug!("Luau program: {luau_program:?}");
 
     // prep progress bar
+    #[cfg(any(feature = "full", feature = "lite"))]
     let show_progress =
         (args.flag_progressbar || std::env::var("QSV_PROGRESSBAR").is_ok()) && !rconfig.is_stdin();
 
+    #[cfg(any(feature = "full", feature = "lite"))]
     let progress = ProgressBar::with_draw_target(None, ProgressDrawTarget::stderr_with_hz(5));
+    
+    #[cfg(any(feature = "full", feature = "lite"))]
     if show_progress {
         util::prep_progress(&progress, util::count_rows(&rconfig)?);
     } else {
@@ -315,6 +320,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut error_count = 0_usize;
 
     while rdr.read_record(&mut record)? {
+        #[cfg(any(feature = "full", feature = "lite"))]
         if show_progress {
             progress.inc(1);
         }
@@ -413,6 +419,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     }
 
+    #[cfg(any(feature = "full", feature = "lite"))]
     if show_progress {
         util::finish_progress(&progress);
     }
