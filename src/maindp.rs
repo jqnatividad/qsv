@@ -22,6 +22,7 @@ macro_rules! command_list {
     help        Show this usage message
     index       Create CSV index for faster access
     input       Read CSVs w/ special quoting, skipping, trimming & transcoding rules
+    luau        Execute Luau script on CSV data
     pseudo      Pseudonymise the values of a column
     rename      Rename the columns of CSV data efficiently
     replace     Replace patterns in CSV data
@@ -164,6 +165,7 @@ enum Command {
     Help,
     Index,
     Input,
+    Luau,
     Pseudo,
     Rename,
     Replace,
@@ -206,6 +208,7 @@ impl Command {
             }
             Command::Index => cmd::index::run(argv),
             Command::Input => cmd::input::run(argv),
+            Command::Luau => cmd::luau::run(argv),
             Command::Pseudo => cmd::pseudo::run(argv),
             Command::Rename => cmd::rename::run(argv),
             Command::Replace => cmd::replace::run(argv),
