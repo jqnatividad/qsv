@@ -296,7 +296,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     #[cfg(any(feature = "full", feature = "lite"))]
     let progress = ProgressBar::with_draw_target(None, ProgressDrawTarget::stderr_with_hz(5));
-    
+
     #[cfg(any(feature = "full", feature = "lite"))]
     if show_progress {
         util::prep_progress(&progress, util::count_rows(&rconfig)?);
