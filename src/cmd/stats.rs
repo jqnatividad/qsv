@@ -533,7 +533,19 @@ impl Stats {
 
         pieces.push(self.typ.to_string());
         if let Some(sum) = self.sum.as_ref().and_then(|sum| sum.show(typ)) {
-            pieces.push(sum);
+            if self.typ == FieldType::TFloat {
+                let sum_decimal = rust_decimal::Decimal::from_str(&sum).unwrap();
+                pieces.push(
+                    sum_decimal
+                        .round_dp_with_strategy(
+                            round_places,
+                            rust_decimal::RoundingStrategy::MidpointNearestEven,
+                        )
+                        .to_string(),
+                );
+            } else {
+                pieces.push(sum);
+            }
         } else {
             pieces.push(empty());
         }
