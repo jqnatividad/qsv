@@ -29,7 +29,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 
 | Command | Description |
 | --- | --- |
-| [apply](/src/cmd/apply.rs#L2)[^4] :sparkle: | Apply series of string, date, math, currency & geocoding transformations to a CSV column. It also has some basic [NLP](https://en.wikipedia.org/wiki/Natural_language_processing) functions ([similarity](https://crates.io/crates/strsim), [sentiment analysis](https://crates.io/crates/vader_sentiment), [profanity](https://docs.rs/censor/latest/censor/), [eudex](https://github.com/ticki/eudex#eudex-a-blazingly-fast-phonetic-reductionhashing-algorithm) & [language detection](https://crates.io/crates/whatlang)).  |
+| [apply](/src/cmd/apply.rs#L2)[^4] ❇️ | Apply series of string, date, math, currency & geocoding transformations to a CSV column. It also has some basic [NLP](https://en.wikipedia.org/wiki/Natural_language_processing) functions ([similarity](https://crates.io/crates/strsim), [sentiment analysis](https:❇️//crates.io/crates/vader_sentiment), [profanity](https://docs.rs/censor/latest/censor/), [eudex](https://github.com/ticki/eudex#eudex-a-blazingly-fast-phonetic-reductionhashing-algorithm) & [language detection](https://crates.io/crates/whatlang)).  |
 | [behead](/src/cmd/behead.rs#L2) | Drop headers from a CSV.  |
 | [cat](/src/cmd/cat.rs#L2) | Concatenate CSV files by row or by column. |
 | [count](/src/cmd/count.rs#L2)[^1] | Count the rows in a CSV file. (Instantaneous with an index.) |
@@ -39,24 +39,24 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [exclude](/src/cmd/exclude.rs#L2)[^1] | Removes a set of CSV data from another set based on the specified columns.  |
 | [explode](/src/cmd/explode.rs#L2) | Explode rows into multiple ones by splitting a column value based on the given separator.  |
 | [extsort](/src/cmd/extsort.rs#L2)[^4] | Sort an arbitrarily large CSV/text file using a multithreaded [external merge sort](https://en.wikipedia.org/wiki/External_sorting) algorithm. |
-| [fetch](/src/cmd/fetch.rs#L2) :sparkle: | Fetches data from web services for every row using **HTTP Get**. Comes with [jql](https://github.com/yamafaktory/jql#%EF%B8%8F-usage) JSON query language support, dynamic throttling ([RateLimit](https://tools.ietf.org/id/draft-polli-ratelimit-headers-00.html)) & caching with optional [Redis](https://redis.io/) support for persistent caching. |
-| [fetchpost](/src/cmd/fetchpost.rs#L2) :sparkle: | Similar to `fetch`, but uses **HTTP Post**. ([HTTP GET vs POST methods](https://www.geeksforgeeks.org/difference-between-http-get-and-post-methods/)) |
+| [fetch](/src/cmd/fetch.rs#L2) ❇️ | Fetches data from web services for every row using **HTTP Get**. Comes with [jql](https://github.com/yamafaktory/jql#%EF%B8%8F-usage) JSON query language support, dynamic throttling ([RateLimit](https://tools.ietf.org/id/draft-polli-ratelimit-headers-00.html)) & caching with optional [Redis](https://redis.io/) support for persistent caching. |
+| [fetchpost](/src/cmd/fetchpost.rs#L2) ❇️ | Similar to `fetch`, but uses **HTTP Post**. ([HTTP GET vs POST methods](https://www.geeksforgeeks.org/difference-between-http-get-and-post-methods/)) |
 | [fill](/src/cmd/fill.rs#L2) | Fill empty values.  |
 | [fixlengths](/src/cmd/fixlengths.rs#L2) | Force a CSV to have same-length records by either padding or truncating them. |
 | [flatten](/src/cmd/flatten.rs#L2) | A flattened view of CSV records. Useful for viewing one record at a time.<br />e.g. `qsv slice -i 5 data.csv \| qsv flatten`. |
 | [fmt](/src/cmd/fmt.rs#L2) | Reformat a CSV with different delimiters, record terminators or quoting rules. (Supports ASCII delimited data.)  |
-| [foreach](/src/cmd/foreach.rs#L3) :sparkle: | Loop over a CSV to execute bash commands. (not available on Windows)  |
+| [foreach](/src/cmd/foreach.rs#L3) ❇️ | Loop over a CSV to execute bash commands. (not available on Windows)  |
 | [frequency](/src/cmd/frequency.rs#L2)[^1][^3] | Build [frequency tables](https://statisticsbyjim.com/basics/frequency-table/) of each column. (Uses multithreading to go faster if an index is present.) |
-| [generate](/src/cmd/generate.rs#L2) :sparkle: | Generate test data by profiling a CSV using [Markov decision process](https://crates.io/crates/test-data-generation) machine learning.  |
+| [generate](/src/cmd/generate.rs#L2) ❇️ | Generate test data by profiling a CSV using [Markov decision process](https://crates.io/crates/test-data-generation) machine learning.  |
 | [headers](/src/cmd/headers.rs#L2) | Show the headers of a CSV. Or show the intersection of all headers between many CSV files. |
 | [index](/src/cmd/index.rs#L2) | Create an index for a CSV. This is very quick & provides constant time indexing into the CSV file. Also enables multithreading for `frequency`, `split`, `stats` & `schema` commands. |
 | [input](/src/cmd/input.rs#L2)[^1] | Read CSV data with special quoting, trimming, line-skipping & UTF-8 transcoding rules. Typically used to "normalize" a CSV for further processing with other qsv commands. |
 | [join](/src/cmd/join.rs#L2)[^1] | Inner, outer, cross, anti & semi joins. Uses a simple hash index to make it fast.  |
 | [jsonl](/src/cmd/jsonl.rs#L2) | Convert newline-delimited JSON ([JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/)) to CSV. See `tojsonl` command to convert CSV to JSONL.
-| [luau](/src/cmd/luau.rs#L2) :sparkle: | Execute a [Luau](https://luau-lang.org) script over CSV lines to transform, filter or aggregate them. |
+| [luau](/src/cmd/luau.rs#L2) ❇️ | Execute a [Luau](https://luau-lang.org) script over CSV lines to transform, filter or aggregate them. |
 | [partition](/src/cmd/partition.rs#L2) | Partition a CSV based on a column value. |
 | [pseudo](/src/cmd/pseudo.rs#L2) | [Pseudonymise](https://en.wikipedia.org/wiki/Pseudonymization) the value of the given column by replacing them with an incremental identifier.  |
-| [py](/src/cmd/python.rs#L2) :sparkle: | Evaluate a Python expression over CSV lines to transform or filter them. Python's [f-strings](https://www.freecodecamp.org/news/python-f-strings-tutorial-how-to-use-f-strings-for-string-formatting/) is particularly useful for extended formatting, [with the ability to evaluate Python expressions as well](https://github.com/jqnatividad/qsv/blob/4cd00dca88addf0d287247fa27d40563b6d46985/src/cmd/python.rs#L23-L31). |
+| [py](/src/cmd/python.rs#L2) ❇️ | Evaluate a Python expression over CSV lines to transform or filter them. Python's [f-strings](https://www.freecodecamp.org/news/python-f-strings-tutorial-how-to-use-f-strings-for-string-formatting/) is particularly useful for extended formatting, [with the ability to evaluate Python expressions as well](https://github.com/jqnatividad/qsv/blob/4cd00dca88addf0d287247fa27d40563b6d46985/src/cmd/python.rs#L23-L31). |
 | [rename](/src/cmd/rename.rs#L2) |  Rename the columns of a CSV efficiently.  |
 | [replace](/src/cmd/replace.rs#L2) | Replace CSV data using a regex.  |
 | [reverse](/src/cmd/reverse.rs#L2)[^2] | Reverse order of rows in a CSV. Unlike the `sort --reverse` command, it preserves the order of rows with the same key.  |
@@ -77,7 +77,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [transpose](/src/cmd/transpose.rs#L2)[^2] | Transpose rows/columns of a CSV.  |
 | [validate](/src/cmd/validate.rs#L2)[^1][^4] | Validate CSV data with JSON Schema (See `schema` command) & put invalid records into a separate file & a validation error report file. If no jsonschema file is provided, validates if a CSV conforms to the [RFC 4180 standard](https://datatracker.ietf.org/doc/html/rfc4180). |
 
- :sparkle:: enabled by optional feature flag on `qsv`. Not available on `qsvlite` & `qsvdp` binary variants.
+ ❇️: enabled by a feature flag on `qsv`. Not available on `qsvlite` & `qsvdp` binary variants.
 [^1]: uses an index when available.   
 [^2]: loads the entire CSV into memory. Note that `dedup`, `stats` & `transpose` have modes that do not load the entire CSV into memory.   
 [^3]: multithreaded when an index is available.   
@@ -94,7 +94,7 @@ brew install qsv
 Prebuilt binary variants of the latest qsv version with more enabled features for Windows, Linux & macOS are also available [for download](https://github.com/jqnatividad/qsv/releases/latest), including binaries compiled with [Rust Nightly/Unstable](https://stackoverflow.com/questions/70745970/rust-nightly-vs-beta-version) ([more info](https://github.com/jqnatividad/qsv/blob/master/docs/PERFORMANCE.md#nightly-release-builds)).
 
 There are three binary variants of qsv:
- * `qsv` - [feature](#feature-flags)-capable(:sparkle:), with the [prebuilt binaries](https://github.com/jqnatividad/qsv/releases/latest) enabling all applicable features except Python [^6]
+ * `qsv` - [feature](#feature-flags)-capable(❇️), with the [prebuilt binaries](https://github.com/jqnatividad/qsv/releases/latest) enabling all applicable features except Python [^6]
  * `qsvlite` - all features disabled (~half the size of `qsv`)
  * `qsvdp` - optimized for use with [DataPusher+](https://github.com/dathere/datapusher-plus), with only DataPusher+ relevant commands & the self-update engine removed (~sixth of the size of `qsv`).
 
@@ -245,7 +245,7 @@ To prevent this, the `py` command processes CSVs in batches (default: 30,000 rec
 
 It has [sandboxing](https://luau-lang.org/sandbox), [type-checking](https://luau-lang.org/typecheck), [additional operators](https://luau-lang.org/syntax) & [increased performance](https://luau-lang.org/performance) while [maintaining compatibility with Lua](https://luau-lang.org/compatibility).
 
-[Lua is much faster than Python](https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/lua-python3.html), and Luau is even faster still - more so, as qsv precompiles Luau scripts into bytecode. In addition, [`luau`](/src/cmd/luau.rs#L2) is embedded into qsv, can do aggregations with its `--prologue` & `--epilogue` options & has no external dependencies unlike the `py` command.
+[Lua is much faster than Python](https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/lua-python3.html), and Luau is even faster still - more so, as qsv precompiles Luau scripts into bytecode. In addition, [`luau`](/src/cmd/luau.rs#L2) is embedded into qsv, has debug logging, can do aggregations with its `--prologue` & `--epilogue` options & has no external dependencies unlike the `py` command.
 
 ## Environment Variables
 
