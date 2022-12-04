@@ -572,8 +572,7 @@ fn stats_rounding() {
 
     let mut cmd = wrk.command("stats");
     cmd.arg("--everything")
-        .arg("--round")
-        .arg("8")
+        .args(["--round", "8"])
         .arg(test_file);
 
     let got: String = wrk.stdout(&mut cmd);
