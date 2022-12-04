@@ -430,10 +430,12 @@ fn round_num(dec_f64: f64, places: u32) -> String {
     use rust_decimal::prelude::*;
 
     let dec_num = Decimal::try_from(dec_f64).unwrap_or_default();
+
     // round using Midpoint Nearest Even Rounding Strategy AKA "Bankers Rounding."
     // https://docs.rs/rust_decimal/latest/rust_decimal/enum.RoundingStrategy.html#variant.MidpointNearestEven
-
-    dec_num.round_dp(places).to_string()
+    dec_num
+        .round_dp_with_strategy(places, RoundingStrategy::MidpointNearestEven)
+        .to_string()
 }
 
 impl Stats {
