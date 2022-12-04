@@ -26,5 +26,5 @@ precinct,String,, ,2210,0,4,,,,1
 location_street_name,String,,103 N Beacon St,INTERSECTION Verdun St & Gallivan Blvd,0,45,,,,1
 location_zipcode,Integer,176426,2109,2215,0,5,2125.6145,15.3943,236.9839,17
 latitude,Float,4233.6674,42.2553,42.3806,6,7,42.3367,0.0305,0.0009,0
-longitude,Float,-7107.268799999998,-71.1626,-71.0298,6,8,-71.0727,0.0311,0.0010,0
+longitude,Float,-7107.2688,-71.1626,-71.0298,6,8,-71.0727,0.0311,0.0010,0
 source,String,,Citizens Connect App,Self Service,12,20,,,,0
