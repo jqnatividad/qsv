@@ -66,7 +66,7 @@ With the judicious use of "require", the prologue & the "_idx"/"_rowcount" varia
 variables/tables/arrays that can be used for complex aggregation operations in the epilogue.
 
 TIP: When developing luau scripts, be sure to set QSV_LOG_LEVEL=debug so you can see the detailed Luau
-errors in the logfile. Set QSV_LOG_LEVEL=trace if you want to see the record values in the log file as well.
+errors in the logfile. Set QSV_LOG_LEVEL=trace if you want to see the record/global values as well.
 
 For more detailed examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_luau.rs.
 
@@ -186,6 +186,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // coz if log debug is on, we use idx to track record/row number
     // in the log error messages
     let mut idx_used: bool = log_enabled!(log::Level::Debug);
+    let trace_on: bool = log_enabled!(log::Level::Trace);
     let mut idx = 0_usize;
 
     // setup LUAU_PATH; create a temporary directory and add it to LUAU_PATH and copy date.lua
@@ -271,6 +272,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .set_mode(mlua::ChunkMode::Binary)
             .exec()
         {
+            if trace_on {
+                log::trace!("prologue globals: {globals:?}");
+            }
             return fail_clierror!("Prologue error: Failed to execute \"{prologue_script}\".\n{e}");
         }
         info!("Prologue executed.");
@@ -287,14 +291,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     idx_used = idx_used || luau_script.contains("_idx") || luau_script.contains("_rowcount");
 
-    let mut luau_program = if args.flag_exec {
+    let mut luau_main_script = if args.flag_exec {
         String::new()
     } else {
         String::from("return ")
     };
 
-    luau_program.push_str(&luau_script);
-    debug!("Luau program: {luau_program:?}");
+    luau_main_script.push_str(&luau_script);
+    debug!("Luau main script: {luau_main_script:?}");
 
     // prep progress bar
     #[cfg(any(feature = "full", feature = "lite"))]
@@ -321,13 +325,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     // pre-compile main script into bytecode
-    let main_bytecode = luau_compiler.compile(&luau_program);
+    let main_bytecode = luau_compiler.compile(&luau_main_script);
 
     let mut record = csv::StringRecord::new();
     let mut error_count = 0_usize;
-
-    let mut trace_var = String::new();
-    let trace_on: bool = log_enabled!(log::Level::Trace);
+    let mut trace_col_values = String::new();
 
     while rdr.read_record(&mut record)? {
         #[cfg(any(feature = "full", feature = "lite"))]
@@ -355,7 +357,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 }
             }
             if trace_on {
-                trace_var = format!("{:?}", col.clone());
+                trace_col_values = format!("{:?}", col.clone());
             }
             globals.set("col", col)?;
         }
@@ -379,11 +381,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 error_count += 1;
                 let err_msg = if idx_used {
                     if trace_on {
-                        log::trace!("{trace_var}");
-                        format!("_idx: {idx} error({error_count}): {e:?}/n")
-                    } else {
-                        format!("_idx: {idx} error({error_count}): {e:?}")
+                        log::trace!("current row({idx}): {trace_col_values}");
+                        log::trace!("current globals({idx}): {globals:?}");
                     }
+                    format!("_idx: {idx} error({error_count}): {e:?}")
                 } else {
                     format!("error({error_count}): {e:?}")
                 };
@@ -468,6 +469,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             Ok(computed) => computed,
             Err(e) => {
                 log::error!("Epilogue error: Cannot evaluate \"{epilogue_script}\".\n{e}");
+                if trace_on {
+                    log::trace!("epilogue globals: {globals:?}");
+                }
                 error_result.clone()
             }
         };
@@ -485,6 +489,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         };
         winfo!("{epilogue_string}");
+    }
+    if trace_on {
+        log::trace!("ending globals: {globals:?}");
     }
 
     wtr.flush()?;
