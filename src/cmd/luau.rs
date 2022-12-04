@@ -55,15 +55,18 @@ There are also special variables - "_idx" that is zero during the prologue, and 
 row number during the main script; and "_rowcount" which is zero during the prologue and the main script,
 and set to the rowcount during the epilogue.
 
-In addition, the user can load luau modules using luau's "require" function from the LUAU_PATH.
-Note that the LuaDate library is preloaded. See https://tieske.github.io/date/#date-id96473 for info on 
-how to use the LuaDate library.
+Luau's standard library is relatively minimal (https://luau-lang.org/library).
+That's why qsv preloads the LuaDate library as date manipulation is a common data-wrangling task.
+See https://tieske.github.io/date/#date-id96473 for info on how to use the LuaDate library.
 
-With the judicious use of require and the prologue and the "_idx"/"_rowcount" variables, one can create
+Furthermore, the user can load additional libraries from the LUAU_PATH using luau's "require" function.
+See http://lua-users.org/wiki/LibrariesAndBindings for a list of other libraries.
+
+With the judicious use of "require", the prologue & the "_idx"/"_rowcount" variables, one can create
 variables/tables/arrays that can be used for complex aggregation operations in the epilogue.
 
 TIP: When developing luau scripts, be sure to set QSV_LOG_LEVEL=debug so you can see the detailed Luau
-errors in the logfile.
+errors in the logfile. Set QSV_LOG_LEVEL=trace if you want to see the record values in the log file as well.
 
 For more detailed examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_luau.rs.
 
@@ -179,7 +182,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let globals = luau.globals();
     globals.set("cols", "{}")?;
 
-    let mut idx_used = false;
+    // we initialize idx_used with a log_enabled debug check
+    // coz if log debug is on, we use idx to track record/row number
+    // in the log error messages
+    let mut idx_used: bool = log_enabled!(log::Level::Debug);
     let mut idx = 0_usize;
 
     // setup LUAU_PATH; create a temporary directory and add it to LUAU_PATH and copy date.lua
@@ -206,7 +212,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             match fs::read_to_string(epilogue_filepath) {
                 Ok(epilogue) => {
                     // check if the epilogue uses _idx or _rowcount
-                    idx_used = epilogue.contains("_idx") || epilogue.contains("_rowcount");
+                    idx_used =
+                        idx_used || epilogue.contains("_idx") || epilogue.contains("_rowcount");
                     epilogue
                 }
                 Err(e) => return fail_clierror!("Cannot load Luau epilogue file: {e}"),
@@ -319,6 +326,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut record = csv::StringRecord::new();
     let mut error_count = 0_usize;
 
+    let mut trace_var = String::new();
+    let trace_on: bool = log_enabled!(log::Level::Trace);
+
     while rdr.read_record(&mut record)? {
         #[cfg(any(feature = "full", feature = "lite"))]
         if show_progress {
@@ -333,7 +343,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         // Updating col
         {
-            let col = luau.create_table()?;
+            let col =
+                luau.create_table_with_capacity(record.len().try_into().unwrap_or_default(), 1)?;
 
             for (i, v) in record.iter().enumerate() {
                 col.set(i + 1, v)?;
@@ -342,6 +353,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 for (h, v) in headers.iter().zip(record.iter()) {
                     col.set(h, v)?;
                 }
+            }
+            if trace_on {
+                trace_var = format!("{:?}", col.clone());
             }
             globals.set("col", col)?;
         }
@@ -361,9 +375,19 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         {
             Ok(computed) => computed,
             Err(e) => {
-                log::error!("{e:?}");
                 error_flag = true;
                 error_count += 1;
+                let err_msg = if idx_used {
+                    if trace_on {
+                        log::trace!("{trace_var}");
+                        format!("_idx: {idx} error({error_count}): {e:?}/n")
+                    } else {
+                        format!("_idx: {idx} error({error_count}): {e:?}")
+                    }
+                } else {
+                    format!("error({error_count}): {e:?}")
+                };
+                log::error!("{err_msg}");
                 error_result.clone()
             }
         };
