@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 * reverted `not_luau_compatible` introduced in 0.76.2 and 0.76.3. Adjusted Github Action publish workflow instead to properly build `luau` in qsvdp when the platform supports it.
 
-**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.76.1...0.76.2
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.76.2...0.76.3
 
 ## [0.76.2] - 2022-12-04
 
