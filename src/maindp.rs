@@ -22,7 +22,7 @@ macro_rules! command_list {
     help        Show this usage message
     index       Create CSV index for faster access
     input       Read CSVs w/ special quoting, skipping, trimming & transcoding rules
-    luau        Execute Luau script on CSV data
+    luau*       Execute Luau script on CSV data
     pseudo      Pseudonymise the values of a column
     rename      Rename the columns of CSV data efficiently
     replace     Replace patterns in CSV data
@@ -39,6 +39,7 @@ macro_rules! command_list {
     validate    Validate CSV data for RFC4180-compliance or with JSON Schema
 
     NOTE: qsvdp ignores the --progressbar option for all commands.
+    luau may be disabled if your platform is not compatible.
 
     sponsored by datHere - Data Infrastructure Engineering
 "
@@ -167,6 +168,7 @@ enum Command {
     Help,
     Index,
     Input,
+    #[cfg(not(feature = ("not_luau_compatible")))]
     Luau,
     Pseudo,
     Rename,
@@ -210,6 +212,7 @@ impl Command {
             }
             Command::Index => cmd::index::run(argv),
             Command::Input => cmd::input::run(argv),
+            #[cfg(not(feature = ("not_luau_compatible")))]
             Command::Luau => cmd::luau::run(argv),
             Command::Pseudo => cmd::pseudo::run(argv),
             Command::Rename => cmd::rename::run(argv),
