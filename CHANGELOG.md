@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.76.1] - 2022-12-04
+
+### Fixed
+* added `not_luau_compatible` feature so we can more easily disable `luau` feature when cross-compiling for some platforms where we cannot properly build luau.
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.76.0...0.76.1
+
 ## [0.76.0] - 2022-12-04
 
 ### Added
