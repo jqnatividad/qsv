@@ -168,7 +168,7 @@ enum Command {
     Help,
     Index,
     Input,
-    #[cfg(not(feature = ("not_luau_compatible")))]
+    #[cfg(not(feature = "not_luau_compatible"))]
     Luau,
     Pseudo,
     Rename,
@@ -212,7 +212,7 @@ impl Command {
             }
             Command::Index => cmd::index::run(argv),
             Command::Input => cmd::input::run(argv),
-            #[cfg(not(feature = ("not_luau_compatible")))]
+            #[cfg(not(feature = "not_luau_compatible"))]
             Command::Luau => cmd::luau::run(argv),
             Command::Pseudo => cmd::pseudo::run(argv),
             Command::Rename => cmd::rename::run(argv),
