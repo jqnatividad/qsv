@@ -85,11 +85,7 @@ pub fn version() -> String {
     enabled_features.push_str("foreach;");
     #[cfg(all(feature = "generate", not(feature = "lite")))]
     enabled_features.push_str("generate;");
-    #[cfg(all(
-        feature = "luau",
-        not(feature = "lite"),
-        not(feature = "not_luau_compatible")
-    ))]
+    #[cfg(all(feature = "luau", not(feature = "lite")))]
     enabled_features.push_str("luau;");
     #[cfg(all(feature = "python", not(feature = "lite")))]
     {

@@ -1,5 +1,3 @@
-#![cfg(not(feature = "not_luau_compatible"))]
-
 static USAGE: &str = r#"
 Create a new computed column, filter rows or compute aggregations by executing a
 Luau script for every line of a CSV file.

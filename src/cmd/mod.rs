@@ -38,7 +38,7 @@ pub mod input;
 pub mod join;
 #[cfg(any(feature = "full", feature = "lite"))]
 pub mod jsonl;
-#[cfg(all(feature = "luau", not(feature = "not_luau_compatible")))]
+#[cfg(feature = "luau")]
 pub mod luau;
 #[cfg(any(feature = "full", feature = "lite"))]
 pub mod partition;
