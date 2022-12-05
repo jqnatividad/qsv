@@ -134,6 +134,7 @@ jobs:
       if: ${{ matrix.job.musl-prep }}
       run: |
         sudo apt-get install musl-tools
+        sudo ln -s /bin/g++ /bin/musl-g++
     - name: Build qsv
       env:
         RUSTFLAGS: --emit=asm
