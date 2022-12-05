@@ -38,6 +38,8 @@ macro_rules! command_list {
     stats       Infer data types and compute descriptive statistics
     validate    Validate CSV data for RFC4180-compliance or with JSON Schema
 
+    NOTE: qsvdp ignores the --progressbar option for all commands.
+
     sponsored by datHere - Data Infrastructure Engineering
 "
     };
