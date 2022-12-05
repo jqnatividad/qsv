@@ -6,10 +6,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.76.3] - 2022-12-05
+
+### Fixed
+* reverted `not_luau_compatible` introduced in 0.76.2 and 0.76.3. Adjusted Github Action publish workflow instead to properly build `luau` in qsvdp when the platform supports it.
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.76.1...0.76.2
+
 ## [0.76.2] - 2022-12-04
 
 ### Fixed
 * tweak `not_luau_compatible` feature so we can more easily disable `luau` feature when cross-compiling for some platforms where we cannot properly build luau.
+
+NOTE: Not published on crates.io due to problems creating prebuilt binaries
 
 **Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.76.1...0.76.2
 
@@ -17,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 * added `not_luau_compatible` feature so we can more easily disable `luau` feature when cross-compiling for some platforms where we cannot properly build luau.
+
+NOTE: Not published on crates.io due to problems creating prebuilt binaries
 
 **Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.76.0...0.76.1
 
@@ -37,6 +48,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 * `stats`: fix sum rounding and variance precision errors https://github.com/jqnatividad/qsv/pull/635
+
+NOTE: Not published on crates.io due to problems creating prebuilt binaries
 
 **Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.75.0...0.76.0
 
