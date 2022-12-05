@@ -129,8 +129,8 @@ fn py_map_datetime() {
             svec!["letter", "datecol"],
             svec!["a", "2019-12-04"],
             svec!["b", "2001-01-03"],
-            svec!["c", "19910704"],
-            svec!["d", "2021-W01-1"],
+            svec!["c", "1991-07-04"],
+            svec!["d", "2021-01-04"],
         ],
     );
     let mut cmd = wrk.command("py");
@@ -144,8 +144,8 @@ fn py_map_datetime() {
         svec!["letter", "datecol", "fivedaysago"],
         svec!["a", "2019-12-04", "2019-11-29"],
         svec!["b", "2001-01-03", "2000-12-29"],
-        svec!["c", "19910704", "1991-06-29"],
-        svec!["d", "2021-W01-1", "2020-12-30"],
+        svec!["c", "1991-07-04", "1991-06-29"],
+        svec!["d", "2021-01-04", "2020-12-30"],
     ];
     assert_eq!(got, expected);
 }
