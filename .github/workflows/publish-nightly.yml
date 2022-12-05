@@ -35,6 +35,7 @@ jobs:
             architecture: x86_64
             addl-build-args: --features=apply,generate,luau,fetch,foreach,nightly,self_update
             default-features:
+            addl-qsvdp-features: luau
           # - os: ubuntu-latest
           #   os-name: linux
           #   target: x86_64-unknown-linux-musl
@@ -48,18 +49,21 @@ jobs:
             architecture: x86_64
             addl-build-args: --features=apply,generate,luau,fetch,nightly,self_update
             default-features:
+            addl-qsvdp-features: luau
           - os: windows-latest
             os-name: windows
             target: x86_64-pc-windows-gnu
             architecture: x86_64
             addl-build-args: --features=apply,generate,luau,fetch,nightly,self_update
             default-features: --no-default-features 
+            addl-qsvdp-features: luau
           - os: macos-latest
             os-name: macos
             target: x86_64-apple-darwin
             architecture: x86_64
             addl-build-args: --features=apply,generate,luau,fetch,foreach,nightly,self_update
-            default-features: --no-default-features 
+            default-features: --no-default-features
+            addl-qsvdp-features: luau
 
     steps:
     - name: Installing Rust toolchain
@@ -106,7 +110,7 @@ jobs:
         command: build
         use-cross: false
         toolchain: ${{ matrix.rust }}
-        args: --profile release-nightly --bin qsvdp -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --features=datapusher_plus --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}
+        args: --profile release-nightly --bin qsvdp -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --features=datapusher_plus,${{ matrix.job.addl-qsvdp-features }} --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}
     - name: Copy binaries to working dir
       shell: bash
       run: |
