@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `py` and `luau`: when errors encountered, return non-zero exit code, along with error count to stderr https://github.com/jqnatividad/qsv/pull/631
 * `safenames` and `excel`: Unsafe empty column/header names are replaced with "\_blank" instead of "\_" https://github.com/jqnatividad/qsv/pull/632
 * `frequency`: replace foreach iterator with regular for; remove unneeded assert https://github.com/jqnatividad/qsv/commit/74eb321defbf294675872a7dd891e8a7aedd31f1
-* bumped qsv-stats from 0.4.1 to 0.4.4 - fixing sum rounding and variance precision errors. 
+* bumped qsv-stats from 0.4.1 to 0.4.5 - fixing sum rounding and variance precision errors. 
 * cargo update bump several indirect dependencies
 * pin Rust nightly to 2022-12-03
 
