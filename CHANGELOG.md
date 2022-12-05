@@ -6,6 +6,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.76.0] - 2022-12-04
+
+### Added
+* `qsvdp`: add `luau` in anticipation of Datapusher+ optional preprocessing https://github.com/jqnatividad/qsv/pull/634
+* `luau`: added ability to load libraries using "require"; preload LuaDate library https://github.com/jqnatividad/qsv/pull/633
+* `luau`: added more extensive debug logging support, adding _idx to debug log messages; trace log level support showing global vars and record values when an error occurs https://github.com/jqnatividad/qsv/pull/636 and https://github.com/jqnatividad/qsv/pull/637
+
+### Changed
+* `py` and `luau`: when errors encountered, return non-zero exit code, along with error count to stderr https://github.com/jqnatividad/qsv/pull/631
+* `safenames` and `excel`: Unsafe empty column/header names are replaced with "\_blank" instead of "\_" https://github.com/jqnatividad/qsv/pull/632
+* `frequency`: replace foreach iterator with regular for; remove unneeded assert https://github.com/jqnatividad/qsv/commit/74eb321defbf294675872a7dd891e8a7aedd31f1
+* bumped qsv-stats from 0.4.1 to 0.4.4 - fixing sum rounding and variance precision errors. 
+* cargo update bump several indirect dependencies
+* pin Rust nightly to 2022-12-03
+
+### Fixed
+* `stats`: fix sum rounding and variance precision errors https://github.com/jqnatividad/qsv/pull/635
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.75.0...0.76.0
+
 ## [0.75.0] - 2022-12-01
 
 ### Added:
