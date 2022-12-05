@@ -748,10 +748,13 @@ pub fn safe_header_names(
 
 #[inline]
 pub fn is_safe_name(header_name: &str) -> bool {
-    if header_name.trim().is_empty() || header_name.len() > 60 {
+    if header_name.trim().is_empty()
+        || header_name.trim_start_matches('_').is_empty()
+        || header_name.len() > 60
+    {
         return false;
     }
-    let first_character = header_name.as_bytes()[0];
+    let first_character = header_name.trim_start_matches('_').as_bytes()[0];
     if first_character.is_ascii_digit() || first_character.is_ascii_whitespace() {
         return false;
     }

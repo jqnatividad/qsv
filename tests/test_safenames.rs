@@ -154,9 +154,10 @@ fn safenames_verify_verbose() {
                 "",
                 "",
                 "",
-                "col1"
+                "col1",
+                "_1",
             ],
-            svec!["1", "b", "33", "1", "b", "33", "34", "z", "42", "3", "2", "1"],
+            svec!["1", "b", "33", "1", "b", "33", "34", "z", "42", "3", "2", "1", "0"],
         ],
     );
 
@@ -164,8 +165,8 @@ fn safenames_verify_verbose() {
     cmd.arg("--mode").arg("V").arg("in.csv");
 
     let changed_headers = wrk.output_stderr(&mut cmd);
-    let expected_count = r#"12 header/s
-8 unsafe header/s: ["col1", " This is a column with invalid chars!# and leading & trailing spaces ", "", "this is already a Postgres Safe Column", "1starts with 1", "", "", ""]
+    let expected_count = r#"13 header/s
+9 unsafe header/s: ["col1", " This is a column with invalid chars!# and leading & trailing spaces ", "", "this is already a Postgres Safe Column", "1starts with 1", "", "", "", "_1"]
 2 safe header/s: ["col1", "this is already a Postgres Safe Column"]
 7 duplicate/s
 "#;
