@@ -39,6 +39,7 @@ jobs:
             use-cross: false
             addl-build-args: --features=apply,generate,luau,fetch,foreach,self_update
             default-features:
+            addl-qsvdp-features: 
           - os: ubuntu-latest
             os-name: linux
             target: x86_64-unknown-linux-musl
@@ -47,6 +48,7 @@ jobs:
             use-cross: false
             addl-build-args: --features=apply,generate,fetch,foreach,self_update,not_luau_compatible
             default-features:
+            addl-qsvdp-features: not_luau_compatible
           - os: ubuntu-latest
             os-name: linux
             target: i686-unknown-linux-gnu
@@ -54,6 +56,7 @@ jobs:
             use-cross: true
             addl-build-args: --features=apply,generate,fetch,foreach,self_update,not_luau_compatible
             default-features:
+            addl-qsvdp-features: not_luau_compatible
           - os: windows-latest
             os-name: windows
             target: x86_64-pc-windows-msvc
@@ -61,6 +64,7 @@ jobs:
             use-cross: false
             addl-build-args: --features=apply,generate,luau,fetch,self_update
             default-features:
+            addl-qsvdp-features:
           - os: windows-latest
             os-name: windows
             target: i686-pc-windows-msvc
@@ -68,6 +72,7 @@ jobs:
             use-cross: true
             addl-build-args: --features=apply,generate,fetch,self_update,not_luau_compatible
             default-features:
+            addl-qsvdp-features: not_luau_compatible
           - os: windows-latest
             os-name: windows
             target: x86_64-pc-windows-gnu
@@ -75,6 +80,7 @@ jobs:
             use-cross: false
             addl-build-args: --features=apply,generate,luau,fetch,self_update
             default-features: --no-default-features
+            addl-qsvdp-features:
           - os: macos-latest
             os-name: macos
             target: x86_64-apple-darwin
@@ -82,6 +88,7 @@ jobs:
             use-cross: false
             addl-build-args: --features=apply,generate,luau,fetch,foreach,self_update
             default-features: --no-default-features
+            addl-qsvdp-features:
           - os: macos-latest
             os-name: macos
             target: aarch64-apple-darwin
@@ -90,6 +97,7 @@ jobs:
             use-cross: true
             addl-build-args: --features=apply,generate,fetch,foreach,self_update,not_luau_compatible
             default-features: --no-default-features
+            addl-qsvdp-features: not_luau_compatible
           - os: ubuntu-latest
             os-name: linux
             target: aarch64-unknown-linux-gnu
@@ -97,6 +105,7 @@ jobs:
             use-cross: true
             addl-build-args: --features=apply,generate,fetch,foreach,self_update,not_luau_compatible
             default-features:
+            addl-qsvdp-features: not_luau_compatible
           # - os: ubuntu-latest
           #   os-name: linux
           #   target: arm-unknown-linux-gnueabihf
@@ -160,7 +169,7 @@ jobs:
         command: build
         use-cross: ${{ matrix.job.use-cross }}
         toolchain: ${{ matrix.rust }}
-        args: --release --locked --bin qsvdp --features=datapusher_plus --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}
+        args: --release --locked --bin qsvdp --features=datapusher_plus,${{ matrix.job.addl-qsvdp-features }} --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}
     - name: Copy binaries to working dir
       shell: bash
       run: |
