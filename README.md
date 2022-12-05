@@ -95,8 +95,8 @@ Prebuilt binary variants of the latest qsv version with more enabled features fo
 
 There are three binary variants of qsv:
  * `qsv` - [feature](#feature-flags)-capable(❇️), with the [prebuilt binaries](https://github.com/jqnatividad/qsv/releases/latest) enabling all applicable features except Python [^6]
- * `qsvlite` - all features disabled (~half the size of `qsv`)
- * `qsvdp` - optimized for use with [DataPusher+](https://github.com/dathere/datapusher-plus), with only DataPusher+ relevant commands & the self-update engine removed (~sixth of the size of `qsv`).
+ * `qsvlite` - all features disabled (~40% of the size of `qsv`)
+ * `qsvdp` - optimized for use with [DataPusher+](https://github.com/dathere/datapusher-plus), with only DataPusher+ relevant commands (~40% of the the size of `qsv`).
 
 Alternatively, you can install from source by [installing Rust](https://www.rust-lang.org/tools/install)
 and installing `qsv` using Rust's cargo command[^5]:
@@ -289,8 +289,8 @@ Relevant env vars are defined as anything that starts with `QSV_` & `MIMALLOC_` 
 `qsv` has several features:
 
 * `mimalloc` (default) - use the mimalloc allocator (see [Memory Allocator](docs/PERFORMANCE.md#memory-allocator) for more info).
-* `apply` (default) - enable `apply` command. This swiss-army knife of CSV transformations is very powerful, but it has a lot of dependencies that increases both compile time and binary size.
-* `fetch` (default) - enables the `fetch` & `fetchpost` commands.
+* `apply` - enable `apply` command. This swiss-army knife of CSV transformations is very powerful, but it has a lot of dependencies that increases both compile time and binary size.
+* `fetch` - enables the `fetch` & `fetchpost` commands.
 * `foreach` - enable `foreach` command (not valid for Windows).
 * `generate` - enable `generate` command.
 * `luau` - enable `luau` command. Embeds a [Luau](https://luau-lang.org) interpreter into qsv. [Luau has type-checking, sandboxing, additional language operators, increased performance & other improvements](https://luau-lang.org/2022/11/04/luau-origins-and-evolution.html) over Lua.
