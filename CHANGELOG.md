@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 * cargo update bump serde from 1.0.148 to 1.0.149
+* simplify python datetime test so it runs on Python 3.6 and above
 
 ### Fixed
 * reverted `not_luau_compatible` introduced in 0.76.2 and 0.76.3. Adjusted Github Action publish workflow instead to properly build `luau` in qsvdp when the platform supports it.
