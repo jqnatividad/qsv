@@ -492,7 +492,7 @@ pub fn init_logger() -> String {
 }
 
 #[cfg(feature = "self_update")]
-pub fn qsv_check_for_update(check_only: bool, send_survey: bool) -> Result<bool, String> {
+pub fn qsv_check_for_update(check_only: bool) -> Result<bool, String> {
     if env::var("QSV_NO_UPDATE").is_ok() {
         return Ok(false);
     }
@@ -579,7 +579,7 @@ or download the prebuilt binaries from GitHub."#
         winfo!("Up to date ({curr_version})... no update required.");
     };
 
-    if send_survey {
+    if !check_only {
         if let Ok(status_code) =
             send_hwsurvey(&bin_name, updated, latest_release, curr_version, false)
         {
@@ -591,7 +591,7 @@ or download the prebuilt binaries from GitHub."#
 }
 
 #[cfg(not(feature = "self_update"))]
-pub fn qsv_check_for_update(_check_only: bool, send_survey: bool) -> Result<bool, String> {
+pub fn qsv_check_for_update(_check_only: bool) -> Result<bool, String> {
     Ok(true)
 }
 
