@@ -1,6 +1,6 @@
 static USAGE: &str = r#"
 Create a new computed column, filter rows or compute aggregations by executing a
-Luau script for every line of a CSV file.
+Luau script for every row of a CSV file.
 
 The executed Luau has 3 ways to reference row columns (as strings):
   1. Directly by using column name (e.g. Amount), can be disabled with -g
@@ -37,7 +37,7 @@ Some usage examples:
         "if tonumber(Amount) < 0 then return 'debit' else return 'credit' end" | \
     qsv luau map AbsAmount "math.abs(tonumber(Amount))"
 
-  Filter some lines based on numerical filtering
+  Filter some rows based on numerical filtering
   $ qsv luau filter "tonumber(a) > 45"
   $ qsv luau filter "tonumber(a) >= tonumber(b)"
 
@@ -45,11 +45,11 @@ Some usage examples:
   "file:" prefix to read non-trivial scripts from the filesystem.
   $ qsv luau map Type -P "file:init.luau" -x "file:debitcredit.luau" -E "file:end.luau"
 
-The main-script is evaluated on a per record basis.
-With "luau map", if the main-script is invalid for a record, "<ERROR>" is returned for that record.
-With "luau filter", if the main-script is invalid for a record, that record is not filtered.
+The main-script is evaluated on a per row basis.
+With "luau map", if the main-script is invalid for a row, "<ERROR>" is returned for that row.
+With "luau filter", if the main-script is invalid for a row, that row is not filtered.
 
-If any record has an invalid result, an exitcode of 1 is returned along with an error count to stderr.
+If any row has an invalid result, an exitcode of 1 is returned along with an error count to stderr.
 
 There are also special variables - "_idx" that is zero during the prologue, and set to the current 
 row number during the main script; and "_rowcount" which is zero during the prologue and the main script,
@@ -66,7 +66,7 @@ With the judicious use of "require", the prologue & the "_idx"/"_rowcount" varia
 variables/tables/arrays that can be used for complex aggregation operations in the epilogue.
 
 TIP: When developing luau scripts, be sure to set QSV_LOG_LEVEL=debug so you can see the detailed Luau
-errors in the logfile. Set QSV_LOG_LEVEL=trace if you want to see the record/global values as well.
+errors in the logfile. Set QSV_LOG_LEVEL=trace if you want to see the row/global values as well.
 
 For more detailed examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_luau.rs.
 
@@ -422,7 +422,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
             wtr.write_record(&record)?;
         } else if args.cmd_filter {
-            let must_keep_line = if error_flag {
+            let must_keep_row = if error_flag {
                 true
             } else {
                 match computed_value {
@@ -438,7 +438,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 }
             };
 
-            if must_keep_line {
+            if must_keep_row {
                 wtr.write_record(&record)?;
             }
         }
