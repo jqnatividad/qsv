@@ -1,20 +1,26 @@
 [package]
-name          = "qsv"
-version       = "0.76.3"                                                                       #:version
-authors       = ["Joel Natividad <joel@datHere.com>"]
-description   = "A high performance CSV data-wrangling toolkit."
+name = "qsv"
+version = "0.76.3" #:version
+authors = ["Joel Natividad <joel@datHere.com>"]
+description = "A high performance CSV data-wrangling toolkit."
 documentation = "https://github.com/jqnatividad/qsv#qsv-ultra-fast-csv-data-wrangling-toolkit"
-homepage      = "https://github.com/jqnatividad/qsv#qsv-ultra-fast-csv-data-wrangling-toolkit"
-repository    = "https://github.com/jqnatividad/qsv"
-readme        = "README.md"
-keywords      = ["csv", "geocode", "data-engineering", "etl", "opendata"]
-categories    = ["command-line-utilities", "parser-implementations"]
-license       = "MIT OR Unlicense"
-autotests     = false
-edition       = "2021"
-rust-version  = "1.65"
-autobins      = false
-include       = ["src/**/*", "LICENSE-MIT", "README.md", "CHANGELOG.md", "resources/luau/vendor/luadate/date.lua"]
+homepage = "https://github.com/jqnatividad/qsv#qsv-ultra-fast-csv-data-wrangling-toolkit"
+repository = "https://github.com/jqnatividad/qsv"
+readme = "README.md"
+keywords = ["csv", "geocode", "data-engineering", "etl", "opendata"]
+categories = ["command-line-utilities", "parser-implementations"]
+license = "MIT OR Unlicense"
+autotests = false
+edition = "2021"
+rust-version = "1.65"
+autobins = false
+include = [
+    "src/**/*",
+    "LICENSE-MIT",
+    "README.md",
+    "CHANGELOG.md",
+    "resources/luau/vendor/luadate/date.lua",
+]
 
 [[bin]]
 name              = "qsv"
