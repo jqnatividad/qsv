@@ -14,7 +14,7 @@ autotests     = false
 edition       = "2021"
 rust-version  = "1.65"
 autobins      = false
-include       = ["src/**/*", "LICENSE-MIT", "README.md", "CHANGELOG.md"]
+include       = ["src/**/*", "LICENSE-MIT", "README.md", "CHANGELOG.md", "resources/luau/vendor/luadate/date.lua"]
 
 [[bin]]
 name              = "qsv"
