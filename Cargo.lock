@@ -1375,9 +1375,9 @@ dependencies = [
 
 [[package]]
 name = "hyper-rustls"
-version = "0.23.1"
+version = "0.23.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "59df7c4e19c950e6e0e868dcc0a300b09a9b88e9ec55bd879ca819087a77355d"
+checksum = "1788965e61b367cd03a62950836d5cd41560c3577d90e40e0819373194d1661c"
 dependencies = [
  "http",
  "hyper",
@@ -2981,9 +2981,9 @@ dependencies = [
 
 [[package]]
 name = "sysinfo"
-version = "0.26.8"
+version = "0.27.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "29ddf41e393a9133c81d5f0974195366bd57082deac6e0eb02ed39b8341c2bb6"
+checksum = "0d08ba83d6dde63d053e42d7230f0dc7f8d8efeb8d30d3681580d158156461ba"
 dependencies = [
  "cfg-if",
  "core-foundation-sys",

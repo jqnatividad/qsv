@@ -142,7 +142,7 @@ serde_json = { version = "1", features = ["preserve_order"] }
 strsim = { version = "0.10", optional = true }
 strum = { version = "0.24", optional = true }
 strum_macros = { version = "0.24", optional = true }
-sysinfo = "0.26"
+sysinfo = "0.27"
 tabwriter = "1.2"
 tempfile = "3"
 test-data-generation = { version = "0.3", optional = true }
