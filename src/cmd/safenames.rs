@@ -14,8 +14,8 @@ In Verify (v) mode, returns number of unsafe headers to stderr.
 In Verbose (V) mode, returns number of headers; duplicate count and unsafe & safe headers to stderr.
 No stdout output is generated in Verify and Verbose mode.
 
-In JSON (j) mode, returns a minified JSON to stdout.
-In Pretty JSON (J) mode, returns a pretty printed JSON to stdout.
+In JSON (j) mode, returns Verbose mode info in minified JSON to stdout.
+In Pretty JSON (J) mode, returns Verbose mode info in pretty printed JSON to stdout.
 
 Given data.csv:
  c1,12_col,Col with Embedded Spaces,,Column!@Invalid+Chars,c1
