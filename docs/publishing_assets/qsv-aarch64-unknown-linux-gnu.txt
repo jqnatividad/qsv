@@ -1,0 +1,4 @@
+The luau feature is not enabled on this prebuilt because of cross-compilation
+limitations using GitHub's Action Runners.
+
+Compile qsv natively on this platform if you want to enable the luau feature.
