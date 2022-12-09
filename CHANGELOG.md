@@ -6,6 +6,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.77.0] - 2022-12-08
+
+## Added
+* `safenames`: added Verbose JSON options https://github.com/jqnatividad/qsv/pull/644
+
+## Changed
+* `py` & `luau`: improved usage text
+* opt-in self-update in https://github.com/jqnatividad/qsv/pull/640 and https://github.com/jqnatividad/qsv/pull/641
+* Create README in prebuilt zip archive with platform specific notes https://github.com/jqnatividad/qsv/pull/642
+* Simplify python map_datetime test so it works on older Python versions https://github.com/jqnatividad/qsv/commit/e85e4e7bf9bf379f8478b066a9f6dea21afbf0e8
+* include date.lua in qsv package so `cargo install` works https://github.com/jqnatividad/qsv/commit/11a0ff8edc5405afd9cc6637de026bf2138a7df0
+* Bump data-encoding from 2.3.2 to 2.3.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/638
+* cargo update bump several dependencies
+* pin Rust nightly to 2022-12-07
+
+## Fixed:
+* `safenames`: fixed calculation of unsafe headers as it was dupe-counting some unsafe headers - https://github.com/jqnatividad/qsv/pull/644
+
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.76.3...0.77.0
+
 ## [0.76.3] - 2022-12-05
 
 ### Changed
