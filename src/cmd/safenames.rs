@@ -7,41 +7,44 @@ characters with _. If the first character is a digit, replace the digit with _.
 If a header with the same name already exists, append a sequence suffix (e.g. c1, c1_2, c1_3).
 Names are limited to 60 characters in length. Empty names are replaced with "_blank".
 
-In Always and Conditional mode, returns number of modified headers to stderr, and sends
-CSV with safe headers output to stdout.
+In Always (a) and Conditional (c) mode, returns number of modified headers to stderr,
+and sends CSV with safe headers output to stdout.
 
-In Verify Mode, returns number of unsafe headers to stderr.
-In Verbose Mode, returns number of headers; unsafe & safe headers; and duplicate count to stderr.
+In Verify (v) mode, returns number of unsafe headers to stderr.
+In Verbose (V) mode, returns number of headers; duplicate count and unsafe & safe headers to stderr.
 No stdout output is generated in Verify and Verbose mode.
+
+In JSON (j) mode, returns a minified JSON to stdout.
+In Pretty JSON (J) mode, returns a pretty printed JSON to stdout.
 
 Given data.csv:
  c1,12_col,Col with Embedded Spaces,,Column!@Invalid+Chars,c1
  1,a2,a3,a4,a5,a6
 
   $ qsv safenames data.csv
-  c1,_2_col,col_with_embedded_spaces,_,column__invalid_chars,c1_2
+  c1,_2_col,Col with Embedded Spaces,_blank,column__invalid_chars,c1_2
   1,a2,a3,a4,a5,a6
   stderr: 5
 
   Conditionally rename headers, allowing "quoted identifiers":
   $ qsv safenames --mode c data.csv
-  c1,_2_col,Col with Embedded Spaces,_,column__invalid_chars,c1_2
+  c1,_2_col,Col with Embedded Spaces,_blank,column__invalid_chars,c1_2
   1,a2,a3,a4,a5,a6
   stderr: 4
 
   Verify how many "unsafe" headers are found:
   $ qsv safenames --mode v data.csv
-  stderr: 5
+  stderr: 3
 
   Verbose mode:
   $ qsv safenames --mode V safenames.csv
   stderr: 6 header/s
-  5 unsafe header/s: ["c1", "12_col", "Col with Embedded Spaces", "", "Column!@Invalid+Chars"]
+  1 duplicate/s
+  3 unsafe header/s: ["12_col", "", "Column!@Invalid+Chars"]
   2 safe header/s: ["c1", "Col with Embedded Spaces"]
-  1 duplicate/s found.
 
-Note how "Col with Embedded Spaces" is both safe and unsafe. This is because it can be created 
-"safely" as a "quoted identifier" in PostgreSQL. However, it is also unsafe because the embedded
+Though "Col with Embedded Spaces" is safe, it is generally discouraged. It can be created "safely"
+as a "quoted identifier" in PostgreSQL. However, it is also discouraged because the embedded
 spaces can cause problems later on (see https://lerner.co.il/2013/11/30/quoting-postgresql/).
 
 For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_safenames.rs.
@@ -51,18 +54,24 @@ Usage:
     qsv safenames --help
 
 safenames options:
-    --mode <c|a|v|V>       Rename header names to "safe" names - i.e.
+    --mode <c|a|v|V|j|J>   Rename header names to "safe" names - i.e.
                            guaranteed "database-ready" names.
-                           It has four modes - conditional, always, verify & Verbose.
+                           It has six modes - conditional, always, verify, Verbose,
+                           with Verbose having two submodes - JSON & pretty JSON.
+
                            conditional (c) - check first before renaming and allow
                            "quoted identifiers" - mixed case with embedded spaces.
                            always (a) - goes ahead and renames all headers
                            without checking if they're already "safe".
+
                            verify (v) - count "unsafe" header names without
                            modifying them. Note that verify does not count
                            "quoted identifiers" as unsafe.
                            verbose (V) - like verify, but verbose, showing
-                           total header count, unsafe headers & safe headers.
+                           total header count, duplicates, unsafe headers & safe headers.
+
+                           JSON (j) - similar to verbose in minified JSON.
+                           pretty JSON (J) - verbose in pretty-printed JSON
                            [default: Always]
 Common options:
     -h, --help             Display this message
@@ -73,7 +82,7 @@ Common options:
                            Must be a single character. (default: ,)
 "#;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     config::{Config, Delimiter},
@@ -94,6 +103,16 @@ enum SafeNameMode {
     Conditional,
     Verify,
     VerifyVerbose,
+    VerifyVerboseJSON,
+    VerifyVerbosePrettyJSON,
+}
+
+#[derive(Serialize, Deserialize)]
+struct SafeNamesStruct {
+    header_count:    usize,
+    duplicate_count: u16,
+    unsafe_headers:  Vec<String>,
+    safe_headers:    Vec<String>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -106,6 +125,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         'a' | 'A' => SafeNameMode::Always,
         'v' => SafeNameMode::Verify,
         'V' => SafeNameMode::VerifyVerbose,
+        'j' => SafeNameMode::VerifyVerboseJSON,
+        'J' => SafeNameMode::VerifyVerbosePrettyJSON,
         _ => {
             return fail_clierror!("Invalid mode: {}", args.flag_mode);
         }
@@ -147,40 +168,51 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let mut dupe_count = 0_u16;
 
         for header_name in headers.iter() {
-            let unsafe_flag = if util::is_safe_name(header_name) {
+            let safe_flag = util::is_safe_name(header_name);
+            if safe_flag {
                 if !safenames_vec.contains(&header_name.to_string()) {
                     safenames_vec.push(header_name.to_string());
                 }
-                false
             } else {
                 unsafenames_vec.push(header_name.to_string());
                 unsafe_count += 1;
-                true
             };
 
             // check for duplicate headers/columns
-            // we use the unsafe_flag so we dont' double unsafe count
-            // an already unsafe header that's also a duplicate
             if checkednames_vec.contains(&header_name.to_string()) {
                 dupe_count += 1;
             } else {
-                if !unsafe_flag {
-                    unsafenames_vec.push(header_name.to_string());
-                    unsafe_count += 1;
-                }
                 checkednames_vec.push(header_name.to_string());
             }
         }
 
-        if safenames_mode == SafeNameMode::VerifyVerbose {
-            eprintln!(
-                "{} header/s\n{unsafe_count} unsafe header/s: {unsafenames_vec:?}\n{} safe \
-                 header/s: {safenames_vec:?}\n{dupe_count} duplicate/s",
-                headers.len(),
-                safenames_vec.len()
-            );
-        } else {
-            eprintln!("{unsafe_count}");
+        match safenames_mode {
+            SafeNameMode::VerifyVerbose => {
+                eprintln!(
+                    "{num_headers} header/s\n{dupe_count} duplicate/s\n{unsafe_count} unsafe \
+                     header/s: {unsafenames_vec:?}\n{num_safeheaders} safe header/s: \
+                     {safenames_vec:?}",
+                    num_headers = headers.len(),
+                    num_safeheaders = safenames_vec.len()
+                );
+            }
+            SafeNameMode::VerifyVerboseJSON | SafeNameMode::VerifyVerbosePrettyJSON => {
+                let safenames_struct = SafeNamesStruct {
+                    header_count:    headers.len(),
+                    duplicate_count: dupe_count,
+                    unsafe_headers:  unsafenames_vec,
+                    safe_headers:    safenames_vec,
+                };
+                if safenames_mode == SafeNameMode::VerifyVerbosePrettyJSON {
+                    println!(
+                        "{}",
+                        serde_json::to_string_pretty(&safenames_struct).unwrap()
+                    );
+                } else {
+                    println!("{}", serde_json::to_string(&safenames_struct).unwrap());
+                };
+            }
+            _ => eprintln!("{unsafe_count}"),
         }
     }
 
