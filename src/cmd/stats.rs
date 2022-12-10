@@ -719,6 +719,10 @@ impl FieldType {
             || current_type == FieldType::TNull
         {
             if string.parse::<i64>().is_ok() {
+                // leading zero, its a string
+                if string.starts_with('0') {
+                    return TString;
+                }
                 return TInteger;
             }
 

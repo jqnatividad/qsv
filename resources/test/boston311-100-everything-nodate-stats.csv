@@ -24,7 +24,7 @@ neighborhood_services_district,String,, ,9,1,2,,,,0,,,,,,,,,,3,16
 ward,String,, ,Ward 9,1,7,,,,0,,,,,,,,,,Ward 3,42
 precinct,String,, ,2210,0,4,,,,1,,,,,,,,,,0306,76
 location_street_name,String,,103 N Beacon St,INTERSECTION Verdun St & Gallivan Blvd,0,45,,,,1,,,,,,,,,,"20 Washington St,563 Columbus Ave,INTERSECTION Gallivan Blvd & Washington St",97
-location_zipcode,Integer,176426,2109,2215,0,5,2125.6145,15.3943,236.9839,17,2085,2101.5,2118,2125,2129,11,2145.5,2162,-0.2727,,24
+location_zipcode,String,,02109,02215,0,5,,,,17,,,,,,,,,,,24
 latitude,Float,4233.6674,42.2553,42.3806,6,7,42.3367,0.0305,0.0009,0,42.2034,42.2619,42.3204,42.3432,42.3594,0.0390,42.4179,42.4764,-0.1667,42.3594,78
 longitude,Float,-7107.2688,-71.1626,-71.0298,6,8,-71.0727,0.0311,0.0010,0,-71.1740,-71.1294,-71.0848,-71.0608,-71.0550,0.0298,-71.0104,-70.9658,-0.6101,-71.0587,77
 source,String,,Citizens Connect App,Self Service,12,20,,,,0,,,,,,,,,,Citizens Connect App,4

@@ -215,8 +215,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 serde_json::to_string_pretty(&sortcheck_struct).unwrap()
             );
         } else {
-            let json_result = serde_json::to_string(&sortcheck_struct).unwrap();
-            println!("{json_result}");
+            println!("{}", serde_json::to_string(&sortcheck_struct).unwrap());
         };
     }
 
