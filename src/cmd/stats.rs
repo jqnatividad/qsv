@@ -739,12 +739,10 @@ impl FieldType {
             if let Ok(parsed_date) =
                 parse_with_preference(string, DMY_PREFERENCE.load(Ordering::Relaxed))
             {
-                let rfc3339_date_str = parsed_date.to_string();
-
                 // with rfc3339 format, time component
                 // starts at position 17. If its shorter than 17,
                 // its a plain date, otherwise, its a datetime.
-                if rfc3339_date_str.len() >= 17 {
+                if parsed_date.to_string().len() >= 17 {
                     return TDateTime;
                 }
                 return TDate;
@@ -937,53 +935,58 @@ impl TypedMinMax {
     }
 
     fn len_range(&self) -> Option<(String, String)> {
-        match (self.str_len.min(), self.str_len.max()) {
-            (Some(min), Some(max)) => {
-                let mut buffer = itoa::Buffer::new();
-                Some((
-                    buffer.format(*min).to_owned(),
-                    buffer.format(*max).to_owned(),
-                ))
-            }
-            _ => None,
+        if let (Some(min), Some(max)) = (self.str_len.min(), self.str_len.max()) {
+            let mut buffer = itoa::Buffer::new();
+            Some((
+                buffer.format(*min).to_owned(),
+                buffer.format(*max).to_owned(),
+            ))
+        } else {
+            None
         }
     }
 
     fn show(&self, typ: FieldType) -> Option<(String, String)> {
         match typ {
             TNull => None,
-            TString => match (self.strings.min(), self.strings.max()) {
-                (Some(min), Some(max)) => {
+            TString => {
+                if let (Some(min), Some(max)) = (self.strings.min(), self.strings.max()) {
                     let min = String::from_utf8_lossy(min).to_string();
                     let max = String::from_utf8_lossy(max).to_string();
                     Some((min, max))
+                } else {
+                    None
                 }
-                _ => None,
-            },
-            TInteger => match (self.integers.min(), self.integers.max()) {
-                (Some(min), Some(max)) => {
+            }
+            TInteger => {
+                if let (Some(min), Some(max)) = (self.integers.min(), self.integers.max()) {
                     let mut buffer = itoa::Buffer::new();
                     Some((
                         buffer.format(*min).to_owned(),
                         buffer.format(*max).to_owned(),
                     ))
+                } else {
+                    None
                 }
-                _ => None,
-            },
-            TFloat => match (self.floats.min(), self.floats.max()) {
-                (Some(min), Some(max)) => {
+            }
+            TFloat => {
+                if let (Some(min), Some(max)) = (self.floats.min(), self.floats.max()) {
                     let mut buffer = ryu::Buffer::new();
                     Some((
                         buffer.format(*min).to_owned(),
                         buffer.format(*max).to_owned(),
                     ))
+                } else {
+                    None
                 }
-                _ => None,
-            },
-            TDate | TDateTime => match (self.dates.min(), self.dates.max()) {
-                (Some(min), Some(max)) => Some((min.to_string(), max.to_string())),
-                _ => None,
-            },
+            }
+            TDate | TDateTime => {
+                if let (Some(min), Some(max)) = (self.dates.min(), self.dates.max()) {
+                    Some((min.to_string(), max.to_string()))
+                } else {
+                    None
+                }
+            }
         }
     }
 }
