@@ -77,7 +77,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [transpose](/src/cmd/transpose.rs#L2)[^2] | Transpose rows/columns of a CSV.  |
 | [validate](/src/cmd/validate.rs#L2)[^1][^4] | Validate CSV data with JSON Schema (See `schema` command) & put invalid records into a separate file & a validation error report file. If no jsonschema file is provided, validates if a CSV conforms to the [RFC 4180 standard](https://datatracker.ietf.org/doc/html/rfc4180). |
 
- ❇️: enabled by a feature flag on `qsv`. Not available on `qsvlite` & `qsvdp` binary variants.
+ ❇️: enabled by a feature flag on `qsv`. Not available on `qsvlite`. `qsvdp` only has `luau` feature enabled.
 [^1]: uses an index when available.   
 [^2]: loads the entire CSV into memory. Note that `dedup`, `stats` & `transpose` have modes that do not load the entire CSV into memory.   
 [^3]: multithreaded when an index is available.   
