@@ -164,8 +164,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         schema_output_file.write_all(schema_pretty.as_bytes())?;
         schema_output_file.flush()?;
 
-        println!("Schema written to {schema_output_filename}");
-        info!("Schema written to {schema_output_filename}");
+        woutinfo!("Schema written to {schema_output_filename}");
     }
 
     Ok(())

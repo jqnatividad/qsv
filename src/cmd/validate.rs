@@ -220,8 +220,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 record_count.separate_with_commas()
             )
         };
-        info!("{msg}");
-        println!("{msg}");
+        woutinfo!("{msg}");
 
         return Ok(());
     }
@@ -360,8 +359,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // if 100% invalid, valid file is not needed, but this is rare so OK with creating empty file.
     if invalid_count > 0 {
         let msg = "Writing invalid/valid/error files...";
-        info!("{msg}");
-        println!("{msg}");
+        woutinfo!("{msg}");
 
         let input_path = args
             .arg_input

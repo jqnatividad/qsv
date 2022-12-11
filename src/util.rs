@@ -146,11 +146,11 @@ pub fn show_env_vars() {
             || OTHER_ENV_VARS.contains(&env_var.to_lowercase().as_str())
         {
             env_var_set = true;
-            println!("{env_var}: {v:?}");
+            woutinfo!("{env_var}: {v:?}");
         }
     }
     if !env_var_set {
-        println!("No qsv-relevant environment variables set.");
+        woutinfo!("No qsv-relevant environment variables set.");
     }
 }
 

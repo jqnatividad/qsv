@@ -68,18 +68,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         use thousands::Separable;
 
         if args.flag_width {
-            println!(
+            woutinfo!(
                 "{};{}",
                 count.separate_with_commas(),
                 width.separate_with_commas()
             );
         } else {
-            println!("{}", count.separate_with_commas());
+            woutinfo!("{}", count.separate_with_commas());
         }
     } else if args.flag_width {
-        println!("{count};{width}");
+        woutinfo!("{count};{width}");
     } else {
-        println!("{count}");
+        woutinfo!("{count}");
     }
     Ok(())
 }

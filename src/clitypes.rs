@@ -12,6 +12,16 @@ macro_rules! wout {
     });
 }
 
+macro_rules! woutinfo {
+    ($($arg:tt)*) => ({
+        use std::io::Write;
+        use log::info;
+        let info = format!($($arg)*);
+        info!("{info}");
+        (writeln!(&mut ::std::io::stdout(), $($arg)*)).unwrap();
+    });
+}
+
 macro_rules! werr {
     ($($arg:tt)*) => ({
         use std::io::Write;
