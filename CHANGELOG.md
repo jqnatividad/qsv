@@ -6,12 +6,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.78.0] - 2022-12-11
+
+### Added
+* `stats`: added leading zero handling when inferring types (e.g. zipcodes like "07094" are strings not integers) https://github.com/jqnatividad/qsv/pull/648
+* `stats`: added --typesonly option, which infers only data types with date inferencing enabled for all columns  https://github.com/jqnatividad/qsv/pull/650
+* `stats`: added underflow handing to sum statistic https://github.com/jqnatividad/qsv/commit/1b5e5451f929ad1c7dc5fb7f17b2a3261809ab05
+* `excel`: expanded --metadata functionality, with the option to return workbook metadata as JSON as well https://github.com/jqnatividad/qsv/pull/651
+* added platform-specific README for prebuilt zip archives https://github.com/jqnatividad/qsv/commit/15e247e523dbc22a50ebff1b15d7d0c4eb668bd5
+
+### Changed
+* `safenames`: improved usage text
+* `stats`: minor performance tweaks https://github.com/jqnatividad/qsv/commit/88be38b542fc61470a7b0331e7be3a3cad62a7bb and https://github.com/jqnatividad/qsv/commit/8aa58c5ad733116d246e171bcea622c1378b8e48
+* `join`: minor performance tweaks https://github.com/jqnatividad/qsv/commit/92d41910077148f769ccf2c8a283be2c30d68bbf
+* `exclude`: minor performance tweaks https://github.com/jqnatividad/qsv/commit/f3cc0ac29c5f3e6cec5a08d3aac3371d32b5eb0f
+* `sniff`: minor performance tweak https://github.com/jqnatividad/qsv/commit/d2a4676fcb5189fc9232538e68854cfcf4ef808b
+* `sortcheck`: minor performance tweak https://github.com/jqnatividad/qsv/commit/83c22ae5a623a8b0740f7024aac9448ee809eabd
+* switch GitHub Actions to use ubuntu-20.04 so as not to link to too new glibc libraries, preventing older distros from running the linux-gnu prebuilts.
+* switch GitHub Actions to use macos-12 to minimize flaky CI tests
+* expanded `qsvdp` description in README
+* Bump actions/setup-python from 4.3.0 to 4.3.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/645
+* cargo update bump several indirect dependencies
+* pin Rust nightly to 2022-12-10
+
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.77.0...0.78.0
+
 ## [0.77.0] - 2022-12-08
 
-## Added
+### Added
 * `safenames`: added Verbose JSON options https://github.com/jqnatividad/qsv/pull/644
 
-## Changed
+### Changed
 * `py` & `luau`: improved usage text
 * opt-in self-update in https://github.com/jqnatividad/qsv/pull/640 and https://github.com/jqnatividad/qsv/pull/641
 * Create README in prebuilt zip archive with platform specific notes https://github.com/jqnatividad/qsv/pull/642
@@ -21,7 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * cargo update bump several dependencies
 * pin Rust nightly to 2022-12-07
 
-## Fixed:
+### Fixed:
 * `safenames`: fixed calculation of unsafe headers as it was dupe-counting some unsafe headers - https://github.com/jqnatividad/qsv/pull/644
 
 
