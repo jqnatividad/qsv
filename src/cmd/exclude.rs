@@ -89,25 +89,20 @@ impl<R: io::Read + io::Seek, W: io::Write> IoState<R, W> {
     }
 
     fn exclude(mut self, invert: bool) -> CliResult<()> {
-        let _scratch = csv::ByteRecord::new();
+        // amortize allocations
+        #[allow(unused_assignments)]
+        let mut curr_row = csv::ByteRecord::new();
+
         let validx = ValueIndex::new(self.rdr2, &self.sel2, self.casei)?;
         for row in self.rdr1.byte_records() {
-            let row = row?;
-            let key = get_row_key(&self.sel1, &row, self.casei);
-            match validx.values.get(&key) {
-                None => {
-                    if invert {
-                        continue;
-                    }
-                    self.wtr.write_record(row.iter())?;
+            curr_row = row?;
+            let key = get_row_key(&self.sel1, &curr_row, self.casei);
+            if let Some(_rows) = validx.values.get(&key) {
+                if invert {
+                    self.wtr.write_record(curr_row.iter())?;
                 }
-                Some(_rows) => {
-                    if invert {
-                        self.wtr.write_record(row.iter())?;
-                    } else {
-                        continue;
-                    }
-                }
+            } else if !invert {
+                self.wtr.write_record(curr_row.iter())?;
             }
         }
         Ok(())
