@@ -881,9 +881,9 @@ impl TypedSum {
             TInteger => {
                 match self.integer {
                     // with saturating_add, if this is equal to i64::MAX or i64::MIN
-                    // we overflowed
-                    i64::MAX => Some("POSITIVE OVERFLOW".to_string()),
-                    i64::MIN => Some("NEGATIVE OVERFLOW".to_string()),
+                    // we overflowed/underflowed
+                    i64::MAX => Some("OVERFLOW".to_string()),
+                    i64::MIN => Some("UNDERFLOW".to_string()),
                     _ => {
                         let mut buffer = itoa::Buffer::new();
                         Some(buffer.format(self.integer).to_owned())
