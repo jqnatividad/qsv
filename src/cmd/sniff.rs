@@ -151,8 +151,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 if args.flag_pretty_json {
                     println!("{}", serde_json::to_string_pretty(&sniffed).unwrap());
                 } else {
-                    let json_result = serde_json::to_string(&sniffed).unwrap();
-                    println!("{json_result}");
+                    println!("{}", serde_json::to_string(&sniffed).unwrap());
                 };
             }
             Err(e) => {
