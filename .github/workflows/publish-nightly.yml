@@ -8,7 +8,7 @@ env:
 
 jobs:
   analyze-tags:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     outputs:
       previous-tag: ${{ steps.previoustag.outputs.tag }}
     steps:
@@ -29,14 +29,14 @@ jobs:
       matrix:
         rust: [nightly-2022-12-07]
         job:
-          - os: ubuntu-latest
+          - os: ubuntu-20.04
             os-name: linux
             target: x86_64-unknown-linux-gnu
             architecture: x86_64
             addl-build-args: --features=apply,generate,luau,fetch,foreach,nightly,self_update
             default-features:
             addl-qsvdp-features: luau
-          # - os: ubuntu-latest
+          # - os: ubuntu-20.04
           #   os-name: linux
           #   target: x86_64-unknown-linux-musl
           #   architecture: x86_64
