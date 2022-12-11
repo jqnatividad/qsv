@@ -179,7 +179,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 ///  * maxLength
 ///  * min
 ///  * max
-#[allow(clippy::len_zero)]
 pub fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<String, Value>> {
     // invoke cmd::stats
     let (csv_fields, csv_stats, stats_col_index_map) = get_stats_records(args)?;
@@ -217,14 +216,17 @@ pub fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<M
         // grab stats record for current column
         let stats_record = csv_stats.get(i).unwrap().clone().to_record(4);
 
-        debug!("stats[{header_string}]: {stats_record:?}");
+        if log::log_enabled!(log::Level::Debug) {
+            debug!("stats[{header_string}]: {stats_record:?}");
+        }
 
         // get Type from stats record
         let col_type = stats_record.get(stats_col_index_map["type"]).unwrap();
         // get NullCount
-        let col_null_count = match stats_record.get(stats_col_index_map["nullcount"]) {
-            Some(s) => s.parse::<usize>().unwrap_or(0_usize),
-            None => 0_usize,
+        let col_null_count = if let Some(s) = stats_record.get(stats_col_index_map["nullcount"]) {
+            s.parse::<usize>().unwrap_or(0_usize)
+        } else {
+            0_usize
         };
 
         // debug!(
@@ -270,20 +272,6 @@ pub fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<M
                     }
                 }
             }
-            "Date" => {
-                type_list.push(Value::String("string".to_string()));
-
-                if args.flag_strict_dates {
-                    field_map.insert("format".to_string(), Value::String("date".to_string()));
-                }
-            }
-            "DateTime" => {
-                type_list.push(Value::String("string".to_string()));
-
-                if args.flag_strict_dates {
-                    field_map.insert("format".to_string(), Value::String("date-time".to_string()));
-                }
-            }
             "Integer" => {
                 type_list.push(Value::String("integer".to_string()));
 
@@ -319,6 +307,20 @@ pub fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<M
             "NULL" => {
                 type_list.push(Value::String("null".to_string()));
             }
+            "Date" => {
+                type_list.push(Value::String("string".to_string()));
+
+                if args.flag_strict_dates {
+                    field_map.insert("format".to_string(), Value::String("date".to_string()));
+                }
+            }
+            "DateTime" => {
+                type_list.push(Value::String("string".to_string()));
+
+                if args.flag_strict_dates {
+                    field_map.insert("format".to_string(), Value::String("date-time".to_string()));
+                }
+            }
             _ => {
                 warn!("Stats gave unexpected field type '{col_type}', default to JSON String.");
                 // defaults to JSON String
@@ -332,17 +334,17 @@ pub fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<M
             type_list.push(Value::String("null".to_string()));
         }
 
-        if col_null_count > 0 && enum_list.len() > 0 {
+        if col_null_count > 0 && !enum_list.is_empty() {
             // for fields that are not mandatory and actually have enum list generated,
             // having JSON NULL indicates that missing value is allowed
             enum_list.push(Value::Null);
         }
 
-        if type_list.len() > 0 {
+        if !type_list.is_empty() {
             field_map.insert("type".to_string(), Value::Array(type_list.clone()));
         }
 
-        if enum_list.len() > 0 {
+        if !enum_list.is_empty() {
             field_map.insert("enum".to_string(), Value::Array(enum_list.clone()));
         }
 
@@ -376,16 +378,15 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
     };
 
     let (csv_fields, csv_stats) = match stats_args.rconfig().indexed() {
-        Ok(o) => match o {
-            None => {
+        Ok(o) => {
+            if let Some(idx) = o {
+                info!("has index, triggering parallel stats");
+                stats_args.parallel_stats(&stats_args.flag_dates_whitelist, &idx)
+            } else {
                 info!("no index, triggering sequential stats");
                 stats_args.sequential_stats(&stats_args.flag_dates_whitelist)
             }
-            Some(idx) => {
-                info!("has index, triggering parallel stats");
-                stats_args.parallel_stats(&stats_args.flag_dates_whitelist, &idx)
-            }
-        },
+        }
         Err(e) => {
             warn!("error determining if indexed, triggering sequential stats: {e}");
             stats_args.sequential_stats(&stats_args.flag_dates_whitelist)
@@ -495,11 +496,14 @@ fn construct_map_of_unique_values(
         // sort the values so enum list so schema can be diff'ed between runs
         unique_values.sort_unstable();
 
-        debug!(
-            "enum[{header_string}]: len={}, val={:?}",
-            unique_values.len(),
-            unique_values
-        );
+        if log::log_enabled!(log::Level::Debug) {
+            // we do this as this debug is relatively expensive
+            debug!(
+                "enum[{header_string}]: len={}, val={:?}",
+                unique_values.len(),
+                unique_values
+            );
+        }
         unique_values_map.insert(header_string, unique_values);
     }
 
@@ -512,18 +516,16 @@ fn construct_map_of_unique_values(
 #[inline]
 fn convert_to_string(byte_slice: &[u8]) -> CliResult<String> {
     // convert csv header to string
-    let string: String = match std::str::from_utf8(byte_slice) {
-        Ok(s) => s.to_string(),
+    match std::str::from_utf8(byte_slice) {
+        Ok(s) => Ok(s.to_string()),
         Err(e) => {
             let lossy_string = String::from_utf8_lossy(byte_slice);
-            return fail_clierror!(
+            fail_clierror!(
                 "Can't convert byte slice to utf8 string. slice={byte_slice:?}, error={e}: \
                  {lossy_string}"
-            );
+            )
         }
-    };
-
-    Ok(string)
+    }
 }
 
 /// determine required fields
