@@ -29,13 +29,25 @@ Excel options:
                                Negative indices start from the end (-1 = last sheet). 
                                If the sheet cannot be found, qsv will read the first sheet.
                                [default: 0]
-    --metadata                 Creates a CSV of workbook metadata with six columns - 
-                               index, sheet_name, headers, num_columns, num_rows & unsafe_headers.
-                               headers is a semicolon-delimited list of the first row
-                               which is presumed to be the header row.
+    --metadata <c|j|J>         Outputs workbook metadata in CSV or JSON format: 
+                                 index, sheet_name, headers, num_columns, num_rows, safe_headers,
+                                 safe_headers_count, unsafe_headers, unsafe_headers_count and
+                                 duplicate_headers_count.
+                               headers is a list of the first row which is presumed to be the header row.
                                num_rows includes all rows, including the first row.
-                               unsafe_headers is a count of headers with unsafe names.
+                               safe_headers is a list of header with "safe"(database-ready) names.
+                               unsafe_headers is a list of headers with "unsafe" names.
+                               duplicate_headers_count is a count of duplicate header names.
+
+                               In CSV(c) mode, the output is in CSV format.
+                               
+                               In JSON(j) mode, the output is minified JSON.
+                               In Pretty JSON(J) mode, the output is pretty-printed JSON.
+                               For both JSON modes, the filename and spreadsheet format are
+                               also included.
+                               
                                All other Excel options are ignored.
+                               [default: none]
     --flexible                 Continue even if the number of columns is different 
                                from the previous record.
     --trim                     Trim all fields so that leading & trailing whitespaces are removed.
@@ -77,7 +89,7 @@ use std::{cmp, path::PathBuf};
 
 use calamine::{open_workbook_auto, DataType, Range, Reader};
 use log::{debug, info};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use thousands::Separable;
 
 use crate::{config::Config, util, CliResult};
@@ -86,7 +98,7 @@ use crate::{config::Config, util, CliResult};
 struct Args {
     arg_input:            String,
     flag_sheet:           String,
-    flag_metadata:        bool,
+    flag_metadata:        String,
     flag_flexible:        bool,
     flag_trim:            bool,
     flag_safenames:       String,
@@ -101,15 +113,53 @@ enum SafeNameMode {
     None,
 }
 
+#[derive(PartialEq)]
+enum MetadataMode {
+    Csv,
+    Json,
+    PrettyJSON,
+    None,
+}
+
+#[derive(Serialize, Deserialize)]
+struct SheetMetadata {
+    index:                   usize,
+    name:                    String,
+    headers:                 Vec<String>,
+    num_columns:             usize,
+    num_rows:                usize,
+    safe_headers:            Vec<String>,
+    safe_headers_count:      usize,
+    unsafe_headers:          Vec<String>,
+    unsafe_headers_count:    usize,
+    duplicate_headers_count: usize,
+}
+
+#[derive(Serialize, Deserialize)]
+struct MetadataStruct {
+    filename:   String,
+    format:     String,
+    num_sheets: usize,
+    sheet:      Vec<SheetMetadata>,
+}
+
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
     let path = &args.arg_input;
 
-    let sce = PathBuf::from(path.to_ascii_lowercase());
+    let sce = PathBuf::from(path);
     let mut ods_flag = false;
-    match sce.extension().and_then(std::ffi::OsStr::to_str) {
-        Some("xls" | "xlsx" | "xlsm" | "xlsb") => (),
-        Some("ods") => ods_flag = true,
+    let filename = sce
+        .file_name()
+        .and_then(std::ffi::OsStr::to_str)
+        .unwrap_or_default();
+    let format = sce
+        .extension()
+        .and_then(std::ffi::OsStr::to_str)
+        .unwrap_or_default();
+    match format.to_ascii_lowercase().as_str() {
+        "xls" | "xlsx" | "xlsm" | "xlsb" => (),
+        "ods" => ods_flag = true,
         _ => {
             return fail!(
                 "The excel command supports the following workbook formats - xls, xlsx, xlsm, \
@@ -147,21 +197,28 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .writer()?;
     let mut record = csv::StringRecord::new();
 
-    // create the metadata report CSV to stdout then exit
-    if args.flag_metadata {
-        record.push_field("index");
-        record.push_field("sheet_name");
-        record.push_field("headers");
-        record.push_field("num_columns");
-        record.push_field("num_rows");
-        record.push_field("unsafe_headers");
-        wtr.write_record(&record)?;
+    // set Metadata Mode
+    let first_letter = args.flag_metadata.chars().next().unwrap_or_default();
+    let metadata_mode = match first_letter {
+        'c' | 'C' => MetadataMode::Csv,
+        'j' => MetadataMode::Json,
+        'J' => MetadataMode::PrettyJSON,
+        'n' | 'N' => MetadataMode::None,
+        _ => {
+            return fail_clierror!("Invalid mode: {}", args.flag_metadata);
+        }
+    };
+
+    if metadata_mode != MetadataMode::None {
+        let mut excelmetadata_struct = MetadataStruct {
+            filename: filename.to_string(),
+            format: format.to_string(),
+            num_sheets,
+            sheet: vec![],
+        };
         #[allow(clippy::needless_range_loop)]
         for i in 0..num_sheets {
-            record.clear();
-            record.push_field(&i.to_string());
             let sheet_name = sheet_vec[i].clone();
-            record.push_field(&sheet_name);
 
             let range = match workbook.worksheet_range_at(i) {
                 Some(result) => {
@@ -174,53 +231,112 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 None => Range::empty(),
             };
 
-            if range.is_empty() {
-                record.push_field("");
-                record.push_field("0");
-                record.push_field("0");
-                record.push_field("0");
-            } else {
-                let (num_rows, num_columns) = range.get_size();
-                let mut sheet_rows = range.rows();
-                let first_row = sheet_rows.next().unwrap();
+            let (header_vec, num_columns, num_rows, safenames_vec, unsafeheaders_vec, dupe_count) =
+                if range.is_empty() {
+                    (vec![], 0_usize, 0_usize, vec![], vec![], 0_usize)
+                } else {
+                    let (num_rows, num_columns) = range.get_size();
+                    let mut sheet_rows = range.rows();
+                    let first_row = sheet_rows.next().unwrap();
 
-                let mut checkednames_vec: Vec<String> = Vec::with_capacity(sheet_rows.len());
-                let mut unsafe_count = 0_u16;
+                    let mut checkednames_vec: Vec<String> = Vec::with_capacity(sheet_rows.len());
+                    let mut safenames_vec: Vec<String> = Vec::new();
+                    let mut unsafenames_vec: Vec<String> = Vec::new();
+                    let mut dupe_count = 0_usize;
 
-                let first_row_str = first_row
-                    .iter()
-                    .map(|h| {
-                        let header = h.to_string();
+                    let header_vec = first_row
+                        .iter()
+                        .map(|h| {
+                            let header = h.to_string();
 
-                        let unsafe_flag = if util::is_safe_name(&header) {
-                            false
-                        } else {
-                            unsafe_count += 1;
-                            true
-                        };
+                            let safe_flag = util::is_safe_name(&header);
+                            if safe_flag {
+                                if !safenames_vec.contains(&header) {
+                                    safenames_vec.push(header.to_string());
+                                }
+                            } else {
+                                unsafenames_vec.push(header.to_string());
+                            };
 
-                        // check for duplicate headers/columns
-                        // we use the unsafe_flag so we dont' double unsafe count
-                        // an already unsafe header that's also a duplicate
-                        if !unsafe_flag && checkednames_vec.contains(&header) {
-                            unsafe_count += 1;
-                        } else {
-                            checkednames_vec.push(header.clone());
-                        }
+                            // check for duplicate headers/columns
+                            if checkednames_vec.contains(&header) {
+                                dupe_count += 1;
+                            } else {
+                                checkednames_vec.push(header.to_string());
+                            }
 
-                        header
-                    })
-                    .collect::<Vec<_>>()
-                    .join(";");
-                record.push_field(&first_row_str);
-                record.push_field(&num_columns.to_string());
-                record.push_field(&num_rows.to_string());
-                record.push_field(&unsafe_count.to_string());
-            }
+                            header
+                        })
+                        .collect::<Vec<_>>();
 
-            wtr.write_record(&record)?;
+                    (
+                        header_vec,
+                        num_columns,
+                        num_rows,
+                        safenames_vec,
+                        unsafenames_vec,
+                        dupe_count,
+                    )
+                };
+            let sheetmetadata_struct = SheetMetadata {
+                index: i,
+                name: sheet_name,
+                headers: header_vec,
+                num_columns,
+                num_rows,
+                safe_headers_count: safenames_vec.len(),
+                safe_headers: safenames_vec,
+                unsafe_headers_count: unsafeheaders_vec.len(),
+                unsafe_headers: unsafeheaders_vec,
+                duplicate_headers_count: dupe_count,
+            };
+
+            excelmetadata_struct.sheet.push(sheetmetadata_struct);
         }
-        wtr.flush()?;
+        match metadata_mode {
+            MetadataMode::Csv => {
+                record.push_field("index");
+                record.push_field("sheet_name");
+                record.push_field("headers");
+                record.push_field("num_columns");
+                record.push_field("num_rows");
+                record.push_field("safe_headers");
+                record.push_field("safe_headers_count");
+                record.push_field("unsafe_headers");
+                record.push_field("unsafe_headers_count");
+                record.push_field("duplicate_headers_count");
+
+                wtr.write_record(&record)?;
+
+                for sheetmetadata in excelmetadata_struct.sheet {
+                    record.clear();
+                    record.push_field(&sheetmetadata.index.to_string());
+                    record.push_field(&sheetmetadata.name);
+                    record.push_field(&format!("{:?}", sheetmetadata.headers));
+                    record.push_field(&sheetmetadata.num_columns.to_string());
+                    record.push_field(&sheetmetadata.num_rows.to_string());
+                    record.push_field(&format!("{:?}", sheetmetadata.safe_headers));
+                    record.push_field(&sheetmetadata.safe_headers_count.to_string());
+                    record.push_field(&format!("{:?}", sheetmetadata.unsafe_headers));
+                    record.push_field(&sheetmetadata.unsafe_headers_count.to_string());
+                    record.push_field(&sheetmetadata.duplicate_headers_count.to_string());
+
+                    wtr.write_record(&record)?;
+                }
+                wtr.flush()?;
+            }
+            MetadataMode::Json | MetadataMode::PrettyJSON => {
+                if metadata_mode == MetadataMode::PrettyJSON {
+                    println!(
+                        "{}",
+                        serde_json::to_string_pretty(&excelmetadata_struct).unwrap()
+                    );
+                } else {
+                    println!("{}", serde_json::to_string(&excelmetadata_struct).unwrap());
+                };
+            }
+            MetadataMode::None => {}
+        }
         log::info!("listed sheet names: {sheet_vec:?}");
         return Ok(());
     }
