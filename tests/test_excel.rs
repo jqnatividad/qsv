@@ -498,7 +498,7 @@ fn excel_metadata() {
     let xls_file = wrk.load_test_file("excel-xls.xls");
 
     let mut cmd = wrk.command("excel");
-    cmd.arg("--metadata").arg(xls_file);
+    cmd.arg("--metadata").arg("csv").arg(xls_file);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
@@ -508,24 +508,271 @@ fn excel_metadata() {
             "headers",
             "num_columns",
             "num_rows",
-            "unsafe_headers"
+            "safe_headers",
+            "safe_headers_count",
+            "unsafe_headers",
+            "unsafe_headers_count",
+            "duplicate_headers_count"
         ],
-        svec!["0", "First", "URL;City", "2", "4", "0"],
-        svec!["1", "Flexibility Test", "URL;City;", "3", "6", "1"],
-        svec!["2", "Middle", "Middle sheet col1;Middle-2", "2", "6", "0"],
-        svec!["3", "Sheet1", "", "0", "0", "0"],
-        svec!["4", "trim test", "col1;   col2;col3", "3", "6", "1"],
+        svec![
+            "0",
+            "First",
+            "[\"URL\", \"City\"]",
+            "2",
+            "4",
+            "[\"URL\", \"City\"]",
+            "2",
+            "[]",
+            "0",
+            "0"
+        ],
+        svec![
+            "1",
+            "Flexibility Test",
+            "[\"URL\", \"City\", \"\"]",
+            "3",
+            "6",
+            "[\"URL\", \"City\"]",
+            "2",
+            "[\"\"]",
+            "1",
+            "0"
+        ],
+        svec![
+            "2",
+            "Middle",
+            "[\"Middle sheet col1\", \"Middle-2\"]",
+            "2",
+            "6",
+            "[\"Middle sheet col1\", \"Middle-2\"]",
+            "2",
+            "[]",
+            "0",
+            "0"
+        ],
+        svec!["3", "Sheet1", "[]", "0", "0", "[]", "0", "[]", "0", "0"],
+        svec![
+            "4",
+            "trim test",
+            "[\"col1\", \"   col2\", \"col3\"]",
+            "3",
+            "6",
+            "[\"col1\", \"col3\"]",
+            "2",
+            "[\"   col2\"]",
+            "1",
+            "0"
+        ],
         svec![
             "5",
             "date test",
-            "date_col;num_col;col_Petsa;just another col",
+            "[\"date_col\", \"num_col\", \"col_Petsa\", \"just another col\"]",
             "4",
             "6",
+            "[\"date_col\", \"num_col\", \"col_Petsa\", \"just another col\"]",
+            "4",
+            "[]",
+            "0",
             "0"
         ],
-        svec!["6", "NoData", "col1;col2;col3;col4", "4", "1", "0"],
-        svec!["7", "Last", "Last sheet col1;Last-2", "2", "6", "0"],
+        svec![
+            "6",
+            "NoData",
+            "[\"col1\", \"col2\", \"col3\", \"col4\"]",
+            "4",
+            "1",
+            "[\"col1\", \"col2\", \"col3\", \"col4\"]",
+            "4",
+            "[]",
+            "0",
+            "0"
+        ],
+        svec![
+            "7",
+            "Last",
+            "[\"Last sheet col1\", \"Last-2\"]",
+            "2",
+            "6",
+            "[\"Last sheet col1\", \"Last-2\"]",
+            "2",
+            "[]",
+            "0",
+            "0"
+        ],
     ];
+    assert_eq!(got, expected);
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn excel_metadata_pretty_json() {
+    let wrk = Workdir::new("excel_metadata");
+
+    let xls_file = wrk.load_test_file("excel-xls.xls");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--metadata").arg("J").arg(xls_file);
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected: &str = r#"{
+  "filename": "excel-xls.xls",
+  "format": "xls",
+  "num_sheets": 8,
+  "sheet": [
+    {
+      "index": 0,
+      "name": "First",
+      "headers": [
+        "URL",
+        "City"
+      ],
+      "num_columns": 2,
+      "num_rows": 4,
+      "safe_headers": [
+        "URL",
+        "City"
+      ],
+      "safe_headers_count": 2,
+      "unsafe_headers": [],
+      "unsafe_headers_count": 0,
+      "duplicate_headers_count": 0
+    },
+    {
+      "index": 1,
+      "name": "Flexibility Test",
+      "headers": [
+        "URL",
+        "City",
+        ""
+      ],
+      "num_columns": 3,
+      "num_rows": 6,
+      "safe_headers": [
+        "URL",
+        "City"
+      ],
+      "safe_headers_count": 2,
+      "unsafe_headers": [
+        ""
+      ],
+      "unsafe_headers_count": 1,
+      "duplicate_headers_count": 0
+    },
+    {
+      "index": 2,
+      "name": "Middle",
+      "headers": [
+        "Middle sheet col1",
+        "Middle-2"
+      ],
+      "num_columns": 2,
+      "num_rows": 6,
+      "safe_headers": [
+        "Middle sheet col1",
+        "Middle-2"
+      ],
+      "safe_headers_count": 2,
+      "unsafe_headers": [],
+      "unsafe_headers_count": 0,
+      "duplicate_headers_count": 0
+    },
+    {
+      "index": 3,
+      "name": "Sheet1",
+      "headers": [],
+      "num_columns": 0,
+      "num_rows": 0,
+      "safe_headers": [],
+      "safe_headers_count": 0,
+      "unsafe_headers": [],
+      "unsafe_headers_count": 0,
+      "duplicate_headers_count": 0
+    },
+    {
+      "index": 4,
+      "name": "trim test",
+      "headers": [
+        "col1",
+        "   col2",
+        "col3"
+      ],
+      "num_columns": 3,
+      "num_rows": 6,
+      "safe_headers": [
+        "col1",
+        "col3"
+      ],
+      "safe_headers_count": 2,
+      "unsafe_headers": [
+        "   col2"
+      ],
+      "unsafe_headers_count": 1,
+      "duplicate_headers_count": 0
+    },
+    {
+      "index": 5,
+      "name": "date test",
+      "headers": [
+        "date_col",
+        "num_col",
+        "col_Petsa",
+        "just another col"
+      ],
+      "num_columns": 4,
+      "num_rows": 6,
+      "safe_headers": [
+        "date_col",
+        "num_col",
+        "col_Petsa",
+        "just another col"
+      ],
+      "safe_headers_count": 4,
+      "unsafe_headers": [],
+      "unsafe_headers_count": 0,
+      "duplicate_headers_count": 0
+    },
+    {
+      "index": 6,
+      "name": "NoData",
+      "headers": [
+        "col1",
+        "col2",
+        "col3",
+        "col4"
+      ],
+      "num_columns": 4,
+      "num_rows": 1,
+      "safe_headers": [
+        "col1",
+        "col2",
+        "col3",
+        "col4"
+      ],
+      "safe_headers_count": 4,
+      "unsafe_headers": [],
+      "unsafe_headers_count": 0,
+      "duplicate_headers_count": 0
+    },
+    {
+      "index": 7,
+      "name": "Last",
+      "headers": [
+        "Last sheet col1",
+        "Last-2"
+      ],
+      "num_columns": 2,
+      "num_rows": 6,
+      "safe_headers": [
+        "Last sheet col1",
+        "Last-2"
+      ],
+      "safe_headers_count": 2,
+      "unsafe_headers": [],
+      "unsafe_headers_count": 0,
+      "duplicate_headers_count": 0
+    }
+  ]
+}"#;
     assert_eq!(got, expected);
     wrk.assert_success(&mut cmd);
 }
