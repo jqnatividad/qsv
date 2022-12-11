@@ -179,16 +179,13 @@ impl<R: io::Read + io::Seek, W: io::Write> IoState<R, W> {
         for row in self.rdr1.byte_records() {
             let row = row?;
             let key = get_row_key(&self.sel1, &row, self.casei);
-            match validx.values.get(&key) {
-                None => continue,
-                Some(rows) => {
-                    for &rowi in rows.iter() {
-                        validx.idx.seek(rowi as u64)?;
+            if let Some(rows) = validx.values.get(&key) {
+                for &rowi in rows.iter() {
+                    validx.idx.seek(rowi as u64)?;
 
-                        validx.idx.read_byte_record(&mut scratch)?;
-                        let combined = row.iter().chain(scratch.iter());
-                        self.wtr.write_record(combined)?;
-                    }
+                    validx.idx.read_byte_record(&mut scratch)?;
+                    let combined = row.iter().chain(scratch.iter());
+                    self.wtr.write_record(combined)?;
                 }
             }
         }
@@ -207,26 +204,21 @@ impl<R: io::Read + io::Seek, W: io::Write> IoState<R, W> {
         for row in self.rdr1.byte_records() {
             let row = row?;
             let key = get_row_key(&self.sel1, &row, self.casei);
-            match validx.values.get(&key) {
-                None => {
+            if let Some(rows) = validx.values.get(&key) {
+                for &rowi in rows.iter() {
+                    validx.idx.seek(rowi as u64)?;
+                    let row1 = row.iter();
+                    validx.idx.read_byte_record(&mut scratch)?;
                     if right {
-                        self.wtr.write_record(pad2.iter().chain(&row))?;
+                        self.wtr.write_record(scratch.iter().chain(row1))?;
                     } else {
-                        self.wtr.write_record(row.iter().chain(&pad2))?;
+                        self.wtr.write_record(row1.chain(&scratch))?;
                     }
                 }
-                Some(rows) => {
-                    for &rowi in rows.iter() {
-                        validx.idx.seek(rowi as u64)?;
-                        let row1 = row.iter();
-                        validx.idx.read_byte_record(&mut scratch)?;
-                        if right {
-                            self.wtr.write_record(scratch.iter().chain(row1))?;
-                        } else {
-                            self.wtr.write_record(row1.chain(&scratch))?;
-                        }
-                    }
-                }
+            } else if right {
+                self.wtr.write_record(pad2.iter().chain(&row))?;
+            } else {
+                self.wtr.write_record(row.iter().chain(&pad2))?;
             }
         }
         Ok(())
@@ -266,19 +258,16 @@ impl<R: io::Read + io::Seek, W: io::Write> IoState<R, W> {
         for row1 in self.rdr1.byte_records() {
             let row1 = row1?;
             let key = get_row_key(&self.sel1, &row1, self.casei);
-            match validx.values.get(&key) {
-                None => {
-                    self.wtr.write_record(row1.iter().chain(&pad2))?;
-                }
-                Some(rows) => {
-                    for &rowi in rows.iter() {
-                        rdr2_written[rowi] = true;
+            if let Some(rows) = validx.values.get(&key) {
+                for &rowi in rows.iter() {
+                    rdr2_written[rowi] = true;
 
-                        validx.idx.seek(rowi as u64)?;
-                        validx.idx.read_byte_record(&mut scratch)?;
-                        self.wtr.write_record(row1.iter().chain(&scratch))?;
-                    }
+                    validx.idx.seek(rowi as u64)?;
+                    validx.idx.read_byte_record(&mut scratch)?;
+                    self.wtr.write_record(row1.iter().chain(&scratch))?;
                 }
+            } else {
+                self.wtr.write_record(row1.iter().chain(&pad2))?;
             }
         }
 
