@@ -495,6 +495,11 @@ impl Stats {
         let sample_type = FieldType::from_sample(infer_dates, sample, self.typ);
         self.typ.merge(sample_type);
 
+        // we're doing typesonly, don't compute statistics
+        if self.which.typesonly {
+            return;
+        }
+
         let t = self.typ;
         if let Some(v) = self.sum.as_mut() {
             v.add(t, sample);
@@ -508,7 +513,7 @@ impl Stats {
         if sample_type == TNull {
             self.nullcount += 1;
         }
-        match self.typ {
+        match t {
             TNull => {
                 if self.which.include_nulls {
                     if let Some(v) = self.online.as_mut() {
@@ -862,6 +867,7 @@ impl TypedSum {
                 if let Some(ref mut float) = self.float {
                     *float += from_bytes::<f64>(sample);
                 } else {
+                    // so we don't panic on overflow, use saturating_add
                     self.integer = self.integer.saturating_add(from_bytes::<i64>(sample));
                 }
             }
@@ -873,11 +879,15 @@ impl TypedSum {
         match typ {
             TNull | TString | TDate | TDateTime => None,
             TInteger => {
-                if self.integer == i64::MAX {
-                    Some("OVERFLOW".to_string())
-                } else {
-                    let mut buffer = itoa::Buffer::new();
-                    Some(buffer.format(self.integer).to_owned())
+                match self.integer {
+                    // with saturating_add, if this is equal to i64::MAX or i64::MIN
+                    // we overflowed
+                    i64::MAX => Some("POSITIVE OVERFLOW".to_string()),
+                    i64::MIN => Some("NEGATIVE OVERFLOW".to_string()),
+                    _ => {
+                        let mut buffer = itoa::Buffer::new();
+                        Some(buffer.format(self.integer).to_owned())
+                    }
                 }
             }
             TFloat => {

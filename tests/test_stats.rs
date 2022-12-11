@@ -406,7 +406,20 @@ stats_tests!(
         "1",
         "2"
     ],
-    "OVERFLOW"
+    "POSITIVE OVERFLOW"
+);
+stats_tests!(
+    stats_sum_negative_overflow,
+    "sum",
+    &[
+        {
+            let i = i64::MIN;
+            &i.to_string()
+        },
+        "-1",
+        "-2"
+    ],
+    "NEGATIVE OVERFLOW"
 );
 
 stats_tests!(stats_min, "min", &["2", "1.1"], "1.1");
