@@ -93,7 +93,6 @@ jobs:
             os-name: macos
             target: aarch64-apple-darwin
             architecture: aarch64
-            build-prep: true
             use-cross: true
             addl-build-args: --features=apply,generate,fetch,foreach,self_update
             default-features: --no-default-features
@@ -134,11 +133,6 @@ jobs:
       with:
         submodules: recursive
         ref: ${{ needs.analyze-tags.outputs.previous-tag }}
-    # - name: build prep for aarch64-apple-darwin
-    #   if: ${{ matrix.job.build-prep }}
-    #   run: |
-    #     sudo xcode-select -s "/Applications/Xcode_12.5.1.app"
-    #     sudo rm -Rf /Library/Developer/CommandLineTools/SDKs/*
     - name: build prep for x86_64-unknown-linux-musl
       if: ${{ matrix.job.musl-prep }}
       run: |
