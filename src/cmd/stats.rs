@@ -36,6 +36,8 @@ stats options:
                               This is provided here because piping 'qsv select'
                               into 'qsv stats' will disable the use of indexing.
     --everything              Show all statistics available.
+    --typesonly               Infer data types only and do not compute statistics.
+                              Automatically turns on --infer-dates for all columns.
     --mode                    Show the mode/s. Multimodal-aware.
                               This requires loading all CSV data in memory.
     --cardinality             Show the cardinality.
@@ -110,6 +112,7 @@ pub struct Args {
     pub arg_input:            Option<String>,
     pub flag_select:          SelectColumns,
     pub flag_everything:      bool,
+    pub flag_typesonly:       bool,
     pub flag_mode:            bool,
     pub flag_cardinality:     bool,
     pub flag_median:          bool,
@@ -129,7 +132,16 @@ static INFER_DATE_FLAGS: once_cell::sync::OnceCell<Vec<bool>> = OnceCell::new();
 static DMY_PREFERENCE: AtomicBool = AtomicBool::new(false);
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
-    let args: Args = util::get_args(USAGE, argv)?;
+    let mut args: Args = util::get_args(USAGE, argv)?;
+    if args.flag_typesonly {
+        args.flag_infer_dates = true;
+        args.flag_dates_whitelist = String::from("all");
+        args.flag_everything = false;
+        args.flag_mode = false;
+        args.flag_cardinality = false;
+        args.flag_median = false;
+        args.flag_quartiles = false;
+    }
 
     let mut wtr = Config::new(&args.flag_output).writer()?;
     let (headers, stats) = match args.rconfig().indexed()? {
@@ -287,13 +299,14 @@ impl Args {
         stats.extend(
             repeat(Stats::new(WhichStats {
                 include_nulls: self.flag_nulls,
-                sum:           true,
-                range:         true,
-                dist:          true,
+                sum:           !self.flag_typesonly,
+                range:         !self.flag_typesonly,
+                dist:          !self.flag_typesonly,
                 cardinality:   self.flag_everything || self.flag_cardinality,
                 median:        !self.flag_everything && self.flag_median && !self.flag_quartiles,
                 quartiles:     self.flag_everything || self.flag_quartiles,
                 mode:          self.flag_everything || self.flag_mode,
+                typesonly:     self.flag_typesonly,
             }))
             .take(record_len),
         );
@@ -301,6 +314,10 @@ impl Args {
     }
 
     pub fn stat_headers(&self) -> csv::StringRecord {
+        if self.flag_typesonly {
+            return csv::StringRecord::from(vec!["field", "type"]);
+        }
+
         // with --everything, we have 22 columns at most
         let mut fields = Vec::with_capacity(22);
         fields.extend_from_slice(&[
@@ -404,6 +421,7 @@ struct WhichStats {
     median:        bool,
     quartiles:     bool,
     mode:          bool,
+    typesonly:     bool,
 }
 
 impl Commute for WhichStats {
@@ -525,6 +543,11 @@ impl Stats {
 
     #[allow(clippy::wrong_self_convention)]
     pub fn to_record(&mut self, round_places: u32) -> csv::StringRecord {
+        // we're doing typesonly
+        if self.which.typesonly {
+            return csv::StringRecord::from(vec![self.typ.to_string()]);
+        }
+
         let typ = self.typ;
         // prealloc memory for performance
         // we have 22 columns at most with --everything

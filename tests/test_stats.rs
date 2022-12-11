@@ -616,6 +616,21 @@ fn stats_with_date_inference() {
     assert_eq!(got, expected.replace("\r\n", "\n").trim_end());
 }
 
+#[test]
+fn stats_typesonly() {
+    let wrk = Workdir::new("stats_typesonly");
+    let test_file = wrk.load_test_file("boston311-100.csv");
+
+    let mut cmd = wrk.command("stats");
+    cmd.arg("--typesonly").arg(test_file);
+
+    let got: String = wrk.stdout(&mut cmd);
+
+    let expected = wrk.load_test_resource("boston311-100-typesonly-stats.csv");
+
+    assert_eq!(got, expected.replace("\r\n", "\n").trim_end());
+}
+
 mod stats_infer_nothing {
     // Only test CSV data with headers.
     // Empty CSV data with no headers won't produce any statistical analysis.
