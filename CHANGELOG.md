@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.78.1] - 2022-12-12
+
+### Changed
+* `qsvdp`: `apply` now available in qsvdp as`applydp` - removing the geocode and calconv subcommands, and removing all operations that require third-party crates EXCEPT dynfmt and datefmt which is needed for Datapusher+ https://github.com/jqnatividad/qsv/pull/652
+* `excel`: fine-tune --metadata processing https://github.com/jqnatividad/qsv/commit/09530d4f65b06060d24b7ed3948aeab25b2aa7c8
+* bump serde from 1.0.149 to 1.0.150
+* `qsvdp` in now included in CI tests
+
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.78.0...0.78.1
+
 ## [0.78.0] - 2022-12-11
 
 ### Added
