@@ -30,6 +30,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | Command | Description |
 | --- | --- |
 | [apply](/src/cmd/apply.rs#L2)[^4] ❇️ | Apply series of string, date, math, currency & geocoding transformations to a CSV column. It also has some basic [NLP](https://en.wikipedia.org/wiki/Natural_language_processing) functions ([similarity](https://crates.io/crates/strsim), [sentiment analysis](https:❇️//crates.io/crates/vader_sentiment), [profanity](https://docs.rs/censor/latest/censor/), [eudex](https://github.com/ticki/eudex#eudex-a-blazingly-fast-phonetic-reductionhashing-algorithm) & [language detection](https://crates.io/crates/whatlang)).  |
+| [applydp](/src/cmd/applydp.rs#L2)[^4] | applydp is a slimmed-down version of `apply` with only [Datapusher+](https://github.com/dathere/datapusher-plus) relevant subcommands/operations. |
 | [behead](/src/cmd/behead.rs#L2) | Drop headers from a CSV.  |
 | [cat](/src/cmd/cat.rs#L2) | Concatenate CSV files by row or by column. |
 | [count](/src/cmd/count.rs#L2)[^1] | Count the rows in a CSV file. (Instantaneous with an index.) |
@@ -77,7 +78,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [transpose](/src/cmd/transpose.rs#L2)[^2] | Transpose rows/columns of a CSV.  |
 | [validate](/src/cmd/validate.rs#L2)[^1][^4] | Validate CSV data with JSON Schema (See `schema` command) & put invalid records into a separate file & a validation error report file. If no jsonschema file is provided, validates if a CSV conforms to the [RFC 4180 standard](https://datatracker.ietf.org/doc/html/rfc4180). |
 
- ❇️: enabled by a feature flag on `qsv`. Not available on `qsvlite`. `qsvdp` only has `luau` feature enabled.
+ ❇️: enabled by a feature flag on `qsv`. Not available on `qsvlite`. `qsvdp` only has `luau` feature enabled and `applydp` - a slimmed-down version of the `apply` feature.
 [^1]: uses an index when available.   
 [^2]: loads the entire CSV into memory. Note that `dedup`, `stats` & `transpose` have modes that do not load the entire CSV into memory.   
 [^3]: multithreaded when an index is available.   
@@ -115,7 +116,7 @@ The binary will be installed in `~/.cargo/bin`.
 Compiling from source also works similarly:
 
 ```bash
-git clone git@github.com:jqnatividad/qsv.git
+git clone https://github.com/jqnatividad/qsv.git
 cd qsv
 cargo build --release --locked --features all_full
 ```
