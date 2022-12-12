@@ -412,7 +412,7 @@ static WHATLANG_CONFIDENCE_THRESHOLD: OnceCell<f64> = OnceCell::new();
 const DEFAULT_THRESHOLD: f64 = 0.9;
 
 #[inline]
-pub fn replace_column_value(
+fn replace_column_value(
     record: &csv::StringRecord,
     column_index: usize,
     new_value: &str,

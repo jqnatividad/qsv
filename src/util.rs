@@ -787,13 +787,13 @@ fn test_hw_survey() {
     assert!(send_hwsurvey("qsv", false, "0.0.2", "0.0.1", true).is_ok());
 }
 
-#[cfg(feature = "apply")]
+#[cfg(any(feature = "apply", feature = "datapusher_plus"))]
 pub struct ColumnNameParser {
     chars: Vec<char>,
     pos:   usize,
 }
 
-#[cfg(feature = "apply")]
+#[cfg(any(feature = "apply", feature = "datapusher_plus"))]
 impl ColumnNameParser {
     pub fn new(s: &str) -> ColumnNameParser {
         ColumnNameParser {

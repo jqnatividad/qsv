@@ -1,5 +1,7 @@
 #[cfg(all(feature = "apply", not(feature = "lite")))]
 pub mod apply;
+#[cfg(feature = "datapusher_plus")]
+pub mod applydp;
 #[cfg(any(feature = "full", feature = "lite"))]
 pub mod behead;
 #[cfg(any(feature = "full", feature = "lite"))]
