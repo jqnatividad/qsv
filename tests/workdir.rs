@@ -204,7 +204,7 @@ impl Workdir {
         self.dir.join(name)
     }
 
-    #[cfg(feature = "all_full")]
+    #[cfg(feature = "full")]
     pub fn qsv_bin(&self) -> PathBuf {
         self.root.join("qsv")
     }
