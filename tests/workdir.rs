@@ -204,13 +204,19 @@ impl Workdir {
         self.dir.join(name)
     }
 
+    #[cfg(feature = "all_full")]
     pub fn qsv_bin(&self) -> PathBuf {
-        #[cfg(feature = "all_full")]
-        return self.root.join("qsv");
-        #[cfg(feature = "lite")]
-        return self.root.join("qsvlite");
-        #[cfg(feature = "datapusher_plus")]
-        return self.root.join("qsvdp");
+        self.root.join("qsv")
+    }
+
+    #[cfg(feature = "lite")]
+    pub fn qsv_bin(&self) -> PathBuf {
+        self.root.join("qsvlite")
+    }
+
+    #[cfg(feature = "datapusher_plus")]
+    pub fn qsv_bin(&self) -> PathBuf {
+        self.root.join("qsvdp")
     }
 
     // clear all files in directory
