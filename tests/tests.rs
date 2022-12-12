@@ -32,6 +32,8 @@ mod workdir;
 
 #[cfg(feature = "apply")]
 mod test_apply;
+#[cfg(feature = "datapusher_plus")]
+mod test_applydp;
 #[cfg(any(feature = "full", feature = "lite"))]
 mod test_behead;
 #[cfg(any(feature = "full", feature = "lite"))]
