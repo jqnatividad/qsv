@@ -1,4 +1,4 @@
-name: qsvdp
+name: qsvdp - Datapusher+ optimized qsv
 
 on:
   push:
