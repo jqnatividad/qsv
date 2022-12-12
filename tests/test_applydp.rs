@@ -528,10 +528,7 @@ fn applydp_ops_chain_validation_error_missing_comparand() {
         .arg("data.csv");
 
     let got = wrk.output_stderr(&mut cmd);
-    assert_eq!(
-        got,
-        "--comparand (-C) is required for strip operations.\n"
-    );
+    assert_eq!(got, "--comparand (-C) is required for strip operations.\n");
     wrk.assert_err(&mut cmd);
 }
 
