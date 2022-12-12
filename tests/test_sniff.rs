@@ -72,6 +72,7 @@ Fields:
 }
 
 #[test]
+#[cfg(any(feature = "full", feature = "lite"))]
 fn qsv_sniff_pipe_delimiter_env() {
     let wrk = Workdir::new("qsv_sniff_pipe_delimiter_env");
     wrk.create_with_delim("in.file", data(), b'|');
@@ -85,6 +86,7 @@ fn qsv_sniff_pipe_delimiter_env() {
 }
 
 #[test]
+#[cfg(any(feature = "full", feature = "lite"))]
 fn qsv_sniff_semicolon_delimiter_env() {
     let wrk = Workdir::new("qsv_sniff_semicolon_delimiter_env");
     wrk.create_with_delim("in.file", data(), b';');
@@ -98,6 +100,7 @@ fn qsv_sniff_semicolon_delimiter_env() {
 }
 
 #[test]
+#[cfg(any(feature = "full", feature = "lite"))]
 fn qsv_sniff_tab_delimiter_env() {
     let wrk = Workdir::new("qsv_sniff_tab_delimiter_env");
     wrk.create_with_delim("in.file", data(), b'\t');
