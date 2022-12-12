@@ -13,6 +13,7 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 macro_rules! command_list {
     () => {
         "
+    applydp     Apply series of transformations to a column
     count       Count records
     dedup       Remove redundant rows
     excel       Exports an Excel sheet to a CSV
@@ -159,6 +160,7 @@ Please choose one of the following commands:",
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "lowercase")]
 enum Command {
+    ApplyDP,
     Count,
     Dedup,
     Excel,
@@ -199,6 +201,7 @@ impl Command {
             )));
         }
         match self {
+            Command::ApplyDP => cmd::applydp::run(argv),
             Command::Count => cmd::count::run(argv),
             Command::Dedup => cmd::dedup::run(argv),
             Command::Excel => cmd::excel::run(argv),

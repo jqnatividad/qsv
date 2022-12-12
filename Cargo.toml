@@ -218,7 +218,7 @@ generate = ["test-data-generation"]
 luau = ["mlua"]
 python = ["pyo3"]
 lite = []
-datapusher_plus = ["self_update"]
+datapusher_plus = ["dynfmt", "self_update", "strum", "strum_macros"]
 full = []
 nightly = [
     "regex/unstable",
