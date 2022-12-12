@@ -1,9 +1,9 @@
 use crate::workdir::Workdir;
 
-static EXPECTED_TABLE: &str = "\
-h1       h2  h3
-abcdefg  1   a
-a        2   z";
+static EXPECTED_CSV: &str = "\
+h1,h2,h3
+abcdefg,1,a
+a,2,z";
 
 fn data() -> Vec<Vec<String>> {
     vec![
@@ -72,45 +72,42 @@ Fields:
 }
 
 #[test]
-#[cfg(any(feature = "full", feature = "lite"))]
 fn qsv_sniff_pipe_delimiter_env() {
     let wrk = Workdir::new("qsv_sniff_pipe_delimiter_env");
     wrk.create_with_delim("in.file", data(), b'|');
 
-    let mut cmd = wrk.command("table");
+    let mut cmd = wrk.command("input");
     cmd.env("QSV_SNIFF_DELIMITER", "1");
     cmd.arg("in.file");
 
     let got: String = wrk.stdout(&mut cmd);
-    assert_eq!(&*got, EXPECTED_TABLE)
+    assert_eq!(&*got, EXPECTED_CSV)
 }
 
 #[test]
-#[cfg(any(feature = "full", feature = "lite"))]
 fn qsv_sniff_semicolon_delimiter_env() {
     let wrk = Workdir::new("qsv_sniff_semicolon_delimiter_env");
     wrk.create_with_delim("in.file", data(), b';');
 
-    let mut cmd = wrk.command("table");
+    let mut cmd = wrk.command("input");
     cmd.env("QSV_SNIFF_DELIMITER", "1");
     cmd.arg("in.file");
 
     let got: String = wrk.stdout(&mut cmd);
-    assert_eq!(&*got, EXPECTED_TABLE)
+    assert_eq!(&*got, EXPECTED_CSV)
 }
 
 #[test]
-#[cfg(any(feature = "full", feature = "lite"))]
 fn qsv_sniff_tab_delimiter_env() {
     let wrk = Workdir::new("qsv_sniff_tab_delimiter_env");
     wrk.create_with_delim("in.file", data(), b'\t');
 
-    let mut cmd = wrk.command("table");
+    let mut cmd = wrk.command("input");
     cmd.env("QSV_SNIFF_DELIMITER", "1");
     cmd.arg("in.file");
 
     let got: String = wrk.stdout(&mut cmd);
-    assert_eq!(&*got, EXPECTED_TABLE)
+    assert_eq!(&*got, EXPECTED_CSV)
 }
 
 #[test]
