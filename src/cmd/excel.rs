@@ -239,8 +239,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     let mut sheet_rows = range.rows();
                     let first_row = sheet_rows.next().unwrap();
 
-                    let mut checkednames_vec: Vec<String> = Vec::with_capacity(sheet_rows.len());
-                    let mut safenames_vec: Vec<String> = Vec::new();
+                    let mut checkednames_vec: Vec<String> = Vec::with_capacity(num_columns);
+                    let mut safenames_vec: Vec<String> = Vec::with_capacity(num_columns);
                     let mut unsafenames_vec: Vec<String> = Vec::new();
                     let mut dupe_count = 0_usize;
 
@@ -267,7 +267,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
                             header
                         })
-                        .collect::<Vec<_>>();
+                        .collect();
 
                     (
                         header_vec,
@@ -325,19 +325,23 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 }
                 wtr.flush()?;
             }
-            MetadataMode::Json | MetadataMode::PrettyJSON => {
-                if metadata_mode == MetadataMode::PrettyJSON {
-                    println!(
-                        "{}",
-                        serde_json::to_string_pretty(&excelmetadata_struct).unwrap()
-                    );
-                } else {
-                    println!("{}", serde_json::to_string(&excelmetadata_struct).unwrap());
+            MetadataMode::Json => {
+                let Ok(json_result) = serde_json::to_string(&excelmetadata_struct) else {
+                    return fail!("Cannot create JSON");
                 };
+                println!("{json_result}");
+            }
+            MetadataMode::PrettyJSON => {
+                let Ok(json_result) = serde_json::to_string_pretty(&excelmetadata_struct) else {
+                    return fail!("Cannot create pretty JSON");
+                };
+                println!("{json_result}");
             }
             MetadataMode::None => {}
         }
-        log::info!("listed sheet names: {sheet_vec:?}");
+        log::info!(r#"exported metadata for "{filename}" workbook sheets: {sheet_vec:?}"#);
+        // after we export metadata, we're done.
+        // we're not exporting the spreadsheet to CSV
         return Ok(());
     }
 
