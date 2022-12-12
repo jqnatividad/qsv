@@ -205,10 +205,17 @@ impl Workdir {
     }
 
     pub fn qsv_bin(&self) -> PathBuf {
-        self.root.join("qsv")
+        #[cfg(feature = "all_full")]
+        return self.root.join("qsv");
+        #[cfg(feature = "lite")]
+        return self.root.join("qsvlite");
+        #[cfg(feature = "datapusher_plus")]
+        return self.root.join("qsvdp");
+
     }
 
     // clear all files in directory
+    #[cfg(any(feature = "full", feature = "lite"))]
     pub fn clear_contents(&self) -> io::Result<()> {
         for entry in fs::read_dir(&self.dir)? {
             fs::remove_file(entry?.path())?;
