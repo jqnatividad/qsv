@@ -73,6 +73,7 @@ const BATCH_SIZE: usize = 24_000;
 static NULL_TYPE: once_cell::sync::OnceCell<Value> = OnceCell::new();
 
 #[derive(Deserialize)]
+#[allow(dead_code)]
 struct Args {
     flag_fail_fast:   bool,
     flag_valid:       Option<String>,
