@@ -52,16 +52,6 @@ Excel options:
                                from the previous record.
     --trim                     Trim all fields so that leading & trailing whitespaces are removed.
                                Also removes embedded linebreaks.
-    --safenames <a|c>          Rename header names to "safe" names - i.e. guaranteed "database-ready"
-                               names where - names are lowercase; duplicate header names have a
-                               sequential suffix (_n) appended; Leading/trailing whitespaces are trimmed;
-                               Whitespace/non-alphanumeric characters are replaced with _;
-                               If a column name starts with a digit, the digit is replaced with a _;
-                               maximum length is 60 characters; and empty header names are set to "_blank".
-                               It has two modes - Always & Conditional.
-                               Always - goes ahead and renames all headers without checking if they're 
-                               already "safe". Conditional - check first before renaming.
-                               [default: none]
     --dates-whitelist <list>   The case-insensitive patterns to look for when 
                                shortlisting columns for date processing.
                                i.e. if the column's name has any of these patterns,
@@ -101,16 +91,8 @@ struct Args {
     flag_metadata:        String,
     flag_flexible:        bool,
     flag_trim:            bool,
-    flag_safenames:       String,
     flag_dates_whitelist: String,
     flag_output:          Option<String>,
-}
-
-#[derive(PartialEq)]
-enum SafeNameMode {
-    Always,
-    Conditional,
-    None,
 }
 
 #[derive(PartialEq)]
@@ -345,15 +327,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         return Ok(());
     }
 
-    // set Safe Name Mode
-    let mut first_letter = args.flag_safenames.chars().next().unwrap_or_default();
-    first_letter.make_ascii_lowercase();
-    let safename = match first_letter {
-        'c' => SafeNameMode::Conditional,
-        'a' => SafeNameMode::Always,
-        _ => SafeNameMode::None,
-    };
-
     // convert sheet_names to lowercase so we can do a case-insensitive compare
     let mut lower_sheet_names: Vec<String> = Vec::with_capacity(num_sheets);
     for s in sheet_names {
@@ -448,7 +421,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // https://support.microsoft.com/en-us/office/excel-specifications-and-limits-1672b34d-7043-467e-8e27-269d656771c3
     // https://wiki.documentfoundation.org/Faq/Calc/022
     let mut row_count = 0_u32;
-    let mut header_names_changed = 0_u16;
 
     for (row_idx, row) in range.rows().enumerate() {
         record.clear();
@@ -529,22 +501,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         }
 
-        // if this is the header/column row and --safe-names option is not None
-        // check header names for "unsafe" names
-        if row_count == 0 && safename != SafeNameMode::None {
-            let mut temp_record = csv::StringRecord::new();
-            for header in &record {
-                temp_record.push_field(header);
-            }
-            let (safe_headers, changed) =
-                util::safe_header_names(&temp_record, true, safename == SafeNameMode::Conditional);
-            header_names_changed = changed;
-            record.clear();
-            for header_name in safe_headers {
-                record.push_field(&header_name);
-            }
-        }
-
         if args.flag_trim {
             record.trim();
             trimmed_record.clear();
@@ -563,17 +519,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
     wtr.flush()?;
 
-    let mut end_msg = format!(
+    let end_msg = format!(
         "{} {}-column rows exported from \"{sheet}\"",
         // don't count the header in row count
         row_count.saturating_sub(1).separate_with_commas(),
         record.len().separate_with_commas(),
     );
-    if header_names_changed > 0 {
-        end_msg.push_str(&format!(
-            ". {header_names_changed} unsafe header/s modified."
-        ));
-    }
 
     winfo!("{end_msg}");
 

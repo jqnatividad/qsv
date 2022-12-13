@@ -300,85 +300,6 @@ fn excel_open_xlsx() {
 }
 
 #[test]
-fn excel_xlsx_safe_header_name() {
-    let wrk = Workdir::new("excel_xlsx_safe_header_name");
-
-    let xlsx_file = wrk.load_test_file("excel-xlsx.xlsx");
-
-    let mut cmd = wrk.command("excel");
-    cmd.arg("--sheet")
-        .arg("safe_header_name_test")
-        .arg("--safenames")
-        .arg("conditional")
-        .arg(xlsx_file);
-
-    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![
-        svec![
-            "col1",
-            "col_with_leading_and_trailing_spaces_",
-            "_23_starts_with_123",
-            "with_____special_____characters_",
-            "col1_2",
-            "col1_3",
-            "the_quick_brown_fox_with_a_very_long_column_name_is_now_jump",
-            "___date___"
-        ],
-        svec![
-            "1",
-            "a",
-            "a",
-            "1.5",
-            "5",
-            "e",
-            "   This is some text. With whitespaces.  ",
-            "2001-09-11"
-        ],
-        svec![
-            "2",
-            "b",
-            "ba",
-            "2.3",
-            "4",
-            "d",
-            "jumped over the lazy dog",
-            "1968-07-04"
-        ],
-        svec![
-            "3",
-            "c",
-            "ka",
-            "3.4",
-            "3",
-            "c",
-            "     by the zigzag\r\nquarry site.   ",
-            "not a date"
-        ],
-        svec![
-            "4",
-            "d",
-            "da",
-            "3.14",
-            "2",
-            "b",
-            "lorem ipsum dolorem",
-            "1902-10-31"
-        ],
-        svec![
-            "5",
-            "e",
-            "e",
-            "0.00012",
-            "1",
-            "a",
-            "Joel was here",
-            "1901-10-15 08:09:36"
-        ],
-    ];
-    assert_eq!(got, expected);
-}
-
-#[test]
 fn excel_last_sheet() {
     let wrk = Workdir::new("excel_last_sheet");
 
@@ -801,26 +722,6 @@ fn excel_empty_sheet_message() {
 
     let got = wrk.output_stderr(&mut cmd);
     assert_eq!(got, "0 4-column rows exported from \"NoData\"\n");
-}
-
-#[test]
-fn excel_unsafename_detected() {
-    let wrk = Workdir::new("excel_unsafename_detected");
-
-    let xls_file = wrk.load_test_file("excel-xls.xls");
-
-    let mut cmd = wrk.command("excel");
-    cmd.arg("--sheet")
-        .arg("trim test")
-        .arg("--safenames")
-        .arg("conditional")
-        .arg(xls_file);
-
-    let got = wrk.output_stderr(&mut cmd);
-    assert_eq!(
-        got,
-        "5 3-column rows exported from \"trim test\". 1 unsafe header/s modified.\n"
-    );
 }
 
 #[test]
