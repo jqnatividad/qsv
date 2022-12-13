@@ -24,6 +24,9 @@ cache at database 2, as opposed to database 1 with fetch.
 Set the environment variables QSV_FP_REDIS_CONNSTR, QSV_FP_REDIS_TTL_SECONDS and 
 QSV_FP_REDIS_TTL_REFRESH respectively to change default Redis settings.
 
+Support HTTP/2 if the server supports it for improved performance.
+(see https://www.cloudflare.com/learning/performance/http2-vs-http1.1/)
+
 EXAMPLES:
 
 data.csv
