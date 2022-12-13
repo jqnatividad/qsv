@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.78.2] - 2022-12-13
+
+### Changed
+* cargo update bump paste 1.0.9 to 1.0.10
+* pin Rust nightly to 2022-12-12
+
+### Removed
+* `excel`: remove --safenames option. If you need safenames, use the `safenames` command https://github.com/jqnatividad/qsv/commit/e5da73bcc64ef3a8c66c611fd6247fa331117544
+
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.78.1...0.78.2
+
 ## [0.78.1] - 2022-12-12
 
 ### Changed
