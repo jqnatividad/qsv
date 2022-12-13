@@ -97,7 +97,7 @@ Prebuilt binary variants of the latest qsv version with more enabled features fo
 There are three binary variants of qsv:
  * `qsv` - [feature](#feature-flags)-capable(❇️), with the [prebuilt binaries](https://github.com/jqnatividad/qsv/releases/latest) enabling all applicable features except Python [^6]
  * `qsvlite` - all features disabled (~40% of the size of `qsv`)
- * `qsvdp` - optimized for use with [DataPusher+](https://github.com/dathere/datapusher-plus), with only DataPusher+ relevant commands, the `--progressbar` option disabled, and the self-update only checking for new releases, reguiring an explicit `--update` (~40% of the the size of `qsv`).
+ * `qsvdp` - optimized for use with [DataPusher+](https://github.com/dathere/datapusher-plus), with only DataPusher+ relevant commands, the `--progressbar` option disabled, and the self-update only checking for new releases, requiring an explicit `--update` (~40% of the the size of `qsv`).
 
 Alternatively, you can install from source by [installing Rust](https://www.rust-lang.org/tools/install)
 and installing `qsv` using Rust's cargo command[^5]:
@@ -224,7 +224,7 @@ qsv stats wcp.csv --output wcpstats.csv
 ## Interpreters
 ### Python
 
-The `python` feature is NOT enabled by default on the prebuilt binaries, as doing so requires it to statically link to python, which presents distribution issues, as various operating systems have differing bundled Python versions.
+The `python` feature is NOT enabled by default on the prebuilt binaries, as doing so requires it to dynamically link to python, which presents distribution issues, as various operating systems have differing bundled Python versions.
 
 If you wish to enable the `python` feature - you'll just have to install/compile from source, making sure you have the development libraries for the desired Python version (Python 3.6 to 3.11 are supported) installed when doing so.
 
