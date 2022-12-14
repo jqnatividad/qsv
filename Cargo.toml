@@ -174,7 +174,7 @@ ext-sort  = { git = "https://github.com/jqnatividad/ext-sort-rs", branch = "perf
 tabwriter = { git = "https://github.com/jqnatividad/tabwriter", branch = "tweaks" }
 
 [features]
-default = ["mimalloc", "apply", "fetch", "full"]
+default = ["mimalloc"]
 all_full = [
     "full",
     "apply",
