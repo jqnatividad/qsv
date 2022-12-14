@@ -12,8 +12,8 @@ set of statistics corresponds to statistics that can be computed efficiently on 
 of data (i.e., constant memory) and can work with arbitrarily large CSV files.
 
 The following additional statistics require loading the entire file into memory:
-mode, cardinality, median, quartiles and its related measures (IQR, lower/upper fences
-and skewness).
+mode (multimodal aware), cardinality, median, quartiles and its related measures 
+(IQR, lower/upper fences and skewness).
 
 Each column's data type is also inferred (NULL, Integer, String, Float, Date & DateTime). 
 Note that the Date and DateTime data types are only inferred with the --infer-dates option 
