@@ -20,7 +20,8 @@ and cache hits NOT refreshing the TTL of cached values.
 Set the environment variables QSV_REDIS_CONNSTR, QSV_REDIS_TTL_SECONDS and 
 QSV_REDIS_TTL_REFRESH to change default Redis settings.
 
-Support HTTP/2 if the server supports it for improved performance.
+Supports brotli, gzip and deflate compression for improved throughtput & performance.
+Automatically upgrades its connection to HTTP/2 as well if the server supports it.
 (see https://www.cloudflare.com/learning/performance/http2-vs-http1.1/)
 
 EXAMPLES USING THE URL-COLUMN ARGUMENT:
