@@ -155,6 +155,7 @@ fn main() -> QsvExitCode {
     stats       Infer data types and compute descriptive statistics
     table       Align CSV data into columns
     tojsonl     Convert CSV to newline-delimited JSON
+    to          Convert CSVs to POSTGRES/XLSX/PARQUET/SQLITE 
     transpose   Transpose rows/columns of CSV data
     validate    Validate CSV data for RFC4180-compliance or with JSON Schema",
     );
@@ -276,6 +277,7 @@ enum Command {
     Input,
     Join,
     Jsonl,
+    To,
     #[cfg(all(feature = "luau", not(feature = "lite")))]
     Luau,
     Partition,
@@ -373,6 +375,7 @@ impl Command {
             Command::Stats => cmd::stats::run(argv),
             Command::Table => cmd::table::run(argv),
             Command::Transpose => cmd::transpose::run(argv),
+            Command::To => cmd::to::run(argv),
             Command::Tojsonl => cmd::tojsonl::run(argv),
             Command::Validate => cmd::validate::run(argv),
         }
