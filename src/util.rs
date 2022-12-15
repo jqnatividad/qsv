@@ -703,6 +703,7 @@ pub fn safe_header_names(
     headers: &csv::StringRecord,
     check_first_char: bool,
     conditional: bool,
+    reserved_names: &[String],
 ) -> (Vec<String>, u16) {
     // Create "safe" var/key names - to support dynfmt/url-template, valid python vars & db-safe
     // column names. Fold to lowercase. Trim leading & trailing whitespace.
@@ -718,7 +719,7 @@ pub fn safe_header_names(
     let mut changed_count = 0_u16;
     let mut name_vec: Vec<String> = Vec::with_capacity(headers.len());
     for header_name in headers {
-        let safe_name = if conditional && is_safe_name(header_name) {
+        let safe_name = if conditional && is_safe_name(header_name, reserved_names) {
             header_name.to_string()
         } else {
             let mut safe_name_always = if header_name.is_empty() {
@@ -750,7 +751,7 @@ pub fn safe_header_names(
 }
 
 #[inline]
-pub fn is_safe_name(header_name: &str) -> bool {
+pub fn is_safe_name(header_name: &str, reserved_names: &[String]) -> bool {
     if header_name.trim().is_empty()
         || header_name.trim_start_matches('_').is_empty()
         || header_name.len() > 60
@@ -762,7 +763,14 @@ pub fn is_safe_name(header_name: &str) -> bool {
         return false;
     }
     let safename_re = regex_once_cell!(r"^[\w\-\s]+$");
-    safename_re.is_match(header_name)
+    if !safename_re.is_match(header_name) {
+        return false;
+    }
+    if reserved_names.contains(&header_name.to_string()) {
+        log::debug!("\"{header_name}\" is a reserved name: {reserved_names:?}");
+        return false;
+    }
+    true
 }
 
 pub fn log_end(mut qsv_args: String, now: std::time::Instant) {
