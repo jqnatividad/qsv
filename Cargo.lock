@@ -2308,9 +2308,9 @@ dependencies = [
 
 [[package]]
 name = "qsv-dateparser"
-version = "0.4.3"
+version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d452c6644bcdb5c08b96154dbbab500de90493d294fd53aba59d4de460903a0e"
+checksum = "df977b8d37929baf1fe86169572e3c391f5ca0c9ccbe6927f03ce0e54c5f3d9f"
 dependencies = [
  "anyhow",
  "chrono",
