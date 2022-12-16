@@ -73,8 +73,9 @@ safenames options:
                            JSON (j) - similar to verbose in minified JSON.
                            pretty JSON (J) - verbose in pretty-printed JSON
                            [default: Always]
-    --reserved <list>      Comma-delimited list of additional reserved names
-                           that are considered "unsafe."
+    --reserved <list>      Comma-delimited list of additional case-insensitive reserved names
+                           that should be considered "unsafe." If a header name is found in 
+                           the reserved list, it will be prefixed with "_RESERVED_".
                            [default: _id]
 
 Common options:
@@ -140,7 +141,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let reserved_names_vec: Vec<String> = args
         .flag_reserved
         .split(',')
-        .map(std::string::ToString::to_string)
+        .map(str::to_lowercase)
         .collect();
 
     let rconfig = Config::new(&args.arg_input)
@@ -183,7 +184,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let mut dupe_count = 0_u16;
 
         for header_name in headers.iter() {
-            let safe_flag = util::is_safe_name(header_name, &reserved_names_vec);
+            let safe_flag = util::is_safe_name(header_name);
             if safe_flag {
                 if !safenames_vec.contains(&header_name.to_string()) {
                     safenames_vec.push(header_name.to_string());
