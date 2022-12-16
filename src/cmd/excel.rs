@@ -219,37 +219,38 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 } else {
                     let (num_rows, num_columns) = range.get_size();
                     let mut sheet_rows = range.rows();
-                    let first_row = sheet_rows.next().unwrap();
-
                     let mut checkednames_vec: Vec<String> = Vec::with_capacity(num_columns);
                     let mut safenames_vec: Vec<String> = Vec::with_capacity(num_columns);
                     let mut unsafenames_vec: Vec<String> = Vec::new();
                     let mut dupe_count = 0_usize;
+                    let mut header_vec: Vec<String> = Vec::with_capacity(num_columns);
 
-                    let header_vec = first_row
-                        .iter()
-                        .map(|h| {
-                            let header = h.to_string();
+                    if let Some(first_row) = sheet_rows.next() {
+                        header_vec = first_row
+                            .iter()
+                            .map(|h| {
+                                let header = h.to_string();
 
-                            let safe_flag = util::is_safe_name(&header);
-                            if safe_flag {
-                                if !safenames_vec.contains(&header) {
-                                    safenames_vec.push(header.to_string());
+                                let safe_flag = util::is_safe_name(&header);
+                                if safe_flag {
+                                    if !safenames_vec.contains(&header) {
+                                        safenames_vec.push(header.to_string());
+                                    }
+                                } else {
+                                    unsafenames_vec.push(header.to_string());
+                                };
+
+                                // check for duplicate headers/columns
+                                if checkednames_vec.contains(&header) {
+                                    dupe_count += 1;
+                                } else {
+                                    checkednames_vec.push(header.to_string());
                                 }
-                            } else {
-                                unsafenames_vec.push(header.to_string());
-                            };
 
-                            // check for duplicate headers/columns
-                            if checkednames_vec.contains(&header) {
-                                dupe_count += 1;
-                            } else {
-                                checkednames_vec.push(header.to_string());
-                            }
-
-                            header
-                        })
-                        .collect();
+                                header
+                            })
+                            .collect();
+                    }
 
                     (
                         header_vec,
@@ -413,20 +414,19 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     let mut trimmed_record = csv::StringRecord::new();
-    let mut date_flag: Vec<bool> = Vec::new();
+    let mut date_flag: Vec<bool> = Vec::with_capacity(20); // to save allocs
     let mut cell_date_flag;
     let mut float_val = 0_f64;
     let mut float_flag;
-    // use u32 as Excel/ODS can only handle 1,048,576 rows anyway
-    // https://support.microsoft.com/en-us/office/excel-specifications-and-limits-1672b34d-7043-467e-8e27-269d656771c3
-    // https://wiki.documentfoundation.org/Faq/Calc/022
-    let mut row_count = 0_u32;
+    let mut row_count = 0_usize;
 
+    debug!("exporting sheet ({sheet})...");
     for (row_idx, row) in range.rows().enumerate() {
         record.clear();
         for (col_idx, cell) in row.iter().enumerate() {
             if row_idx == 0 {
                 // its the header row, check the dates whitelist
+                debug!("processing first row...");
                 let col_name = cell.get_string().unwrap_or_default();
                 record.push_field(col_name);
                 match whitelist_lower.as_str() {
@@ -453,6 +453,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         },
                     ),
                 }
+                debug!("date_flag: {date_flag:?}");
                 continue;
             }
             cell_date_flag = false;
@@ -460,6 +461,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             match *cell {
                 DataType::Empty => record.push_field(""),
                 DataType::String(ref s) => record.push_field(s),
+                DataType::Int(ref i) => {
+                    let mut buffer = itoa::Buffer::new();
+                    record.push_field(buffer.format(*i));
+                }
                 DataType::DateTime(ref f) => {
                     float_val = *f;
                     float_flag = true;
@@ -470,7 +475,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     float_flag = true;
                     cell_date_flag = date_flag[col_idx];
                 }
-                DataType::Int(ref i) => record.push_field(&i.to_string()),
                 DataType::Error(ref e) => record.push_field(&format!("{e:?}")),
                 DataType::Bool(ref b) => record.push_field(&b.to_string()),
             };
