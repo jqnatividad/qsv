@@ -719,7 +719,7 @@ pub fn safe_header_names(
     let mut changed_count = 0_u16;
     let mut name_vec: Vec<String> = Vec::with_capacity(headers.len());
     for header_name in headers {
-        let safe_name = if conditional && is_safe_name(header_name, reserved_names) {
+        let safe_name = if conditional && is_safe_name(header_name) {
             header_name.to_string()
         } else {
             let mut safe_name_always = if header_name.is_empty() {
@@ -732,8 +732,15 @@ pub fn safe_header_names(
             if check_first_char && safe_name_always.as_bytes()[0].is_ascii_digit() {
                 safe_name_always.replace_range(0..1, "_");
             }
-            safe_name_always[..safe_name_always.chars().map(char::len_utf8).take(60).sum()]
-                .to_lowercase()
+            let safename_candidate = safe_name_always
+                [..safe_name_always.chars().map(char::len_utf8).take(60).sum()]
+                .to_lowercase();
+            if reserved_names.contains(&safename_candidate) {
+                log::debug!("\"{safename_candidate}\" is a reserved name: {reserved_names:?}");
+                format!("_RESERVED_{safename_candidate}")
+            } else {
+                safename_candidate
+            }
         };
         let mut sequence_suffix = 2_u16;
         let mut candidate_name = safe_name.clone();
@@ -751,7 +758,7 @@ pub fn safe_header_names(
 }
 
 #[inline]
-pub fn is_safe_name(header_name: &str, reserved_names: &[String]) -> bool {
+pub fn is_safe_name(header_name: &str) -> bool {
     if header_name.trim().is_empty()
         || header_name.trim_start_matches('_').is_empty()
         || header_name.len() > 60
@@ -763,14 +770,7 @@ pub fn is_safe_name(header_name: &str, reserved_names: &[String]) -> bool {
         return false;
     }
     let safename_re = regex_once_cell!(r"^[\w\-\s]+$");
-    if !safename_re.is_match(header_name) {
-        return false;
-    }
-    if reserved_names.contains(&header_name.to_string()) {
-        log::debug!("\"{header_name}\" is a reserved name: {reserved_names:?}");
-        return false;
-    }
-    true
+    safename_re.is_match(header_name)
 }
 
 pub fn log_end(mut qsv_args: String, now: std::time::Instant) {

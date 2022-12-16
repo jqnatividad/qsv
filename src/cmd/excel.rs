@@ -231,7 +231,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         .map(|h| {
                             let header = h.to_string();
 
-                            let safe_flag = util::is_safe_name(&header, &Vec::new());
+                            let safe_flag = util::is_safe_name(&header);
                             if safe_flag {
                                 if !safenames_vec.contains(&header) {
                                     safenames_vec.push(header.to_string());
