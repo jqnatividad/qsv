@@ -31,19 +31,19 @@ fn safenames_conditional() {
             "col1",
             "this_is_a_column_with_invalid_chars___and_leading___trailing",
             // null column names are not allowed in postgres
-            "_blank",
+            "unsafe_",
             // though this is "safe", it's generally discouraged
             // to have embedded spaces and mixed case column names
             // as you will have to use quotes to refer to these columns
             // in Postgres
             "this is already a Postgres Safe Column",
             // a column cannot start with a digit
-            "_starts_with_1",
+            "unsafe_starts_with_1",
             // duplicate cols are not allowed in one table in postgres
             "col1_2",
             "col1_3",
-            "_blank_2",
-            "_blank_3"
+            "unsafe__2",
+            "unsafe__3"
         ],
         svec!["1", "b", "33", "1", "b", "33", "34", "z", "42"],
         svec!["2", "c", "34", "3", "d", "31", "3", "y", "3.14"],
@@ -85,12 +85,12 @@ fn safenames_always() {
         svec![
             "col1",
             "this_is_a_column_with_invalid_chars___and_leading___trailing",
-            "_blank",
+            "unsafe_",
             // we were using Always mode, so even though the
             // original header name was already valid,
             // we replaced spaces with _ regardless
             "this_is_already_a_postgres_safe_column",
-            "_starts_with_1",
+            "unsafe_starts_with_1",
             "col1_2",
             "col1_3"
         ],
@@ -321,9 +321,9 @@ fn safenames_reserved_names_default() {
         svec![
             "col1",
             "this_is_a_column_with_invalid_chars___and_leading___trailing",
-            "_RESERVED__id",
+            "reserved__id",
             "this_is_already_a_postgres_safe_column",
-            "_starts_with_1",
+            "unsafe_starts_with_1",
             "col1_2",
             "col1_3"
         ],
@@ -365,9 +365,9 @@ fn safenames_reserved_names_specified() {
         svec![
             "col1",
             "this_is_a_column_with_invalid_chars___and_leading___trailing",
-            "_RESERVED_waldo",
+            "reserved_waldo",
             "this_is_already_a_postgres_safe_column",
-            "_starts_with_1",
+            "unsafe_starts_with_1",
             "col1_2",
             "col1_3"
         ],
@@ -409,9 +409,9 @@ fn safenames_reserved_names_specified_case_insensitive() {
         svec![
             "col1",
             "this_is_a_column_with_invalid_chars___and_leading___trailing",
-            "_RESERVED_waldo",
+            "reserved_waldo",
             "this_is_already_a_postgres_safe_column",
-            "_starts_with_1",
+            "unsafe_starts_with_1",
             "col1_2",
             "col1_3"
         ],
