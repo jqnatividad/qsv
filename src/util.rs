@@ -704,17 +704,24 @@ pub fn safe_header_names(
     check_first_char: bool,
     conditional: bool,
     reserved_names: &[String],
+    unsafe_prefix: &str,
 ) -> (Vec<String>, u16) {
     // Create "safe" var/key names - to support dynfmt/url-template, valid python vars & db-safe
     // column names. Fold to lowercase. Trim leading & trailing whitespace.
     // Replace whitespace/non-alphanumeric) with _. If name starts with a number & check_first_char
     // is true, replace it with an _ as well. If a column with the same name already exists,
     // append a sequence suffix (e.g. _n). Names are limited to 60 characters in length.
-    // Empty names are replaced with _blank as well.
+    // Empty names are replaced with unsafe_prefix as well.
 
     // If conditional = true, only rename the header if its not already safe as embedded spaces
     // in certain circumstances (postgresql allows embeded spaces in names, but not python, dynfmt
     // and url-template)
+    let prefix = if unsafe_prefix.is_empty() {
+        "_"
+    } else {
+        unsafe_prefix
+    };
+
     let safename_regex = regex_once_cell!(r"[^A-Za-z0-9]");
     let mut changed_count = 0_u16;
     let mut name_vec: Vec<String> = Vec::with_capacity(headers.len());
@@ -723,21 +730,27 @@ pub fn safe_header_names(
             header_name.to_string()
         } else {
             let mut safe_name_always = if header_name.is_empty() {
-                "_blank".to_string()
+                // "_blank".to_string()
+                prefix.to_string()
             } else {
                 safename_regex
                     .replace_all(header_name.trim(), "_")
                     .to_string()
             };
             if check_first_char && safe_name_always.as_bytes()[0].is_ascii_digit() {
-                safe_name_always.replace_range(0..1, "_");
+                safe_name_always.replace_range(0..1, prefix);
             }
+
+            if prefix != "_" && safe_name_always.starts_with('-') {
+                safe_name_always = format!("{prefix}{safe_name_always}");
+            }
+
             let safename_candidate = safe_name_always
                 [..safe_name_always.chars().map(char::len_utf8).take(60).sum()]
                 .to_lowercase();
             if reserved_names.contains(&safename_candidate) {
                 log::debug!("\"{safename_candidate}\" is a reserved name: {reserved_names:?}");
-                format!("_RESERVED_{safename_candidate}")
+                format!("reserved_{safename_candidate}")
             } else {
                 safename_candidate
             }
