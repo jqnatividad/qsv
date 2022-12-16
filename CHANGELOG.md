@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.79.0] - 2022-12-16
 ### Added
 * `safenames`: add --reserved option, allowing user to specify additional "unsafe" names https://github.com/jqnatividad/qsv/pull/657
+* `safenames`: add --prefix option https://github.com/jqnatividad/qsv/pull/658
 * `fetch` & `fetchpost`: added simple retry backoff multiplier - https://github.com/jqnatividad/qsv/commit/e343398ddd9c804237e73bbc652cc9e51c657b78
 
 ### Changed
