@@ -148,7 +148,7 @@ cargo build --release --locked --features datapusher_plus
 
 ### Minimum Supported Rust Version
 
-qsv's MSRV policy is to require [Rust stable](https://github.com/rust-lang/rust/blob/master/RELEASES.md) - currently version 1.65.
+qsv's MSRV policy is to require [Rust stable](https://github.com/rust-lang/rust/blob/master/RELEASES.md) - currently version 1.66.
 
 ## Tab Completion
 
