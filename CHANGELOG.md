@@ -6,6 +6,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.79.0] - 2022-12-16
+### Added
+* `safenames`: add --reserved option, allowing user to specify additional "unsafe" names https://github.com/jqnatividad/qsv/pull/657
+* `fetch` & `fetchpost`: added simple retry backoff multiplier - https://github.com/jqnatividad/qsv/commit/e343398ddd9c804237e73bbc652cc9e51c657b78
+
+### Changed
+* `excel`: refactored --metadata processing; added more debug messages; minor perf tweaks https://github.com/jqnatividad/qsv/commit/f137bab42f81518acd3ef825cd223b9970d70b02
+* set MSRV to Rust 1.6.6
+* cargo update bump several dependencies, notably qsv-dateparser
+* pin Rust nightly to 2022-12-15
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.78.2...0.79.0
+
+
 ## [0.78.2] - 2022-12-13
 
 ### Changed
