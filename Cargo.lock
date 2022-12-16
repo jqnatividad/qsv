@@ -385,9 +385,9 @@ dependencies = [
 
 [[package]]
 name = "bstr"
-version = "1.0.1"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fca0852af221f458706eb0725c03e4ed6c46af9ac98e6a689d5e634215d594dd"
+checksum = "b45ea9b00a7b3f2988e9a65ad3917e62123c38dba709b666506207be96d1790b"
 dependencies = [
  "memchr",
  "once_cell",
@@ -505,9 +505,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.0.77"
+version = "1.0.78"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e9f73505338f7d905b19d18738976aae232eb46b8efc15554ffc56deb5d9ebe4"
+checksum = "a20104e2335ce8a659d6dd92a51a767a0c062599c73b343fd152cb401e828c3d"
 
 [[package]]
 name = "censor"
@@ -732,7 +732,7 @@ name = "csv"
 version = "1.1.6"
 source = "git+https://github.com/jqnatividad/rust-csv?branch=perf-tweaks#a7397b25c424cd98d60d9c6b614dc3d09d682b50"
 dependencies = [
- "bstr 1.0.1",
+ "bstr 1.1.0",
  "csv-core",
  "itoa",
  "ryu",
@@ -1033,16 +1033,15 @@ dependencies = [
 
 [[package]]
 name = "flexi_logger"
-version = "0.24.1"
+version = "0.24.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "99659bcfd52cfece972bd00acb9dba7028094d47e699ea8b193b9aaebd5c362b"
+checksum = "ade8e86c48285f138a4d6ca15a2912e39bd6c74d62db42da4f1985f651a0b057"
 dependencies = [
  "chrono",
  "flate2",
  "glob",
  "lazy_static",
  "log",
- "rustversion",
  "thiserror",
 ]
 
@@ -2077,9 +2076,9 @@ checksum = "6ac9a59f73473f1b8d852421e59e64809f025994837ef743615c6d0c5b305160"
 
 [[package]]
 name = "portable-atomic"
-version = "0.3.16"
+version = "0.3.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ac662b3a6490de378b0ee15cf2dfff7127aebfe0b19acc65e7fbca3d299c3788"
+checksum = "81bdd679d533107e090c2704a35982fc06302e30898e63ffa26a81155c012e92"
 
 [[package]]
 name = "ppv-lite86"
@@ -2308,9 +2307,9 @@ dependencies = [
 
 [[package]]
 name = "qsv-dateparser"
-version = "0.4.3"
+version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d452c6644bcdb5c08b96154dbbab500de90493d294fd53aba59d4de460903a0e"
+checksum = "df977b8d37929baf1fe86169572e3c391f5ca0c9ccbe6927f03ce0e54c5f3d9f"
 dependencies = [
  "anyhow",
  "chrono",
@@ -3217,9 +3216,9 @@ dependencies = [
 
 [[package]]
 name = "toml"
-version = "0.5.9"
+version = "0.5.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8d82e1a7758622a465f8cee077614c73484dac5b836c02ff6a40d5d1010324d7"
+checksum = "1333c76748e868a4d9d1017b5ab53171dfd095f70c712fdb4653a406547f598f"
 dependencies = [
  "serde",
 ]
