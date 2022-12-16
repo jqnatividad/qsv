@@ -3,9 +3,9 @@ Modify headers of a CSV to only have "safe" names - guaranteed "database-ready" 
 (optimized specifically for PostgreSQL column identifiers). 
 
 Fold to lowercase. Trim leading & trailing whitespaces. Replace whitespace/non-alphanumeric
-characters with _. If the first character is a digit, replace the digit with _.
+characters with _. If the first character is a digit, replace the digit with the unsafe prefix.
 If a header with the same name already exists, append a sequence suffix (e.g. c1, c1_2, c1_3).
-Names are limited to 60 characters in length. Empty names are replaced with "_blank".
+Names are limited to 60 characters in length. Empty names are replaced with "unsafe_".
 
 In Always (a) and Conditional (c) mode, returns number of modified headers to stderr,
 and sends CSV with safe headers output to stdout.
@@ -75,8 +75,11 @@ safenames options:
                            [default: Always]
     --reserved <list>      Comma-delimited list of additional case-insensitive reserved names
                            that should be considered "unsafe." If a header name is found in 
-                           the reserved list, it will be prefixed with "_RESERVED_".
+                           the reserved list, it will be prefixed with "reserved_".
                            [default: _id]
+    --prefix <string>      Certain systems do not allow header names to start with "_" (e.g. CKAN Datastore).
+                           This option allows the specification of a prefix to use when a header starts with "_".
+                           [default: unsafe_]
 
 Common options:
     -h, --help             Display this message
@@ -99,6 +102,7 @@ struct Args {
     arg_input:      Option<String>,
     flag_mode:      String,
     flag_reserved:  String,
+    flag_prefix:    String,
     flag_output:    Option<String>,
     flag_delimiter: Option<Delimiter>,
 }
@@ -159,6 +163,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             true,
             safenames_mode == SafeNameMode::Conditional,
             &reserved_names_vec,
+            &args.flag_prefix,
         );
 
         headers.clear();
