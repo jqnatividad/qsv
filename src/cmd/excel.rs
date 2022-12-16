@@ -474,8 +474,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 DataType::Error(ref e) => record.push_field(&format!("{e:?}")),
                 DataType::Bool(ref b) => record.push_field(&b.to_string()),
             };
-            // dates are stored as numbers in Excel
-            // that's why we need the --dates-whitelist, so we can convert the number to a date.
+            // dates are stored as floats in Excel
+            // that's why we need the --dates-whitelist, so we can convert the float to a date.
             // However, with the XLSX format, we can get a cell's format as an attribute. So we can
             // automatically process a cell as a date, even if its column is NOT in the whitelist
             if float_flag {

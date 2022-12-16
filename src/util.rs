@@ -703,6 +703,7 @@ pub fn safe_header_names(
     headers: &csv::StringRecord,
     check_first_char: bool,
     conditional: bool,
+    reserved_names: &[String],
 ) -> (Vec<String>, u16) {
     // Create "safe" var/key names - to support dynfmt/url-template, valid python vars & db-safe
     // column names. Fold to lowercase. Trim leading & trailing whitespace.
@@ -731,8 +732,15 @@ pub fn safe_header_names(
             if check_first_char && safe_name_always.as_bytes()[0].is_ascii_digit() {
                 safe_name_always.replace_range(0..1, "_");
             }
-            safe_name_always[..safe_name_always.chars().map(char::len_utf8).take(60).sum()]
-                .to_lowercase()
+            let safename_candidate = safe_name_always
+                [..safe_name_always.chars().map(char::len_utf8).take(60).sum()]
+                .to_lowercase();
+            if reserved_names.contains(&safename_candidate) {
+                log::debug!("\"{safename_candidate}\" is a reserved name: {reserved_names:?}");
+                format!("_RESERVED_{safename_candidate}")
+            } else {
+                safename_candidate
+            }
         };
         let mut sequence_suffix = 2_u16;
         let mut candidate_name = safe_name.clone();

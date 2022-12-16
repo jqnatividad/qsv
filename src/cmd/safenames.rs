@@ -73,6 +73,11 @@ safenames options:
                            JSON (j) - similar to verbose in minified JSON.
                            pretty JSON (J) - verbose in pretty-printed JSON
                            [default: Always]
+    --reserved <list>      Comma-delimited list of additional case-insensitive reserved names
+                           that should be considered "unsafe." If a header name is found in 
+                           the reserved list, it will be prefixed with "_RESERVED_".
+                           [default: _id]
+
 Common options:
     -h, --help             Display this message
     -o, --output <file>    Write output to <file> instead of stdout.
@@ -93,6 +98,7 @@ use crate::{
 struct Args {
     arg_input:      Option<String>,
     flag_mode:      String,
+    flag_reserved:  String,
     flag_output:    Option<String>,
     flag_delimiter: Option<Delimiter>,
 }
@@ -132,6 +138,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     };
 
+    let reserved_names_vec: Vec<String> = args
+        .flag_reserved
+        .split(',')
+        .map(str::to_lowercase)
+        .collect();
+
     let rconfig = Config::new(&args.arg_input)
         .checkutf8(true)
         .delimiter(args.flag_delimiter);
@@ -142,8 +154,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut headers = csv::StringRecord::from_byte_record_lossy(old_headers.clone());
     if let SafeNameMode::Conditional | SafeNameMode::Always = safenames_mode {
-        let (safe_headers, changed_count) =
-            util::safe_header_names(&headers, true, safenames_mode == SafeNameMode::Conditional);
+        let (safe_headers, changed_count) = util::safe_header_names(
+            &headers,
+            true,
+            safenames_mode == SafeNameMode::Conditional,
+            &reserved_names_vec,
+        );
 
         headers.clear();
         for header_name in safe_headers {
