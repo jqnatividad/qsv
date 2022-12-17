@@ -155,7 +155,7 @@ fn main() -> QsvExitCode {
     stats       Infer data types and compute descriptive statistics
     table       Align CSV data into columns
     tojsonl     Convert CSV to newline-delimited JSON
-    to          Convert CSVs to POSTGRES/XLSX/PARQUET/SQLITE 
+    to          Convert CSVs to PostgreSQL/XLSX/Parquet/SQLite/Data Package
     transpose   Transpose rows/columns of CSV data
     validate    Validate CSV data for RFC4180-compliance or with JSON Schema",
     );
