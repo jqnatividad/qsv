@@ -68,9 +68,9 @@ pub mod stats;
 #[cfg(any(feature = "full", feature = "lite"))]
 pub mod table;
 #[cfg(any(feature = "full", feature = "lite"))]
-pub mod tojsonl;
-#[cfg(any(feature = "full", feature = "lite"))]
 pub mod to;
+#[cfg(any(feature = "full", feature = "lite"))]
+pub mod tojsonl;
 #[cfg(any(feature = "full", feature = "lite"))]
 pub mod transpose;
 pub mod validate;

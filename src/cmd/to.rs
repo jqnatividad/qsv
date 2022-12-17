@@ -108,42 +108,41 @@ Common options:
                            Must be a single character. (default: ,)
 "#;
 
-use log::debug;
-use serde::Deserialize;
-use std::io::Write;
-use std::path::PathBuf;
+use std::{io::Write, path::PathBuf};
 
 use csvs_convert::{
     csvs_to_parquet_with_options, csvs_to_postgres_with_options, csvs_to_sqlite_with_options,
     csvs_to_xlsx_with_options, make_datapackage, DescribeOptions, Options,
 };
+use log::debug;
+use serde::Deserialize;
 
 use crate::{config::Delimiter, util, CliResult};
 
 #[allow(dead_code)]
 #[derive(Deserialize)]
 struct Args {
-    cmd_postgres: bool,
-    arg_connection: Option<String>,
-    cmd_sqlite: bool,
-    arg_sqlite: Option<String>,
-    cmd_parquet: bool,
-    arg_parquet: Option<String>,
-    cmd_xlsx: bool,
-    arg_xlsx: Option<String>,
-    cmd_datapackage: bool,
-    arg_datapackage: Option<String>,
-    arg_input: Vec<PathBuf>,
-    flag_delimiter: Option<Delimiter>,
-    flag_schema: Option<String>,
-    flag_seperator: Option<String>,
-    flag_drop: bool,
-    flag_evolve: bool,
-    flag_stats: bool,
-    flag_stats_csv: Option<String>,
-    flag_threads: Option<usize>,
+    cmd_postgres:       bool,
+    arg_connection:     Option<String>,
+    cmd_sqlite:         bool,
+    arg_sqlite:         Option<String>,
+    cmd_parquet:        bool,
+    arg_parquet:        Option<String>,
+    cmd_xlsx:           bool,
+    arg_xlsx:           Option<String>,
+    cmd_datapackage:    bool,
+    arg_datapackage:    Option<String>,
+    arg_input:          Vec<PathBuf>,
+    flag_delimiter:     Option<Delimiter>,
+    flag_schema:        Option<String>,
+    flag_seperator:     Option<String>,
+    flag_drop:          bool,
+    flag_evolve:        bool,
+    flag_stats:         bool,
+    flag_stats_csv:     Option<String>,
+    flag_threads:       Option<usize>,
     flag_print_package: bool,
-    flag_quiet: bool,
+    flag_quiet:         bool,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -190,7 +189,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } else if args.cmd_parquet {
         debug!("converting to parquet");
         if args.arg_input.is_empty() {
-            return fail_clierror!("Need to add the directory of the parquet files as first argument then the input CSVs");
+            return fail_clierror!(
+                "Need to add the directory of the parquet files as first argument then the input \
+                 CSVs"
+            );
         }
         output = csvs_to_parquet_with_options(
             args.arg_parquet.expect("checked above"),
