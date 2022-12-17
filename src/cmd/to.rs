@@ -242,14 +242,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let empty_array = vec![];
         for resource in output["resources"].as_array().unwrap_or(&empty_array) {
             let mut stdout = std::io::stdout();
-            writeln!(&mut stdout, "")?;
+            writeln!(&mut stdout)?;
             writeln!(
                 &mut stdout,
                 "Table '{}' ({} rows)",
                 resource["name"].as_str().unwrap_or(""),
                 resource["row_count"].as_i64().unwrap_or(0)
             )?;
-            writeln!(&mut stdout, "")?;
+            writeln!(&mut stdout)?;
 
             let mut tabwriter = tabwriter::TabWriter::new(stdout);
 
@@ -277,7 +277,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             tabwriter.flush()?;
         }
         let mut stdout = std::io::stdout();
-        writeln!(&mut stdout, "")?;
+        writeln!(&mut stdout)?;
     }
 
     Ok(())
