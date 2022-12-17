@@ -240,7 +240,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         serde_json::to_writer_pretty(file, &output)?;
         debug!("datapackage complete");
     } else {
-        return fail_clierror!("Need to supply either xlsx,parquet,postgres,sqlite as command");
+        return fail_clierror!(
+            "Need to supply either xlsx,parquet,postgres,sqlite,datapackage as subcommand"
+        );
     }
 
     if args.flag_print_package {
