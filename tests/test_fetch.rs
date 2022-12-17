@@ -348,6 +348,7 @@ fn fetch_jql_multiple_file() {
 }
 
 #[test]
+#[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
 fn fetch_custom_header() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -370,6 +371,7 @@ fn fetch_custom_header() {
 }
 
 #[test]
+#[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
 fn fetch_custom_invalid_header_error() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -388,6 +390,7 @@ fn fetch_custom_invalid_header_error() {
     wrk.assert_err(&mut cmd);
 }
 #[test]
+#[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
 fn fetch_custom_invalid_user_agent_error() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -408,6 +411,7 @@ fn fetch_custom_invalid_user_agent_error() {
 }
 
 #[test]
+#[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
 fn fetch_custom_user_agent() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -428,6 +432,7 @@ fn fetch_custom_user_agent() {
 }
 
 #[test]
+#[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
 fn fetch_custom_invalid_value_error() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -447,6 +452,7 @@ fn fetch_custom_invalid_value_error() {
 }
 
 #[test]
+#[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
 fn fetchpost_custom_invalid_header_error() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -471,6 +477,7 @@ fn fetchpost_custom_invalid_header_error() {
 }
 
 #[test]
+#[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
 fn fetchpost_custom_invalid_value_error() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -495,6 +502,7 @@ fn fetchpost_custom_invalid_value_error() {
 }
 
 #[test]
+#[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
 fn fetchpost_custom_invalid_user_agent_error() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -520,6 +528,7 @@ fn fetchpost_custom_invalid_user_agent_error() {
 }
 
 #[test]
+#[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
 fn fetchpost_custom_user_agent() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -799,6 +808,7 @@ fn fetch_complex_url_template() {
 }
 
 #[test]
+#[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
 fn fetchpost_simple_test() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -879,6 +889,7 @@ fn fetchpost_simple_test() {
 }
 
 #[test]
+#[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
 fn fetchpost_jqlfile_doesnotexist_error() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -908,6 +919,7 @@ fn fetchpost_jqlfile_doesnotexist_error() {
 }
 
 #[test]
+#[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
 fn fetchpost_literalurl_test() {
     let wrk = Workdir::new("fetch_literalurl_test");
     wrk.create(
@@ -972,6 +984,7 @@ fn fetchpost_literalurl_test() {
 }
 
 #[test]
+#[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
 fn fetchpost_simple_report() {
     let wrk = Workdir::new("fetchpost_simple_report");
     wrk.create(
