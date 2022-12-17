@@ -1,5 +1,5 @@
 static USAGE: &str = r#"
-Convert CSV files to XLSX/POSTGRES/SQLITE/PARQUET
+Convert CSV files to PostgreSQL, SQLite, XLSX, Parquet and Data Package.
 
 POSTGRES
 To convert to postgres you need to supply connection string.

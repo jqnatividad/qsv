@@ -22,7 +22,7 @@
 
 </div>
 
-> ℹ️ **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's May 2018 release](https://github.com/BurntSushi/xsv/issues/267). On top of xsv's 20 commands, it adds numerous new features, 27 additional commands, 6 `apply` subcommands & 33 `apply` operations (for a total of 86).
+> ℹ️ **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's May 2018 release](https://github.com/BurntSushi/xsv/issues/267). On top of xsv's 20 commands, it adds numerous new features; 28 additional commands; 6 `apply` subcommands & 33 operations; and 5 `to` subcommands (for a total of 92).
 See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for more details.
 
 ## Available commands
@@ -74,6 +74,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [split](/src/cmd/split.rs#L2)[^1][^3] | Split one CSV file into many CSV files of N chunks. (Uses multithreading to go faster if an index is present.) |
 | [stats](/src/cmd/stats.rs#L2)[^1][^2][^3] | Infer data type (Null, String, Float, Integer, Date, DateTime) & compute descriptive statistics for each column in a CSV (sum, min/max, min/max length, mean, stddev, variance, nullcount, quartiles, IQR, lower/upper fences, skewness, median, mode/s & cardinality). Uses multithreading to go faster if an index is present. |
 | [table](/src/cmd/table.rs#L2)[^2] | Show aligned output of a CSV using [elastic tabstops](https://github.com/BurntSushi/tabwriter).  |
+| [to](/src/cmd/to.rs#L2)[^4] | Convert CSV files to [PostgreSQL](https://www.postgresql.org), [SQLite](https://www.sqlite.org/index.html), XLSX, [Parquet](https://parquet.apache.org) and [Data Package](https://datahub.io/docs/data-packages/tabular). |
 | [tojsonl](/src/cmd/tojsonl.rs#L2)[^3] | Smartly converts CSV to a newline-delimited JSON ([JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/)). By scanning the CSV first, it "smartly" infers the appropriate JSON data type for each column. See `jsonl` command to convert JSONL to CSV. |
 | [transpose](/src/cmd/transpose.rs#L2)[^2] | Transpose rows/columns of a CSV.  |
 | [validate](/src/cmd/validate.rs#L2)[^1][^4] | Validate CSV data with JSON Schema (See `schema` command) & put invalid records into a separate file & a validation error report file. If no jsonschema file is provided, validates if a CSV conforms to the [RFC 4180 standard](https://datatracker.ietf.org/doc/html/rfc4180). |
@@ -184,6 +185,8 @@ The `excel`, `safenames`, `sniff`, `sortcheck` & `validate` commands produce JSO
 The `schema` command produces a [JSON Schema Validation (Draft 7)](https://json-schema.org/draft/2020-12/json-schema-validation.html) file with the ".schema.json" file extension, which can be used with the `validate` command.
 
 The `excel` command recognizes Excel & Open Document Spreadsheet(ODS) files (`.xls`, `.xlsx`, `.xlsm`, `.xlsb` & `.ods` files).
+
+The `to` command produces produces `.xlsx`, [Parquet](https://parquet.apache.org) & [Data Package](https://datahub.io/docs/data-packages/tabular) files, and populates [PostgreSQL](https://www.postgresql.org) and [SQLite](https://www.sqlite.org/index.html) databases.
 
 ### RFC 4180
 
