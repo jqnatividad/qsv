@@ -1107,17 +1107,15 @@ fn get_response(
                 // as we need to add a little jitter as per the spec to avoid thundering herd issues
                 // https://tools.ietf.org/id/draft-polli-ratelimit-headers-00.html#rfc.section.7.5
                 // we multiply by retries as a simple backoff multiplier
-                let addl_sleep = retries as u64 * rand::thread_rng().gen_range(10..30);
+                // we multiply reset_secs by 1001 instead of 1000 to give the server a teeny bit
+                // more breathing room before we hit it again
+                let pause_time =
+                    (reset_secs * 1001) + (retries as u64 * rand::thread_rng().gen_range(10..30));
                 info!(
-                    "sleeping for {addl_sleep} ms until ratelimit is reset/retry_after has elapsed"
+                    "sleeping for {pause_time} ms until ratelimit is reset/retry_after has elapsed"
                 );
 
-                // sleep for reset seconds + addl_sleep milliseconds
-                // we multiply by 1001 instead of 1000 to give the server a little, teeny
-                // breathing room before we hit it again
-                thread::sleep(time::Duration::from_millis(
-                    (reset_secs * 1001) + addl_sleep,
-                ));
+                thread::sleep(time::Duration::from_millis(pause_time));
             }
 
             if retries >= flag_max_retries {
