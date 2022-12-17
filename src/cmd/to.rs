@@ -117,7 +117,10 @@ use csvs_convert::{
 use log::debug;
 use serde::Deserialize;
 
-use crate::{config::{Delimiter, self}, util, CliResult};
+use crate::{
+    config::{self, Delimiter},
+    util, CliResult,
+};
 
 #[allow(dead_code)]
 #[derive(Deserialize)]
@@ -150,11 +153,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     debug!("'to' ommand running");
     let options = Options::builder()
         .delimiter(args.flag_delimiter.map(config::Delimiter::as_byte))
-        .schema(args.flag_schema.unwrap_or(String::new()))
-        .seperator(args.flag_seperator.unwrap_or(" ".into()))
+        .schema(args.flag_schema.unwrap_or_default())
+        .seperator(args.flag_seperator.unwrap_or_else(|| " ".into()))
         .evolve(args.flag_evolve)
         .stats(args.flag_stats)
-        .stats_csv(args.flag_stats_csv.unwrap_or(String::new()))
+        .stats_csv(args.flag_stats_csv.unwrap_or_default())
         .drop(args.flag_drop)
         .threads(args.flag_threads.unwrap_or(0))
         .build();
