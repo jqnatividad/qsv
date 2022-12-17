@@ -492,7 +492,7 @@ pub fn init_logger() -> String {
 }
 
 #[cfg(feature = "self_update")]
-pub fn qsv_check_for_update(check_only: bool) -> Result<bool, String> {
+pub fn qsv_check_for_update(check_only: bool, no_confirm: bool) -> Result<bool, String> {
     if env::var("QSV_NO_UPDATE").is_ok() {
         return Ok(false);
     }
@@ -544,7 +544,7 @@ pub fn qsv_check_for_update(check_only: bool) -> Result<bool, String> {
                 .bin_name(&bin_name)
                 .show_download_progress(true)
                 .show_output(false)
-                .no_confirm(false)
+                .no_confirm(no_confirm)
                 .current_version(curr_version)
                 .build()
             {
@@ -591,7 +591,7 @@ or download the prebuilt binaries from GitHub."#
 }
 
 #[cfg(not(feature = "self_update"))]
-pub fn qsv_check_for_update(_check_only: bool) -> Result<bool, String> {
+pub fn qsv_check_for_update(_check_only: bool, _no_confirm: bool) -> Result<bool, String> {
     Ok(true)
 }
 
