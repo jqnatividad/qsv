@@ -2,8 +2,10 @@ static USAGE: &str = r#"
 Convert CSV files to XLSX/POSTGRES/SQLITE/PARQUET
 
 POSTGRES
-To convert to postgres you need to supply connection string. The format is decribed https://docs.rs/postgres/latest/postgres/config/struct.Config.html#examples-1.
-Additionaly you can use `env=MY_ENV_VAR` and that will get the connection string from the enviroment variable `MY_ENV_VAR`.
+To convert to postgres you need to supply connection string.
+The format is described here - https://docs.rs/postgres/latest/postgres/config/struct.Config.html#examples-1.
+Additionally you can use `env=MY_ENV_VAR` and qsv will get the connection string from the
+environment variable `MY_ENV_VAR`.
 
 Examples:
 
@@ -15,7 +17,8 @@ Load same files into a new/existing postgres schema `myschema`
 
   $ qsv to postgres 'postgres://testuser:pass@localhost/test' --schema=myschema file1.csv file2.csv
 
-Load same files into a new/existing postgres database whose connection string is in the `DATABASE_URL` environment variable.
+Load same files into a new/existing postgres database whose connection string is in the
+`DATABASE_URL` environment variable.
 
   $ qsv to postgres 'env=DATABASE_URL' file1.csv file2.csv
 
@@ -23,7 +26,8 @@ Drop tables if they exist before loading.
 
   $ qsv to postgres 'postgres://testuser:pass@localhost/test' --drop file1.csv file2.csv
 
-Evolve tables if they exist before loading. Read http://datapackage_convert.opendata.coop/evolve.html to explain how evolving works.
+Evolve tables if they exist before loading. Read http://datapackage_convert.opendata.coop/evolve.html
+to explain how evolving works.
 
   $ qsv to postgres 'postgres://testuser:pass@localhost/test' --evolve file1.csv file2.csv
 
@@ -41,7 +45,8 @@ Drop tables if they exist before loading.
 
   $ qsv to sqlite test.db --drop file1.csv file2.csv
 
-Evolve tables if they exist. Read http://datapackage_convert.opendata.coop/evolve.html to explain how evolving is done.
+Evolve tables if they exist. Read http://datapackage_convert.opendata.coop/evolve.html
+to explain how evolving is done.
 
   $ qsv to sqlite test.db --evolve file1.csv file2.csv
 
@@ -96,11 +101,11 @@ options:
     -a --stats             Produce extra statistics about the data beyond just type guessing.
     -c --stats-csv <path>  Output stats as CSV to specified file.
     -q --quiet             Do not print out field summary.
-    -t --threads <num>     Use this amount of threads when calucating stats/type guessing.  
+    -t --threads <num>     Use this amount of threads when calculating stats/type guessing.  
     -s --schema <arg>      The schema to load the data into. (postgres only)
     -d --drop              Drop tables before loading new data into them (postgres/sqlite only)
     -e --evolve            If loading into existing db, alter existing tables so that new data will load. (postgres/sqlite only)
-    -p --seperator         For xlsx, use this character to help truncate xlsx sheet names, defaults to space.  
+    -p --separator         For xlsx, use this character to help truncate xlsx sheet names, defaults to space.  
                            
 Common options:
     -h, --help             Display this message
@@ -138,7 +143,7 @@ struct Args {
     arg_input:          Vec<PathBuf>,
     flag_delimiter:     Option<Delimiter>,
     flag_schema:        Option<String>,
-    flag_seperator:     Option<String>,
+    flag_separator:     Option<String>,
     flag_drop:          bool,
     flag_evolve:        bool,
     flag_stats:         bool,
@@ -150,11 +155,11 @@ struct Args {
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
-    debug!("'to' ommand running");
+    debug!("'to' command running");
     let options = Options::builder()
         .delimiter(args.flag_delimiter.map(config::Delimiter::as_byte))
         .schema(args.flag_schema.unwrap_or_default())
-        .seperator(args.flag_seperator.unwrap_or_else(|| " ".into()))
+        .seperator(args.flag_separator.unwrap_or_else(|| " ".into()))
         .evolve(args.flag_evolve)
         .stats(args.flag_stats)
         .stats_csv(args.flag_stats_csv.unwrap_or_default())
@@ -175,7 +180,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             args.arg_input,
             options,
         )?;
-        debug!("convertion to postgres complete");
+        debug!("conversion to postgres complete");
     } else if args.cmd_sqlite {
         debug!("converting to sqlite");
         if args.arg_input.is_empty() {
@@ -188,7 +193,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             args.arg_input,
             options,
         )?;
-        debug!("convertion to xlsx complete");
+        debug!("conversion to xlsx complete");
     } else if args.cmd_parquet {
         debug!("converting to parquet");
         if args.arg_input.is_empty() {
@@ -202,7 +207,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             args.arg_input,
             options,
         )?;
-        debug!("convertion to parquet complete");
+        debug!("conversion to parquet complete");
     } else if args.cmd_xlsx {
         debug!("converting to xlsx");
         if args.arg_input.is_empty() {
@@ -215,7 +220,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             args.arg_input,
             options,
         )?;
-        debug!("convertion to xlsx complete");
+        debug!("conversion to xlsx complete");
     } else if args.cmd_datapackage {
         debug!("creating datapackage");
         if args.arg_input.is_empty() {
