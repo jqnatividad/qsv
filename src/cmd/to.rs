@@ -101,11 +101,13 @@ options:
     -a --stats             Produce extra statistics about the data beyond just type guessing.
     -c --stats-csv <path>  Output stats as CSV to specified file.
     -q --quiet             Do not print out field summary.
-    -t --threads <num>     Use this amount of threads when calculating stats/type guessing.  
     -s --schema <arg>      The schema to load the data into. (postgres only)
     -d --drop              Drop tables before loading new data into them (postgres/sqlite only)
     -e --evolve            If loading into existing db, alter existing tables so that new data will load. (postgres/sqlite only)
-    -p --separator         For xlsx, use this character to help truncate xlsx sheet names, defaults to space.  
+    -p --separator <arg>   For xlsx, use this character to help truncate xlsx sheet names.
+                           Defaults to space.
+    -j, --jobs <arg>       The number of jobs to run in parallel.
+                           When not set, the number of jobs is set to the number of CPUs detected.
                            
 Common options:
     -h, --help             Display this message
@@ -148,7 +150,7 @@ struct Args {
     flag_evolve:        bool,
     flag_stats:         bool,
     flag_stats_csv:     Option<String>,
-    flag_threads:       Option<usize>,
+    flag_jobs:          Option<usize>,
     flag_print_package: bool,
     flag_quiet:         bool,
 }
@@ -164,7 +166,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .stats(args.flag_stats)
         .stats_csv(args.flag_stats_csv.unwrap_or_default())
         .drop(args.flag_drop)
-        .threads(args.flag_threads.unwrap_or(0))
+        .threads(util::njobs(args.flag_jobs))
         .build();
 
     let output;
