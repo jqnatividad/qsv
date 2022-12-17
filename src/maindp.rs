@@ -88,8 +88,7 @@ mod index;
 mod select;
 mod util;
 
-static USAGE: &str = concat!(
-    "
+static USAGE: &str = r#"
 Usage:
     qsvdp <command> [<args>...]
     qsvdp [options]
@@ -98,20 +97,21 @@ Options:
     --list               List all commands available.
     --envlist            List all qsv-relevant environment variables.
     -u, --update         Check for the latest qsv release.
+    -U, --updatenow      Update qsv to the latest release from GitHub without confirming.
     -h, --help           Display this message
     <command> -h         Display the command help message
     -v, --version        Print version info, mem allocator, features installed, 
-                         max_jobs, num_cpus then exit
+                         max_jobs, num_cpus, build info then exit
 
 * sponsored by datHere - Data Infrastructure Engineering
-"
-);
+"#;
 #[derive(Deserialize)]
 struct Args {
-    arg_command:  Option<Command>,
-    flag_list:    bool,
-    flag_envlist: bool,
-    flag_update:  bool,
+    arg_command:    Option<Command>,
+    flag_list:      bool,
+    flag_envlist:   bool,
+    flag_update:    bool,
+    flag_updatenow: bool,
 }
 
 fn main() -> QsvExitCode {
@@ -134,8 +134,8 @@ fn main() -> QsvExitCode {
         util::log_end(qsv_args, now);
         return QsvExitCode::Good;
     }
-    if args.flag_update {
-        let update_checked = util::qsv_check_for_update(false);
+    if args.flag_update || args.flag_updatenow {
+        let update_checked = util::qsv_check_for_update(false, args.flag_updatenow);
         util::log_end(qsv_args, now);
         if update_checked.is_ok() {
             return QsvExitCode::Good;
@@ -150,7 +150,7 @@ fn main() -> QsvExitCode {
 Please choose one of the following commands:",
                 command_list!()
             ));
-            _ = util::qsv_check_for_update(true);
+            _ = util::qsv_check_for_update(true, false);
             util::log_end(qsv_args, now);
             QsvExitCode::Good
         }
@@ -245,7 +245,7 @@ impl Command {
             Command::Headers => cmd::headers::run(argv),
             Command::Help => {
                 wout!("{USAGE}");
-                _ = util::qsv_check_for_update(true);
+                _ = util::qsv_check_for_update(true, false);
                 Ok(())
             }
             Command::Index => cmd::index::run(argv),
