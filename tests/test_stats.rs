@@ -644,6 +644,35 @@ fn stats_typesonly() {
     assert_eq!(got, expected.replace("\r\n", "\n").trim_end());
 }
 
+#[test]
+fn stats_leading_zero_handling() {
+    let wrk = Workdir::new("stats");
+
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["col1", "col2", "col3"],
+            svec!["1", "4321", "01"],
+            svec!["2", "3210", "02"],
+            svec!["3", "2101", "03"],
+            svec!["4", "1012", "04"],
+            svec!["5", "0", "10"],
+        ],
+    );
+
+    let mut cmd = wrk.command("stats");
+    cmd.arg("--typesonly").arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["field", "type"],
+        svec!["col1", "Integer"],
+        svec!["col2", "Integer"],
+        svec!["col3", "String"],
+    ];
+    assert_eq!(got, expected);
+}
+
 mod stats_infer_nothing {
     // Only test CSV data with headers.
     // Empty CSV data with no headers won't produce any statistical analysis.
