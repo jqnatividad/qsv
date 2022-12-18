@@ -224,6 +224,7 @@ qsv stats wcp.csv --output wcpstats.csv
 
 
 ## Interpreters
+For complex data-wrangling tasks, you can use Luau and Python scripts. The `qsv` binary variant can embed `luau` and `python` interpreters, enabled by identically named feature flags. The `qsvdp` binary variant has the `luau` interpreter embedded by default.
 ### Luau
 
 [Luau](https://luau-lang.org) is a fast, small, safe, gradually typed embeddable scripting language derived from [Lua](https://www.lua.org/about.html). It lies at the [heart of Roblox technology](https://luau-lang.org/2022/11/04/luau-origins-and-evolution.html) - powering all it's user generated content, with [Roblox](https://en.wikipedia.org/wiki/Roblox)'s own internal code having more than 2 millions lines of Luau. 
@@ -238,7 +239,7 @@ The `python` feature is NOT enabled by default on the prebuilt binaries, as doin
 
 If you wish to enable the `python` feature - you'll just have to install/compile from source, making sure you have the development libraries for the desired Python version (Python 3.6 to 3.11 are supported) installed when doing so.
 
-Note that if you plan to distribute your manually built `qsv` with the `python` feature, `qsv` will look for Python shared libraries (libpython* on Linux/macOS, python*.dll on Windows) against which it was compiled starting with the current directory & abort with an error if not found, detailing the Python library it was looking for. 
+Note that if you plan to distribute your manually built `qsv` with the `python` feature, `qsv` will look for the specific version of Python shared libraries (libpython* on Linux/macOS, python*.dll on Windows) against which it was compiled starting with the current directory & abort with an error if not found, detailing the Python library it was looking for. 
 
 Note that this will happen on qsv startup, even if you're not running the `py` command.
 
