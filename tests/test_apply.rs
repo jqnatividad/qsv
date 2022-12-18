@@ -1294,6 +1294,12 @@ fn apply_ops_currencytonum() {
             svec!["EUR 1234.50"],
             svec!["JPY 9,999,999.99"],
             svec!["RMB 6543.21"],
+            svec!["$10.0099"],
+            svec!["$10.0777"],
+            svec!["$10.0723"],
+            svec!["$10.8723"],
+            svec!["$10.77777"],
+            svec!["$10.777"],
         ],
     );
     let mut cmd = wrk.command("apply");
@@ -1332,6 +1338,12 @@ fn apply_ops_currencytonum() {
         svec!["1234.50"],
         svec!["9999999.99"],
         svec!["6543.21"],
+        svec!["10.01"],
+        svec!["10.08"],
+        svec!["10.07"],
+        svec!["10.87"],
+        svec!["10.78"],
+        svec!["10.78"],
     ];
     assert_eq!(got, expected);
 }

@@ -1011,9 +1011,21 @@ fn apply_operations(
                 *cell = censor.count(cell).to_string();
             }
             Operations::Currencytonum => {
-                let currency_value = Currency::from_str(cell);
+                // this is a workaround around current limitation of qsv-currency
+                // and also of upstream currency-rs, that it cannot
+                // handle currency amounts properly with three decimal places
+                // to get around this limitation, we append a 0 at the end to make it four
+                // decimal places without affecting the value
+                let fract_3digits: &'static Regex = regex_once_cell!(r"\.\d\d\d$");
+                let cell_val = if fract_3digits.is_match(cell) {
+                    format!("{cell}0")
+                } else {
+                    cell.clone()
+                };
+
+                let currency_value = Currency::from_str(&cell_val);
                 if let Ok(currency_val) = currency_value {
-                    // its kludgy as currency is stored as BigInt, with
+                    // currency is stored as a BigInt, with
                     // 1 currency unit being 100 coins
                     let currency_coins = currency_val.value();
                     let coins = format!("{:03}", &currency_coins);
