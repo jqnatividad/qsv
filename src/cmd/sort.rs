@@ -42,7 +42,6 @@ use serde::Deserialize;
 
 use self::Number::{Float, Int};
 use crate::{
-    cmd::join::transform,
     config::{Config, Delimiter},
     select::SelectColumns,
     util, CliResult,
@@ -187,8 +186,8 @@ where
             (None, _) => return cmp::Ordering::Less,
             (_, None) => return cmp::Ordering::Greater,
             (Some(x), Some(y)) => {
-                let match_x = transform(x, true);
-                let match_y = transform(y, true);
+                let match_x = util::transform(x, true);
+                let match_y = util::transform(y, true);
                 match match_x.cmp(&match_y) {
                     cmp::Ordering::Equal => (),
                     non_eq => return non_eq,
