@@ -1,5 +1,9 @@
 static USAGE: &str = r#"
-Sorts CSV data lexicographically.
+Sorts CSV data in alphabetical (with case-insensitive option), numerical,
+reverse, unique or random (with optional seed) order.
+
+The sort is done in lexicographical order.
+https://en.wikipedia.org/wiki/Lexicographic_order
 
 Note that this requires reading all of the CSV data into memory. If
 you need to sort a large file that may not fit into memory, use the
