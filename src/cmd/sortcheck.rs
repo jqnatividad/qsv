@@ -11,7 +11,7 @@ first before deduping. However, if you know a CSV is sorted beforehand, you can 
 it first. It will just immediately dedupe on a streaming basis.
 
 `sort` also requires loading the entire CSV into memory. For simple "sorts" (not numeric,
-reverse & random sorts), particularly of very large CSV files that will not fit in memory,
+reverse, unique & random sorts), particularly of very large CSV files that will not fit in memory,
 `extsort` - a multi-threaded streaming sort that is exponentially faster and can work with 
 arbitrarily large files, can be used instead.
 
