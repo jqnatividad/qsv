@@ -17,7 +17,7 @@ sort options:
     --random                Random order
     --seed <number>         RNG seed
     -I, --case-insensitive  Case-insensitive comparisons
-    -u, --uniq              When set, identical consecutive lines will be dropped
+    -u, --unique            When set, identical consecutive lines will be dropped
                             to keep only one line per sorted value.
     -j, --jobs <arg>        The number of jobs to run in parallel.
                             When not set, the number of jobs is set to the
@@ -60,7 +60,7 @@ struct Args {
     flag_output:           Option<String>,
     flag_no_headers:       bool,
     flag_delimiter:        Option<Delimiter>,
-    flag_uniq:             bool,
+    flag_unique:           bool,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -131,7 +131,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut prev: Option<csv::ByteRecord> = None;
     rconfig.write_headers(&mut rdr, &mut wtr)?;
     for r in all {
-        if args.flag_uniq {
+        if args.flag_unique {
             match prev {
                 Some(other_r) => match iter_cmp(sel.select(&r), sel.select(&other_r)) {
                     cmp::Ordering::Equal => (),
