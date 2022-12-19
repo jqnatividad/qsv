@@ -78,9 +78,9 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [transpose](/src/cmd/transpose.rs#L2)<br>🗜️ | Transpose rows/columns of a CSV.  |
 | [validate](/src/cmd/validate.rs#L2)<br>📇🚀 | Validate CSV data with JSON Schema (See `schema` command) & put invalid records into a separate file & a validation error report file. If no jsonschema file is provided, validates if a CSV conforms to the [RFC 4180 standard](https://datatracker.ietf.org/doc/html/rfc4180). |
 
- ❇️: enabled by a feature flag on `qsv`. Not available on `qsvlite`. `qsvdp` only has `luau` feature enabled and `applydp` - a slimmed-down version of the `apply` feature.   
+ ❇️: enabled by a feature flag on `qsv`. Not available on `qsvlite`. `qsvdp` has `luau` & `applydp` pre-enabled.   
 📇: uses an index when available.   
-🗜️: loads the entire CSV into memory. Note that `dedup`, `stats` & `transpose` have modes that do not load the entire CSV into memory.   
+🗜️: loads entire CSV into memory. Note that `dedup`, `stats` & `transpose` have "streaming" modes as well.   
 🏎️: multithreaded when an index is available.   
 🚀: multithreaded even without an index.
 
@@ -97,7 +97,7 @@ Prebuilt binary variants of the latest qsv version with more enabled features fo
 There are three binary variants of qsv:
  * `qsv` - [feature](#feature-flags)-capable(❇️), with the [prebuilt binaries](https://github.com/jqnatividad/qsv/releases/latest) enabling all applicable features except Python [^6]
  * `qsvlite` - all features disabled (~40% of the size of `qsv`)
- * `qsvdp` - optimized for use with [DataPusher+](https://github.com/dathere/datapusher-plus), with only DataPusher+ relevant commands, the `--progressbar` option disabled, and the self-update only checking for new releases, requiring an explicit `--update` (~40% of the the size of `qsv`).
+ * `qsvdp` - optimized for use with [DataPusher+](https://github.com/dathere/datapusher-plus) with only DataPusher+ relevant commands; `applydp`, a slimmed-down version of the `apply` feature; embedded `luau` interpreter; the `--progressbar` option disabled; and the self-update only checking for new releases, requiring an explicit `--update` (~40% of the the size of `qsv`).
 
 Alternatively, you can install from source by [installing Rust](https://www.rust-lang.org/tools/install)
 and installing `qsv` using Rust's cargo command[^5]:
