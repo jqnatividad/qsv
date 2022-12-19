@@ -10,27 +10,28 @@ Usage:
     qsv sort --help
 
 sort options:
-    -s, --select <arg>     Select a subset of columns to sort.
-                           See 'qsv select --help' for the format details.
-    -N, --numeric          Compare according to string numerical value
-    -R, --reverse          Reverse order
-    --random               Random order
-    --seed <number>        RNG seed
-    -j, --jobs <arg>       The number of jobs to run in parallel.
-                           When not set, the number of jobs is set to the
-                           number of CPUs detected.
+    -s, --select <arg>      Select a subset of columns to sort.
+                            See 'qsv select --help' for the format details.
+    -N, --numeric           Compare according to string numerical value
+    -R, --reverse           Reverse order
+    --random                Random order
+    --seed <number>         RNG seed
+    -I, --case-insensitive  Case-insensitive comparisons
+    -u, --uniq              When set, identical consecutive lines will be dropped
+                            to keep only one line per sorted value.
+    -j, --jobs <arg>        The number of jobs to run in parallel.
+                            When not set, the number of jobs is set to the
+                            number of CPUs detected.
 
 Common options:
-    -h, --help             Display this message
-    -o, --output <file>    Write output to <file> instead of stdout.
-    -n, --no-headers       When set, the first row will not be interpreted
-                           as headers. Namely, it will be sorted with the rest
-                           of the rows. Otherwise, the first row will always
-                           appear as the header row in the output.
-    -d, --delimiter <arg>  The field delimiter for reading CSV data.
-                           Must be a single character. (default: ,)
-    -u, --uniq             When set, identical consecutive lines will be dropped
-                           to keep only one line per sorted value.
+    -h, --help              Display this message
+    -o, --output <file>     Write output to <file> instead of stdout.
+    -n, --no-headers        When set, the first row will not be interpreted
+                            as headers. Namely, it will be sorted with the rest
+                            of the rows. Otherwise, the first row will always
+                            appear as the header row in the output.
+    -d, --delimiter <arg>   The field delimiter for reading CSV data.
+                            Must be a single character. (default: ,)
 "#;
 
 use std::cmp;
@@ -41,6 +42,7 @@ use serde::Deserialize;
 
 use self::Number::{Float, Int};
 use crate::{
+    cmd::join::transform,
     config::{Config, Delimiter},
     select::SelectColumns,
     util, CliResult,
@@ -48,17 +50,18 @@ use crate::{
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input:       Option<String>,
-    flag_select:     SelectColumns,
-    flag_numeric:    bool,
-    flag_reverse:    bool,
-    flag_random:     bool,
-    flag_seed:       Option<u64>,
-    flag_jobs:       Option<usize>,
-    flag_output:     Option<String>,
-    flag_no_headers: bool,
-    flag_delimiter:  Option<Delimiter>,
-    flag_uniq:       bool,
+    arg_input:             Option<String>,
+    flag_select:           SelectColumns,
+    flag_numeric:          bool,
+    flag_reverse:          bool,
+    flag_random:           bool,
+    flag_seed:             Option<u64>,
+    flag_case_insensitive: bool,
+    flag_jobs:             Option<usize>,
+    flag_output:           Option<String>,
+    flag_no_headers:       bool,
+    flag_delimiter:        Option<Delimiter>,
+    flag_uniq:             bool,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -81,6 +84,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // Seeding rng
     let seed = args.flag_seed;
 
+    let case_insensitive = args.flag_case_insensitive;
+
     let mut all = rdr.byte_records().collect::<Result<Vec<_>, _>>()?;
     match (numeric, reverse, random) {
         (_, _, true) => {
@@ -96,7 +101,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         (false, false, false) => all.par_sort_unstable_by(|r1, r2| {
             let a = sel.select(r1);
             let b = sel.select(r2);
-            iter_cmp(a, b)
+            if case_insensitive {
+                iter_cmp_case_insensitive(a, b)
+            } else {
+                iter_cmp(a, b)
+            }
         }),
         (true, false, false) => all.par_sort_unstable_by(|r1, r2| {
             let a = sel.select(r1);
@@ -106,7 +115,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         (false, true, false) => all.par_sort_unstable_by(|r1, r2| {
             let a = sel.select(r1);
             let b = sel.select(r2);
-            iter_cmp(b, a)
+            if case_insensitive {
+                iter_cmp_case_insensitive(b, a)
+            } else {
+                iter_cmp(b, a)
+            }
         }),
         (true, true, false) => all.par_sort_unstable_by(|r1, r2| {
             let a = sel.select(r1);
@@ -157,6 +170,30 @@ where
                 cmp::Ordering::Equal => (),
                 non_eq => return non_eq,
             },
+        }
+    }
+}
+
+/// Order `a` and `b` case-insensitively using `Ord`
+#[inline]
+pub fn iter_cmp_case_insensitive<'a, L, R>(mut a: L, mut b: R) -> cmp::Ordering
+where
+    L: Iterator<Item = &'a [u8]>,
+    R: Iterator<Item = &'a [u8]>,
+{
+    loop {
+        match (a.next(), b.next()) {
+            (None, None) => return cmp::Ordering::Equal,
+            (None, _) => return cmp::Ordering::Less,
+            (_, None) => return cmp::Ordering::Greater,
+            (Some(x), Some(y)) => {
+                let match_x = transform(x, true);
+                let match_y = transform(y, true);
+                match match_x.cmp(&match_y) {
+                    cmp::Ordering::Equal => (),
+                    non_eq => return non_eq,
+                }
+            }
         }
     }
 }
