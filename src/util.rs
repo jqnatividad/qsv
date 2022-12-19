@@ -892,3 +892,23 @@ impl ColumnNameParser {
         name
     }
 }
+
+pub type ByteString = Vec<u8>;
+
+#[inline]
+pub fn transform(bs: &[u8], casei: bool) -> ByteString {
+    if let Ok(s) = str::from_utf8(bs) {
+        if casei {
+            let norm: String = s
+                .trim()
+                .chars()
+                .map(|c| c.to_lowercase().next().unwrap())
+                .collect();
+            norm.into_bytes()
+        } else {
+            s.trim().as_bytes().to_vec()
+        }
+    } else {
+        bs.to_vec()
+    }
+}
