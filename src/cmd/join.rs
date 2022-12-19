@@ -80,7 +80,7 @@ use crate::{
     util, CliResult,
 };
 
-type ByteString = Vec<u8>;
+pub type ByteString = Vec<u8>;
 
 #[derive(Deserialize)]
 struct Args {
@@ -458,16 +458,19 @@ fn get_row_key(sel: &Selection, row: &csv::ByteRecord, casei: bool) -> Vec<ByteS
 }
 
 #[inline]
-fn transform(bs: &[u8], casei: bool) -> ByteString {
-    let s = unsafe { str::from_utf8_unchecked(bs) };
-    if casei {
-        let norm: String = s
-            .trim()
-            .chars()
-            .map(|c| c.to_lowercase().next().unwrap())
-            .collect();
-        norm.into_bytes()
+pub fn transform(bs: &[u8], casei: bool) -> ByteString {
+    if let Ok(s) = str::from_utf8(bs) {
+        if casei {
+            let norm: String = s
+                .trim()
+                .chars()
+                .map(|c| c.to_lowercase().next().unwrap())
+                .collect();
+            norm.into_bytes()
+        } else {
+            s.trim().as_bytes().to_vec()
+        }
     } else {
-        s.trim().as_bytes().to_vec()
+        bs.to_vec()
     }
 }
