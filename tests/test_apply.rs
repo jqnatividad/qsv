@@ -1349,6 +1349,202 @@ fn apply_ops_currencytonum() {
 }
 
 #[test]
+fn apply_ops_numtocurrency() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["money"],
+            svec!["$10.00"],
+            svec!["$-10.00"],
+            svec!["$ 12 500.00"],
+            svec!["$5"],
+            svec!["0"],
+            svec!["5"],
+            svec!["$0.25"],
+            svec!["$ 10.05"],
+            svec!["¥10,000,000.00"],
+            svec!["£423.56"],
+            svec!["€120.00"],
+            svec!["֏99,999.50"],
+            svec!["€300 999,55"],
+            svec!["This is not money. Set to zero."],
+            svec!["₱1,234,567.89"],
+            svec!["₽234,567.89"],
+            svec!["₪ 567.89"],
+            svec!["₩ 567.89"],
+            svec!["₩ 89,123.0"],
+            svec!["ƒ 123,456.00"],
+            svec!["฿ 789,123"],
+            svec!["₫ 456"],
+            svec!["123,456.00 $"],
+            svec!["USD 10,000"],
+            svec!["EUR 1234.50"],
+            svec!["JPY 9,999,999.99"],
+            svec!["RMB 6543.21"],
+            svec!["$10.0099"],
+            svec!["$10.0777"],
+            svec!["$10.0723"],
+            svec!["$10.8723"],
+            svec!["$10.77777"],
+            svec!["$10.777"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("numtocurrency")
+        .arg("--comparand")
+        .arg("$")
+        .arg("money")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["money"],
+        svec!["$10.00"],
+        svec!["-$10.00"],
+        svec!["$12,500.00"],
+        svec!["$5.00"],
+        svec!["$0.00"],
+        svec!["$5.00"],
+        svec!["$0.25"],
+        svec!["$10.05"],
+        svec!["$10,000,000.00"],
+        svec!["$423.56"],
+        svec!["$120.00"],
+        svec!["$99,999.50"],
+        svec!["$300,999.55"],
+        svec!["$0.00"],
+        svec!["$1,234,567.89"],
+        svec!["$234,567.89"],
+        svec!["$567.89"],
+        svec!["$567.89"],
+        svec!["$89,123.00"],
+        svec!["$123,456.00"],
+        svec!["$789,123.00"],
+        svec!["$456.00"],
+        svec!["$123,456.00"],
+        svec!["$10,000.00"],
+        svec!["$1,234.50"],
+        svec!["$9,999,999.99"],
+        svec!["$6,543.21"],
+        svec!["$10.01"],
+        svec!["$10.08"],
+        svec!["$10.07"],
+        svec!["$10.87"],
+        svec!["$10.78"],
+        svec!["$10.78"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn apply_ops_numtocurrency_convert() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["money"],
+            svec!["$10.00"],
+            svec!["$-10.00"],
+            svec!["$ 12 500.00"],
+            svec!["$5"],
+            svec!["0"],
+            svec!["5"],
+            svec!["$0.25"],
+            svec!["$ 10.05"],
+            svec!["¥10,000,000.00"],
+            svec!["£423.56"],
+            svec!["€120.00"],
+            svec!["֏99,999.50"],
+            svec!["€300 999,55"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("numtocurrency")
+        .arg("--comparand")
+        .arg("EUR ")
+        .arg("--replacement")
+        .arg("1.5")
+        .arg("money")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["money"],
+        svec!["EUR 15.00"],
+        svec!["-EUR 15.00"],
+        svec!["EUR 18,750.00"],
+        svec!["EUR 7.50"],
+        svec!["EUR 0.00"],
+        svec!["EUR 7.50"],
+        svec!["EUR 0.37"],
+        svec!["EUR 15.07"],
+        svec!["EUR 15,000,000.00"],
+        svec!["EUR 635.34"],
+        svec!["EUR 180.00"],
+        svec!["EUR 149,999.25"],
+        svec!["EUR 451,499.32"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn apply_ops_numtocurrency_convert_euro_format() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["money"],
+            svec!["$10.00"],
+            svec!["$-10.00"],
+            svec!["$ 12 500.00"],
+            svec!["$5"],
+            svec!["0"],
+            svec!["5"],
+            svec!["$0.25"],
+            svec!["$ 10.05"],
+            svec!["¥10,000,000.00"],
+            svec!["£423.56"],
+            svec!["€120.00"],
+            svec!["֏99,999.50"],
+            svec!["€300 999,55"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("numtocurrency")
+        .arg("-C")
+        .arg("EUR ")
+        .arg("--replacement")
+        .arg("1.5")
+        .arg("--formatstr")
+        .arg("euro")
+        .arg("money")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["money"],
+        svec!["EUR 15,00"],
+        svec!["-EUR 15,00"],
+        svec!["EUR 18.750,00"],
+        svec!["EUR 7,50"],
+        svec!["EUR 0,00"],
+        svec!["EUR 7,50"],
+        svec!["EUR 0,37"],
+        svec!["EUR 15,07"],
+        svec!["EUR 15.000.000,00"],
+        svec!["EUR 635,34"],
+        svec!["EUR 180,00"],
+        svec!["EUR 149.999,25"],
+        svec!["EUR 451.499,32"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn apply_ops_similarity() {
     let wrk = Workdir::new("apply");
     wrk.create(

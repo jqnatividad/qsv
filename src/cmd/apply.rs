@@ -3,7 +3,7 @@ Apply a series of transformation functions to a given CSV column. This can be us
 perform typical data-wrangling tasks and/or to harmonize some values, etc.
 
 It has six subcommands:
- * operations - 33 string, format, currency, regex & NLP operators.
+ * operations - 34 string, format, currency, regex & NLP operators.
  * emptyreplace - replace empty cells with <--replacement> string.
  * datefmt - Formats a recognized date column to a specified format using <--formatstr>.
  * dynfmt - Dynamically constructs a new column from other columns using the <--formatstr> template.
@@ -24,7 +24,7 @@ number of transformed columns with the --rename option is the same. e.g.:
 
 $ qsv apply operations trim,upper col1,col2,col3 -r newcol1,newcol2,newcol3 file.csv  
 
-It has 33 supported operations:
+It has 34 supported operations:
 
   * len: Return string length
   * lower: Transform to lowercase
@@ -55,6 +55,10 @@ It has 33 supported operations:
   * currencytonum: Gets the numeric value of a currency. Supports currency symbols
       (e.g. $,¥,£,€,֏,₱,₽,₪,₩,ƒ,฿,₫) and strings (e.g. USD, EUR, RMB, JPY, etc.). 
       Recognizes point, comma and space separators.
+  * numtocurrency: Convert a numeric value to a currency. Specify the currency symbol
+      with --comparand. Automatically rounds values to two decimal places. Specify
+      "euro" formatting (e.g. 1.000,00 instead of 1,000.00 ) by setting --formatstr to "euro".
+      Specify conversion rate by setting --replacement to a number.
   * copy: Mark a column for copying
   * simdl: Damerau-Levenshtein similarity to --comparand
   * simdln: Normalized Damerau-Levenshtein similarity to --comparand (between 0.0 & 1.0)
@@ -105,6 +109,10 @@ Replace ' and ' with ' & ' in the description field.
 Extract the numeric value of the Salary column in a new column named Salary_num.
 
   $ qsv apply operations currencytonum Salary -c Salary_num file.csv
+
+Convert the USD_Price to PHP_Price using the currency symbol "PHP" with a conversion rate of 60.
+
+  $ qsv apply operations numtocurrency USD_Price -C PHP -R 60 -c PHP_Price file.csv
 
 Base64 encode the plaintext_col column and save the encoded value into new column named encoded_col
 and then decode it.
@@ -268,6 +276,10 @@ apply options:
                                 instead of removing it. Only used with the DATEFMT subcommand.
     -f, --formatstr=<string>    This option is used by several subcommands:
 
+                                OPERATIONS: numtocurrency
+                                  If set to "euro", will format the currency to use "." instead of ","
+                                  as separators (e.g. 1.000,00 instead of 1,000.00 )
+
                                 DATEFMT: The date format to use. For formats, see
                                   https://docs.rs/chrono/latest/chrono/format/strftime/
                                   Default to ISO 8601 / RFC 3339 date & time format.
@@ -355,6 +367,7 @@ enum Operations {
     Mltrim,
     Mrtrim,
     Mtrim,
+    Numtocurrency,
     Regex_Replace,
     Replace,
     Rtrim,
@@ -601,6 +614,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                                 &mut cell,
                                 &args.flag_comparand,
                                 &args.flag_replacement,
+                                &args.flag_formatstr,
                             );
                             if args.flag_new_column.is_some() {
                                 record.push_field(&cell);
@@ -926,6 +940,7 @@ fn apply_operations(
     cell: &mut String,
     comparand: &str,
     replacement: &str,
+    formatstr: &str,
 ) {
     for op in ops_vec {
         match op {
@@ -1023,8 +1038,7 @@ fn apply_operations(
                     cell.clone()
                 };
 
-                let currency_value = Currency::from_str(&cell_val);
-                if let Ok(currency_val) = currency_value {
+                if let Ok(currency_val) = Currency::from_str(&cell_val) {
                     // currency is stored as a BigInt, with
                     // 1 currency unit being 100 coins
                     let currency_coins = currency_val.value();
@@ -1036,6 +1050,25 @@ fn apply_operations(
                         let coin_frac = &coins[decpoint..];
                         *cell = format!("{coin_num}.{coin_frac}");
                     }
+                }
+            }
+            Operations::Numtocurrency => {
+                // same 3 decimal place workaround as currencytonum
+                let fract_3digits2: &'static Regex = regex_once_cell!(r"\.\d\d\d$");
+                let cell_val = if fract_3digits2.is_match(cell) {
+                    format!("{cell}0")
+                } else {
+                    cell.clone()
+                };
+
+                if let Ok(currency_value) = Currency::from_str(&cell_val) {
+                    let currency_wrk = currency_value
+                        .convert(replacement.parse::<f64>().unwrap_or(1.0_f64), comparand);
+                    *cell = if formatstr.contains("euro") {
+                        format!("{currency_wrk:e}")
+                    } else {
+                        format!("{currency_wrk}")
+                    };
                 }
             }
             Operations::Simdl => {
