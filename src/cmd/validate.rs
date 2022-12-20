@@ -179,13 +179,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     let validation_error = json!({
                         "errors": [{
                             "title" : "Validation error",
-                            "detail" : format!("{e}")
+                            "detail" : format!("Last valid row: {record_count} - {e}")
                         }]
                     });
                     return fail!(validation_error.to_string());
                 }
                 return fail_clierror!(
-                    r#"Validation error: {e}. Try "qsv fixlengths" or "qsv fmt" to fix it."#
+                    r#"Validation error: {e}.\n Last valid row: {record_count}\nTry "qsv fixlengths" or "qsv fmt" to fix it."#
                 );
             }
             record_count += 1;
