@@ -46,6 +46,7 @@ use serde::Deserialize;
 
 use self::Number::{Float, Int};
 use crate::{
+    cmd::dedup::iter_cmp_ignore_case,
     config::{Config, Delimiter},
     select::SelectColumns,
     util, CliResult,
@@ -75,6 +76,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers)
+        .checkutf8(false)
         .select(args.flag_select);
 
     let mut rdr = rconfig.reader()?;
@@ -105,7 +107,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let a = sel.select(r1);
             let b = sel.select(r2);
             if ignore_case {
-                iter_cmp_case_insensitive(a, b)
+                iter_cmp_ignore_case(a, b)
             } else {
                 iter_cmp(a, b)
             }
@@ -119,7 +121,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let a = sel.select(r1);
             let b = sel.select(r2);
             if ignore_case {
-                iter_cmp_case_insensitive(b, a)
+                iter_cmp_ignore_case(b, a)
             } else {
                 iter_cmp(b, a)
             }
@@ -173,30 +175,6 @@ where
                 cmp::Ordering::Equal => (),
                 non_eq => return non_eq,
             },
-        }
-    }
-}
-
-/// Order `a` and `b` case-insensitively using `Ord`
-#[inline]
-pub fn iter_cmp_case_insensitive<'a, L, R>(mut a: L, mut b: R) -> cmp::Ordering
-where
-    L: Iterator<Item = &'a [u8]>,
-    R: Iterator<Item = &'a [u8]>,
-{
-    loop {
-        match (a.next(), b.next()) {
-            (None, None) => return cmp::Ordering::Equal,
-            (None, _) => return cmp::Ordering::Less,
-            (_, None) => return cmp::Ordering::Greater,
-            (Some(x), Some(y)) => {
-                let match_x = util::transform(x, true);
-                let match_y = util::transform(y, true);
-                match match_x.cmp(&match_y) {
-                    cmp::Ordering::Equal => (),
-                    non_eq => return non_eq,
-                }
-            }
         }
     }
 }

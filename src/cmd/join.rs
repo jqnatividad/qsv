@@ -77,9 +77,7 @@ use crate::{
     config::{Config, Delimiter, SeekRead},
     index::Indexed,
     select::{SelectColumns, Selection},
-    util,
-    util::ByteString,
-    CliResult,
+    util, CliResult,
 };
 
 #[derive(Deserialize)]
@@ -408,10 +406,7 @@ impl<R: io::Read + io::Seek> ValueIndex<R> {
             // indexes in one pass.
             row_idx.write_u64::<BigEndian>(row.position().unwrap().byte())?;
 
-            let fields: Vec<_> = sel
-                .select(&row)
-                .map(|v| util::transform(v, casei))
-                .collect();
+            let fields: Vec<_> = sel.select(&row).map(|v| transform(v, casei)).collect();
             if nulls || !fields.iter().any(std::vec::Vec::is_empty) {
                 match val_idx.entry(fields) {
                     Entry::Vacant(v) => {
@@ -457,5 +452,25 @@ impl<R> fmt::Debug for ValueIndex<R> {
 
 #[inline]
 fn get_row_key(sel: &Selection, row: &csv::ByteRecord, casei: bool) -> Vec<ByteString> {
-    sel.select(row).map(|v| util::transform(v, casei)).collect()
+    sel.select(row).map(|v| transform(v, casei)).collect()
+}
+
+pub type ByteString = Vec<u8>;
+
+#[inline]
+pub fn transform(bs: &[u8], casei: bool) -> ByteString {
+    if let Ok(s) = str::from_utf8(bs) {
+        if casei {
+            let norm: String = s
+                .trim()
+                .chars()
+                .map(|c| c.to_lowercase().next().unwrap())
+                .collect();
+            norm.into_bytes()
+        } else {
+            s.trim().as_bytes().to_vec()
+        }
+    } else {
+        bs.to_vec()
+    }
 }
