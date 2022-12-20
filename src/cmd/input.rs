@@ -146,20 +146,31 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         wtr.write_record(&str_row)?;
     }
 
-    let mut i = 1_u64;
-    while rdr.read_byte_record(&mut row)? {
+    let mut idx = 1_u64;
+    loop {
+        match rdr.read_byte_record(&mut row) {
+            Ok(moredata) => {
+                if !moredata {
+                    break;
+                }
+            }
+            Err(e) => {
+                return fail_clierror!("Invalid CSV. Last valid row ({idx}): {e}");
+            }
+        };
+
         str_row.clear();
         for field in row.iter() {
             str_row.push_field(&String::from_utf8_lossy(field));
         }
         wtr.write_record(&str_row)?;
-        i += 1;
+        idx += 1;
 
-        if total_lines > 0 && i > total_lines {
+        if total_lines > 0 && idx > total_lines {
             break;
         }
     }
-    info!("Wrote {} rows...", i - 1);
+    info!("Wrote {} rows...", idx - 1);
     wtr.flush()?;
     Ok(())
 }
