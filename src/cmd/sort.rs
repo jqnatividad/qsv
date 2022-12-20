@@ -20,7 +20,7 @@ sort options:
     -R, --reverse           Reverse order
     --random                Random order
     --seed <number>         RNG seed
-    -I, --case-insensitive  Case-insensitive comparisons
+    -i, --ignore-case       Compare strings disregarding case
     -u, --unique            When set, identical consecutive lines will be dropped
                             to keep only one line per sorted value.
     -j, --jobs <arg>        The number of jobs to run in parallel.
@@ -53,18 +53,18 @@ use crate::{
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input:             Option<String>,
-    flag_select:           SelectColumns,
-    flag_numeric:          bool,
-    flag_reverse:          bool,
-    flag_random:           bool,
-    flag_seed:             Option<u64>,
-    flag_case_insensitive: bool,
-    flag_jobs:             Option<usize>,
-    flag_output:           Option<String>,
-    flag_no_headers:       bool,
-    flag_delimiter:        Option<Delimiter>,
-    flag_unique:           bool,
+    arg_input:        Option<String>,
+    flag_select:      SelectColumns,
+    flag_numeric:     bool,
+    flag_reverse:     bool,
+    flag_random:      bool,
+    flag_seed:        Option<u64>,
+    flag_ignore_case: bool,
+    flag_jobs:        Option<usize>,
+    flag_output:      Option<String>,
+    flag_no_headers:  bool,
+    flag_delimiter:   Option<Delimiter>,
+    flag_unique:      bool,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -87,7 +87,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // Seeding rng
     let seed = args.flag_seed;
 
-    let case_insensitive = args.flag_case_insensitive;
+    let ignore_case = args.flag_ignore_case;
 
     let mut all = rdr.byte_records().collect::<Result<Vec<_>, _>>()?;
     match (numeric, reverse, random) {
@@ -104,7 +104,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         (false, false, false) => all.par_sort_unstable_by(|r1, r2| {
             let a = sel.select(r1);
             let b = sel.select(r2);
-            if case_insensitive {
+            if ignore_case {
                 iter_cmp_case_insensitive(a, b)
             } else {
                 iter_cmp(a, b)
@@ -118,7 +118,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         (false, true, false) => all.par_sort_unstable_by(|r1, r2| {
             let a = sel.select(r1);
             let b = sel.select(r2);
-            if case_insensitive {
+            if ignore_case {
                 iter_cmp_case_insensitive(b, a)
             } else {
                 iter_cmp(b, a)
