@@ -345,6 +345,66 @@ fn sort_numeric_non_natural() {
 }
 
 #[test]
+fn sort_case_insensitive() {
+    let wrk = Workdir::new("sort_numeric_non_natural");
+    wrk.create(
+        "in.csv",
+        vec![
+            svec!["col1", "col2"],
+            svec!["n", "s"],
+            svec!["Alpha", "baBa"],
+            svec!["aLPHA", "BABA"],
+            svec!["N", "S"],
+            svec!["n", "S"],
+        ],
+    );
+
+    let mut cmd = wrk.command("sort");
+    cmd.arg("--ignore-case").arg("in.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["col1", "col2"],
+        svec!["Alpha", "baBa"],
+        svec!["aLPHA", "BABA"],
+        svec!["n", "s"],
+        svec!["N", "S"],
+        svec!["n", "S"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn sort_case_sensitive() {
+    let wrk = Workdir::new("sort_numeric_non_natural");
+    wrk.create(
+        "in.csv",
+        vec![
+            svec!["col1", "col2"],
+            svec!["n", "s"],
+            svec!["Alpha", "baBa"],
+            svec!["aLPHA", "BABA"],
+            svec!["N", "S"],
+            svec!["n", "S"],
+        ],
+    );
+
+    let mut cmd = wrk.command("sort");
+    cmd.arg("in.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["col1", "col2"],
+        svec!["Alpha", "baBa"],
+        svec!["N", "S"],
+        svec!["aLPHA", "BABA"],
+        svec!["n", "S"],
+        svec!["n", "s"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn sort_reverse() {
     let wrk = Workdir::new("sort_reverse");
     wrk.create(
