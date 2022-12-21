@@ -51,7 +51,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [headers](/src/cmd/headers.rs#L2) | Show the headers of a CSV. Or show the intersection of all headers between many CSV files. |
 | [index](/src/cmd/index.rs#L2) | Create an index for a CSV. This is very quick & provides constant time indexing into the CSV file. Also enables multithreading for `frequency`, `split`, `stats` & `schema` commands. |
 | [input](/src/cmd/input.rs#L2) | Read CSV data with special quoting, trimming, line-skipping & UTF-8 transcoding rules. Typically used to "normalize" a CSV for further processing with other qsv commands. |
-| [join](/src/cmd/join.rs#L2)<br>📇 | Inner, outer, cross, anti & semi joins. Automatically creates a simple hash index to make it fast.  |
+| [join](/src/cmd/join.rs#L2)<br>📇 | Inner, outer, cross, anti & semi joins. Automatically creates a simple, in-memory hash index to make it fast.  |
 | [jsonl](/src/cmd/jsonl.rs#L2) | Convert newline-delimited JSON ([JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/)) to CSV. See `tojsonl` command to convert CSV to JSONL.
 | [luau](/src/cmd/luau.rs#L2)<br>❇️ | Create a new computed column, filter rows or compute aggregations by executing a [Luau](https://luau-lang.org) script for every row of a CSV file. |
 | [partition](/src/cmd/partition.rs#L2) | Partition a CSV based on a column value. |
@@ -79,7 +79,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [validate](/src/cmd/validate.rs#L2)<br>📇🚀 | Validate CSV data with JSON Schema (See `schema` command) & put invalid records into a separate file & a validation error report file. If no jsonschema file is provided, validates if a CSV conforms to the [RFC 4180 standard](https://datatracker.ietf.org/doc/html/rfc4180). |
 
  ❇️: enabled by a feature flag on `qsv`. Not available on `qsvlite`. `qsvdp` has `luau` & `applydp` pre-enabled.   
-📇: uses an index when available.   
+📇: uses an index when available. `join` creates its own in-memory index automatically.   
 🗜️: loads entire CSV into memory, though `dedup`, `stats` & `transpose` have "streaming" modes as well.   
 🏎️: multithreaded when an index is available.   
 🚀: multithreaded even without an index.
