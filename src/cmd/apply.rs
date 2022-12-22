@@ -1139,6 +1139,7 @@ fn search_cached(cell: &str, formatstr: &str) -> Option<String> {
     let geocoder =
         GEOCODER.get_or_init(|| ReverseGeocoder::new(LOCS.get_or_init(Locations::from_memory)));
 
+    // regex for Location field. Accepts (lat, long) & lat, long
     let locregex: &'static Regex = regex_once_cell!(
         r"(?-u)([+-]?[0-9]+\.?[0-9]*|\.[0-9]+),\s*([+-]?[0-9]+\.?[0-9]*|\.[0-9]+)"
     );
