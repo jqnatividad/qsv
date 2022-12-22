@@ -173,6 +173,8 @@ applydp options:
 
     -j, --jobs <arg>            The number of jobs to run in parallel.
                                 When not set, the number of jobs is set to the number of CPUs detected.
+    -b, --batch <size>          The number of rows per batch to load into memory, before running in parallel.
+                                [default: 50000]
 
 Common options:
     -h, --help                  Display this message
@@ -201,9 +203,6 @@ use crate::{
     select::SelectColumns,
     util, CliResult,
 };
-
-// number of CSV rows to process in a batch
-const BATCH_SIZE: usize = 24_000;
 
 #[derive(EnumString)]
 #[strum(ascii_case_insensitive)]
@@ -243,6 +242,7 @@ struct Args {
     flag_prefer_dmy:     bool,
     flag_keep_zero_time: bool,
     flag_formatstr:      String,
+    flag_batch:          u32,
     flag_jobs:           Option<usize>,
     flag_new_column:     Option<String>,
     flag_output:         Option<String>,
@@ -366,8 +366,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut batch_record = csv::StringRecord::new();
 
     // reuse batch buffers
-    let mut batch = Vec::with_capacity(BATCH_SIZE);
-    let mut batch_results = Vec::with_capacity(BATCH_SIZE);
+    let batchsize: usize = args.flag_batch as usize;
+    let mut batch = Vec::with_capacity(batchsize);
+    let mut batch_results = Vec::with_capacity(batchsize);
 
     // set RAYON_NUM_THREADS
     util::njobs(args.flag_jobs);
@@ -376,7 +377,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // each batch is processed via Rayon parallel iterator.
     // loop exits when batch is empty.
     'batch_loop: loop {
-        for _ in 0..BATCH_SIZE {
+        for _ in 0..batchsize {
             match rdr.read_record(&mut batch_record) {
                 Ok(has_data) => {
                     if has_data {
