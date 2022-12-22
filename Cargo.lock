@@ -2078,9 +2078,9 @@ dependencies = [
 
 [[package]]
 name = "libc"
-version = "0.2.138"
+version = "0.2.139"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "db6d7e329c562c5dfab7a46a2afabc8b987ab9a4834c9d1ca04dc54c1546cef8"
+checksum = "201de327520df007757c1f0adce6e827fe8562fbc28bfd9c15571c66ca1f5f79"
 
 [[package]]
 name = "libloading"
@@ -2988,9 +2988,9 @@ dependencies = [
 
 [[package]]
 name = "qsv-stats"
-version = "0.4.3"
+version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f1008df90250894ed91347338bc0b5966b68f945ffe0cdb284cea59c1bb6d84f"
+checksum = "1024b5fbc2e14f538a1399114c0f7c17c436cafe6113a85a58262917637a1b26"
 dependencies = [
  "ahash 0.8.2",
  "num-traits",
