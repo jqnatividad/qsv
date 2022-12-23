@@ -27,6 +27,4 @@ jobs:
       with:
         key: qsv-cache
     - name: Run tests
-      env:
-        RUSTFLAGS: --emit=asm
       run: cargo test --verbose --locked --features=apply,fetch,foreach,generate,luau,python,full
