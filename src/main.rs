@@ -384,6 +384,7 @@ impl Command {
             Command::Stats => cmd::stats::run(argv),
             Command::Table => cmd::table::run(argv),
             Command::Transpose => cmd::transpose::run(argv),
+            #[cfg(all(feature = "to", not(feature = "lite")))]
             Command::To => cmd::to::run(argv),
             Command::Tojsonl => cmd::tojsonl::run(argv),
             Command::Validate => cmd::validate::run(argv),
