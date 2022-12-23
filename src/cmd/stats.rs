@@ -1,7 +1,7 @@
 static USAGE: &str = r#"
-Computes descriptive statistics on CSV data.
+Computes summary statistics on CSV data.
 
-Descriptive statistics includes sum, min/max, min/max length, mean, stddev, variance,
+Summary statistics includes sum, min/max, min/max length, mean, stddev, variance,
 nullcount, quartiles, interquartile range (IQR), lower/upper fences, skewness, median, 
 mode/s, & cardinality. Note that some statistics are expensive to compute and requires
 loading the entire file into memory, so they must be enabled explicitly. 

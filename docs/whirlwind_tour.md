@@ -43,7 +43,7 @@ is that ***it mainly works in "streaming" mode*** - computing statistics as it "
 the CSV file line by line. This also means it can gather statistics on arbitrarily large files,
 as it does not have to load the entire file into memory.[^2]
 
-But can we get more descriptive statistics? What's the variance, the modes, the distribution (quartiles), 
+But can we get more summary statistics? What's the variance, the modes, the distribution (quartiles), 
 and the cardinality of the data?  No problem. That's why `qsv stats` has an `--everything` option to 
 compute these more "expensive" stats. Expensive - as these extended statistics can only be computed at 
 the cost of loading the entire file into memory.

@@ -71,7 +71,7 @@ macro_rules! command_list {
     sniff       Quickly sniff CSV metadata
     sort        Sort CSV data in alphabetical, numerical, reverse or random order
     sortcheck   Check if a CSV is sorted
-    stats       Infer data types and compute descriptive statistics
+    stats       Infer data types and compute summary statistics
     validate    Validate CSV data for RFC4180-compliance or with JSON Schema
 
     NOTE: qsvdp ignores the --progressbar option for all commands.

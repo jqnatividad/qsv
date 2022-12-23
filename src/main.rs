@@ -154,7 +154,7 @@ fn main() -> QsvExitCode {
     sort        Sort CSV data in alphabetical, numerical, reverse or random order
     sortcheck   Check if a CSV is sorted
     split       Split CSV data into many files
-    stats       Infer data types and compute descriptive statistics
+    stats       Infer data types and compute summary statistics
     table       Align CSV data into columns
     tojsonl     Convert CSV to newline-delimited JSON\n",
     );
