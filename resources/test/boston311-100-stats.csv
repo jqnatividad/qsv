@@ -1,8 +1,8 @@
 field,type,sum,min,max,min_length,max_length,mean,stddev,variance,nullcount
 case_enquiry_id,Integer,10100411645180,101004113298,101004155594,12,12,101004116451.8,7905.5202,62497248.9138,0
-open_dt,DateTime,,2022-01-01 00:16:00 UTC,2022-01-31 11:46:00 UTC,19,19,,,,0
-target_dt,DateTime,,2022-01-03 10:32:34 UTC,2022-05-20 13:03:21 UTC,0,19,,,,11
-closed_dt,DateTime,,2022-01-01 12:56:14 UTC,2022-04-25 14:30:31 UTC,0,19,,,,15
+open_dt,DateTime,,2022-01-01 00:16:00 UTC,2022-01-31 11:46:00 UTC,19,19,2022-01-04 07:07:45 UTC,5.56800,,0
+target_dt,DateTime,,2022-01-03 10:32:34 UTC,2022-05-20 13:03:21 UTC,0,19,2022-01-17 03:14:16 UTC,27.00551,,11
+closed_dt,DateTime,,2022-01-01 12:56:14 UTC,2022-04-25 14:30:31 UTC,0,19,2022-01-08 01:10:44 UTC,15.82577,,15
 ontime,String,,ONTIME,OVERDUE,6,7,,,,0
 case_status,String,,Closed,Open,4,6,,,,0
 closure_reason,String,, ,Case Closed. Closed date : Wed Jan 19 11:42:16 EST 2022 Resolved Removed df  ,1,284,,,,0
