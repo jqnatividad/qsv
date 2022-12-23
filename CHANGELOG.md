@@ -6,6 +6,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.80.0] - 2022-12-23
+
+### Added
+* new `to` command. Converts CSVs "to" PostgreSQL, SQLite, XLSX, Parquet and Data Package by @kindly in https://github.com/jqnatividad/qsv/pull/656
+* `apply`: add numtocurrency operation https://github.com/jqnatividad/qsv/pull/670
+* `sort`: add --ignore-case option https://github.com/jqnatividad/qsv/pull/673
+* `stats`: now computes descriptive statistics for dates as well https://github.com/jqnatividad/qsv/pull/684
+* added --updatenow option, resolves https://github.com/jqnatividad/qsv/issues/661 https://github.com/jqnatividad/qsv/pull/662
+* replace footnotes in Available Commands list with emojis :smile:
+
+
+### Changed
+* `apply` & `applydp`: expose --batch size option https://github.com/jqnatividad/qsv/pull/679
+* `validate`: add last valid row to validation error https://github.com/jqnatividad/qsv/commit/7680011a2fcc459aa621414122ecaa869e98ae83
+* `input`: add last valid row to error message https://github.com/jqnatividad/qsv/commit/492e51f85ab5a0637c201d7020d7ac2fdb72be96
+* upgrade to csvs-convert 0.7.5 by @kindly in https://github.com/jqnatividad/qsv/pull/668
+* Bump serial_test from 0.9.0 to 0.10.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/671
+* Bump csvs_convert from 0.7.5 to 0.7.7 by @dependabot in https://github.com/jqnatividad/qsv/pull/674
+* Bump num_cpus from 1.14.0 to 1.15.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/678
+* Bump robinraju/release-downloader from 1.6 to 1.7 by @dependabot in https://github.com/jqnatividad/qsv/pull/677
+* Bump actions/stale from 6 to 7 by @dependabot in https://github.com/jqnatividad/qsv/pull/676
+* Bump actions/setup-python from 4.3.1 to 4.4.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/683
+* added concurrency check to CI tests so that redundant CI test are canceled when new ones are launched
+
+### Fixed
+* `stats`: fix leading zero handling https://github.com/jqnatividad/qsv/pull/667
+* `apply`: fix currencytonum bug https://github.com/jqnatividad/qsv/pull/669
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.79.0...0.80.0
+
+
 ## [0.79.0] - 2022-12-16
 ### Added
 * `safenames`: add --reserved option, allowing user to specify additional "unsafe" names https://github.com/jqnatividad/qsv/pull/657
