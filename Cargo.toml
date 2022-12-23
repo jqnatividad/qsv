@@ -80,7 +80,7 @@ crossbeam-channel = "0.5"
 csv = "1.1"
 csv-core = "0.1"
 csv-index = "0.1"
-csvs_convert = "0.7.7"
+csvs_convert = { version = "0.7.7", optional = true }
 data-encoding = { version = "2.3", optional = true }
 docopt = "1"
 dynfmt = { version = "0.1", default-features = false, features = [
@@ -186,6 +186,7 @@ all_full = [
     "luau",
     "python",
     "self_update",
+    "to",
 ]
 apply = [
     "cached",
@@ -219,6 +220,7 @@ foreach = []
 generate = ["test-data-generation"]
 luau = ["mlua"]
 python = ["pyo3"]
+to = ["csvs_convert"]
 lite = []
 datapusher_plus = ["dynfmt", "self_update", "strum", "strum_macros"]
 full = []
