@@ -156,9 +156,15 @@ fn main() -> QsvExitCode {
     split       Split CSV data into many files
     stats       Infer data types and compute descriptive statistics
     table       Align CSV data into columns
-    tojsonl     Convert CSV to newline-delimited JSON
-    to          Convert CSVs to PostgreSQL/XLSX/Parquet/SQLite/Data Package
-    transpose   Transpose rows/columns of CSV data
+    tojsonl     Convert CSV to newline-delimited JSON\n",
+    );
+
+    #[cfg(all(feature = "to", not(feature = "lite")))]
+    enabled_commands
+        .push_str("    to          Convert CSVs to PostgreSQL/XLSX/Parquet/SQLite/Data Package\n");
+
+    enabled_commands.push_str(
+        "    transpose   Transpose rows/columns of CSV data
     validate    Validate CSV data for RFC4180-compliance or with JSON Schema",
     );
     let num_commands = enabled_commands.split('\n').count();
@@ -279,7 +285,6 @@ enum Command {
     Input,
     Join,
     Jsonl,
-    To,
     #[cfg(all(feature = "luau", not(feature = "lite")))]
     Luau,
     Partition,
@@ -303,6 +308,8 @@ enum Command {
     Stats,
     Table,
     Transpose,
+    #[cfg(all(feature = "to", not(feature = "lite")))]
+    To,
     Tojsonl,
     Validate,
 }

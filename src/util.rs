@@ -95,6 +95,8 @@ pub fn version() -> String {
             enabled_features.push(';');
         });
     }
+    #[cfg(all(feature = "to", not(feature = "lite")))]
+    enabled_features.push_str("to;");
     #[cfg(feature = "self_update")]
     enabled_features.push_str("self_update");
     enabled_features.push('-');

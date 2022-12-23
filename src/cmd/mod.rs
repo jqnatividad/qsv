@@ -67,7 +67,7 @@ pub mod split;
 pub mod stats;
 #[cfg(any(feature = "full", feature = "lite"))]
 pub mod table;
-#[cfg(any(feature = "full", feature = "lite"))]
+#[cfg(all(feature = "to", not(feature = "lite")))]
 pub mod to;
 #[cfg(any(feature = "full", feature = "lite"))]
 pub mod tojsonl;
