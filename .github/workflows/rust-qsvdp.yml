@@ -7,7 +7,7 @@ on:
     branches: [ master ]
 
 concurrency:
-  group: ci-tests-${{ github.ref }}-1
+  group: ci-qsvdp-tests-${{ github.ref }}-1
   cancel-in-progress: true
 
 env:
