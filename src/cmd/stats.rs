@@ -11,6 +11,8 @@ sum, min/max values, min/max length, mean, stddev, variance & nullcount. The def
 set of statistics corresponds to statistics that can be computed efficiently on a stream
 of data (i.e., constant memory) and can work with arbitrarily large CSV files.
 
+Note that standard deviation for dates is returned in days, not in seconds.
+
 The following additional statistics require loading the entire file into memory:
 mode (multimodal aware), cardinality, median, quartiles and its related measures 
 (IQR, lower/upper fences and skewness).
@@ -91,6 +93,7 @@ use std::{
     sync::atomic::{AtomicBool, Ordering},
 };
 
+use chrono::prelude::*;
 use itertools::Itertools;
 use once_cell::sync::OnceCell;
 use qsv_dateparser::parse_with_preference;
@@ -456,6 +459,14 @@ fn round_num(dec_f64: f64, places: u32) -> String {
         .to_string()
 }
 
+fn unixtime_to_isodate(unixtime: f64) -> String {
+    chrono::DateTime::<Utc>::from_utc(
+        chrono::NaiveDateTime::from_timestamp_opt(unixtime as i64, 0).unwrap_or_default(),
+        chrono::offset::Utc,
+    )
+    .to_string()
+}
+
 impl Stats {
     fn new(which: WhichStats) -> Stats {
         let (mut sum, mut minmax, mut online, mut modes, mut median, mut quartiles) =
@@ -541,8 +552,32 @@ impl Stats {
                     }
                 }
             }
-            // do nothing for String and Date/DateTime types
-            _ => {}
+            TDateTime | TDate => {
+                if sample_type == TNull {
+                    if self.which.include_nulls {
+                        if let Some(v) = self.online.as_mut() {
+                            v.add_null();
+                        };
+                    }
+                } else if let Ok(parsed_date) = parse_with_preference(
+                    std::str::from_utf8(sample).unwrap(),
+                    DMY_PREFERENCE.load(Ordering::Relaxed),
+                ) {
+                    #[allow(clippy::cast_precision_loss)]
+                    let n = parsed_date.timestamp() as f64;
+                    if let Some(v) = self.median.as_mut() {
+                        v.add(n);
+                    }
+                    if let Some(v) = self.quartiles.as_mut() {
+                        v.add(n);
+                    }
+                    if let Some(v) = self.online.as_mut() {
+                        v.add(n);
+                    }
+                }
+            }
+            TString => { // do nothing for String type
+            }
         }
     }
 
@@ -559,9 +594,12 @@ impl Stats {
         let mut pieces = Vec::with_capacity(22);
         let empty = String::new;
 
-        pieces.push(self.typ.to_string());
+        // type
+        pieces.push(typ.to_string());
+
+        // sum
         if let Some(sum) = self.sum.as_ref().and_then(|sum| sum.show(typ)) {
-            if self.typ == FieldType::TFloat {
+            if typ == FieldType::TFloat {
                 let sum_decimal = rust_decimal::Decimal::from_str(&sum).unwrap();
                 pieces.push(
                     sum_decimal
@@ -578,6 +616,7 @@ impl Stats {
             pieces.push(empty());
         }
 
+        // min/max
         if let Some(mm) = self.minmax.as_ref().and_then(|mm| mm.show(typ)) {
             pieces.push(mm.0);
             pieces.push(mm.1);
@@ -586,6 +625,7 @@ impl Stats {
             pieces.push(empty());
         }
 
+        // min/max length
         if let Some(mm) = self.minmax.as_ref().and_then(TypedMinMax::len_range) {
             pieces.push(mm.0);
             pieces.push(mm.1);
@@ -594,38 +634,60 @@ impl Stats {
             pieces.push(empty());
         }
 
-        if !(self.typ == TFloat || self.typ == TInteger) {
+        // mean, stddev & variance
+        if !(typ == TFloat || typ == TInteger || typ == TDateTime || typ == TDate) {
             pieces.push(empty());
             pieces.push(empty());
             pieces.push(empty());
         } else if let Some(ref v) = self.online {
-            pieces.push(round_num(v.mean(), round_places));
-            pieces.push(round_num(v.stddev(), round_places));
-            pieces.push(round_num(v.variance(), round_places));
+            if self.typ == TFloat || self.typ == TInteger {
+                pieces.push(round_num(v.mean(), round_places));
+                pieces.push(round_num(v.stddev(), round_places));
+                pieces.push(round_num(v.variance(), round_places));
+            } else {
+                pieces.push(unixtime_to_isodate(v.mean()));
+                // instead of returning stdev in seconds, let's return it in
+                // days as it easier to handle
+                // 86_400 = number of seconds in a day, always round to 5 decimal places
+                pieces.push(round_num(v.stddev() / 86_400_f64, 5));
+                // we don't know how to compute variance on timestamps
+                // it appears the current algorithm we use is not suited to the large timestamp
+                // values as the values we got during testing don't make sense, so
+                // leave it empty for now TODO: use alternate algorithms that are
+                // not sensitive to numerical instability and arithmetic overflow
+                // see https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
+                pieces.push(empty());
+            }
         } else {
             pieces.push(empty());
             pieces.push(empty());
             pieces.push(empty());
         }
 
+        // nullcount
         let mut buffer = itoa::Buffer::new();
         pieces.push(buffer.format(self.nullcount).to_owned());
 
-        match self.median.as_mut().and_then(|v| match self.typ {
-            TInteger | TFloat => v.median(),
-            _ => None,
-        }) {
-            None => {
-                if self.which.median {
-                    pieces.push(empty());
-                }
+        // median
+        if let Some(v) = self.median.as_mut().and_then(|v| {
+            if let TNull | TString = typ {
+                None
+            } else {
+                v.median()
             }
-            Some(v) => {
+        }) {
+            if typ == TDateTime || typ == TDate {
+                pieces.push(unixtime_to_isodate(v));
+            } else {
                 pieces.push(round_num(v, round_places));
             }
+        } else if self.which.median {
+            pieces.push(empty());
         }
-        match self.quartiles.as_mut().and_then(|v| match self.typ {
-            TInteger | TFloat => v.quartiles(),
+
+        // quartiles
+        match self.quartiles.as_mut().and_then(|v| match typ {
+            TInteger | TFloat | TDate | TDateTime => v.quartiles(),
             _ => None,
         }) {
             None => {
@@ -650,30 +712,48 @@ impl Stats {
                 // https://doc.rust-lang.org/std/primitive.f64.html#method.mul_add
 
                 // lower_outer_fence = "q1 - (3.0 * iqr)"
-                pieces.push(round_num(3.0f64.mul_add(-iqr, q1), round_places));
+                let lof = 3.0f64.mul_add(-iqr, q1);
                 // lower_inner_fence = "q1 - (1.5 * iqr)"
-                pieces.push(round_num(1.5f64.mul_add(-iqr, q1), round_places));
-
-                pieces.push(round_num(q1, round_places));
-                pieces.push(round_num(q2, round_places)); // q2 = median
-                pieces.push(round_num(q3, round_places));
-                pieces.push(round_num(iqr, round_places));
+                let lif = 1.5f64.mul_add(-iqr, q1);
 
                 // upper inner fence = "q3 + (1.5 * iqr)"
-                pieces.push(round_num(1.5_f64.mul_add(iqr, q3), round_places));
-
+                let uif = 1.5_f64.mul_add(iqr, q3);
                 // upper_outer_fence = "q3 + (3.0 * iqr)"
-                pieces.push(round_num(3.0_f64.mul_add(iqr, q3), round_places));
+                let uof = 3.0_f64.mul_add(iqr, q3);
 
                 // calculate skewness using Quantile-based measures
                 // https://en.wikipedia.org/wiki/Skewness#Quantile-based_measures
                 // skewness = (q3 - (2.0 * q2) + q1) / iqr
-                pieces.push(round_num(
-                    (2.0f64.mul_add(-q2, q3) + q1) / iqr,
-                    round_places,
-                ));
+                let skewness = (2.0f64.mul_add(-q2, q3) + q1) / iqr;
+
+                if typ == TDateTime || typ == TDate {
+                    pieces.push(unixtime_to_isodate(lof));
+                    pieces.push(unixtime_to_isodate(lif));
+
+                    pieces.push(unixtime_to_isodate(q1));
+                    pieces.push(unixtime_to_isodate(q2)); // q2 = median
+                    pieces.push(unixtime_to_isodate(q3));
+                    pieces.push(round_num(iqr, round_places));
+
+                    pieces.push(unixtime_to_isodate(uif));
+                    pieces.push(unixtime_to_isodate(uof));
+                } else {
+                    pieces.push(round_num(lof, round_places));
+                    pieces.push(round_num(lif, round_places));
+
+                    pieces.push(round_num(q1, round_places));
+                    pieces.push(round_num(q2, round_places)); // q2 = median
+                    pieces.push(round_num(q3, round_places));
+                    pieces.push(round_num(iqr, round_places));
+
+                    pieces.push(round_num(uif, round_places));
+                    pieces.push(round_num(uof, round_places));
+                }
+                pieces.push(round_num(skewness, round_places));
             }
         }
+
+        // mode/modes & cardinality
         match self.modes.as_mut() {
             None => {
                 if self.which.mode {
