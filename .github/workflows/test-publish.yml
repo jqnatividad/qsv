@@ -61,7 +61,7 @@ jobs:
             target: x86_64-pc-windows-gnu
             architecture: x86_64
             use-cross: false
-            addl-build-args: --features=apply,generate,luau,fetch,self_update,to
+            addl-build-args: --features=apply,generate,luau,fetch,self_update
             default-features: --no-default-features
             addl-qsvdp-features: luau
           - os: macos-latest
