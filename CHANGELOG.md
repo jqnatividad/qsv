@@ -29,12 +29,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Bump actions/stale from 6 to 7 by @dependabot in https://github.com/jqnatividad/qsv/pull/676
 * Bump actions/setup-python from 4.3.1 to 4.4.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/683
 * added concurrency check to CI tests so that redundant CI test are canceled when new ones are launched
+* instead of saying "descriptive statistics", use more understandable "summary statistics"
+* changed publishing workflows to enable `to` feature for applicable target platforms
 * cargo update bump dependencies, notably qsv-stats from 0.4.5 to 0.4.6 and qsv_currency from 0.5.0 to 0.6.0
 * pin Rust nightly to 2022-12-22
 
 ### Fixed
 * `stats`: fix leading zero handling https://github.com/jqnatividad/qsv/pull/667
 * `apply`: fix currencytonum bug https://github.com/jqnatividad/qsv/pull/669
+
 
 **Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.79.0...0.80.0
 
