@@ -71,9 +71,9 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [sort](/src/cmd/sort.rs#L2)<br>🚀🗜️ | Sorts CSV data in alphabetical (with case-insensitive option), numerical, reverse, unique or random (with optional seed) order (See also `extsort` & `sortcheck` commands).  |
 | [sortcheck](/src/cmd/sortcheck.rs#L2)<br>📇 | Check if a CSV is sorted. With the --json options, also retrieve record count, sort breaks & duplicate count. |
 | [split](/src/cmd/split.rs#L2)<br>📇🏎️ | Split one CSV file into many CSV files of N chunks. Uses multithreading to go faster if an index is present. |
-| [stats](/src/cmd/stats.rs#L2)<br>📇🗜️🏎️ | Infer data type (Null, String, Float, Integer, Date, DateTime) & compute descriptive statistics for each column in a CSV (sum, min/max, min/max length, mean, stddev, variance, nullcount, quartiles, IQR, lower/upper fences, skewness, median, mode/s & cardinality). Uses multithreading to go faster if an index is present. |
+| [stats](/src/cmd/stats.rs#L2)<br>📇🗜️🏎️ | Infer data type (Null, String, Float, Integer, Date, DateTime) & compute [summary statistics](https://en.wikipedia.org/wiki/Summary_statistics) for each column in a CSV (sum, min/max, min/max length, mean, stddev, variance, nullcount, quartiles, IQR, lower/upper fences, skewness, median, mode/s & cardinality). Uses multithreading to go faster if an index is present. |
 | [table](/src/cmd/table.rs#L2)<br>🗜️ | Show aligned output of a CSV using [elastic tabstops](https://github.com/BurntSushi/tabwriter).  |
-| [to](/src/cmd/to.rs#L2)<br>🚀 | Convert CSV files to [PostgreSQL](https://www.postgresql.org), [SQLite](https://www.sqlite.org/index.html), XLSX, [Parquet](https://parquet.apache.org) and [Data Package](https://datahub.io/docs/data-packages/tabular). |
+| [to](/src/cmd/to.rs#L2)<br>❇️🚀 | Convert CSV files to [PostgreSQL](https://www.postgresql.org), [SQLite](https://www.sqlite.org/index.html), XLSX, [Parquet](https://parquet.apache.org) and [Data Package](https://datahub.io/docs/data-packages/tabular). |
 | [tojsonl](/src/cmd/tojsonl.rs#L2)<br>📇🏎️ | Smartly converts CSV to a newline-delimited JSON ([JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/)). By scanning the CSV first, it "smartly" infers the appropriate JSON data type for each column. See `jsonl` command to convert JSONL to CSV. Uses multithreading to go faster if an index is present. |
 | [transpose](/src/cmd/transpose.rs#L2)<br>🗜️ | Transpose rows/columns of a CSV.  |
 | [validate](/src/cmd/validate.rs#L2)<br>📇🚀 | Validate CSV data with JSON Schema (See `schema` command) & put invalid records into a separate file & a validation error report file. If no jsonschema file is provided, validates if a CSV conforms to the [RFC 4180 standard](https://datatracker.ietf.org/doc/html/rfc4180). |
@@ -126,7 +126,7 @@ The compiled binary will end up in `./target/release/`.
 To enable optional features, use cargo `--features` (see [Feature Flags](#feature-flags) for more info):
 
 ```bash
-cargo install qsv --locked --features apply,generate,luau,fetch,foreach,python,self_update,full
+cargo install qsv --locked --features apply,generate,luau,fetch,foreach,python,to,self_update,full
 # or shorthand
 cargo install qsv --locked --features all_full
 # or to install qsvlite
@@ -135,7 +135,7 @@ cargo install qsv --locked --features lite
 cargo install qsv --locked --features datapusher_plus
 
 # or when compiling from a local repo
-cargo build --release --locked --features apply,generate,luau,fetch,foreach,python,self_update,full
+cargo build --release --locked --features apply,generate,luau,fetch,foreach,python,to,self_update,full
 # shorthand
 cargo build --release --locked --features all_full
 # for qsvlite
@@ -299,11 +299,12 @@ Relevant env vars are defined as anything that starts with `QSV_` & `MIMALLOC_` 
 * `generate` - enable `generate` command.
 * `luau` - enable `luau` command. Embeds a [Luau](https://luau-lang.org) interpreter into qsv. [Luau has type-checking, sandboxing, additional language operators, increased performance & other improvements](https://luau-lang.org/2022/11/04/luau-origins-and-evolution.html) over Lua.
 * `python` - enable `py` command. Note that qsv will look for the shared library for the Python version (Python 3.6 & above supported) it was compiled against & will abort on startup if the library is not found, even if you're not using the `py` command. Check [Python](#python) section for more info.
+* `to` - enables the `to` command.
 * `self_update` - enable self-update engine, checking GitHub for the latest release. Note that if you manually built qsv, `self-update` will only check for new releases.
 It will NOT offer the choice to update itself to the prebuilt binaries published on GitHub. You need not worry that your manually built qsv will be overwritten by a self-update.
 
 * `full` - enable to build `qsv` binary variant which is feature-capable.
-* `all_full` - enable to build `qsv` binary variant with all features enabled (apply,fetch,foreach,generate,luau,python,self_update).
+* `all_full` - enable to build `qsv` binary variant with all features enabled (apply,fetch,foreach,generate,luau,python,to,self_update).
 * `lite` - enable to build `qsvlite` binary variant with all features disabled.
 * `datapusher_plus` - enable to build `qsvdp` binary variant - the [DataPusher+](https://github.com/dathere/datapusher-plus) optimized qsv binary.
 * `nightly` - enable to turn on nightly/unstable features in the `rand`, `regex`, `hashbrown`, `parking_lot` & `pyo3` crates when building with Rust nightly/unstable.
