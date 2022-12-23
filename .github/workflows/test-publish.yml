@@ -19,20 +19,18 @@ jobs:
             target: x86_64-unknown-linux-gnu
             architecture: x86_64
             use-cross: false
-            addl-build-args: --features=apply,generate,luau,fetch,foreach,python,self_update
-            build-nopython: true
+            addl-build-args: --features=apply,generate,luau,fetch,foreach,self_update,to
             default-features:
-            python_library_path: $Python3_ROOT_DIR/lib/libpython3*
+            addl-qsvdp-features: luau
           - os: ubuntu-latest
             os-name: linux
             target: x86_64-unknown-linux-musl
             architecture: x86_64
             musl-prep: true
             use-cross: false
-            addl-build-args: --features=apply,generate,fetch,foreach,python,self_update
-            build-nopython: true
+            addl-build-args: --features=apply,generate,fetch,foreach,self_update,to
             default-features:
-            python_library_path: $Python3_ROOT_DIR/lib/libpython3*
+            addl-qsvdp-features:
           # - os: ubuntu-latest
           #   os-name: linux
           #   target: i686-unknown-linux-gnu
@@ -47,47 +45,41 @@ jobs:
             target: x86_64-pc-windows-msvc
             architecture: x86_64
             use-cross: false
-            addl-build-args: --features=apply,generate,luau,fetch,python,self_update
-            build-nopython: true
+            addl-build-args: --features=apply,generate,luau,fetch,self_update,to
             default-features:
-            python_library_path: $env:Python3_ROOT_DIR/python*.dll
-          # - os: windows-latest
-          #   os-name: windows
-          #   target: i686-pc-windows-msvc
-          #   architecture: i686
-          #   use-cross: true
-          #   addl-build-args: --features=apply,generate,luau,fetch,self_update
-          #   build-nopython: false
-          #   default-features:
-          #   python_library_path:
+            addl-qsvdp-features: luau
+          - os: windows-latest
+            os-name: windows
+            target: i686-pc-windows-msvc
+            architecture: i686
+            use-cross: true
+            addl-build-args: --features=apply,generate,fetch,self_update
+            default-features:
+            addl-qsvdp-features:
           - os: windows-latest
             os-name: windows
             target: x86_64-pc-windows-gnu
             architecture: x86_64
             use-cross: false
-            addl-build-args: --features=apply,generate,luau,fetch,python,self_update
-            build-nopython: true
+            addl-build-args: --features=apply,generate,luau,fetch,self_update,to
             default-features: --no-default-features
-            python_library_path: $env:Python3_ROOT_DIR/python*.dll
+            addl-qsvdp-features: luau
           - os: macos-latest
             os-name: macos
             target: x86_64-apple-darwin
             architecture: x86_64
             use-cross: false
-            addl-build-args: --features=apply,generate,luau,fetch,foreach,python,self_update
-            build-nopython: true
+            addl-build-args: --features=apply,generate,luau,fetch,foreach,self_update,to
             default-features: --no-default-features
-            python_library_path: $Python3_ROOT_DIR/lib/libpython3*
+            addl-qsvdp-features: luau
           - os: macos-latest
             os-name: macos
             target: aarch64-apple-darwin
             architecture: aarch64
-            build-prep: true
             use-cross: true
-            addl-build-args: --features=apply,generate,luau,fetch,foreach,self_update
-            build-nopython: false
+            addl-build-args: --features=apply,generate,fetch,foreach,self_update
             default-features: --no-default-features
-            python_library_path:
+            addl-qsvdp-features:
           # - os: ubuntu-latest
           #   os-name: linux
           #   target: aarch64-unknown-linux-gnu
@@ -115,7 +107,7 @@ jobs:
           #   build-nopython: false
           #   default-features: --no-default-features
           #   python_library_path:
-
+ 
     steps:
     - name: Installing Rust toolchain
       uses: actions-rs/toolchain@v1
@@ -128,40 +120,11 @@ jobs:
       uses: actions/checkout@v3
       with:
         submodules: recursive
-        ref: 'master'
-    - uses: actions/setup-python@v4.4.0
-      with:
-        python-version: '3.11'
-    - name: build prep for aarch64-apple-darwin
-      if: ${{ matrix.job.build-prep }}
-      run: |
-        sudo xcode-select -s "/Applications/Xcode_12.5.1.app"
-        sudo rm -Rf /Library/Developer/CommandLineTools/SDKs/*
+        ref: ${{ needs.analyze-tags.outputs.previous-tag }}
     - name: build prep for x86_64-unknown-linux-musl
       if: ${{ matrix.job.musl-prep }}
       run: |
-        sudo apt-get update
-        sudo apt-get -y upgrade
         sudo apt-get install musl-tools
-    # - name: Build qsv without python
-    #   if: ${{ matrix.job.build-nopython }}
-    #   env:
-    #     RUSTFLAGS: --emit=asm
-    #   uses: actions-rs/cargo@v1
-    #   with:
-    #     command: build
-    #     use-cross: ${{ matrix.job.use-cross }}
-    #     toolchain: ${{ matrix.rust }}
-    #     args: --release --locked --bin qsv --target ${{ matrix.job.target }} --features=nopython_full ${{ matrix.job.default-features }}
-    # - name: Rename qsv without python to qsvnp
-    #   if: ${{ matrix.job.build-nopython }}
-    #   shell: bash
-    #   run: |
-    #     if [ "$RUNNER_OS" == "Windows" ]; then
-    #         mv -v target/${{ matrix.job.target }}/release/qsv.exe target/${{ matrix.job.target }}/release/qsvnp.exe
-    #     else
-    #         mv -v target/${{ matrix.job.target }}/release/qsv target/${{ matrix.job.target }}/release/qsvnp
-    #     fi
     - name: Build qsv
       env:
         RUSTFLAGS: --emit=asm
@@ -188,17 +151,17 @@ jobs:
         command: build
         use-cross: ${{ matrix.job.use-cross }}
         toolchain: ${{ matrix.rust }}
-        args: --release --locked --bin qsvdp --features=datapusher_plus --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}
+        args: --release --locked --bin qsvdp --features=datapusher_plus,${{ matrix.job.addl-qsvdp-features }} --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}
     - name: Copy binaries to working dir
       shell: bash
       run: |
         mkdir qsv-publish-testing
         rm target/${{ matrix.job.target }}/release/*.d 
         cp -v target/${{ matrix.job.target }}/release/qsv* qsv-publish-testing
-    # - name: bundle python shared library
-    #   if: ${{ matrix.job.build-nopython }}
-    #   run: |
-    #     cp -v ${{ matrix.job.python_library_path }} qsv-publish-testing
+    - name: Create README
+      shell: bash
+      run: |
+        cat docs/publishing_assets/README.txt docs/publishing_assets/qsv-${{ matrix.job.target }}.txt > qsv-publish-testing/README
     - name: zip up binaries
       run: 7z a -tzip qsv-publish-testing-${{ matrix.job.target }}.zip ./qsv-publish-testing/* -mx=9 -mmt=on
     - name: Upload zipped binaries to release
@@ -209,4 +172,3 @@ jobs:
         asset_name: qsv-publish-testing-${{ matrix.job.target }}-testing.zip
         overwrite: true
         tag: publish-testing    
- 
