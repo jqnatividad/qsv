@@ -11,8 +11,6 @@ sum, min/max values, min/max length, mean, stddev, variance & nullcount. The def
 set of statistics corresponds to statistics that can be computed efficiently on a stream
 of data (i.e., constant memory) and can work with arbitrarily large CSV files.
 
-Note that standard deviation for dates is returned in days, not in seconds.
-
 The following additional statistics require loading the entire file into memory:
 mode (multimodal aware), cardinality, median, quartiles and its related measures 
 (IQR, lower/upper fences and skewness).
@@ -21,6 +19,11 @@ Each column's data type is also inferred (NULL, Integer, String, Float, Date & D
 Note that the Date and DateTime data types are only inferred with the --infer-dates option 
 as its an expensive operation. The date formats recognized can be found at 
 https://github.com/jqnatividad/belt/tree/main/dateparser#accepted-date-formats.
+
+Summary statistics for dates are also computed when --infer-dates is enabled.
+Note that standard deviation for dates is returned in days, not seconds. Also date variance
+is currently not computed as the current streaming variance algorithm is not well suited to
+unix epoch timestamp values (see https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance).
 
 Unlike the sniff command, stats' data type inferences are GUARANTEED, as the entire file
 is scanned, and not just sampled.
