@@ -269,7 +269,9 @@ apply options:
     -c, --new-column <name>     Put the transformed values in a new column instead.
     -r, --rename <name>         New name for the transformed column.
     -C, --comparand=<string>    The string to compare against for replace & similarity operations.
+                                Also used with numtocurrency operation to specify currency symbol.
     -R, --replacement=<string>  The string to use for the replace & emptyreplace operations.
+                                Also used with numtocurrency operation to conversion rate.
     --prefer-dmy                Prefer to parse dates in dmy format. Otherwise, use mdy format.
                                 Only used with the DATEFMT subcommand.
     --keep-zero-time            If a formatted date ends with "T00:00:00+00:00", keep the time
