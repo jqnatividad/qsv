@@ -1098,31 +1098,11 @@ impl TypedMinMax {
                     None
                 }
             }
-            TDateTime => {
+            TDateTime | TDate => {
                 if let (Some(min), Some(max)) = (self.dates.min(), self.dates.max()) {
-                    // let mindate: DateTime<Utc> =
-                    // DateTime::from_utc(NaiveDateTime::from_timestamp_millis(*min).unwrap(), Utc);
-                    // let maxdate: DateTime<Utc> =
-                    // DateTime::from_utc(NaiveDateTime::from_timestamp_millis(*max).unwrap(), Utc);
-                    // if typ == TDate {
-                    //     let
-                    // }
-
-                    // Some((min.to_string(), max.to_string()))
                     Some((
-                        timestamp_ms_to_rfc3339(*min, TDateTime),
-                        timestamp_ms_to_rfc3339(*max, TDateTime),
-                    ))
-                } else {
-                    None
-                }
-            }
-            TDate => {
-                if let (Some(min), Some(max)) = (self.dates.min(), self.dates.max()) {
-                    // Some((min[..10].to_string(), max[..10].to_string()))
-                    Some((
-                        timestamp_ms_to_rfc3339(*min, TDate),
-                        timestamp_ms_to_rfc3339(*max, TDate),
+                        timestamp_ms_to_rfc3339(*min, typ),
+                        timestamp_ms_to_rfc3339(*max, typ),
                     ))
                 } else {
                     None
