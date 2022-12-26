@@ -97,20 +97,20 @@ fn generate_schema_with_optional_flags_and_validate_with_errors() {
 
     // validation report
     let validation_errors_expected = r#"row_number	field	error
-2	ExtractDate	"07/07/2014 00:00" is not a "date-time"
-3	ExtractDate	"2014-07-07 00:00" is not a "date-time"
-4	ExtractDate	"07/07/2014 00:00" is not a "date-time"
-5	ExtractDate	"07/07/2014 00:00" is not a "date-time"
-6	ExtractDate	"07/07/2014 00:00" is not a "date-time"
-7	ExtractDate	"07/07/2014 00:00" is not a "date-time"
-8	ExtractDate	"07/07/2014 00:00" is not a "date-time"
-9	ExtractDate	"07/07/2014 00:00" is not a "date-time"
-10	ExtractDate	"07/07/2014 00:00" is not a "date-time"
-11	ExtractDate	"07/07/2014 00:00" is not a "date-time"
-12	ExtractDate	"07/07/2014 00:00" is not a "date-time"
-13	ExtractDate	"07/07/2014 00:00" is not a "date-time"
-14	ExtractDate	"07/07/2014 00:00" is not a "date-time"
-15	ExtractDate	"07/07/2014 00:00" is not a "date-time"
+2	ExtractDate	"07/07/2014 00:00" is not a "date"
+3	ExtractDate	"2014-07-07 00:00" is not a "date"
+4	ExtractDate	"07/07/2014 00:00" is not a "date"
+5	ExtractDate	"07/07/2014 00:00" is not a "date"
+6	ExtractDate	"07/07/2014 00:00" is not a "date"
+7	ExtractDate	"07/07/2014 00:00" is not a "date"
+8	ExtractDate	"07/07/2014 00:00" is not a "date"
+9	ExtractDate	"07/07/2014 00:00" is not a "date"
+10	ExtractDate	"07/07/2014 00:00" is not a "date"
+11	ExtractDate	"07/07/2014 00:00" is not a "date"
+12	ExtractDate	"07/07/2014 00:00" is not a "date"
+13	ExtractDate	"07/07/2014 00:00" is not a "date"
+14	ExtractDate	"07/07/2014 00:00" is not a "date"
+15	ExtractDate	"07/07/2014 00:00" is not a "date"
 "#;
 
     // expecting invalid rows, so confirm there ARE output files generated
