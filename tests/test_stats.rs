@@ -630,6 +630,25 @@ fn stats_with_date_inference() {
 }
 
 #[test]
+fn stats_with_date_type() {
+    let wrk = Workdir::new("stats_with_date_inference");
+    let test_file = wrk.load_test_file("boston311-100-notime.csv");
+
+    let mut cmd = wrk.command("stats");
+    cmd.arg("--everything")
+        .arg(test_file)
+        .arg("--infer-dates")
+        .arg("--dates-whitelist")
+        .arg("all");
+
+    let got: String = wrk.stdout(&mut cmd);
+
+    let expected = wrk.load_test_resource("boston311-100-everything-datenotime-stats.csv");
+
+    assert_eq!(got, expected.replace("\r\n", "\n").trim_end());
+}
+
+#[test]
 fn stats_typesonly() {
     let wrk = Workdir::new("stats_typesonly");
     let test_file = wrk.load_test_file("boston311-100.csv");
