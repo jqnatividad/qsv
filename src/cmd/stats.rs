@@ -20,10 +20,10 @@ Note that the Date and DateTime data types are only inferred with the --infer-da
 as its an expensive operation. The date formats recognized can be found at 
 https://github.com/jqnatividad/belt/tree/main/dateparser#accepted-date-formats.
 
-Summary statistics for dates are also computed when --infer-dates is enabled.
-Note that standard deviation for dates is returned in days, not seconds. Also date variance
-is currently not computed as the current streaming variance algorithm is not well suited to
-unix epoch timestamp values (see https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance).
+Summary statistics for dates are also computed when --infer-dates is enabled, with DateTime
+results in rfc3339 format and Date results in "yyyy-mm-dd" format. Standard deviation is 
+returned in days, not seconds. Date variance is currently not computed as the current
+streaming variance algorithm is not well suited to unix epoch timestamp values.
 
 Unlike the sniff command, stats' data type inferences are GUARANTEED, as the entire file
 is scanned, and not just sampled.
@@ -462,12 +462,16 @@ fn round_num(dec_f64: f64, places: u32) -> String {
         .to_string()
 }
 
-fn unixtime_to_isodate(unixtime: f64) -> String {
-    chrono::DateTime::<Utc>::from_utc(
-        chrono::NaiveDateTime::from_timestamp_opt(unixtime as i64, 0).unwrap_or_default(),
+fn timestamp_ms_to_rfc3339(timestamp: i64, typ: FieldType) -> String {
+    let date_val = chrono::DateTime::<Utc>::from_utc(
+        chrono::NaiveDateTime::from_timestamp_millis(timestamp).unwrap_or_default(),
         chrono::offset::Utc,
     )
-    .to_string()
+    .to_rfc3339();
+    if typ == TDate {
+        return date_val[..10].to_string();
+    }
+    date_val
 }
 
 impl Stats {
@@ -567,7 +571,7 @@ impl Stats {
                     DMY_PREFERENCE.load(Ordering::Relaxed),
                 ) {
                     #[allow(clippy::cast_precision_loss)]
-                    let n = parsed_date.timestamp() as f64;
+                    let n = parsed_date.timestamp_millis() as f64;
                     if let Some(v) = self.median.as_mut() {
                         v.add(n);
                     }
@@ -648,16 +652,16 @@ impl Stats {
                 pieces.push(round_num(v.stddev(), round_places));
                 pieces.push(round_num(v.variance(), round_places));
             } else {
-                pieces.push(unixtime_to_isodate(v.mean()));
+                pieces.push(timestamp_ms_to_rfc3339(v.mean() as i64, typ));
                 // instead of returning stdev in seconds, let's return it in
                 // days as it easier to handle
-                // 86_400 = number of seconds in a day, always round to 5 decimal places
-                pieces.push(round_num(v.stddev() / 86_400_f64, 5));
+                // 86_400_000 = number of milliseconds in a day, always round to 5 decimal places
+                pieces.push(round_num(v.stddev() / 86_400_000.0_f64, 5));
                 // we don't know how to compute variance on timestamps
                 // it appears the current algorithm we use is not suited to the large timestamp
                 // values as the values we got during testing don't make sense, so
-                // leave it empty for now TODO: use alternate algorithms that are
-                // not sensitive to numerical instability and arithmetic overflow
+                // leave it empty for now
+                // TODO: explore alternate algorithms for calculating variance
                 // see https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
                 pieces.push(empty());
             }
@@ -680,7 +684,7 @@ impl Stats {
             }
         }) {
             if typ == TDateTime || typ == TDate {
-                pieces.push(unixtime_to_isodate(v));
+                pieces.push(timestamp_ms_to_rfc3339(v as i64, typ));
             } else {
                 pieces.push(round_num(v, round_places));
             }
@@ -730,16 +734,16 @@ impl Stats {
                 let skewness = (2.0f64.mul_add(-q2, q3) + q1) / iqr;
 
                 if typ == TDateTime || typ == TDate {
-                    pieces.push(unixtime_to_isodate(lof));
-                    pieces.push(unixtime_to_isodate(lif));
+                    pieces.push(timestamp_ms_to_rfc3339(lof as i64, typ));
+                    pieces.push(timestamp_ms_to_rfc3339(lif as i64, typ));
 
-                    pieces.push(unixtime_to_isodate(q1));
-                    pieces.push(unixtime_to_isodate(q2)); // q2 = median
-                    pieces.push(unixtime_to_isodate(q3));
+                    pieces.push(timestamp_ms_to_rfc3339(q1 as i64, typ));
+                    pieces.push(timestamp_ms_to_rfc3339(q2 as i64, typ)); // q2 = median
+                    pieces.push(timestamp_ms_to_rfc3339(q3 as i64, typ));
                     pieces.push(round_num(iqr, round_places));
 
-                    pieces.push(unixtime_to_isodate(uif));
-                    pieces.push(unixtime_to_isodate(uof));
+                    pieces.push(timestamp_ms_to_rfc3339(uif as i64, typ));
+                    pieces.push(timestamp_ms_to_rfc3339(uof as i64, typ));
                 } else {
                     pieces.push(round_num(lof, round_places));
                     pieces.push(round_num(lif, round_places));
@@ -850,13 +854,12 @@ impl FieldType {
             if let Ok(parsed_date) =
                 parse_with_preference(string, DMY_PREFERENCE.load(Ordering::Relaxed))
             {
-                // with rfc3339 format, time component
-                // starts at position 17. If its shorter than 17,
-                // its a plain date, otherwise, its a datetime.
-                if parsed_date.to_string().len() >= 17 {
-                    return TDateTime;
+                // get date in rfc3339 format, if it ends with "T00:00:00+00:00"
+                // its a Date type, otherwise, its DateTime.
+                if parsed_date.to_rfc3339().ends_with("T00:00:00+00:00") {
+                    return TDate;
                 }
-                return TDate;
+                return TDateTime;
             }
         }
         TString
@@ -1002,7 +1005,7 @@ struct TypedMinMax {
     str_len:  MinMax<usize>,
     integers: MinMax<i64>,
     floats:   MinMax<f64>,
-    dates:    MinMax<String>,
+    dates:    MinMax<i64>,
 }
 
 impl TypedMinMax {
@@ -1038,14 +1041,13 @@ impl TypedMinMax {
                 self.floats.add(n as f64);
             }
             TDate | TDateTime => {
-                let n = unsafe {
-                    parse_with_preference(
-                        str::from_utf8_unchecked(sample),
-                        DMY_PREFERENCE.load(Ordering::Relaxed),
-                    )
-                    .unwrap_unchecked()
-                };
-                self.dates.add(n.to_string());
+                let dt = parse_with_preference(
+                    &String::from_utf8_lossy(sample),
+                    DMY_PREFERENCE.load(Ordering::Relaxed),
+                )
+                .unwrap_or_default();
+                // self.dates.add(dt.to_rfc3339());
+                self.dates.add(dt.timestamp_millis());
             }
         }
     }
@@ -1096,9 +1098,32 @@ impl TypedMinMax {
                     None
                 }
             }
-            TDate | TDateTime => {
+            TDateTime => {
                 if let (Some(min), Some(max)) = (self.dates.min(), self.dates.max()) {
-                    Some((min.to_string(), max.to_string()))
+                    // let mindate: DateTime<Utc> =
+                    // DateTime::from_utc(NaiveDateTime::from_timestamp_millis(*min).unwrap(), Utc);
+                    // let maxdate: DateTime<Utc> =
+                    // DateTime::from_utc(NaiveDateTime::from_timestamp_millis(*max).unwrap(), Utc);
+                    // if typ == TDate {
+                    //     let
+                    // }
+
+                    // Some((min.to_string(), max.to_string()))
+                    Some((
+                        timestamp_ms_to_rfc3339(*min, TDateTime),
+                        timestamp_ms_to_rfc3339(*max, TDateTime),
+                    ))
+                } else {
+                    None
+                }
+            }
+            TDate => {
+                if let (Some(min), Some(max)) = (self.dates.min(), self.dates.max()) {
+                    // Some((min[..10].to_string(), max[..10].to_string()))
+                    Some((
+                        timestamp_ms_to_rfc3339(*min, TDate),
+                        timestamp_ms_to_rfc3339(*max, TDate),
+                    ))
                 } else {
                     None
                 }

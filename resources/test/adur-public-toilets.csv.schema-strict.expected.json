@@ -6,7 +6,7 @@
   "properties": {
     "ExtractDate": {
       "description": "ExtractDate column from adur-public-toilets.csv",
-      "format": "date-time",
+      "format": "date",
       "type": [
         "string",
         "null"
