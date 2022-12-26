@@ -1,19 +1,18 @@
 static USAGE: &str = r#"
 Computes summary statistics on CSV data.
 
-Summary statistics includes sum, min/max, min/max length, mean, stddev, variance,
+Summary statistics includes sum, min/max/range, min/max length, mean, stddev, variance,
 nullcount, quartiles, interquartile range (IQR), lower/upper fences, skewness, median, 
 mode/s, & cardinality. Note that some statistics are expensive to compute and requires
 loading the entire file into memory, so they must be enabled explicitly. 
 
 By default, the following statistics are reported for *every* column in the CSV data:
-sum, min/max values, min/max length, mean, stddev, variance & nullcount. The default
+sum, min/max/range values, min/max length, mean, stddev, variance & nullcount. The default
 set of statistics corresponds to statistics that can be computed efficiently on a stream
 of data (i.e., constant memory) and can work with arbitrarily large CSV files.
 
 The following additional statistics require loading the entire file into memory:
-mode (multimodal aware), cardinality, median, quartiles and its related measures 
-(IQR, lower/upper fences and skewness).
+mode, cardinality, median, quartiles & its related measures (IQR, lower/upper fences & skewness).
 
 Each column's data type is also inferred (NULL, Integer, String, Float, Date & DateTime). 
 Note that the Date and DateTime data types are only inferred with the --infer-dates option 
@@ -21,7 +20,7 @@ as its an expensive operation. The date formats recognized can be found at
 https://github.com/jqnatividad/belt/tree/main/dateparser#accepted-date-formats.
 
 Summary statistics for dates are also computed when --infer-dates is enabled, with DateTime
-results in rfc3339 format and Date results in "yyyy-mm-dd" format. Standard deviation is 
+results in rfc3339 format and Date results in "yyyy-mm-dd" format. Date range & stddev are 
 returned in days, not seconds. Date variance is currently not computed as the current
 streaming variance algorithm is not well suited to unix epoch timestamp values.
 
@@ -54,6 +53,8 @@ stats options:
                               This requires loading all CSV data in memory.
     --round <decimal_places>  Round statistics to <decimal_places>. Rounding is done following
                               Midpoint Nearest Even (aka "Bankers Rounding") rule.
+                              Date range & stddev are always at least 5 decimal places as
+                              they are reported in days, and 5 places gives us millisecond precision.
                               [default: 4]
     --nulls                   Include NULLs in the population size for computing
                               mean and standard deviation.
@@ -324,14 +325,15 @@ impl Args {
             return csv::StringRecord::from(vec!["field", "type"]);
         }
 
-        // with --everything, we have 22 columns at most
-        let mut fields = Vec::with_capacity(22);
+        // with --everything, we have 23 columns at most
+        let mut fields = Vec::with_capacity(23);
         fields.extend_from_slice(&[
             "field",
             "type",
             "sum",
             "min",
             "max",
+            "range",
             "min_length",
             "max_length",
             "mean",
@@ -597,8 +599,8 @@ impl Stats {
 
         let typ = self.typ;
         // prealloc memory for performance
-        // we have 22 columns at most with --everything
-        let mut pieces = Vec::with_capacity(22);
+        // we have 23 columns at most with --everything
+        let mut pieces = Vec::with_capacity(23);
         let empty = String::new;
 
         // type
@@ -623,11 +625,17 @@ impl Stats {
             pieces.push(empty());
         }
 
-        // min/max
-        if let Some(mm) = self.minmax.as_ref().and_then(|mm| mm.show(typ)) {
+        // min/max/range
+        if let Some(mm) = self
+            .minmax
+            .as_ref()
+            .and_then(|mm| mm.show(typ, round_places))
+        {
             pieces.push(mm.0);
             pieces.push(mm.1);
+            pieces.push(mm.2);
         } else {
+            pieces.push(empty());
             pieces.push(empty());
             pieces.push(empty());
         }
@@ -655,8 +663,12 @@ impl Stats {
                 pieces.push(timestamp_ms_to_rfc3339(v.mean() as i64, typ));
                 // instead of returning stdev in seconds, let's return it in
                 // days as it easier to handle
-                // 86_400_000 = number of milliseconds in a day, always round to 5 decimal places
-                pieces.push(round_num(v.stddev() / 86_400_000.0_f64, 5));
+                // 86_400_000 = number of milliseconds in a day.
+                // Round to at least 5 decimal places
+                pieces.push(round_num(
+                    v.stddev() / 86_400_000.0_f64,
+                    u32::max(round_places, 5),
+                ));
                 // we don't know how to compute variance on timestamps
                 // it appears the current algorithm we use is not suited to the large timestamp
                 // values as the values we got during testing don't make sense, so
@@ -997,8 +1009,8 @@ impl Commute for TypedSum {
     }
 }
 
-/// `TypedMinMax` keeps track of minimum/maximum values for each possible type
-/// where min/max makes sense.
+/// `TypedMinMax` keeps track of minimum/maximum/range values for each possible type
+/// where min/max/range makes sense.
 #[derive(Clone, Default)]
 struct TypedMinMax {
     strings:  MinMax<Vec<u8>>,
@@ -1067,14 +1079,14 @@ impl TypedMinMax {
         }
     }
 
-    fn show(&self, typ: FieldType) -> Option<(String, String)> {
+    fn show(&self, typ: FieldType, round_places: u32) -> Option<(String, String, String)> {
         match typ {
             TNull => None,
             TString => {
                 if let (Some(min), Some(max)) = (self.strings.min(), self.strings.max()) {
                     let min = String::from_utf8_lossy(min).to_string();
                     let max = String::from_utf8_lossy(max).to_string();
-                    Some((min, max))
+                    Some((min, max, "".to_string()))
                 } else {
                     None
                 }
@@ -1085,6 +1097,7 @@ impl TypedMinMax {
                     Some((
                         buffer.format(*min).to_owned(),
                         buffer.format(*max).to_owned(),
+                        buffer.format(*max - *min).to_owned(),
                     ))
                 } else {
                     None
@@ -1096,6 +1109,7 @@ impl TypedMinMax {
                     Some((
                         buffer.format(*min).to_owned(),
                         buffer.format(*max).to_owned(),
+                        round_num(*max - *min, round_places),
                     ))
                 } else {
                     None
@@ -1106,6 +1120,11 @@ impl TypedMinMax {
                     Some((
                         timestamp_ms_to_rfc3339(*min, typ),
                         timestamp_ms_to_rfc3339(*max, typ),
+                        // 86_400_000 = number of milliseconds per day
+                        round_num(
+                            (*max - *min) as f64 / 86_400_000.0_f64,
+                            u32::max(round_places, 5),
+                        ),
                     ))
                 } else {
                     None
