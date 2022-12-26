@@ -953,7 +953,7 @@ impl TypedSum {
                 if let Some(ref mut float) = self.float {
                     *float += from_bytes::<f64>(sample);
                 } else {
-                    // so we don't panic on overflow, use saturating_add
+                    // so we don't panic on overflow/underflow, use saturating_add
                     self.integer = self.integer.saturating_add(from_bytes::<i64>(sample));
                 }
             }
@@ -1016,6 +1016,8 @@ impl TypedMinMax {
             return;
         }
         self.strings.add(sample.to_vec());
+        // we can use unwrap_unchecked with confidence
+        // below since we know the data type domains of the sample
         match typ {
             TString | TNull => {}
             TFloat => {
@@ -1041,12 +1043,13 @@ impl TypedMinMax {
                 self.floats.add(n as f64);
             }
             TDate | TDateTime => {
-                let dt = parse_with_preference(
-                    &String::from_utf8_lossy(sample),
-                    DMY_PREFERENCE.load(Ordering::Relaxed),
-                )
-                .unwrap_or_default();
-                // self.dates.add(dt.to_rfc3339());
+                let dt = unsafe {
+                    parse_with_preference(
+                        &String::from_utf8_lossy(sample),
+                        DMY_PREFERENCE.load(Ordering::Relaxed),
+                    )
+                    .unwrap_unchecked()
+                };
                 self.dates.add(dt.timestamp_millis());
             }
         }
