@@ -1179,6 +1179,7 @@ impl TypedMinMax {
                         timestamp_ms_to_rfc3339(*min, typ),
                         timestamp_ms_to_rfc3339(*max, typ),
                         // 86_400_000 = number of milliseconds per day
+                        #[allow(clippy::cast_precision_loss)]
                         round_num(
                             (*max - *min) as f64 / 86_400_000.0_f64,
                             u32::max(round_places, 5),
