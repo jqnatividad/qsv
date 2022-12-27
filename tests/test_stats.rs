@@ -557,9 +557,9 @@ fn stats_prefer_dmy() {
 
     wrk.create("in2.csv", got);
 
-    // removed variance column as its causing flaky CI test for float values
+    // removed variance & stddev columns as its causing flaky CI test for float values
     let mut cmd = wrk.command("select");
-    cmd.arg("!11").arg("in2.csv");
+    cmd.arg("1-9,12-").arg("in2.csv");
 
     let got2: String = wrk.stdout(&mut cmd);
     let expected2 = wrk.load_test_resource("boston311-100-stats.csv");
@@ -582,9 +582,9 @@ fn stats_prefer_mdy() {
 
     wrk.create("in2.csv", got);
 
-    // removed variance column as its causing flaky CI test for float values
+    // removed variance & stddev columns as its causing flaky CI test for float values
     let mut cmd = wrk.command("select");
-    cmd.arg("!11").arg("in2.csv");
+    cmd.arg("1-9,12-").arg("in2.csv");
 
     let got2: String = wrk.stdout(&mut cmd);
 
@@ -607,9 +607,9 @@ fn stats_rounding() {
 
     wrk.create("in2.csv", got);
 
-    // removed variance column as its causing flaky CI test for float values
+    // removed variance & stddev columns as its causing flaky CI test for float values
     let mut cmd = wrk.command("select");
-    cmd.arg("!11").arg("in2.csv");
+    cmd.arg("1-9,12-").arg("in2.csv");
 
     let got2: String = wrk.stdout(&mut cmd);
     let expected2 = wrk.load_test_resource("boston311-100-everything-8places-stats.csv");
@@ -629,9 +629,9 @@ fn stats_no_date_inference() {
 
     wrk.create("in2.csv", got);
 
-    // removed variance column as its causing flaky CI test for float values
+    // removed variance & stddev columns as its causing flaky CI test for float values
     let mut cmd = wrk.command("select");
-    cmd.arg("!11").arg("in2.csv");
+    cmd.arg("1-9,12-").arg("in2.csv");
 
     let got2: String = wrk.stdout(&mut cmd);
     let expected2 = wrk.load_test_resource("boston311-100-everything-nodate-stats.csv");
@@ -655,9 +655,9 @@ fn stats_with_date_inference() {
 
     wrk.create("in2.csv", got);
 
-    // removed variance column as its causing flaky CI test for float values
+    // removed variance & stddev columns as its causing flaky CI test for float values
     let mut cmd = wrk.command("select");
-    cmd.arg("!11").arg("in2.csv");
+    cmd.arg("1-9,12-").arg("in2.csv");
 
     let got2: String = wrk.stdout(&mut cmd);
     let expected2 = wrk.load_test_resource("boston311-100-everything-date-stats.csv");
@@ -681,9 +681,9 @@ fn stats_with_date_type() {
 
     wrk.create("in2.csv", got);
 
-    // removed variance column as its causing flaky CI test for float values
+    // removed variance & stddev columns as its causing flaky CI test for float values
     let mut cmd = wrk.command("select");
-    cmd.arg("!11").arg("in2.csv");
+    cmd.arg("1-9,12-").arg("in2.csv");
 
     let got2: String = wrk.stdout(&mut cmd);
     let expected2 = wrk.load_test_resource("boston311-100-everything-datenotime-stats.csv");
