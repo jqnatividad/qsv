@@ -1043,9 +1043,9 @@ dependencies = [
 
 [[package]]
 name = "csvs_convert"
-version = "0.7.7"
+version = "0.7.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "148a3f96b5689fca6cbf856f934ef1ede6bc30c8e5f65caf02fa1f7e3b199363"
+checksum = "2d913999c3826733ceaa43ae917044511b0982cb1c0286453f5123c78398c8bd"
 dependencies = [
  "arrow",
  "chrono",
@@ -1053,6 +1053,7 @@ dependencies = [
  "crossbeam-channel",
  "csv",
  "csv-index",
+ "getrandom",
  "lazy_static",
  "minijinja",
  "parquet",
@@ -1551,8 +1552,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c05aeb6a22b8f62540c194aac980f2115af067bfe15a0734d7277a768d396b31"
 dependencies = [
  "cfg-if",
+ "js-sys",
  "libc",
  "wasi 0.11.0+wasi-snapshot-preview1",
+ "wasm-bindgen",
 ]
 
 [[package]]
