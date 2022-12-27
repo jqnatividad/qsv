@@ -3,8 +3,8 @@ Computes summary statistics on CSV data.
 
 Summary statistics includes sum, min/max/range, min/max length, mean, stddev, variance,
 nullcount, quartiles, interquartile range (IQR), lower/upper fences, skewness, median, 
-mode/s, & cardinality. Note that some statistics are expensive to compute and requires
-loading the entire file into memory, so they must be enabled explicitly. 
+cardinality, mode/s & antimode/s. Note that some statistics are expensive to compute and
+requires loading the entire file into memory, so they must be enabled explicitly. 
 
 By default, the following statistics are reported for *every* column in the CSV data:
 sum, min/max/range values, min/max length, mean, stddev, variance & nullcount. The default
@@ -12,7 +12,15 @@ set of statistics corresponds to statistics that can be computed efficiently on 
 of data (i.e., constant memory) and can work with arbitrarily large CSV files.
 
 The following additional statistics require loading the entire file into memory:
-mode, cardinality, median, quartiles & its related measures (IQR, lower/upper fences & skewness).
+cardinality, mode/antimode, median, quartiles and its related measures 
+(Interquartile Range (IQR), lower/upper fences & skewness).
+
+Antimode is the least frequently occurring non-zero score and is the opposite of mode.
+It return "*ALL" if all the values are unique, and only returns a preview of the first
+10 antimodes, for readability purposes.
+
+If you need all the values of a column, run the `frequency` command with --limit set to zero.
+The tail of the resulting frequency table for each column will have all its antimode values.
 
 Each column's data type is also inferred (NULL, Integer, String, Float, Date & DateTime). 
 Note that the Date and DateTime data types are only inferred with the --infer-dates option 
@@ -325,8 +333,8 @@ impl Args {
             return csv::StringRecord::from(vec!["field", "type"]);
         }
 
-        // with --everything, we have 23 columns at most
-        let mut fields = Vec::with_capacity(23);
+        // with --everything, we have 28 columns at most
+        let mut fields = Vec::with_capacity(28);
         fields.extend_from_slice(&[
             "field",
             "type",
@@ -358,11 +366,16 @@ impl Args {
                 "skewness",
             ]);
         }
-        if self.flag_mode || all {
-            fields.push("mode");
-        }
         if self.flag_cardinality || all {
             fields.push("cardinality");
+        }
+        if self.flag_mode || all {
+            fields.push("mode");
+            fields.push("mode_count");
+            fields.push("mode_occurrences");
+            fields.push("antimode");
+            fields.push("antimode_count");
+            fields.push("antimode_occurrences");
         }
         csv::StringRecord::from(fields)
     }
@@ -599,8 +612,8 @@ impl Stats {
 
         let typ = self.typ;
         // prealloc memory for performance
-        // we have 23 columns at most with --everything
-        let mut pieces = Vec::with_capacity(23);
+        // we have 28 columns at most with --everything
+        let mut pieces = Vec::with_capacity(28);
         let empty = String::new;
 
         // type
@@ -775,25 +788,70 @@ impl Stats {
         // mode/modes & cardinality
         match self.modes.as_mut() {
             None => {
-                if self.which.mode {
+                if self.which.cardinality {
                     pieces.push(empty());
                 }
-                if self.which.cardinality {
+                if self.which.mode {
+                    pieces.push(empty());
+                    pieces.push(empty());
+                    pieces.push(empty());
                     pieces.push(empty());
                 }
             }
             Some(ref mut v) => {
-                if self.which.mode {
-                    pieces.push(
-                        v.modes()
-                            .iter()
-                            .map(|c| unsafe { String::from_utf8_unchecked(c.clone()) })
-                            .join(","),
-                    );
-                }
                 if self.which.cardinality {
                     let mut buffer = itoa::Buffer::new();
                     pieces.push(buffer.format(v.cardinality()).to_owned());
+                }
+                if self.which.mode {
+                    // mode/s
+                    let (modes_result, mode_occurrences) = v.modes();
+                    let modes_count = modes_result.len();
+                    let modes_list = modes_result
+                        .iter()
+                        .map(|c| String::from_utf8_lossy(c))
+                        .join(",");
+                    pieces.push(modes_list);
+                    pieces.push(modes_count.to_string());
+                    pieces.push(mode_occurrences.to_string());
+
+                    // antimode/s
+                    if mode_occurrences == 0 {
+                        // all the values are unique
+                        // so instead of returning everything, just say *ALL
+                        pieces.push("*ALL".to_string());
+                        pieces.push("0".to_string());
+                        pieces.push("1".to_string());
+                    } else {
+                        let (antimodes_result, antimodes_count, antimode_occurrences) =
+                            v.antimodes();
+                        let mut antimodes_list;
+
+                        // We only show the first 10 antimodes
+                        if antimodes_count > 10 {
+                            antimodes_list = "*PREVIEW: ".to_string();
+                            let preview = antimodes_result
+                                .iter()
+                                .map(|c| String::from_utf8_lossy(c))
+                                .take(10)
+                                .join(",");
+                            antimodes_list.push_str(&preview);
+                        } else {
+                            antimodes_list = antimodes_result
+                                .iter()
+                                .map(|c| String::from_utf8_lossy(c))
+                                .join(",");
+                        }
+                        // and truncate at 100 characters and add an ellipsis
+                        if antimodes_list.len() > 100 {
+                            antimodes_list.truncate(100);
+                            antimodes_list.push_str("...");
+                        }
+
+                        pieces.push(antimodes_list);
+                        pieces.push(antimodes_count.to_string());
+                        pieces.push(antimode_occurrences.to_string());
+                    }
                 }
             }
         }
