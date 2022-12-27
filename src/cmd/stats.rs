@@ -1144,7 +1144,7 @@ impl TypedMinMax {
                 if let (Some(min), Some(max)) = (self.strings.min(), self.strings.max()) {
                     let min = String::from_utf8_lossy(min).to_string();
                     let max = String::from_utf8_lossy(max).to_string();
-                    Some((min, max, "".to_string()))
+                    Some((min, max, String::new()))
                 } else {
                     None
                 }
