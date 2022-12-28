@@ -378,6 +378,7 @@ impl Config {
     }
 
     fn autoindex_file(&self) {
+        use io::prelude::*;
         // autoindex should never panic. It should silently fail as its a "convenience fn"
         // that's why we have a lot of let-else returns, in lieu of unwraps
         let Some(path_buf) = &self.path else { return };
@@ -387,7 +388,10 @@ impl Config {
         let Ok(idxfile) = fs::File::create(pidx) else { return };
         let mut wtr = io::BufWriter::new(idxfile);
         match csv_index::RandomAccessSimple::create(&mut rdr, &mut wtr) {
-            Ok(_) => debug!("autoindex of {path_buf:?} successful."),
+            Ok(_) => {
+                wtr.flush().unwrap();
+                debug!("autoindex of {path_buf:?} successful.");
+            }
             Err(e) => debug!("autoindex of {path_buf:?} failed: {e}"),
         }
     }
