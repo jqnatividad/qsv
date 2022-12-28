@@ -382,10 +382,10 @@ impl Config {
         // autoindex should never panic. It should silently fail as its a "convenience fn"
         // that's why we have a lot of let-else returns, in lieu of unwraps
         let Some(path_buf) = &self.path else { return };
-        let Ok(mut rdr) = self.reader_file() else { return };
 
         let pidx = util::idx_path(Path::new(path_buf));
         let Ok(idxfile) = fs::File::create(pidx) else { return };
+        let Ok(mut rdr) = self.reader_file() else { return };
         let mut wtr = io::BufWriter::new(idxfile);
         match csv_index::RandomAccessSimple::create(&mut rdr, &mut wtr) {
             Ok(_) => {
