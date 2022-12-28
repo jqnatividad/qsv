@@ -1,4 +1,4 @@
-use std::fs;
+use std::{fs, thread, time};
 
 use filetime::{set_file_times, FileTime};
 
@@ -83,6 +83,9 @@ fn index_outdated_stats_autoindex() {
         future_time(FileTime::from_last_access_time(&md)),
     )
     .unwrap();
+
+    // sleep for one second to ensure the filesystem metadata is up to date
+    thread::sleep(time::Duration::from_millis(1000));
 
     // stats should NOT fail if the index is stale and
     // QSV_AUTOINDEX is set
