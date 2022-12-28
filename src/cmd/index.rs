@@ -54,5 +54,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut rdr = rconfig.reader_file()?;
     let mut wtr = io::BufWriter::new(fs::File::create(pidx)?);
     RandomAccessSimple::create(&mut rdr, &mut wtr)?;
+    io::Write::flush(&mut wtr)?;
     Ok(())
 }
