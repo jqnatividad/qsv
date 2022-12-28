@@ -76,8 +76,6 @@ fn index_outdated_stats_autoindex() {
         ],
     );
 
-    std::env::set_var("QSV_AUTOINDEX", "1");
-
     let md = fs::metadata(wrk.path("in.csv.idx")).unwrap();
     set_file_times(
         wrk.path("in.csv"),
@@ -89,11 +87,9 @@ fn index_outdated_stats_autoindex() {
     // stats should NOT fail if the index is stale and
     // QSV_AUTOINDEX is set
     let mut cmd = wrk.command("stats");
-    cmd.arg("in.csv");
+    cmd.env("QSV_AUTOINDEX", "1").arg("in.csv");
 
     wrk.assert_success(&mut cmd);
-
-    std::env::remove_var("QSV_AUTOINDEX");
 }
 
 fn future_time(ft: FileTime) -> FileTime {
