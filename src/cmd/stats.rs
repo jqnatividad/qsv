@@ -105,7 +105,6 @@ use std::{
     sync::atomic::{AtomicBool, Ordering},
 };
 
-use chrono::prelude::*;
 use itertools::Itertools;
 use once_cell::sync::OnceCell;
 use qsv_dateparser::parse_with_preference;
@@ -468,7 +467,13 @@ pub struct Stats {
 fn round_num(dec_f64: f64, places: u32) -> String {
     use rust_decimal::prelude::*;
 
-    let dec_num = Decimal::try_from(dec_f64).unwrap_or_default();
+    // use from_f64_retain, so we have all the excess bits before rounding with
+    // round_dp_with_strategy as from_f64 will prematurely round when it drops the excess bits
+    let Some(dec_num) = Decimal::from_f64_retain(dec_f64) else {
+        let msg = format!(r#"Failed to convert to decimal "{dec_f64}""#);
+        log::error!("{msg}");
+        return msg;
+    };
 
     // round using Midpoint Nearest Even Rounding Strategy AKA "Bankers Rounding."
     // https://docs.rs/rust_decimal/latest/rust_decimal/enum.RoundingStrategy.html#variant.MidpointNearestEven
@@ -478,11 +483,14 @@ fn round_num(dec_f64: f64, places: u32) -> String {
 }
 
 fn timestamp_ms_to_rfc3339(timestamp: i64, typ: FieldType) -> String {
-    let date_val = chrono::DateTime::<Utc>::from_utc(
-        chrono::NaiveDateTime::from_timestamp_millis(timestamp).unwrap_or_default(),
-        chrono::offset::Utc,
+    use chrono::prelude::*;
+
+    let date_val = DateTime::<Utc>::from_utc(
+        NaiveDateTime::from_timestamp_millis(timestamp).unwrap_or_default(),
+        Utc,
     )
     .to_rfc3339();
+
     if typ == TDate {
         return date_val[..10].to_string();
     }

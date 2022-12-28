@@ -595,7 +595,7 @@ fn stats_prefer_mdy() {
 
 #[test]
 fn stats_rounding() {
-    let wrk = Workdir::new("stats_prefer_mdy");
+    let wrk = Workdir::new("stats_rounding");
     let test_file = wrk.load_test_file("boston311-100.csv");
 
     let mut cmd = wrk.command("stats");
