@@ -630,15 +630,8 @@ impl Stats {
         // sum
         if let Some(sum) = self.sum.as_ref().and_then(|sum| sum.show(typ)) {
             if typ == FieldType::TFloat {
-                let sum_decimal = rust_decimal::Decimal::from_str(&sum).unwrap();
-                pieces.push(
-                    sum_decimal
-                        .round_dp_with_strategy(
-                            round_places,
-                            rust_decimal::RoundingStrategy::MidpointNearestEven,
-                        )
-                        .to_string(),
-                );
+                let f64_val = sum.parse::<f64>().unwrap();
+                pieces.push(round_num(f64_val, round_places));
             } else {
                 pieces.push(sum);
             }
