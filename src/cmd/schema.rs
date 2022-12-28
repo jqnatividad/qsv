@@ -8,7 +8,8 @@ Running `validate` command on original input CSV with generated schema
 should not flag any invalid records.
 
 Generated schema file has `.schema.json` postfix appended. For example, 
-for input `mydata.csv`, schema file would be `mydata.csv.schema.json`. 
+for input `mydata.csv`, schema file would be `mydata.csv.schema.json`.
+
 If piped from stdin, then schema file would be `stdin.csv.schema.json` and
 a `stdin.csv` file will created with stdin's contents as well.
 
@@ -21,10 +22,13 @@ Usage:
     qsv schema --help
 
 Schema options:
-    --enum-threshold NUM       Cardinality threshold for adding enum
-                               constraints [default: 50]
-    --strict-dates             Enforce Internet Datetime format (RFC-3339)
-                               for detected datetime columns
+    --enum-threshold NUM       Cardinality threshold for adding enum constraints
+                               [default: 50]
+    --strict-dates             Enforce Internet Datetime format (RFC-3339) for
+                               detected date/datetime columns. Otherwise, even if
+                               columns are inferred as date/datetime, they are set
+                               to type "string" in the schema instead of
+                               "date" or "date-time".
     --pattern-columns <args>   Select columns to add pattern constraints
     --dates-whitelist <list>   The case-insensitive patterns to look for when 
                                shortlisting fields for date inference.
@@ -33,7 +37,8 @@ Schema options:
                                Set to "all" to inspect ALL fields for
                                date/datetime types.
                                [default: date,time,due,open,close,created]
-    --prefer-dmy               Prefer to parse dates in dmy format. Otherwise, use mdy format.
+    --prefer-dmy               Prefer to parse dates in dmy format.
+                               Otherwise, use mdy format.
     --stdout                   Send generated JSON schema file to stdout instead.
     -j, --jobs <arg>           The number of jobs to run in parallel.
                                When not set, the number of jobs is set to the
