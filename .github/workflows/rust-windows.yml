@@ -26,10 +26,10 @@ jobs:
         python-version: '3.11'
     - name: Update Rust
       run: rustup update
-    # - name: Setup Rust-cache
-    #   uses: Swatinem/rust-cache@v2
-    #   with:
-    #     key: qsv-cache
+    - name: Setup Rust-cache
+      uses: Swatinem/rust-cache@v2
+      with:
+        key: qsv-wincache
     - name: make empty DLLs directory to prevent spurious python warning
       run: |
         mkdir DLLs   
