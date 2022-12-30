@@ -411,11 +411,13 @@ impl Config {
                 let idx_file = match fs::File::open(util::idx_path(p)) {
                     Err(e) => {
                         if self.autoindex {
+                            // however, if QSV_AUTOINDEX is set, we create the index automatically
                             self.autoindex_file();
+                            fs::File::open(util::idx_path(p)).unwrap()
                         } else {
                             warn!("No index file found - {p:?}: {e}");
+                            return Ok(None);
                         }
-                        return Ok(None);
                     }
                     Ok(f) => f,
                 };
@@ -424,8 +426,9 @@ impl Config {
             (Some(p), Some(ip)) => (fs::File::open(p)?, fs::File::open(ip)?),
         };
         // If the CSV data was last modified after the index file was last
-        // modified, then return an error and demand the user regenerate the
-        // index.
+        // modified, then return an error and demand the user regenerate the index.
+        // Unless QSV_AUTOINDEX is set, in which case, we'll recreate the
+        // stale index automatically
         let data_modified = util::last_modified(&csv_file.metadata()?);
         let idx_modified = util::last_modified(&idx_file.metadata()?);
         if data_modified > idx_modified {
