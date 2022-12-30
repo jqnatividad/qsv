@@ -1,4 +1,4 @@
-use std::{fs, thread, time};
+use std::fs;
 
 use filetime::{set_file_times, FileTime};
 
@@ -84,15 +84,10 @@ fn index_outdated_stats_autoindex() {
     )
     .unwrap();
 
-    // sleep for one second to ensure the filesystem metadata is up to date
-    thread::sleep(time::Duration::from_millis(1000));
-
     // stats should NOT fail if the index is stale and
     // QSV_AUTOINDEX is set
-    std::env::set_var("QSV_AUTOINDEX", "1");
     let mut cmd = wrk.command("stats");
     cmd.env("QSV_AUTOINDEX", "1").arg("in.csv");
-    std::env::remove_var("QSV_AUTOINDEX");
 
     wrk.assert_success(&mut cmd);
 }
