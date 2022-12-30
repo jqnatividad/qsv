@@ -756,7 +756,10 @@ impl Stats {
 
                 // calculate skewness using Quantile-based measures
                 // https://en.wikipedia.org/wiki/Skewness#Quantile-based_measures
-                // skewness = (q3 - (2.0 * q2) + q1) / iqr
+                // https://blogs.sas.com/content/iml/2017/07/19/quantile-skewness.html
+                // skewness = ((q3 - q2) - (q2 - q1)) / iqr;
+                // which is also skewness = (q3 - (2.0 * q2) + q1) / iqr
+                // which in turn, is the basis of the fused multiply add version below
                 let skewness = (2.0f64.mul_add(-q2, q3) + q1) / iqr;
 
                 if typ == TDateTime || typ == TDate {
