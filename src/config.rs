@@ -379,7 +379,7 @@ impl Config {
 
     fn autoindex_file(&self) {
         use io::prelude::*;
-        
+
         // autoindex_file should never panic. It should silently fail as its a "convenience fn"
         // that's why we have a lot of let-else returns, in lieu of unwraps
         let Some(path_buf) = &self.path else { return };
