@@ -110,7 +110,7 @@ log = "0.4"
 mimalloc = { version = "0.1", default-features = false, optional = true }
 mlua = { version = "0.8", features = ["luau"], optional = true }
 num_cpus = "1"
-once_cell = { version = "1.16", features = ["parking_lot"] }
+once_cell = { version = "1.17", features = ["parking_lot"] }
 parking_lot = { version = "0.12", features = ["hardware-lock-elision"] }
 pyo3 = { version = "0.17", features = ["auto-initialize"], optional = true }
 qsv-dateparser = "0.4"
@@ -134,7 +134,7 @@ reqwest = { version = "0.11", features = [
 reverse_geocoder = { version = "3", optional = true }
 rust_decimal = "1.27"
 ryu = "1"
-self_update = { version = "0.32", features = [
+self_update = { version = "0.33", features = [
     "archive-zip",
     "compression-zip-deflate",
     "rustls",
