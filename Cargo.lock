@@ -902,9 +902,9 @@ dependencies = [
 
 [[package]]
 name = "cpc"
-version = "1.8.0"
+version = "1.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8a5f9ca8e266976eb016baa8a271391dfedd98ce7124b9d6eb3f0bfdc53bf97c"
+checksum = "1d3f1acdd92c89ff963f1dc875adeef429df520e36e14c4f39d03ab49188233d"
 dependencies = [
  "decimal",
  "unicode-segmentation",
@@ -1636,9 +1636,9 @@ dependencies = [
 
 [[package]]
 name = "half"
-version = "2.1.0"
+version = "2.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ad6a9459c9c30b177b925162351f97e7d967c7ea8bab3b8352805327daf45554"
+checksum = "6c467d36af040b7b2681f5fddd27427f6da8d3d072f575a265e181d2f8e8d157"
 dependencies = [
  "crunchy",
  "num-traits",
@@ -3751,9 +3751,9 @@ dependencies = [
 
 [[package]]
 name = "sysinfo"
-version = "0.27.1"
+version = "0.27.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ccb297c0afb439440834b4bcf02c5c9da8ec2e808e70f36b0d8e815ff403bd24"
+checksum = "17351d0e9eb8841897b14e9669378f3c69fb57779cc04f8ca9a9d512edfb2563"
 dependencies = [
  "cfg-if",
  "core-foundation-sys",
