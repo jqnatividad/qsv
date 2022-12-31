@@ -63,8 +63,8 @@ fn index_outdated_stats() {
 }
 
 #[test]
-fn index_outdated_stats_autoindex() {
-    let wrk = Workdir::new("index_outdated_stats");
+fn index_outdated_index_autoindex() {
+    let wrk = Workdir::new("index_outdated_index");
 
     wrk.create_indexed(
         "in.csv",
@@ -84,11 +84,14 @@ fn index_outdated_stats_autoindex() {
     )
     .unwrap();
 
-    // stats should NOT fail if the index is stale and
+    // slice should NOT fail if the index is stale and
     // QSV_AUTOINDEX is set
     std::env::set_var("QSV_AUTOINDEX", "1");
-    let mut cmd = wrk.command("stats");
-    cmd.env("QSV_AUTOINDEX", "1").arg("in.csv");
+    let mut cmd = wrk.command("slice");
+    cmd.env("QSV_AUTOINDEX", "1")
+        .arg("-i")
+        .arg("2")
+        .arg("in.csv");
     std::env::remove_var("QSV_AUTOINDEX");
 
     wrk.assert_success(&mut cmd);
