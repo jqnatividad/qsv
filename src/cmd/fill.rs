@@ -68,15 +68,15 @@ type BoxedReader = csv::Reader<Box<dyn io::Read + 'static>>;
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input:       Option<String>,
-    arg_selection:   SelectColumns,
-    flag_output:     Option<String>,
+    arg_input: Option<String>,
+    arg_selection: SelectColumns,
+    flag_output: Option<String>,
     flag_no_headers: bool,
-    flag_delimiter:  Option<Delimiter>,
-    flag_groupby:    Option<SelectColumns>,
-    flag_first:      bool,
-    flag_backfill:   bool,
-    flag_default:    Option<String>,
+    flag_delimiter: Option<Delimiter>,
+    flag_groupby: Option<SelectColumns>,
+    flag_first: bool,
+    flag_backfill: bool,
+    flag_default: Option<String>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -162,7 +162,7 @@ impl GroupKeyConstructor for GroupKeySelection {
 
 #[derive(Debug)]
 struct GroupValues {
-    map:     AHashMap<usize, ByteString>,
+    map: AHashMap<usize, ByteString>,
     default: Option<ByteString>,
 }
 
@@ -217,12 +217,12 @@ impl GroupMemorizer for GroupValues {
 }
 
 struct Filler {
-    grouper:       Grouper,
-    groupby:       GroupKeySelection,
-    select:        Selection,
-    buffer:        GroupBuffer,
-    first:         bool,
-    backfill:      bool,
+    grouper: Grouper,
+    groupby: GroupKeySelection,
+    select: Selection,
+    buffer: GroupBuffer,
+    first: bool,
+    backfill: bool,
     default_value: Option<ByteString>,
 }
 
@@ -306,11 +306,11 @@ impl Filler {
 }
 
 struct MapSelected<I, F> {
-    selection:       Vec<usize>,
+    selection: Vec<usize>,
     selection_index: usize,
-    index:           usize,
-    iterator:        I,
-    predicate:       F,
+    index: usize,
+    iterator: I,
+    predicate: F,
 }
 
 impl<I: iter::Iterator, F> iter::Iterator for MapSelected<I, F>
