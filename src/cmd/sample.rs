@@ -7,7 +7,7 @@ random indexing if the sample size is less than 10% of the total number of recor
 This allows for efficient sampling such that the entire CSV file is not parsed.
 
 When sample-size is between 0 and 1 exclusive, it is treated as a percentage
-of the CSV to sample (e.g. 0.20 is 20 percent). This requires an index.
+of the CSV to sample (e.g. 0.20 is 20 percent).
 
 This command is intended to provide a means to sample from a CSV data set that
 is too big to fit into memory (for example, for use with commands like 'qsv
@@ -60,10 +60,16 @@ struct Args {
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
+
+    if args.arg_sample_size.is_sign_negative() {
+        return fail!("Sample size cannot be negative.");
+    }
+
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
         .checkutf8(false)
         .no_headers(args.flag_no_headers);
+
     let mut sample_size = args.arg_sample_size;
 
     let mut wtr = Config::new(&args.flag_output).writer()?;
@@ -83,7 +89,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } else {
         debug!("no index");
         if sample_size < 1.0 {
-            return fail!("Percentage sampling requires an index.");
+            let Ok(row_count) = util::count_rows(&rconfig) else {
+                return fail!("Cannot get rowcount. Percentage sampling requires a rowcount.");
+            };
+            sample_size *= row_count as f64;
         }
         let mut rdr = rconfig.reader()?;
         rconfig.write_headers(&mut rdr, &mut wtr)?;
