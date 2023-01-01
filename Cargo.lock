@@ -1042,9 +1042,9 @@ dependencies = [
 
 [[package]]
 name = "csvs_convert"
-version = "0.7.8"
+version = "0.7.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2d913999c3826733ceaa43ae917044511b0982cb1c0286453f5123c78398c8bd"
+checksum = "27405e3f191eea6e7811979c541f576a61bb0c55de544c14226858f6f8a89174"
 dependencies = [
  "arrow",
  "chrono",
@@ -2991,9 +2991,9 @@ dependencies = [
 
 [[package]]
 name = "qsv-stats"
-version = "0.5.0"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c0257a56227ea1e2a3bbf5d8bb9734984ec50f2e86d23a008139aeb3ac7abcef"
+checksum = "deac146d9a4f5439ccbab010bbcd8f8eb0a9bc4093df7e89ff87992bb93377dd"
 dependencies = [
  "ahash 0.8.2",
  "num-traits",
