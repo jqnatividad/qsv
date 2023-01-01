@@ -2005,6 +2005,10 @@ fn apply_datefmt() {
             svec!["July 4, 2005"],
             svec!["2021-05-01T01:17:02.604456Z"],
             svec!["This is not a date and it will not be reformatted"],
+            svec!["1511648546"],
+            svec!["-770172300"],
+            svec!["1671673426.123456789"],
+            // svec!["-770172300"],
         ],
     );
     let mut cmd = wrk.command("apply");
@@ -2019,6 +2023,53 @@ fn apply_datefmt() {
         svec!["2005-07-04"],
         svec!["2021-05-01T01:17:02.604456+00:00"],
         svec!["This is not a date and it will not be reformatted"],
+        svec!["2017-11-25T22:22:26+00:00"],
+        svec!["1945-08-05T23:15:00+00:00"],
+        svec!["2022-12-22T01:43:46.123456768+00:00"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn apply_datefmt_to_unixtime() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["Created Date"],
+            svec!["September 17, 2012 10:09am EST"],
+            svec!["Wed, 02 Jun 2021 06:31:39 GMT"],
+            svec!["2009-01-20 05:00 EST"],
+            svec!["July 4, 2005"],
+            svec!["2021-05-01T01:17:02.604456Z"],
+            svec!["This is not a date and it will not be reformatted"],
+            svec!["1511648546"],
+            svec!["1620021848429"],
+            svec!["1620024872717915000"],
+            svec!["1945-08-06T06:54:32.717915+00:00"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("datefmt")
+        .arg("Created Date")
+        .arg("--formatstr")
+        .arg("%s")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["Created Date"],
+        svec!["1347894540"],
+        svec!["1622615499"],
+        svec!["1232445600"],
+        svec!["1120435200"],
+        svec!["1619831822"],
+        svec!["This is not a date and it will not be reformatted"],
+        // %s formatstr can only do unixtime in seconds, that's why there's rounding here
+        svec!["1511648546"],
+        svec!["9223372036"],
+        svec!["9223372036"],
+        svec!["-770144728"],
     ];
     assert_eq!(got, expected);
 }
