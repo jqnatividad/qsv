@@ -113,10 +113,10 @@ num_cpus = "1"
 once_cell = { version = "1.17", features = ["parking_lot"] }
 parking_lot = { version = "0.12", features = ["hardware-lock-elision"] }
 pyo3 = { version = "0.17", features = ["auto-initialize"], optional = true }
-qsv-dateparser = "0.5"
+qsv-dateparser = "0.6"
 qsv-stats = "0.5"
 qsv_currency = { version = "0.6", optional = true }
-qsv-sniffer = { version = "0.5", features = ["runtime-dispatch-simd"] }
+qsv-sniffer = { version = "0.6", features = ["runtime-dispatch-simd"] }
 rand = "0.8"
 rayon = "1.6"
 redis = { version = "0.22", features = [
