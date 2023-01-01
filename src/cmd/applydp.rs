@@ -340,7 +340,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let applydp_cmd = if args.cmd_operations {
         match validate_operations(
-            &args.arg_operations.to_lowercase().split(',').collect(),
+            &args.arg_operations.split(',').collect(),
             &args.flag_comparand,
             &args.flag_replacement,
             &args.flag_new_column,
