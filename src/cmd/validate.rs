@@ -160,7 +160,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                                 "detail" : format!("{e}")
                             }]
                         });
-                        return fail!(header_error.to_string());
+                        let json_error = if args.flag_pretty_json {
+                            serde_json::to_string_pretty(&header_error).unwrap()
+                        } else {
+                            header_error.to_string()
+                        };
+
+                        return fail!(json_error);
                     }
                     return fail_clierror!("Cannot read header ({e}).");
                 }
@@ -182,10 +188,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             "detail" : format!("Last valid row: {record_count} - {e}")
                         }]
                     });
-                    return fail!(validation_error.to_string());
+
+                    let json_error = if args.flag_pretty_json {
+                        serde_json::to_string_pretty(&validation_error).unwrap()
+                    } else {
+                        validation_error.to_string()
+                    };
+
+                    return fail!(json_error);
                 }
                 return fail_clierror!(
-                    r#"Validation error: {e}.\n Last valid row: {record_count}\nTry "qsv fixlengths" or "qsv fmt" to fix it."#
+                    r#"Validation error: {e}.
+Last valid row: {record_count}
+Use `qsv fixlengths` to fix record length issues.
+Use `qsv input` to fix formatting and to transcode to utf8 if required."#
                 );
             }
             record_count += 1;

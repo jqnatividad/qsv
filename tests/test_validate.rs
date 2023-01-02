@@ -105,12 +105,20 @@ fn validate_bad_csv() {
     let mut cmd = wrk.command("validate");
     cmd.arg("data.csv");
 
+    let got: String = wrk.output_stderr(&mut cmd);
+    let expected = r#"Validation error: CSV error: record 2 (line: 3, byte: 36): found record with 2 fields, but the previous record has 3 fields.
+Last valid row: 1
+Use `qsv fixlengths` to fix record length issues.
+Use `qsv input` to fix formatting and to transcode to utf8 if required.
+"#;
+    assert_eq!(got, expected);
+
     wrk.assert_err(&mut cmd);
 }
 
 #[test]
-fn validate_bad_csv_json() {
-    let wrk = Workdir::new("validate_bad_csv_json").flexible(true);
+fn validate_bad_csv_prettyjson() {
+    let wrk = Workdir::new("validate_bad_csv_prettyjson").flexible(true);
     wrk.create(
         "data.csv",
         vec![
@@ -121,10 +129,21 @@ fn validate_bad_csv_json() {
         ],
     );
     let mut cmd = wrk.command("validate");
-    cmd.arg("--json").arg("data.csv");
+    cmd.arg("--pretty-json").arg("data.csv");
 
     let got: String = wrk.output_stderr(&mut cmd);
-    assert!(got.contains("Validation error"));
+    let expected = r#"{
+  "errors": [
+    {
+      "title": "Validation error",
+      "detail": "Last valid row: 1 - CSV error: record 2 (line: 3, byte: 36): found record with 2 fields, but the previous record has 3 fields"
+    }
+  ]
+}
+"#;
+    assert_eq!(got, expected);
+
+    wrk.assert_err(&mut cmd);
 }
 
 fn adur_errors() -> &'static str {
