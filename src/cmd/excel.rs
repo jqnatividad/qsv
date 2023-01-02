@@ -1,6 +1,6 @@
 static USAGE: &str = r#"
 Exports a specified Excel/ODS sheet to a CSV file.
-The first row of a sheet is assummed to be the header row.
+The first row of a sheet is assumed to be the header row.
 
 NOTE: Excel stores dates as number of days since 1900.
 https://support.microsoft.com/en-us/office/date-systems-in-excel-e7fe7167-48a9-4b96-bb53-5612a800b487
