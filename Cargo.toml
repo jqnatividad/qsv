@@ -75,12 +75,12 @@ calamine = { version = "0.19", features = ["dates"] }
 censor = { version = "0.3", optional = true }
 chrono = "0.4"
 console = { version = "0.15", optional = true }
-cpc = { version = "1.8", optional = true }
+cpc = { version = "1.9", optional = true }
 crossbeam-channel = "0.5"
 csv = "1.1"
 csv-core = "0.1"
 csv-index = "0.1"
-csvs_convert = { version = "0.7.8", optional = true }
+csvs_convert = { version = "0.7", optional = true }
 data-encoding = { version = "2.3", optional = true }
 docopt = "1"
 dynfmt = { version = "0.1", default-features = false, features = [
