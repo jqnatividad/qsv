@@ -23,7 +23,7 @@ Usage:
     qsv sample --help
 
 sample options:
-    --seed <number>        RNG seed.
+    --seed <number>        Random number generator seed.
 
 Common options:
     -h, --help             Display this message
@@ -88,6 +88,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     } else {
         debug!("no index");
+        #[allow(clippy::cast_precision_loss)]
         if sample_size < 1.0 {
             let Ok(row_count) = util::count_rows(&rconfig) else {
                 return fail!("Cannot get rowcount. Percentage sampling requires a rowcount.");
@@ -117,7 +118,7 @@ where
     let mut all_indices = (0..idx.count()).collect::<Vec<_>>();
     let mut rng = ::rand::thread_rng();
     // this non-cryptographic shuffle is sufficient for our use case
-    // as we're optimizing for performance
+    // as we're optimizing for performance. Add DevSkim lint ignore.
     SliceRandom::shuffle(&mut *all_indices, &mut rng); //DevSkim: ignore DS148264
 
     let mut sampled = Vec::with_capacity(sample_size as usize);
@@ -142,7 +143,7 @@ fn sample_reservoir<R: io::Read>(
         reservoir.push(row?);
     }
 
-    // Seeding rng
+    // Seeding RNG
     let mut rng: StdRng = match seed {
         None => StdRng::from_rng(rand::thread_rng()).unwrap(),
         // the non-cryptographic seed_from_u64 is sufficient for our use case

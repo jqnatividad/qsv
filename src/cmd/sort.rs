@@ -19,7 +19,7 @@ sort options:
     -N, --numeric           Compare according to string numerical value
     -R, --reverse           Reverse order
     --random                Random order
-    --seed <number>         RNG seed
+    --seed <number>         Random number generator seed to use if --random is set
     -i, --ignore-case       Compare strings disregarding case
     -u, --unique            When set, identical consecutive lines will be dropped
                             to keep only one line per sorted value.
@@ -84,9 +84,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let headers = rdr.byte_headers()?.clone();
     let sel = rconfig.selection(&headers)?;
 
+    // set RAYON_NUM_THREADS
     util::njobs(args.flag_jobs);
 
-    // Seeding rng
+    // Seeding RNG
     let seed = args.flag_seed;
 
     let ignore_case = args.flag_ignore_case;
@@ -95,6 +96,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     match (numeric, reverse, random) {
         (_, _, true) => {
             // we don't need cryptographically strong RNGs for this
+            // add DevSkim lint ignores to suppress warning
             if let Some(val) = seed {
                 let mut rng = StdRng::seed_from_u64(val); //DevSkim: ignore DS148264
                 SliceRandom::shuffle(&mut *all, &mut rng); //DevSkim: ignore DS148264
