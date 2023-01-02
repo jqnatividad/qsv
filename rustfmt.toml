@@ -1,9 +1,9 @@
 # NOTE: these options require nightly
 # cargo +nightly fmt
-comment_width = 100
-wrap_comments = true
-format_strings = true
-group_imports = "StdExternalCrate"
-imports_granularity = "Crate"
+comment_width                = 100
+wrap_comments                = true
+format_strings               = true
+group_imports                = "StdExternalCrate"
+imports_granularity          = "Crate"
 enum_discrim_align_threshold = 20
 struct_field_align_threshold = 20
