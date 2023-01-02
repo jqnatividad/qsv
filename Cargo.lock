@@ -2886,7 +2886,7 @@ dependencies = [
 
 [[package]]
 name = "qsv"
-version = "0.80.0"
+version = "0.81.0"
 dependencies = [
  "actix-governor",
  "actix-web",
@@ -2991,9 +2991,9 @@ dependencies = [
 
 [[package]]
 name = "qsv-stats"
-version = "0.5.1"
+version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "deac146d9a4f5439ccbab010bbcd8f8eb0a9bc4093df7e89ff87992bb93377dd"
+checksum = "77e473a72783f2bf10a1a2b650823078e3a8af287f3257fe9fcea5cc508f78e8"
 dependencies = [
  "ahash 0.8.2",
  "num-traits",
