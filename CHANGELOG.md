@@ -6,6 +6,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.81.0] - 2023-01-02
+
+### Added
+* `stats`: added range statistic https://github.com/jqnatividad/qsv/pull/691
+* `stats`: added additional mode stats. For mode, added mode_count and mode_occurrences. Added "antimode" (opposite of mode - least frequently occurring non-zero value), antimode_count and antimode_occurrences. https://github.com/jqnatividad/qsv/pull/694
+* qsv-dateparser now recognizes unix timestamp values with fractional seconds to nanosecond precision as dates. `stats`, `sniff`, `apply datefmt` and `schema`, which all use qsv-dateparser, now infer unix timestamps as dates - https://github.com/jqnatividad/qsv/commit/a29ff8ea255d5aed9992556a0a23ab76117c8340 https://github.com/jqnatividad/qsv/pull/702
+> USAGE NOTE: As timestamps can be float or integer, and data type inferencing will guess dates last, preprocess timestamp columns with `apply datefmt` first, so they are recognized as dates by other qsv commands.
+
+### Changed
+* `apply`: document numtocurrency --comparand & --replacement behavior https://github.com/jqnatividad/qsv/commit/cc88fe921d8cdf7eedcb0008e16ebb5c46744f33
+* `index`: explicitly flush buffers after creating index https://github.com/jqnatividad/qsv/commit/ee5d790af1cde73dfc57b028bf52fa88e83cdaa4
+* `sample`: no longer requires an index to do percentage sampling https://github.com/jqnatividad/qsv/commit/45d4657713ebe2ae8388ce55f4cb1a733e727024
+* `slice`: removed unneeded utf8 check https://github.com/jqnatividad/qsv/commit/5a199f4442bd025cec31309bee44ac71bacbdfaa
+* `schema`: expand usage text regarding `--strict-dates` https://github.com/jqnatividad/qsv/commit/3d22829f3cf0441961e854555cd0c333bcb3ffb1 
+* `stats`: date stats refactor. Date stats are returned in rfc3339 format. Dates are converted to timestamps with millisecond precision while calculating date stats. https://github.com/jqnatividad/qsv/pull/690 https://github.com/jqnatividad/qsv/commit/e7c297795ff5e82cf1dc242090be11ecced6da9a
+* filter out variance/stddev in tests as float precision issues are causing flaky CI tests  https://github.com/jqnatividad/qsv/pull/696
+* Bump qsv-dateparser from 0.4.4 to 0.6.0
+* Bump qsv-stats from 0.4.6 to 0.5.2
+* Bump qsv-sniffer from 0.5.0 to 0.6.0
+* Bump serde from 1.0.151 to 1.0.152 by @dependabot in https://github.com/jqnatividad/qsv/pull/692
+* Bump csvs_convert from 0.7.7 to 0.7.8 by @dependabot in https://github.com/jqnatividad/qsv/pull/693
+* Bump once_cell from 0.16.0 to 0.17.0 https://github.com/jqnatividad/qsv/commit/d3ac2556c74e2ddd66dcee00e5e836d284b662a7
+* Bump self-update from 0.32.0 to 0.34.0 https://github.com/jqnatividad/qsv/commit/5f95933f01e2e0c592b52d7424b6a832aafd3591
+* Bump cpc from 1.8 to 1.9; set csvs_convert dependency to minor version https://github.com/jqnatividad/qsv/commit/ee9164810559f5496dfafba0e789b9cd84000a17
+* applied select clippy recommendations
+* deeplink to Cookbook from Table of Contents
+* pin Rust nightly to 2023-01-01
+* implementation comments on `stats`, `sample`, `sort` & Python distribution
+
+### Fixed
+* `stats`: prevent premature rounding, and make sum statistic use the same rounding method https://github.com/jqnatividad/qsv/commit/879214a1f3032f140f0207fe8807e1bb641110d7 https://github.com/jqnatividad/qsv/commit/1a1362031de8973b623598748bea4bc5fc6e08d3
+* fix autoindex so we return the index path properly https://github.com/jqnatividad/qsv/commit/d3ce6a3918683d66bf0f3246c7d6e8518eead392
+* `fetch` & `fetchpost`: corrected typo https://github.com/jqnatividad/qsv/commit/684036bbc237d5b80ea060f9ee8b8d46c1a2ad88
+
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.80.0...0.81.0
+
 ## [0.80.0] - 2022-12-23
 
 ### Added
