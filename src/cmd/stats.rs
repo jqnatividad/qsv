@@ -1,5 +1,5 @@
 static USAGE: &str = r#"
-Computes summary statistics on CSV data.
+Compute summary statistics & infers data types for each column in a CSV.
 
 Summary statistics includes sum, min/max/range, min/max length, mean, stddev, variance,
 nullcount, quartiles, interquartile range (IQR), lower/upper fences, skewness, median, 
@@ -95,6 +95,9 @@ Common options:
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
 "#;
+
+// stats is heavily optimized and makes extensive use of "unsafe" calls
+// it is a central command, that is used by `schema`, `tojsonl`
 
 use std::{
     borrow::ToOwned,
