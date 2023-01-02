@@ -15,7 +15,7 @@ The following additional statistics require loading the entire file into memory:
 cardinality, mode/antimode, median, quartiles and its related measures 
 (Interquartile Range (IQR), lower/upper fences & skewness).
 
-Antimode is the least frequently occurring non-zero score and is the opposite of mode.
+Antimode is the least frequently occurring non-zero value and is the opposite of mode.
 It return "*ALL" if all the values are unique, and only returns a preview of the first
 10 antimodes, for readability purposes.
 
@@ -50,7 +50,7 @@ stats options:
     --everything              Show all statistics available.
     --typesonly               Infer data types only and do not compute statistics.
                               Automatically turns on --infer-dates for all columns.
-    --mode                    Show the mode/s. Multimodal-aware.
+    --mode                    Show the mode/s & antimode/s. Multimodal-aware.
                               This requires loading all CSV data in memory.
     --cardinality             Show the cardinality.
                               This requires loading all CSV data in memory.
