@@ -285,7 +285,7 @@ impl Config {
         Ok(self.from_writer(self.io_writer()?))
     }
 
-    pub fn reader(&self) -> io::Result<csv::Reader<Box<dyn io::Read + 'static>>> {
+    pub fn reader(&self) -> io::Result<csv::Reader<Box<dyn io::Read + Send + 'static>>> {
         Ok(self.from_reader(self.io_reader()?))
     }
 
@@ -454,7 +454,7 @@ impl Config {
         }
     }
 
-    pub fn io_reader(&self) -> io::Result<Box<dyn io::Read + 'static>> {
+    pub fn io_reader(&self) -> io::Result<Box<dyn io::Read + Send + 'static>> {
         Ok(match self.path {
             None => {
                 if self.checkutf8 {
