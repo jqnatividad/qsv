@@ -61,16 +61,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .checkutf8(false)
         .no_headers(args.flag_no_headers_right);
 
-    let primary_key_cols = args
-        .flag_primary_key_idx
-        .map(|s| {
-            s.split(',')
-                .map(|idx| idx.parse::<usize>())
-                .collect::<Result<Vec<_>, _>>()
-        })
-        .transpose()
-        .map_err(|err| CliError::Other(err.to_string()))?
-        .unwrap_or_else(|| vec![0]);
+    let primary_key_cols = match args.flag_primary_key_idx {
+        None => vec![0],
+        Some(s) => s
+            .split(',')
+            .map(|idx| idx.parse::<usize>())
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(|err| CliError::Other(err.to_string()))?,
+    };
 
     let wtr = Config::new(&args.flag_output).writer()?;
     let mut csv_rdr_left = rconfig_left.reader()?;
