@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `stats`: added range statistic https://github.com/jqnatividad/qsv/pull/691
 * `stats`: added additional mode stats. For mode, added mode_count and mode_occurrences. Added "antimode" (opposite of mode - least frequently occurring non-zero value), antimode_count and antimode_occurrences. https://github.com/jqnatividad/qsv/pull/694
 * qsv-dateparser now recognizes unix timestamp values with fractional seconds to nanosecond precision as dates. `stats`, `sniff`, `apply datefmt` and `schema`, which all use qsv-dateparser, now infer unix timestamps as dates - https://github.com/jqnatividad/qsv/commit/a29ff8ea255d5aed9992556a0a23ab76117c8340 https://github.com/jqnatividad/qsv/pull/702
-> USAGE NOTE: As timestamps can be float or integer, and data type inferencing will guess dates last, preprocess timestamp columns with `apply datefmt` first, so they are recognized as dates by other qsv commands.
+> USAGE NOTE: As timestamps can be float or integer, and data type inferencing will guess dates last, preprocess timestamp columns with apply datefmt first to more date-like, non-timestamp formats, so they are recognized as dates by other qsv commands.
 
 ### Changed
 * `apply`: document numtocurrency --comparand & --replacement behavior https://github.com/jqnatividad/qsv/commit/cc88fe921d8cdf7eedcb0008e16ebb5c46744f33
