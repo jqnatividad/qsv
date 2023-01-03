@@ -549,7 +549,7 @@ impl Stats {
 
     #[inline]
     fn add(&mut self, sample: &[u8], infer_dates: bool) {
-        let sample_type = FieldType::from_sample(infer_dates, sample, self.typ);
+        let (sample_type, timestamp_val) = FieldType::from_sample(infer_dates, sample, self.typ);
         self.typ.merge(sample_type);
 
         // we're doing typesonly, don't compute statistics
@@ -562,7 +562,12 @@ impl Stats {
             v.add(t, sample);
         };
         if let Some(v) = self.minmax.as_mut() {
-            v.add(t, sample);
+            if let Some(ts_val) = timestamp_val {
+                // TODO: is there a better, non-allocating way to do this?
+                v.add(t, ts_val.to_string().as_bytes());
+            } else {
+                v.add(t, sample);
+            }
         };
         if let Some(v) = self.modes.as_mut() {
             v.add(sample.to_vec());
@@ -605,12 +610,11 @@ impl Stats {
                             v.add_null();
                         };
                     }
-                } else if let Ok(parsed_date) = parse_with_preference(
-                    std::str::from_utf8(sample).unwrap(),
-                    DMY_PREFERENCE.load(Ordering::Relaxed),
-                ) {
+                } else if let Some(ts_val) = timestamp_val {
+                    // calculate date statistics by adding date samples as timestamps to
+                    // millisecond precision.
                     #[allow(clippy::cast_precision_loss)]
-                    let n = parsed_date.timestamp_millis() as f64;
+                    let n = ts_val as f64;
                     if let Some(v) = self.median.as_mut() {
                         v.add(n);
                     }
@@ -671,7 +675,12 @@ impl Stats {
         }
 
         // min/max length
-        if let Some(mm) = self.minmax.as_ref().and_then(TypedMinMax::len_range) {
+        if typ == FieldType::TDate || typ == FieldType::TDateTime {
+            // returning min/max length for dates doesn't make sense
+            // especially since we convert the date stats to rfc3339 format
+            pieces.push(empty());
+            pieces.push(empty());
+        } else if let Some(mm) = self.minmax.as_ref().and_then(TypedMinMax::len_range) {
             pieces.push(mm.0);
             pieces.push(mm.1);
         } else {
@@ -779,6 +788,10 @@ impl Stats {
                 let skewness = (2.0f64.mul_add(-q2, q3) + q1) / iqr;
 
                 if typ == TDateTime || typ == TDate {
+                    // casting from f64 to i64 is OK, per
+                    // https://doc.rust-lang.org/reference/expressions/operator-expr.html#numeric-cast
+                    // as values larger/smaller than what i64 can handle will automatically
+                    // saturate to i64 max/min values.
                     pieces.push(timestamp_ms_to_rfc3339(lof as i64, typ));
                     pieces.push(timestamp_ms_to_rfc3339(lif as i64, typ));
 
@@ -907,13 +920,17 @@ pub enum FieldType {
 
 impl FieldType {
     #[inline]
-    pub fn from_sample(infer_dates: bool, sample: &[u8], current_type: FieldType) -> FieldType {
+    pub fn from_sample(
+        infer_dates: bool,
+        sample: &[u8],
+        current_type: FieldType,
+    ) -> (FieldType, Option<i64>) {
         if sample.is_empty() {
-            return TNull;
+            return (TNull, None);
         }
         // no need to do type checking if current_type is already a String
         if current_type == FieldType::TString {
-            return FieldType::TString;
+            return (FieldType::TString, None);
         }
 
         // we skip utf8 validation since we say we only work with utf8
@@ -926,13 +943,13 @@ impl FieldType {
             if let Ok(int_val) = string.parse::<i64>() {
                 // leading zero, its a string
                 if string.starts_with('0') && int_val != 0 {
-                    return TString;
+                    return (TString, None);
                 }
-                return TInteger;
+                return (TInteger, None);
             }
 
             if string.parse::<f64>().is_ok() {
-                return TFloat;
+                return (TFloat, None);
             }
         }
 
@@ -946,13 +963,14 @@ impl FieldType {
             {
                 // get date in rfc3339 format, if it ends with "T00:00:00+00:00"
                 // its a Date type, otherwise, its DateTime.
+                let ts_val = parsed_date.timestamp_millis();
                 if parsed_date.to_rfc3339().ends_with("T00:00:00+00:00") {
-                    return TDate;
+                    return (TDate, Some(ts_val));
                 }
-                return TDateTime;
+                return (TDateTime, Some(ts_val));
             }
         }
-        TString
+        (TString, None)
     }
 }
 
@@ -1133,14 +1151,13 @@ impl TypedMinMax {
                 self.floats.add(n as f64);
             }
             TDate | TDateTime => {
-                let dt = unsafe {
-                    parse_with_preference(
-                        &String::from_utf8_lossy(sample),
-                        DMY_PREFERENCE.load(Ordering::Relaxed),
-                    )
-                    .unwrap_unchecked()
+                let n = unsafe {
+                    str::from_utf8_unchecked(sample)
+                        .parse::<i64>()
+                        .ok()
+                        .unwrap_unchecked()
                 };
-                self.dates.add(dt.timestamp_millis());
+                self.dates.add(n);
             }
         }
     }
