@@ -610,6 +610,8 @@ impl Stats {
                             v.add_null();
                         };
                     }
+                // if ts_val.is_some() then we successfully inferred a date from the sample
+                // and the timestamp value is not None
                 } else if let Some(ts_val) = timestamp_val {
                     // calculate date statistics by adding date samples as timestamps to
                     // millisecond precision.
@@ -922,6 +924,10 @@ pub enum FieldType {
 }
 
 impl FieldType {
+    // infer data type from
+    // a infer_dates flag, if date inference should be attempted
+    // from a given sample, and
+    // the current type inference
     #[inline]
     pub fn from_sample(
         infer_dates: bool,
@@ -1135,7 +1141,6 @@ impl TypedMinMax {
                 let n = unsafe {
                     str::from_utf8_unchecked(sample)
                         .parse::<f64>()
-                        .ok()
                         .unwrap_unchecked()
                 };
 
@@ -1146,7 +1151,6 @@ impl TypedMinMax {
                 let n = unsafe {
                     str::from_utf8_unchecked(sample)
                         .parse::<i64>()
-                        .ok()
                         .unwrap_unchecked()
                 };
                 self.integers.add(n);
@@ -1157,7 +1161,6 @@ impl TypedMinMax {
                 let n = unsafe {
                     str::from_utf8_unchecked(sample)
                         .parse::<i64>()
-                        .ok()
                         .unwrap_unchecked()
                 };
                 self.dates.add(n);
@@ -1244,7 +1247,8 @@ impl Commute for TypedMinMax {
     }
 }
 
-#[inline]
+#[allow(clippy::inline_always)]
+#[inline(always)]
 fn from_bytes<T: FromStr>(bytes: &[u8]) -> T {
     // we don't need to do UTF-8 validation as qsv requires UTF-8 encoding
     unsafe { str::from_utf8_unchecked(bytes).parse().unwrap_unchecked() }
