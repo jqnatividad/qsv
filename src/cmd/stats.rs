@@ -552,7 +552,7 @@ impl Stats {
         let (sample_type, timestamp_val) = FieldType::from_sample(infer_dates, sample, self.typ);
         self.typ.merge(sample_type);
 
-        // we're doing typesonly, don't compute statistics
+        // we're inferring typesonly, don't compute statistics
         if self.which.typesonly {
             return;
         }
@@ -650,8 +650,11 @@ impl Stats {
         // sum
         if let Some(sum) = self.sum.as_ref().and_then(|sum| sum.show(typ)) {
             if typ == FieldType::TFloat {
-                let f64_val = sum.parse::<f64>().unwrap();
-                pieces.push(round_num(f64_val, round_places));
+                if let Ok(f64_val) = sum.parse::<f64>() {
+                    pieces.push(round_num(f64_val, round_places));
+                } else {
+                    pieces.push(format!("ERROR: Cannot convert {sum} to a float."));
+                }
             } else {
                 pieces.push(sum);
             }
