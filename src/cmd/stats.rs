@@ -96,8 +96,20 @@ Common options:
                            Must be a single character. (default: ,)
 "#;
 
-// stats is heavily optimized and makes extensive use of "unsafe" calls
-// it is a central command, that is used by `schema`, `tojsonl`
+// DEVELOPER NOTE: stats is heavily optimized and makes extensive use of "unsafe" calls.
+// It is a central command, that is used by `schema`/`validate`, `tojsonl` and Datapusher+.
+//
+// It was the primary reason I created the qsv fork as I needed to do guaranteed data type
+// inferencing and smart Data Dictionaries for Datapusher+ in the fastest way possible.
+//
+// It underpins the `schema` and `validate` commands - enabling the ability to validate a
+// complex CSV (NYC's 311 data) against a JSONschema at almost 300,000 records/sec.
+//
+// These "unsafe" calls primarily skip repetitive UTF-8 validation and unneeded bounds checking.
+//
+// To safeguard against undefined behavior, `stats` is the most extensively tested command,
+// with 425 tests, with hundreds of property based, "fuzz" testing powered by quickcheck
+// (https://github.com/BurntSushi/quickcheck)
 
 use std::{
     borrow::ToOwned,
