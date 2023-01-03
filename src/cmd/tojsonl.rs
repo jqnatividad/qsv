@@ -22,7 +22,7 @@ Common options:
     -o, --output <file>    Write output to <file> instead of stdout.
 "#;
 
-use std::{borrow::Cow, env::temp_dir, fs::File, path::Path};
+use std::{env::temp_dir, fs::File, path::Path};
 
 use serde::Deserialize;
 use serde_json::{Map, Value};
@@ -159,7 +159,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let _ = write!(temp_str, "{{");
         for (idx, field) in record.iter().enumerate() {
             let field_val = match field_type_vec[idx].as_str() {
-                "string" => format!(r#""{}""#, jsonl_escape(field)),
+                "string" => format!(r#""{}""#, field.escape_default()),
                 "number" => field.to_string(),
                 "boolean" => match field.to_lowercase().as_str() {
                     "true" | "yes" | "1" => "true".to_string(),
@@ -178,34 +178,4 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     Ok(wtr.flush()?)
-}
-
-fn jsonl_escape(input: &str) -> Cow<str> {
-    for (i, ch) in input.chars().enumerate() {
-        if escape_char(ch).is_some() {
-            let mut escaped_string = String::with_capacity(input.len());
-            escaped_string.push_str(&input[..i]);
-
-            for ch in input[i..].chars() {
-                match escape_char(ch) {
-                    Some(escaped_char) => escaped_string.push_str(escaped_char),
-                    None => escaped_string.push(ch),
-                };
-            }
-
-            return Cow::Owned(escaped_string);
-        }
-    }
-
-    Cow::Borrowed(input)
-}
-
-#[inline]
-const fn escape_char(ch: char) -> Option<&'static str> {
-    match ch {
-        '\n' => Some(r#"\n"#),
-        '\r' => Some(r#"\r"#),
-        '"' => Some(r#"\""#),
-        _ => None,
-    }
 }
