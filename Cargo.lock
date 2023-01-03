@@ -1033,6 +1033,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "csv-diff"
+version = "0.1.0-beta.0"
+source = "git+https://gitlab.com/janriemer/csv-diff?branch=additions-for-qsv#085ea83267656cd2784bfcef4bcde20f71a4c42a"
+dependencies = [
+ "ahash 0.8.2",
+ "crossbeam-channel",
+ "csv",
+ "mown",
+ "rayon",
+ "thiserror",
+ "xxhash-rust",
+]
+
+[[package]]
 name = "csv-index"
 version = "0.1.6"
 source = "git+https://github.com/jqnatividad/rust-csv?branch=perf-tweaks#134a2a81f80f36afac1ed2d662a042317337e2f8"
@@ -2330,6 +2344,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "mown"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e7627d8bbeb17edbf1c3f74b21488e4af680040da89713b4217d0010e9cbd97e"
+
+[[package]]
 name = "multiversion"
 version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2904,6 +2924,7 @@ dependencies = [
  "crossbeam-channel",
  "csv",
  "csv-core",
+ "csv-diff",
  "csv-index",
  "csvs_convert",
  "data-encoding",
@@ -4506,6 +4527,12 @@ checksum = "21f7eb250da9497cc9c4ff55c01a436b8adde7e97c4f3f528bf1b0701af6435b"
 dependencies = [
  "libxlsxwriter-sys",
 ]
+
+[[package]]
+name = "xxhash-rust"
+version = "0.8.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "735a71d46c4d68d71d4b24d03fdc2b98e38cea81730595801db779c04fe80d70"
 
 [[package]]
 name = "yaml-rust"

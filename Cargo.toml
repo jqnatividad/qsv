@@ -79,6 +79,7 @@ cpc = { version = "1.9", optional = true }
 crossbeam-channel = "0.5"
 csv = "1.1"
 csv-core = "0.1"
+csv-diff = { git = "https://gitlab.com/janriemer/csv-diff", branch = "additions-for-qsv" }
 csv-index = "0.1"
 csvs_convert = { version = "0.7", optional = true }
 data-encoding = { version = "2.3", optional = true }
