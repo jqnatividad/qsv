@@ -141,9 +141,12 @@ impl<W: Write> CsvDiffWriter<W> {
     }
 
     fn write_diff_byte_record(&mut self, diff_byte_record: DiffByteRecord) -> csv::Result<()> {
+        let add_sign: &[u8] = &b"+"[..];
+        let remove_sign: &[u8] = &b"-"[..];
+
         match &diff_byte_record {
             DiffByteRecord::Add(add) => {
-                let mut vec = vec![&b"+"[..]];
+                let mut vec = vec![add_sign];
                 vec.extend(add.byte_record());
                 self.csv_writer.write_record(vec)
             }
@@ -153,16 +156,16 @@ impl<W: Write> CsvDiffWriter<W> {
                 // TODO: this should be used in the future to highlight the column where differences occur
                 field_indices: _field_indices,
             } => {
-                let mut vec_del = vec![&b"-"[..]];
+                let mut vec_del = vec![remove_sign];
                 vec_del.extend(delete.byte_record());
                 self.csv_writer.write_record(vec_del)?;
 
-                let mut vec_add = vec![&b"+"[..]];
+                let mut vec_add = vec![add_sign];
                 vec_add.extend(add.byte_record());
                 self.csv_writer.write_record(vec_add)
             }
             DiffByteRecord::Delete(del) => {
-                let mut vec = vec![&b"-"[..]];
+                let mut vec = vec![remove_sign];
                 vec.extend(del.byte_record());
                 self.csv_writer.write_record(vec)
             }
