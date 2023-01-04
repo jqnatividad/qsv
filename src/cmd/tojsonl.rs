@@ -4,6 +4,10 @@ Smartly converts CSV to a newline-delimited JSON (JSONL/NDJSON).
 By scanning the CSV first, it "smartly" infers the appropriate JSON data type
 for each column.
 
+It will infer a column as boolean if it only has a domain of two values,
+and the values are one of the following combinations, case-insensitive:
+ "true"/"false"; "true"/null; "yes"/"no"; "yes"/null; "y"/"n" and "y"/null.  
+
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_tojsonl.rs.
 
 Usage:
@@ -116,34 +120,51 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let prelim_type = field_map.get("type").unwrap();
         let field_values_enum = field_map.get("enum");
 
+        // log::debug!("prelim_type: {prelim_type} field_values_enum: {field_values_enum:?}");
+
         // check if a field has a boolean data type
         if let Some(values) = field_values_enum {
-            let vals = values.as_array().unwrap();
-            if vals.len() == 2 {
-                let val1 = vals[0].as_str().unwrap().to_string().to_lowercase();
-                let val2 = vals[1].as_str().unwrap().to_string().to_lowercase();
-                if let ("true", "false")
-                | ("false", "true")
-                | ("1", "0")
-                | ("0", "1")
-                | ("yes", "no")
-                | ("no", "yes") = (val1.as_str(), val2.as_str())
-                {
-                    field_type_vec.push("boolean".to_string());
-                    continue;
+            if let Some(vals) = values.as_array() {
+                if vals.len() == 2 {
+                    let val1 = if vals[0].is_null() {
+                        "null".to_string()
+                    } else {
+                        vals[0].as_str().unwrap().trim().to_lowercase()
+                    };
+                    let val2 = if vals[1].is_null() {
+                        "null".to_string()
+                    } else {
+                        vals[1].as_str().unwrap().trim().to_lowercase()
+                    };
+                    // log::debug!("val1: {val1} val2: {val2}");
+                    if let ("true", "false")
+                    | ("false", "true")
+                    | ("yes", "no")
+                    | ("no", "yes")
+                    | ("y", "n")
+                    | ("n", "y")
+                    | ("true", "null")
+                    | ("null", "true")
+                    | ("yes", "null")
+                    | ("null", "yes")
+                    | ("y", "null")
+                    | ("null", "y") = (val1.as_str(), val2.as_str())
+                    {
+                        field_type_vec.push("boolean".to_string());
+                        continue;
+                    }
                 }
             }
         }
         // its not a boolean, so its a Number, String or Null
         let temp_type = prelim_type.clone();
-        let temp_string = temp_type.as_array().unwrap()[0]
+        let temp_str = temp_type.as_array().unwrap()[0]
             .as_str()
-            .unwrap()
-            .to_string();
-        if temp_string == "integer" {
+            .unwrap_or_default();
+        if temp_str == "integer" {
             field_type_vec.push("number".to_string());
         } else {
-            field_type_vec.push(temp_string);
+            field_type_vec.push(temp_str.to_string());
         }
     }
 
@@ -161,8 +182,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let field_val = match field_type_vec[idx].as_str() {
                 "string" => format!(r#""{}""#, field.escape_default()),
                 "number" => field.to_string(),
-                "boolean" => match field.to_lowercase().as_str() {
-                    "true" | "yes" | "1" => "true".to_string(),
+                "boolean" => match field.trim().to_lowercase().as_str() {
+                    "true" | "yes" | "y" => "true".to_string(),
                     _ => "false".to_string(),
                 },
                 "null" => "null".to_string(),
