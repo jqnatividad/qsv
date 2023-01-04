@@ -24,6 +24,148 @@ fn tojsonl_simple() {
 }
 
 #[test]
+fn tojsonl_boolean() {
+    let wrk = Workdir::new("tojsonl");
+    wrk.create(
+        "in.csv",
+        vec![
+            svec!["col1", "col2"],
+            svec!["true", "Mark"],
+            svec!["false", "John"],
+            svec!["false", "Bob"],
+        ],
+    );
+
+    let mut cmd = wrk.command("tojsonl");
+    cmd.arg("in.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = r#"{"col1":true,"col2":"Mark"}
+{"col1":false,"col2":"John"}
+{"col1":false,"col2":"Bob"}"#;
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn tojsonl_not_boolean_case_sensitive() {
+    let wrk = Workdir::new("tojsonl");
+    wrk.create(
+        "in.csv",
+        vec![
+            svec!["col1", "col2"],
+            svec!["True", "Mark"],
+            svec!["False", "John"],
+            svec!["false", "Bob"],
+        ],
+    );
+
+    let mut cmd = wrk.command("tojsonl");
+    cmd.arg("in.csv");
+
+    // not treated as boolean since col1's domain has three values
+    // True, False and false
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = r#"{"col1":"True","col2":"Mark"}
+{"col1":"False","col2":"John"}
+{"col1":"false","col2":"Bob"}"#;
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn tojsonl_is_boolean_case_sensitive() {
+    let wrk = Workdir::new("tojsonl");
+    wrk.create(
+        "in.csv",
+        vec![
+            svec!["col1", "col2"],
+            svec!["True", "Mark"],
+            svec!["False", "John"],
+            svec!["False", "Bob"],
+        ],
+    );
+
+    let mut cmd = wrk.command("tojsonl");
+    cmd.arg("in.csv");
+
+    // this is treated as boolean since col1's domain has two values
+    // True and False
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = r#"{"col1":true,"col2":"Mark"}
+{"col1":false,"col2":"John"}
+{"col1":false,"col2":"Bob"}"#;
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn tojsonl_boolean_yes() {
+    let wrk = Workdir::new("tojsonl");
+    wrk.create(
+        "in.csv",
+        vec![
+            svec!["col1", "col2"],
+            svec!["yes", "Mark"],
+            svec!["no", "John"],
+            svec!["no", "Bob"],
+        ],
+    );
+
+    let mut cmd = wrk.command("tojsonl");
+    cmd.arg("in.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = r#"{"col1":true,"col2":"Mark"}
+{"col1":false,"col2":"John"}
+{"col1":false,"col2":"Bob"}"#;
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn tojsonl_boolean_null() {
+    let wrk = Workdir::new("tojsonl");
+    wrk.create(
+        "in.csv",
+        vec![
+            svec!["col1", "col2"],
+            svec!["true", "Mark"],
+            svec!["", "John"],
+            svec!["", "Bob"],
+        ],
+    );
+
+    let mut cmd = wrk.command("tojsonl");
+    cmd.arg("in.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = r#"{"col1":true,"col2":"Mark"}
+{"col1":false,"col2":"John"}
+{"col1":false,"col2":"Bob"}"#;
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn tojsonl_boolean_yes_null() {
+    let wrk = Workdir::new("tojsonl");
+    wrk.create(
+        "in.csv",
+        vec![
+            svec!["col1", "col2"],
+            svec!["y", "Mark"],
+            svec!["", "John"],
+            svec!["", "Bob"],
+        ],
+    );
+
+    let mut cmd = wrk.command("tojsonl");
+    cmd.arg("in.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = r#"{"col1":true,"col2":"Mark"}
+{"col1":false,"col2":"John"}
+{"col1":false,"col2":"Bob"}"#;
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn tojsonl_nested() {
     let wrk = Workdir::new("tojsonl_nested");
     wrk.create(
