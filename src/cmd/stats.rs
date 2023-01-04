@@ -28,8 +28,8 @@ as its an expensive operation. The date formats recognized can be found at
 https://github.com/jqnatividad/belt/tree/main/dateparser#accepted-date-formats.
 
 Summary statistics for dates are also computed when --infer-dates is enabled, with DateTime
-results in rfc3339 format and Date results in "yyyy-mm-dd" format. Date range & stddev are 
-returned in days, not seconds. Date variance is currently not computed as the current
+results in rfc3339 format and Date results in "yyyy-mm-dd" format. Date range, stddev & iqr
+are returned in days, not seconds. Date variance is currently not computed as the current
 streaming variance algorithm is not well suited to unix epoch timestamp values.
 
 Unlike the sniff command, stats' data type inferences are GUARANTEED, as the entire file
@@ -61,7 +61,7 @@ stats options:
                               This requires loading all CSV data in memory.
     --round <decimal_places>  Round statistics to <decimal_places>. Rounding is done following
                               Midpoint Nearest Even (aka "Bankers Rounding") rule.
-                              Date range & stddev are always at least 5 decimal places as
+                              For dates - range, stddev & IQR are always at least 5 decimal places as
                               they are reported in days, and 5 places gives us millisecond precision.
                               [default: 4]
     --nulls                   Include NULLs in the population size for computing
@@ -806,7 +806,11 @@ impl Stats {
                     pieces.push(timestamp_ms_to_rfc3339(q1 as i64, typ));
                     pieces.push(timestamp_ms_to_rfc3339(q2 as i64, typ)); // q2 = median
                     pieces.push(timestamp_ms_to_rfc3339(q3 as i64, typ));
-                    pieces.push(round_num(iqr, round_places));
+                    // return iqr in days - there are 86,400,000 ms in a day
+                    pieces.push(round_num(
+                        (q3 - q1) / 86_400_000.0_f64,
+                        u32::max(round_places, 5),
+                    ));
 
                     pieces.push(timestamp_ms_to_rfc3339(uif as i64, typ));
                     pieces.push(timestamp_ms_to_rfc3339(uof as i64, typ));
