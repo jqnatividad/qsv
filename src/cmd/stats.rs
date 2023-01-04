@@ -13,7 +13,7 @@ of data (i.e., constant memory) and can work with arbitrarily large CSV files.
 
 The following additional statistics require loading the entire file into memory:
 cardinality, mode/antimode, median, quartiles and its related measures 
-(Interquartile Range (IQR), lower/upper fences & skewness).
+(IQR, lower/upper fences & skewness).
 
 Antimode is the least frequently occurring non-zero value and is the opposite of mode.
 It return "*ALL" if all the values are unique, and only returns a preview of the first
@@ -28,9 +28,10 @@ as its an expensive operation. The date formats recognized can be found at
 https://github.com/jqnatividad/belt/tree/main/dateparser#accepted-date-formats.
 
 Summary statistics for dates are also computed when --infer-dates is enabled, with DateTime
-results in rfc3339 format and Date results in "yyyy-mm-dd" format. Date range, stddev & iqr
-are returned in days, not seconds. Date variance is currently not computed as the current
-streaming variance algorithm is not well suited to unix epoch timestamp values.
+results in rfc3339 format and Date results in "yyyy-mm-dd" format in the UTC timezone.
+Date range, stddev & IQR are returned in days, not timestamp milliseconds. Date variance is
+currently not computed as the current streaming variance algorithm is not well suited to 
+unix epoch timestamp values.
 
 Unlike the sniff command, stats' data type inferences are GUARANTEED, as the entire file
 is scanned, and not just sampled.
@@ -507,6 +508,8 @@ fn timestamp_ms_to_rfc3339(timestamp: i64, typ: FieldType) -> String {
     )
     .to_rfc3339();
 
+    // if type = Date, only return the date component
+    // do not return the time component
     if typ == TDate {
         return date_val[..10].to_string();
     }
@@ -790,8 +793,8 @@ impl Stats {
                 // calculate skewness using Quantile-based measures
                 // https://en.wikipedia.org/wiki/Skewness#Quantile-based_measures
                 // https://blogs.sas.com/content/iml/2017/07/19/quantile-skewness.html
-                // skewness = ((q3 - q2) - (q2 - q1)) / iqr;
-                // which is also skewness = (q3 - (2.0 * q2) + q1) / iqr
+                // quantile skewness = ((q3 - q2) - (q2 - q1)) / iqr;
+                // which is also (q3 - (2.0 * q2) + q1) / iqr
                 // which in turn, is the basis of the fused multiply add version below
                 let skewness = (2.0f64.mul_add(-q2, q3) + q1) / iqr;
 
