@@ -85,8 +85,25 @@ pub fn version() -> String {
     enabled_features.push_str("foreach;");
     #[cfg(all(feature = "generate", not(feature = "lite")))]
     enabled_features.push_str("generate;");
+
     #[cfg(all(feature = "luau", not(feature = "lite")))]
-    enabled_features.push_str("luau;");
+    {
+        let luau = mlua::Lua::new();
+        match luau.load("return _VERSION").eval() {
+            Ok(version_info) => {
+                if let mlua::Value::String(string_val) = version_info {
+                    enabled_features.push_str(&format!(
+                        "{};",
+                        string_val.to_str().unwrap_or("Luau - unknown version")
+                    ));
+                } else {
+                    enabled_features.push_str("Luau - ?;")
+                }
+            }
+            Err(e) => enabled_features.push_str(&format!("Luau - cannot retrieve version: {e};")),
+        };
+    }
+
     #[cfg(all(feature = "python", not(feature = "lite")))]
     {
         enabled_features.push_str("python-");
