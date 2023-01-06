@@ -3,8 +3,8 @@ Compute summary statistics & infers data types for each column in a CSV.
 
 Summary statistics includes sum, min/max/range, min/max length, mean, stddev, variance,
 nullcount, quartiles, interquartile range (IQR), lower/upper fences, skewness, median, 
-cardinality, mode/s & antimode/s. Note that some statistics are expensive to compute and
-requires loading the entire file into memory, so they must be enabled explicitly. 
+cardinality, mode/s & antimode/s. Note that some statistics requires loading the
+entire file into memory, so they must be enabled explicitly. 
 
 By default, the following statistics are reported for *every* column in the CSV data:
 sum, min/max/range values, min/max length, mean, stddev, variance & nullcount. The default
@@ -15,17 +15,12 @@ The following additional statistics require loading the entire file into memory:
 cardinality, mode/antimode, median, quartiles and its related measures 
 (IQR, lower/upper fences & skewness).
 
-Antimode is the least frequently occurring non-zero value and is the opposite of mode.
-It return "*ALL" if all the values are unique, and only returns a preview of the first
+"Antimode" is the least frequently occurring non-zero value and is the opposite of mode.
+It returns "*ALL" if all the values are unique, and only returns a preview of the first
 10 antimodes, for readability purposes.
 
 If you need all the values of a column, run the `frequency` command with --limit set to zero.
 The tail of the resulting frequency table for each column will have all its antimode values.
-
-Each column's data type is also inferred (NULL, Integer, String, Float, Date & DateTime). 
-Note that the Date and DateTime data types are only inferred with the --infer-dates option 
-as its an expensive operation. The date formats recognized can be found at 
-https://github.com/jqnatividad/belt/tree/main/dateparser#accepted-date-formats.
 
 Summary statistics for dates are also computed when --infer-dates is enabled, with DateTime
 results in rfc3339 format and Date results in "yyyy-mm-dd" format in the UTC timezone.
@@ -33,11 +28,22 @@ Date range, stddev & IQR are returned in days, not timestamp milliseconds. Date 
 currently not computed as the current streaming variance algorithm is not well suited to 
 unix epoch timestamp values.
 
+Each column's data type is also inferred (NULL, Integer, String, Float, Date & DateTime).
 Unlike the sniff command, stats' data type inferences are GUARANTEED, as the entire file
 is scanned, and not just sampled.
 
+Note that the Date and DateTime data types are only inferred with the --infer-dates option 
+as its an expensive operation to match a date candidate against 19 possible date formats,
+with each format, having several variants.
+
+The date formats recognized and its sub-variants along with examples can be found at 
+https://github.com/jqnatividad/belt/tree/main/dateparser#accepted-date-formats.
+
 Computing statistics on a large file can be made much faster if you create an index for it
 first with 'qsv index' to enable multithreading.
+
+For examples, see the "boston311" test files in https://github.com/jqnatividad/qsv/tree/master/resources/test
+and https://github.com/jqnatividad/qsv/blob/f7f9c4297fb3dea685b5d0f631932b6b2ca4a99a/tests/test_stats.rs#L544.
 
 Usage:
     qsv stats [options] [<input>]
