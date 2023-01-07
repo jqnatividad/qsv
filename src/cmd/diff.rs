@@ -77,11 +77,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut csv_diff_writer = CsvDiffWriter::new(wtr);
     csv_diff_writer.write_headers(&mut csv_rdr_left, &mut csv_rdr_right)?;
 
-    let csv_diff = CsvByteDiffBuilder::new()
+    let Ok(csv_diff) = CsvByteDiffBuilder::new()
         .primary_key_columns(primary_key_cols)
-        .build()
-        // TODO: proper error handling
-        .expect("can instantiate");
+        .build() else {
+            return fail_clierror!("Cannot instantiate diff")
+        };
 
     let diff_byte_records_iter = csv_diff.diff(csv_rdr_left.into(), csv_rdr_right.into());
 
