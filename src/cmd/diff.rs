@@ -138,7 +138,8 @@ impl<W: Write> CsvDiffWriter<W> {
         for dbr in diff_byte_records {
             self.write_diff_byte_record(dbr?)?;
         }
-        Ok(self.csv_writer.flush()?)
+        self.csv_writer.flush()?;
+        Ok(())
     }
 
     fn write_diff_byte_record(&mut self, diff_byte_record: DiffByteRecord) -> csv::Result<()> {
