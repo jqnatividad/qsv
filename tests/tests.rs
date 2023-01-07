@@ -42,6 +42,7 @@ mod test_combos;
 mod test_comments;
 mod test_count;
 mod test_dedup;
+mod test_diff;
 #[cfg(any(feature = "full", feature = "lite"))]
 mod test_enumerate;
 mod test_excel;
