@@ -9,13 +9,14 @@ use std::{
 use docopt::Docopt;
 #[cfg(any(feature = "full", feature = "lite"))]
 use indicatif::{HumanCount, ProgressBar, ProgressStyle};
+use once_cell::sync::OnceCell;
 use serde::de::DeserializeOwned;
 #[cfg(any(feature = "full", feature = "lite"))]
 use serde::de::{Deserialize, Deserializer, Error};
 
 use crate::{
     config::{Config, Delimiter},
-    CliResult,
+    CliError, CliResult,
 };
 
 #[macro_export]
@@ -25,6 +26,8 @@ macro_rules! regex_once_cell {
         RE.get_or_init(|| regex::Regex::new($re).unwrap())
     }};
 }
+
+static ROW_COUNT: once_cell::sync::OnceCell<u64> = OnceCell::new();
 
 #[inline]
 pub fn num_cpus() -> usize {
@@ -174,19 +177,31 @@ pub fn show_env_vars() {
 }
 
 #[inline]
-pub fn count_rows(conf: &Config) -> Result<u64, io::Error> {
+pub fn count_rows(conf: &Config) -> Result<u64, CliError> {
     if let Some(idx) = conf.indexed().unwrap_or(None) {
         Ok(idx.count())
     } else {
         // index does not exist or is stale,
         // count records by iterating through records
-        let mut rdr = conf.reader()?;
-        let mut count = 0u64;
-        let mut record = csv::ByteRecord::new();
-        while rdr.read_byte_record(&mut record)? {
-            count += 1;
+        // however, do this only once per invocation and cache the result
+        let rc = ROW_COUNT.get_or_init(|| {
+            if let Ok(mut rdr) = conf.reader() {
+                let mut count = 0u64;
+                let mut record = csv::ByteRecord::new();
+                while rdr.read_byte_record(&mut record).unwrap_or_default() {
+                    count += 1;
+                }
+                count
+            } else {
+                u64::MAX
+            }
+        });
+
+        if *rc < u64::MAX {
+            Ok(*rc)
+        } else {
+            Err(CliError::Other("Unable to get row count".to_string()))
         }
-        Ok(count)
     }
 }
 
