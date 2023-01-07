@@ -13,7 +13,7 @@ fn simple_diff() {
 
     wrk.create("in2.csv", got);
 
-    // sort on case_enquiry_id, diffresult
+    // sort on case_enquiry_id
     let mut cmd = wrk.command("sort");
     cmd.arg("--select").arg("2").arg("in2.csv");
 
