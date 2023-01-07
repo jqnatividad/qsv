@@ -1,3 +1,4 @@
+#![cfg(feature = "full")]
 static USAGE: &str = r#"
 Creates the difference between two CSVs.
 
