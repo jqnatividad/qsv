@@ -38,14 +38,14 @@ use crate::{
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input_left: Option<String>,
-    arg_input_right: Option<String>,
-    flag_output: Option<String>,
-    flag_no_headers_left: bool,
+    arg_input_left:        Option<String>,
+    arg_input_right:       Option<String>,
+    flag_output:           Option<String>,
+    flag_no_headers_left:  bool,
     flag_no_headers_right: bool,
-    flag_delimiter_left: Option<Delimiter>,
-    flag_delimiter_right: Option<Delimiter>,
-    flag_primary_key_idx: Option<String>,
+    flag_delimiter_left:   Option<Delimiter>,
+    flag_delimiter_right:  Option<Delimiter>,
+    flag_primary_key_idx:  Option<String>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -109,7 +109,8 @@ impl<W: Write> CsvDiffWriter<W> {
                 rdr_bh.write_diffresult_header(&mut self.csv_writer)?;
                 // we also read the headers from the right CSV, so that both readers end up
                 // before the actual records. Otherwise, it would lead to errors when we
-                // diff the CSVs, because the header of one CSV would have been read and the other not.
+                // diff the CSVs, because the header of one CSV would have been read and the other
+                // not.
                 let _ = rdr_right.byte_headers()?;
             }
             (true, false) => {
@@ -153,7 +154,8 @@ impl<W: Write> CsvDiffWriter<W> {
             DiffByteRecord::Modify {
                 delete,
                 add,
-                // TODO: this should be used in the future to highlight the column where differences occur
+                // TODO: this should be used in the future to highlight the column where differences
+                // occur
                 field_indices: _field_indices,
             } => {
                 let mut vec_del = vec![remove_sign];

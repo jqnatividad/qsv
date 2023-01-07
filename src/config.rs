@@ -69,23 +69,23 @@ impl<'de> Deserialize<'de> for Delimiter {
 #[allow(clippy::struct_excessive_bools)]
 #[derive(Debug)]
 pub struct Config {
-    path: Option<PathBuf>, // None implies <stdin>
-    idx_path: Option<PathBuf>,
-    select_columns: Option<SelectColumns>,
-    delimiter: u8,
-    pub no_headers: bool,
-    flexible: bool,
-    terminator: csv::Terminator,
-    pub quote: u8,
-    quote_style: csv::QuoteStyle,
-    double_quote: bool,
-    escape: Option<u8>,
-    quoting: bool,
+    path:              Option<PathBuf>, // None implies <stdin>
+    idx_path:          Option<PathBuf>,
+    select_columns:    Option<SelectColumns>,
+    delimiter:         u8,
+    pub no_headers:    bool,
+    flexible:          bool,
+    terminator:        csv::Terminator,
+    pub quote:         u8,
+    quote_style:       csv::QuoteStyle,
+    double_quote:      bool,
+    escape:            Option<u8>,
+    quoting:           bool,
     pub preamble_rows: u64,
-    trim: csv::Trim,
-    autoindex: bool,
-    checkutf8: bool,
-    prefer_dmy: bool,
+    trim:              csv::Trim,
+    autoindex:         bool,
+    checkutf8:         bool,
+    prefer_dmy:        bool,
 }
 
 // Empty trait as an alias for Seek and Read that avoids auto trait errors
