@@ -123,9 +123,8 @@ impl<W: Write> CsvDiffWriter<W> {
 
                 rdr_bh.write_diffresult_header(&mut self.csv_writer)?;
             }
-            (false, false) => {
-                // nothing to do, because there are no headers
-            }
+            // nothing to do, because there are no headers
+            (false, false) => {}
         }
 
         Ok(())
