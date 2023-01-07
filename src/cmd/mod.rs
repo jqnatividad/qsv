@@ -8,6 +8,7 @@ pub mod behead;
 pub mod cat;
 pub mod count;
 pub mod dedup;
+pub mod diff;
 #[cfg(any(feature = "full", feature = "lite"))]
 pub mod enumerate;
 pub mod excel;

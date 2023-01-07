@@ -64,7 +64,7 @@ use crate::{
 
 type ByteString = Vec<u8>;
 type BoxedWriter = csv::Writer<Box<dyn io::Write + 'static>>;
-type BoxedReader = csv::Reader<Box<dyn io::Read + 'static>>;
+type BoxedReader = csv::Reader<Box<dyn io::Read + Send + 'static>>;
 
 #[derive(Deserialize)]
 struct Args {
