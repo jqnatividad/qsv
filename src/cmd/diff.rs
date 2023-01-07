@@ -65,7 +65,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         None => vec![0],
         Some(s) => s
             .split(',')
-            .map(|idx| idx.parse::<usize>())
+            .map(str::parse::<usize>)
             .collect::<Result<Vec<_>, _>>()
             .map_err(|err| CliError::Other(err.to_string()))?,
     };
