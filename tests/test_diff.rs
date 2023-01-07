@@ -1,3 +1,4 @@
+#![cfg(feature = "full")]
 use crate::workdir::Workdir;
 
 #[test]
