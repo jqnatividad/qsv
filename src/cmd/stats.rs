@@ -640,8 +640,8 @@ impl Stats {
                     }
                 }
             }
-            TString => { // do nothing for String type
-            }
+            // do nothing for String type
+            TString => {}
         }
     }
 
@@ -706,7 +706,7 @@ impl Stats {
         }
 
         // mean, stddev & variance
-        if !(typ == TFloat || typ == TInteger || typ == TDateTime || typ == TDate) {
+        if typ == TString || typ == TNull {
             pieces.push(empty());
             pieces.push(empty());
             pieces.push(empty());
@@ -880,7 +880,8 @@ impl Stats {
                             v.antimodes();
                         let mut antimodes_list = String::new();
 
-                        // We only show the first 10 antimodes
+                        // We only store the first 10 antimodes
+                        // so if antimodes_count > 10, add the "*PREVIEW: " prefix
                         if antimodes_count > 10 {
                             antimodes_list.push_str("*PREVIEW: ");
                         }
@@ -892,7 +893,7 @@ impl Stats {
                                 .join(","),
                         );
 
-                        // and truncate at 100 characters and add an ellipsis
+                        // and truncate at 100 characters with an ellipsis
                         if antimodes_list.len() > 100 {
                             antimodes_list.truncate(100);
                             antimodes_list.push_str("...");
