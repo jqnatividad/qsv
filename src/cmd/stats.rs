@@ -859,8 +859,7 @@ impl Stats {
                 }
                 if self.which.mode {
                     // mode/s
-                    let (modes_result, mode_occurrences) = v.modes();
-                    let modes_count = modes_result.len();
+                    let (modes_result, modes_count, mode_occurrences) = v.modes();
                     let modes_list = modes_result
                         .iter()
                         .map(|c| String::from_utf8_lossy(c))
@@ -879,23 +878,20 @@ impl Stats {
                     } else {
                         let (antimodes_result, antimodes_count, antimode_occurrences) =
                             v.antimodes();
-                        let mut antimodes_list;
+                        let mut antimodes_list = String::new();
 
                         // We only show the first 10 antimodes
                         if antimodes_count > 10 {
-                            antimodes_list = "*PREVIEW: ".to_string();
-                            let preview = antimodes_result
-                                .iter()
-                                .map(|c| String::from_utf8_lossy(c))
-                                .take(10)
-                                .join(",");
-                            antimodes_list.push_str(&preview);
-                        } else {
-                            antimodes_list = antimodes_result
-                                .iter()
-                                .map(|c| String::from_utf8_lossy(c))
-                                .join(",");
+                            antimodes_list.push_str("*PREVIEW: ");
                         }
+
+                        antimodes_list.push_str(
+                            &antimodes_result
+                                .iter()
+                                .map(|c| String::from_utf8_lossy(c))
+                                .join(","),
+                        );
+
                         // and truncate at 100 characters and add an ellipsis
                         if antimodes_list.len() > 100 {
                             antimodes_list.truncate(100);
