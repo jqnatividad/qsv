@@ -436,9 +436,9 @@ dependencies = [
 
 [[package]]
 name = "async-trait"
-version = "0.1.60"
+version = "0.1.61"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "677d1d8ab452a3936018a687b20e6f7cf5363d713b732b8884001317b0e48aa3"
+checksum = "705339e0e4a9690e2908d2b3d049d85682cf19fbd5782494498fbf7003a6a282"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1043,9 +1043,9 @@ dependencies = [
 
 [[package]]
 name = "csvs_convert"
-version = "0.7.9"
+version = "0.7.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "27405e3f191eea6e7811979c541f576a61bb0c55de544c14226858f6f8a89174"
+checksum = "d6c89bf707479d558d299bfff6459b4f93f508f7785a6f052de461e77cd9d6f8"
 dependencies = [
  "arrow",
  "chrono",
@@ -1055,6 +1055,7 @@ dependencies = [
  "csv-index",
  "getrandom",
  "lazy_static",
+ "log",
  "minijinja",
  "parquet",
  "pathdiff",
@@ -1560,9 +1561,9 @@ dependencies = [
 
 [[package]]
 name = "glob"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9b919933a397b79c37e33b77bb2aa3dc8eb6e165ad809e58ff75bc7db2e34574"
+checksum = "d2fabcfbdc87f4758337ca535fb41a6d701b65693ce38287d856d1674551ec9b"
 
 [[package]]
 name = "governor"
@@ -2992,9 +2993,9 @@ dependencies = [
 
 [[package]]
 name = "qsv-stats"
-version = "0.5.2"
+version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "77e473a72783f2bf10a1a2b650823078e3a8af287f3257fe9fcea5cc508f78e8"
+checksum = "3daf0b4795e9f230285c71198c9d809d932e7323c59fdd39c18842878ef8f401"
 dependencies = [
  "ahash 0.8.2",
  "num-traits",
@@ -3952,9 +3953,9 @@ dependencies = [
 
 [[package]]
 name = "tokio"
-version = "1.23.1"
+version = "1.24.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "38a54aca0c15d014013256222ba0ebed095673f89345dd79119d912eb561b7a8"
+checksum = "1d9f76183f91ecfb55e1d7d5602bd1d979e38a3a522fe900241cf195624d67ae"
 dependencies = [
  "autocfg",
  "bytes",
@@ -4068,9 +4069,9 @@ dependencies = [
 
 [[package]]
 name = "try-lock"
-version = "0.2.3"
+version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "59547bce71d9c38b83d9c0e92b6066c4253371f15005def0c30d9657f50c7642"
+checksum = "3528ecfd12c466c6f163363caf2d02a71161dd5e1cc6ae7b34207ea2d42d81ed"
 
 [[package]]
 name = "twox-hash"
