@@ -524,7 +524,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     wtr.flush()?;
 
     let end_msg = format!(
-        "{} {}-column rows exported from \"{sheet}\"",
+        "{} {}-column rows exported from \"{sheet}\" sheet",
         // don't count the header in row count
         row_count.saturating_sub(1).separate_with_commas(),
         record.len().separate_with_commas(),

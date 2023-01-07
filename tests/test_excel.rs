@@ -345,7 +345,7 @@ fn excel_invalid_sheet_neg_index() {
     cmd.arg("--sheet").arg("-100").arg(xls_file);
 
     let got = wrk.output_stderr(&mut cmd);
-    let expected = "5 2-column rows exported from \"Last\"\n".to_string();
+    let expected = "5 2-column rows exported from \"Last\" sheet\n".to_string();
     assert_eq!(got, expected);
 }
 
@@ -708,7 +708,7 @@ fn excel_message() {
     cmd.arg("--sheet").arg("Middle").arg(xls_file);
 
     let got = wrk.output_stderr(&mut cmd);
-    assert_eq!(got, "5 2-column rows exported from \"Middle\"\n");
+    assert_eq!(got, "5 2-column rows exported from \"Middle\" sheet\n");
 }
 
 #[test]
@@ -721,7 +721,7 @@ fn excel_empty_sheet_message() {
     cmd.arg("--sheet").arg("nodata").arg(xls_file);
 
     let got = wrk.output_stderr(&mut cmd);
-    assert_eq!(got, "0 4-column rows exported from \"NoData\"\n");
+    assert_eq!(got, "0 4-column rows exported from \"NoData\" sheet\n");
 }
 
 #[test]
@@ -734,5 +734,5 @@ fn excel_empty_sheet2_message() {
     cmd.arg("--sheet").arg("Sheet1").arg(xls_file);
 
     let got = wrk.output_stderr(&mut cmd);
-    assert_eq!(got, "0 0-column rows exported from \"Sheet1\"\n");
+    assert_eq!(got, "0 0-column rows exported from \"Sheet1\" sheet\n");
 }
