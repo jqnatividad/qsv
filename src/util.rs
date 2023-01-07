@@ -100,7 +100,7 @@ pub fn version() -> String {
                         string_val.to_str().unwrap_or("Luau - unknown version")
                     ));
                 } else {
-                    enabled_features.push_str("Luau - ?;")
+                    enabled_features.push_str("Luau - ?;");
                 }
             }
             Err(e) => enabled_features.push_str(&format!("Luau - cannot retrieve version: {e};")),
