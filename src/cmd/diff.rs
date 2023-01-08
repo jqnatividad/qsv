@@ -2,13 +2,13 @@
 static USAGE: &str = r#"
 Creates the difference between two CSVs.
 
+Note that diff does not support stdin. A file path is required for both arguments.
+
 Usage:
     qsv diff [options] [<input-left>] [<input-right>]
     qsv diff --help
 
-Common options:
-    -h, --help                  Display this message
-    -o, --output <file>         Write output to <file> instead of stdout.
+diff options:
     --no-headers-left           When set, the first row will be considered as part of
                                 the left CSV to diff. (When not set, the
                                 first row is the header row and will be skipped during
@@ -24,6 +24,13 @@ Common options:
     --primary-key-idx <arg...>  The column indices that uniquely identify a record
                                 as a comma separated list of indices, e.g. 0,1,2.
                                 (default: 0)
+    -j, --jobs <arg>            The number of jobs to run in parallel.
+                                When not set, the number of jobs is set to the number
+                                of CPUs detected.
+
+Common options:
+    -h, --help                  Display this message
+    -o, --output <file>         Write output to <file> instead of stdout.
 "#;
 
 use std::io::{self, Read, Write};
@@ -42,6 +49,7 @@ struct Args {
     arg_input_left:        Option<String>,
     arg_input_right:       Option<String>,
     flag_output:           Option<String>,
+    flag_jobs:             Option<usize>,
     flag_no_headers_left:  bool,
     flag_no_headers_right: bool,
     flag_delimiter_left:   Option<Delimiter>,
@@ -62,6 +70,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .checkutf8(false)
         .no_headers(args.flag_no_headers_right);
 
+    if rconfig_left.is_stdin() || rconfig_right.is_stdin() {
+        return fail_clierror!(
+            "diff does not support stdin. A file path is required for both arguments."
+        );
+    }
+
     let primary_key_cols = match args.flag_primary_key_idx {
         None => vec![0],
         Some(s) => s
@@ -74,6 +88,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let wtr = Config::new(&args.flag_output).writer()?;
     let mut csv_rdr_left = rconfig_left.reader()?;
     let mut csv_rdr_right = rconfig_right.reader()?;
+
+    // set RAYON_NUM_THREADS
+    util::njobs(args.flag_jobs);
 
     let mut csv_diff_writer = CsvDiffWriter::new(wtr);
     csv_diff_writer.write_headers(&mut csv_rdr_left, &mut csv_rdr_right)?;
