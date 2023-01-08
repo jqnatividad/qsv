@@ -152,17 +152,17 @@ impl<W: Write> CsvDiffWriter<W> {
         diff_byte_records: impl IntoIterator<Item = csv::Result<DiffByteRecord>>,
     ) -> io::Result<()> {
         for dbr in diff_byte_records {
-            self.write_diff_byte_record(dbr?)?;
+            self.write_diff_byte_record(&dbr?)?;
         }
         self.csv_writer.flush()?;
         Ok(())
     }
 
-    fn write_diff_byte_record(&mut self, diff_byte_record: DiffByteRecord) -> csv::Result<()> {
+    fn write_diff_byte_record(&mut self, diff_byte_record: &DiffByteRecord) -> csv::Result<()> {
         let add_sign: &[u8] = &b"+"[..];
         let remove_sign: &[u8] = &b"-"[..];
 
-        match &diff_byte_record {
+        match diff_byte_record {
             DiffByteRecord::Add(add) => {
                 let mut vec = vec![add_sign];
                 vec.extend(add.byte_record());
