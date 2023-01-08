@@ -34,7 +34,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [cat](/src/cmd/cat.rs#L2) | Concatenate CSV files by row or by column. |
 | [count](/src/cmd/count.rs#L2)<br>📇 | Count the rows in a CSV file. (Instantaneous with an index.) |
 | [dedup](/src/cmd/dedup.rs#L2)<br>🗜️🚀 | Remove duplicate rows (See also `extsort`, `sort` & `sortcheck` commands). |
-| [diff](/src/cmd/diff.rs#L3)<br>🚀 | Find the difference between two CSVs with ludicrous speed!<br/>e.g. *compare two CSVs with 1M rows x 9 columns in under 600ms!* |
+| [diff](/src/cmd/diff.rs#L2)<br>🚀 | Find the difference between two CSVs with ludicrous speed!<br/>e.g. *compare two CSVs with 1M rows x 9 columns in under 600ms!* |
 | [enum](/src/cmd/enumerate.rs#L2) | Add a new column enumerating rows by adding a column of incremental or uuid identifiers. Can also be used to copy a column or fill a new column with a constant value.  |
 | [excel](/src/cmd/excel.rs#L2) | Exports a specified Excel/ODS sheet to a CSV file. |
 | [exclude](/src/cmd/exclude.rs#L2)<br>📇 | Removes a set of CSV data from another set based on the specified columns.  |
