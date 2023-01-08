@@ -3,8 +3,8 @@ Compute summary statistics & infers data types for each column in a CSV.
 
 Summary statistics includes sum, min/max/range, min/max length, mean, stddev, variance,
 nullcount, quartiles, interquartile range (IQR), lower/upper fences, skewness, median, 
-cardinality, mode/s & antimode/s. Note that some statistics requires loading the
-entire file into memory, so they must be enabled explicitly. 
+cardinality, mode/s & antimode/s, and median absolute deviation (MAD). Note that some
+statistics requires loading the entire file into memory, so they must be enabled explicitly. 
 
 By default, the following statistics are reported for *every* column in the CSV data:
 sum, min/max/range values, min/max length, mean, stddev, variance & nullcount. The default
@@ -13,19 +13,19 @@ of data (i.e., constant memory) and can work with arbitrarily large CSV files.
 
 The following additional statistics require loading the entire file into memory:
 cardinality, mode/antimode, median, quartiles and its related measures 
-(IQR, lower/upper fences & skewness).
+(IQR, lower/upper fences & skewness) and MAD.
 
 "Antimode" is the least frequently occurring non-zero value and is the opposite of mode.
 It returns "*ALL" if all the values are unique, and only returns a preview of the first
-10 antimodes, for readability purposes.
+10 antimodes.
 
-If you need all the values of a column, run the `frequency` command with --limit set to zero.
-The tail of the resulting frequency table for each column will have all its antimode values.
+If you need all the antimode values of a column, run the `frequency` command with --limit set
+to zero. The resulting frequency table will have all the antimode values.
 
 Summary statistics for dates are also computed when --infer-dates is enabled, with DateTime
 results in rfc3339 format and Date results in "yyyy-mm-dd" format in the UTC timezone.
-Date range, stddev & IQR are returned in days, not timestamp milliseconds. Date variance is
-currently not computed as the current streaming variance algorithm is not well suited to 
+Date range, stddev, MAD & IQR are returned in days, not timestamp milliseconds. Date variance
+is currently not computed as the current streaming variance algorithm is not well suited to 
 unix epoch timestamp values.
 
 Each column's data type is also inferred (NULL, Integer, String, Float, Date & DateTime).
@@ -62,6 +62,8 @@ stats options:
     --cardinality             Show the cardinality.
                               This requires loading all CSV data in memory.
     --median                  Show the median.
+                              This requires loading all CSV data in memory.
+    --mad                     Shows the median absolute deviation (MAD).
                               This requires loading all CSV data in memory.
     --quartiles               Show the quartiles, the IQR, the lower/upper inner/outer
                               fences and skewness.
@@ -111,13 +113,12 @@ Common options:
 // for Datapusher+ (https://github.com/dathere/datapusher-plus).
 //
 // It underpins the `schema` and `validate` commands - enabling validation of a
-// complex CSV (NYC's 311 data) against a JSONschema at almost 300,000 records/sec.
+// complex CSV (NYC's 311 data) JSONschema at almost 300,000 records/sec.
 //
 // These "unsafe" calls primarily skip repetitive UTF-8 validation and unneeded bounds checking.
 //
 // To safeguard against undefined behavior, `stats` is the most extensively tested command,
-// with 425 tests, with hundreds of property based, "fuzz" tests powered by quickcheck
-// (https://github.com/BurntSushi/quickcheck).
+// with 425 tests.
 
 use std::{
     borrow::ToOwned,
@@ -153,6 +154,7 @@ pub struct Args {
     pub flag_mode:            bool,
     pub flag_cardinality:     bool,
     pub flag_median:          bool,
+    pub flag_mad:             bool,
     pub flag_quartiles:       bool,
     pub flag_round:           u32,
     pub flag_nulls:           bool,
@@ -178,6 +180,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         args.flag_cardinality = false;
         args.flag_median = false;
         args.flag_quartiles = false;
+        args.flag_mad = false;
     }
 
     let mut wtr = Config::new(&args.flag_output).writer()?;
@@ -341,6 +344,7 @@ impl Args {
                 dist:          !self.flag_typesonly,
                 cardinality:   self.flag_everything || self.flag_cardinality,
                 median:        !self.flag_everything && self.flag_median && !self.flag_quartiles,
+                mad:           self.flag_everything || self.flag_mad,
                 quartiles:     self.flag_everything || self.flag_quartiles,
                 mode:          self.flag_everything || self.flag_mode,
                 typesonly:     self.flag_typesonly,
@@ -355,8 +359,8 @@ impl Args {
             return csv::StringRecord::from(vec!["field", "type"]);
         }
 
-        // with --everything, we have 28 columns at most
-        let mut fields = Vec::with_capacity(28);
+        // with --everything, we have 29 columns at most
+        let mut fields = Vec::with_capacity(29);
         fields.extend_from_slice(&[
             "field",
             "type",
@@ -374,6 +378,9 @@ impl Args {
         let all = self.flag_everything;
         if self.flag_median && !self.flag_quartiles && !all {
             fields.push("median");
+        }
+        if self.flag_mad || all {
+            fields.push("mad");
         }
         if self.flag_quartiles || all {
             fields.extend_from_slice(&[
@@ -462,6 +469,7 @@ struct WhichStats {
     dist:          bool,
     cardinality:   bool,
     median:        bool,
+    mad:           bool,
     quartiles:     bool,
     mode:          bool,
     typesonly:     bool,
@@ -483,6 +491,7 @@ pub struct Stats {
     nullcount: u64,
     modes:     Option<Unsorted<Vec<u8>>>,
     median:    Option<Unsorted<f64>>,
+    mad:       Option<Unsorted<f64>>,
     quartiles: Option<Unsorted<f64>>,
     which:     WhichStats,
 }
@@ -524,8 +533,8 @@ fn timestamp_ms_to_rfc3339(timestamp: i64, typ: FieldType) -> String {
 
 impl Stats {
     fn new(which: WhichStats) -> Stats {
-        let (mut sum, mut minmax, mut online, mut modes, mut median, mut quartiles) =
-            (None, None, None, None, None, None);
+        let (mut sum, mut minmax, mut online, mut modes, mut median, mut quartiles, mut mad) =
+            (None, None, None, None, None, None, None);
         if which.sum {
             sum = Some(TypedSum::default());
         }
@@ -543,6 +552,9 @@ impl Stats {
         } else if which.median {
             median = Some(stats::Unsorted::default());
         }
+        if which.mad {
+            mad = Some(stats::Unsorted::default());
+        }
         Stats {
             typ: FieldType::default(),
             sum,
@@ -551,6 +563,7 @@ impl Stats {
             nullcount: 0,
             modes,
             median,
+            mad,
             quartiles,
             which,
         }
@@ -561,7 +574,7 @@ impl Stats {
         let (sample_type, timestamp_val) = FieldType::from_sample(infer_dates, sample, self.typ);
         self.typ.merge(sample_type);
 
-        // we're inferring typesonly, don't compute statistics
+        // we're inferring typesonly, don't add samples to compute statistics
         if self.which.typesonly {
             return;
         }
@@ -607,6 +620,9 @@ impl Stats {
                     if let Some(v) = self.median.as_mut() {
                         v.add(n);
                     }
+                    if let Some(v) = self.mad.as_mut() {
+                        v.add(n);
+                    }
                     if let Some(v) = self.quartiles.as_mut() {
                         v.add(n);
                     }
@@ -632,6 +648,9 @@ impl Stats {
                     if let Some(v) = self.median.as_mut() {
                         v.add(n);
                     }
+                    if let Some(v) = self.mad.as_mut() {
+                        v.add(n);
+                    }
                     if let Some(v) = self.quartiles.as_mut() {
                         v.add(n);
                     }
@@ -654,8 +673,8 @@ impl Stats {
 
         let typ = self.typ;
         // prealloc memory for performance
-        // we have 28 columns at most with --everything
-        let mut pieces = Vec::with_capacity(28);
+        // we have 29 columns at most with --everything
+        let mut pieces = Vec::with_capacity(29);
         let empty = String::new;
 
         // type
@@ -757,6 +776,24 @@ impl Stats {
                 pieces.push(round_num(v, round_places));
             }
         } else if self.which.median {
+            pieces.push(empty());
+        }
+
+        // median absolute deviation (MAD)
+        if let Some(v) = self.mad.as_mut().and_then(|v| {
+            if let TNull | TString = typ {
+                None
+            } else {
+                v.mad()
+            }
+        }) {
+            if typ == TDateTime || typ == TDate {
+                // like stddev, return MAD in days
+                pieces.push(round_num(v / 86_400_000.0_f64, u32::max(round_places, 5)));
+            } else {
+                pieces.push(round_num(v, round_places));
+            }
+        } else if self.which.mad {
             pieces.push(empty());
         }
 

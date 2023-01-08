@@ -371,6 +371,7 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
         flag_cardinality:     true,
         flag_median:          false,
         flag_quartiles:       false,
+        flag_mad:             false,
         flag_nulls:           false,
         flag_round:           4,
         flag_infer_dates:     true,
