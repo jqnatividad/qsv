@@ -1,4 +1,3 @@
-#![cfg(feature = "full")]
 static USAGE: &str = r#"
 Creates the difference between two CSVs.
 
@@ -111,11 +110,11 @@ struct CsvDiffWriter<W: Write> {
 }
 
 impl<W: Write> CsvDiffWriter<W> {
-    pub fn new(csv_writer: csv::Writer<W>) -> Self {
+    fn new(csv_writer: csv::Writer<W>) -> Self {
         Self { csv_writer }
     }
 
-    pub fn write_headers<R: Read>(
+    fn write_headers<R: Read>(
         &mut self,
         rdr_left: &mut csv::Reader<R>,
         rdr_right: &mut csv::Reader<R>,
@@ -148,7 +147,7 @@ impl<W: Write> CsvDiffWriter<W> {
         Ok(())
     }
 
-    pub fn write_diff_byte_records(
+    fn write_diff_byte_records(
         &mut self,
         diff_byte_records: impl IntoIterator<Item = csv::Result<DiffByteRecord>>,
     ) -> io::Result<()> {
