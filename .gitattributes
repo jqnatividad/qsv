@@ -1,4 +1,5 @@
 * text=auto
 *.sh text eol=lf
+*.csv text eol=lf
 resources/test/test-windows1252.csv encoding=cp1252
 resources/test/test-utf16le.csv encoding=utf-16le
