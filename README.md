@@ -317,7 +317,7 @@ It will NOT offer the choice to update itself to the prebuilt binaries published
 ## Testing
 qsv has ~950 tests in the [tests](https://github.com/jqnatividad/qsv/tree/master/tests) directory.
 Each command has its own test suite in a separate file with the convention `test_<COMMAND>.rs`.
-Apart from preventing regressions, the tests also serve as good illustrative examples. 
+Apart from preventing regressions, the tests also serve as good illustrative examples, and are often linked from the usage text of each corresponding command.
 
 To test each binary variant:
 ```
