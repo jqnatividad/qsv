@@ -6,6 +6,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.82.0] - 2023-01-09
+
+### Added
+* `diff`: Find the difference between two CSVs ludicrously fast! by @janriemer in https://github.com/jqnatividad/qsv/pull/711
+* `stats`: added [Median Absolute Deviation](https://en.wikipedia.org/wiki/Median_absolute_deviation) (MAD) https://github.com/jqnatividad/qsv/pull/715
+* added Testing section to README https://github.com/jqnatividad/qsv/commit/517d69b496aaa9535a2b23b05e44a5999d8ef994
+
+### Changed
+* `validate`: schema less validation error improvements https://github.com/jqnatividad/qsv/pull/703
+* `stats`: faster date inferencing https://github.com/jqnatividad/qsv/pull/706
+* `stats`: minor performance tweaks https://github.com/jqnatividad/qsv/commit/15e6284c20cccf4a6b74498336d31b0d7ba03285 https://github.com/jqnatividad/qsv/commit/3f0ed2b314765a546e28b534d5e82bff892592c3
+* `stats`: refactored modes compilation https://github.com/jqnatividad/qsv/commit/6e448b041a2c78b3ce1cc89aadaff4a8d1081472
+* `stats`: simplify if condition https://github.com/jqnatividad/qsv/commit/ae7cc85afe1dc4c3f87cbefe3b14dc93b28d94e9
+* `luau`: show luau version when invoking --version https://github.com/jqnatividad/qsv/commit/f7f9c4297fb3dea685b5d0f631932b6b2ca4a99a
+* `excel`: add "sheet" suffix to end msg for readability https://github.com/jqnatividad/qsv/commit/ae3a8e31784a24c8492de76c5074e477cc474063
+* cache `util::count_rows` result, so if a CSV without an index is queried, it caches the result and future calls to count_rows in the same session will be instantaneous https://github.com/jqnatividad/qsv/commit/e805dedf5674cfbc56d9948791419ac6fd51f2fd
+* Bump console from 0.15.3 to 0.15.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/704
+* Bump cached from 0.41.0 to 0.42.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/709
+* Bump mlua from 0.8.6 to 0.8.7 by @dependabot in https://github.com/jqnatividad/qsv/pull/712
+* Bump qsv-stats from 0.5.2 to 0.6.0 with the new MAD statistic support
+* cargo update bump dependencies - notably mimalloc from 0.1.32 to 0.1.34, luau0-src from 0.5.1_luau553 to 0.5.0_luau555, csvs_convert from 0.7.9 to 0.7.11 and regex from 1.7.0 to 1.7.1
+* pin Rust nightly to 2023-01-08
+
+### Fixed
+* `tojsonl`: fix escaping of unicode string. Replace hand-rolled escape fn with built-in escape_default fn https://github.com/jqnatividad/qsv/pull/707. Fixes https://github.com/jqnatividad/qsv/issues/705
+* `tojsonl`: more robust boolean inferencing https://github.com/jqnatividad/qsv/pull/710. Fixes https://github.com/jqnatividad/qsv/issues/708
+
+
+## New Contributors
+* @janriemer made their first contribution in https://github.com/jqnatividad/qsv/pull/711
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.81.0...0.82.0
+
 ## [0.81.0] - 2023-01-02
 
 ### Added
