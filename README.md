@@ -28,7 +28,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 
 | Command | Description |
 | --- | --- |
-| [apply](/src/cmd/apply.rs#L2)<br>❇️🚀 | Apply series of string, date, math, currency & geocoding transformations to a CSV column. It also has some basic [NLP](https://en.wikipedia.org/wiki/Natural_language_processing) functions ([similarity](https://crates.io/crates/strsim), [sentiment analysis](https:❇️//crates.io/crates/vader_sentiment), [profanity](https://docs.rs/censor/latest/censor/), [eudex](https://github.com/ticki/eudex#eudex-a-blazingly-fast-phonetic-reductionhashing-algorithm) & [language detection](https://crates.io/crates/whatlang)).  |
+| [apply](/src/cmd/apply.rs#L2)<br>❇️🚀🧠 | Apply series of string, date, math, currency & geocoding transformations to a CSV column. It also has some basic [NLP](https://en.wikipedia.org/wiki/Natural_language_processing) functions ([similarity](https://crates.io/crates/strsim), [sentiment analysis](https:❇️//crates.io/crates/vader_sentiment), [profanity](https://docs.rs/censor/latest/censor/), [eudex](https://github.com/ticki/eudex#eudex-a-blazingly-fast-phonetic-reductionhashing-algorithm) & [language detection](https://crates.io/crates/whatlang)).  |
 | [applydp](/src/cmd/applydp.rs#L2)<br>🚀 | applydp is a slimmed-down version of `apply` with only [Datapusher+](https://github.com/dathere/datapusher-plus) relevant subcommands/operations (`qsvdp` binary variant only). |
 | [behead](/src/cmd/behead.rs#L2) | Drop headers from a CSV.  |
 | [cat](/src/cmd/cat.rs#L2) | Concatenate CSV files by row or by column. |
@@ -40,8 +40,8 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [exclude](/src/cmd/exclude.rs#L2)<br>📇 | Removes a set of CSV data from another set based on the specified columns.  |
 | [explode](/src/cmd/explode.rs#L2) | Explode rows into multiple ones by splitting a column value based on the given separator.  |
 | [extsort](/src/cmd/extsort.rs#L2)<br>🚀 | Sort an arbitrarily large CSV/text file using a multithreaded [external merge sort](https://en.wikipedia.org/wiki/External_sorting) algorithm. |
-| [fetch](/src/cmd/fetch.rs#L2)<br>❇️ | Fetches data from web services for every row using **HTTP Get**. Comes with [jql](https://github.com/yamafaktory/jql#%EF%B8%8F-usage) JSON query language support, dynamic throttling ([RateLimit](https://tools.ietf.org/id/draft-polli-ratelimit-headers-00.html)) & caching with optional [Redis](https://redis.io/) support for persistent caching. |
-| [fetchpost](/src/cmd/fetchpost.rs#L2)<br>❇️ | Similar to `fetch`, but uses **HTTP Post**. ([HTTP GET vs POST methods](https://www.geeksforgeeks.org/difference-between-http-get-and-post-methods/)) |
+| [fetch](/src/cmd/fetch.rs#L2)<br>❇️🧠 | Fetches data from web services for every row using **HTTP Get**. Comes with [jql](https://github.com/yamafaktory/jql#%EF%B8%8F-usage) JSON query language support, dynamic throttling ([RateLimit](https://tools.ietf.org/id/draft-polli-ratelimit-headers-00.html)) & caching with optional [Redis](https://redis.io/) support for persistent caching. |
+| [fetchpost](/src/cmd/fetchpost.rs#L2)<br>❇️🧠 | Similar to `fetch`, but uses **HTTP Post**. ([HTTP GET vs POST methods](https://www.geeksforgeeks.org/difference-between-http-get-and-post-methods/)) |
 | [fill](/src/cmd/fill.rs#L2) | Fill empty values.  |
 | [fixlengths](/src/cmd/fixlengths.rs#L2) | Force a CSV to have same-length records by either padding or truncating them. |
 | [flatten](/src/cmd/flatten.rs#L2) | A flattened view of CSV records. Useful for viewing one record at a time.<br />e.g. `qsv slice -i 5 data.csv \| qsv flatten`. |
@@ -82,6 +82,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
  ❇️: enabled by a feature flag on `qsv`. Not available on `qsvlite`. `qsvdp` has `luau` & `applydp` pre-enabled.   
 📇: uses an index when available. `join` creates its own in-memory index automatically.   
 🗜️: loads entire CSV into memory, though `dedup`, `stats` & `transpose` have "streaming" modes as well.   
+🧠: expensive operations are memoized (cached) with available Redis caching for fetch commands.    
 🏎️: multithreaded when an index is available.   
 🚀: multithreaded even without an index.
 
