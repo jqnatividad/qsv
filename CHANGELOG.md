@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Bump cached from 0.41.0 to 0.42.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/709
 * Bump mlua from 0.8.6 to 0.8.7 by @dependabot in https://github.com/jqnatividad/qsv/pull/712
 * Bump qsv-stats from 0.5.2 to 0.6.0 with the new MAD statistic support
-* cargo update bump dependencies - notably mimalloc from 0.1.32 to 0.1.34, luau0-src from 0.5.1_luau553 to 0.5.0_luau555, csvs_convert from 0.7.9 to 0.7.11 and regex from 1.7.0 to 1.7.1
+* cargo update bump dependencies - notably mimalloc from 0.1.32 to 0.1.34, luau0-src from 0.4.1_luau553 to 0.5.0_luau555, csvs_convert from 0.7.9 to 0.7.11 and regex from 1.7.0 to 1.7.1
 * pin Rust nightly to 2023-01-08
 
 ### Fixed
