@@ -171,6 +171,12 @@ pub struct Args {
 static INFER_DATE_FLAGS: once_cell::sync::OnceCell<Vec<bool>> = OnceCell::new();
 static DMY_PREFERENCE: AtomicBool = AtomicBool::new(false);
 
+// number of milliseconds per day
+const MS_IN_DAY: f64 = 86_400_000.0;
+// number of decimal places when rounding days
+// 5 decimal places give us millisecond precision
+const DAY_DECIMAL_PLACES: usize = 5;
+
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut args: Args = util::get_args(USAGE, argv)?;
     if args.flag_typesonly {
@@ -737,11 +743,10 @@ impl Stats {
                 pieces.push(timestamp_ms_to_rfc3339(v.mean() as i64, typ));
                 // instead of returning stdev in seconds, let's return it in
                 // days as it easier to handle
-                // 86_400_000 = number of milliseconds in a day.
                 // Round to at least 5 decimal places
                 pieces.push(round_num(
-                    v.stddev() / 86_400_000.0_f64,
-                    u32::max(round_places, 5),
+                    v.stddev() / MS_IN_DAY,
+                    u32::max(round_places, DAY_DECIMAL_PLACES),
                 ));
                 // we don't know how to compute variance on timestamps
                 // it appears the current algorithm we use is not suited to the large timestamp
@@ -788,7 +793,10 @@ impl Stats {
         }) {
             if typ == TDateTime || typ == TDate {
                 // like stddev, return MAD in days
-                pieces.push(round_num(v / 86_400_000.0_f64, u32::max(round_places, 5)));
+                pieces.push(round_num(
+                    v / MS_IN_DAY,
+                    u32::max(round_places, DAY_DECIMAL_PLACES),
+                ));
             } else {
                 pieces.push(round_num(v, round_places));
             }
@@ -853,8 +861,8 @@ impl Stats {
                     pieces.push(timestamp_ms_to_rfc3339(q3 as i64, typ));
                     // return iqr in days - there are 86,400,000 ms in a day
                     pieces.push(round_num(
-                        (q3 - q1) / 86_400_000.0_f64,
-                        u32::max(round_places, 5),
+                        (q3 - q1) / MS_IN_DAY,
+                        u32::max(round_places, DAY_DECIMAL_PLACES),
                     ));
 
                     pieces.push(timestamp_ms_to_rfc3339(uif as i64, typ));
@@ -1270,12 +1278,9 @@ impl TypedMinMax {
                     Some((
                         timestamp_ms_to_rfc3339(*min, typ),
                         timestamp_ms_to_rfc3339(*max, typ),
-                        // 86_400_000 = number of milliseconds per day
+                        // return in days, not timestamp in milliseconds
                         #[allow(clippy::cast_precision_loss)]
-                        round_num(
-                            (*max - *min) as f64 / 86_400_000.0_f64,
-                            u32::max(round_places, 5),
-                        ),
+                        round_num((*max - *min) as f64 / MS_IN_DAY, u32::max(round_places, 5)),
                     ))
                 } else {
                     None
