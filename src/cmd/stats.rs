@@ -56,7 +56,8 @@ stats options:
                               into 'qsv stats' will disable the use of indexing.
     --everything              Show all statistics available.
     --typesonly               Infer data types only and do not compute statistics.
-                              Automatically turns on --infer-dates for all columns.
+                              Note that if you want to infer dates, you'll still need to use
+                              the --infer-dates and --dates-whitelist options.
     --mode                    Show the mode/s & antimode/s. Multimodal-aware.
                               This requires loading all CSV data in memory.
     --cardinality             Show the cardinality.
@@ -173,8 +174,6 @@ static DMY_PREFERENCE: AtomicBool = AtomicBool::new(false);
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut args: Args = util::get_args(USAGE, argv)?;
     if args.flag_typesonly {
-        args.flag_infer_dates = true;
-        args.flag_dates_whitelist = String::from("all");
         args.flag_everything = false;
         args.flag_mode = false;
         args.flag_cardinality = false;
