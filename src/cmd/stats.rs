@@ -175,7 +175,7 @@ static DMY_PREFERENCE: AtomicBool = AtomicBool::new(false);
 const MS_IN_DAY: f64 = 86_400_000.0;
 // number of decimal places when rounding days
 // 5 decimal places give us millisecond precision
-const DAY_DECIMAL_PLACES: usize = 5;
+const DAY_DECIMAL_PLACES: u32 = 5;
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut args: Args = util::get_args(USAGE, argv)?;
