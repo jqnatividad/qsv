@@ -1,8 +1,8 @@
 field,type
 case_enquiry_id,Integer
-open_dt,String
-target_dt,String
-closed_dt,String
+open_dt,DateTime
+target_dt,DateTime
+closed_dt,DateTime
 ontime,String
 case_status,String
 closure_reason,String

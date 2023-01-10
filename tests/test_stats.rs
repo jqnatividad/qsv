@@ -707,6 +707,25 @@ fn stats_typesonly() {
 }
 
 #[test]
+fn stats_typesonly_with_dates() {
+    let wrk = Workdir::new("stats_typesonly_with_dates");
+    let test_file = wrk.load_test_file("boston311-100.csv");
+
+    let mut cmd = wrk.command("stats");
+    cmd.arg("--typesonly")
+        .arg("--infer-dates")
+        .arg("--dates-whitelist")
+        .arg("all")
+        .arg(test_file);
+
+    let got: String = wrk.stdout(&mut cmd);
+
+    let expected = wrk.load_test_resource("boston311-100-typesonly-withdates-stats.csv");
+
+    assert_eq!(got, expected.replace("\r\n", "\n").trim_end());
+}
+
+#[test]
 fn stats_leading_zero_handling() {
     let wrk = Workdir::new("stats");
 
