@@ -2,18 +2,18 @@ static USAGE: &str = r#"
 Compute summary statistics & infers data types for each column in a CSV.
 
 Summary statistics includes sum, min/max/range, min/max length, mean, stddev, variance,
-nullcount, quartiles, interquartile range (IQR), lower/upper fences, skewness, median, 
+nullcount, sparsity, quartiles, interquartile range (IQR), lower/upper fences, skewness, median, 
 cardinality, mode/s & antimode/s, and median absolute deviation (MAD). Note that some
 statistics requires loading the entire file into memory, so they must be enabled explicitly. 
 
 By default, the following statistics are reported for *every* column in the CSV data:
-sum, min/max/range values, min/max length, mean, stddev, variance & nullcount. The default
-set of statistics corresponds to statistics that can be computed efficiently on a stream
-of data (i.e., constant memory) and can work with arbitrarily large CSV files.
+sum, min/max/range values, min/max length, mean, stddev, variance, nullcount & sparsity.
+The default set of statistics corresponds to statistics that can be computed efficiently
+on a stream of data (i.e., constant memory) and can work with arbitrarily large CSV files.
 
 The following additional statistics require loading the entire file into memory:
-cardinality, mode/antimode, median, quartiles and its related measures 
-(IQR, lower/upper fences & skewness) and MAD.
+cardinality, mode/antimode, median, MAD, quartiles and its related measures (IQR,
+lower/upper fences & skewness).
 
 "Antimode" is the least frequently occurring non-zero value and is the opposite of mode.
 It returns "*ALL" if all the values are unique, and only returns a preview of the first
@@ -170,6 +170,7 @@ pub struct Args {
 
 static INFER_DATE_FLAGS: once_cell::sync::OnceCell<Vec<bool>> = OnceCell::new();
 static DMY_PREFERENCE: AtomicBool = AtomicBool::new(false);
+static RECORD_COUNT: once_cell::sync::OnceCell<u64> = OnceCell::new();
 
 // number of milliseconds per day
 const MS_IN_DAY: f64 = 86_400_000.0;
@@ -189,7 +190,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     let mut wtr = Config::new(&args.flag_output).writer()?;
-    let (headers, stats) = match args.rconfig().indexed()? {
+    let fconfig = args.rconfig();
+    let record_count = RECORD_COUNT.get_or_init(|| util::count_rows(&fconfig).unwrap());
+    log::info!("scanning {record_count} records...");
+    let (headers, stats) = match fconfig.indexed()? {
         None => args.sequential_stats(&args.flag_dates_whitelist),
         Some(idx) => {
             if let Some(num_jobs) = args.flag_jobs {
@@ -364,8 +368,8 @@ impl Args {
             return csv::StringRecord::from(vec!["field", "type"]);
         }
 
-        // with --everything, we have 29 columns at most
-        let mut fields = Vec::with_capacity(29);
+        // with --everything, we have 30 columns at most
+        let mut fields = Vec::with_capacity(30);
         fields.extend_from_slice(&[
             "field",
             "type",
@@ -379,6 +383,7 @@ impl Args {
             "stddev",
             "variance",
             "nullcount",
+            "sparsity",
         ]);
         let all = self.flag_everything;
         if self.flag_median && !self.flag_quartiles && !all {
@@ -678,8 +683,8 @@ impl Stats {
 
         let typ = self.typ;
         // prealloc memory for performance
-        // we have 29 columns at most with --everything
-        let mut pieces = Vec::with_capacity(29);
+        // we have 30 columns at most with --everything
+        let mut pieces = Vec::with_capacity(30);
         let empty = String::new;
 
         // type
@@ -765,6 +770,12 @@ impl Stats {
         // nullcount
         let mut buffer = itoa::Buffer::new();
         pieces.push(buffer.format(self.nullcount).to_owned());
+
+        // sparsity
+        #[allow(clippy::cast_precision_loss)]
+        let sparsity: f64 = self.nullcount as f64 / *RECORD_COUNT.get().unwrap() as f64;
+        let mut buffer = ryu::Buffer::new();
+        pieces.push(buffer.format(sparsity).to_owned());
 
         // median
         let mut existing_median = None;
