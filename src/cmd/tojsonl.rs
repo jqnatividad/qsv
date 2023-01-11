@@ -137,18 +137,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         vals[1].as_str().unwrap().trim().to_lowercase()
                     };
                     // log::debug!("val1: {val1} val2: {val2}");
-                    if let ("true", "false")
-                    | ("false", "true")
-                    | ("yes", "no")
-                    | ("no", "yes")
-                    | ("y", "n")
-                    | ("n", "y")
-                    | ("true", "null")
-                    | ("null", "true")
-                    | ("yes", "null")
-                    | ("null", "yes")
-                    | ("y", "null")
-                    | ("null", "y") = (val1.as_str(), val2.as_str())
+                    if let ("true", "false" | "null")
+                    | ("false" | "null", "true")
+                    | ("yes", "no" | "null")
+                    | ("no" | "null", "yes")
+                    | ("y", "n" | "null")
+                    | ("n" | "null", "y") = (val1.as_str(), val2.as_str())
                     {
                         field_type_vec.push("boolean".to_string());
                         continue;
