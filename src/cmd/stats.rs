@@ -767,11 +767,13 @@ impl Stats {
         pieces.push(buffer.format(self.nullcount).to_owned());
 
         // median
+        let mut existing_median  = None;
         if let Some(v) = self.median.as_mut().and_then(|v| {
             if let TNull | TString = typ {
                 None
             } else {
-                v.median()
+                existing_median = v.median();
+                existing_median
             }
         }) {
             if typ == TDateTime || typ == TDate {
@@ -788,7 +790,7 @@ impl Stats {
             if let TNull | TString = typ {
                 None
             } else {
-                v.mad()
+                v.mad(existing_median)
             }
         }) {
             if typ == TDateTime || typ == TDate {
