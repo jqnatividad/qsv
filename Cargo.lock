@@ -42,7 +42,7 @@ dependencies = [
  "actix-service",
  "actix-utils",
  "ahash 0.7.6",
- "base64",
+ "base64 0.13.1",
  "bitflags",
  "brotli",
  "bytes",
@@ -467,6 +467,12 @@ name = "base64"
 version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9e1b586273c5702936fe7b7d6896644d8be71e6314cfe09d3167c95f712589e8"
+
+[[package]]
+name = "base64"
+version = "0.21.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a4a4ddaa51a5bc52a6948f74c06d20aaaddb71924eab79b8c97a8c556e942d6a"
 
 [[package]]
 name = "bindgen"
@@ -1965,7 +1971,7 @@ checksum = "6ca9e2b45609132ae2214d50482c03aeee78826cd6fd53a8940915b81acedf16"
 dependencies = [
  "ahash 0.8.2",
  "anyhow",
- "base64",
+ "base64 0.13.1",
  "bytecount",
  "fancy-regex",
  "fraction",
@@ -2205,9 +2211,9 @@ dependencies = [
 
 [[package]]
 name = "luau0-src"
-version = "0.5.0+luau555"
+version = "0.5.1+luau558"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "926eae82c84e922123fe3bda88b65049bc24ac12e3247bbcee1fa35a2c950529"
+checksum = "5e0869ba31f9b152c28bb604ecee6deaa2103a97365bb219781ac137bd487626"
 dependencies = [
  "cc",
 ]
@@ -2590,7 +2596,7 @@ dependencies = [
  "arrow-ipc",
  "arrow-schema",
  "arrow-select",
- "base64",
+ "base64 0.13.1",
  "bytes",
  "chrono",
  "hashbrown 0.13.1",
@@ -2755,7 +2761,7 @@ version = "0.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "878c6cbf956e03af9aa8204b407b9cbf47c072164800aa918c516cd4b056c50c"
 dependencies = [
- "base64",
+ "base64 0.13.1",
  "byteorder",
  "bytes",
  "fallible-iterator",
@@ -3012,9 +3018,9 @@ dependencies = [
 
 [[package]]
 name = "qsv-stats"
-version = "0.6.0"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4e5b718911904471de67658395c07dcbc6a7f4acdc14800be757e53dc87677a4"
+checksum = "04ab048a69b1ab56c24db6dec5a8e6dd39673bb83bf01c547ce33d9fc83e76f6"
 dependencies = [
  "ahash 0.8.2",
  "num-traits",
@@ -3235,7 +3241,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "68cc60575865c7831548863cc02356512e3f1dc2f3f82cb837d7fc4cc8f3c97c"
 dependencies = [
  "async-compression",
- "base64",
+ "base64 0.13.1",
  "bytes",
  "cookie",
  "cookie_store",
@@ -3413,11 +3419,11 @@ dependencies = [
 
 [[package]]
 name = "rustls-pemfile"
-version = "1.0.1"
+version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0864aeff53f8c05aa08d86e5ef839d3dfcf07aeba2db32f12db0ef716e87bd55"
+checksum = "d194b56d58803a43635bdc398cd17e383d6f71f9182b9a192c127ca42494a59b"
 dependencies = [
- "base64",
+ "base64 0.21.0",
 ]
 
 [[package]]
@@ -3772,9 +3778,9 @@ dependencies = [
 
 [[package]]
 name = "sysinfo"
-version = "0.27.4"
+version = "0.27.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "444c7f371193a054273b0a1bbfe1e617b804b7fd62fd3e2794b4be6b0a872b0c"
+checksum = "fcd303550875ba33b137a7c93318cfdeb54c95e63ff7a0982d28425d3f87552c"
 dependencies = [
  "cfg-if",
  "core-foundation-sys",
