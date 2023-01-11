@@ -773,7 +773,7 @@ impl Stats {
 
         // sparsity
         #[allow(clippy::cast_precision_loss)]
-        let sparsity: f64 = self.nullcount as f64 / *RECORD_COUNT.get().unwrap() as f64;
+        let sparsity: f64 = self.nullcount as f64 / *RECORD_COUNT.get().unwrap_or(&1) as f64;
         let mut buffer = ryu::Buffer::new();
         pieces.push(buffer.format(sparsity).to_owned());
 
