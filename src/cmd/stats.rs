@@ -767,7 +767,7 @@ impl Stats {
         pieces.push(buffer.format(self.nullcount).to_owned());
 
         // median
-        let mut existing_median  = None;
+        let mut existing_median = None;
         if let Some(v) = self.median.as_mut().and_then(|v| {
             if let TNull | TString = typ {
                 None
