@@ -772,6 +772,10 @@ impl Stats {
         pieces.push(buffer.format(self.nullcount).to_owned());
 
         // sparsity
+        // stats is also called by the `schema` and `tojsonl` commands to infer a schema,
+        // sparsity is not required by those cmds and we don't have necessarily
+        // have record_count at this point, so just set sparsity to nullcount (div by 1) so
+        // we don't panic.
         #[allow(clippy::cast_precision_loss)]
         let sparsity: f64 = self.nullcount as f64 / *RECORD_COUNT.get().unwrap_or(&1) as f64;
         let mut buffer = ryu::Buffer::new();
