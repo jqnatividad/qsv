@@ -22,7 +22,8 @@ Usage:
     qsv schema --help
 
 Schema options:
-    --enum-threshold NUM       Cardinality threshold for adding enum constraints
+    --enum-threshold NUM       Cardinality threshold for adding enum constraints.
+                               Enum constraints are compiled for String & Integer types.
                                [default: 50]
     --strict-dates             Enforce Internet Datetime format (RFC-3339) for
                                detected date/datetime columns. Otherwise, even if
@@ -288,6 +289,14 @@ pub fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<M
                     let max = max_str.parse::<i64>().unwrap();
                     field_map.insert("maximum".to_string(), Value::Number(Number::from(max)));
                 };
+
+                // enum constraint
+                if let Some(values) = unique_values_map.get(&header_string) {
+                    for value in values {
+                        let int_value = value.parse::<i64>().unwrap();
+                        enum_list.push(Value::Number(Number::from(int_value)));
+                    }
+                }
             }
             "Float" => {
                 type_list.push(Value::String("number".to_string()));
