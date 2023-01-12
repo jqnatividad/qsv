@@ -270,7 +270,7 @@ dependencies = [
  "arrow-string",
  "chrono",
  "half",
- "hashbrown 0.13.1",
+ "hashbrown 0.13.2",
  "multiversion",
  "num",
  "regex",
@@ -288,7 +288,7 @@ dependencies = [
  "arrow-schema",
  "chrono",
  "half",
- "hashbrown 0.13.1",
+ "hashbrown 0.13.2",
  "num",
 ]
 
@@ -676,7 +676,7 @@ checksum = "5e5877db5d1af7fae60d06b5db9430b68056a69b3582a0be8e3691e87654aeb6"
 dependencies = [
  "cached_proc_macro",
  "cached_proc_macro_types",
- "hashbrown 0.13.1",
+ "hashbrown 0.13.2",
  "instant",
  "once_cell",
  "r2d2",
@@ -1684,9 +1684,9 @@ dependencies = [
 
 [[package]]
 name = "hashbrown"
-version = "0.13.1"
+version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33ff8ae62cd3a9102e5637afc8452c55acf3844001bd5374e0b0bd7b6616c038"
+checksum = "43a3c133739dddd0d2990f9a4bdf8eb4b21ef50e4851ca85ab661199821d510e"
 dependencies = [
  "ahash 0.8.2",
 ]
@@ -2599,7 +2599,7 @@ dependencies = [
  "base64 0.13.1",
  "bytes",
  "chrono",
- "hashbrown 0.13.1",
+ "hashbrown 0.13.2",
  "num",
  "num-bigint",
  "paste",
@@ -2940,7 +2940,7 @@ dependencies = [
  "flexi_logger",
  "governor 0.5.1",
  "grex",
- "hashbrown 0.13.1",
+ "hashbrown 0.13.2",
  "indicatif",
  "itertools",
  "itoa",
