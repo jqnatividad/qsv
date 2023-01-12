@@ -5,8 +5,8 @@ By scanning the CSV first, it "smartly" infers the appropriate JSON data type
 for each column.
 
 It will infer a column as boolean if it only has a domain of two values,
-and the values are one of the following combinations, case-insensitive:
- "true"/"false"; "true"/null; "yes"/"no"; "yes"/null; "y"/"n" and "y"/null.  
+and the first character of the values are one of the following case-insensitive
+combinations: t/f; t/null; 1/0; 1/null; y/n & y/null are treated as true/false.
 
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_tojsonl.rs.
 
@@ -120,29 +120,61 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let prelim_type = field_map.get("type").unwrap();
         let field_values_enum = field_map.get("enum");
 
-        // log::debug!("prelim_type: {prelim_type} field_values_enum: {field_values_enum:?}");
+        log::debug!("prelim_type: {prelim_type} field_values_enum: {field_values_enum:?}");
 
         // check if a field has a boolean data type
+        // by checking its enum constraint
         if let Some(values) = field_values_enum {
             if let Some(vals) = values.as_array() {
+                // if this field only has a domain of two values
                 if vals.len() == 2 {
                     let val1 = if vals[0].is_null() {
-                        "null".to_string()
+                        '_'
                     } else {
-                        vals[0].as_str().unwrap().trim().to_lowercase()
+                        // get the first character of val1 lowercase
+                        // if its a string
+                        if let Some(str_val) = vals[0].as_str() {
+                            first_lower_char(str_val)
+                        } else if let Some(int_val) = vals[0].as_u64() {
+                            // its an integer (as we only do enum constraints)
+                            // for string and integers)
+                            match int_val {
+                                1 => '1',
+                                0 => '0',
+                                _ => '_',
+                            }
+                        } else {
+                            '_'
+                        }
                     };
+                    // same as above, but for the 2nd value
                     let val2 = if vals[1].is_null() {
-                        "null".to_string()
+                        '_'
                     } else {
-                        vals[1].as_str().unwrap().trim().to_lowercase()
+                        if let Some(str_val) = vals[1].as_str() {
+                            first_lower_char(str_val)
+                        } else if let Some(int_val) = vals[1].as_u64() {
+                            match int_val {
+                                1 => '1',
+                                0 => '0',
+                                _ => '_',
+                            }
+                        } else {
+                            '_'
+                        }
                     };
-                    // log::debug!("val1: {val1} val2: {val2}");
-                    if let ("true", "false" | "null")
-                    | ("false" | "null", "true")
-                    | ("yes", "no" | "null")
-                    | ("no" | "null", "yes")
-                    | ("y", "n" | "null")
-                    | ("n" | "null", "y") = (val1.as_str(), val2.as_str())
+                    log::debug!("val1: {val1} val2: {val2}");
+
+                    // check if the domain of two values is truthy or falsy
+                    // i.e. starts with case-insensitive "t", "1", "y" are truthy values
+                    // ot "f", "0", "n" or null are falsy values
+                    // if it is, infer a boolean field
+                    if let ('t', 'f' | '_')
+                    | ('f' | '_', 't')
+                    | ('1', '0' | '_')
+                    | ('0' | '_', '1')
+                    | ('y', 'n' | '_')
+                    | ('n' | '_', 'y') = (val1, val2)
                     {
                         field_type_vec.push("boolean".to_string());
                         continue;
@@ -176,8 +208,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let field_val = match field_type_vec[idx].as_str() {
                 "string" => format!(r#""{}""#, field.escape_default()),
                 "number" => field.to_string(),
-                "boolean" => match field.trim().to_lowercase().as_str() {
-                    "true" | "yes" | "y" => "true".to_string(),
+                "boolean" => match first_lower_char(field) {
+                    't' | 'y' | '1' => "true".to_string(),
                     _ => "false".to_string(),
                 },
                 "null" => "null".to_string(),
@@ -193,4 +225,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     Ok(wtr.flush()?)
+}
+
+#[inline]
+fn first_lower_char(field_str: &str) -> char {
+    field_str
+        .trim_start()
+        .chars()
+        .next()
+        .unwrap_or('_')
+        .to_ascii_lowercase()
 }
