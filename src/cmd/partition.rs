@@ -11,23 +11,23 @@ Usage:
     qsv partition --help
 
 partition options:
-    --filename <filename>  A filename template to use when constructing
-                           the names of the output files.  The string '{}'
-                           will be replaced by a value based on the value
-                           of the field, but sanitized for shell safety.
-                           [default: {}.csv]
+    --filename <filename>    A filename template to use when constructing the
+                             names of the output files.  The string '{}' will
+                             be replaced by a value based on the partition column,
+                             but sanitized for shell safety.
+                             [default: {}.csv]
     -p, --prefix-length <n>  Truncate the partition column after the
-                           specified number of bytes when creating the
-                           output file.
-    --drop                 Drop the partition column from results.
+                             specified number of bytes when creating the
+                             output file.
+    --drop                   Drop the partition column from results.
 
 Common options:
-    -h, --help             Display this message
-    -n, --no-headers       When set, the first row will NOT be interpreted
-                           as column names. Otherwise, the first row will
-                           appear in all chunks as the header row.
-    -d, --delimiter <arg>  The field delimiter for reading CSV data.
-                           Must be a single character. (default: ,)
+    -h, --help               Display this message
+    -n, --no-headers         When set, the first row will NOT be interpreted
+                             as column names. Otherwise, the first row will
+                             appear in all chunks as the header row.
+    -d, --delimiter <arg>    The field delimiter for reading CSV data.
+                             Must be a single character. (default: ,)
 "#;
 
 use std::{
