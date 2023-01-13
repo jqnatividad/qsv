@@ -264,3 +264,18 @@ fn tojsonl_nested() {
 
     assert_eq!(got, expected);
 }
+
+#[test]
+fn tojsonl_boston() {
+    let wrk = Workdir::new("tojsonl");
+    let test_file = wrk.load_test_file("boston311-100.csv");
+
+    let mut cmd = wrk.command("tojsonl");
+    cmd.arg(test_file);
+
+    let got: String = wrk.stdout(&mut cmd);
+
+    let expected = wrk.load_test_resource("boston311-100.jsonl");
+
+    assert_eq!(got, expected.replace("\r\n", "\n").trim_end());
+}
