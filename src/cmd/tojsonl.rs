@@ -26,16 +26,17 @@ Common options:
     -o, --output <file>    Write output to <file> instead of stdout.
 "#;
 
-use std::{env::temp_dir, fs::File, path::Path};
+use std::{env::temp_dir, fs::File, path::Path, str::FromStr};
 
 use serde::Deserialize;
 use serde_json::{Map, Value};
+use strum_macros::EnumString;
 use uuid::Uuid;
 
 use super::schema::infer_schema_from_stats;
 use crate::{
     config::{Config, Delimiter},
-    util, CliResult,
+    util, CliError, CliResult,
 };
 
 #[derive(Deserialize, Clone)]
@@ -44,6 +45,22 @@ struct Args {
     flag_jobs:      Option<usize>,
     flag_delimiter: Option<Delimiter>,
     flag_output:    Option<String>,
+}
+
+impl From<std::fmt::Error> for CliError {
+    fn from(err: std::fmt::Error) -> CliError {
+        CliError::Other(err.to_string())
+    }
+}
+
+#[derive(PartialEq, EnumString)]
+#[strum(ascii_case_insensitive)]
+enum JsonlType {
+    Boolean,
+    String,
+    Number,
+    Integer,
+    Null,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -111,59 +128,56 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .writer()?;
 
     let headers = rdr.headers()?.clone();
-    let mut record = csv::StringRecord::new();
 
     // create a vec lookup about inferred field data types
-    let mut field_type_vec: Vec<String> = Vec::with_capacity(headers.len());
+    let mut field_type_vec: Vec<JsonlType> = Vec::with_capacity(headers.len());
     for (_field_name, field_def) in properties_map.iter() {
         let Some(field_map) = field_def.as_object() else { return fail!("Cannot create field map") };
         let prelim_type = field_map.get("type").unwrap();
         let field_values_enum = field_map.get("enum");
 
-        log::debug!("prelim_type: {prelim_type} field_values_enum: {field_values_enum:?}");
+        // log::debug!("prelim_type: {prelim_type} field_values_enum: {field_values_enum:?}");
 
         // check if a field has a boolean data type
         // by checking its enum constraint
-        if let Some(values) = field_values_enum {
-            if let Some(vals) = values.as_array() {
+        if let Some(domain) = field_values_enum {
+            if let Some(vals) = domain.as_array() {
                 // if this field only has a domain of two values
                 if vals.len() == 2 {
                     let val1 = if vals[0].is_null() {
                         '_'
                     } else {
-                        // get the first character of val1 lowercase
                         // if its a string
+                        // get the first character of val1 lowercase
                         if let Some(str_val) = vals[0].as_str() {
                             first_lower_char(str_val)
                         } else if let Some(int_val) = vals[0].as_u64() {
-                            // its an integer (as we only do enum constraints)
+                            // its an integer (as we only do enum constraints
                             // for string and integers)
                             match int_val {
                                 1 => '1',
                                 0 => '0',
-                                _ => '_',
+                                _ => '*', // its something else
                             }
                         } else {
-                            '_'
+                            '*'
                         }
                     };
                     // same as above, but for the 2nd value
                     let val2 = if vals[1].is_null() {
                         '_'
-                    } else {
-                        if let Some(str_val) = vals[1].as_str() {
-                            first_lower_char(str_val)
-                        } else if let Some(int_val) = vals[1].as_u64() {
-                            match int_val {
-                                1 => '1',
-                                0 => '0',
-                                _ => '_',
-                            }
-                        } else {
-                            '_'
+                    } else if let Some(str_val) = vals[1].as_str() {
+                        first_lower_char(str_val)
+                    } else if let Some(int_val) = vals[1].as_u64() {
+                        match int_val {
+                            1 => '1',
+                            0 => '0',
+                            _ => '*',
                         }
+                    } else {
+                        '*'
                     };
-                    log::debug!("val1: {val1} val2: {val2}");
+                    // log::debug!("val1: {val1} val2: {val2}");
 
                     // check if the domain of two values is truthy or falsy
                     // i.e. starts with case-insensitive "t", "1", "y" are truthy values
@@ -176,46 +190,62 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     | ('y', 'n' | '_')
                     | ('n' | '_', 'y') = (val1, val2)
                     {
-                        field_type_vec.push("boolean".to_string());
+                        field_type_vec.push(JsonlType::Boolean);
                         continue;
                     }
                 }
             }
         }
-        // its not a boolean, so its a Number, String or Null
-        let temp_type = prelim_type.clone();
-        let temp_str = temp_type.as_array().unwrap()[0]
+
+        let temp_str = prelim_type.as_array().unwrap()[0]
             .as_str()
             .unwrap_or_default();
-        if temp_str == "integer" {
-            field_type_vec.push("number".to_string());
-        } else {
-            field_type_vec.push(temp_str.to_string());
-        }
+        field_type_vec.push(JsonlType::from_str(temp_str).unwrap_or(JsonlType::String));
     }
 
     // amortize allocs
+    let mut record = csv::StringRecord::new();
     #[allow(unused_assignments)]
     let mut temp_str = String::with_capacity(100);
+    #[allow(unused_assignments)]
+    let mut temp_str2 = String::with_capacity(50);
 
     // write jsonl file
     while rdr.read_record(&mut record)? {
         use std::fmt::Write as _;
 
         temp_str.clear();
-        let _ = write!(temp_str, "{{");
+        record.trim();
+        write!(temp_str, "{{")?;
         for (idx, field) in record.iter().enumerate() {
-            let field_val = match field_type_vec[idx].as_str() {
-                "string" => format!(r#""{}""#, field.escape_default()),
-                "number" => field.to_string(),
-                "boolean" => match first_lower_char(field) {
-                    't' | 'y' | '1' => "true".to_string(),
-                    _ => "false".to_string(),
-                },
-                "null" => "null".to_string(),
-                _ => "unknown".to_string(),
+            let field_val = if let Some(field_type) = field_type_vec.get(idx) {
+                match field_type {
+                    JsonlType::Integer | JsonlType::Number => field,
+                    JsonlType::Boolean => {
+                        if let 't' | 'y' | '1' = first_lower_char(field) {
+                            "true"
+                        } else {
+                            "false"
+                        }
+                    }
+                    JsonlType::Null => "null",
+                    JsonlType::String => {
+                        if field.is_empty() {
+                            "null"
+                        } else {
+                            temp_str2 = format!(r#""{}""#, field.escape_default());
+                            &temp_str2
+                        }
+                    }
+                }
+            } else {
+                "null"
             };
-            let _ = write!(temp_str, r#""{}":{field_val},"#, &headers[idx]);
+            if field_val.is_empty() {
+                write!(temp_str, r#""{}":null,"#, &headers[idx])?;
+            } else {
+                write!(temp_str, r#""{}":{field_val},"#, &headers[idx])?;
+            }
         }
         temp_str.pop(); // remove last comma
         temp_str.push('}');
