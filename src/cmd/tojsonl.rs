@@ -180,8 +180,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     // log::debug!("val1: {val1} val2: {val2}");
 
                     // check if the domain of two values is truthy or falsy
-                    // i.e. starts with case-insensitive "t", "1", "y" are truthy values
-                    // ot "f", "0", "n" or null are falsy values
+                    // i.e. if first character, case-insensitive is "t", "1" or "y" - truthy values
+                    // "f", "0", "n" or null - falsy values
                     // if it is, infer a boolean field
                     if let ('t', 'f' | '_')
                     | ('f' | '_', 't')
