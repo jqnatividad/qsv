@@ -121,6 +121,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } else {
         conf.reader()?
     };
+
+    // TODO: instead of abusing csv writer to write jsonl file
+    // just use a normal buffered writer
     let mut wtr = Config::new(&args.flag_output)
         .flexible(true)
         .no_headers(true)
