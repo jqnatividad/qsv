@@ -26,7 +26,7 @@ Common options:
     -o, --output <file>    Write output to <file> instead of stdout.
 "#;
 
-use std::{env::temp_dir, fs::File, path::Path, str::FromStr};
+use std::{env::temp_dir, fmt::Write, fs::File, path::Path, str::FromStr};
 
 use serde::Deserialize;
 use serde_json::{Map, Value};
@@ -147,13 +147,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     let val1 = if vals[0].is_null() {
                         '_'
                     } else {
-                        // if its a string
+                        // check the first domain value, if its a string
                         // get the first character of val1 lowercase
                         if let Some(str_val) = vals[0].as_str() {
                             first_lower_char(str_val)
                         } else if let Some(int_val) = vals[0].as_u64() {
-                            // its an integer (as we only do enum constraints
-                            // for string and integers)
+                            // else, its an integer (as we only do enum constraints
+                            // for string and integers), and see if its 1 or 0
                             match int_val {
                                 1 => '1',
                                 0 => '0',
@@ -163,7 +163,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             '*'
                         }
                     };
-                    // same as above, but for the 2nd value
+                    // same as above, but for the 2nd domain value
                     let val2 = if vals[1].is_null() {
                         '_'
                     } else if let Some(str_val) = vals[1].as_str() {
@@ -180,8 +180,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     // log::debug!("val1: {val1} val2: {val2}");
 
                     // check if the domain of two values is truthy or falsy
-                    // i.e. if first character, case-insensitive is "t", "1" or "y" - truthy values
-                    // "f", "0", "n" or null - falsy values
+                    // i.e. if first character, case-insensitive is "t", "1" or "y" - truthy
+                    // "f", "0", "n" or null - falsy
                     // if it is, infer a boolean field
                     if let ('t', 'f' | '_')
                     | ('f' | '_', 't')
@@ -197,10 +197,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         }
 
-        let temp_str = prelim_type.as_array().unwrap()[0]
-            .as_str()
-            .unwrap_or_default();
-        field_type_vec.push(JsonlType::from_str(temp_str).unwrap_or(JsonlType::String));
+        // ok to use index access and unwrap here as we know
+        // we have at least one element in the prelim_type as_array
+        field_type_vec.push(
+            JsonlType::from_str(
+                prelim_type.as_array().unwrap()[0]
+                    .as_str()
+                    .unwrap_or("null"),
+            )
+            .unwrap_or(JsonlType::String),
+        );
     }
 
     // amortize allocs
@@ -210,10 +216,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     #[allow(unused_assignments)]
     let mut temp_str2 = String::with_capacity(50);
 
-    // write jsonl file
+    // TODO: see if its worth it to do rayon here after benchmarking
+    // with large files. We have --jobs option, but we only pass it
+    // thru to stats/frequency to infer data types & enum constraints.
+    //
+    // now that we have type mappings, iterate thru input csv
+    // and write jsonl file
     while rdr.read_record(&mut record)? {
-        use std::fmt::Write as _;
-
         temp_str.clear();
         record.trim();
         write!(temp_str, "{{")?;
