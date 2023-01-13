@@ -11,7 +11,7 @@
 [![HomeBrew Installs](https://img.shields.io/homebrew/installs/dy/qsv?label=installs&logo=homebrew)](https://formulae.brew.sh/formula/qsv)
 [![Crates.io](https://img.shields.io/crates/v/qsv.svg?logo=crates.io)](https://crates.io/crates/qsv)
 [![Crates.io downloads](https://img.shields.io/crates/d/qsv?color=orange&label=crates.io%20downloads)](https://crates.io/crates/qsv)
-[![Minimum supported Rust version](https://img.shields.io/badge/Rust-1.66-red?logo=rust)](#minimum-supported-rust-version)
+[![Minimum supported Rust version](https://img.shields.io/badge/Rust-1.66.1-red?logo=rust)](#minimum-supported-rust-version)
 
 <div align="center">
 
@@ -82,7 +82,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
  ❇️: enabled by a feature flag on `qsv`. Not available on `qsvlite`. `qsvdp` has `luau` & `applydp` pre-enabled.   
 📇: uses an index when available. `join` creates its own in-memory index automatically.   
 🗜️: loads entire CSV into memory, though `dedup`, `stats` & `transpose` have "streaming" modes as well.   
-🧠: expensive operations are memoized (cached) with available Redis caching for fetch commands.    
+🧠: expensive operations are memoized (cached) with available inter-session Redis caching for fetch commands.    
 🏎️: multithreaded when an index is available.   
 🚀: multithreaded even without an index.
 
@@ -150,7 +150,7 @@ cargo build --release --locked --features datapusher_plus
 
 ### Minimum Supported Rust Version
 
-qsv's MSRV policy is to require [Rust stable](https://github.com/rust-lang/rust/blob/master/RELEASES.md) - currently version 1.66.
+qsv's MSRV policy is to require [Rust stable](https://github.com/rust-lang/rust/blob/master/RELEASES.md) - currently version 1.66.1.
 
 ## Tab Completion
 
