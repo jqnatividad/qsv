@@ -764,7 +764,6 @@ pub fn safe_header_names(
             header_name.to_string()
         } else {
             let mut safe_name_always = if header_name.is_empty() {
-                // "_blank".to_string()
                 prefix.to_string()
             } else {
                 safename_regex
@@ -775,7 +774,7 @@ pub fn safe_header_names(
                 safe_name_always.replace_range(0..1, prefix);
             }
 
-            if prefix != "_" && safe_name_always.starts_with('-') {
+            if prefix != "_" && safe_name_always.starts_with('_') {
                 safe_name_always = format!("{prefix}{safe_name_always}");
             }
 
