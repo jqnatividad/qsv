@@ -6,6 +6,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.83.0] - 2023-01-13
+
+### Added
+* `stats`: add sparsity to "streaming" statistics https://github.com/jqnatividad/qsv/pull/719
+* `schema`: also infer enum constraints for integer fields. Not only good for validation, this is also required by `tojsonl` for smarter boolean inferencing https://github.com/jqnatividad/qsv/pull/721
+
+### Changed
+* `stats`: change `--typesonly` so it will not automatically `--infer-dates`. Let the user decide. https://github.com/jqnatividad/qsv/pull/718
+* `stats`: if median is already known, use it to calculate Median Absolute Deviation https://github.com/jqnatividad/qsv/commit/08ed08da4651a96bf05372b34b670063fbcec14f
+* `tojsonl`: smarter boolean inferencing. It will infer a column as boolean if it only has a domain of two values,
+and the first character of the values are one of the following case-insensitive "truthy/falsy"
+combinations: t/f; t/null; 1/0; 1/null; y/n & y/null are treated as true/false. https://github.com/jqnatividad/qsv/pull/722 and https://github.com/jqnatividad/qsv/pull/723
+* `safenames`: process `--reserved` option before `--prefix` option. https://github.com/jqnatividad/qsv/commit/b333549199726a3e92b95fb1d501fbdbbeede34a
+* `strum` and `strum-macros` are no longer optional dependencies as we use it with all the binary variants now https://github.com/jqnatividad/qsv/commit/bea6e00fc400e8fafa2938832f8654d97c45fe34
+* Bump qsv-stats from 0.6.0 to 0.7.0
+* Bump sysinfo from 0.27.3 to 0.27.6
+* Bump hashbrown from 0.13.1 to 0.13.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/720
+* Bump actions/setup-python from 4.4.0 to 4.5.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/724
+* change MSRV from 1.66.0 to 1.66.1
+
+* cargo update bump indirect dependencies
+* pin Rust nightly to 2023-01-12
+
+### Fixed
+* `safenames`: fixed `--prefix` option. When checking for invalid underscore prefix, it was checking for hyphen, not underscore, causing a problem with Datapusher+ https://github.com/jqnatividad/qsv/commit/4fbbfd3a479b6678fa9d4c823fd00b592b326c7a
+
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.82.0...0.83.0
+
+
 ## [0.82.0] - 2023-01-09
 
 ### Added
