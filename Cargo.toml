@@ -143,8 +143,8 @@ self_update = { version = "0.34", features = [
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 strsim = { version = "0.10", optional = true }
-strum = { version = "0.24", optional = true }
-strum_macros = { version = "0.24", optional = true }
+strum = "0.24"
+strum_macros = "0.24"
 sysinfo = "0.27"
 tabwriter = "1.2"
 tempfile = "3"
@@ -200,8 +200,6 @@ apply = [
     "qsv_currency",
     "reverse_geocoder",
     "strsim",
-    "strum",
-    "strum_macros",
     "titlecase",
     "vader_sentiment",
     "whatlang",
@@ -223,7 +221,7 @@ luau = ["mlua"]
 python = ["pyo3"]
 to = ["csvs_convert"]
 lite = []
-datapusher_plus = ["dynfmt", "self_update", "strum", "strum_macros"]
+datapusher_plus = ["dynfmt", "self_update"]
 full = []
 nightly = [
     "regex/unstable",
