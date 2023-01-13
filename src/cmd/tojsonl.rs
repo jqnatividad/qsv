@@ -232,21 +232,21 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         for (idx, field) in record.iter().enumerate() {
             let field_val = if let Some(field_type) = field_type_vec.get(idx) {
                 match field_type {
-                    JsonlType::Integer | JsonlType::Number => field,
-                    JsonlType::Boolean => {
-                        if let 't' | 'y' | '1' = first_lower_char(field) {
-                            "true"
-                        } else {
-                            "false"
-                        }
-                    }
-                    JsonlType::Null => "null",
                     JsonlType::String => {
                         if field.is_empty() {
                             "null"
                         } else {
                             temp_str2 = format!(r#""{}""#, field.escape_default());
                             &temp_str2
+                        }
+                    }
+                    JsonlType::Null => "null",
+                    JsonlType::Integer | JsonlType::Number => field,
+                    JsonlType::Boolean => {
+                        if let 't' | 'y' | '1' = first_lower_char(field) {
+                            "true"
+                        } else {
+                            "false"
                         }
                     }
                 }
