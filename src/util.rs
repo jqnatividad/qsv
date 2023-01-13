@@ -774,19 +774,21 @@ pub fn safe_header_names(
                 safe_name_always.replace_range(0..1, prefix);
             }
 
-            if prefix != "_" && safe_name_always.starts_with('_') {
-                safe_name_always = format!("{prefix}{safe_name_always}");
-            }
-
             let safename_candidate = safe_name_always
                 [..safe_name_always.chars().map(char::len_utf8).take(60).sum()]
                 .to_lowercase();
-            if reserved_names.contains(&safename_candidate) {
+
+            let mut final_candidate = if reserved_names.contains(&safename_candidate) {
                 log::debug!("\"{safename_candidate}\" is a reserved name: {reserved_names:?}");
                 format!("reserved_{safename_candidate}")
             } else {
                 safename_candidate
+            };
+
+            if prefix != "_" && final_candidate.starts_with('_') {
+                final_candidate = format!("{prefix}{final_candidate}");
             }
+            final_candidate
         };
         let mut sequence_suffix = 2_u16;
         let mut candidate_name = safe_name.clone();
