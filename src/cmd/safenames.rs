@@ -158,8 +158,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut headers = csv::StringRecord::from_byte_record_lossy(old_headers.clone());
     if let SafeNameMode::Conditional | SafeNameMode::Always = safenames_mode {
+        // trim enclosing quotes and spaces from headers as it messes up safenames
+        // csv library will automatically add quotes when necessary when we write it
+        let mut noquote_headers = csv::StringRecord::new();
+        for header in &headers {
+            noquote_headers.push_field(header.trim_matches(|c| c == '"' || c == ' '));
+        }
+
         let (safe_headers, changed_count) = util::safe_header_names(
-            &headers,
+            &noquote_headers,
             true,
             safenames_mode == SafeNameMode::Conditional,
             &reserved_names_vec,
