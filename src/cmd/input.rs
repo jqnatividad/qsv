@@ -31,7 +31,7 @@ input options:
                              skips them. Takes precedence over --skip-lines option.
                              Does not work with <stdin>.
     --skip-lastlines <arg>   The number of epilog lines to skip.
-    --trim-headers           Trim leading & trailing whitespace from header values.
+    --trim-headers           Trim leading & trailing whitespace & quotes from header values.
     --trim-fields            Trim leading & trailing whitespace from field values.
 
 Common options:
@@ -141,7 +141,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         row.trim();
 
         for field in row.iter() {
-            str_row.push_field(&String::from_utf8_lossy(field));
+            // we also trim excess quotes from the header, to be consistent with safenames
+            str_row.push_field(String::from_utf8_lossy(field).trim_matches('"'));
         }
         wtr.write_record(&str_row)?;
     }
