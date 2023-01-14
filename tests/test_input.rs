@@ -258,3 +258,130 @@ fn test_input_both_skip_flexible() {
     ];
     assert_eq!(got, expected);
 }
+
+#[test]
+fn input_noheadertrim() {
+    let wrk = Workdir::new("input_noheadertrim");
+
+    // headers taken from malformed CSV example - cities.csv at
+    // https://people.sc.fsu.edu/~jburkardt/data/csv/csv.html
+    wrk.create(
+        "data.csv",
+        vec![
+            svec![
+                "\"LatD\"",
+                "\"LatM\"",
+                "\"LatS\"",
+                "\"NS\"",
+                "\"LonD\"",
+                "\"LonM\"",
+                "\"LonS\"",
+                "\"EW\"",
+                "\"City\"",
+                "\"State\""
+            ],
+            svec![
+                "41",
+                "5",
+                "59",
+                "N",
+                "80",
+                "39",
+                "0",
+                "W",
+                "Youngstown",
+                "OH"
+            ],
+        ],
+    );
+
+    let mut cmd = wrk.command("input");
+    cmd.arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec![
+            "\"LatD\"",
+            "\"LatM\"",
+            "\"LatS\"",
+            "\"NS\"",
+            "\"LonD\"",
+            "\"LonM\"",
+            "\"LonS\"",
+            "\"EW\"",
+            "\"City\"",
+            "\"State\""
+        ],
+        svec![
+            "41",
+            "5",
+            "59",
+            "N",
+            "80",
+            "39",
+            "0",
+            "W",
+            "Youngstown",
+            "OH"
+        ],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn input_headertrim() {
+    let wrk = Workdir::new("input_headertrim");
+
+    // headers taken from malformed CSV example - cities.csv at
+    // https://people.sc.fsu.edu/~jburkardt/data/csv/csv.html
+    wrk.create(
+        "data.csv",
+        vec![
+            svec![
+                "\"LatD\"",
+                "\"LatM\"",
+                "\"LatS\"",
+                "\"NS\"",
+                "\"LonD\"",
+                "\"LonM\"",
+                "\"LonS\"",
+                "\"EW\"",
+                "\"City\"",
+                "\"State\""
+            ],
+            svec![
+                "41",
+                "5",
+                "59",
+                "N",
+                "80",
+                "39",
+                "0",
+                "W",
+                "Youngstown",
+                "OH"
+            ],
+        ],
+    );
+
+    let mut cmd = wrk.command("input");
+    cmd.arg("--trim-headers").arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["LatD", "LatM", "LatS", "NS", "LonD", "LonM", "LonS", "EW", "City", "State"],
+        svec![
+            "41",
+            "5",
+            "59",
+            "N",
+            "80",
+            "39",
+            "0",
+            "W",
+            "Youngstown",
+            "OH"
+        ],
+    ];
+    assert_eq!(got, expected);
+}
