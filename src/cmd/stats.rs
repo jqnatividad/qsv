@@ -774,8 +774,8 @@ impl Stats {
         // sparsity
         // stats is also called by the `schema` and `tojsonl` commands to infer a schema,
         // sparsity is not required by those cmds and we don't have necessarily
-        // have record_count at this point, so just set sparsity to nullcount (div by 1) so
-        // we don't panic.
+        // have record_count when called by those cmds, so just set sparsity to nullcount
+        // (div by 1) so we don't panic.
         #[allow(clippy::cast_precision_loss)]
         let sparsity: f64 = self.nullcount as f64 / *RECORD_COUNT.get().unwrap_or(&1) as f64;
         let mut buffer = ryu::Buffer::new();
@@ -987,8 +987,12 @@ impl Commute for Stats {
 }
 
 #[allow(clippy::enum_variant_names)]
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Default)]
 pub enum FieldType {
+    // The default - TNull, is the most specific type.
+    // Type inference proceeds by assuming the most specific type and then
+    // relaxing the type as counter-examples are found.
+    #[default]
     TNull,
     TString,
     TFloat,
@@ -998,10 +1002,9 @@ pub enum FieldType {
 }
 
 impl FieldType {
-    // infer data type from
-    // a infer_dates flag, if date inference should be attempted
-    // from a given sample, and
-    // the current type inference
+    // infer data type
+    // infer_dates signals if date inference should be attempted
+    // from a given sample & current type inference
     #[inline]
     pub fn from_sample(
         infer_dates: bool,
@@ -1075,15 +1078,6 @@ impl Commute for FieldType {
             // anything else is a String
             (_, _) => TString,
         };
-    }
-}
-
-impl Default for FieldType {
-    // The default is the most specific type.
-    // Type inference proceeds by assuming the most specific type and then
-    // relaxing the type as counter-examples are found.
-    fn default() -> FieldType {
-        TNull
     }
 }
 
