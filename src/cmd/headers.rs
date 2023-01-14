@@ -19,6 +19,7 @@ headers options:
                            input is given.
     --intersect            Shows the intersection of all headers in all of
                            the inputs given.
+    --trim                 Trim space & quote characters from header name.
 
 Common options:
     -h, --help             Display this message
@@ -38,6 +39,7 @@ struct Args {
     arg_input:       Vec<String>,
     flag_just_names: bool,
     flag_intersect:  bool,
+    flag_trim:       bool,
     flag_delimiter:  Option<Delimiter>,
 }
 
@@ -65,7 +67,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         if num_inputs == 1 && !args.flag_just_names {
             write!(&mut wtr, "{}\t", i + 1)?;
         }
-        wtr.write_all(&header)?;
+        if args.flag_trim {
+            wtr.write_all(
+                std::string::String::from_utf8_lossy(&header)
+                    .trim_matches(|c| c == '"' || c == ' ')
+                    .as_bytes(),
+            )?;
+        } else {
+            wtr.write_all(&header)?;
+        }
         wtr.write_all(b"\n")?;
     }
     wtr.flush()?;

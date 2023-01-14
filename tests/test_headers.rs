@@ -40,6 +40,112 @@ h2";
 }
 
 #[test]
+fn headers_notrim() {
+    let wrk = Workdir::new("headers_notrim");
+
+    // headers taken from malformed CSV example - cities.csv at
+    // https://people.sc.fsu.edu/~jburkardt/data/csv/csv.html
+    wrk.create(
+        "data.csv",
+        vec![
+            svec![
+                "\"LatD\"",
+                "\"LatM\"",
+                "\"LatS\"",
+                "\"NS\"",
+                "\"LonD\"",
+                "\"LonM\"",
+                "\"LonS\"",
+                "\"EW\"",
+                "\"City\"",
+                "\"State\""
+            ],
+            svec![
+                "41",
+                "5",
+                "59",
+                "N",
+                "80",
+                "39",
+                "0",
+                "W",
+                "Youngstown",
+                "OH"
+            ],
+        ],
+    );
+
+    let mut cmd = wrk.command("headers");
+    cmd.arg("data.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = r#"1   "LatD"
+2   "LatM"
+3   "LatS"
+4   "NS"
+5   "LonD"
+6   "LonM"
+7   "LonS"
+8   "EW"
+9   "City"
+10  "State""#;
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn headers_trim() {
+    let wrk = Workdir::new("headers_trim");
+
+    // headers taken from malformed CSV example - cities.csv at
+    // https://people.sc.fsu.edu/~jburkardt/data/csv/csv.html
+    wrk.create(
+        "data.csv",
+        vec![
+            svec![
+                "\"LatD\"",
+                "\"LatM\"",
+                "\"LatS\"",
+                "\"NS\"",
+                "\"LonD\"",
+                "\"LonM\"",
+                "\"LonS\"",
+                "\"EW\"",
+                "\"City\"",
+                "\"State\""
+            ],
+            svec![
+                "41",
+                "5",
+                "59",
+                "N",
+                "80",
+                "39",
+                "0",
+                "W",
+                "Youngstown",
+                "OH"
+            ],
+        ],
+    );
+
+    let mut cmd = wrk.command("headers");
+    cmd.arg("--trim").arg("data.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = r#"1   LatD
+2   LatM
+3   LatS
+4   NS
+5   LonD
+6   LonM
+7   LonS
+8   EW
+9   City
+10  State"#;
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn headers_multiple() {
     let (wrk, mut cmd) = setup("headers_multiple");
     cmd.arg("in2.csv");
