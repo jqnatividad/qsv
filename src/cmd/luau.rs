@@ -121,7 +121,7 @@ use std::{env, fs};
 #[cfg(any(feature = "full", feature = "lite"))]
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::{debug, info, log_enabled};
-use mlua::Lua;
+use mlua::{Lua, Value};
 use serde::Deserialize;
 use tempfile;
 
@@ -315,7 +315,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         progress.set_draw_target(ProgressDrawTarget::hidden());
     }
 
-    let error_result: mlua::Value = luau.load("return \"<ERROR>\";").eval()?;
+    let error_result: Value = luau.load("return \"<ERROR>\";").eval()?;
     let mut error_flag;
 
     // we init/reset _idx and _rowcount right before the main loop
@@ -370,7 +370,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         error_flag = false;
-        let computed_value: mlua::Value = match luau
+        let computed_value: Value = match luau
             .load(&main_bytecode)
             .set_mode(mlua::ChunkMode::Binary)
             .eval()
@@ -395,21 +395,21 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         if args.cmd_map {
             match computed_value {
-                mlua::Value::String(string) => {
+                Value::String(string) => {
                     record.push_field(&string.to_string_lossy());
                 }
-                mlua::Value::Number(number) => {
+                Value::Number(number) => {
                     let mut buffer = ryu::Buffer::new();
                     record.push_field(buffer.format(number));
                 }
-                mlua::Value::Integer(number) => {
+                Value::Integer(number) => {
                     let mut buffer = itoa::Buffer::new();
                     record.push_field(buffer.format(number));
                 }
-                mlua::Value::Boolean(boolean) => {
+                Value::Boolean(boolean) => {
                     record.push_field(if boolean { "true" } else { "false" });
                 }
-                mlua::Value::Nil => {
+                Value::Nil => {
                     record.push_field("");
                 }
                 _ => {
@@ -426,14 +426,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 true
             } else {
                 match computed_value {
-                    mlua::Value::String(strval) => !strval.to_string_lossy().is_empty(),
-                    mlua::Value::Boolean(boolean) => boolean,
-                    mlua::Value::Nil => false,
-                    mlua::Value::Integer(intval) => intval != 0,
+                    Value::String(strval) => !strval.to_string_lossy().is_empty(),
+                    Value::Boolean(boolean) => boolean,
+                    Value::Nil => false,
+                    Value::Integer(intval) => intval != 0,
                     // we compare to f64::EPSILON as float comparison to zero
                     // unlike int, where we can say intval != 0, we cannot do fltval !=0
                     // https://doc.rust-lang.org/std/primitive.f64.html#associatedconstant.EPSILON
-                    mlua::Value::Number(fltval) => (fltval).abs() > f64::EPSILON,
+                    Value::Number(fltval) => (fltval).abs() > f64::EPSILON,
                     _ => true,
                 }
             };
@@ -461,7 +461,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         info!("Compiling and executing epilogue. _idx used: {idx_used}, _rowcount: {idx}");
         let epilogue_bytecode = luau_compiler.compile(&epilogue_script);
-        let epilogue_value: mlua::Value = match luau
+        let epilogue_value: Value = match luau
             .load(&epilogue_bytecode)
             .set_mode(mlua::ChunkMode::Binary)
             .eval()
@@ -476,11 +476,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         };
         let epilogue_string = match epilogue_value {
-            mlua::Value::String(string) => string.to_string_lossy().to_string(),
-            mlua::Value::Number(number) => number.to_string(),
-            mlua::Value::Integer(number) => number.to_string(),
-            mlua::Value::Boolean(boolean) => (if boolean { "true" } else { "false" }).to_string(),
-            mlua::Value::Nil => String::new(),
+            Value::String(string) => string.to_string_lossy().to_string(),
+            Value::Number(number) => number.to_string(),
+            Value::Integer(number) => number.to_string(),
+            Value::Boolean(boolean) => (if boolean { "true" } else { "false" }).to_string(),
+            Value::Nil => String::new(),
             _ => {
                 return fail_clierror!(
                     "Unexpected epilogue value type returned by provided Luau expression. \
