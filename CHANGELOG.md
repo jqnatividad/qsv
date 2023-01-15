@@ -6,6 +6,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.84.0] - 2023-01-14
+
+### Added
+* `headers`: added `--trim` option to trim quote and spaces from headers https://github.com/jqnatividad/qsv/pull/726
+
+
+### Changed
+* `input`: `--trim-headers` option also removes excess quotes https://github.com/jqnatividad/qsv/pull/727
+* `safenames`: trim quotes and spaces from headers https://github.com/jqnatividad/qsv/commit/0260833bc8b36ea6e6ccb9e79687c76470a8a6b0
+* cargo update bump dependencies
+* pin Rust nightly to 2022-01-13
+
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.83.0...0.84.0
+
 ## [0.83.0] - 2023-01-13
 
 ### Added
