@@ -21,14 +21,14 @@ dependencies = [
 
 [[package]]
 name = "actix-governor"
-version = "0.3.2"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6fbf4afa1e2f7c28040febe2a7199ad0a5fed564dd645da06ab12642c7d22483"
+checksum = "43ca3a2b04bda362f1f84625218947a4a03167d7573fc98372a9ade8503a5b18"
 dependencies = [
  "actix-http",
  "actix-web",
  "futures",
- "governor 0.4.2",
+ "governor",
 ]
 
 [[package]]
@@ -1585,23 +1585,6 @@ checksum = "d2fabcfbdc87f4758337ca535fb41a6d701b65693ce38287d856d1674551ec9b"
 
 [[package]]
 name = "governor"
-version = "0.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "19775995ee20209163239355bc3ad2f33f83da35d9ef72dea26e5af753552c87"
-dependencies = [
- "dashmap",
- "futures",
- "futures-timer",
- "no-std-compat",
- "nonzero_ext",
- "parking_lot",
- "quanta",
- "rand",
- "smallvec",
-]
-
-[[package]]
-name = "governor"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c390a940a5d157878dd057c78680a33ce3415bcd05b4799509ea44210914b4d5"
@@ -2938,7 +2921,7 @@ dependencies = [
  "ext-sort",
  "filetime",
  "flexi_logger",
- "governor 0.5.1",
+ "governor",
  "grex",
  "hashbrown 0.13.2",
  "indicatif",

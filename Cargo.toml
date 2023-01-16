@@ -158,7 +158,7 @@ vader_sentiment = { version = "0.1", optional = true }
 whatlang = { version = "0.16", optional = true }
 
 [dev-dependencies]
-actix-governor = "0.3"
+actix-governor = "0.4"
 actix-web = { version = "4.2", default-features = false, features = [
     "compress-brotli",
     "compress-gzip",
