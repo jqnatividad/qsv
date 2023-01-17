@@ -521,6 +521,7 @@ fn round_num(dec_f64: f64, places: u32) -> String {
     // https://docs.rs/rust_decimal/latest/rust_decimal/enum.RoundingStrategy.html#variant.MidpointNearestEven
     dec_num
         .round_dp_with_strategy(places, RoundingStrategy::MidpointNearestEven)
+        .normalize()
         .to_string()
 }
 
@@ -778,8 +779,7 @@ impl Stats {
         // (div by 1) so we don't panic.
         #[allow(clippy::cast_precision_loss)]
         let sparsity: f64 = self.nullcount as f64 / *RECORD_COUNT.get().unwrap_or(&1) as f64;
-        let mut buffer = ryu::Buffer::new();
-        pieces.push(buffer.format(sparsity).to_owned());
+        pieces.push(round_num(sparsity, round_places));
 
         // median
         let mut existing_median = None;
