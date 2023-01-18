@@ -283,3 +283,17 @@ fn sniff_prefer_dmy() {
 
     assert_eq!(got, expected);
 }
+
+#[test]
+fn sniff_flaky_delimiter_guess() {
+    let wrk = Workdir::new("sniff_flaky_delimiter_guess");
+    let test_file = wrk.load_test_file("test_sniff_delimiter.csv");
+
+    let mut cmd = wrk.command("sniff");
+    cmd.arg("--delimiter").arg(",").arg(test_file);
+
+    // this should  ALWAYS succeed since we explicitly set the delimiter to ','
+    // about 40% OF the time for this specific file, the delimiter guesser will
+    // guess the wrong delimiter if we don't explicitly set it.
+    wrk.assert_success(&mut cmd);
+}

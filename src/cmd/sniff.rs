@@ -29,6 +29,12 @@ sniff options:
 
 Common options:
     -h, --help             Display this message
+    -d, --delimiter <arg>  The field delimiter for reading CSV data.
+                           Specify this when the delimiter is known beforehand,
+                           as the delimiter guessing algorithm can sometimes be
+                           wrong if not enough delimiters are present in the sample.
+                           Must be a single ascii character.
+
 "#;
 
 use qsv_sniffer::{DatePreference, SampleSize, Sniffer};
@@ -36,7 +42,10 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use thousands::Separable;
 
-use crate::{config::Config, util, CliResult};
+use crate::{
+    config::{Config, Delimiter},
+    util, CliResult,
+};
 
 #[derive(Deserialize)]
 struct Args {
@@ -45,6 +54,7 @@ struct Args {
     flag_prefer_dmy:  bool,
     flag_json:        bool,
     flag_pretty_json: bool,
+    flag_delimiter:   Option<Delimiter>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -77,7 +87,10 @@ const fn rowcount(metadata: &qsv_sniffer::metadata::Metadata, rowcount: u64) -> 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
-    let conf = Config::new(&args.arg_input).flexible(true).checkutf8(false);
+    let conf = Config::new(&args.arg_input)
+        .flexible(true)
+        .checkutf8(false)
+        .delimiter(args.flag_delimiter);
     let n_rows = util::count_rows(&conf)?;
 
     let mut sample_size = args.flag_sample;
@@ -102,21 +115,37 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let sniff_results = if sample_all {
         log::info!("Sniffing ALL {n_rows} rows...");
-        Sniffer::new()
-            .sample_size(SampleSize::All)
-            .date_preference(dt_preference)
-            .sniff_reader(rdr.into_inner())
+        if let Some(delimiter) = args.flag_delimiter {
+            Sniffer::new()
+                .sample_size(SampleSize::All)
+                .date_preference(dt_preference)
+                .delimiter(delimiter.as_byte())
+                .sniff_reader(rdr.into_inner())
+        } else {
+            Sniffer::new()
+                .sample_size(SampleSize::All)
+                .date_preference(dt_preference)
+                .sniff_reader(rdr.into_inner())
+        }
     } else {
         let mut sniff_size = sample_size as usize;
-        // sample_size is at least 10
-        if sniff_size < 10 {
-            sniff_size = 10;
+        // sample_size is at least 20
+        if sniff_size < 20 {
+            sniff_size = 20;
         }
         log::info!("Sniffing {sniff_size} of {n_rows} rows...");
-        Sniffer::new()
-            .sample_size(SampleSize::Records(sniff_size))
-            .date_preference(dt_preference)
-            .sniff_reader(rdr.into_inner())
+        if let Some(delimiter) = args.flag_delimiter {
+            Sniffer::new()
+                .sample_size(SampleSize::Records(sniff_size))
+                .date_preference(dt_preference)
+                .delimiter(delimiter.as_byte())
+                .sniff_reader(rdr.into_inner())
+        } else {
+            Sniffer::new()
+                .sample_size(SampleSize::Records(sniff_size))
+                .date_preference(dt_preference)
+                .sniff_reader(rdr.into_inner())
+        }
     };
 
     if args.flag_json || args.flag_pretty_json {
