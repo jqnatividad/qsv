@@ -87,13 +87,17 @@ const fn rowcount(metadata: &qsv_sniffer::metadata::Metadata, rowcount: u64) -> 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
+    let mut sample_size = args.flag_sample;
+    if sample_size < 0.0 {
+        return fail_clierror!("Sample size must be greater than or equal to zero.");
+    }
+
     let conf = Config::new(&args.arg_input)
         .flexible(true)
         .checkutf8(false)
         .delimiter(args.flag_delimiter);
     let n_rows = util::count_rows(&conf)?;
 
-    let mut sample_size = args.flag_sample;
     let mut sample_all = false;
     // its a percentage, get the actual sample size
     #[allow(clippy::cast_precision_loss)]
