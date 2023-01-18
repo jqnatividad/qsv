@@ -113,7 +113,7 @@ mlua = { version = "0.8", features = ["luau"], optional = true }
 num_cpus = "1"
 once_cell = { version = "1.17", features = ["parking_lot"] }
 parking_lot = { version = "0.12", features = ["hardware-lock-elision"] }
-pyo3 = { version = "0.17", features = ["auto-initialize"], optional = true }
+pyo3 = { version = "0.18", features = ["auto-initialize"], optional = true }
 qsv-dateparser = "0.6"
 qsv-stats = "0.7"
 qsv_currency = { version = "0.6", optional = true }
