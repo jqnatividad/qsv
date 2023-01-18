@@ -166,7 +166,7 @@ actix-web = { version = "4.2", default-features = false, features = [
 assert-json-diff = "2.0"
 newline-converter = "0.2"
 quickcheck = { version = "1", default-features = false }
-serial_test = "0.10"
+serial_test = "1.0"
 
 [patch.crates-io]
 csv       = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
