@@ -113,13 +113,14 @@ Common options:
 // inferencing & to compile smart Data Dictionaries in the most performant way possible
 // for Datapusher+ (https://github.com/dathere/datapusher-plus).
 //
-// It underpins the `schema` and `validate` commands - enabling validation of a
-// complex CSV (NYC's 311 data) JSONschema at almost 300,000 records/sec.
+// It underpins the `schema` and `validate` commands - enabling the automatic creation of
+// a JSONschema based on a CSV's summary statistics; and use the generated JSONschema to
+// quickly validate complex CSVs (NYC's 311 data) at almost 300,000 records/sec.
 //
 // These "unsafe" calls primarily skip repetitive UTF-8 validation and unneeded bounds checking.
 //
 // To safeguard against undefined behavior, `stats` is the most extensively tested command,
-// with 425 tests.
+// with >425 tests.
 
 use std::{
     borrow::ToOwned,
@@ -519,6 +520,7 @@ fn round_num(dec_f64: f64, places: u32) -> String {
 
     // round using Midpoint Nearest Even Rounding Strategy AKA "Bankers Rounding."
     // https://docs.rs/rust_decimal/latest/rust_decimal/enum.RoundingStrategy.html#variant.MidpointNearestEven
+    // we also normalize to remove trailing zeroes and to change -0.0 to 0.0.
     dec_num
         .round_dp_with_strategy(places, RoundingStrategy::MidpointNearestEven)
         .normalize()
@@ -749,7 +751,7 @@ impl Stats {
                 pieces.push(timestamp_ms_to_rfc3339(v.mean() as i64, typ));
                 // instead of returning stdev in seconds, let's return it in
                 // days as it easier to handle
-                // Round to at least 5 decimal places
+                // Round to at least 5 decimal places, so we have millisecond precision
                 pieces.push(round_num(
                     v.stddev() / MS_IN_DAY,
                     u32::max(round_places, DAY_DECIMAL_PLACES),
@@ -774,8 +776,8 @@ impl Stats {
 
         // sparsity
         // stats is also called by the `schema` and `tojsonl` commands to infer a schema,
-        // sparsity is not required by those cmds and we don't have necessarily
-        // have record_count when called by those cmds, so just set sparsity to nullcount
+        // sparsity is not required by those cmds and we don't necessarily have the
+        // record_count when called by those cmds, so just set sparsity to nullcount
         // (div by 1) so we don't panic.
         #[allow(clippy::cast_precision_loss)]
         let sparsity: f64 = self.nullcount as f64 / *RECORD_COUNT.get().unwrap_or(&1) as f64;
