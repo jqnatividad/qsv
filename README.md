@@ -315,7 +315,7 @@ It will NOT offer the choice to update itself to the prebuilt binaries published
 > ℹ️ **NOTE:** `qsvlite`, as the name implies, always has **non-default features disabled**. `qsv` can be built with any combination of the above features using the cargo `--features` & `--no-default-features` flags. The prebuilt `qsv` binaries has **all applicable features valid for the target platform**[^6].
 
 ## Testing
-qsv has ~950 tests in the [tests](https://github.com/jqnatividad/qsv/tree/master/tests) directory.
+qsv has ~960 tests in the [tests](https://github.com/jqnatividad/qsv/tree/master/tests) directory.
 Each command has its own test suite in a separate file with the convention `test_<COMMAND>.rs`.
 Apart from preventing regressions, the tests also serve as good illustrative examples, and are often linked from the usage text of each corresponding command.
 
@@ -327,8 +327,13 @@ cargo test --feature all_full
 # to test qsvlite
 cargo test --feature lite
 
-# to test qsvp
+# to test qsvdp
 cargo test --feature datapusher_plus
+
+# to test a specific command
+# here we test only stats and use the
+# -F shortcut for --feature
+cargo test stats -F all_full
 ```
 
 ## License
