@@ -257,5 +257,8 @@ fn assert_eq_ftables(got: &FTables, expected: &FTables) -> bool {
     for (k, v) in got.iter() {
         assert_eq!(freq_data(v), freq_data(expected.get(k).unwrap()));
     }
+    for (k, v) in expected.iter() {
+        assert_eq!(freq_data(got.get(k).unwrap()), freq_data(v));
+    }
     true
 }
