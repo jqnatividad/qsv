@@ -7,6 +7,12 @@ characters with _. If the first character is a digit, replace the digit with the
 If a header with the same name already exists, append a sequence suffix (e.g. c1, c1_2, c1_3).
 Names are limited to 60 characters in length. Empty names are replaced with "unsafe_".
 
+In addition, specifically because of CKAN Datastore requirements:
+- Headers with leading underscores are replaced with "unsafe_" prefix.
+- Headers that are named "_id" are renamed to "reserved__id".
+
+These CKAN Datastore options can be configured via the --prefix & --reserved options, respectively.
+
 In Always (a) and Conditional (c) mode, returns number of modified headers to stderr,
 and sends CSV with safe headers output to stdout.
 
