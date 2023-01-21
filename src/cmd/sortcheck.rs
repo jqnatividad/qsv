@@ -209,6 +209,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             unsorted_breaks,
             dupe_count,
         };
+        // it's OK to have unwrap here as we know sortcheck_struct is valid json
         if args.flag_pretty_json {
             println!(
                 "{}",

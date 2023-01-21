@@ -237,6 +237,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     unsafe_headers:  unsafenames_vec,
                     safe_headers:    safenames_vec,
                 };
+                // its OK to have unwrap here because safenames_struct is always valid
                 if safenames_mode == SafeNameMode::VerifyVerbosePrettyJSON {
                     println!(
                         "{}",
