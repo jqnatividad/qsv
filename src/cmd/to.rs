@@ -7,6 +7,8 @@ The format is described here - https://docs.rs/postgres/latest/postgres/config/s
 Additionally you can use `env=MY_ENV_VAR` and qsv will get the connection string from the
 environment variable `MY_ENV_VAR`.
 
+If using the `--dump` option instead of a connection string put a name of a file or `-` for stdout.
+
 Examples:
 
 Load `file1.csv` and `file2.csv' file to local database `test`, with user `testuser`, and password `pass`.
@@ -31,9 +33,19 @@ to explain how evolving works.
 
   $ qsv to postgres 'postgres://testuser:pass@localhost/test' --evolve file1.csv file2.csv
 
+Create dump file.
+
+  $ qsv to postgres --dump dumpfile.sql file1.csv file2.csv
+
+Print dump to stdout.
+
+  $ qsv to postgres --dump - file1.csv file2.csv
+
 
 SQLITE
 Convert to sqlite db file. Will be created if it does not exist.
+
+If using the `--dump` option, instead of a sqlite database file, put the name of the dump file or `-` for stdout.
 
 Examples:
 
@@ -49,6 +61,14 @@ Evolve tables if they exist. Read http://datapackage_convert.opendata.coop/evolv
 to explain how evolving is done.
 
   $ qsv to sqlite test.db --evolve file1.csv file2.csv
+
+Create dump file .
+
+  $ qsv to sqlite --dump dumpfile.sql file1.csv file2.csv
+
+Print dump to stdout.
+
+  $ qsv to sqlite --dump - file1.csv file2.csv
 
 
 XLSX
@@ -89,7 +109,7 @@ For all other conversions you can output the datapackage created by specifying `
 
 
 Usage:
-    qsv to postgres [options] <connection> [<input>...]
+    qsv to postgres [options] <postgres> [<input>...]
     qsv to sqlite [options] <sqlite> [<input>...]
     qsv to xlsx [options] <xlsx> [<input>...]
     qsv to parquet [options] <parquet> [<input>...]
@@ -98,12 +118,13 @@ Usage:
 
 options:
     -k --print-package     Print statistics as datapackage, by default will print field summary.
+    -u --dump              Create database dump file for use with `psql` or `sqlite3` command line tools (postgres/sqlite only).
     -a --stats             Produce extra statistics about the data beyond just type guessing.
     -c --stats-csv <path>  Output stats as CSV to specified file.
     -q --quiet             Do not print out field summary.
-    -s --schema <arg>      The schema to load the data into. (postgres only)
-    -d --drop              Drop tables before loading new data into them (postgres/sqlite only)
-    -e --evolve            If loading into existing db, alter existing tables so that new data will load. (postgres/sqlite only)
+    -s --schema <arg>      The schema to load the data into. (postgres only).
+    -d --drop              Drop tables before loading new data into them (postgres/sqlite only).
+    -e --evolve            If loading into existing db, alter existing tables so that new data will load. (postgres/sqlite only).
     -p --separator <arg>   For xlsx, use this character to help truncate xlsx sheet names.
                            Defaults to space.
     -j, --jobs <arg>       The number of jobs to run in parallel.
@@ -130,10 +151,10 @@ use crate::{
 };
 
 #[allow(dead_code)]
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 struct Args {
     cmd_postgres:       bool,
-    arg_connection:     Option<String>,
+    arg_postgres:       Option<String>,
     cmd_sqlite:         bool,
     arg_sqlite:         Option<String>,
     cmd_parquet:        bool,
@@ -146,6 +167,7 @@ struct Args {
     flag_delimiter:     Option<Delimiter>,
     flag_schema:        Option<String>,
     flag_separator:     Option<String>,
+    flag_dump:          bool,
     flag_drop:          bool,
     flag_evolve:        bool,
     flag_stats:         bool,
@@ -158,7 +180,7 @@ struct Args {
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
     debug!("'to' command running");
-    let options = Options::builder()
+    let mut options = Options::builder()
         .delimiter(args.flag_delimiter.map(config::Delimiter::as_byte))
         .schema(args.flag_schema.unwrap_or_default())
         .seperator(args.flag_separator.unwrap_or_else(|| " ".into()))
@@ -177,11 +199,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 "Need to add connection string as first argument then the input CSVs"
             );
         }
-        output = csvs_to_postgres_with_options(
-            args.arg_connection.expect("checked above"),
-            args.arg_input,
-            options,
-        )?;
+        if args.flag_dump {
+            options.dump_file = args.arg_postgres.expect("checked above");
+            output = csvs_to_postgres_with_options("".into(), args.arg_input, options)?;
+        } else {
+            output = csvs_to_postgres_with_options(
+                args.arg_postgres.expect("checked above"),
+                args.arg_input,
+                options,
+            )?;
+        }
         debug!("conversion to postgres complete");
     } else if args.cmd_sqlite {
         debug!("converting to sqlite");
@@ -190,11 +217,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 "Need to add the name of a sqlite db as first argument then the input CSVs"
             );
         }
-        output = csvs_to_sqlite_with_options(
-            args.arg_sqlite.expect("checked above"),
-            args.arg_input,
-            options,
-        )?;
+        if args.flag_dump {
+            options.dump_file = args.arg_sqlite.expect("checked above");
+            output = csvs_to_sqlite_with_options("".into(), args.arg_input, options)?;
+        } else {
+            output = csvs_to_sqlite_with_options(
+                args.arg_sqlite.expect("checked above"),
+                args.arg_input,
+                options,
+            )?;
+        }
         debug!("conversion to xlsx complete");
     } else if args.cmd_parquet {
         debug!("converting to parquet");
@@ -250,7 +282,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             "{}",
             serde_json::to_string_pretty(&output).expect("values should be serializable")
         );
-    } else if !args.flag_quiet {
+    } else if !args.flag_quiet && !args.flag_dump {
         let empty_array = vec![];
         for resource in output["resources"].as_array().unwrap_or(&empty_array) {
             let mut stdout = std::io::stdout();
