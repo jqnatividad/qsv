@@ -654,12 +654,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             };
             if !args.flag_cache_error && final_response.status_code != 200 {
                 let key = format!(
-                    "{}{:?}{:?}{}{}{}",
+                    "{}{:?}{:?}{}{}{}{}",
                     url,
                     form_body_jsonmap,
                     args.flag_jql,
                     args.flag_store_error,
                     args.flag_pretty,
+                    args.flag_compress,
                     include_existing_columns
                 );
 
