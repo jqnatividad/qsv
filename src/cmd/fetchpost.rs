@@ -114,6 +114,11 @@ Fetchpost options:
     -H, --http-header <k:v>    Append custom header(s) to the HTTP header. Pass multiple key-value pairs
                                by adding this option multiple times, once for each pair. The key and value 
                                should be separated by a colon.
+    --compress                 Compress the HTTP request body using gzip. Note that most servers do not support
+                               compressed request bodies unless they are specifically configured to do so. This
+                               should only be enabled for trusted scenarios where "zip bombs" are not a concern.
+                               see https://github.com/postmanlabs/httpbin/issues/577#issuecomment-875814469
+                               for more info.
     --max-retries <count>      Maximum number of retries per record before an error is raised.
                                [default: 5]
     --max-errors <count>       Maximum number of errors before aborting.
@@ -154,12 +159,13 @@ Common options:
     -p, --progressbar          Show progress bars. Not valid for stdin.
 "#;
 
-use std::{fs, thread, time};
+use std::{fs, io::Write, thread, time};
 
 use cached::{
     proc_macro::{cached, io_cached},
     Cached, IOCached, RedisCache, Return,
 };
+use flate2::{write::GzEncoder, Compression};
 use governor::{
     clock::DefaultClock,
     middleware::NoOpMiddleware,
@@ -177,6 +183,7 @@ use regex::Regex;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use serde_urlencoded;
 use url::Url;
 
 use crate::{
@@ -195,6 +202,7 @@ struct Args {
     flag_rate_limit:  u32,
     flag_timeout:     u64,
     flag_http_header: Vec<String>,
+    flag_compress:    bool,
     flag_max_retries: u8,
     flag_max_errors:  u64,
     flag_store_error: bool,
@@ -222,7 +230,7 @@ static TIMEOUT_FP_SECS: OnceCell<u64> = OnceCell::new();
 const FETCHPOST_REPORT_PREFIX: &str = "qsv_fetchp_";
 const FETCHPOST_REPORT_SUFFIX: &str = ".fetchpost-report.tsv";
 
-// prioritize compression schemes. Brotli first, then gzip, then deflate, and * last
+// prioritize decompression schemes. Brotli first, then gzip, then deflate, and * last
 static DEFAULT_ACCEPT_ENCODING: &str = "br;q=1.0, gzip;q=0.6, deflate;q=0.4, *;q=0.2";
 
 struct RedisConfig {
@@ -410,6 +418,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             reqwest::header::ACCEPT_ENCODING,
             HeaderValue::from_str(DEFAULT_ACCEPT_ENCODING).unwrap(),
         );
+        map.append(
+            reqwest::header::CONTENT_TYPE,
+            HeaderValue::from_str("application/x-www-form-urlencoded").unwrap(),
+        );
+        if args.flag_compress {
+            map.append(
+                reqwest::header::CONTENT_ENCODING,
+                HeaderValue::from_str("gzip").unwrap(),
+            );
+        }
         map
     };
     debug!("HTTP Header: {http_headers:?}");
@@ -617,6 +635,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 &jql_selector,
                 args.flag_store_error,
                 args.flag_pretty,
+                args.flag_compress,
                 include_existing_columns,
                 args.flag_max_retries,
             )?;
@@ -658,6 +677,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 &jql_selector,
                 args.flag_store_error,
                 args.flag_pretty,
+                args.flag_compress,
                 include_existing_columns,
                 args.flag_max_retries,
             );
@@ -788,6 +808,7 @@ fn get_cached_response(
     flag_jql: &Option<String>,
     flag_store_error: bool,
     flag_pretty: bool,
+    flag_compress: bool,
     include_existing_columns: bool,
     flag_max_retries: u8,
 ) -> cached::Return<FetchResponse> {
@@ -799,6 +820,7 @@ fn get_cached_response(
         flag_jql,
         flag_store_error,
         flag_pretty,
+        flag_compress,
         include_existing_columns,
         flag_max_retries,
     ))
@@ -810,7 +832,7 @@ fn get_cached_response(
 #[io_cached(
     type = "cached::RedisCache<String, String>",
     key = "String",
-    convert = r#"{ format!("{}{:?}{:?}{}{}{}", url, form_body_jsonmap, flag_jql, flag_store_error, flag_pretty, include_existing_columns) }"#,
+    convert = r#"{ format!("{}{:?}{:?}{}{}{}{}", url, form_body_jsonmap, flag_jql, flag_store_error, flag_pretty, flag_compress, include_existing_columns) }"#,
     create = r##" {
         RedisCache::new("fp", REDISCONFIG.ttl_secs)
             .set_namespace("q")
@@ -831,6 +853,7 @@ fn get_redis_response(
     flag_jql: &Option<String>,
     flag_store_error: bool,
     flag_pretty: bool,
+    flag_compress: bool,
     include_existing_columns: bool,
     flag_max_retries: u8,
 ) -> Result<cached::Return<String>, CliError> {
@@ -843,6 +866,7 @@ fn get_redis_response(
             flag_jql,
             flag_store_error,
             flag_pretty,
+            flag_compress,
             include_existing_columns,
             flag_max_retries,
         ))
@@ -850,6 +874,7 @@ fn get_redis_response(
     }))
 }
 
+#[allow(clippy::fn_params_excessive_bools)]
 #[inline]
 fn get_response(
     url: &str,
@@ -859,6 +884,7 @@ fn get_response(
     flag_jql: &Option<String>,
     flag_store_error: bool,
     flag_pretty: bool,
+    flag_compress: bool,
     include_existing_columns: bool,
     flag_max_retries: u8,
 ) -> FetchResponse {
@@ -927,7 +953,21 @@ fn get_response(
         }
 
         // send the actual request
-        if let Ok(resp) = client.post(&valid_url).form(form_body_jsonmap).send() {
+        let form_body_raw = serde_urlencoded::to_string(form_body_jsonmap)
+            .unwrap()
+            .as_bytes()
+            .to_owned();
+        let resp_result = if flag_compress {
+            // gzip the request body
+            let mut gz_enc = GzEncoder::new(Vec::new(), Compression::default());
+            gz_enc.write_all(&form_body_raw).unwrap();
+            let gzipped_request_body = gz_enc.finish().unwrap();
+            client.post(&valid_url).body(gzipped_request_body).send()
+        } else {
+            client.post(&valid_url).body(form_body_raw).send()
+        };
+
+        if let Ok(resp) = resp_result {
             // debug!("{resp:?}");
             api_respheader.clone_from(resp.headers());
             api_status = resp.status();

@@ -91,6 +91,7 @@ eudex = { version = "0.1", optional = true }
 ext-sort = { version = "0.1", features = [
     "memory-limit",
 ], default-features = false }
+flate2 = { version = "1", optional = true }
 filetime = "0.2"
 flexi_logger = { version = "0.24", features = [
     "compress",
@@ -142,6 +143,7 @@ self_update = { version = "0.34", features = [
 ], default-features = false, optional = true }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
+serde_urlencoded = { version = "0.7", optional = true }
 strsim = { version = "0.10", optional = true }
 strum = "0.24"
 strum_macros = "0.24"
@@ -208,11 +210,13 @@ fetch = [
     "cached",
     "console",
     "dynfmt",
+    "flate2",
     "governor",
     "hashbrown",
     "jql",
     "jsonxf",
     "redis",
+    "serde_urlencoded",
     "url",
 ]
 foreach = []
