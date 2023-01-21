@@ -889,6 +889,94 @@ fn fetchpost_simple_test() {
 }
 
 #[test]
+fn fetchpost_compress_test() {
+    let wrk = Workdir::new("fetch");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["URL", "col1", "number col", "bool_col"],
+            svec!["https://httpbin.org/post", "a", "42", "true"],
+            svec!["https://httpbin.org/post", "b", "3.14", "false"],
+            svec!["https://httpbin.org/post", "c", "666", "true"],
+            svec!["https://httpbin.org/post", "d", "33", "true"],
+            svec!["https://httpbin.org/post", "e", "0", "false"],
+        ],
+    );
+    let mut cmd = wrk.command("fetchpost");
+    cmd.arg("URL")
+        .arg("bool_col,col1,number col")
+        .arg("--jql")
+        .arg(r#""form""#)
+        .arg("--new-column")
+        .arg("response")
+        .arg("--compress")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+
+    let mut got_parsed: Vec<Vec<String>> = Vec::new();
+    let mut record_parsed: Vec<String> = Vec::new();
+
+    for record in got {
+        record_parsed.clear();
+        record_parsed.push(record[1].to_string());
+        record_parsed.push(record[2].to_string());
+        record_parsed.push(record[3].to_string());
+        record_parsed.push(record[4].to_string());
+
+        got_parsed.push(record_parsed.clone());
+    }
+
+    // this garbled response is actually expected, as httpbin.org does not
+    // decompress compressed requests so it doesn't get zip-bombed.
+    // so it just echoed back the gzipped request body.
+    // https://github.com/postmanlabs/httpbin/issues/577#issuecomment-875814469
+    // but if this was sent to an internal server that did decompress, it would work.
+    let expected = vec![
+        svec!["col1", "number col", "bool_col", "response"],
+        svec![
+            "a",
+            "42",
+            "true",
+            "{\"\\u{1f}�\\u{8}\\0\\0\\0\\0\\0\\0�K��ωO�ϱ-)*MU\\u{3}2\\u{c}m\\u{13}��Js�R��A�\": \
+             String(\"\"), \"F\\0�}�\\u{12}\\\"\\0\\0\\0\": String(\"\")}"
+        ],
+        svec![
+            "b",
+            "3.14",
+            "false",
+            "{\"\\0�i\\u{85}%\\0\\0\\0\": String(\"\"), \
+             \"\\u{1f}�\\u{8}\\0\\0\\0\\0\\0\\0�K��ωO�ϱMK�)NU\\u{3}�\\u{c}m���Js�R��A��z�\": \
+             String(\"\")}"
+        ],
+        svec![
+            "c",
+            "666",
+            "true",
+            "{\"\\u{1f}�\\u{8}\\0\\0\\0\\0\\0\\0�K��ωO�ϱ-)*MU\\u{3}2\\u{c}m���Js�R��A�fff\\0�K]g#\\
+             \
+             \0\\0\\0\": String(\"\")}"
+        ],
+        svec![
+            "d",
+            "33",
+            "true",
+            "{\"\\u{1f}�\\u{8}\\0\\0\\0\\0\\0\\0�K��ωO�ϱ-)*MU\\u{3}2\\u{c}mS��Js�R��A���\\0[ew\\\
+             u{19}\\\"\\0\\0\\0\": String(\"\")}"
+        ],
+        svec![
+            "e",
+            "0",
+            "false",
+            "{\"\\u{1f}�\\u{8}\\0\\0\\0\\0\\0\\0�K��ωO�ϱMK�)NU\\u{3}�\\u{c}mS��Js�R��A�\\u{6}\\0�,\
+             e�\\\"\\0\\0\\0\": String(\"\")}"
+        ],
+    ];
+
+    assert_eq!(got_parsed, expected);
+}
+
+#[test]
 // #[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
 fn fetchpost_jqlfile_doesnotexist_error() {
     let wrk = Workdir::new("fetch");
