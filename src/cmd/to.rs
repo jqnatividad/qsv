@@ -201,7 +201,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
         if args.flag_dump {
             options.dump_file = args.arg_postgres.expect("checked above");
-            output = csvs_to_postgres_with_options("".into(), args.arg_input, options)?;
+            output = csvs_to_postgres_with_options(String::new(), args.arg_input, options)?;
         } else {
             output = csvs_to_postgres_with_options(
                 args.arg_postgres.expect("checked above"),
@@ -219,7 +219,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
         if args.flag_dump {
             options.dump_file = args.arg_sqlite.expect("checked above");
-            output = csvs_to_sqlite_with_options("".into(), args.arg_input, options)?;
+            output = csvs_to_sqlite_with_options(String::new(), args.arg_input, options)?;
         } else {
             output = csvs_to_sqlite_with_options(
                 args.arg_sqlite.expect("checked above"),
