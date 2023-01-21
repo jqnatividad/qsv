@@ -199,13 +199,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 "Need to add connection string as first argument then the input CSVs"
             );
         }
-        if args.flag_dump{
+        if args.flag_dump {
             options.dump_file = args.arg_postgres.expect("checked above");
-            output = csvs_to_postgres_with_options(
-                "".into(),
-                args.arg_input,
-                options,
-            )?;
+            output = csvs_to_postgres_with_options("".into(), args.arg_input, options)?;
         } else {
             output = csvs_to_postgres_with_options(
                 args.arg_postgres.expect("checked above"),
@@ -221,13 +217,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 "Need to add the name of a sqlite db as first argument then the input CSVs"
             );
         }
-        if args.flag_dump{
+        if args.flag_dump {
             options.dump_file = args.arg_sqlite.expect("checked above");
-            output = csvs_to_sqlite_with_options(
-                "".into(),
-                args.arg_input,
-                options,
-            )?;
+            output = csvs_to_sqlite_with_options("".into(), args.arg_input, options)?;
         } else {
             output = csvs_to_sqlite_with_options(
                 args.arg_sqlite.expect("checked above"),
