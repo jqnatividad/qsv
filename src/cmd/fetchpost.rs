@@ -27,8 +27,15 @@ QSV_FP_REDIS_TTL_REFRESH respectively to change default Redis settings.
 Supports brotli, gzip and deflate automatic decompression for improved throughput and
 performance, preferring brotli over gzip over deflate.
 
-Automatically upgrades its connection to HTTP/2 as well if the server supports it.
-(see https://www.cloudflare.com/learning/performance/http2-vs-http1.1/)
+Gzip compression of requests bodies is supported with the --compress flag. Note that
+public APIs typically do not support gzip compression of request bodies because of the
+"zip bomb" vulnerability. This option should only be used with private APIs where this
+is not a concern.
+
+Automatically upgrades its connection to HTTP/2 with adaptive flow control as well
+if the server supports it.
+See https://www.cloudflare.com/learning/performance/http2-vs-http1.1/ and
+https://medium.com/coderscorner/http-2-flow-control-77e54f7fd518 for more info.
 
 EXAMPLES:
 
