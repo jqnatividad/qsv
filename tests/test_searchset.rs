@@ -338,8 +338,8 @@ fn searchset_flag() {
     let expected = vec![
         svec!["foobar", "barfoo", "flagged"],
         svec!["a", "b", "0"],
-        svec!["barfoo", "foobar", "3;[1, 2]"],
-        svec!["is waldo here", "spot", "4;[3]"],
+        svec!["barfoo", "foobar", "3;1,2"],
+        svec!["is waldo here", "spot", "4;3"],
         svec!["Ḟooƀar", "ḃarḟoo", "0"],
         svec!["bleh", "no, Waldo is there", "0"],
     ];
@@ -368,5 +368,29 @@ fn searchset_flag_invert_match() {
         svec!["bleh", "no, Waldo is there", "6"],
     ];
     assert_eq!(got, expected);
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn searchset_flag_complex() {
+    let wrk = Workdir::new("searchset_flag_complex");
+    let test_file = wrk.load_test_file("boston311-100-with-fake-pii.csv");
+    let regex_file = wrk.load_test_file("pii_regex_searchset.txt");
+
+    let mut cmd = wrk.command("searchset");
+    cmd.arg(regex_file)
+        .arg(test_file)
+        .args(["--flag", "flagged"])
+        .arg("--flag-matches-only")
+        .arg("--json");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let got_stderr: String = wrk.output_stderr(&mut cmd);
+
+    let expected = wrk.load_test_resource("boston311-100-pii-searchset.csv");
+    assert_eq!(got, expected.replace("\r\n", "\n").trim_end());
+
+    let expected_stderr = r#"{"rows_with_matches":5,"total_matches":6,"record_count":100}"#;
+    assert_eq!(got_stderr.trim_end(), expected_stderr);
     wrk.assert_success(&mut cmd);
 }

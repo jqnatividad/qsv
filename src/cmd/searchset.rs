@@ -39,11 +39,16 @@ search options:
                            column named <column>. For each found row, <column>
                            is set to the row number of the row, followed by a
                            semicolon, then a list of the matching regexes.
+    --flag-matches-only    When --flag is enabled, only rows that match are
+                           sent to output. Rows that do not match are filtered.
     -q, --quick            Return on first match with an exitcode of 0, returning
                            the row number of the first match to stderr.
                            Return exit code 1 if no match is found.
-                           No output is produced.
+                           No output is produced. Ignored if --json is enabled.
     -c, --count            Return number of matches to stderr.
+                           Ignored if --json is enabled.
+    -j, --json             Return number of matches, number of rows with matches,
+                           and number of rows to stderr in JSON format.
     --size-limit <mb>      Set the approximate size limit (MB) of the compiled
                            regular expression. If the compiled expression exceeds this 
                            number, then a compilation error is returned.
@@ -74,8 +79,9 @@ use std::{
 #[cfg(any(feature = "full", feature = "lite"))]
 use indicatif::{HumanCount, ProgressBar, ProgressDrawTarget};
 use log::{debug, info};
-use regex::bytes::RegexSetBuilder;
+use regex::{bytes::RegexSetBuilder, Regex};
 use serde::Deserialize;
+use serde_json::json;
 
 use crate::{
     config::{Config, Delimiter},
@@ -86,21 +92,23 @@ use crate::{
 #[allow(dead_code)]
 #[derive(Deserialize)]
 struct Args {
-    arg_input:           Option<String>,
-    arg_regexset_file:   String,
-    flag_select:         SelectColumns,
-    flag_output:         Option<String>,
-    flag_no_headers:     bool,
-    flag_delimiter:      Option<Delimiter>,
-    flag_invert_match:   bool,
-    flag_unicode:        bool,
-    flag_ignore_case:    bool,
-    flag_flag:           Option<String>,
-    flag_size_limit:     usize,
-    flag_dfa_size_limit: usize,
-    flag_quick:          bool,
-    flag_count:          bool,
-    flag_progressbar:    bool,
+    arg_input:              Option<String>,
+    arg_regexset_file:      String,
+    flag_select:            SelectColumns,
+    flag_output:            Option<String>,
+    flag_no_headers:        bool,
+    flag_delimiter:         Option<Delimiter>,
+    flag_invert_match:      bool,
+    flag_unicode:           bool,
+    flag_ignore_case:       bool,
+    flag_flag:              Option<String>,
+    flag_flag_matches_only: bool,
+    flag_size_limit:        usize,
+    flag_dfa_size_limit:    usize,
+    flag_quick:             bool,
+    flag_count:             bool,
+    flag_json:              bool,
+    flag_progressbar:       bool,
 }
 
 fn read_regexset(filename: &String) -> io::Result<Vec<String>> {
@@ -117,6 +125,19 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
     let regexset = read_regexset(&args.arg_regexset_file)?;
+
+    let mut regex_labels: Vec<String> = Vec::with_capacity(regexset.len());
+    let labels_re = Regex::new(r".?#(?P<label>.*)$").unwrap();
+
+    // use regex comment labels if they exist, so matches are easier to understand
+    for (i, regex) in regexset.iter().enumerate() {
+        let label = labels_re
+            .captures(regex)
+            .and_then(|cap| cap.name("label"))
+            .map_or_else(|| (i + 1).to_string(), |m| m.as_str().to_string());
+        regex_labels.push(label);
+    }
+
     let regex_unicode = if env::var("QSV_REGEX_UNICODE").is_ok() {
         true
     } else {
@@ -144,7 +165,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut headers = rdr.byte_headers()?.clone();
     let sel = rconfig.selection(&headers)?;
 
-    let mut match_list: String = String::new();
     let do_match_list = args.flag_flag.map_or(false, |column_name| {
         headers.push_field(column_name.as_bytes());
         true
@@ -154,6 +174,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         wtr.write_record(&headers)?;
     }
 
+    let record_count = util::count_rows(&rconfig)?;
     // prep progress bar
     #[cfg(any(feature = "full", feature = "lite"))]
     let show_progress =
@@ -162,7 +183,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let progress = ProgressBar::with_draw_target(None, ProgressDrawTarget::stderr_with_hz(5));
     #[cfg(any(feature = "full", feature = "lite"))]
     if show_progress {
-        util::prep_progress(&progress, util::count_rows(&rconfig)?);
+        util::prep_progress(&progress, record_count);
     } else {
         progress.set_draw_target(ProgressDrawTarget::hidden());
     }
@@ -174,6 +195,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut row_ctr: u64 = 0;
 
     // to save allocs
+    let mut match_list_vec = Vec::new();
+    #[allow(unused_assignments)]
+    let mut match_list = String::with_capacity(20);
     #[allow(unused_assignments)]
     let mut matched_rows = String::with_capacity(20);
     #[allow(unused_assignments)]
@@ -187,12 +211,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let mut m = sel.select(&record).any(|f| {
             let matched = pattern.is_match(f);
             if matched && do_match_list {
-                let mut matches: Vec<_> = pattern.matches(f).into_iter().collect();
+                let mut matches: Vec<usize> = pattern.matches(f).into_iter().collect();
                 total_matches += matches.len() as u64;
                 for j in &mut matches {
                     *j += 1; // so the list is human readable - i.e. not zero-based
                 }
-                match_list = format!("{matches:?}");
+                match_list_vec = matches;
             }
             matched
         });
@@ -214,12 +238,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 if args.flag_invert_match {
                     matched_rows.as_bytes()
                 } else {
+                    match_list = match_list_vec
+                        .iter()
+                        .map(|i| regex_labels[*i - 1].clone())
+                        .collect::<Vec<String>>()
+                        .join(",");
                     match_list_with_row = format!("{matched_rows};{match_list}");
                     match_list_with_row.as_bytes()
                 }
             } else {
                 b"0"
             });
+            if args.flag_flag_matches_only && !m {
+                continue;
+            }
             wtr.write_byte_record(&record)?;
         } else if m {
             wtr.write_byte_record(&record)?;
@@ -234,28 +266,37 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 " - {} total matches in {} rows with matches found in {} records.",
                 HumanCount(total_matches),
                 HumanCount(match_row_ctr),
-                HumanCount(progress.length().unwrap()),
+                HumanCount(record_count),
             ));
         } else {
             progress.set_message(format!(
                 " - {} rows with matches found in {} records.",
                 HumanCount(match_row_ctr),
-                HumanCount(progress.length().unwrap()),
+                HumanCount(record_count),
             ));
         }
         util::finish_progress(&progress);
     }
 
-    if args.flag_count && !args.flag_quick {
-        eprintln!("{match_row_ctr}");
-        info!("matches: {match_row_ctr}");
-    }
+    if args.flag_json {
+        let json = json!({
+            "rows_with_matches": match_row_ctr,
+            "total_matches": total_matches,
+            "record_count": record_count,
+        });
+        eprintln!("{json}");
+    } else {
+        if args.flag_count && !args.flag_quick {
+            eprintln!("{match_row_ctr}");
+            info!("matches: {match_row_ctr}");
+        }
 
-    if match_row_ctr == 0 {
-        return Err(CliError::NoMatch());
-    } else if args.flag_quick {
-        eprintln!("{row_ctr}");
-        info!("quick searchset first match at {row_ctr}");
+        if match_row_ctr == 0 {
+            return Err(CliError::NoMatch());
+        } else if args.flag_quick {
+            eprintln!("{row_ctr}");
+            info!("quick searchset first match at {row_ctr}");
+        }
     }
 
     Ok(())
