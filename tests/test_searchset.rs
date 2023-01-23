@@ -381,12 +381,16 @@ fn searchset_flag_complex() {
     cmd.arg(regex_file)
         .arg(test_file)
         .args(["--flag", "flagged"])
-        .arg("--flag-matches-only");
+        .arg("--flag-matches-only")
+        .arg("--json");
 
     let got: String = wrk.stdout(&mut cmd);
+    let got_stderr: String = wrk.output_stderr(&mut cmd);
 
     let expected = wrk.load_test_resource("boston311-100-pii-searchset.csv");
-
     assert_eq!(got, expected.replace("\r\n", "\n").trim_end());
+
+    let expected_stderr = r#"{"rows_with_matches":5,"total_matches":6,"record_count":100}"#;
+    assert_eq!(got_stderr.trim_end(), expected_stderr);
     wrk.assert_success(&mut cmd);
 }

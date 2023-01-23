@@ -44,8 +44,11 @@ search options:
     -q, --quick            Return on first match with an exitcode of 0, returning
                            the row number of the first match to stderr.
                            Return exit code 1 if no match is found.
-                           No output is produced.
+                           No output is produced. Ignored if --json is enabled.
     -c, --count            Return number of matches to stderr.
+                           Ignored if --json is enabled.
+    -j, --json             Return number of matches, number of rows with matches,
+                           and number of rows to stderr in JSON format.
     --size-limit <mb>      Set the approximate size limit (MB) of the compiled
                            regular expression. If the compiled expression exceeds this 
                            number, then a compilation error is returned.
@@ -78,6 +81,7 @@ use indicatif::{HumanCount, ProgressBar, ProgressDrawTarget};
 use log::{debug, info};
 use regex::{bytes::RegexSetBuilder, Regex};
 use serde::Deserialize;
+use serde_json::json;
 
 use crate::{
     config::{Config, Delimiter},
@@ -103,6 +107,7 @@ struct Args {
     flag_dfa_size_limit:    usize,
     flag_quick:             bool,
     flag_count:             bool,
+    flag_json:              bool,
     flag_progressbar:       bool,
 }
 
@@ -169,6 +174,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         wtr.write_record(&headers)?;
     }
 
+    let record_count = util::count_rows(&rconfig)?;
     // prep progress bar
     #[cfg(any(feature = "full", feature = "lite"))]
     let show_progress =
@@ -177,7 +183,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let progress = ProgressBar::with_draw_target(None, ProgressDrawTarget::stderr_with_hz(5));
     #[cfg(any(feature = "full", feature = "lite"))]
     if show_progress {
-        util::prep_progress(&progress, util::count_rows(&rconfig)?);
+        util::prep_progress(&progress, record_count);
     } else {
         progress.set_draw_target(ProgressDrawTarget::hidden());
     }
@@ -260,28 +266,37 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 " - {} total matches in {} rows with matches found in {} records.",
                 HumanCount(total_matches),
                 HumanCount(match_row_ctr),
-                HumanCount(progress.length().unwrap()),
+                HumanCount(record_count),
             ));
         } else {
             progress.set_message(format!(
                 " - {} rows with matches found in {} records.",
                 HumanCount(match_row_ctr),
-                HumanCount(progress.length().unwrap()),
+                HumanCount(record_count),
             ));
         }
         util::finish_progress(&progress);
     }
 
-    if args.flag_count && !args.flag_quick {
-        eprintln!("{match_row_ctr}");
-        info!("matches: {match_row_ctr}");
-    }
+    if args.flag_json {
+        let json = json!({
+            "rows_with_matches": match_row_ctr,
+            "total_matches": total_matches,
+            "record_count": record_count,
+        });
+        eprintln!("{json}");
+    } else {
+        if args.flag_count && !args.flag_quick {
+            eprintln!("{match_row_ctr}");
+            info!("matches: {match_row_ctr}");
+        }
 
-    if match_row_ctr == 0 {
-        return Err(CliError::NoMatch());
-    } else if args.flag_quick {
-        eprintln!("{row_ctr}");
-        info!("quick searchset first match at {row_ctr}");
+        if match_row_ctr == 0 {
+            return Err(CliError::NoMatch());
+        } else if args.flag_quick {
+            eprintln!("{row_ctr}");
+            info!("quick searchset first match at {row_ctr}");
+        }
     }
 
     Ok(())
