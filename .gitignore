@@ -25,3 +25,4 @@ perf.data*
 *.code-workspace
 tmp/*
 *.icloud
+*.parquet
