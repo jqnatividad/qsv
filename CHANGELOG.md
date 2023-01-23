@@ -6,6 +6,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.85.0] - 2023-01-22
+
+### Added
+* Update csvs_convert by @kindly in https://github.com/jqnatividad/qsv/pull/736
+* `sniff`: added `--delimiter` option https://github.com/jqnatividad/qsv/pull/732
+* `fetchpost`: add `--compress` option in https://github.com/jqnatividad/qsv/pull/737
+* `searchset`: several tweaks for PII screening requirement of Datapusher+. `--flag` option now shows regex labels instead of just row number; new `--flag-matches-only` option sends only matching rows to output when used with `--flag`; `--json` option returns rows_with_matches, total_matches and rowcount as json to stderr. https://github.com/jqnatividad/qsv/pull/738
+
+### Changed
+* `luau`: minor tweaks to increase code readability https://github.com/jqnatividad/qsv/commit/31d01c8b9eb1fe85262e9bf5fd237ae4493d562c
+* `stats`: now normalize after rounding. Normalizing strips leading zeroes and converts -0.0 to 0.0. https://github.com/jqnatividad/qsv/commit/f838272b4deb79d25ca5704cf3c89652c0b9a3bb
+* `safenames`: mention CKAN-specific options https://github.com/jqnatividad/qsv/commit/f371ac25ba0c27e48b7b9b14a37dc47913cf0095
+* `fetch` & `fetchpost`: document decompression priority https://github.com/jqnatividad/qsv/commit/43ce13c4bf7eb23dc5d051d522d6d52d3cc255aa
+* Bump actix-governor from 0.3.2 to 0.4.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/728
+* Bump sysinfo from 0.27.6 to 0.27.7 by @dependabot in https://github.com/jqnatividad/qsv/pull/730
+* Bump serial_test from 0.10.0 to 1.0.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/729
+* Bump pyo3 from 0.17.3 to 0.18.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/731
+* Bump reqwest from 0.11.13 to 0.11.14 by @dependabot in https://github.com/jqnatividad/qsv/pull/734
+* cargo update bump for other dependencies
+* pin Rust nightly to 2023-01-21
+
+### Fixed
+* `sniff`: now checks that `--sample` size is greater than zero https://github.com/jqnatividad/qsv/commit/cd4c390ce4322d7076866be27025d67800bc60e2
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.84.0...0.85.0
+
 ## [0.84.0] - 2023-01-14
 
 ### Added
