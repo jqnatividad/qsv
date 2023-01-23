@@ -606,7 +606,7 @@ pub fn qsv_check_for_update(check_only: bool, no_confirm: bool) -> Result<bool, 
             winfo!(
                 r#"This qsv was {QSV_KIND}. self-update does not work for manually {QSV_KIND} binaries.
 If you wish to update to the latest version of qsv, manually install/compile from source
-or download the prebuilt binaries from GitHub."#
+or download the latest prebuilt binaries from GitHub - https://github.com/jqnatividad/qsv/releases/latest"#
             );
         }
     } else {
