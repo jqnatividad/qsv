@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 * `luau`: minor tweaks to increase code readability https://github.com/jqnatividad/qsv/commit/31d01c8b9eb1fe85262e9bf5fd237ae4493d562c
-* `stats`: now normalize after rounding. Normalizing strips leading zeroes and converts -0.0 to 0.0. https://github.com/jqnatividad/qsv/commit/f838272b4deb79d25ca5704cf3c89652c0b9a3bb
+* `stats`: now normalize after rounding. Normalizing strips trailing zeroes and converts -0.0 to 0.0. https://github.com/jqnatividad/qsv/commit/f838272b4deb79d25ca5704cf3c89652c0b9a3bb
 * `safenames`: mention CKAN-specific options https://github.com/jqnatividad/qsv/commit/f371ac25ba0c27e48b7b9b14a37dc47913cf0095
 * `fetch` & `fetchpost`: document decompression priority https://github.com/jqnatividad/qsv/commit/43ce13c4bf7eb23dc5d051d522d6d52d3cc255aa
 * Bump actix-governor from 0.3.2 to 0.4.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/728
