@@ -248,7 +248,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             flag_rowi += 1;
             flag_column = if m {
                 let mut buffer = itoa::Buffer::new();
-                matched_rows = buffer.format(flag_rowi).to_owned();
+                buffer.format(flag_rowi).clone_into(&mut matched_rows);
                 if args.flag_invert_match {
                     matched_rows.as_bytes().to_vec()
                 } else {
