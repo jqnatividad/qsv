@@ -1,3 +1,4 @@
+#![allow(unused_assignments)]
 static USAGE: &str = r#"
 Fetchpost fetches data from web services for every row using HTTP Post.
 As opposed to fetch, which uses HTTP Get.
@@ -558,21 +559,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // we still optimize since fetch is backed by a memoized cache (in memory or Redis, when --redis
     // is used), so we want to return responses as fast as possible as we bypass the network
     // request with a cache hit
-    #[allow(unused_assignments)]
     let mut record = csv::ByteRecord::new();
-    #[allow(unused_assignments)]
     let mut jsonl_record = csv::ByteRecord::new();
-    #[allow(unused_assignments)]
     let mut report_record = csv::ByteRecord::new();
-    #[allow(unused_assignments)]
     let mut url = String::with_capacity(100);
     let mut redis_cache_hits: u64 = 0;
-    #[allow(unused_assignments)]
     let mut intermediate_redis_value: Return<String> = Return {
         was_cached: false,
         value:      String::new(),
     };
-    #[allow(unused_assignments)]
     let mut intermediate_value: Return<FetchResponse> = Return {
         was_cached: false,
         value:      FetchResponse {
@@ -581,9 +576,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             retries:     0_u8,
         },
     };
-    #[allow(unused_assignments)]
     let mut final_value = String::with_capacity(150);
-    #[allow(unused_assignments)]
     let mut final_response = FetchResponse {
         response:    String::new(),
         status_code: 0_u16,
