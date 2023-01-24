@@ -1,3 +1,4 @@
+#![allow(unused_assignments)]
 static USAGE: &str = r#"
 Filters CSV data by whether the given regex set matches a row.
 
@@ -26,48 +27,52 @@ Usage:
     qsv searchset --help
 
 search options:
-    -i, --ignore-case      Case insensitive search. This is equivalent to
-                           prefixing the regex with '(?i)'.
-    -s, --select <arg>     Select the columns to search. See 'qsv select -h'
-                           for the full syntax.
-    -v, --invert-match     Select only rows that did not match
-    -u, --unicode          Enable unicode support. When enabled, character classes
-                           will match all unicode word characters instead of only
-                           ASCII word characters. Decreases performance.
-    -f, --flag <column>    If given, the command will not filter rows
-                           but will instead flag the found rows in a new
-                           column named <column>. For each found row, <column>
-                           is set to the row number of the row, followed by a
-                           semicolon, then a list of the matching regexes.
-    --flag-matches-only    When --flag is enabled, only rows that match are
-                           sent to output. Rows that do not match are filtered.
-    -q, --quick            Return on first match with an exitcode of 0, returning
-                           the row number of the first match to stderr.
-                           Return exit code 1 if no match is found.
-                           No output is produced. Ignored if --json is enabled.
-    -c, --count            Return number of matches to stderr.
-                           Ignored if --json is enabled.
-    -j, --json             Return number of matches, number of rows with matches,
-                           and number of rows to stderr in JSON format.
-    --size-limit <mb>      Set the approximate size limit (MB) of the compiled
-                           regular expression. If the compiled expression exceeds this 
-                           number, then a compilation error is returned.
-                           Modify this only if you're getting regular expression
-                           compilation errors. [default: 50]
-    --dfa-size-limit <mb>  Set the approximate size of the cache (MB) used by the regular
-                           expression engine's Discrete Finite Automata.
-                           Modify this only if you're getting regular expression
-                           compilation errors. [default: 10]
+    -i, --ignore-case          Case insensitive search. This is equivalent to
+                               prefixing the regex with '(?i)'.
+    -s, --select <arg>         Select the columns to search. See 'qsv select -h'
+                               for the full syntax.
+    -v, --invert-match         Select only rows that did not match
+    -u, --unicode              Enable unicode support. When enabled, character classes
+                               will match all unicode word characters instead of only
+                               ASCII word characters. Decreases performance.
+
+    -f, --flag <column>        If given, the command will not filter rows
+                               but will instead flag the found rows in a new
+                               column named <column>. For each found row, <column>
+                               is set to the row number of the row, followed by a
+                               semicolon, then a list of the matching regexes.
+    --flag-matches-only        When --flag is enabled, only rows that match are
+                               sent to output. Rows that do not match are filtered.
+    --unmatched-output <file>  When --flag-matches-only is enabled, output the rows
+                               that did not match to <file>.
+
+    -q, --quick                Return on first match with an exitcode of 0, returning
+                               the row number of the first match to stderr.
+                               Return exit code 1 if no match is found.
+                               No output is produced. Ignored if --json is enabled.
+    -c, --count                Return number of matches to stderr.
+                               Ignored if --json is enabled.
+    -j, --json                 Return number of matches, number of rows with matches,
+                               and number of rows to stderr in JSON format.
+    --size-limit <mb>          Set the approximate size limit (MB) of the compiled
+                               regular expression. If the compiled expression exceeds this 
+                               number, then a compilation error is returned.
+                               Modify this only if you're getting regular expression
+                               compilation errors. [default: 50]
+    --dfa-size-limit <mb>      Set the approximate size of the cache (MB) used by the regular
+                               expression engine's Discrete Finite Automata.
+                               Modify this only if you're getting regular expression
+                               compilation errors. [default: 10]
 
 Common options:
-    -h, --help             Display this message
-    -o, --output <file>    Write output to <file> instead of stdout.
-    -n, --no-headers       When set, the first row will not be interpreted
-                           as headers. (i.e., They are not searched, analyzed,
-                           sliced, etc.)
-    -d, --delimiter <arg>  The field delimiter for reading CSV data.
-                           Must be a single character. (default: ,)
-    -p, --progressbar      Show progress bars. Not valid for stdin.
+    -h, --help                 Display this message
+    -o, --output <file>        Write output to <file> instead of stdout.
+    -n, --no-headers           When set, the first row will not be interpreted
+                               as headers. (i.e., They are not searched, analyzed,
+                               sliced, etc.)
+    -d, --delimiter <arg>      The field delimiter for reading CSV data.
+                               Must be a single character. (default: ,)
+    -p, --progressbar          Show progress bars. Not valid for stdin.
 "#;
 
 use std::{
@@ -103,6 +108,7 @@ struct Args {
     flag_ignore_case:       bool,
     flag_flag:              Option<String>,
     flag_flag_matches_only: bool,
+    flag_unmatched_output:  Option<String>,
     flag_size_limit:        usize,
     flag_dfa_size_limit:    usize,
     flag_quick:             bool,
@@ -123,6 +129,13 @@ fn read_regexset(filename: &String) -> io::Result<Vec<String>> {
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
+
+    if args.flag_flag.is_none() && args.flag_flag_matches_only {
+        return fail_clierror!("Cannot use --flag-matches-only without --flag",);
+    }
+    if !args.flag_flag_matches_only && args.flag_unmatched_output.is_some() {
+        return fail_clierror!("Cannot use --unmatched-output without --flag-matches-only",);
+    }
 
     let regexset = read_regexset(&args.arg_regexset_file)?;
 
@@ -161,6 +174,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut rdr = rconfig.reader()?;
     let mut wtr = Config::new(&args.flag_output).writer()?;
+    let mut unmatched_wtr = Config::new(&args.flag_unmatched_output).writer()?;
 
     let mut headers = rdr.byte_headers()?.clone();
     let sel = rconfig.selection(&headers)?;
@@ -194,14 +208,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut total_matches: u64 = 0;
     let mut row_ctr: u64 = 0;
 
-    // to save allocs
-    let mut match_list_vec = Vec::new();
-    #[allow(unused_assignments)]
+    // to save allocs - allow_unused_assignments lint turned off
+    // for searchset.rs for this
+    let mut flag_column: Vec<u8> = Vec::with_capacity(20);
+    let mut match_list_vec = Vec::with_capacity(20);
     let mut match_list = String::with_capacity(20);
-    #[allow(unused_assignments)]
     let mut matched_rows = String::with_capacity(20);
-    #[allow(unused_assignments)]
     let mut match_list_with_row = String::with_capacity(20);
+
     while rdr.read_byte_record(&mut record)? {
         row_ctr += 1;
         #[cfg(any(feature = "full", feature = "lite"))]
@@ -232,11 +246,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         if do_match_list {
             flag_rowi += 1;
-            record.push_field(if m {
+            flag_column = if m {
                 let mut buffer = itoa::Buffer::new();
                 matched_rows = buffer.format(flag_rowi).to_owned();
                 if args.flag_invert_match {
-                    matched_rows.as_bytes()
+                    matched_rows.as_bytes().to_vec()
                 } else {
                     match_list = match_list_vec
                         .iter()
@@ -244,19 +258,24 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         .collect::<Vec<String>>()
                         .join(",");
                     match_list_with_row = format!("{matched_rows};{match_list}");
-                    match_list_with_row.as_bytes()
+                    match_list_with_row.as_bytes().to_vec()
                 }
             } else {
-                b"0"
-            });
+                b"0".to_vec()
+            };
             if args.flag_flag_matches_only && !m {
+                if args.flag_unmatched_output.is_some() {
+                    unmatched_wtr.write_byte_record(&record)?;
+                }
                 continue;
             }
+            record.push_field(&flag_column);
             wtr.write_byte_record(&record)?;
         } else if m {
             wtr.write_byte_record(&record)?;
         }
     }
+    unmatched_wtr.flush()?;
     wtr.flush()?;
 
     #[cfg(any(feature = "full", feature = "lite"))]
