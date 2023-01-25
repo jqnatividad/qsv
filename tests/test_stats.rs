@@ -178,7 +178,7 @@ fn get_field_value(wrk: &Workdir, cmd: &mut process::Command, field: &str) -> St
     if field == "cardinality" {
         cmd.arg("--cardinality");
     }
-    if field == "mode" {
+    if field == "mode" || field == "antimode" {
         cmd.arg("--mode");
     }
     if field == "infer_dates" {
@@ -329,6 +329,36 @@ stats_tests!(
     &["5", "5", "33", "33", "42", "17", "99", "99"],
     "33,5,99"
 );
+stats_tests!(
+    stats_multiple_antimodes,
+    "antimode",
+    &["a", "a", "b", "b", "c", "d", "e", "e"],
+    "c,d"
+);
+stats_tests!(
+    stats_multiple_antimodes_num,
+    "antimode",
+    &["5", "5", "33", "33", "42", "17", "98", "99", "99"],
+    "17,42,98"
+);
+stats_tests!(
+    stats_range,
+    "range",
+    &["a", "a", "b", "b", "c", "d", "e", "e"],
+    ""
+);
+stats_tests!(
+    stats_range_num,
+    "range",
+    &["5", "5", "33", "33", "42", "17", "98", "99", "99"],
+    "94"
+);
+stats_tests!(
+    stats_sparsity,
+    "sparsity",
+    &["5", "5", "33", "33", "42", "17", "98", "99", "99", ""],
+    "0.1"
+);
 
 stats_tests!(stats_null_mean, "mean", &[""], "");
 stats_tests!(stats_null_stddev, "stddev", &[""], "");
@@ -336,6 +366,9 @@ stats_tests!(stats_null_variance, "variance", &[""], "");
 stats_tests!(stats_null_median, "median", &[""], "");
 stats_tests!(stats_null_quartiles, "quartiles", &[""], ",,,,,");
 stats_tests!(stats_null_mode, "mode", &[""], "N/A");
+stats_tests!(stats_null_antimode, "antimode", &[""], "*ALL");
+stats_tests!(stats_null_range, "range", &[""], "N/A");
+stats_tests!(stats_null_sparsity, "sparsity", &[""], "1.0");
 
 stats_tests!(stats_includenulls_null_mean, "mean", &[""], "", true, false);
 stats_tests!(
@@ -375,6 +408,30 @@ stats_tests!(
     "mode",
     &[""],
     "N/A",
+    true,
+    false
+);
+stats_tests!(
+    stats_includenulls_null_antimode,
+    "antimode",
+    &[""],
+    "*ALL",
+    true,
+    false
+);
+stats_tests!(
+    stats_includenulls_null_range,
+    "range",
+    &[""],
+    "N/A",
+    true,
+    false
+);
+stats_tests!(
+    stats_includenulls_null_sparsity,
+    "sparsity",
+    &[""],
+    "1.0",
     true,
     false
 );
