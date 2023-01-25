@@ -610,8 +610,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         }
                     }
                     ApplySubCmd::Operations => {
+                        let mut cell = String::new();
                         for col_index in sel.iter() {
-                            let mut cell = record[*col_index].to_owned();
+                            record[*col_index].clone_into(&mut cell);
                             apply_operations(
                                 &ops_vec,
                                 &mut cell,
@@ -638,8 +639,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         }
                     }
                     ApplySubCmd::DateFmt => {
+                        let mut cell = String::new();
                         for col_index in sel.iter() {
-                            let mut cell = record[*col_index].to_owned();
+                            record[*col_index].clone_into(&mut cell);
                             if !cell.is_empty() {
                                 let parsed_date = parse_with_preference(&cell, prefer_dmy);
                                 if let Ok(format_date) = parsed_date {
