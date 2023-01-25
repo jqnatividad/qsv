@@ -17,7 +17,11 @@ fn fetch_simple() {
         ],
     );
     let mut cmd = wrk.command("fetch");
-    cmd.arg("URL").arg("data.csv").arg("--store-error");
+    cmd.arg("URL")
+        .arg("data.csv")
+        .arg("--store-error")
+        .arg("--rate-limit")
+        .arg("2");
 
     let got = wrk.stdout::<String>(&mut cmd);
 
@@ -48,7 +52,9 @@ fn fetch_simple_new_col() {
         .arg("--new-column")
         .arg("response")
         .arg("data.csv")
-        .arg("--store-error");
+        .arg("--store-error")
+        .arg("--rate-limit")
+        .arg("2");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
 
@@ -154,7 +160,9 @@ fn fetch_simple_redis() {
     cmd.arg("URL")
         .arg("data.csv")
         .arg("--store-error")
-        .arg("--redis");
+        .arg("--redis")
+        .arg("--rate-limit")
+        .arg("2");
 
     let got = wrk.stdout::<String>(&mut cmd);
 
