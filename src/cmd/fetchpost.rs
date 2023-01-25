@@ -613,12 +613,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 serde_json::Value::String(value_string),
             );
         }
-        debug!("{form_body_jsonmap:?}");
+        if log::log_enabled!(Debug) {
+            debug!("{form_body_jsonmap:?}");
+        }
 
         if literal_url_used {
             url = literal_url.clone();
         } else if let Ok(s) = std::str::from_utf8(&record[column_index]) {
-            s.clone_into(&mut url)
+            s.clone_into(&mut url);
         } else {
             url = String::new();
         }
