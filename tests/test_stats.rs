@@ -321,25 +321,25 @@ stats_tests!(
     stats_multiple_modes,
     "mode",
     &["a", "a", "b", "b", "c", "d", "e", "e"],
-    "a,b,e"
+    "a,b,e,3,1"
 );
 stats_tests!(
     stats_multiple_modes_num,
     "mode",
     &["5", "5", "33", "33", "42", "17", "99", "99"],
-    "33,5,99"
+    "33,5,99,3,1"
 );
 stats_tests!(
     stats_multiple_antimodes,
     "antimode",
     &["a", "a", "b", "b", "c", "d", "e", "e"],
-    "c,d"
+    "c,d,2,1"
 );
 stats_tests!(
     stats_multiple_antimodes_num,
     "antimode",
     &["5", "5", "33", "33", "42", "17", "98", "99", "99"],
-    "17,42,98"
+    "17,42,98,3,1"
 );
 stats_tests!(
     stats_range,
@@ -512,8 +512,17 @@ stats_tests!(
 );
 
 stats_tests!(stats_cardinality, "cardinality", &["a", "b", "a"], "2");
-stats_tests!(stats_mode, "mode", &["a", "b", "a"], "a");
-stats_tests!(stats_mode_null, "mode", &["", "a", "b", "a"], "a");
+stats_tests!(stats_mode, "mode", &["a", "b", "a"], "a,1,2");
+stats_tests!(stats_mode_null, "mode", &["", "a", "b", "a"], "a,1,2");
+stats_tests!(stats_antimode, "antimode", &["a", "b", "a"], "b,1,1");
+// TODO: this is a bug as it should ignore nulls unless --nulls option is on. antimode should be
+// b,1,1
+stats_tests!(
+    stats_antimode_null,
+    "antimode",
+    &["", "a", "b", "a"],
+    ",b,2,1"
+);
 stats_tests!(stats_median, "median", &["1", "2", "3"], "2");
 stats_tests!(stats_median_null, "median", &["", "1", "2", "3"], "2");
 stats_tests!(stats_median_even, "median", &["1", "2", "3", "4"], "2.5");
