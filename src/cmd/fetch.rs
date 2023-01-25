@@ -626,7 +626,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         } else if let Ok(s) = std::str::from_utf8(&record[column_index]) {
             // we're not using a URL template,
             // just use the field as-is as the URL
-            url = s.to_owned();
+            s.clone_into(&mut url);
         } else {
             url = String::new();
         }

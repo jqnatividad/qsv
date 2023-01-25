@@ -618,7 +618,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         if literal_url_used {
             url = literal_url.clone();
         } else if let Ok(s) = std::str::from_utf8(&record[column_index]) {
-            url = s.to_owned();
+            s.clone_into(&mut url)
         } else {
             url = String::new();
         }

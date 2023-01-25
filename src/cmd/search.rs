@@ -171,7 +171,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             flag_rowi += 1;
             record.push_field(if m {
                 let mut buffer = itoa::Buffer::new();
-                matched_rows = buffer.format(flag_rowi).to_owned();
+                buffer.format(flag_rowi).clone_into(&mut matched_rows);
                 matched_rows.as_bytes()
             } else {
                 b"0"
