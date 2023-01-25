@@ -188,9 +188,9 @@ dependencies = [
 
 [[package]]
 name = "ahash"
-version = "0.8.2"
+version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bf6ccdb167abbf410dcb915cabd428929d7f6a04980b54a11f26a39f1c7f7107"
+checksum = "2c99f64d1e06488f620f932677e24bc6e2897582980441ae90a671415bd7ec2f"
 dependencies = [
  "cfg-if",
  "const-random",
@@ -260,7 +260,7 @@ version = "29.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2fe17dc0113da7e2eaeaedbd304d347aa8ea64916d225b79a5c3f3b6b5d8da4c"
 dependencies = [
- "ahash 0.8.2",
+ "ahash 0.8.3",
  "arrow-array",
  "arrow-buffer",
  "arrow-cast",
@@ -284,7 +284,7 @@ version = "29.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b9452131e027aec3276e43449162af084db611c42ef875e54d231e6580bc6254"
 dependencies = [
- "ahash 0.8.2",
+ "ahash 0.8.3",
  "arrow-buffer",
  "arrow-data",
  "arrow-schema",
@@ -1046,7 +1046,7 @@ version = "0.1.0-beta.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d86823063631fc35d5099bdfa24800463558ff69f5891d0bfcc648c426febbec"
 dependencies = [
- "ahash 0.8.2",
+ "ahash 0.8.3",
  "crossbeam-channel",
  "csv",
  "mown",
@@ -1673,7 +1673,7 @@ version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "43a3c133739dddd0d2990f9a4bdf8eb4b21ef50e4851ca85ab661199821d510e"
 dependencies = [
- "ahash 0.8.2",
+ "ahash 0.8.3",
 ]
 
 [[package]]
@@ -1954,7 +1954,7 @@ version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6ca9e2b45609132ae2214d50482c03aeee78826cd6fd53a8940915b81acedf16"
 dependencies = [
- "ahash 0.8.2",
+ "ahash 0.8.3",
  "anyhow",
  "base64 0.13.1",
  "bytecount",
@@ -2573,7 +2573,7 @@ version = "29.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d906343fd18ace6b998d5074697743e8e9358efa8c3c796a1381b98cba813338"
 dependencies = [
- "ahash 0.8.2",
+ "ahash 0.8.3",
  "arrow-array",
  "arrow-buffer",
  "arrow-cast",
@@ -2901,7 +2901,7 @@ version = "0.85.0"
 dependencies = [
  "actix-governor",
  "actix-web",
- "ahash 0.8.2",
+ "ahash 0.8.3",
  "assert-json-diff",
  "byteorder",
  "cached",
@@ -3009,7 +3009,7 @@ version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "04ab048a69b1ab56c24db6dec5a8e6dd39673bb83bf01c547ce33d9fc83e76f6"
 dependencies = [
- "ahash 0.8.2",
+ "ahash 0.8.3",
  "num-traits",
 ]
 
