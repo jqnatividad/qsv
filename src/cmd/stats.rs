@@ -120,7 +120,7 @@ Common options:
 // These "unsafe" calls primarily skip repetitive UTF-8 validation and unneeded bounds checking.
 //
 // To safeguard against undefined behavior, `stats` is the most extensively tested command,
-// with >425 tests.
+// with ~470 tests.
 
 use std::{
     borrow::ToOwned,
