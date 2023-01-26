@@ -946,12 +946,14 @@ impl Stats {
                             antimodes_list.push_str("*PREVIEW: ");
                         }
 
-                        antimodes_list.push_str(
-                            &antimodes_result
-                                .iter()
-                                .map(|c| String::from_utf8_lossy(c))
-                                .join(","),
-                        );
+                        let antimodes_vals = &antimodes_result
+                            .iter()
+                            .map(|c| String::from_utf8_lossy(c))
+                            .join(",");
+                        if antimodes_vals.starts_with(',') {
+                            antimodes_list.push_str("NULL");
+                        }
+                        antimodes_list.push_str(antimodes_vals);
 
                         // and truncate at 100 characters with an ellipsis
                         if antimodes_list.len() > 100 {
