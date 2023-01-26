@@ -598,9 +598,6 @@ impl Stats {
         };
         if let Some(v) = self.minmax.as_mut() {
             if let Some(ts_val) = timestamp_val {
-                // TODO: is there a better, non-allocating way to do this?
-                // v.add(t, ts_val.to_string().as_bytes());
-                // informal benchmarking suggest itoa is a tad faster
                 let mut buffer = itoa::Buffer::new();
                 v.add(t, buffer.format(ts_val).as_bytes());
             } else {
@@ -949,12 +946,14 @@ impl Stats {
                             antimodes_list.push_str("*PREVIEW: ");
                         }
 
-                        antimodes_list.push_str(
-                            &antimodes_result
-                                .iter()
-                                .map(|c| String::from_utf8_lossy(c))
-                                .join(","),
-                        );
+                        let antimodes_vals = &antimodes_result
+                            .iter()
+                            .map(|c| String::from_utf8_lossy(c))
+                            .join(",");
+                        if antimodes_vals.starts_with(',') {
+                            antimodes_list.push_str("NULL");
+                        }
+                        antimodes_list.push_str(antimodes_vals);
 
                         // and truncate at 100 characters with an ellipsis
                         if antimodes_list.len() > 100 {

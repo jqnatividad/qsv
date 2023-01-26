@@ -515,13 +515,11 @@ stats_tests!(stats_cardinality, "cardinality", &["a", "b", "a"], "2");
 stats_tests!(stats_mode, "mode", &["a", "b", "a"], "a,1,2");
 stats_tests!(stats_mode_null, "mode", &["", "a", "b", "a"], "a,1,2");
 stats_tests!(stats_antimode, "antimode", &["a", "b", "a"], "b,1,1");
-// TODO: this is a bug as it should ignore nulls unless --nulls option is on. antimode should be
-// b,1,1
 stats_tests!(
     stats_antimode_null,
     "antimode",
     &["", "a", "b", "a"],
-    ",b,2,1"
+    "NULL,b,2,1"
 );
 stats_tests!(stats_median, "median", &["1", "2", "3"], "2");
 stats_tests!(stats_median_null, "median", &["", "1", "2", "3"], "2");
