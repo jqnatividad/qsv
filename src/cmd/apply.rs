@@ -426,6 +426,16 @@ static WHATLANG_CONFIDENCE_THRESHOLD: OnceCell<f64> = OnceCell::new();
 // default confidence threshold for whatlang language detection - 90% confidence
 const DEFAULT_THRESHOLD: f64 = 0.9;
 
+// valid subcommands
+enum ApplySubCmd {
+    Operations,
+    DateFmt,
+    DynFmt,
+    Geocode,
+    EmptyReplace,
+    CalcConv,
+}
+
 #[inline]
 fn replace_column_value(
     record: &csv::StringRecord,
@@ -501,15 +511,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         }
         debug!("dynfmt_fields: {dynfmt_fields:?}  dynfmt_template: {dynfmt_template}");
-    }
-
-    enum ApplySubCmd {
-        Operations,
-        DateFmt,
-        DynFmt,
-        Geocode,
-        EmptyReplace,
-        CalcConv,
     }
 
     let mut ops_vec: Vec<Operations> = Vec::new();
