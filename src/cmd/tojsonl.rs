@@ -1,3 +1,4 @@
+#![allow(unused_assignments)]
 static USAGE: &str = r#"
 Smartly converts CSV to a newline-delimited JSON (JSONL/NDJSON).
 
@@ -214,21 +215,23 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // amortize allocs
     let mut record = csv::StringRecord::new();
-    #[allow(unused_assignments)]
-    let mut temp_str = String::with_capacity(100);
-    #[allow(unused_assignments)]
-    let mut temp_str2 = String::with_capacity(50);
+
+    let mut temp_string = String::with_capacity(100);
+    let mut temp_string2 = String::with_capacity(50);
+
+    let mut header_key = Value::String(String::with_capacity(50));
+    let mut temp_val = Value::String(String::with_capacity(50));
 
     // TODO: see if its worth it to do rayon here after benchmarking
     // with large files. We have --jobs option, but we only pass it
     // thru to stats/frequency to infer data types & enum constraints.
-    //
+
     // now that we have type mappings, iterate thru input csv
     // and write jsonl file
     while rdr.read_record(&mut record)? {
-        temp_str.clear();
+        temp_string.clear();
         record.trim();
-        write!(temp_str, "{{")?;
+        write!(temp_string, "{{")?;
         for (idx, field) in record.iter().enumerate() {
             let field_val = if let Some(field_type) = field_type_vec.get(idx) {
                 match field_type {
@@ -236,8 +239,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         if field.is_empty() {
                             "null"
                         } else {
-                            temp_str2 = format!(r#""{}""#, field.escape_default());
-                            &temp_str2
+                            temp_val = field.to_string().into();
+                            temp_string2 = format!(r#"{temp_val}"#);
+                            &temp_string2
                         }
                     }
                     JsonlType::Null => "null",
@@ -253,16 +257,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             } else {
                 "null"
             };
+            header_key = headers[idx].to_string().into();
             if field_val.is_empty() {
-                write!(temp_str, r#""{}":null,"#, &headers[idx])?;
+                write!(temp_string, r#"{header_key}:null,"#)?;
             } else {
-                write!(temp_str, r#""{}":{field_val},"#, &headers[idx])?;
+                write!(temp_string, r#"{header_key}:{field_val},"#)?;
             }
         }
-        temp_str.pop(); // remove last comma
-        temp_str.push('}');
+        temp_string.pop(); // remove last comma
+        temp_string.push('}');
         record.clear();
-        record.push_field(&temp_str);
+        record.push_field(&temp_string);
         wtr.write_record(&record)?;
     }
 
