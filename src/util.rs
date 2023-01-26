@@ -530,7 +530,7 @@ pub fn qsv_check_for_update(check_only: bool, no_confirm: bool) -> Result<bool, 
     use self_update::cargo_crate_version;
     const GITHUB_RATELIMIT_MSG: &str =
         "Github is rate-limiting self-update checks at the moment. Try again in an hour.";
-        
+
     if env::var("QSV_NO_UPDATE").is_ok() {
         return Ok(false);
     }
