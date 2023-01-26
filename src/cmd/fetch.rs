@@ -176,7 +176,7 @@ Common options:
     -p, --progressbar          Show progress bars. Not valid for stdin.
 "#;
 
-use std::{fs, thread, time};
+use std::{fs, num::NonZeroU32, thread, time};
 
 use cached::{
     proc_macro::{cached, io_cached},
@@ -187,6 +187,7 @@ use governor::{
     clock::DefaultClock,
     middleware::NoOpMiddleware,
     state::{direct::NotKeyed, InMemoryState},
+    Quota, RateLimiter,
 };
 use indicatif::{HumanCount, MultiProgress, ProgressBar, ProgressDrawTarget};
 use log::{
@@ -197,7 +198,10 @@ use once_cell::sync::{Lazy, OnceCell};
 use rand::Rng;
 use redis;
 use regex::Regex;
-use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
+use reqwest::{
+    blocking::Client,
+    header::{HeaderMap, HeaderName, HeaderValue},
+};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use url::Url;
@@ -247,6 +251,18 @@ const FETCH_REPORT_SUFFIX: &str = ".fetch-report.tsv";
 
 // prioritize compression schemes. Brotli first, then gzip, then deflate, and * last
 static DEFAULT_ACCEPT_ENCODING: &str = "br;q=1.0, gzip;q=0.6, deflate;q=0.4, *;q=0.2";
+
+// for governor/ratelimiter
+const MINIMUM_WAIT_MS: u64 = 10;
+const MIN_WAIT: time::Duration = time::Duration::from_millis(MINIMUM_WAIT_MS);
+
+// for --report option
+#[derive(PartialEq)]
+enum ReportKind {
+    Detailed,
+    Short,
+    None,
+}
 
 impl From<reqwest::Error> for CliError {
     fn from(err: reqwest::Error) -> CliError {
@@ -396,7 +412,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         debug!("dynfmt_fields: {dynfmt_fields:?}  url_template: {dynfmt_url_template}");
     }
 
-    use std::num::NonZeroU32;
     let rate_limit = match args.flag_rate_limit {
         0 => NonZeroU32::new(u32::MAX).unwrap(),
         1..=1000 => NonZeroU32::new(args.flag_rate_limit).unwrap(),
@@ -451,8 +466,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
     debug!("HTTP Header: {http_headers:?}");
 
-    use reqwest::blocking::Client;
-
     let client_timeout = time::Duration::from_secs(*TIMEOUT_SECS.get().unwrap_or(&30));
     let client = Client::builder()
         .user_agent(user_agent)
@@ -466,8 +479,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .connection_verbose(log_enabled!(Debug) || log_enabled!(Trace))
         .timeout(client_timeout)
         .build()?;
-
-    use governor::{Quota, RateLimiter};
 
     // set rate limiter with allow_burst set to 1 - see https://github.com/antifuchs/governor/issues/39
     let limiter =
@@ -509,13 +520,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         Some(ref jql_file) => Some(fs::read_to_string(jql_file)?),
         None => args.flag_jql.as_ref().map(std::string::ToString::to_string),
     };
-
-    #[derive(PartialEq)]
-    enum ReportKind {
-        Detailed,
-        Short,
-        None,
-    }
 
     // prepare report
     let report = if args.flag_report.to_lowercase().starts_with('d') {
@@ -912,8 +916,6 @@ fn get_response(
     info!("Using URL: {valid_url}");
 
     // wait until RateLimiter gives Okay or we timeout
-    const MINIMUM_WAIT_MS: u64 = 10;
-    const MIN_WAIT: time::Duration = time::Duration::from_millis(MINIMUM_WAIT_MS);
     let mut limiter_total_wait: u64;
     let timeout_secs = unsafe { *TIMEOUT_SECS.get_unchecked() };
     let governor_timeout_ms = timeout_secs * 1_000;
