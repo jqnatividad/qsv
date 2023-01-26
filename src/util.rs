@@ -527,6 +527,10 @@ pub fn init_logger() -> String {
 
 #[cfg(feature = "self_update")]
 pub fn qsv_check_for_update(check_only: bool, no_confirm: bool) -> Result<bool, String> {
+    use self_update::cargo_crate_version;
+    const GITHUB_RATELIMIT_MSG: &str =
+        "Github is rate-limiting self-update checks at the moment. Try again in an hour.";
+        
     if env::var("QSV_NO_UPDATE").is_ok() {
         return Ok(false);
     }
@@ -543,10 +547,6 @@ pub fn qsv_check_for_update(check_only: bool, no_confirm: bool) -> Result<bool, 
     };
 
     winfo!("Checking GitHub for updates...");
-
-    use self_update::cargo_crate_version;
-    const GITHUB_RATELIMIT_MSG: &str =
-        "Github is rate-limiting self-update checks at the moment. Try again in an hour.";
 
     let curr_version = cargo_crate_version!();
     let releases = if let Ok(releases_list) =
