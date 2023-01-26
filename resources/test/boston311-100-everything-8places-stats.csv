@@ -22,8 +22,8 @@ police_district,String,, ,E5,,1,3,,0,0,,,,,,,,,,,13,A1,1,20, ,1,1
 neighborhood,String,, ,West Roxbury,,1,38,,0,0,,,,,,,,,,,19,Dorchester,1,15," ,Brighton,Mission Hill",3,1
 neighborhood_services_district,String,, ,9,,1,2,,0,0,,,,,,,,,,,16,3,1,15," ,12",2,1
 ward,String,, ,Ward 9,,1,7,,0,0,,,,,,,,,,,42,Ward 3,1,10,"*PREVIEW:  ,01,02,04,06,07,1,10,16,18",23,1
-precinct,String,, ,2210,,0,4,,1,0.01,,,,,,,,,,,76,0306,1,5,"*PREVIEW: , ,0102,0105,0108,0109,0201,0204,0305,0307",61,1
-location_street_name,String,,103 N Beacon St,INTERSECTION Verdun St & Gallivan Blvd,,0,45,,1,0.01,,,,,,,,,,,97,"20 Washington St,563 Columbus Ave,INTERSECTION Gallivan Blvd & Washington St",3,2,"*PREVIEW: ,103 N Beacon St,11 Aberdeen St,1148 Hyde Park Ave,119 L St,12 Derne St,126 Elm St,1270 Co...",94,1
+precinct,String,, ,2210,,0,4,,1,0.01,,,,,,,,,,,76,0306,1,5,"*PREVIEW: NULL, ,0102,0105,0108,0109,0201,0204,0305,0307",61,1
+location_street_name,String,,103 N Beacon St,INTERSECTION Verdun St & Gallivan Blvd,,0,45,,1,0.01,,,,,,,,,,,97,"20 Washington St,563 Columbus Ave,INTERSECTION Gallivan Blvd & Washington St",3,2,"*PREVIEW: NULL,103 N Beacon St,11 Aberdeen St,1148 Hyde Park Ave,119 L St,12 Derne St,126 Elm St,127...",94,1
 location_zipcode,String,,02109,02215,,0,5,,17,0.17,,,,,,,,,,,24,,1,17,"02126,02134,02210,02215",4,1
 latitude,Float,4233.6674,42.2553,42.3806,0.1253,6,7,42.336674,0,0,0.0163,42.2034,42.2619,42.3204,42.34315,42.3594,0.039,42.4179,42.4764,-0.16666667,78,42.3594,1,20,"*PREVIEW: 42.2553,42.2601,42.2609,42.2645,42.2674,42.2789,42.2797,42.2804,42.2821,42.2878",74,1
 longitude,Float,-7107.2688,-71.1626,-71.0298,0.1328,6,8,-71.072688,0,0,0.01205,-71.17405,-71.129425,-71.0848,-71.06085,-71.05505,0.02975,-71.010425,-70.9658,-0.61008403,77,-71.0587,1,19,"*PREVIEW: -71.0298,-71.0301,-71.0309,-71.0323,-71.0325,-71.0329,-71.0336,-71.0338,-71.034,-71.0355",72,1
