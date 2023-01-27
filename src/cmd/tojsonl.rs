@@ -94,6 +94,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // we're calling the schema command to infer data types and enums
     let schema_args = crate::cmd::schema::Args {
         // we only do three, as we're only inferring boolean based on enum
+        // i.e. we only inspect a field if its boolean if its domain
+        // is just two values. if its more than 2, that's all we need know
+        // for boolean inferencing
         flag_enum_threshold:  3,
         flag_strict_dates:    false,
         flag_pattern_columns: crate::select::SelectColumns::parse("")?,
@@ -111,7 +114,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         match infer_schema_from_stats(&schema_args, &input_filename) {
             Ok(map) => map,
             Err(e) => {
-                return fail_clierror!("Failed to infer field types via stats and frequency: {e}");
+                return fail_clierror!("Failed to infer field types: {e}");
             }
         };
 
