@@ -242,8 +242,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         if field.is_empty() {
                             "null"
                         } else {
-                            temp_val = field.to_string().into();
-                            temp_string2 = format!(r#"{temp_val}"#);
+                            // we round-trip thru serde_json to escape the str
+                            // per json spec (https://www.json.org/json-en.html)
+                            temp_val = field.into();
+                            temp_string2 = temp_val.to_string();
                             &temp_string2
                         }
                     }
@@ -260,7 +262,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             } else {
                 "null"
             };
-            header_key = headers[idx].to_string().into();
+            header_key = headers[idx].into();
             if field_val.is_empty() {
                 write!(temp_string, r#"{header_key}:null,"#)?;
             } else {
