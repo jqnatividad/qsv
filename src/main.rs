@@ -21,7 +21,6 @@
         // preference
         clippy::doc_markdown,
         clippy::unseparated_literal_suffix,
-        clippy::items_after_statements,
         clippy::unnecessary_wraps,
         // false positive
         clippy::needless_doctest_main,
