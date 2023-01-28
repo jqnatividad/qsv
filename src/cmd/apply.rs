@@ -1189,7 +1189,6 @@ fn search_cached(cell: &str, formatstr: &str) -> Option<String> {
                         cc = locdetails.record.cc
                     ),
                     "country" => locdetails.record.cc.to_string(),
-                    #[allow(clippy::match_same_arms)]
                     _ => locdetails.record.name.to_string(),
                 }
             })
