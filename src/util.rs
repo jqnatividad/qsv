@@ -336,10 +336,11 @@ pub const fn num_of_chunks(nitems: usize, chunk_size: usize) -> usize {
     n
 }
 
-#[allow(clippy::cast_sign_loss)]
-pub fn last_modified(md: &fs::Metadata) -> u64 {
+pub fn file_metadata(md: &fs::Metadata) -> (u64, u64) {
     use filetime::FileTime;
-    FileTime::from_last_modification_time(md).unix_seconds() as u64
+    let last_modified = FileTime::from_last_modification_time(md).unix_seconds() as u64;
+    let fsize = md.len();
+    (last_modified, fsize)
 }
 
 #[cfg(any(feature = "full", feature = "lite"))]
