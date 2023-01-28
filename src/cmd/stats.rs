@@ -1064,6 +1064,9 @@ impl FieldType {
 impl Commute for FieldType {
     #[inline]
     #[allow(clippy::match_same_arms)]
+    // we allow match_same_arms because we want are optimizing for
+    // performance and not readability, as match arms are evaluated in order
+    // so we want to put the most common cases first
     fn merge(&mut self, other: FieldType) {
         *self = match (*self, other) {
             (TString, TString) => TString,

@@ -1157,6 +1157,8 @@ fn search_cached(cell: &str, formatstr: &str) -> Option<String> {
             let search_result = geocoder.search((lat, long));
             search_result.map(|locdetails| {
                 #[allow(clippy::match_same_arms)]
+                // match arms are evaluated in order,
+                // so we're optimizing for the most common cases first
                 match formatstr {
                     "%+" | "city-state" => format!(
                         "{name}, {admin1}",
