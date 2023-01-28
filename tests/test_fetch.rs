@@ -618,10 +618,10 @@ async fn index() -> impl Responder {
 /// handler with path parameters like `/user/{name}/`
 /// returns Smurf fullname in JSON format
 async fn get_fullname(req: HttpRequest, name: web::Path<String>) -> Result<impl Responder> {
-    println!("{:?}", req);
+    println!("{req:?}");
 
     let obj = MyObj {
-        fullname: format!("{} Smurf", name),
+        fullname: format!("{name} Smurf"),
     };
 
     Ok(web::Json(obj))

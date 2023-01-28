@@ -35,9 +35,9 @@ impl Workdir {
         let dir = root
             .join(QSV_INTEGRATION_TEST_DIR)
             .join(name)
-            .join(format!("test-{}", id));
+            .join(format!("test-{id}"));
         if let Err(err) = create_dir_all(&dir) {
-            panic!("Could not create '{:?}': {}", dir, err);
+            panic!("Could not create '{dir:?}': {err}");
         }
         Workdir {
             root,
@@ -124,7 +124,7 @@ impl Workdir {
             .trim_matches(&['\r', '\n'][..])
             .parse()
             .ok()
-            .unwrap_or_else(|| panic!("Could not convert from string: '{}'", stdout))
+            .unwrap_or_else(|| panic!("Could not convert from string: '{stdout}'"))
     }
 
     pub fn output_stderr(&self, cmd: &mut process::Command) -> String {

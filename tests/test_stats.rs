@@ -210,10 +210,7 @@ fn get_field_value(wrk: &Workdir, cmd: &mut process::Command, field: &str) -> St
             }
         }
     }
-    panic!(
-        "BUG: Could not find field '{}' in headers '{:?}' for command '{:?}'.",
-        field, headers, cmd
-    );
+    panic!("BUG: Could not find field '{field}' in headers '{headers:?}' for command '{cmd:?}'.");
 }
 
 stats_tests!(stats_infer_string, "type", &["a"], "String");
