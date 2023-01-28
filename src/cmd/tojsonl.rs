@@ -280,7 +280,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 #[inline]
 fn first_lower_char(field_str: &str) -> char {
     field_str
-        .trim_start()
         .chars()
         .next()
         .unwrap_or('_')
