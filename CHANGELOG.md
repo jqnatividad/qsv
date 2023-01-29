@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.86.0] - 2023-01-29
 
 ### Added
-* `apply`: added `thousands` operation which adds thousands separator to numeric values.
+* `apply`: added `thousands` operation which adds thousands separators to numeric values.
 Specify the separator policy with --comparand (default: comma). The valid policies are:
-comma, dot, space, underscore, hex_four (place a space every four hex digits) and
+comma, dot, space, underscore, hexfour (place a space every four hex digits) and
 indiancomma (place a comma every two digits, except the last three digits). https://github.com/jqnatividad/qsv/pull/748
 * `searchset`: added `--unmatched-output` option. This was done to allow Datapusher+ to screen for PIIs more efficiently. Writing PII candidate records in one CSV file, and the "clean" records in another CSV in just one pass.  https://github.com/jqnatividad/qsv/pull/742
 
