@@ -24,7 +24,7 @@ number of transformed columns with the --rename option is the same. e.g.:
 
 $ qsv apply operations trim,upper col1,col2,col3 -r newcol1,newcol2,newcol3 file.csv
 
-It has 34 supported operations:
+It has 35 supported operations:
 
   * len: Return string length
   * lower: Transform to lowercase
