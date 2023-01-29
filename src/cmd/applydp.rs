@@ -19,7 +19,7 @@ applied in order:
 Operations support multi-column transformations. Just make sure the
 number of transformed columns with the --rename option is the same. e.g.:
 
-$ qsv applydp operations trim,upper col1,col2,col3 -r newcol1,newcol2,newcol3 file.csv  
+$ qsv applydp operations trim,upper col1,col2,col3 -r newcol1,newcol2,newcol3 file.csv
 
 It has 17 supported operations:
 
@@ -60,7 +60,7 @@ save it to a new column named uppercase_clean_surname.
 Trim, then transform to uppercase the firstname and surname fields and
 rename the columns ufirstname and usurname.
 
-  $ qsv applydp operations trim,upper firstname,surname -r ufirstname,usurname file.csv  
+  $ qsv applydp operations trim,upper firstname,surname -r ufirstname,usurname file.csv
 
 Trim parentheses & brackets from the description field.
 
@@ -92,7 +92,7 @@ DATEFMT
 Formats a recognized date column to a specified format using <--formatstr>. 
 See https://github.com/jqnatividad/belt/tree/main/dateparser#accepted-date-formats for
 recognized date formats.
-See https://docs.rs/chrono/latest/chrono/format/strftime/ for 
+See https://docs.rs/chrono/latest/chrono/format/strftime/ for
 accepted date formats for --formatstr.
 Defaults to ISO 8601/RFC 3339 format when --formatstr is not specified.
 
