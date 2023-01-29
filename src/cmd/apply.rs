@@ -3,7 +3,7 @@ Apply a series of transformation functions to a given CSV column. This can be us
 perform typical data-wrangling tasks and/or to harmonize some values, etc.
 
 It has six subcommands:
- * operations - 34 string, format, currency, regex & NLP operators.
+ * operations - 35 string, format, currency, regex & NLP operators.
  * emptyreplace - replace empty cells with <--replacement> string.
  * datefmt - Formats a recognized date column to a specified format using <--formatstr>.
  * dynfmt - Dynamically constructs a new column from other columns using the <--formatstr> template.
@@ -52,6 +52,10 @@ It has 34 supported operations:
       Add additional comma-delimited profanities with -comparand. 
   * censor_count: count of profanities detected.
       Add additional comma-delimited profanities with -comparand. 
+  * thousands: Add thousands separator to numeric values.
+      Specify the separator policy with --comparand (default: comma). The valid policies are:
+      comma, dot, space, underscore, hex_four (place a space every four hex digits) and
+      indiancomma (place a comma every two digits, except the last three digits).
   * currencytonum: Gets the numeric value of a currency. Supports currency symbols
       (e.g. $,¥,£,€,֏,₱,₽,₪,₩,ƒ,฿,₫) and strings (e.g. USD, EUR, RMB, JPY, etc.). 
       Recognizes point, comma and space separators.
@@ -337,6 +341,7 @@ use strsim::{
     sorensen_dice,
 };
 use strum_macros::EnumString;
+use thousands::{policies, Separable, SeparatorPolicy};
 use titlecase::titlecase;
 use vader_sentiment::SentimentIntensityAnalyzer;
 use whatlang::detect;
@@ -383,6 +388,7 @@ enum Operations {
     Squeeze0,
     Strip_Prefix,
     Strip_Suffix,
+    Thousands,
     Titlecase,
     Trim,
     Upper,
@@ -421,10 +427,18 @@ static GEOCODER: OnceCell<ReverseGeocoder> = OnceCell::new();
 static EUDEX_COMPARAND_HASH: OnceCell<eudex::Hash> = OnceCell::new();
 static REGEX_REPLACE: OnceCell<Regex> = OnceCell::new();
 static SENTIMENT_ANALYZER: OnceCell<SentimentIntensityAnalyzer> = OnceCell::new();
+static THOUSANDS_POLICY: OnceCell<SeparatorPolicy> = OnceCell::new();
 static WHATLANG_CONFIDENCE_THRESHOLD: OnceCell<f64> = OnceCell::new();
 
 // default confidence threshold for whatlang language detection - 90% confidence
 const DEFAULT_THRESHOLD: f64 = 0.9;
+
+// for thousands operator
+static INDIANCOMMA_POLICY: SeparatorPolicy = SeparatorPolicy {
+    separator: ",",
+    groups:    &[3, 2],
+    digits:    thousands::digits::ASCII_DECIMAL,
+};
 
 // valid subcommands
 enum ApplySubCmd {
@@ -873,6 +887,19 @@ fn validate_operations(
                 }
                 strip_invokes = strip_invokes.saturating_add(1);
             }
+            Operations::Thousands => {
+                let separator_policy = match flag_comparand.as_str() {
+                    "dot" => policies::DOT_SEPARATOR,
+                    "space" => policies::SPACE_SEPARATOR,
+                    "underscore" => policies::UNDERSCORE_SEPARATOR,
+                    "hexfour" => policies::HEX_FOUR,
+                    "indiancomma" => INDIANCOMMA_POLICY,
+                    _ => policies::COMMA_SEPARATOR,
+                };
+                if THOUSANDS_POLICY.set(separator_policy).is_err() {
+                    return fail!("Cannot initialize Thousands policy.");
+                };
+            }
             Operations::Whatlang => {
                 if flag_new_column.is_none() {
                     return fail!("--new_column (-c) is required for whatlang language detection.");
@@ -1030,6 +1057,11 @@ fn apply_operations(
             Operations::Censor_Count => {
                 let censor = CENSOR.get().unwrap();
                 *cell = censor.count(cell).to_string();
+            }
+            Operations::Thousands => {
+                if let Ok(num) = cell.parse::<f64>() {
+                    *cell = num.separate_by_policy(*THOUSANDS_POLICY.get().unwrap());
+                }
             }
             Operations::Currencytonum => {
                 // this is a workaround around current limitation of qsv-currency

@@ -1261,6 +1261,116 @@ fn apply_new_column() {
 }
 
 #[test]
+fn apply_ops_thousands() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["number"],
+            svec!["123456789"],
+            svec!["123456789.12345678"],
+            svec!["123456789.0"],
+            svec!["123456789.123"],
+            svec!["0"],
+            svec!["5"],
+            svec!["not a number, should be ignored"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("thousands")
+        .arg("number")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["number"],
+        svec!["123,456,789"],
+        svec!["123,456,789.12345678"],
+        svec!["123,456,789"],
+        svec!["123,456,789.123"],
+        svec!["0"],
+        svec!["5"],
+        svec!["not a number, should be ignored"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn apply_ops_thousands_space() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["number"],
+            svec!["123456789"],
+            svec!["123456789.12345678"],
+            svec!["123456789.0"],
+            svec!["123456789.123"],
+            svec!["0"],
+            svec!["5"],
+            svec!["not a number, should be ignored"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("thousands")
+        .arg("number")
+        .args(["--comparand", "space"])
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["number"],
+        svec!["123 456 789"],
+        svec!["123 456 789.12345678"],
+        svec!["123 456 789"],
+        svec!["123 456 789.123"],
+        svec!["0"],
+        svec!["5"],
+        svec!["not a number, should be ignored"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn apply_ops_thousands_indiancomma() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["number"],
+            svec!["123456789"],
+            svec!["123456789.12345678"],
+            svec!["123456789.0"],
+            svec!["123456789.123"],
+            svec!["0"],
+            svec!["5"],
+            svec!["not a number, should be ignored"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("thousands")
+        .arg("number")
+        .args(["--comparand", "indiancomma"])
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["number"],
+        svec!["12,34,56,789"],
+        svec!["12,34,56,789.12345678"],
+        svec!["12,34,56,789"],
+        svec!["12,34,56,789.123"],
+        svec!["0"],
+        svec!["5"],
+        svec!["not a number, should be ignored"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn apply_ops_currencytonum() {
     let wrk = Workdir::new("apply");
     wrk.create(
