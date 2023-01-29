@@ -6,6 +6,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.86.0] - 2023-01-29
+
+### Added
+* `apply`: added `thousands` operation which adds thousands separator to numeric values.
+Specify the separator policy with --comparand (default: comma). The valid policies are:
+comma, dot, space, underscore, hex_four (place a space every four hex digits) and
+indiancomma (place a comma every two digits, except the last three digits). https://github.com/jqnatividad/qsv/pull/748
+* `searchset`: added `--unmatched-output` option. This was done to allow Datapusher+ to screen for PIIs more efficiently. Writing PII candidate records in one CSV file, and the "clean" records in another CSV in just one pass.  https://github.com/jqnatividad/qsv/pull/742
+
+
+### Changed
+* `fetch` & `fetchpost`: expanded usage text info on HTTP2 Adaptive Flow Control support
+* `fetchpost`: added more detail about `--compress` option
+* `stats`: added more tests
+* updated prebuilt zip archive READMEs https://github.com/jqnatividad/qsv/commit/072973efd7947a93773b2783d098eeace17d963d
+* Bump redis from 0.22.2 to 0.22.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/741
+* Bump ahash from 0.8.2 to 0.8.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/743
+* Bump jql from 5.1.4 to 5.1.6 by @dependabot in https://github.com/jqnatividad/qsv/pull/747
+* applied select clippy recommendations
+* cargo update bump several indirect dependencies
+* pin Rust nightly to 2023-01-27
+
+
+### Fixed
+* `stats`: fixed antimodes null display. Use the literal `NULL` instead of just "" when listing NULL as an antimode. https://github.com/jqnatividad/qsv/pull/745
+* `tojsonl`: fixed invalid escaping of JSON values https://github.com/jqnatividad/qsv/pull/746
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.85.0...0.86.0
+
 ## [0.85.0] - 2023-01-22
 
 ### Added
