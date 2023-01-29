@@ -10,7 +10,7 @@
 [![HomeBrew](https://img.shields.io/homebrew/v/qsv?logo=homebrew)](https://formulae.brew.sh/formula/qsv)
 [![Crates.io](https://img.shields.io/crates/v/qsv.svg?logo=crates.io)](https://crates.io/crates/qsv)
 [![Crates.io downloads](https://img.shields.io/crates/d/qsv?color=orange&label=crates.io%20downloads)](https://crates.io/crates/qsv)
-[![Minimum supported Rust version](https://img.shields.io/badge/Rust-1.67.0-red?logo=rust)](#minimum-supported-rust-version)
+[![Minimum supported Rust version](https://img.shields.io/badge/Rust-1.66.1-red?logo=rust)](#minimum-supported-rust-version)
 
 <div align="center">
 
@@ -149,7 +149,7 @@ cargo build --release --locked --features datapusher_plus
 
 ### Minimum Supported Rust Version
 
-qsv's MSRV policy is to require [Rust stable](https://github.com/rust-lang/rust/blob/master/RELEASES.md) - currently version 1.67.0.
+qsv's MSRV policy is to require [Rust stable](https://github.com/rust-lang/rust/blob/master/RELEASES.md) - currently version 1.66.1.
 
 ## Tab Completion
 
