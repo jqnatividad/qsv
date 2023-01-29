@@ -56,6 +56,7 @@ It has 34 supported operations:
       Specify the separator policy with --comparand (default: comma). The valid policies are:
       comma, dot, space, underscore, hex_four (place a space every four hex digits) and
       indiancomma (place a comma every two digits, except the last three digits).
+      The decimal separator can be specified with --replacement (default: .).
   * currencytonum: Gets the numeric value of a currency. Supports currency symbols
       (e.g. $,¥,£,€,֏,₱,₽,₪,₩,ƒ,฿,₫) and strings (e.g. USD, EUR, RMB, JPY, etc.). 
       Recognizes point, comma and space separators.
@@ -282,9 +283,10 @@ apply options:
                                 instead of removing it. Only used with the DATEFMT subcommand.
     -f, --formatstr=<string>    This option is used by several subcommands:
 
-                                OPERATIONS: numtocurrency
-                                  If set to "euro", will format the currency to use "." instead of ","
-                                  as separators (e.g. 1.000,00 instead of 1,000.00 )
+                                OPERATIONS: 
+                                  numtocurrency
+                                    If set to "euro", will format the currency to use "." instead of ","
+                                    as separators (e.g. 1.000,00 instead of 1,000.00 )
 
                                 DATEFMT: The date format to use. For formats, see
                                   https://docs.rs/chrono/latest/chrono/format/strftime/
@@ -1060,7 +1062,27 @@ fn apply_operations(
             }
             Operations::Thousands => {
                 if let Ok(num) = cell.parse::<f64>() {
-                    *cell = num.separate_by_policy(*THOUSANDS_POLICY.get().unwrap());
+                    let mut temp_string = num.separate_by_policy(*THOUSANDS_POLICY.get().unwrap());
+
+                    // if there is a decimal separator (fractional part > 0.0), use the requested
+                    // decimal separator in --replacement
+                    if num.fract() > 0.0 {
+                        // if replacement is empty, use the default decimal separator (.)
+                        *cell = if replacement.is_empty() {
+                            temp_string
+                        } else {
+                            // else replace the decimal separator (last '.') w/ the requested one
+                            match temp_string.rfind('.') {
+                                Some(last_dot) => {
+                                    temp_string.replace_range(last_dot..=last_dot, replacement);
+                                    temp_string
+                                }
+                                None => temp_string,
+                            }
+                        };
+                    } else {
+                        *cell = temp_string;
+                    }
                 }
             }
             Operations::Currencytonum => {
