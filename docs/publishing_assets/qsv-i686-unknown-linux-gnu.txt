@@ -1,0 +1,8 @@
+The luau feature is not enabled on this prebuilt because of cross-compilation
+limitations using GitHub's Action Runners.
+
+As I don't have access to this platform, I do not know if the --luau feature
+can even be compiled on it.
+
+If you find that --luau can be enabled on i1686-unknown-linux-gnu, please do
+let me know so I can update this note accordingly.

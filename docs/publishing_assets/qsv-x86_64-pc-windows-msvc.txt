@@ -1,0 +1,1 @@
+The `foreach` feature is not enabled as it only works on Unix-like OSes.

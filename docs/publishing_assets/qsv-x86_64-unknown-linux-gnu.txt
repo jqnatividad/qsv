@@ -2,7 +2,7 @@ If you get a "GLIBC_* not found" error when running qsv, your Linux distro does
 not have the necessary version of the GNU C Library that qsv dynamically links to
 at startup.
 
-Use the "linux-musl.zip" archive instead. It contains qsv statically linked to the
+Use the "*-linux-musl.zip" archive instead. It contains qsv statically linked to the
 musl C library.
 
 https://www.gnu.org/software/libc/
