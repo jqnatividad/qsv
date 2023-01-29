@@ -22,9 +22,9 @@ applied in order:
 Operations support multi-column transformations. Just make sure the
 number of transformed columns with the --rename option is the same. e.g.:
 
-$ qsv apply operations trim,upper col1,col2,col3 -r newcol1,newcol2,newcol3 file.csv  
+$ qsv apply operations trim,upper col1,col2,col3 -r newcol1,newcol2,newcol3 file.csv
 
-It has 34 supported operations:
+It has 35 supported operations:
 
   * len: Return string length
   * lower: Transform to lowercase
@@ -49,13 +49,14 @@ It has 34 supported operations:
       https://daringfireball.net/2008/05/title_case
   * censor: profanity filter. Add additional comma-delimited profanities with --comparand.
   * censor_check: check if profanity is detected (boolean).
-      Add additional comma-delimited profanities with -comparand. 
+      Add additional comma-delimited profanities with -comparand.
   * censor_count: count of profanities detected.
-      Add additional comma-delimited profanities with -comparand. 
+      Add additional comma-delimited profanities with -comparand.
   * thousands: Add thousands separator to numeric values.
       Specify the separator policy with --comparand (default: comma). The valid policies are:
       comma, dot, space, underscore, hex_four (place a space every four hex digits) and
       indiancomma (place a comma every two digits, except the last three digits).
+      The decimal separator can be specified with --replacement (default: .).
   * currencytonum: Gets the numeric value of a currency. Supports currency symbols
       (e.g. $,¥,£,€,֏,₱,₽,₪,₩,ƒ,฿,₫) and strings (e.g. USD, EUR, RMB, JPY, etc.). 
       Recognizes point, comma and space separators.
@@ -92,7 +93,7 @@ Trim, then transform to uppercase the surname field and rename the column upperc
 
   $ qsv apply operations trim,upper surname -r uppercase_clean_surname file.csv
 
-Trim, then transform to uppercase the surname field and 
+Trim, then transform to uppercase the surname field and
 save it to a new column named uppercase_clean_surname.
 
   $ qsv apply operations trim,upper surname -c uppercase_clean_surname file.csv
@@ -100,7 +101,7 @@ save it to a new column named uppercase_clean_surname.
 Trim, then transform to uppercase the firstname and surname fields and
 rename the columns ufirstname and usurname.
 
-  $ qsv apply operations trim,upper firstname,surname -r ufirstname,usurname file.csv  
+  $ qsv apply operations trim,upper firstname,surname -r ufirstname,usurname file.csv
 
 Trim parentheses & brackets from the description field.
 
@@ -146,7 +147,7 @@ Replace empty cells in file.csv Measurement column with 'Unknown Measurement'.
 $ qsv apply emptyreplace --replacement 'Unknown Measurement' file.csv
 
 DATEFMT
-Formats a recognized date column to a specified format using <--formatstr>. 
+Formats a recognized date column to a specified format using <--formatstr>.
 See https://github.com/jqnatividad/belt/tree/main/dateparser#accepted-date-formats for
 recognized date formats.
 See https://docs.rs/chrono/latest/chrono/format/strftime/ for 
@@ -200,7 +201,7 @@ Create a new column 'FullName' from 'FirstName', 'MI', and 'LastName' columns:
 GEOCODE
 Geocodes to the nearest city center point given a location column
 [i.e. a column which contains a latitude, longitude WGS84 coordinate] against
-an embedded copy of the Geonames city database. 
+an embedded copy of the Geonames city database.
 
 The geocoded information is formatted based on --formatstr, returning
 it in 'city-state' format if not specified.
@@ -282,9 +283,10 @@ apply options:
                                 instead of removing it. Only used with the DATEFMT subcommand.
     -f, --formatstr=<string>    This option is used by several subcommands:
 
-                                OPERATIONS: numtocurrency
-                                  If set to "euro", will format the currency to use "." instead of ","
-                                  as separators (e.g. 1.000,00 instead of 1,000.00 )
+                                OPERATIONS: 
+                                  numtocurrency
+                                    If set to "euro", will format the currency to use "." instead of ","
+                                    as separators (e.g. 1.000,00 instead of 1,000.00 )
 
                                 DATEFMT: The date format to use. For formats, see
                                   https://docs.rs/chrono/latest/chrono/format/strftime/
@@ -296,7 +298,7 @@ apply options:
                                 GEOCODE: the place format to use with the geocode subcommand.
                                   The available formats are:
                                   - 'city-state' (default) - e.g. Brooklyn, New York
-                                  - 'city-country' - Brooklyn, US 
+                                  - 'city-country' - Brooklyn, US
                                   - 'city-state-country' | 'city-admin1-country' - Brooklyn, New York US
                                   - 'city' - Brooklyn
                                   - 'county' | 'admin2' - Kings County
@@ -1060,7 +1062,27 @@ fn apply_operations(
             }
             Operations::Thousands => {
                 if let Ok(num) = cell.parse::<f64>() {
-                    *cell = num.separate_by_policy(*THOUSANDS_POLICY.get().unwrap());
+                    let mut temp_string = num.separate_by_policy(*THOUSANDS_POLICY.get().unwrap());
+
+                    // if there is a decimal separator (fractional part > 0.0), use the requested
+                    // decimal separator in --replacement
+                    if num.fract() > 0.0 {
+                        // if replacement is empty, use the default decimal separator (.)
+                        *cell = if replacement.is_empty() {
+                            temp_string
+                        } else {
+                            // else replace the decimal separator (last '.') w/ the requested one
+                            match temp_string.rfind('.') {
+                                Some(last_dot) => {
+                                    temp_string.replace_range(last_dot..=last_dot, replacement);
+                                    temp_string
+                                }
+                                None => temp_string,
+                            }
+                        };
+                    } else {
+                        *cell = temp_string;
+                    }
                 }
             }
             Operations::Currencytonum => {
