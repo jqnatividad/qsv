@@ -52,11 +52,11 @@ It has 35 supported operations:
       Add additional comma-delimited profanities with -comparand.
   * censor_count: count of profanities detected.
       Add additional comma-delimited profanities with -comparand.
-  * thousands: Add thousands separator to numeric values.
+  * thousands: Add thousands separators to numeric values.
       Specify the separator policy with --comparand (default: comma). The valid policies are:
-      comma, dot, space, underscore, hex_four (place a space every four hex digits) and
+      comma, dot, space, underscore, hexfour (place a space every four hex digits) and
       indiancomma (place a comma every two digits, except the last three digits).
-      The decimal separator can be specified with --replacement (default: .).
+      The decimal separator can be specified with --replacement (default: '.')
   * currencytonum: Gets the numeric value of a currency. Supports currency symbols
       (e.g. $,¥,£,€,֏,₱,₽,₪,₩,ƒ,฿,₫) and strings (e.g. USD, EUR, RMB, JPY, etc.). 
       Recognizes point, comma and space separators.
