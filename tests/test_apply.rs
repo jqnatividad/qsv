@@ -1273,6 +1273,12 @@ fn apply_ops_thousands() {
             svec!["123456789.123"],
             svec!["0"],
             svec!["5"],
+            svec!["-123456789"],
+            svec!["-123456789.12345678"],
+            svec!["-123456789.0"],
+            svec!["-123456789.123"],
+            svec!["0"],
+            svec!["-5"],
             svec!["not a number, should be ignored"],
         ],
     );
@@ -1291,6 +1297,12 @@ fn apply_ops_thousands() {
         svec!["123,456,789.123"],
         svec!["0"],
         svec!["5"],
+        svec!["-123,456,789"],
+        svec!["-123,456,789.12345678"],
+        svec!["-123,456,789"],
+        svec!["-123,456,789.123"],
+        svec!["0"],
+        svec!["-5"],
         svec!["not a number, should be ignored"],
     ];
     assert_eq!(got, expected);
@@ -1463,6 +1475,13 @@ fn apply_ops_round() {
             svec!["123456789.12398"],
             svec!["0"],
             svec!["5"],
+            svec!["-123456789"],
+            svec!["-123456789.12345678"],
+            svec!["-123456789.0"],
+            svec!["-123456789.123"],
+            svec!["-123456789.12398"],
+            svec!["-0"],
+            svec!["-5"],
             svec!["not a number, should be ignored"],
         ],
     );
@@ -1482,6 +1501,13 @@ fn apply_ops_round() {
         svec!["123456789.124"],
         svec!["0"],
         svec!["5"],
+        svec!["-123456789"],
+        svec!["-123456789.123"],
+        svec!["-123456789"],
+        svec!["-123456789.123"],
+        svec!["-123456789.124"],
+        svec!["0"],
+        svec!["-5"],
         svec!["not a number, should be ignored"],
     ];
     assert_eq!(got, expected);
