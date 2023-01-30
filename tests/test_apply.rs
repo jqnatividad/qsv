@@ -1316,7 +1316,7 @@ fn apply_ops_thousands_space() {
     cmd.arg("operations")
         .arg("thousands")
         .arg("number")
-        .args(["--comparand", "space"])
+        .args(["--formatstr", "space"])
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
@@ -1353,7 +1353,7 @@ fn apply_ops_thousands_indiancomma() {
     cmd.arg("operations")
         .arg("thousands")
         .arg("number")
-        .args(["--comparand", "indiancomma"])
+        .args(["--formatstr", "indiancomma"])
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
@@ -1391,7 +1391,7 @@ fn apply_ops_thousands_eurostyle() {
     cmd.arg("operations")
         .arg("thousands")
         .arg("number")
-        .args(["--comparand", "dot"])
+        .args(["--formatstr", "dot"])
         .args(["--replacement", ","])
         .arg("data.csv");
 
@@ -1431,7 +1431,7 @@ fn apply_ops_thousands_hexfour() {
     cmd.arg("operations")
         .arg("thousands")
         .arg("number")
-        .args(["--comparand", "hexfour"])
+        .args(["--formatstr", "hexfour"])
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
@@ -1442,6 +1442,85 @@ fn apply_ops_thousands_hexfour() {
         svec!["1 2345 6789"],
         svec!["1 2345 6789.123"],
         svec!["12 3451 2345 6789.123"],
+        svec!["0"],
+        svec!["5"],
+        svec!["not a number, should be ignored"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn apply_ops_round() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["number"],
+            svec!["123456789"],
+            svec!["123456789.12345678"],
+            svec!["123456789.0"],
+            svec!["123456789.123"],
+            svec!["123456789.12398"],
+            svec!["0"],
+            svec!["5"],
+            svec!["not a number, should be ignored"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("round")
+        .arg("number")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["number"],
+        svec!["123456789"],
+        svec!["123456789.123"],
+        svec!["123456789"],
+        svec!["123456789.123"],
+        svec!["123456789.124"],
+        svec!["0"],
+        svec!["5"],
+        svec!["not a number, should be ignored"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn apply_ops_round_5places() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["number"],
+            svec!["123456789"],
+            svec!["123456789.12345678"],
+            svec!["123456789.0"],
+            svec!["123456789.123"],
+            svec!["123456789.1239876"],
+            svec!["123456789.1239844"],
+            svec!["0"],
+            svec!["5"],
+            svec!["not a number, should be ignored"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("round")
+        .args(["--formatstr", "5"])
+        .arg("number")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["number"],
+        svec!["123456789"],
+        svec!["123456789.12346"],
+        svec!["123456789"],
+        svec!["123456789.123"],
+        svec!["123456789.12399"],
+        svec!["123456789.12398"],
         svec!["0"],
         svec!["5"],
         svec!["not a number, should be ignored"],
