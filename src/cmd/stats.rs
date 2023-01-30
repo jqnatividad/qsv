@@ -507,26 +507,6 @@ pub struct Stats {
     which:     WhichStats,
 }
 
-fn round_num(dec_f64: f64, places: u32) -> String {
-    use rust_decimal::prelude::*;
-
-    // use from_f64_retain, so we have all the excess bits before rounding with
-    // round_dp_with_strategy as from_f64 will prematurely round when it drops the excess bits
-    let Some(dec_num) = Decimal::from_f64_retain(dec_f64) else {
-        let msg = format!(r#"Failed to convert to decimal "{dec_f64}""#);
-        log::error!("{msg}");
-        return msg;
-    };
-
-    // round using Midpoint Nearest Even Rounding Strategy AKA "Bankers Rounding."
-    // https://docs.rs/rust_decimal/latest/rust_decimal/enum.RoundingStrategy.html#variant.MidpointNearestEven
-    // we also normalize to remove trailing zeroes and to change -0.0 to 0.0.
-    dec_num
-        .round_dp_with_strategy(places, RoundingStrategy::MidpointNearestEven)
-        .normalize()
-        .to_string()
-}
-
 fn timestamp_ms_to_rfc3339(timestamp: i64, typ: FieldType) -> String {
     use chrono::prelude::*;
 
@@ -694,7 +674,7 @@ impl Stats {
         if let Some(sum) = self.sum.as_ref().and_then(|sum| sum.show(typ)) {
             if typ == FieldType::TFloat {
                 if let Ok(f64_val) = sum.parse::<f64>() {
-                    pieces.push(round_num(f64_val, round_places));
+                    pieces.push(util::round_num(f64_val, round_places));
                 } else {
                     pieces.push(format!("ERROR: Cannot convert {sum} to a float."));
                 }
@@ -741,15 +721,15 @@ impl Stats {
             pieces.push(empty());
         } else if let Some(ref v) = self.online {
             if self.typ == TFloat || self.typ == TInteger {
-                pieces.push(round_num(v.mean(), round_places));
-                pieces.push(round_num(v.stddev(), round_places));
-                pieces.push(round_num(v.variance(), round_places));
+                pieces.push(util::round_num(v.mean(), round_places));
+                pieces.push(util::round_num(v.stddev(), round_places));
+                pieces.push(util::round_num(v.variance(), round_places));
             } else {
                 pieces.push(timestamp_ms_to_rfc3339(v.mean() as i64, typ));
                 // instead of returning stdev in seconds, let's return it in
                 // days as it easier to handle
                 // Round to at least 5 decimal places, so we have millisecond precision
-                pieces.push(round_num(
+                pieces.push(util::round_num(
                     v.stddev() / MS_IN_DAY,
                     u32::max(round_places, DAY_DECIMAL_PLACES),
                 ));
@@ -778,7 +758,7 @@ impl Stats {
         // (div by 1) so we don't panic.
         #[allow(clippy::cast_precision_loss)]
         let sparsity: f64 = self.nullcount as f64 / *RECORD_COUNT.get().unwrap_or(&1) as f64;
-        pieces.push(round_num(sparsity, round_places));
+        pieces.push(util::round_num(sparsity, round_places));
 
         // median
         let mut existing_median = None;
@@ -793,7 +773,7 @@ impl Stats {
             if typ == TDateTime || typ == TDate {
                 pieces.push(timestamp_ms_to_rfc3339(v as i64, typ));
             } else {
-                pieces.push(round_num(v, round_places));
+                pieces.push(util::round_num(v, round_places));
             }
         } else if self.which.median {
             pieces.push(empty());
@@ -809,12 +789,12 @@ impl Stats {
         }) {
             if typ == TDateTime || typ == TDate {
                 // like stddev, return MAD in days
-                pieces.push(round_num(
+                pieces.push(util::round_num(
                     v / MS_IN_DAY,
                     u32::max(round_places, DAY_DECIMAL_PLACES),
                 ));
             } else {
-                pieces.push(round_num(v, round_places));
+                pieces.push(util::round_num(v, round_places));
             }
         } else if self.which.mad {
             pieces.push(empty());
@@ -876,7 +856,7 @@ impl Stats {
                     pieces.push(timestamp_ms_to_rfc3339(q2 as i64, typ)); // q2 = median
                     pieces.push(timestamp_ms_to_rfc3339(q3 as i64, typ));
                     // return iqr in days - there are 86,400,000 ms in a day
-                    pieces.push(round_num(
+                    pieces.push(util::round_num(
                         (q3 - q1) / MS_IN_DAY,
                         u32::max(round_places, DAY_DECIMAL_PLACES),
                     ));
@@ -884,18 +864,18 @@ impl Stats {
                     pieces.push(timestamp_ms_to_rfc3339(uif as i64, typ));
                     pieces.push(timestamp_ms_to_rfc3339(uof as i64, typ));
                 } else {
-                    pieces.push(round_num(lof, round_places));
-                    pieces.push(round_num(lif, round_places));
+                    pieces.push(util::round_num(lof, round_places));
+                    pieces.push(util::round_num(lif, round_places));
 
-                    pieces.push(round_num(q1, round_places));
-                    pieces.push(round_num(q2, round_places)); // q2 = median
-                    pieces.push(round_num(q3, round_places));
-                    pieces.push(round_num(iqr, round_places));
+                    pieces.push(util::round_num(q1, round_places));
+                    pieces.push(util::round_num(q2, round_places)); // q2 = median
+                    pieces.push(util::round_num(q3, round_places));
+                    pieces.push(util::round_num(iqr, round_places));
 
-                    pieces.push(round_num(uif, round_places));
-                    pieces.push(round_num(uof, round_places));
+                    pieces.push(util::round_num(uif, round_places));
+                    pieces.push(util::round_num(uof, round_places));
                 }
-                pieces.push(round_num(skewness, round_places));
+                pieces.push(util::round_num(skewness, round_places));
             }
         }
 
@@ -1282,7 +1262,7 @@ impl TypedMinMax {
                     Some((
                         buffer.format(*min).to_owned(),
                         buffer.format(*max).to_owned(),
-                        round_num(*max - *min, round_places),
+                        util::round_num(*max - *min, round_places),
                     ))
                 } else {
                     None
@@ -1295,7 +1275,10 @@ impl TypedMinMax {
                         timestamp_ms_to_rfc3339(*max, typ),
                         // return in days, not timestamp in milliseconds
                         #[allow(clippy::cast_precision_loss)]
-                        round_num((*max - *min) as f64 / MS_IN_DAY, u32::max(round_places, 5)),
+                        util::round_num(
+                            (*max - *min) as f64 / MS_IN_DAY,
+                            u32::max(round_places, 5),
+                        ),
                     ))
                 } else {
                     None

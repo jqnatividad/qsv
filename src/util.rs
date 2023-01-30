@@ -928,3 +928,23 @@ impl ColumnNameParser {
         name
     }
 }
+
+pub fn round_num(dec_f64: f64, places: u32) -> String {
+    use rust_decimal::prelude::*;
+
+    // use from_f64_retain, so we have all the excess bits before rounding with
+    // round_dp_with_strategy as from_f64 will prematurely round when it drops the excess bits
+    let Some(dec_num) = Decimal::from_f64_retain(dec_f64) else {
+        let msg = format!(r#"Failed to convert to decimal "{dec_f64}""#);
+        log::error!("{msg}");
+        return msg;
+    };
+
+    // round using Midpoint Nearest Even Rounding Strategy AKA "Bankers Rounding."
+    // https://docs.rs/rust_decimal/latest/rust_decimal/enum.RoundingStrategy.html#variant.MidpointNearestEven
+    // we also normalize to remove trailing zeroes and to change -0.0 to 0.0.
+    dec_num
+        .round_dp_with_strategy(places, RoundingStrategy::MidpointNearestEven)
+        .normalize()
+        .to_string()
+}
