@@ -6,6 +6,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.87.0] - 2023-01-29
+
+### Added
+* `apply`: add decimal separator --replacement option to thousands operation. This fully rounds out `thousands` formatting, as it will allow formatting numbers to support "euro-style" formats (e.g. 1.234.567,89 instead of 1,234,567.89) https://github.com/jqnatividad/qsv/pull/749
+* `apply`: add round operation; also refactored thousands operation to use more appropriate `--formatstr` option instead of `--comparand` option to specify "format" of thousands separator policy https://github.com/jqnatividad/qsv/pull/751
+* `applydp`: add round operation  https://github.com/jqnatividad/qsv/pull/752
+
+### Changed
+* changed MSRV policy to track latest Rust version in Homebrew, instead of latest Rust stable
+* removed excess trailing whitespace in `apply` & `applydp` usage text
+* moved `round_num` function from `stats.rs` to `util.rs` so it can be used in round operation in `apply` and `applydp`
+* cargo update bump dependencies, notably tokio from 1.24.2 to 1.25.0
+* pin Rust nightly to 2023-01-28
+
+### Fixed
+* `apply`: corrected thousands operation usage text - `hexfour` not `hex_four` https://github.com/jqnatividad/qsv/commit/6545aa2b3ce470b5f6c039c998e9f6fc21a6ad84
+
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.86.0...0.87.0
+
+
 ## [0.86.0] - 2023-01-29
 
 ### Added
