@@ -3,7 +3,7 @@ Apply a series of transformation functions to a given CSV column. This can be us
 perform typical data-wrangling tasks and/or to harmonize some values, etc.
 
 It has six subcommands:
- * operations - 35 string, format, currency, regex & NLP operators.
+ * operations - 36 string, format, currency, regex & NLP operators.
  * emptyreplace - replace empty cells with <--replacement> string.
  * datefmt - Formats a recognized date column to a specified format using <--formatstr>.
  * dynfmt - Dynamically constructs a new column from other columns using the <--formatstr> template.
@@ -24,7 +24,7 @@ number of transformed columns with the --rename option is the same. e.g.:
 
 $ qsv apply operations trim,upper col1,col2,col3 -r newcol1,newcol2,newcol3 file.csv
 
-It has 35 supported operations:
+It has 36 supported operations:
 
   * len: Return string length
   * lower: Transform to lowercase
@@ -52,8 +52,11 @@ It has 35 supported operations:
       Add additional comma-delimited profanities with -comparand.
   * censor_count: count of profanities detected.
       Add additional comma-delimited profanities with -comparand.
+  * round: Round numeric values to the specified number of decimal places using
+      Midpoint Nearest Even Rounding Strategy AKA "Bankers Rounding."
+      Specify the number of decimal places with --formatstr (default: 3).
   * thousands: Add thousands separators to numeric values.
-      Specify the separator policy with --comparand (default: comma). The valid policies are:
+      Specify the separator policy with --formatstr (default: comma). The valid policies are:
       comma, dot, space, underscore, hexfour (place a space every four hex digits) and
       indiancomma (place a comma every two digits, except the last three digits).
       The decimal separator can be specified with --replacement (default: '.')
@@ -288,6 +291,15 @@ apply options:
                                     If set to "euro", will format the currency to use "." instead of ","
                                     as separators (e.g. 1.000,00 instead of 1,000.00 )
 
+                                  thousands
+                                    The thousands separator policy to use. The available policies are:
+                                    comma, dot, space, underscore, hexfour (place a space every four 
+                                    hex digits) and indiancomma (place a comma every two digits,
+                                    except the last three digits). (default: comma)
+
+                                  round
+                                    The number of decimal places to round to (default: 3)
+
                                 DATEFMT: The date format to use. For formats, see
                                   https://docs.rs/chrono/latest/chrono/format/strftime/
                                   Default to ISO 8601 / RFC 3339 date & time format.
@@ -378,6 +390,7 @@ enum Operations {
     Numtocurrency,
     Regex_Replace,
     Replace,
+    Round,
     Rtrim,
     Sentiment,
     Simdl,
@@ -430,10 +443,14 @@ static EUDEX_COMPARAND_HASH: OnceCell<eudex::Hash> = OnceCell::new();
 static REGEX_REPLACE: OnceCell<Regex> = OnceCell::new();
 static SENTIMENT_ANALYZER: OnceCell<SentimentIntensityAnalyzer> = OnceCell::new();
 static THOUSANDS_POLICY: OnceCell<SeparatorPolicy> = OnceCell::new();
+static ROUND_PLACES: OnceCell<u32> = OnceCell::new();
 static WHATLANG_CONFIDENCE_THRESHOLD: OnceCell<f64> = OnceCell::new();
 
 // default confidence threshold for whatlang language detection - 90% confidence
 const DEFAULT_THRESHOLD: f64 = 0.9;
+
+// default number of decimal places to round to
+const DEFAULT_ROUND_PLACES: u32 = 3;
 
 // for thousands operator
 static INDIANCOMMA_POLICY: SeparatorPolicy = SeparatorPolicy {
@@ -537,6 +554,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             &args.flag_comparand,
             &args.flag_replacement,
             &args.flag_new_column,
+            &args.flag_formatstr,
         ) {
             Ok(operations_vec) => ops_vec = operations_vec,
             Err(e) => return Err(e),
@@ -772,9 +790,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 // and prepare operations enum vec
 fn validate_operations(
     operations: &Vec<&str>,
-    flag_comparand: &String,
-    flag_replacement: &String,
+    flag_comparand: &str,
+    flag_replacement: &str,
     flag_new_column: &Option<String>,
+    flag_formatstr: &str,
 ) -> Result<Vec<Operations>, CliError> {
     let mut censor_invokes = 0_u8;
     let mut copy_invokes = 0_u8;
@@ -890,7 +909,7 @@ fn validate_operations(
                 strip_invokes = strip_invokes.saturating_add(1);
             }
             Operations::Thousands => {
-                let separator_policy = match flag_comparand.as_str() {
+                let separator_policy = match flag_formatstr {
                     "dot" => policies::DOT_SEPARATOR,
                     "space" => policies::SPACE_SEPARATOR,
                     "underscore" => policies::UNDERSCORE_SEPARATOR,
@@ -900,6 +919,18 @@ fn validate_operations(
                 };
                 if THOUSANDS_POLICY.set(separator_policy).is_err() {
                     return fail!("Cannot initialize Thousands policy.");
+                };
+            }
+            Operations::Round => {
+                if ROUND_PLACES
+                    .set(
+                        flag_formatstr
+                            .parse::<u32>()
+                            .unwrap_or(DEFAULT_ROUND_PLACES),
+                    )
+                    .is_err()
+                {
+                    return fail!("Cannot initialize Round precision.");
                 };
             }
             Operations::Whatlang => {
@@ -1083,6 +1114,11 @@ fn apply_operations(
                     } else {
                         *cell = temp_string;
                     }
+                }
+            }
+            Operations::Round => {
+                if let Ok(num) = cell.parse::<f64>() {
+                    *cell = util::round_num(num, *ROUND_PLACES.get().unwrap());
                 }
             }
             Operations::Currencytonum => {
