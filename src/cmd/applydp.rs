@@ -4,7 +4,7 @@ It "applies" a series of transformation functions to a given CSV column. This ca
 perform typical data-wrangling tasks and/or to harmonize some values, etc.
 
 It has four subcommands:
- * operations - 17 string, format & regex operators.
+ * operations - 18 string, format & regex operators.
  * emptyreplace - replace empty cells with <--replacement> string.
  * datefmt - Formats a recognized date column to a specified format using <--formatstr>.
  * dynfmt - Dynamically constructs a new column from other columns using the <--formatstr> template.
@@ -21,7 +21,7 @@ number of transformed columns with the --rename option is the same. e.g.:
 
 $ qsv applydp operations trim,upper col1,col2,col3 -r newcol1,newcol2,newcol3 file.csv
 
-It has 17 supported operations:
+It has 18 supported operations:
 
   * len: Return string length
   * lower: Transform to lowercase
@@ -40,6 +40,9 @@ It has 17 supported operations:
   * replace: Replace all matches of a pattern (using --comparand)
       with a string (using --replacement) (Rust replace)
   * regex_replace: Replace all regex matches in --comparand w/ --replacement.
+  * round: Round numeric values to the specified number of decimal places using
+      Midpoint Nearest Even Rounding Strategy AKA "Bankers Rounding."
+      Specify the number of decimal places with --formatstr (default: 3).
   * copy: Mark a column for copying
 
 
@@ -164,6 +167,10 @@ applydp options:
                                 instead of removing it. Only used with the DATEFMT subcommand.
     -f, --formatstr=<string>    This option is used by several subcommands:
 
+                                OPERATIONS:
+                                  round
+                                    The number of decimal places to round to (default: 3)
+
                                 DATEFMT: The date format to use. For formats, see
                                   https://docs.rs/chrono/latest/chrono/format/strftime/
                                   Default to ISO 8601 / RFC 3339 date & time format.
@@ -218,6 +225,7 @@ enum Operations {
     Mtrim,
     Regex_Replace,
     Replace,
+    Round,
     Rtrim,
     Squeeze,
     Squeeze0,
@@ -251,6 +259,10 @@ struct Args {
 }
 
 static REGEX_REPLACE: OnceCell<Regex> = OnceCell::new();
+static ROUND_PLACES: OnceCell<u32> = OnceCell::new();
+
+// default number of decimal places to round to
+const DEFAULT_ROUND_PLACES: u32 = 3;
 
 #[inline]
 fn replace_column_value(
@@ -344,6 +356,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             &args.flag_comparand,
             &args.flag_replacement,
             &args.flag_new_column,
+            &args.flag_formatstr,
         ) {
             Ok(operations_vec) => ops_vec = operations_vec,
             Err(e) => return Err(e),
@@ -497,9 +510,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 // and prepare operations enum vec
 fn validate_operations(
     operations: &Vec<&str>,
-    flag_comparand: &String,
-    flag_replacement: &String,
+    flag_comparand: &str,
+    flag_replacement: &str,
     flag_new_column: &Option<String>,
+    flag_formatstr: &str,
 ) -> Result<Vec<Operations>, CliError> {
     let mut copy_invokes = 0_u8;
     let mut regex_replace_invokes = 0_u8;
@@ -556,6 +570,18 @@ fn validate_operations(
                     return fail!("--comparand (-C) is required for strip operations.");
                 }
                 strip_invokes = strip_invokes.saturating_add(1);
+            }
+            Operations::Round => {
+                if ROUND_PLACES
+                    .set(
+                        flag_formatstr
+                            .parse::<u32>()
+                            .unwrap_or(DEFAULT_ROUND_PLACES),
+                    )
+                    .is_err()
+                {
+                    return fail!("Cannot initialize Round precision.");
+                };
             }
             _ => {}
         }
@@ -635,6 +661,11 @@ fn applydp_operations(
             Operations::Regex_Replace => {
                 let regexreplace = REGEX_REPLACE.get().unwrap();
                 *cell = regexreplace.replace_all(cell, replacement).to_string();
+            }
+            Operations::Round => {
+                if let Ok(num) = cell.parse::<f64>() {
+                    *cell = util::round_num(num, *ROUND_PLACES.get().unwrap());
+                }
             }
             Operations::Copy => {} // copy is a noop
         }

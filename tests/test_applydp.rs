@@ -457,6 +457,85 @@ fn applydp_ops_mtrim() {
 }
 
 #[test]
+fn applydp_ops_round() {
+    let wrk = Workdir::new("applydp");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["number"],
+            svec!["123456789"],
+            svec!["123456789.12345678"],
+            svec!["123456789.0"],
+            svec!["123456789.123"],
+            svec!["123456789.12398"],
+            svec!["0"],
+            svec!["5"],
+            svec!["not a number, should be ignored"],
+        ],
+    );
+    let mut cmd = wrk.command("applydp");
+    cmd.arg("operations")
+        .arg("round")
+        .arg("number")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["number"],
+        svec!["123456789"],
+        svec!["123456789.123"],
+        svec!["123456789"],
+        svec!["123456789.123"],
+        svec!["123456789.124"],
+        svec!["0"],
+        svec!["5"],
+        svec!["not a number, should be ignored"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn applydp_ops_round_5places() {
+    let wrk = Workdir::new("applydp");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["number"],
+            svec!["123456789"],
+            svec!["123456789.12345678"],
+            svec!["123456789.0"],
+            svec!["123456789.123"],
+            svec!["123456789.1239876"],
+            svec!["123456789.1239844"],
+            svec!["0"],
+            svec!["5"],
+            svec!["not a number, should be ignored"],
+        ],
+    );
+    let mut cmd = wrk.command("applydp");
+    cmd.arg("operations")
+        .arg("round")
+        .args(["--formatstr", "5"])
+        .arg("number")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["number"],
+        svec!["123456789"],
+        svec!["123456789.12346"],
+        svec!["123456789"],
+        svec!["123456789.123"],
+        svec!["123456789.12399"],
+        svec!["123456789.12398"],
+        svec!["0"],
+        svec!["5"],
+        svec!["not a number, should be ignored"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn applydp_ops_chain() {
     let wrk = Workdir::new("applydp");
     wrk.create(
