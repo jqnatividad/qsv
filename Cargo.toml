@@ -61,9 +61,6 @@ strip         = true
 inherits = "release"
 panic    = "abort"
 
-[profile.test]
-opt-level = 3
-
 [dependencies]
 ahash = "0.8"
 byteorder = "1.4"
