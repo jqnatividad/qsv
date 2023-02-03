@@ -14,6 +14,7 @@ builds
 *.xlsx
 *.zip
 .DS_store
+.DS_Store
 *.txt
 *.svg
 perf.data*
