@@ -734,57 +734,67 @@ fn send_hwsurvey(
     }
 }
 
+#[allow(clippy::needless_pass_by_value)]
 pub fn safe_header_names(
     headers: &csv::StringRecord,
     check_first_char: bool,
     conditional: bool,
-    reserved_names: &[String],
+    reserved_names: Option<Vec<String>>,
     unsafe_prefix: &str,
 ) -> (Vec<String>, u16) {
     // Create "safe" var/key names - to support dynfmt/url-template, valid python vars & db-safe
     // column names. Fold to lowercase. Trim leading & trailing whitespace.
     // Replace whitespace/non-alphanumeric) with _. If name starts with a number & check_first_char
-    // is true, replace it with an _ as well. If a column with the same name already exists,
+    // is true, prepend the unsafe_prefix. If a column with the same name already exists,
     // append a sequence suffix (e.g. _n). Names are limited to 60 characters in length.
     // Empty names are replaced with unsafe_prefix as well.
 
-    // If conditional = true, only rename the header if its not already safe as embedded spaces
-    // in certain circumstances (postgresql allows embeded spaces in names, but not python, dynfmt
-    // and url-template)
+    // If conditional = true & reserved_names is none, only rename the header if its not safe
     let prefix = if unsafe_prefix.is_empty() {
         "_"
     } else {
         unsafe_prefix
     };
-
     let safename_regex = regex_once_cell!(r"[^A-Za-z0-9]");
     let mut changed_count = 0_u16;
     let mut name_vec: Vec<String> = Vec::with_capacity(headers.len());
+
     for header_name in headers {
-        let safe_name = if conditional && is_safe_name(header_name) {
+        let reserved_found = if let Some(reserved_names_vec) = reserved_names.clone() {
+            let lower_header_name = header_name.to_lowercase();
+            reserved_names_vec
+                .iter()
+                .any(|reserved_name| reserved_name == lower_header_name.as_str())
+        } else {
+            false
+        };
+        let safe_name = if conditional && is_safe_name(header_name) && !reserved_found {
             header_name.to_string()
         } else {
-            let mut safe_name_always = if header_name.is_empty() {
+            let mut safename_always = if header_name.is_empty() {
                 prefix.to_string()
             } else {
                 safename_regex
                     .replace_all(header_name.trim(), "_")
                     .to_string()
             };
-            if check_first_char && safe_name_always.as_bytes()[0].is_ascii_digit() {
-                safe_name_always.replace_range(0..1, prefix);
+            if check_first_char && safename_always.as_bytes()[0].is_ascii_digit() {
+                safename_always = format!("{prefix}{safename_always}");
             }
 
-            let safename_candidate = safe_name_always
-                [..safe_name_always.chars().map(char::len_utf8).take(60).sum()]
-                .to_lowercase();
-
-            let mut final_candidate = if reserved_names.contains(&safename_candidate) {
-                log::debug!("\"{safename_candidate}\" is a reserved name: {reserved_names:?}");
-                format!("reserved_{safename_candidate}")
+            let safename_candidate = if reserved_found {
+                log::warn!("\"{safename_always}\" is a reserved name: {reserved_names:?}");
+                format!("reserved_{safename_always}")
             } else {
-                safename_candidate
+                safename_always
             };
+
+            let mut final_candidate = safename_candidate[..safename_candidate
+                .chars()
+                .map(char::len_utf8)
+                .take(60)
+                .sum()]
+                .to_lowercase();
 
             if prefix != "_" && final_candidate.starts_with('_') {
                 final_candidate = format!("{prefix}{final_candidate}");
