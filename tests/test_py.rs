@@ -530,7 +530,8 @@ fn py_format_header_with_invalid_chars() {
     cmd.arg("map")
         .arg("formatted")
         .arg(
-            "f'{qty_fruit_day} {_fruit} cost ${(float(unit_cost_usd) * float(qty_fruit_day)):.2f}'",
+            "f'{qty_fruit_day} {_1fruit} cost ${(float(unit_cost_usd) * \
+             float(qty_fruit_day)):.2f}'",
         )
         .arg("data.csv");
 
