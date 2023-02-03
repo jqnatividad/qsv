@@ -86,7 +86,7 @@ jobs:
         sudo apt-get install musl-tools
     - name: Build qsv-nightly
       env:
-        RUSTFLAGS: --emit=asm -C target-cpu=native
+        RUSTFLAGS: --emit=asm
       uses: actions-rs/cargo@v1
       with:
         command: build
@@ -95,7 +95,7 @@ jobs:
         args: --profile release-nightly --bin qsv -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }},full ${{ matrix.job.default-features }}
     - name: Build qsvlite-nightly
       env:
-        RUSTFLAGS: --emit=asm -C target-cpu=native
+        RUSTFLAGS: --emit=asm
       uses: actions-rs/cargo@v1   
       with:
         command: build
@@ -104,7 +104,7 @@ jobs:
         args: --profile release-nightly --bin qsvlite -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --features=lite,self_update --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}
     - name: Build qsvdp-nightly
       env:
-        RUSTFLAGS: --emit=asm -C target-cpu=native
+        RUSTFLAGS: --emit=asm
       uses: actions-rs/cargo@v1
       with:
         command: build
