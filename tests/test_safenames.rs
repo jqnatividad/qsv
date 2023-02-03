@@ -38,7 +38,7 @@ fn safenames_conditional() {
             // in Postgres
             "this is already a Postgres Safe Column",
             // a column cannot start with a digit
-            "unsafe_starts_with_1",
+            "unsafe_1starts_with_1",
             // duplicate cols are not allowed in one table in postgres
             "col1_2",
             "col1_3",
@@ -90,7 +90,7 @@ fn safenames_always() {
             // original header name was already valid,
             // we replaced spaces with _ regardless
             "this_is_already_a_postgres_safe_column",
-            "unsafe_starts_with_1",
+            "unsafe_1starts_with_1",
             "col1_2",
             "col1_3"
         ],
@@ -130,7 +130,7 @@ fn safenames_verify() {
     cmd.arg("--mode").arg("verify").arg("in.csv");
 
     let changed_headers = wrk.output_stderr(&mut cmd);
-    let expected_count = "5\n";
+    let expected_count = "6\n";
     assert_eq!(changed_headers, expected_count);
 
     wrk.assert_success(&mut cmd);
@@ -166,13 +166,20 @@ fn safenames_verify_verbose() {
 
     let got_stderr = wrk.output_stderr(&mut cmd);
 
+    // the order of the duplicate headers is not guaranteed as we use a HashMap
+    // so we need to check for both possible orders
     let expected_stderr = r#"13 header/s
-7 duplicate/s
-7 unsafe header/s: [" This is a column with invalid chars!# and leading & trailing spaces ", "", "1starts with 1", "", "", "", "_1"]
-2 safe header/s: ["col1", "this is already a Postgres Safe Column"]
+2 duplicate/s: "col1:5, :4"
+8 unsafe header/s: [" This is a column with invalid chars!# and leading & trailing spaces ", "", "this is already a Postgres Safe Column", "1starts with 1", "", "", "", "_1"]
+1 safe header/s: ["col1"]
+"#;
+    let expected_stderr2 = r#"13 header/s
+2 duplicate/s: ":4, col1:5"
+8 unsafe header/s: [" This is a column with invalid chars!# and leading & trailing spaces ", "", "this is already a Postgres Safe Column", "1starts with 1", "", "", "", "_1"]
+1 safe header/s: ["col1"]
 "#;
 
-    assert_eq!(got_stderr, expected_stderr);
+    assert!(got_stderr == expected_stderr || got_stderr == expected_stderr2);
 
     wrk.assert_success(&mut cmd);
 }
@@ -207,12 +214,19 @@ fn safenames_verify_verbose_pretty_json() {
 
     let got: String = wrk.stdout(&mut cmd);
 
+    // the order of the duplicate headers is not guaranteed as we use a HashMap
+    // so we need to check for both possible orders
     let expected = r#"{
   "header_count": 13,
-  "duplicate_count": 7,
+  "duplicate_count": 2,
+  "duplicate_headers": [
+    ":4",
+    "col1:5"
+  ],
   "unsafe_headers": [
     " This is a column with invalid chars!# and leading & trailing spaces ",
     "",
+    "this is already a Postgres Safe Column",
     "1starts with 1",
     "",
     "",
@@ -220,12 +234,34 @@ fn safenames_verify_verbose_pretty_json() {
     "_1"
   ],
   "safe_headers": [
-    "col1",
-    "this is already a Postgres Safe Column"
+    "col1"
   ]
 }"#;
 
-    assert_eq!(got, expected);
+    let expected2 = r#"{
+  "header_count": 13,
+  "duplicate_count": 2,
+  "duplicate_headers": [
+    "col1:5",
+    ":4"
+  ],
+  "unsafe_headers": [
+    " This is a column with invalid chars!# and leading & trailing spaces ",
+    "",
+    "this is already a Postgres Safe Column",
+    "1starts with 1",
+    "",
+    "",
+    "",
+    "_1"
+  ],
+  "safe_headers": [
+    "col1"
+  ]
+}"#;
+
+    // assert_eq!(got, expected);
+    assert!(got == expected || got == expected2);
 
     wrk.assert_success(&mut cmd);
 }
@@ -260,9 +296,13 @@ fn safenames_verify_verbose_json() {
 
     let got: String = wrk.stdout(&mut cmd);
 
-    let expected = r#"{"header_count":13,"duplicate_count":7,"unsafe_headers":[" This is a column with invalid chars!# and leading & trailing spaces ","","1starts with 1","","","","_1"],"safe_headers":["col1","this is already a Postgres Safe Column"]}"#;
+    // the order of the duplicate headers is not guaranteed as we use a HashMap
+    // so we need to check for both possible orders
+    let expected = r#"{"header_count":13,"duplicate_count":2,"duplicate_headers":["col1:5",":4"],"unsafe_headers":[" This is a column with invalid chars!# and leading & trailing spaces ","","this is already a Postgres Safe Column","1starts with 1","","","","_1"],"safe_headers":["col1"]}"#;
 
-    assert_eq!(got, expected);
+    let expected2 = r#"{"header_count":13,"duplicate_count":2,"duplicate_headers":[":4","col1:5"],"unsafe_headers":[" This is a column with invalid chars!# and leading & trailing spaces ","","this is already a Postgres Safe Column","1starts with 1","","","","_1"],"safe_headers":["col1"]}"#;
+
+    assert!(got == expected || got == expected2);
 
     wrk.assert_success(&mut cmd);
 }
@@ -323,7 +363,7 @@ fn safenames_reserved_names_default() {
             "this_is_a_column_with_invalid_chars___and_leading___trailing",
             "reserved__id",
             "this_is_already_a_postgres_safe_column",
-            "unsafe_starts_with_1",
+            "unsafe_1starts_with_1",
             "col1_2",
             "col1_3"
         ],
@@ -367,7 +407,7 @@ fn safenames_reserved_names_specified() {
             "this_is_a_column_with_invalid_chars___and_leading___trailing",
             "reserved_waldo",
             "this_is_already_a_postgres_safe_column",
-            "unsafe_starts_with_1",
+            "unsafe_1starts_with_1",
             "col1_2",
             "col1_3"
         ],
@@ -411,7 +451,7 @@ fn safenames_reserved_names_specified_case_insensitive() {
             "this_is_a_column_with_invalid_chars___and_leading___trailing",
             "reserved_waldo",
             "this_is_already_a_postgres_safe_column",
-            "unsafe_starts_with_1",
+            "unsafe_1starts_with_1",
             "col1_2",
             "col1_3"
         ],

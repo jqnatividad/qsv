@@ -3,9 +3,9 @@ Modify headers of a CSV to only have "safe" names - guaranteed "database-ready" 
 (optimized specifically for PostgreSQL column identifiers). 
 
 Fold to lowercase. Trim leading & trailing whitespaces. Replace whitespace/non-alphanumeric
-characters with _. If the first character is a digit, replace the digit with the unsafe prefix.
-If a header with the same name already exists, append a sequence suffix (e.g. c1, c1_2, c1_3).
-Names are limited to 60 characters in length. Empty names are replaced with "unsafe_".
+characters with _. If name starts with a number & check_first_char is true, prepend the unsafe prefix.
+If a header with the same name already exists, append a sequence suffix (e.g. col, col_2, col_3).
+Names are limited to 60 characters in length. Empty names are replaced with the unsafe prefix.
 
 In addition, specifically because of CKAN Datastore requirements:
 - Headers with leading underscores are replaced with "unsafe_" prefix.
@@ -28,30 +28,33 @@ Given data.csv:
  1,a2,a3,a4,a5,a6
 
   $ qsv safenames data.csv
-  c1,_2_col,Col with Embedded Spaces,_blank,column__invalid_chars,c1_2
+  c1,unsafe_12_col,col_with_embedded_spaces,unsafe_,column__invalid_chars,c1_2
   1,a2,a3,a4,a5,a6
   stderr: 5
 
   Conditionally rename headers, allowing "quoted identifiers":
   $ qsv safenames --mode c data.csv
-  c1,_2_col,Col with Embedded Spaces,_blank,column__invalid_chars,c1_2
+  c1,unsafe_12_col,Col with Embedded Spaces,unsafe_,column__invalid_chars,c1_2
   1,a2,a3,a4,a5,a6
   stderr: 4
 
   Verify how many "unsafe" headers are found:
   $ qsv safenames --mode v data.csv
-  stderr: 3
+  stderr: 4
 
   Verbose mode:
-  $ qsv safenames --mode V safenames.csv
+  $ qsv safenames --mode V data.csv
   stderr: 6 header/s
-  1 duplicate/s
-  3 unsafe header/s: ["12_col", "", "Column!@Invalid+Chars"]
-  2 safe header/s: ["c1", "Col with Embedded Spaces"]
+  1 duplicate/s: "c1:2"
+  4 unsafe header/s: ["12_col", "Col with Embedded Spaces", "", "Column!@Invalid+Chars"]
+  1 safe header/s: ["c1"]
 
-Though "Col with Embedded Spaces" is safe, it is generally discouraged. It can be created "safely"
-as a "quoted identifier" in PostgreSQL. However, it is also discouraged because the embedded
-spaces can cause problems later on (see https://lerner.co.il/2013/11/30/quoting-postgresql/).
+Note that even if "Col with Embedded Spaces" is technically safe, it is generally discouraged.
+Though it can be created as a "quoted identifier" in PostgreSQL, it is still marked "unsafe"
+by default, unless mode is set to "conditional." 
+
+It is discouraged because the embedded spaces can cause problems later on.
+(see https://lerner.co.il/2013/11/30/quoting-postgresql/ for more info).
 
 For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_safenames.rs.
 
@@ -84,8 +87,8 @@ safenames options:
                            the reserved list, it will be prefixed with "reserved_".
                            [default: _id]
     --prefix <string>      Certain systems do not allow header names to start with "_" (e.g. CKAN Datastore).
-                           This option allows the specification of a prefix to use when a header starts with "_".
-                           [default: unsafe_]
+                           This option allows the specification of the unsafe prefix to use when a header
+                           starts with "_". [default: unsafe_]
 
 Common options:
     -h, --help             Display this message
@@ -96,6 +99,9 @@ Common options:
                            Must be a single character. (default: ,)
 "#;
 
+use std::collections::HashMap;
+
+use ahash::RandomState;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -123,12 +129,13 @@ enum SafeNameMode {
     VerifyVerbosePrettyJSON,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 struct SafeNamesStruct {
-    header_count:    usize,
-    duplicate_count: u16,
-    unsafe_headers:  Vec<String>,
-    safe_headers:    Vec<String>,
+    header_count:      usize,
+    duplicate_count:   usize,
+    duplicate_headers: Vec<String>,
+    unsafe_headers:    Vec<String>,
+    safe_headers:      Vec<String>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -163,22 +170,22 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let old_headers = rdr.byte_headers()?;
 
     let mut headers = csv::StringRecord::from_byte_record_lossy(old_headers.clone());
+
+    // trim enclosing quotes and spaces from headers as it messes up safenames
+    // csv library will automatically add quotes when necessary when we write it
+    let mut noquote_headers = csv::StringRecord::new();
+    for header in &headers {
+        noquote_headers.push_field(header.trim_matches(|c| c == '"' || c == ' '));
+    }
+
+    let (safe_headers, changed_count) = util::safe_header_names(
+        &noquote_headers,
+        true,
+        safenames_mode == SafeNameMode::Conditional,
+        Some(reserved_names_vec),
+        &args.flag_prefix,
+    );
     if let SafeNameMode::Conditional | SafeNameMode::Always = safenames_mode {
-        // trim enclosing quotes and spaces from headers as it messes up safenames
-        // csv library will automatically add quotes when necessary when we write it
-        let mut noquote_headers = csv::StringRecord::new();
-        for header in &headers {
-            noquote_headers.push_field(header.trim_matches(|c| c == '"' || c == ' '));
-        }
-
-        let (safe_headers, changed_count) = util::safe_header_names(
-            &noquote_headers,
-            true,
-            safenames_mode == SafeNameMode::Conditional,
-            &reserved_names_vec,
-            &args.flag_prefix,
-        );
-
         headers.clear();
         for header_name in safe_headers {
             headers.push_field(&header_name);
@@ -195,15 +202,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         eprintln!("{changed_count}");
     } else {
         // Verify or VerifyVerbose Mode
-        let mut checkednames_vec: Vec<String> = Vec::with_capacity(old_headers.len());
         let mut safenames_vec: Vec<String> = Vec::new();
         let mut unsafenames_vec: Vec<String> = Vec::new();
+        let mut checkednames_map: HashMap<String, u16, RandomState> = HashMap::default();
         let mut unsafe_count = 0_u16;
-        let mut dupe_count = 0_u16;
+        let mut temp_string;
 
         for header_name in headers.iter() {
-            let safe_flag = util::is_safe_name(header_name);
-            if safe_flag {
+            if safe_headers.contains(&header_name.to_string()) {
                 if !safenames_vec.contains(&header_name.to_string()) {
                     safenames_vec.push(header_name.to_string());
                 }
@@ -212,32 +218,41 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 unsafe_count += 1;
             };
 
-            // check for duplicate headers/columns
-            if checkednames_vec.contains(&header_name.to_string()) {
-                dupe_count += 1;
+            temp_string = header_name.to_string();
+            if let Some(count) = checkednames_map.get(&temp_string) {
+                checkednames_map.insert(temp_string, count + 1);
+                // dupe_count += 1;
             } else {
-                checkednames_vec.push(header_name.to_string());
-            }
+                checkednames_map.insert(temp_string, 1);
+            };
         }
 
+        let dupe_count = checkednames_map.values().filter(|&&v| v > 1).count();
+
+        let safenames_struct = SafeNamesStruct {
+            header_count:      headers.len(),
+            duplicate_count:   dupe_count, //checkednames_map.len(),
+            duplicate_headers: checkednames_map
+                .iter()
+                .filter(|(_, &v)| v > 1)
+                .map(|(k, v)| format!("{k}:{v}"))
+                .collect(),
+            unsafe_headers:    unsafenames_vec.clone(),
+            safe_headers:      safenames_vec.clone(),
+        };
         match safenames_mode {
             SafeNameMode::VerifyVerbose => {
                 eprintln!(
-                    "{num_headers} header/s\n{dupe_count} duplicate/s\n{unsafe_count} unsafe \
-                     header/s: {unsafenames_vec:?}\n{num_safeheaders} safe header/s: \
-                     {safenames_vec:?}",
+                    r#"{num_headers} header/s
+{dupe_count} duplicate/s: {dupe_headers:?}
+{unsafe_count} unsafe header/s: {unsafenames_vec:?}
+{num_safeheaders} safe header/s: {safenames_vec:?}"#,
+                    dupe_headers = safenames_struct.duplicate_headers.join(", "),
                     num_headers = headers.len(),
                     num_safeheaders = safenames_vec.len()
                 );
             }
             SafeNameMode::VerifyVerboseJSON | SafeNameMode::VerifyVerbosePrettyJSON => {
-                let safenames_struct = SafeNamesStruct {
-                    header_count:    headers.len(),
-                    duplicate_count: dupe_count,
-                    unsafe_headers:  unsafenames_vec,
-                    safe_headers:    safenames_vec,
-                };
-                // its OK to have unwrap here because safenames_struct is always valid
                 if safenames_mode == SafeNameMode::VerifyVerbosePrettyJSON {
                     println!(
                         "{}",
