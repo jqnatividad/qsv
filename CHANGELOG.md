@@ -6,6 +6,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.87.1] - 2023-02-02
+
+### Changed
+* `safenames`: refactor in https://github.com/jqnatividad/qsv/pull/754
+   - better handling of headers that start with a digit, instead of replacing the digit with a _, prepend the unsafe prefix
+   - quoted identifiers are also considered unsafe, unless conditional mode is used
+   - verbose modes now also return a list of duplicate header names
+* update MSRV to 1.67.0
+* cargo update bump depedencies
+* disable optimization on test profile for faster CI compilation, which was taking much longer than test run time
+* optimize prebuilt nightlies to compile with target-cpu=native
+* pin Rust nightly to 2023-02-01
+
+### Fixed
+^ `safenames`: fixed mode behavior inconsistencies https://github.com/jqnatividad/qsv/pull/754
+all modes now use the same safenames algorithm. Before, the verbose modes used a simpler one leading to inconsistencies between modes (resolves safenames handling inconsistent between modes #753)
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.87.0...0.88.0
+
 ## [0.87.0] - 2023-01-29
 
 ### Added
