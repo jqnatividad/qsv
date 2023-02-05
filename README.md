@@ -16,7 +16,7 @@
 
  &nbsp;          |  Table of Contents
 :--------------------------|:-------------------------
-![qsv logo](docs/images/qsv-logo.png)<br/><sub><sup>[logo details](https://github.com/jqnatividad/qsv/discussions/295)</sup></sub>  |qsv is a command line program for<br>indexing, slicing, analyzing, filtering,<br>enriching, validating & joining CSV files.<br>Commands are simple, fast & composable.<br><br>* [Available Commands](#available-commands)<br>* [Installation](#installation)<br> * [Whirlwind Tour](docs/whirlwind_tour.md#a-whirlwind-tour)<br>* [Cookbook](https://github.com/jqnatividad/qsv/wiki/Cookbook#cookbook)<br>* [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq)<br>* [Changelog](https://github.com/jqnatividad/qsv/blob/master/CHANGELOG.md#changelog)<br>* [Performance Tuning](https://github.com/jqnatividad/qsv/blob/master/docs/PERFORMANCE.md#performance-tuning)<br>* [Benchmarks](docs/BENCHMARKS.md)<br>* [Environment Variables](#environment-variables)<br>* [Feature Flags](#feature-flags)<br>* [Testing](#testing)<br>* [NYC School of Data 2022 slides](https://docs.google.com/presentation/d/e/2PACX-1vQ12ndZL--gkz0HLQRaxqsNOwzddkv1iUKB3sq661yA77OPlAsmHJHpjaqt9s9QEf73VqMfb0cv4jHU/pub?start=false&loop=false&delayms=3000)<br>* [Sponsor](#sponsor)
+![qsv logo](docs/images/qsv-logo.png)<br/><sub><sup>[logo details](https://github.com/jqnatividad/qsv/discussions/295)</sup></sub>  |qsv is a command line program for<br>indexing, slicing, analyzing, filtering,<br>enriching, validating & joining CSV files.<br>Commands are simple, fast & composable.<br><br>* [Available Commands](#available-commands)<br>* [Installation Options](#installation-options)<br> * [Whirlwind Tour](docs/whirlwind_tour.md#a-whirlwind-tour)<br>* [Cookbook](https://github.com/jqnatividad/qsv/wiki/Cookbook#cookbook)<br>* [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq)<br>* [Changelog](https://github.com/jqnatividad/qsv/blob/master/CHANGELOG.md#changelog)<br>* [Performance Tuning](https://github.com/jqnatividad/qsv/blob/master/docs/PERFORMANCE.md#performance-tuning)<br>* [Benchmarks](docs/BENCHMARKS.md)<br>* [Environment Variables](#environment-variables)<br>* [Feature Flags](#feature-flags)<br>* [Testing](#testing)<br>* [NYC School of Data 2022 slides](https://docs.google.com/presentation/d/e/2PACX-1vQ12ndZL--gkz0HLQRaxqsNOwzddkv1iUKB3sq661yA77OPlAsmHJHpjaqt9s9QEf73VqMfb0cv4jHU/pub?start=false&loop=false&delayms=3000)<br>* [Sponsor](#sponsor)
 
 </div>
 
@@ -85,7 +85,13 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 🏎️: multithreaded when an index is available.   
 🚀: multithreaded even without an index.
 
-## Installation
+## Installation Options
+
+### Option 1: Download Prebuilt Binaries
+
+Full-featured prebuilt [binary variants](#variants) of the latest qsv version for Windows, Linux & macOS are available [for download](https://github.com/jqnatividad/qsv/releases/latest), including binaries compiled with [Rust Nightly](https://stackoverflow.com/questions/70745970/rust-nightly-vs-beta-version) ([more info](https://github.com/jqnatividad/qsv/blob/master/docs/PERFORMANCE.md#nightly-release-builds)).
+
+### Option 2: Homebrew
 
 For [macOS and Linux (64-bit)](https://formulae.brew.sh/formula/qsv), you can quickly install qsv with [Homebrew](https://brew.sh). However, only the `apply` [feature](#feature-flags) is enabled.
 
@@ -93,17 +99,11 @@ For [macOS and Linux (64-bit)](https://formulae.brew.sh/formula/qsv), you can qu
 brew install qsv
 ```
 
-Prebuilt binary variants of the latest qsv version with more enabled features for Windows, Linux & macOS are also available [for download](https://github.com/jqnatividad/qsv/releases/latest), including binaries compiled with [Rust Nightly/Unstable](https://stackoverflow.com/questions/70745970/rust-nightly-vs-beta-version) ([more info](https://github.com/jqnatividad/qsv/blob/master/docs/PERFORMANCE.md#nightly-release-builds)).
+### Option 3: Install with Rust
 
-There are three binary variants of qsv:
- * `qsv` - [feature](#feature-flags)-capable(❇️), with the [prebuilt binaries](https://github.com/jqnatividad/qsv/releases/latest) enabling all applicable features except Python [^6]
- * `qsvlite` - all features disabled (~33% of the size of `qsv`)
- * `qsvdp` - optimized for use with [DataPusher+](https://github.com/dathere/datapusher-plus) with only DataPusher+ relevant commands; `applydp`, a slimmed-down version of the `apply` feature; embedded `luau` interpreter; the `--progressbar` option disabled; and the self-update only checking for new releases, requiring an explicit `--update` (~33% of the the size of `qsv`).
+If you have [Rust installed](https://www.rust-lang.org/tools/install), you can also install from source using Rust's cargo command[^1]:
 
-Alternatively, you can install from source by [installing Rust](https://www.rust-lang.org/tools/install)
-and installing `qsv` using Rust's cargo command[^5]:
-
-[^5]: Of course, you'll also need a linker & a C compiler. Linux users should generally install GCC or Clang, according to their distribution’s documentation.
+[^1]: Of course, you'll also need a linker & a C compiler. Linux users should generally install GCC or Clang, according to their distribution’s documentation.
 For example, if you use Ubuntu, you can install the `build-essential` package. On macOS, you can get a C compiler by running `$ xcode-select --install`.
 For Windows, this means installing [Visual Studio 2022](https://visualstudio.microsoft.com/downloads/). When prompted for workloads, include "Desktop Development with C++",
 the Windows 10 or 11 SDK & the English language pack, along with any other language packs your require.
@@ -114,7 +114,24 @@ cargo install qsv --locked --features all_full
 
 The binary will be installed in `~/.cargo/bin`.
 
-Compiling from source also works similarly:
+To install different [variants](#variants) and enable optional features, use cargo `--features` (see [Feature Flags](#feature-flags) for more info):
+
+```bash
+# to install qsv with all features enabled
+cargo install qsv --locked --features apply,generate,luau,fetch,foreach,python,to,self_update,full
+# or shorthand
+cargo install qsv --locked -F all_full
+
+# or to install qsvlite
+cargo install qsv --locked -F lite
+
+# or to install qsvdp
+cargo install qsv --locked -F datapusher_plus
+```
+
+### Option 4: Compile from Source
+
+Compiling from source also works similarly[^1}]:
 
 ```bash
 git clone https://github.com/jqnatividad/qsv.git
@@ -124,28 +141,29 @@ cargo build --release --locked --features all_full
 
 The compiled binary will end up in `./target/release/`.
 
-To enable optional features, use cargo `--features` (see [Feature Flags](#feature-flags) for more info):
+To compile different [variants](#variants) and enable optional [features](#feature-flags):
 
 ```bash
-cargo install qsv --locked --features apply,generate,luau,fetch,foreach,python,to,self_update,full
-# or shorthand
-cargo install qsv --locked --features all_full
-# or to install qsvlite
-cargo install qsv --locked --features lite
-# or to install qsvdp
-cargo install qsv --locked --features datapusher_plus
-
-# or when compiling from a local repo
+# to compile qsv with all features enabled
 cargo build --release --locked --features apply,generate,luau,fetch,foreach,python,to,self_update,full
 # shorthand
-cargo build --release --locked --features all_full
+cargo build --release --locked -F all_full
+
 # for qsvlite
-cargo build --release --locked --features lite
+cargo build --release --locked -F lite
+
 # for qsvdp
-cargo build --release --locked --features datapusher_plus
+cargo build --release --locked -F datapusher_plus
 ```
 
-[^6]: The `foreach` feature is not available on Windows. The `python` feature is not enabled on the prebuilt binaries. Compile with Python 3.6 and above development environment installed if you want to enable the `python` feature. Lua support is enabled by default on the prebuilt binaries, with preference for `luau` for platforms that support it.  
+### Variants
+
+There are three binary variants of qsv:
+* `qsv` - [feature](#feature-flags)-capable(❇️), with the [prebuilt binaries](https://github.com/jqnatividad/qsv/releases/latest) enabling all applicable features except Python [^2]
+* `qsvlite` - all features disabled (~33% of the size of `qsv`)
+* `qsvdp` - optimized for use with [DataPusher+](https://github.com/dathere/datapusher-plus) with only DataPusher+ relevant commands; `applydp`, a slimmed-down version of the `apply` feature; embedded `luau` interpreter; the `--progressbar` option disabled; and the self-update only checking for new releases, requiring an explicit `--update` (~33% of the the size of `qsv`).
+
+[^2]: The `foreach` feature is not available on Windows. The `python` feature is not enabled on the prebuilt binaries. Compile qsv with Python 3.6 and above development environment installed if you want to enable the `python` feature. Luau support is enabled by default on the prebuilt binaries, with preference for `luau` for platforms that support it.  
 
 ### Minimum Supported Rust Version
 
@@ -311,7 +329,7 @@ It will NOT offer the choice to update itself to the prebuilt binaries published
 * `nightly` - enable to turn on nightly/unstable features in the `rand`, `regex`, `hashbrown`, `parking_lot` & `pyo3` crates when building with Rust nightly/unstable.
 
 
-> ℹ️ **NOTE:** `qsvlite`, as the name implies, always has **non-default features disabled**. `qsv` can be built with any combination of the above features using the cargo `--features` & `--no-default-features` flags. The prebuilt `qsv` binaries has **all applicable features valid for the target platform**[^6].
+> ℹ️ **NOTE:** `qsvlite`, as the name implies, always has **non-default features disabled**. `qsv` can be built with any combination of the above features using the cargo `--features` & `--no-default-features` flags. The prebuilt `qsv` binaries has **all applicable features valid for the target platform**[^2].
 
 ## Testing
 qsv has ~1,020 tests in the [tests](https://github.com/jqnatividad/qsv/tree/master/tests) directory.
