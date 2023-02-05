@@ -2,3 +2,5 @@ The mimalloc memory allocator is not enabled on this prebuilt because of
 cross-compilation limitations using GitHub's Action Runners.
 
 Compile qsv natively on this platform if you want to use mimalloc.
+
+The `foreach` feature is also not enabled, as it only works on Unix-like OSes.
