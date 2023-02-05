@@ -74,19 +74,19 @@ To find out your jobs setting, call `qsv --version`. The second to the last numb
 
 ## Version details
 The `--version` option shows a lot of information about qsv. It displays:
- * qsv version
- * the memory allocator (`standard` or `mimalloc`)
- * all enabled features (`apply`, `fetch`, `foreach`, `generate`, `luau`, `python` & `self_update`)
- * Python version linked if the `python` feature was enabled
- * the number of processors to use for multi-threading commands
- * the number of logical processors detected
- * the target platform
- * the Rust version used to compile qsv
- * QSV_KIND - `prebuilt`, `prebuilt-nightly`, `installed` & `compiled`.
-   The prebuilts are the qsv binaries published on Github with every release. `prebuilt` is built using the current Rust stable at the time of release. `prebuilt-nightly` is built using Rust nightly/unstable at the time of release.
+* qsv version
+* the memory allocator (`standard` or `mimalloc`)
+* all enabled features (`apply`, `fetch`, `foreach`, `generate`, `luau`, `python` & `self_update`)
+* Python version linked if the `python` feature was enabled
+* the number of processors to use for multi-threading commands
+* the number of logical processors detected
+* the target platform
+* the Rust version used to compile qsv
+* QSV_KIND - `prebuilt`, `prebuilt-nightly`, `installed` & `compiled`.
+   The prebuilts are the qsv binaries published on Github with every release. `prebuilt` is built using the current Rust stable at the time of release. `prebuilt-nightly` is built using Rust nightly that passes all CI tests at the time of release.
    `installed` is qsv built using `cargo install`. `compiled` is qsv built using `cargo build`.
 
-```
+```bash
 $ qsv --version
 qsv 0.69.0-mimalloc-apply;fetch;foreach;generate;luau;python-3.10.5 (v3.10.5:f377153967, Jun  6 2022, 12:36:10) [Clang 13.0.0 (clang-1300.0.29.30)];self_update-8-8 (aarch64-apple-darwin compiled with Rust 1.64) compiled
 ```
@@ -106,7 +106,7 @@ For the most part, this shouldn't be a problem as UTF-8 is the de facto encoding
 ## Nightly Release Builds
 Pre-built binaries compiled using Rust Nightly/Unstable are also [available for download](https://github.com/jqnatividad/qsv/releases/latest). These binaries are optimized for size and speed:
 
-* compiled with the last known Rust nightly/unstable that can build qsv.
+* compiled with the last known Rust nightly/unstable that passes all 1,000+ tests.
 * stdlib is compiled from source, instead of using the pre-built stdlib. This ensures stdlib is compiled with all of qsv's release settings
   (link time optimization, opt-level, codegen-units, panic=abort, etc.), presenting more opportunities for Rust/LLVM to optimize the generated code.
   This is why we only have nightly release builds for select platforms (the platform of GitHub's action runners), as we need access to the "native hardware"
@@ -114,18 +114,17 @@ Pre-built binaries compiled using Rust Nightly/Unstable are also [available for 
 * set `panic=abort` - removing panic-handling/formatting and backtrace code, making for smaller binaries.
 * enables unstable/nightly features in the `rand`, `regex`, `hashbrown`, `parking_lot` and `pyo3` crates, that unlock performance/SIMD features on those crates.
 
-Despite the 'unstable' label, these binaries are actually quite stable, given how [Rust is made](https://doc.rust-lang.org/book/appendix-07-nightly-rust.html),
-and the fact that qsv itself doesn't actually use any unstable feature flags, beyond activating the 'unstable' features in the aforementioned crates, which is really more about performance (that's why we can still compile with Rust stable). You only really loose the backtrace messages when qsv panics.
+Despite the 'unstable' label, these binaries are actually quite stable, given how [Rust is made](https://doc.rust-lang.org/book/appendix-07-nightly-rust.html) and are really more about performance (that's why we can still compile with Rust stable). You only really loose the backtrace messages when qsv panics.
 
 If you need to maximize performance - use the nightly builds. If you prefer a "safer", rock-solid experience, use the stable builds.
 
-If you want to really squeeze every little bit of performance from qsv, build it locally like how the Nightly Release Builds are built, with the additional step
-of optimizing the build to your machine's CPU by setting `RUSTFLAGS='-C target-cpu=native'`.
+If you want to really squeeze every little bit of performance from qsv, build it locally like how the Nightly Release Builds are built, with the additional step of optimizing the build to your machine's CPU by setting `RUSTFLAGS='-C target-cpu=native'`.
+
 Doing so will ensure CPU features are tailored to your hardware and you're using the latest Rust nightly.
 
 For example, on Ubuntu 22.04 LTS Linux:
 
-```
+```bash
 rustup default nightly-2023-02-01
 rustup update
 export RUSTFLAGS='-C target-cpu=native'
