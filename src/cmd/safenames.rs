@@ -205,7 +205,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let mut safenames_vec: Vec<String> = Vec::new();
         let mut unsafenames_vec: Vec<String> = Vec::new();
         let mut checkednames_map: HashMap<String, u16, RandomState> = HashMap::default();
-        let mut unsafe_count = 0_u16;
         let mut temp_string;
 
         for header_name in headers.iter() {
@@ -215,23 +214,24 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 }
             } else {
                 unsafenames_vec.push(header_name.to_string());
-                unsafe_count += 1;
             };
 
             temp_string = header_name.to_string();
             if let Some(count) = checkednames_map.get(&temp_string) {
                 checkednames_map.insert(temp_string, count + 1);
-                // dupe_count += 1;
             } else {
                 checkednames_map.insert(temp_string, 1);
             };
         }
 
+        let headers_count = headers.len();
         let dupe_count = checkednames_map.values().filter(|&&v| v > 1).count();
+        let unsafe_count = unsafenames_vec.len();
+        let safe_count = safenames_vec.len();
 
         let safenames_struct = SafeNamesStruct {
-            header_count:      headers.len(),
-            duplicate_count:   dupe_count, //checkednames_map.len(),
+            header_count:      headers_count,
+            duplicate_count:   dupe_count,
             duplicate_headers: checkednames_map
                 .iter()
                 .filter(|(_, &v)| v > 1)
@@ -248,8 +248,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 {unsafe_count} unsafe header/s: {unsafenames_vec:?}
 {num_safeheaders} safe header/s: {safenames_vec:?}"#,
                     dupe_headers = safenames_struct.duplicate_headers.join(", "),
-                    num_headers = headers.len(),
-                    num_safeheaders = safenames_vec.len()
+                    num_headers = headers_count,
+                    num_safeheaders = safe_count
                 );
             }
             SafeNameMode::VerifyVerboseJSON | SafeNameMode::VerifyVerbosePrettyJSON => {
