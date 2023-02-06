@@ -151,7 +151,7 @@ use crate::{
 };
 
 #[allow(dead_code)]
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize)]
 struct Args {
     cmd_postgres:       bool,
     arg_postgres:       Option<String>,

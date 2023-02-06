@@ -30,7 +30,7 @@ const UTF8_ERROR_MSG: &str = "is not UTF-8 encoded. Use the input command to tra
 // file size at which we warn user that a large file has not been indexed
 const NO_INDEX_WARNING_FILESIZE: u64 = 100_000_000; // 100MB
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub struct Delimiter(pub u8);
 
 /// Delimiter represents values that can be passed from the command line that
@@ -71,7 +71,6 @@ impl<'de> Deserialize<'de> for Delimiter {
     }
 }
 
-#[derive(Debug)]
 pub struct Config {
     path:              Option<PathBuf>, // None implies <stdin>
     idx_path:          Option<PathBuf>,

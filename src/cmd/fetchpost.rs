@@ -205,7 +205,7 @@ use crate::{
     util, CliError, CliResult,
 };
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize)]
 struct Args {
     flag_new_column:  Option<String>,
     flag_jql:         Option<String>,
@@ -281,7 +281,7 @@ impl RedisConfig {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 struct FetchResponse {
     response:    String,
     status_code: u16,

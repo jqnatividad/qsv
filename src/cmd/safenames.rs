@@ -129,7 +129,7 @@ enum SafeNameMode {
     VerifyVerbosePrettyJSON,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize)]
 struct SafeNamesStruct {
     header_count:      usize,
     duplicate_count:   usize,

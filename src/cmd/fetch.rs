@@ -213,7 +213,7 @@ use crate::{
     util, CliError, CliResult,
 };
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize)]
 struct Args {
     flag_url_template: Option<String>,
     flag_new_column:   Option<String>,
@@ -293,7 +293,7 @@ impl RedisConfig {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 struct FetchResponse {
     response:    String,
     status_code: u16,

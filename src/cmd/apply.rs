@@ -410,7 +410,7 @@ enum Operations {
     Whatlang,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize)]
 struct Args {
     arg_column:          SelectColumns,
     cmd_operations:      bool,
