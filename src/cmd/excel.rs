@@ -78,7 +78,8 @@ Common options:
 use std::{cmp, path::PathBuf};
 
 use calamine::{open_workbook_auto, DataType, Range, Reader};
-use log::{debug, info};
+use itertools::Itertools;
+use log::info;
 use serde::{Deserialize, Serialize};
 use thousands::Separable;
 
@@ -177,7 +178,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut wtr = Config::new(&args.flag_output)
         .flexible(args.flag_flexible)
         .writer()?;
-    let mut record = csv::StringRecord::new();
 
     // set Metadata Mode
     let first_letter = args.flag_metadata.chars().next().unwrap_or_default();
@@ -190,6 +190,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             return fail_clierror!("Invalid mode: {}", args.flag_metadata);
         }
     };
+
+    // use with_capacity to minimize reallocation
+    let mut record = csv::StringRecord::with_capacity(200, 20);
 
     if metadata_mode != MetadataMode::None {
         let mut excelmetadata_struct = MetadataStruct {
@@ -231,8 +234,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             .map(|h| {
                                 let header = h.to_string();
 
-                                let safe_flag = util::is_safe_name(&header);
-                                if safe_flag {
+                                if util::is_safe_name(&header) {
                                     if !safenames_vec.contains(&header) {
                                         safenames_vec.push(header.to_string());
                                     }
@@ -322,7 +324,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
             MetadataMode::None => {}
         }
-        log::info!(r#"exported metadata for "{filename}" workbook sheets: {sheet_vec:?}"#);
+        info!(r#"exported metadata for "{filename}" workbook sheets: {sheet_vec:?}"#);
         // after we export metadata, we're done.
         // we're not exporting the spreadsheet to CSV
         return Ok(());
@@ -364,7 +366,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         } else {
             // failing all else, get the first sheet
             let first_sheet = sheet_names[0].to_string();
-            debug!(
+            info!(
                 r#"Invalid sheet "{}". Using the first sheet "{}" instead."#,
                 args.flag_sheet, first_sheet
             );
@@ -399,34 +401,39 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // the column indices of the date column names
     let mut all_numbers_whitelist = true;
 
-    let mut dates_whitelist =
-        itertools::Itertools::collect_vec(whitelist_lower.split(',').map(|s| {
+    let mut dates_whitelist = whitelist_lower
+        .split(',')
+        .map(|s| {
             if all_numbers_whitelist && s.parse::<u16>().is_err() {
                 all_numbers_whitelist = false;
                 info!("NOT a column index dates whitelist");
             }
             s.trim().to_string()
-        }));
+        })
+        .collect_vec();
+
     // we sort the whitelist, so we can do the faster binary_search() instead of contains()
     // with an all_numbers_whitelist
     if all_numbers_whitelist {
         dates_whitelist.sort_unstable();
     }
 
-    let mut trimmed_record = csv::StringRecord::new();
-    let mut date_flag: Vec<bool> = Vec::with_capacity(20); // to save allocs
-    let mut cell_date_flag;
+    // use with_capacity to minimize reallocations
+    let mut trimmed_record = csv::StringRecord::with_capacity(200, 20);
+    let mut date_flag: Vec<bool> = Vec::with_capacity(20);
+
+    let mut cell_date_flag: bool;
     let mut float_val = 0_f64;
-    let mut float_flag;
+    let mut float_flag: bool;
     let mut row_count = 0_usize;
 
-    debug!("exporting sheet ({sheet})...");
+    info!("exporting sheet ({sheet})...");
     for (row_idx, row) in range.rows().enumerate() {
         record.clear();
         for (col_idx, cell) in row.iter().enumerate() {
             if row_idx == 0 {
                 // its the header row, check the dates whitelist
-                debug!("processing first row...");
+                info!("processing first row...");
                 let col_name = cell.get_string().unwrap_or_default();
                 record.push_field(col_name);
                 match whitelist_lower.as_str() {
@@ -445,7 +452,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             for whitelist_item in &dates_whitelist {
                                 if col_name_lower.contains(whitelist_item) {
                                     date_found = true;
-                                    log::info!("date-whitelisted: {col_name}");
+                                    info!("date-whitelisted: {col_name}");
                                     break;
                                 }
                             }
@@ -453,7 +460,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         },
                     ),
                 }
-                debug!("date_flag: {date_flag:?}");
+                info!("date_flag: {date_flag:?}");
                 continue;
             }
             cell_date_flag = false;
@@ -478,6 +485,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 DataType::Error(ref e) => record.push_field(&format!("{e:?}")),
                 DataType::Bool(ref b) => record.push_field(&b.to_string()),
             };
+
             // dates are stored as floats in Excel
             // that's why we need the --dates-whitelist, so we can convert the float to a date.
             // However, with the XLSX format, we can get a cell's format as an attribute. So we can
