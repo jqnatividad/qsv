@@ -20,6 +20,8 @@ require sorted data.
 
 Returns exit code 0 if a CSV is sorted, and exit code 1 otherwise.
 
+For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_sortcheck.rs.
+
 Usage:
     qsv sortcheck [options] [<input>]
     qsv sortcheck --help
