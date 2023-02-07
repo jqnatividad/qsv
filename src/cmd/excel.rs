@@ -135,18 +135,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let filename = sce
         .file_name()
         .and_then(std::ffi::OsStr::to_str)
-        .unwrap_or_default();
+        .unwrap_or_default()
+        .to_string();
     let format = sce
         .extension()
         .and_then(std::ffi::OsStr::to_str)
-        .unwrap_or_default();
-    match format.to_ascii_lowercase().as_str() {
+        .unwrap_or_default()
+        .to_lowercase();
+    match format.as_str() {
         "xls" | "xlsx" | "xlsm" | "xlsb" => (),
         "ods" => ods_flag = true,
         _ => {
             return fail!(
-                "The excel command supports the following workbook formats - xls, xlsx, xlsm, \
-                 xlsb and ods."
+                "\"{format}\" not supported. The excel command only supports the following file \
+                 formats - xls, xlsx, xlsm, xlsb and ods."
             );
         }
     };
@@ -196,8 +198,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     if metadata_mode != MetadataMode::None {
         let mut excelmetadata_struct = MetadataStruct {
-            filename: filename.to_string(),
-            format: format.to_string(),
+            filename,
+            format,
             num_sheets,
             sheet: vec![],
         };
@@ -205,15 +207,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         for i in 0..num_sheets {
             let sheet_name = sheet_vec[i].clone();
 
-            let range = match workbook.worksheet_range_at(i) {
-                Some(result) => {
-                    if let Ok(result) = result {
-                        result
-                    } else {
-                        return fail_clierror!("Cannot retrieve range from {}", sheet_name);
+            let range = if let Some(result) = workbook.worksheet_range_at(i) {
+                match result {
+                    Ok(result) => result,
+                    Err(e) => {
+                        return fail_clierror!("Cannot retrieve range from {sheet_name}: {e}.");
                     }
                 }
-                None => Range::empty(),
+            } else {
+                Range::empty()
             };
 
             let (header_vec, num_columns, num_rows, safenames_vec, unsafeheaders_vec, dupe_count) =
@@ -324,7 +326,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
             MetadataMode::None => {}
         }
-        info!(r#"exported metadata for "{filename}" workbook sheets: {sheet_vec:?}"#);
+        info!(r#"exported metadata for "{path}" workbook sheets: {sheet_vec:?}"#);
         // after we export metadata, we're done.
         // we're not exporting the spreadsheet to CSV
         return Ok(());
@@ -383,15 +385,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         return fail_clierror!("Cannot get sheet index for {sheet}");
     };
 
-    let range = match workbook.worksheet_range_at(sheet_index) {
-        Some(result) => {
-            if let Ok(result) = result {
-                result
-            } else {
-                return fail_clierror!("Cannot retrieve range from {sheet}");
-            }
+    let range = if let Some(result) = workbook.worksheet_range_at(sheet_index) {
+        match result {
+            Ok(result) => result,
+            Err(e) => return fail_clierror!("Cannot retrieve range from {sheet}: {e}"),
         }
-        None => Range::empty(),
+    } else {
+        Range::empty()
     };
 
     let whitelist_lower = args.flag_dates_whitelist.to_lowercase();
