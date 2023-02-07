@@ -181,7 +181,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 HumanCount(record_count),
                 HumanCount(dupe_count),
             ));
-        } else if args.flag_all {
+        } else if args.flag_all || do_json {
             progress.set_message(format!(
                 " - ALL {} records checked. {} unsorted breaks & {} duplicates found. NOT Sorted.",
                 HumanCount(record_count),
