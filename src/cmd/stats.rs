@@ -13,7 +13,9 @@ on a stream of data (i.e., constant memory) and can work with arbitrarily large 
 
 The following additional statistics require loading the entire file into memory:
 cardinality, mode/antimode, median, MAD, quartiles and its related measures (IQR,
-lower/upper fences & skewness).
+lower/upper fences & skewness). As Rust doesn't have an integrated Out-Of-Memory (OOM)
+handler yet, care must be taken when computing these additional statistics on very large 
+CSV files, as qsv will panic if it runs out of memory.
 
 "Antimode" is the least frequently occurring non-zero value and is the opposite of mode.
 It returns "*ALL" if all the values are unique, and only returns a preview of the first
