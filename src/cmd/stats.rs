@@ -89,6 +89,15 @@ stats options:
                               it is shortlisted for date inferencing.
                               Set to "all" to inspect ALL fields for
                               date/datetime types. Ignored if --infer-dates is false.
+
+                              Note that false positive date matches WILL most likely occur
+                              when using "all" as unix epoch timestamps are just numbers.
+                              Be sure to only use "all" if you know the columns you're
+                              inspecting are dates, boolean or string fields.
+                              
+                              To avoid false positives, preprocess the file first 
+                              with `apply datefmt` to convert unix epoch timestamp columns
+                              to RFC3339 format.
                               [default: date,time,due,open,close,created]
     --prefer-dmy              Parse dates in dmy format. Otherwise, use mdy format.
                               Ignored if --infer-dates is false.
