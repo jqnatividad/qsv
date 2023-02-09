@@ -117,21 +117,23 @@ Common options:
                            Must be a single character. (default: ,)
 "#;
 
-// DEVELOPER NOTE: stats is heavily optimized and makes extensive use of "unsafe" calls.
-// It is a central command, that is used by `schema`/`validate`, `tojsonl` and Datapusher+.
-//
-// It was the primary reason I created the qsv fork as I needed to do GUARANTEED data type
-// inferencing & to compile smart Data Dictionaries in the most performant way possible
-// for Datapusher+ (https://github.com/dathere/datapusher-plus).
-//
-// It underpins the `schema` and `validate` commands - enabling the automatic creation of
-// a JSONschema based on a CSV's summary statistics; and use the generated JSONschema to
-// quickly validate complex CSVs (NYC's 311 data) at almost 300,000 records/sec.
-//
-// These "unsafe" calls primarily skip repetitive UTF-8 validation and unneeded bounds checking.
-//
-// To safeguard against undefined behavior, `stats` is the most extensively tested command,
-// with ~470 tests.
+/*
+DEVELOPER NOTE: stats is heavily optimized and makes extensive use of "unsafe" calls.
+It is a central command, that is used by `schema`/`validate`, `tojsonl` and Datapusher+.
+
+It was the primary reason I created the qsv fork as I needed to do GUARANTEED data type
+inferencing & to compile smart Data Dictionaries in the most performant way possible
+for Datapusher+ (https://github.com/dathere/datapusher-plus).
+
+It underpins the `schema` and `validate` commands - enabling the automatic creation of
+a JSONschema based on a CSV's summary statistics; and use the generated JSONschema to
+quickly validate complex CSVs (NYC's 311 data) at almost 300,000 records/sec.
+
+These "unsafe" calls primarily skip repetitive UTF-8 validation and unneeded bounds checking.
+
+To safeguard against undefined behavior, `stats` is the most extensively tested command,
+with ~470 tests.
+*/
 
 use std::{
     borrow::ToOwned,
