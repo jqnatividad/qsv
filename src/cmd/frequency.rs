@@ -178,19 +178,21 @@ impl Args {
         let null = &b""[..].to_vec();
         let nsel = sel.normal();
         let mut tabs: Vec<_> = (0..nsel.len()).map(|_| Frequencies::new()).collect();
-        let mut bs;
+        #[allow(unused_assignments)]
+        // amortize allocation
+        let mut field_work: Vec<u8> = Vec::with_capacity(100);
+        let mut row_work: csv::ByteRecord;
         for row in it {
-            let row = row?;
-            for (i, field) in nsel.select(row.into_iter()).enumerate() {
-                let field = {
-                    bs = field.to_vec();
-                    match String::from_utf8(bs) {
+            row_work = row?;
+            for (i, field) in nsel.select(row_work.into_iter()).enumerate() {
+                field_work = {
+                    match String::from_utf8(field.to_vec()) {
                         Ok(s) => s.trim().as_bytes().to_vec(),
                         Err(bs) => bs.into_bytes(),
                     }
                 };
-                if !field.is_empty() {
-                    tabs[i].add(field);
+                if !field_work.is_empty() {
+                    tabs[i].add(field_work);
                 } else if !self.flag_no_nulls {
                     tabs[i].add(null.clone());
                 }
