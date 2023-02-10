@@ -420,6 +420,23 @@ impl Config {
                             fs::File::open(util::idx_path(p)).unwrap()
                         } else {
                             warn!("No index file found - {p:?}: {e}");
+
+                            let (_, data_fsize) = util::file_metadata(&p.metadata()?);
+
+                            // If the CSV file is larger than NO_INDEX_WARNING_FILESIZE,
+                            // log a warning that the user should consider creating an index file
+                            // for faster access.
+                            if data_fsize > NO_INDEX_WARNING_FILESIZE {
+                                use thousands::Separable;
+
+                                warn!(
+                                    "The {} MB CSV file is larger than the {} MB \
+                                     NO_INDEX_WARNING_FILESIZE threshold. Consider creating an \
+                                     index file for faster access.",
+                                    (data_fsize * 100).separate_with_commas(),
+                                    (NO_INDEX_WARNING_FILESIZE * 100).separate_with_commas()
+                                );
+                            }
                             return Ok(None);
                         }
                     }
@@ -433,7 +450,7 @@ impl Config {
         // modified, then return an error and demand the user regenerate the index.
         // Unless QSV_AUTOINDEX is set, in which case, we'll recreate the
         // stale index automatically
-        let (data_modified, data_fsize) = util::file_metadata(&csv_file.metadata()?);
+        let (data_modified, _) = util::file_metadata(&csv_file.metadata()?);
         let (idx_modified, _) = util::file_metadata(&idx_file.metadata()?);
         if data_modified > idx_modified {
             if self.autoindex {
@@ -445,18 +462,6 @@ impl Config {
                     "The CSV file was modified after the index file. Please re-create the index.",
                 ));
             }
-        }
-        // If the CSV file is larger than NO_INDEX_WARNING_FILESIZE,
-        // log a warning that the user should consider creating an index file for faster access.
-        if data_fsize > NO_INDEX_WARNING_FILESIZE {
-            use thousands::Separable;
-
-            warn!(
-                "The {} MB CSV file is larger than the {} MB NO_INDEX_WARNING_FILESIZE threshold. \
-                 Consider creating an index file for faster access.",
-                (data_fsize * 100).separate_with_commas(),
-                (NO_INDEX_WARNING_FILESIZE * 100).separate_with_commas()
-            );
         }
         let csv_rdr = self.from_reader(csv_file);
         Ok(Some((csv_rdr, idx_file)))
