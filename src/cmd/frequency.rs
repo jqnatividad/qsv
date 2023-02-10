@@ -178,10 +178,17 @@ impl Args {
         let null = &b""[..].to_vec();
         let nsel = sel.normal();
         let mut tabs: Vec<_> = (0..nsel.len()).map(|_| Frequencies::new()).collect();
+        let mut bs;
         for row in it {
             let row = row?;
             for (i, field) in nsel.select(row.into_iter()).enumerate() {
-                let field = trim(field.to_vec());
+                let field = {
+                    bs = field.to_vec();
+                    match String::from_utf8(bs) {
+                        Ok(s) => s.trim().as_bytes().to_vec(),
+                        Err(bs) => bs.into_bytes(),
+                    }
+                };
                 if !field.is_empty() {
                     tabs[i].add(field);
                 } else if !self.flag_no_nulls {
@@ -199,13 +206,5 @@ impl Args {
         let headers = rdr.byte_headers()?;
         let sel = self.rconfig().selection(headers)?;
         Ok((sel.select(headers).map(<[u8]>::to_vec).collect(), sel))
-    }
-}
-
-#[inline]
-fn trim(bs: ByteString) -> ByteString {
-    match String::from_utf8(bs) {
-        Ok(s) => s.trim().as_bytes().to_vec(),
-        Err(bs) => bs.into_bytes(),
     }
 }
