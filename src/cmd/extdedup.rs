@@ -22,9 +22,7 @@ extdedup options:
     -D, --dupes-output <file>  Write duplicates to <file>.
     -H, --human-readable       Comma separate duplicate count.
     --memory-limit <arg>       The maximum amount of memory to buffer the on-disk hash table.
-                               This is a percentage of total memory. (default: 10)
-                               Note that this is not a hard limit, the actual memory used
-                               may be slightly higher than this value.
+                               This is a percentage of total memory. [default: 10]
 
 Common options:
     -h, --help                 Display this message
