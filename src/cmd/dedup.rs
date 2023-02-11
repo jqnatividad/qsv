@@ -18,7 +18,7 @@ Usage:
     qsv dedup [options] [<input>]
     qsv dedup --help
 
-sort options:
+dedup options:
     -s, --select <arg>         Select a subset of columns to dedup.
                                Note that the outputs will remain at the full width
                                of the CSV.
