@@ -99,7 +99,7 @@ impl Cache {
         res
     }
 
-    fn item_to_keys<'a>(item: &'a str) -> impl Iterator<Item = [u8; CHUNK_SIZE + 1]> + 'a {
+    fn item_to_keys(item: & str) -> impl Iterator<Item = [u8; CHUNK_SIZE + 1]> + '_ {
         let res = item
             .as_bytes()
             .chunks(CHUNK_SIZE)
