@@ -58,7 +58,7 @@ impl Cache {
 
     pub fn insert(&mut self, item: &str) -> bool {
         if self.memo_size >= self.memo_limit {
-            debug!("Memory cache is full, dump to disk");
+            // debug!("Memory cache is full, dump to disk");
             self.dump_to_disk();
         }
 
@@ -67,7 +67,7 @@ impl Cache {
             self.memo_size += item.len();
             if self.disk.is_some() {
                 res = self.insert_on_disk(item);
-                debug!("Insert on disk: {}", res);
+                // debug!("Insert on disk: {res}");
             }
         }
 
