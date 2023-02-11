@@ -39,7 +39,8 @@ sort options:
                             Unsorted breaks count the number of times two consecutive
                             rows are unsorted (i.e. n row > n+1 row).
                             Dupe count is the number of times two consecutive
-                            rows are equal.
+                            rows are equal. Note that dupe count is INVALID and
+                            should be ignored if the file is not sorted.
     --pretty-json           Same as --json but in pretty JSON format.
 
 Common options:
@@ -183,10 +184,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             ));
         } else if args.flag_all || do_json {
             progress.set_message(format!(
-                " - ALL {} records checked. {} unsorted breaks & {} duplicates found. NOT Sorted.",
+                " - ALL {} records checked. {} unsorted breaks. NOT Sorted.",
                 HumanCount(record_count),
                 HumanCount(unsorted_breaks),
-                HumanCount(dupe_count),
             ));
         } else {
             progress.set_message(format!(
