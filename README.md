@@ -20,7 +20,7 @@
 
 </div>
 
-> ℹ️ **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's May 2018 release](https://github.com/BurntSushi/xsv/issues/267). On top of xsv's 20 commands, it adds numerous new features; 30 additional commands; 6 `apply` subcommands & 35 operations; and 5 `to` subcommands (for a total of 96).
+> ℹ️ **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's May 2018 release](https://github.com/BurntSushi/xsv/issues/267). On top of xsv's 20 commands, it adds numerous new features; 31 additional commands; 6 `apply` subcommands & 35 operations; and 5 `to` subcommands (for a total of 97).
 See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for more details.
 
 ## Available commands
@@ -32,12 +32,13 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [behead](/src/cmd/behead.rs#L2) | Drop headers from a CSV.  |
 | [cat](/src/cmd/cat.rs#L2) | Concatenate CSV files by row or by column. |
 | [count](/src/cmd/count.rs#L2)<br>📇 | Count the rows in a CSV file. (Instantaneous with an index.) |
-| [dedup](/src/cmd/dedup.rs#L2)<br>🗜️🚀 | Remove duplicate rows (See also `extsort`, `sort` & `sortcheck` commands). |
+| [dedup](/src/cmd/dedup.rs#L2)<br>🗜️🚀 | Remove duplicate rows (See also `extdedup`, `extsort`, `sort` & `sortcheck` commands). |
 | [diff](/src/cmd/diff.rs#L2)<br>🚀 | Find the difference between two CSVs with ludicrous speed!<br/>e.g. *compare two CSVs with 1M rows x 9 columns in under 600ms!* |
 | [enum](/src/cmd/enumerate.rs#L2) | Add a new column enumerating rows by adding a column of incremental or uuid identifiers. Can also be used to copy a column or fill a new column with a constant value.  |
 | [excel](/src/cmd/excel.rs#L2) | Exports a specified Excel/ODS sheet to a CSV file. |
 | [exclude](/src/cmd/exclude.rs#L2)<br>📇 | Removes a set of CSV data from another set based on the specified columns.  |
 | [explode](/src/cmd/explode.rs#L2) | Explode rows into multiple ones by splitting a column value based on the given separator.  |
+| [extdedup](/src/cmd/extdedup.rs#L2)<br> | Remove duplicate rows from an arbitrarily large CSV/text file using a memory-mapped, on-disk hash table. Unlike the 'dedup' command, this command does not load the entire file into memory nor does it sort the deduped file. |
 | [extsort](/src/cmd/extsort.rs#L2)<br>🚀 | Sort an arbitrarily large CSV/text file using a multithreaded [external merge sort](https://en.wikipedia.org/wiki/External_sorting) algorithm. |
 | [fetch](/src/cmd/fetch.rs#L3)<br>❇️🧠 | Fetches data from web services for every row using **HTTP Get**. Comes with [HTTP/2](https://http2-explained.haxx.se/en/part1) [adaptive flow control](https://medium.com/coderscorner/http-2-flow-control-77e54f7fd518), [jql](https://github.com/yamafaktory/jql#%EF%B8%8F-usage) JSON query language support, dynamic throttling ([RateLimit](https://tools.ietf.org/id/draft-polli-ratelimit-headers-00.html)) & caching with optional [Redis](https://redis.io/) support for persistent caching. |
 | [fetchpost](/src/cmd/fetchpost.rs#L3)<br>❇️🧠 | Similar to `fetch`, but uses **HTTP Post**. ([HTTP GET vs POST methods](https://www.geeksforgeeks.org/difference-between-http-get-and-post-methods/)) |
