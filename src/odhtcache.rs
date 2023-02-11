@@ -56,9 +56,9 @@ impl Cache {
         }
     }
 
+    #[inline]
     pub fn insert(&mut self, item: &str) -> bool {
         if self.memo_size >= self.memo_limit {
-            // debug!("Memory cache is full, dump to disk");
             self.dump_to_disk();
         }
 
@@ -74,6 +74,7 @@ impl Cache {
         res
     }
 
+    #[inline]
     pub fn contains(&self, item: &str) -> bool {
         if self.memo.contains(item) {
             return true;
@@ -110,10 +111,11 @@ impl Cache {
                 key[..chunk.len()].copy_from_slice(chunk);
                 key
             });
-        return res;
+        res
     }
 
     fn dump_to_disk(&mut self) {
+        // debug!("Memory cache is full, dump to disk");
         let keys = self.memo.drain().collect::<Vec<_>>();
         for key in keys {
             self.insert_on_disk(&key);
