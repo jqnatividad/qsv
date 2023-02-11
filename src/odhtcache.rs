@@ -103,7 +103,6 @@ impl Cache {
         let res = item
             .as_bytes()
             .chunks(CHUNK_SIZE)
-            .into_iter()
             .enumerate()
             .map(|(i, chunk)| {
                 let mut key = [0_u8; CHUNK_SIZE + 1];
