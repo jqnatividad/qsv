@@ -23,7 +23,7 @@ impl Config for OdhtConfig {
     }
     #[inline]
     fn encode_value(v: &Self::Value) -> Self::EncodedValue {
-        [if *v { 1 } else { 0 }; 1]
+        [*v as u8; 1]
     }
     #[inline]
     fn decode_key(k: &Self::EncodedKey) -> Self::Key {
@@ -64,7 +64,7 @@ impl Cache {
 
         let mut res = self.memo.insert(item.to_owned());
         if res {
-            self.memo_size = self.memo_size + item.len();
+            self.memo_size += item.len();
             if self.disk.is_some() {
                 res = self.insert_on_disk(item);
                 debug!("Insert on disk: {}", res);
@@ -105,7 +105,7 @@ impl Cache {
             .into_iter()
             .enumerate()
             .map(|(i, chunk)| {
-                let mut key = [0 as u8; CHUNK_SIZE + 1];
+                let mut key = [0_u8; CHUNK_SIZE + 1];
                 key[CHUNK_SIZE] = i as u8;
                 key[..chunk.len()].copy_from_slice(chunk);
                 key
