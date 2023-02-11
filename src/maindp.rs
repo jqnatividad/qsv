@@ -53,6 +53,7 @@ macro_rules! command_list {
     dedup       Remove redundant rows
     excel       Exports an Excel sheet to a CSV
     exclude     Excludes the records in one CSV from another
+    extdedup    Remove duplicates rows from an arbitrarily large text file
     frequency   Show frequency tables
     headers     Show header names
     help        Show this usage message
@@ -200,6 +201,7 @@ enum Command {
     Dedup,
     Excel,
     Exclude,
+    ExtDedup,
     Frequency,
     Headers,
     Help,
@@ -241,6 +243,7 @@ impl Command {
             Command::Dedup => cmd::dedup::run(argv),
             Command::Excel => cmd::excel::run(argv),
             Command::Exclude => cmd::exclude::run(argv),
+            Command::ExtDedup => cmd::extdedup::run(argv),
             Command::Frequency => cmd::frequency::run(argv),
             Command::Headers => cmd::headers::run(argv),
             Command::Help => {
