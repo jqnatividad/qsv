@@ -384,6 +384,7 @@ pub struct Selection(Vec<usize>);
 pub type _GetField = for<'c> fn(&mut &'c csv::ByteRecord, &usize) -> Option<&'c [u8]>;
 
 impl Selection {
+    #[inline]
     pub fn select<'a, 'b>(
         &'a self,
         row: &'b csv::ByteRecord,

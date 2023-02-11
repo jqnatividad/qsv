@@ -263,6 +263,7 @@ impl Config {
         self
     }
 
+    #[inline]
     pub fn selection(&self, first_record: &csv::ByteRecord) -> Result<Selection, String> {
         match self.select_columns {
             None => fail!("Config has no 'SelectColumns'. Did you call Config::select?"),
