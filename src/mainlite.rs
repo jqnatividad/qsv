@@ -64,6 +64,7 @@ mod clitypes;
 mod cmd;
 mod config;
 mod index;
+mod odhtcache;
 mod select;
 mod util;
 
