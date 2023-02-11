@@ -110,6 +110,7 @@ log = "0.4"
 mimalloc = { version = "0.1", default-features = false, optional = true }
 mlua = { version = "0.8", features = ["luau"], optional = true }
 num_cpus = "1"
+odht = "0.3"
 once_cell = { version = "1.17", features = ["parking_lot"] }
 parking_lot = { version = "0.12", features = ["hardware-lock-elision"] }
 pyo3 = { version = "0.18", features = ["auto-initialize"], optional = true }
