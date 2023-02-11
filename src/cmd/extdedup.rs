@@ -111,14 +111,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         if dedup_cache.contains(&line) {
             dupes_count += 1;
             if write_dupes {
-                dupes_writer.write_all(format!("{}\t{}\n", dupes_count, line).as_bytes())?;
+                dupes_writer.write_all(format!("{dupes_count}\t{line}\n").as_bytes())?;
             }
         } else {
             dedup_cache.insert(&line.clone());
             if args.flag_no_output {
                 continue;
             }
-            output_writer.write_all(format!("{}\n", line).as_bytes())?;
+            output_writer.write_all(format!("{line}\n").as_bytes())?;
         }
     }
 
