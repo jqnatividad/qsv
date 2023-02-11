@@ -49,6 +49,7 @@ mod clitypes;
 mod cmd;
 mod config;
 mod index;
+mod odhtcache;
 mod select;
 mod util;
 
@@ -94,6 +95,7 @@ fn main() -> QsvExitCode {
     excel       Exports an Excel sheet to a CSV
     exclude     Excludes the records in one CSV from another
     explode     Explode rows based on some column separator
+    extdedup    Remove duplicates rows from an arbitrarily large text file
     extsort     Sort arbitrarily large text file\n",
     );
 
@@ -266,6 +268,7 @@ enum Command {
     Excel,
     Exclude,
     Explode,
+    ExtDedup,
     ExtSort,
     #[cfg(all(feature = "fetch", not(feature = "lite")))]
     Fetch,
@@ -339,6 +342,7 @@ impl Command {
             Command::Excel => cmd::excel::run(argv),
             Command::Exclude => cmd::exclude::run(argv),
             Command::Explode => cmd::explode::run(argv),
+            Command::ExtDedup => cmd::extdedup::run(argv),
             Command::ExtSort => cmd::extsort::run(argv),
             #[cfg(all(feature = "fetch", not(feature = "lite")))]
             Command::Fetch => cmd::fetch::run(argv),
