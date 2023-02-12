@@ -20,6 +20,9 @@ extdedup options:
     --no-output                Do not write deduplicated output to <output>.
                                Use this if you only want to know the duplicate count.
     -D, --dupes-output <file>  Write duplicates to <file>.
+                               Note that the file will NOT be a valid CSV.
+                               It is a list of duplicate lines, with the row number of the
+                               duplicate separated by a tab from the duplicate line itself.
     -H, --human-readable       Comma separate duplicate count.
     --memory-limit <arg>       The maximum amount of memory to buffer the on-disk hash table.
                                This is a percentage of total memory. [default: 10]
@@ -119,15 +122,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         )
     };
 
-    let mut dedup_cache = odhtcache::ExtDedupCache::new(mem_limited_buffer.try_into().unwrap());
+    let mut dedup_cache = odhtcache::ExtDedupCache::new(mem_limited_buffer);
 
     let mut dupes_count = 0_u64;
-    for line in input_reader.lines() {
+    for (row_idx, line) in input_reader.lines().enumerate() {
         let line = line?;
         if dedup_cache.contains(&line) {
             dupes_count += 1;
             if write_dupes {
-                dupes_writer.write_all(format!("{dupes_count}\t{line}\n").as_bytes())?;
+                dupes_writer.write_all(format!("{row_idx}\t{line}\n").as_bytes())?;
             }
         } else {
             dedup_cache.insert(&line.clone());

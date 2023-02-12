@@ -38,17 +38,17 @@ impl Config for ExtDedupConfig {
 pub struct ExtDedupCache {
     memo:       HashSet<String>,
     disk:       Option<HashTableOwned<ExtDedupConfig>>,
-    memo_limit: usize,
-    memo_size:  usize,
+    memo_limit: u64,
+    memo_size:  u64,
 }
 
 impl ExtDedupCache {
-    pub fn new(memo_limit: usize) -> Self {
+    pub fn new(memo_limit: u64) -> Self {
         Self {
             memo:       HashSet::new(),
             disk:       None,
             memo_limit: if memo_limit == 0 {
-                usize::MAX
+                u64::MAX
             } else {
                 memo_limit
             },
@@ -64,7 +64,7 @@ impl ExtDedupCache {
 
         let mut res = self.memo.insert(item.to_owned());
         if res {
-            self.memo_size += item.len();
+            self.memo_size += item.len() as u64;
             if self.disk.is_some() {
                 res = self.insert_on_disk(item);
                 // debug!("Insert on disk: {res}");
