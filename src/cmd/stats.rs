@@ -1005,7 +1005,7 @@ impl FieldType {
         sample: &[u8],
         current_type: FieldType,
     ) -> (FieldType, Option<i64>) {
-        if sample.is_empty() {
+        if sample.len() == 0 {
             return (TNull, None);
         }
         // no need to do type checking if current_type is already a String
@@ -1115,7 +1115,7 @@ struct TypedSum {
 impl TypedSum {
     #[inline]
     fn add(&mut self, typ: FieldType, sample: &[u8]) {
-        if sample.is_empty() {
+        if sample.len() == 0 {
             return;
         }
         #[allow(clippy::cast_precision_loss)]
@@ -1194,7 +1194,7 @@ impl TypedMinMax {
     #[inline]
     fn add(&mut self, typ: FieldType, sample: &[u8]) {
         self.str_len.add(sample.len());
-        if sample.is_empty() {
+        if sample.len() == 0 {
             return;
         }
         self.strings.add(sample.to_vec());
