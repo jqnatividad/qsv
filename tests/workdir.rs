@@ -220,7 +220,6 @@ impl Workdir {
     }
 
     // clear all files in directory
-    #[cfg(any(feature = "full", feature = "lite"))]
     pub fn clear_contents(&self) -> io::Result<()> {
         for entry in fs::read_dir(&self.dir)? {
             fs::remove_file(entry?.path())?;
