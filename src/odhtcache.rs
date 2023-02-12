@@ -4,11 +4,11 @@ use std::collections::HashSet;
 use log::debug;
 use odht::{Config, FxHashFn, HashTableOwned};
 
-struct OdhtConfig;
+struct ExtDedupConfig;
 
 const CHUNK_SIZE: usize = 127;
 
-impl Config for OdhtConfig {
+impl Config for ExtDedupConfig {
     type Key = [u8; CHUNK_SIZE + 1];
     type Value = bool;
 
@@ -35,14 +35,14 @@ impl Config for OdhtConfig {
     }
 }
 
-pub struct Cache {
+pub struct ExtDedupCache {
     memo:       HashSet<String>,
-    disk:       Option<HashTableOwned<OdhtConfig>>,
+    disk:       Option<HashTableOwned<ExtDedupConfig>>,
     memo_limit: usize,
     memo_size:  usize,
 }
 
-impl Cache {
+impl ExtDedupCache {
     pub fn new(memo_limit: usize) -> Self {
         Self {
             memo:       HashSet::new(),
@@ -81,7 +81,7 @@ impl Cache {
         }
 
         return if let Some(ref disk) = self.disk {
-            Cache::item_to_keys(item).all(|key| disk.contains_key(&key))
+            ExtDedupCache::item_to_keys(item).all(|key| disk.contains_key(&key))
         } else {
             false
         };
@@ -90,10 +90,10 @@ impl Cache {
     fn insert_on_disk(&mut self, item: &str) -> bool {
         let disk = self.disk.get_or_insert_with(|| {
             debug!("Create new disk cache");
-            HashTableOwned::<OdhtConfig>::with_capacity(1_000_000, 95)
+            HashTableOwned::<ExtDedupConfig>::with_capacity(1_000_000, 95)
         });
         let mut res = false;
-        for key in Cache::item_to_keys(item) {
+        for key in ExtDedupCache::item_to_keys(item) {
             res = disk.insert(&key, &true).is_none() || res;
         }
         res
@@ -131,7 +131,7 @@ mod tests {
 
     #[test]
     fn test_basic_cache() {
-        let mut cache = Cache::new(0);
+        let mut cache = ExtDedupCache::new(0);
         assert!(cache.insert("hello"));
         assert!(cache.insert("world"));
 
@@ -142,7 +142,7 @@ mod tests {
 
     #[test]
     fn test_limit_memory() {
-        let mut cache = Cache::new(1024);
+        let mut cache = ExtDedupCache::new(1024);
         for _ in 0..100 {
             cache.insert(&rand_string(32));
         }

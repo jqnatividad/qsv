@@ -103,7 +103,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         )
     };
 
-    let mut dedup_cache = odhtcache::Cache::new(mem_limited_buffer.try_into().unwrap());
+    let mut dedup_cache = odhtcache::ExtDedupCache::new(mem_limited_buffer.try_into().unwrap());
 
     let mut dupes_count = 0_u64;
     for line in input_reader.lines() {
