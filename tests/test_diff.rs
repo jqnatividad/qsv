@@ -1,3 +1,5 @@
+use newline_converter::dos2unix;
+
 use crate::workdir::Workdir;
 
 #[test]
@@ -22,5 +24,5 @@ fn simple_diff() {
     let got2: String = wrk.stdout(&mut cmd);
     let expected2 = wrk.load_test_resource("boston311-100-diffresult.csv");
 
-    assert_eq!(got2, expected2.replace("\r\n", "\n").trim_end());
+    assert_eq!(dos2unix(&got2), dos2unix(&expected2).trim_end());
 }

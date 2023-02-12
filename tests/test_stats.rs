@@ -1,5 +1,7 @@
 use std::{borrow::ToOwned, cmp, process};
 
+use newline_converter::dos2unix;
+
 use crate::workdir::Workdir;
 
 macro_rules! stats_tests {
@@ -625,7 +627,7 @@ fn stats_prefer_dmy() {
     let got2: String = wrk.stdout(&mut cmd);
     let expected2 = wrk.load_test_resource("boston311-100-stats.csv");
 
-    assert_eq!(got2, expected2.replace("\r\n", "\n").trim_end());
+    assert_eq!(dos2unix(&got2), dos2unix(&expected2).trim_end());
 }
 
 #[test]
@@ -651,7 +653,7 @@ fn stats_prefer_mdy() {
 
     let expected2 = wrk.load_test_resource("boston311-100-stats.csv");
 
-    assert_eq!(got2, expected2.replace("\r\n", "\n").trim_end());
+    assert_eq!(dos2unix(&got2), dos2unix(&expected2).trim_end());
 }
 
 #[test]
@@ -675,7 +677,7 @@ fn stats_rounding() {
     let got2: String = wrk.stdout(&mut cmd);
     let expected2 = wrk.load_test_resource("boston311-100-everything-8places-stats.csv");
 
-    assert_eq!(got2, expected2.replace("\r\n", "\n").trim_end());
+    assert_eq!(dos2unix(&got2), dos2unix(&expected2).trim_end());
 }
 
 #[test]
@@ -697,7 +699,7 @@ fn stats_no_date_inference() {
     let got2: String = wrk.stdout(&mut cmd);
     let expected2 = wrk.load_test_resource("boston311-100-everything-nodate-stats.csv");
 
-    assert_eq!(got2, expected2.replace("\r\n", "\n").trim_end());
+    assert_eq!(dos2unix(&got2), dos2unix(&expected2).trim_end());
 }
 
 #[test]
@@ -723,7 +725,7 @@ fn stats_with_date_inference() {
     let got2: String = wrk.stdout(&mut cmd);
     let expected2 = wrk.load_test_resource("boston311-100-everything-date-stats.csv");
 
-    assert_eq!(got2, expected2.replace("\r\n", "\n").trim_end());
+    assert_eq!(dos2unix(&got2), dos2unix(&expected2).trim_end());
 }
 
 #[test]
@@ -749,7 +751,7 @@ fn stats_with_date_type() {
     let got2: String = wrk.stdout(&mut cmd);
     let expected2 = wrk.load_test_resource("boston311-100-everything-datenotime-stats.csv");
 
-    assert_eq!(got2, expected2.replace("\r\n", "\n").trim_end());
+    assert_eq!(dos2unix(&got2), dos2unix(&expected2).trim_end());
 }
 
 #[test]
@@ -764,7 +766,7 @@ fn stats_typesonly() {
 
     let expected = wrk.load_test_resource("boston311-100-typesonly-stats.csv");
 
-    assert_eq!(got, expected.replace("\r\n", "\n").trim_end());
+    assert_eq!(dos2unix(&got), dos2unix(&expected).trim_end());
 }
 
 #[test]
@@ -783,7 +785,7 @@ fn stats_typesonly_with_dates() {
 
     let expected = wrk.load_test_resource("boston311-100-typesonly-withdates-stats.csv");
 
-    assert_eq!(got, expected.replace("\r\n", "\n").trim_end());
+    assert_eq!(dos2unix(&got), dos2unix(&expected).trim_end());
 }
 
 #[test]
