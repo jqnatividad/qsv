@@ -50,6 +50,7 @@ mod test_excel;
 mod test_exclude;
 #[cfg(any(feature = "full", feature = "lite"))]
 mod test_explode;
+mod test_extdedup;
 #[cfg(any(feature = "full", feature = "lite"))]
 mod test_extsort;
 #[cfg(feature = "fetch")]
