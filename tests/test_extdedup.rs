@@ -7,13 +7,10 @@ fn extdedup() {
     let wrk = Workdir::new("extdedup").flexible(true);
     wrk.clear_contents().unwrap();
 
-    // copy csv file to workdir
-    let withdupes_csv = wrk.load_test_resource("boston311-100-20dupes-random.csv");
-    wrk.create_from_string("boston311-100-20dupes.csv", &withdupes_csv);
+    let test_file = wrk.load_test_file("boston311-100-20dupes-random.csv");
 
     let mut cmd = wrk.command("extdedup");
-    cmd.arg("boston311-100-20dupes.csv")
-        .arg("boston311-100-extdeduped.csv");
+    cmd.arg(test_file).arg("boston311-100-extdeduped.csv");
     wrk.output(&mut cmd);
 
     // load deduped output

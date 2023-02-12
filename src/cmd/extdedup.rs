@@ -90,6 +90,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     let mut write_dupes = false;
+
+    #[cfg(target_family = "unix")]
     let mut dupes_writer = if let Some(dupes_output) = args.flag_dupes_output {
         write_dupes = true;
         io::BufWriter::with_capacity(
@@ -100,6 +102,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         io::BufWriter::with_capacity(
             config::DEFAULT_WTR_BUFFER_CAPACITY,
             fs::File::create("/dev/null")?,
+        )
+    };
+
+    #[cfg(target_family = "windows")]
+    let mut dupes_writer = if let Some(dupes_output) = args.flag_dupes_output {
+        write_dupes = true;
+        io::BufWriter::with_capacity(
+            config::DEFAULT_WTR_BUFFER_CAPACITY,
+            fs::File::create(dupes_output)?,
+        )
+    } else {
+        io::BufWriter::with_capacity(
+            config::DEFAULT_WTR_BUFFER_CAPACITY,
+            fs::File::create("nul")?,
         )
     };
 
