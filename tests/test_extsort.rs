@@ -11,7 +11,6 @@ fn extsort() {
     let unsorted_csv = wrk.load_test_resource("adur-public-toilets.csv");
     wrk.create_from_string("adur-public-toilets.csv", &unsorted_csv);
 
-    // run schema command with value constraints option
     let mut cmd = wrk.command("extsort");
     cmd.arg("adur-public-toilets.csv")
         .arg("adur-public-toilets-extsort-test.csv");
