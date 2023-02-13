@@ -111,6 +111,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         (args.arg_input.clone().unwrap(), filename)
     };
 
+    // we're loading the entire file into memory, we need to check avail mem
+    util::mem_file_check(&std::path::PathBuf::from(&input_path))?;
+
     // we can do this directly here, since args is mutable and
     // Config has not been created yet at this point
     args.flag_prefer_dmy = args.flag_prefer_dmy || std::env::var("QSV_PREFER_DMY").is_ok();

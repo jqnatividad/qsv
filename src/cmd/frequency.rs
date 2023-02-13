@@ -78,6 +78,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
     let rconfig = args.rconfig();
 
+    // we're loading the entire file into memory, we need to check avail mem
+    if let Some(path) = rconfig.path.clone() {
+        util::mem_file_check(&path)?;
+    }
+
     let mut wtr = Config::new(&args.flag_output).writer()?;
     let (headers, tables) = match args.rconfig().indexed()? {
         Some(ref mut idx) if util::njobs(args.flag_jobs) > 1 => args.parallel_ftables(idx),
