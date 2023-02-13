@@ -29,6 +29,7 @@ extdedup options:
 
 Common options:
     -h, --help                 Display this message
+    -Q, --quiet                Do not print duplicate count to stderr.
 "#;
 
 use std::{
@@ -50,6 +51,7 @@ struct Args {
     flag_dupes_output:   Option<String>,
     flag_human_readable: bool,
     flag_memory_limit:   Option<u8>,
+    flag_quiet:          bool,
 }
 
 const MEMORY_LIMITED_BUFFER: u64 = 100 * 1_000_000; // 100 MB
@@ -143,6 +145,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     dupes_writer.flush()?;
     output_writer.flush()?;
+
+    if args.flag_quiet {
+        return Ok(());
+    }
 
     eprintln!(
         "{}",
