@@ -13,6 +13,7 @@ use once_cell::sync::OnceCell;
 use serde::de::DeserializeOwned;
 #[cfg(any(feature = "full", feature = "lite"))]
 use serde::de::{Deserialize, Deserializer, Error};
+use sysinfo::{System, SystemExt};
 
 use crate::{
     config::{Config, Delimiter},
@@ -26,6 +27,9 @@ macro_rules! regex_once_cell {
         RE.get_or_init(|| regex::Regex::new($re).unwrap())
     }};
 }
+
+// leave at least 20% of the available memory free
+const DEFAULT_FREEMEMORY_HEADROOM_PCT: u8 = 20;
 
 static ROW_COUNT: once_cell::sync::OnceCell<u64> = OnceCell::new();
 
@@ -343,6 +347,42 @@ pub fn file_metadata(md: &fs::Metadata) -> (u64, u64) {
     (last_modified, fsize)
 }
 
+pub fn mem_file_check(path: &Path) -> Result<(), String> {
+    if !path.exists() {
+        return Ok(());
+    }
+    let avail_mem = {
+        let mut sys = System::new_all();
+        sys.refresh_memory();
+        sys.available_memory()
+    };
+    let mut mem_pct = env::var("QSV_FREEMEMORY_HEADROOM_PCT")
+        .unwrap_or_else(|_| DEFAULT_FREEMEMORY_HEADROOM_PCT.to_string())
+        .parse::<u8>()
+        .unwrap_or(DEFAULT_FREEMEMORY_HEADROOM_PCT);
+
+    // for safety, we don't want to go below 10% memory headroom
+    if mem_pct < 10 {
+        mem_pct = 10;
+    }
+
+    #[allow(clippy::cast_precision_loss)]
+    let max_avail_mem = (avail_mem as f32 * ((100 - mem_pct) as f32 / 100.0_f32)) as u64;
+
+    let file_metadata = fs::metadata(path).map_err(|e| format!("Failed to get metadata: {e}"))?;
+    let fsize = file_metadata.len();
+    log::info!(
+        "qsv running in non-streaming mode. Available memory: {avail_mem} bytes. Max Available \
+         memory: {max_avail_mem} bytes. QSV_FREEMEMORY_HEADROOM_PCT: {mem_pct} percent. File \
+         size: {fsize} bytes."
+    );
+    if fsize > max_avail_mem {
+        return fail!("Not enough memory to process the file.");
+    }
+
+    Ok(())
+}
+
 #[cfg(any(feature = "full", feature = "lite"))]
 pub fn condense(val: Cow<[u8]>, n: Option<usize>) -> Cow<[u8]> {
     match n {
@@ -643,7 +683,7 @@ fn send_hwsurvey(
     dry_run: bool,
 ) -> Result<reqwest::StatusCode, String> {
     use serde_json::json;
-    use sysinfo::{CpuExt, System, SystemExt};
+    use sysinfo::CpuExt;
 
     static HW_SURVEY_URL: &str =
         "https://4dhmneehnl.execute-api.us-east-1.amazonaws.com/dev/qsv-hwsurvey";
