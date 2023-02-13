@@ -6,6 +6,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.88.0] - 2023-02-13
+
+### Added
+* `extdedup`: new command to deduplicate arbitrarily large CSV/text files using a memory-buffered, on-disk hash table. Not only does it dedup very large files using constant memory, it does so while retaining the file's original sort order, unlike the `dedup` which loads the entire file into memory to sort it first before deduping by comparing neighboring rows https://github.com/jqnatividad/qsv/pull/762
+* Added Out-of-memory handling for "non-streaming" commands (i.e. commands that load the entire file into memory) using a heuristic that an input file's size is lower than the free memory available minus a headroom of 20 percent. This headroom can be adjusted using the QSV_FREEMEMORY_HEADROOM_PCT environment variable, which has a minimum value of 10 percent https://github.com/jqnatividad/qsv/pull/767
+* add `-Q, --quiet` option to all commands that return counts to stderr (`dedup`, `extdedup`, `search`, `searchset` and `replace`) in https://github.com/jqnatividad/qsv/pull/768
+
+### Changed
+* `sort` & `sortcheck`: separate test suites and link from usage text https://github.com/jqnatividad/qsv/pull/756
+* `frequency`: amortize allocations, preallocate with_capacity. Informal benchmarking shows an improvement of ~10%. https://github.com/jqnatividad/qsv/pull/761
+* `extsort`: refactor. Aligned options with `extdedup`; now also support stdin/stdout; added `--memory-limit` option  https://github.com/jqnatividad/qsv/pull/763
+* `safenames`: minor optimization https://github.com/jqnatividad/qsv/commit/a7df378e0a755300e541dec0fef0b12d39b215f2
+* `excel`: minor optimization https://github.com/jqnatividad/qsv/commit/75eac7875e276b45e668cbe91271ad86cec8db49
+* `stats`: add date inferencing false positive warning, with a recommendation how to prevent false positives https://github.com/jqnatividad/qsv/commit/a84a4e614b5c14dd2e0d523bec4c6d9dbeb7c3ba
+* `sortcheck`: added note to usage text that dupe_count is only valid if file is sorted https://github.com/jqnatividad/qsv/commit/ab69f144fa2ac375255bf9fbd6dd08bf538c1dfa
+* reorganized Installation section to differentiate different options https://github.com/jqnatividad/qsv/commit/9ef8bfc0b90574b41629c7c7bd463289dc1dcb62
+* bump MSRV to 1.67.1
+* applied select clippy recommendations
+* Bump flexi_logger from 0.25.0 to 0.25.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/755
+* Bump pyo3 from 0.18.0 to 0.18.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/757
+* Bump serde_json from 1.0.92 to 1.0.93 by @dependabot in https://github.com/jqnatividad/qsv/pull/760
+* Bump filetime from 0.2.19 to 0.2.20 by @dependabot in https://github.com/jqnatividad/qsv/pull/759
+* Bump self_update from 0.34.0 to 0.35.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/765
+* cargo update bump several indirect dependencies
+* pin Rust nightly to 2023-02-12
+
+### Fixed
+* `sortcheck`: correct wrong progress message showing invalid dupe_count (as dupe count is only valid if the file is sorted) https://github.com/jqnatividad/qsv/commit/8eaa8240249c5c7eb1ece068764a8caa7e804414
+* `py` & `luau`: correct usage text about stderr https://github.com/jqnatividad/qsv/commit/1b56e72988e2dee1502517f8e2dbf036416efb8d
+
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.87.1...0.88.0
+
 ## [0.87.1] - 2023-02-02
 
 ### Changed
