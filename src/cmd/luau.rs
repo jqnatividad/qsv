@@ -49,7 +49,7 @@ The main-script is evaluated on a per row basis.
 With "luau map", if the main-script is invalid for a row, "<ERROR>" is returned for that row.
 With "luau filter", if the main-script is invalid for a row, that row is not filtered.
 
-If any row has an invalid result, an exitcode of 1 is returned along with an error count to stderr.
+If any row has an invalid result, an exitcode of 1 is returned and an error count is logged.
 
 There are also special variables - "_idx" that is zero during the prologue, and set to the current 
 row number during the main script; and "_rowcount" which is zero during the prologue and the main script,

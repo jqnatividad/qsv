@@ -56,6 +56,7 @@ Common options:
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
     -p, --progressbar      Show progress bars. Not valid for stdin.
+    -Q, --quiet            Do not return number of matches to stderr.
 "#;
 
 use std::env;
@@ -90,6 +91,7 @@ struct Args {
     flag_quick:          bool,
     flag_count:          bool,
     flag_progressbar:    bool,
+    flag_quiet:          bool,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -194,14 +196,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     if args.flag_count && !args.flag_quick {
-        eprintln!("{match_ctr}");
+        if !args.flag_quiet {
+            eprintln!("{match_ctr}");
+        }
         info!("matches: {match_ctr}");
     }
 
     if match_ctr == 0 {
         return Err(CliError::NoMatch());
     } else if args.flag_quick {
-        eprintln!("{row_ctr}");
+        if !args.flag_quiet {
+            eprintln!("{row_ctr}");
+        }
         info!("quick search first match at {row_ctr}");
     }
 

@@ -73,6 +73,7 @@ Common options:
     -d, --delimiter <arg>      The field delimiter for reading CSV data.
                                Must be a single character. (default: ,)
     -p, --progressbar          Show progress bars. Not valid for stdin.
+    -Q, --quiet                Do not return number of matches to stderr.
 "#;
 
 use std::{
@@ -115,6 +116,7 @@ struct Args {
     flag_count:             bool,
     flag_json:              bool,
     flag_progressbar:       bool,
+    flag_quiet:             bool,
 }
 
 fn read_regexset(filename: &String) -> io::Result<Vec<String>> {
@@ -306,14 +308,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         eprintln!("{json}");
     } else {
         if args.flag_count && !args.flag_quick {
-            eprintln!("{match_row_ctr}");
+            if !args.flag_quiet {
+                eprintln!("{match_row_ctr}");
+            }
             info!("matches: {match_row_ctr}");
         }
 
         if match_row_ctr == 0 {
             return Err(CliError::NoMatch());
         } else if args.flag_quick {
-            eprintln!("{row_ctr}");
+            if !args.flag_quiet {
+                eprintln!("{row_ctr}");
+            }
             info!("quick searchset first match at {row_ctr}");
         }
     }

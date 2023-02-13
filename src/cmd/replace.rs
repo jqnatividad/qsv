@@ -46,6 +46,7 @@ Common options:
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
     -p, --progressbar      Show progress bars. Not valid for stdin.
+    -Q, --quiet            Do not print number of replacements to stderr.
 
 "#;
 
@@ -77,6 +78,7 @@ struct Args {
     flag_size_limit:     usize,
     flag_dfa_size_limit: usize,
     flag_progressbar:    bool,
+    flag_quiet:          bool,
 }
 
 const NULL_VALUE: &str = "<NULL>";
@@ -191,7 +193,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         util::finish_progress(&progress);
     }
 
-    eprintln!("{total_match_ctr}");
+    if !args.flag_quiet {
+        eprintln!("{total_match_ctr}");
+    }
     if total_match_ctr == 0 {
         return Err(CliError::NoMatch());
     }

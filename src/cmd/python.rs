@@ -78,7 +78,7 @@ Some usage examples:
   With "py map", if the expression is invalid for a record, "<ERROR>" is returned for that record.
   With "py filter", if the expression is invalid for a record, that record is not filtered.
 
-  If any record has an invalid result, an exitcode of 1 is returned along with an error count to stderr.
+  If any record has an invalid result, an exitcode of 1 is returned and an error count is logged.
 
 For more extensive examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_py.rs.
 
