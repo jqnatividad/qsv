@@ -132,6 +132,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         }
     } else {
+        // we're loading the entire file into memory, we need to check avail mem
+        if let Some(path) = rconfig.path.clone() {
+            util::mem_file_check(&path)?;
+        }
+
         util::njobs(args.flag_jobs);
 
         let mut all = rdr.byte_records().collect::<Result<Vec<_>, _>>()?;

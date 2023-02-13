@@ -59,6 +59,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
 impl Args {
     fn in_memory_transpose(&self) -> CliResult<()> {
+        // we're loading the entire file into memory, we need to check avail mem
+        if let Some(path) = self.rconfig().path {
+            util::mem_file_check(&path)?;
+        }
+
         let mut rdr = self.rconfig().reader()?;
         let mut wtr = self.wconfig().writer()?;
         let nrows = rdr.byte_headers()?.len();
