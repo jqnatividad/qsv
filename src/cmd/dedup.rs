@@ -45,6 +45,7 @@ Common options:
                                appear as the header row in the output.
     -d, --delimiter <arg>      The field delimiter for reading CSV data.
                                Must be a single character. (default: ,)
+    -Q, --quiet                Do not print duplicate count to stderr.
 "#;
 
 use std::cmp;
@@ -71,6 +72,7 @@ struct Args {
     flag_delimiter:      Option<Delimiter>,
     flag_human_readable: bool,
     flag_jobs:           Option<usize>,
+    flag_quiet:          bool,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -173,6 +175,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     dupewtr.flush()?;
+    wtr.flush()?;
+
+    if args.flag_quiet {
+        return Ok(());
+    }
 
     if args.flag_human_readable {
         use thousands::Separable;
@@ -182,7 +189,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         eprintln!("{dupe_count}");
     }
 
-    Ok(wtr.flush()?)
+    Ok(())
 }
 
 /// Try comparing `a` and `b` ignoring the case
