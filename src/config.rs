@@ -72,7 +72,7 @@ impl<'de> Deserialize<'de> for Delimiter {
 }
 
 pub struct Config {
-    path:              Option<PathBuf>, // None implies <stdin>
+    pub path:          Option<PathBuf>, // None implies <stdin>
     idx_path:          Option<PathBuf>,
     select_columns:    Option<SelectColumns>,
     delimiter:         u8,

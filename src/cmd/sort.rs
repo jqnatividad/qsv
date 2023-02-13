@@ -81,6 +81,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .checkutf8(false)
         .select(args.flag_select);
 
+    // we're loading the entire file into memory, we need to check avail mem
+    if let Some(path) = rconfig.path.clone() {
+        util::mem_file_check(&path)?;
+    }
+
     let mut rdr = rconfig.reader()?;
 
     let headers = rdr.byte_headers()?.clone();

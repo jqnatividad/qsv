@@ -206,6 +206,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut wtr = Config::new(&args.flag_output).writer()?;
     let fconfig = args.rconfig();
     let record_count = RECORD_COUNT.get_or_init(|| util::count_rows(&fconfig).unwrap());
+
+    if let Some(path) = fconfig.path.clone() {
+        // we're loading the entire file into memory, we need to check avail mem
+        if args.flag_everything
+            || args.flag_mode
+            || args.flag_cardinality
+            || args.flag_median
+            || args.flag_quartiles
+            || args.flag_mad
+        {
+            util::mem_file_check(&path)?;
+        }
+    }
+
     log::info!("scanning {record_count} records...");
     let (headers, stats) = match fconfig.indexed()? {
         None => args.sequential_stats(&args.flag_dates_whitelist),
