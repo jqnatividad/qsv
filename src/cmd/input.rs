@@ -1,19 +1,19 @@
 static USAGE: &str = r#"
-Read CSV data with special quoting, trimming, line-skipping & UTF-8 transcoding rules.
+Read CSV data with special quoting, trimming, line-skipping & UTF-8 transcoding rules
+and transforms it to a "normalized" CSV.
 
 Generally, all qsv commands support basic options like specifying the delimiter
-used in CSV data. This does not cover all possible types of CSV data. For
-example, some CSV files don't use '"' for quotes or use different escaping
-styles.
+used in CSV data. However, this does not cover all possible types of CSV data. For
+example, some CSV files don't use '"' for quotes or use different escaping styles.
 
 Also, CSVs with preamble lines can have them skipped with the --skip-lines & --auto-skip
-options. Similarly, --skip-lastlines allows epilog lines to be skipped.
+options. Similarly, --skip-lastlines allows epilogue lines to be skipped.
 
 Finally, non-UTF8 encoded files are transcoded to UTF-8 with this command, replacing all
 invalid UTF-8 sequences with �.
 
-This command is typically used in the beginning of a data pipeline to normalize & prepare CSVs
-for further processing with other qsv commands.
+This command is typically used at the beginning of a data pipeline (thus the name `input`)
+to normalize & prepare CSVs for further processing with other qsv commands.
 
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_input.rs.
 
@@ -27,10 +27,10 @@ input options:
                              quotes are escaped by doubling them.
     --no-quoting             Disable quoting completely.
     --skip-lines <arg>       The number of preamble lines to skip.
-    --auto-skip              Sniff's a CSV for preamble lines and automatically
+    --auto-skip              Sniffs a CSV for preamble lines and automatically
                              skips them. Takes precedence over --skip-lines option.
                              Does not work with <stdin>.
-    --skip-lastlines <arg>   The number of epilog lines to skip.
+    --skip-lastlines <arg>   The number of epilogue lines to skip.
     --trim-headers           Trim leading & trailing whitespace & quotes from header values.
     --trim-fields            Trim leading & trailing whitespace from field values.
 
