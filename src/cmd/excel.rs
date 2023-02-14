@@ -73,6 +73,7 @@ Excel options:
 Common options:
     -h, --help                 Display this message
     -o, --output <file>        Write output to <file> instead of stdout.
+    -Q, --quiet                Do not display export summary message.
 "#;
 
 use std::{cmp, path::PathBuf};
@@ -94,6 +95,7 @@ struct Args {
     flag_trim:            bool,
     flag_dates_whitelist: String,
     flag_output:          Option<String>,
+    flag_quiet:           bool,
 }
 
 #[derive(PartialEq)]
@@ -531,14 +533,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
     wtr.flush()?;
 
-    let end_msg = format!(
-        "{} {}-column rows exported from \"{sheet}\" sheet",
-        // don't count the header in row count
-        row_count.saturating_sub(1).separate_with_commas(),
-        record.len().separate_with_commas(),
-    );
-
-    winfo!("{end_msg}");
+    if !args.flag_quiet {
+        let end_msg = format!(
+            "{} {}-column rows exported from \"{sheet}\" sheet",
+            // don't count the header in row count
+            row_count.saturating_sub(1).separate_with_commas(),
+            record.len().separate_with_commas(),
+        );
+        winfo!("{end_msg}");
+    }
 
     Ok(())
 }
