@@ -39,8 +39,8 @@ sort options:
                             Unsorted breaks count the number of times two consecutive
                             rows are unsorted (i.e. n row > n+1 row).
                             Dupe count is the number of times two consecutive
-                            rows are equal. Note that dupe count is INVALID and
-                            should be ignored if the file is not sorted.
+                            rows are equal. Note that dupe count does not apply
+                            if the file is not sorted and is set to -1.
     --pretty-json           Same as --json but in pretty JSON format.
 
 Common options:
@@ -87,7 +87,7 @@ struct SortCheckStruct {
     sorted:          bool,
     record_count:    u64,
     unsorted_breaks: u64,
-    dupe_count:      u64,
+    dupe_count:      i64,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -209,7 +209,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 record_count
             },
             unsorted_breaks,
-            dupe_count,
+            dupe_count: if sorted { dupe_count as i64 } else { -1 },
         };
         // it's OK to have unwrap here as we know sortcheck_struct is valid json
         if args.flag_pretty_json {
