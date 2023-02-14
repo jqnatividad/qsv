@@ -152,7 +152,7 @@ fn sortcheck_simple_all_json() {
 
     assert_eq!(
         got_stdout,
-        r#"{"sorted":false,"record_count":9,"unsorted_breaks":2,"dupe_count":2}
+        r#"{"sorted":false,"record_count":9,"unsorted_breaks":2,"dupe_count":-1}
 "#
     );
     wrk.assert_err(&mut cmd);
@@ -185,7 +185,7 @@ fn sortcheck_simple_json() {
 
     assert_eq!(
         got_stdout,
-        r#"{"sorted":false,"record_count":9,"unsorted_breaks":2,"dupe_count":2}
+        r#"{"sorted":false,"record_count":9,"unsorted_breaks":2,"dupe_count":-1}
 "#
     );
     wrk.assert_err(&mut cmd);
@@ -221,7 +221,7 @@ fn sortcheck_simple_all_json_progressbar() {
 
     assert_eq!(
         got_stdout,
-        r#"{"sorted":false,"record_count":9,"unsorted_breaks":2,"dupe_count":2}
+        r#"{"sorted":false,"record_count":9,"unsorted_breaks":2,"dupe_count":-1}
 "#
     );
     wrk.assert_err(&mut cmd);
