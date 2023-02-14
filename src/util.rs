@@ -1,7 +1,7 @@
 #[cfg(any(feature = "full", feature = "lite"))]
 use std::borrow::Cow;
 use std::{
-    env, fs, io,
+    env, fs,
     path::{Path, PathBuf},
     str,
 };
@@ -465,7 +465,7 @@ pub fn range(start: Idx, end: Idx, len: Idx, index: Idx) -> Result<(usize, usize
 /// Create a directory recursively, avoiding the race conditions fixed by
 /// https://github.com/rust-lang/rust/pull/39799.
 #[cfg(any(feature = "full", feature = "lite"))]
-fn create_dir_all_threadsafe(path: &Path) -> io::Result<()> {
+fn create_dir_all_threadsafe(path: &Path) -> std::io::Result<()> {
     use std::thread;
 
     // Try 20 times. This shouldn't theoretically need to be any larger
@@ -474,7 +474,7 @@ fn create_dir_all_threadsafe(path: &Path) -> io::Result<()> {
         match fs::create_dir_all(path) {
             // This happens if a directory in `path` doesn't exist when we
             // test for it, and another thread creates it before we can.
-            Err(ref err) if err.kind() == io::ErrorKind::AlreadyExists => {}
+            Err(ref err) if err.kind() == std::io::ErrorKind::AlreadyExists => {}
             other => return other,
         }
         // We probably don't need to sleep at all, because the intermediate
@@ -511,7 +511,7 @@ impl FilenameTemplate {
         &self,
         path: P,
         unique_value: &str,
-    ) -> io::Result<csv::Writer<Box<dyn io::Write + 'static>>>
+    ) -> std::io::Result<csv::Writer<Box<dyn std::io::Write + 'static>>>
     where
         P: AsRef<Path>,
     {
