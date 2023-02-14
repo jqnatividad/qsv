@@ -168,7 +168,7 @@ There are three binary variants of qsv:
 
 ## Regular Expression Syntax
 
-Several commands allow the user to specify regular expressions (`apply`, `schema`, `search`, `searchset` & `replace`). We use the [`regex`](https://docs.rs/regex) crate to parse, compile and execute these expressions. [^3]
+The `--select` option and several commands allow the user to specify regular expressions (`apply`, `schema`, `search`, `searchset`, `select` & `replace`). We use the [`regex`](https://docs.rs/regex) crate to parse, compile and execute these expressions. [^3]
 
 [^3]: This is the same regex engine used by [`ripgrep`](https://github.com/BurntSushi/ripgrep#ripgrep-rg) - the [blazingly fast grep replacement](https://blog.burntsushi.net/ripgrep/) that powers Visual Studio's [magical](https://lab.cccb.org/en/arthur-c-clarke-any-sufficiently-advanced-technology-is-indistinguishable-from-magic/) ["Find in Files"](https://github.com/microsoft/vscode-ripgrep) feature.
 
