@@ -166,26 +166,14 @@ There are three binary variants of qsv:
 
 [^2]: The `foreach` feature is not available on Windows. The `python` feature is not enabled on the prebuilt binaries. Compile qsv with Python 3.6 and above development environment installed if you want to enable the `python` feature. Luau support is enabled by default on the prebuilt binaries, with preference for `luau` for platforms that support it.  
 
-### Minimum Supported Rust Version
+## Regular Expression Syntax
 
-qsv's MSRV policy is to require the latest [Rust version](https://github.com/rust-lang/rust/blob/master/RELEASES.md) that is [supported by Homebrew](https://formulae.brew.sh/formula/rust#default).
+Several commands allow the user to specify regular expressions (`apply`, `schema`, `search`, `searchset` & `replace`). We use the [`regex`](https://docs.rs/regex)
+crate to parse, compile and execute these expressions.
 
-## Tab Completion
+*"Its syntax is similar to Perl-style regular expressions, but lacks a few features like look around and back references. In exchange, all searches execute in linear time with respect to the size of the regular expression and search text."*
 
-qsv's command-line options are quite extensive. Thankfully, since it uses [docopt](http://docopt.org/) for CLI processing,
-we can take advantage of [docopt.rs' tab completion support](https://github.com/docopt/docopt.rs#tab-completion-support) to make it
-easier to use qsv at the command-line (currently, only bash shell is supported):
-
-```bash
-# install docopt-wordlist
-cargo install docopt
-
-# IMPORTANT: run these commands from the root directory of your qsv git repository
-# to setup bash qsv tab completion
-echo "DOCOPT_WORDLIST_BIN=\"$(which docopt-wordlist)"\" >> $HOME/.bash_completion
-echo "source \"$(pwd)/scripts/docopt-wordlist.bash\"" >> $HOME/.bash_completion
-echo "complete -F _docopt_wordlist_commands qsv" >> $HOME/.bash_completion
-```
+Its syntax can be found [here](https://docs.rs/regex/latest/regex/#syntax).
 
 ## File formats
 
@@ -207,14 +195,14 @@ The `excel` command recognizes Excel & Open Document Spreadsheet(ODS) files (`.x
 
 The `to` command produces produces `.xlsx`, [Parquet](https://parquet.apache.org) & [Data Package](https://datahub.io/docs/data-packages/tabular) files, and populates [PostgreSQL](https://www.postgresql.org) and [SQLite](https://www.sqlite.org/index.html) databases.
 
-### RFC 4180
+## RFC 4180
 
 qsv validates against the [RFC 4180](https://datatracker.ietf.org/doc/html/rfc4180) CSV standard. However IRL, CSV formats vary significantly & qsv is actually not strictly compliant with the specification so it can process "real-world" CSV files.
 qsv leverages the awesome [Rust CSV](https://docs.rs/csv/latest/csv/) crate to read/write CSV files.
 
 Click [here](https://docs.rs/csv-core/latest/csv_core/struct.Reader.html#rfc-4180) to find out more about how qsv conforms to the standard using this crate.
 
-### **UTF-8 Encoding**
+## **UTF-8 Encoding**
 
 The following commands require UTF-8 encoded input (of which ASCII is a subset) - `dedup`, `exclude`, `fetch`, `fetchpost`, `frequency`, `join`, `schema`, `sort`, `stats` & `validate`.
 
@@ -224,7 +212,7 @@ This was done to increase performance of these commands, as they make extensive 
 
 Should you need to re-encode CSV/TSV files, you can use the `input` command to transcode to UTF-8. It will replace all invalid UTF-8 sequences with `�`. Alternatively, there are several utilities you can use to do so on [Linux/macOS](https://stackoverflow.com/questions/805418/how-can-i-find-encoding-of-a-file-via-a-script-on-linux) & [Windows](https://superuser.com/questions/1163753/converting-text-file-to-utf-8-on-windows-command-prompt).
 
-### **Windows Usage Note**
+## **Windows Usage Note**
 
 Unlike other modern operating systems, Microsoft Windows' [default encoding is UTF16-LE](https://stackoverflow.com/questions/66072117/why-does-windows-use-utf-16le). This will cause problems when redirecting qsv's output to a CSV file & trying to open it with Excel (which ignores the comma delimiter, with everything in the first column):
 
@@ -330,6 +318,27 @@ It will NOT offer the choice to update itself to the prebuilt binaries published
 * `nightly` - enable to turn on nightly/unstable features in the `rand`, `regex`, `hashbrown`, `parking_lot` & `pyo3` crates when building with Rust nightly/unstable.
 
 > ℹ️ **NOTE:** `qsvlite`, as the name implies, always has **non-default features disabled**. `qsv` can be built with any combination of the above features using the cargo `--features` & `--no-default-features` flags. The prebuilt `qsv` binaries has **all applicable features valid for the target platform**[^2].
+
+## Minimum Supported Rust Version
+
+qsv's MSRV policy is to require the latest [Rust version](https://github.com/rust-lang/rust/blob/master/RELEASES.md) that is [supported by Homebrew](https://formulae.brew.sh/formula/rust#default).
+
+## Tab Completion
+
+qsv's command-line options are quite extensive. Thankfully, since it uses [docopt](http://docopt.org/) for CLI processing,
+we can take advantage of [docopt.rs' tab completion support](https://github.com/docopt/docopt.rs#tab-completion-support) to make it
+easier to use qsv at the command-line (currently, only bash shell is supported):
+
+```bash
+# install docopt-wordlist
+cargo install docopt
+
+# IMPORTANT: run these commands from the root directory of your qsv git repository
+# to setup bash qsv tab completion
+echo "DOCOPT_WORDLIST_BIN=\"$(which docopt-wordlist)"\" >> $HOME/.bash_completion
+echo "source \"$(pwd)/scripts/docopt-wordlist.bash\"" >> $HOME/.bash_completion
+echo "complete -F _docopt_wordlist_commands qsv" >> $HOME/.bash_completion
+```
 
 ## Testing
 qsv has ~1,020 tests in the [tests](https://github.com/jqnatividad/qsv/tree/master/tests) directory.
