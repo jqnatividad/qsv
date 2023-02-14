@@ -374,8 +374,13 @@ impl Config {
             let fsize = f.metadata().unwrap().len() as usize;
             let mut buffer = vec![0; std::cmp::min(DEFAULT_UTF8_CHECK_BUFFER_LEN, fsize)];
             if f.read_exact(&mut buffer).is_ok() {
-                let s = std::str::from_utf8(&buffer);
-                return Ok(s.is_ok());
+                match std::str::from_utf8(&buffer) {
+                    Ok(_) => return Ok(true),
+                    Err(e) => {
+                        log::error!("{} is not utf8 encoded: {e}", path_buf.display(), e = e);
+                        return Ok(false);
+                    }
+                }
             }
         }
         Ok(false)
