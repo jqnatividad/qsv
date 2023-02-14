@@ -132,7 +132,7 @@ cargo install qsv --locked -F datapusher_plus
 
 ### Option 4: Compile from Source
 
-Compiling from source also works similarly[^1}]:
+Compiling from source also works similarly[^1]:
 
 ```bash
 git clone https://github.com/jqnatividad/qsv.git
