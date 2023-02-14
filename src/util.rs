@@ -369,9 +369,8 @@ pub fn mem_file_check(path: &Path) -> Result<(), String> {
         .unwrap_or(DEFAULT_FREEMEMORY_HEADROOM_PCT);
 
     // for safety, we don't want to go below 10% memory headroom
-    if mem_pct < 10 {
-        mem_pct = 10;
-    }
+    // nor above 90% memory headroom as its too memory-restrictive
+    mem_pct = mem_pct.clamp(10, 90);
 
     #[allow(clippy::cast_precision_loss)]
     let max_avail_mem = (avail_mem as f32 * ((100 - mem_pct) as f32 / 100.0_f32)) as u64;
