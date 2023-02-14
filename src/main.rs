@@ -198,12 +198,12 @@ sponsored by datHere - Data Infrastructure Engineering
         return QsvExitCode::Good;
     }
     if args.flag_update || args.flag_updatenow {
-        let update_checked = util::qsv_check_for_update(false, args.flag_updatenow);
         util::log_end(qsv_args, now);
-        if update_checked.is_ok() {
-            return QsvExitCode::Good;
+        if let Err(e) = util::qsv_check_for_update(false, args.flag_updatenow) {
+            eprintln!("{e}");
+            return QsvExitCode::Bad;
         }
-        return QsvExitCode::Bad;
+        return QsvExitCode::Good;
     }
     match args.arg_command {
         None => {
@@ -362,7 +362,7 @@ impl Command {
             Command::Headers => cmd::headers::run(argv),
             Command::Help => {
                 wout!("{USAGE}");
-                _ = util::qsv_check_for_update(true, false);
+                util::qsv_check_for_update(true, false)?;
                 Ok(())
             }
             Command::Index => cmd::index::run(argv),
