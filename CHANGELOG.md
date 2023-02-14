@@ -9,13 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.88.0] - 2023-02-13
 
 ### Added
-* `extdedup`: new command to deduplicate arbitrarily large CSV/text files using a memory-buffered, on-disk hash table. Not only does it dedup very large files using constant memory, it does so while retaining the file's original sort order, unlike the `dedup` which loads the entire file into memory to sort it first before deduping by comparing neighboring rows https://github.com/jqnatividad/qsv/pull/762
+* `extdedup`: new command to deduplicate arbitrarily large CSV/text files using a memory-buffered, on-disk hash table. Not only does it dedup very large files using constant memory, it does so while retaining the file's original sort order, unlike `dedup` which loads the entire file into memory to sort it first before deduping by comparing neighboring rows https://github.com/jqnatividad/qsv/pull/762
 * Added Out-of-Memory (OOM) handling for "non-streaming" commands (i.e. commands that load the entire file into memory) using a heuristic that if an input file's size is lower than the free memory available minus a default headroom of 20 percent, qsv processing stops gracefully with a detailed message about the potential OOM condition. This headroom can be adjusted using the `QSV_FREEMEMORY_HEADROOM_PCT` environment variable, which has a minimum value of 10 percent https://github.com/jqnatividad/qsv/pull/767
 * add `-Q, --quiet` option to all commands that return counts to stderr (`dedup`, `extdedup`, `search`, `searchset` and `replace`) in https://github.com/jqnatividad/qsv/pull/768
 
 ### Changed
 * `sort` & `sortcheck`: separate test suites and link from usage text https://github.com/jqnatividad/qsv/pull/756
-* `frequency`: amortize allocations, preallocate with_capacity. Informal benchmarking shows an improvement of ~10%. https://github.com/jqnatividad/qsv/pull/761
+* `frequency`: amortize allocations, preallocate with_capacity. Informal benchmarking shows an improvement of ~30%! https://github.com/jqnatividad/qsv/pull/761
 * `extsort`: refactor. Aligned options with `extdedup`; now also support stdin/stdout; added `--memory-limit` option  https://github.com/jqnatividad/qsv/pull/763
 * `safenames`: minor optimization https://github.com/jqnatividad/qsv/commit/a7df378e0a755300e541dec0fef0b12d39b215f2
 * `excel`: minor optimization https://github.com/jqnatividad/qsv/commit/75eac7875e276b45e668cbe91271ad86cec8db49
