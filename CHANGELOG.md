@@ -6,6 +6,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.88.1] - 2023-02-15
+
+### Changed
+* also show `--update` and `--updatenow` errors on stderr https://github.com/jqnatividad/qsv/pull/770
+* `sortcheck`: when a file is not sorted, dupecount is invalid. Set dupecount to -1 to make it plainly evident when file is not sorted. https://github.com/jqnatividad/qsv/pull/771
+* `excel`: added `--quiet` option https://github.com/jqnatividad/qsv/commit/99d88499df573f9f46992346f394d9372ceeffcc
+* `extdedup`: minimize allocations in hot loop https://github.com/jqnatividad/qsv/commit/62096fa84505b6de2c108d1f07707008e1c2d170
+* improved mem_file_check OOM-prevention helper function. Better error messages; clamp free memory headroom percentage between 10 and 90 percent https://github.com/jqnatividad/qsv/commit/6701ebfae58e942117378996ec6679544f620cbf and https://github.com/jqnatividad/qsv/commit/5cd8a95e7b36819f75f0d3bb8172dcff601b649b
+* improved utf8 check error messages to give more detail, and not just say there is an encoding error https://github.com/jqnatividad/qsv/commit/c9b5b075d31b9639958193db919683475c3e3ba5
+* improved README, adding Regular Expression Syntax section; reordered sections
+* modified CI workflows to also check qsvlite
+* Bump once_cell from 1.17.0 to 1.17.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/775
+* cargo update bump several indirect dependencies
+* pin Rust nightly to 2023-02-14
+
+### Fixed
+* `dedup` unnecessarily doing utf8 check; improve `input` usage text https://github.com/jqnatividad/qsv/pull/773
+* `dedup`: fix unstable dedup results caused by using `par_sort_unstable_by` https://github.com/jqnatividad/qsv/pull/776
+* `sort`: fix unstable sort results caused by using `par_sort_unstable_by` https://github.com/jqnatividad/qsv/commit/9f01df41a77dece75e434ee24b3ea0178d58deaf
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.88.0...088.1
+
 ## [0.88.0] - 2023-02-13
 
 ### Added
