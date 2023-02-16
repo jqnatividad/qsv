@@ -112,7 +112,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 SliceRandom::shuffle(&mut *all, &mut rng); //DevSkim: ignore DS148264
             }
         }
-        (false, false, false) => all.par_sort_unstable_by(|r1, r2| {
+        (false, false, false) => all.par_sort_by(|r1, r2| {
             let a = sel.select(r1);
             let b = sel.select(r2);
             if ignore_case {
@@ -121,12 +121,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 iter_cmp(a, b)
             }
         }),
-        (true, false, false) => all.par_sort_unstable_by(|r1, r2| {
+        (true, false, false) => all.par_sort_by(|r1, r2| {
             let a = sel.select(r1);
             let b = sel.select(r2);
             iter_cmp_num(a, b)
         }),
-        (false, true, false) => all.par_sort_unstable_by(|r1, r2| {
+        (false, true, false) => all.par_sort_by(|r1, r2| {
             let a = sel.select(r1);
             let b = sel.select(r2);
             if ignore_case {
@@ -135,7 +135,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 iter_cmp(b, a)
             }
         }),
-        (true, true, false) => all.par_sort_unstable_by(|r1, r2| {
+        (true, true, false) => all.par_sort_by(|r1, r2| {
             let a = sel.select(r1);
             let b = sel.select(r2);
             iter_cmp_num(b, a)
