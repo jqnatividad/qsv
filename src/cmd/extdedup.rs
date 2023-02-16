@@ -127,19 +127,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut dedup_cache = odhtcache::ExtDedupCache::new(mem_limited_buffer);
 
     let mut dupes_count = 0_u64;
+    let mut line_work = String::with_capacity(100);
     for (row_idx, line) in input_reader.lines().enumerate() {
-        let line = line?;
-        if dedup_cache.contains(&line) {
+        line_work.clone_from(&line?);
+        if dedup_cache.contains(&line_work) {
             dupes_count += 1;
             if write_dupes {
-                dupes_writer.write_all(format!("{row_idx}\t{line}\n").as_bytes())?;
+                dupes_writer.write_all(format!("{row_idx}\t{line_work}\n").as_bytes())?;
             }
         } else {
-            dedup_cache.insert(&line.clone());
+            dedup_cache.insert(&line_work);
             if args.flag_no_output {
                 continue;
             }
-            output_writer.write_all(format!("{line}\n").as_bytes())?;
+            output_writer.write_all(format!("{line_work}\n").as_bytes())?;
         }
     }
 
