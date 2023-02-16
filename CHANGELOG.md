@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.88.1] - 2023-02-15
+## [0.88.2] - 2023-02-16
 
 ### Changed
 * also show `--update` and `--updatenow` errors on stderr https://github.com/jqnatividad/qsv/pull/770
@@ -25,8 +25,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `dedup` unnecessarily doing utf8 check; improve `input` usage text https://github.com/jqnatividad/qsv/pull/773
 * `dedup`: fix unstable dedup results caused by using `par_sort_unstable_by` https://github.com/jqnatividad/qsv/pull/776
 * `sort`: fix unstable sort results caused by using `par_sort_unstable_by` https://github.com/jqnatividad/qsv/commit/9f01df41a77dece75e434ee24b3ea0178d58deaf
+* removed mispublished 0.88.1 release
 
-**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.88.0...088.1
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.88.0...088.2
 
 ## [0.88.0] - 2023-02-13
 
