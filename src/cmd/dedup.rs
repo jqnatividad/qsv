@@ -137,7 +137,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } else {
         // we're loading the entire file into memory, we need to check avail mem
         if let Some(path) = rconfig.path.clone() {
-            util::mem_file_check(&path)?;
+            util::mem_file_check(&path, false)?;
         }
 
         // set RAYON_NUM_THREADS for parallel sort

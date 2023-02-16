@@ -218,7 +218,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             || args.flag_quartiles
             || args.flag_mad
         {
-            util::mem_file_check(&path)?;
+            util::mem_file_check(&path, false)?;
         }
     }
 

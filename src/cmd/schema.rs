@@ -112,7 +112,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     // we're loading the entire file into memory, we need to check avail mem
-    util::mem_file_check(&std::path::PathBuf::from(&input_path))?;
+    util::mem_file_check(&std::path::PathBuf::from(&input_path), false)?;
 
     // we can do this directly here, since args is mutable and
     // Config has not been created yet at this point
