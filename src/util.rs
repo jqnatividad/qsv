@@ -8,7 +8,7 @@ use std::{
 
 use docopt::Docopt;
 #[cfg(any(feature = "full", feature = "lite"))]
-use indicatif::{HumanBytes, HumanCount, ProgressBar, ProgressStyle};
+use indicatif::{HumanCount, ProgressBar, ProgressStyle};
 use once_cell::sync::OnceCell;
 use serde::de::DeserializeOwned;
 #[cfg(any(feature = "full", feature = "lite"))]
@@ -156,9 +156,9 @@ pub fn version() -> String {
                  {rustversion}) {QSV_KIND}",
                 maxjobs = max_jobs(),
                 numcpus = num_cpus(),
-                max_file_size = HumanBytes(max_file_size),
-                avail_mem = HumanBytes(avail_mem),
-                total_mem = HumanBytes(total_mem),
+                max_file_size = indicatif::HumanBytes(max_file_size),
+                avail_mem = indicatif::HumanBytes(avail_mem),
+                total_mem = indicatif::HumanBytes(total_mem),
             )
         } else {
             format!(
@@ -168,9 +168,9 @@ pub fn version() -> String {
                  {rustversion}) {QSV_KIND}",
                 maxjobs = max_jobs(),
                 numcpus = num_cpus(),
-                max_file_size = HumanBytes(max_file_size),
-                avail_mem = HumanBytes(avail_mem),
-                total_mem = HumanBytes(total_mem),
+                max_file_size = indicatif::HumanBytes(max_file_size),
+                avail_mem = indicatif::HumanBytes(avail_mem),
+                total_mem = indicatif::HumanBytes(total_mem),
             )
         }
     } else {
@@ -399,10 +399,10 @@ pub fn mem_file_check(path: &Path, version_check: bool) -> Result<i64, String> {
             "qsv running in non-streaming mode. Available memory: {avail_mem}. Max Available \
              memory: {max_avail_mem}. QSV_FREEMEMORY_HEADROOM_PCT: {mem_pct} percent. File size: \
              {fsize}.",
-            avail_mem = HumanBytes(avail_mem),
-            max_avail_mem = HumanBytes(max_avail_mem),
+            avail_mem = indicatif::HumanBytes(avail_mem),
+            max_avail_mem = indicatif::HumanBytes(max_avail_mem),
             mem_pct = mem_pct,
-            fsize = HumanBytes(fsize)
+            fsize = indicatif::HumanBytes(fsize)
         );
         log::info!("{detail_msg}");
         if fsize > max_avail_mem {
