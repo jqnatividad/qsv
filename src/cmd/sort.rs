@@ -83,7 +83,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // we're loading the entire file into memory, we need to check avail mem
     if let Some(path) = rconfig.path.clone() {
-        util::mem_file_check(&path)?;
+        util::mem_file_check(&path, false)?;
     }
 
     let mut rdr = rconfig.reader()?;

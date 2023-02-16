@@ -8,7 +8,7 @@ use std::{
 
 use docopt::Docopt;
 #[cfg(any(feature = "full", feature = "lite"))]
-use indicatif::{HumanCount, ProgressBar, ProgressStyle};
+use indicatif::{HumanBytes, HumanCount, ProgressBar, ProgressStyle};
 use once_cell::sync::OnceCell;
 use serde::de::DeserializeOwned;
 #[cfg(any(feature = "full", feature = "lite"))]
@@ -125,6 +125,15 @@ pub fn version() -> String {
     enabled_features.push_str("self_update");
     enabled_features.push('-');
 
+    // get max_file_size & memory info. max_file_size is based on QSV_FREE_MEMORY_HEADROOM_PCT
+    // setting and is only enforced when qsv is running in "non-streaming" mode (i.e. needs to
+    // load the entire file into memory).
+    let max_file_size = mem_file_check(Path::new(""), true).unwrap_or(0) as u64;
+    let mut sys = System::new_all();
+    sys.refresh_memory();
+    let avail_mem = sys.available_memory();
+    let total_mem = sys.total_memory();
+
     #[cfg(feature = "mimalloc")]
     let malloc_kind = "mimalloc".to_string();
     #[cfg(not(feature = "mimalloc"))]
@@ -137,27 +146,35 @@ pub fn version() -> String {
         option_env!("CARGO_PKG_VERSION_PRE"),
         option_env!("CARGO_PKG_RUST_VERSION"),
     );
-    match (qsvtype, maj, min, pat, pre, rustversion) {
-        (Some(qsvtype), Some(maj), Some(min), Some(pat), Some(pre), Some(rustversion)) => {
-            if pre.is_empty() {
-                format!(
-                    "{qsvtype} {maj}.{min}.\
-                     {pat}-{malloc_kind}-{enabled_features}{maxjobs}-{numcpus} ({TARGET} compiled \
-                     with Rust {rustversion}) {QSV_KIND}",
-                    maxjobs = max_jobs(),
-                    numcpus = num_cpus()
-                )
-            } else {
-                format!(
-                    "{qsvtype} {maj}.{min}.\
-                     {pat}-{pre}-{malloc_kind}-{enabled_features}{maxjobs}-{numcpus} ({TARGET} \
-                     compiled with Rust {rustversion}) {QSV_KIND}",
-                    maxjobs = max_jobs(),
-                    numcpus = num_cpus(),
-                )
-            }
+    if let (Some(qsvtype), Some(maj), Some(min), Some(pat), Some(pre), Some(rustversion)) =
+        (qsvtype, maj, min, pat, pre, rustversion)
+    {
+        if pre.is_empty() {
+            format!(
+                "{qsvtype} {maj}.{min}.{pat}-{malloc_kind}-{enabled_features}{maxjobs}-{numcpus};\
+                 {max_file_size}-{avail_mem}-{total_mem} ({TARGET} compiled with Rust \
+                 {rustversion}) {QSV_KIND}",
+                maxjobs = max_jobs(),
+                numcpus = num_cpus(),
+                max_file_size = HumanBytes(max_file_size),
+                avail_mem = HumanBytes(avail_mem),
+                total_mem = HumanBytes(total_mem),
+            )
+        } else {
+            format!(
+                "{qsvtype} {maj}.{min}.\
+                 {pat}-{pre}-{malloc_kind}-{enabled_features}{maxjobs}-{numcpus};\
+                 {max_file_size}-{avail_mem}-{total_mem} ({TARGET} compiled with Rust \
+                 {rustversion}) {QSV_KIND}",
+                maxjobs = max_jobs(),
+                numcpus = num_cpus(),
+                max_file_size = HumanBytes(max_file_size),
+                avail_mem = HumanBytes(avail_mem),
+                total_mem = HumanBytes(total_mem),
+            )
         }
-        _ => String::new(),
+    } else {
+        String::new()
     }
 }
 
@@ -347,15 +364,13 @@ pub fn file_metadata(md: &fs::Metadata) -> (u64, u64) {
     (last_modified, fsize)
 }
 
-pub fn mem_file_check(path: &Path) -> Result<(), String> {
-    use indicatif::HumanBytes;
-
-    // if the file doesn't exist, we don't need to check memory
-    // as file existence is checked before this function is called
-    // and if we do get here with a non-existent file, that means
-    // we're using stdin, so this check doesn't apply
-    if !path.exists() {
-        return Ok(());
+pub fn mem_file_check(path: &Path, version_check: bool) -> Result<i64, String> {
+    // if we're NOT calling this from the version() and the file doesn't exist,
+    // we don't need to check memory as file existence is checked before this function is called.
+    // If we do get here with a non-existent file, that means we're using stdin,
+    // so this check doesn't apply, so we return -1
+    if !path.exists() && !version_check {
+        return Ok(-1_i64);
     }
 
     let avail_mem = {
@@ -375,24 +390,29 @@ pub fn mem_file_check(path: &Path) -> Result<(), String> {
     #[allow(clippy::cast_precision_loss)]
     let max_avail_mem = (avail_mem as f32 * ((100 - mem_pct) as f32 / 100.0_f32)) as u64;
 
-    let file_metadata = fs::metadata(path).map_err(|e| format!("Failed to get file size: {e}"))?;
-    let fsize = file_metadata.len();
-    let detail_msg = format!(
-        "qsv running in non-streaming mode. Available memory: {avail_mem}. Max Available memory: \
-         {max_avail_mem}. QSV_FREEMEMORY_HEADROOM_PCT: {mem_pct} percent. File size: {fsize}.",
-        avail_mem = HumanBytes(avail_mem),
-        max_avail_mem = HumanBytes(max_avail_mem),
-        mem_pct = mem_pct,
-        fsize = HumanBytes(fsize)
-    );
-    if fsize > max_avail_mem {
-        return fail!(format!(
-            "Not enough memory to process the file. {detail_msg}"
-        ));
+    // if we're calling this from version(), we don't need to check the file size
+    if !version_check {
+        let file_metadata =
+            fs::metadata(path).map_err(|e| format!("Failed to get file size: {e}"))?;
+        let fsize = file_metadata.len();
+        let detail_msg = format!(
+            "qsv running in non-streaming mode. Available memory: {avail_mem}. Max Available \
+             memory: {max_avail_mem}. QSV_FREEMEMORY_HEADROOM_PCT: {mem_pct} percent. File size: \
+             {fsize}.",
+            avail_mem = HumanBytes(avail_mem),
+            max_avail_mem = HumanBytes(max_avail_mem),
+            mem_pct = mem_pct,
+            fsize = HumanBytes(fsize)
+        );
+        log::info!("{detail_msg}");
+        if fsize > max_avail_mem {
+            return fail!(format!(
+                "Not enough memory to process the file. {detail_msg}"
+            ));
+        }
     }
-    log::info!("{detail_msg}");
 
-    Ok(())
+    Ok(max_avail_mem as i64)
 }
 
 #[cfg(any(feature = "full", feature = "lite"))]

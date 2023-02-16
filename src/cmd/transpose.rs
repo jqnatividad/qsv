@@ -61,7 +61,7 @@ impl Args {
     fn in_memory_transpose(&self) -> CliResult<()> {
         // we're loading the entire file into memory, we need to check avail mem
         if let Some(path) = self.rconfig().path {
-            util::mem_file_check(&path)?;
+            util::mem_file_check(&path, false)?;
         }
 
         let mut rdr = self.rconfig().reader()?;
