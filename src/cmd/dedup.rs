@@ -143,7 +143,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         util::njobs(args.flag_jobs);
 
         let mut all = rdr.byte_records().collect::<Result<Vec<_>, _>>()?;
-        all.par_sort_unstable_by(|r1, r2| {
+        all.par_sort_by(|r1, r2| {
             let a = sel.select(r1);
             let b = sel.select(r2);
             iter_cmp(a, b)

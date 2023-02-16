@@ -72,6 +72,20 @@ fn dedup_select() {
 }
 
 #[test]
+fn dedup_select_issue774() {
+    let wrk = Workdir::new("dedup_select_issue774");
+    let test_file = wrk.load_test_file("dedup-test.csv");
+
+    let mut cmd = wrk.command("dedup");
+    cmd.args(["-s", "id"]).arg(test_file);
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = wrk.load_test_resource("dedup-by-id-test-expected.csv");
+
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn dedup_sorted() {
     let wrk = Workdir::new("dedup_sorted");
     wrk.create(
