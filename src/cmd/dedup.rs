@@ -140,6 +140,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             util::mem_file_check(&path)?;
         }
 
+        // set RAYON_NUM_THREADS for parallel sort
         util::njobs(args.flag_jobs);
 
         let mut all = rdr.byte_records().collect::<Result<Vec<_>, _>>()?;
@@ -149,30 +150,31 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             iter_cmp(a, b)
         });
 
-        let mut current = 0;
-        while current + 1 < all.len() {
-            let a = sel.select(&all[current]);
-            let b = sel.select(&all[current + 1]);
-            if ignore_case {
-                if iter_cmp_ignore_case(a, b) == cmp::Ordering::Equal {
+        for (current, current_record) in all.iter().enumerate() {
+            let a = sel.select(current_record);
+            if let Some(next_record) = all.get(current + 1) {
+                let b = sel.select(next_record);
+                if ignore_case {
+                    if iter_cmp_ignore_case(a, b) == cmp::Ordering::Equal {
+                        dupe_count += 1;
+                        if dupes_output {
+                            dupewtr.write_byte_record(current_record)?;
+                        }
+                    } else {
+                        wtr.write_byte_record(current_record)?;
+                    }
+                } else if iter_cmp(a, b) == cmp::Ordering::Equal {
                     dupe_count += 1;
                     if dupes_output {
-                        dupewtr.write_byte_record(&all[current])?;
+                        dupewtr.write_byte_record(current_record)?;
                     }
                 } else {
-                    wtr.write_byte_record(&all[current])?;
-                }
-            } else if iter_cmp(a, b) == cmp::Ordering::Equal {
-                dupe_count += 1;
-                if dupes_output {
-                    dupewtr.write_byte_record(&all[current])?;
+                    wtr.write_byte_record(current_record)?;
                 }
             } else {
-                wtr.write_byte_record(&all[current])?;
+                wtr.write_byte_record(current_record)?;
             }
-            current += 1;
         }
-        wtr.write_byte_record(&all[current])?;
     }
 
     dupewtr.flush()?;
