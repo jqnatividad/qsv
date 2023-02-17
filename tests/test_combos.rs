@@ -79,23 +79,6 @@ fn combo_sort_dedup() {
 }
 
 #[test]
-#[ignore = "Doesn't work on GH Action runners, but works locally. Ignoring so GH CI doesn't fail."]
-fn utf8_check_invalid() {
-    // this test runs properly locally, but the github action runners
-    // don't run it properly, as it seems the test files are not encoded properly
-    // by GitHub so we're ignoring it for CI to work.
-    let wrk = Workdir::new("utf8_check_invalid");
-
-    let nonutf8_file = wrk.load_test_file("test-windows1252.csv");
-
-    let mut cmd = wrk.command("headers");
-    cmd.arg(nonutf8_file);
-
-    let got: String = wrk.output_stderr(&mut cmd);
-    assert!(got.contains("is not UTF-8 encoded"));
-}
-
-#[test]
 fn utf8_check_valid() {
     let wrk = Workdir::new("utf8_check_valid");
 
