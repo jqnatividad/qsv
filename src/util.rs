@@ -129,7 +129,7 @@ pub fn version() -> String {
     // setting and is only enforced when qsv is running in "non-streaming" mode (i.e. needs to
     // load the entire file into memory).
     let max_file_size = mem_file_check(Path::new(""), true).unwrap_or(0) as u64;
-    let mut sys = System::new_all();
+    let mut sys = System::new();
     sys.refresh_memory();
     let avail_mem = sys.available_memory();
     let total_mem = sys.total_memory();
@@ -204,7 +204,9 @@ pub fn count_rows(conf: &Config) -> Result<u64, CliError> {
     } else {
         // index does not exist or is stale,
         // count records by iterating through records
-        // however, do this only once per invocation and cache the result
+        // Do this only once per invocation and cache the result, so we don't
+        // have to re-count rows every time we need to know the row count for CSVs
+        // that don't have an index.
         let rc = ROW_COUNT.get_or_init(|| {
             if let Ok(mut rdr) = conf.reader() {
                 let mut count = 0u64;
@@ -214,6 +216,7 @@ pub fn count_rows(conf: &Config) -> Result<u64, CliError> {
                 }
                 count
             } else {
+                // sentinel value to indicate that we were unable to count rows
                 u64::MAX
             }
         });
