@@ -61,12 +61,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let rconfig_left = Config::new(&args.arg_input_left)
         .delimiter(args.flag_delimiter_left)
-        .checkutf8(false)
         .no_headers(args.flag_no_headers_left);
 
     let rconfig_right = Config::new(&args.arg_input_right)
         .delimiter(args.flag_delimiter_right)
-        .checkutf8(false)
         .no_headers(args.flag_no_headers_right);
 
     if rconfig_left.is_stdin() || rconfig_right.is_stdin() {

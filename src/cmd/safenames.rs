@@ -161,9 +161,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .map(str::to_lowercase)
         .collect();
 
-    let rconfig = Config::new(&args.arg_input)
-        .checkutf8(true)
-        .delimiter(args.flag_delimiter);
+    let rconfig = Config::new(&args.arg_input).delimiter(args.flag_delimiter);
 
     let mut rdr = rconfig.reader()?;
     let mut wtr = Config::new(&args.flag_output).writer()?;

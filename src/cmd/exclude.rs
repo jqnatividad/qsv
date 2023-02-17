@@ -114,12 +114,10 @@ impl Args {
         let rconf1 = Config::new(&Some(self.arg_input1.clone()))
             .delimiter(self.flag_delimiter)
             .no_headers(self.flag_no_headers)
-            .checkutf8(false)
             .select(self.arg_columns1.clone());
         let rconf2 = Config::new(&Some(self.arg_input2.clone()))
             .delimiter(self.flag_delimiter)
             .no_headers(self.flag_no_headers)
-            .checkutf8(false)
             .select(self.arg_columns2.clone());
 
         let mut rdr1 = rconf1.reader_file()?;

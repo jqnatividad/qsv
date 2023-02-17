@@ -35,7 +35,6 @@ struct Args {
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
     let conf = Config::new(&args.arg_input)
-        .checkutf8(false)
         .no_headers(args.flag_no_headers)
         // we also want to count the quotes when computing width
         .quoting(!args.flag_width)

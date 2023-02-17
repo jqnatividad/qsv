@@ -94,7 +94,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let conf = Config::new(&args.arg_input)
         .flexible(true)
-        .checkutf8(false)
         .delimiter(args.flag_delimiter);
     let n_rows = util::count_rows(&conf)?;
 

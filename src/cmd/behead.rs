@@ -22,9 +22,7 @@ struct Args {
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
-    let conf = Config::new(&args.arg_input)
-        .checkutf8(false)
-        .no_headers(false);
+    let conf = Config::new(&args.arg_input).no_headers(false);
 
     let mut rdr = conf.reader()?;
     let mut wtr = Config::new(&args.flag_output).writer()?;
