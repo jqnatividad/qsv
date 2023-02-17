@@ -204,6 +204,7 @@ use reqwest::{
 };
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use simdutf8::basic::from_utf8;
 use url::Url;
 
 use crate::{
@@ -618,14 +619,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             // let's dynamically construct the URL with it
             record_vec.clear();
             for field in &record {
-                record_vec.push(unsafe { std::str::from_utf8_unchecked(field).to_owned() });
+                record_vec.push(from_utf8(field).unwrap_or_default().to_owned());
             }
             if let Ok(formatted) =
                 dynfmt::SimpleCurlyFormat.format(&dynfmt_url_template, &*record_vec)
             {
                 url = formatted.into_owned();
             }
-        } else if let Ok(s) = std::str::from_utf8(&record[column_index]) {
+        } else if let Ok(s) = from_utf8(&record[column_index]) {
             // we're not using a URL template,
             // just use the field as-is as the URL
             s.clone_into(&mut url);

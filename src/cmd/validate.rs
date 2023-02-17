@@ -61,6 +61,7 @@ use once_cell::sync::OnceCell;
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, value::Number, Map, Value};
+use simdutf8::basic::from_utf8;
 use thousands::Separable;
 
 use crate::{
@@ -503,9 +504,8 @@ fn do_json_validation(
     schema_json: &Value,
     schema_compiled: &JSONSchema,
 ) -> Option<String> {
-    // row number was added as last column. We use unsafe from_utf8_unchecked to
-    // skip UTF8 validation since we know its safe as we added it earlier
-    let row_number_string = unsafe { str::from_utf8_unchecked(record.get(headers_len).unwrap()) };
+    // row number was added as last column. We use can do unwrap safely since we know its there
+    let row_number_string = from_utf8(record.get(headers_len).unwrap()).unwrap();
 
     // debug!("instance[{row_number}]: {instance:?}");
     validate_json_instance(
@@ -553,9 +553,9 @@ fn to_json_instance(
     // iterate over each CSV field and convert to JSON type
     for (i, header) in headers.iter().enumerate() {
         // convert csv header to string
-        let header_string = unsafe { std::str::from_utf8_unchecked(header).to_string() };
+        let header_string = from_utf8(header).unwrap().to_string();
         // convert csv value to string; no trimming reqd as it's done on the record level beforehand
-        let value_string = unsafe { std::str::from_utf8_unchecked(&record[i]).to_string() };
+        let value_string = from_utf8(&record[i]).unwrap().to_string();
 
         // if value_string is empty, then just put an empty JSON String
         if value_string.is_empty() {
