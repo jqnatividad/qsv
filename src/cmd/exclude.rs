@@ -19,6 +19,11 @@ Usage:
     qsv exclude [options] <columns1> <input1> <columns2> <input2>
     qsv exclude --help
 
+input parameters:
+    <input1> is the file from which data will be removed.
+    <input2> is the file containing the data to be removed from <input1> 
+     e.g. 'qsv exclude id records.csv id previously-processed.csv'
+
 exclude options:
     -i, --ignore-case      When set, matching is done case insensitively.
     -v                     When set, matching rows will be the only ones included,
