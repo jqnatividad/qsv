@@ -373,7 +373,7 @@ pub fn mem_file_check(path: &Path, version_check: bool) -> Result<i64, String> {
     }
 
     let avail_mem = {
-        let mut sys = System::new_all();
+        let mut sys = System::new();
         sys.refresh_memory();
         sys.available_memory()
     };
