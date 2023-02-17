@@ -23,10 +23,6 @@ pub const DEFAULT_WTR_BUFFER_CAPACITY: usize = 64 * (1 << 10);
 // number of rows for qsv_sniffer to sample
 const DEFAULT_SNIFFER_SAMPLE: usize = 100;
 
-// for files, number of bytes to check for UTF8 encoding
-const DEFAULT_UTF8_CHECK_BUFFER_LEN: usize = 8192;
-const UTF8_ERROR_MSG: &str = "is not UTF-8 encoded. Use the input command to transcode to UTF-8.";
-
 // file size at which we warn user that a large file has not been indexed
 const NO_INDEX_WARNING_FILESIZE: u64 = 100_000_000; // 100MB
 
@@ -87,7 +83,6 @@ pub struct Config {
     pub preamble_rows: u64,
     trim:              csv::Trim,
     autoindex:         bool,
-    checkutf8:         bool,
     prefer_dmy:        bool,
 }
 
@@ -164,7 +159,6 @@ impl Config {
             preamble_rows: preamble,
             trim: csv::Trim::None,
             autoindex: env::var("QSV_AUTOINDEX").is_ok(),
-            checkutf8: env::var("QSV_SKIPUTF8_CHECK").is_err(),
             prefer_dmy: env::var("QSV_PREFER_DMY").is_ok(),
         }
     }
@@ -258,11 +252,6 @@ impl Config {
         self.path.is_none()
     }
 
-    pub const fn checkutf8(mut self, yes: bool) -> Config {
-        self.checkutf8 = yes;
-        self
-    }
-
     #[inline]
     pub fn selection(&self, first_record: &csv::ByteRecord) -> Result<Selection, String> {
         match self.select_columns {
@@ -299,15 +288,7 @@ impl Config {
                 io::ErrorKind::InvalidInput,
                 "Cannot use <stdin> here",
             )),
-            Some(ref p) => {
-                if !self.is_utf8_encoded()? {
-                    return Err(io::Error::new(
-                        io::ErrorKind::InvalidData,
-                        format!("{p:?} {UTF8_ERROR_MSG}"),
-                    ));
-                }
-                fs::File::open(p).map(|f| self.from_reader(f))
-            }
+            Some(ref p) => fs::File::open(p).map(|f| self.from_reader(f)),
         }
     }
 
@@ -318,72 +299,10 @@ impl Config {
                 let mut buffer: Vec<u8> = Vec::new();
                 let stdin = io::stdin();
                 stdin.lock().read_to_end(&mut buffer)?;
-                // check if its utf8-encoded
-                if self.checkutf8 {
-                    debug!("checking stdin encoding...");
-                    // get first 8k of buffer
-                    if buffer.is_empty() {
-                        return Err(io::Error::new(
-                            io::ErrorKind::InvalidData,
-                            "<stdin> is empty!".to_string(),
-                        ));
-                    }
-                    let buffer_check = buffer
-                        .chunks_exact(std::cmp::min(DEFAULT_UTF8_CHECK_BUFFER_LEN, buffer.len()))
-                        .next()
-                        .unwrap();
-                    let s = std::str::from_utf8(buffer_check);
-                    if s.is_err() {
-                        return Err(io::Error::new(
-                            io::ErrorKind::InvalidData,
-                            format!("<stdin> {UTF8_ERROR_MSG}"),
-                        ));
-                    }
-                }
                 self.from_reader(Box::new(io::Cursor::new(buffer)))
             }
-            Some(ref p) => {
-                if !self.is_utf8_encoded()? {
-                    return Err(io::Error::new(
-                        io::ErrorKind::InvalidData,
-                        format!("{p:?} {UTF8_ERROR_MSG}"),
-                    ));
-                }
-                self.from_reader(Box::new(fs::File::open(p).unwrap()))
-            }
+            Some(ref p) => self.from_reader(Box::new(fs::File::open(p).unwrap())),
         })
-    }
-
-    // qsv only works safely with utf8 encoded files
-    // check first DEFAULT_UTF8_CHECK_BUFFER_LEN bytes
-    // of file to quickly check if its utf8
-    fn is_utf8_encoded(&self) -> io::Result<bool> {
-        if !self.checkutf8 {
-            return Ok(true);
-        }
-        if let Some(path_buf) = &self.path {
-            debug!("checking encoding...");
-            let mut f = match fs::File::open(path_buf) {
-                Ok(x) => x,
-                Err(err) => {
-                    let msg = format!("failed to open {}: {err}", path_buf.display());
-                    return Err(io::Error::new(io::ErrorKind::NotFound, msg));
-                }
-            };
-
-            let fsize = f.metadata().unwrap().len() as usize;
-            let mut buffer = vec![0; std::cmp::min(DEFAULT_UTF8_CHECK_BUFFER_LEN, fsize)];
-            if f.read_exact(&mut buffer).is_ok() {
-                match std::str::from_utf8(&buffer) {
-                    Ok(_) => return Ok(true),
-                    Err(e) => {
-                        log::error!("{} is not utf8 encoded: {e}", path_buf.display(), e = e);
-                        return Ok(false);
-                    }
-                }
-            }
-        }
-        Ok(false)
     }
 
     fn autoindex_file(&self) {
@@ -482,49 +401,14 @@ impl Config {
 
     pub fn io_reader(&self) -> io::Result<Box<dyn io::Read + Send + 'static>> {
         Ok(match self.path {
-            None => {
-                if self.checkutf8 {
-                    let stdin_reader = io::stdin();
-                    let mut buffer: Vec<u8> = Vec::new();
-                    stdin_reader.lock().read_to_end(&mut buffer)?;
-                    if buffer.is_empty() {
-                        return Err(io::Error::new(
-                            io::ErrorKind::InvalidData,
-                            "<stdin> is empty!".to_string(),
-                        ));
-                    }
-                    // check if its utf8-encoded
-                    let buffer_check = buffer
-                        .chunks_exact(std::cmp::min(DEFAULT_UTF8_CHECK_BUFFER_LEN, buffer.len()))
-                        .next()
-                        .unwrap();
-                    let s = std::str::from_utf8(buffer_check);
-                    if s.is_err() {
-                        return Err(io::Error::new(
-                            io::ErrorKind::InvalidData,
-                            format!("<stdin> {UTF8_ERROR_MSG}"),
-                        ));
-                    }
-                    Box::new(io::Cursor::new(buffer))
-                } else {
-                    Box::new(io::stdin())
+            None => Box::new(io::stdin()),
+            Some(ref p) => match fs::File::open(p) {
+                Ok(x) => Box::new(x),
+                Err(err) => {
+                    let msg = format!("failed to open {}: {}", p.display(), err);
+                    return Err(io::Error::new(io::ErrorKind::NotFound, msg));
                 }
-            }
-            Some(ref p) => {
-                if !self.is_utf8_encoded()? {
-                    return Err(io::Error::new(
-                        io::ErrorKind::InvalidData,
-                        format!("{p:?} {UTF8_ERROR_MSG}"),
-                    ));
-                }
-                match fs::File::open(p) {
-                    Ok(x) => Box::new(x),
-                    Err(err) => {
-                        let msg = format!("failed to open {}: {err}", p.display());
-                        return Err(io::Error::new(io::ErrorKind::NotFound, msg));
-                    }
-                }
-            }
+            },
         })
     }
 

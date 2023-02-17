@@ -169,7 +169,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     debug!("Successfully compiled regex set!");
 
     let rconfig = Config::new(&args.arg_input)
-        .checkutf8(false)
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers)
         .select(args.flag_select);

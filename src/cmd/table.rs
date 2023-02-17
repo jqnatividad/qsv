@@ -74,7 +74,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
         .no_headers(true)
-        .checkutf8(false)
         .flexible(true);
     let wconfig = Config::new(&args.flag_output).delimiter(Some(Delimiter(b'\t')));
 

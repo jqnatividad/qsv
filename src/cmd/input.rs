@@ -78,7 +78,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         std::env::set_var("QSV_SNIFF_PREAMBLE", "1");
     }
     let mut rconfig = Config::new(&args.arg_input)
-        .checkutf8(false)
         .delimiter(args.flag_delimiter)
         .no_headers(true)
         .quote(args.flag_quote.as_byte())

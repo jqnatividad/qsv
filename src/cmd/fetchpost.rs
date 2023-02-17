@@ -329,7 +329,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
         .trim(csv::Trim::All)
-        .checkutf8(false)
         .no_headers(args.flag_no_headers);
 
     let mut rdr = rconfig.reader()?;

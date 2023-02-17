@@ -59,7 +59,7 @@ struct Args {
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
-    match args.rconfig().checkutf8(false).indexed()? {
+    match args.rconfig().indexed()? {
         None => args.no_index(),
         Some(idxed) => args.with_index(idxed),
     }
@@ -111,7 +111,6 @@ impl Args {
 
     fn rconfig(&self) -> Config {
         Config::new(&self.arg_input)
-            .checkutf8(false)
             .delimiter(self.flag_delimiter)
             .no_headers(self.flag_no_headers)
     }

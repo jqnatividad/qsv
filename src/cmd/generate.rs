@@ -77,9 +77,7 @@ struct Args {
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
-    let conf = Config::new(&args.arg_input)
-        .checkutf8(false)
-        .delimiter(args.flag_delimiter);
+    let conf = Config::new(&args.arg_input).delimiter(args.flag_delimiter);
 
     let tdir = temp_dir();
     let mut dsp = DataSampleParser::new();

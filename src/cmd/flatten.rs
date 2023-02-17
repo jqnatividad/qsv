@@ -58,7 +58,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
-        .checkutf8(false)
         .no_headers(args.flag_no_headers);
     let mut rdr = rconfig.reader()?;
     let headers = rdr.byte_headers()?.clone();
