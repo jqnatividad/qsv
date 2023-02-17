@@ -205,11 +205,7 @@ Click [here](https://docs.rs/csv-core/latest/csv_core/struct.Reader.html#rfc-418
 
 ## **UTF-8 Encoding**
 
-The following commands require UTF-8 encoded input (of which ASCII is a subset) - `dedup`, `exclude`, `fetch`, `fetchpost`, `frequency`, `join`, `schema`, `sort`, `stats` & `validate`.
-
-For these commands, qsv checks if the input is UTF-8 encoded by scanning the first 8k & will abort if its not unless `QSV_SKIPUTF8_CHECK` is set. On Linux & macOS, UTF-8 encoding is the default.
-
-This was done to increase performance of these commands, as they make extensive use of `from_utf8_unchecked` so as not to pay the repetitive utf-8 validation penalty, no matter how small, even for already utf-8 encoded files.
+qsv require UTF-8 encoded input (of which ASCII is a subset).
 
 Should you need to re-encode CSV/TSV files, you can use the `input` command to transcode to UTF-8. It will replace all invalid UTF-8 sequences with `�`. Alternatively, there are several utilities you can use to do so on [Linux/macOS](https://stackoverflow.com/questions/805418/how-can-i-find-encoding-of-a-file-via-a-script-on-linux) & [Windows](https://superuser.com/questions/1163753/converting-text-file-to-utf-8-on-windows-command-prompt).
 
@@ -273,7 +269,6 @@ To prevent this, the `py` command processes CSVs in batches (default: 30,000 rec
 | `QSV_NO_UPDATE` | if set, prohibit self-update version check for the latest qsv release published on GitHub. |
 | `QSV_PREFER_DMY` | if set, date parsing will use DMY format. Otherwise, use MDY format (used with `apply datefmt`, `schema`, `sniff` & `stats` commands). |
 | `QSV_REGEX_UNICODE` | if set, makes `search`, `searchset` & `replace` commands unicode-aware. For increased performance, these commands are not unicode-aware by default & will ignore unicode values when matching & will abort when unicode characters are used in the regex. Note that the `apply operations regex_replace` operation is always unicode-aware. |
-| `QSV_SKIPUTF8_CHECK` | if set, skip UTF-8 encoding check. Otherwise, for several commands that require UTF-8 encoded input (see [UTF8-Encoding](#utf-8-encoding)), qsv scans the first 8k. |
 | `QSV_RDR_BUFFER_CAPACITY` | reader buffer size (default (bytes): 16384) |
 | `QSV_WTR_BUFFER_CAPACITY` | writer buffer size (default (bytes): 65536) |
 | `QSV_FREEMEMORY_HEADROOM_PCT` | the percentage of free available memory required when running qsv in "non-streaming" mode (i.e. the entire file needs to be loaded into memory). If the incoming file is greater than the available memory after the headroom is subtracted, qsv will not proceed. (default: (percent) 20 ) |

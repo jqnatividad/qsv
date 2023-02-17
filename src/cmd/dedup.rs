@@ -53,6 +53,7 @@ use std::cmp;
 use csv::ByteRecord;
 use rayon::prelude::*;
 use serde::Deserialize;
+use simdutf8::basic::from_utf8;
 
 use crate::{
     cmd::sort::iter_cmp,
@@ -220,6 +221,6 @@ where
     X: Iterator<Item = &'a [u8]>,
 {
     xs.next()
-        .map(|bytes| unsafe { std::str::from_utf8_unchecked(bytes) })
+        .and_then(|bytes| from_utf8(bytes).ok())
         .map(str::to_lowercase)
 }

@@ -45,6 +45,7 @@ use std::cmp;
 use rand::{rngs::StdRng, seq::SliceRandom, SeedableRng};
 use rayon::prelude::*;
 use serde::Deserialize;
+use simdutf8::basic::from_utf8;
 
 use self::Number::{Float, Int};
 use crate::{
@@ -236,7 +237,7 @@ where
     X: Iterator<Item = &'a [u8]>,
 {
     xs.next()
-        .map(|bytes| unsafe { std::str::from_utf8_unchecked(bytes) })
+        .map(|bytes| from_utf8(bytes).unwrap())
         .and_then(|s| {
             if let Ok(i) = s.parse::<i64>() {
                 Some(Number::Int(i))

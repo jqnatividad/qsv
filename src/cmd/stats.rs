@@ -150,6 +150,7 @@ use itertools::Itertools;
 use once_cell::sync::OnceCell;
 use qsv_dateparser::parse_with_preference;
 use serde::Deserialize;
+use simdutf8::basic::from_utf8;
 use stats::{merge_all, Commute, MinMax, OnlineStats, Unsorted};
 use threadpool::ThreadPool;
 
@@ -477,7 +478,7 @@ fn init_date_inference(
 
             let mut infer_date_flags: Vec<bool> = Vec::with_capacity(headers.len());
             for header in headers {
-                let header_str = from_bytes::<String>(header).to_lowercase();
+                let header_str = from_bytes::<String>(header).unwrap().to_lowercase();
                 let mut date_found = false;
                 for whitelist_item in &whitelist {
                     if header_str.contains(whitelist_item) {
@@ -635,7 +636,7 @@ impl Stats {
                         };
                     }
                 } else {
-                    let n = from_bytes::<f64>(sample);
+                    let n = from_bytes::<f64>(sample).unwrap();
                     if let Some(v) = self.median.as_mut() {
                         v.add(n);
                     }
@@ -1029,8 +1030,7 @@ impl FieldType {
             return (FieldType::TString, None);
         }
 
-        // we skip utf8 validation since we say we only work with utf8
-        let string = unsafe { str::from_utf8_unchecked(sample) };
+        let string = from_utf8(sample).unwrap();
 
         if current_type == FieldType::TFloat
             || current_type == FieldType::TInteger
@@ -1137,7 +1137,7 @@ impl TypedSum {
         #[allow(clippy::cast_precision_loss)]
         match typ {
             TFloat => {
-                let float: f64 = from_bytes::<f64>(sample);
+                let float: f64 = from_bytes::<f64>(sample).unwrap();
                 match self.float {
                     None => {
                         self.float = Some((self.integer as f64) + float);
@@ -1149,10 +1149,12 @@ impl TypedSum {
             }
             TInteger => {
                 if let Some(ref mut float) = self.float {
-                    *float += from_bytes::<f64>(sample);
+                    *float += from_bytes::<f64>(sample).unwrap();
                 } else {
                     // so we don't panic on overflow/underflow, use saturating_add
-                    self.integer = self.integer.saturating_add(from_bytes::<i64>(sample));
+                    self.integer = self
+                        .integer
+                        .saturating_add(from_bytes::<i64>(sample).unwrap());
                 }
             }
             _ => {}
@@ -1219,31 +1221,19 @@ impl TypedMinMax {
         match typ {
             TString | TNull => {}
             TFloat => {
-                let n = unsafe {
-                    str::from_utf8_unchecked(sample)
-                        .parse::<f64>()
-                        .unwrap_unchecked()
-                };
+                let n = from_utf8(sample).unwrap().parse::<f64>().unwrap();
 
                 self.floats.add(n);
                 self.integers.add(n as i64);
             }
             TInteger => {
-                let n = unsafe {
-                    str::from_utf8_unchecked(sample)
-                        .parse::<i64>()
-                        .unwrap_unchecked()
-                };
+                let n = from_utf8(sample).unwrap().parse::<i64>().unwrap();
                 self.integers.add(n);
                 #[allow(clippy::cast_precision_loss)]
                 self.floats.add(n as f64);
             }
             TDate | TDateTime => {
-                let n = unsafe {
-                    str::from_utf8_unchecked(sample)
-                        .parse::<i64>()
-                        .unwrap_unchecked()
-                };
+                let n = from_utf8(sample).unwrap().parse::<i64>().unwrap();
                 self.dates.add(n);
             }
         }
@@ -1330,7 +1320,6 @@ impl Commute for TypedMinMax {
 
 #[allow(clippy::inline_always)]
 #[inline(always)]
-fn from_bytes<T: FromStr>(bytes: &[u8]) -> T {
-    // we don't need to do UTF-8 validation as qsv requires UTF-8 encoding
-    unsafe { str::from_utf8_unchecked(bytes).parse().unwrap_unchecked() }
+fn from_bytes<T: FromStr>(bytes: &[u8]) -> Option<T> {
+    from_utf8(bytes).ok().and_then(|s| s.parse().ok())
 }

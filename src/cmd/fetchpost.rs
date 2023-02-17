@@ -196,6 +196,7 @@ use reqwest::{
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use serde_urlencoded;
+use simdutf8::basic::from_utf8;
 use url::Url;
 
 use crate::{
@@ -609,8 +610,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         form_body_jsonmap.clear();
         for col_idx in col_list.iter() {
             let header_key = String::from_utf8_lossy(headers.get(*col_idx).unwrap());
-            let value_string =
-                unsafe { std::str::from_utf8_unchecked(&record[*col_idx]).to_string() };
+            let value_string = from_utf8(&record[*col_idx]).unwrap_or_default().to_string();
             form_body_jsonmap.insert(
                 header_key.to_string(),
                 serde_json::Value::String(value_string),
@@ -622,7 +622,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         if literal_url_used {
             url = literal_url.clone();
-        } else if let Ok(s) = std::str::from_utf8(&record[column_index]) {
+        } else if let Ok(s) = from_utf8(&record[column_index]) {
             s.clone_into(&mut url);
         } else {
             url = String::new();
