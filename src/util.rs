@@ -125,10 +125,10 @@ pub fn version() -> String {
     enabled_features.push_str("self_update");
     enabled_features.push('-');
 
-    // get max_file_size & memory info. max_file_size is based on QSV_FREE_MEMORY_HEADROOM_PCT
+    // get max_file_size & memory info. max_file_size is based on QSV_FREEMEMORY_HEADROOM_PCT
     // setting and is only enforced when qsv is running in "non-streaming" mode (i.e. needs to
     // load the entire file into memory).
-    let max_file_size = mem_file_check(Path::new(""), true).unwrap_or(0) as u64;
+    let max_file_size = mem_file_check(Path::new(""), true, false).unwrap_or(0) as u64;
     let mut sys = System::new();
     sys.refresh_memory();
     let avail_mem = sys.available_memory();
@@ -369,7 +369,7 @@ pub fn file_metadata(md: &fs::Metadata) -> (u64, u64) {
     (last_modified, fsize)
 }
 
-pub fn mem_file_check(path: &Path, version_check: bool) -> Result<i64, String> {
+pub fn mem_file_check(path: &Path, version_check: bool, no_memcheck: bool) -> Result<i64, String> {
     // if we're NOT calling this from the version() and the file doesn't exist,
     // we don't need to check memory as file existence is checked before this function is called.
     // If we do get here with a non-existent file, that means we're using stdin,
@@ -378,8 +378,11 @@ pub fn mem_file_check(path: &Path, version_check: bool) -> Result<i64, String> {
         return Ok(-1_i64);
     }
 
+    let no_memcheck_work = env::var("QSV_NO_MEMORY_CHECK").is_ok() || no_memcheck;
+
     let mut sys = System::new();
     sys.refresh_memory();
+    let total_mem = sys.total_memory();
     let avail_mem = sys.available_memory();
     let free_swap = sys.free_swap();
     let mut mem_pct = env::var("QSV_FREEMEMORY_HEADROOM_PCT")
@@ -392,8 +395,11 @@ pub fn mem_file_check(path: &Path, version_check: bool) -> Result<i64, String> {
     mem_pct = mem_pct.clamp(10, 90);
 
     #[allow(clippy::cast_precision_loss)]
-    let max_avail_mem =
-        ((avail_mem + free_swap) as f32 * ((100 - mem_pct) as f32 / 100.0_f32)) as u64;
+    let max_avail_mem = if no_memcheck_work {
+        (total_mem as f32 * ((100 - mem_pct) as f32 / 100.0_f32)) as u64
+    } else {
+        ((avail_mem + free_swap) as f32 * ((100 - mem_pct) as f32 / 100.0_f32)) as u64
+    };
 
     // if we're calling this from version(), we don't need to check the file size
     if !version_check {
@@ -401,9 +407,10 @@ pub fn mem_file_check(path: &Path, version_check: bool) -> Result<i64, String> {
             fs::metadata(path).map_err(|e| format!("Failed to get file size: {e}"))?;
         let fsize = file_metadata.len();
         let detail_msg = format!(
-            "qsv running in non-streaming mode. Available memory: {avail_mem}. Free swap: \
-             {free_swap} Max Available memory: {max_avail_mem}. QSV_FREEMEMORY_HEADROOM_PCT: \
-             {mem_pct} percent. File size: {fsize}.",
+            "qsv running in non-streaming mode. Total memory: {total_mem} Available memory: \
+             {avail_mem}. Free swap: {free_swap} Max Available memory/Max input file size: \
+             {max_avail_mem}. QSV_FREEMEMORY_HEADROOM_PCT: {mem_pct}%. File size: {fsize}.",
+            total_mem = indicatif::HumanBytes(total_mem),
             avail_mem = indicatif::HumanBytes(avail_mem),
             free_swap = indicatif::HumanBytes(free_swap),
             max_avail_mem = indicatif::HumanBytes(max_avail_mem),

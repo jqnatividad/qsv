@@ -46,6 +46,8 @@ Common options:
                            names.
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
+    --no-memcheck          Do not check if there is enough memory to load the
+                           entire CSV into memory.
 "#;
 
 use std::{fs, io};
@@ -63,15 +65,16 @@ use crate::{
 
 #[derive(Clone, Deserialize)]
 pub struct Args {
-    pub arg_input:       Option<String>,
-    pub flag_select:     SelectColumns,
-    pub flag_limit:      usize,
-    pub flag_asc:        bool,
-    pub flag_no_nulls:   bool,
-    pub flag_jobs:       Option<usize>,
-    pub flag_output:     Option<String>,
-    pub flag_no_headers: bool,
-    pub flag_delimiter:  Option<Delimiter>,
+    pub arg_input:        Option<String>,
+    pub flag_select:      SelectColumns,
+    pub flag_limit:       usize,
+    pub flag_asc:         bool,
+    pub flag_no_nulls:    bool,
+    pub flag_jobs:        Option<usize>,
+    pub flag_output:      Option<String>,
+    pub flag_no_headers:  bool,
+    pub flag_delimiter:   Option<Delimiter>,
+    pub flag_no_memcheck: bool,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -80,7 +83,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // we're loading the entire file into memory, we need to check avail mem
     if let Some(path) = rconfig.path.clone() {
-        util::mem_file_check(&path, false)?;
+        util::mem_file_check(&path, false, args.flag_no_memcheck)?;
     }
 
     let mut wtr = Config::new(&args.flag_output).writer()?;

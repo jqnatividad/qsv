@@ -21,6 +21,8 @@ Common options:
     -o, --output <file>    Write output to <file> instead of stdout.
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
+    --no-memcheck          Do not check if there is enough memory to load the
+                           entire CSV into memory. Ignored with --multipass.
 "#;
 
 use std::str;
@@ -35,10 +37,11 @@ use crate::{
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input:      Option<String>,
-    flag_output:    Option<String>,
-    flag_delimiter: Option<Delimiter>,
-    flag_multipass: bool,
+    arg_input:        Option<String>,
+    flag_output:      Option<String>,
+    flag_delimiter:   Option<Delimiter>,
+    flag_multipass:   bool,
+    flag_no_memcheck: bool,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -61,7 +64,7 @@ impl Args {
     fn in_memory_transpose(&self) -> CliResult<()> {
         // we're loading the entire file into memory, we need to check avail mem
         if let Some(path) = self.rconfig().path {
-            util::mem_file_check(&path, false)?;
+            util::mem_file_check(&path, false, self.flag_no_memcheck)?;
         }
 
         let mut rdr = self.rconfig().reader()?;

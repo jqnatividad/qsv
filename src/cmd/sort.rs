@@ -38,6 +38,8 @@ Common options:
                             appear as the header row in the output.
     -d, --delimiter <arg>   The field delimiter for reading CSV data.
                             Must be a single character. (default: ,)
+    --no-memcheck           Do not check if there is enough memory to load the
+                            entire CSV into memory.
 "#;
 
 use std::cmp;
@@ -69,6 +71,7 @@ struct Args {
     flag_no_headers:  bool,
     flag_delimiter:   Option<Delimiter>,
     flag_unique:      bool,
+    flag_no_memcheck: bool,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -83,7 +86,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // we're loading the entire file into memory, we need to check avail mem
     if let Some(path) = rconfig.path.clone() {
-        util::mem_file_check(&path, false)?;
+        util::mem_file_check(&path, false, args.flag_no_memcheck)?;
     }
 
     let mut rdr = rconfig.reader()?;
