@@ -147,7 +147,7 @@ simdutf8 = "0.1"
 strsim = { version = "0.10", optional = true }
 strum = "0.24"
 strum_macros = "0.24"
-sysinfo = "0.27"
+sysinfo = "0.28"
 tabwriter = "1.2"
 tempfile = "3"
 test-data-generation = { version = "0.3", optional = true }
