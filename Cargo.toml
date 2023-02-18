@@ -74,8 +74,7 @@ chrono = "0.4"
 console = { version = "0.15", optional = true }
 cpc = { version = "1.9", optional = true }
 crossbeam-channel = "0.5"
-csv = "1.1"
-csv-core = "0.1"
+csv = "1.2"
 csv-diff = "0.1.0-beta.1"
 csv-index = "0.1"
 csvs_convert = { version = "0.7", optional = true }
@@ -171,9 +170,6 @@ quickcheck = { version = "1", default-features = false }
 serial_test = "1.0"
 
 [patch.crates-io]
-csv       = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
-csv-core  = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
-csv-index = { git = "https://github.com/jqnatividad/rust-csv", branch = "perf-tweaks" }
 docopt    = { git = "https://github.com/jqnatividad/docopt.rs", branch = "perf-clippy-2021" }
 ext-sort  = { git = "https://github.com/jqnatividad/ext-sort-rs", branch = "perf-tweaks" }
 tabwriter = { git = "https://github.com/jqnatividad/tabwriter", branch = "tweaks" }
