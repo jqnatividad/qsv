@@ -29,6 +29,8 @@ Common options:
     -o, --output <file>    Write output to <file> instead of stdout.
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
+    --no-memcheck          Do not check if there is enough memory to load the
+                           entire CSV into memory.
 "#;
 
 use std::{borrow::Cow, convert::From};
@@ -43,13 +45,14 @@ use crate::{
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input:      Option<String>,
-    flag_width:     usize,
-    flag_pad:       usize,
-    flag_output:    Option<String>,
-    flag_delimiter: Option<Delimiter>,
-    flag_align:     Align,
-    flag_condense:  Option<usize>,
+    arg_input:        Option<String>,
+    flag_width:       usize,
+    flag_pad:         usize,
+    flag_output:      Option<String>,
+    flag_delimiter:   Option<Delimiter>,
+    flag_align:       Align,
+    flag_condense:    Option<usize>,
+    flag_no_memcheck: bool,
 }
 
 #[derive(Deserialize, Clone, Copy)]
@@ -75,6 +78,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .delimiter(args.flag_delimiter)
         .no_headers(true)
         .flexible(true);
+
+    // we're loading the entire file into memory, we need to check avail mem
+    if let Some(path) = rconfig.path.clone() {
+        util::mem_file_check(&path, false, args.flag_no_memcheck)?;
+    }
+
     let wconfig = Config::new(&args.flag_output).delimiter(Some(Delimiter(b'\t')));
 
     let tw = TabWriter::new(wconfig.io_writer()?)
