@@ -238,7 +238,7 @@ def celsius_to_fahrenheit(celsius):
 }
 
 #[test]
-fn py_map_row_positional() {
+fn py_map_col_positional() {
     let wrk = Workdir::new("py");
     wrk.create(
         "data.csv",
@@ -253,7 +253,7 @@ fn py_map_row_positional() {
     let mut cmd = wrk.command("py");
     cmd.arg("map")
         .arg("inc")
-        .arg("int(row[1]) + 1")
+        .arg("int(col[1]) + 1")
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
@@ -268,7 +268,7 @@ fn py_map_row_positional() {
 }
 
 #[test]
-fn py_map_row_by_key() {
+fn py_map_col_by_key() {
     let wrk = Workdir::new("py");
     wrk.create(
         "data.csv",
@@ -283,7 +283,7 @@ fn py_map_row_by_key() {
     let mut cmd = wrk.command("py");
     cmd.arg("map")
         .arg("inc")
-        .arg("int(row['number']) + 1")
+        .arg("int(col['number']) + 1")
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
@@ -298,7 +298,7 @@ fn py_map_row_by_key() {
 }
 
 #[test]
-fn py_map_row_by_attr() {
+fn py_map_col_by_attr() {
     let wrk = Workdir::new("py");
     wrk.create(
         "data.csv",
@@ -313,7 +313,7 @@ fn py_map_row_by_attr() {
     let mut cmd = wrk.command("py");
     cmd.arg("map")
         .arg("inc")
-        .arg("int(row.number) + 1")
+        .arg("int(col.number) + 1")
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
@@ -341,7 +341,7 @@ fn py_map_no_headers() {
     );
     let mut cmd = wrk.command("py");
     cmd.arg("map")
-        .arg("int(row[1]) + 1")
+        .arg("int(col[1]) + 1")
         .arg("--no-headers")
         .arg("data.csv");
 

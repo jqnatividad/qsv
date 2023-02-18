@@ -293,7 +293,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 .getattr("QSVRow")?
                 .call1((headers.iter().collect::<Vec<&str>>(),))?;
 
-            batch_locals.set_item("row", py_row)?;
+            batch_locals.set_item("col", py_row)?;
 
             let error_result = intern!(py, "<ERROR>");
 
