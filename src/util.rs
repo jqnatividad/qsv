@@ -133,6 +133,7 @@ pub fn version() -> String {
     sys.refresh_memory();
     let avail_mem = sys.available_memory();
     let total_mem = sys.total_memory();
+    let free_swap = sys.free_swap();
 
     #[cfg(feature = "mimalloc")]
     let malloc_kind = "mimalloc".to_string();
@@ -152,11 +153,12 @@ pub fn version() -> String {
         if pre.is_empty() {
             format!(
                 "{qsvtype} {maj}.{min}.{pat}-{malloc_kind}-{enabled_features}{maxjobs}-{numcpus};\
-                 {max_file_size}-{avail_mem}-{total_mem} ({TARGET} compiled with Rust \
+                 {max_file_size}-{free_swap}-{avail_mem}-{total_mem} ({TARGET} compiled with Rust \
                  {rustversion}) {QSV_KIND}",
                 maxjobs = max_jobs(),
                 numcpus = num_cpus(),
                 max_file_size = indicatif::HumanBytes(max_file_size),
+                free_swap = indicatif::HumanBytes(free_swap),
                 avail_mem = indicatif::HumanBytes(avail_mem),
                 total_mem = indicatif::HumanBytes(total_mem),
             )
@@ -164,11 +166,12 @@ pub fn version() -> String {
             format!(
                 "{qsvtype} {maj}.{min}.\
                  {pat}-{pre}-{malloc_kind}-{enabled_features}{maxjobs}-{numcpus};\
-                 {max_file_size}-{avail_mem}-{total_mem} ({TARGET} compiled with Rust \
+                 {max_file_size}-{free_swap}-{avail_mem}-{total_mem} ({TARGET} compiled with Rust \
                  {rustversion}) {QSV_KIND}",
                 maxjobs = max_jobs(),
                 numcpus = num_cpus(),
                 max_file_size = indicatif::HumanBytes(max_file_size),
+                free_swap = indicatif::HumanBytes(free_swap),
                 avail_mem = indicatif::HumanBytes(avail_mem),
                 total_mem = indicatif::HumanBytes(total_mem),
             )
@@ -375,11 +378,10 @@ pub fn mem_file_check(path: &Path, version_check: bool) -> Result<i64, String> {
         return Ok(-1_i64);
     }
 
-    let avail_mem = {
-        let mut sys = System::new();
-        sys.refresh_memory();
-        sys.available_memory()
-    };
+    let mut sys = System::new();
+    sys.refresh_memory();
+    let avail_mem = sys.available_memory();
+    let free_swap = sys.free_swap();
     let mut mem_pct = env::var("QSV_FREEMEMORY_HEADROOM_PCT")
         .unwrap_or_else(|_| DEFAULT_FREEMEMORY_HEADROOM_PCT.to_string())
         .parse::<u8>()
@@ -390,7 +392,8 @@ pub fn mem_file_check(path: &Path, version_check: bool) -> Result<i64, String> {
     mem_pct = mem_pct.clamp(10, 90);
 
     #[allow(clippy::cast_precision_loss)]
-    let max_avail_mem = (avail_mem as f32 * ((100 - mem_pct) as f32 / 100.0_f32)) as u64;
+    let max_avail_mem =
+        ((avail_mem + free_swap) as f32 * ((100 - mem_pct) as f32 / 100.0_f32)) as u64;
 
     // if we're calling this from version(), we don't need to check the file size
     if !version_check {
@@ -398,10 +401,11 @@ pub fn mem_file_check(path: &Path, version_check: bool) -> Result<i64, String> {
             fs::metadata(path).map_err(|e| format!("Failed to get file size: {e}"))?;
         let fsize = file_metadata.len();
         let detail_msg = format!(
-            "qsv running in non-streaming mode. Available memory: {avail_mem}. Max Available \
-             memory: {max_avail_mem}. QSV_FREEMEMORY_HEADROOM_PCT: {mem_pct} percent. File size: \
-             {fsize}.",
+            "qsv running in non-streaming mode. Available memory: {avail_mem}. Free swap: \
+             {free_swap} Max Available memory: {max_avail_mem}. QSV_FREEMEMORY_HEADROOM_PCT: \
+             {mem_pct} percent. File size: {fsize}.",
             avail_mem = indicatif::HumanBytes(avail_mem),
+            free_swap = indicatif::HumanBytes(free_swap),
             max_avail_mem = indicatif::HumanBytes(max_avail_mem),
             mem_pct = mem_pct,
             fsize = indicatif::HumanBytes(fsize)
