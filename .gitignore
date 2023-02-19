@@ -27,3 +27,4 @@ perf.data*
 tmp/*
 *.icloud
 *.parquet
+*.rsbak
