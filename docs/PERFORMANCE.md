@@ -37,10 +37,27 @@ rustc --print target-features
 
 ## Memory Allocator
 
-By default, qsv uses an alternative allocator - [mimalloc](https://github.com/microsoft/mimalloc),
-a performance-oriented allocator from Microsoft.
-If you want to use the standard allocator, use the `--no-default-features` flag
-when installing/compiling qsv, e.g.:
+qsv supports three memory allocators: mimalloc, jemalloc and the standard allocator.
+
+By default, qsv uses [mimalloc](https://github.com/microsoft/mimalloc), a performance-oriented allocator from Microsoft.
+
+You can also use another alternative - the [jemalloc](https://jemalloc.net) allocator, which is the default Linux allocator used by the [Pola.rs](https://www.pola.rs) project for its python bindings, as benchmarks have shown that it [performs better than mimalloc on some platforms](https://docs.rs/polars/latest/polars/#custom-allocator).
+
+If you don't want to use mimalloc, use the `--no-default-features` flag when installing/compiling qsv, e.g.:
+
+### To use jemalloc
+
+```bash
+cargo install qsv --path . --no-default-features --features all_full,jemallocator
+```
+
+or
+
+```bash
+cargo build --release --no-default-features --features all_full,jemallocator
+```
+
+### To use the standard allocator
 
 ```bash
 cargo install qsv --path . --no-default-features --features all_full
