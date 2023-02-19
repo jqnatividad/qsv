@@ -100,6 +100,7 @@ impl Args {
     }
 
     fn cat_rowskey(&self) -> CliResult<()> {
+        // this algorithm is largely inspired by https://github.com/vi/csvcatrow by @vi
         if self.flag_no_headers {
             return fail_clierror!(
                 "cat rowskey does not support --no-headers, as we column headers as keys."
