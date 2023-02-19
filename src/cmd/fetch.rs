@@ -673,7 +673,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
                 if GET_REDIS_RESPONSE.cache_remove(&key).is_err() && log_enabled!(Warn) {
                     // failure to remove cache keys is non-fatal. Continue, but log it.
-                    warn!(r#"Cannot remove Redis key "{key}""#);
+                    wwarn!(r#"Cannot remove Redis key "{key}""#);
                 };
             }
         } else {
@@ -1139,7 +1139,7 @@ fn get_response(
             }
 
             if retries >= flag_max_retries {
-                warn!("{flag_max_retries} max-retries reached.");
+                wwarn!("{flag_max_retries} max-retries reached.");
                 break 'retry;
             }
             retries += 1;

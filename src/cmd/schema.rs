@@ -345,7 +345,7 @@ pub fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<M
                 }
             }
             _ => {
-                warn!("Stats gave unexpected field type '{col_type}', default to JSON String.");
+                wwarn!("Stats gave unexpected field type '{col_type}', default to JSON String.");
                 // defaults to JSON String
                 type_list.push(Value::String("string".to_string()));
             }
@@ -414,7 +414,7 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
             }
         }
         Err(e) => {
-            warn!("error determining if indexed, triggering sequential stats: {e}");
+            wwarn!("error determining if indexed, triggering sequential stats: {e}");
             stats_args.sequential_stats(&stats_args.flag_dates_whitelist)
         }
     }?;
