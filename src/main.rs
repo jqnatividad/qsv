@@ -47,6 +47,10 @@ use crate::clitypes::{CliError, CliResult, QsvExitCode};
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
+#[cfg(feature = "jemallocator")]
+#[global_allocator]
+static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
+
 mod clitypes;
 mod cmd;
 mod config;

@@ -136,9 +136,11 @@ pub fn version() -> String {
     let free_swap = sys.free_swap();
 
     #[cfg(feature = "mimalloc")]
-    let malloc_kind = "mimalloc".to_string();
-    #[cfg(not(feature = "mimalloc"))]
-    let malloc_kind = "standard".to_string();
+    let malloc_kind = "mimalloc";
+    #[cfg(feature = "jemallocator")]
+    let malloc_kind = "jemalloc";
+    #[cfg(not(any(feature = "mimalloc", feature = "jemallocator")))]
+    let malloc_kind = "standard";
     let (qsvtype, maj, min, pat, pre, rustversion) = (
         option_env!("CARGO_BIN_NAME"),
         option_env!("CARGO_PKG_VERSION_MAJOR"),
