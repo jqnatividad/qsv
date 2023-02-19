@@ -31,6 +31,16 @@ macro_rules! werr {
     });
 }
 
+macro_rules! wwarn {
+    ($($arg:tt)*) => ({
+        use std::io::Write;
+        use log::warn;
+        let warning = format!($($arg)*);
+        warn!("{warning}");
+        (writeln!(&mut ::std::io::stderr(), $($arg)*)).unwrap();
+    });
+}
+
 macro_rules! winfo {
     ($($arg:tt)*) => ({
         use std::io::Write;
