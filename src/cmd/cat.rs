@@ -6,14 +6,27 @@ the inputs given. The number of rows in the result is always equivalent to
 the minimum number of rows across all given CSV data. (This behavior can be
 reversed with the '--pad' flag.)
 
-When concatenating by row, all CSV data must have the same number of columns.
-If you need to rearrange the columns or fix the lengths of records, use the
-'select' or 'fixlengths' commands. Also, only the headers of the *first* CSV
-data given are used. Headers in subsequent inputs are ignored. (This behavior
-can be disabled with --no-headers.)
+Concatenating by rows can be done in two ways:
+
+'rows' subcommand: 
+   All CSV data must have the same number of columns and in the same order. 
+   If you need to rearrange the columns or fix the lengths of records, use the
+   'select' or 'fixlengths' commands. Also, only the headers of the *first* CSV
+   data given are used. Headers in subsequent inputs are ignored. (This behavior
+   can be disabled with --no-headers.)
+
+'rowskey' subcommand:
+   CSV data can have different numbers of columns and in different orders. All
+   columns are written in insertion order. Does not work with --no-headers, as
+   the column header names are used as keys. Nor does it work with stdin, as 
+   input files are scanned twice - once for collecting all the column names, and
+   the second time for writing the output.
+
+For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_cat.rs.
 
 Usage:
     qsv cat rows    [options] [<input>...]
+    qsv cat rowskey [options] [<input>...]
     qsv cat columns [options] [<input>...]
     qsv cat --help
 
@@ -32,6 +45,7 @@ Common options:
                            Must be a single character. (default: ,)
 "#;
 
+use indexmap::{IndexMap, IndexSet};
 use serde::Deserialize;
 
 use crate::{
@@ -42,6 +56,7 @@ use crate::{
 #[derive(Deserialize)]
 struct Args {
     cmd_rows:        bool,
+    cmd_rowskey:     bool,
     cmd_columns:     bool,
     arg_input:       Vec<String>,
     flag_pad:        bool,
@@ -54,6 +69,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
     if args.cmd_rows {
         args.cat_rows()
+    } else if args.cmd_rowskey {
+        args.cat_rowskey()
     } else if args.cmd_columns {
         args.cat_columns()
     } else {
@@ -77,6 +94,75 @@ impl Args {
             }
             while rdr.read_byte_record(&mut row)? {
                 wtr.write_byte_record(&row)?;
+            }
+        }
+        wtr.flush().map_err(From::from)
+    }
+
+    fn cat_rowskey(&self) -> CliResult<()> {
+        // this algorithm is largely inspired by https://github.com/vi/csvcatrow by @vi
+        if self.flag_no_headers {
+            return fail_clierror!(
+                "cat rowskey does not support --no-headers, as we column headers as keys."
+            );
+        }
+        let mut columns_global: IndexSet<Box<[u8]>> = IndexSet::with_capacity(32);
+
+        // First pass, add all columns to an IndexSet
+        for conf in &self.configs()? {
+            if conf.is_stdin() {
+                return fail_clierror!(
+                    "cat rowskey does not support stdin, as we need to scan files twice."
+                );
+            }
+            let mut rdr = conf.reader()?;
+            let h = rdr.byte_headers()?;
+            for field in h {
+                let fi = field.to_vec().into_boxed_slice();
+                columns_global.insert(fi);
+            }
+        }
+        let num_columns_global = columns_global.len();
+
+        // Second pass, write all columns to a new file
+        let mut wtr = Config::new(&self.flag_output).writer()?;
+        for c in &columns_global {
+            wtr.write_field(c)?;
+        }
+        wtr.write_byte_record(&csv::ByteRecord::new())?;
+
+        for conf in self.configs()? {
+            let mut rdr = conf.reader()?;
+            let h = rdr.byte_headers()?;
+
+            let mut columns_of_this_file = IndexMap::with_capacity(num_columns_global);
+
+            for (n, field) in h.iter().enumerate() {
+                let fi = field.to_vec().into_boxed_slice();
+                if columns_of_this_file.contains_key(&fi) {
+                    wwarn!(
+                        "Duplicate column `{}` name in file `{:?}`.",
+                        String::from_utf8_lossy(&fi),
+                        conf.path,
+                    );
+                }
+                columns_of_this_file.insert(fi, n);
+            }
+
+            for row in rdr.byte_records() {
+                let row = row?;
+                for c in &columns_global {
+                    if let Some(idx) = columns_of_this_file.get(c) {
+                        if let Some(d) = row.get(*idx) {
+                            wtr.write_field(d)?;
+                        } else {
+                            wtr.write_field(b"")?;
+                        }
+                    } else {
+                        wtr.write_field(b"")?;
+                    }
+                }
+                wtr.write_byte_record(&csv::ByteRecord::new())?;
             }
         }
         wtr.flush().map_err(From::from)
