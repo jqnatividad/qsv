@@ -10,15 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 * `cat`: added new `rowskey` subcommand. Unlike the existing `rows` subcommand, it allows far more flexible concatenation of CSV files by row, even if the files have different number of columns and column order. https://github.com/jqnatividad/qsv/pull/795
-* added jemalloc support. As the current default mimalloc allocator is not supported in some platforms. Also, for certain workloads, jemalloc may be faster. https://github.com/jqnatividad/qsv/pull/796
-* added `--no-memcheck` and related `QSV_NO_MEMORY_CHECK` env var. This relaxes the conservative Out-of-Memory prevention heuristic of qsv. See (Memory Management)[https://github.com/jqnatividad/qsv#memory-management] for more info https://github.com/jqnatividad/qsv/pull/792
-
+* added jemalloc support. As the current default mimalloc allocator is not supported in some platforms. Also, for certain workloads, jemalloc may be faster. See [Memory Allocator](https://github.com/jqnatividad/qsv/blob/master/docs/PERFORMANCE.md#memory-allocator) for more info https://github.com/jqnatividad/qsv/pull/796
+* added `--no-memcheck` and related `QSV_NO_MEMORY_CHECK` env var. This relaxes the conservative Out-of-Memory prevention heuristic of qsv. See [Memory Management](https://github.com/jqnatividad/qsv#memory-management) for more info https://github.com/jqnatividad/qsv/pull/792
 
 ### Changed
-* `--version` now returns max input file size when running in "non-streaming" mode, and detailed memory info https://github.com/jqnatividad/qsv/pull/780
+* `--version` now returns max input file size when running in "non-streaming" mode, and detailed memory info. See [Version details](https://github.com/jqnatividad/qsv/blob/master/docs/PERFORMANCE.md#version-details) for more info https://github.com/jqnatividad/qsv/pull/780
 * `exclude`: expanded usage text and added 'input parameters' help by @tmtmtmtm in https://github.com/jqnatividad/qsv/pull/783
 * `stats`: performance tweaks in https://github.com/jqnatividad/qsv/commit/96e8168e6064469ab4489ed19c36aa595d5d119d, https://github.com/jqnatividad/qsv/commit/634d42a646dfb3bed2d34842bb3fa484cf641c7e and https://github.com/jqnatividad/qsv/commit/7e148cf78753aa60ef60f8efd6f1c7fea246b703
-* Use simdutf8 to do SIMD accelerated utf8 validation, removing problematic utf8 screening. Together with https://github.com/jqnatividad/qsv/pull/782, completes utf8 validation revamp. https://github.com/jqnatividad/qsv/pull/784
+* Use [simdutf8](https://github.com/rusticstuff/simdutf8#simdutf8--high-speed-utf-8-validation) to do SIMD accelerated utf8 validation, replacing problematic utf8 screening. Together with https://github.com/jqnatividad/qsv/pull/782, completes utf8 validation revamp. https://github.com/jqnatividad/qsv/pull/784
 * Bump sysinfo from 0.27.7 to 0.28.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/786
 * cargo update bump several indirect dependencies
 * pin Rust nightly to 2023-02-18
