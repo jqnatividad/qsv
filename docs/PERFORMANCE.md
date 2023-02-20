@@ -87,16 +87,18 @@ Several commands support multithreading - `stats`, `frequency`, `schema`, `split
 
 qsv will automatically spawn parallel jobs equal to the detected number of logical processors. Should you want to manually override this, use the `--jobs` command-line option or the `QSV_MAX_JOBS` environment variable.
 
-To find out your jobs setting, call `qsv --version`. The second to the last number is the number of jobs qsv will use for multithreaded commands. The last number is the number of logical processors detected by qsv.
+To find out your jobs setting, call `qsv --version`.
 
 ## Version details
 The `--version` option shows a lot of information about qsv. It displays:
 * qsv version
-* the memory allocator (`standard` or `mimalloc`)
-* all enabled features (`apply`, `fetch`, `foreach`, `generate`, `luau`, `python` & `self_update`)
+* the memory allocator (`standard`, `mimalloc` or `jemalloc`)
+* all enabled features (`apply`, `fetch`, `foreach`, `generate`, `luau`, `python`, `self_update` & `to`)
 * Python version linked if the `python` feature was enabled
+* Luau version embedded if the `luau` feature was enabled
 * the number of processors to use for multi-threading commands
 * the number of logical processors detected
+* memory-related information (max "non-streaming" input file size, free swap memory, available memory & total memory)
 * the target platform
 * the Rust version used to compile qsv
 * QSV_KIND - `prebuilt`, `prebuilt-nightly`, `installed` & `compiled`.
@@ -105,10 +107,16 @@ The `--version` option shows a lot of information about qsv. It displays:
 
 ```bash
 $ qsv --version
-qsv 0.69.0-mimalloc-apply;fetch;foreach;generate;luau;python-3.10.5 (v3.10.5:f377153967, Jun  6 2022, 12:36:10) [Clang 13.0.0 (clang-1300.0.29.30)];self_update-8-8 (aarch64-apple-darwin compiled with Rust 1.64) compiled
+qsv 0.88.2-mimalloc-apply;fetch;foreach;generate;Luau 0.561;python-3.11.0 (v3.11.0:deaf509e8f, Oct 24 2022, 14:43:23) [Clang 13.0.0 (clang-1300.0.29.30)];to;self_update-8-8;3.66 GiB-913.00 MiB-3.69 GiB-16.00 GiB (aarch64-apple-darwin compiled with Rust 1.67.1) compiled
 ```
 
-Shows that I'm running qsv version 0.69.0, with the `mimalloc` allocator (instead of `standard`), and I have the `apply`, `fetch`, `foreach`, `generate`, `luau`, `python` and `self_update` features enabled, and qsv will be using 8 logical processors out of 8 detected when running multithreaded commands, and the qsv binary was built to target the aarch64-apple-darwin platform (Apple Silicon), compiled using Rust 1.64. The binary was `compiled` using `cargo build`.
+Shows that I'm running qsv version 0.88.2, with the `mimalloc` allocator (instead of `standard` or `jemalloc`), and I have the `apply`, `fetch`, `foreach`, `generate`, `luau`, `python`, `self_update` and `to` features enabled, with the exact version of the embedded Luau interpreter, and the python version qsv is dynamically linked against. 
+
+It shows qsv will use 8 logical processors out of 8 detected when running multithreaded commands.
+
+It also shows that I can have a maximum input file size of 3.66 GiB for "non-streaming" commands (see [Memory Management](https://github.com/jqnatividad/qsv#memory-management) for more info), 913.00 MiB of free swap memory, 3.69 GiB of available memory and 16.00 GiB of total memory.
+
+The qsv binary was built to target the aarch64-apple-darwin platform (Apple Silicon), compiled using Rust 1.67.1. The binary was `compiled` using `cargo build`.
 
 ## Caching
 The `apply geocode` command [memoizes](https://en.wikipedia.org/wiki/Memoization) otherwise expensive geocoding operations and will report its cache hit rate. `apply geocode` memoization, however, is not persistent across sessions.
@@ -142,7 +150,7 @@ Doing so will ensure CPU features are tailored to your hardware and you're using
 For example, on Ubuntu 22.04 LTS Linux:
 
 ```bash
-rustup default nightly-2023-02-15
+rustup default nightly-2023-02-18
 rustup update
 export RUSTFLAGS='-C target-cpu=native'
 
