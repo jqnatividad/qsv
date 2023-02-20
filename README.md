@@ -269,7 +269,7 @@ qsv uses the heuristic below when running these "non-streaming" commands:
 
 1. at startup, compute total available memory by adding the current available memory and free swap space 
 2. subtract a percentage headroom from the total available memory (default: 20%)
-3. if the total available memory is less than the size of the CSV file, qsv will abort with an error
+3. if this adjusted total available memory is less than the size of the CSV file, qsv will abort with an error
 
 The percentage headroom can be changed by setting the `QSV_MEMORY_HEADROOM_PCT` environment variable to a value between 10 and 90 (default: 20).
 
