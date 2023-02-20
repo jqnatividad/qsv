@@ -1218,25 +1218,35 @@ impl TypedMinMax {
             return;
         }
         self.strings.add(sample.to_vec());
-        // we can use unwrap_unchecked with confidence
-        // below since we know the data type domains of the sample
-        match typ {
-            TString | TNull => {}
-            TFloat => {
-                let n = from_utf8(sample).unwrap().parse::<f64>().unwrap();
+        // we can use unwrap_unchecked below since we know the data type of the sample
+        unsafe {
+            match typ {
+                TString | TNull => {}
+                TFloat => {
+                    let n = from_utf8(sample)
+                        .unwrap_unchecked()
+                        .parse::<f64>()
+                        .unwrap_unchecked();
 
-                self.floats.add(n);
-                self.integers.add(n as i64);
-            }
-            TInteger => {
-                let n = from_utf8(sample).unwrap().parse::<i64>().unwrap();
-                self.integers.add(n);
-                #[allow(clippy::cast_precision_loss)]
-                self.floats.add(n as f64);
-            }
-            TDate | TDateTime => {
-                let n = from_utf8(sample).unwrap().parse::<i64>().unwrap();
-                self.dates.add(n);
+                    self.floats.add(n);
+                    self.integers.add(n as i64);
+                }
+                TInteger => {
+                    let n = from_utf8(sample)
+                        .unwrap_unchecked()
+                        .parse::<i64>()
+                        .unwrap_unchecked();
+                    self.integers.add(n);
+                    #[allow(clippy::cast_precision_loss)]
+                    self.floats.add(n as f64);
+                }
+                TDate | TDateTime => {
+                    let n = from_utf8(sample)
+                        .unwrap_unchecked()
+                        .parse::<i64>()
+                        .unwrap_unchecked();
+                    self.dates.add(n);
+                }
             }
         }
     }
