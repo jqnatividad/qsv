@@ -103,12 +103,12 @@ impl Args {
         // this algorithm is largely inspired by https://github.com/vi/csvcatrow by @vi
         if self.flag_no_headers {
             return fail_clierror!(
-                "cat rowskey does not support --no-headers, as we column headers as keys."
+                "cat rowskey does not support --no-headers, as we use column headers as keys."
             );
         }
         let mut columns_global: IndexSet<Box<[u8]>> = IndexSet::with_capacity(32);
 
-        // First pass, add all columns to an IndexSet
+        // First pass, add all column headers to an IndexSet
         for conf in &self.configs()? {
             if conf.is_stdin() {
                 return fail_clierror!(
