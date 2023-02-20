@@ -33,6 +33,8 @@ const DEFAULT_FREEMEMORY_HEADROOM_PCT: u8 = 20;
 
 static ROW_COUNT: once_cell::sync::OnceCell<u64> = OnceCell::new();
 
+pub type ByteString = Vec<u8>;
+
 #[inline]
 pub fn num_cpus() -> usize {
     num_cpus::get()
@@ -1044,4 +1046,22 @@ pub fn round_num(dec_f64: f64, places: u32) -> String {
         .round_dp_with_strategy(places, RoundingStrategy::MidpointNearestEven)
         .normalize()
         .to_string()
+}
+
+#[inline]
+pub fn transform(bs: &[u8], casei: bool) -> ByteString {
+    if let Ok(s) = simdutf8::basic::from_utf8(bs) {
+        if casei {
+            let norm: String = s
+                .trim()
+                .chars()
+                .map(|c| c.to_lowercase().next().unwrap())
+                .collect();
+            norm.into_bytes()
+        } else {
+            s.trim().as_bytes().to_vec()
+        }
+    } else {
+        bs.to_vec()
+    }
 }
