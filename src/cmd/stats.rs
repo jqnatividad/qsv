@@ -1323,5 +1323,9 @@ impl Commute for TypedMinMax {
 #[allow(clippy::inline_always)]
 #[inline(always)]
 fn from_bytes<T: FromStr>(bytes: &[u8]) -> Option<T> {
-    from_utf8(bytes).ok().and_then(|s| s.parse().ok())
+    if let Ok(x) = from_utf8(bytes) {
+        x.parse().ok()
+    } else {
+        None
+    }
 }
