@@ -343,20 +343,19 @@ impl Args {
     {
         let mut stats = self.new_stats(sel.len());
 
-        // amortize allocation
-        #[allow(unused_assignments)]
-        let mut record = csv::ByteRecord::with_capacity(1000, sel.len());
-        it.for_each(|row| {
-            record = unsafe { row.unwrap_unchecked() };
-            sel.select(&record).enumerate().for_each(|(i, field)| {
-                unsafe {
-                    // we use unchecked here so we skip unnecessary bounds checking
-                    stats
-                        .get_unchecked_mut(i)
-                        .add(field, *INFER_DATE_FLAGS.get_unchecked().get_unchecked(i));
-                }
-            });
-        });
+        // we use unsafe here so we skip unnecessary bounds checking
+        // that we are certain is safe
+        unsafe {
+            for row in it {
+                sel.select(&row.unwrap_unchecked())
+                    .enumerate()
+                    .for_each(|(i, field)| {
+                        stats
+                            .get_unchecked_mut(i)
+                            .add(field, *INFER_DATE_FLAGS.get_unchecked().get_unchecked(i));
+                    });
+            }
+        }
         stats
     }
 
