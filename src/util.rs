@@ -436,7 +436,7 @@ pub fn condense(val: Cow<[u8]>, n: Option<usize>) -> Cow<[u8]> {
         None => val,
         Some(n) => {
             let mut is_short_utf8 = false;
-            if let Ok(s) = str::from_utf8(&val) {
+            if let Ok(s) = simdutf8::basic::from_utf8(&val) {
                 if n >= s.chars().count() {
                     is_short_utf8 = true;
                 } else {

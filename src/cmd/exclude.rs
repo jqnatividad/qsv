@@ -44,7 +44,6 @@ use std::{collections::hash_map::Entry, fmt, fs, io, str};
 use ahash::AHashMap;
 use byteorder::{BigEndian, WriteBytesExt};
 use serde::Deserialize;
-use simdutf8::basic::from_utf8;
 
 use crate::{
     config::{Config, Delimiter},
@@ -253,7 +252,7 @@ fn get_row_key(sel: &Selection, row: &csv::ByteRecord, casei: bool) -> Vec<ByteS
 
 #[inline]
 fn transform(bs: &[u8], casei: bool) -> ByteString {
-    let s = from_utf8(bs).unwrap_or_default();
+    let s = simdutf8::basic::from_utf8(bs).unwrap_or_default();
     if casei {
         let norm: String = s
             .trim()

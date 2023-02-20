@@ -457,7 +457,7 @@ pub type ByteString = Vec<u8>;
 
 #[inline]
 pub fn transform(bs: &[u8], casei: bool) -> ByteString {
-    if let Ok(s) = str::from_utf8(bs) {
+    if let Ok(s) = simdutf8::basic::from_utf8(bs) {
         if casei {
             let norm: String = s
                 .trim()
