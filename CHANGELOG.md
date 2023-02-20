@@ -6,6 +6,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.89.0] - 2023-02-20
+
+### Added
+* `cat`: added new `rowskey` subcommand. Unlike the existing `rows` subcommand, it allows far more flexible concatenation of CSV files by row, even if the files have different number of columns and column order. https://github.com/jqnatividad/qsv/pull/795
+* added jemalloc support. As the current default mimalloc allocator is not supported in some platforms. Also, for certain workloads, jemalloc may be faster. https://github.com/jqnatividad/qsv/pull/796
+* added `--no-memcheck` and related `QSV_NO_MEMORY_CHECK` env var. This relaxes the conservative Out-of-Memory prevention heuristic of qsv. See (Memory Management)[https://github.com/jqnatividad/qsv#memory-management] for more info https://github.com/jqnatividad/qsv/pull/792
+
+
+### Changed
+* `--version` now returns max input file size when running in "non-streaming" mode, and detailed memory info https://github.com/jqnatividad/qsv/pull/780
+* `exclude`: expanded usage text and added 'input parameters' help by @tmtmtmtm in https://github.com/jqnatividad/qsv/pull/783
+* `stats`: performance tweaks in https://github.com/jqnatividad/qsv/commit/96e8168e6064469ab4489ed19c36aa595d5d119d, https://github.com/jqnatividad/qsv/commit/634d42a646dfb3bed2d34842bb3fa484cf641c7e and https://github.com/jqnatividad/qsv/commit/7e148cf78753aa60ef60f8efd6f1c7fea246b703
+* Use simdutf8 to do SIMD accelerated utf8 validation, removing problematic utf8 screening. Together with https://github.com/jqnatividad/qsv/pull/782, completes utf8 validation revamp. https://github.com/jqnatividad/qsv/pull/784
+* Bump sysinfo from 0.27.7 to 0.28.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/786
+* cargo update bump several indirect dependencies
+* pin Rust nightly to 2023-02-18
+
+### Removed
+* Removed patched versions of csv crate optimized for performance, using Rust 2021 edition. With the release of csv 1.2,switched back to csv crate upstream. https://github.com/jqnatividad/qsv/pull/794
+* removed utf8 first 8k screening. It was increasing code complexity and not very reliable. https://github.com/jqnatividad/qsv/pull/782
+
+### Fixed
+* `dedup`: refactored to use iterators to avoid out of bounds errors. https://github.com/jqnatividad/qsv/commit/f5e547b68410407851f217c706ad303bdbc5a583
+* `exclude`: don't screen for utf8. This bugfix spurred the utf8 validation revamp, where I realized, I just needed to pull out utf8 screening https://github.com/jqnatividad/qsv/pull/781
+* `py`:  `col`, not `row` https://github.com/jqnatividad/qsv/pull/793
+
+## New Contributors
+* @tmtmtmtm made their first contribution in https://github.com/jqnatividad/qsv/pull/783
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.88.2...0.89.0
+
 ## [0.88.2] - 2023-02-16
 
 ### Changed
