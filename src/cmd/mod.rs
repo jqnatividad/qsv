@@ -41,6 +41,8 @@ pub mod index;
 pub mod input;
 #[cfg(any(feature = "full", feature = "lite"))]
 pub mod join;
+#[cfg(all(feature = "polars", not(feature = "lite")))]
+pub mod joinp;
 #[cfg(any(feature = "full", feature = "lite"))]
 pub mod jsonl;
 #[cfg(feature = "luau")]

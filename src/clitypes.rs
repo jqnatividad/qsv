@@ -178,3 +178,9 @@ impl From<serde_json::Error> for CliError {
         CliError::Other(format!("JSON error: {err:?}"))
     }
 }
+
+impl From<polars::error::PolarsError> for CliError {
+    fn from(err: polars::error::PolarsError) -> CliError {
+        CliError::Other(format!("Polars error: {err:?}"))
+    }
+}
