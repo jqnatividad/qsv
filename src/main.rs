@@ -132,9 +132,13 @@ fn main() -> QsvExitCode {
     help        Show this usage message
     index       Create CSV index for faster access
     input       Read CSVs w/ special quoting, skipping, trimming & transcoding rules
-    join        Join CSV files
-    jsonl       Convert newline-delimited JSON files to CSV\n",
+    join        Join CSV files\n",
     );
+
+    #[cfg(all(feature = "polars", not(feature = "lite")))]
+    enabled_commands.push_str("    joinp     Join CSV files using the Pola.rs engine\n");
+
+    enabled_commands.push_str("    jsonl       Convert newline-delimited JSON files to CSV\n");
 
     #[cfg(all(feature = "luau", not(feature = "lite")))]
     enabled_commands.push_str("    luau        Execute Luau script on CSV data\n");
@@ -294,6 +298,8 @@ enum Command {
     Index,
     Input,
     Join,
+    #[cfg(all(feature = "polars", not(feature = "lite")))]
+    JoinP,
     Jsonl,
     #[cfg(all(feature = "luau", not(feature = "lite")))]
     Luau,
@@ -372,6 +378,8 @@ impl Command {
             Command::Index => cmd::index::run(argv),
             Command::Input => cmd::input::run(argv),
             Command::Join => cmd::join::run(argv),
+            #[cfg(all(feature = "polars", not(feature = "lite")))]
+            Command::JoinP => cmd::joinp::run(argv),
             Command::Jsonl => cmd::jsonl::run(argv),
             #[cfg(all(feature = "luau", not(feature = "lite")))]
             Command::Luau => cmd::luau::run(argv),
