@@ -62,7 +62,7 @@ use std::{
 use polars::{io::prelude::*, prelude::*};
 use serde::Deserialize;
 
-use crate::{config::Delimiter, util, CliResult};
+use crate::{config::Delimiter, util, CliError, CliResult};
 
 #[derive(Deserialize)]
 struct Args {
@@ -80,6 +80,12 @@ struct Args {
     flag_delimiter:   Option<Delimiter>,
     flag_quiet:       bool,
     flag_no_memcheck: bool,
+}
+
+impl From<polars::error::PolarsError> for CliError {
+    fn from(err: polars::error::PolarsError) -> CliError {
+        CliError::Other(format!("Polars error: {err:?}"))
+    }
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
