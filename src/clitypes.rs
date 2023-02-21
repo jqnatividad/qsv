@@ -179,6 +179,7 @@ impl From<serde_json::Error> for CliError {
     }
 }
 
+#[cfg(all(feature = "polars", not(feature = "lite")))]
 impl From<polars::error::PolarsError> for CliError {
     fn from(err: polars::error::PolarsError) -> CliError {
         CliError::Other(format!("Polars error: {err:?}"))
