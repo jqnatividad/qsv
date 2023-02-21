@@ -147,7 +147,7 @@ use serde::Deserialize;
 
 use crate::{
     config::{self, Delimiter},
-    util, CliResult,
+    util, CliError, CliResult,
 };
 
 #[allow(dead_code)]
@@ -175,6 +175,24 @@ struct Args {
     flag_jobs:          Option<usize>,
     flag_print_package: bool,
     flag_quiet:         bool,
+}
+
+impl From<csvs_convert::Error> for CliError {
+    fn from(err: csvs_convert::Error) -> CliError {
+        CliError::Other(format!("Conversion error: {err:?}"))
+    }
+}
+
+impl From<csvs_convert::DescribeError> for CliError {
+    fn from(err: csvs_convert::DescribeError) -> CliError {
+        CliError::Other(format!("Conversion error: {err:?}"))
+    }
+}
+
+impl From<serde_json::Error> for CliError {
+    fn from(err: serde_json::Error) -> CliError {
+        CliError::Other(format!("JSON error: {err:?}"))
+    }
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {

@@ -157,24 +157,3 @@ impl From<regex::Error> for CliError {
         CliError::Other(format!("Regex error: {err:?}"))
     }
 }
-
-#[cfg(all(feature = "to", not(feature = "lite")))]
-impl From<csvs_convert::Error> for CliError {
-    fn from(err: csvs_convert::Error) -> CliError {
-        CliError::Other(format!("Conversion error: {err:?}"))
-    }
-}
-
-#[cfg(all(feature = "to", not(feature = "lite")))]
-impl From<csvs_convert::DescribeError> for CliError {
-    fn from(err: csvs_convert::DescribeError) -> CliError {
-        CliError::Other(format!("Conversion error: {err:?}"))
-    }
-}
-
-#[cfg(all(feature = "to", not(feature = "lite")))]
-impl From<serde_json::Error> for CliError {
-    fn from(err: serde_json::Error) -> CliError {
-        CliError::Other(format!("JSON error: {err:?}"))
-    }
-}
