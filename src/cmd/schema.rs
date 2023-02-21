@@ -543,14 +543,13 @@ fn construct_map_of_unique_values(
 #[inline]
 fn convert_to_string(byte_slice: &[u8]) -> CliResult<String> {
     // convert csv header to string
-    match simdutf8::basic::from_utf8(byte_slice) {
-        Ok(s) => Ok(s.to_string()),
-        Err(_) => {
-            let lossy_string = String::from_utf8_lossy(byte_slice);
-            fail_clierror!(
-                "Can't convert byte slice to utf8 string. slice={byte_slice:?}: {lossy_string}"
-            )
-        }
+    if let Ok(s) = simdutf8::basic::from_utf8(byte_slice) {
+        Ok(s.to_string())
+    } else {
+        let lossy_string = String::from_utf8_lossy(byte_slice);
+        fail_clierror!(
+            "Can't convert byte slice to utf8 string. slice={byte_slice:?}: {lossy_string}"
+        )
     }
 }
 
