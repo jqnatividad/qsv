@@ -20,7 +20,7 @@
 
 </div>
 
-> ℹ️ **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's May 2018 release](https://github.com/BurntSushi/xsv/issues/267). On top of xsv's 20 commands, it adds numerous new features; 31 additional commands; 6 `apply` subcommands & 35 operations; 5 `to` subcommands; and 3 `cat` subcommands (for a total of 100).
+> ℹ️ **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's May 2018 release](https://github.com/BurntSushi/xsv/issues/267). On top of xsv's 20 commands, it adds numerous new features; 32 additional commands; 6 `apply` subcommands & 35 operations; 5 `to` subcommands; and 3 `cat` subcommands (for a total of 101).
 See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for more details.
 
 ## Available commands
@@ -53,6 +53,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [index](/src/cmd/index.rs#L2) | Create an index for a CSV. This is very quick & provides constant time indexing into the CSV file. Also enables multithreading for `frequency`, `split`, `stats` & `schema` commands. |
 | [input](/src/cmd/input.rs#L2) | Read CSV data with special quoting, trimming, line-skipping & UTF-8 transcoding rules. Typically used to "normalize" a CSV for further processing with other qsv commands. |
 | [join](/src/cmd/join.rs#L2)<br>📇 | Inner, outer, cross, anti & semi joins. Automatically creates a simple, in-memory hash index to make it fast.  |
+| [joinp](/src/cmd/joinp.rs#L2)<br>🚀🗜️ | Inner, left, outer, cross, anti & semi joins using the [Pola.rs](https://www.pola.rs) engine. |
 | [jsonl](/src/cmd/jsonl.rs#L2) | Convert newline-delimited JSON ([JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/)) to CSV. See `tojsonl` command to convert CSV to JSONL.
 | [luau](/src/cmd/luau.rs#L2)<br>❇️ | Create a new computed column, filter rows or compute aggregations by executing a [Luau](https://luau-lang.org) script for every row of a CSV file. |
 | [partition](/src/cmd/partition.rs#L2) | Partition a CSV based on a column value. |
