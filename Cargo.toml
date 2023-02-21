@@ -114,6 +114,12 @@ num_cpus = "1"
 odht = "0.3"
 once_cell = { version = "1.17", features = ["parking_lot"] }
 parking_lot = { version = "0.12", features = ["hardware-lock-elision"] }
+polars = { version = "0.27", features = [
+    "performant",
+    "lazy",
+    "cross_join",
+    "semi_anti_join",
+], optional = true }
 pyo3 = { version = "0.18", features = ["auto-initialize"], optional = true }
 qsv-dateparser = "0.6"
 qsv-stats = "0.7"
@@ -189,6 +195,7 @@ all_full = [
     "foreach",
     "generate",
     "luau",
+    "polars",
     "python",
     "self_update",
     "to",
