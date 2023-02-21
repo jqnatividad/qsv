@@ -47,12 +47,15 @@ Common options:
     -o, --output <file>    Write output to <file> instead of stdout.
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
+    -Q, --quiet            Do not print join rowcount to stderr.
+    --no-memcheck          Do not check if there is enough memory to load the
+                           entire CSVs into memory.
 "#;
 
 use std::{
     fs::File,
     io::{self, Write},
-    path::Path,
+    path::{Path, PathBuf},
     str,
 };
 
@@ -63,38 +66,46 @@ use crate::{config::Delimiter, util, CliResult};
 
 #[derive(Deserialize)]
 struct Args {
-    arg_columns1:   String,
-    arg_input1:     String,
-    arg_columns2:   String,
-    arg_input2:     String,
-    flag_left:      bool,
-    flag_outer:     bool,
-    flag_cross:     bool,
-    flag_semi:      bool,
-    flag_anti:      bool,
-    flag_output:    Option<String>,
-    flag_nulls:     bool,
-    flag_delimiter: Option<Delimiter>,
+    arg_columns1:     String,
+    arg_input1:       String,
+    arg_columns2:     String,
+    arg_input2:       String,
+    flag_left:        bool,
+    flag_outer:       bool,
+    flag_cross:       bool,
+    flag_semi:        bool,
+    flag_anti:        bool,
+    flag_output:      Option<String>,
+    flag_nulls:       bool,
+    flag_delimiter:   Option<Delimiter>,
+    flag_quiet:       bool,
+    flag_no_memcheck: bool,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
-    let state = args.new_join()?;
-    match (
+    let join = args.new_join()?;
+    let join_rowcount = match (
         args.flag_left,
         args.flag_outer,
         args.flag_cross,
         args.flag_semi,
         args.flag_anti,
     ) {
-        (false, false, false, false, false) => state.polars_join(JoinType::Inner),
-        (true, false, false, false, false) => state.polars_join(JoinType::Left),
-        (false, true, false, false, false) => state.polars_join(JoinType::Outer),
-        (false, false, true, false, false) => state.polars_join(JoinType::Cross),
-        (false, false, false, true, false) => state.polars_join(JoinType::Semi),
-        (false, false, false, false, true) => state.polars_join(JoinType::Anti),
+        (false, false, false, false, false) => join.polars_join(JoinType::Inner),
+        (true, false, false, false, false) => join.polars_join(JoinType::Left),
+        (false, true, false, false, false) => join.polars_join(JoinType::Outer),
+        (false, false, true, false, false) => join.polars_join(JoinType::Cross),
+        (false, false, false, true, false) => join.polars_join(JoinType::Semi),
+        (false, false, false, false, true) => join.polars_join(JoinType::Anti),
         _ => fail!("Please pick exactly one join operation."),
+    }?;
+
+    if !args.flag_quiet {
+        eprintln!("{join_rowcount}");
     }
+
+    Ok(())
 }
 
 struct JoinStruct {
@@ -103,63 +114,82 @@ struct JoinStruct {
     df2:    DataFrame,
     sel2:   String,
     output: Option<String>,
+    delim:  u8,
 }
 
 impl JoinStruct {
-    fn polars_join(self, jointype: JoinType) -> CliResult<()> {
-        let selcol1: Vec<&str> = self.sel1.split(',').collect();
-        let selcol2: Vec<&str> = self.sel2.split(',').collect();
+    fn polars_join(self, jointype: JoinType) -> CliResult<usize> {
+        let selcols1: Vec<&str> = self.sel1.split(',').collect();
+        let selcols2: Vec<&str> = self.sel2.split(',').collect();
 
-        let selcol1_len = selcol1.len();
-        let selcol2_len = selcol2.len();
+        let selcols1_len = selcols1.len();
+        let selcols2_len = selcols2.len();
 
-        if selcol1_len != selcol2_len {
+        if selcols1_len != selcols2_len {
             return fail_clierror!(
-                "Both columns1 ({selcol1:?}) and columns2 ({selcol2:?}) must specify the same \
-                 number of columns ({selcol1_len } != {selcol2_len})."
+                "Both columns1 ({selcols1:?}) and columns2 ({selcols2:?}) must specify the same \
+                 number of columns ({selcols1_len } != {selcols2_len})."
             );
         }
 
-        let mut join_results = self.df1.join(&self.df2, selcol1, selcol2, jointype, None)?;
+        let mut join_results = self
+            .df1
+            .join(&self.df2, selcols1, selcols2, jointype, None)?;
 
         // no need to use buffered writer here, as CsvWriter already does that
         let mut out_writer = match self.output {
-            Some(x) => {
-                let path = Path::new(&x);
+            Some(output_file) => {
+                let path = Path::new(&output_file);
                 Box::new(File::create(path).unwrap()) as Box<dyn Write>
             }
             None => Box::new(io::stdout()) as Box<dyn Write>,
         };
 
+        // height of the dataframe is the number of rows
+        let join_results_len = join_results.height();
+
         CsvWriter::new(&mut out_writer)
             .has_header(true)
-            .with_delimiter(b',')
+            .with_delimiter(self.delim)
             .finish(&mut join_results)?;
 
-        Ok(())
+        Ok(join_results_len)
     }
 }
 
 impl Args {
     fn new_join(&self) -> CliResult<JoinStruct> {
+        // we're loading entire files into memory, we need to check avail mem
+        // definitely can have a more sophisticated check, but this is better than getting an OOM
+        let f1 = PathBuf::from(self.arg_input1.clone());
+        if f1.exists() {
+            util::mem_file_check(&f1, false, self.flag_no_memcheck)?;
+        } else {
+            return fail_clierror!("{f1:?} does not exist.");
+        }
+        let f2 = PathBuf::from(self.arg_input2.clone());
+        if f1.exists() {
+            util::mem_file_check(&f1, false, self.flag_no_memcheck)?;
+        } else {
+            return fail_clierror!("{f2:?} does not exist.");
+        }
+
+        let delim = if let Some(delimiter) = self.flag_delimiter {
+            delimiter.as_byte()
+        } else {
+            b','
+        };
+
         let df1 = CsvReader::from_path(&self.arg_input1)?
             .has_header(true)
             .with_missing_is_null(self.flag_nulls)
-            .with_delimiter(if let Some(delimiter) = self.flag_delimiter {
-                delimiter.as_byte()
-            } else {
-                b','
-            })
+            .with_delimiter(delim)
             .finish()?;
 
         let df2 = CsvReader::from_path(&self.arg_input2)?
             .has_header(true)
             .with_missing_is_null(self.flag_nulls)
-            .with_delimiter(if let Some(delimiter) = self.flag_delimiter {
-                delimiter.as_byte()
-            } else {
-                b','
-            })
+            .with_delimiter(delim)
             .finish()?;
 
         Ok(JoinStruct {
@@ -168,6 +198,7 @@ impl Args {
             df2,
             sel2: self.arg_columns2.clone(),
             output: self.flag_output.clone(),
+            delim,
         })
     }
 }
