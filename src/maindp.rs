@@ -80,7 +80,7 @@ macro_rules! command_list {
     validate    Validate CSV data for RFC4180-compliance or with JSON Schema
 
     NOTE: qsvdp ignores the --progressbar option for all commands.
-    luau may be disabled if your platform is not compatible.
+    luau is currently disabled until Datapusher+ can take advantage of it.
 
     sponsored by datHere - Data Infrastructure Engineering
 "
