@@ -166,7 +166,7 @@ There are three binary variants of qsv:
 * `qsvlite` - all features disabled (~33% of the size of `qsv`)
 * `qsvdp` - optimized for use with [DataPusher+](https://github.com/dathere/datapusher-plus) with only DataPusher+ relevant commands; `applydp`, a slimmed-down version of the `apply` feature; embedded `luau` interpreter; the `--progressbar` option disabled; and the self-update only checking for new releases, requiring an explicit `--update` (~33% of the the size of `qsv`).
 
-[^2]: The `foreach` feature is not available on Windows. The `python` feature is not enabled on the prebuilt binaries. Compile qsv with Python 3.6 and above development environment installed if you want to enable the `python` feature. Luau support is enabled by default on the prebuilt binaries, with preference for `luau` for platforms that support it.  
+[^2]: The `foreach` feature is not available on Windows. The `python` feature is not enabled on the prebuilt binaries. Compile qsv with Python development environment installed if you want to enable the `python` feature (Python 3.7 & above supported). The `luau` feature is enabled by default on the prebuilt binaries.  
 
 ## Regular Expression Syntax
 
@@ -241,16 +241,16 @@ It has [sandboxing](https://luau-lang.org/sandbox), [type-checking](https://luau
 
 ### Python
 
-The `python` feature is NOT enabled by default on the prebuilt binaries, as doing so requires it to dynamically link to python at runtime, which presents distribution issues, as various operating systems have differing bundled Python versions.
+The `python` feature is NOT enabled by default on the prebuilt binaries, as doing so requires it to dynamically link to python libraries at runtime, which presents distribution issues, as various operating systems have differing bundled Python versions.
 
-If you wish to enable the `python` feature - you'll just have to install/compile from source, making sure you have the development libraries for the desired Python version (Python 3.6 to 3.11 are supported) installed when doing so.
+If you wish to enable the `python` feature - you'll just have to install/compile from source, making sure you have the development libraries for the desired Python version (Python 3.7 to 3.11 are supported) installed when doing so.
 
 If you plan to distribute your manually built `qsv` with the `python` feature, `qsv` will look for the specific version of Python shared libraries (libpython* on Linux/macOS, python*.dll on Windows) against which it was compiled starting with the current directory & abort with an error if not found, detailing the Python library it was looking for. 
 
 Note that this will happen on qsv startup, even if you're not running the `py` command.
 
 When building from source - [PyO3](https://pyo3.rs) - the underlying crate that enables the `python` feature, uses a build script to determine the Python version & set the correct linker arguments. By default it uses the python3 executable.
-You can override this by setting `PYO3_PYTHON` (e.g., `PYO3_PYTHON=python3.6`), before installing/compiling qsv. See the [PyO3 User Guide](https://pyo3.rs/v0.17.1/building_and_distribution.html) for more information.
+You can override this by setting `PYO3_PYTHON` (e.g., `PYO3_PYTHON=python3.7`), before installing/compiling qsv. See the [PyO3 User Guide](https://pyo3.rs/v0.17.1/building_and_distribution.html) for more information.
 
 Consider using the [`luau`](/src/cmd/luau.rs#L2) command instead of the [`py`]((/src/cmd/python.rs#L2)) command if the operation you're trying to do can be done with `luau` - as `luau` is faster than `py` and can do aggregations. 
 
@@ -332,7 +332,7 @@ Relevant env vars are defined as anything that starts with `QSV_` & `MIMALLOC_` 
 * `foreach` - enable `foreach` command (not valid for Windows).
 * `generate` - enable `generate` command.
 * `luau` - enable `luau` command. Embeds a [Luau](https://luau-lang.org) interpreter into qsv. [Luau has type-checking, sandboxing, additional language operators, increased performance & other improvements](https://luau-lang.org/2022/11/04/luau-origins-and-evolution.html) over Lua.
-* `python` - enable `py` command. Note that qsv will look for the shared library for the Python version (Python 3.6 & above supported) it was compiled against & will abort on startup if the library is not found, even if you're not using the `py` command. Check [Python](#python) section for more info.
+* `python` - enable `py` command. Note that qsv will look for the shared library for the Python version (Python 3.7 & above supported) it was compiled against & will abort on startup if the library is not found, even if you're not using the `py` command. Check [Python](#python) section for more info.
 * `to` - enables the `to` command.
 * `self_update` - enable self-update engine, checking GitHub for the latest release. Note that if you manually built qsv, `self-update` will only check for new releases.
 It will NOT offer the choice to update itself to the prebuilt binaries published on GitHub. You need not worry that your manually built qsv will be overwritten by a self-update.
