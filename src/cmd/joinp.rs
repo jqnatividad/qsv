@@ -26,8 +26,7 @@ joinp options:
     --outer                Do a 'full outer' join. This returns all rows in
                            both data sets with matching records joined. If
                            there is no match, the missing side will be padded
-                           out with empty fields. (This is the combination of
-                           'outer left' and 'outer right'.)
+                           out with empty fields.
     --cross                USE WITH CAUTION.
                            This returns the cartesian product of the CSV
                            data sets given. The number of rows return is
@@ -35,10 +34,11 @@ joinp options:
                            number of rows in the given data sets, respectively.
     --semi                 This returns only the rows in the first CSV data set
                            that have a corresponding row in the second CSV data
-                           set. The output is the same as the first data set.
+                           set. The output schema is the same as the first data set.
     --anti                 This returns only the rows in the first CSV data set
                            that do not have a corresponding row in the second
-                           CSV data set. The output is the same as the first dataset.
+                           CSV data set. The output schema is the same as the
+                           first dataset.
     --nulls                When set, joins will work on empty fields.
                            Otherwise, empty fields are completely ignored.
 
