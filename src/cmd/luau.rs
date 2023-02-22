@@ -188,6 +188,26 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let trace_on: bool = log_enabled!(log::Level::Trace);
     let mut idx = 0_usize;
 
+    let luau_script = if let Some(script_filepath) = args.arg_main_script.strip_prefix("file:") {
+        match fs::read_to_string(script_filepath) {
+            Ok(file_contents) => file_contents,
+            Err(e) => return fail_clierror!("Cannot load Luau file: {e}"),
+        }
+    } else {
+        args.arg_main_script
+    };
+
+    idx_used = idx_used || luau_script.contains("_idx") || luau_script.contains("_rowcount");
+
+    let mut luau_main_script = if args.flag_exec {
+        String::new()
+    } else {
+        String::from("return ")
+    };
+
+    luau_main_script.push_str(&luau_script);
+    debug!("Luau main script: {luau_main_script:?}");
+
     // setup LUAU_PATH; create a temporary directory and add it to LUAU_PATH and copy date.lua
     // there so qsv luau users can just `local date = require "date"` in their scripts,
     // as well as load other lua/luau libraries as needed.
@@ -278,26 +298,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
         info!("Prologue executed.");
     }
-
-    let luau_script = if let Some(script_filepath) = args.arg_main_script.strip_prefix("file:") {
-        match fs::read_to_string(script_filepath) {
-            Ok(file_contents) => file_contents,
-            Err(e) => return fail_clierror!("Cannot load Luau file: {e}"),
-        }
-    } else {
-        args.arg_main_script
-    };
-
-    idx_used = idx_used || luau_script.contains("_idx") || luau_script.contains("_rowcount");
-
-    let mut luau_main_script = if args.flag_exec {
-        String::new()
-    } else {
-        String::from("return ")
-    };
-
-    luau_main_script.push_str(&luau_script);
-    debug!("Luau main script: {luau_main_script:?}");
 
     // prep progress bar
     #[cfg(any(feature = "full", feature = "lite"))]
