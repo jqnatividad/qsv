@@ -126,11 +126,11 @@ The `fetch` and `fetchpost` commands also memoizes expensive REST API calls with
 ## UTF-8 Encoding for Performance
 [Rust strings are utf-8 encoded](https://doc.rust-lang.org/std/string/struct.String.html). As a result, qsv **REQUIRES** UTF-8 encoded files.
 
-Still, users will attempt to use non UTF-8 encoded files, and for the most part, they will still work! This is because most qsv commands use ByteRecords, where qsv manipulates raw bytes and doesn't care about the encoding.
+Still, users will attempt to use non UTF-8 encoded files, and for the most part, they will still work! This is because most qsv commands use [ByteRecords](https://docs.rs/csv/latest/csv/struct.ByteRecord.html), where qsv manipulates raw bytes and doesn't care about the encoding.
 
-Where it does matter, qsv will attempt to convert the bytes to UTF-8. But instead of using [std::str::from_utf8](https://doc.rust-lang.org/stable/std/str/fn.from_utf8.html), it makes extensive use of [`simdutf8`](https://github.com/rusticstuff/simdutf8#simdutf8--high-speed-utf-8-validation) for SIMD-accelerated utf-8 validation, which is up to 23x faster on x86-64 and 11x faster on aarch64 (Apple Silicon).
+Where it does matter, qsv will attempt to convert the bytes to UTF-8. But instead of using [std::str::from_utf8](https://doc.rust-lang.org/stable/std/str/fn.from_utf8.html), it makes extensive use of [`simdutf8`](https://github.com/rusticstuff/simdutf8#simdutf8--high-speed-utf-8-validation) for [SIMD](https://en.wikipedia.org/wiki/Single_instruction,_multiple_data)-accelerated UTF-8 validation, which is up to 23x faster on x86-64 and 11x faster on aarch64 (Apple Silicon).
 
-As UTF-8 is the de facto encoding standard, this shouldn't be a problem. However, should you need to process a CSV file with a different encoding, use the `input` command first to "[loosely transcode](https://doc.rust-lang.org/std/string/struct.String.html#method.from_utf8_lossy)" it to UTF-8.
+As UTF-8 is the de facto encoding standard, this shouldn't be a problem most of the time. However, should you need to process a CSV file with a different encoding, use the `input` command with the `--output` option first to "[loosely transcode](https://doc.rust-lang.org/std/string/struct.String.html#method.from_utf8_lossy)" it to UTF-8.
 
 ## Nightly Release Builds
 Pre-built binaries compiled using Rust Nightly/Unstable are also [available for download](https://github.com/jqnatividad/qsv/releases/latest). These binaries are optimized for size and speed:
