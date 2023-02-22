@@ -53,7 +53,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [index](/src/cmd/index.rs#L2) | Create an index for a CSV. This is very quick & provides constant time indexing into the CSV file. Also enables multithreading for `frequency`, `split`, `stats` & `schema` commands. |
 | [input](/src/cmd/input.rs#L2) | Read CSV data with special quoting, trimming, line-skipping & UTF-8 transcoding rules. Typically used to "normalize" a CSV for further processing with other qsv commands. |
 | [join](/src/cmd/join.rs#L2)<br>📇 | Inner, outer, cross, anti & semi joins. Automatically creates a simple, in-memory hash index to make it fast.  |
-| [joinp](/src/cmd/joinp.rs#L2)<br>🚀🗜️ | Inner, left, outer, cross, anti & semi joins using the [Pola.rs](https://www.pola.rs) engine. |
+| [joinp](/src/cmd/joinp.rs#L2)<br>🚀🗜️🐻‍❄️ | Inner, left, outer, cross, anti & semi joins using the [Pola.rs](https://www.pola.rs) engine. |
 | [jsonl](/src/cmd/jsonl.rs#L2) | Convert newline-delimited JSON ([JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/)) to CSV. See `tojsonl` command to convert CSV to JSONL.
 | [luau](/src/cmd/luau.rs#L2)<br>❇️ | Create a new computed column, filter rows or compute aggregations by executing a [Luau](https://luau-lang.org) script for every row of a CSV file. |
 | [partition](/src/cmd/partition.rs#L2) | Partition a CSV based on a column value. |
@@ -85,6 +85,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 🗜️: loads entire CSV into memory, though `dedup`, `stats` & `transpose` have "streaming" modes as well.   
 🪗: uses additional memory proportional to the cardinality of the columns in the CSV.   
 🧠: expensive operations are memoized (cached) with available inter-session Redis caching for fetch commands.    
+🐻‍❄️: command powered by [Pola.rs](https://pola.rs) engine.   
 🏎️: multithreaded when an index is available.   
 🚀: multithreaded even without an index.
 
@@ -334,6 +335,7 @@ Relevant env vars are defined as anything that starts with `QSV_` & `MIMALLOC_` 
 * `foreach` - enable `foreach` command (not valid for Windows).
 * `generate` - enable `generate` command.
 * `luau` - enable `luau` command. Embeds a [Luau](https://luau-lang.org) interpreter into qsv. [Luau has type-checking, sandboxing, additional language operators, increased performance & other improvements](https://luau-lang.org/2022/11/04/luau-origins-and-evolution.html) over Lua.
+* `polars` - enables all [Polars](https://pola.rs)-powered commands.
 * `python` - enable `py` command. Note that qsv will look for the shared library for the Python version (Python 3.7 & above supported) it was compiled against & will abort on startup if the library is not found, even if you're not using the `py` command. Check [Python](#python) section for more info.
 * `to` - enables the `to` command.
 * `self_update` - enable self-update engine, checking GitHub for the latest release. Note that if you manually built qsv, `self-update` will only check for new releases.
