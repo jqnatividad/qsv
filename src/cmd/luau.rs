@@ -25,9 +25,9 @@ Some usage examples:
   Add running total column for Amount
   $ qsv luau map Total -x "tot = (tot or 0) + Amount; return tot"
 
-  Or use the prologue and epilogue options to compute the running & grand totals
-  $ qsv luau map Total --prologue "tot = 0; gtotal = 0" -x \
-        "tot = tot + Amount; gtotal = gtotal + tot; return tot" --epilogue "return gtotal"
+  Or use the --begin and --end options to compute the running & grand totals
+  $ qsv luau map Total --begin "tot = 0; gtotal = 0" -x \
+        "tot = tot + Amount; gtotal = gtotal + tot; return tot" --end "return gtotal"
 
   Add running total column for Amount when previous balance was 900
   $ qsv luau map Total -x "tot = (tot or 900) + Amount; return tot"
@@ -43,7 +43,7 @@ Some usage examples:
 
   Typing long scripts on the command line gets tiresome rather quickly, so use the
   "file:" prefix to read non-trivial scripts from the filesystem.
-  $ qsv luau map Type -P "file:init.luau" -x "file:debitcredit.luau" -E "file:end.luau"
+  $ qsv luau map Type -B "file:init.luau" -x "file:debitcredit.luau" -E "file:end.luau"
 
 The main-script is evaluated on a per row basis.
 With "luau map", if the main-script is invalid for a row, "<ERROR>" is returned for that row.
@@ -51,9 +51,9 @@ With "luau filter", if the main-script is invalid for a row, that row is not fil
 
 If any row has an invalid result, an exitcode of 1 is returned and an error count is logged.
 
-There are also special variables - "_idx" that is zero during the prologue, and set to the current 
-row number during the main script; and "_rowcount" which is zero during the prologue and the main script,
-and set to the rowcount during the epilogue.
+There are also special variables - "_idx" that is zero during the BEGIN script & set to the current 
+row number during the main script; & "_rowcount" which is zero during the BEGIN & main scripts,
+and set to the rowcount during the END script.
 
 Luau's standard library is relatively minimal (https://luau-lang.org/library).
 That's why qsv preloads the LuaDate library as date manipulation is a common data-wrangling task.
@@ -62,8 +62,8 @@ See https://tieske.github.io/date/#date-id96473 for info on how to use the LuaDa
 Furthermore, the user can load additional libraries from the LUAU_PATH using luau's "require" function.
 See http://lua-users.org/wiki/LibrariesAndBindings for a list of other libraries.
 
-With the judicious use of "require", the prologue & the "_idx"/"_rowcount" variables, one can create
-variables/tables/arrays that can be used for complex aggregation operations in the epilogue.
+With the judicious use of "require", the BEGIN script & the "_idx"/"_rowcount" variables, one can create
+variables/tables/arrays that can be used for complex aggregation operations in the END script.
 
 TIP: When developing luau scripts, be sure to set QSV_LOG_LEVEL=debug so you can see the detailed Luau
 errors in the logfile. Set QSV_LOG_LEVEL=trace if you want to see the row/global values as well.
@@ -81,24 +81,34 @@ Usage:
 All <script> arguments/options can either be the Luau code, or if it starts with "file:",
 the filepath from which to load the script.
 
+Instead of using the --begin and --end options, you can also embed BEGIN and END scripts.
+The BEGIN script is embedded in the main-script by adding a BEGIN block at the top of the script.
+The BEGIN block is "BEGIN { ... }!" and can contain multiple statements.
+
+The END script is embedded in the main-script by adding an END block at the bottom of the script.
+The END block is "END { ... }!" and can contain multiple statements.
+
 luau options:
     -x, --exec               exec[ute] Luau script, instead of the default eval[uate].
                              eval (default) expects just a single Luau expression,
                              while exec expects one or more statements, allowing
                              full-fledged Luau programs. This only applies to the main-script
-                             argument, not the prologue & epilogue scripts.
+                             argument, not the BEGIN & END scripts.
     -g, --no-globals         Don't create Luau global variables for each column, only col.
                              Useful when some column names mask standard Luau globals.
                              Note: access to Luau globals thru _G remains even without -g.
-    -P, --prologue <script>  Luau script/file to execute BEFORE processing the CSV with the main-script.
+    -B, --begin <script>     Luau script/file to execute in the BEGINning, before processing the CSV
+                             with the main-script.
                              The variables _idx and _rowcount are set to zero before invoking
-                             the prologue script.
+                             the BEGIN script.
                              Typically used to initialize global variables.
-    -E, --epilogue <script>  Luau script/file to execute AFTER processing the CSV with the main-script.
+                             Takes precedence over an embedded BEGIN script.
+    -E, --end <script>       Luau script/file to execute at the END, after processing the CSV with
+                             the main-script.
                              Both _idx and _rowcount variables are set to the rowcount before invoking
-                             the epilogue script.
-                             Typically used for aggregations.
-                             The output of the epilogue is sent to stderr.
+                             the END script. Typically used for aggregations.
+                             The output of the END script is sent to stderr.
+                             Takes precedence over an embedded END script.
     --luau-path <pattern>    The LUAU_PATH pattern to use from which the scripts 
                              can "require" lua/luau library files from.
                              See https://www.lua.org/pil/8.1.html
@@ -139,8 +149,8 @@ struct Args {
     arg_input:        Option<String>,
     flag_exec:        bool,
     flag_no_globals:  bool,
-    flag_prologue:    Option<String>,
-    flag_epilogue:    Option<String>,
+    flag_begin:       Option<String>,
+    flag_end:         Option<String>,
     flag_luau_path:   String,
     flag_output:      Option<String>,
     flag_no_headers:  bool,
@@ -155,7 +165,7 @@ impl From<mlua::Error> for CliError {
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
-    let args: Args = util::get_args(USAGE, argv)?;
+    let mut args: Args = util::get_args(USAGE, argv)?;
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers);
@@ -188,6 +198,50 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let trace_on: bool = log_enabled!(log::Level::Trace);
     let mut idx = 0_usize;
 
+    let mut luau_script = if let Some(script_filepath) = args.arg_main_script.strip_prefix("file:")
+    {
+        match fs::read_to_string(script_filepath) {
+            Ok(file_contents) => file_contents,
+            Err(e) => return fail_clierror!("Cannot load Luau file: {e}"),
+        }
+    } else {
+        args.arg_main_script
+    };
+
+    idx_used = idx_used || luau_script.contains("_idx") || luau_script.contains("_rowcount");
+
+    // check if the main script has BEGIN and END blocks
+    // and if so, extract them and remove them from the main script
+    let begin_re = regex::Regex::new(r"(?ms)BEGIN \{(?P<begin_block>.*?)\}!").unwrap();
+    let end_re = regex::Regex::new(r"(?ms)END \{(?P<end_block>.*?)\}!").unwrap();
+    let mut embedded_begin_script = String::new();
+    let mut embedded_end_script = String::new();
+    let mut main_script = luau_script.clone();
+    if let Some(caps) = begin_re.captures(&luau_script) {
+        embedded_begin_script = caps["begin_block"].to_string();
+        let begin_block_replace = format!("BEGIN {{{embedded_begin_script}}}!");
+        debug!("begin_block_replace: {begin_block_replace:?}");
+        main_script = main_script.replace(&begin_block_replace, "");
+    }
+    if let Some(caps) = end_re.captures(&main_script) {
+        embedded_end_script = caps["end_block"].to_string();
+        let end_block_replace = format!("END {{{embedded_end_script}}}!");
+        main_script = main_script.replace(&end_block_replace, "");
+    }
+    luau_script = main_script;
+    debug!("Embedded BEGIN script: {embedded_begin_script:?}");
+    debug!("Embedded END script: {embedded_end_script:?}");
+    debug!("MAIN Luau script: {luau_script:?}");
+
+    let mut luau_main_script = if args.flag_exec {
+        String::new()
+    } else {
+        String::from("return ")
+    };
+
+    luau_main_script.push_str(&luau_script);
+    debug!("Luau main script: {luau_main_script:?}");
+
     // setup LUAU_PATH; create a temporary directory and add it to LUAU_PATH and copy date.lua
     // there so qsv luau users can just `local date = require "date"` in their scripts,
     // as well as load other lua/luau libraries as needed.
@@ -202,27 +256,27 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     env::set_var("LUAU_PATH", luau_path.clone());
     info!(r#"set LUAU_PATH to "{luau_path}""#);
 
-    // check if an epilogue was specified. We check it first for two reasons:
-    // 1) so we don't run the main script only to err out on an invalid epilogue file not found.
-    // 2) to see if _idx or _rowcount is used, even if they're not used in the prologue,
-    //    so we can init the _idx and _rowcount global vars in the beginning, if the epilogue
-    //    referred to the special vars & they're not referenced in the prologue & main scripts.
-    let epilogue_script = if let Some(ref epilogue) = args.flag_epilogue {
-        if let Some(epilogue_filepath) = epilogue.strip_prefix("file:") {
-            match fs::read_to_string(epilogue_filepath) {
-                Ok(epilogue) => {
-                    // check if the epilogue uses _idx or _rowcount
-                    idx_used =
-                        idx_used || epilogue.contains("_idx") || epilogue.contains("_rowcount");
-                    epilogue
+    // check if an END script was specified. We check it before BEGIN for two reasons:
+    // 1) so we don't run the main script only to error out on an invalid END script file not found.
+    // 2) to see if _idx or _rowcount is used in the END, even if they're not used in the BEGIN
+    // script,    so we can init the _idx and _rowcount global vars in the beginning, if the END
+    // script    referred to the special vars & they're not referenced in the BEGIN & main
+    // scripts.
+    let end_script = if let Some(ref end) = args.flag_end {
+        if let Some(end_filepath) = end.strip_prefix("file:") {
+            match fs::read_to_string(end_filepath) {
+                Ok(end) => {
+                    // check if the END script uses _idx or _rowcount
+                    idx_used = idx_used || end.contains("_idx") || end.contains("_rowcount");
+                    end
                 }
-                Err(e) => return fail_clierror!("Cannot load Luau epilogue file: {e}"),
+                Err(e) => return fail_clierror!("Cannot load Luau END script file: {e}"),
             }
         } else {
-            epilogue.to_string()
+            end.to_string()
         }
     } else {
-        String::new()
+        embedded_end_script //String::new()
     };
 
     // prepare the Luau compiler, so we can compile the scripts into bytecode
@@ -244,60 +298,43 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // set it as the default compiler
     luau.set_compiler(luau_compiler.clone());
 
-    // check if a prologue was specified
-    if let Some(prologue) = args.flag_prologue {
-        let prologue_script = if let Some(prologue_filepath) = prologue.strip_prefix("file:") {
-            match fs::read_to_string(prologue_filepath) {
+    if args.flag_begin.is_none() && !embedded_begin_script.is_empty() {
+        args.flag_begin = Some(embedded_begin_script);
+    }
+
+    // check if a BEGIN script was specified
+    if let Some(begin_script) = args.flag_begin {
+        let begin_script = if let Some(begin_filepath) = begin_script.strip_prefix("file:") {
+            match fs::read_to_string(begin_filepath) {
                 Ok(file_contents) => file_contents,
-                Err(e) => return fail_clierror!("Cannot load Luau prologue file: {e}"),
+                Err(e) => return fail_clierror!("Cannot load Luau BEGIN script file: {e}"),
             }
         } else {
-            prologue
+            begin_script
         };
 
-        idx_used =
-            idx_used || prologue_script.contains("_idx") || prologue_script.contains("_rowcount");
+        idx_used = idx_used || begin_script.contains("_idx") || begin_script.contains("_rowcount");
         if idx_used {
             // we set _idx and _rowcount here just in case they're
-            // used in the prologue script
+            // used in the BEGIN script
             globals.set("_idx", 0)?;
             globals.set("_rowcount", 0)?;
         }
 
-        info!("Compiling and executing prologue. _idx used: {idx_used}");
-        let prologue_bytecode = luau_compiler.compile(&prologue_script);
+        info!("Compiling and executing BEGIN script. _idx used: {idx_used}");
+        let begin_bytecode = luau_compiler.compile(&begin_script);
         if let Err(e) = luau
-            .load(&prologue_bytecode)
+            .load(&begin_bytecode)
             .set_mode(mlua::ChunkMode::Binary)
             .exec()
         {
             if trace_on {
-                log::trace!("prologue globals: {globals:?}");
+                log::trace!("BEGIN globals: {globals:?}");
             }
-            return fail_clierror!("Prologue error: Failed to execute \"{prologue_script}\".\n{e}");
+            return fail_clierror!("BEGIN error: Failed to execute \"{begin_script}\".\n{e}");
         }
-        info!("Prologue executed.");
+        info!("BEGIN executed.");
     }
-
-    let luau_script = if let Some(script_filepath) = args.arg_main_script.strip_prefix("file:") {
-        match fs::read_to_string(script_filepath) {
-            Ok(file_contents) => file_contents,
-            Err(e) => return fail_clierror!("Cannot load Luau file: {e}"),
-        }
-    } else {
-        args.arg_main_script
-    };
-
-    idx_used = idx_used || luau_script.contains("_idx") || luau_script.contains("_rowcount");
-
-    let mut luau_main_script = if args.flag_exec {
-        String::new()
-    } else {
-        String::from("return ")
-    };
-
-    luau_main_script.push_str(&luau_script);
-    debug!("Luau main script: {luau_main_script:?}");
 
     // prep progress bar
     #[cfg(any(feature = "full", feature = "lite"))]
@@ -448,33 +485,33 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         util::finish_progress(&progress);
     }
 
-    if !epilogue_script.is_empty() {
+    if !end_script.is_empty() {
         // if idx_used, also set a convenience variable named _rowcount;
         // true, _rowcount is equal to _idx at this point, but this
-        // should make for more readable epilogues.
+        // should make for more readable END scripts.
         // Also, _rowcount is zero during the main script, and only set
-        // to _idx during the epilogue.
+        // to _idx during the END script.
         if idx_used {
             globals.set("_rowcount", idx)?;
         }
 
-        info!("Compiling and executing epilogue. _idx used: {idx_used}, _rowcount: {idx}");
-        let epilogue_bytecode = luau_compiler.compile(&epilogue_script);
-        let epilogue_value: Value = match luau
-            .load(&epilogue_bytecode)
+        info!("Compiling and executing END script. _idx used: {idx_used}, _rowcount: {idx}");
+        let end_bytecode = luau_compiler.compile(&end_script);
+        let end_value: Value = match luau
+            .load(&end_bytecode)
             .set_mode(mlua::ChunkMode::Binary)
             .eval()
         {
             Ok(computed) => computed,
             Err(e) => {
-                log::error!("Epilogue error: Cannot evaluate \"{epilogue_script}\".\n{e}");
+                log::error!("END error: Cannot evaluate \"{end_script}\".\n{e}");
                 if trace_on {
-                    log::trace!("epilogue globals: {globals:?}");
+                    log::trace!("END globals: {globals:?}");
                 }
                 error_result.clone()
             }
         };
-        let epilogue_string = match epilogue_value {
+        let end_string = match end_value {
             Value::String(string) => string.to_string_lossy().to_string(),
             Value::Number(number) => number.to_string(),
             Value::Integer(number) => number.to_string(),
@@ -482,12 +519,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             Value::Nil => String::new(),
             _ => {
                 return fail_clierror!(
-                    "Unexpected epilogue value type returned by provided Luau expression. \
-                     {epilogue_value:?}"
+                    "Unexpected END value type returned by provided Luau expression. {end_value:?}"
                 );
             }
         };
-        winfo!("{epilogue_string}");
+        winfo!("{end_string}");
     }
     if trace_on {
         log::trace!("ending globals: {globals:?}");
