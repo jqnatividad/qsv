@@ -238,7 +238,7 @@ For complex data-wrangling tasks, you can use Luau and Python scripts. The `qsv`
 
 It has [sandboxing](https://luau-lang.org/sandbox), [type-checking](https://luau-lang.org/typecheck), [additional operators](https://luau-lang.org/syntax) & [increased performance](https://luau-lang.org/performance) while [maintaining compatibility with Lua](https://luau-lang.org/compatibility).
 
-[Lua is much faster than Python](https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/lua-python3.html) & Luau is even faster still - more so, as qsv precompiles Luau scripts into bytecode. In addition, [`luau`](/src/cmd/luau.rs#L2) is embedded into qsv, has debug logging, can do aggregations with its `--begin` & `--end` options & has no external dependencies unlike the `py` command.
+[Lua is much faster than Python](https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/lua-python3.html) & Luau is even faster still - more so, as qsv precompiles Luau into bytecode. In addition, [`luau`](/src/cmd/luau.rs#L2) is embedded into qsv, has debug logging, can do aggregations with its `--begin` & `--end` options & has no external dependencies unlike the `py` command.
 
 At this stage, we're using Luau with the [LuaDate](https://tieske.github.io/date/) module preloaded as an embedded interpreter. In the future, we'll add custom qsv-specific data-wrangling Luau modules to make it qsv's purpose-built [Domain-Specific Language](https://en.wikipedia.org/wiki/Domain-specific_language).
 
