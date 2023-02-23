@@ -165,7 +165,7 @@ cargo build --release --locked -F datapusher_plus
 There are three binary variants of qsv:
 * `qsv` - [feature](#feature-flags)-capable(❇️), with the [prebuilt binaries](https://github.com/jqnatividad/qsv/releases/latest) enabling all applicable features except Python [^2]
 * `qsvlite` - all features disabled (~33% of the size of `qsv`)
-* `qsvdp` - optimized for use with [DataPusher+](https://github.com/dathere/datapusher-plus) with only DataPusher+ relevant commands; `applydp`, a slimmed-down version of the `apply` feature; embedded `luau` interpreter; the `--progressbar` option disabled; and the self-update only checking for new releases, requiring an explicit `--update` (~33% of the the size of `qsv`).
+* `qsvdp` - optimized for use with [DataPusher+](https://github.com/dathere/datapusher-plus) with only DataPusher+ relevant commands; `applydp`, a slimmed-down version of the `apply` feature; the `--progressbar` option disabled; and the self-update only checking for new releases, requiring an explicit `--update` (~33% of the the size of `qsv`).
 
 [^2]: The `foreach` feature is not available on Windows. The `python` feature is not enabled on the prebuilt binaries. Compile qsv with Python development environment installed if you want to enable the `python` feature (Python 3.7 & above supported). The `luau` feature is enabled by default on the prebuilt binaries.  
 
@@ -231,7 +231,7 @@ qsv stats wcp.csv --output wcpstats.csv
 ```
 
 ## Interpreters
-For complex data-wrangling tasks, you can use Luau and Python scripts. The `qsv` binary variant can embed `luau` and `python` interpreters, enabled by identically named feature flags. The `qsvdp` binary variant has the `luau` interpreter embedded by default.
+For complex data-wrangling tasks, you can use Luau and Python scripts. The `qsv` binary variant can embed `luau` and `python` interpreters, enabled by identically named feature flags.
 ### Luau
 
 [Luau](https://luau-lang.org) is a fast, small, safe, gradually typed embeddable scripting language derived from [Lua](https://www.lua.org/about.html). It lies at the [heart of Roblox technology](https://luau-lang.org/2022/11/04/luau-origins-and-evolution.html) - powering all it's user generated content, with [Roblox](https://en.wikipedia.org/wiki/Roblox)'s own internal code having more than 2 millions lines of Luau. 
