@@ -1278,9 +1278,9 @@ dependencies = [
 
 [[package]]
 name = "csv-diff"
-version = "0.1.0-beta.1"
+version = "0.1.0-beta.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d86823063631fc35d5099bdfa24800463558ff69f5891d0bfcc648c426febbec"
+checksum = "995ff146e82a65fb2c98855cc498a6b6081ca15cbbf5fa81e68ca9f14ec25ee8"
 dependencies = [
  "ahash 0.8.3",
  "crossbeam-channel",
