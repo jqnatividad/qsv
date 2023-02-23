@@ -224,23 +224,23 @@ fn luau_aggregation_with_embedded_begin_end_using_file() {
 BEGIN {
     -- this is the BEGIN block
     -- where we typically initialize variables
-    tot = 0;
-    gtotal = 0;
+    running_total = 0;
+    grand_total = 0;
     amt_array = {};
 }!
 
--- this is the main script
+-- this is the main script, which is executed for each row
 -- note that we use the _idx special variable to get the row index
 amt_array[_idx] = Amount;
-tot = tot + Amount;
-gtotal = gtotal + tot;
--- tot is the value we map to the "Running Total" column of each row
-return tot;
+running_total = running_total + Amount;
+grand_total = grand_total + running_total;
+-- running_total is the value we "map" to the "Running Total" column of each row
+return running_total;
 
 END {
     -- and this is the end block
     -- note that we use the _rowcount special variable to get the number of rows
-    return ("Min/Max: " .. math.min(unpack(amt_array)) .. "/" .. math.max(unpack(amt_array)) .. " Grand total of " .. _rowcount .. " rows: " .. gtotal);
+    return ("Min/Max: " .. math.min(unpack(amt_array)) .. "/" .. math.max(unpack(amt_array)) .. " Grand total of " .. _rowcount .. " rows: " .. grand_total);
 }!        
 "#,
     );
