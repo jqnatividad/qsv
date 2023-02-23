@@ -240,8 +240,9 @@ return running_total;
 END {
     -- and this is the END block, which is executed once at the end
     -- note how we use the _rowcount special variable to get the number of rows
-    return ("Min/Max: " ..
-       math.min(unpack(amount_array)) .. "/" .. math.max(unpack(amount_array)) ..
+    min_amount = math.min(unpack(amount_array));
+    max_amount = math.max(unpack(amount_array));
+    return ("Min/Max: " .. min_amount .. "/" .. max_amount ..
        " Grand total of " .. _rowcount .. " rows: " .. grand_total);
 }!        
 "#,
