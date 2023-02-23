@@ -231,7 +231,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     luau_script = main_script;
     debug!("Embedded BEGIN script: {embedded_begin_script:?}");
     debug!("Embedded END script: {embedded_end_script:?}");
-    debug!("MAIN Luau script: {luau_script:?}");
 
     let mut luau_main_script = if args.flag_exec {
         String::new()
@@ -258,10 +257,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // check if an END script was specified. We check it before BEGIN for two reasons:
     // 1) so we don't run the main script only to error out on an invalid END script file not found.
-    // 2) to see if _idx or _rowcount is used in the END, even if they're not used in the BEGIN
-    // script,    so we can init the _idx and _rowcount global vars in the beginning, if the END
-    // script    referred to the special vars & they're not referenced in the BEGIN & main
-    // scripts.
+    // 2) to see if _idx/_rowcount is used in the END, even if they're not used in the BEGIN script
+    //    so we can init the _idx and _rowcount global vars in the beginning if the END script
+    //    referred to the special vars & they're NOT referenced in the BEGIN & main scripts.
     let end_script = if let Some(ref end) = args.flag_end {
         if let Some(end_filepath) = end.strip_prefix("file:") {
             match fs::read_to_string(end_filepath) {
@@ -276,7 +274,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             end.to_string()
         }
     } else {
-        embedded_end_script //String::new()
+        embedded_end_script
     };
 
     // prepare the Luau compiler, so we can compile the scripts into bytecode
