@@ -83,12 +83,17 @@ Load `file1.csv` and `file2.csv' into xlsx file
 PARQUET
 Convert to directory of parquet files.  Need to select a directory, it will be created if it does not exists.
 
+To stream the data use the `pipe` option.  To pipe from stdin use `-` for the filename or use named pipe. Type guessing is more limited with this option.
+
 Examples:
 
 Convert `file1.csv` and `file2.csv' into `mydir/file1.parquet` and `mydir/file2.parquet` files.
 
   $ qsv to parquet mydir file1.csv file2.csv
 
+Convert from stdin.
+
+  $ qsv to parquet --pipe mydir -
 
 DATAPACKAGE
 Generate a datapackage, which contains stats and information about what is in the CSV files.
@@ -125,6 +130,7 @@ options:
     -s --schema <arg>      The schema to load the data into. (postgres only).
     -d --drop              Drop tables before loading new data into them (postgres/sqlite only).
     -e --evolve            If loading into existing db, alter existing tables so that new data will load. (postgres/sqlite only).
+    -i --pipe              For parquet, allow piping from stdin (using `-`) or from a named pipe.
     -p --separator <arg>   For xlsx, use this character to help truncate xlsx sheet names.
                            Defaults to space.
     -j, --jobs <arg>       The number of jobs to run in parallel.
@@ -175,6 +181,7 @@ struct Args {
     flag_jobs:          Option<usize>,
     flag_print_package: bool,
     flag_quiet:         bool,
+    flag_pipe:          bool,
 }
 
 impl From<csvs_convert::Error> for CliError {
@@ -204,6 +211,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .seperator(args.flag_separator.unwrap_or_else(|| " ".into()))
         .evolve(args.flag_evolve)
         .stats(args.flag_stats)
+        .pipe(args.flag_pipe)
         .stats_csv(args.flag_stats_csv.unwrap_or_default())
         .drop(args.flag_drop)
         .threads(util::njobs(args.flag_jobs))
@@ -305,21 +313,38 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         for resource in output["resources"].as_array().unwrap_or(&empty_array) {
             let mut stdout = std::io::stdout();
             writeln!(&mut stdout)?;
-            writeln!(
-                &mut stdout,
-                "Table '{}' ({} rows)",
-                resource["name"].as_str().unwrap_or(""),
-                resource["row_count"].as_i64().unwrap_or(0)
-            )?;
+            if args.flag_pipe {
+                writeln!(
+                    &mut stdout,
+                    "Table '{}'",
+                    resource["name"].as_str().unwrap_or("")
+                )?;
+            } else {
+                writeln!(
+                    &mut stdout,
+                    "Table '{}' ({} rows)",
+                    resource["name"].as_str().unwrap_or(""),
+                    resource["row_count"].as_i64().unwrap_or(0)
+                )?;
+            }
+
             writeln!(&mut stdout)?;
 
             let mut tabwriter = tabwriter::TabWriter::new(stdout);
 
-            writeln!(
-                &mut tabwriter,
-                "{}",
-                ["Field Name", "Field Type", "Field Format"].join("\t")
-            )?;
+            if args.flag_pipe {
+                writeln!(
+                    &mut tabwriter,
+                    "{}",
+                    ["Field Name", "Field Type"].join("\t")
+                )?;
+            } else {
+                writeln!(
+                    &mut tabwriter,
+                    "{}",
+                    ["Field Name", "Field Type", "Field Format"].join("\t")
+                )?;
+            }
 
             for field in resource["schema"]["fields"]
                 .as_array()

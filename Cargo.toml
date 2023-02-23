@@ -77,7 +77,7 @@ crossbeam-channel = "0.5"
 csv = "1.2"
 csv-diff = "0.1.0-beta.1"
 csv-index = "0.1"
-csvs_convert = { version = "0.7", optional = true }
+csvs_convert = { version = "0.8", optional = true }
 data-encoding = { version = "2.3", optional = true }
 docopt = "1"
 dynfmt = { version = "0.1", default-features = false, features = [
