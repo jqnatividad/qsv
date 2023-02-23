@@ -89,7 +89,7 @@ fn luau_aggregation() {
 }
 
 #[test]
-fn luau_aggregation_with_prologue() {
+fn luau_aggregation_with_begin() {
     let wrk = Workdir::new("luau");
     wrk.create(
         "data.csv",
@@ -104,7 +104,7 @@ fn luau_aggregation_with_prologue() {
     let mut cmd = wrk.command("luau");
     cmd.arg("map")
         .arg("Total")
-        .arg("--prologue")
+        .arg("--begin")
         .arg("tot = 0")
         .arg("-x")
         .arg("tot = tot + Amount; return tot")
@@ -122,7 +122,7 @@ fn luau_aggregation_with_prologue() {
 }
 
 #[test]
-fn luau_aggregation_with_prologue_epilogue() {
+fn luau_aggregation_with_begin_end() {
     let wrk = Workdir::new("luau");
     wrk.create(
         "data.csv",
@@ -137,11 +137,11 @@ fn luau_aggregation_with_prologue_epilogue() {
     let mut cmd = wrk.command("luau");
     cmd.arg("map")
         .arg("Total")
-        .arg("--prologue")
+        .arg("--begin")
         .arg("tot = 0; gtotal = 0; amt_array = {}")
         .arg("-x")
         .arg("amt_array[_idx] = Amount; tot = tot + Amount; gtotal = gtotal + tot; return tot")
-        .arg("--epilogue")
+        .arg("--end")
         .arg(r#"return ("Min/Max: " .. math.min(unpack(amt_array)) .. "/" .. math.max(unpack(amt_array)) .. " Grand total of " .. _rowcount .. " rows: " .. gtotal)"#)
         .arg("data.csv");
 
@@ -155,15 +155,15 @@ fn luau_aggregation_with_prologue_epilogue() {
     ];
     assert_eq!(got, expected);
 
-    let epilogue = wrk.output_stderr(&mut cmd);
-    let expected_epilogue = "Min/Max: 7/72 Grand total of 4 rows: 275\n".to_string();
-    assert_eq!(epilogue, expected_epilogue);
+    let end = wrk.output_stderr(&mut cmd);
+    let expected_end = "Min/Max: 7/72 Grand total of 4 rows: 275\n".to_string();
+    assert_eq!(end, expected_end);
 
     wrk.assert_success(&mut cmd);
 }
 
 #[test]
-fn luau_aggregation_with_prologue_epilogue_and_luau_syntax() {
+fn luau_aggregation_with_begin_end_and_luau_syntax() {
     let wrk = Workdir::new("luau");
     wrk.create(
         "data.csv",
@@ -178,11 +178,11 @@ fn luau_aggregation_with_prologue_epilogue_and_luau_syntax() {
     let mut cmd = wrk.command("luau");
     cmd.arg("map")
         .arg("Total")
-        .arg("--prologue")
+        .arg("--begin")
         .arg("tot = 0; gtotal = 0; amt_array = {}")
         .arg("-x")
         .arg("amt_array[_idx] = Amount; tot += if tonumber(Amount) < 0 then Amount * -1 else Amount; gtotal += tot; return tot")
-        .arg("--epilogue")
+        .arg("--end")
         .arg(r#"return ("Min/Max: " .. math.min(unpack(amt_array)) .. "/" .. math.max(unpack(amt_array)) .. " Grand total of " .. _rowcount .. " rows: " .. gtotal)"#)
         .arg("data.csv");
 
@@ -196,9 +196,9 @@ fn luau_aggregation_with_prologue_epilogue_and_luau_syntax() {
     ];
     assert_eq!(got, expected);
 
-    let epilogue = wrk.output_stderr(&mut cmd);
-    let expected_epilogue = "Min/Max: -72/13 Grand total of 4 rows: 275\n".to_string();
-    assert_eq!(epilogue, expected_epilogue);
+    let end = wrk.output_stderr(&mut cmd);
+    let expected_end = "Min/Max: -72/13 Grand total of 4 rows: 275\n".to_string();
+    assert_eq!(end, expected_end);
 
     wrk.assert_success(&mut cmd);
 }
