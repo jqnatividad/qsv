@@ -222,25 +222,27 @@ fn luau_aggregation_with_embedded_begin_end_using_file() {
         "testbeginend.luau",
         r#"
 BEGIN {
-    -- this is the BEGIN block
+    -- this is the BEGIN block, which is executed once at the beginning
     -- where we typically initialize variables
     running_total = 0;
     grand_total = 0;
-    amt_array = {};
+    amount_array = {};
 }!
 
--- this is the main script, which is executed for each row
--- note that we use the _idx special variable to get the row index
-amt_array[_idx] = Amount;
+-- this is the MAIN script, which is executed for each row
+-- note how we use the _idx special variable to get the row index
+amount_array[_idx] = Amount;
 running_total = running_total + Amount;
 grand_total = grand_total + running_total;
 -- running_total is the value we "map" to the "Running Total" column of each row
 return running_total;
 
 END {
-    -- and this is the end block
-    -- note that we use the _rowcount special variable to get the number of rows
-    return ("Min/Max: " .. math.min(unpack(amt_array)) .. "/" .. math.max(unpack(amt_array)) .. " Grand total of " .. _rowcount .. " rows: " .. grand_total);
+    -- and this is the END block, which is executed once at the end
+    -- note how we use the _rowcount special variable to get the number of rows
+    return ("Min/Max: " ..
+       math.min(unpack(amount_array)) .. "/" .. math.max(unpack(amount_array)) ..
+       " Grand total of " .. _rowcount .. " rows: " .. grand_total);
 }!        
 "#,
     );
