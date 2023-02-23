@@ -81,6 +81,13 @@ Usage:
 All <script> arguments/options can either be the Luau code, or if it starts with "file:",
 the filepath from which to load the script.
 
+Instead of using the --begin and --end options, you can also embed BEGIN and END scripts.
+The BEGIN script is embedded in the main-script by adding a BEGIN block at the top of the script.
+The BEGIN block is "BEGIN { ... }!" and can contain multiple statements.
+
+The END script is embedded in the main-script by adding an END block at the bottom of the script.
+The END block is "END { ... }!" and can contain multiple statements.
+
 luau options:
     -x, --exec               exec[ute] Luau script, instead of the default eval[uate].
                              eval (default) expects just a single Luau expression,
@@ -95,11 +102,13 @@ luau options:
                              The variables _idx and _rowcount are set to zero before invoking
                              the BEGIN script.
                              Typically used to initialize global variables.
+                             Takes precedence over an embedded BEGIN script.
     -E, --end <script>       Luau script/file to execute at the END, after processing the CSV with
                              the main-script.
                              Both _idx and _rowcount variables are set to the rowcount before invoking
                              the END script. Typically used for aggregations.
                              The output of the END script is sent to stderr.
+                             Takes precedence over an embedded END script.
     --luau-path <pattern>    The LUAU_PATH pattern to use from which the scripts 
                              can "require" lua/luau library files from.
                              See https://www.lua.org/pil/8.1.html
@@ -156,7 +165,7 @@ impl From<mlua::Error> for CliError {
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
-    let args: Args = util::get_args(USAGE, argv)?;
+    let mut args: Args = util::get_args(USAGE, argv)?;
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers);
@@ -189,7 +198,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let trace_on: bool = log_enabled!(log::Level::Trace);
     let mut idx = 0_usize;
 
-    let luau_script = if let Some(script_filepath) = args.arg_main_script.strip_prefix("file:") {
+    let mut luau_script = if let Some(script_filepath) = args.arg_main_script.strip_prefix("file:")
+    {
         match fs::read_to_string(script_filepath) {
             Ok(file_contents) => file_contents,
             Err(e) => return fail_clierror!("Cannot load Luau file: {e}"),
@@ -199,6 +209,29 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     idx_used = idx_used || luau_script.contains("_idx") || luau_script.contains("_rowcount");
+
+    // check if the main script has BEGIN and END blocks
+    // and if so, extract them and remove them from the main script
+    let begin_re = regex::Regex::new(r"(?ms)BEGIN \{(?P<begin_block>.*?)\}!").unwrap();
+    let end_re = regex::Regex::new(r"(?ms)END \{(?P<end_block>.*?)\}!").unwrap();
+    let mut embedded_begin_script = String::new();
+    let mut embedded_end_script = String::new();
+    let mut main_script = luau_script.clone();
+    if let Some(caps) = begin_re.captures(&luau_script) {
+        embedded_begin_script = caps["begin_block"].to_string();
+        let begin_block_replace = format!("BEGIN {{{embedded_begin_script}}}!");
+        debug!("begin_block_replace: {begin_block_replace:?}");
+        main_script = main_script.replace(&begin_block_replace, "");
+    }
+    if let Some(caps) = end_re.captures(&main_script) {
+        embedded_end_script = caps["end_block"].to_string();
+        let end_block_replace = format!("END {{{embedded_end_script}}}!");
+        main_script = main_script.replace(&end_block_replace, "");
+    }
+    luau_script = main_script;
+    debug!("Embedded BEGIN script: {embedded_begin_script:?}");
+    debug!("Embedded END script: {embedded_end_script:?}");
+    debug!("MAIN Luau script: {luau_script:?}");
 
     let mut luau_main_script = if args.flag_exec {
         String::new()
@@ -223,11 +256,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     env::set_var("LUAU_PATH", luau_path.clone());
     info!(r#"set LUAU_PATH to "{luau_path}""#);
 
-    // check if an END script was specified. We check it first for two reasons:
+    // check if an END script was specified. We check it before BEGIN for two reasons:
     // 1) so we don't run the main script only to error out on an invalid END script file not found.
-    // 2) to see if _idx or _rowcount is used, even if they're not used in the BEGIN script,
-    //    so we can init the _idx and _rowcount global vars in the beginning, if the END script
-    //    referred to the special vars & they're not referenced in the BEGIN & main scripts.
+    // 2) to see if _idx or _rowcount is used in the END, even if they're not used in the BEGIN
+    // script,    so we can init the _idx and _rowcount global vars in the beginning, if the END
+    // script    referred to the special vars & they're not referenced in the BEGIN & main
+    // scripts.
     let end_script = if let Some(ref end) = args.flag_end {
         if let Some(end_filepath) = end.strip_prefix("file:") {
             match fs::read_to_string(end_filepath) {
@@ -242,7 +276,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             end.to_string()
         }
     } else {
-        String::new()
+        embedded_end_script //String::new()
     };
 
     // prepare the Luau compiler, so we can compile the scripts into bytecode
@@ -264,15 +298,19 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // set it as the default compiler
     luau.set_compiler(luau_compiler.clone());
 
+    if args.flag_begin.is_none() && !embedded_begin_script.is_empty() {
+        args.flag_begin = Some(embedded_begin_script);
+    }
+
     // check if a BEGIN script was specified
-    if let Some(begin) = args.flag_begin {
-        let begin_script = if let Some(begin_filepath) = begin.strip_prefix("file:") {
+    if let Some(begin_script) = args.flag_begin {
+        let begin_script = if let Some(begin_filepath) = begin_script.strip_prefix("file:") {
             match fs::read_to_string(begin_filepath) {
                 Ok(file_contents) => file_contents,
                 Err(e) => return fail_clierror!("Cannot load Luau BEGIN script file: {e}"),
             }
         } else {
-            begin
+            begin_script
         };
 
         idx_used = idx_used || begin_script.contains("_idx") || begin_script.contains("_rowcount");
