@@ -12,8 +12,11 @@ instead as they scan the entire file.
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_sniff.rs.
 
 Usage:
-    qsv sniff [options] [<input>]
+    qsv sniff [options] <input>
     qsv sniff --help
+
+sniff arguments:
+    <input>                The CSV file to sniff. Does not work with stdin.
 
 sniff options:
     --sample <size>        First n rows to sample to sniff out the metadata.
@@ -89,6 +92,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut sample_size = args.flag_sample;
     if sample_size < 0.0 {
+        if args.flag_json || args.flag_pretty_json {
+            let json_result = json!({
+                "errors": [{
+                    "title": "sniff error",
+                    "detail": "Sample size must be greater than or equal to zero."
+                }]
+            });
+            return fail_clierror!("{json_result}");
+        }
         return fail_clierror!("Sample size must be greater than or equal to zero.");
     }
 
@@ -96,6 +108,19 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .flexible(true)
         .delimiter(args.flag_delimiter);
     let n_rows = util::count_rows(&conf)?;
+
+    if n_rows == 0 {
+        if args.flag_json || args.flag_pretty_json {
+            let json_result = json!({
+                "errors": [{
+                    "title": "sniff error",
+                    "detail": "Empty file"
+                }]
+            });
+            return fail_clierror!("{json_result}");
+        }
+        return fail_clierror!("Empty file");
+    }
 
     let mut sample_all = false;
     // its a percentage, get the actual sample size
@@ -108,7 +133,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         sample_all = true;
     }
 
-    let rdr = conf.reader_file_stdin()?;
+    let rdr = conf.reader_file()?;
 
     let dt_preference = if args.flag_prefer_dmy || conf.get_dmy_preference() {
         DatePreference::DmyFormat
