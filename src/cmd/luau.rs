@@ -45,24 +45,28 @@ Some usage examples:
   "file:" prefix to read non-trivial scripts from the filesystem.
   $ qsv luau map Type -B "file:init.luau" -x "file:debitcredit.luau" -E "file:end.luau"
 
-The main-script is evaluated on a per row basis.
+The MAIN script is evaluated on a per row basis.
 With "luau map", if the main-script is invalid for a row, "<ERROR>" is returned for that row.
 With "luau filter", if the main-script is invalid for a row, that row is not filtered.
 
 If any row has an invalid result, an exitcode of 1 is returned and an error count is logged.
 
-There are also special variables - "_idx" that is zero during the BEGIN script & set to the current 
-row number during the main script; & "_rowcount" which is zero during the BEGIN & main scripts,
-and set to the rowcount during the END script.
+There are also special variables - "_IDX" - a read-only variable that is zero during the BEGIN script and
+set to the current row number during the main script; & "_ROWCOUNT" - a read-only variable which is zero
+during the BEGIN & MAIN scripts, and set to the rowcount during the END script.
+
+"_INDEX" - a read/write variable that enables random access of the CSV file. Setting it to a row number
+will change the current row to that row number. Setting "_INDEX" to a negative number will start from
+the end of the CSV file. It will only work, however, if the CSV has an index.
 
 Luau's standard library is relatively minimal (https://luau-lang.org/library).
 That's why qsv preloads the LuaDate library as date manipulation is a common data-wrangling task.
 See https://tieske.github.io/date/#date-id96473 for info on how to use the LuaDate library.
 
-Furthermore, the user can load additional libraries from the LUAU_PATH using luau's "require" function.
+Additional libraries can be loaded from the LUAU_PATH using luau's "require" function.
 See http://lua-users.org/wiki/LibrariesAndBindings for a list of other libraries.
 
-With the judicious use of "require", the BEGIN script & the "_idx"/"_rowcount" variables, one can create
+With the judicious use of "require", the BEGIN script & the "_IDX"/"_ROWCOUNT" variables, one can create
 variables/tables/arrays that can be used for complex aggregation operations in the END script.
 
 TIP: When developing luau scripts, be sure to set QSV_LOG_LEVEL=debug so you can see the detailed Luau
@@ -82,10 +86,10 @@ All <script> arguments/options can either be the Luau code, or if it starts with
 the filepath from which to load the script.
 
 Instead of using the --begin and --end options, you can also embed BEGIN and END scripts.
-The BEGIN script is embedded in the main-script by adding a BEGIN block at the top of the script.
+The BEGIN script is embedded in the MAIN script by adding a BEGIN block at the top of the script.
 The BEGIN block is "BEGIN { ... }!" and can contain multiple statements.
 
-The END script is embedded in the main-script by adding an END block at the bottom of the script.
+The END script is embedded in the MAIN script by adding an END block at the bottom of the script.
 The END block is "END { ... }!" and can contain multiple statements.
 
 luau options:
@@ -99,13 +103,13 @@ luau options:
                              Note: access to Luau globals thru _G remains even without -g.
     -B, --begin <script>     Luau script/file to execute in the BEGINning, before processing the CSV
                              with the main-script.
-                             The variables _idx and _rowcount are set to zero before invoking
+                             The variables _IDX and _ROWCOUNT are set to zero before invoking
                              the BEGIN script.
                              Typically used to initialize global variables.
                              Takes precedence over an embedded BEGIN script.
     -E, --end <script>       Luau script/file to execute at the END, after processing the CSV with
                              the main-script.
-                             Both _idx and _rowcount variables are set to the rowcount before invoking
+                             Both _IDX and _ROWCOUNT variables are set to the rowcount before invoking
                              the END script. Typically used for aggregations.
                              The output of the END script is sent to stderr.
                              Takes precedence over an embedded END script.
@@ -124,6 +128,8 @@ Common options:
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
     -p, --progressbar      Show progress bars. Not valid for stdin.
+                           Also not valid when "_INDEX" var is used
+                           for random access.
 "#;
 
 use std::{env, fs};
@@ -165,38 +171,10 @@ impl From<mlua::Error> for CliError {
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
-    let mut args: Args = util::get_args(USAGE, argv)?;
+    let args: Args = util::get_args(USAGE, argv)?;
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers);
-
-    let mut rdr = rconfig.reader()?;
-    let mut wtr = Config::new(&args.flag_output).writer()?;
-
-    let mut headers = rdr.headers()?.clone();
-
-    if !rconfig.no_headers {
-        if !args.cmd_filter {
-            let new_column = args
-                .arg_new_column
-                .as_ref()
-                .ok_or("Specify new column name")?;
-            headers.push_field(new_column);
-        }
-
-        wtr.write_record(&headers)?;
-    }
-
-    let luau = Lua::new();
-    let globals = luau.globals();
-    globals.set("cols", "{}")?;
-
-    // we initialize idx_used with a log_enabled debug check
-    // coz if log debug is on, we use idx to track record/row number
-    // in the log error messages
-    let mut idx_used: bool = log_enabled!(log::Level::Debug);
-    let trace_on: bool = log_enabled!(log::Level::Trace);
-    let mut idx = 0_usize;
 
     let mut luau_script = if let Some(script_filepath) = args.arg_main_script.strip_prefix("file:")
     {
@@ -205,10 +183,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             Err(e) => return fail_clierror!("Cannot load Luau file: {e}"),
         }
     } else {
-        args.arg_main_script
+        args.arg_main_script.clone()
     };
 
-    idx_used = idx_used || luau_script.contains("_idx") || luau_script.contains("_rowcount");
+    let mut index_file_used = luau_script.contains("_INDEX");
 
     // check if the main script has BEGIN and END blocks
     // and if so, extract them and remove them from the main script
@@ -229,17 +207,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         main_script = main_script.replace(&end_block_replace, "");
     }
     luau_script = main_script;
-    debug!("Embedded BEGIN script: {embedded_begin_script:?}");
-    debug!("Embedded END script: {embedded_end_script:?}");
 
-    let mut luau_main_script = if args.flag_exec {
+    let mut main_script = if args.flag_exec {
         String::new()
     } else {
         String::from("return ")
     };
 
-    luau_main_script.push_str(&luau_script);
-    debug!("Luau main script: {luau_main_script:?}");
+    main_script.push_str(luau_script.trim());
+    debug!("MAIN script: {main_script:?}");
 
     // setup LUAU_PATH; create a temporary directory and add it to LUAU_PATH and copy date.lua
     // there so qsv luau users can just `local date = require "date"` in their scripts,
@@ -250,22 +226,37 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
     let luadate_path = temp_dir.path().join("date.lua");
     fs::write(luadate_path.clone(), luadate_library)?;
-    let mut luau_path = args.flag_luau_path;
+    let mut luau_path = args.flag_luau_path.clone();
     luau_path.push_str(&format!(";{}", luadate_path.as_os_str().to_string_lossy()));
     env::set_var("LUAU_PATH", luau_path.clone());
     info!(r#"set LUAU_PATH to "{luau_path}""#);
 
-    // check if an END script was specified. We check it before BEGIN for two reasons:
-    // 1) so we don't run the main script only to error out on an invalid END script file not found.
-    // 2) to see if _idx/_rowcount is used in the END, even if they're not used in the BEGIN script
-    //    so we can init the _idx and _rowcount global vars in the beginning if the END script
-    //    referred to the special vars & they're NOT referenced in the BEGIN & main scripts.
+    // check if a BEGIN script was specified
+    let begin_script = if let Some(ref begin) = args.flag_begin {
+        if let Some(begin_filepath) = begin.strip_prefix("file:") {
+            match fs::read_to_string(begin_filepath) {
+                Ok(begin) => {
+                    // check if the BEGIN script uses _INDEX
+                    index_file_used = index_file_used || begin.contains("_INDEX");
+                    begin
+                }
+                Err(e) => return fail_clierror!("Cannot load Luau BEGIN script file: {e}"),
+            }
+        } else {
+            begin.to_string()
+        }
+    } else {
+        embedded_begin_script.trim().to_string()
+    };
+    debug!("BEGIN script: {begin_script:?}");
+
+    // check if an END script was specified
     let end_script = if let Some(ref end) = args.flag_end {
         if let Some(end_filepath) = end.strip_prefix("file:") {
             match fs::read_to_string(end_filepath) {
                 Ok(end) => {
-                    // check if the END script uses _idx or _rowcount
-                    idx_used = idx_used || end.contains("_idx") || end.contains("_rowcount");
+                    // check if the END script uses _INDEX
+                    index_file_used = index_file_used || end.contains("_INDEX");
                     end
                 }
                 Err(e) => return fail_clierror!("Cannot load Luau END script file: {e}"),
@@ -274,11 +265,31 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             end.to_string()
         }
     } else {
-        embedded_end_script
+        embedded_end_script.trim().to_string()
     };
+    debug!("END script: {end_script:?}");
 
-    // prepare the Luau compiler, so we can compile the scripts into bytecode
-    // see https://docs.rs/mlua/latest/mlua/struct.Compiler.html for more info
+    if index_file_used {
+        with_index(&rconfig, &args, &begin_script, &main_script, &end_script)?;
+    } else {
+        no_index(&rconfig, &args, &begin_script, &main_script, &end_script)?;
+    }
+
+    Ok(())
+}
+
+fn no_index(
+    rconfig: &Config,
+    args: &Args,
+    begin_script: &str,
+    main_script: &str,
+    end_script: &str,
+) -> Result<(), CliError> {
+    let luau = Lua::new();
+    let globals = luau.globals();
+    globals.set("cols", "{}")?;
+    let trace_on: bool = log_enabled!(log::Level::Trace);
+
     let luau_compiler = if log_enabled!(log::Level::Debug) {
         // debugging is on, set more debugging friendly compiler settings
         // so we can see more error details in the logfile
@@ -293,34 +304,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .set_debug_level(1)
             .set_coverage_level(0)
     };
-    // set it as the default compiler
     luau.set_compiler(luau_compiler.clone());
 
-    if args.flag_begin.is_none() && !embedded_begin_script.is_empty() {
-        args.flag_begin = Some(embedded_begin_script);
-    }
-
-    // check if a BEGIN script was specified
-    if let Some(begin_script) = args.flag_begin {
-        let begin_script = if let Some(begin_filepath) = begin_script.strip_prefix("file:") {
-            match fs::read_to_string(begin_filepath) {
-                Ok(file_contents) => file_contents,
-                Err(e) => return fail_clierror!("Cannot load Luau BEGIN script file: {e}"),
-            }
-        } else {
-            begin_script
-        };
-
-        idx_used = idx_used || begin_script.contains("_idx") || begin_script.contains("_rowcount");
-        if idx_used {
-            // we set _idx and _rowcount here just in case they're
-            // used in the BEGIN script
-            globals.set("_idx", 0)?;
-            globals.set("_rowcount", 0)?;
-        }
-
-        info!("Compiling and executing BEGIN script. _idx used: {idx_used}");
-        let begin_bytecode = luau_compiler.compile(&begin_script);
+    // we initialize the special vars _IDX and _ROWCOUNT
+    globals.set("_IDX", 0)?;
+    globals.set("_ROWCOUNT", 0)?;
+    if !begin_script.is_empty() {
+        info!("Compiling and executing BEGIN script.");
+        let begin_bytecode = luau_compiler.compile(begin_script);
         if let Err(e) = luau
             .load(&begin_bytecode)
             .set_mode(mlua::ChunkMode::Binary)
@@ -333,49 +324,49 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
         info!("BEGIN executed.");
     }
+    let mut rdr = rconfig.reader()?;
+    let mut wtr = Config::new(&args.flag_output).writer()?;
+    let mut headers = rdr.headers()?.clone();
+    if !rconfig.no_headers {
+        if !args.cmd_filter {
+            let new_column = args
+                .arg_new_column
+                .as_ref()
+                .ok_or("Specify new column name")?;
+            headers.push_field(new_column);
+        }
 
-    // prep progress bar
+        wtr.write_record(&headers)?;
+    }
     #[cfg(any(feature = "full", feature = "lite"))]
     let show_progress =
         (args.flag_progressbar || std::env::var("QSV_PROGRESSBAR").is_ok()) && !rconfig.is_stdin();
-
     #[cfg(any(feature = "full", feature = "lite"))]
     let progress = ProgressBar::with_draw_target(None, ProgressDrawTarget::stderr_with_hz(5));
-
     #[cfg(any(feature = "full", feature = "lite"))]
     if show_progress {
-        util::prep_progress(&progress, util::count_rows(&rconfig)?);
+        util::prep_progress(&progress, util::count_rows(rconfig)?);
     } else {
         progress.set_draw_target(ProgressDrawTarget::hidden());
     }
 
     let error_result: Value = luau.load("return \"<ERROR>\";").eval()?;
     let mut error_flag;
-
-    // we init/reset _idx and _rowcount right before the main loop
-    if idx_used {
-        globals.set("_idx", 0)?;
-        globals.set("_rowcount", 0)?;
-    }
-
-    // pre-compile main script into bytecode
-    let main_bytecode = luau_compiler.compile(&luau_main_script);
-
+    let main_bytecode = luau_compiler.compile(main_script);
     let mut record = csv::StringRecord::new();
+    let mut idx = 0_u64;
     let mut error_count = 0_usize;
     let mut trace_col_values = String::new();
 
+    // main loop
     while rdr.read_record(&mut record)? {
         #[cfg(any(feature = "full", feature = "lite"))]
         if show_progress {
             progress.inc(1);
         }
 
-        // _idx is used, be sure to keep _idx set to current row number
-        if idx_used {
-            idx += 1;
-            globals.set("_idx", idx)?;
-        }
+        idx += 1;
+        globals.set("_IDX", idx)?;
 
         // Updating col
         {
@@ -409,18 +400,23 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .set_mode(mlua::ChunkMode::Binary)
             .eval()
         {
-            Ok(computed) => computed,
+            Ok(computed) => {
+                if trace_on {
+                    log::trace!("current row({idx}): {trace_col_values:?}");
+                    log::trace!("current globals({idx}): {globals:?}");
+                    log::trace!("computed value({idx}): {computed:?}");
+                }
+                computed
+            }
             Err(e) => {
                 error_flag = true;
                 error_count += 1;
-                let err_msg = if idx_used {
+                let err_msg = {
                     if trace_on {
-                        log::trace!("current row({idx}): {trace_col_values}");
+                        log::trace!("current row({idx}): {trace_col_values:?}");
                         log::trace!("current globals({idx}): {globals:?}");
                     }
-                    format!("_idx: {idx} error({error_count}): {e:?}")
-                } else {
-                    format!("error({error_count}): {e:?}")
+                    format!("_IDX: {idx} error({error_count}): {e:?}")
                 };
                 log::error!("{err_msg}");
                 error_result.clone()
@@ -478,23 +474,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     }
 
-    #[cfg(any(feature = "full", feature = "lite"))]
-    if show_progress {
-        util::finish_progress(&progress);
-    }
-
     if !end_script.is_empty() {
-        // if idx_used, also set a convenience variable named _rowcount;
-        // true, _rowcount is equal to _idx at this point, but this
+        // at the END, set a convenience variable named _ROWCOUNT;
+        // true, _ROWCOUNT is equal to _IDX at this point, but this
         // should make for more readable END scripts.
-        // Also, _rowcount is zero during the main script, and only set
-        // to _idx during the END script.
-        if idx_used {
-            globals.set("_rowcount", idx)?;
-        }
+        // Also, _ROWCOUNT is zero during the main script, and only set
+        // to _IDX during the END script.
+        globals.set("_ROWCOUNT", idx)?;
 
-        info!("Compiling and executing END script. _idx used: {idx_used}, _rowcount: {idx}");
-        let end_bytecode = luau_compiler.compile(&end_script);
+        info!("Compiling and executing END script. _ROWCOUNT: {idx}");
+        let end_bytecode = luau_compiler.compile(end_script);
         let end_value: Value = match luau
             .load(&end_bytecode)
             .set_mode(mlua::ChunkMode::Binary)
@@ -503,9 +492,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             Ok(computed) => computed,
             Err(e) => {
                 log::error!("END error: Cannot evaluate \"{end_script}\".\n{e}");
-                if trace_on {
-                    log::trace!("END globals: {globals:?}");
-                }
+                log::error!("END globals: {globals:?}");
                 error_result.clone()
             }
         };
@@ -526,11 +513,260 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if trace_on {
         log::trace!("ending globals: {globals:?}");
     }
-
     wtr.flush()?;
-
+    #[cfg(any(feature = "full", feature = "lite"))]
+    if show_progress {
+        util::finish_progress(&progress);
+    }
     if error_count > 0 {
         return fail_clierror!("Luau errors encountered: {error_count}");
+    };
+    Ok(())
+}
+
+// this function is largely similar to no_index
+// the primary difference being that we use an Indexed File rdr in the main loop
+// differences pointed out in comments below
+fn with_index(
+    rconfig: &Config,
+    args: &Args,
+    begin_script: &str,
+    main_script: &str,
+    end_script: &str,
+) -> Result<(), CliError> {
+    let Some(mut idx_file) = rconfig.indexed()? else { return fail!("Index required but no index file found") };
+
+    let luau = Lua::new();
+    let globals = luau.globals();
+    globals.set("cols", "{}")?;
+    let trace_on: bool = log_enabled!(log::Level::Trace);
+
+    let luau_compiler = if log_enabled!(log::Level::Debug) {
+        mlua::Compiler::new()
+            .set_optimization_level(0)
+            .set_debug_level(2)
+            .set_coverage_level(2)
+    } else {
+        mlua::Compiler::new()
+            .set_optimization_level(2)
+            .set_debug_level(1)
+            .set_coverage_level(0)
+    };
+    luau.set_compiler(luau_compiler.clone());
+    let row_count = util::count_rows(rconfig).unwrap_or_default();
+
+    let mut wtr = Config::new(&args.flag_output).writer()?;
+    let mut headers = idx_file.headers()?.clone();
+    if !rconfig.no_headers {
+        if !args.cmd_filter {
+            let new_column = args
+                .arg_new_column
+                .as_ref()
+                .ok_or("Specify new column name")?;
+            headers.push_field(new_column);
+        }
+
+        wtr.write_record(&headers)?;
     }
+
+    if !begin_script.is_empty() {
+        // unlike no_index, we actually know the row_count at the BEGINning
+        globals.set("_IDX", 0)?;
+        globals.set("_ROWCOUNT", row_count)?;
+
+        info!("Compiling and executing BEGIN script.");
+        let begin_bytecode = luau_compiler.compile(begin_script);
+        if let Err(e) = luau
+            .load(&begin_bytecode)
+            .set_mode(mlua::ChunkMode::Binary)
+            .exec()
+        {
+            if trace_on {
+                log::trace!("BEGIN globals: {globals:?}");
+            }
+            return fail_clierror!("BEGIN error: Failed to execute \"{begin_script}\".\n{e}");
+        }
+        info!("BEGIN executed.");
+    }
+
+    // unlike no_index, setting "_INDEX" allows us to change the current record
+    // for the NEXT read
+    let mut pos = globals.get::<_, isize>("_INDEX").unwrap_or_default();
+    let mut curr_record = if pos > 0 && pos <= row_count as isize {
+        pos as u64
+    } else if pos < 0 && pos.unsigned_abs() as u64 <= row_count {
+        row_count - pos.unsigned_abs() as u64
+    } else {
+        0_u64
+    };
+    debug!("BEGIN current record: {curr_record}");
+    idx_file.seek(curr_record)?;
+
+    let error_result: Value = luau.load("return \"<ERROR>\";").eval()?;
+    let mut error_flag;
+
+    let main_bytecode = luau_compiler.compile(main_script);
+    let mut record = csv::StringRecord::new();
+    let mut error_count = 0_usize;
+    let mut trace_col_values = String::new();
+
+    // main loop - here we an indexed file reader, seeking to the next
+    // record to read by looking at _INDEX special var
+    while idx_file.read_record(&mut record)? {
+        globals.set("_IDX", curr_record)?;
+
+        {
+            let col =
+                luau.create_table_with_capacity(record.len().try_into().unwrap_or_default(), 1)?;
+
+            for (i, v) in record.iter().enumerate() {
+                col.set(i + 1, v)?;
+            }
+            if !rconfig.no_headers {
+                for (h, v) in headers.iter().zip(record.iter()) {
+                    col.set(h, v)?;
+                }
+            }
+            if trace_on {
+                trace_col_values = format!("{:?}", col.clone());
+            }
+            globals.set("col", col)?;
+        }
+
+        if !args.flag_no_globals && !rconfig.no_headers {
+            for (h, v) in headers.iter().zip(record.iter()) {
+                globals.set(h, v)?;
+            }
+        }
+
+        error_flag = false;
+        let computed_value: Value = match luau
+            .load(&main_bytecode)
+            .set_mode(mlua::ChunkMode::Binary)
+            .eval()
+        {
+            Ok(computed) => {
+                if trace_on {
+                    log::trace!("current row({curr_record}): {trace_col_values:?}");
+                    log::trace!("current globals({curr_record}): {globals:?}");
+                    log::trace!("computed value({curr_record}): {computed:?}");
+                }
+                computed
+            }
+            Err(e) => {
+                error_flag = true;
+                error_count += 1;
+                let err_msg = {
+                    if trace_on {
+                        log::trace!("current row({curr_record}): {trace_col_values:?}");
+                        log::trace!("current globals({curr_record}): {globals:?}");
+                    }
+                    format!("_IDX: {curr_record} error({error_count}): {e:?}")
+                };
+                log::error!("{err_msg}");
+                error_result.clone()
+            }
+        };
+
+        if args.cmd_map {
+            match computed_value {
+                Value::String(string) => {
+                    record.push_field(&string.to_string_lossy());
+                }
+                Value::Number(number) => {
+                    let mut buffer = ryu::Buffer::new();
+                    record.push_field(buffer.format(number));
+                }
+                Value::Integer(number) => {
+                    let mut buffer = itoa::Buffer::new();
+                    record.push_field(buffer.format(number));
+                }
+                Value::Boolean(boolean) => {
+                    record.push_field(if boolean { "true" } else { "false" });
+                }
+                Value::Nil => {
+                    record.push_field("");
+                }
+                _ => {
+                    return fail_clierror!(
+                        "Unexpected value type returned by provided Luau expression. \
+                         {computed_value:?}"
+                    );
+                }
+            }
+
+            wtr.write_record(&record)?;
+        } else if args.cmd_filter {
+            let must_keep_row = if error_flag {
+                true
+            } else {
+                match computed_value {
+                    Value::String(strval) => !strval.to_string_lossy().is_empty(),
+                    Value::Boolean(boolean) => boolean,
+                    Value::Nil => false,
+                    Value::Integer(intval) => intval != 0,
+                    Value::Number(fltval) => (fltval).abs() > f64::EPSILON,
+                    _ => true,
+                }
+            };
+
+            if must_keep_row {
+                wtr.write_record(&record)?;
+            }
+        }
+
+        pos = globals.get::<_, isize>("_INDEX").unwrap_or_default();
+        if pos < 0 || pos as u64 > row_count {
+            break;
+        }
+        let next_record = if pos > 0 && pos <= row_count as isize {
+            pos as u64
+        } else if pos < 0 && pos.unsigned_abs() as u64 <= row_count {
+            row_count + 1 - pos.unsigned_abs() as u64
+        } else {
+            0_u64
+        };
+        if idx_file.seek(next_record).is_err() {
+            break;
+        }
+        curr_record = next_record;
+    } // main loop
+
+    if !end_script.is_empty() {
+        info!("Compiling and executing END script. _ROWCOUNT: {row_count}");
+        let end_bytecode = luau_compiler.compile(end_script);
+        let end_value: Value = match luau
+            .load(&end_bytecode)
+            .set_mode(mlua::ChunkMode::Binary)
+            .eval()
+        {
+            Ok(computed) => computed,
+            Err(e) => {
+                log::error!("END error: Cannot evaluate \"{end_script}\".\n{e}");
+                log::error!("END globals: {globals:?}");
+                error_result.clone()
+            }
+        };
+        let end_string = match end_value {
+            Value::String(string) => string.to_string_lossy().to_string(),
+            Value::Number(number) => number.to_string(),
+            Value::Integer(number) => number.to_string(),
+            Value::Boolean(boolean) => (if boolean { "true" } else { "false" }).to_string(),
+            Value::Nil => String::new(),
+            _ => {
+                return fail_clierror!(
+                    "Unexpected END value type returned by provided Luau expression. {end_value:?}"
+                );
+            }
+        };
+        winfo!("{end_string}");
+    }
+    if trace_on {
+        log::trace!("ending globals: {globals:?}");
+    }
+    wtr.flush()?;
+    if error_count > 0 {
+        return fail_clierror!("Luau errors encountered: {error_count}");
+    };
     Ok(())
 }
