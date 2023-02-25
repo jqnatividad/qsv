@@ -28,3 +28,4 @@ tmp/*
 *.icloud
 *.parquet
 *.rsbak
+*.luau
