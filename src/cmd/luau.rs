@@ -59,6 +59,9 @@ during the BEGIN & MAIN scripts, and set to the rowcount during the END script.
 will change the current row to that row number. Setting "_INDEX" to a negative number will start from
 the end of the CSV file. It will only work, however, if the CSV has an index.
 
+When using _INDEX, the MAIN script will keep looping and evaluate the row specified by _INDEX
+until _INDEX is set to an invalid row number (e.g. negative number or to a value greater than rowcount).
+
 Luau's standard library is relatively minimal (https://luau-lang.org/library).
 That's why qsv preloads the LuaDate library as date manipulation is a common data-wrangling task.
 See https://tieske.github.io/date/#date-id96473 for info on how to use the LuaDate library.
@@ -69,8 +72,10 @@ See http://lua-users.org/wiki/LibrariesAndBindings for a list of other libraries
 With the judicious use of "require", the BEGIN script & the "_IDX"/"_ROWCOUNT" variables, one can create
 variables/tables/arrays that can be used for complex aggregation operations in the END script.
 
-TIP: When developing luau scripts, be sure to set QSV_LOG_LEVEL=debug so you can see the detailed Luau
-errors in the logfile. Set QSV_LOG_LEVEL=trace if you want to see the row/global values as well.
+TIP: When developing Luau scripts, be sure to take advantage of the "qsv_log" function.
+It will log messages to the logfile at the specified log level. Be sure to set QSV_LOG_LEVEL to the
+appropriate log level. The first parameter to qsv_log is the log level (info, warn, error, debug, trace).
+You can add as many as 255 addl parameters which will be concatenated and logged as a single message.
 
 For more detailed examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_luau.rs.
 
@@ -117,6 +122,9 @@ luau options:
                              can "require" lua/luau library files from.
                              See https://www.lua.org/pil/8.1.html
                              [default: ?;?.luau;?.lua]
+    --max-errors <count>     The maximum number of errors to tolerate before aborting.
+                             Set to zero to disable error limit.
+                             [default: 100]
 
 Common options:
     -h, --help             Display this message
@@ -137,7 +145,7 @@ use std::{env, fs};
 #[cfg(any(feature = "full", feature = "lite"))]
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::{debug, info, log_enabled};
-use mlua::{Lua, Value};
+use mlua::{Lua, LuaSerdeExt, Value};
 use serde::Deserialize;
 use tempfile;
 
@@ -162,6 +170,7 @@ struct Args {
     flag_no_headers:  bool,
     flag_delimiter:   Option<Delimiter>,
     flag_progressbar: bool,
+    flag_max_errors:  usize,
 }
 
 impl From<mlua::Error> for CliError {
@@ -269,28 +278,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
     debug!("END script: {end_script:?}");
 
-    if index_file_used {
-        with_index(&rconfig, &args, &begin_script, &main_script, &end_script)?;
-    } else {
-        no_index(&rconfig, &args, &begin_script, &main_script, &end_script)?;
-    }
-
-    Ok(())
-}
-
-fn no_index(
-    rconfig: &Config,
-    args: &Args,
-    begin_script: &str,
-    main_script: &str,
-    end_script: &str,
-) -> Result<(), CliError> {
+    // -------- setup Luau environment --------
     let luau = Lua::new();
-    let globals = luau.globals();
-    globals.set("cols", "{}")?;
-    let trace_on: bool = log_enabled!(log::Level::Trace);
-
-    let luau_compiler = if log_enabled!(log::Level::Debug) {
+    let luau_compiler = if log_enabled!(log::Level::Debug) || log_enabled!(log::Level::Trace) {
         // debugging is on, set more debugging friendly compiler settings
         // so we can see more error details in the logfile
         mlua::Compiler::new()
@@ -306,6 +296,84 @@ fn no_index(
     };
     luau.set_compiler(luau_compiler.clone());
 
+    let globals = luau.globals();
+
+    // this is a helper function that can be called from Luau scripts
+    // to send log messages to the logfile
+    // the first parameter is the log level, and the following parameters are concatenated
+    let qsv_log = luau.create_function(|luau, mut args: mlua::MultiValue| {
+        let mut log_msg = String::with_capacity(20);
+        let mut idx = 0_u8;
+        let mut log_level = String::new();
+        while let Some(val) = args.pop_front() {
+            let val = luau.from_value::<serde_json::Value>(val)?;
+            let val_str = &serde_json::to_string_pretty(&val).unwrap_or_default();
+            if idx == 0 {
+                log_level = val_str.trim_matches('"').to_lowercase();
+            } else {
+                log_msg.push_str(val_str.trim_matches('"'));
+                if idx == u8::MAX {
+                    break;
+                }
+            }
+            idx += 1;
+        }
+        match log_level.as_str() {
+            "info" => log::info!("{log_msg}"),
+            "warn" => log::warn!("{log_msg}"),
+            "error" => log::error!("{log_msg}"),
+            "debug" => log::debug!("{log_msg}"),
+            "trace" => log::trace!("{log_msg}"),
+            _ => {
+                log::info!("unknown log level: {log_level} msg: {log_msg}");
+            }
+        }
+        Ok(())
+    })?;
+    luau.globals().set("qsv_log", qsv_log)?;
+
+    if index_file_used {
+        with_index(
+            &rconfig,
+            &args,
+            &luau,
+            &luau_compiler,
+            &globals,
+            &begin_script,
+            &main_script,
+            &end_script,
+            args.flag_max_errors,
+        )?;
+    } else {
+        no_index(
+            &rconfig,
+            &args,
+            &luau,
+            &luau_compiler,
+            &globals,
+            &begin_script,
+            &main_script,
+            &end_script,
+            args.flag_max_errors,
+        )?;
+    }
+
+    Ok(())
+}
+
+fn no_index(
+    rconfig: &Config,
+    args: &Args,
+    luau: &Lua,
+    luau_compiler: &mlua::Compiler,
+    globals: &mlua::Table,
+    begin_script: &str,
+    main_script: &str,
+    end_script: &str,
+    max_errors: usize,
+) -> Result<(), CliError> {
+    globals.set("cols", "{}")?;
+
     // we initialize the special vars _IDX and _ROWCOUNT
     globals.set("_IDX", 0)?;
     globals.set("_ROWCOUNT", 0)?;
@@ -317,9 +385,6 @@ fn no_index(
             .set_mode(mlua::ChunkMode::Binary)
             .exec()
         {
-            if trace_on {
-                log::trace!("BEGIN globals: {globals:?}");
-            }
             return fail_clierror!("BEGIN error: Failed to execute \"{begin_script}\".\n{e}");
         }
         info!("BEGIN executed.");
@@ -356,7 +421,6 @@ fn no_index(
     let mut record = csv::StringRecord::new();
     let mut idx = 0_u64;
     let mut error_count = 0_usize;
-    let mut trace_col_values = String::new();
 
     // main loop
     while rdr.read_record(&mut record)? {
@@ -381,9 +445,6 @@ fn no_index(
                     col.set(h, v)?;
                 }
             }
-            if trace_on {
-                trace_col_values = format!("{:?}", col.clone());
-            }
             globals.set("col", col)?;
         }
 
@@ -400,28 +461,19 @@ fn no_index(
             .set_mode(mlua::ChunkMode::Binary)
             .eval()
         {
-            Ok(computed) => {
-                if trace_on {
-                    log::trace!("current row({idx}): {trace_col_values:?}");
-                    log::trace!("current globals({idx}): {globals:?}");
-                    log::trace!("computed value({idx}): {computed:?}");
-                }
-                computed
-            }
+            Ok(computed) => computed,
             Err(e) => {
                 error_flag = true;
                 error_count += 1;
-                let err_msg = {
-                    if trace_on {
-                        log::trace!("current row({idx}): {trace_col_values:?}");
-                        log::trace!("current globals({idx}): {globals:?}");
-                    }
-                    format!("_IDX: {idx} error({error_count}): {e:?}")
-                };
-                log::error!("{err_msg}");
+                log::error!("_IDX: {idx} error({error_count}): {e:?}");
                 error_result.clone()
             }
         };
+
+        if max_errors > 0 && error_count > max_errors {
+            info!("Maximum number of errors ({max_errors}) reached. Aborting MAIN script.");
+            break;
+        }
 
         if args.cmd_map {
             match computed_value {
@@ -510,9 +562,6 @@ fn no_index(
         };
         winfo!("{end_string}");
     }
-    if trace_on {
-        log::trace!("ending globals: {globals:?}");
-    }
     wtr.flush()?;
     #[cfg(any(feature = "full", feature = "lite"))]
     if show_progress {
@@ -530,29 +579,18 @@ fn no_index(
 fn with_index(
     rconfig: &Config,
     args: &Args,
+    luau: &Lua,
+    luau_compiler: &mlua::Compiler,
+    globals: &mlua::Table,
     begin_script: &str,
     main_script: &str,
     end_script: &str,
+    max_errors: usize,
 ) -> Result<(), CliError> {
     let Some(mut idx_file) = rconfig.indexed()? else { return fail!("Index required but no index file found") };
 
-    let luau = Lua::new();
-    let globals = luau.globals();
     globals.set("cols", "{}")?;
-    let trace_on: bool = log_enabled!(log::Level::Trace);
 
-    let luau_compiler = if log_enabled!(log::Level::Debug) {
-        mlua::Compiler::new()
-            .set_optimization_level(0)
-            .set_debug_level(2)
-            .set_coverage_level(2)
-    } else {
-        mlua::Compiler::new()
-            .set_optimization_level(2)
-            .set_debug_level(1)
-            .set_coverage_level(0)
-    };
-    luau.set_compiler(luau_compiler.clone());
     let row_count = util::count_rows(rconfig).unwrap_or_default();
 
     let mut wtr = Config::new(&args.flag_output).writer()?;
@@ -572,6 +610,7 @@ fn with_index(
     if !begin_script.is_empty() {
         // unlike no_index, we actually know the row_count at the BEGINning
         globals.set("_IDX", 0)?;
+        globals.set("_INDEX", 0)?;
         globals.set("_ROWCOUNT", row_count)?;
 
         info!("Compiling and executing BEGIN script.");
@@ -581,9 +620,6 @@ fn with_index(
             .set_mode(mlua::ChunkMode::Binary)
             .exec()
         {
-            if trace_on {
-                log::trace!("BEGIN globals: {globals:?}");
-            }
             return fail_clierror!("BEGIN error: Failed to execute \"{begin_script}\".\n{e}");
         }
         info!("BEGIN executed.");
@@ -608,7 +644,6 @@ fn with_index(
     let main_bytecode = luau_compiler.compile(main_script);
     let mut record = csv::StringRecord::new();
     let mut error_count = 0_usize;
-    let mut trace_col_values = String::new();
 
     // main loop - here we an indexed file reader, seeking to the next
     // record to read by looking at _INDEX special var
@@ -627,9 +662,6 @@ fn with_index(
                     col.set(h, v)?;
                 }
             }
-            if trace_on {
-                trace_col_values = format!("{:?}", col.clone());
-            }
             globals.set("col", col)?;
         }
 
@@ -645,28 +677,19 @@ fn with_index(
             .set_mode(mlua::ChunkMode::Binary)
             .eval()
         {
-            Ok(computed) => {
-                if trace_on {
-                    log::trace!("current row({curr_record}): {trace_col_values:?}");
-                    log::trace!("current globals({curr_record}): {globals:?}");
-                    log::trace!("computed value({curr_record}): {computed:?}");
-                }
-                computed
-            }
+            Ok(computed) => computed,
             Err(e) => {
                 error_flag = true;
                 error_count += 1;
-                let err_msg = {
-                    if trace_on {
-                        log::trace!("current row({curr_record}): {trace_col_values:?}");
-                        log::trace!("current globals({curr_record}): {globals:?}");
-                    }
-                    format!("_IDX: {curr_record} error({error_count}): {e:?}")
-                };
-                log::error!("{err_msg}");
+                log::error!("_IDX: {curr_record} error({error_count}): {e:?}");
                 error_result.clone()
             }
         };
+
+        if max_errors > 0 && error_count > max_errors {
+            info!("Maximum number of errors ({max_errors}) reached. Aborting MAIN script.");
+            break;
+        }
 
         if args.cmd_map {
             match computed_value {
@@ -760,9 +783,6 @@ fn with_index(
             }
         };
         winfo!("{end_string}");
-    }
-    if trace_on {
-        log::trace!("ending globals: {globals:?}");
     }
     wtr.flush()?;
     if error_count > 0 {
