@@ -43,7 +43,7 @@ fn luau_map_idx() {
     let mut cmd = wrk.command("luau");
     cmd.arg("map")
         .arg("inc")
-        .arg("number * _idx")
+        .arg("number * _IDX")
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
@@ -140,9 +140,9 @@ fn luau_aggregation_with_begin_end() {
         .arg("--begin")
         .arg("tot = 0; gtotal = 0; amt_array = {}")
         .arg("-x")
-        .arg("amt_array[_idx] = Amount; tot = tot + Amount; gtotal = gtotal + tot; return tot")
+        .arg("amt_array[_IDX] = Amount; tot = tot + Amount; gtotal = gtotal + tot; return tot")
         .arg("--end")
-        .arg(r#"return ("Min/Max: " .. math.min(unpack(amt_array)) .. "/" .. math.max(unpack(amt_array)) .. " Grand total of " .. _rowcount .. " rows: " .. gtotal)"#)
+        .arg(r#"return ("Min/Max: " .. math.min(unpack(amt_array)) .. "/" .. math.max(unpack(amt_array)) .. " Grand total of " .. _ROWCOUNT .. " rows: " .. gtotal)"#)
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
@@ -180,10 +180,10 @@ fn luau_aggregation_with_embedded_begin_end() {
         .arg("Total")
         .arg("-x")
         .arg(
-            "BEGIN {tot = 0; gtotal = 0; amt_array = {}}! amt_array[_idx] = Amount; tot = tot + \
+            "BEGIN {tot = 0; gtotal = 0; amt_array = {}}! amt_array[_IDX] = Amount; tot = tot + \
              Amount; gtotal = gtotal + tot; return tot END {return (\"Min/Max: \" .. \
              math.min(unpack(amt_array)) .. \"/\" .. math.max(unpack(amt_array)) .. \" Grand \
-             total of \" .. _rowcount .. \" rows: \" .. gtotal)}!",
+             total of \" .. _ROWCOUNT .. \" rows: \" .. gtotal)}!",
         )
         .arg("data.csv");
 
@@ -230,8 +230,8 @@ BEGIN {
 }!
 
 -- this is the MAIN script, which is executed for each row
--- note how we use the _idx special variable to get the row index
-amount_array[_idx] = Amount;
+-- note how we use the _IDX special variable to get the row index
+amount_array[_IDX] = Amount;
 running_total = running_total + Amount;
 grand_total = grand_total + running_total;
 -- running_total is the value we "map" to the "Running Total" column of each row
@@ -239,11 +239,11 @@ return running_total;
 
 END {
     -- and this is the END block, which is executed once at the end
-    -- note how we use the _rowcount special variable to get the number of rows
+    -- note how we use the _ROWCOUNT special variable to get the number of rows
     min_amount = math.min(unpack(amount_array));
     max_amount = math.max(unpack(amount_array));
     return ("Min/Max: " .. min_amount .. "/" .. max_amount ..
-       " Grand total of " .. _rowcount .. " rows: " .. grand_total);
+       " Grand total of " .. _ROWCOUNT .. " rows: " .. grand_total);
 }!        
 "#,
     );
@@ -294,15 +294,15 @@ fn luau_aggregation_with_embedded_begin_end_and_beginend_options() {
         .arg("tot = 1; gtotal = 0; amt_array = {}")
         .arg("-x")
         .arg(
-            "BEGIN {tot = 0; gtotal = 0; amt_array = {}}! amt_array[_idx] = Amount; tot = tot + \
+            "BEGIN {tot = 0; gtotal = 0; amt_array = {}}! amt_array[_IDX] = Amount; tot = tot + \
              Amount; gtotal = gtotal + tot; return tot END {return (\"Min/Max: \" .. \
              math.min(unpack(amt_array)) .. \"/\" .. math.max(unpack(amt_array)) .. \" Grand \
-             total of \" .. _rowcount .. \" rows: \" .. gtotal)}!",
+             total of \" .. _ROWCOUNT .. \" rows: \" .. gtotal)}!",
         )
         .arg("--end")
         .arg(
             "return (\"Minimum/Maximum: \" .. math.min(unpack(amt_array)) .. \"/\" .. \
-             math.max(unpack(amt_array)) .. \" Grand total of \" .. _rowcount .. \" rows: \" .. \
+             math.max(unpack(amt_array)) .. \" Grand total of \" .. _ROWCOUNT .. \" rows: \" .. \
              gtotal)",
         )
         .arg("data.csv");
@@ -319,6 +319,76 @@ fn luau_aggregation_with_embedded_begin_end_and_beginend_options() {
 
     let end = wrk.output_stderr(&mut cmd);
     let expected_end = "Minimum/Maximum: 7/72 Grand total of 4 rows: 279\n".to_string();
+    assert_eq!(end, expected_end);
+
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn luau_aggregation_with_embedded_begin_end_using_file_random_access() {
+    let wrk = Workdir::new("luau_embedded_begin_end");
+    wrk.create_indexed(
+        "data.csv",
+        vec![
+            svec!["letter", "Amount"],
+            svec!["a", "13"],
+            svec!["b", "24"],
+            svec!["c", "72"],
+            svec!["d", "7"],
+        ],
+    );
+
+    wrk.create_from_string(
+        "testbeginend.luau",
+        r#"
+BEGIN {
+    -- this is the BEGIN block, which is executed once at the beginning
+    -- where we typically initialize variables
+    running_total = 0;
+    grand_total = 0;
+    amount_array = {};
+    _INDEX = 3
+}!
+
+-- this is the MAIN script, which is executed for each row
+-- note how we use the _IDX special variable to get the row index
+amount_array[_IDX] = Amount;
+running_total = running_total + Amount;
+grand_total = grand_total + running_total;
+_INDEX = _INDEX - 1
+-- running_total is the value we "map" to the "Running Total" column of each row
+return running_total;
+
+END {
+    -- and this is the END block, which is executed once at the end
+    -- note how we use the _ROWCOUNT special variable to get the number of rows
+    min_amount = math.min(unpack(amount_array));
+    max_amount = math.max(unpack(amount_array));
+    return ("Min/Max: " .. min_amount .. "/" .. max_amount ..
+       " Grand total of " .. _ROWCOUNT .. " rows: " .. grand_total);
+}!        
+"#,
+    );
+
+    let mut cmd = wrk.command("luau");
+    cmd.arg("map")
+        .arg("Running Total")
+        .arg("-x")
+        .arg("file:testbeginend.luau")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["letter", "Amount", "Running Total"],
+        svec!["d", "7", "7"],
+        svec!["c", "72", "79"],
+        svec!["b", "24", "103"],
+        svec!["a", "13", "116"],
+    ];
+    assert_eq!(got, expected);
+
+    let end = wrk.output_stderr(&mut cmd);
+    let expected_end = "Min/Max: 7/72 Grand total of 4 rows: 305\n".to_string();
     assert_eq!(end, expected_end);
 
     wrk.assert_success(&mut cmd);
@@ -343,9 +413,9 @@ fn luau_aggregation_with_begin_end_and_luau_syntax() {
         .arg("--begin")
         .arg("tot = 0; gtotal = 0; amt_array = {}")
         .arg("-x")
-        .arg("amt_array[_idx] = Amount; tot += if tonumber(Amount) < 0 then Amount * -1 else Amount; gtotal += tot; return tot")
+        .arg("amt_array[_IDX] = Amount; tot += if tonumber(Amount) < 0 then Amount * -1 else Amount; gtotal += tot; return tot")
         .arg("--end")
-        .arg(r#"return ("Min/Max: " .. math.min(unpack(amt_array)) .. "/" .. math.max(unpack(amt_array)) .. " Grand total of " .. _rowcount .. " rows: " .. gtotal)"#)
+        .arg(r#"return ("Min/Max: " .. math.min(unpack(amt_array)) .. "/" .. math.max(unpack(amt_array)) .. " Grand total of " .. _ROWCOUNT .. " rows: " .. gtotal)"#)
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
