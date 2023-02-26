@@ -153,6 +153,7 @@ impl JoinStruct {
 
         // height of the dataframe is the number of rows
         let join_results_len = join_results.height();
+        let mut join_results2 = polars::prelude::coalesce(join_results);
 
         CsvWriter::new(&mut out_writer)
             .has_header(true)

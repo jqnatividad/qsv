@@ -52,6 +52,7 @@ join options:
                            data sets given. The number of rows return is
                            equal to N * M, where N and M correspond to the
                            number of rows in the given data sets, respectively.
+    --merge                When set, only one column will be kept.
     --nulls                When set, joins will work on empty fields.
                            Otherwise, empty fields are completely ignored.
                            (In fact, any row that has an empty field in the
@@ -94,6 +95,7 @@ struct Args {
     flag_right:       bool,
     flag_full:        bool,
     flag_cross:       bool,
+    flag_merge:       bool,
     flag_output:      Option<String>,
     flag_no_headers:  bool,
     flag_ignore_case: bool,
@@ -150,6 +152,7 @@ struct IoState<R, W: io::Write> {
     sel1:       Selection,
     rdr2:       csv::Reader<R>,
     sel2:       Selection,
+    wsel2:      Option<Selection>, // for filtering. TODO should I normalize it
     no_headers: bool,
     casei:      bool,
     nulls:      bool,
@@ -159,7 +162,10 @@ impl<R: io::Read + io::Seek, W: io::Write> IoState<R, W> {
     fn write_headers(&mut self) -> CliResult<()> {
         if !self.no_headers {
             let mut headers = self.rdr1.byte_headers()?.clone();
-            headers.extend(self.rdr2.byte_headers()?.iter());
+            match self.wsel2 {
+                None => headers.extend(self.rdr2.byte_headers()?.iter()),
+                Some(ref sel) => headers.extend(sel.select(self.rdr2.byte_headers()?)),
+            }
             self.wtr.write_record(&headers)?;
         }
         Ok(())
@@ -184,6 +190,7 @@ impl<R: io::Read + io::Seek, W: io::Write> IoState<R, W> {
                     validx.idx.seek(rowi as u64)?;
 
                     validx.idx.read_byte_record(&mut scratch)?;
+
                     let combined = row.iter().chain(scratch.iter());
                     self.wtr.write_record(combined)?;
                 }
@@ -264,12 +271,21 @@ impl<R: io::Read + io::Seek, W: io::Write> IoState<R, W> {
 
                     validx.idx.seek(rowi as u64)?;
                     validx.idx.read_byte_record(&mut scratch)?;
-                    self.wtr.write_record(row1.iter().chain(&scratch))?;
+                    match self.wsel2 {
+                        Some(ref sel) => self
+                            .wtr
+                            .write_record(row1.iter().chain(sel.select(&scratch)))?,
+                        None => self.wtr.write_record(row1.iter().chain(&scratch))?,
+                    };
                 }
             } else {
                 self.wtr.write_record(row1.iter().chain(&pad2))?;
             }
         }
+
+        // amortize allocation
+        #[allow(unused_assignments)]
+        let mut m: AHashMap<_, _> = AHashMap::new();
 
         // OK, now write any row from rdr2 that didn't get joined with a row
         // from rdr1.
@@ -277,7 +293,19 @@ impl<R: io::Read + io::Seek, W: io::Write> IoState<R, W> {
             if !written {
                 validx.idx.seek(i as u64)?;
                 validx.idx.read_byte_record(&mut scratch)?;
-                self.wtr.write_record(pad1.iter().chain(&scratch))?;
+                // self.wtr.write_record(pad1.iter().chain(&scratch))?;
+                match self.wsel2 {
+                    Some(ref sel) => {
+                        // if merge, copy csv2 selection to corresponding csv1 columns
+                        m = self.sel1.iter().zip(self.sel2.iter()).collect();
+                        let row1 = (0..pad1.len()).map(|i| match m.get(&i) {
+                            Some(j) => &scratch[**j],
+                            None => b"",
+                        });
+                        self.wtr.write_record(row1.chain(sel.select(&scratch)))?;
+                    }
+                    None => self.wtr.write_record(pad1.iter().chain(&scratch))?,
+                }
             }
         }
         Ok(())
@@ -304,7 +332,10 @@ impl<R: io::Read + io::Seek, W: io::Write> IoState<R, W> {
 
     fn get_padding(&mut self) -> CliResult<(csv::ByteRecord, csv::ByteRecord)> {
         let len1 = self.rdr1.byte_headers()?.len();
-        let len2 = self.rdr2.byte_headers()?.len();
+        let mut len2 = self.rdr2.byte_headers()?.len();
+        if let Some(ref sel) = self.wsel2 {
+            len2 -= sel.len();
+        }
         Ok((
             repeat(b"").take(len1).collect(),
             repeat(b"").take(len2).collect(),
@@ -328,12 +359,24 @@ impl Args {
         let mut rdr1 = rconf1.reader_file_stdin()?;
         let mut rdr2 = rconf2.reader_file_stdin()?;
         let (sel1, sel2) = self.get_selections(&rconf1, &mut rdr1, &rconf2, &mut rdr2)?;
+
+        let wsel2: Option<Selection> = if self.flag_merge {
+            Some(
+                self.arg_columns2
+                    .invert()
+                    .selection(rdr2.byte_headers()?, !rconf2.no_headers)?,
+            )
+        } else {
+            None
+        };
+
         Ok(IoState {
             wtr: Config::new(&self.flag_output).writer()?,
             rdr1,
             sel1,
             rdr2,
             sel2,
+            wsel2,
             no_headers: rconf1.no_headers,
             casei: self.flag_ignore_case,
             nulls: self.flag_nulls,

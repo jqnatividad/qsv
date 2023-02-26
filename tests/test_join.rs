@@ -57,10 +57,17 @@ fn setup(name: &str, headers: bool) -> Workdir {
     wrk
 }
 
-fn make_rows(headers: bool, left_only: bool, rows: Vec<Vec<String>>) -> Vec<Vec<String>> {
+fn make_rows(
+    headers: bool,
+    merge: bool,
+    left_only: bool,
+    rows: Vec<Vec<String>>,
+) -> Vec<Vec<String>> {
     let mut all_rows = vec![];
     if headers {
-        if left_only {
+        if merge {
+            all_rows.push(svec!["city", "state", "place"]);
+        } else if left_only {
             all_rows.push(svec!["city", "state"]);
         } else {
             all_rows.push(svec!["city", "state", "city", "place"]);
@@ -76,6 +83,7 @@ join_test!(join_inner, |wrk: Workdir,
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = make_rows(
         headers,
+        false,
         false,
         vec![
             svec!["Boston", "MA", "Boston", "Logan Airport"],
@@ -93,6 +101,7 @@ join_test!(
         let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
         let expected = make_rows(
             headers,
+            false,
             false,
             vec![
                 svec!["Boston", "MA", "Boston", "Logan Airport"],
@@ -114,6 +123,7 @@ join_test!(
         let expected = make_rows(
             headers,
             false,
+            false,
             vec![
                 svec!["Boston", "MA", "Boston", "Logan Airport"],
                 svec!["Boston", "MA", "Boston", "Boston Garden"],
@@ -133,6 +143,7 @@ join_test!(
         let expected = make_rows(
             headers,
             false,
+            false,
             vec![
                 svec!["Boston", "MA", "Boston", "Logan Airport"],
                 svec!["Boston", "MA", "Boston", "Boston Garden"],
@@ -151,7 +162,7 @@ join_test!(join_left_semi, |wrk: Workdir,
                             headers: bool| {
     cmd.arg("--left-semi");
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = make_rows(headers, true, vec![svec!["Buffalo", "NY"]]);
+    let expected = make_rows(headers, false, true, vec![svec!["Buffalo", "NY"]]);
     assert_eq!(got, expected);
 });
 
@@ -162,11 +173,34 @@ join_test!(join_left_anti, |wrk: Workdir,
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = make_rows(
         headers,
+        false,
         true,
         vec![svec!["New York", "NY"], svec!["San Francisco", "CA"]],
     );
     assert_eq!(got, expected);
 });
+
+join_test!(
+    join_outer_full_merged,
+    |wrk: Workdir, mut cmd: process::Command, headers: bool| {
+        cmd.args(&["--full", "--merge"]);
+        let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+        let expected = make_rows(
+            headers,
+            true,
+            false,
+            vec![
+                svec!["Boston", "MA", "Logan Airport"],
+                svec!["Boston", "MA", "Boston Garden"],
+                svec!["New York", "NY", ""],
+                svec!["San Francisco", "CA", ""],
+                svec!["Buffalo", "NY", "Ralph Wilson Stadium"],
+                svec!["Orlando", "", "Disney World"],
+            ],
+        );
+        assert_eq!(got, expected);
+    }
+);
 
 #[test]
 fn join_inner_issue11() {
