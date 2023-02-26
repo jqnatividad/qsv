@@ -1,4 +1,4 @@
-#[cfg(all(feature = "apply", not(feature = "lite")))]
+#[cfg(all(feature = "apply", feature = "full"))]
 pub mod apply;
 #[cfg(feature = "datapusher_plus")]
 pub mod applydp;
@@ -19,9 +19,9 @@ pub mod explode;
 pub mod extdedup;
 #[cfg(any(feature = "full", feature = "lite"))]
 pub mod extsort;
-#[cfg(all(feature = "fetch", not(feature = "lite")))]
+#[cfg(all(feature = "fetch", feature = "full"))]
 pub mod fetch;
-#[cfg(all(feature = "fetch", not(feature = "lite")))]
+#[cfg(all(feature = "fetch", feature = "full"))]
 pub mod fetchpost;
 #[cfg(any(feature = "full", feature = "lite"))]
 pub mod fill;
@@ -34,23 +34,23 @@ pub mod fmt;
 #[cfg(all(feature = "foreach", target_family = "unix", not(feature = "lite")))]
 pub mod foreach;
 pub mod frequency;
-#[cfg(all(feature = "generate", not(feature = "lite")))]
+#[cfg(all(feature = "generate", feature = "full"))]
 pub mod generate;
 pub mod headers;
 pub mod index;
 pub mod input;
 #[cfg(any(feature = "full", feature = "lite"))]
 pub mod join;
-#[cfg(all(feature = "polars", not(feature = "lite")))]
+#[cfg(all(feature = "polars", feature = "full"))]
 pub mod joinp;
 #[cfg(any(feature = "full", feature = "lite"))]
 pub mod jsonl;
-#[cfg(feature = "luau")]
+#[cfg(all(feature = "luau", feature = "full"))]
 pub mod luau;
 #[cfg(any(feature = "full", feature = "lite"))]
 pub mod partition;
 pub mod pseudo;
-#[cfg(all(feature = "python", not(feature = "lite")))]
+#[cfg(all(feature = "python", feature = "full"))]
 pub mod python;
 pub mod rename;
 pub mod replace;
@@ -72,7 +72,7 @@ pub mod split;
 pub mod stats;
 #[cfg(any(feature = "full", feature = "lite"))]
 pub mod table;
-#[cfg(all(feature = "to", not(feature = "lite")))]
+#[cfg(all(feature = "to", feature = "full"))]
 pub mod to;
 #[cfg(any(feature = "full", feature = "lite"))]
 pub mod tojsonl;
