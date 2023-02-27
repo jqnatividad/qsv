@@ -166,7 +166,7 @@ threadpool = "1.8"
 titlecase = { version = "2", optional = true }
 tokio = "1"
 uuid = { version = "1", features = ["v4"] }
-url = { version = "2.3", optional = true }
+url = "2.3"
 vader_sentiment = { version = "0.1", optional = true }
 whatlang = { version = "0.16", optional = true }
 
@@ -231,7 +231,6 @@ fetch = [
     "jsonxf",
     "redis",
     "serde_urlencoded",
-    "url",
 ]
 foreach = []
 generate = ["test-data-generation"]

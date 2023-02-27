@@ -269,7 +269,10 @@ impl Command {
             Command::SearchSet => cmd::searchset::run(argv),
             Command::Select => cmd::select::run(argv),
             Command::Slice => cmd::slice::run(argv),
-            Command::Sniff => cmd::sniff::run(argv),
+            Command::Sniff => {
+                let rt = tokio::runtime::Runtime::new().unwrap();
+                rt.block_on(cmd::sniff::run(argv))
+            }
             Command::Sort => cmd::sort::run(argv),
             Command::SortCheck => cmd::sortcheck::run(argv),
             Command::Stats => cmd::stats::run(argv),
