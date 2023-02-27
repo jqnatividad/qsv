@@ -37,7 +37,7 @@ jobs:
             target: x86_64-unknown-linux-gnu
             architecture: x86_64
             use-cross: false
-            addl-build-args: --features=apply,generate,luau,fetch,foreach,self_update,to
+            addl-build-args: --features=apply,generate,luau,fetch,foreach,self_update,to,polars
             default-features:
             addl-qsvdp-features: luau
           - os: ubuntu-20.04
@@ -46,7 +46,7 @@ jobs:
             architecture: x86_64
             musl-prep: true
             use-cross: false
-            addl-build-args: --features=apply,generate,fetch,foreach,self_update,to
+            addl-build-args: --features=apply,generate,fetch,foreach,self_update,to,polars
             default-features:
             addl-qsvdp-features:
           - os: ubuntu-20.04
@@ -54,7 +54,7 @@ jobs:
             target: i686-unknown-linux-gnu
             architecture: i686
             use-cross: true
-            addl-build-args: --features=apply,generate,fetch,foreach,self_update
+            addl-build-args: --features=apply,generate,fetch,foreach,self_update,polars
             default-features:
             addl-qsvdp-features:
           - os: windows-latest
@@ -62,7 +62,7 @@ jobs:
             target: x86_64-pc-windows-msvc
             architecture: x86_64
             use-cross: false
-            addl-build-args: --features=apply,generate,luau,fetch,self_update,to
+            addl-build-args: --features=apply,generate,luau,fetch,self_update,to,polars
             default-features:
             addl-qsvdp-features: luau
           - os: windows-latest
@@ -78,7 +78,7 @@ jobs:
             target: x86_64-pc-windows-gnu
             architecture: x86_64
             use-cross: false
-            addl-build-args: --features=apply,generate,luau,fetch,self_update
+            addl-build-args: --features=apply,generate,luau,fetch,self_update,polars
             default-features: --no-default-features
             addl-qsvdp-features: luau
           - os: macos-12
@@ -86,7 +86,7 @@ jobs:
             target: x86_64-apple-darwin
             architecture: x86_64
             use-cross: false
-            addl-build-args: --features=apply,generate,luau,fetch,foreach,self_update,to
+            addl-build-args: --features=apply,generate,luau,fetch,foreach,self_update,to,polars
             default-features: --no-default-features
             addl-qsvdp-features: luau
           - os: macos-12
@@ -94,7 +94,7 @@ jobs:
             target: aarch64-apple-darwin
             architecture: aarch64
             use-cross: true
-            addl-build-args: --features=apply,generate,fetch,foreach,self_update
+            addl-build-args: --features=apply,generate,fetch,foreach,self_update,to,polars
             default-features: --no-default-features
             addl-qsvdp-features:
           - os: ubuntu-20.04
