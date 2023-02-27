@@ -259,7 +259,7 @@ pub fn finish_progress(progress: &ProgressBar) {
             .unwrap(),
     );
 
-    if progress.length().unwrap() == progress.position() {
+    if progress.length().unwrap_or_default() == progress.position() {
         progress.finish();
         log::info!("Progress done... {}", progress.message());
     } else {
