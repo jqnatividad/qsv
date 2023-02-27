@@ -46,7 +46,7 @@ jobs:
             architecture: x86_64
             musl-prep: true
             use-cross: false
-            addl-build-args: --features=apply,generate,fetch,foreach,self_update,to,polars
+            addl-build-args: --features=apply,generate,fetch,foreach,self_update
             default-features:
             addl-qsvdp-features:
           - os: ubuntu-20.04
@@ -54,7 +54,7 @@ jobs:
             target: i686-unknown-linux-gnu
             architecture: i686
             use-cross: true
-            addl-build-args: --features=apply,generate,fetch,foreach,self_update,polars
+            addl-build-args: --features=apply,generate,fetch,foreach,self_update
             default-features:
             addl-qsvdp-features:
           - os: windows-latest
