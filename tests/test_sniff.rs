@@ -23,7 +23,7 @@ fn sniff() {
 
     let got: String = wrk.stdout(&mut cmd);
 
-    let expected = r#"Metadata
+    let expected_start = r#"Metadata
 ========
 	Delimiter: ,
 	Has header row?: true
@@ -32,6 +32,12 @@ fn sniff() {
 	Flexible: false
 	Is utf-8 encoded?: true
 
+Path: stdin
+Sniffed:"#;
+
+    let expected_end = r#"Retrieved size (bytes): 27
+File size (bytes): 27
+Sampled records: 2
 Number of records: 2
 Number of fields: 3
 Fields:
@@ -39,7 +45,69 @@ Fields:
     1:  Unsigned  h2
     2:  Text      h3"#;
 
-    assert_eq!(got, expected);
+    assert!(got.starts_with(expected_start));
+    assert!(got.ends_with(expected_end));
+}
+
+#[test]
+fn sniff_url() {
+    let wrk = Workdir::new("sniff");
+
+    let mut cmd = wrk.command("sniff");
+    cmd.arg("https://github.com/jqnatividad/qsv/raw/master/resources/test/boston311-100.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+
+    let expected_start = r#"Metadata
+========
+	Delimiter: ,
+	Has header row?: true
+	Number of preamble rows: 0
+	Quote character: none
+	Flexible: false
+	Is utf-8 encoded?: true
+
+Path: https://github.com/jqnatividad/qsv/raw/master/resources/test/boston311-100.csv
+Sniffed:"#;
+
+    let expected_end = r#"Retrieved size (bytes): 47,702
+File size (bytes): 47,702
+Sampled records: 100
+Number of records: 100
+Number of fields: 29
+Fields:
+    0:   Unsigned  case_enquiry_id
+    1:   DateTime  open_dt
+    2:   DateTime  target_dt
+    3:   DateTime  closed_dt
+    4:   Text      ontime
+    5:   Text      case_status
+    6:   Text      closure_reason
+    7:   Text      case_title
+    8:   Text      subject
+    9:   Text      reason
+    10:  Text      type
+    11:  Text      queue
+    12:  Text      department
+    13:  Text      submittedphoto
+    14:  Boolean   closedphoto
+    15:  Text      location
+    16:  Unsigned  fire_district
+    17:  Text      pwd_district
+    18:  Unsigned  city_council_district
+    19:  Text      police_district
+    20:  Text      neighborhood
+    21:  Unsigned  neighborhood_services_district
+    22:  Text      ward
+    23:  Unsigned  precinct
+    24:  Text      location_street_name
+    25:  Unsigned  location_zipcode
+    26:  Float     latitude
+    27:  Float     longitude
+    28:  Text      source"#;
+
+    assert!(got.starts_with(expected_start));
+    assert!(got.ends_with(expected_end));
 }
 
 #[test]
@@ -52,7 +120,7 @@ fn sniff_tab() {
 
     let got: String = wrk.stdout(&mut cmd);
 
-    let expected = r#"Metadata
+    let expected_start = r#"Metadata
 ========
 	Delimiter: tab
 	Has header row?: true
@@ -61,14 +129,19 @@ fn sniff_tab() {
 	Flexible: false
 	Is utf-8 encoded?: true
 
+Path: stdin
+Sniffed:"#;
+    let expected_end = r#"Retrieved size (bytes): 27
+File size (bytes): 27
+Sampled records: 2
 Number of records: 2
 Number of fields: 3
 Fields:
     0:  Text      h1
     1:  Unsigned  h2
     2:  Text      h3"#;
-
-    assert_eq!(got, expected);
+    assert!(got.starts_with(expected_start));
+    assert!(got.ends_with(expected_end));
 }
 
 #[test]
@@ -120,8 +193,10 @@ fn sniff_json() {
 
     let got: String = wrk.stdout(&mut cmd);
 
-    let expected = r#"{"delimiter_char":",","header_row":true,"preamble_rows":3,"quote_char":"none","flexible":false,"is_utf8":true,"num_records":3,"num_fields":4,"fields":["h1","h2","h3","h4"],"types":["Text","Unsigned","Text","Float"]}"#;
-    assert_eq!(got, expected);
+    let expected_start = r#"{"path":"stdin","sniff_timestamp":"#;
+    let expected_end = r#""delimiter_char":",","header_row":true,"preamble_rows":3,"quote_char":"none","flexible":false,"is_utf8":true,"retrieved_size":116,"file_size":116,"sampled_records":3,"num_records":3,"num_fields":4,"fields":["h1","h2","h3","h4"],"types":["Text","Unsigned","Text","Float"]}"#;
+    assert!(got.starts_with(expected_start));
+    assert!(got.ends_with(expected_end));
 }
 
 #[test]
@@ -134,8 +209,10 @@ fn sniff_flexible_json() {
 
     let got: String = wrk.stdout(&mut cmd);
 
-    let expected = r#"{"delimiter_char":",","header_row":true,"preamble_rows":3,"quote_char":"none","flexible":true,"is_utf8":true,"num_records":5,"num_fields":4,"fields":["h1","h2","h3","h4"],"types":["Text","Unsigned","Text","Float"]}"#;
-    assert_eq!(got, expected);
+    let expected_start = r#"{"path":"stdin","sniff_timestamp":"#;
+    let expected_end = r#""delimiter_char":",","header_row":true,"preamble_rows":3,"quote_char":"none","flexible":true,"is_utf8":true,"retrieved_size":135,"file_size":135,"sampled_records":5,"num_records":5,"num_fields":4,"fields":["h1","h2","h3","h4"],"types":["Text","Unsigned","Text","Float"]}"#;
+    assert!(got.starts_with(expected_start));
+    assert!(got.ends_with(expected_end));
 }
 
 #[test]
@@ -148,13 +225,18 @@ fn sniff_pretty_json() {
 
     let got: String = wrk.stdout(&mut cmd);
 
-    let expected = r#"{
-  "delimiter_char": ",",
+    let expected_start = r#"{
+  "path": "stdin",
+  "sniff_timestamp":"#;
+    let expected_end = r#""delimiter_char": ",",
   "header_row": true,
   "preamble_rows": 3,
   "quote_char": "none",
   "flexible": false,
   "is_utf8": true,
+  "retrieved_size": 116,
+  "file_size": 116,
+  "sampled_records": 3,
   "num_records": 3,
   "num_fields": 4,
   "fields": [
@@ -171,7 +253,8 @@ fn sniff_pretty_json() {
   ]
 }"#;
 
-    assert_eq!(got, expected);
+    assert!(got.starts_with(expected_start));
+    assert!(got.ends_with(expected_end));
 }
 
 #[test]
@@ -182,18 +265,23 @@ fn sniff_sample() {
     let mut cmd = wrk.command("sniff");
     cmd.arg("--pretty-json")
         .arg("--sample")
-        .arg("0.25")
+        .arg("0.5")
         .arg(test_file);
 
     let got: String = wrk.stdout(&mut cmd);
 
-    let expected = r#"{
-  "delimiter_char": ",",
+    let expected_start = r#"{
+  "path": "stdin",
+  "sniff_timestamp":"#;
+    let expected_end = r#""delimiter_char": ",",
   "header_row": true,
   "preamble_rows": 0,
   "quote_char": "none",
   "flexible": false,
   "is_utf8": true,
+  "retrieved_size": 9246,
+  "file_size": 9246,
+  "sampled_records": 7,
   "num_records": 15,
   "num_fields": 32,
   "fields": [
@@ -266,7 +354,8 @@ fn sniff_sample() {
   ]
 }"#;
 
-    assert_eq!(got, expected);
+    assert!(got.starts_with(expected_start));
+    assert!(got.ends_with(expected_end));
 }
 
 #[test]
@@ -279,9 +368,55 @@ fn sniff_prefer_dmy() {
 
     let got: String = wrk.stdout(&mut cmd);
 
-    let expected = "Metadata\n========\n\tDelimiter: ,\n\tHas header row?: true\n\tNumber of preamble rows: 0\n\tQuote character: none\n\tFlexible: false\n\tIs utf-8 encoded?: true\n\nNumber of records: 100\nNumber of fields: 29\nFields:\n    0:   Unsigned  case_enquiry_id\n    1:   DateTime  open_dt\n    2:   DateTime  target_dt\n    3:   DateTime  closed_dt\n    4:   Text      ontime\n    5:   Text      case_status\n    6:   Text      closure_reason\n    7:   Text      case_title\n    8:   Text      subject\n    9:   Text      reason\n    10:  Text      type\n    11:  Text      queue\n    12:  Text      department\n    13:  Text      submittedphoto\n    14:  Boolean   closedphoto\n    15:  Text      location\n    16:  Unsigned  fire_district\n    17:  Text      pwd_district\n    18:  Unsigned  city_council_district\n    19:  Text      police_district\n    20:  Text      neighborhood\n    21:  Unsigned  neighborhood_services_district\n    22:  Text      ward\n    23:  Unsigned  precinct\n    24:  Text      location_street_name\n    25:  Unsigned  location_zipcode\n    26:  Float     latitude\n    27:  Float     longitude\n    28:  Text      source";
+    let expected_start = r#"Metadata
+========
+	Delimiter: ,
+	Has header row?: true
+	Number of preamble rows: 0
+	Quote character: none
+	Flexible: false
+	Is utf-8 encoded?: true
 
-    assert_eq!(got, expected);
+Path: stdin
+Sniffed:"#;
+    let expected_end = r#"Retrieved size (bytes): 47,702
+File size (bytes): 47,702
+Sampled records: 100
+Number of records: 100
+Number of fields: 29
+Fields:
+    0:   Unsigned  case_enquiry_id
+    1:   DateTime  open_dt
+    2:   DateTime  target_dt
+    3:   DateTime  closed_dt
+    4:   Text      ontime
+    5:   Text      case_status
+    6:   Text      closure_reason
+    7:   Text      case_title
+    8:   Text      subject
+    9:   Text      reason
+    10:  Text      type
+    11:  Text      queue
+    12:  Text      department
+    13:  Text      submittedphoto
+    14:  Boolean   closedphoto
+    15:  Text      location
+    16:  Unsigned  fire_district
+    17:  Text      pwd_district
+    18:  Unsigned  city_council_district
+    19:  Text      police_district
+    20:  Text      neighborhood
+    21:  Unsigned  neighborhood_services_district
+    22:  Text      ward
+    23:  Unsigned  precinct
+    24:  Text      location_street_name
+    25:  Unsigned  location_zipcode
+    26:  Float     latitude
+    27:  Float     longitude
+    28:  Text      source"#;
+
+    assert!(got.starts_with(expected_start));
+    assert!(got.ends_with(expected_end));
 }
 
 #[test]
