@@ -98,9 +98,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             return fail_clierror!("Cannot instantiate diff")
         };
 
-    let diff_byte_records_iter = csv_diff.diff(csv_rdr_left.into(), csv_rdr_right.into());
+    let mut diff_byte_records = csv_diff
+        .diff(csv_rdr_left.into(), csv_rdr_right.into())
+        .try_to_diff_byte_records()?;
 
-    Ok(csv_diff_writer.write_diff_byte_records(diff_byte_records_iter)?)
+    diff_byte_records.sort_by_line();
+
+    Ok(csv_diff_writer.write_diff_byte_records(diff_byte_records)?)
 }
 
 struct CsvDiffWriter<W: Write> {
@@ -147,10 +151,10 @@ impl<W: Write> CsvDiffWriter<W> {
 
     fn write_diff_byte_records(
         &mut self,
-        diff_byte_records: impl IntoIterator<Item = csv::Result<DiffByteRecord>>,
+        diff_byte_records: impl IntoIterator<Item = DiffByteRecord>,
     ) -> io::Result<()> {
         for dbr in diff_byte_records {
-            self.write_diff_byte_record(&dbr?)?;
+            self.write_diff_byte_record(&dbr)?;
         }
         self.csv_writer.flush()?;
         Ok(())
