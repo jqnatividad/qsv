@@ -6,6 +6,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.90.0] - 2023-02-27
+
+### Added
+* `joinp`:  new join command powered by [Pola.rs](https://pola.rs). This is just the first of more commands that will leverage the Pola.rs engine. https://github.com/jqnatividad/qsv/pull/798
+* `luau`: added random acess mode; major refactor as we prepare to use `luau` as qsv's [DSL](https://en.wikipedia.org/wiki/Domain-specific_language); added `qsv_log` helper that can be called from Luau scripts to facilitate development of [full-fledged data-wrangling scripts](https://github.com/jqnatividad/qsv/blob/9cad3396a8f56d2c2136c843078d5635324539a5/tests/test_luau.rs#L224-L247).  https://github.com/jqnatividad/qsv/pull/805 and https://github.com/jqnatividad/qsv/pull/806
+* `sniff`: added URL & re-enabled stdin support; URL support features sampling only the required number of rows to sniff the metadata without downloading the entire file; expanded sniff metadata returned; added `--progressbar` option for URL sniffing https://github.com/jqnatividad/qsv/pull/812
+* `sniff`: added `--timeout` option for URL inputs; now runs async from all the binary variants  https://github.com/jqnatividad/qsv/pull/813
+
+### Changed
+* `diff`: sort by line when no other sort option is given by @janriemer in https://github.com/jqnatividad/qsv/pull/808
+* `luau`: rename `--prologue`/`--epilogue` options to `--begin`/`--end`; add  embedded BEGIN/END block handling https://github.com/jqnatividad/qsv/pull/801
+* Update to csvs_convert 0.8 by @kindly in https://github.com/jqnatividad/qsv/pull/800
+* use simdutf8 when possible https://github.com/jqnatividad/qsv/commit/ae466cbffbc924cc5c1cc09509dd963c56dfc259
+* Bump self_update from 0.35.0 to 0.36.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/797
+* Bump sysinfo from 0.28.0 to 0.28.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/809
+* Bump actix-web from 4.3.0 to 4.3.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/811
+* improved conditional compilation of different variants https://github.com/jqnatividad/qsv/commit/9e636946504a09a1edeea4b0533d42a0bb658b7f
+* temporarily skip CI tests that use httpbin.org as it was causing intermittent failures https://github.com/jqnatividad/qsv/commit/bee160228794c26326baf569e5e7239206ae4314
+* cargo update bump several indirect dependencies
+* pin Rust nightly to 2023-02-26
+
+### Removed
+* Python 3.6 support removed https://github.com/jqnatividad/qsv/commit/86b29d487261fda7670072bfd5977dd9508ac0aa
+
+### Fixed
+* `sniff`: does not work with stdin which fixes #803; https://github.com/jqnatividad/qsv/pull/807   
+Note that stdin support was shortly re-enabled in https://github.com/jqnatividad/qsv/pull/812  
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.89.0...0.90.0
+
 ## [0.89.0] - 2023-02-20
 
 ### Added
