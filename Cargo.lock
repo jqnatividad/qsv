@@ -133,9 +133,9 @@ dependencies = [
 
 [[package]]
 name = "actix-web"
-version = "4.3.0"
+version = "4.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "464e0fddc668ede5f26ec1f9557a8d44eda948732f40c6b0ad79126930eb775f"
+checksum = "cd3cb42f9566ab176e1ef0b8b3a896529062b4efc6be0123046095914c4c1c96"
 dependencies = [
  "actix-codec",
  "actix-http",
@@ -3507,6 +3507,7 @@ dependencies = [
  "ahash 0.8.3",
  "assert-json-diff",
  "byteorder",
+ "bytes",
  "cached",
  "calamine",
  "censor",
@@ -3526,6 +3527,8 @@ dependencies = [
  "filetime",
  "flate2",
  "flexi_logger",
+ "futures",
+ "futures-util",
  "governor",
  "grex",
  "hashbrown 0.13.2",
@@ -3576,6 +3579,7 @@ dependencies = [
  "thousands",
  "threadpool",
  "titlecase",
+ "tokio",
  "url",
  "uuid",
  "vader_sentiment",
@@ -3872,6 +3876,7 @@ dependencies = [
  "url",
  "wasm-bindgen",
  "wasm-bindgen-futures",
+ "wasm-streams",
  "web-sys",
  "webpki-roots",
  "winreg",
@@ -5023,6 +5028,19 @@ name = "wasm-bindgen-shared"
 version = "0.2.84"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0046fef7e28c3804e5e38bfa31ea2a0f73905319b677e57ebe37e49358989b5d"
+
+[[package]]
+name = "wasm-streams"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6bbae3363c08332cadccd13b67db371814cd214c2524020932f0804b8cf7c078"
+dependencies = [
+ "futures-util",
+ "js-sys",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
 
 [[package]]
 name = "wasm-timer"
