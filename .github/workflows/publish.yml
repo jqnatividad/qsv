@@ -11,7 +11,7 @@ env:
 
 jobs:
   analyze-tags:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     outputs:
       previous-tag: ${{ steps.previoustag.outputs.tag }}
     steps:
@@ -32,7 +32,7 @@ jobs:
       matrix:
         rust: [stable]
         job:
-          - os: ubuntu-20.04
+          - os: ubuntu-22.04
             os-name: linux
             target: x86_64-unknown-linux-gnu
             architecture: x86_64
@@ -40,7 +40,7 @@ jobs:
             addl-build-args: --features=apply,generate,luau,fetch,foreach,self_update,to,polars
             default-features:
             addl-qsvdp-features: luau
-          - os: ubuntu-20.04
+          - os: ubuntu-22.04
             os-name: linux
             target: x86_64-unknown-linux-musl
             architecture: x86_64
@@ -49,7 +49,7 @@ jobs:
             addl-build-args: --features=apply,generate,fetch,foreach,self_update
             default-features:
             addl-qsvdp-features:
-          - os: ubuntu-20.04
+          - os: ubuntu-22.04
             os-name: linux
             target: i686-unknown-linux-gnu
             architecture: i686
@@ -97,7 +97,7 @@ jobs:
             addl-build-args: --features=apply,generate,fetch,foreach,self_update,to,polars
             default-features: --no-default-features
             addl-qsvdp-features:
-          - os: ubuntu-20.04
+          - os: ubuntu-22.04
             os-name: linux
             target: aarch64-unknown-linux-gnu
             architecture: aarch64
