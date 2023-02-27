@@ -36,6 +36,8 @@ sniff options:
     --pretty-json            Return results in pretty JSON format.
     --save-urlsample <file>  Save the URL sample to a file.
                              Valid only when input is a URL.
+    --timeout <secs>         Timeout for URL requests in seconds.
+                             [default: 30]
 
 Common options:
     -h, --help               Display this message
@@ -47,7 +49,7 @@ Common options:
     -p, --progressbar        Show progress bars. Only valid for URL input.
 "#;
 
-use std::{cmp::min, fs, io::Write};
+use std::{cmp::min, fs, io::Write, time::Duration};
 
 use bytes::Bytes;
 use futures::executor::block_on;
@@ -59,6 +61,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tempfile::NamedTempFile;
 use thousands::Separable;
+use url::Url;
 
 use crate::{
     config::{Config, Delimiter},
@@ -75,6 +78,7 @@ struct Args {
     flag_pretty_json:    bool,
     flag_delimiter:      Option<Delimiter>,
     flag_progressbar:    bool,
+    flag_timeout:        u64,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -122,7 +126,7 @@ async fn get_file_to_sniff(args: &Args) -> CliResult<SniffFileStruct> {
     if let Some(uri) = args.arg_input.clone() {
         match uri {
             // its a URL, download sample to temp file
-            url if url::Url::parse(&url).is_ok() && url.starts_with("http") => {
+            url if Url::parse(&url).is_ok() && url.starts_with("http") => {
                 let client = match Client::builder()
                     .user_agent(util::DEFAULT_USER_AGENT)
                     .brotli(true)
@@ -140,6 +144,7 @@ async fn get_file_to_sniff(args: &Args) -> CliResult<SniffFileStruct> {
 
                 let res = client
                     .get(url.clone())
+                    .timeout(Duration::from_secs(args.flag_timeout))
                     .send()
                     .await
                     .or(Err(format!("Failed to GET from '{url}'")))?;
@@ -321,7 +326,6 @@ async fn get_file_to_sniff(args: &Args) -> CliResult<SniffFileStruct> {
     }
 }
 
-#[tokio::main]
 pub async fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
