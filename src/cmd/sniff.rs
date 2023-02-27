@@ -159,7 +159,7 @@ async fn get_file_to_sniff(args: &Args) -> CliResult<SniffFileStruct> {
                     args.flag_sample.round() as u64
                 } else if args.flag_sample.abs() < f64::EPSILON {
                     // sample size is zero, so we want to download the entire file
-                    total_size
+                    u64::MAX
                 } else {
                     // sample size is a percentage, download percentage number of lines
                     // from the file. Since we don't know how wide the lines are, we
@@ -187,7 +187,7 @@ async fn get_file_to_sniff(args: &Args) -> CliResult<SniffFileStruct> {
                             .unwrap(),
                     );
                     progress.set_message(format!(
-                        "Downloading {} samples,,,",
+                        "Downloading {} samples...",
                         HumanCount(lines_sample_size)
                     ));
                 } else {
@@ -221,12 +221,14 @@ async fn get_file_to_sniff(args: &Args) -> CliResult<SniffFileStruct> {
                 }
                 // we subtract 1 because we don't want to count the header row
                 downloaded_lines -= 1;
+
                 if show_progress {
                     progress.finish_with_message(format!(
                         "Downloaded {} samples.",
                         HumanCount(downloaded_lines)
                     ));
                 }
+
                 // now we downloaded the file, rewrite it so we only have the exact sample size
                 // and truncate potentially incomplete lines. We streamed the download
                 // and the downloaded file may be more than the sample size, and the final
@@ -251,8 +253,11 @@ async fn get_file_to_sniff(args: &Args) -> CliResult<SniffFileStruct> {
 
                 let mut wtr = Config::new(&Some(wtr_file_path.clone())).writer()?;
                 let mut sampled_records = 0_u64;
+
+                // amortize allocation
                 #[allow(unused_assignments)]
                 let mut record = csv::ByteRecord::with_capacity(100, 20);
+
                 for rec in rdr.byte_records() {
                     record.clone_from(&rec?);
                     sampled_records += 1;
@@ -270,6 +275,9 @@ async fn get_file_to_sniff(args: &Args) -> CliResult<SniffFileStruct> {
                     tempfile_flag: true,
                     retrieved_size: downloaded,
                     file_size: if total_size == u64::MAX {
+                        // the server didn't give us content length, so we just
+                        // downloaded the entire file. downloaded variable
+                        // is the total size of the file
                         downloaded
                     } else {
                         total_size
