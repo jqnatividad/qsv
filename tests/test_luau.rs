@@ -348,6 +348,9 @@ BEGIN {
     grand_total = 0;
     amount_array = {};
 
+    -- note how we use the qsv_log function to log to the qsv log file
+    qsv_log("debug", " _INDEX:", _INDEX, " _IDX:", _IDX, " _ROWCOUNT:", _ROWCOUNT)
+
     -- start from the end of the CSV file, set _INDEX to the last row
     -- both _IDX and _INDEX are zero-based, that's why we subtract 1
     _INDEX = _ROWCOUNT - 1;
@@ -359,7 +362,6 @@ amount_array[_IDX] = Amount;
 running_total = running_total + Amount;
 grand_total = grand_total + running_total;
 
--- note how we use the qsv_log function to log to the qsv log file
 qsv_log("warn", "logging from Luau script! running_total:", running_total, " _INDEX:", _INDEX)
 
 -- we modify _INDEX to do random access on the CSV file, in this case going backwards
