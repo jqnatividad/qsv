@@ -31,6 +31,7 @@ macro_rules! werr {
     });
 }
 
+#[cfg(any(feature = "full", feature = "lite"))]
 macro_rules! wwarn {
     ($($arg:tt)*) => ({
         use std::io::Write;
