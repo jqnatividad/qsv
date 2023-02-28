@@ -36,7 +36,7 @@ jobs:
             target: i686-unknown-linux-gnu
             architecture: i686
             use-cross: true
-            addl-build-args: --features=apply,generate,luau,fetch,foreach,self_update
+            addl-build-args:  --features=apply,generate,fetch,foreach,self_update
             build-nopython: false
             default-features:
             python_library_path:
