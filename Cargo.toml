@@ -247,4 +247,5 @@ nightly = [
     "parking_lot/nightly",
     "pyo3/nightly",
     "hashbrown/nightly",
+    "polars/nightly",
 ]
