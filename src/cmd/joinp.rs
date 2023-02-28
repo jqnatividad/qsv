@@ -1,5 +1,5 @@
 static USAGE: &str = r#"
-Joins two sets of CSV data on the specified columns using the pola.rs engine.
+Joins two sets of CSV data on the specified columns using the Pola.rs engine.
 
 The default join operation is an 'inner' join. This corresponds to the
 intersection of rows on the keys specified.
@@ -7,8 +7,6 @@ intersection of rows on the keys specified.
 The columns arguments specify the columns to join for each input. Columns can
 be referenced by name. Specify multiple columns by separating them with a comma.
 Both columns1 and columns2 must specify exactly the same number of columns.
-
-For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_joinp.rs.
 
 Usage:
     qsv joinp [options] <columns1> <input1> <columns2> <input2>
@@ -115,9 +113,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 }
 
 struct JoinStruct {
-    df1:    DataFrame,
+    lf1:    LazyFrame,
     sel1:   String,
-    df2:    DataFrame,
+    lf2:    LazyFrame,
     sel2:   String,
     output: Option<String>,
     delim:  u8,
@@ -125,8 +123,8 @@ struct JoinStruct {
 
 impl JoinStruct {
     fn polars_join(self, jointype: JoinType) -> CliResult<usize> {
-        let selcols1: Vec<&str> = self.sel1.split(',').collect();
-        let selcols2: Vec<&str> = self.sel2.split(',').collect();
+        let selcols1: Vec<_> = self.sel1.split(',').map(polars::lazy::dsl::col).collect();
+        let selcols2: Vec<_> = self.sel2.split(',').map(polars::lazy::dsl::col).collect();
 
         let selcols1_len = selcols1.len();
         let selcols2_len = selcols2.len();
@@ -138,9 +136,28 @@ impl JoinStruct {
             );
         }
 
+        let optimize_all = polars::lazy::frame::OptState {
+            projection_pushdown:        true,
+            predicate_pushdown:         true,
+            type_coercion:              true,
+            simplify_expr:              true,
+            file_caching:               true,
+            slice_pushdown:             true,
+            common_subplan_elimination: true,
+            streaming:                  true,
+        };
+
         let mut join_results = self
-            .df1
-            .join(&self.df2, selcols1, selcols2, jointype, None)?;
+            .lf1
+            .with_optimizations(optimize_all)
+            .join_builder()
+            .with(self.lf2.with_optimizations(optimize_all))
+            .left_on(selcols1)
+            .right_on(selcols2)
+            .how(jointype)
+            .force_parallel(true)
+            .finish()
+            .collect()?;
 
         // no need to use buffered writer here, as CsvWriter already does that
         let mut out_writer = match self.output {
@@ -186,22 +203,22 @@ impl Args {
             b','
         };
 
-        let df1 = CsvReader::from_path(&self.arg_input1)?
+        let lf1 = LazyCsvReader::new(&self.arg_input1)
             .has_header(true)
             .with_missing_is_null(self.flag_nulls)
             .with_delimiter(delim)
             .finish()?;
 
-        let df2 = CsvReader::from_path(&self.arg_input2)?
+        let lf2 = LazyCsvReader::new(&self.arg_input2)
             .has_header(true)
             .with_missing_is_null(self.flag_nulls)
             .with_delimiter(delim)
             .finish()?;
 
         Ok(JoinStruct {
-            df1,
+            lf1,
             sel1: self.arg_columns1.clone(),
-            df2,
+            lf2,
             sel2: self.arg_columns2.clone(),
             output: self.flag_output.clone(),
             delim,
