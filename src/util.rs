@@ -281,8 +281,8 @@ macro_rules! update_cache_info {
             Ok(cache) => {
                 let cache_size = cache.cache_size();
                 if cache_size > 0 {
-                    let hits = cache.cache_hits().expect("Cache hits required");
-                    let misses = cache.cache_misses().expect("Cache misses required");
+                    let hits = cache.cache_hits().unwrap_or_default();
+                    let misses = cache.cache_misses().unwrap_or(1);
                     let hit_ratio = (hits as f64 / (hits + misses) as f64) * 100.0;
                     $progress.set_message(format!(
                         " of {} records. Cache hit ratio: {hit_ratio:.2}%",
