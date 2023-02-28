@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.90.1] - 2023-02-28
+
+### Changed
+* `joinp`: Refactor to use LazyFrames instead of DataFrames for performance and ability to do streaming. https://github.com/jqnatividad/qsv/pull/814 and https://github.com/jqnatividad/qsv/pull/815
+* `luau`: expanded example using `qsv_log` helper https://github.com/jqnatividad/qsv/commit/5c198e4bcb243005dace25d8aecbc58bb211cadc
+* handled new clippy lints https://github.com/jqnatividad/qsv/commit/e81a391bd675a2f4fb07169c1d6848340104b9fe
+* adjust publishing workflows to build binaries with as many features enabled. On some platforms, the `to` and `polars`(for `joinp`) features cannot be built. 
+* cargo update bump indirect dependencies, notably arrow and duckdb
+* pin Rust nightly to 2023-02-27
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.90.0...0.90.1
+
 ## [0.90.0] - 2023-02-27
 
 ### Added
