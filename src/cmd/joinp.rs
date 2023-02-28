@@ -8,6 +8,8 @@ The columns arguments specify the columns to join for each input. Columns can
 be referenced by name. Specify multiple columns by separating them with a comma.
 Both columns1 and columns2 must specify exactly the same number of columns.
 
+Returns the shape of the join result (number of rows, number of columns) to stderr.
+
 Usage:
     qsv joinp [options] <columns1> <input1> <columns2> <input2>
     qsv joinp --help
@@ -45,15 +47,13 @@ Common options:
     -o, --output <file>    Write output to <file> instead of stdout.
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
-    -Q, --quiet            Do not print join rowcount to stderr.
-    --no-memcheck          Do not check if there is enough memory to load the
-                           entire CSVs into memory.
+    -Q, --quiet            Do not return join shape to stderr.
 "#;
 
 use std::{
     fs::File,
     io::{self, Write},
-    path::{Path, PathBuf},
+    path::Path,
     str,
 };
 
@@ -64,20 +64,19 @@ use crate::{config::Delimiter, util, CliError, CliResult};
 
 #[derive(Deserialize)]
 struct Args {
-    arg_columns1:     String,
-    arg_input1:       String,
-    arg_columns2:     String,
-    arg_input2:       String,
-    flag_left:        bool,
-    flag_outer:       bool,
-    flag_cross:       bool,
-    flag_semi:        bool,
-    flag_anti:        bool,
-    flag_output:      Option<String>,
-    flag_nulls:       bool,
-    flag_delimiter:   Option<Delimiter>,
-    flag_quiet:       bool,
-    flag_no_memcheck: bool,
+    arg_columns1:   String,
+    arg_input1:     String,
+    arg_columns2:   String,
+    arg_input2:     String,
+    flag_left:      bool,
+    flag_outer:     bool,
+    flag_cross:     bool,
+    flag_semi:      bool,
+    flag_anti:      bool,
+    flag_output:    Option<String>,
+    flag_nulls:     bool,
+    flag_delimiter: Option<Delimiter>,
+    flag_quiet:     bool,
 }
 
 impl From<polars::error::PolarsError> for CliError {
@@ -89,7 +88,7 @@ impl From<polars::error::PolarsError> for CliError {
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
     let join = args.new_join()?;
-    let join_rowcount = match (
+    let join_shape = match (
         args.flag_left,
         args.flag_outer,
         args.flag_cross,
@@ -106,7 +105,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }?;
 
     if !args.flag_quiet {
-        eprintln!("{join_rowcount}");
+        eprintln!("{join_shape:?}");
     }
 
     Ok(())
@@ -122,7 +121,7 @@ struct JoinStruct {
 }
 
 impl JoinStruct {
-    fn polars_join(self, jointype: JoinType) -> CliResult<usize> {
+    fn polars_join(self, jointype: JoinType) -> CliResult<(usize, usize)> {
         let selcols1: Vec<_> = self.sel1.split(',').map(polars::lazy::dsl::col).collect();
         let selcols2: Vec<_> = self.sel2.split(',').map(polars::lazy::dsl::col).collect();
 
@@ -137,14 +136,13 @@ impl JoinStruct {
         }
 
         let optimize_all = polars::lazy::frame::OptState {
-            projection_pushdown:        true,
-            predicate_pushdown:         true,
-            type_coercion:              true,
-            simplify_expr:              true,
-            file_caching:               true,
-            slice_pushdown:             true,
-            common_subplan_elimination: true,
-            streaming:                  true,
+            projection_pushdown: true,
+            predicate_pushdown:  true,
+            type_coercion:       true,
+            simplify_expr:       true,
+            file_caching:        true,
+            slice_pushdown:      true,
+            streaming:           true,
         };
 
         let mut join_results = self
@@ -168,35 +166,20 @@ impl JoinStruct {
             None => Box::new(io::stdout()) as Box<dyn Write>,
         };
 
-        // height of the dataframe is the number of rows
-        let join_results_len = join_results.height();
+        // shape is the number of rows and columns
+        let join_shape = join_results.shape();
 
         CsvWriter::new(&mut out_writer)
             .has_header(true)
             .with_delimiter(self.delim)
             .finish(&mut join_results)?;
 
-        Ok(join_results_len)
+        Ok(join_shape)
     }
 }
 
 impl Args {
     fn new_join(&self) -> CliResult<JoinStruct> {
-        // we're loading entire files into memory, we need to check avail mem
-        // definitely can have a more sophisticated check, but this is better than getting an OOM
-        let f1 = PathBuf::from(self.arg_input1.clone());
-        if f1.exists() {
-            util::mem_file_check(&f1, false, self.flag_no_memcheck)?;
-        } else {
-            return fail_clierror!("{f1:?} does not exist.");
-        }
-        let f2 = PathBuf::from(self.arg_input2.clone());
-        if f1.exists() {
-            util::mem_file_check(&f1, false, self.flag_no_memcheck)?;
-        } else {
-            return fail_clierror!("{f2:?} does not exist.");
-        }
-
         let delim = if let Some(delimiter) = self.flag_delimiter {
             delimiter.as_byte()
         } else {
