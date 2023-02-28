@@ -308,6 +308,7 @@ async fn get_file_to_sniff(args: &Args) -> CliResult<SniffFileStruct> {
         let stdin = std::io::stdin();
         let mut stdin_handle = stdin.lock();
         std::io::copy(&mut stdin_handle, &mut stdin_file)?;
+        drop(stdin_handle);
         let (file, path) = stdin_file
             .keep()
             .or(Err("Cannot keep temporary file".to_string()))?;

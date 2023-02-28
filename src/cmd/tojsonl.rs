@@ -83,6 +83,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let stdin = std::io::stdin();
         let mut stdin_handle = stdin.lock();
         std::io::copy(&mut stdin_handle, &mut stdin_file)?;
+        drop(stdin_handle);
         args.arg_input = Some(stdin_fpath.clone());
         is_stdin = true;
         stdin_fpath
