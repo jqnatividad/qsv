@@ -29,39 +29,39 @@ jobs:
       matrix:
         rust: [nightly-2023-02-26]
         job:
-          - os: ubuntu-20.04
+          - os: ubuntu-latest
             os-name: linux
             target: x86_64-unknown-linux-gnu
             architecture: x86_64
-            addl-build-args: --features=apply,generate,luau,fetch,foreach,nightly,to,self_update
+            addl-build-args: --features=apply,generate,luau,fetch,foreach,nightly,to,self_update,polars
             default-features:
             addl-qsvdp-features: luau
-          - os: ubuntu-20.04
+          - os: ubuntu-latest
             os-name: linux
             target: x86_64-unknown-linux-musl
             architecture: x86_64
             musl-prep: true
-            addl-build-args: --features=apply,generate,fetch,foreach,nightly,to,self_update
+            addl-build-args: --features=apply,generate,fetch,foreach,nightly,to,self_update,polars
             default-features:
           - os: windows-latest
             os-name: windows
             target: x86_64-pc-windows-msvc
             architecture: x86_64
-            addl-build-args: --features=apply,generate,luau,fetch,nightly,to,self_update
+            addl-build-args: --features=apply,generate,luau,fetch,nightly,to,self_update,polars
             default-features:
             addl-qsvdp-features: luau
           - os: windows-latest
             os-name: windows
             target: x86_64-pc-windows-gnu
             architecture: x86_64
-            addl-build-args: --features=apply,generate,luau,fetch,nightly,self_update
+            addl-build-args: --features=apply,generate,luau,fetch,nightly,self_update,polars
             default-features: --no-default-features 
             addl-qsvdp-features: luau
-          - os: macos-12
+          - os: macos-latest
             os-name: macos
             target: x86_64-apple-darwin
             architecture: x86_64
-            addl-build-args: --features=apply,generate,luau,fetch,foreach,nightly,to,self_update
+            addl-build-args: --features=apply,generate,luau,fetch,foreach,nightly,to,self_update,polars
             default-features:
             addl-qsvdp-features: luau
 
@@ -83,7 +83,8 @@ jobs:
     - name: build prep for x86_64-unknown-linux-musl
       if: ${{ matrix.job.musl-prep }}
       run: |
-        sudo apt-get install musl-tools
+        sudo apt-get install musl-tools musl-dev
+        sudo ln -s /usr/bin/g++ /usr/bin/musl-g++        
     - name: Build qsv-nightly
       env:
         RUSTFLAGS: --emit=asm
