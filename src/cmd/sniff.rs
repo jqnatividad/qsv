@@ -334,6 +334,7 @@ async fn get_file_to_sniff(args: &Args) -> CliResult<SniffFileStruct> {
     }
 }
 
+#[allow(clippy::unused_async)] // false positive lint
 pub async fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 

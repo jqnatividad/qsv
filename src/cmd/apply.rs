@@ -868,6 +868,7 @@ fn validate_operations(
                             return fail_clierror!("regex_replace expression error: {err:?}");
                         }
                     };
+                    #[allow(clippy::let_underscore_untyped)]
                     let _ = REGEX_REPLACE.set(re);
                 }
                 regex_replace_invokes = regex_replace_invokes.saturating_add(1);

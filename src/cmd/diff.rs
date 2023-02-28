@@ -130,6 +130,7 @@ impl<W: Write> CsvDiffWriter<W> {
                 // before the actual records. Otherwise, it would lead to errors when we
                 // diff the CSVs, because the header of one CSV would have been read and the other
                 // not.
+                #[allow(clippy::let_underscore_untyped)]
                 let _ = rdr_right.byte_headers()?;
             }
             (true, false) => {
