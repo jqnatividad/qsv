@@ -926,7 +926,7 @@ pub fn is_safe_name(header_name: &str) -> bool {
 pub fn log_end(mut qsv_args: String, now: std::time::Instant) {
     if log::log_enabled!(log::Level::Info) {
         let ellipsis = if qsv_args.len() > 24 {
-            qsv_args.truncate(24);
+            utf8_truncate(&mut qsv_args, 24);
             "..."
         } else {
             ""
@@ -935,6 +935,23 @@ pub fn log_end(mut qsv_args: String, now: std::time::Instant) {
             "END \"{qsv_args}{ellipsis}\" elapsed: {}",
             now.elapsed().as_secs_f32()
         );
+    }
+}
+
+// taken from https://gist.github.com/dginev/f6da5e94335d545e0a7b
+pub fn utf8_truncate(input: &mut String, maxsize: usize) {
+    let mut utf8_maxsize = input.len();
+    if utf8_maxsize >= maxsize {
+        {
+            let mut char_iter = input.char_indices();
+            while utf8_maxsize >= maxsize {
+                utf8_maxsize = match char_iter.next_back() {
+                    Some((index, _)) => index,
+                    _ => 0,
+                };
+            }
+        } // Extra {} wrap to limit the immutable borrow of char_indices()
+        input.truncate(utf8_maxsize);
     }
 }
 
@@ -1036,9 +1053,7 @@ pub fn round_num(dec_f64: f64, places: u32) -> String {
     // use from_f64_retain, so we have all the excess bits before rounding with
     // round_dp_with_strategy as from_f64 will prematurely round when it drops the excess bits
     let Some(dec_num) = Decimal::from_f64_retain(dec_f64) else {
-        let msg = format!(r#"Failed to convert to decimal "{dec_f64}""#);
-        log::error!("{msg}");
-        return msg;
+        return String::new();
     };
 
     // round using Midpoint Nearest Even Rounding Strategy AKA "Bankers Rounding."
