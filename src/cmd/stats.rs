@@ -969,7 +969,7 @@ impl Stats {
 
                         // and truncate at 100 characters with an ellipsis
                         if antimodes_list.len() > 100 {
-                            antimodes_list.truncate(100);
+                            util::utf8_truncate(&mut antimodes_list, 101);
                             antimodes_list.push_str("...");
                         }
 

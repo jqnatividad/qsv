@@ -789,6 +789,21 @@ fn stats_typesonly_with_dates() {
 }
 
 #[test]
+fn stats_everything_utf8_japanese_issue817() {
+    let wrk = Workdir::new("stats_everything_utf8_japanese");
+    let test_file = wrk.load_test_file("utf8-japanesedata.csv");
+
+    let mut cmd = wrk.command("stats");
+    cmd.arg("--everything").arg(test_file);
+
+    let got: String = wrk.stdout(&mut cmd);
+
+    let expected = wrk.load_test_resource("utf8-japanesedata-stats-everything.csv");
+
+    assert_eq!(dos2unix(&got), dos2unix(&expected).trim_end());
+}
+
+#[test]
 fn stats_leading_zero_handling() {
     let wrk = Workdir::new("stats");
 
