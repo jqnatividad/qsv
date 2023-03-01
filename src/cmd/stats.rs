@@ -133,7 +133,7 @@ It underpins the `schema` and `validate` commands - enabling the automatic creat
 a JSONschema based on a CSV's summary statistics; and use the generated JSONschema to
 quickly validate complex CSVs (NYC's 311 data) at almost 300,000 records/sec.
 
-These "unsafe" calls primarily skip repetitive UTF-8 validation and unneeded bounds checking.
+These "unsafe" calls primarily skip unneeded bounds checking.
 
 To safeguard against undefined behavior, `stats` is the most extensively tested command,
 with ~470 tests.
@@ -301,17 +301,22 @@ impl Args {
         let pool = ThreadPool::new(util::njobs(self.flag_jobs));
         let (send, recv) = channel::bounded(0);
         for i in 0..nchunks {
-            let (send, args, sel) = (send.clone(), self.clone(), sel.clone());
-            pool.execute(move || unsafe {
+            // safety: the index file call is always safe
+            // seeking may fail, so we need to abort if that happens
+            unsafe {
+                let (send, args, sel) = (send.clone(), self.clone(), sel.clone());
                 let mut idx = args
                     .rconfig()
                     .indexed()
                     .unwrap_unchecked()
                     .unwrap_unchecked();
-                idx.seek((i * chunk_size) as u64).unwrap_unchecked();
-                let it = idx.byte_records().take(chunk_size);
-                send.send(args.compute(&sel, it)).unwrap_unchecked();
-            });
+                pool.execute(move || {
+                    idx.seek((i * chunk_size) as u64)
+                        .expect("File seek failed.");
+                    let it = idx.byte_records().take(chunk_size);
+                    send.send(args.compute(&sel, it)).unwrap_unchecked();
+                });
+            }
         }
         drop(send);
         Ok((headers, merge_all(recv.iter()).unwrap_or_default()))
@@ -343,7 +348,7 @@ impl Args {
     {
         let mut stats = self.new_stats(sel.len());
 
-        // we use unsafe here so we skip unnecessary bounds checking
+        // safety: we use unsafe in this hot loop so we skip unnecessary bounds checking
         // that we are certain is safe
         unsafe {
             for row in it {
@@ -1218,7 +1223,7 @@ impl TypedMinMax {
             return;
         }
         self.strings.add(sample.to_vec());
-        // we can use unwrap_unchecked below since we know the data type of the sample
+        // safety: we can use unwrap_unchecked below since we know the data type of the sample
         unsafe {
             match typ {
                 TString | TNull => {}
