@@ -97,7 +97,7 @@ The BEGIN block is "BEGIN { ... }!" and can contain multiple statements.
 The END script is embedded in the MAIN script by adding an END block at the bottom of the script.
 The END block is "END { ... }!" and can contain multiple statements.
 
-luau options:
+Luau options:
     -x, --exec               exec[ute] Luau script, instead of the default eval[uate].
                              eval (default) expects just a single Luau expression,
                              while exec expects one or more statements, allowing
@@ -331,6 +331,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         Ok(())
     })?;
     luau.globals().set("qsv_log", qsv_log)?;
+
+    // this is a helper function that can be called from Luau scripts
+    // to coalesce - return the first non-null value in a list
+    let qsv_coalesce = luau.create_function(|luau, mut args: mlua::MultiValue| {
+        while let Some(val) = args.pop_front() {
+            let val = luau.from_value::<serde_json::Value>(val)?;
+            let val_str = &serde_json::to_string(&val).unwrap_or_default();
+            if !val_str.is_empty() {
+                return Ok(val_str.to_string());
+            }
+        }
+        Ok(String::new())
+    })?;
+    luau.globals().set("qsv_coalesce", qsv_coalesce)?;
 
     if index_file_used {
         with_index(
