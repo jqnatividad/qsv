@@ -34,6 +34,7 @@ impl<R: io::Read + io::Seek, I: io::Read + io::Seek> Indexed<R, I> {
 
     /// Return the number of records (not including the header record) in this
     /// index.
+    #[inline]
     pub fn count(&self) -> u64 {
         if self.csv_rdr.has_headers() && !self.idx.is_empty() {
             self.idx.len() - 1
@@ -43,6 +44,7 @@ impl<R: io::Read + io::Seek, I: io::Read + io::Seek> Indexed<R, I> {
     }
 
     /// Seek to the starting position of record `i`.
+    #[inline]
     pub fn seek(&mut self, mut i: u64) -> CliResult<()> {
         if i >= self.count() {
             let msg = format!(

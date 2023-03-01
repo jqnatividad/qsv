@@ -408,7 +408,8 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
         Ok(o) => {
             if let Some(idx) = o {
                 info!("has index, triggering parallel stats");
-                stats_args.parallel_stats(&stats_args.flag_dates_whitelist, &idx)
+                let idx_count = idx.count();
+                stats_args.parallel_stats(&stats_args.flag_dates_whitelist, idx_count)
             } else {
                 info!("no index, triggering sequential stats");
                 stats_args.sequential_stats(&stats_args.flag_dates_whitelist)

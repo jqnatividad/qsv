@@ -142,7 +142,7 @@ with ~470 tests.
 use std::{
     borrow::ToOwned,
     default::Default,
-    fmt, fs, io,
+    fmt, io,
     iter::repeat,
     str::{self, FromStr},
     sync::atomic::{AtomicBool, Ordering},
@@ -159,7 +159,6 @@ use threadpool::ThreadPool;
 use self::FieldType::{TDate, TDateTime, TFloat, TInteger, TNull, TString};
 use crate::{
     config::{Config, Delimiter},
-    index::Indexed,
     select::{SelectColumns, Selection},
     util, CliResult,
 };
@@ -230,14 +229,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let (headers, stats) = match fconfig.indexed()? {
         None => args.sequential_stats(&args.flag_dates_whitelist),
         Some(idx) => {
+            let idx_count = idx.count();
             if let Some(num_jobs) = args.flag_jobs {
                 if num_jobs == 1 {
                     args.sequential_stats(&args.flag_dates_whitelist)
                 } else {
-                    args.parallel_stats(&args.flag_dates_whitelist, &idx)
+                    args.parallel_stats(&args.flag_dates_whitelist, idx_count)
                 }
             } else {
-                args.parallel_stats(&args.flag_dates_whitelist, &idx)
+                args.parallel_stats(&args.flag_dates_whitelist, idx_count)
             }
         }
     }?;
@@ -277,11 +277,11 @@ impl Args {
     pub fn parallel_stats(
         &self,
         whitelist: &str,
-        idx: &Indexed<fs::File, fs::File>,
+        idx_count: u64,
     ) -> CliResult<(csv::ByteRecord, Vec<Stats>)> {
         // N.B. This method doesn't handle the case when the number of records
         // is zero correctly. So we use `sequential_stats` instead.
-        if idx.count() == 0 {
+        if idx_count == 0 {
             return self.sequential_stats(whitelist);
         }
 
@@ -295,14 +295,16 @@ impl Args {
             whitelist,
         )?;
 
-        let chunk_size = util::chunk_size(idx.count() as usize, util::njobs(self.flag_jobs));
-        let nchunks = util::num_of_chunks(idx.count() as usize, chunk_size);
+        let chunk_size = util::chunk_size(idx_count as usize, util::njobs(self.flag_jobs));
+        let nchunks = util::num_of_chunks(idx_count as usize, chunk_size);
 
         let pool = ThreadPool::new(util::njobs(self.flag_jobs));
         let (send, recv) = channel::bounded(0);
         for i in 0..nchunks {
             // safety: the index file call is always safe
-            // seeking may fail, so we need to abort if that happens
+            // seeking may fail and you have a bigger problem
+            // as the index file was modified while stats is running
+            // so we need to abort if that happens
             unsafe {
                 let (send, args, sel) = (send.clone(), self.clone(), sel.clone());
                 let mut idx = args
