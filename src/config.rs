@@ -216,7 +216,6 @@ impl Config {
         self
     }
 
-    #[cfg(any(feature = "full", feature = "lite"))]
     pub const fn quote_style(mut self, style: csv::QuoteStyle) -> Config {
         self.quote_style = style;
         self
