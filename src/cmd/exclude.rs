@@ -175,7 +175,7 @@ impl<R: io::Read + io::Seek> ValueIndex<R> {
     fn new(mut rdr: csv::Reader<R>, sel: &Selection, casei: bool) -> CliResult<ValueIndex<R>> {
         let mut val_idx = AHashMap::with_capacity(10000);
         let mut row_idx = io::Cursor::new(Vec::with_capacity(8 * 10000));
-        let (mut rowi, mut count) = (0usize, 0usize);
+        let (mut rowi, mut count) = (0_usize, 0_usize);
 
         // This logic is kind of tricky. Basically, we want to include
         // the header row in the line index (because that's what csv::index

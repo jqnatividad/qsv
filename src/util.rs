@@ -218,7 +218,7 @@ pub fn count_rows(conf: &Config) -> Result<u64, CliError> {
         // that don't have an index.
         let rc = ROW_COUNT.get_or_init(|| {
             if let Ok(mut rdr) = conf.reader() {
-                let mut count = 0u64;
+                let mut count = 0_u64;
                 let mut record = csv::ByteRecord::new();
                 while rdr.read_byte_record(&mut record).unwrap_or_default() {
                     count += 1;

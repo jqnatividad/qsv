@@ -58,7 +58,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         if config.is_stdin() {
             return fail!("<stdin> cannot be used in this command. Please specify a file path.");
         }
-        let mut maxlen = 0usize;
+        let mut maxlen = 0_usize;
         let mut rdr = config.reader()?;
         let mut record = csv::ByteRecord::new();
         while rdr.read_byte_record(&mut record)? {

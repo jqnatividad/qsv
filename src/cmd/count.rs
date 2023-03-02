@@ -89,9 +89,9 @@ fn count_input(
 ) -> Result<(u64, usize), crate::clitypes::CliError> {
     info!("counting...");
     let mut rdr = conf.reader()?;
-    let mut count = 0u64;
-    let mut max_width = 0usize;
-    let mut record_numfields = 0usize;
+    let mut count = 0_u64;
+    let mut max_width = 0_usize;
+    let mut record_numfields = 0_usize;
     let mut record = csv::ByteRecord::new();
 
     if compute_width {
