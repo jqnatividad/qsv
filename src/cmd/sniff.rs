@@ -206,19 +206,23 @@ async fn get_file_to_sniff(args: &Args) -> CliResult<SniffFileStruct> {
                     chunk = item.or(Err("Error while downloading file".to_string()))?;
                     file.write_all(&chunk)
                         .map_err(|_| "Error while writing to file".to_string())?;
-                    downloaded = min(downloaded + (chunk.len() as u64), total_size);
+                    let chunk_len = chunk.len() as u64;
+                    downloaded = min(downloaded + chunk_len, total_size);
                     if show_progress {
-                        progress.inc(downloaded);
+                        progress.inc(chunk_len);
                     }
-                    let num_lines = chunk
-                        .iter()
-                        .filter(|x| x.eq_ignore_ascii_case(&b'\n'))
-                        .count();
+
+                    // scan chunk for newlines
+                    let num_lines = chunk.into_iter().filter(|&x| x == b'\n').count();
+                    // and keep track of the number of lines downloaded which is ~= sample_size
                     downloaded_lines += num_lines as u64;
-                    if downloaded_lines >= lines_sample_size {
+                    // we downloaded enough samples, stop downloading
+                    if downloaded_lines > lines_sample_size {
                         break;
                     }
                 }
+                drop(client);
+
                 // we subtract 1 because we don't want to count the header row
                 downloaded_lines -= 1;
 
@@ -251,22 +255,27 @@ async fn get_file_to_sniff(args: &Args) -> CliResult<SniffFileStruct> {
                     .or(Err("Cannot keep temporary file".to_string()))?;
                 let wtr_file_path = path.to_str().unwrap().to_string();
 
-                let mut wtr = Config::new(&Some(wtr_file_path.clone())).writer()?;
+                let mut wtr = Config::new(&Some(wtr_file_path.clone()))
+                    .no_headers(false)
+                    .writer()?;
                 let mut sampled_records = 0_u64;
 
                 // amortize allocation
                 #[allow(unused_assignments)]
                 let mut record = csv::ByteRecord::with_capacity(100, 20);
 
+                let header_row = rdr.byte_headers()?;
+                wtr.write_byte_record(header_row)?;
+                rdr.byte_records().next();
+
                 for rec in rdr.byte_records() {
                     record.clone_from(&rec?);
-                    sampled_records += 1;
                     if sampled_records >= lines_sample_size {
                         break;
                     }
+                    sampled_records += 1;
                     wtr.write_byte_record(&record)?;
                 }
-                sampled_records -= 1; // we don't want to count the header row
                 wtr.flush()?;
 
                 Ok(SniffFileStruct {
