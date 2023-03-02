@@ -63,7 +63,7 @@ fn sniff_url() {
 	Delimiter: ,
 	Has header row?: true
 	Number of preamble rows: 0
-	Quote character: none
+	Quote character: "
 	Flexible: false
 	Is utf-8 encoded?: true
 

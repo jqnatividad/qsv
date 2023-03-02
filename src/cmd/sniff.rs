@@ -1,7 +1,9 @@
 #![allow(clippy::cast_precision_loss)]
 static USAGE: &str = r#"
-Quickly sniff CSV metadata (delimiter, header row, preamble rows, quote character, 
-flexible, is_utf8, number of records, number of fields, field names & data types).
+Quickly sniff and infer CSV metadata (delimiter, header row, number of preamble rows,
+quote character, flexible, is_utf8, number of records, file size, number of fields,
+field names & data types) using a Viterbi algorithm 
+(https://en.wikipedia.org/wiki/Viterbi_algorithm).
 
 NOTE: This command "sniffs" a CSV's schema by sampling the first n rows of a file.
 Its inferences are sometimes wrong if the sample is not large enough (use --sample 
@@ -19,6 +21,13 @@ Usage:
 sniff arguments:
     <input>                  The CSV to sniff. This can be a local file, stdin 
                              or a URL (http and https schemes supported).
+
+                             Note that when input is a URL, sniff will automatically
+                             download the file to a temporary file and sniff it. It
+                             will create the file using csv::QuoteStyle::NonNumeric
+                             so the sniffed schema may not be the same as the original.
+                             This is done to increase the chances of sniffing the
+                             correct schema.
 
 sniff options:
     --sample <size>          First n rows to sample to sniff out the metadata.
@@ -257,6 +266,8 @@ async fn get_file_to_sniff(args: &Args) -> CliResult<SniffFileStruct> {
 
                 let mut wtr = Config::new(&Some(wtr_file_path.clone()))
                     .no_headers(false)
+                    .flexible(true)
+                    .quote_style(csv::QuoteStyle::NonNumeric)
                     .writer()?;
                 let mut sampled_records = 0_u64;
 
@@ -371,12 +382,30 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
         .flexible(true)
         .delimiter(args.flag_delimiter);
     let n_rows = if sfile_info.sampled_records == 0 {
-        util::count_rows(&conf)?
+        match util::count_rows(&conf) {
+            Ok(n) => n,
+            Err(e) => {
+                cleanup_tempfile(sfile_info.tempfile_flag, sfile_info.file_to_sniff)?;
+
+                if args.flag_json || args.flag_pretty_json {
+                    let json_result = json!({
+                        "errors": [{
+                            "title": "count rows error",
+                            "detail": e.to_string()
+                        }]
+                    });
+                    return fail_clierror!("{json_result}");
+                }
+                return fail_clierror!("{}", e);
+            }
+        }
     } else {
         sfile_info.sampled_records
     };
 
     if n_rows == 0 {
+        cleanup_tempfile(sfile_info.tempfile_flag, sfile_info.file_to_sniff)?;
+
         if args.flag_json || args.flag_pretty_json {
             let json_result = json!({
                 "errors": [{
@@ -415,6 +444,10 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
     } else {
         DatePreference::MdyFormat
     };
+
+    if let Some(save_urlsample) = args.flag_save_urlsample {
+        fs::copy(sfile_info.file_to_sniff.clone(), save_urlsample)?;
+    }
 
     let sniff_results = if sample_all {
         log::info!("Sniffing ALL {n_rows} rows...");
@@ -504,6 +537,7 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
                         "detail": e.to_string()
                     }]
                 });
+                cleanup_tempfile(sfile_info.tempfile_flag, sfile_info.file_to_sniff)?;
                 return fail_clierror!("{json_result}");
             }
         }
@@ -537,18 +571,23 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
                 println!("{disp}");
             }
             Err(e) => {
+                cleanup_tempfile(sfile_info.tempfile_flag, sfile_info.file_to_sniff)?;
                 return fail_clierror!("sniff error: {e}");
             }
         }
     }
 
-    if let Some(save_urlsample) = args.flag_save_urlsample {
-        fs::copy(sfile_info.file_to_sniff.clone(), save_urlsample)?;
-    }
+    cleanup_tempfile(sfile_info.tempfile_flag, sfile_info.file_to_sniff)?;
 
-    if sfile_info.tempfile_flag {
-        fs::remove_file(sfile_info.file_to_sniff)?;
-    }
+    Ok(())
+}
 
+fn cleanup_tempfile(
+    tempfile_flag: bool,
+    file_to_sniff: String,
+) -> Result<(), crate::clitypes::CliError> {
+    if tempfile_flag {
+        fs::remove_file(file_to_sniff)?;
+    }
     Ok(())
 }
