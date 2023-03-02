@@ -393,6 +393,12 @@ impl Config {
         Ok(Some((csv_rdr, idx_file)))
     }
 
+    /// Check if the index file exists and is newer than the CSV file.
+    /// If so, return the index file.
+    /// If not, return None.
+    /// Unless QSV_AUTOINDEX is set, in which case, we'll recreate the
+    /// stale index automatically
+    #[inline]
     pub fn indexed(&self) -> CliResult<Option<Indexed<fs::File, fs::File>>> {
         match self.index_files()? {
             None => Ok(None),
