@@ -307,12 +307,12 @@ impl Args {
             // so we need to abort if that happens
             unsafe {
                 let (send, args, sel) = (send.clone(), self.clone(), sel.clone());
-                let mut idx = args
-                    .rconfig()
-                    .indexed()
-                    .unwrap_unchecked()
-                    .unwrap_unchecked();
                 pool.execute(move || {
+                    let mut idx = args
+                        .rconfig()
+                        .indexed()
+                        .unwrap_unchecked()
+                        .unwrap_unchecked();
                     idx.seek((i * chunk_size) as u64)
                         .expect("File seek failed.");
                     let it = idx.byte_records().take(chunk_size);
