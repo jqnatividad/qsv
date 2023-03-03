@@ -20,7 +20,7 @@ diff options:
                                 Must be a single character. (default: ,)
     --delimiter-right <arg>     The field delimiter for reading CSV data on the right.
                                 Must be a single character. (default: ,)
-    --primary-key-idx <arg...>  The column indices that uniquely identify a record
+    -k, --key <arg...>          The column indices that uniquely identify a record
                                 as a comma separated list of indices, e.g. 0,1,2.
                                 (default: 0)
     -j, --jobs <arg>            The number of jobs to run in parallel.
@@ -53,7 +53,7 @@ struct Args {
     flag_no_headers_right: bool,
     flag_delimiter_left:   Option<Delimiter>,
     flag_delimiter_right:  Option<Delimiter>,
-    flag_primary_key_idx:  Option<String>,
+    flag_key:              Option<String>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -73,7 +73,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         );
     }
 
-    let primary_key_cols = match args.flag_primary_key_idx {
+    let primary_key_cols = match args.flag_key {
         None => vec![0],
         Some(s) => s
             .split(',')
