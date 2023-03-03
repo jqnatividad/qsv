@@ -52,16 +52,16 @@ use crate::{
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input_left: Option<String>,
-    arg_input_right: Option<String>,
-    flag_output: Option<String>,
-    flag_jobs: Option<usize>,
-    flag_no_headers_left: bool,
+    arg_input_left:        Option<String>,
+    arg_input_right:       Option<String>,
+    flag_output:           Option<String>,
+    flag_jobs:             Option<usize>,
+    flag_no_headers_left:  bool,
     flag_no_headers_right: bool,
     flag_delimiter_left:   Option<Delimiter>,
     flag_delimiter_right:  Option<Delimiter>,
     flag_key:              Option<String>,
-    flag_sort_columns: Option<String>,
+    flag_sort_columns:     Option<String>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
