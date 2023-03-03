@@ -627,7 +627,6 @@ fn with_index(
     globals.set("_ROWCOUNT", row_count)?;
     globals.set("_LASTROW", row_count - 1)?;
     if !begin_script.is_empty() {
-
         info!("Compiling and executing BEGIN script.");
         let begin_bytecode = luau_compiler.compile(begin_script);
         if let Err(e) = luau
