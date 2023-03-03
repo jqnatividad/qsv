@@ -349,16 +349,19 @@ BEGIN {
     amount_array = {};
 
     -- note how we use the qsv_log function to log to the qsv log file
-    qsv_log("debug", " _INDEX:", _INDEX, " _IDX:", _IDX, " _ROWCOUNT:", _ROWCOUNT)
+    qsv_log("debug", " _INDEX:", _INDEX, " _ROWCOUNT:", _ROWCOUNT)
 
-    -- start from the end of the CSV file, set _INDEX to the last row
-    -- both _IDX and _INDEX are zero-based, that's why we subtract 1
-    _INDEX = _ROWCOUNT - 1;
+    -- start from the end of the CSV file, set _INDEX to _LASTROW
+    _INDEX = _LASTROW;
 }!
 
--- this is the MAIN script, which is executed for each row
--- note how we use the _IDX to get the row index
-amount_array[_IDX] = Amount;
+
+----------------------------------------------------------------------------
+-- this is the MAIN script, which is executed for the row specified by _INDEX
+-- As we are doing random access, to exit this loop, we need to set 
+-- _INDEX to less than zero or greater than _LASTROW
+
+amount_array[_INDEX] = Amount;
 running_total = running_total + Amount;
 grand_total = grand_total + running_total;
 
@@ -370,6 +373,8 @@ _INDEX = _INDEX - 1;
 -- running_total is the value we "map" to the "Running Total" column of each row
 return running_total;
 
+
+----------------------------------------------------------------------------
 END {
     -- and this is the END block, which is executed once at the end
     -- note how we use the _ROWCOUNT special variable to get the number of rows

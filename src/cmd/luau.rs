@@ -621,11 +621,12 @@ fn with_index(
         wtr.write_record(&headers)?;
     }
 
+    // unlike no_index, we actually know the row_count at the BEGINning
+    globals.set("_IDX", 0)?;
+    globals.set("_INDEX", 0)?;
+    globals.set("_ROWCOUNT", row_count)?;
+    globals.set("_LASTROW", row_count - 1)?;
     if !begin_script.is_empty() {
-        // unlike no_index, we actually know the row_count at the BEGINning
-        globals.set("_IDX", 0)?;
-        globals.set("_INDEX", 0)?;
-        globals.set("_ROWCOUNT", row_count)?;
 
         info!("Compiling and executing BEGIN script.");
         let begin_bytecode = luau_compiler.compile(begin_script);
