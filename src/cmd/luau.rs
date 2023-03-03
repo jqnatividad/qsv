@@ -56,8 +56,7 @@ set to the current row number during the main script; & "_ROWCOUNT" - a read-onl
 during the BEGIN & MAIN scripts, and set to the rowcount during the END script.
 
 "_INDEX" - a read/write variable that enables random access of the CSV file. Setting it to a row number
-will change the current row to that row number. Setting "_INDEX" to a negative number will start from
-the end of the CSV file. It will only work, however, if the CSV has an index.
+will change the current row to that row number. It will only work, however, if the CSV has an index.
 
 When using _INDEX, the MAIN script will keep looping and evaluate the row specified by _INDEX
 until _INDEX is set to an invalid row number (e.g. negative number or to a value greater than rowcount).
@@ -644,8 +643,6 @@ fn with_index(
     let mut pos = globals.get::<_, isize>("_INDEX").unwrap_or_default();
     let mut curr_record = if pos > 0 && pos <= row_count as isize {
         pos as u64
-    } else if pos < 0 && pos.unsigned_abs() as u64 <= row_count {
-        row_count - pos.unsigned_abs() as u64
     } else {
         0_u64
     };
