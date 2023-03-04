@@ -28,6 +28,36 @@ fn luau_map() {
 }
 
 #[test]
+fn luau_map_multiple_columns() {
+    let wrk = Workdir::new("luau");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["letter", "number"],
+            svec!["a", "13"],
+            svec!["b", "24"],
+            svec!["c", "72"],
+            svec!["d", "7"],
+        ],
+    );
+    let mut cmd = wrk.command("luau");
+    cmd.arg("map")
+        .arg("newcol1,newcol2,newcol3")
+        .arg("{number + 1, number + 2, number + 3}")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["letter", "number", "newcol1", "newcol2", "newcol3"],
+        svec!["a", "13", "14", "15", "16"],
+        svec!["b", "24", "25", "26", "27"],
+        svec!["c", "72", "73", "74", "75"],
+        svec!["d", "7", "8", "9", "10"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn luau_map_idx() {
     let wrk = Workdir::new("luau");
     wrk.create(
@@ -411,6 +441,97 @@ END {
 }
 
 #[test]
+fn luau_aggregation_with_embedded_begin_end_using_file_random_access_multiple_columns() {
+    let wrk = Workdir::new("luau_embedded_multiple_columns");
+    wrk.create_indexed(
+        "data.csv",
+        vec![
+            svec!["letter", "Amount"],
+            svec!["a", "13"],
+            svec!["b", "24"],
+            svec!["c", "72"],
+            svec!["d", "7"],
+        ],
+    );
+
+    wrk.create_from_string(
+        "testbeginend.luau",
+        r#"
+BEGIN {
+    -- this is the BEGIN block, which is executed once at the beginning
+    -- where we typically initialize variables
+    running_total = 0;
+    grand_total = 0;
+    amount_array = {};
+
+    -- note how we use the qsv_log function to log to the qsv log file
+    qsv_log("debug", " _INDEX:", _INDEX, " _ROWCOUNT:", _ROWCOUNT)
+
+    -- start from the end of the CSV file, set _INDEX to _LASTROW
+    _INDEX = _LASTROW;
+}!
+
+
+----------------------------------------------------------------------------
+-- this is the MAIN script, which is executed for the row specified by _INDEX
+-- As we are doing random access, to exit this loop, we need to set 
+-- _INDEX to less than zero or greater than _LASTROW
+
+amount_array[_INDEX] = Amount;
+running_total = running_total + Amount;
+grand_total = grand_total + running_total;
+
+qsv_log("warn", "logging from Luau script! running_total:", running_total, " _INDEX:", _INDEX)
+
+-- we modify _INDEX to do random access on the CSV file, in this case going backwards
+_INDEX = _INDEX - 1;
+
+-- running_total is the value we "map" to the "Running Total" column of each row
+return {running_total, running_total + (running_total * 0.1)};
+
+
+----------------------------------------------------------------------------
+END {
+    -- and this is the END block, which is executed once at the end
+    -- note how we use the _ROWCOUNT special variable to get the number of rows
+    min_amount = math.min(unpack(amount_array));
+    max_amount = math.max(unpack(amount_array));
+    return ("Min/Max: " .. min_amount .. "/" .. max_amount ..
+       " Grand total of " .. _ROWCOUNT .. " rows: " .. grand_total);
+}!
+"#,
+    );
+
+    let mut cmd = wrk.command("luau");
+    cmd.arg("map")
+        .arg("Running Total, Running Total with 10%")
+        .arg("-x")
+        .arg("file:testbeginend.luau")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec![
+            "letter",
+            "Amount",
+            "Running Total",
+            "Running Total with 10%"
+        ],
+        svec!["d", "7", "7", "7.7"],
+        svec!["c", "72", "79", "86.9"],
+        svec!["b", "24", "103", "113.3"],
+        svec!["a", "13", "116", "127.6"],
+    ];
+    assert_eq!(got, expected);
+
+    let end = wrk.output_stderr(&mut cmd);
+    let expected_end = "Min/Max: 7/72 Grand total of 4 rows: 305\n".to_string();
+    assert_eq!(end, expected_end);
+
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
 fn luau_aggregation_with_begin_end_and_luau_syntax() {
     let wrk = Workdir::new("luau");
     wrk.create(
@@ -647,6 +768,34 @@ fn luau_map_no_headers() {
         svec!["b", "24", "25"],
         svec!["c", "72", "73"],
         svec!["d", "7", "8"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn luau_map_no_headers_multiple_new_columns() {
+    let wrk = Workdir::new("luau");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["a", "13"],
+            svec!["b", "24"],
+            svec!["c", "72"],
+            svec!["d", "7"],
+        ],
+    );
+    let mut cmd = wrk.command("luau");
+    cmd.arg("map")
+        .arg("{col[2] + 1, col[2] + 2, col[2] + 3}")
+        .arg("--no-headers")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["a", "13", "14", "15", "16"],
+        svec!["b", "24", "25", "26", "27"],
+        svec!["c", "72", "73", "74", "75"],
+        svec!["d", "7", "8", "9", "10"],
     ];
     assert_eq!(got, expected);
 }

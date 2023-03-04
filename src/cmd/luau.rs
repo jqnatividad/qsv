@@ -37,6 +37,9 @@ Some usage examples:
         "if tonumber(Amount) < 0 then return 'debit' else return 'credit' end" | \
     qsv luau map AbsAmount "math.abs(tonumber(Amount))"
 
+  Map multiple new columns in one pass
+  $ qsv luau map newcol1,newcol2,newcol3 "{cola + 1, colb + 2, colc + 3}"
+
   Filter some rows based on numerical filtering
   $ qsv luau filter "tonumber(a) > 45"
   $ qsv luau filter "tonumber(a) >= tonumber(b)"
@@ -80,21 +83,28 @@ For more detailed examples, see https://github.com/jqnatividad/qsv/blob/master/t
 
 Usage:
     qsv luau map [options] -n <main-script> [<input>]
-    qsv luau map [options] <new-column> <main-script> [<input>]
+    qsv luau map [options] <new-columns> <main-script> [<input>]
     qsv luau filter [options] <main-script> [<input>]
     qsv luau map --help
     qsv luau filter --help
     qsv luau --help
 
-All <script> arguments/options can either be the Luau code, or if it starts with "file:",
-the filepath from which to load the script.
+Luau arguments:
 
-Instead of using the --begin and --end options, you can also embed BEGIN and END scripts.
-The BEGIN script is embedded in the MAIN script by adding a BEGIN block at the top of the script.
-The BEGIN block is "BEGIN { ... }!" and can contain multiple statements.
+    All <script> arguments/options can either be the Luau code, or if it starts with "file:",
+    the filepath from which to load the script.
 
-The END script is embedded in the MAIN script by adding an END block at the bottom of the script.
-The END block is "END { ... }!" and can contain multiple statements.
+    Instead of using the --begin and --end options, you can also embed BEGIN and END scripts in the
+    MAIN script by using the "BEGIN { ... }!" and "END { ... }!" syntax.
+
+    The BEGIN script is embedded in the MAIN script by adding a BEGIN block at the top of the script.
+    The BEGIN block can contain multiple statements.
+
+    The END script is embedded in the MAIN script by adding an END block at the bottom of the script.
+    The END block can contain multiple statements.
+
+    <new-columns> is a comma-separated list of new column names to add to the CSV when using "luau map".
+    Note that the new columns are added to the CSV after the existing columns.
 
 Luau options:
     -x, --exec               exec[ute] Luau script, instead of the default eval[uate].
@@ -129,9 +139,7 @@ Common options:
     -h, --help             Display this message
     -o, --output <file>    Write output to <file> instead of stdout.
     -n, --no-headers       When set, the first row will not be interpreted
-                           as headers. Namely, it will be sorted with the rest
-                           of the rows. Otherwise, the first row will always
-                           appear as the header row in the output.
+                           as headers.
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
     -p, --progressbar      Show progress bars. Not valid for stdin.
@@ -157,7 +165,7 @@ use crate::{
 struct Args {
     cmd_map:          bool,
     cmd_filter:       bool,
-    arg_new_column:   Option<String>,
+    arg_new_columns:  Option<String>,
     arg_main_script:  String,
     arg_input:        Option<String>,
     flag_exec:        bool,
@@ -293,10 +301,43 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .set_debug_level(1)
             .set_coverage_level(0)
     };
+    // set default Luau compiler
     luau.set_compiler(luau_compiler.clone());
 
     let globals = luau.globals();
 
+    setup_helpers(&luau)?;
+
+    if index_file_used {
+        with_index(
+            &rconfig,
+            &args,
+            &luau,
+            &luau_compiler,
+            &globals,
+            &begin_script,
+            &main_script,
+            &end_script,
+            args.flag_max_errors,
+        )?;
+    } else {
+        no_index(
+            &rconfig,
+            &args,
+            &luau,
+            &luau_compiler,
+            &globals,
+            &begin_script,
+            &main_script,
+            &end_script,
+            args.flag_max_errors,
+        )?;
+    }
+
+    Ok(())
+}
+
+fn setup_helpers(luau: &Lua) -> Result<(), CliError> {
     // this is a helper function that can be called from Luau scripts
     // to send log messages to the logfile
     // the first parameter is the log level, and the following parameters are concatenated
@@ -344,33 +385,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         Ok(String::new())
     })?;
     luau.globals().set("qsv_coalesce", qsv_coalesce)?;
-
-    if index_file_used {
-        with_index(
-            &rconfig,
-            &args,
-            &luau,
-            &luau_compiler,
-            &globals,
-            &begin_script,
-            &main_script,
-            &end_script,
-            args.flag_max_errors,
-        )?;
-    } else {
-        no_index(
-            &rconfig,
-            &args,
-            &luau,
-            &luau_compiler,
-            &globals,
-            &begin_script,
-            &main_script,
-            &end_script,
-            args.flag_max_errors,
-        )?;
-    }
-
     Ok(())
 }
 
@@ -405,13 +419,19 @@ fn no_index(
     let mut rdr = rconfig.reader()?;
     let mut wtr = Config::new(&args.flag_output).writer()?;
     let mut headers = rdr.headers()?.clone();
+    let mut new_column_count = 0_u8;
     if !rconfig.no_headers {
         if !args.cmd_filter {
-            let new_column = args
-                .arg_new_column
+            let new_columns = args
+                .arg_new_columns
                 .as_ref()
-                .ok_or("Specify new column name")?;
-            headers.push_field(new_column);
+                .ok_or("Specify new column names")?;
+
+            let new_columns_vec: Vec<&str> = new_columns.split(',').collect();
+            for new_column in new_columns_vec {
+                new_column_count += 1;
+                headers.push_field(new_column.trim());
+            }
         }
 
         wtr.write_record(&headers)?;
@@ -506,6 +526,49 @@ fn no_index(
                 }
                 Value::Nil => {
                     record.push_field("");
+                }
+                Value::Table(table) => {
+                    let mut columns_inserted = 0_u8;
+                    for pair in table.pairs::<mlua::Value, mlua::Value>() {
+                        // we don't care about the key, just the value
+                        let (_k, v) = pair?;
+                        match v {
+                            Value::Integer(intval) => {
+                                let mut buffer = itoa::Buffer::new();
+                                record.push_field(buffer.format(intval));
+                            }
+                            Value::String(strval) => {
+                                record.push_field(&strval.to_string_lossy());
+                            }
+                            Value::Number(number) => {
+                                let mut buffer = ryu::Buffer::new();
+                                record.push_field(buffer.format(number));
+                            }
+                            Value::Boolean(boolean) => {
+                                record.push_field(if boolean { "true" } else { "false" });
+                            }
+                            Value::Nil => {
+                                record.push_field("");
+                            }
+                            _ => {
+                                return fail_clierror!(
+                                    "Unexpected value type returned by provided Luau expression. \
+                                     {v:?}"
+                                );
+                            }
+                        }
+                        columns_inserted += 1;
+                        if new_column_count > 0 && columns_inserted >= new_column_count {
+                            // we ignore table values more than the number of new columns defined
+                            break;
+                        }
+                    }
+                    // on the other hand, if there are less table values than expected
+                    // we fill it up with empty fields
+                    while new_column_count > 0 && columns_inserted < new_column_count {
+                        record.push_field("");
+                        columns_inserted += 1;
+                    }
                 }
                 _ => {
                     return fail_clierror!(
@@ -608,13 +671,19 @@ fn with_index(
 
     let mut wtr = Config::new(&args.flag_output).writer()?;
     let mut headers = idx_file.headers()?.clone();
+    let mut new_column_count = 0_u8;
     if !rconfig.no_headers {
         if !args.cmd_filter {
-            let new_column = args
-                .arg_new_column
+            let new_columns = args
+                .arg_new_columns
                 .as_ref()
-                .ok_or("Specify new column name")?;
-            headers.push_field(new_column);
+                .ok_or("Specify new column names")?;
+
+            let new_columns_vec: Vec<&str> = new_columns.split(',').collect();
+            for new_column in new_columns_vec {
+                new_column_count += 1;
+                headers.push_field(new_column.trim());
+            }
         }
 
         wtr.write_record(&headers)?;
@@ -720,6 +789,49 @@ fn with_index(
                 }
                 Value::Nil => {
                     record.push_field("");
+                }
+                Value::Table(table) => {
+                    let mut columns_inserted = 0_u8;
+                    for pair in table.pairs::<mlua::Value, mlua::Value>() {
+                        // we don't care about the key, just the value
+                        let (_k, v) = pair?;
+                        match v {
+                            Value::Integer(intval) => {
+                                let mut buffer = itoa::Buffer::new();
+                                record.push_field(buffer.format(intval));
+                            }
+                            Value::String(strval) => {
+                                record.push_field(&strval.to_string_lossy());
+                            }
+                            Value::Number(number) => {
+                                let mut buffer = ryu::Buffer::new();
+                                record.push_field(buffer.format(number));
+                            }
+                            Value::Boolean(boolean) => {
+                                record.push_field(if boolean { "true" } else { "false" });
+                            }
+                            Value::Nil => {
+                                record.push_field("");
+                            }
+                            _ => {
+                                return fail_clierror!(
+                                    "Unexpected value type returned by provided Luau expression. \
+                                     {v:?}"
+                                );
+                            }
+                        }
+                        columns_inserted += 1;
+                        if new_column_count > 0 && columns_inserted >= new_column_count {
+                            // we ignore table values more than the number of new columns defined
+                            break;
+                        }
+                    }
+                    // on the other hand, if there are less table values than expected
+                    // we fill it up with empty fields
+                    while new_column_count > 0 && columns_inserted < new_column_count {
+                        record.push_field("");
+                        columns_inserted += 1;
+                    }
                 }
                 _ => {
                     return fail_clierror!(
