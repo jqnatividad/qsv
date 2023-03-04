@@ -337,7 +337,7 @@ Relevant env vars are defined as anything that starts with `QSV_` & `MIMALLOC_` 
 * `luau` - enable `luau` command. Embeds a [Luau](https://luau-lang.org) interpreter into qsv. [Luau has type-checking, sandboxing, additional language operators, increased performance & other improvements](https://luau-lang.org/2022/11/04/luau-origins-and-evolution.html) over Lua.
 * `polars` - enables all [Polars](https://pola.rs)-powered commands (currently, only `joinp`). Note that Polars is a very powerful library, but it has a lot of dependencies that drastically increases both compile time and binary size.
 * `python` - enable `py` command. Note that qsv will look for the shared library for the Python version (Python 3.7 & above supported) it was compiled against & will abort on startup if the library is not found, even if you're not using the `py` command. Check [Python](#python) section for more info.
-* `to` - enables the `to` command.
+* `to` - enables the `to` command. Note that enabling this feature will also noticeably increase both compile time and binary size.
 * `self_update` - enable self-update engine, checking GitHub for the latest release. Note that if you manually built qsv, `self-update` will only check for new releases.
 It will NOT offer the choice to update itself to the prebuilt binaries published on GitHub. You need not worry that your manually built qsv will be overwritten by a self-update.
 
