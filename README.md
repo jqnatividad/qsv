@@ -55,7 +55,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [join](/src/cmd/join.rs#L2)<br>📇 | Inner, outer, cross, anti & semi joins. Automatically creates a simple, in-memory hash index to make it fast.  |
 | [joinp](/src/cmd/joinp.rs#L2)<br>❇️🚀🐻‍❄️ | Inner, left, outer, cross, anti & semi joins using the [Pola.rs](https://www.pola.rs) engine. Unlike `join`, it can process very large files and is multi-threaded. |
 | [jsonl](/src/cmd/jsonl.rs#L2) | Convert newline-delimited JSON ([JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/)) to CSV. See `tojsonl` command to convert CSV to JSONL.
-| [luau](/src/cmd/luau.rs#L2)<br>❇️📇 | Create a new computed column, filter rows or compute aggregations by executing a [Luau](https://luau-lang.org) script for every row of a CSV file. Supports random access with an index. Allows the creation of [full-fledged data-wrangling scripts](https://github.com/jqnatividad/qsv/blob/b4675f1b413ff5b513d3959875e02007af27411a/tests/test_luau.rs#L460-L501).|
+| [luau](/src/cmd/luau.rs#L2)<br>❇️📇 | Create a new computed column, filter rows or compute aggregations by executing a [Luau](https://luau-lang.org) script for every row of a CSV file. Supports random access with an index. Allows the creation of [full-fledged data-wrangling scripts](https://github.com/jqnatividad/qsv/blob/1edd06eb5eb30e0a0dc045c3ee62a1e1f68899bd/tests/test_luau.rs#L461-L503).|
 | [partition](/src/cmd/partition.rs#L2) | Partition a CSV based on a column value. |
 | [pseudo](/src/cmd/pseudo.rs#L2) | [Pseudonymise](https://en.wikipedia.org/wiki/Pseudonymization) the value of the given column by replacing them with an incremental identifier.  |
 | [py](/src/cmd/python.rs#L2)<br>❇️ | Create a new computed column or filter rows by evaluating a python expression on every row of a CSV file. Python's [f-strings](https://www.freecodecamp.org/news/python-f-strings-tutorial-how-to-use-f-strings-for-string-formatting/) is particularly useful for extended formatting, [with the ability to evaluate Python expressions as well](https://github.com/jqnatividad/qsv/blob/4cd00dca88addf0d287247fa27d40563b6d46985/src/cmd/python.rs#L23-L31). |
@@ -240,7 +240,11 @@ It has [sandboxing](https://luau-lang.org/sandbox), [type-checking](https://luau
 
 [Lua is much faster than Python](https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/lua-python3.html) & Luau is even faster still - more so, as qsv precompiles Luau into bytecode. In addition, [`luau`](/src/cmd/luau.rs#L2) is embedded into qsv, has debug logging, can do aggregations with its `--begin` & `--end` options & has no external dependencies unlike the `py` command.
 
-At this stage, we're using Luau with the [LuaDate](https://tieske.github.io/date/) module preloaded as an embedded interpreter. In the future, we'll add custom qsv-specific data-wrangling Luau modules to make it qsv's purpose-built [Domain-Specific Language](https://en.wikipedia.org/wiki/Domain-specific_language).
+It also supports random access with indexed CSV files, and has [several helper functions](https://github.com/jqnatividad/qsv/blob/1edd06eb5eb30e0a0dc045c3ee62a1e1f68899bd/src/cmd/luau.rs#L340-L389) to help ease the development of [full-fledged data-wrangling scripts](https://github.com/jqnatividad/qsv/blob/1edd06eb5eb30e0a0dc045c3ee62a1e1f68899bd/tests/test_luau.rs#L461-L503).
+
+As date manipulation is often needed, we're also preloading the [LuaDate](https://tieske.github.io/date/) module.
+
+As the preferred interpreter, `luau` will gain more features over time as qsv's purpose-built, data-wrangling [Domain-Specific Language](https://en.wikipedia.org/wiki/Domain-specific_language).
 
 ### Python
 
@@ -255,7 +259,7 @@ Note that this will happen on qsv startup, even if you're not running the `py` c
 When building from source - [PyO3](https://pyo3.rs) - the underlying crate that enables the `python` feature, uses a build script to determine the Python version & set the correct linker arguments. By default it uses the python3 executable.
 You can override this by setting `PYO3_PYTHON` (e.g., `PYO3_PYTHON=python3.7`), before installing/compiling qsv. See the [PyO3 User Guide](https://pyo3.rs/v0.17.1/building_and_distribution.html) for more information.
 
-Consider using the [`luau`](/src/cmd/luau.rs#L2) command instead of the [`py`]((/src/cmd/python.rs#L2)) command if the operation you're trying to do can be done with `luau` - as `luau` is faster than `py` and can do aggregations. 
+Consider using the [`luau`](/src/cmd/luau.rs#L2) command instead of the [`py`]((/src/cmd/python.rs#L2)) command if the operation you're trying to do can be done with `luau` - as `luau` is much faster than `py`, can do aggregations, supports random access, and allows mapping of multiple new columns. 
 
 The `py` command cannot do aggregations because [PyO3's GIL-bound memory](https://pyo3.rs/v0.17.2/memory.html#gil-bound-memory) limitations will quickly consume a lot of memory (see [issue 449](https://github.com/jqnatividad/qsv/issues/449#issuecomment-1226095316) for details).
 To prevent this, the `py` command processes CSVs in batches (default: 30,000 records), with a GIL pool for each batch, so no globals are available across batches.
