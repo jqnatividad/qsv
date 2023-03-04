@@ -484,6 +484,7 @@ grand_total = grand_total + running_total;
 qsv_log("warn", "logging from Luau script! running_total:", running_total, " _INDEX:", _INDEX)
 
 -- we modify _INDEX to do random access on the CSV file, in this case going backwards
+-- the MAIN script ends when _INDEX is less than zero or greater than _LASTROW
 _INDEX = _INDEX - 1;
 
 -- running_total is the value we "map" to the "Running Total" column of each row
