@@ -3,6 +3,7 @@ use serial_test::serial;
 use crate::workdir::Workdir;
 
 #[test]
+#[ignore = "Temporarily skip this as it seems https://zippopotam.us is not currently available"]
 fn fetch_simple() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -34,6 +35,7 @@ fn fetch_simple() {
 }
 
 #[test]
+#[ignore = "Temporarily skip this as it seems https://zippopotam.us is not currently available"]
 fn fetch_simple_new_col() {
     let wrk = Workdir::new("fetch_simple_new_col");
     wrk.create(
@@ -86,6 +88,7 @@ fn fetch_simple_new_col() {
 }
 
 #[test]
+#[ignore = "Temporarily skip this as it seems https://zippopotam.us is not currently available"]
 fn fetch_simple_report() {
     let wrk = Workdir::new("fetch_simple_report");
     wrk.create(
@@ -146,6 +149,7 @@ fn fetch_simple_report() {
 }
 
 #[test]
+#[ignore = "Temporarily skip this as it seems https://zippopotam.us is not currently available"]
 fn fetch_simple_url_template() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -175,6 +179,7 @@ fn fetch_simple_url_template() {
 }
 
 #[test]
+#[ignore = "Temporarily skip this as it seems https://zippopotam.us is not currently available"]
 fn fetch_simple_redis() {
     // if there is no local redis server, skip fetch_simple_redis test
     let redis_client = redis::Client::open("redis://127.0.0.1:6379").unwrap();
@@ -216,6 +221,7 @@ fn fetch_simple_redis() {
 }
 
 #[test]
+#[ignore = "Temporarily skip this as it seems https://zippopotam.us is not currently available"]
 fn fetch_jql_single() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -249,6 +255,7 @@ fn fetch_jql_single() {
 }
 
 #[test]
+#[ignore = "Temporarily skip this as it seems https://zippopotam.us is not currently available"]
 fn fetch_jql_single_file() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -282,6 +289,7 @@ fn fetch_jql_single_file() {
 }
 
 #[test]
+#[ignore = "Temporarily skip this as it seems https://zippopotam.us is not currently available"]
 fn fetch_jqlfile_doesnotexist_error() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -308,6 +316,7 @@ fn fetch_jqlfile_doesnotexist_error() {
 }
 
 #[test]
+#[ignore = "Temporarily skip this as it seems https://zippopotam.us is not currently available"]
 fn fetch_jql_jqlfile_error() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -332,6 +341,7 @@ fn fetch_jql_jqlfile_error() {
 }
 
 #[test]
+#[ignore = "Temporarily skip this as it seems https://zippopotam.us is not currently available"]
 fn fetch_jql_multiple() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -362,6 +372,7 @@ fn fetch_jql_multiple() {
 }
 
 #[test]
+#[ignore = "Temporarily skip this as it seems https://zippopotam.us is not currently available"]
 fn fetch_jql_multiple_file() {
     let wrk = Workdir::new("fetch");
     wrk.create(
