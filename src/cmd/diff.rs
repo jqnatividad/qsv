@@ -23,6 +23,13 @@ diff options:
     -k, --key <arg...>          The column indices that uniquely identify a record
                                 as a comma separated list of indices, e.g. 0,1,2.
                                 (default: 0)
+    --sort-columns <arg...>     The column indices by which the diff result should be
+                                sorted as a comma separated list of indices, e.g. 0,1,2.
+                                Records in the diff result that are marked as "modified"
+                                ("delete" and "add" records that have the same key,
+                                but have different content) will always be kept together
+                                in the sorted diff result and so won't be sorted
+                                independently from each other.
     -j, --jobs <arg>            The number of jobs to run in parallel.
                                 When not set, the number of jobs is set to the number
                                 of CPUs detected.
@@ -54,6 +61,7 @@ struct Args {
     flag_delimiter_left:   Option<Delimiter>,
     flag_delimiter_right:  Option<Delimiter>,
     flag_key:              Option<String>,
+    flag_sort_columns:     Option<String>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -82,6 +90,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .map_err(|err| CliError::Other(err.to_string()))?,
     };
 
+    let sort_cols = args
+        .flag_sort_columns
+        .map(|s| {
+            s.split(',')
+                .map(str::parse::<usize>)
+                .collect::<Result<Vec<_>, _>>()
+                .map_err(|err| CliError::Other(err.to_string()))
+        })
+        .transpose()?;
+
     let wtr = Config::new(&args.flag_output).writer()?;
     let mut csv_rdr_left = rconfig_left.reader()?;
     let mut csv_rdr_right = rconfig_right.reader()?;
@@ -102,7 +120,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .diff(csv_rdr_left.into(), csv_rdr_right.into())
         .try_to_diff_byte_records()?;
 
-    diff_byte_records.sort_by_line();
+    match sort_cols {
+        Some(sort_cols) => {
+            diff_byte_records
+                .sort_by_columns(sort_cols)
+                .map_err(|e| CliError::Other(e.to_string()))?;
+        }
+        None => {
+            diff_byte_records.sort_by_line();
+        }
+    }
 
     Ok(csv_diff_writer.write_diff_byte_records(diff_byte_records)?)
 }
