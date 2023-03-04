@@ -1,6 +1,6 @@
 static USAGE: &str = r#"
-Create a new computed column, filter rows or compute aggregations by executing a
-Luau script for every row of a CSV file.
+Create multiple new computed columns, filter rows or compute aggregations by 
+executing a Luau script for every row of a CSV file.
 
 The executed Luau has 3 ways to reference row columns (as strings):
   1. Directly by using column name (e.g. Amount), can be disabled with -g
@@ -48,21 +48,38 @@ Some usage examples:
   "file:" prefix to read non-trivial scripts from the filesystem.
   $ qsv luau map Type -B "file:init.luau" -x "file:debitcredit.luau" -E "file:end.luau"
 
-The MAIN script is evaluated on a per row basis.
-With "luau map", if the main-script is invalid for a row, "<ERROR>" is returned for that row.
-With "luau filter", if the main-script is invalid for a row, that row is not filtered.
+With "luau map", if the MAIN script is invalid for a row, "<ERROR>" is returned for that row.
+With "luau filter", if the MAIN script is invalid for a row, that row is not filtered.
 
 If any row has an invalid result, an exitcode of 1 is returned and an error count is logged.
 
-There are also special variables - "_IDX" - a read-only variable that is zero during the BEGIN script and
-set to the current row number during the main script; & "_ROWCOUNT" - a read-only variable which is zero
-during the BEGIN & MAIN scripts, and set to the rowcount during the END script.
+SPECIAL VARIABLES:
+  "_IDX" - a READ-only variable that is zero during the BEGIN script and
+       set to the current row number during the MAIN & END scripts.
 
-"_INDEX" - a read/write variable that enables random access of the CSV file. Setting it to a row number
-will change the current row to that row number. It will only work, however, if the CSV has an index.
+       "_IDX" is primarily used when the CSV has no index and the MAIN script evaluates each
+       row in sequence.
+ 
+  "_INDEX" - a READ/WRITE variable that enables random access of the CSV file. Setting it to 
+       a row number will change the current row to that row number.
+       It will only work, however, if the CSV has an index.
 
-When using _INDEX, the MAIN script will keep looping and evaluate the row specified by _INDEX
-until _INDEX is set to an invalid row number (e.g. negative number or to a value greater than rowcount).
+       When using _INDEX, the MAIN script will keep looping and evaluate the row specified by
+       _INDEX until _INDEX is set to an invalid row number (e.g. negative number or to a value
+       greater than rowcount).
+
+       "_INDEX" is primarily used when you want to process the CSV in random access mode.
+       If the CSV has no index, it will abort with an error unless "qsv_autoindex()" is
+       called in the BEGIN script to create an index.
+       
+  "_ROWCOUNT" - a READ-only variable which is zero during the BEGIN & MAIN scripts, 
+       and set to the rowcount during the END script when the CSV has no index.
+
+       When using _INDEX and the CSV has an index, _ROWCOUNT will be set to the rowcount
+       of the CSV file, even from the BEGINning.
+
+  "_LASTROW" - a READ-only variable that is set to the last row number of the CSV file.
+       It will only work, however, if the CSV has an index.
 
 Luau's standard library is relatively minimal (https://luau-lang.org/library).
 That's why qsv preloads the LuaDate library as date manipulation is a common data-wrangling task.
@@ -74,9 +91,10 @@ See http://lua-users.org/wiki/LibrariesAndBindings for a list of other libraries
 With the judicious use of "require", the BEGIN script & the "_IDX"/"_ROWCOUNT" variables, one can create
 variables/tables/arrays that can be used for complex aggregation operations in the END script.
 
-TIP: When developing Luau scripts, be sure to take advantage of the "qsv_log" function.
-It will log messages to the logfile at the specified log level. Be sure to set QSV_LOG_LEVEL to the
-appropriate log level. The first parameter to qsv_log is the log level (info, warn, error, debug, trace).
+TIP: When developing Luau scripts, be sure to take advantage of the "qsv_log" function to debug your script.
+It will log messages to the logfile at the specified log level as specified by the QSV_LOG_LEVEL
+environment variable. The first parameter to qsv_log is the log level (info, warn, error, debug, trace)
+of the log message and will default to "info" if an invalid log level is specified.
 You can add as many as 255 addl parameters which will be concatenated and logged as a single message.
 
 For more detailed examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_luau.rs.
@@ -147,8 +165,9 @@ Common options:
                            for random access.
 "#;
 
-use std::{env, fs};
+use std::{env, fs, io, io::Write, path::Path};
 
+use csv_index::RandomAccessSimple;
 #[cfg(any(feature = "full", feature = "lite"))]
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::{debug, info, log_enabled};
@@ -385,6 +404,13 @@ fn setup_helpers(luau: &Lua) -> Result<(), CliError> {
         Ok(String::new())
     })?;
     luau.globals().set("qsv_coalesce", qsv_coalesce)?;
+
+    // this is a helper function that creates an index file for the current CSV.
+    // It does not work for stdin and should only be called in the BEGIN script
+    // its actually just a stub and the real function is called before processing
+    // the BEGIN script
+    let qsv_autoindex = luau.create_function(|_luau, mut _args: mlua::MultiValue| Ok(true))?;
+    luau.globals().set("qsv_autoindex", qsv_autoindex)?;
     Ok(())
 }
 
@@ -649,8 +675,34 @@ fn no_index(
     Ok(())
 }
 
-// this function is largely similar to no_index
-// the primary difference being that we use an Indexed File rdr in the main loop
+fn create_index(arg_input: Option<String>) -> Result<bool, CliError> {
+    // this is a utility function that creates an index file for the current CSV.
+    // it is called when "qsv_autoindex()" is called in the BEGIN script.
+    let Some(input ) = &arg_input else {
+        log::warn!("qsv_autoindex() does not work for stdin.");
+        return Ok(false);
+    };
+
+    let pidx = util::idx_path(Path::new(&input));
+    debug!("Creating index file {pidx:?} for {input:?}.");
+
+    let rconfig = Config::new(&Some(input.to_string()));
+    let mut rdr = rconfig.reader_file()?;
+    let mut wtr = io::BufWriter::new(fs::File::create(pidx)?);
+    if RandomAccessSimple::create(&mut rdr, &mut wtr).is_err() {
+        return Ok(false);
+    };
+    if wtr.flush().is_err() {
+        return Ok(false);
+    }
+
+    log::info!("qsv_autoindex() successful.");
+    Ok(true)
+}
+
+// this function is largely similar to no_index, and is triggered when
+// we use the special variable _INDEX in the Luau scripts.
+// the primary difference being that we use an Indexed File rdr in the main loop.
 // differences pointed out in comments below
 fn with_index(
     rconfig: &Config,
@@ -663,11 +715,24 @@ fn with_index(
     end_script: &str,
     max_errors: usize,
 ) -> Result<(), CliError> {
-    let Some(mut idx_file) = rconfig.indexed()? else { return fail!("Index required but no index file found") };
+    // qsv_autoindex() was called in the BEGIN script, so we need to create the index file
+    if begin_script.contains("qsv_autoindex()") {
+        let result = create_index(args.arg_input.clone());
+        if result.is_err() {
+            return fail_clierror!("Unable to create index file");
+        }
+    }
+
+    let Some(mut idx_file) = rconfig.indexed()? else {
+        return fail!(r#"Index required but no index file found. Use "qsv_autoindex()" in your BEGIN script."#); 
+    };
 
     globals.set("cols", "{}")?;
 
-    let row_count = util::count_rows(rconfig).unwrap_or_default();
+    let mut row_count = util::count_rows(rconfig).unwrap_or_default();
+    if args.flag_no_headers {
+        row_count += 1;
+    }
 
     let mut wtr = Config::new(&args.flag_output).writer()?;
     let mut headers = idx_file.headers()?.clone();
