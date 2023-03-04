@@ -330,6 +330,7 @@ Relevant env vars are defined as anything that starts with `QSV_` & `MIMALLOC_` 
 `qsv` has several features:
 
 * `mimalloc` (default) - use the mimalloc allocator (see [Memory Allocator](docs/PERFORMANCE.md#memory-allocator) for more info).
+* `jemallocator` - use the jemalloc allocator (see [Memory Allocator](docs/PERFORMANCE.md#memory-allocator) for more info).
 * `apply` - enable `apply` command. This swiss-army knife of CSV transformations is very powerful, but it has a lot of dependencies that increases both compile time and binary size.
 * `fetch` - enables the `fetch` & `fetchpost` commands.
 * `foreach` - enable `foreach` command (not valid for Windows).
