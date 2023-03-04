@@ -103,8 +103,8 @@ Luau arguments:
     The END script is embedded in the MAIN script by adding an END block at the bottom of the script.
     The END block can contain multiple statements.
 
-    <new-columns> is a comma-separated list of new column names to add to the CSV when using "luau map".
-    Note that the new columns are added to the CSV after the existing columns.
+    <new-columns> is a comma-separated list of new computed columns to add to the CSV when using
+    "luau map". Note that the new columns are added to the CSV after the existing columns.
 
 Luau options:
     -x, --exec               exec[ute] Luau script, instead of the default eval[uate].
