@@ -240,11 +240,11 @@ It has [sandboxing](https://luau-lang.org/sandbox), [type-checking](https://luau
 
 [Lua is much faster than Python](https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/lua-python3.html) & Luau is even faster still - more so, as qsv precompiles Luau into bytecode. In addition, [`luau`](/src/cmd/luau.rs#L2) is embedded into qsv, has debug logging, can do aggregations with its `--begin` & `--end` options & has no external dependencies unlike the `py` command.
 
-It also supports random access with indexed CSV files, and has [several helper functions](https://github.com/jqnatividad/qsv/blob/1edd06eb5eb30e0a0dc045c3ee62a1e1f68899bd/src/cmd/luau.rs#L340-L389) to help ease the development of [full-fledged data-wrangling scripts](https://github.com/jqnatividad/qsv/blob/1edd06eb5eb30e0a0dc045c3ee62a1e1f68899bd/tests/test_luau.rs#L461-L503).
+It also allows mapping of multiple new columns, supports random access with indexed CSV files, and has [several helper functions](https://github.com/jqnatividad/qsv/blob/1edd06eb5eb30e0a0dc045c3ee62a1e1f68899bd/src/cmd/luau.rs#L340-L389) to help ease the development of [full-fledged data-wrangling scripts](https://github.com/jqnatividad/qsv/blob/1edd06eb5eb30e0a0dc045c3ee62a1e1f68899bd/tests/test_luau.rs#L461-L503).
 
 As date manipulation is often needed, we're also preloading the [LuaDate](https://tieske.github.io/date/) module.
 
-As the preferred interpreter, `luau` will gain more features over time as qsv's purpose-built, data-wrangling [Domain-Specific Language](https://en.wikipedia.org/wiki/Domain-specific_language).
+As the preferred interpreter, `luau` will gain even more features over time compared to the `python` feature as qsv's purpose-built, data-wrangling [Domain-Specific Language](https://en.wikipedia.org/wiki/Domain-specific_language).
 
 ### Python
 
