@@ -211,7 +211,7 @@ fn luau_aggregation_with_embedded_begin_end() {
         .arg("-x")
         .arg(
             "BEGIN {tot = 0; gtotal = 0; amt_array = {}}! amt_array[_IDX] = Amount; tot = tot + \
-             Amount; gtotal = gtotal + tot; return tot END {return (\"Min/Max: \" .. \
+             Amount; gtotal = gtotal + tot; return tot\nEND {return (\"Min/Max: \" .. \
              math.min(unpack(amt_array)) .. \"/\" .. math.max(unpack(amt_array)) .. \" Grand \
              total of \" .. _ROWCOUNT .. \" rows: \" .. gtotal)}!",
         )
@@ -325,7 +325,7 @@ fn luau_aggregation_with_embedded_begin_end_and_beginend_options() {
         .arg("-x")
         .arg(
             "BEGIN {tot = 0; gtotal = 0; amt_array = {}}! amt_array[_IDX] = Amount; tot = tot + \
-             Amount; gtotal = gtotal + tot; return tot END {return (\"Min/Max: \" .. \
+             Amount; gtotal = gtotal + tot; return tot\nEND {return (\"Min/Max: \" .. \
              math.min(unpack(amt_array)) .. \"/\" .. math.max(unpack(amt_array)) .. \" Grand \
              total of \" .. _ROWCOUNT .. \" rows: \" .. gtotal)}!",
         )
