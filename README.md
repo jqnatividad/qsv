@@ -231,14 +231,14 @@ qsv stats wcp.csv --output wcpstats.csv
 ```
 
 ## Interpreters
-For complex data-wrangling tasks, you can use Luau and Python scripts. The `qsv` binary variant can embed `luau` and `python` interpreters, enabled by identically named feature flags.
+For complex data-wrangling tasks, you can use Luau and Python scripts. The `qsv` binary variant can embed `luau` and/or link to `python`, enabled by identically named feature flags respectively.
 ### Luau
 
 [Luau](https://luau-lang.org) is a fast, small, safe, gradually typed, statically linked, embeddable scripting language derived from [Lua](https://www.lua.org/about.html). It lies at the [heart of Roblox technology](https://luau-lang.org/2022/11/04/luau-origins-and-evolution.html) - powering all it's user generated content, with [Roblox](https://en.wikipedia.org/wiki/Roblox)'s own internal code having more than 2 millions lines of Luau. 
 
 It has [sandboxing](https://luau-lang.org/sandbox), [type-checking](https://luau-lang.org/typecheck), [additional operators](https://luau-lang.org/syntax) & [increased performance](https://luau-lang.org/performance) while [maintaining compatibility with Lua](https://luau-lang.org/compatibility).
 
-[Lua is much faster than Python](https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/lua-python3.html) & Luau is even faster still - more so, as qsv precompiles Luau into bytecode. In addition, [`luau`](/src/cmd/luau.rs#L2) is embedded into qsv, has debug logging, can do aggregations with its `--begin` & `--end` options & has no external dependencies unlike the `py` command.
+[Lua is faster than Python](https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/lua-python3.html) & Luau is even faster still - more so, as qsv precompiles Luau into bytecode. In addition, [`luau`](/src/cmd/luau.rs#L2) is embedded into qsv, has debug logging, can do aggregations with its `--begin` & `--end` options & has no external dependencies unlike the `py` command.
 
 It also allows mapping of multiple new computed columns, supports random access with indexed CSV files, and has [several helper functions](https://github.com/jqnatividad/qsv/blob/1edd06eb5eb30e0a0dc045c3ee62a1e1f68899bd/src/cmd/luau.rs#L340-L389) to help ease the development of [full-fledged data-wrangling scripts](https://github.com/jqnatividad/qsv/blob/1edd06eb5eb30e0a0dc045c3ee62a1e1f68899bd/tests/test_luau.rs#L461-L503).
 
@@ -246,7 +246,7 @@ As date manipulation is often needed, we're also preloading the [LuaDate](https:
 
 As the preferred interpreter, `luau` will gain even more features over time compared to the `python` feature as qsv's purpose-built, data-wrangling [Domain-Specific Language](https://en.wikipedia.org/wiki/Domain-specific_language).
 
-[Luau 0.566](https://github.com/Roblox/luau/releases/tag/0.566) is embedded into qsv, which is the latest stable version at the time of writing.
+[Luau 0.566](https://github.com/Roblox/luau/releases/tag/0.566) is currently embedded - qsv's policy is to use the latest stable Luau version at the time of each qsv release.
 
 ### Python
 
