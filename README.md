@@ -55,7 +55,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [join](/src/cmd/join.rs#L2)<br>📇 | Inner, outer, cross, anti & semi joins. Automatically creates a simple, in-memory hash index to make it fast.  |
 | [joinp](/src/cmd/joinp.rs#L2)<br>❇️🚀🐻‍❄️ | Inner, left, outer, cross, anti & semi joins using the [Pola.rs](https://www.pola.rs) engine. Unlike `join`, it can process very large files and is multi-threaded. |
 | [jsonl](/src/cmd/jsonl.rs#L2) | Convert newline-delimited JSON ([JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/)) to CSV. See `tojsonl` command to convert CSV to JSONL.
-| [luau](/src/cmd/luau.rs#L2)<br>❇️📇 | Create multiple new computed columns, filter rows or compute aggregations by executing a [Luau](https://luau-lang.org) script for every row of a CSV file. Supports random access with an index. Allows the creation of [full-fledged data-wrangling scripts](https://github.com/jqnatividad/qsv/blob/1edd06eb5eb30e0a0dc045c3ee62a1e1f68899bd/tests/test_luau.rs#L461-L503).|
+| [luau](/src/cmd/luau.rs#L2)<br>❇️📇 | Create multiple new computed columns, filter rows or compute aggregations by executing a [Luau](https://luau-lang.org) [0.566](https://github.com/Roblox/luau/releases/tag/0.566) script for every row of a CSV file. Supports random access with an index. Allows the creation of [full-fledged data-wrangling scripts](https://github.com/jqnatividad/qsv/blob/1edd06eb5eb30e0a0dc045c3ee62a1e1f68899bd/tests/test_luau.rs#L461-L503).|
 | [partition](/src/cmd/partition.rs#L2) | Partition a CSV based on a column value. |
 | [pseudo](/src/cmd/pseudo.rs#L2) | [Pseudonymise](https://en.wikipedia.org/wiki/Pseudonymization) the value of the given column by replacing them with an incremental identifier.  |
 | [py](/src/cmd/python.rs#L2)<br>❇️ | Create a new computed column or filter rows by evaluating a python expression on every row of a CSV file. Python's [f-strings](https://www.freecodecamp.org/news/python-f-strings-tutorial-how-to-use-f-strings-for-string-formatting/) is particularly useful for extended formatting, [with the ability to evaluate Python expressions as well](https://github.com/jqnatividad/qsv/blob/4cd00dca88addf0d287247fa27d40563b6d46985/src/cmd/python.rs#L23-L31). |
@@ -245,6 +245,8 @@ It also allows mapping of multiple new columns, supports random access with inde
 As date manipulation is often needed, we're also preloading the [LuaDate](https://tieske.github.io/date/) module.
 
 As the preferred interpreter, `luau` will gain even more features over time compared to the `python` feature as qsv's purpose-built, data-wrangling [Domain-Specific Language](https://en.wikipedia.org/wiki/Domain-specific_language).
+
+[Luau 0.566](https://github.com/Roblox/luau/releases/tag/0.566) is embedded into qsv, which is the latest stable version at the time of writing.
 
 ### Python
 
