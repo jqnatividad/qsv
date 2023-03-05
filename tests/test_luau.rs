@@ -303,6 +303,69 @@ END {
 }
 
 #[test]
+fn luau_test_string_interpolation_feature() {
+    let wrk = Workdir::new("luau_embedded_begin_end");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["letter", "code digit"],
+            svec!["a", "2"],
+            svec!["b", "7"],
+            svec!["c", "1"],
+            svec!["d", "5"],
+        ],
+    );
+
+    wrk.create_from_string(
+        "testbeginend.luau",
+        r#"
+BEGIN {
+    -- this is the BEGIN block, which is executed once at the beginning
+    -- where we typically initialize variables
+    running_total = 0;
+    grand_total = 0;
+    code_array = {};
+}!
+
+-- this is the MAIN script, which is executed for each row
+-- note how we use the _IDX special variable to get the row index
+code_array[_IDX] = col["code digit"];
+running_total = running_total + col["code digit"];
+grand_total = grand_total + running_total;
+-- running_total is the value we "map" to the "Running Total" column of each row
+return running_total;
+
+END {
+    return(`The lock combination is {table.concat(code_array)}. Again, {table.concat(code_array, ", ")}.`)
+}!        
+"#,
+    );
+
+    let mut cmd = wrk.command("luau");
+    cmd.arg("map")
+        .arg("Running Total")
+        .arg("-x")
+        .arg("file:testbeginend.luau")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["letter", "code digit", "Running Total"],
+        svec!["a", "2", "2"],
+        svec!["b", "7", "9"],
+        svec!["c", "1", "10"],
+        svec!["d", "5", "15"],
+    ];
+    assert_eq!(got, expected);
+
+    let end = wrk.output_stderr(&mut cmd);
+    let expected_end = "The lock combination is 2715. Again, 2, 7, 1, 5.\n".to_string();
+    assert_eq!(end, expected_end);
+
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
 fn luau_aggregation_with_embedded_begin_end_and_beginend_options() {
     // when a main script has BEGIN/END blocks, and --begin/--end options are also specified,
     // the --begin/--end options take precedence and the embedded BEGIN/END blocks are ignored.
