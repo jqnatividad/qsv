@@ -116,10 +116,10 @@ Luau arguments:
     MAIN script by using the "BEGIN { ... }!" and "END { ... }!" syntax.
 
     The BEGIN script is embedded in the MAIN script by adding a BEGIN block at the top of the script.
-    The BEGIN block can contain multiple statements.
+    The BEGIN block must start at the beggining of the line. It can contain multiple statements.
 
     The END script is embedded in the MAIN script by adding an END block at the bottom of the script.
-    The END block can contain multiple statements.
+    The END block must start at the beginning of the line. It can contain multiple statements.
 
     <new-columns> is a comma-separated list of new computed columns to add to the CSV when using
     "luau map". Note that the new columns are added to the CSV after the existing columns.
@@ -133,16 +133,13 @@ Luau options:
     -g, --no-globals         Don't create Luau global variables for each column, only col.
                              Useful when some column names mask standard Luau globals.
                              Note: access to Luau globals thru _G remains even without -g.
-    -B, --begin <script>     Luau script/file to execute in the BEGINning, before processing the CSV
-                             with the main-script.
-                             The variables _IDX and _ROWCOUNT are set to zero before invoking
-                             the BEGIN script.
+    -B, --begin <script>     Luau script/file to execute in the BEGINning, before processing
+                             the CSV with the main-script.
                              Typically used to initialize global variables.
                              Takes precedence over an embedded BEGIN script.
-    -E, --end <script>       Luau script/file to execute at the END, after processing the CSV with
-                             the main-script.
-                             Both _IDX and _ROWCOUNT variables are set to the rowcount before invoking
-                             the END script. Typically used for aggregations.
+    -E, --end <script>       Luau script/file to execute at the END, after processing the
+                             CSV with the main-script.
+                             Typically used for aggregations.
                              The output of the END script is sent to stderr.
                              Takes precedence over an embedded END script.
     --luau-path <pattern>    The LUAU_PATH pattern to use from which the scripts 
@@ -221,12 +218,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         args.arg_main_script.clone()
     };
 
+    // in Luau, comments begin with two consecutive hyphens
+    // let's remove them, so we don't falsely trigger on commented special variables
+    let comment_remover_re = regex::Regex::new(r"--.*?$").unwrap();
+    comment_remover_re.replace_all(&luau_script, "");
+
     let mut index_file_used = luau_script.contains("_INDEX");
 
     // check if the main script has BEGIN and END blocks
     // and if so, extract them and remove them from the main script
-    let begin_re = regex::Regex::new(r"(?ms)BEGIN \{(?P<begin_block>.*?)\}!").unwrap();
-    let end_re = regex::Regex::new(r"(?ms)END \{(?P<end_block>.*?)\}!").unwrap();
+    let begin_re = regex::Regex::new(r"(?ms)^BEGIN \{(?P<begin_block>.*?)\}!").unwrap();
+    let end_re = regex::Regex::new(r"(?ms)^END \{(?P<end_block>.*?)\}!").unwrap();
+
     let mut embedded_begin_script = String::new();
     let mut embedded_end_script = String::new();
     let mut main_script = luau_script.clone();
@@ -250,6 +253,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     main_script.push_str(luau_script.trim());
+    comment_remover_re.replace_all(&main_script, "");
     debug!("MAIN script: {main_script:?}");
 
     // setup LUAU_PATH; create a temporary directory and add it to LUAU_PATH and copy date.lua
@@ -270,11 +274,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let begin_script = if let Some(ref begin) = args.flag_begin {
         if let Some(begin_filepath) = begin.strip_prefix("file:") {
             match fs::read_to_string(begin_filepath) {
-                Ok(begin) => {
-                    // check if the BEGIN script uses _INDEX
-                    index_file_used = index_file_used || begin.contains("_INDEX");
-                    begin
-                }
+                Ok(begin) => begin,
                 Err(e) => return fail_clierror!("Cannot load Luau BEGIN script file: {e}"),
             }
         } else {
@@ -283,17 +283,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } else {
         embedded_begin_script.trim().to_string()
     };
+    comment_remover_re.replace_all(&begin_script, "");
+    // check if the BEGIN script uses _INDEX
+    index_file_used = index_file_used || begin_script.contains("_INDEX");
     debug!("BEGIN script: {begin_script:?}");
 
     // check if an END script was specified
     let end_script = if let Some(ref end) = args.flag_end {
         if let Some(end_filepath) = end.strip_prefix("file:") {
             match fs::read_to_string(end_filepath) {
-                Ok(end) => {
-                    // check if the END script uses _INDEX
-                    index_file_used = index_file_used || end.contains("_INDEX");
-                    end
-                }
+                Ok(end) => end,
                 Err(e) => return fail_clierror!("Cannot load Luau END script file: {e}"),
             }
         } else {
@@ -302,6 +301,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } else {
         embedded_end_script.trim().to_string()
     };
+    comment_remover_re.replace_all(&end_script, "");
+    // check if the END script uses _INDEX
+    index_file_used = index_file_used || end_script.contains("_INDEX");
     debug!("END script: {end_script:?}");
 
     // -------- setup Luau environment --------
