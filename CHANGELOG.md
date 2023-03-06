@@ -6,6 +6,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.91.0] - 2023-03-05
+
+### Added
+* `luau`: map multiple new computed columns in one call https://github.com/jqnatividad/qsv/pull/829
+* `luau`: added `qsv_autoindex()` helper function https://github.com/jqnatividad/qsv/pull/834
+* `luau`: added `qsv_coalesce()` helper function https://github.com/jqnatividad/qsv/commit/3064ba2116ce5c96f3bd7e789616a3b0ffe9f63b
+* `luau`: added `_LASTROW` special variable to facilitate random access mode
+
+### Changed
+* `diff`: rename --primary-key-idx -> --key by @janriemer in https://github.com/jqnatividad/qsv/pull/826
+* `diff`: implement option to sort by columns by @janriemer in https://github.com/jqnatividad/qsv/pull/827
+* `luau`: parsing improvements https://github.com/jqnatividad/qsv/pull/835
+* `luau`: bump embedded luau version from 0.562 to 0.566 https://github.com/jqnatividad/qsv/commit/f4a08b4980201015dcba31dfae74d8b1045c0455
+* `sniff`: major refactoring. https://github.com/jqnatividad/qsv/pull/836
+* enable polars nightly feature when building nightly https://github.com/jqnatividad/qsv/pull/816
+* bump qsv-sniffer from 0.6.1 to 0.7.0 https://github.com/jqnatividad/qsv/commit/5027a64576f19792f917550f9146792d5c9e351a
+* Bump crossbeam-channel from 0.5.6 to 0.5.7 by @dependabot in https://github.com/jqnatividad/qsv/pull/818
+* Bump flexi_logger from 0.25.1 to 0.25.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/824
+* Bump rayon from 1.6.1 to 1.7.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/831
+* Bump ryu from 1.0.12 to 1.0.13 by @dependabot in https://github.com/jqnatividad/qsv/pull/830
+* Bump itoa from 1.0.5 to 1.0.6 by @dependabot in https://github.com/jqnatividad/qsv/pull/832
+* cargo update bump dependencies
+* pin Rust nightly to 2023-03-04
+
+### Fixed
+* `stats`: use utf8-aware truncate https://github.com/jqnatividad/qsv/pull/819
+* `sniff`: fix URL sniffing https://github.com/jqnatividad/qsv/commit/8d2c514fa2a173be626b5c36dbfb70d60335b81e
+* show polars version in `qsv --version` https://github.com/jqnatividad/qsv/commit/586a1ed987fa2efbfbc233bd82f84a52fa4c3859
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.90.1...0.91.0
+
 ## [0.90.1] - 2023-02-28
 
 ### Changed
