@@ -1,0 +1,134 @@
+name: Publish Nightly-Testing
+
+on:
+  workflow_dispatch:
+
+env:
+  QSV_KIND: prebuilt-nightly
+
+jobs:
+  publish:
+    name: Publish for ${{ matrix.job.target }}
+    runs-on: ${{ matrix.job.os }}
+    strategy:
+      matrix:
+        rust: [nightly-2023-03-04]
+        job:
+          - os: ubuntu-latest
+            os-name: linux
+            target: x86_64-unknown-linux-gnu
+            architecture: x86_64
+            addl-build-args: --features=apply,generate,luau,fetch,foreach,nightly,to,self_update
+            default-features:
+            addl-qsvdp-features: luau
+          # - os: ubuntu-latest
+          #   os-name: linux
+          #   target: x86_64-unknown-linux-musl
+          #   architecture: x86_64
+          #   musl-prep: true
+          #   addl-build-args: --features=apply,generate,fetch,foreach,nightly,self_update
+          #   default-features:
+          - os: windows-latest
+            os-name: windows
+            target: x86_64-pc-windows-msvc
+            architecture: x86_64
+            addl-build-args: --features=apply,generate,luau,fetch,nightly,to,self_update,polars
+            default-features:
+            addl-qsvdp-features: luau
+          - os: windows-latest
+            os-name: windows
+            target: x86_64-pc-windows-gnu
+            architecture: x86_64
+            addl-build-args: --features=apply,generate,luau,fetch,nightly,self_update,polars
+            default-features: --no-default-features 
+            addl-qsvdp-features: luau
+          - os: macos-latest
+            os-name: macos
+            target: x86_64-apple-darwin
+            architecture: x86_64
+            addl-build-args: --features=apply,generate,luau,fetch,foreach,nightly,to,self_update,polars
+            default-features:
+            addl-qsvdp-features: luau
+
+    steps:
+    - name: Installing Rust toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: ${{ matrix.rust }}
+        profile: minimal
+        components: rust-src
+        target: ${{ matrix.job.target }}
+        override: true
+        default: true
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        submodules: recursive
+    # - name: build prep for x86_64-unknown-linux-musl
+    #   if: ${{ matrix.job.musl-prep }}
+    #   run: |
+    #     sudo apt-get install musl-tools musl-dev
+    #     sudo ln -s /usr/bin/g++ /usr/bin/musl-g++        
+    - name: Build qsv-nightly
+      env:
+        RUSTFLAGS: --emit=asm
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        use-cross: false
+        toolchain: ${{ matrix.rust }}
+        args: --profile release-nightly --bin qsv -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }},full ${{ matrix.job.default-features }}
+    - name: Build qsvlite-nightly
+      env:
+        RUSTFLAGS: --emit=asm
+      uses: actions-rs/cargo@v1   
+      with:
+        command: build
+        use-cross: false
+        toolchain: ${{ matrix.rust }}
+        args: --profile release-nightly --bin qsvlite -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --features=lite,self_update --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}
+    - name: Build qsvdp-nightly
+      env:
+        RUSTFLAGS: --emit=asm
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        use-cross: false
+        toolchain: ${{ matrix.rust }}
+        args: --profile release-nightly --bin qsvdp -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --features=datapusher_plus,${{ matrix.job.addl-qsvdp-features }} --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}
+    - name: Copy binaries to working dir
+      shell: bash
+      run: |
+        mkdir qsv-publish-testing
+        rm target/${{ matrix.job.target }}/release-nightly/*.d 
+        cp target/${{ matrix.job.target }}/release-nightly/qsv* qsv-publish-testing
+        cd qsv-publish-testing
+        if [ "$RUNNER_OS" == "Windows"]; then
+             mv qsv.exe qsv_nightly.exe
+             mv qsvlite.exe qsvlite_nightly.exe
+             mv qsvdp.exe qsvdp_nightly.exe
+        else
+             mv qsv qsv_nightly
+             mv qsvlite qsvlite_nightly
+             mv qsvdp qsvdp_nightly
+        fi
+        rustup show > qsv_nightly_rust_version_info.txt
+        cd ..
+    - name: Download latest release zip
+      uses: robinraju/release-downloader@v1.7
+      with:
+        repository: "jqnatividad/qsv"
+        latest: true
+        token: ${{ secrets.GITHUB_TOKEN }}
+        fileName: qsv-publish-testing-${{ matrix.job.target }}.zip
+    - name: add/update nightly files to zip
+      run: 7z u -tzip qsv-publish-testing-${{ matrix.job.target }}.zip ./qsv-publish-testing/qsv* -mx=9 -mmt=on
+    - name: Upload zipped binaries to release
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: qsv-publish-testing-${{ matrix.job.target }}.zip
+        asset_name: qsv-publish-testing-${{ matrix.job.target }}.zip
+        overwrite: true
+        tag: publish-testing
+ 
