@@ -119,7 +119,7 @@ jobs:
       with:
         repository: "jqnatividad/qsv"
         latest: false
-        releaseId: "publish-testing"
+        tag: "publish-testing"
         token: ${{ secrets.GITHUB_TOKEN }}
         fileName: qsv-publish-testing-${{ matrix.job.target }}-testing.zip
     - name: add/update nightly files to zip
