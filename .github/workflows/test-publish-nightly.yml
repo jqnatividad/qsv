@@ -46,7 +46,7 @@ jobs:
             os-name: macos
             target: x86_64-apple-darwin
             architecture: x86_64
-            addl-build-args: --features=apply,generate,luau,fetch,foreach,nightly,to,self_update,polars
+            addl-build-args: --features=apply,generate,luau,fetch,foreach,nightly,to,self_update
             default-features:
             addl-qsvdp-features: luau
 
