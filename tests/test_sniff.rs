@@ -23,29 +23,24 @@ fn sniff() {
 
     let got: String = wrk.stdout(&mut cmd);
 
-    let expected_start = r#"Metadata
-========
-	Delimiter: ,
-	Has header row?: true
-	Number of preamble rows: 0
-	Quote character: none
-	Flexible: false
-	Is utf-8 encoded?: true
-
-Path: stdin
-Sniffed:"#;
-
-    let expected_end = r#"Retrieved size (bytes): 27
-File size (bytes): 27
-Sampled records: 2
-Number of records: 2
-Number of fields: 3
+    let expected_end = r#"Delimiter: ,
+Header Row: true
+Preamble Rows: 0
+Quote Char: none
+Flexible: false
+Is UTF8: true
+Retrieved Size (bytes): 27
+File Size (bytes): 27
+Sampled Records: 2
+Estimated: false
+Num Records: 2
+Avg Record Len (bytes): 6
+Num Fields: 3
 Fields:
     0:  Text      h1
     1:  Unsigned  h2
     2:  Text      h3"#;
 
-    assert!(got.starts_with(expected_start));
     assert!(got.ends_with(expected_end));
 }
 
@@ -58,23 +53,19 @@ fn sniff_url() {
 
     let got: String = wrk.stdout(&mut cmd);
 
-    let expected_start = r#"Metadata
-========
-	Delimiter: ,
-	Has header row?: true
-	Number of preamble rows: 0
-	Quote character: "
-	Flexible: false
-	Is utf-8 encoded?: true
-
-Path: https://github.com/jqnatividad/qsv/raw/master/resources/test/boston311-100.csv
-Sniffed:"#;
-
-    let expected_end = r#"Retrieved size (bytes): 47,702
-File size (bytes): 47,702
-Sampled records: 100
-Number of records: 100
-Number of fields: 29
+    let expected_end = r#"Delimiter: ,
+Header Row: true
+Preamble Rows: 0
+Quote Char: "
+Flexible: false
+Is UTF8: true
+Retrieved Size (bytes): 47,702
+File Size (bytes): 47,702
+Sampled Records: 100
+Estimated: true
+Num Records: 107
+Avg Record Len (bytes): 444
+Num Fields: 29
 Fields:
     0:   Unsigned  case_enquiry_id
     1:   DateTime  open_dt
@@ -106,8 +97,7 @@ Fields:
     27:  Float     longitude
     28:  Text      source"#;
 
-    assert!(got.starts_with(expected_start));
-    assert!(got.ends_with(expected_end));
+    assert!(got.ends_with(expected_end.trim_end()));
 }
 
 #[test]
@@ -120,28 +110,25 @@ fn sniff_tab() {
 
     let got: String = wrk.stdout(&mut cmd);
 
-    let expected_start = r#"Metadata
-========
-	Delimiter: tab
-	Has header row?: true
-	Number of preamble rows: 0
-	Quote character: none
-	Flexible: false
-	Is utf-8 encoded?: true
-
-Path: stdin
-Sniffed:"#;
-    let expected_end = r#"Retrieved size (bytes): 27
-File size (bytes): 27
-Sampled records: 2
-Number of records: 2
-Number of fields: 3
+    let expected_end = r#"Delimiter: tab
+Header Row: true
+Preamble Rows: 0
+Quote Char: none
+Flexible: false
+Is UTF8: true
+Retrieved Size (bytes): 27
+File Size (bytes): 27
+Sampled Records: 2
+Estimated: false
+Num Records: 2
+Avg Record Len (bytes): 6
+Num Fields: 3
 Fields:
     0:  Text      h1
     1:  Unsigned  h2
     2:  Text      h3"#;
-    assert!(got.starts_with(expected_start));
-    assert!(got.ends_with(expected_end));
+
+    assert!(got.ends_with(expected_end.trim_end()));
 }
 
 #[test]
@@ -193,9 +180,7 @@ fn sniff_json() {
 
     let got: String = wrk.stdout(&mut cmd);
 
-    let expected_start = r#"{"path":"stdin","sniff_timestamp":"#;
-    let expected_end = r#""delimiter_char":",","header_row":true,"preamble_rows":3,"quote_char":"none","flexible":false,"is_utf8":true,"retrieved_size":116,"file_size":116,"sampled_records":3,"num_records":3,"num_fields":4,"fields":["h1","h2","h3","h4"],"types":["Text","Unsigned","Text","Float"]}"#;
-    assert!(got.starts_with(expected_start));
+    let expected_end = r#""delimiter_char":",","header_row":true,"preamble_rows":3,"quote_char":"none","flexible":false,"is_utf8":true,"retrieved_size":116,"file_size":116,"sampled_records":3,"estimated":false,"num_records":3,"avg_record_len":10,"num_fields":4,"fields":["h1","h2","h3","h4"],"types":["Text","Unsigned","Text","Float"]}"#;
     assert!(got.ends_with(expected_end));
 }
 
@@ -209,9 +194,7 @@ fn sniff_flexible_json() {
 
     let got: String = wrk.stdout(&mut cmd);
 
-    let expected_start = r#"{"path":"stdin","sniff_timestamp":"#;
-    let expected_end = r#""delimiter_char":",","header_row":true,"preamble_rows":3,"quote_char":"none","flexible":true,"is_utf8":true,"retrieved_size":135,"file_size":135,"sampled_records":5,"num_records":5,"num_fields":4,"fields":["h1","h2","h3","h4"],"types":["Text","Unsigned","Text","Float"]}"#;
-    assert!(got.starts_with(expected_start));
+    let expected_end = r#""delimiter_char":",","header_row":true,"preamble_rows":3,"quote_char":"none","flexible":true,"is_utf8":true,"retrieved_size":135,"file_size":135,"sampled_records":5,"estimated":false,"num_records":5,"avg_record_len":8,"num_fields":4,"fields":["h1","h2","h3","h4"],"types":["Text","Unsigned","Text","Float"]}"#;
     assert!(got.ends_with(expected_end));
 }
 
@@ -225,9 +208,6 @@ fn sniff_pretty_json() {
 
     let got: String = wrk.stdout(&mut cmd);
 
-    let expected_start = r#"{
-  "path": "stdin",
-  "sniff_timestamp":"#;
     let expected_end = r#""delimiter_char": ",",
   "header_row": true,
   "preamble_rows": 3,
@@ -237,7 +217,9 @@ fn sniff_pretty_json() {
   "retrieved_size": 116,
   "file_size": 116,
   "sampled_records": 3,
+  "estimated": false,
   "num_records": 3,
+  "avg_record_len": 10,
   "num_fields": 4,
   "fields": [
     "h1",
@@ -253,7 +235,6 @@ fn sniff_pretty_json() {
   ]
 }"#;
 
-    assert!(got.starts_with(expected_start));
     assert!(got.ends_with(expected_end));
 }
 
@@ -270,9 +251,6 @@ fn sniff_sample() {
 
     let got: String = wrk.stdout(&mut cmd);
 
-    let expected_start = r#"{
-  "path": "stdin",
-  "sniff_timestamp":"#;
     let expected_end = r#""delimiter_char": ",",
   "header_row": true,
   "preamble_rows": 0,
@@ -282,7 +260,9 @@ fn sniff_sample() {
   "retrieved_size": 9246,
   "file_size": 9246,
   "sampled_records": 7,
+  "estimated": false,
   "num_records": 15,
+  "avg_record_len": 555,
   "num_fields": 32,
   "fields": [
     "ExtractDate",
@@ -354,7 +334,6 @@ fn sniff_sample() {
   ]
 }"#;
 
-    assert!(got.starts_with(expected_start));
     assert!(got.ends_with(expected_end));
 }
 
@@ -368,22 +347,19 @@ fn sniff_prefer_dmy() {
 
     let got: String = wrk.stdout(&mut cmd);
 
-    let expected_start = r#"Metadata
-========
-	Delimiter: ,
-	Has header row?: true
-	Number of preamble rows: 0
-	Quote character: none
-	Flexible: false
-	Is utf-8 encoded?: true
-
-Path: stdin
-Sniffed:"#;
-    let expected_end = r#"Retrieved size (bytes): 47,702
-File size (bytes): 47,702
-Sampled records: 100
-Number of records: 100
-Number of fields: 29
+    let expected_end = r#"Delimiter: ,
+Header Row: true
+Preamble Rows: 0
+Quote Char: none
+Flexible: false
+Is UTF8: true
+Retrieved Size (bytes): 47,702
+File Size (bytes): 47,702
+Sampled Records: 100
+Estimated: false
+Num Records: 100
+Avg Record Len (bytes): 444
+Num Fields: 29
 Fields:
     0:   Unsigned  case_enquiry_id
     1:   DateTime  open_dt
@@ -415,8 +391,7 @@ Fields:
     27:  Float     longitude
     28:  Text      source"#;
 
-    assert!(got.starts_with(expected_start));
-    assert!(got.ends_with(expected_end));
+    assert!(got.ends_with(expected_end.trim_end()));
 }
 
 #[test]

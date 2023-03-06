@@ -1,4 +1,3 @@
-#![allow(clippy::cast_precision_loss)]
 static USAGE: &str = r#"
 Quickly sniff and infer CSV metadata (delimiter, header row, number of preamble rows,
 quote character, flexible, is_utf8, number of records, file size, number of fields,
@@ -58,7 +57,7 @@ Common options:
     -p, --progressbar        Show progress bars. Only valid for URL input.
 "#;
 
-use std::{cmp::min, fs, io::Write, time::Duration};
+use std::{cmp::min, fmt, fs, io::Write, time::Duration};
 
 use bytes::Bytes;
 use futures::executor::block_on;
@@ -68,6 +67,7 @@ use qsv_sniffer::{DatePreference, SampleSize, Sniffer};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use tabwriter::TabWriter;
 use tempfile::NamedTempFile;
 use thousands::Separable;
 use url::Url;
@@ -90,7 +90,7 @@ struct Args {
     flag_timeout:        u64,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Default, Debug)]
 struct SniffStruct {
     path:            String,
     sniff_timestamp: String,
@@ -100,25 +100,114 @@ struct SniffStruct {
     quote_char:      String,
     flexible:        bool,
     is_utf8:         bool,
-    retrieved_size:  u64,
-    file_size:       u64,
-    sampled_records: u64,
-    num_records:     u64,
+    retrieved_size:  usize,
+    file_size:       usize,
+    sampled_records: usize,
+    estimated:       bool,
+    num_records:     usize,
+    avg_record_len:  usize,
     num_fields:      usize,
     fields:          Vec<String>,
     types:           Vec<String>,
 }
+impl fmt::Display for SniffStruct {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln!(f, "Path: {}", self.path)?;
+        writeln!(f, "Sniff Timestamp: {}", self.sniff_timestamp)?;
+        writeln!(
+            f,
+            "Delimiter: {}",
+            if self.delimiter_char == '\t' {
+                "tab".to_string()
+            } else {
+                self.delimiter_char.to_string()
+            }
+        )?;
+        writeln!(f, "Header Row: {}", self.header_row)?;
+        writeln!(
+            f,
+            "Preamble Rows: {}",
+            self.preamble_rows.separate_with_commas()
+        )?;
+        writeln!(f, "Quote Char: {}", self.quote_char)?;
+        writeln!(f, "Flexible: {}", self.flexible)?;
+        writeln!(f, "Is UTF8: {}", self.is_utf8)?;
+        writeln!(
+            f,
+            "Retrieved Size (bytes): {}",
+            self.retrieved_size.separate_with_commas()
+        )?;
+        writeln!(
+            f,
+            "File Size (bytes): {}",
+            self.file_size.separate_with_commas()
+        )?;
+        writeln!(
+            f,
+            "Sampled Records: {}",
+            self.sampled_records.separate_with_commas()
+        )?;
+        writeln!(f, "Estimated: {}", self.estimated)?;
+        writeln!(
+            f,
+            "Num Records: {}",
+            self.num_records.separate_with_commas()
+        )?;
+        writeln!(
+            f,
+            "Avg Record Len (bytes): {}",
+            self.avg_record_len.separate_with_commas()
+        )?;
+        writeln!(f, "Num Fields: {}", self.num_fields.separate_with_commas())?;
+        writeln!(f, "Fields:")?;
 
-struct SniffFileStruct {
-    display_path:    String,
-    file_to_sniff:   String,
-    tempfile_flag:   bool,
-    retrieved_size:  u64,
-    file_size:       u64,
-    sampled_records: u64,
+        let mut tabwtr = TabWriter::new(vec![]);
+
+        for (i, ty) in self.types.iter().enumerate() {
+            writeln!(
+                &mut tabwtr,
+                "\t{}:\t{}\t{}",
+                i,
+                ty,
+                self.fields.get(i).unwrap_or(&String::new())
+            )
+            .unwrap_or_default();
+        }
+        tabwtr.flush().unwrap();
+
+        let tabbed_field_list = String::from_utf8(tabwtr.into_inner().unwrap()).unwrap();
+        writeln!(f, "{tabbed_field_list}")?;
+
+        Ok(())
+    }
 }
 
-const fn rowcount(metadata: &qsv_sniffer::metadata::Metadata, rowcount: u64) -> u64 {
+#[derive(Debug, Clone)]
+struct SniffFileStruct {
+    display_path:       String,
+    file_to_sniff:      String,
+    tempfile_flag:      bool,
+    retrieved_size:     usize,
+    file_size:          usize,
+    downloaded_records: usize,
+}
+
+const fn rowcount(
+    metadata: &qsv_sniffer::metadata::Metadata,
+    sniff_file_info: &SniffFileStruct,
+    count: usize,
+) -> (usize, bool) {
+    let mut estimated = false;
+    let rowcount = if count == usize::MAX {
+        // if the file is usize::MAX, it's a sentinel value for "Unknown" as the server
+        // didn't provide a Content-Length header, so we estimate the rowcount by
+        // dividing the file_size by avg_rec_len
+        estimated = true;
+        sniff_file_info.file_size / metadata.avg_record_len
+    } else {
+        count
+    };
+
     let has_header_row = metadata.dialect.header.has_header_row;
     let num_preamble_rows = metadata.dialect.header.num_preamble_rows;
     let mut final_rowcount = rowcount;
@@ -127,8 +216,8 @@ const fn rowcount(metadata: &qsv_sniffer::metadata::Metadata, rowcount: u64) -> 
         final_rowcount += 1;
     }
 
-    final_rowcount -= num_preamble_rows as u64;
-    final_rowcount
+    final_rowcount -= num_preamble_rows;
+    (final_rowcount, estimated)
 }
 
 async fn get_file_to_sniff(args: &Args) -> CliResult<SniffFileStruct> {
@@ -158,23 +247,27 @@ async fn get_file_to_sniff(args: &Args) -> CliResult<SniffFileStruct> {
                     .await
                     .or(Err(format!("Failed to GET from '{url}'")))?;
 
-                let total_size = res
-                    .content_length()
-                    // if we can't get the content length, just set it to a large value
-                    // so we just end up downloading the entire file
-                    .unwrap_or(u64::MAX);
+                let total_size = match res.content_length() {
+                    Some(l) => l as usize,
+                    None => {
+                        // if we can't get the content length, just set it to a large value
+                        // so we just end up downloading the entire file
+                        usize::MAX
+                    }
+                };
 
+                #[allow(clippy::cast_precision_loss)]
                 let lines_sample_size = if args.flag_sample > 1.0 {
-                    args.flag_sample.round() as u64
+                    args.flag_sample.round() as usize
                 } else if args.flag_sample.abs() < f64::EPSILON {
                     // sample size is zero, so we want to download the entire file
-                    u64::MAX
+                    usize::MAX
                 } else {
                     // sample size is a percentage, download percentage number of lines
                     // from the file. Since we don't know how wide the lines are, we
                     // just download a percentage of the bytes, assuming the lines are
                     // 100 characters wide as a rough estimate.
-                    ((total_size / 100_u64) as f64 * args.flag_sample) as u64
+                    ((total_size / 100_usize) as f64 * args.flag_sample) as usize
                 };
 
                 // prep progress bar
@@ -182,7 +275,7 @@ async fn get_file_to_sniff(args: &Args) -> CliResult<SniffFileStruct> {
                     args.flag_progressbar || std::env::var("QSV_PROGRESSBAR").is_ok();
 
                 let progress = ProgressBar::with_draw_target(
-                    Some(total_size),
+                    Some(total_size.try_into().unwrap_or(u64::MAX)),
                     ProgressDrawTarget::stderr_with_hz(5),
                 );
                 if show_progress {
@@ -197,16 +290,16 @@ async fn get_file_to_sniff(args: &Args) -> CliResult<SniffFileStruct> {
                     );
                     progress.set_message(format!(
                         "Downloading {} samples...",
-                        HumanCount(lines_sample_size)
+                        HumanCount(lines_sample_size as u64)
                     ));
                 } else {
                     progress.set_draw_target(ProgressDrawTarget::hidden());
                 }
 
                 let mut file = NamedTempFile::new()?;
-                let mut downloaded: u64 = 0;
+                let mut downloaded = 0_usize;
                 let mut stream = res.bytes_stream();
-                let mut downloaded_lines = 0_u64;
+                let mut downloaded_lines = 0_usize;
                 #[allow(unused_assignments)]
                 let mut chunk = Bytes::new(); // amortize the allocation
 
@@ -215,16 +308,16 @@ async fn get_file_to_sniff(args: &Args) -> CliResult<SniffFileStruct> {
                     chunk = item.or(Err("Error while downloading file".to_string()))?;
                     file.write_all(&chunk)
                         .map_err(|_| "Error while writing to file".to_string())?;
-                    let chunk_len = chunk.len() as u64;
+                    let chunk_len = chunk.len();
                     downloaded = min(downloaded + chunk_len, total_size);
                     if show_progress {
-                        progress.inc(chunk_len);
+                        progress.inc(chunk_len as u64);
                     }
 
                     // scan chunk for newlines
                     let num_lines = chunk.into_iter().filter(|&x| x == b'\n').count();
                     // and keep track of the number of lines downloaded which is ~= sample_size
-                    downloaded_lines += num_lines as u64;
+                    downloaded_lines += num_lines;
                     // we downloaded enough samples, stop downloading
                     if downloaded_lines > lines_sample_size {
                         break;
@@ -238,7 +331,7 @@ async fn get_file_to_sniff(args: &Args) -> CliResult<SniffFileStruct> {
                 if show_progress {
                     progress.finish_with_message(format!(
                         "Downloaded {} samples.",
-                        HumanCount(downloaded_lines)
+                        HumanCount(downloaded_lines as u64)
                     ));
                 }
 
@@ -269,7 +362,7 @@ async fn get_file_to_sniff(args: &Args) -> CliResult<SniffFileStruct> {
                     .flexible(true)
                     .quote_style(csv::QuoteStyle::NonNumeric)
                     .writer()?;
-                let mut sampled_records = 0_u64;
+                let mut downloaded_records = 0_usize;
 
                 // amortize allocation
                 #[allow(unused_assignments)]
@@ -280,11 +373,11 @@ async fn get_file_to_sniff(args: &Args) -> CliResult<SniffFileStruct> {
                 rdr.byte_records().next();
 
                 for rec in rdr.byte_records() {
-                    record.clone_from(&rec?);
-                    if sampled_records >= lines_sample_size {
+                    record = rec?;
+                    if downloaded_records >= lines_sample_size {
                         break;
                     }
-                    sampled_records += 1;
+                    downloaded_records += 1;
                     wtr.write_byte_record(&record)?;
                 }
                 wtr.flush()?;
@@ -294,7 +387,7 @@ async fn get_file_to_sniff(args: &Args) -> CliResult<SniffFileStruct> {
                     file_to_sniff: wtr_file_path,
                     tempfile_flag: true,
                     retrieved_size: downloaded,
-                    file_size: if total_size == u64::MAX {
+                    file_size: if total_size == usize::MAX {
                         // the server didn't give us content length, so we just
                         // downloaded the entire file. downloaded variable
                         // is the total size of the file
@@ -302,7 +395,7 @@ async fn get_file_to_sniff(args: &Args) -> CliResult<SniffFileStruct> {
                     } else {
                         total_size
                     },
-                    sampled_records,
+                    downloaded_records,
                 })
             }
             // its a file, passthrough the path along with its size
@@ -310,15 +403,17 @@ async fn get_file_to_sniff(args: &Args) -> CliResult<SniffFileStruct> {
                 let metadata = fs::metadata(&path)
                     .map_err(|_| format!("Cannot get metadata for file '{path}'"))?;
 
-                let fsize = metadata.len();
+                let fsize = metadata.len() as usize;
+
+                let canonical_path = fs::canonicalize(&path)?.to_str().unwrap().to_string();
 
                 Ok(SniffFileStruct {
-                    display_path:    "stdin".to_string(),
-                    file_to_sniff:   path,
-                    tempfile_flag:   false,
-                    retrieved_size:  fsize,
-                    file_size:       fsize,
-                    sampled_records: 0,
+                    display_path:       canonical_path,
+                    file_to_sniff:      path,
+                    tempfile_flag:      false,
+                    retrieved_size:     fsize,
+                    file_size:          fsize,
+                    downloaded_records: 0,
                 })
             }
         }
@@ -337,22 +432,31 @@ async fn get_file_to_sniff(args: &Args) -> CliResult<SniffFileStruct> {
             .metadata()
             .map_err(|_| "Cannot get metadata for stdin file".to_string())?;
 
-        let fsize = metadata.len();
-        let path_string = path.to_str().unwrap().to_string();
-        let canonical_path = fs::canonicalize(&path_string)?
-            .to_str()
-            .unwrap()
-            .to_string();
+        let fsize = metadata.len() as usize;
+        let path_string = path
+            .into_os_string()
+            .into_string()
+            .unwrap_or_else(|_| "???".to_string());
 
         Ok(SniffFileStruct {
-            display_path:    canonical_path,
-            file_to_sniff:   path_string,
-            tempfile_flag:   true,
-            retrieved_size:  fsize,
-            file_size:       fsize,
-            sampled_records: 0,
+            display_path:       "stdin".to_string(),
+            file_to_sniff:      path_string,
+            tempfile_flag:      true,
+            retrieved_size:     fsize,
+            file_size:          fsize,
+            downloaded_records: 0,
         })
     }
+}
+
+fn cleanup_tempfile(
+    tempfile_flag: bool,
+    tempfile: String,
+) -> Result<(), crate::clitypes::CliError> {
+    if tempfile_flag {
+        fs::remove_file(tempfile)?;
+    }
+    Ok(())
 }
 
 #[allow(clippy::unused_async)] // false positive lint
@@ -377,15 +481,16 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
 
     let future = get_file_to_sniff(&args);
     let sfile_info = block_on(future)?;
+    let tempfile_to_delete = sfile_info.file_to_sniff.clone();
 
     let conf = Config::new(&Some(sfile_info.file_to_sniff.clone()))
         .flexible(true)
         .delimiter(args.flag_delimiter);
-    let n_rows = if sfile_info.sampled_records == 0 {
+    let n_rows = if sfile_info.downloaded_records == 0 {
         match util::count_rows(&conf) {
-            Ok(n) => n,
+            Ok(n) => n as usize,
             Err(e) => {
-                cleanup_tempfile(sfile_info.tempfile_flag, sfile_info.file_to_sniff)?;
+                cleanup_tempfile(sfile_info.tempfile_flag, tempfile_to_delete)?;
 
                 if args.flag_json || args.flag_pretty_json {
                     let json_result = json!({
@@ -400,11 +505,16 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
             }
         }
     } else {
-        sfile_info.sampled_records
+        // sfile_info.sampled_records
+        // usize::MAX is a sentinel value to let us
+        // know that we need to estimate the number of records
+        // since we only downloaded a sample,not the entire file
+        usize::MAX
     };
 
+    // its an empty file, exit with an error
     if n_rows == 0 {
-        cleanup_tempfile(sfile_info.tempfile_flag, sfile_info.file_to_sniff)?;
+        cleanup_tempfile(sfile_info.tempfile_flag, tempfile_to_delete)?;
 
         if args.flag_json || args.flag_pretty_json {
             let json_result = json!({
@@ -431,10 +541,11 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
 
     // for a local file and stdin, set sampled_records to the sample size
     // for a remote file, set sampled_records to the number of rows downloaded
-    let sampled_records = if sfile_info.sampled_records == 0 {
-        sample_size as u64
+    let sampled_records = if sfile_info.downloaded_records == 0 {
+        sample_size as usize
     } else {
-        sfile_info.sampled_records
+        sample_all = true;
+        sfile_info.downloaded_records
     };
 
     let rdr = conf.reader_file()?;
@@ -450,7 +561,7 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     let sniff_results = if sample_all {
-        log::info!("Sniffing ALL {n_rows} rows...");
+        log::info!("Sniffing ALL rows...");
         if let Some(delimiter) = args.flag_delimiter {
             Sniffer::new()
                 .sample_size(SampleSize::All)
@@ -469,7 +580,7 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
         if sniff_size < 20 {
             sniff_size = 20;
         }
-        log::info!("Sniffing {sniff_size} of {n_rows} rows...");
+        log::info!("Sniffing {sniff_size} rows...");
         if let Some(delimiter) = args.flag_delimiter {
             Sniffer::new()
                 .sample_size(SampleSize::Records(sniff_size))
@@ -484,110 +595,82 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
         }
     };
 
-    if args.flag_json || args.flag_pretty_json {
-        match sniff_results {
-            Ok(metadata) => {
-                let num_records = rowcount(&metadata, n_rows);
+    let mut processed_results = SniffStruct::default();
+    let mut sniffing_error: Option<String> = None;
 
-                let sniffedfields = metadata
-                    .fields
-                    .iter()
-                    .map(std::string::ToString::to_string)
-                    .collect();
-                let sniffedtypes = metadata
-                    .types
-                    .iter()
-                    .map(std::string::ToString::to_string)
-                    .collect();
+    match sniff_results {
+        Ok(metadata) => {
+            let (num_records, estimated) = rowcount(&metadata, &sfile_info, n_rows);
 
-                let sniffed = SniffStruct {
-                    path: sfile_info.display_path,
-                    sniff_timestamp: sniffed_ts,
-                    delimiter_char: metadata.dialect.delimiter as char,
-                    header_row: metadata.dialect.header.has_header_row,
-                    preamble_rows: metadata.dialect.header.num_preamble_rows,
-                    quote_char: match metadata.dialect.quote {
-                        qsv_sniffer::metadata::Quote::Some(chr) => format!("{}", char::from(chr)),
-                        qsv_sniffer::metadata::Quote::None => "none".into(),
-                    },
-                    flexible: metadata.dialect.flexible,
-                    is_utf8: metadata.dialect.is_utf8,
-                    retrieved_size: sfile_info.retrieved_size,
-                    file_size: sfile_info.file_size,
-                    sampled_records: if sampled_records > num_records {
-                        num_records
-                    } else {
-                        sampled_records
-                    },
-                    num_records,
-                    num_fields: metadata.num_fields,
-                    fields: sniffedfields,
-                    types: sniffedtypes,
-                };
-                if args.flag_pretty_json {
-                    println!("{}", serde_json::to_string_pretty(&sniffed).unwrap());
+            let sniffedfields = metadata
+                .fields
+                .iter()
+                .map(std::string::ToString::to_string)
+                .collect();
+            let sniffedtypes = metadata
+                .types
+                .iter()
+                .map(std::string::ToString::to_string)
+                .collect();
+
+            processed_results = SniffStruct {
+                path: sfile_info.display_path,
+                sniff_timestamp: sniffed_ts,
+                delimiter_char: metadata.dialect.delimiter as char,
+                header_row: metadata.dialect.header.has_header_row,
+                preamble_rows: metadata.dialect.header.num_preamble_rows,
+                quote_char: match metadata.dialect.quote {
+                    qsv_sniffer::metadata::Quote::Some(chr) => format!("{}", char::from(chr)),
+                    qsv_sniffer::metadata::Quote::None => "none".into(),
+                },
+                flexible: metadata.dialect.flexible,
+                is_utf8: metadata.dialect.is_utf8,
+                retrieved_size: sfile_info.retrieved_size,
+                file_size: sfile_info.file_size, // sfile_info.file_size,
+                sampled_records: if sampled_records > num_records {
+                    num_records
                 } else {
-                    println!("{}", serde_json::to_string(&sniffed).unwrap());
-                };
-            }
-            Err(e) => {
-                let json_result = json!({
-                    "errors": [{
-                        "title": "sniff error",
-                        "detail": e.to_string()
-                    }]
-                });
-                cleanup_tempfile(sfile_info.tempfile_flag, sfile_info.file_to_sniff)?;
-                return fail_clierror!("{json_result}");
-            }
+                    sampled_records
+                },
+                estimated,
+                num_records,
+                avg_record_len: metadata.avg_record_len,
+                num_fields: metadata.num_fields,
+                fields: sniffedfields,
+                types: sniffedtypes,
+            };
         }
+        Err(e) => {
+            sniffing_error = Some(e.to_string());
+        }
+    }
+
+    cleanup_tempfile(sfile_info.tempfile_flag, tempfile_to_delete)?;
+
+    if args.flag_json || args.flag_pretty_json {
+        if sniffing_error.is_none() {
+            if args.flag_pretty_json {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&processed_results).unwrap()
+                );
+            } else {
+                println!("{}", serde_json::to_string(&processed_results).unwrap());
+            };
+            Ok(())
+        } else {
+            let json_error = json!({
+                "errors": [{
+                    "title": "sniff error",
+                    "detail": sniffing_error.unwrap()
+                }]
+            });
+            fail_clierror!("{json_error}")
+        }
+    } else if sniffing_error.is_none() {
+        println!("{processed_results}");
+        return Ok(());
     } else {
-        match sniff_results {
-            Ok(metadata) => {
-                let full_metadata = format!("{metadata}");
-                // show otherwise invisible tab character as "tab"
-                let mut disp = full_metadata.replace("\tDelimiter: \t", "\tDelimiter: tab");
-                // remove Dialect header
-                disp = disp.replace("Dialect:\n", "");
-                let num_rows = rowcount(&metadata, n_rows);
-                if num_rows > 0 {
-                    let sampled_records = if sampled_records > num_rows {
-                        num_rows
-                    } else {
-                        sampled_records
-                    };
-                    let rows_str = format!(
-                        "\nPath: {}\nSniffed: {}\nRetrieved size (bytes): {}\nFile size (bytes): \
-                         {}\nSampled records: {}\nNumber of records: {}\nNumber of fields:",
-                        sfile_info.display_path.separate_with_commas(),
-                        sniffed_ts.separate_with_commas(),
-                        sfile_info.retrieved_size.separate_with_commas(),
-                        sfile_info.file_size.separate_with_commas(),
-                        sampled_records.separate_with_commas(),
-                        num_rows.separate_with_commas()
-                    );
-                    disp = disp.replace("\nNumber of fields:", &rows_str);
-                }
-                println!("{disp}");
-            }
-            Err(e) => {
-                cleanup_tempfile(sfile_info.tempfile_flag, sfile_info.file_to_sniff)?;
-                return fail_clierror!("sniff error: {e}");
-            }
-        }
+        return fail_clierror!("{}", sniffing_error.unwrap());
     }
-
-    cleanup_tempfile(sfile_info.tempfile_flag, sfile_info.file_to_sniff)?;
-
-    Ok(())
-}
-
-fn cleanup_tempfile(
-    tempfile_flag: bool,
-    file_to_sniff: String,
-) -> Result<(), crate::clitypes::CliError> {
-    if tempfile_flag {
-        fs::remove_file(file_to_sniff)?;
-    }
-    Ok(())
 }
