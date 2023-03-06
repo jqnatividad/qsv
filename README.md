@@ -50,7 +50,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [frequency](/src/cmd/frequency.rs#L2)<br>📇🪗🏎️ | Build [frequency tables](https://statisticsbyjim.com/basics/frequency-table/) of each column. Uses multithreading to go faster if an index is present. |
 | [generate](/src/cmd/generate.rs#L2)<br>❇️ | Generate test data by profiling a CSV using [Markov decision process](https://crates.io/crates/test-data-generation) machine learning.  |
 | [headers](/src/cmd/headers.rs#L2) | Show the headers of a CSV. Or show the intersection of all headers between many CSV files. |
-| [index](/src/cmd/index.rs#L2) | Create an index for a CSV. This is very quick & provides constant time indexing into the CSV file. Also enables multithreading for `frequency`, `split`, `stats` & `schema` commands. |
+| [index](/src/cmd/index.rs#L2) | Create an index for a CSV. This is very quick & provides constant time indexing/random access into the CSV file. Also enables multithreading for `frequency`, `split`, `stats` & `schema` commands. |
 | [input](/src/cmd/input.rs#L2) | Read CSV data with special quoting, trimming, line-skipping & UTF-8 transcoding rules. Typically used to "normalize" a CSV for further processing with other qsv commands. |
 | [join](/src/cmd/join.rs#L2)<br>📇 | Inner, outer, cross, anti & semi joins. Automatically creates a simple, in-memory hash index to make it fast.  |
 | [joinp](/src/cmd/joinp.rs#L2)<br>❇️🚀🐻‍❄️ | Inner, left, outer, cross, anti & semi joins using the [Pola.rs](https://www.pola.rs) engine. Unlike `join`, it can process very large files and is multi-threaded. |
