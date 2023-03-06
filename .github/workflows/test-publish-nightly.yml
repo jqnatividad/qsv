@@ -120,15 +120,15 @@ jobs:
         repository: "jqnatividad/qsv"
         latest: true
         token: ${{ secrets.GITHUB_TOKEN }}
-        fileName: qsv-publish-testing-${{ matrix.job.target }}.zip
+        fileName: qsv-publish-testing-${{ matrix.job.target }}-testing.zip
     - name: add/update nightly files to zip
-      run: 7z u -tzip qsv-publish-testing-${{ matrix.job.target }}.zip ./qsv-publish-testing/qsv* -mx=9 -mmt=on
+      run: 7z u -tzip qsv-publish-testing-${{ matrix.job.target }}-testing.zip ./qsv-publish-testing/qsv* -mx=9 -mmt=on
     - name: Upload zipped binaries to release
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: qsv-publish-testing-${{ matrix.job.target }}.zip
-        asset_name: qsv-publish-testing-${{ matrix.job.target }}.zip
+        file: qsv-publish-testing-${{ matrix.job.target }}-testing.zip
+        asset_name: qsv-publish-testing-${{ matrix.job.target }}-testing.zip
         overwrite: true
         tag: publish-testing
  
