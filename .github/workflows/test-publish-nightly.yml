@@ -118,7 +118,8 @@ jobs:
       uses: robinraju/release-downloader@v1.7
       with:
         repository: "jqnatividad/qsv"
-        latest: true
+        latest: false
+        releaseId: "publish-testing"
         token: ${{ secrets.GITHUB_TOKEN }}
         fileName: qsv-publish-testing-${{ matrix.job.target }}-testing.zip
     - name: add/update nightly files to zip
