@@ -223,7 +223,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let comment_remover_re = regex::Regex::new(r"--.*?$").unwrap();
     comment_remover_re.replace_all(&luau_script, "");
 
-    let mut index_file_used = luau_script.contains("_INDEX");
+    let mut index_file_used = luau_script.contains("_INDEX") || luau_script.contains("_LASTROW");
 
     // check if the main script has BEGIN and END blocks
     // and if so, extract them and remove them from the main script
@@ -285,7 +285,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
     comment_remover_re.replace_all(&begin_script, "");
     // check if the BEGIN script uses _INDEX
-    index_file_used = index_file_used || begin_script.contains("_INDEX");
+    index_file_used =
+        index_file_used || begin_script.contains("_INDEX") || begin_script.contains("_LASTROW");
     debug!("BEGIN script: {begin_script:?}");
 
     // check if an END script was specified
@@ -303,7 +304,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
     comment_remover_re.replace_all(&end_script, "");
     // check if the END script uses _INDEX
-    index_file_used = index_file_used || end_script.contains("_INDEX");
+    index_file_used =
+        index_file_used || end_script.contains("_INDEX") || end_script.contains("_LASTROW");
     debug!("END script: {end_script:?}");
 
     // -------- setup Luau environment --------
