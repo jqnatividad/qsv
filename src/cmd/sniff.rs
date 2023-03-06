@@ -1,8 +1,9 @@
 static USAGE: &str = r#"
 Quickly sniff and infer CSV metadata (delimiter, header row, number of preamble rows,
-quote character, flexible, is_utf8, number of records, file size, number of fields,
-field names & data types) using a Viterbi algorithm 
-(https://en.wikipedia.org/wiki/Viterbi_algorithm).
+quote character, flexible, is_utf8, average record length, number of records, content
+length and estimated number of records if sniffing a URL, file size, number of fields,
+field names & data types) using a Viterbi algorithm.
+(https://en.wikipedia.org/wiki/Viterbi_algorithm)
 
 NOTE: This command "sniffs" a CSV's schema by sampling the first n rows of a file.
 Its inferences are sometimes wrong if the sample is not large enough (use --sample 
