@@ -68,7 +68,9 @@ Excel options:
 
                                If the list is all integers, its interpreted as the zero-based
                                index of all the date columns for date processing.
-                               [default: date,time,due,open,close,created]                               
+                               [default: date,time,due,open,close,created]
+
+     --range <range>           An Excel format range, like C:T or C3:T25, to extract to the CSV.
 
 Common options:
     -h, --help                 Display this message
@@ -96,6 +98,7 @@ struct Args {
     flag_dates_whitelist: String,
     flag_output:          Option<String>,
     flag_quiet:           bool,
+    flag_range:           String,
 }
 
 #[derive(PartialEq)]
@@ -128,6 +131,54 @@ struct MetadataStruct {
     sheet:      Vec<SheetMetadata>,
 }
 
+
+struct RequestedRangeStruct {
+    // matches args for https://docs.rs/calamine/latest/calamine/struct.Range.html#method.rows
+    start: (u32, u32), // upper left, 0 based, row, column
+    end:   (u32, u32), // lower right.
+}
+
+impl RequestedRangeStruct {
+    fn parse_col(col: String) -> u32 {
+        // takes a string like C3 and returns a 0 indexed column number, 2
+        // returns 0 on missing.
+        let base: u8 = String::from("a").as_bytes()[0];
+
+        col.chars().filter(|c| !c.is_digit(10)).collect::<String>()
+            .as_bytes().iter().map(|i| i-base).fold(0, |sum, i| 26*sum + u32::from(i))
+    }
+
+    fn parse_row(row: String) -> u32 {
+        // takes a string like R32 and returns 0 indexed row number, 31.
+        // returns 0 on missing
+        row.chars().filter(|c| c.is_digit(10)).collect::<String>().parse::<u32>().unwrap_or(1)-1
+    }
+
+    pub fn from_string(range: String, worksheet_size: (usize, usize)) -> RequestedRangeStruct {
+        // worksheet_size is from range.getsize, height,width.
+
+        let Some((start,end)) = range.split_once(':') else { panic!("Unable to parse range string") };
+
+        let start_row: u32 = Self::parse_row(start.to_string());
+        let mut end_row: u32 = Self::parse_row(end.to_string());
+        let start_col: u32 = Self::parse_col(start.to_string());
+        let mut end_col: u32 = Self::parse_col(end.to_string());
+
+        if end_row == 0 {
+            end_row = worksheet_size.0 as u32;
+        }
+        if end_col == 0 {
+            end_col = worksheet_size.1 as u32;
+        }
+
+        return RequestedRangeStruct{
+            start: (start_row, start_col),
+            end: (end_row, end_col),
+        }
+    }
+
+}
+
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
     let path = &args.arg_input;
@@ -154,6 +205,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             );
         }
     };
+
+    let requested_range = args.flag_range.to_lowercase();
 
     let mut workbook = match open_workbook_auto(path) {
         Ok(workbook) => workbook,
@@ -387,7 +440,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         return fail_clierror!("Cannot get sheet index for {sheet}");
     };
 
-    let range = if let Some(result) = workbook.worksheet_range_at(sheet_index) {
+    let mut range = if let Some(result) = workbook.worksheet_range_at(sheet_index) {
         match result {
             Ok(result) => result,
             Err(e) => return fail_clierror!("Cannot retrieve range from {sheet}: {e}"),
@@ -395,6 +448,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } else {
         Range::empty()
     };
+
+    if requested_range != "" {
+        info!("using range: {requested_range}");
+        let parsed_range = RequestedRangeStruct::from_string(requested_range, range.get_size());
+        info!("Range start: {0} {1}", parsed_range.start.0, parsed_range.start.1 );
+        info!("Range end: {0} {1}", parsed_range.end.0, parsed_range.end.1);
+        range = range.range(parsed_range.start,parsed_range.end);
+    }
 
     let whitelist_lower = args.flag_dates_whitelist.to_lowercase();
     info!("using date-whitelist: {whitelist_lower}");
