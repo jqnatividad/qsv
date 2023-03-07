@@ -541,7 +541,7 @@ BEGIN {
 
 
 ----------------------------------------------------------------------------
--- this is the MAIN script, which is executed for the row specified by _INDEX
+-- this is the MAIN script loop, which is executed for the row specified by _INDEX
 -- As we are doing random access, to exit this loop, we need to set 
 -- _INDEX to less than zero or greater than _LASTROW
 
@@ -555,17 +555,21 @@ qsv_log("warn", "logging from Luau script! running_total:", running_total, " _IN
 -- the MAIN script ends when _INDEX is less than zero or greater than _LASTROW
 _INDEX = _INDEX - 1;
 
--- running_total is the value we "map" to the "Running Total" column of each row
+-- running_total is the value we "map" to the "Running Total" column of the CURRENT row _INDEX
+-- Note that the CURRENT row is still the _INDEX value when we entered this loop iteration,
+-- not _INDEX - 1 which will become the next CURRENT row AFTER this loop iteration
 return running_total;
 
 
 ----------------------------------------------------------------------------
 END {
     -- and this is the END block, which is executed once at the end
-    -- note how we use the _ROWCOUNT special variable to get the number of rows
     min_amount = math.min(unpack(amount_array));
     max_amount = math.max(unpack(amount_array));
-    return (`Min/Max: {min_amount}/{max_amount} Grand total of {_ROWCOUNT} rows: {grand_total}`);
+
+    -- note how we computed the Range by using the new Luau String interpolation feature
+    -- which is similar to Python f-strings. We also used the special _ROWCOUNT variable here
+    return (`Min/Max/Range: {min_amount}/{max_amount}/{max_amount - min_amount} Grand total of {_ROWCOUNT} rows: {grand_total}`);
 }!
 "#,
     );
@@ -588,7 +592,7 @@ END {
     assert_eq!(got, expected);
 
     let end = wrk.output_stderr(&mut cmd);
-    let expected_end = "Min/Max: 7/72 Grand total of 4 rows: 305\n".to_string();
+    let expected_end = "Min/Max/Range: 7/72/65 Grand total of 4 rows: 305\n".to_string();
     assert_eq!(end, expected_end);
 
     wrk.assert_success(&mut cmd);
