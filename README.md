@@ -55,7 +55,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [join](/src/cmd/join.rs#L2)<br>📇 | Inner, outer, cross, anti & semi joins. Automatically creates a simple, in-memory hash index to make it fast.  |
 | [joinp](/src/cmd/joinp.rs#L2)<br>❇️🚀🐻‍❄️ | Inner, left, outer, cross, anti & semi joins using the [Pola.rs](https://www.pola.rs) engine. Unlike `join`, it can process very large files and is multi-threaded. |
 | [jsonl](/src/cmd/jsonl.rs#L2) | Convert newline-delimited JSON ([JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/)) to CSV. See `tojsonl` command to convert CSV to JSONL.
-| [luau](/src/cmd/luau.rs#L2)<br>❇️📇 | Create multiple new computed columns, filter rows or compute aggregations by executing a [Luau](https://luau-lang.org) [0.566](https://github.com/Roblox/luau/releases/tag/0.566) script for every row of a CSV file. Supports [random access](https://www.webopedia.com/definitions/random-access/) with an index. Allows the creation of [full-fledged data-wrangling scripts](https://github.com/jqnatividad/qsv/blob/1edd06eb5eb30e0a0dc045c3ee62a1e1f68899bd/tests/test_luau.rs#L461-L503).|
+| [luau](/src/cmd/luau.rs#L2)<br>❇️📇 | Create multiple new computed columns, filter rows or compute aggregations by executing a [Luau](https://luau-lang.org) [0.566](https://github.com/Roblox/luau/releases/tag/0.566) script for every row of a CSV file in sequence, or using [random access](https://www.webopedia.com/definitions/random-access/) with an index. Allows the creation of full-fledged data-wrangling scripts - e.g. [sequential mode](https://github.com/jqnatividad/qsv/blob/444ef8d380567fded26911ea41a28a7b1d5a17ff/tests/test_luau.rs#L254-L276) [random access mode](https://github.com/jqnatividad/qsv/blob/444ef8d380567fded26911ea41a28a7b1d5a17ff/tests/test_luau.rs#L523-L572).|
 | [partition](/src/cmd/partition.rs#L2) | Partition a CSV based on a column value. |
 | [pseudo](/src/cmd/pseudo.rs#L2) | [Pseudonymise](https://en.wikipedia.org/wiki/Pseudonymization) the value of the given column by replacing them with an incremental identifier.  |
 | [py](/src/cmd/python.rs#L2)<br>❇️ | Create a new computed column or filter rows by evaluating a python expression on every row of a CSV file. Python's [f-strings](https://www.freecodecamp.org/news/python-f-strings-tutorial-how-to-use-f-strings-for-string-formatting/) is particularly useful for extended formatting, [with the ability to evaluate Python expressions as well](https://github.com/jqnatividad/qsv/blob/4cd00dca88addf0d287247fa27d40563b6d46985/src/cmd/python.rs#L23-L31). |
@@ -217,6 +217,7 @@ Should you need to re-encode CSV/TSV files, you can use the `input` command to t
 Unlike other modern operating systems, Microsoft Windows' [default encoding is UTF16-LE](https://stackoverflow.com/questions/66072117/why-does-windows-use-utf-16le). This will cause problems when redirecting qsv's output to a CSV file & trying to open it with Excel (which ignores the comma delimiter, with everything in the first column):
 
 ```
+# the following command will produce a UTF16-LE encoded CSV file on Windows
 qsv stats wcp.csv > wcpstats.csv
 ```
 
