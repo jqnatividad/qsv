@@ -527,8 +527,8 @@ BEGIN {
     grand_total = 0;
     amount_array = {};
 
-    -- here we call qsv_autoindex() to create/update an index if required 
-    -- so we can do random access on the CSV with the _INDEX special variable
+    -- here we call the qsv_autoindex() helper function to create/update an index
+    -- so we can do random access on the CSV with the _INDEX special variable.
     -- qsv_autoindex() should only be called from the BEGIN block
     csv_indexed = qsv_autoindex();
 
@@ -552,7 +552,7 @@ grand_total = grand_total + running_total;
 qsv_log("warn", "logging from Luau script! running_total:", running_total, " _INDEX:", _INDEX)
 
 -- we modify _INDEX to do random access on the CSV file, in this case going backwards
--- the MAIN script ends when _INDEX is less than zero or greater than _LASTROW
+-- here, the MAIN script ends when _INDEX is less than zero
 _INDEX = _INDEX - 1;
 
 -- running_total is the value we "map" to the "Running Total" column of the CURRENT row _INDEX
