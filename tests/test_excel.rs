@@ -736,3 +736,23 @@ fn excel_empty_sheet2_message() {
     let got = wrk.output_stderr(&mut cmd);
     assert_eq!(got, "0 0-column rows exported from \"Sheet1\" sheet\n");
 }
+
+#[test]
+fn excel_integer_headers() {
+    let wrk = Workdir::new("excel_integer_headers");
+
+    let xls_file = wrk.load_test_file("excel-numeric-header.xlsx");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg(xls_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["location ", "2020", "2021", "2022"],
+        svec!["Here", "1", "2", "3"],
+        svec!["There", "4", "5", "6"],
+    ];
+
+    assert_eq!(got, expected);
+    wrk.assert_success(&mut cmd);
+}
