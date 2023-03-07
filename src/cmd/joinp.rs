@@ -14,7 +14,7 @@ Usage:
     qsv joinp [options] <columns1> <input1> <columns2> <input2>
     qsv joinp --help
 
-input parameters:
+joinp arguments:
     Both <input1> and <input2> files need to have headers. Stdin is not supported.
 
 joinp options:
