@@ -131,52 +131,52 @@ struct MetadataStruct {
     sheet:      Vec<SheetMetadata>,
 }
 
-
-struct RequestedRangeStruct {
+struct RequestedRange {
     // matches args for https://docs.rs/calamine/latest/calamine/struct.Range.html#method.rows
     start: (u32, u32), // upper left, 0 based, row, column
     end:   (u32, u32), // lower right.
 }
 
-impl RequestedRangeStruct {
-    fn parse_col(col: String) -> u32 {
+impl RequestedRange {
+    fn parse_col(col: &str) -> Option<u32> {
         // takes a string like C3 and returns a 0 indexed column number, 2
         // returns 0 on missing.
-        let base: u8 = String::from("a").as_bytes()[0];
 
-        col.chars().filter(|c| !c.is_digit(10)).collect::<String>()
-            .as_bytes().iter().map(|i| i-base).fold(0, |sum, i| 26*sum + u32::from(i))
+        col.chars()
+            .filter(|c| !c.is_ascii_digit())
+            .map(|i| u32::from(i) - u32::from('a'))
+            .reduce(|sum, i| 26 * sum + i)
     }
 
-    fn parse_row(row: String) -> u32 {
+    fn parse_row(row: &str) -> Option<u32> {
         // takes a string like R32 and returns 0 indexed row number, 31.
         // returns 0 on missing
-        row.chars().filter(|c| c.is_digit(10)).collect::<String>().parse::<u32>().unwrap_or(1)-1
+        row.chars()
+            .filter(|c| c.is_ascii_digit())
+            .collect::<String>()
+            .parse::<u32>()
+            .ok()
+            .map(|r| r - 1)
     }
 
-    pub fn from_string(range: String, worksheet_size: (usize, usize)) -> RequestedRangeStruct {
+    pub fn from_string(range: &str, worksheet_size: (usize, usize)) -> CliResult<RequestedRange> {
         // worksheet_size is from range.getsize, height,width.
 
-        let Some((start,end)) = range.split_once(':') else { panic!("Unable to parse range string") };
+        let Some((start,end)) = range.split_once(':') else { return fail_clierror!("Unable to parse range string") };
 
-        let start_row: u32 = Self::parse_row(start.to_string());
-        let mut end_row: u32 = Self::parse_row(end.to_string());
-        let start_col: u32 = Self::parse_col(start.to_string());
-        let mut end_col: u32 = Self::parse_col(end.to_string());
+        let start_row = Self::parse_row(start);
+        let end_row = Self::parse_row(end);
+        let start_col = Self::parse_col(start);
+        let end_col = Self::parse_col(end);
 
-        if end_row == 0 {
-            end_row = worksheet_size.0 as u32;
-        }
-        if end_col == 0 {
-            end_col = worksheet_size.1 as u32;
-        }
-
-        return RequestedRangeStruct{
-            start: (start_row, start_col),
-            end: (end_row, end_col),
-        }
+        Ok(RequestedRange {
+            start: (start_row.unwrap_or(0), start_col.unwrap_or(0)),
+            end:   (
+                end_row.unwrap_or(worksheet_size.0 as _),
+                end_col.unwrap_or(worksheet_size.1 as _),
+            ),
+        })
     }
-
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -449,12 +449,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         Range::empty()
     };
 
-    if requested_range != "" {
+    if !requested_range.is_empty() {
         info!("using range: {requested_range}");
-        let parsed_range = RequestedRangeStruct::from_string(requested_range, range.get_size());
-        info!("Range start: {0} {1}", parsed_range.start.0, parsed_range.start.1 );
-        info!("Range end: {0} {1}", parsed_range.end.0, parsed_range.end.1);
-        range = range.range(parsed_range.start,parsed_range.end);
+        let parsed_range = RequestedRange::from_string(&requested_range, range.get_size())?;
+        info!(
+            "Range start: {} {}",
+            parsed_range.start.0, parsed_range.start.1
+        );
+        info!("Range end: {} {}", parsed_range.end.0, parsed_range.end.1);
+        range = range.range(parsed_range.start, parsed_range.end);
     }
 
     let whitelist_lower = args.flag_dates_whitelist.to_lowercase();
