@@ -731,6 +731,39 @@ fn luau_aggregation_with_begin_end_and_luau_syntax() {
 }
 
 #[test]
+fn luau_map_remap_with_qsv_coalesce() {
+    let wrk = Workdir::new("luau_remap_coalesce");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["id", "name", "name_right"],
+            svec!["1", "Artur A. Mosiyan", ""],
+            svec!["2", "Eduard A. Aghabekyan", ""],
+            svec!["3", "Արամայիս Աղաբեկյան", "Aramais E. Aghabekyan"],
+            svec!["4", "Eleonora V. Avanesyan", ""],
+        ],
+    );
+    let mut cmd = wrk.command("luau");
+    cmd.arg("map")
+        .arg("id,name")
+        .arg("--remap")
+        .arg("{id,qsv_coalesce(name_right,name)}")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["id", "name"],
+        svec!["1", "Artur A. Mosiyan"],
+        svec!["2", "Eduard A. Aghabekyan"],
+        svec!["3", "Aramais E. Aghabekyan"],
+        svec!["4", "Eleonora V. Avanesyan"],
+    ];
+    assert_eq!(got, expected);
+
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
 fn luau_map_math() {
     let wrk = Workdir::new("luau");
     wrk.create(
