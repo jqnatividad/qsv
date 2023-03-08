@@ -412,7 +412,9 @@ fn setup_helpers(luau: &Lua) -> Result<(), CliError> {
     // this is a helper function that creates an index file for the current CSV.
     // It does not work for stdin and should only be called in the BEGIN script
     // its actually just a stub and the real function is called before processing
-    // the BEGIN script
+    // the BEGIN script.
+    // Calling this will initialize the _ROWCOUNT and _LASTROW special variables
+    // so that the BEGIN script can use them
     let qsv_autoindex = luau.create_function(|_luau, mut _args: mlua::MultiValue| Ok(true))?;
     luau.globals().set("qsv_autoindex", qsv_autoindex)?;
     Ok(())
