@@ -133,6 +133,8 @@ Luau options:
     -g, --no-globals         Don't create Luau global variables for each column, only col.
                              Useful when some column names mask standard Luau globals.
                              Note: access to Luau globals thru _G remains even without -g.
+    -r, --remap              Only the listed new columns are written to the output CSV.
+                             Only applies to "map" subcommand.
     -B, --begin <script>     Luau script/file to execute in the BEGINning, before processing
                              the CSV with the main-script.
                              Typically used to initialize global variables.
@@ -186,6 +188,7 @@ struct Args {
     arg_input:        Option<String>,
     flag_exec:        bool,
     flag_no_globals:  bool,
+    flag_remap:       bool,
     flag_begin:       Option<String>,
     flag_end:         Option<String>,
     flag_luau_path:   String,
@@ -400,7 +403,7 @@ fn setup_helpers(luau: &Lua) -> Result<(), CliError> {
     let qsv_coalesce = luau.create_function(|luau, mut args: mlua::MultiValue| {
         while let Some(val) = args.pop_front() {
             let val = luau.from_value::<serde_json::Value>(val)?;
-            let val_str = &serde_json::to_string(&val).unwrap_or_default();
+            let val_str = val.as_str().unwrap_or_default();
             if !val_str.is_empty() {
                 return Ok(val_str.to_string());
             }
@@ -413,7 +416,7 @@ fn setup_helpers(luau: &Lua) -> Result<(), CliError> {
     // It does not work for stdin and should only be called in the BEGIN script
     // its actually just a stub and the real function is called before processing
     // the BEGIN script.
-    // Calling this will initialize the _ROWCOUNT and _LASTROW special variables
+    // Calling this will also initialize the _ROWCOUNT and _LASTROW special variables
     // so that the BEGIN script can use them
     let qsv_autoindex = luau.create_function(|_luau, mut _args: mlua::MultiValue| Ok(true))?;
     luau.globals().set("qsv_autoindex", qsv_autoindex)?;
@@ -451,6 +454,7 @@ fn no_index(
     let mut rdr = rconfig.reader()?;
     let mut wtr = Config::new(&args.flag_output).writer()?;
     let mut headers = rdr.headers()?.clone();
+    let mut remap_headers = csv::StringRecord::new();
     let mut new_column_count = 0_u8;
     if !rconfig.no_headers {
         if !args.cmd_filter {
@@ -462,11 +466,17 @@ fn no_index(
             let new_columns_vec: Vec<&str> = new_columns.split(',').collect();
             for new_column in new_columns_vec {
                 new_column_count += 1;
-                headers.push_field(new_column.trim());
+                let new_column = new_column.trim();
+                headers.push_field(new_column);
+                remap_headers.push_field(new_column);
             }
         }
 
-        wtr.write_record(&headers)?;
+        if args.flag_remap {
+            wtr.write_record(&remap_headers)?;
+        } else {
+            wtr.write_record(&headers)?;
+        }
     }
     #[cfg(any(feature = "full", feature = "lite"))]
     let show_progress =
@@ -488,6 +498,7 @@ fn no_index(
     let mut error_count = 0_usize;
 
     // main loop
+    // without an index, we stream the CSV in sequential order
     while rdr.read_record(&mut record)? {
         #[cfg(any(feature = "full", feature = "lite"))]
         if show_progress {
@@ -560,6 +571,11 @@ fn no_index(
                     record.push_field("");
                 }
                 Value::Table(table) => {
+                    if args.flag_remap {
+                        // we're in remap mode, so we clear the record
+                        // and only write the new columns to output
+                        record.clear();
+                    }
                     let mut columns_inserted = 0_u8;
                     for pair in table.pairs::<mlua::Value, mlua::Value>() {
                         // we don't care about the key, just the value
@@ -681,7 +697,7 @@ fn no_index(
     Ok(())
 }
 
-fn create_index(arg_input: Option<String>) -> Result<bool, CliError> {
+fn create_index(arg_input: &Option<String>) -> Result<bool, CliError> {
     // this is a utility function that creates an index file for the current CSV.
     // it is called when "qsv_autoindex()" is called in the BEGIN script.
     let Some(input ) = &arg_input else {
@@ -723,9 +739,9 @@ fn with_index(
 ) -> Result<(), CliError> {
     // qsv_autoindex() was called in the BEGIN script, so we need to create the index file
     if begin_script.contains("qsv_autoindex()") {
-        let result = create_index(args.arg_input.clone());
+        let result = create_index(&args.arg_input);
         if result.is_err() {
-            return fail_clierror!("Unable to create index file");
+            return fail_clierror!("Unable to create/update index file");
         }
     }
 
@@ -735,6 +751,7 @@ fn with_index(
 
     globals.set("cols", "{}")?;
 
+    // with an index, we know the _ROWCOUNT in advance, so we can set it here
     let mut row_count = util::count_rows(rconfig).unwrap_or_default();
     if args.flag_no_headers {
         row_count += 1;
@@ -742,6 +759,7 @@ fn with_index(
 
     let mut wtr = Config::new(&args.flag_output).writer()?;
     let mut headers = idx_file.headers()?.clone();
+    let mut remap_headers = csv::StringRecord::new();
     let mut new_column_count = 0_u8;
     if !rconfig.no_headers {
         if !args.cmd_filter {
@@ -753,11 +771,17 @@ fn with_index(
             let new_columns_vec: Vec<&str> = new_columns.split(',').collect();
             for new_column in new_columns_vec {
                 new_column_count += 1;
-                headers.push_field(new_column.trim());
+                let new_column = new_column.trim();
+                headers.push_field(new_column);
+                remap_headers.push_field(new_column);
             }
         }
 
-        wtr.write_record(&headers)?;
+        if args.flag_remap {
+            wtr.write_record(&remap_headers)?;
+        } else {
+            wtr.write_record(&headers)?;
+        }
     }
 
     // unlike no_index, we actually know the row_count at the BEGINning
@@ -796,8 +820,8 @@ fn with_index(
     let mut record = csv::StringRecord::new();
     let mut error_count = 0_usize;
 
-    // main loop - here we an indexed file reader, seeking to the next
-    // record to read by looking at _INDEX special var
+    // main loop - here we use an indexed file reader to implement random access mode,
+    // seeking to the next record to read by looking at _INDEX special var
     while idx_file.read_record(&mut record)? {
         globals.set("_IDX", curr_record)?;
 
@@ -862,6 +886,11 @@ fn with_index(
                     record.push_field("");
                 }
                 Value::Table(table) => {
+                    if args.flag_remap {
+                        // we're in remap mode, so we clear the record
+                        // and only write the new columns to output
+                        record.clear();
+                    }
                     let mut columns_inserted = 0_u8;
                     for pair in table.pairs::<mlua::Value, mlua::Value>() {
                         // we don't care about the key, just the value
