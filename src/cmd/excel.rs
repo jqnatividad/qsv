@@ -161,7 +161,7 @@ impl RequestedRange {
     }
 
     pub fn from_string(range: &str, worksheet_size: (usize, usize)) -> CliResult<RequestedRange> {
-        // worksheet_size is from range.getsize, height,width.
+        // worksheet_size is from range.getsize, height,width.  1 indexed.
 
         let Some((start,end)) = range.split_once(':') else { return fail_clierror!("Unable to parse range string") };
 
@@ -173,8 +173,8 @@ impl RequestedRange {
         Ok(RequestedRange {
             start: (start_row.unwrap_or(0), start_col.unwrap_or(0)),
             end:   (
-                end_row.unwrap_or(worksheet_size.0 as _),
-                end_col.unwrap_or(worksheet_size.1 as _),
+                end_row.unwrap_or((worksheet_size.0 as u32) - 1),
+                end_col.unwrap_or((worksheet_size.1 as u32) - 1),
             ),
         })
     }

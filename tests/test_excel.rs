@@ -756,3 +756,60 @@ fn excel_integer_headers() {
     assert_eq!(got, expected);
     wrk.assert_success(&mut cmd);
 }
+
+#[test]
+fn excel_range_cols() {
+    let wrk = Workdir::new("excel_range_cols");
+
+    let xls_file = wrk.load_test_file("excel-range.xlsx");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--range").arg("a:b").arg(xls_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["A", "B"],
+        svec!["2", "3"],
+        svec!["3", "4"],
+    ];
+
+    assert_eq!(got, expected);
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn excel_range_rowcols() {
+    let wrk = Workdir::new("excel_range_rowcols");
+
+    let xls_file = wrk.load_test_file("excel-range.xlsx");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--range").arg("d2:e2").arg(xls_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["5", "6"],
+    ];
+
+    assert_eq!(got, expected);
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn excel_range_double_letter_cols() {
+    let wrk = Workdir::new("excel_range_double_letter_cols");
+
+    let xls_file = wrk.load_test_file("excel-range.xlsx");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--range").arg("z1:ab2").arg(xls_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["Z", "AA", "AB"],
+        svec!["27", "28", "29"],
+    ];
+
+    assert_eq!(got, expected);
+    wrk.assert_success(&mut cmd);
+}
