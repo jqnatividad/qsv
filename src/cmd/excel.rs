@@ -144,7 +144,7 @@ impl RequestedRange {
 
         col.chars()
             .filter(|c| !c.is_ascii_digit())
-            .map(|i| u32::from(i) - (u32::from('a')-1))
+            .map(|i| u32::from(i) - (u32::from('a') - 1))
             .reduce(|sum, i| 26 * sum + i)
             .map(|r| r - 1)
     }

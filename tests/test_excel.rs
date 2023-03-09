@@ -767,11 +767,7 @@ fn excel_range_cols() {
     cmd.arg("--range").arg("a:b").arg(xls_file);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![
-        svec!["A", "B"],
-        svec!["2", "3"],
-        svec!["3", "4"],
-    ];
+    let expected = vec![svec!["A", "B"], svec!["2", "3"], svec!["3", "4"]];
 
     assert_eq!(got, expected);
     wrk.assert_success(&mut cmd);
@@ -787,9 +783,7 @@ fn excel_range_rowcols() {
     cmd.arg("--range").arg("d2:e2").arg(xls_file);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![
-        svec!["5", "6"],
-    ];
+    let expected = vec![svec!["5", "6"]];
 
     assert_eq!(got, expected);
     wrk.assert_success(&mut cmd);
@@ -805,10 +799,7 @@ fn excel_range_double_letter_cols() {
     cmd.arg("--range").arg("z1:ab2").arg(xls_file);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![
-        svec!["Z", "AA", "AB"],
-        svec!["27", "28", "29"],
-    ];
+    let expected = vec![svec!["Z", "AA", "AB"], svec!["27", "28", "29"]];
 
     assert_eq!(got, expected);
     wrk.assert_success(&mut cmd);
