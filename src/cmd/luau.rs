@@ -722,7 +722,7 @@ fn no_index(
                 }
 
                 wtr.write_record(&insertrecord)?;
-                luau.globals().raw_remove("_QSV_INSERTRECORD_TBL")?; // remove the table
+                luau.globals().raw_set("_QSV_INSERTRECORD_TBL", "")?; // empty the table
             }
 
             wtr.write_record(&record)?;
@@ -1112,7 +1112,7 @@ fn with_index(
                 }
 
                 wtr.write_record(&insertrecord)?;
-                luau.globals().raw_remove("_QSV_INSERTRECORD_TBL")?; // remove the table
+                luau.globals().raw_set("_QSV_INSERTRECORD_TBL", "")?; // empty the table
             }
 
             wtr.write_record(&record)?;
@@ -1141,8 +1141,6 @@ fn with_index(
         }
         let next_record = if pos > 0 && pos <= row_count as isize {
             pos as u64
-        } else if pos < 0 && pos.unsigned_abs() as u64 <= row_count {
-            row_count + 1 - pos.unsigned_abs() as u64
         } else {
             0_u64
         };
