@@ -153,7 +153,7 @@ impl RequestedRange {
         // takes a string like R32 and returns 0 indexed row number, 31.
         // returns 0 on missing
         row.chars()
-            .filter(|c| c.is_ascii_digit())
+            .filter(char::is_ascii_digit)
             .collect::<String>()
             .parse::<u32>()
             .ok()
