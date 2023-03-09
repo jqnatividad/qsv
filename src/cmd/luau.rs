@@ -223,7 +223,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // in Luau, comments begin with two consecutive hyphens
     // let's remove them, so we don't falsely trigger on commented special variables
-    let comment_remover_re = regex::Regex::new(r"((?m)^\s*?--.*?$)").unwrap();
+    let comment_remover_re = regex::Regex::new(r"(?m)(^\s*?--.*?$)").unwrap();
     luau_script = comment_remover_re.replace_all(&luau_script, "").to_string();
 
     let mut index_file_used = luau_script.contains("_INDEX") || luau_script.contains("_LASTROW");
