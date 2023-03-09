@@ -68,7 +68,9 @@ Excel options:
 
                                If the list is all integers, its interpreted as the zero-based
                                index of all the date columns for date processing.
-                               [default: date,time,due,open,close,created]                               
+                               [default: date,time,due,open,close,created]
+
+     --range <range>           An Excel format range, like C:T or C3:T25, to extract to the CSV.
 
 Common options:
     -h, --help                 Display this message
@@ -96,6 +98,7 @@ struct Args {
     flag_dates_whitelist: String,
     flag_output:          Option<String>,
     flag_quiet:           bool,
+    flag_range:           String,
 }
 
 #[derive(PartialEq)]
@@ -128,6 +131,55 @@ struct MetadataStruct {
     sheet:      Vec<SheetMetadata>,
 }
 
+struct RequestedRange {
+    // matches args for https://docs.rs/calamine/latest/calamine/struct.Range.html#method.rows
+    start: (u32, u32), // upper left, 0 based, row, column
+    end:   (u32, u32), // lower right.
+}
+
+impl RequestedRange {
+    fn parse_col(col: &str) -> Option<u32> {
+        // takes a string like C3 and returns a 0 indexed column number, 2
+        // returns 0 on missing.
+
+        col.chars()
+            .filter(|c| !c.is_ascii_digit())
+            .map(|i| u32::from(i) - (u32::from('a')-1))
+            .reduce(|sum, i| 26 * sum + i)
+            .map(|r| r - 1)
+    }
+
+    fn parse_row(row: &str) -> Option<u32> {
+        // takes a string like R32 and returns 0 indexed row number, 31.
+        // returns 0 on missing
+        row.chars()
+            .filter(|c| c.is_ascii_digit())
+            .collect::<String>()
+            .parse::<u32>()
+            .ok()
+            .map(|r| r - 1)
+    }
+
+    pub fn from_string(range: &str, worksheet_size: (usize, usize)) -> CliResult<RequestedRange> {
+        // worksheet_size is from range.getsize, height,width.  1 indexed.
+
+        let Some((start,end)) = range.split_once(':') else { return fail_clierror!("Unable to parse range string") };
+
+        let start_row = Self::parse_row(start);
+        let end_row = Self::parse_row(end);
+        let start_col = Self::parse_col(start);
+        let end_col = Self::parse_col(end);
+
+        Ok(RequestedRange {
+            start: (start_row.unwrap_or(0), start_col.unwrap_or(0)),
+            end:   (
+                end_row.unwrap_or((worksheet_size.0 as u32) - 1),
+                end_col.unwrap_or((worksheet_size.1 as u32) - 1),
+            ),
+        })
+    }
+}
+
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
     let path = &args.arg_input;
@@ -154,6 +206,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             );
         }
     };
+
+    let requested_range = args.flag_range.to_lowercase();
 
     let mut workbook = match open_workbook_auto(path) {
         Ok(workbook) => workbook,
@@ -387,7 +441,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         return fail_clierror!("Cannot get sheet index for {sheet}");
     };
 
-    let range = if let Some(result) = workbook.worksheet_range_at(sheet_index) {
+    let mut range = if let Some(result) = workbook.worksheet_range_at(sheet_index) {
         match result {
             Ok(result) => result,
             Err(e) => return fail_clierror!("Cannot retrieve range from {sheet}: {e}"),
@@ -395,6 +449,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } else {
         Range::empty()
     };
+
+    if !requested_range.is_empty() {
+        info!("using range: {requested_range}");
+        let parsed_range = RequestedRange::from_string(&requested_range, range.get_size())?;
+        info!(
+            "Range start: {} {}",
+            parsed_range.start.0, parsed_range.start.1
+        );
+        info!("Range end: {} {}", parsed_range.end.0, parsed_range.end.1);
+        range = range.range(parsed_range.start, parsed_range.end);
+    }
 
     let whitelist_lower = args.flag_dates_whitelist.to_lowercase();
     info!("using date-whitelist: {whitelist_lower}");
