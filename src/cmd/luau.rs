@@ -600,7 +600,7 @@ fn sequential_mode(
         };
 
         // check if qsv_insertrecord() was called in the END script
-        process_insertrecord(luau, empty_table, insertrecord, headers_count, &mut wtr)?;
+        process_insertrecord(luau, &empty_table, insertrecord, headers_count, &mut wtr)?;
 
         let end_string = match end_value {
             Value::String(string) => string.to_string_lossy().to_string(),
@@ -865,7 +865,7 @@ fn random_acess_mode(
         };
 
         // check if qsv_insertrecord() was called in the END script
-        process_insertrecord(luau, empty_table, insertrecord, headers_count, &mut wtr)?;
+        process_insertrecord(luau, &empty_table, insertrecord, headers_count, &mut wtr)?;
 
         let end_string = match end_value {
             Value::String(string) => string.to_string_lossy().to_string(),
@@ -1025,7 +1025,7 @@ fn create_insertrecord(
 
 fn process_insertrecord(
     luau: &Lua,
-    empty_table: mlua::Table,
+    empty_table: &mlua::Table,
     mut insertrecord: csv::StringRecord,
     headers_count: usize,
     wtr: &mut csv::Writer<Box<dyn Write>>,
