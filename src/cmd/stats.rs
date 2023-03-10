@@ -154,6 +154,7 @@ use qsv_dateparser::parse_with_preference;
 use serde::Deserialize;
 use simdutf8::basic::from_utf8;
 use stats::{merge_all, Commute, MinMax, OnlineStats, Unsorted};
+use tempfile::NamedTempFile;
 use threadpool::ThreadPool;
 
 use self::FieldType::{TDate, TDateTime, TFloat, TInteger, TNull, TString};
@@ -209,7 +210,25 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     let mut wtr = Config::new(&args.flag_output).writer()?;
-    let fconfig = args.rconfig();
+    let mut fconfig = args.rconfig();
+    let mut tempfile_path = None;
+
+    if fconfig.is_stdin() {
+        // read from stdin and write to a temp file
+        log::debug!("Reading from stdin");
+        let mut stdin_file = NamedTempFile::new()?;
+        let stdin = std::io::stdin();
+        let mut stdin_handle = stdin.lock();
+        std::io::copy(&mut stdin_handle, &mut stdin_file)?;
+        drop(stdin_handle);
+        let (_file, path) = stdin_file
+            .keep()
+            .or(Err("Cannot keep temporary file".to_string()))?;
+        tempfile_path = Some(path.clone());
+        args.arg_input = Some(path.as_os_str().to_os_string().into_string().unwrap());
+        fconfig.path = Some(path);
+    }
+
     let record_count = RECORD_COUNT.get_or_init(|| util::count_rows(&fconfig).unwrap());
 
     if let Some(path) = fconfig.path.clone() {
@@ -255,6 +274,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         wtr.write_record(vec![&*header].into_iter().chain(stat))?;
     }
     wtr.flush()?;
+
+    if tempfile_path.is_some() {
+        // remove the temp file
+        log::debug!("delete temp file");
+        std::fs::remove_file(tempfile_path.unwrap())?;
+    }
+
     Ok(())
 }
 
