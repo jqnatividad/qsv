@@ -31,6 +31,8 @@ selected using regular expressions.
   Quote column names that conflict with selector syntax:
   $ qsv select '\"Date - Opening\",\"Date - Actual Closing\"'
 
+For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_select.rs.
+
 Usage:
     qsv select [options] [--] <selection> [<input>]
     qsv select --help
