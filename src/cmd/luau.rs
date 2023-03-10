@@ -164,7 +164,13 @@ Common options:
                            for random access.
 "#;
 
-use std::{collections::HashMap, env, fs, io, io::Write, path::Path};
+use std::{
+    collections::HashMap,
+    env, fs, io,
+    io::Write,
+    path::Path,
+    sync::atomic::{AtomicBool, Ordering},
+};
 
 use csv_index::RandomAccessSimple;
 #[cfg(any(feature = "full", feature = "lite"))]
@@ -204,6 +210,8 @@ impl From<mlua::Error> for CliError {
         CliError::Other(err.to_string())
     }
 }
+
+static QSV_BREAK: AtomicBool = AtomicBool::new(false);
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
@@ -365,89 +373,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     Ok(())
 }
 
-fn setup_helpers(luau: &Lua) -> Result<(), CliError> {
-    // this is a helper function that can be called from Luau scripts
-    // to send log messages to the logfile
-    // the first parameter is the log level, and the following parameters are concatenated
-    let qsv_log = luau.create_function(|luau, mut args: mlua::MultiValue| {
-        let mut log_msg = String::with_capacity(20);
-        let mut idx = 0_u8;
-        let mut log_level = String::new();
-        while let Some(val) = args.pop_front() {
-            let val = luau.from_value::<serde_json::Value>(val)?;
-            let val_str = &serde_json::to_string_pretty(&val).unwrap_or_default();
-            if idx == 0 {
-                log_level = val_str.trim_matches('"').to_lowercase();
-            } else {
-                log_msg.push_str(val_str.trim_matches('"'));
-                if idx == u8::MAX {
-                    break;
-                }
-            }
-            idx += 1;
-        }
-        match log_level.as_str() {
-            "info" => log::info!("{log_msg}"),
-            "warn" => log::warn!("{log_msg}"),
-            "error" => log::error!("{log_msg}"),
-            "debug" => log::debug!("{log_msg}"),
-            "trace" => log::trace!("{log_msg}"),
-            _ => {
-                log::info!("unknown log level: {log_level} msg: {log_msg}");
-            }
-        }
-        Ok(())
-    })?;
-    luau.globals().set("qsv_log", qsv_log)?;
-
-    // this is a helper function that can be called from Luau scripts
-    // to coalesce - return the first non-null value in a list
-    let qsv_coalesce = luau.create_function(|luau, mut args: mlua::MultiValue| {
-        while let Some(val) = args.pop_front() {
-            let val = luau.from_value::<serde_json::Value>(val)?;
-            let val_str = val.as_str().unwrap_or_default();
-            if !val_str.is_empty() {
-                return Ok(val_str.to_string());
-            }
-        }
-        Ok(String::new())
-    })?;
-    luau.globals().set("qsv_coalesce", qsv_coalesce)?;
-
-    // this is a helper function that creates an index file for the current CSV.
-    // It does not work for stdin and should only be called in the BEGIN script
-    // its actually just a stub and the real function is called before processing
-    // the BEGIN script.
-    // Calling this will also initialize the _ROWCOUNT and _LASTROW special variables
-    // so that the BEGIN script can use them
-    let qsv_autoindex = luau.create_function(|_luau, mut _args: mlua::MultiValue| Ok(true))?;
-    luau.globals().set("qsv_autoindex", qsv_autoindex)?;
-
-    // this is a helper function that can be called from Luau scripts to insert a record
-    // It will automatically ignore excess columns, and fill up columns with
-    // empty strings if there are less columns specified than expected.
-    let qsv_insertrecord = luau.create_function(|luau, mut args: mlua::MultiValue| {
-        let args_len = args.len().try_into().unwrap_or(10_i32);
-        let insertrecord_table = luau.create_table_with_capacity(args_len, 1)?;
-        let mut idx = 0_u16;
-
-        while let Some(val) = args.pop_front() {
-            let val = luau.from_value::<serde_json::Value>(val)?;
-            let val_str = val.as_str().unwrap_or_default();
-
-            insertrecord_table.set(idx, val_str).unwrap();
-            idx += 1;
-        }
-        luau.globals()
-            .set("_QSV_INSERTRECORD_TBL", insertrecord_table.clone())?;
-
-        Ok(())
-    })?;
-    luau.globals().set("qsv_insertrecord", qsv_insertrecord)?;
-
-    Ok(())
-}
-
+// ------------ SEQUENTIAL MODE ------------
+// this mode is used when the user does not use _INDEX or _LASTROW in their script,
+// so we just scan the CSV, processing the MAIN script in sequence.
 fn no_index(
     rconfig: &Config,
     args: &Args,
@@ -531,7 +459,7 @@ fn no_index(
 
     // main loop
     // without an index, we stream the CSV in sequential order
-    while rdr.read_record(&mut record)? {
+    'main: while rdr.read_record(&mut record)? {
         #[cfg(any(feature = "full", feature = "lite"))]
         if show_progress {
             progress.inc(1);
@@ -578,85 +506,19 @@ fn no_index(
             }
         };
 
+        if QSV_BREAK.load(Ordering::Relaxed) {
+            let qsv_break_msg: String = globals.get("_QSV_BREAK_MSG")?;
+            eprintln!("{qsv_break_msg}");
+            break 'main;
+        }
+
         if max_errors > 0 && error_count > max_errors {
             info!("Maximum number of errors ({max_errors}) reached. Aborting MAIN script.");
-            break;
+            break 'main;
         }
 
         if args.cmd_map {
-            match computed_value {
-                Value::String(string) => {
-                    record.push_field(&string.to_string_lossy());
-                }
-                Value::Number(number) => {
-                    let mut buffer = ryu::Buffer::new();
-                    record.push_field(buffer.format(number));
-                }
-                Value::Integer(number) => {
-                    let mut buffer = itoa::Buffer::new();
-                    record.push_field(buffer.format(number));
-                }
-                Value::Boolean(boolean) => {
-                    record.push_field(if boolean { "true" } else { "false" });
-                }
-                Value::Nil => {
-                    record.push_field("");
-                }
-                Value::Table(table) => {
-                    if args.flag_remap {
-                        // we're in remap mode, so we clear the record
-                        // and only write the new columns to output
-                        record.clear();
-                    }
-                    let mut columns_inserted = 0_u8;
-                    for pair in table.pairs::<mlua::Value, mlua::Value>() {
-                        // we don't care about the key, just the value
-                        let (_k, v) = pair?;
-                        match v {
-                            Value::Integer(intval) => {
-                                let mut buffer = itoa::Buffer::new();
-                                record.push_field(buffer.format(intval));
-                            }
-                            Value::String(strval) => {
-                                record.push_field(&strval.to_string_lossy());
-                            }
-                            Value::Number(number) => {
-                                let mut buffer = ryu::Buffer::new();
-                                record.push_field(buffer.format(number));
-                            }
-                            Value::Boolean(boolean) => {
-                                record.push_field(if boolean { "true" } else { "false" });
-                            }
-                            Value::Nil => {
-                                record.push_field("");
-                            }
-                            _ => {
-                                return fail_clierror!(
-                                    "Unexpected value type returned by provided Luau expression. \
-                                     {v:?}"
-                                );
-                            }
-                        }
-                        columns_inserted += 1;
-                        if new_column_count > 0 && columns_inserted >= new_column_count {
-                            // we ignore table values more than the number of new columns defined
-                            break;
-                        }
-                    }
-                    // on the other hand, if there are less table values than expected
-                    // we fill it up with empty fields
-                    while new_column_count > 0 && columns_inserted < new_column_count {
-                        record.push_field("");
-                        columns_inserted += 1;
-                    }
-                }
-                _ => {
-                    return fail_clierror!(
-                        "Unexpected value type returned by provided Luau expression. \
-                         {computed_value:?}"
-                    );
-                }
-            }
+            map_computedvalue(computed_value, &mut record, args, new_column_count)?;
 
             // check if the script is trying to insert a record with
             // qsv_insertrecord(). We do this by checking if the global
@@ -679,53 +541,14 @@ fn no_index(
                     let (k, v) = pair?;
                     map.insert(k, v);
                 }
-                let map_len = map.len() as u16;
-                let mut columns_inserted = 0_usize;
-                for i in 0..map_len {
-                    // safety: we just created the map and know its len, so its safe to unwrap
-                    let v = map.get(&i).unwrap().clone();
-                    match v {
-                        Value::Integer(intval) => {
-                            let mut buffer = itoa::Buffer::new();
-                            insertrecord.push_field(buffer.format(intval));
-                        }
-                        Value::String(strval) => {
-                            insertrecord.push_field(&strval.to_string_lossy());
-                        }
-                        Value::Number(number) => {
-                            let mut buffer = ryu::Buffer::new();
-                            insertrecord.push_field(buffer.format(number));
-                        }
-                        Value::Boolean(boolean) => {
-                            insertrecord.push_field(if boolean { "true" } else { "false" });
-                        }
-                        Value::Nil => {
-                            insertrecord.push_field("");
-                        }
-                        _ => {
-                            return fail_clierror!(
-                                "Unexpected value type returned by provided Luau expression. {v:?}"
-                            );
-                        }
-                    }
-                    columns_inserted += 1;
-                    if columns_inserted > headers_count {
-                        // we ignore table values more than the number of new columns defined
-                        break;
-                    }
-                }
-                // on the other hand, if there are less table values than expected
-                // we fill it up with empty fields
-                while columns_inserted < headers_count {
-                    insertrecord.push_field("");
-                    columns_inserted += 1;
-                }
+                create_insertrecord(&map, &mut insertrecord, headers_count)?;
 
+                wtr.write_record(&record)?;
                 wtr.write_record(&insertrecord)?;
                 luau.globals().raw_set("_QSV_INSERTRECORD_TBL", "")?; // empty the table
+            } else {
+                wtr.write_record(&record)?;
             }
-
-            wtr.write_record(&record)?;
         } else if args.cmd_filter {
             let must_keep_row = if error_flag {
                 true
@@ -771,6 +594,10 @@ fn no_index(
                 error_result.clone()
             }
         };
+
+        // check if qsv_insertrecord() was called in the END script
+        process_insertrecord(luau, empty_table, insertrecord, headers_count, &mut wtr)?;
+
         let end_string = match end_value {
             Value::String(string) => string.to_string_lossy().to_string(),
             Value::Number(number) => number.to_string(),
@@ -796,31 +623,7 @@ fn no_index(
     Ok(())
 }
 
-fn create_index(arg_input: &Option<String>) -> Result<bool, CliError> {
-    // this is a utility function that creates an index file for the current CSV.
-    // it is called when "qsv_autoindex()" is called in the BEGIN script.
-    let Some(input ) = &arg_input else {
-        log::warn!("qsv_autoindex() does not work for stdin.");
-        return Ok(false);
-    };
-
-    let pidx = util::idx_path(Path::new(&input));
-    debug!("Creating index file {pidx:?} for {input:?}.");
-
-    let rconfig = Config::new(&Some(input.to_string()));
-    let mut rdr = rconfig.reader_file()?;
-    let mut wtr = io::BufWriter::new(fs::File::create(pidx)?);
-    if RandomAccessSimple::create(&mut rdr, &mut wtr).is_err() {
-        return Ok(false);
-    };
-    if wtr.flush().is_err() {
-        return Ok(false);
-    }
-
-    log::info!("qsv_autoindex() successful.");
-    Ok(true)
-}
-
+// ------------ RANDOM ACCESS MODE ------------
 // this function is largely similar to no_index, and is triggered when
 // we use the special variable _INDEX in the Luau scripts.
 // the primary difference being that we use an Indexed File rdr in the main loop.
@@ -929,7 +732,7 @@ fn with_index(
 
     // main loop - here we use an indexed file reader to implement random access mode,
     // seeking to the next record to read by looking at _INDEX special var
-    while idx_file.read_record(&mut record)? {
+    'main: while idx_file.read_record(&mut record)? {
         globals.set("_IDX", curr_record)?;
 
         {
@@ -968,85 +771,19 @@ fn with_index(
             }
         };
 
+        if QSV_BREAK.load(Ordering::Relaxed) {
+            let qsv_break_msg: String = globals.get("_QSV_BREAK_MSG")?;
+            eprintln!("{qsv_break_msg}");
+            break 'main;
+        }
+
         if max_errors > 0 && error_count > max_errors {
             info!("Maximum number of errors ({max_errors}) reached. Aborting MAIN script.");
-            break;
+            break 'main;
         }
 
         if args.cmd_map {
-            match computed_value {
-                Value::String(string) => {
-                    record.push_field(&string.to_string_lossy());
-                }
-                Value::Number(number) => {
-                    let mut buffer = ryu::Buffer::new();
-                    record.push_field(buffer.format(number));
-                }
-                Value::Integer(number) => {
-                    let mut buffer = itoa::Buffer::new();
-                    record.push_field(buffer.format(number));
-                }
-                Value::Boolean(boolean) => {
-                    record.push_field(if boolean { "true" } else { "false" });
-                }
-                Value::Nil => {
-                    record.push_field("");
-                }
-                Value::Table(table) => {
-                    if args.flag_remap {
-                        // we're in remap mode, so we clear the record
-                        // and only write the new columns to output
-                        record.clear();
-                    }
-                    let mut columns_inserted = 0_u8;
-                    for pair in table.pairs::<mlua::Value, mlua::Value>() {
-                        // we don't care about the key, just the value
-                        let (_k, v) = pair?;
-                        match v {
-                            Value::Integer(intval) => {
-                                let mut buffer = itoa::Buffer::new();
-                                record.push_field(buffer.format(intval));
-                            }
-                            Value::String(strval) => {
-                                record.push_field(&strval.to_string_lossy());
-                            }
-                            Value::Number(number) => {
-                                let mut buffer = ryu::Buffer::new();
-                                record.push_field(buffer.format(number));
-                            }
-                            Value::Boolean(boolean) => {
-                                record.push_field(if boolean { "true" } else { "false" });
-                            }
-                            Value::Nil => {
-                                record.push_field("");
-                            }
-                            _ => {
-                                return fail_clierror!(
-                                    "Unexpected value type returned by provided Luau expression. \
-                                     {v:?}"
-                                );
-                            }
-                        }
-                        columns_inserted += 1;
-                        if new_column_count > 0 && columns_inserted >= new_column_count {
-                            // we ignore table values more than the number of new columns defined
-                            break;
-                        }
-                    }
-                    // on the other hand, if there are less table values than expected
-                    // we fill it up with empty fields
-                    while new_column_count > 0 && columns_inserted < new_column_count {
-                        record.push_field("");
-                        columns_inserted += 1;
-                    }
-                }
-                _ => {
-                    return fail_clierror!(
-                        "Unexpected value type returned by provided Luau expression. \
-                         {computed_value:?}"
-                    );
-                }
-            }
+            map_computedvalue(computed_value, &mut record, args, new_column_count)?;
 
             // check if the script is trying to insert a record with
             // qsv_insertrecord(). We do this by checking if the global
@@ -1069,53 +806,14 @@ fn with_index(
                     let (k, v) = pair?;
                     map.insert(k, v);
                 }
-                let map_len = map.len() as u16;
-                let mut columns_inserted = 0_usize;
-                for i in 0..map_len {
-                    // safety: we just created the map and know its len, so its safe to unwrap
-                    let v = map.get(&i).unwrap().clone();
-                    match v {
-                        Value::Integer(intval) => {
-                            let mut buffer = itoa::Buffer::new();
-                            insertrecord.push_field(buffer.format(intval));
-                        }
-                        Value::String(strval) => {
-                            insertrecord.push_field(&strval.to_string_lossy());
-                        }
-                        Value::Number(number) => {
-                            let mut buffer = ryu::Buffer::new();
-                            insertrecord.push_field(buffer.format(number));
-                        }
-                        Value::Boolean(boolean) => {
-                            insertrecord.push_field(if boolean { "true" } else { "false" });
-                        }
-                        Value::Nil => {
-                            insertrecord.push_field("");
-                        }
-                        _ => {
-                            return fail_clierror!(
-                                "Unexpected value type returned by provided Luau expression. {v:?}"
-                            );
-                        }
-                    }
-                    columns_inserted += 1;
-                    if columns_inserted > headers_count {
-                        // we ignore table values more than the number of new columns defined
-                        break;
-                    }
-                }
-                // on the other hand, if there are less table values than expected
-                // we fill it up with empty fields
-                while columns_inserted < headers_count {
-                    insertrecord.push_field("");
-                    columns_inserted += 1;
-                }
+                create_insertrecord(&map, &mut insertrecord, headers_count)?;
 
+                wtr.write_record(&record)?;
                 wtr.write_record(&insertrecord)?;
                 luau.globals().raw_set("_QSV_INSERTRECORD_TBL", "")?; // empty the table
+            } else {
+                wtr.write_record(&record)?;
             }
-
-            wtr.write_record(&record)?;
         } else if args.cmd_filter {
             let must_keep_row = if error_flag {
                 true
@@ -1137,7 +835,7 @@ fn with_index(
 
         pos = globals.get::<_, isize>("_INDEX").unwrap_or_default();
         if pos < 0 || pos as u64 > row_count {
-            break;
+            break 'main;
         }
         let next_record = if pos > 0 && pos <= row_count as isize {
             pos as u64
@@ -1145,7 +843,7 @@ fn with_index(
             0_u64
         };
         if idx_file.seek(next_record).is_err() {
-            break;
+            break 'main;
         }
         curr_record = next_record;
     } // main loop
@@ -1165,6 +863,10 @@ fn with_index(
                 error_result.clone()
             }
         };
+
+        // check if qsv_insertrecord() was called in the END script
+        process_insertrecord(luau, empty_table, insertrecord, headers_count, &mut wtr)?;
+
         let end_string = match end_value {
             Value::String(string) => string.to_string_lossy().to_string(),
             Value::Number(number) => number.to_string(),
@@ -1183,5 +885,305 @@ fn with_index(
     if error_count > 0 {
         return fail_clierror!("Luau errors encountered: {error_count}");
     };
+    Ok(())
+}
+
+// -----------------------------------------------------------------------------
+// UTILITY FUNCTIONS
+// -----------------------------------------------------------------------------
+
+#[inline]
+fn map_computedvalue(
+    computed_value: Value,
+    record: &mut csv::StringRecord,
+    args: &Args,
+    new_column_count: u8,
+) -> Result<(), CliError> {
+    match computed_value {
+        Value::String(string) => {
+            record.push_field(&string.to_string_lossy());
+        }
+        Value::Number(number) => {
+            let mut buffer = ryu::Buffer::new();
+            record.push_field(buffer.format(number));
+        }
+        Value::Integer(number) => {
+            let mut buffer = itoa::Buffer::new();
+            record.push_field(buffer.format(number));
+        }
+        Value::Boolean(boolean) => {
+            record.push_field(if boolean { "true" } else { "false" });
+        }
+        Value::Nil => {
+            record.push_field("");
+        }
+        Value::Table(table) => {
+            if args.flag_remap {
+                // we're in remap mode, so we clear the record
+                // and only write the new columns to output
+                record.clear();
+            }
+            let mut columns_inserted = 0_u8;
+            for pair in table.pairs::<mlua::Value, mlua::Value>() {
+                // we don't care about the key, just the value
+                let (_k, v) = pair?;
+                match v {
+                    Value::Integer(intval) => {
+                        let mut buffer = itoa::Buffer::new();
+                        record.push_field(buffer.format(intval));
+                    }
+                    Value::String(strval) => {
+                        record.push_field(&strval.to_string_lossy());
+                    }
+                    Value::Number(number) => {
+                        let mut buffer = ryu::Buffer::new();
+                        record.push_field(buffer.format(number));
+                    }
+                    Value::Boolean(boolean) => {
+                        record.push_field(if boolean { "true" } else { "false" });
+                    }
+                    Value::Nil => {
+                        record.push_field("");
+                    }
+                    _ => {
+                        return fail_clierror!(
+                            "Unexpected value type returned by provided Luau expression. {v:?}"
+                        );
+                    }
+                }
+                columns_inserted += 1;
+                if new_column_count > 0 && columns_inserted >= new_column_count {
+                    // we ignore table values more than the number of new columns defined
+                    break;
+                }
+            }
+            // on the other hand, if there are less table values than expected
+            // we fill it up with empty fields
+            while new_column_count > 0 && columns_inserted < new_column_count {
+                record.push_field("");
+                columns_inserted += 1;
+            }
+        }
+        _ => {
+            return fail_clierror!(
+                "Unexpected value type returned by provided Luau expression. {computed_value:?}"
+            );
+        }
+    };
+    Ok(())
+}
+
+#[inline]
+fn create_insertrecord(
+    map: &HashMap<u16, Value>,
+    insertrecord: &mut csv::StringRecord,
+    headers_count: usize,
+) -> Result<(), CliError> {
+    let map_len = map.len() as u16;
+    let mut columns_inserted = 0_usize;
+    for i in 0..map_len {
+        // safety: we just created the map and know its len, so its safe to unwrap
+        let v = map.get(&i).unwrap().clone();
+        match v {
+            Value::Integer(intval) => {
+                let mut buffer = itoa::Buffer::new();
+                insertrecord.push_field(buffer.format(intval));
+            }
+            Value::String(strval) => {
+                insertrecord.push_field(&strval.to_string_lossy());
+            }
+            Value::Number(number) => {
+                let mut buffer = ryu::Buffer::new();
+                insertrecord.push_field(buffer.format(number));
+            }
+            Value::Boolean(boolean) => {
+                insertrecord.push_field(if boolean { "true" } else { "false" });
+            }
+            Value::Nil => {
+                insertrecord.push_field("");
+            }
+            _ => {
+                return fail_clierror!(
+                    "Unexpected value type returned by provided Luau expression. {v:?}"
+                );
+            }
+        }
+        columns_inserted += 1;
+        if columns_inserted > headers_count {
+            // we ignore table values more than the number of new columns defined
+            break;
+        }
+    }
+    // on the other hand, if there are less table values than expected
+    // we fill it up with empty fields
+    while columns_inserted < headers_count {
+        insertrecord.push_field("");
+        columns_inserted += 1;
+    }
+    Ok(())
+}
+
+fn process_insertrecord(
+    luau: &Lua,
+    empty_table: mlua::Table,
+    mut insertrecord: csv::StringRecord,
+    headers_count: usize,
+    wtr: &mut csv::Writer<Box<dyn Write>>,
+) -> Result<(), CliError> {
+    let insertrecord_table = luau
+        .globals()
+        .get("_QSV_INSERTRECORD_TBL")
+        .unwrap_or_else(|_| empty_table.clone());
+    let insertrecord_table_len = insertrecord_table.len().unwrap_or_default();
+    if insertrecord_table_len > 0 {
+        // _QSV_INSERTRECORD_TBL is populated, we have a record to insert
+        insertrecord.clear();
+
+        // we do this so we can unroll the table in insertion order, ordered by key.
+        // Otherwise, Lua's table pairs function will give us the kv pairs in
+        // a random order
+        let mut map: HashMap<u16, Value> = HashMap::new();
+        for pair in insertrecord_table.pairs::<u16, Value>() {
+            let (k, v) = pair?;
+            map.insert(k, v);
+        }
+        create_insertrecord(&map, &mut insertrecord, headers_count)?;
+
+        wtr.write_record(&insertrecord)?;
+    };
+    Ok(())
+}
+
+fn create_index(arg_input: &Option<String>) -> Result<bool, CliError> {
+    // this is a utility function that creates an index file for the current CSV.
+    // it is called when "qsv_autoindex()" is called in the BEGIN script.
+    let Some(input ) = &arg_input else {
+        log::warn!("qsv_autoindex() does not work for stdin.");
+        return Ok(false);
+    };
+
+    let pidx = util::idx_path(Path::new(&input));
+    debug!("Creating index file {pidx:?} for {input:?}.");
+
+    let rconfig = Config::new(&Some(input.to_string()));
+    let mut rdr = rconfig.reader_file()?;
+    let mut wtr = io::BufWriter::new(fs::File::create(pidx)?);
+    if RandomAccessSimple::create(&mut rdr, &mut wtr).is_err() {
+        return Ok(false);
+    };
+    if wtr.flush().is_err() {
+        return Ok(false);
+    }
+
+    log::info!("qsv_autoindex() successful.");
+    Ok(true)
+}
+
+// setup_helpers sets up some helper functions that can be called from Luau scripts
+fn setup_helpers(luau: &Lua) -> Result<(), CliError> {
+    // this is a helper function that can be called from Luau scripts
+    // to send log messages to the logfile
+    // the first parameter is the log level, and the following parameters are concatenated
+    let qsv_log = luau.create_function(|luau, mut args: mlua::MultiValue| {
+        let mut log_msg = String::with_capacity(20);
+        let mut idx = 0_u8;
+        let mut log_level = String::new();
+        while let Some(val) = args.pop_front() {
+            let val = luau.from_value::<serde_json::Value>(val)?;
+            let val_str = &serde_json::to_string_pretty(&val).unwrap_or_default();
+            if idx == 0 {
+                log_level = val_str.trim_matches('"').to_lowercase();
+            } else {
+                log_msg.push_str(val_str.trim_matches('"'));
+                if idx == u8::MAX {
+                    break;
+                }
+            }
+            idx += 1;
+        }
+        match log_level.as_str() {
+            "info" => log::info!("{log_msg}"),
+            "warn" => log::warn!("{log_msg}"),
+            "error" => log::error!("{log_msg}"),
+            "debug" => log::debug!("{log_msg}"),
+            "trace" => log::trace!("{log_msg}"),
+            _ => {
+                log::info!("unknown log level: {log_level} msg: {log_msg}");
+            }
+        }
+        Ok(())
+    })?;
+    luau.globals().set("qsv_log", qsv_log)?;
+
+    // this is a helper function that can be called from Luau scripts
+    // to coalesce - return the first non-null value in a list
+    let qsv_coalesce = luau.create_function(|luau, mut args: mlua::MultiValue| {
+        while let Some(val) = args.pop_front() {
+            let val = luau.from_value::<serde_json::Value>(val)?;
+            let val_str = val.as_str().unwrap_or_default();
+            if !val_str.is_empty() {
+                return Ok(val_str.to_string());
+            }
+        }
+        Ok(String::new())
+    })?;
+    luau.globals().set("qsv_coalesce", qsv_coalesce)?;
+
+    // this is a helper function that can be called from Luau scripts
+    // to stop processing. All the parameters are concatenated and returned as a string.
+    // The string is also stored in the global variable _QSV_BREAK_MSG.
+    // qsv_break should only be called from scripts that are processing CSVs in sequential mode.
+    // When in random access mode, set _INDEX instead to -1 or a value greater than _LASTROW instead
+    let qsv_break = luau.create_function(|luau, mut args: mlua::MultiValue| {
+        let mut break_msg = String::with_capacity(20);
+        let mut idx = 0_u8;
+        while let Some(val) = args.pop_front() {
+            let val = luau.from_value::<serde_json::Value>(val)?;
+            let val_str = &serde_json::to_string_pretty(&val).unwrap_or_default();
+
+            break_msg.push_str(val_str.trim_matches('"'));
+            if idx == u8::MAX {
+                break;
+            }
+            idx += 1;
+        }
+        luau.globals().set("_QSV_BREAK_MSG", break_msg.clone())?;
+        QSV_BREAK.store(true, Ordering::Relaxed);
+
+        Ok(break_msg)
+    })?;
+    luau.globals().set("qsv_break", qsv_break)?;
+
+    // this is a helper function that creates an index file for the current CSV.
+    // It does not work for stdin and should only be called in the BEGIN script
+    // its actually just a stub and the real function is called before processing
+    // the BEGIN script.
+    // Calling this will also initialize the _ROWCOUNT and _LASTROW special variables
+    // so that the BEGIN script can use them
+    let qsv_autoindex = luau.create_function(|_luau, mut _args: mlua::MultiValue| Ok(true))?;
+    luau.globals().set("qsv_autoindex", qsv_autoindex)?;
+
+    // this is a helper function that can be called from the MAIN & END scripts to insert a record
+    // It will automatically ignore excess columns, and fill up columns with
+    // empty strings if there are less columns specified than expected.
+    let qsv_insertrecord = luau.create_function(|luau, mut args: mlua::MultiValue| {
+        let args_len = args.len().try_into().unwrap_or(10_i32);
+        let insertrecord_table = luau.create_table_with_capacity(args_len, 1)?;
+        let mut idx = 0_u16;
+
+        while let Some(val) = args.pop_front() {
+            let val = luau.from_value::<serde_json::Value>(val)?;
+            let val_str = val.as_str().unwrap_or_default();
+
+            insertrecord_table.set(idx, val_str).unwrap();
+            idx += 1;
+        }
+        luau.globals()
+            .set("_QSV_INSERTRECORD_TBL", insertrecord_table.clone())?;
+
+        Ok(())
+    })?;
+    luau.globals().set("qsv_insertrecord", qsv_insertrecord)?;
+
     Ok(())
 }
