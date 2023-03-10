@@ -302,6 +302,77 @@ END {
 }
 
 #[test]
+fn luau_qsv_break() {
+    let wrk = Workdir::new("luau_qsv_break");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["letter", "Amount"],
+            svec!["a", "13"],
+            svec!["b", "24"],
+            svec!["c", "72"],
+            svec!["d", "7"],
+        ],
+    );
+
+    wrk.create_from_string(
+        "testbreak.luau",
+        r#"
+BEGIN {
+    -- this is the BEGIN block, which is executed once at the beginning
+    -- where we typically initialize variables
+    running_total = 0;
+    grand_total = 0;
+    amount_array = {};
+}!
+
+-- this is the MAIN script, which is executed for each row
+-- note how we use the _IDX special variable to get the row index
+if (tonumber(Amount) > 25) then
+    qsv_break("This is the break msg.");
+else
+    amount_array[_IDX] = Amount;
+    running_total = running_total + Amount;
+    grand_total = grand_total + running_total;
+
+    -- running_total is the value we "map" to the "Running Total" column of each row
+    return running_total;
+end
+
+END {
+    -- and this is the END block, which is executed once at the end
+    -- note how we use the _ROWCOUNT special variable to get the number of rows
+    min_amount = math.min(unpack(amount_array));
+    max_amount = math.max(unpack(amount_array));
+    return (`Min/Max: {min_amount}/{max_amount} Grand total of {_IDX - 1} rows: {grand_total}`);
+}!
+"#,
+    );
+
+    let mut cmd = wrk.command("luau");
+    cmd.arg("map")
+        .arg("Running Total")
+        .arg("-x")
+        .arg("file:testbreak.luau")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["letter", "Amount", "Running Total"],
+        svec!["a", "13", "13"],
+        svec!["b", "24", "37"],
+    ];
+    assert_eq!(got, expected);
+
+    let end = wrk.output_stderr(&mut cmd);
+    let expected_end =
+        "This is the break msg.\nMin/Max: 13/24 Grand total of 2 rows: 50\n".to_string();
+    assert_eq!(end, expected_end);
+
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
 fn luau_insertrecord() {
     let wrk = Workdir::new("luau_insertrecord");
     wrk.create(
@@ -341,6 +412,11 @@ END {
     -- note how we use the _ROWCOUNT special variable to get the number of rows
     min_amount = math.min(unpack(amount_array));
     max_amount = math.max(unpack(amount_array));
+
+    -- we insert a record at the end of the table with qsv_insertrecord
+    -- with the grand total for Running Total, not counting the qsv_insertedrecords
+    qsv_insertrecord(`Grand Total`, ``, `{grand_total}`);
+
     return (`Min/Max: {min_amount}/{max_amount} Grand total of {_ROWCOUNT} rows: {grand_total}`);
 }!
 "#,
@@ -356,14 +432,15 @@ END {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["letter", "Amount", "Running Total"],
-        svec!["a1", "131", "13"],
         svec!["a", "13", "13"],
-        svec!["b2", "242", "50"],
+        svec!["a1", "131", "13"],
         svec!["b", "24", "37"],
-        svec!["c3", "723", "159"],
+        svec!["b2", "242", "50"],
         svec!["c", "72", "109"],
-        svec!["d4", "74", "275"],
+        svec!["c3", "723", "159"],
         svec!["d", "7", "116"],
+        svec!["d4", "74", "275"],
+        svec!["Grand Total", "", "275"],
     ];
     assert_eq!(got, expected);
 
@@ -421,6 +498,11 @@ END {
     -- note how we use the _ROWCOUNT special variable to get the number of rows
     min_amount = math.min(unpack(amount_array));
     max_amount = math.max(unpack(amount_array));
+
+    -- we insert a record at the end of the table with qsv_insertrecord
+    -- with the grand total for Running Total, not counting the qsv_insertedrecords
+    qsv_insertrecord(`Grand Total`, ``, `{grand_total}`);
+
     return (`Min/Max: {min_amount}/{max_amount} Grand total of {_ROWCOUNT} rows: {grand_total}`);
 }!
 "#,
@@ -439,18 +521,17 @@ END {
 
     let expected = vec![
         svec!["letter", "Amount", "Running Total"],
-        svec!["d3", "73", "7"],
         svec!["d", "7", "7"],
-        svec!["c2", "722", "86"],
+        svec!["d3", "73", "7"],
         svec!["c", "72", "79"],
-        svec!["b1", "241", "189"],
+        svec!["c2", "722", "86"],
         svec!["b", "24", "103"],
-        svec!["a0", "130", "305"],
+        svec!["b1", "241", "189"],
         svec!["a", "13", "116"],
+        svec!["a0", "130", "305"],
+        svec!["Grand Total", "", "305"],
     ];
     assert_eq!(got, expected);
-    // let expected2: String = "Hello there\n".to_string();
-    // assert_eq!(got2, expected2);
 
     let end = wrk.output_stderr(&mut cmd);
     let expected_end = "Min/Max: 7/72 Grand total of 4 rows: 305\n".to_string();
