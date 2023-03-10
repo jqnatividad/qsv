@@ -1,6 +1,7 @@
 static USAGE: &str = r#"
 Create multiple new computed columns, filter rows or compute aggregations by 
-executing a Luau script for every row of a CSV file.
+executing a Luau script for every row (SEQUENTIAL MODE) or for
+specified rows (RANDOM ACCESS MODE) of a CSV file.
 
 The executed Luau has 3 ways to reference row columns (as strings):
   1. Directly by using column name (e.g. Amount), can be disabled with -g
@@ -58,28 +59,27 @@ SPECIAL VARIABLES:
        set to the current row number during the MAIN & END scripts.
 
        "_IDX" is primarily used when the CSV has no index and the MAIN script evaluates each
-       row in sequence.
+       row in sequence (SEQUENTIAL MODE).
  
-  "_INDEX" - a READ/WRITE variable that enables random access of the CSV file. Setting it to 
-       a row number will change the current row to that row number.
+  "_INDEX" - a READ/WRITE variable that enables RANDOM ACCESS MODE when used in a script.
+       Setting it to a row number will change the current row to the specified row number.
        It will only work, however, if the CSV has an index.
 
        When using _INDEX, the MAIN script will keep looping and evaluate the row specified by
        _INDEX until _INDEX is set to an invalid row number (e.g. negative number or to a value
        greater than rowcount).
 
-       "_INDEX" is primarily used when you want to process the CSV in random access mode.
        If the CSV has no index, it will abort with an error unless "qsv_autoindex()" is
        called in the BEGIN script to create an index.
        
   "_ROWCOUNT" - a READ-only variable which is zero during the BEGIN & MAIN scripts, 
-       and set to the rowcount during the END script when the CSV has no index.
+       and set to the rowcount during the END script when the CSV has no index (SEQUENTIAL MODE).
 
        When using _INDEX and the CSV has an index, _ROWCOUNT will be set to the rowcount
-       of the CSV file, even from the BEGINning.
+       of the CSV file, even from the BEGINning (RANDOM ACCESS MODE).
 
   "_LASTROW" - a READ-only variable that is set to the last row number of the CSV file.
-       It will only work, however, if the CSV has an index.
+       It will only work, however, if the CSV has an index (RANDOM ACCESS MODE).
 
 Luau's standard library is relatively minimal (https://luau-lang.org/library).
 That's why qsv preloads the LuaDate library as date manipulation is a common data-wrangling task.
@@ -88,7 +88,7 @@ See https://tieske.github.io/date/#date-id96473 for info on how to use the LuaDa
 Additional libraries can be loaded from the LUAU_PATH using luau's "require" function.
 See http://lua-users.org/wiki/LibrariesAndBindings for a list of other libraries.
 
-With the judicious use of "require", the BEGIN script & the "_IDX"/"_ROWCOUNT" variables, one can create
+With the judicious use of "require", the BEGIN script & the special variables, one can create
 variables/tables/arrays that can be used for complex aggregation operations in the END script.
 
 TIP: When developing Luau scripts, be sure to take advantage of the "qsv_log" function to debug your script.
@@ -96,6 +96,10 @@ It will log messages to the logfile at the specified log level as specified by t
 environment variable. The first parameter to qsv_log is the log level (info, warn, error, debug, trace)
 of the log message and will default to "info" if an invalid log level is specified.
 You can add as many as 255 addl parameters which will be concatenated and logged as a single message.
+
+There are more Luau helper functions in addition to "qsv_log": "qsv_break", "qsv_insertrecord",
+"qsv_autoindex", and "qsv_coalesce". Detailed descriptions of these helpers can be found in the
+"setup_helpers" section at the bottom of this file.
 
 For more detailed examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_luau.rs.
 
@@ -345,7 +349,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     setup_helpers(&luau)?;
 
     if index_file_used {
-        with_index(
+        random_acess_mode(
             &rconfig,
             &args,
             &luau,
@@ -357,7 +361,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             args.flag_max_errors,
         )?;
     } else {
-        no_index(
+        sequential_mode(
             &rconfig,
             &args,
             &luau,
@@ -376,7 +380,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 // ------------ SEQUENTIAL MODE ------------
 // this mode is used when the user does not use _INDEX or _LASTROW in their script,
 // so we just scan the CSV, processing the MAIN script in sequence.
-fn no_index(
+fn sequential_mode(
     rconfig: &Config,
     args: &Args,
     luau: &Lua,
@@ -624,11 +628,11 @@ fn no_index(
 }
 
 // ------------ RANDOM ACCESS MODE ------------
-// this function is largely similar to no_index, and is triggered when
-// we use the special variable _INDEX in the Luau scripts.
+// this function is largely similar to sequential_mode, and is triggered when
+// we use the special variable _INDEX or _LASTROW in the Luau scripts.
 // the primary difference being that we use an Indexed File rdr in the main loop.
 // differences pointed out in comments below
-fn with_index(
+fn random_acess_mode(
     rconfig: &Config,
     args: &Args,
     luau: &Lua,
@@ -639,7 +643,7 @@ fn with_index(
     end_script: &str,
     max_errors: usize,
 ) -> Result<(), CliError> {
-    // qsv_autoindex() was called in the BEGIN script, so we need to create the index file
+    // users can create an index file by calling qsv_autoindex() in their BEGIN script
     if begin_script.contains("qsv_autoindex()") {
         let result = create_index(&args.arg_input);
         if result.is_err() {
@@ -647,13 +651,14 @@ fn with_index(
         }
     }
 
+    // we abort RANDOM ACCESS mode if the index file is not found
     let Some(mut idx_file) = rconfig.indexed()? else {
         return fail!(r#"Index required but no index file found. Use "qsv_autoindex()" in your BEGIN script."#); 
     };
 
     globals.set("cols", "{}")?;
 
-    // with an index, we know the _ROWCOUNT in advance, so we can set it here
+    // with an index, we can fetch the row_count in advance
     let mut row_count = util::count_rows(rconfig).unwrap_or_default();
     if args.flag_no_headers {
         row_count += 1;
@@ -689,7 +694,7 @@ fn with_index(
         }
     }
 
-    // unlike no_index, we actually know the row_count at the BEGINning
+    // unlike sequential_mode, we actually know the row_count at the BEGINning
     globals.set("_IDX", 0)?;
     globals.set("_INDEX", 0)?;
     globals.set("_ROWCOUNT", row_count)?;
@@ -708,7 +713,7 @@ fn with_index(
         info!("BEGIN executed.");
     }
 
-    // unlike no_index, setting "_INDEX" allows us to change the current record
+    // in random access mode, setting "_INDEX" allows us to change the current record
     // for the NEXT read
     let mut pos = globals.get::<_, isize>("_INDEX").unwrap_or_default();
     let mut curr_record = if pos > 0 && pos <= row_count as isize {
@@ -785,9 +790,7 @@ fn with_index(
         if args.cmd_map {
             map_computedvalue(computed_value, &mut record, args, new_column_count)?;
 
-            // check if the script is trying to insert a record with
-            // qsv_insertrecord(). We do this by checking if the global
-            // _QSV_INSERTRECORD_TBL exists and is not empty
+            // check if the MAIN script is trying to insert a record
             insertrecord_table = luau
                 .globals()
                 .get("_QSV_INSERTRECORD_TBL")
@@ -798,9 +801,6 @@ fn with_index(
                 // _QSV_INSERTRECORD_TBL is populated, we have a record to insert
                 insertrecord.clear();
 
-                // we do this so we can unroll the table in insertion order, ordered by key.
-                // Otherwise, Lua's table pairs function will give us the kv pairs in
-                // a random order
                 let mut map: HashMap<u16, Value> = HashMap::new();
                 for pair in insertrecord_table.pairs::<u16, Value>() {
                     let (k, v) = pair?;
