@@ -4,6 +4,8 @@ Splits the given CSV data into chunks.
 The files are written to the directory given with the name '{start}.csv',
 where {start} is the index of the first record of the chunk (starting at 0).
 
+For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_split.rs.
+
 Usage:
     qsv split [options] <outdir> [<input>]
     qsv split --help
