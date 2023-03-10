@@ -1,7 +1,7 @@
 #![cfg(target_family = "unix")]
 static USAGE: &str = r#"
-Execute a bash command once per line in given CSV file. Works only in
-Unix-like environments.
+Execute a shell command once per line in given CSV file. Only works in
+Linux, macOS and other Unix-like environments.
 
 Deleting all files whose filenames are listed in a column:
 
@@ -14,6 +14,8 @@ Executing a command that outputs CSV once per line without repeating headers:
 Same as above but with an additional column containing the current value:
 
   $ qsv foreach query -c from_query 'search {}' queries.csv > results.csv
+
+For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_foreach.rs.
 
 Usage:
     qsv foreach [options] <column> <command> [<input>]
