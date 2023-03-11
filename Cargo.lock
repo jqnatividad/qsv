@@ -4456,7 +4456,7 @@ dependencies = [
 [[package]]
 name = "tabwriter"
 version = "1.2.1"
-source = "git+https://github.com/jqnatividad/tabwriter?branch=tweaks#4852d07d211b1c7a7a615a56213469b5d11805c8"
+source = "git+https://github.com/jqnatividad/tabwriter?branch=tweaks-2023#9015c7f4ad3296cf4bb6a7448715fe2f33128eb4"
 dependencies = [
  "unicode-width",
 ]

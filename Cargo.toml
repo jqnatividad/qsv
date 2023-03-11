@@ -192,7 +192,7 @@ serial_test = "1.0"
 [patch.crates-io]
 docopt    = { git = "https://github.com/jqnatividad/docopt.rs", branch = "perf-clippy-2023" }
 ext-sort  = { git = "https://github.com/jqnatividad/ext-sort-rs", branch = "perf-tweaks" }
-tabwriter = { git = "https://github.com/jqnatividad/tabwriter", branch = "tweaks" }
+tabwriter = { git = "https://github.com/jqnatividad/tabwriter", branch = "tweaks-2023" }
 
 [features]
 default = ["mimalloc"]
