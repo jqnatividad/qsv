@@ -276,7 +276,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     wtr.flush()?;
 
     if tempfile_path.is_some() {
-        // remove the temp file
+        // remove the temp file we created to store stdin
         log::debug!("delete temp file");
         std::fs::remove_file(tempfile_path.unwrap())?;
     }
