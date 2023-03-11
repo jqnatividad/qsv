@@ -1523,7 +1523,7 @@ checksum = "fea41bba32d969b513997752735605054bc0dfa92b4c56bf1189f2e174be7a10"
 [[package]]
 name = "docopt"
 version = "1.1.1"
-source = "git+https://github.com/jqnatividad/docopt.rs?branch=perf-clippy-2021#f00aafc6bdc9da12e8795f054856058ca3525b9d"
+source = "git+https://github.com/jqnatividad/docopt.rs?branch=perf-clippy-2023#86cd3afc0b5dac9bb3fec6882beb8f9f4bb3a05d"
 dependencies = [
  "lazy_static",
  "regex",
