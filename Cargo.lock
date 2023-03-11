@@ -1521,17 +1521,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fea41bba32d969b513997752735605054bc0dfa92b4c56bf1189f2e174be7a10"
 
 [[package]]
-name = "docopt"
-version = "1.1.1"
-source = "git+https://github.com/jqnatividad/docopt.rs?branch=perf-clippy-2023#86cd3afc0b5dac9bb3fec6882beb8f9f4bb3a05d"
-dependencies = [
- "lazy_static",
- "regex",
- "serde",
- "strsim 0.10.0",
-]
-
-[[package]]
 name = "duckdb"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3514,7 +3503,6 @@ dependencies = [
  "csv-index",
  "csvs_convert",
  "data-encoding",
- "docopt",
  "dynfmt",
  "eudex",
  "ext-sort",
@@ -3548,6 +3536,7 @@ dependencies = [
  "qsv-sniffer",
  "qsv-stats",
  "qsv_currency",
+ "qsv_docopt",
  "quickcheck",
  "rand",
  "rayon",
@@ -3626,6 +3615,18 @@ checksum = "e34b3032b7942a4217f388aeac39a8b2f2d50405d6e21185d06c3c45d1e4ca9e"
 dependencies = [
  "num",
  "serde",
+]
+
+[[package]]
+name = "qsv_docopt"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "255f1adc730b5f797f665b93407ec754db6cbab94c798c531cf2d6ec4d257025"
+dependencies = [
+ "lazy_static",
+ "regex",
+ "serde",
+ "strsim 0.10.0",
 ]
 
 [[package]]

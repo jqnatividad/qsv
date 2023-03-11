@@ -1,6 +1,7 @@
 extern crate crossbeam_channel as channel;
 use std::{env, io, time::Instant};
 
+extern crate qsv_docopt as docopt;
 use docopt::Docopt;
 use serde::Deserialize;
 

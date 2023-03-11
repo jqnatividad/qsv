@@ -83,7 +83,6 @@ csv-diff = "0.1.0-beta.4"
 csv-index = "0.1"
 csvs_convert = { version = "0.8", optional = true }
 data-encoding = { version = "2.3", optional = true }
-docopt = "1"
 dynfmt = { version = "0.1", default-features = false, features = [
     "curly",
 ], optional = true }
@@ -128,6 +127,7 @@ polars = { version = "0.27", features = [
 ], optional = true }
 pyo3 = { version = "0.18", features = ["auto-initialize"], optional = true }
 qsv-dateparser = "0.6"
+qsv_docopt = "1.2"
 qsv-stats = "0.7"
 qsv_currency = { version = "0.6", optional = true }
 qsv-sniffer = { version = "0.7", features = ["runtime-dispatch-simd"] }
@@ -190,7 +190,6 @@ quickcheck = { version = "1", default-features = false }
 serial_test = "1.0"
 
 [patch.crates-io]
-docopt    = { git = "https://github.com/jqnatividad/docopt.rs", branch = "perf-clippy-2023" }
 ext-sort  = { git = "https://github.com/jqnatividad/ext-sort-rs", branch = "perf-tweaks" }
 tabwriter = { git = "https://github.com/jqnatividad/tabwriter", branch = "tweaks-2023" }
 
