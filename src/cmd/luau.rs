@@ -1133,7 +1133,7 @@ fn setup_helpers(luau: &Lua) -> Result<(), CliError> {
     // to stop processing. All the parameters are concatenated and returned as a string.
     // The string is also stored in the global variable _QSV_BREAK_MSG.
     // qsv_break should only be called from scripts that are processing CSVs in sequential mode.
-    // When in random access mode, set _INDEX instead to -1 or a value greater than _LASTROW instead
+    // When in random access mode, set _INDEX to -1 or a value greater than _LASTROW instead
     let qsv_break = luau.create_function(|luau, mut args: mlua::MultiValue| {
         let mut break_msg = String::with_capacity(20);
         let mut idx = 0_u8;
