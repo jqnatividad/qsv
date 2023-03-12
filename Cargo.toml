@@ -147,7 +147,7 @@ reqwest = { version = "0.11", features = [
     "stream",
 ], default-features = false }
 reverse_geocoder = { version = "3", optional = true }
-rust_decimal = "1.28"
+rust_decimal = "1.29"
 ryu = "1"
 self_update = { version = "0.36", features = [
     "archive-zip",
