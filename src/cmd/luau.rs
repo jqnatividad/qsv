@@ -452,7 +452,7 @@ fn sequential_mode(
         headers_count,
         &mut wtr,
     )?;
-    // we clear the table so we don't falsely detect a call to qsv_insertrecord() 
+    // we clear the table so we don't falsely detect a call to qsv_insertrecord()
     // in the MAIN/END scripts
     luau.globals().set("_QSV_INSERTRECORD_TBL", Value::Nil)?;
 
@@ -732,7 +732,7 @@ fn random_acess_mode(
         headers_count,
         &mut wtr,
     )?;
-    // we clear the table so we don't falsely detect a call to qsv_insertrecord() 
+    // we clear the table so we don't falsely detect a call to qsv_insertrecord()
     // in the MAIN/END scripts
     luau.globals().set("_QSV_INSERTRECORD_TBL", Value::Nil)?;
 
