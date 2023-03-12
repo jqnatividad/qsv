@@ -395,6 +395,77 @@ END {
 }
 
 #[test]
+fn luau_qsv_skip() {
+    let wrk = Workdir::new("luau_qsv_skip");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["letter", "Amount"],
+            svec!["a", "13"],
+            svec!["b", "24"],
+            svec!["c", "72"],
+            svec!["d", "7"],
+        ],
+    );
+
+    wrk.create_from_string(
+        "testbreak.luau",
+        r#"
+BEGIN {
+    -- this is the BEGIN block, which is executed once at the beginning
+    -- where we typically initialize variables
+    running_total = 0;
+    grand_total = 0;
+    amount_array = {};
+}!
+
+-- this is the MAIN script, which is executed for each row
+-- note how we use the _IDX special variable to get the row index
+if (tonumber(Amount) > 25) then
+    amount_array[_IDX] = 0;
+    qsv_skip();
+else
+    amount_array[_IDX] = Amount;
+    running_total = running_total + Amount;
+    grand_total = grand_total + running_total;
+end
+-- running_total is the value we "map" to the "Running Total" column of each row
+return running_total;
+
+END {
+    -- and this is the END block, which is executed once at the end
+    -- note how we use the _ROWCOUNT special variable to get the number of rows
+    min_amount = math.min(unpack(amount_array));
+    max_amount = math.max(unpack(amount_array));
+    return (`Min/Max: {min_amount}/{max_amount} Grand total of {_IDX - 1} rows: {grand_total}`);
+}!
+"#,
+    );
+
+    let mut cmd = wrk.command("luau");
+    cmd.arg("map")
+        .arg("Running Total")
+        .arg("-x")
+        .arg("file:testbreak.luau")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["letter", "Amount", "Running Total"],
+        svec!["a", "13", "13"],
+        svec!["b", "24", "37"],
+        svec!["d", "7", "44"],
+    ];
+    assert_eq!(got, expected);
+
+    let end = wrk.output_stderr(&mut cmd);
+    let expected_end = "Min/Max: 0/24 Grand total of 3 rows: 94\n".to_string();
+    assert_eq!(end, expected_end);
+
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
 fn luau_insertrecord() {
     let wrk = Workdir::new("luau_insertrecord");
     wrk.create(

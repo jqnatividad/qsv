@@ -215,6 +215,7 @@ impl From<mlua::Error> for CliError {
 }
 
 static QSV_BREAK: AtomicBool = AtomicBool::new(false);
+static QSV_SKIP: AtomicBool = AtomicBool::new(false);
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
@@ -553,9 +554,15 @@ fn sequential_mode(
 
                 create_insertrecord(&insertrecord_table, &mut insertrecord, headers_count)?;
 
-                wtr.write_record(&record)?;
+                if QSV_SKIP.load(Ordering::Relaxed) {
+                    QSV_SKIP.store(false, Ordering::Relaxed);
+                } else {
+                    wtr.write_record(&record)?;
+                }
                 wtr.write_record(&insertrecord)?;
                 luau.globals().raw_set("_QSV_INSERTRECORD_TBL", "")?; // empty the table
+            } else if QSV_SKIP.load(Ordering::Relaxed) {
+                QSV_SKIP.store(false, Ordering::Relaxed);
             } else {
                 wtr.write_record(&record)?;
             }
@@ -822,9 +829,15 @@ fn random_acess_mode(
 
                 create_insertrecord(&insertrecord_table, &mut insertrecord, headers_count)?;
 
-                wtr.write_record(&record)?;
+                if QSV_SKIP.load(Ordering::Relaxed) {
+                    QSV_SKIP.store(false, Ordering::Relaxed);
+                } else {
+                    wtr.write_record(&record)?;
+                }
                 wtr.write_record(&insertrecord)?;
                 luau.globals().raw_set("_QSV_INSERTRECORD_TBL", "")?; // empty the table
+            } else if QSV_SKIP.load(Ordering::Relaxed) {
+                QSV_SKIP.store(false, Ordering::Relaxed);
             } else {
                 wtr.write_record(&record)?;
             }
@@ -1138,6 +1151,15 @@ fn setup_helpers(luau: &Lua) -> Result<(), CliError> {
         Ok(break_msg)
     })?;
     luau.globals().set("qsv_break", qsv_break)?;
+
+    // this is a helper function that can be called from Luau scripts
+    // to SKIP writing the output of that row.
+    let qsv_skip = luau.create_function(|_, ()| {
+        QSV_SKIP.store(true, Ordering::Relaxed);
+
+        Ok(())
+    })?;
+    luau.globals().set("qsv_skip", qsv_skip)?;
 
     // this is a helper function that creates an index file for the current CSV.
     // It does not work for stdin and should only be called in the BEGIN script
