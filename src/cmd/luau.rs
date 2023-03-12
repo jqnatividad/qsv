@@ -1167,7 +1167,7 @@ fn setup_helpers(luau: &Lua) -> Result<(), CliError> {
     // the BEGIN script.
     // Calling this will also initialize the _ROWCOUNT and _LASTROW special variables
     // so that the BEGIN script can use them
-    let qsv_autoindex = luau.create_function(|_luau, mut _args: mlua::MultiValue| Ok(true))?;
+    let qsv_autoindex = luau.create_function(|_, ()| Ok(()))?;
     luau.globals().set("qsv_autoindex", qsv_autoindex)?;
 
     // this is a helper function that can be called from the BEGIN, MAIN & END scripts to insert a
