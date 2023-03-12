@@ -253,26 +253,48 @@ fn luau_aggregation_with_embedded_begin_end_using_file() {
         r#"
 BEGIN {
     -- this is the BEGIN block, which is executed once at the beginning
-    -- where we typically initialize variables
+    -- where we typically initialize variables, setup functions
+    -- and load additional Lua libraries as required
     running_total = 0;
     grand_total = 0;
     amount_array = {};
+    adjusted_array = {};
+
+    function margin(x: number, y: number ): number
+        return x * y;
+    end
+
+    function sum(numbers_array: table): number
+        local sum: number = 0;
+        for _, v in ipairs(numbers_array) do
+            sum = sum + v;
+        end
+        return sum;
+    end
 }!
 
--- this is the MAIN script, which is executed for each row
+
+-- this is the MAIN script loop, which is executed for each row
 -- note how we use the _IDX special variable to get the row index
 amount_array[_IDX] = Amount;
 running_total = running_total + Amount;
-grand_total = grand_total + running_total;
+
+adjusted_array[_IDX] = Amount + margin(Amount, 0.25);
+
 -- running_total is the value we "map" to the "Running Total" column of each row
 return running_total;
 
+
 END {
     -- and this is the END block, which is executed once at the end
-    -- note how we use the _ROWCOUNT special variable to get the number of rows
+    grand_total = running_total;
     min_amount = math.min(unpack(amount_array));
     max_amount = math.max(unpack(amount_array));
-    return (`Min/Max: {min_amount}/{max_amount} Grand total of {_ROWCOUNT} rows: {grand_total}`);
+    adjusted_total = sum(adjusted_array);
+
+    -- note how we use the _ROWCOUNT special variable to get the number of rows
+    -- the value returned from the END script is sent to stderr
+    return (`Min/Max: {min_amount}/{max_amount} Grand total of {_ROWCOUNT} rows: {grand_total} adjusted: {adjusted_total}`);
 }!        
 "#,
     );
@@ -295,7 +317,7 @@ END {
     assert_eq!(got, expected);
 
     let end = wrk.output_stderr(&mut cmd);
-    let expected_end = "Min/Max: 7/72 Grand total of 4 rows: 275\n".to_string();
+    let expected_end = "Min/Max: 7/72 Grand total of 4 rows: 116 adjusted: 145\n".to_string();
     assert_eq!(end, expected_end);
 
     wrk.assert_success(&mut cmd);
