@@ -1194,5 +1194,77 @@ fn setup_helpers(luau: &Lua) -> Result<(), CliError> {
     })?;
     luau.globals().set("qsv_insertrecord", qsv_insertrecord)?;
 
+    // this is a helper function that can be called from the BEGIN script to register
+    // and load a lookup table. It expects two arguments - the lookup_name & the
+    // lookup_table_path - the path of the CSV to use as a lookup table.
+    // It returns a table with the header names if successful and create a Luau table
+    // named using lookup_name, storing all the lookup values.
+    // The first column is the key and the rest of the columns are values stored in a
+    // table indexed by column name.
+    let qsv_register_lookup = luau.create_function(|luau, mut args: mlua::MultiValue| {
+        let args_len = args.len().try_into().unwrap_or(10_i32);
+
+        if args_len != 2 {
+            return Err(mlua::Error::RuntimeError(
+                "qsv_register_lookup: two arguments expected - lookup_name & lookup_table_path"
+                    .to_string(),
+            ));
+        }
+
+        let lookup_name = luau.from_value::<serde_json::Value>(args.pop_front().unwrap())?;
+        let lookup_name_str = lookup_name.as_str().unwrap_or_default();
+        let lookup_table_path = luau.from_value::<serde_json::Value>(args.pop_front().unwrap())?;
+        let lookup_table_path_str = lookup_table_path.as_str().unwrap_or_default();
+
+        let lookup_table = luau.create_table()?;
+        #[allow(unused_assignments)]
+        let mut record = csv::StringRecord::new();
+
+        let Ok(mut rdr) = csv::ReaderBuilder::new()
+            .has_headers(true)
+            .from_path(lookup_table_path_str)
+            else {
+                return Err(mlua::Error::RuntimeError(
+                    format!("qsv_register_lookup: cannot read {lookup_table_path_str}")
+                ));
+            };
+        let headers = match rdr.headers() {
+            Ok(headers) => headers.clone(),
+            Err(e) => {
+                return Err(mlua::Error::RuntimeError(format!(
+                    "qsv_register_lookup: cannot read headers of lookup table - {e}"
+                )));
+            }
+        };
+        for result in rdr.records() {
+            record = result.unwrap_or_default();
+            let key = record.get(0).unwrap_or_default().trim();
+            let inside_table = luau.create_table()?;
+            for (i, header) in headers.iter().enumerate() {
+                if i > 0 {
+                    let val = record.get(i).unwrap_or_default().trim();
+                    inside_table.set(header, val)?;
+                }
+            }
+            lookup_table.set(key, inside_table)?;
+        }
+
+        luau.globals().set(lookup_name_str, lookup_table.clone())?;
+
+        // now that we've successfully loaded the lookup table, we return the headers
+        // as a table so the user can use them to access the values
+        let headers_table = luau.create_table()?;
+        for (i, header) in headers.iter().enumerate() {
+            // we do not include the first column, which is the key
+            if i > 0 {
+                headers_table.set(i, header)?;
+            }
+        }
+
+        Ok(headers_table)
+    })?;
+    luau.globals()
+        .set("qsv_register_lookup", qsv_register_lookup)?;
+
     Ok(())
 }
