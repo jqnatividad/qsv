@@ -568,9 +568,9 @@ BEGIN {
     grand_total = 0;
     amount_array = {};
 
-    qsv_autoindex()
+    qsv_autoindex();
 
-    _INDEX = _LASTROW
+    _INDEX = _LASTROW;
 }!
 
 -- this is the MAIN script, which is executed for each row
@@ -581,7 +581,7 @@ grand_total = grand_total + running_total;
 
 qsv_insertrecord(`{letter}{_IDX}`, `{Amount}{_IDX}`, `{grand_total}`, `excess column, should not be inserted`)
 
-_INDEX = _INDEX - 1
+_INDEX = _INDEX - 1;
 
 -- running_total is the value we "map" to the "Running Total" column of each row
 return running_total;
@@ -881,7 +881,7 @@ amount_array[_INDEX] = Amount;
 running_total = running_total + Amount;
 grand_total = grand_total + running_total;
 
-qsv_log("warn", "logging from Luau script! running_total:", running_total, " _INDEX:", _INDEX)
+qsv_log("warn", "logging from Luau script! running_total:", running_total, " _INDEX:", _INDEX);
 
 -- we modify _INDEX to do random access on the CSV file, in this case going backwards
 -- here, the MAIN script ends when _INDEX is less than zero
@@ -955,7 +955,7 @@ BEGIN {
     amount_array = {};
 
     -- note how we use the qsv_log function to log to the qsv log file
-    qsv_log("debug", " _INDEX:", _INDEX, " _ROWCOUNT:", _ROWCOUNT)
+    qsv_log("debug", " _INDEX:", _INDEX, " _ROWCOUNT:", _ROWCOUNT);
 
     -- start from the end of the CSV file, set _INDEX to _LASTROW
     _INDEX = _LASTROW;
@@ -971,7 +971,7 @@ amount_array[_INDEX] = Amount;
 running_total = running_total + Amount;
 grand_total = grand_total + running_total;
 
-qsv_log("warn", "logging from Luau script! running_total:", running_total, " _INDEX:", _INDEX)
+qsv_log("warn", "logging from Luau script! running_total:", running_total, " _INDEX:", _INDEX);
 
 -- we modify _INDEX to do random access on the CSV file, in this case going backwards
 -- the MAIN script ends when _INDEX is less than zero or greater than _LASTROW
