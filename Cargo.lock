@@ -3619,9 +3619,9 @@ dependencies = [
 
 [[package]]
 name = "qsv_docopt"
-version = "1.2.1"
+version = "1.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c0a000f4bd2b24a377e9f7c4256ff5f46661d69d72cac3724f7c0d66118c29c0"
+checksum = "c8669637eb4a9ca1b760016e146731435eae705d3e7ab7321f7e29361823cd3e"
 dependencies = [
  "once_cell",
  "regex",
@@ -3675,9 +3675,9 @@ dependencies = [
 
 [[package]]
 name = "quote"
-version = "1.0.24"
+version = "1.0.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "50686e0021c4136d1d453b2dfe059902278681512a34d4248435dc34b6b5c8ec"
+checksum = "4424af4bf778aae2051a77b60283332f386554255d722233d09fbfc7e30da2fc"
 dependencies = [
  "proc-macro2",
 ]
