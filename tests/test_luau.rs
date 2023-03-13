@@ -324,6 +324,101 @@ END {
 }
 
 #[test]
+fn luau_register_lookup_table() {
+    let wrk = Workdir::new("luau_register_lookup_table");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["letter", "Amount"],
+            svec!["a", "13"],
+            svec!["b", "24"],
+            svec!["c", "72"],
+            svec!["d", "7"],
+        ],
+    );
+
+    let lookup_file = wrk.load_test_file("us-states-lookup.csv");
+
+    wrk.create_from_string(
+        "testlookup.luau",
+        r#"
+BEGIN {
+    -- this is the BEGIN block, which is executed once at the beginning
+    -- where we typically initialize variables
+    running_total = 0;
+    grand_total = 0;
+    amount_array = {};
+    csv_indexed = qsv_autoindex();
+
+    us_states_lookup_headers = qsv_register_lookup("us_states", "us-states-lookup.csv")
+
+    -- note how we use the qsv_log function to log to the qsv log file
+    qsv_log("debug", " _INDEX:", _INDEX, " _ROWCOUNT:", _ROWCOUNT, " csv_indexed:", csv_indexed)
+    qsv_log("debug", "us_states_lookup_headers:", us_states_lookup_headers)
+    qsv_log("debug", "us_states lookup table:", us_states)
+    qsv_log("debug", "NY Capital:", us_states["NY"]["Capital"], " can be also: ", us_states.NY.Capital)
+    -- start from the end of the CSV file, set _INDEX to _LASTROW
+    _INDEX = _LASTROW;
+}!
+
+
+----------------------------------------------------------------------------
+-- this is the MAIN script, which is executed for the row specified by _INDEX
+-- As we are doing random access, to exit this loop, we need to set 
+-- _INDEX to less than zero or greater than _LASTROW
+
+amount_with_nytax = Amount + Amount * (us_states.NY["Sales Tax (2023)"] / 100);
+amount_array[_INDEX] = amount_with_nytax;
+running_total = running_total + amount_with_nytax;
+
+qsv_log("warn", "logging from Luau script! running_total:", running_total, " _INDEX:", _INDEX)
+
+-- we modify _INDEX to do random access on the CSV file, in this case going backwards
+-- the MAIN script ends when _INDEX is less than zero or greater than _LASTROW
+_INDEX = _INDEX - 1;
+
+-- running_total is the value we "map" to the "Running Total" column of each row
+return running_total;
+
+
+----------------------------------------------------------------------------
+END {
+    -- and this is the END block, which is executed once at the end
+    -- note how we use the _ROWCOUNT special variable to get the number of rows
+    min_amount = math.min(unpack(amount_array));
+    max_amount = math.max(unpack(amount_array));
+    grand_total = running_total;
+    return ("Min/Max: " .. min_amount .. "/" .. max_amount ..
+        " Grand total of " .. _ROWCOUNT .. " rows: " .. grand_total);
+}!
+"#.replace("us-states-lookup.csv", &lookup_file).as_str(),
+    );
+
+    let mut cmd = wrk.command("luau");
+    cmd.arg("map")
+        .arg("Running Total")
+        .arg("-x")
+        .arg("file:testlookup.luau")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["letter", "Amount", "Running Total"],
+        svec!["d", "7", "7.28"],
+        svec!["c", "72", "82.16"],
+        svec!["b", "24", "107.12"],
+        svec!["a", "13", "120.64"],
+    ];
+    assert_eq!(got, expected);
+
+    let end = wrk.output_stderr(&mut cmd);
+    let expected_end = "Min/Max: 7.28/74.88 Grand total of 4 rows: 120.64\n".to_string();
+    assert_eq!(end, expected_end);
+
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
 fn luau_qsv_break() {
     let wrk = Workdir::new("luau_qsv_break");
     wrk.create(
