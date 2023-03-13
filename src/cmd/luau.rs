@@ -346,7 +346,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let globals = luau.globals();
 
-    setup_helpers(&luau, args.flag_delimiter.clone())?;
+    setup_helpers(&luau, args.flag_delimiter)?;
 
     if index_file_used {
         random_acess_mode(
