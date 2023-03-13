@@ -410,8 +410,7 @@ END {
     min_amount = math.min(unpack(amount_array));
     max_amount = math.max(unpack(amount_array));
     grand_total = running_total;
-    return ("Min/Max: " .. min_amount .. "/" .. max_amount ..
-        " Grand total of " .. _ROWCOUNT .. " rows: " .. grand_total);
+    return `Min/Max: {min_amount}/{max_amount} Grand total of {_ROWCOUNT} rows: {grand_total}`;
 }!
 "#);
 
@@ -921,8 +920,7 @@ END {
     -- note how we use the _ROWCOUNT special variable to get the number of rows
     min_amount = math.min(unpack(amount_array));
     max_amount = math.max(unpack(amount_array));
-    return ("Min/Max: " .. min_amount .. "/" .. max_amount ..
-       " Grand total of " .. _ROWCOUNT .. " rows: " .. grand_total);
+    return `Min/Max: {min_amount}/{max_amount} Grand total of {_ROWCOUNT} rows: {grand_total}`;
 }!
 "#,
     );
