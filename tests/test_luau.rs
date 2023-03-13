@@ -337,7 +337,29 @@ fn luau_register_lookup_table() {
         ],
     );
 
-    let lookup_file = wrk.load_test_file("us-states-lookup.csv");
+    wrk.create(
+        "us-states-lookup.csv",
+        vec![
+            svec![
+                "Abbreviation",
+                "Name",
+                "Capital",
+                "Population (2019)",
+                "area (square miles)",
+                "Sales Tax (2023)"
+            ],
+            svec!["NJ", "New Jersey", "Trenton", "8,882,190", "8,723", "7"],
+            svec![
+                "NM",
+                "New Mexico",
+                "Santa Fe",
+                "2,096,829",
+                "121,590",
+                "5.13"
+            ],
+            svec!["NY", "New York", "Albany", "19,453,561", "54,555", "4"],
+        ],
+    );
 
     wrk.create_from_string(
         "testlookup.luau",
@@ -391,8 +413,7 @@ END {
     return ("Min/Max: " .. min_amount .. "/" .. max_amount ..
         " Grand total of " .. _ROWCOUNT .. " rows: " .. grand_total);
 }!
-"#.replace("us-states-lookup.csv", &lookup_file).as_str(),
-    );
+"#);
 
     let mut cmd = wrk.command("luau");
     cmd.arg("map")
