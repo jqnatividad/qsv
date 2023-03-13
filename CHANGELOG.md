@@ -6,6 +6,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.92.0] - 2023-03-13
+
+### Added
+* `excel`: added option to specify range to extract by @EricSoroos in https://github.com/jqnatividad/qsv/pull/843
+* `luau`: added --remap option. This allows the user to only map specified columns to the output CSV https://github.com/jqnatividad/qsv/pull/841
+* `luau`: added several new helper functions:
+  * `qsv_skip`: skips writing the current record to the output CSV https://github.com/jqnatividad/qsv/pull/854
+  * `qsv_break`: stops processing the current CSV file https://github.com/jqnatividad/qsv/pull/846
+  * `qsv_insertrecord`: inserts a new record to the output CSV https://github.com/jqnatividad/qsv/pull/845
+  * `qsv_register_lookup`: loads a CSV that can be used as a lookup table in Luau https://github.com/jqnatividad/qsv/commit/38e7b7eb264d4b43b7f3039696ad918238f0a4c6
+
+### Changed
+* `luau`: reorganized code for readability/maintainability https://github.com/jqnatividad/qsv/pull/846
+* `foreach`: tweak usage text to say it works with shell commands, not just the bash shell https://github.com/jqnatividad/qsv/commit/78851b33e8482c1961e97c17c95ea316950355fd
+* `split`: added deeplink to examples/tests https://github.com/jqnatividad/qsv/commit/6f293b853b74505b7769e2972e7bc358506db34e
+* `select`: added deeplink to examples/tests https://github.com/jqnatividad/qsv/commit/72fa0942c5954b48236b6d137a8347e89e2f097c
+* Switch to qsv-optimized fork of docopt.rs - [qsv_docopt](https://github.com/jqnatividad/docopt.rs#qsv_docopt). As [docopt.rs](https://github.com/docopt/docopt.rs) is unmaintained and docopt parsing is an integral part of qsv as we embed each command's usage text in a way that cannot be done by either [clap](http://docs.rs/clap/) or [structopt](http://docs.rs/structopt/) https://github.com/jqnatividad/qsv/pull/852
+* Bump embedded Luau from [0.566](https://github.com/Roblox/luau/releases/tag/0.566) to [0.567](https://github.com/Roblox/luau/releases/tag/0.567) https://github.com/jqnatividad/qsv/commit/d624e840802b51aae59cf5db0923f8f2605426c5
+* Bump csv from 1.2.0 to 1.2.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/839
+* Bump serde from 1.0.152 to 1.0.153 by @dependabot in https://github.com/jqnatividad/qsv/pull/842
+* Bump serde from 1.0.153 to 1.0.154 by @dependabot in https://github.com/jqnatividad/qsv/pull/844
+* Bump rust_decimal from 1.28.1 to 1.29.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/853
+* start using new crates.io sparse protocol
+* applied select clippy lint recommendations
+* cargo update bump several other dependencies
+* pin Rust nightly to 2021-03-12
+
+### Fixed
+* `stats`: fix stdin regression https://github.com/jqnatividad/qsv/pull/851
+* `excel`: Fix missing integer headers in excel transform. by @EricSoroos in https://github.com/jqnatividad/qsv/pull/840
+* `luau`: fix & improve comment remover https://github.com/jqnatividad/qsv/pull/845
+
+
+## New Contributors
+* @EricSoroos made their first contribution in https://github.com/jqnatividad/qsv/pull/840
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.91.0...0.92.0
+
 ## [0.91.0] - 2023-03-05
 
 ### Added
