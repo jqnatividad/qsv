@@ -271,20 +271,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     main_script.push_str(luau_script.trim());
     debug!("MAIN script: {main_script:?}");
 
-    // setup LUAU_PATH; create a temporary directory and add it to LUAU_PATH and copy date.lua
-    // there so qsv luau users can just `local date = require "date"` in their scripts,
-    // as well as load other lua/luau libraries as needed.
-    let luadate_library = include_bytes!("../../resources/luau/vendor/luadate/date.lua");
-    let Ok(temp_dir) = tempfile::tempdir() else {
-        return fail!("Cannot create temporary directory to copy luadate library to.");
-    };
-    let luadate_path = temp_dir.path().join("date.lua");
-    fs::write(luadate_path.clone(), luadate_library)?;
-    let mut luau_path = args.flag_luau_path.clone();
-    luau_path.push_str(&format!(";{}", luadate_path.as_os_str().to_string_lossy()));
-    env::set_var("LUAU_PATH", luau_path.clone());
-    info!(r#"set LUAU_PATH to "{luau_path}""#);
-
     // check if a BEGIN script was specified
     let begin_script = if let Some(ref begin) = args.flag_begin {
         let discrete_begin = if let Some(begin_filepath) = begin.strip_prefix("file:") {
@@ -327,6 +313,48 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     index_file_used =
         index_file_used || end_script.contains("_INDEX") || end_script.contains("_LASTROW");
     debug!("END script: {end_script:?}");
+
+    // check if "require" was used in the scripts. If so, we need to setup LUAU_PATH;
+    // we check for "require \"" so we don't trigger on just the literal "require"
+    // which is a fairly common word (e.g. requirements, required, requires, etc.)
+    let require_used = main_script.contains("require \"")
+        || begin_script.contains("require \"")
+        || end_script.contains("require \"");
+
+    // if require_used, create a temporary directory and copy date.lua there.
+    // we do this outside the "require_used" setup below as the tempdir
+    // needs to persist until the end of the program.
+    let temp_dir = if require_used {
+        match tempfile::tempdir() {
+            Ok(temp_dir) => {
+                let temp_dir_path = temp_dir.into_path();
+                Some(temp_dir_path)
+            }
+            Err(e) => {
+                return fail_clierror!(
+                    "Cannot create temporary directory to copy luadate library to: {e}"
+                )
+            }
+        }
+    } else {
+        None
+    };
+
+    // "require " was used in the scripts, so we need to prepare luadate and setup LUAU_PATH;
+    if require_used {
+        // prepare luadate so users can just `local date = require "date"` in their scripts
+        let luadate_library = include_bytes!("../../resources/luau/vendor/luadate/date.lua");
+        // safety: safe to unwrap as we just created the tempdir above
+        let tdir_path = temp_dir.clone().unwrap();
+        let luadate_path = tdir_path.join("date.lua");
+        fs::write(luadate_path.clone(), luadate_library)?;
+
+        // set LUAU_PATH to include the luadate library
+        let mut luau_path = args.flag_luau_path.clone();
+        luau_path.push_str(&format!(";{}", luadate_path.as_os_str().to_string_lossy()));
+        env::set_var("LUAU_PATH", luau_path.clone());
+        info!(r#"set LUAU_PATH to "{luau_path}""#);
+    }
 
     // -------- setup Luau environment --------
     let luau = Lua::new();
@@ -375,6 +403,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             &end_script,
             args.flag_max_errors,
         )?;
+    }
+
+    if let Some(temp_dir) = temp_dir {
+        // delete the tempdir
+        fs::remove_dir_all(temp_dir)?;
     }
 
     Ok(())
