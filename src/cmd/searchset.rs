@@ -79,7 +79,7 @@ Common options:
 use std::{
     env,
     fs::File,
-    io::{self, prelude::*, BufReader},
+    io::{self, BufRead, BufReader},
 };
 
 #[cfg(any(feature = "full", feature = "lite"))]
