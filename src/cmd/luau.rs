@@ -249,9 +249,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut embedded_end_script = String::new();
     let mut main_script = luau_script.clone();
 
-    // remove comments
-    main_script = comment_remover_re.replace_all(&main_script, "").to_string();
-
     if let Some(caps) = begin_re.captures(&luau_script) {
         embedded_begin_script = caps["begin_block"].to_string();
         let begin_block_replace = format!("BEGIN {{{embedded_begin_script}}}!");
