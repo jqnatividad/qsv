@@ -45,7 +45,7 @@ Common options:
 use std::cmp;
 
 use rand::{rngs::StdRng, seq::SliceRandom, SeedableRng};
-use rayon::prelude::*;
+use rayon::slice::ParallelSliceMut;
 use serde::Deserialize;
 use simdutf8::basic::from_utf8;
 

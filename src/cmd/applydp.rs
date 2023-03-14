@@ -198,7 +198,10 @@ use dynfmt::Format;
 use log::debug;
 use once_cell::sync::OnceCell;
 use qsv_dateparser::parse_with_preference;
-use rayon::prelude::*;
+use rayon::{
+    iter::{IndexedParallelIterator, ParallelIterator},
+    prelude::IntoParallelRefIterator,
+};
 use regex::Regex;
 use serde::Deserialize;
 use strum_macros::EnumString;
