@@ -346,9 +346,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         None
     };
 
-    // "require " was used in the scripts, so we need to prepare luadate and setup LUAU_PATH;
+    // "require " was used in the scripts, so we need to prepare luadate library and setup LUAU_PATH
     if require_used {
-        // prepare luadate so users can just `local date = require "date"` in their scripts
+        // prepare luadate so users can just use 'date = require "date"' in their scripts
         let luadate_library = include_bytes!("../../resources/luau/vendor/luadate/date.lua");
         // safety: safe to unwrap as we just created the tempdir above
         let tdir_path = temp_dir.clone().unwrap();
