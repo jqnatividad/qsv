@@ -506,8 +506,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     DataType::Error(ref _e) => String::new(),
                     DataType::String(ref s) => s.to_string(),
                     DataType::Int(ref i) => i.to_string(),
-                    DataType::DateTime(ref f) => f.to_string(),
-                    DataType::Float(ref f) => f.to_string(),
+                    DataType::DateTime(ref f) | DataType::Float(ref f) => f.to_string(),
                     DataType::Bool(ref b) => b.to_string(),
                 };
                 record.push_field(&col_name);
