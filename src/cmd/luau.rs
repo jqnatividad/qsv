@@ -216,7 +216,11 @@ impl From<mlua::Error> for CliError {
 
 static QSV_BREAK: AtomicBool = AtomicBool::new(false);
 static QSV_SKIP: AtomicBool = AtomicBool::new(false);
+
 // there are 3 stages: 1-BEGIN, 2-MAIN, 3-END
+const BEGIN_STAGE: i8 = 1;
+const MAIN_STAGE: i8 = 2;
+const END_STAGE: i8 = 3;
 static LUAU_STAGE: AtomicI8 = AtomicI8::new(0);
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -467,7 +471,7 @@ fn sequential_mode(
     globals.set("_ROWCOUNT", 0)?;
     if !begin_script.is_empty() {
         info!("Compiling and executing BEGIN script.");
-        LUAU_STAGE.store(1, Ordering::Relaxed);
+        LUAU_STAGE.store(BEGIN_STAGE, Ordering::Relaxed);
 
         let begin_bytecode = luau_compiler.compile(begin_script);
         if let Err(e) = luau
@@ -521,7 +525,7 @@ fn sequential_mode(
     let mut idx = 0_u64;
     let mut error_count = 0_usize;
 
-    LUAU_STAGE.store(2, Ordering::Relaxed);
+    LUAU_STAGE.store(MAIN_STAGE, Ordering::Relaxed);
 
     // main loop
     // without an index, we stream the CSV in sequential order
@@ -640,7 +644,7 @@ fn sequential_mode(
         // should make for more readable END scripts.
         // Also, _ROWCOUNT is zero during the main script, and only set
         // to _IDX during the END script.
-        LUAU_STAGE.store(3, Ordering::Relaxed);
+        LUAU_STAGE.store(END_STAGE, Ordering::Relaxed);
         globals.set("_ROWCOUNT", idx)?;
 
         info!("Compiling and executing END script. _ROWCOUNT: {idx}");
@@ -762,7 +766,7 @@ fn random_acess_mode(
 
     if !begin_script.is_empty() {
         info!("Compiling and executing BEGIN script.");
-        LUAU_STAGE.store(1, Ordering::Relaxed);
+        LUAU_STAGE.store(BEGIN_STAGE, Ordering::Relaxed);
 
         let begin_bytecode = luau_compiler.compile(begin_script);
         if let Err(e) = luau
@@ -815,7 +819,7 @@ fn random_acess_mode(
     let mut record = csv::StringRecord::new();
     let mut error_count = 0_usize;
 
-    LUAU_STAGE.store(2, Ordering::Relaxed);
+    LUAU_STAGE.store(MAIN_STAGE, Ordering::Relaxed);
 
     // main loop - here we use an indexed file reader to implement random access mode,
     // seeking to the next record to read by looking at _INDEX special var
@@ -931,7 +935,7 @@ fn random_acess_mode(
 
     if !end_script.is_empty() {
         info!("Compiling and executing END script. _ROWCOUNT: {row_count}");
-        LUAU_STAGE.store(3, Ordering::Relaxed);
+        LUAU_STAGE.store(END_STAGE, Ordering::Relaxed);
 
         let end_bytecode = luau_compiler.compile(end_script);
         let end_value: Value = match luau
@@ -1134,6 +1138,9 @@ fn create_index(arg_input: &Option<String>) -> Result<bool, CliError> {
     Ok(true)
 }
 
+// -----------------------------------------------------------------------------
+// HELPER FUNCTIONS
+// -----------------------------------------------------------------------------
 // setup_helpers sets up some helper functions that can be called from Luau scripts
 fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliError> {
     // this is a helper function that can be called from Luau scripts
@@ -1143,9 +1150,9 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
         let mut log_msg = {
             // at which stage are we logging?
             match LUAU_STAGE.load(Ordering::Relaxed) {
-                1 => "BEGIN: ".to_string(),
-                2 => "MAIN: ".to_string(),
-                3 => "END: ".to_string(),
+                BEGIN_STAGE => "BEGIN: ".to_string(),
+                MAIN_STAGE => "MAIN: ".to_string(),
+                END_STAGE => "END: ".to_string(),
                 _ => String::new(),
             }
         };
@@ -1198,7 +1205,7 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
     // qsv_break should only be called from scripts that are processing CSVs in sequential mode.
     // When in random access mode, set _INDEX to -1 or a value greater than _LASTROW instead
     let qsv_break = luau.create_function(|luau, mut args: mlua::MultiValue| {
-        if LUAU_STAGE.load(Ordering::Relaxed) == 3 {
+        if LUAU_STAGE.load(Ordering::Relaxed) == END_STAGE {
             return Err(mlua::Error::RuntimeError(
                 "qsv_break() can only be called from the BEGIN and MAIN scripts.".to_string(),
             ));
@@ -1226,7 +1233,7 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
     // this is a helper function that can be called from the MAIN script
     // to SKIP writing the output of that row.
     let qsv_skip = luau.create_function(|_, ()| {
-        if LUAU_STAGE.load(Ordering::Relaxed) != 2 {
+        if LUAU_STAGE.load(Ordering::Relaxed) != MAIN_STAGE {
             return Err(mlua::Error::RuntimeError(
                 "qsv_skip() can only be called from the MAIN script.".to_string(),
             ));
@@ -1245,7 +1252,7 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
     // Calling this will also initialize the _ROWCOUNT and _LASTROW special variables
     // so that the BEGIN script can use them
     let qsv_autoindex = luau.create_function(|_, ()| {
-        if LUAU_STAGE.load(Ordering::Relaxed) != 1 {
+        if LUAU_STAGE.load(Ordering::Relaxed) != BEGIN_STAGE {
             return Err(mlua::Error::RuntimeError(
                 "qsv_autoindex() can only be called from the BEGIN script.".to_string(),
             ));
@@ -1289,7 +1296,7 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
     let qsv_register_lookup = luau.create_function(move |luau, mut args: mlua::MultiValue| {
         let args_len = args.len().try_into().unwrap_or(10_i32);
 
-        if LUAU_STAGE.load(Ordering::Relaxed) != 1 {
+        if LUAU_STAGE.load(Ordering::Relaxed) != BEGIN_STAGE {
             return Err(mlua::Error::RuntimeError(
                 "qsv_register_lookup() can only be called from the BEGIN script.".to_string(),
             ));
