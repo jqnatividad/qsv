@@ -1048,7 +1048,7 @@ impl ColumnNameParser {
 }
 
 pub fn round_num(dec_f64: f64, places: u32) -> String {
-    use rust_decimal::prelude::*;
+    use rust_decimal::{Decimal, RoundingStrategy};
 
     // use from_f64_retain, so we have all the excess bits before rounding with
     // round_dp_with_strategy as from_f64 will prematurely round when it drops the excess bits

@@ -57,7 +57,10 @@ use std::{
     str,
 };
 
-use polars::{io::prelude::*, prelude::*};
+use polars::{
+    frame::hash_join::JoinType,
+    prelude::{CsvWriter, LazyCsvReader, LazyFrame, SerWriter},
+};
 use serde::Deserialize;
 
 use crate::{config::Delimiter, util, CliError, CliResult};
