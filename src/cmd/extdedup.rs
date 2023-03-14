@@ -34,7 +34,7 @@ Common options:
 
 use std::{
     fs,
-    io::{self, prelude::*, stdin, stdout},
+    io::{self, stdin, stdout, BufRead, Write},
 };
 
 use serde::Deserialize;
