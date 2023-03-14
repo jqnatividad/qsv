@@ -118,7 +118,11 @@ use std::fs;
 
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::{error, log_enabled, Level::Debug};
-use pyo3::{intern, prelude::*, types::PyDict};
+use pyo3::{
+    intern,
+    types::{PyDict, PyModule},
+    PyErr, PyResult, Python,
+};
 use serde::Deserialize;
 
 use crate::{
@@ -245,7 +249,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // we batch python operations so that the GILPool does not get very large
     // as we release the pool after each batch
     // loop exits when batch is empty.
-    // see https://pyo3.rs/v0.17.1/memory.html#gil-bound-memory for more info.
+    // see https://pyo3.rs/latest/memory.html#gil-bound-memory for more info.
     'batch_loop: loop {
         for _ in 0..args.flag_batch {
             match rdr.read_record(&mut batch_record) {
