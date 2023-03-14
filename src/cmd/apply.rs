@@ -346,7 +346,10 @@ use log::debug;
 use once_cell::sync::OnceCell;
 use qsv_currency::Currency;
 use qsv_dateparser::parse_with_preference;
-use rayon::prelude::*;
+use rayon::{
+    iter::{IndexedParallelIterator, ParallelIterator},
+    prelude::IntoParallelRefIterator,
+};
 use regex::Regex;
 use reverse_geocoder::{Locations, ReverseGeocoder};
 use serde::Deserialize;

@@ -53,7 +53,7 @@ Common options:
 use std::cmp;
 
 use csv::ByteRecord;
-use rayon::prelude::*;
+use rayon::slice::ParallelSliceMut;
 use serde::Deserialize;
 use simdutf8::basic::from_utf8;
 

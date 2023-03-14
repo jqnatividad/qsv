@@ -58,7 +58,10 @@ use itertools::Itertools;
 use jsonschema::{output::BasicOutput, paths::PathChunk, JSONSchema};
 use log::info;
 use once_cell::sync::OnceCell;
-use rayon::prelude::*;
+use rayon::{
+    iter::{IndexedParallelIterator, ParallelIterator},
+    prelude::IntoParallelRefIterator,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, value::Number, Map, Value};
 use simdutf8::basic::from_utf8;
