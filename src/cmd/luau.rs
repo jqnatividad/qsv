@@ -248,6 +248,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut embedded_begin_script = String::new();
     let mut embedded_end_script = String::new();
     let mut main_script = luau_script.clone();
+
+    // remove comments
+    main_script = comment_remover_re.replace_all(&main_script, "").to_string();
+
     if let Some(caps) = begin_re.captures(&luau_script) {
         embedded_begin_script = caps["begin_block"].to_string();
         let begin_block_replace = format!("BEGIN {{{embedded_begin_script}}}!");
@@ -268,7 +272,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     main_script.push_str(luau_script.trim());
-    main_script = comment_remover_re.replace_all(&main_script, "").to_string();
     debug!("MAIN script: {main_script:?}");
 
     // setup LUAU_PATH; create a temporary directory and add it to LUAU_PATH and copy date.lua
@@ -286,40 +289,43 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     info!(r#"set LUAU_PATH to "{luau_path}""#);
 
     // check if a BEGIN script was specified
-    let mut begin_script = if let Some(ref begin) = args.flag_begin {
-        if let Some(begin_filepath) = begin.strip_prefix("file:") {
+    let begin_script = if let Some(ref begin) = args.flag_begin {
+        let discrete_begin = if let Some(begin_filepath) = begin.strip_prefix("file:") {
             match fs::read_to_string(begin_filepath) {
                 Ok(begin) => begin,
                 Err(e) => return fail_clierror!("Cannot load Luau BEGIN script file: {e}"),
             }
         } else {
             begin.to_string()
-        }
+        };
+        comment_remover_re
+            .replace_all(&discrete_begin, "")
+            .to_string()
     } else {
         embedded_begin_script.trim().to_string()
     };
-    begin_script = comment_remover_re
-        .replace_all(&begin_script, "")
-        .to_string();
+
     // check if the BEGIN script uses _INDEX
     index_file_used =
         index_file_used || begin_script.contains("_INDEX") || begin_script.contains("_LASTROW");
     debug!("BEGIN script: {begin_script:?}");
 
     // check if an END script was specified
-    let mut end_script = if let Some(ref end) = args.flag_end {
-        if let Some(end_filepath) = end.strip_prefix("file:") {
+    let end_script = if let Some(ref end) = args.flag_end {
+        let discrete_end = if let Some(end_filepath) = end.strip_prefix("file:") {
             match fs::read_to_string(end_filepath) {
                 Ok(end) => end,
                 Err(e) => return fail_clierror!("Cannot load Luau END script file: {e}"),
             }
         } else {
             end.to_string()
-        }
+        };
+        comment_remover_re
+            .replace_all(&discrete_end, "")
+            .to_string()
     } else {
         embedded_end_script.trim().to_string()
     };
-    end_script = comment_remover_re.replace_all(&end_script, "").to_string();
     // check if the END script uses _INDEX
     index_file_used =
         index_file_used || end_script.contains("_INDEX") || end_script.contains("_LASTROW");
