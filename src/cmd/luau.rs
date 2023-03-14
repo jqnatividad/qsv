@@ -172,7 +172,7 @@ use std::{
     env, fs, io,
     io::Write,
     path::Path,
-    sync::atomic::{AtomicBool, Ordering},
+    sync::atomic::{AtomicBool, AtomicI8, Ordering},
 };
 
 use csv_index::RandomAccessSimple;
@@ -216,6 +216,8 @@ impl From<mlua::Error> for CliError {
 
 static QSV_BREAK: AtomicBool = AtomicBool::new(false);
 static QSV_SKIP: AtomicBool = AtomicBool::new(false);
+// there are 3 stages: 1-BEGIN, 2-MAIN, 3-END
+static LUAU_STAGE: AtomicI8 = AtomicI8::new(0);
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
@@ -465,6 +467,8 @@ fn sequential_mode(
     globals.set("_ROWCOUNT", 0)?;
     if !begin_script.is_empty() {
         info!("Compiling and executing BEGIN script.");
+        LUAU_STAGE.store(1, Ordering::Relaxed);
+
         let begin_bytecode = luau_compiler.compile(begin_script);
         if let Err(e) = luau
             .load(&begin_bytecode)
@@ -489,6 +493,12 @@ fn sequential_mode(
         headers_count,
         &mut wtr,
     )?;
+    if QSV_BREAK.load(Ordering::Relaxed) {
+        let qsv_break_msg: String = globals.get("_QSV_BREAK_MSG")?;
+        eprintln!("{qsv_break_msg}");
+        return Ok(());
+    }
+
     // we clear the table so we don't falsely detect a call to qsv_insertrecord()
     // in the MAIN/END scripts
     luau.globals().set("_QSV_INSERTRECORD_TBL", Value::Nil)?;
@@ -506,11 +516,12 @@ fn sequential_mode(
     }
 
     let error_result: Value = luau.load("return \"<ERROR>\";").eval()?;
-    let mut error_flag;
     let main_bytecode = luau_compiler.compile(main_script);
     let mut record = csv::StringRecord::new();
     let mut idx = 0_u64;
     let mut error_count = 0_usize;
+
+    LUAU_STAGE.store(2, Ordering::Relaxed);
 
     // main loop
     // without an index, we stream the CSV in sequential order
@@ -546,7 +557,6 @@ fn sequential_mode(
             }
         }
 
-        error_flag = false;
         let computed_value: Value = match luau
             .load(&main_bytecode)
             .set_mode(mlua::ChunkMode::Binary)
@@ -554,7 +564,6 @@ fn sequential_mode(
         {
             Ok(computed) => computed,
             Err(e) => {
-                error_flag = true;
                 error_count += 1;
                 log::error!("_IDX: {idx} error({error_count}): {e:?}");
                 error_result.clone()
@@ -603,7 +612,7 @@ fn sequential_mode(
                 wtr.write_record(&record)?;
             }
         } else if args.cmd_filter {
-            let must_keep_row = if error_flag {
+            let must_keep_row = if error_count > 0 {
                 true
             } else {
                 match computed_value {
@@ -631,6 +640,7 @@ fn sequential_mode(
         // should make for more readable END scripts.
         // Also, _ROWCOUNT is zero during the main script, and only set
         // to _IDX during the END script.
+        LUAU_STAGE.store(3, Ordering::Relaxed);
         globals.set("_ROWCOUNT", idx)?;
 
         info!("Compiling and executing END script. _ROWCOUNT: {idx}");
@@ -665,6 +675,7 @@ fn sequential_mode(
         };
         winfo!("{end_string}");
     }
+
     wtr.flush()?;
     #[cfg(any(feature = "full", feature = "lite"))]
     if show_progress {
@@ -751,6 +762,8 @@ fn random_acess_mode(
 
     if !begin_script.is_empty() {
         info!("Compiling and executing BEGIN script.");
+        LUAU_STAGE.store(1, Ordering::Relaxed);
+
         let begin_bytecode = luau_compiler.compile(begin_script);
         if let Err(e) = luau
             .load(&begin_bytecode)
@@ -775,6 +788,12 @@ fn random_acess_mode(
         headers_count,
         &mut wtr,
     )?;
+    if QSV_BREAK.load(Ordering::Relaxed) {
+        let qsv_break_msg: String = globals.get("_QSV_BREAK_MSG")?;
+        eprintln!("{qsv_break_msg}");
+        return Ok(());
+    }
+
     // we clear the table so we don't falsely detect a call to qsv_insertrecord()
     // in the MAIN/END scripts
     luau.globals().set("_QSV_INSERTRECORD_TBL", Value::Nil)?;
@@ -791,11 +810,12 @@ fn random_acess_mode(
     idx_file.seek(curr_record)?;
 
     let error_result: Value = luau.load("return \"<ERROR>\";").eval()?;
-    let mut error_flag;
 
     let main_bytecode = luau_compiler.compile(main_script);
     let mut record = csv::StringRecord::new();
     let mut error_count = 0_usize;
+
+    LUAU_STAGE.store(2, Ordering::Relaxed);
 
     // main loop - here we use an indexed file reader to implement random access mode,
     // seeking to the next record to read by looking at _INDEX special var
@@ -823,7 +843,6 @@ fn random_acess_mode(
             }
         }
 
-        error_flag = false;
         let computed_value: Value = match luau
             .load(&main_bytecode)
             .set_mode(mlua::ChunkMode::Binary)
@@ -831,7 +850,6 @@ fn random_acess_mode(
         {
             Ok(computed) => computed,
             Err(e) => {
-                error_flag = true;
                 error_count += 1;
                 log::error!("_IDX: {curr_record} error({error_count}): {e:?}");
                 error_result.clone()
@@ -878,7 +896,7 @@ fn random_acess_mode(
                 wtr.write_record(&record)?;
             }
         } else if args.cmd_filter {
-            let must_keep_row = if error_flag {
+            let must_keep_row = if error_count > 0 {
                 true
             } else {
                 match computed_value {
@@ -913,6 +931,8 @@ fn random_acess_mode(
 
     if !end_script.is_empty() {
         info!("Compiling and executing END script. _ROWCOUNT: {row_count}");
+        LUAU_STAGE.store(3, Ordering::Relaxed);
+
         let end_bytecode = luau_compiler.compile(end_script);
         let end_value: Value = match luau
             .load(&end_bytecode)
@@ -944,6 +964,7 @@ fn random_acess_mode(
         };
         winfo!("{end_string}");
     }
+
     wtr.flush()?;
     if error_count > 0 {
         return fail_clierror!("Luau errors encountered: {error_count}");
@@ -1119,7 +1140,15 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
     // to send log messages to the logfile
     // the first parameter is the log level, and the following parameters are concatenated
     let qsv_log = luau.create_function(|luau, mut args: mlua::MultiValue| {
-        let mut log_msg = String::with_capacity(20);
+        let mut log_msg = {
+            // at which stage are we logging?
+            match LUAU_STAGE.load(Ordering::Relaxed) {
+                1 => "BEGIN: ".to_string(),
+                2 => "MAIN: ".to_string(),
+                3 => "END: ".to_string(),
+                _ => String::new(),
+            }
+        };
         let mut idx = 0_u8;
         let mut log_level = String::new();
         while let Some(val) = args.pop_front() {
@@ -1163,12 +1192,18 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
     })?;
     luau.globals().set("qsv_coalesce", qsv_coalesce)?;
 
-    // this is a helper function that can be called from Luau scripts
+    // this is a helper function that can be called from the BEGIN and MAIN script
     // to stop processing. All the parameters are concatenated and returned as a string.
     // The string is also stored in the global variable _QSV_BREAK_MSG.
     // qsv_break should only be called from scripts that are processing CSVs in sequential mode.
     // When in random access mode, set _INDEX to -1 or a value greater than _LASTROW instead
     let qsv_break = luau.create_function(|luau, mut args: mlua::MultiValue| {
+        if LUAU_STAGE.load(Ordering::Relaxed) == 3 {
+            return Err(mlua::Error::RuntimeError(
+                "qsv_break() can only be called from the BEGIN and MAIN scripts.".to_string(),
+            ));
+        }
+
         let mut break_msg = String::with_capacity(20);
         let mut idx = 0_u8;
         while let Some(val) = args.pop_front() {
@@ -1188,9 +1223,15 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
     })?;
     luau.globals().set("qsv_break", qsv_break)?;
 
-    // this is a helper function that can be called from Luau scripts
+    // this is a helper function that can be called from the MAIN script
     // to SKIP writing the output of that row.
     let qsv_skip = luau.create_function(|_, ()| {
+        if LUAU_STAGE.load(Ordering::Relaxed) != 2 {
+            return Err(mlua::Error::RuntimeError(
+                "qsv_skip() can only be called from the MAIN script.".to_string(),
+            ));
+        }
+
         QSV_SKIP.store(true, Ordering::Relaxed);
 
         Ok(())
@@ -1203,7 +1244,15 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
     // the BEGIN script.
     // Calling this will also initialize the _ROWCOUNT and _LASTROW special variables
     // so that the BEGIN script can use them
-    let qsv_autoindex = luau.create_function(|_, ()| Ok(()))?;
+    let qsv_autoindex = luau.create_function(|_, ()| {
+        if LUAU_STAGE.load(Ordering::Relaxed) != 1 {
+            return Err(mlua::Error::RuntimeError(
+                "qsv_autoindex() can only be called from the BEGIN script.".to_string(),
+            ));
+        }
+
+        Ok(())
+    })?;
     luau.globals().set("qsv_autoindex", qsv_autoindex)?;
 
     // this is a helper function that can be called from the BEGIN, MAIN & END scripts to insert a
@@ -1240,9 +1289,15 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
     let qsv_register_lookup = luau.create_function(move |luau, mut args: mlua::MultiValue| {
         let args_len = args.len().try_into().unwrap_or(10_i32);
 
+        if LUAU_STAGE.load(Ordering::Relaxed) != 1 {
+            return Err(mlua::Error::RuntimeError(
+                "qsv_register_lookup() can only be called from the BEGIN script.".to_string(),
+            ));
+        }
+
         if args_len != 2 {
             return Err(mlua::Error::RuntimeError(
-                "qsv_register_lookup: two arguments expected - lookup_name & lookup_table_path"
+                "qsv_register_lookup() requires two arguments - lookup_name & lookup_table_path"
                     .to_string(),
             ));
         }
@@ -1266,7 +1321,7 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
             Ok(headers) => headers.clone(),
             Err(e) => {
                 return Err(mlua::Error::RuntimeError(format!(
-                    "qsv_register_lookup: cannot read headers of lookup table - {e}"
+                    "qsv_register_lookup() cannot read headers of lookup table: {e}"
                 )));
             }
         };
