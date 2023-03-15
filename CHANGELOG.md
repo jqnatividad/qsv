@@ -6,6 +6,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.93.0] - 2023-03-15
+
+### Added
+* `luau`: qsv_register_lookup helper function now works with CSVs on URLs https://github.com/jqnatividad/qsv/pull/860
+* `luau`: added support for "dathere://" lookup scheme, allowing users to conveniently load oft-used lookup tables from https://github.com/dathere/qsv-lookup-tables https://github.com/jqnatividad/qsv/pull/861
+* `luau`: added detailed API definitions for Luau Helper Functions https://github.com/jqnatividad/qsv/blob/605b38b5636382d45f96d3d9d3c404bb20efaf15/src/cmd/luau.rs#L1156-L1497
+* `validate`: added --timeout option when downloading JSON Schemas https://github.com/jqnatividad/qsv/commit/605b38b5636382d45f96d3d9d3c404bb20efaf15
+
+### Changed
+* remove all glob imports https://github.com/jqnatividad/qsv/pull/857 and https://github.com/jqnatividad/qsv/pull/858
+* qsvdp ([Datapusher+](https://github.com/dathere/datapusher-plus#datapusher)-optimized qsv binary variant) now has an embedded `luau` interpreter https://github.com/jqnatividad/qsv/pull/859
+* `validate`: JSON Schema url now case-insensitive https://github.com/jqnatividad/qsv/commit/3123dc6da30370cae88c9e4bb9d387fed3d36507
+* Bump serde from 1.0.155 to 1.0.156 by @dependabot in https://github.com/jqnatividad/qsv/pull/862
+* applied select clippy lint recommendations
+* cargo update bump several indirect dependencies
+* pin Rust nightly to 2023-03-14
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.92.0...0.93.0
+
 ## [0.92.0] - 2023-03-13
 
 ### Added
