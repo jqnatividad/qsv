@@ -890,7 +890,7 @@ mod tests_for_schema_validation {
 
 fn load_json(uri: &str) -> Result<String, String> {
     let json_string = match uri {
-        url if url.starts_with("http") => {
+        url if url.to_lowercase().starts_with("http") => {
             use reqwest::blocking::Client;
             let client = match Client::builder()
                 .user_agent(util::DEFAULT_USER_AGENT)
