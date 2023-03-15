@@ -1342,7 +1342,9 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
     //       lookup_table_uri: The name of the CSV file to load. Note that it will use
     //                         the luau --delimiter option if specified.
     //                         This can be a file on the filesystem or on at a URL
-    //                         ("http" and "https" schemes supported)
+    //                         ("http", "https" and "dathere" schemes supported).
+    //                         The dathere scheme is used to access lookup-ready CSVs
+    //                         on https://github.com/dathere/qsv-lookup-tables.
     //                returns: Luau table of header names excluding the first header,
     //                         or Luau runtime error if the CSV could not be loaded
     //
@@ -1366,6 +1368,11 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
         let lookup_name_str = lookup_name.as_str().unwrap_or_default();
         let lookup_table_uri = luau.from_value::<serde_json::Value>(args.pop_front().unwrap())?;
         let mut lookup_table_uri_string = lookup_table_uri.as_str().unwrap_or_default().to_string();
+
+        // if the lookup_table_uri starts with "dathere://", prepend the repo URL to the lookup table
+        if let Some(lookup_url) = lookup_table_uri_string.strip_prefix("dathere://") {
+            lookup_table_uri_string = format!("https://raw.githubusercontent.com/dathere/qsv-lookup-tables/main/lookup-tables/{lookup_url}");
+        }
 
         let lookup_on_url = lookup_table_uri_string.to_lowercase().starts_with("http");
 
