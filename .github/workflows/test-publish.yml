@@ -30,7 +30,7 @@ jobs:
             use-cross: false
             addl-build-args: --features=apply,generate,fetch,foreach,self_update
             default-features:
-            addl-qsvdp-features:
+            addl-qsvdp-features: luau
           - os: ubuntu-latest
             os-name: linux
             target: i686-unknown-linux-gnu
