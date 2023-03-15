@@ -45,7 +45,7 @@ pub mod join;
 pub mod joinp;
 #[cfg(any(feature = "full", feature = "lite"))]
 pub mod jsonl;
-#[cfg(all(feature = "luau", feature = "full"))]
+#[cfg(feature = "luau")]
 pub mod luau;
 #[cfg(any(feature = "full", feature = "lite"))]
 pub mod partition;
