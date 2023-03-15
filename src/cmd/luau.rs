@@ -1146,6 +1146,14 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
     // this is a helper function that can be called from Luau scripts
     // to send log messages to the logfile
     // the first parameter is the log level, and the following parameters are concatenated
+    //
+    //   qsv_log(log_level, arg1, .., argN)
+    //       log_level: string, one of "info", "warn", "error", "debug", "trace".
+    //                  if invalid log_level is provided, "info" is assumed.
+    //      arg1, argN: Up to 255 arguments to be concatenated and logged as one string.
+    //         returns: Luau table of header names excluding the first header,
+    //                  or Luau runtime error if the lookup table could not be loaded
+    //
     let qsv_log = luau.create_function(|luau, mut args: mlua::MultiValue| {
         let mut log_msg = {
             // at which stage are we logging?
@@ -1187,6 +1195,11 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
 
     // this is a helper function that can be called from Luau scripts
     // to coalesce - return the first non-null value in a list
+    //
+    //   qsv_coalesce(arg1, .., argN)
+    //      returns: first non-null value of the arguments
+    //               or an empty string if all arguments are null
+    //
     let qsv_coalesce = luau.create_function(|luau, mut args: mlua::MultiValue| {
         while let Some(val) = args.pop_front() {
             let val = luau.from_value::<serde_json::Value>(val)?;
@@ -1204,6 +1217,12 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
     // The string is also stored in the global variable _QSV_BREAK_MSG.
     // qsv_break should only be called from scripts that are processing CSVs in sequential mode.
     // When in random access mode, set _INDEX to -1 or a value greater than _LASTROW instead
+    //
+    //   qsv_break(arg1, .., argN)
+    //      arg1, argN: up to 254 arguments
+    //         returns: concatenated args as one string or an empty string if no args are passed.
+    //                  Luau runtime error if called from END script
+    //
     let qsv_break = luau.create_function(|luau, mut args: mlua::MultiValue| {
         if LUAU_STAGE.load(Ordering::Relaxed) == END_STAGE {
             return Err(mlua::Error::RuntimeError(
@@ -1211,7 +1230,7 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
             ));
         }
 
-        let mut break_msg = String::with_capacity(20);
+        let mut break_msg = String::new();
         let mut idx = 0_u8;
         while let Some(val) = args.pop_front() {
             let val = luau.from_value::<serde_json::Value>(val)?;
@@ -1232,6 +1251,11 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
 
     // this is a helper function that can be called from the MAIN script
     // to SKIP writing the output of that row.
+    //
+    //   qsv_skip()
+    //      returns: None
+    //               or Luau runtime error if called from BEGIN or END scripts
+    //
     let qsv_skip = luau.create_function(|_, ()| {
         if LUAU_STAGE.load(Ordering::Relaxed) != MAIN_STAGE {
             return Err(mlua::Error::RuntimeError(
@@ -1251,6 +1275,13 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
     // the BEGIN script.
     // Calling this will also initialize the _ROWCOUNT and _LASTROW special variables
     // so that the BEGIN script can use them
+    //
+    //   qsv_autoindex()
+    //      returns: None as this is a stub function.
+    //               A Luau runtime error will be raised if the index cannot be created
+    //               as soon as the BEGIN script is actually executed.
+    //               A Luau runtime error is also returned if called from MAIN or END.
+    //
     let qsv_autoindex = luau.create_function(|_, ()| {
         if LUAU_STAGE.load(Ordering::Relaxed) != BEGIN_STAGE {
             return Err(mlua::Error::RuntimeError(
@@ -1266,6 +1297,14 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
     // record It will automatically ignore excess columns, and fill up columns with
     // empty strings if there are less columns specified than expected.
     // Note that you can only insert ONE record in the BEGIN and END scripts
+    //
+    //   qsv_insertrecord(col1, .., colN)
+    //      col1..N: the values to insert. If there are more columns than expected, the extra
+    //               columns will be ignored. If there are less columns than expected, the
+    //               missing columns will be filled with empty strings.
+    //               Up to 65,535 columns supported.
+    //      returns: None. Will always succeed.
+    //
     let qsv_insertrecord = luau.create_function(|luau, mut args: mlua::MultiValue| {
         let args_len = args.len().try_into().unwrap_or(10_i32);
         let insertrecord_table = luau.create_table_with_capacity(args_len, 1)?;
@@ -1278,6 +1317,10 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
 
             insertrecord_table.set(idx, val_str).unwrap();
             idx += 1;
+
+            if idx == u16::MAX {
+                break;
+            }
         }
         luau.globals()
             .set("_QSV_INSERTRECORD_TBL", insertrecord_table.clone())?;
@@ -1293,6 +1336,14 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
     // named using lookup_name, storing all the lookup values.
     // The first column is the key and the rest of the columns are values stored in a
     // table indexed by column name.
+    //
+    //   qsv_register(lookup_name, lookup_table_path)
+    //            lookup_name: The name of the Luau table to load the CSV into
+    //      lookup_table_path: The name of the CSV file to load. Note that it will use
+    //                         the luau --delimiter option if specified.
+    //                returns: Luau table of header names excluding the first header,
+    //                         or Luau runtime error if the CSV could not be loaded
+    //
     let qsv_register_lookup = luau.create_function(move |luau, mut args: mlua::MultiValue| {
         let args_len = args.len().try_into().unwrap_or(10_i32);
 
