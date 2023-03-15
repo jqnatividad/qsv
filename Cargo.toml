@@ -240,7 +240,7 @@ luau = ["mlua"]
 python = ["pyo3"]
 to = ["csvs_convert"]
 lite = []
-datapusher_plus = ["dynfmt", "luau", "self_update"]
+datapusher_plus = ["dynfmt", "self_update"]
 full = []
 nightly = [
     "regex/unstable",
