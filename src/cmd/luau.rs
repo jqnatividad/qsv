@@ -155,6 +155,9 @@ Luau options:
     --max-errors <count>     The maximum number of errors to tolerate before aborting.
                              Set to zero to disable error limit.
                              [default: 100]
+    --timeout <seconds>      Timeout for downloading lookup_tables using
+                             the qsv_register_lookup() helper function.
+                             [default: 15]
 
 Common options:
     -h, --help             Display this message
@@ -172,7 +175,7 @@ use std::{
     env, fs, io,
     io::Write,
     path::Path,
-    sync::atomic::{AtomicBool, AtomicI8, Ordering},
+    sync::atomic::{AtomicBool, AtomicI8, AtomicU16, Ordering},
 };
 
 use csv_index::RandomAccessSimple;
@@ -206,6 +209,7 @@ struct Args {
     flag_delimiter:   Option<Delimiter>,
     flag_progressbar: bool,
     flag_max_errors:  usize,
+    flag_timeout:     u16,
 }
 
 impl From<mlua::Error> for CliError {
@@ -223,8 +227,19 @@ const MAIN_STAGE: i8 = 2;
 const END_STAGE: i8 = 3;
 static LUAU_STAGE: AtomicI8 = AtomicI8::new(0);
 
+static TIMEOUT_SECS: AtomicU16 = AtomicU16::new(15);
+
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
+
+    if args.flag_timeout > 3_600 {
+        return fail!("Timeout cannot be more than 3,600 seconds (1 hour).");
+    } else if args.flag_timeout == 0 {
+        return fail!("Timeout cannot be zero.");
+    }
+    info!("TIMEOUT: {} secs", args.flag_timeout);
+    TIMEOUT_SECS.store(args.flag_timeout, Ordering::Relaxed);
+
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers);
@@ -1384,6 +1399,9 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
 
         if lookup_on_url {
             use reqwest::blocking::Client;
+
+            let client_timeout = std::time::Duration::from_secs(TIMEOUT_SECS.load(Ordering::Relaxed) as u64);
+
             let client = match Client::builder()
                 .user_agent(util::DEFAULT_USER_AGENT)
                 .brotli(true)
@@ -1391,6 +1409,8 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
                 .deflate(true)
                 .use_rustls_tls()
                 .http2_adaptive_window(true)
+                .connection_verbose(log_enabled!(log::Level::Debug) || log_enabled!(log::Level::Trace))
+                .timeout(client_timeout)
                 .build()
             {
                 Ok(c) => c,
