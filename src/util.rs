@@ -277,6 +277,7 @@ macro_rules! update_cache_info {
         use indicatif::HumanCount;
 
         let cache_instance = $cache_instance.lock();
+        #[allow(clippy::significant_drop_tightening)]
         match cache_instance {
             Ok(cache) => {
                 let cache_size = cache.cache_size();
