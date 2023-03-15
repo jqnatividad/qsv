@@ -1331,16 +1331,18 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
 
     // this is a helper function that can be called from the BEGIN script to register
     // and load a lookup table. It expects two arguments - the lookup_name & the
-    // lookup_table_path - the path of the CSV to use as a lookup table.
+    // lookup_table_uri - the URI of the CSV to use as a lookup table.
     // It returns a table with the header names if successful and create a Luau table
     // named using lookup_name, storing all the lookup values.
     // The first column is the key and the rest of the columns are values stored in a
     // table indexed by column name.
     //
-    //   qsv_register(lookup_name, lookup_table_path)
+    //   qsv_register(lookup_name, lookup_table_uri)
     //            lookup_name: The name of the Luau table to load the CSV into
-    //      lookup_table_path: The name of the CSV file to load. Note that it will use
+    //       lookup_table_uri: The name of the CSV file to load. Note that it will use
     //                         the luau --delimiter option if specified.
+    //                         This can be a file on the filesystem or on at a URL
+    //                         ("http" and "https" schemes supported)
     //                returns: Luau table of header names excluding the first header,
     //                         or Luau runtime error if the CSV could not be loaded
     //
@@ -1355,21 +1357,66 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
 
         if args_len != 2 {
             return Err(mlua::Error::RuntimeError(
-                "qsv_register_lookup() requires two arguments - lookup_name & lookup_table_path"
+                "qsv_register_lookup() requires two arguments - lookup_name & lookup_table_uri"
                     .to_string(),
             ));
         }
 
         let lookup_name = luau.from_value::<serde_json::Value>(args.pop_front().unwrap())?;
         let lookup_name_str = lookup_name.as_str().unwrap_or_default();
-        let lookup_table_path = luau.from_value::<serde_json::Value>(args.pop_front().unwrap())?;
-        let lookup_table_path_string = lookup_table_path.as_str().unwrap_or_default().to_string();
+        let lookup_table_uri = luau.from_value::<serde_json::Value>(args.pop_front().unwrap())?;
+        let mut lookup_table_uri_string = lookup_table_uri.as_str().unwrap_or_default().to_string();
+
+        let lookup_on_url = lookup_table_uri_string.to_lowercase().starts_with("http");
+
+        // if lookup_on_url, create a temporary file and download CSV to it.
+        // We do this outside the download proper below as the tempdir
+        // needs to persist until the end of this helper function, when
+        // it will be automatically deleted
+        let mut temp_file = tempfile::NamedTempFile::new()?;
+
+        if lookup_on_url {
+            use reqwest::blocking::Client;
+            let client = match Client::builder()
+                .user_agent(util::DEFAULT_USER_AGENT)
+                .brotli(true)
+                .gzip(true)
+                .deflate(true)
+                .use_rustls_tls()
+                .http2_adaptive_window(true)
+                .build()
+            {
+                Ok(c) => c,
+                Err(e) => {
+                    return Err(mlua::Error::RuntimeError(format!(
+                        "Cannot build reqwest client to download lookup CSV: {e}."
+                    )));
+                }
+            };
+
+            let lookup_csv_contents = match client.get(lookup_table_uri_string).send() {
+                Ok(response) => response.text().unwrap_or_default(),
+                Err(e) => {
+                    return Err(mlua::Error::RuntimeError(format!(
+                        "Cannot read lookup CSV at url: {e}."
+                    )));
+                }
+            };
+
+            temp_file.write_all(lookup_csv_contents.as_bytes())?;
+
+            // we need to persist the tempfile so that we can pass the path to the CSV reader
+            let (_lookup_file, lookup_file_path) =
+                temp_file.keep().expect("Cannot persist tempfile");
+
+            lookup_table_uri_string = lookup_file_path.to_str().unwrap_or_default().to_string();
+        }
 
         let lookup_table = luau.create_table()?;
         #[allow(unused_assignments)]
         let mut record = csv::StringRecord::new();
 
-        let conf = Config::new(&Some(lookup_table_path_string))
+        let conf = Config::new(&Some(lookup_table_uri_string.clone()))
             .delimiter(delimiter)
             .no_headers(false);
 
@@ -1394,6 +1441,11 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
                 }
             }
             lookup_table.raw_set(key, inside_table)?;
+        }
+
+        // if we downloaded the CSV to a temp file, we need to delete it
+        if lookup_on_url {
+            fs::remove_file(lookup_table_uri_string)?;
         }
 
         luau.globals()
