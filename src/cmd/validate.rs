@@ -32,6 +32,8 @@ Validate options:
     -b, --batch <size>         The number of rows per batch to load into memory,
                                before running in parallel.
                                [default: 50000]
+    --timeout <seconds>        Timeout for downloading json-schemas.
+                               [default: 15]
 
 Common options:
     -h, --help                 Display this message
@@ -49,6 +51,7 @@ use std::{
     fs::File,
     io::{BufReader, BufWriter, Read, Write},
     str,
+    sync::atomic::{AtomicU16, Ordering},
 };
 
 use csv::ByteRecord;
@@ -56,7 +59,7 @@ use csv::ByteRecord;
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use itertools::Itertools;
 use jsonschema::{output::BasicOutput, paths::PathChunk, JSONSchema};
-use log::info;
+use log::{debug, info, log_enabled};
 use once_cell::sync::OnceCell;
 use rayon::{
     iter::{IndexedParallelIterator, ParallelIterator},
@@ -75,6 +78,8 @@ use crate::{
 // to save on repeated init/allocs
 static NULL_TYPE: once_cell::sync::OnceCell<Value> = OnceCell::new();
 
+static TIMEOUT_SECS: AtomicU16 = AtomicU16::new(15);
+
 #[derive(Deserialize)]
 #[allow(dead_code)]
 struct Args {
@@ -90,6 +95,7 @@ struct Args {
     flag_progressbar: bool,
     arg_input:        Option<String>,
     arg_json_schema:  Option<String>,
+    flag_timeout:     u16,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -104,6 +110,14 @@ struct RFC4180Struct {
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
+
+    if args.flag_timeout > 3_600 {
+        return fail!("Timeout cannot be more than 3,600 seconds (1 hour).");
+    } else if args.flag_timeout == 0 {
+        return fail!("Timeout cannot be zero.");
+    }
+    info!("TIMEOUT: {} secs", args.flag_timeout);
+    TIMEOUT_SECS.store(args.flag_timeout, Ordering::Relaxed);
 
     #[cfg(any(feature = "full", feature = "lite"))]
     let mut rconfig = Config::new(&args.arg_input)
@@ -277,7 +291,7 @@ Use `qsv input` to fix formatting and to transcode to utf8 if required."#
             }
         };
 
-    // debug!("compiled schema: {:?}", &schema_compiled);
+    debug!("compiled schema: {:?}", &schema_compiled);
 
     // how many rows read and processed as batches
     let mut row_number: u32 = 0;
@@ -892,6 +906,10 @@ fn load_json(uri: &str) -> Result<String, String> {
     let json_string = match uri {
         url if url.to_lowercase().starts_with("http") => {
             use reqwest::blocking::Client;
+
+            let client_timeout =
+                std::time::Duration::from_secs(TIMEOUT_SECS.load(Ordering::Relaxed) as u64);
+
             let client = match Client::builder()
                 .user_agent(util::DEFAULT_USER_AGENT)
                 .brotli(true)
@@ -899,6 +917,10 @@ fn load_json(uri: &str) -> Result<String, String> {
                 .deflate(true)
                 .use_rustls_tls()
                 .http2_adaptive_window(true)
+                .connection_verbose(
+                    log_enabled!(log::Level::Debug) || log_enabled!(log::Level::Trace),
+                )
+                .timeout(client_timeout)
                 .build()
             {
                 Ok(c) => c,
