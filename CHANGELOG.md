@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.93.1] - 2023-03-15
+
+### Fixed
+* Fixed publishing workflow so qsvdp `luau` is only enabled on platforms that support it
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.93.0...0.93.1
+
 ## [0.93.0] - 2023-03-15
 
 ### Added
