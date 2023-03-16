@@ -401,6 +401,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     setup_helpers(&luau, args.flag_delimiter)?;
 
     if index_file_used {
+        info!("RANDOM ACCESS MODE (_INDEX or _LASTROW special variables used)");
         random_acess_mode(
             &rconfig,
             &args,
@@ -413,6 +414,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             args.flag_max_errors,
         )?;
     } else {
+        info!("SEQUENTIAL MODE");
         sequential_mode(
             &rconfig,
             &args,
