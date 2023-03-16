@@ -106,7 +106,7 @@ indicatif = "0.17"
 itertools = "0.10"
 itoa = "1"
 jemallocator = { version = "0.5", optional = true }
-jsonschema = { version = "0.16", features = [
+jsonschema = { version = "0.17", features = [
     "resolve-file",
     "resolve-http",
 ], default-features = false }
