@@ -158,6 +158,12 @@ Luau options:
     --timeout <seconds>      Timeout for downloading lookup_tables using
                              the qsv_register_lookup() helper function.
                              [default: 15]
+    --ckan-api <url>         The URL of the CKAN API to use for downloading lookup_table
+                             resources using the qsv_register_lookup() helper function
+                             with the "ckan://" scheme.
+                             [default: https://catalog.dathere.com/api/3/action]
+    --ckan-token <token>     The CKAN API token to use. Only required if downloading
+                             private resources.
 
 Common options:
     -h, --help             Display this message
@@ -215,6 +221,8 @@ struct Args {
     flag_progressbar: bool,
     flag_max_errors:  usize,
     flag_timeout:     u16,
+    flag_ckan_api:    String,
+    flag_ckan_token:  Option<String>,
 }
 
 impl From<mlua::Error> for CliError {
@@ -404,7 +412,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let globals = luau.globals();
 
-    setup_helpers(&luau, args.flag_delimiter)?;
+    setup_helpers(
+        &luau,
+        args.flag_delimiter,
+        args.flag_ckan_api.clone(),
+        args.flag_ckan_token.clone(),
+    )?;
 
     if index_file_used {
         info!("RANDOM ACCESS MODE (_INDEX or _LASTROW special variables used)");
@@ -1221,7 +1234,12 @@ fn create_index(arg_input: &Option<String>) -> Result<bool, CliError> {
 // HELPER FUNCTIONS
 // -----------------------------------------------------------------------------
 // setup_helpers sets up some helper functions that can be called from Luau scripts
-fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliError> {
+fn setup_helpers(
+    luau: &Lua,
+    delimiter: Option<Delimiter>,
+    ckan_api_url: String,
+    ckan_token: Option<String>,
+) -> Result<(), CliError> {
     // this is a helper function that can be called from Luau scripts
     // to send log messages to the logfile
     // the first parameter is the log level, and the following parameters are concatenated
@@ -1438,9 +1456,19 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
     //       lookup_table_uri: The name of the CSV file to load. Note that it will use
     //                         the luau --delimiter option if specified.
     //                         This can be a file on the filesystem or on at a URL
-    //                         ("http", "https" and "dathere" schemes supported).
+    //                         ("http", "https", "dathere" and "ckan" schemes supported).
+    //
     //                         The dathere scheme is used to access lookup-ready CSVs
     //                         on https://github.com/dathere/qsv-lookup-tables.
+    //
+    //                         The ckan scheme is used to access lookup-ready CSVs
+    //                         on the given --ckan-api URL. The string following the ckan
+    //                         scheme is the resource ID or alias of the CSV to load.
+    //                         If you don't have a resource ID or alias, you can use the
+    //                         resource name to look for followed by a question mark.
+    //                         If a match is found, the first resource with a matching name
+    //                         will be used.
+    //
     //                returns: Luau table of header names excluding the first header,
     //                         or Luau runtime error if the CSV could not be loaded
     //
@@ -1457,6 +1485,22 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
             lookup_table_uri = format!("https://raw.githubusercontent.com/dathere/qsv-lookup-tables/main/lookup-tables/{lookup_url}");
         }
 
+        let mut lookup_ckan = false;
+        let mut resource_search = false;
+        if let Some(mut lookup_url) = lookup_table_uri.strip_prefix("ckan://") {
+            lookup_ckan = true;
+            // it's a CKAN resource. If it ends with a '?', we'll do a resource_search
+            lookup_url = lookup_url.trim();
+            if lookup_url.ends_with('?') {
+                lookup_table_uri = format!("{ckan_api_url}/resource_search?query=name:{lookup_url}");
+                lookup_table_uri.pop(); // remove the trailing '?'
+                resource_search = true;
+            } else {
+                // otherwise, we do a resource_show
+                lookup_table_uri = format!("{ckan_api_url}/resource_show?id={lookup_url}");
+            }
+        }
+
         let lookup_on_url = lookup_table_uri.to_lowercase().starts_with("http");
 
         // if lookup_on_url, create a temporary file and download CSV to it.
@@ -1466,7 +1510,7 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
         let mut temp_file = tempfile::NamedTempFile::new()?;
 
         if lookup_on_url {
-            use reqwest::blocking::Client;
+            use reqwest::{blocking::Client, Url};
 
             let client_timeout = std::time::Duration::from_secs(TIMEOUT_SECS.load(Ordering::Relaxed) as u64);
 
@@ -1489,13 +1533,113 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
                 }
             };
 
-            let lookup_csv_contents = match client.get(lookup_table_uri).send() {
-                Ok(response) => response.text().unwrap_or_default(),
-                Err(e) => {
-                    return Err(mlua::Error::RuntimeError(format!(
-                        "Cannot read lookup CSV at url: {e}."
-                    )));
+            let lookup_csv_contents = if lookup_ckan {
+                // we're using the ckan scheme, so we need to get the resource
+
+                let mut headers = reqwest::header::HeaderMap::new();
+
+                if let Some(ckan_token) = &ckan_token {
+                    // there's a ckan token, so use it
+                    headers.insert(
+                        reqwest::header::AUTHORIZATION,
+                        reqwest::header::HeaderValue::from_str(ckan_token).unwrap(),
+                    );
                 }
+
+                debug!("Downloading lookup CSV from {}...", lookup_table_uri.clone());
+
+                // first, check if this is a resource query (i.e. ends with a question mark)
+                if resource_search {
+                    // it is a resource query, so let's do a resource_search
+                    // and get the first resource with a matching name
+
+                    let validated_url = match Url::parse(&lookup_table_uri) {
+                        Ok(url) => url,
+                        Err(e) => {
+                            return Err(mlua::Error::RuntimeError(format!(
+                                "Invalid resource_search url {e}."
+                            )));
+                        }
+                    };
+
+                    let resource_search_result = match client.get(validated_url).headers(headers.clone()).send() {
+                        Ok(response) => response.text().unwrap_or_default(),
+                        Err(e) => {
+                            return Err(mlua::Error::RuntimeError(format!(
+                                "Cannot find resource nam. Cannot read lookup CSV resource at url: {e}."
+                            )));
+                        }
+                    };
+
+                    let resource_search_json: serde_json::Value = match serde_json::from_str(&resource_search_result) {
+                        Ok(json) => json,
+                        Err(e) => {
+                            return Err(mlua::Error::RuntimeError(format!(
+                                "Invalid resource_search json {e}."
+                            )));
+                        }
+                    };
+
+                    let Some(resource_id) = resource_search_json["result"]["results"][0]["id"].as_str() else {
+                        return Err(mlua::Error::RuntimeError("Cannot find a resource name.".to_string()));
+                    };
+
+                    lookup_table_uri = format!("{ckan_api_url}/resource_show?id={resource_id}");
+                }
+
+                // get resource_show json and get the resource URL
+                let resource_show_result = match client.get(lookup_table_uri).headers(headers).send() {
+                    Ok(response) => response.text().unwrap_or_default(),
+                    Err(e) => {
+                        return Err(mlua::Error::RuntimeError(format!(
+                            "CKAN scheme used. Cannot get lookup CSV resource: {e}.",
+                        )));
+                    }
+                };
+
+                let resource_show_json: serde_json::Value = match serde_json::from_str(&resource_show_result) {
+                    Ok(json) => json,
+                    Err(e) => {
+                        return Err(mlua::Error::RuntimeError(format!(
+                            "Invalid resource_show json: {e}."
+                        )));
+                    }
+                };
+
+                let Some(url) = resource_show_json["result"]["url"].as_str() else {
+                    return Err(mlua::Error::RuntimeError(
+                            "Cannot get resource URL.".to_string()
+                    ));
+                };
+
+                match client.get(url).send() {
+                    Ok(response) => response.text().unwrap_or_default(),
+                    Err(e) => {
+                        return Err(mlua::Error::RuntimeError(format!(
+                            "Cannot read lookup CSV at {url}: {e}."
+                        )));
+                    }
+                }
+            } else {
+                // we're not using the ckan scheme, so just get the CSV
+
+                let validated_url = match Url::parse(&lookup_table_uri) {
+                    Ok(url) => url,
+                    Err(e) => {
+                        return Err(mlua::Error::RuntimeError(format!(
+                            "Invalid lookup CSV url {e}."
+                        )));
+                    }
+                };
+
+                match client.get(validated_url).send() {
+                        Ok(response) => response.text().unwrap_or_default(),
+                        Err(e) => {
+                            return Err(mlua::Error::RuntimeError(format!(
+                                "Cannot read lookup CSV at url: {e}."
+                            )));
+                        }
+                    }
             };
 
             temp_file.write_all(lookup_csv_contents.as_bytes())?;
