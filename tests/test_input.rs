@@ -1,6 +1,37 @@
 use crate::workdir::Workdir;
 
 #[test]
+fn test_input_comment() {
+    let wrk = Workdir::new("input_comment");
+    wrk.create(
+        "preamble.csv",
+        vec![
+            svec!["# test file to see how skiplines work", ""],
+            svec!["# this is another comment before the header", ""],
+            svec!["# DATA DICTIONARY", ""],
+            svec!["# column1 - alphabetic; id of the column", ""],
+            svec!["# column2 - numeric; just a number", ""],
+            svec!["column1", "column2"],
+            svec!["a", "1"],
+            svec!["c", "3"],
+            svec!["# comment here too!", "5"],
+            svec!["e", "5"],
+        ],
+    );
+    let mut cmd = wrk.command("input");
+    cmd.arg("--comment").arg("#").arg("preamble.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["column1", "column2"],
+        svec!["a", "1"],
+        svec!["c", "3"],
+        svec!["e", "5"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn test_input_skiplines() {
     let wrk = Workdir::new("input_skiplines");
     wrk.create(
