@@ -38,6 +38,8 @@ input options:
     --skip-lastlines <arg>   The number of epilogue lines to skip.
     --trim-headers           Trim leading & trailing whitespace & quotes from header values.
     --trim-fields            Trim leading & trailing whitespace from field values.
+    --comment <char>         The comment character to use. When set, lines
+                             starting with this character will be skipped.
 
 Common options:
     -h, --help               Display this message
@@ -67,6 +69,7 @@ struct Args {
     flag_auto_skip:      bool,
     flag_trim_headers:   bool,
     flag_trim_fields:    bool,
+    flag_comment:        Option<char>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -82,10 +85,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if args.flag_auto_skip {
         std::env::set_var("QSV_SNIFF_PREAMBLE", "1");
     }
+
+    let mut comment_char: Option<u8> = None;
+    if let Some(char) = args.flag_comment {
+        comment_char = Some(char as u8);
+    }
+
     let mut rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
         .no_headers(true)
         .quote(args.flag_quote.as_byte())
+        .comment(comment_char)
         .trim(trim_setting);
     if args.flag_auto_skip {
         std::env::remove_var("QSV_SNIFF_PREAMBLE");
