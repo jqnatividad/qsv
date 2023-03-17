@@ -167,6 +167,7 @@ Common options:
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
     -p, --progressbar      Show progress bars. Not valid for stdin.
+                           Ignored in qsvdp.
                            In SEQUENTIAL MODE, the progress bar will show the
                            number of rows processed.
                            In RANDOM ACCESS MODE, the progress bar will show
@@ -183,9 +184,8 @@ use std::{
 };
 
 use csv_index::RandomAccessSimple;
-use indicatif::ProgressStyle;
 #[cfg(any(feature = "full", feature = "lite"))]
-use indicatif::{ProgressBar, ProgressDrawTarget};
+use indicatif::{ProgressBar, ProgressDrawTarget, ProgressStyle};
 use log::{debug, info, log_enabled};
 use mlua::{Lua, LuaSerdeExt, Value};
 use serde::Deserialize;
@@ -530,6 +530,9 @@ fn sequential_mode(
     // in the MAIN/END scripts
     luau.globals().set("_QSV_INSERTRECORD_TBL", Value::Nil)?;
 
+    #[cfg(feature = "datapusher_plus")]
+    let show_progress = false;
+
     #[cfg(any(feature = "full", feature = "lite"))]
     let show_progress =
         (args.flag_progressbar || std::env::var("QSV_PROGRESSBAR").is_ok()) && !rconfig.is_stdin();
@@ -850,6 +853,9 @@ fn random_acess_mode(
     let mut record = csv::StringRecord::new();
     let mut error_count = 0_usize;
     let mut processed_count = 0_usize;
+
+    #[cfg(feature = "datapusher_plus")]
+    let show_progress = false;
 
     #[cfg(any(feature = "full", feature = "lite"))]
     let show_progress =
