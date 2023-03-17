@@ -84,6 +84,7 @@ pub struct Config {
     trim:              csv::Trim,
     autoindex:         bool,
     prefer_dmy:        bool,
+    comment:           Option<u8>,
 }
 
 // Empty trait as an alias for Seek and Read that avoids auto trait errors
@@ -160,6 +161,7 @@ impl Config {
             trim: csv::Trim::None,
             autoindex: env::var("QSV_AUTOINDEX").is_ok(),
             prefer_dmy: env::var("QSV_PREFER_DMY").is_ok(),
+            comment: None,
         }
     }
 
@@ -172,6 +174,11 @@ impl Config {
 
     pub const fn get_delimiter(&self) -> u8 {
         self.delimiter
+    }
+
+    pub const fn comment(mut self, c: Option<u8>) -> Config {
+        self.comment = c;
+        self
     }
 
     pub const fn get_dmy_preference(&self) -> bool {
@@ -422,9 +429,11 @@ impl Config {
             .unwrap_or_else(|_| DEFAULT_RDR_BUFFER_CAPACITY.to_string());
         let rdr_buffer: usize = rdr_capacitys.parse().unwrap_or(DEFAULT_RDR_BUFFER_CAPACITY);
 
-        let rdr_comment: Option<u8> = env::var("QSV_COMMENT_CHAR")
-            .ok()
-            .map(|s| s.as_bytes().first().unwrap().to_owned());
+        let rdr_comment: Option<u8> = if let Ok(comment_char) = env::var("QSV_COMMENT_CHAR") {
+            Some(comment_char.as_bytes().first().unwrap().to_owned())
+        } else {
+            self.comment
+        };
 
         csv::ReaderBuilder::new()
             .flexible(self.flexible)
