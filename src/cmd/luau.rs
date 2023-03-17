@@ -1566,7 +1566,7 @@ fn setup_helpers(
                         Ok(response) => response.text().unwrap_or_default(),
                         Err(e) => {
                             return Err(mlua::Error::RuntimeError(format!(
-                                "Cannot find resource nam. Cannot read lookup CSV resource at url: {e}."
+                                "Cannot find resource name with resource_search: {e}."
                             )));
                         }
                     };
