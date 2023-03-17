@@ -167,8 +167,12 @@ Common options:
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
     -p, --progressbar      Show progress bars. Not valid for stdin.
-                           Also not valid when "_INDEX" var is used
-                           for random access.
+                           In SEQUENTIAL MODE, the progress bar will show the
+                           number of rows processed.
+                           In RANDOM ACCESS MODE, the progress bar will show
+                           the position of the current row being processed.
+                           Enabling this option will also suppress stderr output
+                           from the END script.
 "#;
 
 use std::{
@@ -179,6 +183,7 @@ use std::{
 };
 
 use csv_index::RandomAccessSimple;
+use indicatif::ProgressStyle;
 #[cfg(any(feature = "full", feature = "lite"))]
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::{debug, info, log_enabled};
@@ -379,6 +384,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // -------- setup Luau environment --------
     let luau = Lua::new();
+    // see Compiler settings here: https://docs.rs/mlua/latest/mlua/struct.Compiler.html#
     let luau_compiler = if log_enabled!(log::Level::Debug) || log_enabled!(log::Level::Trace) {
         // debugging is on, set more debugging friendly compiler settings
         // so we can see more error details in the logfile
@@ -487,7 +493,7 @@ fn sequential_mode(
     globals.set("_IDX", 0)?;
     globals.set("_ROWCOUNT", 0)?;
     if !begin_script.is_empty() {
-        info!("Compiling and executing BEGIN script.");
+        info!("Compiling and executing BEGIN script. _IDX: 0 _ROWCOUNT: 0");
         LUAU_STAGE.store(BEGIN_STAGE, Ordering::Relaxed);
 
         let begin_bytecode = luau_compiler.compile(begin_script);
@@ -543,6 +549,7 @@ fn sequential_mode(
     let mut error_count = 0_usize;
 
     LUAU_STAGE.store(MAIN_STAGE, Ordering::Relaxed);
+    info!("Executing MAIN script.");
 
     // main loop
     // without an index, we stream the CSV in sequential order
@@ -694,7 +701,9 @@ fn sequential_mode(
                 );
             }
         };
-        winfo!("{end_string}");
+        if !end_string.is_empty() && !show_progress {
+            winfo!("{end_string}");
+        }
     }
 
     wtr.flush()?;
@@ -702,6 +711,8 @@ fn sequential_mode(
     if show_progress {
         util::finish_progress(&progress);
     }
+    info!("SEQUENTIAL MODE: Processed {idx} record/s.");
+
     if error_count > 0 {
         return fail_clierror!("Luau errors encountered: {error_count}");
     };
@@ -782,7 +793,10 @@ fn random_acess_mode(
     globals.set("_LASTROW", row_count - 1)?;
 
     if !begin_script.is_empty() {
-        info!("Compiling and executing BEGIN script.");
+        info!(
+            "Compiling and executing BEGIN script. _ROWCOUNT: {row_count} _LASTROW: {}",
+            row_count - 1
+        );
         LUAU_STAGE.store(BEGIN_STAGE, Ordering::Relaxed);
 
         let begin_bytecode = luau_compiler.compile(begin_script);
@@ -835,14 +849,47 @@ fn random_acess_mode(
     let main_bytecode = luau_compiler.compile(main_script);
     let mut record = csv::StringRecord::new();
     let mut error_count = 0_usize;
+    let mut processed_count = 0_usize;
+
+    #[cfg(any(feature = "full", feature = "lite"))]
+    let show_progress =
+        (args.flag_progressbar || std::env::var("QSV_PROGRESSBAR").is_ok()) && !rconfig.is_stdin();
+    #[cfg(any(feature = "full", feature = "lite"))]
+    let progress = ProgressBar::with_draw_target(None, ProgressDrawTarget::stderr_with_hz(5));
+    #[cfg(any(feature = "full", feature = "lite"))]
+    if show_progress {
+        progress.set_style(
+            ProgressStyle::default_bar()
+                .template("[{elapsed_precise}] [{bar:40.cyan/blue} {human_pos}] {msg}")
+                .unwrap()
+                .progress_chars(" * "),
+        );
+
+        progress.set_message(format!("{row_count} records"));
+
+        // draw progress bar for the first time using RANDOM ACCESS style
+        progress.set_length(curr_record);
+    } else {
+        progress.set_draw_target(ProgressDrawTarget::hidden());
+    }
 
     LUAU_STAGE.store(MAIN_STAGE, Ordering::Relaxed);
+    info!(
+        "Executing MAIN script. _INDEX: {curr_record} _ROWCOUNT: {row_count} _LASTROW: {}",
+        row_count - 1
+    );
 
     // main loop - here we use an indexed file reader to implement random access mode,
     // seeking to the next record to read by looking at _INDEX special var
     'main: while idx_file.read_record(&mut record)? {
         globals.set("_IDX", curr_record)?;
 
+        #[cfg(any(feature = "full", feature = "lite"))]
+        if show_progress {
+            progress.set_position(curr_record + 1);
+        }
+
+        processed_count += 1;
         {
             let col =
                 luau.create_table_with_capacity(record.len().try_into().unwrap_or_default(), 1)?;
@@ -983,10 +1030,19 @@ fn random_acess_mode(
                 );
             }
         };
-        winfo!("{end_string}");
+        if !end_string.is_empty() && !show_progress {
+            winfo!("{end_string}");
+        }
     }
 
     wtr.flush()?;
+    let msg = format!("RANDOM ACCESS MODE: Processed {processed_count} record/s.");
+    #[cfg(any(feature = "full", feature = "lite"))]
+    if show_progress {
+        progress.abandon_with_message(msg.clone());
+    }
+    info!("{msg}");
+
     if error_count > 0 {
         return fail_clierror!("Luau errors encountered: {error_count}");
     };
@@ -1269,6 +1325,23 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
     // this is a helper function that can be called from the MAIN script
     // to SKIP writing the output of that row.
     //
+    //   qsv_sleep(milliseconds: number)
+    //      returns: None
+    //
+    let qsv_sleep = luau.create_function(|_, args: mlua::Number| {
+        let sleep_time = args as u64;
+        if sleep_time > 0 {
+            log::info!("sleeping for {} milliseconds", sleep_time);
+            std::thread::sleep(std::time::Duration::from_millis(sleep_time));
+        }
+
+        Ok(())
+    })?;
+    luau.globals().set("qsv_sleep", qsv_sleep)?;
+
+    // this is a helper function that can be called from the MAIN script
+    // to sleep for N milliseconds.
+    //
     //   qsv_skip()
     //      returns: None
     //               or Luau runtime error if called from BEGIN or END scripts
@@ -1411,7 +1484,7 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
                 .deflate(true)
                 .use_rustls_tls()
                 .http2_adaptive_window(true)
-                .connection_verbose(log_enabled!(log::Level::Debug) || log_enabled!(log::Level::Trace))
+                .connection_verbose(log_enabled!(log::Level::Trace))
                 .timeout(client_timeout)
                 .build()
             {
