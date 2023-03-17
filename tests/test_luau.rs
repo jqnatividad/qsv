@@ -623,6 +623,46 @@ END {
 }
 
 #[test]
+fn luau_register_lookup_table_ckan() {
+    let wrk = Workdir::new("luau_register_lookup_ckan");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["metric_name", "target_score"],
+            svec!["POTHOLE ON-TIME %", "0.6"],
+            svec!["ON-TIME PERMIT REVIEWS", "0.6"],
+            svec!["BFD RESPONSE TIME", "0.6"],
+            svec!["BPS ATTENDANCE", "0.6"],
+        ],
+    );
+
+    wrk.create_from_string(
+        "testlookup.luau",
+        r#"
+BEGIN {
+    cityscore_headers = qsv_register_lookup("cityscore", "ckan://CityScore Summary?")
+}!
+
+-- MAIN SCRIPT
+prev_month_score = cityscore[`{metric_name}`].previous_month_score
+
+return prev_month_score;
+"#,
+    );
+
+    let mut cmd = wrk.command("luau");
+    cmd.arg("map")
+        .arg("previous_month_score")
+        .arg("-x")
+        .arg("file:testlookup.luau")
+        .arg("--ckan-api")
+        .arg("https://data.boston.gov/api/3/action")
+        .arg("data.csv");
+
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
 fn luau_qsv_break() {
     let wrk = Workdir::new("luau_qsv_break");
     wrk.create(
