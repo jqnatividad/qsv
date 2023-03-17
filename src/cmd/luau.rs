@@ -1323,7 +1323,7 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
     luau.globals().set("qsv_break", qsv_break)?;
 
     // this is a helper function that can be called from the MAIN script
-    // to SKIP writing the output of that row.
+    // to sleep for N milliseconds.
     //
     //   qsv_sleep(milliseconds: number)
     //      returns: None
@@ -1438,8 +1438,7 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
     //                returns: Luau table of header names excluding the first header,
     //                         or Luau runtime error if the CSV could not be loaded
     //
-    let qsv_register_lookup = luau.create_function(move |luau, mut args: mlua::MultiValue| {
-        let args_len = args.len().try_into().unwrap_or(10_i32);
+    let qsv_register_lookup = luau.create_function(move |luau, (lookup_name, mut lookup_table_uri): (String, String)| {
 
         if LUAU_STAGE.load(Ordering::Relaxed) != BEGIN_STAGE {
             return Err(mlua::Error::RuntimeError(
@@ -1447,24 +1446,12 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
             ));
         }
 
-        if args_len != 2 {
-            return Err(mlua::Error::RuntimeError(
-                "qsv_register_lookup() requires two arguments - lookup_name & lookup_table_uri"
-                    .to_string(),
-            ));
-        }
-
-        let lookup_name = luau.from_value::<serde_json::Value>(args.pop_front().unwrap())?;
-        let lookup_name_str = lookup_name.as_str().unwrap_or_default();
-        let lookup_table_uri = luau.from_value::<serde_json::Value>(args.pop_front().unwrap())?;
-        let mut lookup_table_uri_string = lookup_table_uri.as_str().unwrap_or_default().to_string();
-
         // if the lookup_table_uri starts with "dathere://", prepend the repo URL to the lookup table
-        if let Some(lookup_url) = lookup_table_uri_string.strip_prefix("dathere://") {
-            lookup_table_uri_string = format!("https://raw.githubusercontent.com/dathere/qsv-lookup-tables/main/lookup-tables/{lookup_url}");
+        if let Some(lookup_url) = lookup_table_uri.strip_prefix("dathere://") {
+            lookup_table_uri = format!("https://raw.githubusercontent.com/dathere/qsv-lookup-tables/main/lookup-tables/{lookup_url}");
         }
 
-        let lookup_on_url = lookup_table_uri_string.to_lowercase().starts_with("http");
+        let lookup_on_url = lookup_table_uri.to_lowercase().starts_with("http");
 
         // if lookup_on_url, create a temporary file and download CSV to it.
         // We do this outside the download proper below as the tempdir
@@ -1496,7 +1483,7 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
                 }
             };
 
-            let lookup_csv_contents = match client.get(lookup_table_uri_string).send() {
+            let lookup_csv_contents = match client.get(lookup_table_uri).send() {
                 Ok(response) => response.text().unwrap_or_default(),
                 Err(e) => {
                     return Err(mlua::Error::RuntimeError(format!(
@@ -1511,14 +1498,14 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
             let (_lookup_file, lookup_file_path) =
                 temp_file.keep().expect("Cannot persist tempfile");
 
-            lookup_table_uri_string = lookup_file_path.to_str().unwrap_or_default().to_string();
+            lookup_table_uri = lookup_file_path.to_string_lossy().to_string();
         }
 
         let lookup_table = luau.create_table()?;
         #[allow(unused_assignments)]
         let mut record = csv::StringRecord::new();
 
-        let conf = Config::new(&Some(lookup_table_uri_string.clone()))
+        let conf = Config::new(&Some(lookup_table_uri.clone()))
             .delimiter(delimiter)
             .no_headers(false);
 
@@ -1547,11 +1534,11 @@ fn setup_helpers(luau: &Lua, delimiter: Option<Delimiter>) -> Result<(), CliErro
 
         // if we downloaded the CSV to a temp file, we need to delete it
         if lookup_on_url {
-            fs::remove_file(lookup_table_uri_string)?;
+            fs::remove_file(lookup_table_uri)?;
         }
 
         luau.globals()
-            .raw_set(lookup_name_str, lookup_table.clone())?;
+            .raw_set(lookup_name, lookup_table.clone())?;
 
         // now that we've successfully loaded the lookup table, we return the headers
         // as a table so the user can use them to access the values
