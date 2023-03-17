@@ -640,13 +640,47 @@ fn luau_register_lookup_table_ckan() {
         "testlookup.luau",
         r#"
 BEGIN {
+
     cityscore_headers = qsv_register_lookup("cityscore", "ckan://CityScore Summary?")
+
+    function spairs(t, order)
+        -- collect the keys
+        local keys = {}
+        for k in pairs(t) do keys[#keys+1] = k end
+    
+        -- if order function given, sort by it by passing the table and keys a, b,
+        -- otherwise just sort the keys 
+        if order then
+            table.sort(keys, function(a,b) return order(t, a, b) end)
+        else
+            table.sort(keys)
+        end
+    
+        -- return the iterator function
+        local i = 0
+        return function()
+            i = i + 1
+            if keys[i] then
+                return keys[i], t[keys[i]]
+            end
+        end
+    end
+
 }!
 
--- MAIN SCRIPT
+-- this is the MAIN script
+
 prev_month_score = cityscore[`{metric_name}`].previous_month_score
 
 return prev_month_score;
+
+END {
+    sorted_headers = ""
+    for k, v in spairs(cityscore_headers, function(t,a,b) return t[b] > t[a] end) do
+        sorted_headers = sorted_headers .. v .. ","
+    end
+    return `{sorted_headers}`
+}!
 "#,
     );
 
@@ -658,6 +692,13 @@ return prev_month_score;
         .arg("--ckan-api")
         .arg("https://data.boston.gov/api/3/action")
         .arg("data.csv");
+
+    let end = wrk.output_stderr(&mut cmd);
+    let expected_end = "previous_day_score,previous_month_score,previous_quarter_score,\
+                        previous_week_score,score_calculated_ts,score_day_name,\
+                        score_final_table_ts,\n"
+        .to_string();
+    assert_eq!(end, expected_end);
 
     wrk.assert_success(&mut cmd);
 }
