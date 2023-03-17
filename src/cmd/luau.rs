@@ -1657,6 +1657,7 @@ fn setup_helpers(
 
         let conf = Config::new(&Some(lookup_table_uri.clone()))
             .delimiter(delimiter)
+            .comment(Some(b'#'))
             .no_headers(false);
 
         let mut rdr = conf.reader()?;
