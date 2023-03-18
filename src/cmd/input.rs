@@ -25,12 +25,12 @@ input options:
     --quote <arg>            The quote character to use. [default: "]
     --escape <arg>           The escape character to use. When not specified,
                              quotes are escaped by doubling them.
-    --no-quoting             Disable quoting completely. Othwerwise, input
-                             will use csv::QuoteStyle::NonNumeric. This puts quotes around 
-                             all fields that are non-numeric. Namely, when writing a field
-                             that does not parse as a valid float or integer, then quotes
-                             will be used even if they aren’t strictly necessary. This makes
-                             CSV files more portable.
+    --no-quoting             Disable quoting completely. 
+                             Othwerwise, input uses csv::QuoteStyle::NonNumeric,
+                             which puts quotes around all fields that are non-numeric.
+                             Namely, when writing a field that doesn't parse as a valid
+                             float or integer, quotes will be used.
+                             This makes CSV files more portable.
     --skip-lines <arg>       The number of preamble lines to skip.
     --auto-skip              Sniffs a CSV for preamble lines and automatically
                              skips them. Takes precedence over --skip-lines option.
