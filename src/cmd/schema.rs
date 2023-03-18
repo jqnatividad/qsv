@@ -93,12 +93,14 @@ pub struct Args {
 const STDIN_CSV: &str = "stdin.csv";
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
-    let preargs: Args = util::get_args(USAGE, argv)?;
-    let mut args = preargs.clone();
+    let mut args: Args = util::get_args(USAGE, argv)?;
 
     // if using stdin, we create a stdin.csv file as stdin is not seekable and we need to
     // open the file multiple times to compile stats/unique values, etc.
-    let (input_path, input_filename) = if preargs.arg_input.is_none() {
+    // We use a fixed "stdin.csv" filename instead of a temporary file with random characters
+    // so the name of the generated schema.json file is readable and predictable
+    // (stdin.csv.schema.json)
+    let (input_path, input_filename) = if args.arg_input.is_none() {
         let mut stdin_file = File::create(STDIN_CSV)?;
         let stdin = std::io::stdin();
         let mut stdin_handle = stdin.lock();

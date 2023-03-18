@@ -68,8 +68,8 @@ enum JsonlType {
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
-    let preargs: Args = util::get_args(USAGE, argv)?;
-    let mut args = preargs.clone();
+    let mut args: Args = util::get_args(USAGE, argv)?;
+
     let conf = Config::new(&args.arg_input).delimiter(args.flag_delimiter);
     let mut is_stdin = false;
 
@@ -78,7 +78,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // if using stdin, we create a stdin.csv file as stdin is not seekable and we need to
     // open the file multiple times to compile stats/unique values, etc.
-    let input_filename = if preargs.arg_input.is_none() {
+    let input_filename = if args.arg_input.is_none() {
         let mut stdin_file = File::create(stdin_fpath.clone())?;
         let stdin = std::io::stdin();
         let mut stdin_handle = stdin.lock();
