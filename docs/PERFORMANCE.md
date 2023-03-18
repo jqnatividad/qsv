@@ -154,7 +154,7 @@ Doing so will ensure CPU features are tailored to your hardware and you're using
 For example, on Ubuntu 22.04 LTS Linux:
 
 ```bash
-rustup default nightly-2023-03-14
+rustup default nightly-2023-03-17
 rustup update
 export RUSTFLAGS='-C target-cpu=native'
 
