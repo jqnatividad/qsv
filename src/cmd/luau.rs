@@ -1407,6 +1407,40 @@ fn setup_helpers(
     })?;
     luau.globals().set("qsv_autoindex", qsv_autoindex)?;
 
+    // this is a helper function that can be called from the BEGIN, MAIN & END scripts to write to
+    // a file. The file will be created if it does not exist. The file will be appended to if it
+    // already exists. The filename will be sanitized and will be written to the current working
+    // directory. The file will be closed after the write is complete.
+    //
+    //   qsv_writefile(filename: string, data: string)
+    //        filename: the name of the file to write to
+    //      stringdata: the string to write to the file. Note that a newline will not be added
+    //                  automatically.
+    //         returns: A Luau runtime error is returned if the file cannot be opened or written.
+    //
+    let qsv_writefile = luau.create_function(move |_, (filename, data): (String, String)| {
+        use std::fs::OpenOptions;
+
+        use sanitise_file_name::sanitise;
+
+        let sanitised_filename = sanitise(&filename);
+
+        let mut file = OpenOptions::new()
+            .write(true)
+            .create(true)
+            .append(true)
+            .open(sanitised_filename.clone())
+            .map_err(|e| mlua::Error::RuntimeError(format!("Error opening file: {}", e)))?;
+
+        file.write_all(data.as_bytes())
+            .map_err(|e| mlua::Error::RuntimeError(format!("Error writing to file: {}", e)))?;
+
+        file.flush()?;
+
+        Ok(sanitised_filename)
+    })?;
+    luau.globals().set("qsv_writefile", qsv_writefile)?;
+
     // this is a helper function that can be called from the BEGIN, MAIN & END scripts to insert a
     // record It will automatically ignore excess columns, and fill up columns with
     // empty strings if there are less columns specified than expected.
