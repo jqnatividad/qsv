@@ -704,6 +704,38 @@ END {
 }
 
 #[test]
+fn luau_writefile() {
+    let wrk = Workdir::new("luau_writefile");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["metric_name", "target_score"],
+            svec!["POTHOLE ON-TIME %", "0.6"],
+            svec!["ON-TIME PERMIT REVIEWS", "0.6"],
+            svec!["BFD RESPONSE TIME", "0.6"],
+            svec!["BPS ATTENDANCE", "0.6"],
+        ],
+    );
+
+    wrk.create_from_string(
+        "testwrite.luau",
+        r#"
+qsv_writefile("c:\windows\testfile.txt", `{metric_name} new target: {target_score * 2}\n`)
+return target_score * 2;
+"#,
+    );
+
+    let mut cmd = wrk.command("luau");
+    cmd.arg("map")
+        .arg("new_target")
+        .arg("-x")
+        .arg("file:testwrite.luau")
+        .arg("data.csv");
+
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
 fn luau_qsv_break() {
     let wrk = Workdir::new("luau_qsv_break");
     wrk.create(
