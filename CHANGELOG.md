@@ -6,6 +6,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.94.0] = 2023-03-17
+
+### Added
+* `luau`: qsv_register_lookup now supports "ckan:\\\\" scheme. This allows the luau script developer to fetch lookup table resources from CKAN instances. https://github.com/jqnatividad/qsv/pull/864
+* `luau`: added detailed example for "dathere:\\\\" lookup scheme in https://github.com/dathere/qsv-lookup-tables repo. https://github.com/jqnatividad/qsv/commit/3074538a9ac1071ba6d6b6e85fdc0ca3c833ce4e
+* `luau`:  added `qsv_writefile` helper function. This allows the luau script developer to write text files to the current working directory. Filenames are sanitized for safety.  https://github.com/jqnatividad/qsv/pull/867
+* `luau`: random access mode now supports progressbars. The progressbar indicates the current record and the total number of records in the CSV file https://github.com/jqnatividad/qsv/commit/63150a0a0d885f5bd5b118524d802ff59b18f621
+* `input`: added  --comment option which allows the user to specify the comment character.
+CSV rows that start with the comment character are skipped. https://github.com/jqnatividad/qsv/pull/866
+
+
+### Changed
+* `luau`: added additional logging messages to help with script debugging https://github.com/jqnatividad/qsv/commit/bcff8adc03ad398829f4874e948f5152bca04783
+* `schema` & `tojsonl`: refactor stdin handling https://github.com/jqnatividad/qsv/commit/6c923b19bfa3fbed918335b70b793a6d6011a960
+* bump jsonschema from 0.16 to 0.17
+* cargo update bump several indirect dependencies
+* pin Rust nightly to 2023-03-17
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.93.1...0.94.0
+
 ## [0.93.1] - 2023-03-15
 
 ### Fixed
