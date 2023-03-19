@@ -4,11 +4,30 @@ Partitions the given CSV data into chunks based on the value of a column
 The files are written to the output directory with filenames based on the
 values in the partition column and the `--filename` flag.
 
-For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_partition.rs.
+EXAMPLE:
+
+Partition nyc311.csv file into separate files based on the value of the
+"Borough" column in the current directory:
+    $ qsv partition Borough . --filename "nyc311-{}.csv" nyc311.csv
+
+will create the following files, each containing the data for each borough:
+    nyc311-Bronx.csv
+    nyc311-Brooklyn.csv
+    nyc311-Manhattan.csv
+    nyc311-Queens.csv
+    nyc311-Staten_Island.csv
+
+For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_partition.rs.
 
 Usage:
     qsv partition [options] <column> <outdir> [<input>]
     qsv partition --help
+
+partition arguments:
+    <column>                 The column to use as a key for partitioning.
+    <outdir>                 The directory to write the output files to.
+    <input>                  The CSV file to read from. If not specified, then
+                             the input will be read from stdin.
 
 partition options:
     --filename <filename>    A filename template to use when constructing the
