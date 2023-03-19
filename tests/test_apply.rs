@@ -2287,6 +2287,68 @@ fn apply_emptyreplace() {
 }
 
 #[test]
+fn apply_emptyreplace_multiple_columns() {
+    let wrk = Workdir::new("apply_emptyreplace_multiple_columns");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["name", "age", "city"],
+            svec!["John", "30", "New York"],
+            svec![" ", " ", "      "],
+            svec!["Sue", " ", "Boston"],
+            svec!["Hopkins", "40", ""],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("emptyreplace")
+        .arg("--replacement")
+        .arg("NA")
+        .arg("name,age,city")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["name", "age", "city"],
+        svec!["John", "30", "New York"],
+        svec!["NA", "NA", "NA"],
+        svec!["Sue", "NA", "Boston"],
+        svec!["Hopkins", "40", "NA"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn apply_emptyreplace_all_columns() {
+    let wrk = Workdir::new("apply_emptyreplace_all_columns");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["name", "age", "city"],
+            svec!["John", "30", "New York"],
+            svec![" ", " ", "      "],
+            svec!["Sue", " ", "Boston"],
+            svec!["Hopkins", "40", ""],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("emptyreplace")
+        .arg("--replacement")
+        .arg("NA")
+        .arg("1-")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["name", "age", "city"],
+        svec!["John", "30", "New York"],
+        svec!["NA", "NA", "NA"],
+        svec!["Sue", "NA", "Boston"],
+        svec!["Hopkins", "40", "NA"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn apply_datefmt() {
     let wrk = Workdir::new("apply");
     wrk.create(

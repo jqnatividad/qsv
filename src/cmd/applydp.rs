@@ -153,8 +153,30 @@ qsv applydp datefmt [--formatstr=<string>] [options] <column> [<input>]
 qsv applydp dynfmt --formatstr=<string> [options] --new-column=<name> [<input>]
 qsv applydp --help
 
-The <column> argument can be a list of columns for the operations and datefmt subcommands.
-See 'qsv select --help' for the format details.
+apply arguments:
+The <column> argument can be a list of columns for the operations, emptyreplace &
+datefmt subcommands. See 'qsv select --help' for the format details.
+
+    OPERATIONS subcommand:
+        <operations>                The operation/s to apply.
+        <column>                    The column/s to apply the operations to.
+
+    EMPTYREPLACE subcommand:
+        --replacement=<string>      The string to to use to replace empty values.
+        <column>                    The column/s to check for emptiness.
+
+    DATEFMT subcommand:
+        --formatstr=<string>        The date format to use for the datefmt operation.
+                                    See DATEFMT section in the --formatstr option below
+                                    for more details.
+        <column>                    The date column/s to apply the datefmt operation to.
+
+    DYNFMT subcommand:
+        --formatstr=<string>        The template to use for the dynfmt operation.
+                                    See DYNFMT example above for more details.
+        --new-column=<name>         Put the generated values in a new column.
+        
+    <input>                     The input file to read from. If not specified, reads from stdin.
 
 applydp options:
     -c, --new-column <name>     Put the transformed values in a new column instead.
@@ -437,14 +459,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         }
                     }
                     ApplydpSubCmd::EmptyReplace => {
-                        let mut cell = record[column_index].to_owned();
-                        if cell.trim().is_empty() {
-                            cell = args.flag_replacement.clone();
-                        }
-                        if args.flag_new_column.is_some() {
-                            record.push_field(&cell);
-                        } else {
-                            record = replace_column_value(&record, column_index, &cell);
+                        let mut cell = String::new();
+                        for col_index in sel.iter() {
+                            record[*col_index].clone_into(&mut cell);
+                            if cell.trim().is_empty() {
+                                cell = args.flag_replacement.clone();
+                            }
+                            if args.flag_new_column.is_some() {
+                                record.push_field(&cell);
+                            } else {
+                                record = replace_column_value(&record, *col_index, &cell);
+                            }
                         }
                     }
                     ApplydpSubCmd::DateFmt => {
