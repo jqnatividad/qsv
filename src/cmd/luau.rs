@@ -1430,10 +1430,13 @@ fn setup_helpers(
             .create(true)
             .append(true)
             .open(sanitised_filename.clone())
-            .map_err(|e| mlua::Error::RuntimeError(format!("Error opening file: {}", e)))?;
+            .map_err(|e| {
+                mlua::Error::RuntimeError(format!("qsv_writefile() - Error opening file: {e}"))
+            })?;
 
-        file.write_all(data.as_bytes())
-            .map_err(|e| mlua::Error::RuntimeError(format!("Error writing to file: {}", e)))?;
+        file.write_all(data.as_bytes()).map_err(|e| {
+            mlua::Error::RuntimeError(format!("qsv_writefile() - Error writing to file: {e}"))
+        })?;
 
         file.flush()?;
 
@@ -1508,6 +1511,8 @@ fn setup_helpers(
     //
     let qsv_register_lookup = luau.create_function(move |luau, (lookup_name, mut lookup_table_uri): (String, String)| {
 
+        const ERROR_MSG_PREFIX: &str = "qsv_register_lookup() - ";
+
         if LUAU_STAGE.load(Ordering::Relaxed) != BEGIN_STAGE {
             return Err(mlua::Error::RuntimeError(
                 "qsv_register_lookup() can only be called from the BEGIN script.".to_string(),
@@ -1562,8 +1567,8 @@ fn setup_helpers(
                 Ok(c) => c,
                 Err(e) => {
                     return Err(mlua::Error::RuntimeError(format!(
-                        "Cannot build reqwest client to download lookup CSV: {e}."
-                    )));
+                        "{ERROR_MSG_PREFIX}Cannot build reqwest client to download lookup CSV: {e}.")
+                    ));
                 }
             };
 
@@ -1591,7 +1596,7 @@ fn setup_helpers(
                         Ok(url) => url,
                         Err(e) => {
                             return Err(mlua::Error::RuntimeError(format!(
-                                "Invalid resource_search url {e}."
+                                "{ERROR_MSG_PREFIX}Invalid resource_search url {e}."
                             )));
                         }
                     };
@@ -1600,7 +1605,7 @@ fn setup_helpers(
                         Ok(response) => response.text().unwrap_or_default(),
                         Err(e) => {
                             return Err(mlua::Error::RuntimeError(format!(
-                                "Cannot find resource name with resource_search: {e}."
+                                "{ERROR_MSG_PREFIX}Cannot find resource name with resource_search: {e}."
                             )));
                         }
                     };
@@ -1609,13 +1614,13 @@ fn setup_helpers(
                         Ok(json) => json,
                         Err(e) => {
                             return Err(mlua::Error::RuntimeError(format!(
-                                "Invalid resource_search json {e}."
+                                "{ERROR_MSG_PREFIX}Invalid resource_search json {e}."
                             )));
                         }
                     };
 
                     let Some(resource_id) = resource_search_json["result"]["results"][0]["id"].as_str() else {
-                        return Err(mlua::Error::RuntimeError("Cannot find a resource name.".to_string()));
+                        return Err(mlua::Error::RuntimeError("{ERROR_MSG_PREFIX}Cannot find a resource name.".to_string()));
                     };
 
                     lookup_table_uri = format!("{ckan_api_url}/resource_show?id={resource_id}");
@@ -1626,7 +1631,7 @@ fn setup_helpers(
                     Ok(response) => response.text().unwrap_or_default(),
                     Err(e) => {
                         return Err(mlua::Error::RuntimeError(format!(
-                            "CKAN scheme used. Cannot get lookup CSV resource: {e}.",
+                            "{ERROR_MSG_PREFIX}CKAN scheme used. Cannot get lookup CSV resource: {e}.",
                         )));
                     }
                 };
@@ -1635,14 +1640,16 @@ fn setup_helpers(
                     Ok(json) => json,
                     Err(e) => {
                         return Err(mlua::Error::RuntimeError(format!(
-                            "Invalid resource_show json: {e}."
+                            "{ERROR_MSG_PREFIX}Invalid resource_show json: {e}."
                         )));
                     }
                 };
 
                 let Some(url) = resource_show_json["result"]["url"].as_str() else {
+                    let err_msg = "qsv_register_lookup() - Cannot get resource URL from resource_show JSON response.";
+                    log::error!("{err_msg}: {resource_show_json}");
                     return Err(mlua::Error::RuntimeError(
-                            "Cannot get resource URL.".to_string()
+                            err_msg.to_string()
                     ));
                 };
 
@@ -1650,7 +1657,7 @@ fn setup_helpers(
                     Ok(response) => response.text().unwrap_or_default(),
                     Err(e) => {
                         return Err(mlua::Error::RuntimeError(format!(
-                            "Cannot read lookup CSV at {url}: {e}."
+                            "{ERROR_MSG_PREFIX}Cannot read lookup CSV at {url}: {e}."
                         )));
                     }
                 }
@@ -1661,7 +1668,7 @@ fn setup_helpers(
                     Ok(url) => url,
                     Err(e) => {
                         return Err(mlua::Error::RuntimeError(format!(
-                            "Invalid lookup CSV url {e}."
+                            "{ERROR_MSG_PREFIX}Invalid lookup CSV url {e}."
                         )));
                     }
                 };
@@ -1670,7 +1677,7 @@ fn setup_helpers(
                         Ok(response) => response.text().unwrap_or_default(),
                         Err(e) => {
                             return Err(mlua::Error::RuntimeError(format!(
-                                "Cannot read lookup CSV at url: {e}."
+                                "{ERROR_MSG_PREFIX}Cannot read lookup CSV at url: {e}."
                             )));
                         }
                     }
@@ -1700,7 +1707,7 @@ fn setup_helpers(
             Ok(headers) => headers.clone(),
             Err(e) => {
                 return Err(mlua::Error::RuntimeError(format!(
-                    "qsv_register_lookup() cannot read headers of lookup table: {e}"
+                    "{ERROR_MSG_PREFIX}cannot read headers of lookup table: {e}"
                 )));
             }
         };
