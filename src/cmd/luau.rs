@@ -1418,46 +1418,52 @@ fn setup_helpers(
     //                  NOT be added automatically.
     //                  If data is "_NEWFILE!", a new empty file will be created and
     //                  if the file already exists, it will be overwritten.
-    //         returns: A Luau runtime error is returned if the file cannot be opened or written.
+    //         returns: Sanitized filename as a string.
+    //                  A Luau runtime error if the file cannot be opened or written.
     //
-    let qsv_writefile =
-        luau.create_function(move |_, (filename, mut data): (String, String)| {
-            use std::fs::OpenOptions;
+    let qsv_writefile = luau.create_function(move |_, (filename, data): (String, String)| {
+        use std::fs::OpenOptions;
 
-            use sanitise_file_name::sanitise;
+        use sanitise_file_name::sanitise;
 
-            const NEWFILE_FLAG: &str = "_NEWFILE!";
+        const NEWFILE_FLAG: &str = "_NEWFILE!";
 
-            let sanitised_filename = sanitise(&filename);
+        let sanitised_filename = sanitise(&filename);
 
-            let newfile_flag = data == NEWFILE_FLAG;
+        let newfile_flag = data == NEWFILE_FLAG;
 
-            let mut file = OpenOptions::new()
+        let mut file = if newfile_flag {
+            // create a new file. If the file already exists, overwrite it.
+            std::fs::File::create(sanitised_filename.clone()).map_err(|e| {
+                mlua::Error::RuntimeError(format!(
+                    "qsv_writefile() - Error creating a new file: {e}"
+                ))
+            })?
+        } else {
+            // append to an existing file. If the file does not exist, create it.
+            OpenOptions::new()
                 .write(true)
                 .create(true)
-                .append(!newfile_flag)
+                .append(true)
                 .open(sanitised_filename.clone())
                 .map_err(|e| {
-                    mlua::Error::RuntimeError(format!("qsv_writefile() - Error opening file: {e}"))
-                })?;
-            if newfile_flag {
-                file.write(b"").map_err(|e| {
                     mlua::Error::RuntimeError(format!(
-                        "qsv_writefile() - Error creating new file: {e}"
+                        "qsv_writefile() - Error opening existing file: {e}"
                     ))
-                })?;
-            } else {
-                file.write_all(data.as_bytes()).map_err(|e| {
-                    mlua::Error::RuntimeError(format!(
-                        "qsv_writefile() - Error appending to file: {e}"
-                    ))
-                })?;
-            }
+                })?
+        };
+        if !newfile_flag {
+            file.write_all(data.as_bytes()).map_err(|e| {
+                mlua::Error::RuntimeError(format!(
+                    "qsv_writefile() - Error appending to existing file: {e}"
+                ))
+            })?;
+        }
 
-            file.flush()?;
+        file.flush()?;
 
-            Ok(sanitised_filename)
-        })?;
+        Ok(sanitised_filename)
+    })?;
     luau.globals().set("qsv_writefile", qsv_writefile)?;
 
     // this is a helper function that can be called from the BEGIN, MAIN & END scripts to insert a
