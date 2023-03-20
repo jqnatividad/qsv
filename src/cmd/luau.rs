@@ -1479,7 +1479,9 @@ fn setup_helpers(
                     ))
                 })?
         };
-        if !newfile_flag {
+        if newfile_flag {
+            log::info!("qsv_writefile() - created file: {sanitised_filename}");
+        } else {
             let data_as_bytes = data.as_bytes();
             file.write_all(data_as_bytes).map_err(|e| {
                 mlua::Error::RuntimeError(format!(
@@ -1490,8 +1492,6 @@ fn setup_helpers(
                 "qsv_writefile() - appending {} bytes to file: {sanitised_filename}",
                 data_as_bytes.len()
             );
-        } else {
-            log::info!("qsv_writefile() - creating file: {sanitised_filename}");
         }
 
         file.flush()?;
@@ -1600,8 +1600,8 @@ fn setup_helpers(
     //
     //   qsv_shellcmd(shellcmd: String, args: String)
     //      shellcmd: the shell command to execute. For safety, only the following
-    //                commands are allowed: cat, cp, cut, echo, rg, grep, head, ls, mkdir,
-    //                mv, nl, pwd, sed, sort, tail, touch, tr, uniq, wc, whoami
+    //                commands are allowed: awk, cat, cp, cut, df, echo, rg, grep, head, ls,
+    //                mkdir, mv, nl, pwd, sed, sort, tail, touch, tr, uname, uniq, wc, whoami
     //         args: the arguments to pass to the command. stdin is not supported.
     //      returns: a table with stdout and stderr output of the shell command.
     //               A Luau runtime error if the command cannot be executed.
@@ -1615,9 +1615,11 @@ fn setup_helpers(
         #[strum(ascii_case_insensitive)]
         #[allow(non_camel_case_types)]
         enum ShellCmd {
+            Awk,
             Cat,
             Cp,
             Cut,
+            Df,
             Echo,
             Grep,
             Head,
@@ -1632,6 +1634,7 @@ fn setup_helpers(
             Tail,
             Touch,
             Tr,
+            Uname,
             Uniq,
             Wc,
             Whoami,
@@ -1642,8 +1645,8 @@ fn setup_helpers(
             return Err(mlua::Error::RuntimeError(format!(
                 "Invalid shell command: \"{shellcmd}\". \
                 Only the following commands are allowed: \
-                cat, cp, cut, echo, rg, grep, head, ls, mkdir, \
-                mv, nl, pwd, sed, sort, tail, touch, tr, uniq, wc, whoami"
+                awk, cat, cp, cut, df, echo, rg, grep, head, ls, mkdir, \
+                mv, nl, pwd, sed, sort, tail, touch, tr, uname, uniq, wc, whoami"
             )))
         };
 
