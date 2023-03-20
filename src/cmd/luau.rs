@@ -49,7 +49,8 @@ Some usage examples:
   "file:" prefix to read non-trivial scripts from the filesystem.
   $ qsv luau map Type -B "file:init.luau" -x "file:debitcredit.luau" -E "file:end.luau"
 
-With "luau map", if the MAIN script is invalid for a row, "<ERROR>" is returned for that row.
+With "luau map", if the MAIN script is invalid for a row, "<ERROR>" followed by a 
+detailed error message is returned for that row.
 With "luau filter", if the MAIN script is invalid for a row, that row is not filtered.
 
 If any row has an invalid result, an exitcode of 1 is returned and an error count is logged.
