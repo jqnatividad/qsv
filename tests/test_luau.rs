@@ -878,6 +878,215 @@ END {
 }
 
 #[test]
+fn luau_qsv_cmd() {
+    let wrk = Workdir::new("luau_qsv_cmd_test");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["letter", "Amount"],
+            svec!["a", "13"],
+            svec!["b", "24"],
+            svec!["c", "72"],
+            svec!["d", "7"],
+        ],
+    );
+
+    wrk.create_from_string(
+        "testqsvcmd.luau",
+        r#"
+BEGIN {
+    -- this is the BEGIN block, which is executed once at the beginning
+    -- where we typically initialize variables
+    running_total = 0;
+    grand_total = 0;
+    amount_array = {};
+    qsv_writefile("count.txt", "_NEWFILE!");
+}!
+
+-- this is the MAIN script, which is executed for each row
+-- note how we use the _IDX special variable to get the row index
+
+amount_array[_IDX] = Amount;
+running_total = running_total + Amount;
+grand_total = grand_total + running_total;
+-- running_total is the value we "map" to the "Running Total" column of each row
+return running_total;
+
+END {
+    -- and this is the END block, which is executed once at the end
+    -- note how we use the _ROWCOUNT special variable to get the number of rows
+    min_amount = math.min(unpack(amount_array));
+    max_amount = math.max(unpack(amount_array));
+
+    qsv_cmd_output = qsv_cmd("count data.csv");
+    qsv_writefile("count.txt", qsv_cmd_output.stdout);
+    return (`Min/Max: {min_amount}/{max_amount} Grand total of {_IDX - 1} rows: {grand_total}`);
+}!
+"#,
+    );
+
+    let mut cmd = wrk.command("luau");
+    cmd.arg("map")
+        .arg("Running Total")
+        .arg("-x")
+        .arg("file:testqsvcmd.luau")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["letter", "Amount", "Running Total"],
+        svec!["a", "13", "13"],
+        svec!["b", "24", "37"],
+        svec!["c", "72", "109"],
+        svec!["d", "7", "116"],
+    ];
+    assert_eq!(got, expected);
+
+    let end = wrk.output_stderr(&mut cmd);
+    let expected_end = "Min/Max: 7/72 Grand total of 3 rows: 275\n".to_string();
+    assert_eq!(end, expected_end);
+
+    let table_txt = wrk.read_to_string("count.txt");
+    let expected_table_txt = "4\n";
+    assert_eq!(table_txt, expected_table_txt);
+
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn luau_qsv_invalid_shellcmd() {
+    let wrk = Workdir::new("luau_qsv_invalid_shellcmd");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["letter", "Amount"],
+            svec!["a", "13"],
+            svec!["b", "24"],
+            svec!["c", "72"],
+            svec!["d", "7"],
+        ],
+    );
+
+    wrk.create_from_string(
+        "testqsvcmd.luau",
+        r#"
+BEGIN {
+    -- this is the BEGIN block, which is executed once at the beginning
+    -- where we typically initialize variables
+    running_total = 0;
+    grand_total = 0;
+    amount_array = {};
+    qsv_writefile("echo.txt", "_NEWFILE!");
+}!
+
+-- this is the MAIN script, which is executed for each row
+-- note how we use the _IDX special variable to get the row index
+
+amount_array[_IDX] = Amount;
+running_total = running_total + Amount;
+grand_total = grand_total + running_total;
+-- running_total is the value we "map" to the "Running Total" column of each row
+return running_total;
+
+END {
+    -- and this is the END block, which is executed once at the end
+    -- note how we use the _ROWCOUNT special variable to get the number of rows
+    min_amount = math.min(unpack(amount_array));
+    max_amount = math.max(unpack(amount_array));
+
+    qsv_shellcmd_output = qsv_shellcmd("rm","-rf *");
+    qsv_writefile("echo.txt", qsv_shellcmd_output.stderr);
+    return (`Min/Max: {min_amount}/{max_amount} Grand total of {_IDX - 1} rows: {grand_total}`);
+}!
+"#,
+    );
+
+    let mut cmd = wrk.command("luau");
+    cmd.arg("map")
+        .arg("Running Total")
+        .arg("-x")
+        .arg("file:testqsvcmd.luau")
+        .arg("data.csv");
+
+    let end = wrk.output_stderr(&mut cmd);
+    assert!(end.starts_with("<ERROR>"));
+
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn luau_qsv_shellcmd() {
+    let wrk = Workdir::new("luau_qsv_shellcmd");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["letter", "Amount"],
+            svec!["a", "13"],
+            svec!["b", "24"],
+            svec!["c", "72"],
+            svec!["d", "7"],
+        ],
+    );
+
+    wrk.create_from_string(
+        "testqsvcmd.luau",
+        r#"
+BEGIN {
+    -- this is the BEGIN block, which is executed once at the beginning
+    -- where we typically initialize variables
+    running_total = 0;
+    grand_total = 0;
+    amount_array = {};
+    qsv_writefile("echo.txt", "_NEWFILE!");
+}!
+
+-- this is the MAIN script, which is executed for each row
+-- note how we use the _IDX special variable to get the row index
+
+amount_array[_IDX] = Amount;
+running_total = running_total + Amount;
+grand_total = grand_total + running_total;
+-- running_total is the value we "map" to the "Running Total" column of each row
+return running_total;
+
+END {
+    -- and this is the END block, which is executed once at the end
+    -- note how we use the _ROWCOUNT special variable to get the number of rows
+    min_amount = math.min(unpack(amount_array));
+    max_amount = math.max(unpack(amount_array));
+
+    qsv_shellcmd_output = qsv_shellcmd("echo","the quick brown fox jumped over the lazy dog");
+    qsv_writefile("echo.txt", qsv_shellcmd_output.stdout);
+    return (`Min/Max: {min_amount}/{max_amount} Grand total of {_IDX - 1} rows: {grand_total}`);
+}!
+"#,
+    );
+
+    let mut cmd = wrk.command("luau");
+    cmd.arg("map")
+        .arg("Running Total")
+        .arg("-x")
+        .arg("file:testqsvcmd.luau")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["letter", "Amount", "Running Total"],
+        svec!["a", "13", "13"],
+        svec!["b", "24", "37"],
+        svec!["c", "72", "109"],
+        svec!["d", "7", "116"],
+    ];
+    assert_eq!(got, expected);
+
+    let table_txt = wrk.read_to_string("echo.txt");
+    let expected_table_txt = "the quick brown fox jumped over the lazy dog\n";
+    assert_eq!(table_txt, expected_table_txt);
+
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
 fn luau_insertrecord() {
     let wrk = Workdir::new("luau_insertrecord");
     wrk.create(
@@ -1632,16 +1841,6 @@ fn luau_map_error() {
         .arg("div")
         .arg("math.dancefloor(number / 2)")
         .arg("data.csv");
-
-    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![
-        svec!["letter", "number", "div"],
-        svec!["a", "13", "<ERROR>"],
-        svec!["b", "24", "<ERROR>"],
-        svec!["c", "72", "<ERROR>"],
-        svec!["d", "7", "<ERROR>"],
-    ];
-    assert_eq!(got, expected);
 
     wrk.assert_err(&mut cmd);
     let stderr_string = wrk.output_stderr(&mut cmd);

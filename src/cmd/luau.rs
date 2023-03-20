@@ -49,7 +49,8 @@ Some usage examples:
   "file:" prefix to read non-trivial scripts from the filesystem.
   $ qsv luau map Type -B "file:init.luau" -x "file:debitcredit.luau" -E "file:end.luau"
 
-With "luau map", if the MAIN script is invalid for a row, "<ERROR>" is returned for that row.
+With "luau map", if the MAIN script is invalid for a row, "<ERROR>" followed by a 
+detailed error message is returned for that row.
 With "luau filter", if the MAIN script is invalid for a row, that row is not filtered.
 
 If any row has an invalid result, an exitcode of 1 is returned and an error count is logged.
@@ -558,7 +559,6 @@ fn sequential_mode(
         progress.set_draw_target(ProgressDrawTarget::hidden());
     }
 
-    let error_result: Value = luau.load("return \"<ERROR>\";").eval()?;
     let main_bytecode = luau_compiler.compile(main_script);
     let mut record = csv::StringRecord::new();
     let mut idx = 0_u64;
@@ -609,8 +609,11 @@ fn sequential_mode(
             Ok(computed) => computed,
             Err(e) => {
                 error_count += 1;
-                log::error!("_IDX: {idx} error({error_count}): {e:?}");
-                error_result.clone()
+                let err_msg = format!("<ERROR> _IDX: {idx} error({error_count}): {e:?}");
+                log::error!("{err_msg}");
+
+                mlua::ToLua::to_lua(err_msg, luau)
+                    .map_err(|e| format!("Failed to convert error message to Lua: {e}"))?
             }
         };
 
@@ -696,9 +699,12 @@ fn sequential_mode(
         {
             Ok(computed) => computed,
             Err(e) => {
-                log::error!("END error: Cannot evaluate \"{end_script}\".\n{e}");
+                let err_msg = format!("<ERROR> END error: Cannot evaluate \"{end_script}\".\n{e}");
+                log::error!("{err_msg}");
                 log::error!("END globals: {globals:?}");
-                error_result.clone()
+
+                mlua::ToLua::to_lua(err_msg, luau)
+                    .map_err(|e| format!("Failed to convert error message to Lua: {e}"))?
             }
         };
 
@@ -860,8 +866,6 @@ fn random_acess_mode(
     debug!("BEGIN current record: {curr_record}");
     idx_file.seek(curr_record)?;
 
-    let error_result: Value = luau.load("return \"<ERROR>\";").eval()?;
-
     let main_bytecode = luau_compiler.compile(main_script);
     let mut record = csv::StringRecord::new();
     let mut error_count = 0_usize;
@@ -938,8 +942,11 @@ fn random_acess_mode(
             Ok(computed) => computed,
             Err(e) => {
                 error_count += 1;
-                log::error!("_IDX: {curr_record} error({error_count}): {e:?}");
-                error_result.clone()
+                let err_msg = format!("<ERROR> _IDX: {curr_record} error({error_count}): {e:?}");
+                log::error!("{err_msg}");
+
+                mlua::ToLua::to_lua(err_msg, luau)
+                    .map_err(|e| format!("Failed to convert error message to Lua: {e}"))?
             }
         };
 
@@ -1028,9 +1035,12 @@ fn random_acess_mode(
         {
             Ok(computed) => computed,
             Err(e) => {
-                log::error!("END error: Cannot evaluate \"{end_script}\".\n{e}");
+                let err_msg = format!("<ERROR> END error: Cannot evaluate \"{end_script}\".\n{e}");
+                log::error!("{err_msg}");
                 log::error!("END globals: {globals:?}");
-                error_result.clone()
+
+                mlua::ToLua::to_lua(err_msg, luau)
+                    .map_err(|e| format!("Failed to convert error message to Lua: {e}"))?
             }
         };
 
@@ -1501,6 +1511,133 @@ fn setup_helpers(
         Ok(())
     })?;
     luau.globals().set("qsv_insertrecord", qsv_insertrecord)?;
+
+    // this is a helper function to imvoke other qsv commands from Luau scripts.
+    //
+    //   qsv_cmd(qsv_args: String)
+    //      qsv_args: the arguments to pass to qsv. Note that the qsv binary will be
+    //                automatically prepended. stdin is not supported.
+    //      returns: a table with stdout and stderr output of the qsv command.
+    //               A Luau runtime error if the command cannot be executed.
+    //
+    let qsv_cmd = luau.create_function(|luau, args: mlua::String| {
+        let qsv_binary = env::current_exe().unwrap();
+
+        let mut cmd = std::process::Command::new(qsv_binary);
+        let qsv_args = args.to_str().unwrap_or_default().to_string();
+        let args_vec: Vec<&str> = qsv_args.split_whitespace().collect();
+        log::info!("Invoking qsv_cmd: {qsv_args}");
+        let result = cmd.args(args_vec).output();
+
+        match result {
+            Ok(output) => {
+                let child_stdout = simdutf8::basic::from_utf8(&output.stdout)
+                    .unwrap_or_default()
+                    .to_string();
+                let child_stderr = simdutf8::basic::from_utf8(&output.stderr)
+                    .unwrap_or_default()
+                    .to_string();
+                log::info!("qsv command stdout: {child_stdout} stderr: {child_stderr}");
+
+                let output_table = luau.create_table()?;
+                output_table.set("stdout", child_stdout)?;
+                output_table.set("stderr", child_stderr)?;
+
+                Ok(output_table)
+            }
+            Err(e) => {
+                log::error!("failed to execute qsv command: {e}");
+                Err(mlua::Error::RuntimeError(format!(
+                    r#"failed to execute qsv command "{qsv_args}": {e}"#
+                )))
+            }
+        }
+    })?;
+    luau.globals().set("qsv_cmd", qsv_cmd)?;
+
+    // this is a helper function to imvoke shell commands from Luau scripts.
+    //
+    //   qsv_shellcmd(shellcmd: String, args: String)
+    //      shellcmd: the shell command to execute. For safety, only the following
+    //                commands are allowed: cat, cp, cut, echo, rg, grep, head, ls, mkdir,
+    //                mv, nl, pwd, sed, sort, tail, touch, tr, uniq, wc, whoami
+    //         args: the arguments to pass to the command. stdin is not supported.
+    //      returns: a table with stdout and stderr output of the shell command.
+    //               A Luau runtime error if the command cannot be executed.
+    //
+    let qsv_shellcmd = luau.create_function(|luau, (shellcmd, args): (String, String)| {
+        use std::str::FromStr;
+
+        use strum_macros::EnumString;
+
+        #[derive(EnumString)]
+        #[strum(ascii_case_insensitive)]
+        #[allow(non_camel_case_types)]
+        enum ShellCmd {
+            Cat,
+            Cp,
+            Cut,
+            Echo,
+            Grep,
+            Head,
+            Ls,
+            Mkdir,
+            Mv,
+            Nl,
+            Pwd,
+            Rg,
+            Sed,
+            Sort,
+            Tail,
+            Touch,
+            Tr,
+            Uniq,
+            Wc,
+            Whoami,
+        }
+
+        let shellcmd_string = shellcmd.to_ascii_lowercase();
+        let Ok(_) = ShellCmd::from_str(&shellcmd_string) else {
+            return Err(mlua::Error::RuntimeError(format!(
+                "Invalid shell command: \"{shellcmd}\". \
+                Only the following commands are allowed: \
+                cat, cp, cut, echo, rg, grep, head, ls, mkdir, \
+                mv, nl, pwd, sed, sort, tail, touch, tr, uniq, wc, whoami"
+            )))
+        };
+
+        let mut cmd = std::process::Command::new(shellcmd_string.clone());
+        let args_string = args.as_str().to_string();
+        let args_vec: Vec<&str> = args_string.split_whitespace().collect();
+        log::info!("Invoking qsv_shellcmd: {shellcmd_string} {args_string}");
+        let result = cmd.args(args_vec).output();
+
+        match result {
+            Ok(output) => {
+                let child_stdout = simdutf8::basic::from_utf8(&output.stdout)
+                    .unwrap_or_default()
+                    .to_string();
+                let child_stderr = simdutf8::basic::from_utf8(&output.stderr)
+                    .unwrap_or_default()
+                    .to_string();
+                log::info!("shellcmd stdout: {child_stdout} stderr: {child_stderr}");
+
+                let output_table = luau.create_table()?;
+                output_table.set("stdout", child_stdout)?;
+                output_table.set("stderr", child_stderr)?;
+
+                Ok(output_table)
+            }
+            Err(e) => {
+                let err_msg = format!(
+                    r#"failed to execute shell command "{shellcmd_string}" "{args_string}": {e}"#
+                );
+                log::error!("{err_msg}");
+                Err(mlua::Error::RuntimeError(err_msg))
+            }
+        }
+    })?;
+    luau.globals().set("qsv_shellcmd", qsv_shellcmd)?;
 
     // this is a helper function that can be called from the BEGIN script to register
     // and load a lookup table. It expects two arguments - the lookup_name & the
