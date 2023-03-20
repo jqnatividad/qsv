@@ -1531,12 +1531,19 @@ fn setup_helpers(
 
         match result {
             Ok(output) => {
-                let child_stdout = simdutf8::basic::from_utf8(&output.stdout)
-                    .unwrap_or_default()
-                    .to_string();
-                let child_stderr = simdutf8::basic::from_utf8(&output.stderr)
-                    .unwrap_or_default()
-                    .to_string();
+                let child_stdout = if let Ok(s) = simdutf8::basic::from_utf8(&output.stdout) {
+                    s.to_string()
+                } else {
+                    let lossy_string = String::from_utf8_lossy(output.stdout.as_slice());
+                    lossy_string.to_string()
+                };
+
+                let child_stderr = if let Ok(s) = simdutf8::basic::from_utf8(&output.stderr) {
+                    s.to_string()
+                } else {
+                    let lossy_string = String::from_utf8_lossy(output.stderr.as_slice());
+                    lossy_string.to_string()
+                };
                 log::info!("qsv command stdout: {child_stdout} stderr: {child_stderr}");
 
                 let output_table = luau.create_table()?;
@@ -1614,12 +1621,19 @@ fn setup_helpers(
 
         match result {
             Ok(output) => {
-                let child_stdout = simdutf8::basic::from_utf8(&output.stdout)
-                    .unwrap_or_default()
-                    .to_string();
-                let child_stderr = simdutf8::basic::from_utf8(&output.stderr)
-                    .unwrap_or_default()
-                    .to_string();
+                let child_stdout = if let Ok(s) = simdutf8::basic::from_utf8(&output.stdout) {
+                    s.to_string()
+                } else {
+                    let lossy_string = String::from_utf8_lossy(output.stdout.as_slice());
+                    lossy_string.to_string()
+                };
+
+                let child_stderr = if let Ok(s) = simdutf8::basic::from_utf8(&output.stderr) {
+                    s.to_string()
+                } else {
+                    let lossy_string = String::from_utf8_lossy(output.stderr.as_slice());
+                    lossy_string.to_string()
+                };
                 log::info!("shellcmd stdout: {child_stdout} stderr: {child_stderr}");
 
                 let output_table = luau.create_table()?;
