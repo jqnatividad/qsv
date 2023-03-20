@@ -543,7 +543,7 @@ fn sequential_mode(
     )?;
     if QSV_BREAK.load(Ordering::Relaxed) {
         let qsv_break_msg: String = globals.get("_QSV_BREAK_MSG")?;
-        eprintln!("{qsv_break_msg}");
+        winfo!("{qsv_break_msg}");
         return Ok(());
     }
 
@@ -626,7 +626,7 @@ fn sequential_mode(
 
         if QSV_BREAK.load(Ordering::Relaxed) {
             let qsv_break_msg: String = globals.get("_QSV_BREAK_MSG")?;
-            eprintln!("{qsv_break_msg}");
+            winfo!("{qsv_break_msg}");
             break 'main;
         }
 
@@ -654,6 +654,9 @@ fn sequential_mode(
                 create_insertrecord(&insertrecord_table, &mut insertrecord, headers_count)?;
 
                 if QSV_SKIP.load(Ordering::Relaxed) {
+                    if log_enabled!(log::Level::Debug) {
+                        debug!("Skipping record {idx} because _QSV_SKIP is set to true");
+                    }
                     QSV_SKIP.store(false, Ordering::Relaxed);
                 } else {
                     wtr.write_record(&record)?;
@@ -854,7 +857,7 @@ fn random_acess_mode(
     )?;
     if QSV_BREAK.load(Ordering::Relaxed) {
         let qsv_break_msg: String = globals.get("_QSV_BREAK_MSG")?;
-        eprintln!("{qsv_break_msg}");
+        winfo!("{qsv_break_msg}");
         return Ok(());
     }
 
@@ -959,7 +962,7 @@ fn random_acess_mode(
 
         if QSV_BREAK.load(Ordering::Relaxed) {
             let qsv_break_msg: String = globals.get("_QSV_BREAK_MSG")?;
-            eprintln!("{qsv_break_msg}");
+            winfo!("{qsv_break_msg}");
             break 'main;
         }
 
@@ -985,6 +988,9 @@ fn random_acess_mode(
                 create_insertrecord(&insertrecord_table, &mut insertrecord, headers_count)?;
 
                 if QSV_SKIP.load(Ordering::Relaxed) {
+                    if log_enabled!(log::Level::Debug) {
+                        debug!("Skipping record {curr_record} because _QSV_SKIP is set to true");
+                    }
                     QSV_SKIP.store(false, Ordering::Relaxed);
                 } else {
                     wtr.write_record(&record)?;
@@ -1193,6 +1199,10 @@ fn create_insertrecord(
     while columns_inserted < headers_count {
         insertrecord.push_field("");
         columns_inserted += 1;
+    }
+
+    if log_enabled!(log::Level::Debug) {
+        debug!("insertrecord: {insertrecord:?}");
     }
     Ok(())
 }
@@ -1470,11 +1480,18 @@ fn setup_helpers(
                 })?
         };
         if !newfile_flag {
-            file.write_all(data.as_bytes()).map_err(|e| {
+            let data_as_bytes = data.as_bytes();
+            file.write_all(data_as_bytes).map_err(|e| {
                 mlua::Error::RuntimeError(format!(
                     "qsv_writefile() - Error appending to existing file: {e}"
                 ))
             })?;
+            log::info!(
+                "qsv_writefile() - appending {} bytes to file: {sanitised_filename}",
+                data_as_bytes.len()
+            );
+        } else {
+            log::info!("qsv_writefile() - creating file: {sanitised_filename}");
         }
 
         file.flush()?;
@@ -1515,6 +1532,12 @@ fn setup_helpers(
         luau.globals()
             .set("_QSV_INSERTRECORD_TBL", insertrecord_table.clone())?;
 
+        if log::log_enabled!(log::Level::Debug) {
+            log::debug!("qsv_insertrecord() - inserting record: {insertrecord_table:?}");
+        } else {
+            log::info!("qsv_insertrecord() - inserting record");
+        }
+
         Ok(())
     })?;
     luau.globals().set("qsv_insertrecord", qsv_insertrecord)?;
@@ -1551,7 +1574,11 @@ fn setup_helpers(
                     let lossy_string = String::from_utf8_lossy(output.stderr.as_slice());
                     lossy_string.to_string()
                 };
-                log::info!("qsv command stdout: {child_stdout} stderr: {child_stderr}");
+                if log_enabled!(log::Level::Debug) {
+                    log::debug!("qsv command stdout: {child_stdout} stderr: {child_stderr}");
+                } else {
+                    log::info!("qsv command executed.");
+                }
 
                 let output_table = luau.create_table()?;
                 output_table.set("stdout", child_stdout)?;
@@ -1641,7 +1668,11 @@ fn setup_helpers(
                     let lossy_string = String::from_utf8_lossy(output.stderr.as_slice());
                     lossy_string.to_string()
                 };
-                log::info!("shellcmd stdout: {child_stdout} stderr: {child_stderr}");
+                if log_enabled!(log::Level::Debug) {
+                    log::debug!("shellcmd stdout: {child_stdout} stderr: {child_stderr}");
+                } else {
+                    log::info!("shellcmd executed.");
+                }
 
                 let output_table = luau.create_table()?;
                 output_table.set("stdout", child_stdout)?;
@@ -1910,7 +1941,13 @@ fn setup_helpers(
         }
 
         luau.globals()
-            .raw_set(lookup_name, lookup_table.clone())?;
+            .raw_set(lookup_name.clone(), lookup_table.clone())?;
+
+        if log_enabled!(log::Level::Debug) {
+            debug!("qsv_register_lookup() - lookup table \"{lookup_name}\": {lookup_table:#?}");
+        } else {
+            info!("qsv_register_lookup() - lookup table \"{lookup_name}\" registered");
+        }
 
         // now that we've successfully loaded the lookup table, we return the headers
         // as a table so the user can use them to access the values
