@@ -1010,8 +1010,11 @@ END {
         .arg("file:testqsvcmd.luau")
         .arg("data.csv");
 
-    let end = wrk.output_stderr(&mut cmd);
-    assert!(end.starts_with("<ERROR>"));
+    let output_stderr = wrk.output_stderr(&mut cmd);
+    assert!(
+        output_stderr.starts_with("<ERROR>")
+            && output_stderr.contains("runtime error: Invalid shell command: \"rm\".")
+    );
 
     wrk.assert_success(&mut cmd);
 }
