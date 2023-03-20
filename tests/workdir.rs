@@ -82,6 +82,13 @@ impl Workdir {
         file.flush().unwrap();
     }
 
+    pub fn read_to_string(&self, filename: &str) -> String {
+        let mut file = File::open(self.path(filename)).unwrap();
+        let mut contents = String::new();
+        file.read_to_string(&mut contents).unwrap_or_default();
+        contents
+    }
+
     pub fn read_stdout<T: Csv>(&self, cmd: &mut process::Command) -> T {
         let stdout: String = self.stdout(cmd);
         let mut rdr = csv::ReaderBuilder::new()
