@@ -59,18 +59,19 @@ SPECIAL VARIABLES:
   "_IDX" - a READ-only variable that is zero during the BEGIN script and
        set to the current row number during the MAIN & END scripts.
 
-       "_IDX" is primarily used when the CSV has no index and the MAIN script evaluates each
-       row in sequence (SEQUENTIAL MODE).
+       It is primarily used in SEQUENTIAL MODE when the CSV has no index or you wish
+       to process the CSV sequentially.
  
   "_INDEX" - a READ/WRITE variable that enables RANDOM ACCESS MODE when used in a script.
-       Setting it to a row number will change the current row to the specified row number.
+       Using "_INDEX" in a script switches qsv to RANDOM ACCESS MODE where setting it
+       to a row number will change the current row to the specified row number.
        It will only work, however, if the CSV has an index.
 
        When using _INDEX, the MAIN script will keep looping and evaluate the row specified by
-       _INDEX until _INDEX is set to an invalid row number (e.g. negative number or to a value
-       greater than rowcount).
+       _INDEX until _INDEX is set to an invalid row number (e.g. <= zero or to a value
+       greater than _ROWCOUNT).
 
-       If the CSV has no index, it will abort with an error unless "qsv_autoindex()" is
+       If the CSV has no index, qsv will abort with an error unless "qsv_autoindex()" is
        called in the BEGIN script to create an index.
        
   "_ROWCOUNT" - a READ-only variable which is zero during the BEGIN & MAIN scripts, 
@@ -80,16 +81,20 @@ SPECIAL VARIABLES:
        of the CSV file, even from the BEGINning (RANDOM ACCESS MODE).
 
   "_LASTROW" - a READ-only variable that is set to the last row number of the CSV file.
-       It will only work, however, if the CSV has an index (RANDOM ACCESS MODE).
+       Like _INDEX, it will also trigger RANDOM ACCESS MODE if used in a script.
 
-Luau's standard library is relatively minimal (https://luau-lang.org/library).
+       Similarly, if the CSV has no index, qsv will also abort with an error unless
+       "qsv_autoindex()" is called in the BEGIN script to create an index.
+
+For security and safety reasons as a purpose-built embeddable interpreter, Luau's standard library
+is relatively minimal (https://luau-lang.org/library).
 That's why qsv preloads the LuaDate library as date manipulation is a common data-wrangling task.
 See https://tieske.github.io/date/#date-id96473 for info on how to use the LuaDate library.
 
 Additional libraries can be loaded from the LUAU_PATH using luau's "require" function.
 See http://lua-users.org/wiki/LibrariesAndBindings for a list of other libraries.
 
-With the judicious use of "require", the BEGIN script & the special variables, one can create
+With the judicious use of "require", the BEGIN script & special variables, one can create
 variables/tables/arrays that can be used for complex aggregation operations in the END script.
 
 TIP: When developing Luau scripts, be sure to take advantage of the "qsv_log" function to debug your script.
@@ -98,9 +103,11 @@ environment variable. The first parameter to qsv_log is the log level (info, war
 of the log message and will default to "info" if an invalid log level is specified.
 You can add as many as 255 addl parameters which will be concatenated and logged as a single message.
 
-There are more Luau helper functions in addition to "qsv_log": "qsv_break", "qsv_insertrecord",
-"qsv_autoindex", and "qsv_coalesce". Detailed descriptions of these helpers can be found in the
-"setup_helpers" section at the bottom of this file.
+There are more Luau helper functions in addition to "qsv_log": "qsv_break", "qsv_skip", "qsv_insertrecord",
+"qsv_autoindex", "qsv_coalesce", "qsv_sleep", "qsv_writefile", "qsv_cmd", "qsv_shellcmd", and last but
+not least - the powerful "qsv_register_lookup" which allows you to "lookup" values against other CSVs on the
+filesystem, a URL, datHere's lookup repo or CKAN instances.
+Detailed descriptions of these helpers can be found in the "setup_helpers" section at the bottom of this file.
 
 For more detailed examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_luau.rs.
 
@@ -1661,7 +1668,7 @@ fn setup_helpers(
     // The first column is the key and the rest of the columns are values stored in a
     // table indexed by column name.
     //
-    //   qsv_register(lookup_name, lookup_table_uri)
+    //   qsv_register_lookup(lookup_name, lookup_table_uri)
     //            lookup_name: The name of the Luau table to load the CSV into
     //       lookup_table_uri: The name of the CSV file to load. Note that it will use
     //                         the luau --delimiter option if specified.
