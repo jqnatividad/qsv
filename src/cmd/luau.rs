@@ -1381,7 +1381,7 @@ fn setup_helpers(
     luau.globals().set("qsv_sleep", qsv_sleep)?;
 
     // this is a helper function that can be called from the MAIN script
-    // to sleep for N milliseconds.
+    // to skip writing the current row's output when processing CSVs.
     //
     //   qsv_skip()
     //      returns: None
@@ -1484,8 +1484,8 @@ fn setup_helpers(
     luau.globals().set("qsv_writefile", qsv_writefile)?;
 
     // this is a helper function that can be called from the BEGIN, MAIN & END scripts to insert a
-    // record It will automatically ignore excess columns, and fill up columns with
-    // empty strings if there are less columns specified than expected.
+    // record into the output CSV. It will automatically ignore excess columns, and fill up columns
+    // with empty strings if there are less columns specified than expected.
     // Note that you can only insert ONE record in the BEGIN and END scripts
     //
     //   qsv_insertrecord(col1, .., colN)
