@@ -1,3 +1,5 @@
+use newline_converter::dos2unix;
+
 use crate::workdir::Workdir;
 
 #[test]
@@ -1079,9 +1081,12 @@ END {
     ];
     assert_eq!(got, expected);
 
-    let table_txt = wrk.read_to_string("echo.txt");
-    let expected_table_txt = "the quick brown fox jumped over the lazy dog\n";
-    assert_eq!(table_txt, expected_table_txt);
+    let echo_text = wrk.read_to_string("echo.txt");
+    let expected_echo_text = "the quick brown fox jumped over the lazy dog";
+    assert_eq!(
+        dos2unix(&echo_text).trim_end(),
+        dos2unix(expected_echo_text).trim_end()
+    );
 
     wrk.assert_success(&mut cmd);
 }
