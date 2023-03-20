@@ -245,7 +245,7 @@ It also allows mapping of multiple new computed columns, supports random access 
 
 As date manipulation is often needed, we're also preloading the [LuaDate](https://tieske.github.io/date/) module.
 
-Finally, as [qsv's DSL]((#luau_deeplink)) (👑), `luau` will gain even more features over time compared to the `python` feature.
+Finally, as [qsv's DSL](#luau_deeplink) (👑), `luau` will gain even more features over time compared to the `python` feature.
 
 [Luau 0.567](https://github.com/Roblox/luau/releases/tag/0.567) is currently embedded - qsv's policy is to use the latest stable Luau version at the time of each qsv release.
 
