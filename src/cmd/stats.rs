@@ -1057,6 +1057,7 @@ impl FieldType {
         sample: &[u8],
         current_type: FieldType,
     ) -> (FieldType, Option<i64>) {
+        #[allow(clippy::len_zero)]
         if sample.len() == 0 {
             return (TNull, None);
         }
@@ -1166,6 +1167,7 @@ struct TypedSum {
 impl TypedSum {
     #[inline]
     fn add(&mut self, typ: FieldType, sample: &[u8]) {
+        #[allow(clippy::len_zero)]
         if sample.len() == 0 {
             return;
         }
@@ -1246,8 +1248,9 @@ struct TypedMinMax {
 impl TypedMinMax {
     #[inline]
     fn add(&mut self, typ: FieldType, sample: &[u8]) {
-        self.str_len.add(sample.len());
-        if sample.len() == 0 {
+        let sample_len = sample.len();
+        self.str_len.add(sample_len);
+        if sample_len == 0 {
             return;
         }
         self.strings.add(sample.to_vec());
