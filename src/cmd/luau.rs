@@ -201,6 +201,7 @@ use indicatif::{ProgressBar, ProgressDrawTarget, ProgressStyle};
 use log::{debug, info, log_enabled};
 use mlua::{Lua, LuaSerdeExt, Value};
 use serde::Deserialize;
+use strum_macros::IntoStaticStr;
 use tempfile;
 
 use crate::{
@@ -242,6 +243,7 @@ static QSV_SKIP: AtomicBool = AtomicBool::new(false);
 
 // there are 3 stages: 1-BEGIN, 2-MAIN, 3-END
 #[repr(i8)]
+#[derive(IntoStaticStr)]
 enum Stage {
     Begin = 1,
     Main  = 2,
@@ -1298,11 +1300,8 @@ fn setup_helpers(
             // at which stage are we logging?
             // safety: this is safe to unwrap because we only set LUAU_STAGE using the Stage enum
             let stage: Stage = LUAU_STAGE.load(Ordering::Relaxed).try_into().unwrap();
-            match stage {
-                Stage::Begin => "BEGIN: ".to_string(),
-                Stage::Main => "MAIN: ".to_string(),
-                Stage::End => "END: ".to_string(),
-            }
+            let stage_str: &'static str = stage.into();
+            format!("{}: ", stage_str.to_ascii_uppercase())
         };
         let mut idx = 0_u8;
         let mut log_level = String::new();
