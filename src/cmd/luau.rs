@@ -1434,6 +1434,57 @@ fn setup_helpers(
     })?;
     luau.globals().set("qsv_autoindex", qsv_autoindex)?;
 
+    // this is a helper function to set an environment variable.
+    // Note that the environment variable is set in the current process
+    // and NOT in the shell/parent process that is executing the qsv process.
+    //
+    //   qsv_setenv(envar: string, value: string)
+    //          envvar: the name of the environment variable to set
+    //           value: the value to set the environment variable to.
+    //                  Set to "" to unset the environment variable.
+    //         returns: None
+    //                  A Luau runtime error if the envvar is empty.
+    //
+    let qsv_setenv = luau.create_function(|_, (envvar, value): (String, String)| {
+        if envvar.is_empty() {
+            return Err(mlua::Error::RuntimeError(
+                "qsv_setenv() - envvar cannot be empty.".to_string(),
+            ));
+        }
+
+        if value.is_empty() {
+            std::env::remove_var(envvar);
+        } else {
+            std::env::set_var(envvar, value);
+        }
+
+        Ok(())
+    })?;
+    luau.globals().set("qsv_setenv", qsv_setenv)?;
+
+    // this is a helper function to get the value of an environment variable.
+    // Note that the environment variable is read from the parent AND current processes.
+    //
+    //   qsv_getenv(envar: string)
+    //          envvar: the name of the environment variable to get
+    //         returns: The value of the environment variable or an empty string if the
+    //                  environment variable is not set.
+    //                  A Luau runtime error if the envvar argument is empty.
+    //
+    let qsv_getenv = luau.create_function(|_, envvar: String| {
+        if envvar.is_empty() {
+            return Err(mlua::Error::RuntimeError(
+                "qsv_getenv() - envvar cannot be empty.".to_string(),
+            ));
+        }
+
+        match std::env::var(envvar) {
+            Ok(val) => Ok(val),
+            Err(_) => Ok(String::new()),
+        }
+    })?;
+    luau.globals().set("qsv_getenv", qsv_getenv)?;
+
     // this is a helper function that can be called from the BEGIN, MAIN & END scripts to write to
     // a file. The file will be created if it does not exist. The file will be appended to if it
     // already exists. The filename will be sanitized and will be written to the current working
