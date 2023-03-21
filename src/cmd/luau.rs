@@ -241,9 +241,26 @@ static QSV_BREAK: AtomicBool = AtomicBool::new(false);
 static QSV_SKIP: AtomicBool = AtomicBool::new(false);
 
 // there are 3 stages: 1-BEGIN, 2-MAIN, 3-END
-const BEGIN_STAGE: i8 = 1;
-const MAIN_STAGE: i8 = 2;
-const END_STAGE: i8 = 3;
+#[repr(i8)]
+enum Stage {
+    Begin = 1,
+    Main  = 2,
+    End   = 3,
+}
+
+impl TryFrom<i8> for Stage {
+    type Error = ();
+
+    fn try_from(v: i8) -> Result<Self, Self::Error> {
+        match v {
+            x if x == Stage::Begin as i8 => Ok(Stage::Begin),
+            x if x == Stage::Main as i8 => Ok(Stage::Main),
+            x if x == Stage::End as i8 => Ok(Stage::End),
+            _ => Err(()),
+        }
+    }
+}
+
 static LUAU_STAGE: AtomicI8 = AtomicI8::new(0);
 
 static TIMEOUT_SECS: AtomicU16 = AtomicU16::new(15);
@@ -513,7 +530,7 @@ fn sequential_mode(
     globals.set("_ROWCOUNT", 0)?;
     if !begin_script.is_empty() {
         info!("Compiling and executing BEGIN script. _IDX: 0 _ROWCOUNT: 0");
-        LUAU_STAGE.store(BEGIN_STAGE, Ordering::Relaxed);
+        LUAU_STAGE.store(Stage::Begin as i8, Ordering::Relaxed);
 
         let begin_bytecode = luau_compiler.compile(begin_script);
         if let Err(e) = luau
@@ -569,7 +586,7 @@ fn sequential_mode(
     let mut idx = 0_u64;
     let mut error_count = 0_usize;
 
-    LUAU_STAGE.store(MAIN_STAGE, Ordering::Relaxed);
+    LUAU_STAGE.store(Stage::Main as i8, Ordering::Relaxed);
     info!("Executing MAIN script.");
 
     // main loop
@@ -695,7 +712,7 @@ fn sequential_mode(
         // should make for more readable END scripts.
         // Also, _ROWCOUNT is zero during the main script, and only set
         // to _IDX during the END script.
-        LUAU_STAGE.store(END_STAGE, Ordering::Relaxed);
+        LUAU_STAGE.store(Stage::End as i8, Ordering::Relaxed);
         globals.set("_ROWCOUNT", idx)?;
 
         info!("Compiling and executing END script. _ROWCOUNT: {idx}");
@@ -827,7 +844,7 @@ fn random_acess_mode(
             "Compiling and executing BEGIN script. _ROWCOUNT: {row_count} _LASTROW: {}",
             row_count - 1
         );
-        LUAU_STAGE.store(BEGIN_STAGE, Ordering::Relaxed);
+        LUAU_STAGE.store(Stage::Begin as i8, Ordering::Relaxed);
 
         let begin_bytecode = luau_compiler.compile(begin_script);
         if let Err(e) = luau
@@ -904,7 +921,7 @@ fn random_acess_mode(
         progress.set_draw_target(ProgressDrawTarget::hidden());
     }
 
-    LUAU_STAGE.store(MAIN_STAGE, Ordering::Relaxed);
+    LUAU_STAGE.store(Stage::Main as i8, Ordering::Relaxed);
     info!(
         "Executing MAIN script. _INDEX: {curr_record} _ROWCOUNT: {row_count} _LASTROW: {}",
         row_count - 1
@@ -1036,7 +1053,7 @@ fn random_acess_mode(
 
     if !end_script.is_empty() {
         info!("Compiling and executing END script. _ROWCOUNT: {row_count}");
-        LUAU_STAGE.store(END_STAGE, Ordering::Relaxed);
+        LUAU_STAGE.store(Stage::End as i8, Ordering::Relaxed);
 
         let end_bytecode = luau_compiler.compile(end_script);
         let end_value: Value = match luau
@@ -1279,11 +1296,12 @@ fn setup_helpers(
     let qsv_log = luau.create_function(|luau, mut args: mlua::MultiValue| {
         let mut log_msg = {
             // at which stage are we logging?
-            match LUAU_STAGE.load(Ordering::Relaxed) {
-                BEGIN_STAGE => "BEGIN: ".to_string(),
-                MAIN_STAGE => "MAIN: ".to_string(),
-                END_STAGE => "END: ".to_string(),
-                _ => String::new(),
+            // safety: this is safe to unwrap because we only set LUAU_STAGE using the Stage enum
+            let stage: Stage = LUAU_STAGE.load(Ordering::Relaxed).try_into().unwrap();
+            match stage {
+                Stage::Begin => "BEGIN: ".to_string(),
+                Stage::Main => "MAIN: ".to_string(),
+                Stage::End => "END: ".to_string(),
             }
         };
         let mut idx = 0_u8;
@@ -1346,7 +1364,7 @@ fn setup_helpers(
     //                  Luau runtime error if called from END script
     //
     let qsv_break = luau.create_function(|luau, mut args: mlua::MultiValue| {
-        if LUAU_STAGE.load(Ordering::Relaxed) == END_STAGE {
+        if LUAU_STAGE.load(Ordering::Relaxed) == Stage::End as i8 {
             return Err(mlua::Error::RuntimeError(
                 "qsv_break() can only be called from the BEGIN and MAIN scripts.".to_string(),
             ));
@@ -1396,7 +1414,7 @@ fn setup_helpers(
     //               or Luau runtime error if called from BEGIN or END scripts
     //
     let qsv_skip = luau.create_function(|_, ()| {
-        if LUAU_STAGE.load(Ordering::Relaxed) != MAIN_STAGE {
+        if LUAU_STAGE.load(Ordering::Relaxed) != Stage::Main as i8 {
             return Err(mlua::Error::RuntimeError(
                 "qsv_skip() can only be called from the MAIN script.".to_string(),
             ));
@@ -1422,7 +1440,7 @@ fn setup_helpers(
     //               A Luau runtime error is also returned if called from MAIN or END.
     //
     let qsv_autoindex = luau.create_function(|_, ()| {
-        if LUAU_STAGE.load(Ordering::Relaxed) != BEGIN_STAGE {
+        if LUAU_STAGE.load(Ordering::Relaxed) != Stage::Begin as i8 {
             return Err(mlua::Error::RuntimeError(
                 "qsv_autoindex() can only be called from the BEGIN script.".to_string(),
             ));
@@ -1776,7 +1794,7 @@ fn setup_helpers(
 
         const ERROR_MSG_PREFIX: &str = "qsv_register_lookup() - ";
 
-        if LUAU_STAGE.load(Ordering::Relaxed) != BEGIN_STAGE {
+        if LUAU_STAGE.load(Ordering::Relaxed) != Stage::Begin as i8 {
             return Err(mlua::Error::RuntimeError(
                 "qsv_register_lookup() can only be called from the BEGIN script.".to_string(),
             ));
