@@ -92,21 +92,19 @@ That's why qsv preloads the LuaDate library as date manipulation is a common dat
 See https://tieske.github.io/date/#date-id96473 for info on how to use the LuaDate library.
 
 Additional libraries can be loaded from the LUAU_PATH using luau's "require" function.
-See http://lua-users.org/wiki/LibrariesAndBindings for a list of other libraries.
+See https://github.com/LewisJEllis/awesome-lua for a list of other libraries.
 
-With the judicious use of "require", the BEGIN script & special variables, one can create
-variables/tables/arrays that can be used for complex aggregation operations in the END script.
+With the judicious use of "require", the BEGIN script & special variables, one can create variables,
+tables, arrays & functions that can be used for complex aggregation operations in the END script.
 
 TIP: When developing Luau scripts, be sure to take advantage of the "qsv_log" function to debug your script.
 It will log messages to the logfile at the specified log level as specified by the QSV_LOG_LEVEL
-environment variable. The first parameter to qsv_log is the log level (info, warn, error, debug, trace)
-of the log message and will default to "info" if an invalid log level is specified.
-You can add as many as 255 addl parameters which will be concatenated and logged as a single message.
+environment variable.
 
 There are more Luau helper functions in addition to "qsv_log": "qsv_break", "qsv_skip", "qsv_insertrecord",
-"qsv_autoindex", "qsv_coalesce", "qsv_sleep", "qsv_writefile", "qsv_cmd", "qsv_shellcmd", and last but
-not least - the powerful "qsv_register_lookup" which allows you to "lookup" values against other CSVs on the
-filesystem, a URL, datHere's lookup repo or CKAN instances.
+"qsv_autoindex", "qsv_coalesce", "qsv_sleep", "qsv_writefile", "qsv_cmd", "qsv_shellcmd", "qsv_setenv", 
+"qsv_getenv" and last but not least - the powerful "qsv_register_lookup" which allows you to "lookup" values
+against other CSVs on the filesystem, a URL, datHere's lookup repo or CKAN instances.
 Detailed descriptions of these helpers can be found in the "setup_helpers" section at the bottom of this file.
 
 For more detailed examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_luau.rs.
