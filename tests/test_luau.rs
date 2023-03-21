@@ -2126,3 +2126,103 @@ fn luau_filter_num() {
     ];
     assert_eq!(got, expected);
 }
+
+#[test]
+fn luau_envvars() {
+    let wrk = Workdir::new("luau_envvars");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["letter", "number"],
+            svec!["a", "13"],
+            svec!["b", "24"],
+            svec!["c", "72"],
+            svec!["d", "-7"],
+            svec!["e", "0"],
+            svec!["f", "42"],
+            svec!["g", "0.0"],
+            svec!["h", "3.14"],
+            svec!["i", "0.000123"],
+            svec!["j", "-7.01"],
+            svec!["k", "0.0000"],
+        ],
+    );
+
+    wrk.create_from_string(
+        "testenvvar.luau",
+        r#"
+BEGIN {
+    qsv_setenv("TESTENVVAR", "11");
+}!
+
+local limit = qsv_getenv("TESTENVVAR")
+return tonumber(number) > tonumber(limit)
+"#,
+    );
+
+    let mut cmd = wrk.command("luau");
+    cmd.arg("filter")
+        .arg("-x")
+        .arg("file:testenvvar.luau")
+        .arg("data.csv");
+
+    let testenvvar = std::env::var("TESTENVVAR").unwrap_or_else(|_| "NOT SET".to_string());
+    assert_eq!(testenvvar, "NOT SET");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["letter", "number"],
+        svec!["a", "13"],
+        svec!["b", "24"],
+        svec!["c", "72"],
+        svec!["f", "42"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn luau_envvars_external() {
+    let wrk = Workdir::new("luau_envvars_external");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["letter", "number"],
+            svec!["a", "13"],
+            svec!["b", "24"],
+            svec!["c", "72"],
+            svec!["d", "-7"],
+            svec!["e", "0"],
+            svec!["f", "42"],
+            svec!["g", "0.0"],
+            svec!["h", "3.14"],
+            svec!["i", "0.000123"],
+            svec!["j", "-7.01"],
+            svec!["k", "0.0000"],
+        ],
+    );
+
+    wrk.create_from_string(
+        "testenvvar.luau",
+        r#"
+local limit = qsv_getenv("TESTENVVAR")
+return tonumber(number) > tonumber(limit)
+"#,
+    );
+
+    let mut cmd = wrk.command("luau");
+    cmd.arg("filter")
+        .arg("-x")
+        .arg("file:testenvvar.luau")
+        .arg("data.csv")
+        .env("TESTENVVAR", "10");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["letter", "number"],
+        svec!["a", "13"],
+        svec!["b", "24"],
+        svec!["c", "72"],
+        svec!["f", "42"],
+    ];
+    assert_eq!(got, expected);
+}
