@@ -86,10 +86,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         std::env::set_var("QSV_SNIFF_PREAMBLE", "1");
     }
 
-    let mut comment_char: Option<u8> = None;
-    if let Some(char) = args.flag_comment {
-        comment_char = Some(char as u8);
-    }
+    let comment_char: Option<u8> = args.flag_comment.map(|char| char as u8);
 
     let mut rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
