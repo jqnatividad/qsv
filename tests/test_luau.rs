@@ -860,7 +860,7 @@ END {
     cmd.arg("map")
         .arg("Running Total")
         .arg("-x")
-        .arg("testbreak.luau")
+        .arg("testbreak.LUAU")
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
@@ -931,7 +931,7 @@ END {
     cmd.arg("map")
         .arg("Running Total")
         .arg("-x")
-        .arg("testqsvcmd.LUA")
+        .arg("testqsvcmd.Lua")
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
