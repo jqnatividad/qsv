@@ -171,11 +171,14 @@ Luau options:
     --ckan-api <url>         The URL of the CKAN API to use for downloading lookup_table
                              resources using the qsv_register_lookup() helper function
                              with the "ckan://" scheme.
+                             If the QSV_CKAN_API envvar is set, it will be used instead.
                              [default: https://catalog.dathere.com/api/3/action]
     --ckan-token <token>     The CKAN API token to use. Only required if downloading
                              private resources.
+                             If the QSV_CKAN_TOKEN envvar is set, it will be used instead.
     --cache-dir <dir>        The directory to use for caching downloaded lookup_table
                              resources using the qsv_register_lookup() helper function.
+                             If the QSV_CACHE_DIR envvar is set, it will be used instead.
                              [default: qsv-cache]
 
 Common options:
@@ -461,16 +464,25 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let globals = luau.globals();
 
-    setup_helpers(
-        &luau,
-        args.flag_delimiter,
-        args.flag_ckan_api.clone(),
-        args.flag_ckan_token.clone(),
-    )?;
+    // check the QSV_CKAN_API environment variable
+    let ckan_api = if let Ok(api) = std::env::var("QSV_CKAN_API") {
+        api
+    } else {
+        args.flag_ckan_api.clone()
+    };
 
-    // check the QSV_CACHE_PATH environment variable
+    // check the QSV_CKAN_TOKEN environment variable
+    let ckan_token = if let Ok(token) = std::env::var("QSV_CKAN_TOKEN") {
+        Some(token)
+    } else {
+        args.flag_ckan_token.clone()
+    };
+
+    setup_helpers(&luau, args.flag_delimiter, ckan_api, ckan_token)?;
+
+    // check the QSV_CACHE_DIR environment variable
     if let Ok(cache_path) = std::env::var("QSV_CACHE_DIR") {
-        // if QSV_CACHE_PATH env var is set, check if it exists. If it doesn't, create it.
+        // if QSV_CACHE_DIR env var is set, check if it exists. If it doesn't, create it.
         if !Path::new(&cache_path).exists() {
             fs::create_dir_all(&cache_path)?;
         }
@@ -2047,11 +2059,10 @@ fn setup_helpers(
 
                     let mut headers = reqwest::header::HeaderMap::new();
 
-                    if cached_csv_exists && cache_csv_last_modified.is_some(){
-                        // if a cached CSV exists, we need to use the If-Modified-Since header
+                    if let Some(modified) = cache_csv_last_modified {
+                        // a cached CSV exists, we need to use the If-Modified-Since header
                         // to avoid downloading the CSV again if it hasn't changed
-                        let last_modified: chrono::DateTime<chrono::Utc> = cache_csv_last_modified.unwrap()
-                            .into();
+                        let last_modified: chrono::DateTime<chrono::Utc> = modified.into();
                         last_modified_rfc8222 = last_modified.to_rfc2822();
 
                         (headers).insert(
