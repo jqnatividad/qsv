@@ -138,3 +138,26 @@ fn count_width() {
     let expected = "2;9";
     assert_eq!(got, expected.to_string());
 }
+
+#[test]
+fn count_comments() {
+    let wrk = Workdir::new("count_comments");
+
+    wrk.create(
+        "in.csv",
+        vec![
+            svec!["# this is a comment", ""],
+            svec!["# next comment", ""],
+            svec!["letter", "number"],
+            svec!["alpha", "13"],
+            svec!["beta", "24"],
+            svec!["# comment here too!", "24"],
+        ],
+    );
+    let mut cmd = wrk.command("count");
+    cmd.arg("in.csv").env("QSV_COMMENT_CHAR", "#");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = "2";
+    assert_eq!(got, expected.to_string());
+}
