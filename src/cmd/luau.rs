@@ -196,6 +196,7 @@ use std::{
     io::Write,
     path::Path,
     sync::atomic::{AtomicBool, AtomicI8, AtomicU16, Ordering},
+    time::Instant,
 };
 
 use csv_index::RandomAccessSimple;
@@ -1825,6 +1826,8 @@ fn setup_helpers(
             ));
         }
 
+        let call_parameters = format!("qsv_lookup_register({lookup_name}, {lookup_table_uri}, {cache_age_secs})");
+
         let mut cached_csv_exists = false;
         let mut cached_csv_age_secs = 0_i64;
         let mut cached_csv_size = 0;
@@ -1917,6 +1920,10 @@ fn setup_helpers(
                     }
                 };
 
+                let now = std::time::SystemTime::now();
+                let now_dt_utc: chrono::DateTime<chrono::Utc> = now.into();
+                let download_start = Instant::now();
+                let mut last_modified_rfc8222 = now_dt_utc.to_rfc2822();
                 let mut write_csv_contents = true;
                 let lookup_csv_contents = if lookup_ckan {
                     // we're using the ckan scheme, so we need to get the resource
@@ -2026,11 +2033,11 @@ fn setup_helpers(
                         // to avoid downloading the CSV again if it hasn't changed
                         let last_modified: chrono::DateTime<chrono::Utc> = cache_csv_last_modified.unwrap()
                             .into();
-                        let last_modified = last_modified.to_rfc2822();
+                        last_modified_rfc8222 = last_modified.to_rfc2822();
 
                         (headers).insert(
                             reqwest::header::IF_MODIFIED_SINCE,
-                            reqwest::header::HeaderValue::from_str(&last_modified).unwrap(),
+                            reqwest::header::HeaderValue::from_str(&last_modified_rfc8222).unwrap(),
                         );
                     }
 
@@ -2065,6 +2072,13 @@ fn setup_helpers(
                             ));
                         }
                     };
+
+                    // add a comment to the top of the file with the parameters used to download the CSV,
+                    // the last-modified date of the CSV, and how long it took to download it in ms
+                    writeln!(cache_file, "# {call_parameters}")?;
+                    writeln!(cache_file, "# Last-Modified: {last_modified_rfc8222}")?;
+                    let download_elapsed = download_start.elapsed().as_millis();
+                    writeln!(cache_file, "# Download-duration-ms: {download_elapsed}")?;
                     cache_file.write_all(lookup_csv_contents.as_bytes())?;
                 }
 
