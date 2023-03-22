@@ -3,6 +3,9 @@ Create multiple new computed columns, filter rows or compute aggregations by
 executing a Luau script for every row (SEQUENTIAL MODE) or for
 specified rows (RANDOM ACCESS MODE) of a CSV file.
 
+Luau is not just another qsv command. It is qsv's Domain-Specific Language (DSL)
+for data-wrangling. 👑
+
 The executed Luau has 3 ways to reference row columns (as strings):
   1. Directly by using column name (e.g. Amount), can be disabled with -g
   2. Indexing col variable by column name: col.Amount or col["Total Balance"]
