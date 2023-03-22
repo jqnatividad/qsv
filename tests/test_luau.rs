@@ -690,7 +690,7 @@ END {
     cmd.arg("map")
         .arg("previous_month_score")
         .arg("-x")
-        .arg("file:testlookup.luau")
+        .arg("testlookup.luau")
         .arg("--ckan-api")
         .arg("https://data.boston.gov/api/3/action")
         .arg("data.csv");
@@ -752,7 +752,7 @@ fn luau_qsv_break() {
     );
 
     wrk.create_from_string(
-        "testbreak.luau",
+        "testbreak.lua",
         r#"
 BEGIN {
     -- this is the BEGIN block, which is executed once at the beginning
@@ -789,7 +789,7 @@ END {
     cmd.arg("map")
         .arg("Running Total")
         .arg("-x")
-        .arg("file:testbreak.luau")
+        .arg("testbreak.lua")
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
