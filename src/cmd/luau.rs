@@ -1817,7 +1817,7 @@ fn setup_helpers(
     //                         or Luau runtime error if the CSV could not be loaded
     //
     let qsv_register_lookup = luau.create_function(move |luau, (lookup_name, mut lookup_table_uri, cache_age_secs): (String, String, i64)| {
-        const ERROR_MSG_PREFIX: &str = "qsv_register_lookup() - ";
+        const MSG_PREFIX: &str = "qsv_register_lookup() - ";
 
         if LUAU_STAGE.load(Ordering::Relaxed) != Stage::Begin as i8 {
             return Err(mlua::Error::RuntimeError(
@@ -1836,12 +1836,12 @@ fn setup_helpers(
         let lookup_table_path = Path::new(&lookup_table_uri);
         let lookup_table_is_file = lookup_table_path.exists();
         if lookup_table_is_file {
-            debug!("{lookup_table_uri} is a file in the local filesystem");
+            debug!("{MSG_PREFIX}{lookup_table_uri} is a file in the local filesystem");
         } else if cached_csv_path.exists() {
 
             if cache_age_secs < 0 {
                 // delete the cached CSV file
-                debug!("deleting cached CSV file {}", cached_csv_path.display());
+                debug!("{MSG_PREFIX}deleting cached CSV file {}", cached_csv_path.display());
                 std::fs::remove_file(&cached_csv_path)?;
             } else {
                 // get metadata for the cached CSV file
@@ -1861,10 +1861,12 @@ fn setup_helpers(
             }
         }
 
-        // if the lookup table exists and is younger than cache_age_secs, we can use it
+        // if the lookup is not a file in the local filesystem, check if we can use the cached CSV
+        // i.e. if the cached CSV exists and is not older than cache_age_secs or set not to expire, and not empty
+        // otherwise, we will re-download it
         if !lookup_table_is_file && cached_csv_exists && cached_csv_age_secs <= cache_age_secs && cached_csv_size > 0 {
             lookup_table_uri = cached_csv_path.display().to_string();
-            log::info!("Using cached lookup table {lookup_table_uri}");
+            log::info!("{MSG_PREFIX}Using cached lookup table {lookup_table_uri}");
         } else {
             // if the lookup_table_uri starts with "dathere://", prepend the repo URL to the lookup table
             if let Some(lookup_url) = lookup_table_uri.strip_prefix("dathere://") {
@@ -1910,7 +1912,7 @@ fn setup_helpers(
                     Ok(c) => c,
                     Err(e) => {
                         return Err(mlua::Error::RuntimeError(format!(
-                            "{ERROR_MSG_PREFIX}Cannot build reqwest client to download lookup CSV: {e}.")
+                            "{MSG_PREFIX}Cannot build reqwest client to download lookup CSV: {e}.")
                         ));
                     }
                 };
@@ -1929,7 +1931,7 @@ fn setup_helpers(
                         );
                     }
 
-                    debug!("Downloading lookup CSV from {}...", lookup_table_uri.clone());
+                    debug!("{MSG_PREFIX}Downloading lookup CSV from {}...", lookup_table_uri.clone());
 
                     // first, check if this is a resource query (i.e. ends with a question mark)
                     if resource_search {
@@ -1940,7 +1942,7 @@ fn setup_helpers(
                             Ok(url) => url,
                             Err(e) => {
                                 return Err(mlua::Error::RuntimeError(format!(
-                                    "{ERROR_MSG_PREFIX}Invalid resource_search url {e}."
+                                    "{MSG_PREFIX}Invalid resource_search url {e}."
                                 )));
                             }
                         };
@@ -1949,7 +1951,7 @@ fn setup_helpers(
                             Ok(response) => response.text().unwrap_or_default(),
                             Err(e) => {
                                 return Err(mlua::Error::RuntimeError(format!(
-                                    "{ERROR_MSG_PREFIX}Cannot find resource name with resource_search: {e}."
+                                    "{MSG_PREFIX}Cannot find resource name with resource_search: {e}."
                                 )));
                             }
                         };
@@ -1958,13 +1960,13 @@ fn setup_helpers(
                             Ok(json) => json,
                             Err(e) => {
                                 return Err(mlua::Error::RuntimeError(format!(
-                                    "{ERROR_MSG_PREFIX}Invalid resource_search json {e}."
+                                    "{MSG_PREFIX}Invalid resource_search json {e}."
                                 )));
                             }
                         };
 
                         let Some(resource_id) = resource_search_json["result"]["results"][0]["id"].as_str() else {
-                            return Err(mlua::Error::RuntimeError("{ERROR_MSG_PREFIX}Cannot find a resource name.".to_string()));
+                            return Err(mlua::Error::RuntimeError("{MSG_PREFIX}Cannot find a resource name.".to_string()));
                         };
 
                         lookup_table_uri = format!("{ckan_api_url}/resource_show?id={resource_id}");
@@ -1975,7 +1977,7 @@ fn setup_helpers(
                         Ok(response) => response.text().unwrap_or_default(),
                         Err(e) => {
                             return Err(mlua::Error::RuntimeError(format!(
-                                "{ERROR_MSG_PREFIX}CKAN scheme used. Cannot get lookup CSV resource: {e}.",
+                                "{MSG_PREFIX}CKAN scheme used. Cannot get lookup CSV resource: {e}.",
                             )));
                         }
                     };
@@ -1984,7 +1986,7 @@ fn setup_helpers(
                         Ok(json) => json,
                         Err(e) => {
                             return Err(mlua::Error::RuntimeError(format!(
-                                "{ERROR_MSG_PREFIX}Invalid resource_show json: {e}."
+                                "{MSG_PREFIX}Invalid resource_show json: {e}."
                             )));
                         }
                     };
@@ -2001,7 +2003,7 @@ fn setup_helpers(
                         Ok(response) => response.text().unwrap_or_default(),
                         Err(e) => {
                             return Err(mlua::Error::RuntimeError(format!(
-                                "{ERROR_MSG_PREFIX}Cannot read lookup CSV at {url}: {e}."
+                                "{MSG_PREFIX}Cannot read lookup CSV at {url}: {e}."
                             )));
                         }
                     }
@@ -2012,7 +2014,7 @@ fn setup_helpers(
                         Ok(url) => url,
                         Err(e) => {
                             return Err(mlua::Error::RuntimeError(format!(
-                                "{ERROR_MSG_PREFIX}Invalid lookup CSV url {e}."
+                                "{MSG_PREFIX}Invalid lookup CSV url {e}."
                             )));
                         }
                     };
@@ -2036,7 +2038,7 @@ fn setup_helpers(
                         Ok(response) => response,
                         Err(e) => {
                             return Err(mlua::Error::RuntimeError(format!(
-                                "{ERROR_MSG_PREFIX}Cannot read lookup CSV at url: {e}."
+                                "{MSG_PREFIX}Cannot read lookup CSV at url: {e}."
                             )));
                         }
                     };
@@ -2059,7 +2061,7 @@ fn setup_helpers(
                         Ok(f) => f,
                         Err(e) => {
                             return Err(mlua::Error::RuntimeError(format!(
-                                "{ERROR_MSG_PREFIX}Cannot create cache file {}: {e}.", cache_file_path.display())
+                                "{MSG_PREFIX}Cannot create cache file {}: {e}.", cache_file_path.display())
                             ));
                         }
                     };
@@ -2085,7 +2087,7 @@ fn setup_helpers(
             Ok(headers) => headers.clone(),
             Err(e) => {
                 return Err(mlua::Error::RuntimeError(format!(
-                    "{ERROR_MSG_PREFIX}cannot read headers of lookup table: {e}"
+                    "{MSG_PREFIX}cannot read headers of lookup table: {e}"
                 )));
             }
         };
