@@ -823,7 +823,7 @@ fn luau_qsv_skip() {
     );
 
     wrk.create_from_string(
-        "testbreak.luau",
+        "testbreak.LUAU",
         r#"
 BEGIN {
     -- this is the BEGIN block, which is executed once at the beginning
@@ -860,7 +860,7 @@ END {
     cmd.arg("map")
         .arg("Running Total")
         .arg("-x")
-        .arg("file:testbreak.luau")
+        .arg("testbreak.luau")
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
@@ -894,7 +894,7 @@ fn luau_qsv_cmd() {
     );
 
     wrk.create_from_string(
-        "testqsvcmd.luau",
+        "testqsvcmd.Lua",
         r#"
 BEGIN {
     -- this is the BEGIN block, which is executed once at the beginning
@@ -931,7 +931,7 @@ END {
     cmd.arg("map")
         .arg("Running Total")
         .arg("-x")
-        .arg("file:testqsvcmd.luau")
+        .arg("testqsvcmd.LUA")
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
