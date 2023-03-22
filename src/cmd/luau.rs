@@ -170,6 +170,9 @@ Luau options:
                              [default: https://catalog.dathere.com/api/3/action]
     --ckan-token <token>     The CKAN API token to use. Only required if downloading
                              private resources.
+    --cache-dir <dir>        The directory to use for caching downloaded lookup_table
+                             resources using the qsv_register_lookup() helper function.
+                             [default: qsv-cache]
 
 Common options:
     -h, --help             Display this message
@@ -230,6 +233,7 @@ struct Args {
     flag_timeout:     u16,
     flag_ckan_api:    String,
     flag_ckan_token:  Option<String>,
+    flag_cache_dir:   String,
 }
 
 impl From<mlua::Error> for CliError {
@@ -444,6 +448,23 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         args.flag_ckan_token.clone(),
     )?;
 
+    // check the QSV_CACHE_PATH environment variable
+    if let Ok(cache_path) = std::env::var("QSV_CACHE_DIR") {
+        // if QSV_CACHE_PATH env var is set, check if it exists. If it doesn't, create it.
+        if !Path::new(&cache_path).exists() {
+            fs::create_dir_all(&cache_path)?;
+        }
+        info!("Using cache directory: {cache_path}");
+        globals.set("_QSV_CACHE_DIR", cache_path)?;
+    } else {
+        if !Path::new(&args.flag_cache_dir).exists() {
+            fs::create_dir_all(&args.flag_cache_dir)?;
+        }
+        info!("Using cache directory: {}", args.flag_cache_dir);
+        globals.set("_QSV_CACHE_DIR", args.flag_cache_dir.clone())?;
+    }
+
+    debug!("Main processing");
     if index_file_used {
         info!("RANDOM ACCESS MODE (_INDEX or _LASTROW special variables used)");
         random_acess_mode(
@@ -1785,12 +1806,14 @@ fn setup_helpers(
     //                         resource name to look for followed by a question mark.
     //                         If a match is found, the first resource with a matching name
     //                         will be used.
+    //         cache_age_secs: The number of seconds to cache a downloaded CSV file.
+    //                         If the CSV file is older than this, it will be re-downloaded.
+    //                         If 0, the cached CSV will be used every time.
     //
     //                returns: Luau table of header names excluding the first header,
     //                         or Luau runtime error if the CSV could not be loaded
     //
-    let qsv_register_lookup = luau.create_function(move |luau, (lookup_name, mut lookup_table_uri): (String, String)| {
-
+    let qsv_register_lookup = luau.create_function(move |luau, (lookup_name, mut lookup_table_uri, cache_age_secs): (String, String, i64)| {
         const ERROR_MSG_PREFIX: &str = "qsv_register_lookup() - ";
 
         if LUAU_STAGE.load(Ordering::Relaxed) != Stage::Begin as i8 {
@@ -1799,177 +1822,218 @@ fn setup_helpers(
             ));
         }
 
-        // if the lookup_table_uri starts with "dathere://", prepend the repo URL to the lookup table
-        if let Some(lookup_url) = lookup_table_uri.strip_prefix("dathere://") {
-            lookup_table_uri = format!("https://raw.githubusercontent.com/dathere/qsv-lookup-tables/main/lookup-tables/{lookup_url}");
-        }
+        let mut cached_csv_exists = false;
+        let mut cached_csv_age_secs = 0_i64;
+        let mut cached_csv_size = 0;
+        let qsv_cache_dir: String = luau.globals().get("_QSV_CACHE_DIR")?;
+        let cached_csv_path = Path::new(&qsv_cache_dir).join(format!("{lookup_name}.csv"));
 
-        let mut lookup_ckan = false;
-        let mut resource_search = false;
-        if let Some(mut lookup_url) = lookup_table_uri.strip_prefix("ckan://") {
-            lookup_ckan = true;
-            // it's a CKAN resource. If it ends with a '?', we'll do a resource_search
-            lookup_url = lookup_url.trim();
-            if lookup_url.ends_with('?') {
-                lookup_table_uri = format!("{ckan_api_url}/resource_search?query=name:{lookup_url}");
-                lookup_table_uri.pop(); // remove the trailing '?'
-                resource_search = true;
+        // check if lookup_table_uri is a file in the local filesystem
+        let lookup_table_path = Path::new(&lookup_table_uri);
+        let lookup_table_is_file = lookup_table_path.exists();
+        if lookup_table_is_file {
+            debug!("{lookup_table_uri} is a file in the local filesystem");
+        } else if cached_csv_path.exists() {
+
+            if cache_age_secs < 0 {
+                // delete the cached CSV file
+                debug!("deleting cached CSV file {}", cached_csv_path.display());
+                std::fs::remove_file(&cached_csv_path)?;
             } else {
-                // otherwise, we do a resource_show
-                lookup_table_uri = format!("{ckan_api_url}/resource_show?id={lookup_url}");
+                // check if the cached CSV file is older than cache_age_secs
+
+                cached_csv_exists = true;
+                let metadata = cached_csv_path.metadata()?;
+                let modified_secs = metadata.modified()?.duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
+                let now_secs = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
+                cached_csv_size = metadata.len();
+
+                // if cache_age_secs is 0, the cached file never expires
+                cached_csv_age_secs = if cache_age_secs > 0 {
+                        (now_secs - modified_secs).try_into().unwrap_or(0_i64)
+                } else {
+                    0_i64
+                };
             }
         }
 
-        let lookup_on_url = lookup_table_uri.to_lowercase().starts_with("http");
+        // if the lookup table exists and is younger than cache_age_secs, we can use it
+        if !lookup_table_is_file && cached_csv_exists && cached_csv_age_secs <= cache_age_secs && cached_csv_size > 0 {
+            lookup_table_uri = cached_csv_path.display().to_string();
+            log::info!("Using cached lookup table {lookup_table_uri}");
+        } else {
+            // if the lookup_table_uri starts with "dathere://", prepend the repo URL to the lookup table
+            if let Some(lookup_url) = lookup_table_uri.strip_prefix("dathere://") {
+                lookup_table_uri = format!("https://raw.githubusercontent.com/dathere/qsv-lookup-tables/main/lookup-tables/{lookup_url}");
+            }
 
-        // if lookup_on_url, create a temporary file and download CSV to it.
-        // We do this outside the download proper below as the tempdir
-        // needs to persist until the end of this helper function, when
-        // it will be automatically deleted
-        let mut temp_file = tempfile::NamedTempFile::new()?;
+            let mut lookup_ckan = false;
+            let mut resource_search = false;
+            if let Some(mut lookup_url) = lookup_table_uri.strip_prefix("ckan://") {
+                lookup_ckan = true;
+                // it's a CKAN resource. If it ends with a '?', we'll do a resource_search
+                lookup_url = lookup_url.trim();
+                if lookup_url.ends_with('?') {
+                    lookup_table_uri = format!("{ckan_api_url}/resource_search?query=name:{lookup_url}");
+                    lookup_table_uri.pop(); // remove the trailing '?'
+                    resource_search = true;
+                } else {
+                    // otherwise, we do a resource_show
+                    lookup_table_uri = format!("{ckan_api_url}/resource_show?id={lookup_url}");
+                }
+            }
 
-        if lookup_on_url {
-            use reqwest::{blocking::Client, Url};
+            let lookup_on_url = lookup_table_uri.to_lowercase().starts_with("http");
 
-            let client_timeout = std::time::Duration::from_secs(TIMEOUT_SECS.load(Ordering::Relaxed) as u64);
-
-            let client = match Client::builder()
-                .user_agent(util::DEFAULT_USER_AGENT)
-                .brotli(true)
-                .gzip(true)
-                .deflate(true)
-                .use_rustls_tls()
-                .http2_adaptive_window(true)
-                .connection_verbose(log_enabled!(log::Level::Trace))
-                .timeout(client_timeout)
-                .build()
-            {
-                Ok(c) => c,
+            let cache_file_path = Path::new(&qsv_cache_dir).join(&format!("{lookup_name}.csv"));
+            let mut cache_file = match std::fs::File::create(&cache_file_path) {
+                Ok(f) => f,
                 Err(e) => {
                     return Err(mlua::Error::RuntimeError(format!(
-                        "{ERROR_MSG_PREFIX}Cannot build reqwest client to download lookup CSV: {e}.")
+                        "{ERROR_MSG_PREFIX}Cannot create cache file {}: {e}.", cache_file_path.display())
                     ));
                 }
             };
 
-            let lookup_csv_contents = if lookup_ckan {
-                // we're using the ckan scheme, so we need to get the resource
+            if lookup_on_url {
+                use reqwest::{blocking::Client, Url};
 
-                let mut headers = reqwest::header::HeaderMap::new();
+                let client_timeout = std::time::Duration::from_secs(TIMEOUT_SECS.load(Ordering::Relaxed) as u64);
 
-                if let Some(ckan_token) = &ckan_token {
-                    // there's a ckan token, so use it
-                    headers.insert(
-                        reqwest::header::AUTHORIZATION,
-                        reqwest::header::HeaderValue::from_str(ckan_token).unwrap(),
-                    );
-                }
+                let client = match Client::builder()
+                    .user_agent(util::DEFAULT_USER_AGENT)
+                    .brotli(true)
+                    .gzip(true)
+                    .deflate(true)
+                    .use_rustls_tls()
+                    .http2_adaptive_window(true)
+                    .connection_verbose(log_enabled!(log::Level::Trace))
+                    .timeout(client_timeout)
+                    .build()
+                {
+                    Ok(c) => c,
+                    Err(e) => {
+                        return Err(mlua::Error::RuntimeError(format!(
+                            "{ERROR_MSG_PREFIX}Cannot build reqwest client to download lookup CSV: {e}.")
+                        ));
+                    }
+                };
 
-                debug!("Downloading lookup CSV from {}...", lookup_table_uri.clone());
+                let lookup_csv_contents = if lookup_ckan {
+                    // we're using the ckan scheme, so we need to get the resource
 
-                // first, check if this is a resource query (i.e. ends with a question mark)
-                if resource_search {
-                    // it is a resource query, so let's do a resource_search
-                    // and get the first resource with a matching name
+                    let mut headers = reqwest::header::HeaderMap::new();
+
+                    if let Some(ckan_token) = &ckan_token {
+                        // there's a ckan token, so use it
+                        headers.insert(
+                            reqwest::header::AUTHORIZATION,
+                            reqwest::header::HeaderValue::from_str(ckan_token).unwrap(),
+                        );
+                    }
+
+                    debug!("Downloading lookup CSV from {}...", lookup_table_uri.clone());
+
+                    // first, check if this is a resource query (i.e. ends with a question mark)
+                    if resource_search {
+                        // it is a resource query, so let's do a resource_search
+                        // and get the first resource with a matching name
+
+                        let validated_url = match Url::parse(&lookup_table_uri) {
+                            Ok(url) => url,
+                            Err(e) => {
+                                return Err(mlua::Error::RuntimeError(format!(
+                                    "{ERROR_MSG_PREFIX}Invalid resource_search url {e}."
+                                )));
+                            }
+                        };
+
+                        let resource_search_result = match client.get(validated_url).headers(headers.clone()).send() {
+                            Ok(response) => response.text().unwrap_or_default(),
+                            Err(e) => {
+                                return Err(mlua::Error::RuntimeError(format!(
+                                    "{ERROR_MSG_PREFIX}Cannot find resource name with resource_search: {e}."
+                                )));
+                            }
+                        };
+
+                        let resource_search_json: serde_json::Value = match serde_json::from_str(&resource_search_result) {
+                            Ok(json) => json,
+                            Err(e) => {
+                                return Err(mlua::Error::RuntimeError(format!(
+                                    "{ERROR_MSG_PREFIX}Invalid resource_search json {e}."
+                                )));
+                            }
+                        };
+
+                        let Some(resource_id) = resource_search_json["result"]["results"][0]["id"].as_str() else {
+                            return Err(mlua::Error::RuntimeError("{ERROR_MSG_PREFIX}Cannot find a resource name.".to_string()));
+                        };
+
+                        lookup_table_uri = format!("{ckan_api_url}/resource_show?id={resource_id}");
+                    }
+
+                    // get resource_show json and get the resource URL
+                    let resource_show_result = match client.get(lookup_table_uri).headers(headers).send() {
+                        Ok(response) => response.text().unwrap_or_default(),
+                        Err(e) => {
+                            return Err(mlua::Error::RuntimeError(format!(
+                                "{ERROR_MSG_PREFIX}CKAN scheme used. Cannot get lookup CSV resource: {e}.",
+                            )));
+                        }
+                    };
+
+                    let resource_show_json: serde_json::Value = match serde_json::from_str(&resource_show_result) {
+                        Ok(json) => json,
+                        Err(e) => {
+                            return Err(mlua::Error::RuntimeError(format!(
+                                "{ERROR_MSG_PREFIX}Invalid resource_show json: {e}."
+                            )));
+                        }
+                    };
+
+                    let Some(url) = resource_show_json["result"]["url"].as_str() else {
+                        let err_msg = "qsv_register_lookup() - Cannot get resource URL from resource_show JSON response.";
+                        log::error!("{err_msg}: {resource_show_json}");
+                        return Err(mlua::Error::RuntimeError(
+                                err_msg.to_string()
+                        ));
+                    };
+
+                    match client.get(url).send() {
+                        Ok(response) => response.text().unwrap_or_default(),
+                        Err(e) => {
+                            return Err(mlua::Error::RuntimeError(format!(
+                                "{ERROR_MSG_PREFIX}Cannot read lookup CSV at {url}: {e}."
+                            )));
+                        }
+                    }
+                } else {
+                    // we're not using the ckan scheme, so just get the CSV
 
                     let validated_url = match Url::parse(&lookup_table_uri) {
                         Ok(url) => url,
                         Err(e) => {
                             return Err(mlua::Error::RuntimeError(format!(
-                                "{ERROR_MSG_PREFIX}Invalid resource_search url {e}."
+                                "{ERROR_MSG_PREFIX}Invalid lookup CSV url {e}."
                             )));
                         }
                     };
 
-                    let resource_search_result = match client.get(validated_url).headers(headers.clone()).send() {
-                        Ok(response) => response.text().unwrap_or_default(),
-                        Err(e) => {
-                            return Err(mlua::Error::RuntimeError(format!(
-                                "{ERROR_MSG_PREFIX}Cannot find resource name with resource_search: {e}."
-                            )));
+                    match client.get(validated_url).send() {
+                            Ok(response) => response.text().unwrap_or_default(),
+                            Err(e) => {
+                                return Err(mlua::Error::RuntimeError(format!(
+                                    "{ERROR_MSG_PREFIX}Cannot read lookup CSV at url: {e}."
+                                )));
+                            }
                         }
-                    };
-
-                    let resource_search_json: serde_json::Value = match serde_json::from_str(&resource_search_result) {
-                        Ok(json) => json,
-                        Err(e) => {
-                            return Err(mlua::Error::RuntimeError(format!(
-                                "{ERROR_MSG_PREFIX}Invalid resource_search json {e}."
-                            )));
-                        }
-                    };
-
-                    let Some(resource_id) = resource_search_json["result"]["results"][0]["id"].as_str() else {
-                        return Err(mlua::Error::RuntimeError("{ERROR_MSG_PREFIX}Cannot find a resource name.".to_string()));
-                    };
-
-                    lookup_table_uri = format!("{ckan_api_url}/resource_show?id={resource_id}");
-                }
-
-                // get resource_show json and get the resource URL
-                let resource_show_result = match client.get(lookup_table_uri).headers(headers).send() {
-                    Ok(response) => response.text().unwrap_or_default(),
-                    Err(e) => {
-                        return Err(mlua::Error::RuntimeError(format!(
-                            "{ERROR_MSG_PREFIX}CKAN scheme used. Cannot get lookup CSV resource: {e}.",
-                        )));
-                    }
                 };
 
-                let resource_show_json: serde_json::Value = match serde_json::from_str(&resource_show_result) {
-                    Ok(json) => json,
-                    Err(e) => {
-                        return Err(mlua::Error::RuntimeError(format!(
-                            "{ERROR_MSG_PREFIX}Invalid resource_show json: {e}."
-                        )));
-                    }
-                };
+                cache_file.write_all(lookup_csv_contents.as_bytes())?;
 
-                let Some(url) = resource_show_json["result"]["url"].as_str() else {
-                    let err_msg = "qsv_register_lookup() - Cannot get resource URL from resource_show JSON response.";
-                    log::error!("{err_msg}: {resource_show_json}");
-                    return Err(mlua::Error::RuntimeError(
-                            err_msg.to_string()
-                    ));
-                };
-
-                match client.get(url).send() {
-                    Ok(response) => response.text().unwrap_or_default(),
-                    Err(e) => {
-                        return Err(mlua::Error::RuntimeError(format!(
-                            "{ERROR_MSG_PREFIX}Cannot read lookup CSV at {url}: {e}."
-                        )));
-                    }
-                }
-            } else {
-                // we're not using the ckan scheme, so just get the CSV
-
-                let validated_url = match Url::parse(&lookup_table_uri) {
-                    Ok(url) => url,
-                    Err(e) => {
-                        return Err(mlua::Error::RuntimeError(format!(
-                            "{ERROR_MSG_PREFIX}Invalid lookup CSV url {e}."
-                        )));
-                    }
-                };
-
-                match client.get(validated_url).send() {
-                        Ok(response) => response.text().unwrap_or_default(),
-                        Err(e) => {
-                            return Err(mlua::Error::RuntimeError(format!(
-                                "{ERROR_MSG_PREFIX}Cannot read lookup CSV at url: {e}."
-                            )));
-                        }
-                    }
-            };
-
-            temp_file.write_all(lookup_csv_contents.as_bytes())?;
-
-            // we need to persist the tempfile so that we can pass the path to the CSV reader
-            let (_lookup_file, lookup_file_path) =
-                temp_file.keep().expect("Cannot persist tempfile");
-
-            lookup_table_uri = lookup_file_path.to_string_lossy().to_string();
+                lookup_table_uri = cache_file_path.to_string_lossy().to_string();
+            }
         }
 
         let lookup_table = luau.create_table()?;
@@ -2002,11 +2066,6 @@ fn setup_helpers(
                 }
             }
             lookup_table.raw_set(key, inside_table)?;
-        }
-
-        // if we downloaded the CSV to a temp file, we need to delete it
-        if lookup_on_url {
-            fs::remove_file(lookup_table_uri)?;
         }
 
         luau.globals()
