@@ -300,10 +300,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             Ok(file_contents) => file_contents,
             Err(e) => return fail_clierror!("Cannot load Luau file: {e}"),
         }
-    } else if args.arg_main_script.ends_with(".luau") || args.arg_main_script.ends_with(".lua") {
+    } else if std::path::Path::new(&args.arg_main_script)
+        .extension()
+        .map_or(false, |ext| ext.eq_ignore_ascii_case("luau"))
+        || std::path::Path::new(&args.arg_main_script)
+            .extension()
+            .map_or(false, |ext| ext.eq_ignore_ascii_case("lua"))
+    {
         match fs::read_to_string(args.arg_main_script.clone()) {
             Ok(file_contents) => file_contents,
-            Err(e) => return fail_clierror!("Cannot load .luau file: {e}"),
+            Err(e) => return fail_clierror!("Cannot load .lua/.luau file: {e}"),
         }
     } else {
         args.arg_main_script.clone()
@@ -354,10 +360,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 Ok(begin) => begin,
                 Err(e) => return fail_clierror!("Cannot load Luau BEGIN script file: {e}"),
             }
-        } else if begin.ends_with(".luau") || begin.ends_with(".lua") {
+        } else if std::path::Path::new(begin)
+            .extension()
+            .map_or(false, |ext| ext.eq_ignore_ascii_case("luau"))
+            || std::path::Path::new(begin)
+                .extension()
+                .map_or(false, |ext| ext.eq_ignore_ascii_case("lua"))
+        {
             match fs::read_to_string(begin.clone()) {
                 Ok(file_contents) => file_contents,
-                Err(e) => return fail_clierror!("Cannot load BEGIN .luau file: {e}"),
+                Err(e) => return fail_clierror!("Cannot load BEGIN .lua/luau file: {e}"),
             }
         } else {
             begin.to_string()
@@ -381,10 +393,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 Ok(end) => end,
                 Err(e) => return fail_clierror!("Cannot load Luau END script file: {e}"),
             }
-        } else if end.ends_with(".luau") || end.ends_with(".lua") {
+        } else if std::path::Path::new(end)
+            .extension()
+            .map_or(false, |ext| ext.eq_ignore_ascii_case("luau"))
+            || std::path::Path::new(end)
+                .extension()
+                .map_or(false, |ext| ext.eq_ignore_ascii_case("lua"))
+        {
             match fs::read_to_string(end.clone()) {
                 Ok(file_contents) => file_contents,
-                Err(e) => return fail_clierror!("Cannot load END .luau file: {e}"),
+                Err(e) => return fail_clierror!("Cannot load END .lua/.luau file: {e}"),
             }
         } else {
             end.to_string()
