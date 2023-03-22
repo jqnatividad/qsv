@@ -1807,8 +1807,11 @@ fn setup_helpers(
     //                         If a match is found, the first resource with a matching name
     //                         will be used.
     //         cache_age_secs: The number of seconds to cache a downloaded CSV file.
-    //                         If the CSV file is older than this, it will be re-downloaded.
-    //                         If 0, the cached CSV will be used every time.
+    //                         If the CSV file is older than this, it will be re-downloaded unless
+    //                         the server returns a 304 Not Modified response.
+    //                         If 0, the cached CSV will never expire and will be used every time.
+    //                         If negative, the cached CSV will be deleted if it exists and the
+    //                         CSV will be re-downloaded.
     //
     //                returns: Luau table of header names excluding the first header,
     //                         or Luau runtime error if the CSV could not be loaded
@@ -1825,6 +1828,7 @@ fn setup_helpers(
         let mut cached_csv_exists = false;
         let mut cached_csv_age_secs = 0_i64;
         let mut cached_csv_size = 0;
+        let mut cache_csv_last_modified: Option<std::time::SystemTime> = None;
         let qsv_cache_dir: String = luau.globals().get("_QSV_CACHE_DIR")?;
         let cached_csv_path = Path::new(&qsv_cache_dir).join(format!("{lookup_name}.csv"));
 
@@ -1840,11 +1844,11 @@ fn setup_helpers(
                 debug!("deleting cached CSV file {}", cached_csv_path.display());
                 std::fs::remove_file(&cached_csv_path)?;
             } else {
-                // check if the cached CSV file is older than cache_age_secs
-
+                // get metadata for the cached CSV file
                 cached_csv_exists = true;
                 let metadata = cached_csv_path.metadata()?;
-                let modified_secs = metadata.modified()?.duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
+                cache_csv_last_modified = Some(metadata.modified()?);
+                let modified_secs = cache_csv_last_modified.unwrap().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
                 let now_secs = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
                 cached_csv_size = metadata.len();
 
@@ -1886,14 +1890,6 @@ fn setup_helpers(
             let lookup_on_url = lookup_table_uri.to_lowercase().starts_with("http");
 
             let cache_file_path = Path::new(&qsv_cache_dir).join(&format!("{lookup_name}.csv"));
-            let mut cache_file = match std::fs::File::create(&cache_file_path) {
-                Ok(f) => f,
-                Err(e) => {
-                    return Err(mlua::Error::RuntimeError(format!(
-                        "{ERROR_MSG_PREFIX}Cannot create cache file {}: {e}.", cache_file_path.display())
-                    ));
-                }
-            };
 
             if lookup_on_url {
                 use reqwest::{blocking::Client, Url};
@@ -1919,6 +1915,7 @@ fn setup_helpers(
                     }
                 };
 
+                let mut write_csv_contents = true;
                 let lookup_csv_contents = if lookup_ckan {
                     // we're using the ckan scheme, so we need to get the resource
 
@@ -2020,17 +2017,54 @@ fn setup_helpers(
                         }
                     };
 
-                    match client.get(validated_url).send() {
-                            Ok(response) => response.text().unwrap_or_default(),
-                            Err(e) => {
-                                return Err(mlua::Error::RuntimeError(format!(
-                                    "{ERROR_MSG_PREFIX}Cannot read lookup CSV at url: {e}."
-                                )));
-                            }
+                    let mut headers = reqwest::header::HeaderMap::new();
+
+                    if cached_csv_exists && cache_csv_last_modified.is_some(){
+                        // if a cached CSV exists, we need to use the If-Modified-Since header
+                        // to avoid downloading the CSV again if it hasn't changed
+                        let last_modified: chrono::DateTime<chrono::Utc> = cache_csv_last_modified.unwrap()
+                            .into();
+                        let last_modified = last_modified.to_rfc2822();
+
+                        (headers).insert(
+                            reqwest::header::IF_MODIFIED_SINCE,
+                            reqwest::header::HeaderValue::from_str(&last_modified).unwrap(),
+                        );
+                    }
+
+                    let response = match client.get(validated_url).headers(headers).send() {
+                        Ok(response) => response,
+                        Err(e) => {
+                            return Err(mlua::Error::RuntimeError(format!(
+                                "{ERROR_MSG_PREFIX}Cannot read lookup CSV at url: {e}."
+                            )));
                         }
+                    };
+
+                    if response.status() == reqwest::StatusCode::NOT_MODIFIED {
+                        // the CSV hasn't changed, so we can just use the cached CSV
+                        debug!("Lookup CSV hasn't changed, so using cached CSV.");
+                        write_csv_contents = false;
+                    } else {
+                        // the CSV has changed, so we need to download it
+                        debug!("Lookup CSV has changed, so downloading new CSV.");
+                    }
+
+                    response.text().unwrap_or_default()
                 };
 
-                cache_file.write_all(lookup_csv_contents.as_bytes())?;
+                if write_csv_contents {
+                    // write the CSV contents to the cache file
+                    let mut cache_file = match std::fs::File::create(&cache_file_path) {
+                        Ok(f) => f,
+                        Err(e) => {
+                            return Err(mlua::Error::RuntimeError(format!(
+                                "{ERROR_MSG_PREFIX}Cannot create cache file {}: {e}.", cache_file_path.display())
+                            ));
+                        }
+                    };
+                    cache_file.write_all(lookup_csv_contents.as_bytes())?;
+                }
 
                 lookup_table_uri = cache_file_path.to_string_lossy().to_string();
             }
