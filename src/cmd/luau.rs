@@ -119,8 +119,8 @@ Usage:
 
 Luau arguments:
 
-    All <script> arguments/options can either be the Luau code, or if it starts with "file:",
-    the filepath from which to load the script.
+    All <script> arguments/options can either be the Luau code, or if it starts with "file:" or
+    ends with ".luau/.lua" - the filepath from which to load the script.
 
     Instead of using the --begin and --end options, you can also embed BEGIN and END scripts in the
     MAIN script by using the "BEGIN { ... }!" and "END { ... }!" syntax.
@@ -149,11 +149,15 @@ Luau options:
                              the CSV with the main-script.
                              Typically used to initialize global variables.
                              Takes precedence over an embedded BEGIN script.
+                             If <script> begins with "file:" or ends with ".luau/.lua", it is
+                             interpreted as a filepath from which to load the script.
     -E, --end <script>       Luau script/file to execute at the END, after processing the
                              CSV with the main-script.
                              Typically used for aggregations.
                              The output of the END script is sent to stderr.
                              Takes precedence over an embedded END script.
+                             If <script> begins with "file:" or ends with ".luau/.lua", it is
+                             interpreted as a filepath from which to load the script.
     --luau-path <pattern>    The LUAU_PATH pattern to use from which the scripts 
                              can "require" lua/luau library files from.
                              See https://www.lua.org/pil/8.1.html
@@ -293,6 +297,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             Ok(file_contents) => file_contents,
             Err(e) => return fail_clierror!("Cannot load Luau file: {e}"),
         }
+    } else if args.arg_main_script.ends_with(".luau") || args.arg_main_script.ends_with(".lua") {
+        match fs::read_to_string(args.arg_main_script.clone()) {
+            Ok(file_contents) => file_contents,
+            Err(e) => return fail_clierror!("Cannot load .luau file: {e}"),
+        }
     } else {
         args.arg_main_script.clone()
     };
@@ -342,6 +351,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 Ok(begin) => begin,
                 Err(e) => return fail_clierror!("Cannot load Luau BEGIN script file: {e}"),
             }
+        } else if begin.ends_with(".luau") || begin.ends_with(".lua") {
+            match fs::read_to_string(begin.clone()) {
+                Ok(file_contents) => file_contents,
+                Err(e) => return fail_clierror!("Cannot load BEGIN .luau file: {e}"),
+            }
         } else {
             begin.to_string()
         };
@@ -363,6 +377,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             match fs::read_to_string(end_filepath) {
                 Ok(end) => end,
                 Err(e) => return fail_clierror!("Cannot load Luau END script file: {e}"),
+            }
+        } else if end.ends_with(".luau") || end.ends_with(".lua") {
+            match fs::read_to_string(end.clone()) {
+                Ok(file_contents) => file_contents,
+                Err(e) => return fail_clierror!("Cannot load END .luau file: {e}"),
             }
         } else {
             end.to_string()
