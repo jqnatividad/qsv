@@ -6,7 +6,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.94.0] = 2023-03-17
+## [0.95.0] - 2023-03-23
+
+### Added
+* `luau`: added qsv_cmd() and qsv_shellcmd() helpers, detailed map error messages to help with script development https://github.com/jqnatividad/qsv/pull/869
+* `luau`: added environment variable set/get helper functions - qsv_setenv() and qsv_getenv() https://github.com/jqnatividad/qsv/pull/872
+* `luau`: added smart qsv_register_lookup() caching so lookup tables need not be repeatedly downloaded and can be persisted/expired as required https://github.com/jqnatividad/qsv/pull/874
+* `luau`: added QSV_CKAN_API, QSV_CKAN_TOKEN and QSV_CACHE_DIR env vars https://github.com/jqnatividad/qsv/commit/9b7269e98fe004c6d2268d626777628af65dd45d
+
+### Changed
+* `apply` & `applydp`: expanded usage text to have arguments section; emptyreplace subcommand now supports column selectors https://github.com/jqnatividad/qsv/pull/868
+* `luau`: smarter script file processing. In addition to recognizing "file:" prefix, if the script argument ends with ".lua/luau" file extensions, its automatically processed as a file https://github.com/jqnatividad/qsv/pull/875
+* `luau`: qsv_sleep() and qsv_writefile() improvements https://github.com/jqnatividad/qsv/commit/27358a26411f95f57acfd62aad8b92906fe82ced
+* `partition`: added arguments section to usage text; added NYC 311 example https://github.com/jqnatividad/qsv/commit/74aa37b1c138f1c010d338fb4f6c9b48a381532a
+* Bump reqwest from 0.11.14 to 0.11.15 by @dependabot in https://github.com/jqnatividad/qsv/pull/870
+* Bump regex from 1.7.1 to 1.7.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/873
+* apply select clippy lint recommendations
+* cargo update bump several indirect dependencies
+* pin Rust nightly to 2023-03-22
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.94.0...0.95.0
+
+## [0.94.0] - 2023-03-17
 
 ### Added
 * `luau`: qsv_register_lookup now supports "ckan://" scheme. This allows the luau script developer to fetch lookup table resources from CKAN instances. https://github.com/jqnatividad/qsv/pull/864
