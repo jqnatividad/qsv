@@ -123,6 +123,8 @@ The `apply geocode` command [memoizes](https://en.wikipedia.org/wiki/Memoization
 
 The `fetch` and `fetchpost` commands also memoizes expensive REST API calls with its optional Redis support. It effectively has a persistent cache as the default time-to-live (TTL) before a Redis cache entry is expired is 28 days and Redis entries are persisted across restarts. Redis cache settings can be fine-tuned with the `QSV_REDIS_CONNSTR`, `QSV_REDIS_TTL_SECONDS`, `QSV_REDIS_TTL_REFRESH` and `QSV_FP_REDIS_CONNSTR` environment variables.
 
+The `luau` command caches lookup tables on disk using the QSV_CACHE_DIR environment variable and the `--cache-dir` command-line option. The default cache directory is `qsv-cache` in the current working directory. The QSV_CACHE_DIR environment variable overrides the `--cache-dir` command-line option.
+
 ## UTF-8 Encoding for Performance
 [Rust strings are utf-8 encoded](https://doc.rust-lang.org/std/string/struct.String.html). As a result, qsv **REQUIRES** UTF-8 encoded files.
 
