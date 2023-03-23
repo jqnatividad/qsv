@@ -97,7 +97,7 @@ Full-featured prebuilt [binary variants](#variants) of the latest qsv version fo
 
 ### Option 2: Homebrew
 
-For [macOS and Linux (64-bit)](https://formulae.brew.sh/formula/qsv), you can quickly install qsv with [Homebrew](https://brew.sh). However, only the `apply` [feature](#feature-flags) is enabled.
+For [macOS and Linux (64-bit)](https://formulae.brew.sh/formula/qsv), you can quickly install qsv with [Homebrew](https://brew.sh). However, only the `apply` and `luau` [features](#feature-flags) are enabled.
 
 ```
 brew install qsv
