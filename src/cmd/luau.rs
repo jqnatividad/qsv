@@ -1872,6 +1872,15 @@ fn setup_helpers(
     let qsv_register_lookup = luau.create_function(move |luau, (lookup_name, mut lookup_table_uri, cache_age_secs): (String, String, i64)| {
         const MSG_PREFIX: &str = "qsv_register_lookup() - ";
 
+        macro_rules! lookup_err {
+            ($($arg:tt)*) => ({
+                use log::error;
+                let err_msg = format!($($arg)*);
+                error!("{MSG_PREFIX}{err_msg}");
+                Err(mlua::Error::RuntimeError(err_msg))
+            });
+        }
+
         if LUAU_STAGE.load(Ordering::Relaxed) != Stage::Begin as i8 {
             return Err(mlua::Error::RuntimeError(
                 "qsv_register_lookup() can only be called from the BEGIN script.".to_string(),
@@ -1966,9 +1975,7 @@ fn setup_helpers(
                 {
                     Ok(c) => c,
                     Err(e) => {
-                        return Err(mlua::Error::RuntimeError(format!(
-                            "{MSG_PREFIX}Cannot build reqwest client to download lookup CSV: {e}.")
-                        ));
+                        return lookup_err!("Cannot build reqwest client to download lookup CSV: {e}.");
                     }
                 };
 
@@ -1977,7 +1984,7 @@ fn setup_helpers(
                 let download_start = Instant::now();
                 let mut last_modified_rfc8222 = now_dt_utc.to_rfc2822();
                 let mut write_csv_contents = true;
-                let lookup_csv_contents = if lookup_ckan {
+                let lookup_csv_response = if lookup_ckan {
                     // we're using the ckan scheme, so we need to get the resource
 
                     let mut headers = reqwest::header::HeaderMap::new();
@@ -2000,70 +2007,56 @@ fn setup_helpers(
                         let validated_url = match Url::parse(&lookup_table_uri) {
                             Ok(url) => url,
                             Err(e) => {
-                                return Err(mlua::Error::RuntimeError(format!(
-                                    "{MSG_PREFIX}Invalid resource_search url {e}."
-                                )));
+                                return lookup_err!("Invalid resource_search url {e}.");
                             }
                         };
 
                         let resource_search_result = match client.get(validated_url).headers(headers.clone()).send() {
                             Ok(response) => response.text().unwrap_or_default(),
                             Err(e) => {
-                                return Err(mlua::Error::RuntimeError(format!(
-                                    "{MSG_PREFIX}Cannot find resource name with resource_search: {e}."
-                                )));
+                                return lookup_err!("Cannot find resource name with resource_search: {e}.");
                             }
                         };
 
                         let resource_search_json: serde_json::Value = match serde_json::from_str(&resource_search_result) {
                             Ok(json) => json,
                             Err(e) => {
-                                return Err(mlua::Error::RuntimeError(format!(
-                                    "{MSG_PREFIX}Invalid resource_search json {e}."
-                                )));
+                                return lookup_err!("Invalid resource_search json {e}.");
                             }
                         };
 
                         let Some(resource_id) = resource_search_json["result"]["results"][0]["id"].as_str() else {
-                            return Err(mlua::Error::RuntimeError("{MSG_PREFIX}Cannot find a resource name.".to_string()));
+                            return lookup_err!("Cannot find a resource name.");
                         };
 
                         lookup_table_uri = format!("{ckan_api_url}/resource_show?id={resource_id}");
                     }
 
                     // get resource_show json and get the resource URL
-                    let resource_show_result = match client.get(lookup_table_uri).headers(headers).send() {
+                    let resource_show_result = match client.get(lookup_table_uri).headers(headers.clone()).send() {
                         Ok(response) => response.text().unwrap_or_default(),
                         Err(e) => {
-                            return Err(mlua::Error::RuntimeError(format!(
-                                "{MSG_PREFIX}CKAN scheme used. Cannot get lookup CSV resource: {e}.",
-                            )));
+                            return lookup_err!("CKAN scheme used. Cannot get lookup CSV resource: {e}.");
                         }
                     };
 
                     let resource_show_json: serde_json::Value = match serde_json::from_str(&resource_show_result) {
                         Ok(json) => json,
                         Err(e) => {
-                            return Err(mlua::Error::RuntimeError(format!(
-                                "{MSG_PREFIX}Invalid resource_show json: {e}."
-                            )));
+                            return lookup_err!("Invalid resource_show json: {e}.");
                         }
                     };
 
                     let Some(url) = resource_show_json["result"]["url"].as_str() else {
                         let err_msg = "qsv_register_lookup() - Cannot get resource URL from resource_show JSON response.";
                         log::error!("{err_msg}: {resource_show_json}");
-                        return Err(mlua::Error::RuntimeError(
-                                err_msg.to_string()
-                        ));
+                        return lookup_err!("{}", err_msg);
                     };
 
-                    match client.get(url).send() {
-                        Ok(response) => response.text().unwrap_or_default(),
+                    match client.get(url).headers(headers).send() {
+                        Ok(response) => response,
                         Err(e) => {
-                            return Err(mlua::Error::RuntimeError(format!(
-                                "{MSG_PREFIX}Cannot read lookup CSV at {url}: {e}."
-                            )));
+                            return lookup_err!(r#"Cannot read lookup CSV at "{url}": {e}."#);
                         }
                     }
                 } else {
@@ -2072,9 +2065,7 @@ fn setup_helpers(
                     let validated_url = match Url::parse(&lookup_table_uri) {
                         Ok(url) => url,
                         Err(e) => {
-                            return Err(mlua::Error::RuntimeError(format!(
-                                "{MSG_PREFIX}Invalid lookup CSV url {e}."
-                            )));
+                            return lookup_err!("Invalid lookup CSV url {e}.");
                         }
                     };
 
@@ -2092,35 +2083,42 @@ fn setup_helpers(
                         );
                     }
 
-                    let response = match client.get(validated_url).headers(headers).send() {
+                    match client.get(validated_url.clone()).headers(headers).send() {
                         Ok(response) => response,
                         Err(e) => {
-                            return Err(mlua::Error::RuntimeError(format!(
-                                "{MSG_PREFIX}Cannot read lookup CSV at url: {e}."
-                            )));
+                            return lookup_err!(r#"Cannot read lookup CSV at "{validated_url}": {e}."#);
                         }
-                    };
+                    }
+                };
 
-                    if response.status() == reqwest::StatusCode::NOT_MODIFIED {
+                let lookup_csv_contents = {
+                    let response_status = lookup_csv_response.status();
+                    if response_status == reqwest::StatusCode::NOT_MODIFIED {
                         // the CSV hasn't changed, so we can just use the cached CSV
                         debug!("Lookup CSV hasn't changed, so using cached CSV.");
                         write_csv_contents = false;
-                    } else {
+                    } else if response_status.is_success() {
                         // the CSV has changed, so we need to download it
-                        debug!("Lookup CSV has changed, so downloading new CSV.");
+                        write_csv_contents = true;
+                    } else {
+                        match lookup_csv_response.error_for_status_ref() {
+                            Ok(_) => (),
+                            Err(e) => {
+                                return lookup_err!("Cannot read lookup CSV at url: {e}.");
+                            }
+                        }
                     }
-
-                    response.text().unwrap_or_default()
+                    lookup_csv_response.text().unwrap_or_default()
                 };
 
-                if write_csv_contents {
+                if write_csv_contents && !lookup_csv_contents.is_empty() {
                     // write the CSV contents to the cache file
+                    info!("Writing lookup CSV to cache file: {}", cache_file_path.display());
                     let mut cache_file = match std::fs::File::create(&cache_file_path) {
                         Ok(f) => f,
                         Err(e) => {
-                            return Err(mlua::Error::RuntimeError(format!(
-                                "{MSG_PREFIX}Cannot create cache file {}: {e}.", cache_file_path.display())
-                            ));
+                            return lookup_err!(
+                                "Cannot create cache file {}: {e}.", cache_file_path.display());
                         }
                     };
 
@@ -2151,9 +2149,7 @@ fn setup_helpers(
         let headers = match rdr.headers() {
             Ok(headers) => headers.clone(),
             Err(e) => {
-                return Err(mlua::Error::RuntimeError(format!(
-                    "{MSG_PREFIX}cannot read headers of lookup table: {e}"
-                )));
+                return lookup_err!("Cannot read headers of lookup table: {e}");
             }
         };
         for result in rdr.records() {
@@ -2170,13 +2166,7 @@ fn setup_helpers(
         }
 
         luau.globals()
-            .raw_set(lookup_name.clone(), lookup_table.clone())?;
-
-        if log_enabled!(log::Level::Debug) {
-            debug!("qsv_register_lookup() - lookup table \"{lookup_name}\": {lookup_table:#?}");
-        } else {
-            info!("qsv_register_lookup() - lookup table \"{lookup_name}\" registered");
-        }
+            .raw_set(lookup_name, lookup_table)?;
 
         // now that we've successfully loaded the lookup table, we return the headers
         // as a table so the user can use them to access the values
@@ -2187,6 +2177,8 @@ fn setup_helpers(
                 headers_table.raw_set(i, header)?;
             }
         }
+
+        info!("{call_parameters} successfully registered.");
 
         Ok(headers_table)
     })?;
