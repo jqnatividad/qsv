@@ -83,7 +83,7 @@ The same is true with the write buffer (default: 64k) with the `QSV_WTR_BUFFER_C
 
 ## Multithreading
 
-Several commands support multithreading - `stats`, `frequency`, `schema`, `split` and `tojsonl` (when an index is available); `apply`, `dedup`, `extsort`, `sort` and `validate` (no index required).
+Several commands support multithreading - `stats`, `frequency`, `schema`, `split` and `tojsonl` (when an index is available); `apply`, `dedup`, `extsort`, `joinp`, `sort`, `to` and `validate` (no index required).
 
 qsv will automatically spawn parallel jobs equal to the detected number of logical processors. Should you want to manually override this, use the `--jobs` command-line option or the `QSV_MAX_JOBS` environment variable.
 
