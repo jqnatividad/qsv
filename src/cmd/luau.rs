@@ -1882,9 +1882,7 @@ fn setup_helpers(
         }
 
         if LUAU_STAGE.load(Ordering::Relaxed) != Stage::Begin as i8 {
-            return Err(mlua::Error::RuntimeError(
-                "qsv_register_lookup() can only be called from the BEGIN script.".to_string(),
-            ));
+            return lookup_err!("can only be called from the BEGIN script.");
         }
 
         let call_parameters = format!("qsv_lookup_register({lookup_name}, {lookup_table_uri}, {cache_age_secs})");
@@ -2048,9 +2046,7 @@ fn setup_helpers(
                     };
 
                     let Some(url) = resource_show_json["result"]["url"].as_str() else {
-                        let err_msg = "qsv_register_lookup() - Cannot get resource URL from resource_show JSON response.";
-                        log::error!("{err_msg}: {resource_show_json}");
-                        return lookup_err!("{}", err_msg);
+                        return lookup_err!("Cannot get resource URL from resource_show JSON response.: {resource_show_json}");
                     };
 
                     match client.get(url).headers(headers).send() {
