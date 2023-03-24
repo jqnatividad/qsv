@@ -2,7 +2,7 @@ static USAGE: &str = r#"
 Exports a specified Excel/ODS sheet to a CSV file.
 The first row of a sheet is assumed to be the header row.
 
-NOTE: Excel stores dates as number of days since 1900.
+NOTE: Excel 97-2003 Binary File Format (.XLS) stores dates as number of days since 1900.
 https://support.microsoft.com/en-us/office/date-systems-in-excel-e7fe7167-48a9-4b96-bb53-5612a800b487
 
 Because of this, this command uses a --dates-whitelist to determine if it
@@ -15,8 +15,8 @@ fractional components (e.g. 40729 is 2011-07-05, 37145.354166666664 is 2001-09-1
 We need a whitelist so we know to only do this date conversions for date fields and
 not all columns with numeric values.
 
-Note however that with XLSX files, qsv will automatically process a cell as a date, even if its
-not its not in the --dates-whitelist, if the cell's format has been explicitly set to date.
+With the modern XML-based, XLSX format however, qsv will automatically process a cell as a date,
+even if its not its not in the --dates-whitelist, if the cell's format has been explicitly set to date.
 
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_excel.rs.
 
