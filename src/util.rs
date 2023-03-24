@@ -663,7 +663,9 @@ pub fn qsv_check_for_update(check_only: bool, no_confirm: bool) -> Result<bool, 
     let mut updated = false;
     if latest_release > &curr_version.to_string() {
         eprintln!("Update {latest_release} available. Current version is {curr_version}.");
-        eprintln!("Release notes: https://github.com/jqnatividad/qsv/releases/latest\n");
+        eprintln!(
+            "Release notes: https://github.com/jqnatividad/qsv/releases/tag/{latest_release}\n"
+        );
         if QSV_KIND.starts_with("prebuilt") && !check_only {
             match self_update::backends::github::Update::configure()
                 .repo_owner("jqnatividad")
@@ -698,8 +700,8 @@ pub fn qsv_check_for_update(check_only: bool, no_confirm: bool) -> Result<bool, 
             // our prebuilt binaries.
             winfo!(
                 r#"This qsv was {QSV_KIND}. self-update does not work for manually {QSV_KIND} binaries.
-If you wish to update to the latest version of qsv, manually install/compile from source
-or download the latest prebuilt binaries from GitHub - https://github.com/jqnatividad/qsv/releases/latest"#
+If you wish to update to the latest version of qsv, manually install/compile from source.
+Self-update only works with prebuilt binaries released on GitHub https://github.com/jqnatividad/qsv/releases/latest"#
             );
         }
     } else {
