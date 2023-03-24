@@ -7,6 +7,8 @@ Usage:
     qsv diff [options] [<input-left>] [<input-right>]
     qsv diff --help
 
+For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_diff.rs
+
 diff options:
     --no-headers-left           When set, the first row will be considered as part of
                                 the left CSV to diff. (When not set, the
