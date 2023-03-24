@@ -186,7 +186,7 @@ actix-web = { version = "4.3", default-features = false, features = [
     "compress-gzip",
 ] }
 assert-json-diff = "2.0"
-newline-converter = "0.2"
+newline-converter = "0.3"
 quickcheck = { version = "1", default-features = false }
 serial_test = "1.0"
 
