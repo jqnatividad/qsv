@@ -4,6 +4,8 @@ Prints a count of the number of records in the CSV data.
 Note that the count will not include the header row (unless --no-headers is
 given).
 
+For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_count.rs.
+
 Usage:
     qsv count [options] [<input>]
     qsv count --help

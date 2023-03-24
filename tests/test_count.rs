@@ -1,5 +1,67 @@
 use crate::{qcheck, workdir::Workdir, CsvData};
 
+#[test]
+fn count_simple() {
+    let wrk = Workdir::new("count_simple");
+    wrk.create_indexed(
+        "in.csv",
+        vec![
+            svec!["letter", "number"],
+            svec!["alpha", "13"],
+            svec!["beta", "24"],
+            svec!["gamma", "37"],
+        ],
+    );
+    let mut cmd = wrk.command("count");
+    cmd.arg("in.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = "3";
+    assert_eq!(got, expected.to_string());
+}
+
+#[test]
+fn count_width() {
+    let wrk = Workdir::new("count_width");
+    wrk.create_indexed(
+        "in.csv",
+        vec![
+            svec!["letter", "number"],
+            svec!["alpha", "13"],
+            svec!["beta", "24"],
+        ],
+    );
+    let mut cmd = wrk.command("count");
+    cmd.arg("--width").arg("in.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = "2;9";
+    assert_eq!(got, expected.to_string());
+}
+
+#[test]
+fn count_comments() {
+    let wrk = Workdir::new("count_comments");
+
+    wrk.create(
+        "in.csv",
+        vec![
+            svec!["# this is a comment", ""],
+            svec!["# next comment", ""],
+            svec!["letter", "number"],
+            svec!["alpha", "13"],
+            svec!["beta", "24"],
+            svec!["# comment here too!", "24"],
+        ],
+    );
+    let mut cmd = wrk.command("count");
+    cmd.arg("in.csv").env("QSV_COMMENT_CHAR", "#");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = "2";
+    assert_eq!(got, expected.to_string());
+}
+
 /// This tests whether `qsv count` gets the right answer.
 ///
 /// It does some simple case analysis to handle whether we want to test counts
@@ -118,46 +180,4 @@ fn prop_count_noheaders_indexed_env() {
         )
     }
     qcheck(p as fn(CsvData) -> bool);
-}
-
-#[test]
-fn count_width() {
-    let wrk = Workdir::new("count_width");
-    wrk.create_indexed(
-        "in.csv",
-        vec![
-            svec!["letter", "number"],
-            svec!["alpha", "13"],
-            svec!["beta", "24"],
-        ],
-    );
-    let mut cmd = wrk.command("count");
-    cmd.arg("--width").arg("in.csv");
-
-    let got: String = wrk.stdout(&mut cmd);
-    let expected = "2;9";
-    assert_eq!(got, expected.to_string());
-}
-
-#[test]
-fn count_comments() {
-    let wrk = Workdir::new("count_comments");
-
-    wrk.create(
-        "in.csv",
-        vec![
-            svec!["# this is a comment", ""],
-            svec!["# next comment", ""],
-            svec!["letter", "number"],
-            svec!["alpha", "13"],
-            svec!["beta", "24"],
-            svec!["# comment here too!", "24"],
-        ],
-    );
-    let mut cmd = wrk.command("count");
-    cmd.arg("in.csv").env("QSV_COMMENT_CHAR", "#");
-
-    let got: String = wrk.stdout(&mut cmd);
-    let expected = "2";
-    assert_eq!(got, expected.to_string());
 }
