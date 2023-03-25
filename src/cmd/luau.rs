@@ -285,13 +285,11 @@ static TIMEOUT_SECS: AtomicU16 = AtomicU16::new(15);
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
-    if args.flag_timeout > 3_600 {
-        return fail!("Timeout cannot be more than 3,600 seconds (1 hour).");
-    } else if args.flag_timeout == 0 {
-        return fail!("Timeout cannot be zero.");
-    }
-    info!("TIMEOUT: {} secs", args.flag_timeout);
-    TIMEOUT_SECS.store(args.flag_timeout, Ordering::Relaxed);
+    // safety: its safe since flag_timeout is a u16
+    TIMEOUT_SECS.store(
+        util::timeout_secs(args.flag_timeout)?.try_into().unwrap(),
+        Ordering::Relaxed,
+    );
 
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
