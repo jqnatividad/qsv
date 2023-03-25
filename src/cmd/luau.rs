@@ -170,7 +170,7 @@ Luau options:
                              [default: 100]
     --timeout <seconds>      Timeout for downloading lookup_tables using
                              the qsv_register_lookup() helper function.
-                             [default: 15]
+                             [default: 30]
     --ckan-api <url>         The URL of the CKAN API to use for downloading lookup_table
                              resources using the qsv_register_lookup() helper function
                              with the "ckan://" scheme.
