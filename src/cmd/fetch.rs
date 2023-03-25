@@ -132,7 +132,7 @@ Fetch options:
                                default of 10.
                                [default: 0 ]
     --timeout <seconds>        Timeout for each URL request.
-                               [default: 15 ]
+                               [default: 30 ]
     -H, --http-header <k:v>    Append custom header(s) to the HTTP header. Pass multiple key-value pairs
                                by adding this option multiple times, once for each pair. The key and value 
                                should be separated by a colon.

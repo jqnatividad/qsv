@@ -33,7 +33,7 @@ Validate options:
                                before running in parallel.
                                [default: 50000]
     --timeout <seconds>        Timeout for downloading json-schemas.
-                               [default: 15]
+                               [default: 30]
 
 Common options:
     -h, --help                 Display this message
