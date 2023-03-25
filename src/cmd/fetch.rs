@@ -222,7 +222,7 @@ struct Args {
     flag_jqlfile:      Option<String>,
     flag_pretty:       bool,
     flag_rate_limit:   u32,
-    flag_timeout:      u64,
+    flag_timeout:      u16,
     flag_http_header:  Vec<String>,
     flag_max_retries:  u8,
     flag_max_errors:   u64,
@@ -307,13 +307,9 @@ static JQL_GROUPS: once_cell::sync::OnceCell<Vec<jql::Group>> = OnceCell::new();
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
-    if args.flag_timeout > 3_600 {
-        return fail!("Timeout cannot be more than 3,600 seconds (1 hour).");
-    } else if args.flag_timeout == 0 {
-        return fail!("Timeout cannot be zero.");
-    }
-    info!("TIMEOUT: {} secs", args.flag_timeout);
-    TIMEOUT_SECS.set(args.flag_timeout).unwrap();
+    TIMEOUT_SECS
+        .set(util::timeout_secs(args.flag_timeout)?)
+        .unwrap();
 
     if args.flag_redis {
         // check if redis connection is valid
