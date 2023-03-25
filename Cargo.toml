@@ -74,7 +74,7 @@ cached = { version = "0.42", default-features = false, features = [
 ], optional = true }
 calamine = { version = "0.19", features = ["dates"] }
 censor = { version = "0.3", optional = true }
-chrono = "0.4"
+chrono = { version = "0.4", default-features = false }
 console = { version = "0.15", optional = true }
 cpc = { version = "1.9", optional = true }
 crossbeam-channel = "0.5"
@@ -126,7 +126,7 @@ polars = { version = "0.27", features = [
     "semi_anti_join",
 ], optional = true }
 pyo3 = { version = "0.18", features = ["auto-initialize"], optional = true }
-qsv-dateparser = "0.6"
+qsv-dateparser = "0.7"
 qsv_docopt = "1.2"
 qsv-stats = "0.7"
 qsv_currency = { version = "0.6", optional = true }
