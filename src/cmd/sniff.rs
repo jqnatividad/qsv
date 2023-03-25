@@ -88,7 +88,7 @@ struct Args {
     flag_pretty_json:    bool,
     flag_delimiter:      Option<Delimiter>,
     flag_progressbar:    bool,
-    flag_timeout:        u64,
+    flag_timeout:        u16,
 }
 
 #[derive(Serialize, Deserialize, Default, Debug)]
@@ -243,7 +243,9 @@ async fn get_file_to_sniff(args: &Args) -> CliResult<SniffFileStruct> {
 
                 let res = client
                     .get(url.clone())
-                    .timeout(Duration::from_secs(args.flag_timeout))
+                    .timeout(Duration::from_secs(
+                        util::timeout_secs(args.flag_timeout).unwrap_or(30),
+                    ))
                     .send()
                     .await
                     .or(Err(format!("Failed to GET from '{url}'")))?;
