@@ -3540,7 +3540,7 @@ dependencies = [
  "parking_lot 0.12.1",
  "polars",
  "pyo3",
- "qsv-dateparser 0.7.0",
+ "qsv-dateparser",
  "qsv-sniffer",
  "qsv-stats",
  "qsv_currency",
@@ -3580,18 +3580,6 @@ dependencies = [
 
 [[package]]
 name = "qsv-dateparser"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0db9c78aace71a71cb51ffc63806fc038f42dea688795652a21d8d3f1d3fa765"
-dependencies = [
- "anyhow",
- "chrono",
- "once_cell",
- "regex",
-]
-
-[[package]]
-name = "qsv-dateparser"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2500c2234b6f76c717559d705f4c88325915b9a281bc3899852a6b3eac204ff2"
@@ -3604,16 +3592,16 @@ dependencies = [
 
 [[package]]
 name = "qsv-sniffer"
-version = "0.7.0"
+version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "982652a9fa6b22fa927222ac7084ea487f5b47776eddf3d0890d21e735d1b1ef"
+checksum = "c67f6ab185e652392b90e3336a61f31471d805028062d290be1d539412cec8b7"
 dependencies = [
  "bitflags",
  "bytecount",
  "csv",
  "csv-core",
  "memchr",
- "qsv-dateparser 0.6.0",
+ "qsv-dateparser",
  "regex",
  "tabwriter",
 ]
