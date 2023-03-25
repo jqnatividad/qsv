@@ -111,13 +111,10 @@ struct RFC4180Struct {
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
-    if args.flag_timeout > 3_600 {
-        return fail!("Timeout cannot be more than 3,600 seconds (1 hour).");
-    } else if args.flag_timeout == 0 {
-        return fail!("Timeout cannot be zero.");
-    }
-    info!("TIMEOUT: {} secs", args.flag_timeout);
-    TIMEOUT_SECS.store(args.flag_timeout, Ordering::Relaxed);
+    TIMEOUT_SECS.store(
+        util::timeout_secs(args.flag_timeout)? as u16,
+        Ordering::Relaxed,
+    );
 
     #[cfg(any(feature = "full", feature = "lite"))]
     let mut rconfig = Config::new(&args.arg_input)
