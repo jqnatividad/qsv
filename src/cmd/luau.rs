@@ -6,7 +6,26 @@ specified rows (RANDOM ACCESS MODE) of a CSV file.
 Luau is not just another qsv command. It is qsv's Domain-Specific Language (DSL)
 for data-wrangling. 👑
 
-The executed Luau has 3 ways to reference row columns (as strings):
+It has three subcommands:
+  map:    Create new columns by executing a Luau script for every row (SEQUENTIAL MODE)
+          or for specified rows (RANDOM ACCESS MODE)
+  filter: Filter rows by executing a Luau script for every row (SEQUENTIAL MODE)
+          or for specified rows (RANDOM ACCESS MODE
+  run:    Run a Luau script without requiring a "typical" CSV. The input is instead used
+          to pass optional arguments to the script.
+          If the input is empty, then the script is executed with no arguments.
+          If the input is a string, then the script is executed using it as an argument.
+
+          If the input is a CSV file, it is treated as a JOBS CSV, with each row describing
+          a job. A job CSV has four columns - JobID, Job, Input and Output. The script is executed
+          for each job, with the Job column containing the luau script to run. Input can be a string
+          to pass to the script, a CSV file to read from or "stdin". Output is the file to write to
+          (stdout if not specified).
+          A jobresults.csv is created with the filename of the JOBS CSV as the prefix. It contains
+          the JobID, Job, Input, Output, Started, Elapsed, amd Result columns. Result 
+          contains the stderr from each job.
+
+The executed Luau has 3 ways to reference row columns (as strings) in `map` and `filter`:
   1. Directly by using column name (e.g. Amount), can be disabled with -g
   2. Indexing col variable by column name: col.Amount or col["Total Balance"]
   3. Indexing col variable by column 1-based index: col[1], col[2], etc.
@@ -116,8 +135,10 @@ Usage:
     qsv luau map [options] -n <main-script> [<input>]
     qsv luau map [options] <new-columns> <main-script> [<input>]
     qsv luau filter [options] <main-script> [<input>]
+    qsv luau run [options] <main-script> [<input>]
     qsv luau map --help
     qsv luau filter --help
+    qsv luau run --help
     qsv luau --help
 
 Luau arguments:
@@ -170,7 +191,7 @@ Luau options:
                              [default: 100]
     --timeout <seconds>      Timeout for downloading lookup_tables using
                              the qsv_register_lookup() helper function.
-                             [default: 30]
+                             [default: 15]
     --ckan-api <url>         The URL of the CKAN API to use for downloading lookup_table
                              resources using the qsv_register_lookup() helper function
                              with the "ckan://" scheme.
@@ -227,6 +248,7 @@ use crate::{
 struct Args {
     cmd_map:          bool,
     cmd_filter:       bool,
+    cmd_run:          bool,
     arg_new_columns:  Option<String>,
     arg_main_script:  String,
     arg_input:        Option<String>,
@@ -280,12 +302,13 @@ impl TryFrom<i8> for Stage {
 
 static LUAU_STAGE: AtomicI8 = AtomicI8::new(0);
 
-static TIMEOUT_SECS: AtomicU16 = AtomicU16::new(15);
+static TIMEOUT_SECS: AtomicU16 = AtomicU16::new(30);
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
-    // safety: its safe since flag_timeout is a u16
+    // safety: its safe to unwrap since flag_timeout is a u16. So calling timeout_secs which returns
+    // a u64 back to a u16 to store in TIMEOUT_SECS (which is a u16) is safe.
     TIMEOUT_SECS.store(
         util::timeout_secs(args.flag_timeout)?.try_into().unwrap(),
         Ordering::Relaxed,
@@ -317,7 +340,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     // in Luau, comments begin with two consecutive hyphens
-    // let's remove them, so we don't falsely trigger on commented special variables
+    // let's remove them, so we don't falsely trigger on commented special variables/helpers/etc
     let comment_remover_re = regex::Regex::new(r"(?m)(^\s*?--.*?$)").unwrap();
     luau_script = comment_remover_re.replace_all(&luau_script, "").to_string();
 
