@@ -6,6 +6,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.95.1] - 2023-03-27
+
+### Changed
+* `count`: add example/test add link from usage text https://github.com/jqnatividad/qsv/commit/9cd3c293eef0344c27693949f415850881211adf
+* `diff`: add examples link from usage text https://github.com/jqnatividad/qsv/commit/4250811d0d20284342ccd7efcc58cd7562d16636
+* Standardize --timeout option handling and exposed it with QSV_TIMEOUT env var https://github.com/jqnatividad/qsv/pull/886
+* improved self-update messages https://github.com/jqnatividad/qsv/commit/4027306f08aeca3b2ebe1e4243628a65c1307a9e
+* Bump qsv-dateparser from 0.6 to 0.7
+* Bump qsv-sniffer from 0.7 to 0.8
+* Bump actions/stale from 7 to 8 by @dependabot in https://github.com/jqnatividad/qsv/pull/876
+* Bump newline-converter from 0.2.2 to 0.3.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/877
+* Bump rust_decimal from 1.29.0 to 1.29.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/882
+* Bump regex from 1.7.2 to 1.7.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/881
+* Bump sysinfo from 0.28.3 to 0.28.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/883
+* Bump pyo3 from 0.18.1 to 0.18.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/885
+* Bump indexmap from 1.9.2 to 1.9.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/884
+* change MSRV to Rust 1.68.1
+* cargo update bump several indirect dependencies
+* pin Rust nightly to 2023-03-26
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.95.0...0.95.1
+
 ## [0.95.0] - 2023-03-23
 
 ### Added
