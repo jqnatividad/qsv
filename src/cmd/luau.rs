@@ -17,13 +17,14 @@ It has three subcommands:
           If the input is a string, then the script is executed using it as an argument.
 
           If the input is a CSV file, it is treated as a JOBS CSV, with each row describing
-          a job. A job CSV has four columns - JobID, Job, Input and Output. The script is executed
-          for each job, with the Job column containing the luau script to run. Input can be a string
-          to pass to the script, a CSV file to read from or "stdin". Output is the file to write to
-          (stdout if not specified).
+          a job. A job CSV has four columns - JobID, Job, JobInput and JobOutput. The script
+          is executed for each job, with the Job column containing the luau script to run.
+          JobInput can be a string to pass to the script, a CSV file to read from or "stdin".
+          JobOutput is the file to write to (stdout if not specified).
+
           A jobresults.csv is created with the filename of the JOBS CSV as the prefix. It contains
-          the JobID, Job, Input, Output, Started, Elapsed, amd Result columns. Result 
-          contains the stderr from each job.
+          the JobID, Job, JobInput, JobOutput, JobStarted, JobElapsed, and JobResult columns. 
+          JobResult contains the stderr from each job.
 
 The executed Luau has 3 ways to reference row columns (as strings) in `map` and `filter`:
   1. Directly by using column name (e.g. Amount), can be disabled with -g
@@ -237,7 +238,7 @@ use log::{debug, info, log_enabled};
 use mlua::{Lua, LuaSerdeExt, Value};
 use serde::Deserialize;
 use strum_macros::IntoStaticStr;
-use tempfile;
+use tempfile::{self, NamedTempFile};
 
 use crate::{
     config::{Config, Delimiter},
@@ -300,6 +301,14 @@ impl TryFrom<i8> for Stage {
     }
 }
 
+#[derive(PartialEq, Eq, Debug)]
+enum RunMode {
+    NotRun,
+    NoInput,
+    StringInput,
+    JobFileInput,
+}
+
 static LUAU_STAGE: AtomicI8 = AtomicI8::new(0);
 
 static TIMEOUT_SECS: AtomicU16 = AtomicU16::new(30);
@@ -314,9 +323,80 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         Ordering::Relaxed,
     );
 
-    let rconfig = Config::new(&args.arg_input)
-        .delimiter(args.flag_delimiter)
-        .no_headers(args.flag_no_headers);
+    // if we're running the run subcommand, the arguments are different
+    let mut run_mode = if args.cmd_run {
+        match args.arg_input.clone() {
+            Some(input_filepath) => {
+                debug!("input_filepath: {}", input_filepath);
+                if Path::new(&input_filepath).exists() {
+                    // its a file, inspect it later to see if its JOBS CSV file
+                    RunMode::JobFileInput
+                } else {
+                    // its not a file, just pass it as a string argument to the script
+                    RunMode::StringInput
+                }
+            }
+            None => {
+                // its not a file, just pass it as a string argument to the script
+                RunMode::NoInput
+            }
+        }
+    } else {
+        RunMode::NotRun
+    };
+    debug!("run_mode: {:?}", run_mode);
+
+    let job_tempfile = NamedTempFile::new()?;
+    let job_tempfile_path = job_tempfile.path().to_str().unwrap().to_string();
+
+    let rconfig = if run_mode == RunMode::NotRun {
+        // we're not running the run subcommand, so just process the input as a regular CSV file
+        Config::new(&args.arg_input)
+            .delimiter(args.flag_delimiter)
+            .no_headers(args.flag_no_headers)
+    } else {
+        // we're running the run subcommand, so we need to create a JOB CSV file
+        if run_mode == RunMode::JobFileInput {
+            // if the input is a file, check if its a JOBS CSV file
+            // and it has the required columns
+            let job_file_exists = Path::new(&args.arg_input.clone().unwrap()).exists();
+            let job_tempfile = if job_file_exists {
+                std::fs::File::open(args.arg_input.clone().unwrap())?
+            } else {
+                job_tempfile.reopen()?
+            };
+            debug!(
+                "input is a file, checking if its a JOBS CSV file - job_file_exists: {}, \
+                 job_tempfile: {:?}",
+                job_file_exists, job_tempfile
+            );
+            let mut job_reader = csv::Reader::from_reader(job_tempfile);
+            let job_headers = job_reader.headers()?;
+            if job_headers != vec!["JobID", "Job", "JobInput", "JobOutput"] {
+                return fail_clierror!(
+                    "JOBS CSV file must have the following columns: JobID, Job, JobInput, \
+                     JobOutput: {job_headers:?}"
+                );
+            }
+            Config::new(&args.arg_input).delimiter(args.flag_delimiter)
+        } else {
+            // if the input is not a JOBS CSV file, create a JOB CSV file
+            // and pass the input as a string argument to the script
+            let mut job_tempfile = job_tempfile.reopen()?;
+            writeln!(job_tempfile, "JobID,Job,JobInput,JobOutput")?;
+            let job_stub = format!(
+                r#"1,"{}",{},stdout"#,
+                args.arg_main_script,
+                args.arg_input.clone().unwrap_or_default()
+            );
+            writeln!(job_tempfile, "{job_stub}")?;
+            debug!("input is not a file, creating a JOBS CSV file: {job_stub}");
+            // and now we're running the run subcommand with a JOBS CSV file
+            // so we can set the run mode to JobFileInput
+            run_mode = RunMode::JobFileInput;
+            Config::new(&Some(job_tempfile_path))
+        }
+    };
 
     let mut luau_script = if let Some(script_filepath) = args.arg_main_script.strip_prefix("file:")
     {
@@ -542,6 +622,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if index_file_used {
         info!("RANDOM ACCESS MODE (_INDEX or _LASTROW special variables used)");
         random_acess_mode(
+            &run_mode,
             &rconfig,
             &args,
             &luau,
@@ -555,6 +636,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } else {
         info!("SEQUENTIAL MODE");
         sequential_mode(
+            &run_mode,
             &rconfig,
             &args,
             &luau,
@@ -579,6 +661,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 // this mode is used when the user does not use _INDEX or _LASTROW in their script,
 // so we just scan the CSV, processing the MAIN script in sequence.
 fn sequential_mode(
+    run_mode: &RunMode,
     rconfig: &Config,
     args: &Args,
     luau: &Lua,
@@ -598,12 +681,21 @@ fn sequential_mode(
     let mut new_column_count = 0_u8;
     let mut headers_count = headers.len();
 
+    let job_results_columns = "JobStarted,JobElapsed,JobResult".to_string();
+
     if !rconfig.no_headers {
         if !args.cmd_filter {
-            let new_columns = args
-                .arg_new_columns
-                .as_ref()
-                .ok_or("Specify new column names")?;
+            // let new_columns = args
+            //     .arg_new_columns
+            //     .as_ref()
+            //     .ok_or("Specify new column names")?;
+            let new_columns = if *run_mode == RunMode::NotRun {
+                args.arg_new_columns
+                    .as_ref()
+                    .ok_or("Specify new column names")?
+            } else {
+                &job_results_columns
+            };
 
             let new_columns_vec: Vec<&str> = new_columns.split(',').collect();
             for new_column in new_columns_vec {
@@ -678,13 +770,16 @@ fn sequential_mode(
         progress.set_draw_target(ProgressDrawTarget::hidden());
     }
 
-    let main_bytecode = luau_compiler.compile(main_script);
+    let mut main_bytecode = luau_compiler.compile(main_script);
     let mut record = csv::StringRecord::new();
     let mut idx = 0_u64;
     let mut error_count = 0_usize;
 
     LUAU_STAGE.store(Stage::Main as i8, Ordering::Relaxed);
     info!("Executing MAIN script.");
+
+    // we create a temp dir to store the job output files
+    let temp_results_dir = tempfile::tempdir()?;
 
     // main loop
     // without an index, we stream the CSV in sequential order
@@ -696,6 +791,65 @@ fn sequential_mode(
 
         idx += 1;
         globals.set("_IDX", idx)?;
+
+        if *run_mode == RunMode::JobFileInput {
+            record.trim();
+
+            let job_input = record.get(2).unwrap();
+            let job_input_file =
+                if job_input.is_empty() || job_input.to_ascii_lowercase() == "stdin" {
+                    // if the JobInput column is empty or "stdin"
+                    if idx == 1 {
+                        // if this is the first job, we get args.arg_input and write it to a file
+                        let first_input = args.arg_input.clone();
+                        if let Some(first_input) = first_input {
+                            let first_input_path = temp_results_dir.path().join("job_0000.csv");
+                            let mut first_input_file = std::fs::File::create(&first_input_path)?;
+                            write!(first_input_file, "{first_input}")?;
+                            first_input_path
+                        } else {
+                            std::path::PathBuf::from("-")
+                        }
+                    } else {
+                        // if this is not the first job, we read the input from stdin
+                        // using the idx as the filename suffix with a .csv extension
+                        temp_results_dir
+                            .path()
+                            .join(format!("job_{:04}.csv", idx - 1))
+                    }
+
+                    // // if the JobInput column is empty or "stdin", we read the input from stdin
+                    // // using the idx as the filename suffix with a .csv extension
+                    // temp_results_dir.path().join(format!("job_{:04}.csv", idx - 1))
+                } else {
+                    std::path::PathBuf::from(job_input)
+                };
+
+            // record 3 is the JobOutput column - the output file
+            let job_output = record.get(3).unwrap();
+            let job_output_file = if job_output.is_empty()
+                || job_output.to_ascii_lowercase() == "stdout"
+            {
+                // if the JobOutput column is empty or "stdout", we write the output to a temp file
+                // using the idx as the filename suffix with a .csv extension
+                temp_results_dir.path().join(format!("job_{idx:04}.csv"))
+            } else {
+                std::path::PathBuf::from(job_output)
+            };
+
+            let job_script = format!(
+                r#"local jobstart = os.clock();
+                local jobstarted = os.date();
+                local job_output = qsv_cmd("luau map JobStarted,JobElapsed,JobResult \"{job}\" {job_input_path} --output {job_output_path}");
+                local jobelapsed = os.clock() - jobstart;
+                return {{jobstarted, jobelapsed, job_output.stderr}}"#,
+                job = record.get(1).unwrap(),
+                job_input_path = job_input_file.display(),
+                job_output_path = job_output_file.display()
+            );
+            debug!("Job script: {job_script}");
+            main_bytecode = luau_compiler.compile(&job_script);
+        }
 
         // Updating col
         {
@@ -747,7 +901,7 @@ fn sequential_mode(
             break 'main;
         }
 
-        if args.cmd_map {
+        if args.cmd_map || *run_mode == RunMode::JobFileInput {
             map_computedvalue(computed_value, &mut record, args, new_column_count)?;
 
             // check if the script is trying to insert a record with
@@ -869,6 +1023,7 @@ fn sequential_mode(
 // the primary difference being that we use an Indexed File rdr in the main loop.
 // differences pointed out in comments below
 fn random_acess_mode(
+    run_mode: &RunMode,
     rconfig: &Config,
     args: &Args,
     luau: &Lua,
