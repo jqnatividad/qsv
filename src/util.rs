@@ -83,10 +83,10 @@ pub fn njobs(flag_jobs: Option<usize>) -> usize {
     })
 }
 
-pub fn timeout_secs(timeout_option: u16) -> Result<u64, String> {
+pub fn timeout_secs(timeout: u16) -> Result<u64, String> {
     let timeout = match env::var("QSV_TIMEOUT") {
         Ok(val) => val.parse::<u16>().unwrap_or(30_u16),
-        Err(_) => timeout_option,
+        Err(_) => timeout,
     };
 
     if timeout > 3600 {
