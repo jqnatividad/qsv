@@ -12,6 +12,7 @@ Returns the shape of the join result (number of rows, number of columns) to stde
 
 Usage:
     qsv joinp [options] <columns1> <input1> <columns2> <input2>
+    qsv joinp --cross <input1> <input2>
     qsv joinp --help
 
 joinp arguments:
@@ -32,6 +33,7 @@ joinp options:
                            data sets given. The number of rows return is
                            equal to N * M, where N and M correspond to the
                            number of rows in the given data sets, respectively.
+                           The columns1 and columns2 arguments are ignored.
     --semi                 This returns only the rows in the first CSV data set
                            that have a corresponding row in the second CSV data
                            set. The output schema is the same as the first data set.
@@ -148,17 +150,27 @@ impl JoinStruct {
             streaming:           true,
         };
 
-        let mut join_results = self
-            .lf1
-            .with_optimizations(optimize_all)
-            .join_builder()
-            .with(self.lf2.with_optimizations(optimize_all))
-            .left_on(selcols1)
-            .right_on(selcols2)
-            .how(jointype)
-            .force_parallel(true)
-            .finish()
-            .collect()?;
+        let mut join_results = if jointype == JoinType::Cross {
+            self.lf1
+                .with_optimizations(optimize_all)
+                .join_builder()
+                .with(self.lf2.with_optimizations(optimize_all))
+                .how(JoinType::Cross)
+                .force_parallel(true)
+                .finish()
+                .collect()?
+        } else {
+            self.lf1
+                .with_optimizations(optimize_all)
+                .join_builder()
+                .with(self.lf2.with_optimizations(optimize_all))
+                .left_on(selcols1)
+                .right_on(selcols2)
+                .how(jointype)
+                .force_parallel(true)
+                .finish()
+                .collect()?
+        };
 
         // no need to use buffered writer here, as CsvWriter already does that
         let mut out_writer = match self.output {

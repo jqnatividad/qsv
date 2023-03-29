@@ -72,6 +72,8 @@ mod test_input;
 #[cfg(any(feature = "full", feature = "lite"))]
 mod test_join;
 #[cfg(any(feature = "full", feature = "lite"))]
+mod test_joinp;
+#[cfg(any(feature = "full", feature = "lite"))]
 mod test_jsonl;
 #[cfg(feature = "luau")]
 mod test_luau;
