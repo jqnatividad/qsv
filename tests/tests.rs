@@ -71,7 +71,7 @@ mod test_index;
 mod test_input;
 #[cfg(any(feature = "full", feature = "lite"))]
 mod test_join;
-#[cfg(any(feature = "full", feature = "lite"))]
+#[cfg(all(feature = "full", feature = "polars"))]
 mod test_joinp;
 #[cfg(any(feature = "full", feature = "lite"))]
 mod test_jsonl;
