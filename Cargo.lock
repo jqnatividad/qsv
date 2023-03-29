@@ -1125,9 +1125,9 @@ dependencies = [
 
 [[package]]
 name = "cpc"
-version = "1.9.0"
+version = "1.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1d3f1acdd92c89ff963f1dc875adeef429df520e36e14c4f39d03ab49188233d"
+checksum = "5e0716a6413298adacdb2c216ae25d683979932512d79ba14bd5d9fe09fd1e4b"
 dependencies = [
  "decimal",
  "unicode-segmentation",
@@ -1447,7 +1447,6 @@ dependencies = [
  "cc",
  "libc",
  "ord_subset",
- "rustc-serialize",
  "serde",
 ]
 
@@ -4077,12 +4076,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "08d43f7aa6b08d49f382cde6a7982047c3426db949b1424bc4b7ec9ae12c6ce2"
 
 [[package]]
-name = "rustc-serialize"
-version = "0.3.24"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dcf128d1287d2ea9d80910b5f1120d0b8eede3fbf1abe91c40d39ea7d51e6fda"
-
-[[package]]
 name = "rustc_version"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4093,9 +4086,9 @@ dependencies = [
 
 [[package]]
 name = "rustix"
-version = "0.37.4"
+version = "0.37.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c348b5dc624ecee40108aa2922fed8bad89d7fcc2b9f8cb18f632898ac4a37f9"
+checksum = "0e78cc525325c06b4a7ff02db283472f3c042b7ff0c391f96c6d5ac6f4f91b75"
 dependencies = [
  "bitflags",
  "errno",
