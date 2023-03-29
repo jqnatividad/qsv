@@ -119,7 +119,7 @@ num_cpus = "1"
 odht = "0.3"
 once_cell = { version = "1.17", features = ["parking_lot"] }
 parking_lot = { version = "0.12", features = ["hardware-lock-elision"] }
-polars = { version = "0.27", features = [
+polars = { version = "0.28", features = [
     "lazy",
     "streaming",
     "cross_join",
