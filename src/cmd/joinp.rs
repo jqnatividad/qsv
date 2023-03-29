@@ -59,7 +59,7 @@ use std::{
 
 use polars::{
     frame::hash_join::JoinType,
-    prelude::{CsvWriter, LazyCsvReader, LazyFrame, SerWriter},
+    prelude::{CsvWriter, LazyCsvReader, LazyFileListReader, LazyFrame, SerWriter},
 };
 use serde::Deserialize;
 
