@@ -48,9 +48,15 @@ Some usage examples:
   $ qsv luau filter "tonumber(a) > 45"
   $ qsv luau filter "tonumber(a) >= tonumber(b)"
 
-  Typing long scripts on the command line gets tiresome rather quickly, so use the
-  "file:" prefix to read non-trivial scripts from the filesystem.
-  $ qsv luau map Type -B "file:init.luau" -x "file:debitcredit.luau" -E "file:end.luau"
+  Typing long scripts on the command line gets tiresome rather quickly. Use the
+  "file:" prefix or the ".lua/.luau" file extension to read non-trivial scripts 
+  from the filesystem.
+
+  In the following example, both the BEGIN and END scripts have the lua/luau file extension
+  so they are read from the filesystem.  With the debitcredit.script file, we use the
+  "file:" prefix to read it from the filesystem.
+
+    $ qsv luau map Type -B init.lua -x file:debitcredit.script -E end.luau
 
 With "luau map", if the MAIN script is invalid for a row, "<ERROR>" followed by a 
 detailed error message is returned for that row.
