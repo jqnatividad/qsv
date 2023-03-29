@@ -1578,6 +1578,25 @@ fn setup_helpers(
     })?;
     luau.globals().set("qsv_getenv", qsv_getenv)?;
 
+    // this is a helper function to check if a file exists.
+    //
+    //   qsv_fileexists(filepath: string)
+    //        filepath: the path to the file to check
+    //         returns: true if the file exists, false otherwise.
+    //                  A Luau runtime error if the filepath argument is empty.
+    //
+    let qsv_fileexists = luau.create_function(|_, filepath: String| {
+        if filepath.is_empty() {
+            return Err(mlua::Error::RuntimeError(
+                "qsv_fileexists() - filepath cannot be empty.".to_string(),
+            ));
+        }
+
+        let path = Path::new(&filepath);
+        Ok(path.exists())
+    })?;
+    luau.globals().set("qsv_fileexists", qsv_fileexists)?;
+
     // this is a helper function that can be called from the BEGIN, MAIN & END scripts to write to
     // a file. The file will be created if it does not exist. The file will be appended to if it
     // already exists. The filename will be sanitized and will be written to the current working
