@@ -190,7 +190,7 @@ actix-web = { version = "4.3", default-features = false, features = [
 assert-json-diff = "2.0"
 newline-converter = "0.3"
 quickcheck = { version = "1", default-features = false }
-serial_test = "1.0"
+serial_test = "2.0"
 
 [patch.crates-io]
 ext-sort  = { git = "https://github.com/jqnatividad/ext-sort-rs", branch = "perf-tweaks" }
