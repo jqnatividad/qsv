@@ -48,7 +48,7 @@ Schema options:
 Common options:
     -h, --help                 Display this message
     -n, --no-headers           When set, the first row will not be interpreted
-                               as headers. Namely, it will be sorted with the rest
+                               as headers. Namely, it will be processed with the rest
                                of the rows. Otherwise, the first row will always
                                appear as the header row in the output.
     -d, --delimiter <arg>      The field delimiter for reading CSV data.
