@@ -37,7 +37,9 @@ Schema options:
                                "date" or "date-time".
     --pattern-columns <args>   Select columns to derive regex pattern constraints.
                                That is, this will create a regular expression
-                               that matches all values for the specified columns.
+                               that matches all values for each specified column.
+                               Columns are selected using `select` syntax 
+                               (see `qsv select --help` for details).
     --dates-whitelist <list>   The case-insensitive patterns to look for when 
                                shortlisting fields for date inference.
                                i.e. if the field's name has any of these patterns,
