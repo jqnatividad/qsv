@@ -105,7 +105,6 @@ fn luau_aggregation() {
     let mut cmd = wrk.command("luau");
     cmd.arg("map")
         .arg("Total")
-        .arg("-x")
         .arg("tot = (tot or 0) + Amount; return tot")
         .arg("data.csv");
 
@@ -138,7 +137,6 @@ fn luau_aggregation_with_begin() {
         .arg("Total")
         .arg("--begin")
         .arg("tot = 0")
-        .arg("-x")
         .arg("tot = tot + Amount; return tot")
         .arg("data.csv");
 
@@ -171,7 +169,6 @@ fn luau_aggregation_with_begin_end() {
         .arg("Total")
         .arg("--begin")
         .arg("tot = 0; gtotal = 0; amt_array = {}")
-        .arg("-x")
         .arg("amt_array[_IDX] = Amount; tot = tot + Amount; gtotal = gtotal + tot; return tot")
         .arg("--end")
         .arg(r#"return ("Min/Max: " .. math.min(unpack(amt_array)) .. "/" .. math.max(unpack(amt_array)) .. " Grand total of " .. _ROWCOUNT .. " rows: " .. gtotal)"#)
@@ -210,7 +207,6 @@ fn luau_aggregation_with_embedded_begin_end() {
     let mut cmd = wrk.command("luau");
     cmd.arg("map")
         .arg("Total")
-        .arg("-x")
         .arg(
             "BEGIN {tot = 0; gtotal = 0; amt_array = {}}! amt_array[_IDX] = Amount; tot = tot + \
              Amount; gtotal = gtotal + tot; return tot\nEND {return (\"Min/Max: \" .. \
@@ -304,7 +300,6 @@ END {
     let mut cmd = wrk.command("luau");
     cmd.arg("map")
         .arg("Running Total")
-        .arg("-x")
         .arg("file:testbeginend.luau")
         .arg("data.csv");
 
@@ -419,7 +414,6 @@ END {
     let mut cmd = wrk.command("luau");
     cmd.arg("map")
         .arg("Running Total")
-        .arg("-x")
         .arg("file:testlookup.luau")
         .arg("data.csv");
 
@@ -511,7 +505,6 @@ END {
     let mut cmd = wrk.command("luau");
     cmd.arg("map")
         .arg("Running Total")
-        .arg("-x")
         .arg("file:testlookup.luau")
         .arg("data.csv");
 
@@ -603,7 +596,6 @@ END {
     let mut cmd = wrk.command("luau");
     cmd.arg("map")
         .arg("Running Total")
-        .arg("-x")
         .arg("file:testlookup.luau")
         .arg("data.csv");
 
@@ -689,7 +681,6 @@ END {
     let mut cmd = wrk.command("luau");
     cmd.arg("map")
         .arg("previous_month_score")
-        .arg("-x")
         .arg("testlookup.luau")
         .arg("--ckan-api")
         .arg("https://data.boston.gov/api/3/action")
@@ -730,7 +721,6 @@ return target_score * 2;
     let mut cmd = wrk.command("luau");
     cmd.arg("map")
         .arg("new_target")
-        .arg("-x")
         .arg("file:testwrite.luau")
         .arg("data.csv");
 
@@ -788,7 +778,6 @@ END {
     let mut cmd = wrk.command("luau");
     cmd.arg("map")
         .arg("Running Total")
-        .arg("-x")
         .arg("testbreak.lua")
         .arg("data.csv");
 
@@ -859,7 +848,6 @@ END {
     let mut cmd = wrk.command("luau");
     cmd.arg("map")
         .arg("Running Total")
-        .arg("-x")
         .arg("testbreak.LUAU")
         .arg("data.csv");
 
@@ -930,7 +918,6 @@ END {
     let mut cmd = wrk.command("luau");
     cmd.arg("map")
         .arg("Running Total")
-        .arg("-x")
         .arg("testqsvcmd.Lua")
         .arg("data.csv");
 
@@ -1006,7 +993,6 @@ END {
     let mut cmd = wrk.command("luau");
     cmd.arg("map")
         .arg("Running Total")
-        .arg("-x")
         .arg("file:testqsvcmd.luau")
         .arg("data.csv");
 
@@ -1070,7 +1056,6 @@ END {
     let mut cmd = wrk.command("luau");
     cmd.arg("map")
         .arg("Running Total")
-        .arg("-x")
         .arg("file:testqsvcmd.luau")
         .arg("data.csv");
 
@@ -1147,7 +1132,6 @@ END {
     let mut cmd = wrk.command("luau");
     cmd.arg("map")
         .arg("Running Total")
-        .arg("-x")
         .arg("file:testbeginend.luau")
         .arg("data.csv");
 
@@ -1233,7 +1217,6 @@ END {
     let mut cmd = wrk.command("luau");
     cmd.arg("map")
         .arg("Running Total")
-        .arg("-x")
         .arg("file:testrandominsertrecord.luau")
         .arg("data.csv");
 
@@ -1304,7 +1287,6 @@ END {
     let mut cmd = wrk.command("luau");
     cmd.arg("map")
         .arg("Running Total")
-        .arg("-x")
         .arg("file:testbeginend.luau")
         .arg("data.csv");
 
@@ -1345,7 +1327,6 @@ fn luau_aggregation_with_embedded_begin_end_and_beginend_options() {
         .arg("Total")
         .arg("--begin")
         .arg("tot = 1; gtotal = 0; amt_array = {}")
-        .arg("-x")
         .arg(
             "BEGIN {tot = 0; gtotal = 0; amt_array = {}}! amt_array[_IDX] = Amount; tot = tot + \
              Amount; gtotal = gtotal + tot; return tot\nEND {return (\"Min/Max: \" .. \
@@ -1442,7 +1423,6 @@ END {
     let mut cmd = wrk.command("luau");
     cmd.arg("map")
         .arg("Running Total")
-        .arg("-x")
         .arg("file:testbeginend.luau")
         .arg("data.csv");
 
@@ -1537,7 +1517,6 @@ END {
     let mut cmd = wrk.command("luau");
     cmd.arg("map")
         .arg("Running Total")
-        .arg("-x")
         .arg("file:testbeginend.luau")
         .arg("data.csv");
 
@@ -1623,7 +1602,6 @@ END {
     let mut cmd = wrk.command("luau");
     cmd.arg("map")
         .arg("Running Total, Running Total with 10%")
-        .arg("-x")
         .arg("file:testbeginend.luau")
         .arg("data.csv");
 
@@ -1667,7 +1645,6 @@ fn luau_aggregation_with_begin_end_and_luau_syntax() {
         .arg("Total")
         .arg("--begin")
         .arg("tot = 0; gtotal = 0; amt_array = {}")
-        .arg("-x")
         .arg("amt_array[_IDX] = Amount; tot += if tonumber(Amount) < 0 then Amount * -1 else Amount; gtotal += tot; return tot")
         .arg("--end")
         .arg(r#"return ("Min/Max: " .. math.min(unpack(amt_array)) .. "/" .. math.max(unpack(amt_array)) .. " Grand total of " .. _ROWCOUNT .. " rows: " .. gtotal)"#)
@@ -1769,7 +1746,6 @@ fn luau_map_require_luadate() {
     let mut cmd = wrk.command("luau");
     cmd.arg("map")
         .arg("days_added")
-        .arg("-x")
         .arg(r#"local date = require "date";local t_date = date(date_col):adddays(tonumber(number)); return tostring(t_date:fmt("${iso}"))"#)
         .arg("data.csv");
 
@@ -1816,7 +1792,6 @@ return mintest"#;
     let mut cmd = wrk.command("luau");
     cmd.arg("map")
         .arg("min")
-        .arg("-x")
         .arg(r#"local mintest = require "mintest";local t_min = mintest.mymin(number1,number2); return t_min"#)
         .arg("data.csv");
 
@@ -1957,7 +1932,6 @@ fn luau_map_exec() {
     let mut cmd = wrk.command("luau");
     cmd.arg("map")
         .arg("running_total")
-        .arg("-x")
         .arg("tot = (tot or 0) + x; return tot")
         .arg("data.csv");
 
@@ -2162,7 +2136,6 @@ return tonumber(number) > tonumber(limit)
 
     let mut cmd = wrk.command("luau");
     cmd.arg("filter")
-        .arg("-x")
         .arg("file:testenvvar.luau")
         .arg("data.csv");
 
@@ -2211,7 +2184,6 @@ return tonumber(number) > tonumber(limit)
 
     let mut cmd = wrk.command("luau");
     cmd.arg("filter")
-        .arg("-x")
         .arg("file:testenvvar.luau")
         .arg("data.csv")
         .env("TESTENVVAR", "10");

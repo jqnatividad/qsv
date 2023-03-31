@@ -137,6 +137,11 @@ Luau arguments:
     The BEGIN script is embedded in the MAIN script by adding a BEGIN block at the top of the script.
     The BEGIN block must start at the beggining of the line. It can contain multiple statements.
 
+    The MAIN script is the main Luau script to execute. It can contain multiple statements and should
+    end with a "return" statement. In map mode, the return value is/are the new value/s of the mapped
+    column/s. In filter mode, the return value is a boolean indicating whether the row should be
+    filtered or not.
+
     The END script is embedded in the MAIN script by adding an END block at the bottom of the script.
     The END block must start at the beginning of the line. It can contain multiple statements.
 
@@ -144,11 +149,6 @@ Luau arguments:
     "luau map". Note that the new columns are added to the CSV after the existing columns.
 
 Luau options:
-    -x, --exec               exec[ute] Luau script, instead of the default eval[uate].
-                             eval (default) expects just a single Luau expression,
-                             while exec expects one or more statements, allowing
-                             full-fledged Luau programs. This only applies to the main-script
-                             argument, not the BEGIN & END scripts.
     -g, --no-globals         Don't create Luau global variables for each column, only col.
                              Useful when some column names mask standard Luau globals.
                              Note: access to Luau globals thru _G remains even without -g.
@@ -236,7 +236,6 @@ struct Args {
     arg_new_columns:  Option<String>,
     arg_main_script:  String,
     arg_input:        Option<String>,
-    flag_exec:        bool,
     flag_no_globals:  bool,
     flag_remap:       bool,
     flag_begin:       Option<String>,
@@ -351,7 +350,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
     luau_script = main_script;
 
-    let mut main_script = if args.flag_exec {
+    // if the main script is a single expression, we need to prepend a return statement
+    let mut main_script = if luau_script.contains("return") {
         String::new()
     } else {
         String::from("return ")
