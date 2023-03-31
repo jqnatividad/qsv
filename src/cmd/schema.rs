@@ -136,6 +136,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // we can do this directly here, since args is mutable and
     // Config has not been created yet at this point
     args.flag_prefer_dmy = args.flag_prefer_dmy || std::env::var("QSV_PREFER_DMY").is_ok();
+    if args.flag_prefer_dmy {
+        winfo!("Prefer DMY set.");
+    }
 
     // build schema for each field by their inferred type, min/max value/length, and unique values
     let mut properties_map: Map<String, Value> =
@@ -155,7 +158,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         if pattern_map.contains_key(field_name) && should_emit_pattern_constraint(field_def) {
             let field_def_map = field_def.as_object_mut().unwrap();
             let pattern = Value::String(pattern_map[field_name].clone());
-            field_def_map.insert("pattern".to_string(), pattern);
+            field_def_map.insert("pattern".to_string(), pattern.clone());
+            winfo!("Added regex pattern constraint for field: {field_name} -> {pattern}");
         }
     }
 
@@ -381,6 +385,7 @@ pub fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<M
 
         if !enum_list.is_empty() {
             field_map.insert("enum".to_string(), Value::Array(enum_list.clone()));
+            winfo!("Enum list generated for field '{header_string}' ({} value/s)", enum_list.len());
         }
 
         // add current field definition to properties map
@@ -418,11 +423,14 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
     let (csv_fields, csv_stats) = match stats_args.rconfig().indexed() {
         Ok(o) => {
             if let Some(idx) = o {
-                info!("has index, triggering parallel stats");
+                winfo!("index found... triggering parallel stats");
                 let idx_count = idx.count();
                 stats_args.parallel_stats(&stats_args.flag_dates_whitelist, idx_count)
             } else {
-                info!("no index, triggering sequential stats");
+                winfo!(
+                    "no index, triggering sequential stats. Consider indexing your data if schema \
+                     inferencing is slow. "
+                );
                 stats_args.sequential_stats(&stats_args.flag_dates_whitelist)
             }
         }
@@ -642,8 +650,6 @@ fn generate_string_patterns(
 
         // build regex based on unique values
         let regexp: String = RegExpBuilder::from(&values)
-            .with_conversion_of_digits()
-            .with_conversion_of_words()
             .with_conversion_of_repetitions()
             .with_minimum_repetitions(2)
             .build();
