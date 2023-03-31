@@ -1362,6 +1362,16 @@ fn setup_helpers(
     ckan_api_url: String,
     ckan_token: Option<String>,
 ) -> Result<(), CliError> {
+    macro_rules! helper_err {
+        ($helper_name:literal, $($arg:tt)*) => ({
+            use log::error;
+            let helper_name = format!("{}: ", $helper_name);
+            let err_msg = format!($($arg)*);
+            error!("{helper_name}: {err_msg}");
+            Err(mlua::Error::RuntimeError(err_msg))
+        });
+    }
+
     // this is a helper function that can be called from Luau scripts
     // to send log messages to the logfile
     // the first parameter is the log level, and the following parameters are concatenated
@@ -1442,9 +1452,10 @@ fn setup_helpers(
     //
     let qsv_break = luau.create_function(|luau, mut args: mlua::MultiValue| {
         if LUAU_STAGE.load(Ordering::Relaxed) == Stage::End as i8 {
-            return Err(mlua::Error::RuntimeError(
-                "qsv_break() can only be called from the BEGIN and MAIN scripts.".to_string(),
-            ));
+            return helper_err!(
+                "qsv_break",
+                "qsv_break() can only be called from the BEGIN and MAIN scripts."
+            );
         }
 
         let mut break_msg = String::new();
@@ -1492,9 +1503,10 @@ fn setup_helpers(
     //
     let qsv_skip = luau.create_function(|_, ()| {
         if LUAU_STAGE.load(Ordering::Relaxed) != Stage::Main as i8 {
-            return Err(mlua::Error::RuntimeError(
-                "qsv_skip() can only be called from the MAIN script.".to_string(),
-            ));
+            return helper_err!(
+                "qsv_skip",
+                "qsv_skip() can only be called from the MAIN script."
+            );
         }
 
         QSV_SKIP.store(true, Ordering::Relaxed);
@@ -1518,9 +1530,10 @@ fn setup_helpers(
     //
     let qsv_autoindex = luau.create_function(|_, ()| {
         if LUAU_STAGE.load(Ordering::Relaxed) != Stage::Begin as i8 {
-            return Err(mlua::Error::RuntimeError(
-                "qsv_autoindex() can only be called from the BEGIN script.".to_string(),
-            ));
+            return helper_err!(
+                "qsv_autoindex",
+                "qsv_autoindex() can only be called from the BEGIN script."
+            );
         }
 
         Ok(())
@@ -1540,9 +1553,7 @@ fn setup_helpers(
     //
     let qsv_setenv = luau.create_function(|_, (envvar, value): (String, String)| {
         if envvar.is_empty() {
-            return Err(mlua::Error::RuntimeError(
-                "qsv_setenv() - envvar cannot be empty.".to_string(),
-            ));
+            return helper_err!("qsv_setenv", "envvar cannot be empty.");
         }
 
         if value.is_empty() {
@@ -1566,9 +1577,7 @@ fn setup_helpers(
     //
     let qsv_getenv = luau.create_function(|_, envvar: String| {
         if envvar.is_empty() {
-            return Err(mlua::Error::RuntimeError(
-                "qsv_getenv() - envvar cannot be empty.".to_string(),
-            ));
+            return helper_err!("qsv_getenv", "envvar cannot be empty.");
         }
 
         match std::env::var(envvar) {
@@ -1587,9 +1596,7 @@ fn setup_helpers(
     //
     let qsv_fileexists = luau.create_function(|_, filepath: String| {
         if filepath.is_empty() {
-            return Err(mlua::Error::RuntimeError(
-                "qsv_fileexists() - filepath cannot be empty.".to_string(),
-            ));
+            return helper_err!("qsv_fileexists", "filepath cannot be empty.");
         }
 
         let path = Path::new(&filepath);
@@ -1750,10 +1757,7 @@ fn setup_helpers(
                 Ok(output_table)
             }
             Err(e) => {
-                log::error!("failed to execute qsv command: {e}");
-                Err(mlua::Error::RuntimeError(format!(
-                    r#"failed to execute qsv command "{qsv_args}": {e}"#
-                )))
+                helper_err!("qsv_cmd", "failed to execute qsv command: {qsv_args}: {e}")
             }
         }
     })?;
@@ -1805,12 +1809,10 @@ fn setup_helpers(
 
         let shellcmd_string = shellcmd.to_ascii_lowercase();
         let Ok(_) = ShellCmd::from_str(&shellcmd_string) else {
-            return Err(mlua::Error::RuntimeError(format!(
-                "Invalid shell command: \"{shellcmd}\". \
+            return helper_err!("qsv_shellcmd", "Invalid shell command: \"{shellcmd}\". \
                 Only the following commands are allowed: \
                 awk, cat, cp, cut, df, echo, rg, grep, head, ls, mkdir, \
-                mv, nl, pwd, sed, sort, tail, touch, tr, uname, uniq, wc, whoami"
-            )))
+                mv, nl, pwd, sed, sort, tail, touch, tr, uname, uniq, wc, whoami")
         };
 
         let mut cmd = std::process::Command::new(shellcmd_string.clone());
@@ -1847,11 +1849,10 @@ fn setup_helpers(
                 Ok(output_table)
             }
             Err(e) => {
-                let err_msg = format!(
-                    r#"failed to execute shell command "{shellcmd_string}" "{args_string}": {e}"#
-                );
-                log::error!("{err_msg}");
-                Err(mlua::Error::RuntimeError(err_msg))
+                helper_err!(
+                    "qsv_shellcmd",
+                    "failed to execute shell command: {shellcmd_string} {args_string}: {e}"
+                )
             }
         }
     })?;
@@ -1895,17 +1896,8 @@ fn setup_helpers(
     let qsv_register_lookup = luau.create_function(move |luau, (lookup_name, mut lookup_table_uri, cache_age_secs): (String, String, i64)| {
         const MSG_PREFIX: &str = "qsv_register_lookup() - ";
 
-        macro_rules! lookup_err {
-            ($($arg:tt)*) => ({
-                use log::error;
-                let err_msg = format!($($arg)*);
-                error!("{MSG_PREFIX}{err_msg}");
-                Err(mlua::Error::RuntimeError(err_msg))
-            });
-        }
-
         if LUAU_STAGE.load(Ordering::Relaxed) != Stage::Begin as i8 {
-            return lookup_err!("can only be called from the BEGIN script.");
+            return helper_err!("qsv_register_lookup", "can only be called from the BEGIN script.");
         }
 
         let call_parameters = format!("qsv_lookup_register({lookup_name}, {lookup_table_uri}, {cache_age_secs})");
@@ -1996,7 +1988,7 @@ fn setup_helpers(
                 {
                     Ok(c) => c,
                     Err(e) => {
-                        return lookup_err!("Cannot build reqwest client to download lookup CSV: {e}.");
+                        return helper_err!("qsv_register_lookup", "Cannot build reqwest client to download lookup CSV: {e}.");
                     }
                 };
 
@@ -2028,26 +2020,26 @@ fn setup_helpers(
                         let validated_url = match Url::parse(&lookup_table_uri) {
                             Ok(url) => url,
                             Err(e) => {
-                                return lookup_err!("Invalid resource_search url {e}.");
+                                return helper_err!("qsv_register_lookup", "Invalid resource_search url {e}.");
                             }
                         };
 
                         let resource_search_result = match client.get(validated_url).headers(headers.clone()).send() {
                             Ok(response) => response.text().unwrap_or_default(),
                             Err(e) => {
-                                return lookup_err!("Cannot find resource name with resource_search: {e}.");
+                                return helper_err!("qsv_register_lookup", "Cannot find resource name with resource_search: {e}.");
                             }
                         };
 
                         let resource_search_json: serde_json::Value = match serde_json::from_str(&resource_search_result) {
                             Ok(json) => json,
                             Err(e) => {
-                                return lookup_err!("Invalid resource_search json {e}.");
+                                return helper_err!("qsv_register_lookup", "Invalid resource_search json {e}.");
                             }
                         };
 
                         let Some(resource_id) = resource_search_json["result"]["results"][0]["id"].as_str() else {
-                            return lookup_err!("Cannot find a resource name.");
+                            return helper_err!("qsv_register_lookup", "Cannot find a resource name.");
                         };
 
                         lookup_table_uri = format!("{ckan_api_url}/resource_show?id={resource_id}");
@@ -2057,25 +2049,25 @@ fn setup_helpers(
                     let resource_show_result = match client.get(lookup_table_uri).headers(headers.clone()).send() {
                         Ok(response) => response.text().unwrap_or_default(),
                         Err(e) => {
-                            return lookup_err!("CKAN scheme used. Cannot get lookup CSV resource: {e}.");
+                            return helper_err!("qsv_register_lookup", "CKAN scheme used. Cannot get lookup CSV resource: {e}.");
                         }
                     };
 
                     let resource_show_json: serde_json::Value = match serde_json::from_str(&resource_show_result) {
                         Ok(json) => json,
                         Err(e) => {
-                            return lookup_err!("Invalid resource_show json: {e}.");
+                            return helper_err!("qsv_register_lookup", "Invalid resource_show json: {e}.");
                         }
                     };
 
                     let Some(url) = resource_show_json["result"]["url"].as_str() else {
-                        return lookup_err!("Cannot get resource URL from resource_show JSON response.: {resource_show_json}");
+                        return helper_err!("qsv_register_lookup", "Cannot get resource URL from resource_show JSON response.: {resource_show_json}");
                     };
 
                     match client.get(url).headers(headers).send() {
                         Ok(response) => response,
                         Err(e) => {
-                            return lookup_err!(r#"Cannot read lookup CSV at "{url}": {e}."#);
+                            return helper_err!("qsv_register_lookup", r#"Cannot read lookup CSV at "{url}": {e}."#);
                         }
                     }
                 } else {
@@ -2084,7 +2076,7 @@ fn setup_helpers(
                     let validated_url = match Url::parse(&lookup_table_uri) {
                         Ok(url) => url,
                         Err(e) => {
-                            return lookup_err!("Invalid lookup CSV url {e}.");
+                            return helper_err!("qsv_register_lookup", "Invalid lookup CSV url {e}.");
                         }
                     };
 
@@ -2105,7 +2097,7 @@ fn setup_helpers(
                     match client.get(validated_url.clone()).headers(headers).send() {
                         Ok(response) => response,
                         Err(e) => {
-                            return lookup_err!(r#"Cannot read lookup CSV at "{validated_url}": {e}."#);
+                            return helper_err!("qsv_register_lookup", r#"Cannot read lookup CSV at "{validated_url}": {e}."#);
                         }
                     }
                 };
@@ -2123,7 +2115,7 @@ fn setup_helpers(
                         match lookup_csv_response.error_for_status_ref() {
                             Ok(_) => (),
                             Err(e) => {
-                                return lookup_err!("Cannot read lookup CSV at url: {e}.");
+                                return helper_err!("qsv_register_lookup", "Cannot read lookup CSV at url: {e}.");
                             }
                         }
                     }
@@ -2136,7 +2128,7 @@ fn setup_helpers(
                     let mut cache_file = match std::fs::File::create(&cache_file_path) {
                         Ok(f) => f,
                         Err(e) => {
-                            return lookup_err!(
+                            return helper_err!("qsv_register_lookup", 
                                 "Cannot create cache file {}: {e}.", cache_file_path.display());
                         }
                     };
@@ -2168,7 +2160,7 @@ fn setup_helpers(
         let headers = match rdr.headers() {
             Ok(headers) => headers.clone(),
             Err(e) => {
-                return lookup_err!("Cannot read headers of lookup table: {e}");
+                return helper_err!("qsv_register_lookup", "Cannot read headers of lookup table: {e}");
             }
         };
         for result in rdr.records() {
