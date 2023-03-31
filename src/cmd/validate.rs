@@ -524,7 +524,7 @@ fn do_json_validation(
 
     // debug!("instance[{row_number}]: {instance:?}");
     validate_json_instance(
-        &(match to_json_instance(headers, headers_len, record, schema_json) {
+        &(match to_json_instance(headers, record, schema_json) {
             Ok(obj) => obj,
             Err(e) => {
                 return Some(format!("{row_number_string}\t<RECORD>\t{e}"));
@@ -550,7 +550,6 @@ fn do_json_validation(
 #[inline]
 fn to_json_instance(
     headers: &ByteRecord,
-    headers_len: usize,
     record: &ByteRecord,
     schema: &Value,
 ) -> Result<Value, String> {
@@ -561,8 +560,9 @@ fn to_json_instance(
 
     // map holds individual CSV fields converted as serde_json::Value
     // we use with_capacity to minimize allocs
-    let mut json_object_map: Map<String, Value> = Map::with_capacity(headers_len);
+    let mut json_object_map: Map<String, Value> = Map::with_capacity(headers.len());
 
+    // safety: NULL_TYPE is a static reference that we know will know is initialized
     let null_type = unsafe { NULL_TYPE.get_unchecked() };
 
     // iterate over each CSV field and convert to JSON type
@@ -737,7 +737,7 @@ mod tests_for_csv_to_json_conversion {
         record.trim();
 
         assert_eq!(
-            to_json_instance(&headers, headers.len(), &record, &schema_json())
+            to_json_instance(&headers, &record, &schema_json())
                 .expect("can't convert csv to json instance"),
             json!({
                 "A": "hello",
@@ -767,7 +767,6 @@ mod tests_for_csv_to_json_conversion {
 
         let result = to_json_instance(
             &headers,
-            headers.len(),
             &rdr.byte_records().next().unwrap().unwrap(),
             &schema_json(),
         );
@@ -866,7 +865,7 @@ mod tests_for_schema_validation {
 
         let record = &rdr.byte_records().next().unwrap().unwrap();
 
-        let instance = to_json_instance(&headers, headers.len(), record, &schema_json()).unwrap();
+        let instance = to_json_instance(&headers, record, &schema_json()).unwrap();
 
         let result = validate_json_instance(&instance, &compiled_schema());
 
@@ -884,7 +883,7 @@ mod tests_for_schema_validation {
 
         let record = &rdr.byte_records().next().unwrap().unwrap();
 
-        let instance = to_json_instance(&headers, headers.len(), record, &schema_json()).unwrap();
+        let instance = to_json_instance(&headers, record, &schema_json()).unwrap();
 
         let result = validate_json_instance(&instance, &compiled_schema());
 
