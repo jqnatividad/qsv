@@ -187,6 +187,7 @@ Luau options:
                              If the QSV_CKAN_TOKEN envvar is set, it will be used instead.
     --cache-dir <dir>        The directory to use for caching downloaded lookup_table
                              resources using the qsv_register_lookup() helper function.
+                             If the directory does not exist, qsv will attempt to create it.
                              If the QSV_CACHE_DIR envvar is set, it will be used instead.
                              [default: qsv-cache]
 
