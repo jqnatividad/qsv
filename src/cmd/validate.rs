@@ -1,5 +1,6 @@
 static USAGE: &str = r#"
-Validate CSV data with JSON Schema, and put invalid records into a separate file.
+Validate CSV data with a JSON Validation Schema, putting invalid records into a separate file.
+Uses https://json-schema.org/draft/2020-12/json-schema-validation.html.
 When run without JSON Schema, only a simple CSV check (RFC 4180) is performed.
 
 Example output files from `mydata.csv`. If piped from stdin, then filename is `stdin.csv`.
@@ -8,7 +9,7 @@ Example output files from `mydata.csv`. If piped from stdin, then filename is `s
 * mydata.csv.invalid
 * mydata.csv.validation-errors.tsv
 
-JSON Schema can be a local file or a URL.
+JSON Validation Schema can be a local file or a URL.
 
 Returns exitcode 0 when the CSV file is valid, exitcode > 0 otherwise.
 If all records are valid, no output files are produced.
@@ -146,7 +147,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         progress.set_draw_target(ProgressDrawTarget::hidden());
     }
 
-    // if no json schema supplied, only let csv reader RFC4180-validate csv file
+    // if no json validation schema supplied, only let csv reader RFC4180-validate csv file
     if args.arg_json_schema.is_none() {
         // just read csv file and let csv reader report problems
 
@@ -263,14 +264,14 @@ Use `qsv input` to fix formatting and to transcode to utf8 if required."#
     let headers = rdr.byte_headers()?.clone();
     let headers_len = headers.len();
 
-    // parse and compile supplied JSON Schema
+    // parse and compile supplied JSON Validation Schema
     let (schema_json, schema_compiled): (Value, JSONSchema) =
         match load_json(&args.arg_json_schema.unwrap()) {
             Ok(s) => {
                 // parse JSON string
                 match serde_json::from_str(&s) {
                     Ok(json) => {
-                        // compile JSON Schema
+                        // compile JSON Validation Schema
                         match JSONSchema::options().compile(&json) {
                             Ok(schema) => (json, schema),
                             Err(e) => {
@@ -555,7 +556,7 @@ fn to_json_instance(
 ) -> Result<Value, String> {
     // make sure schema has expected structure
     let Some(schema_properties) = schema.get("properties") else {
-                     return fail!("JSON Schema missing 'properties' object");
+                     return fail!("JSON Validation Schema missing 'properties' object");
                  };
 
     // map holds individual CSV fields converted as serde_json::Value
@@ -779,7 +780,7 @@ mod tests_for_csv_to_json_conversion {
     }
 }
 
-/// Validate JSON instance against compiled JSON schema
+/// Validate JSON instance against compiled JSON Validation Schema
 /// If invalid, returns Some(Vec<(String,String)>) holding the error messages
 #[inline]
 fn validate_json_instance(
