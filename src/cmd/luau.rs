@@ -27,17 +27,17 @@ Some usage examples:
   $ qsv luau map c "tonumber(a) + tonumber(b)"
 
   Add running total column for Amount
-  $ qsv luau map Total -x "tot = (tot or 0) + Amount; return tot"
+  $ qsv luau map Total "tot = (tot or 0) + Amount; return tot"
 
   Or use the --begin and --end options to compute the running & grand totals
-  $ qsv luau map Total --begin "tot = 0; gtotal = 0" -x \
+  $ qsv luau map Total --begin "tot = 0; gtotal = 0" \
         "tot = tot + Amount; gtotal = gtotal + tot; return tot" --end "return gtotal"
 
   Add running total column for Amount when previous balance was 900
-  $ qsv luau map Total -x "tot = (tot or 900) + Amount; return tot"
+  $ qsv luau map Total "tot = (tot or 900) + Amount; return tot"
 
   Convert Amount to always-positive AbsAmount and Type (debit/credit) columns
-  $ qsv luau map Type -x \
+  $ qsv luau map Type \
         "if tonumber(Amount) < 0 then return 'debit' else return 'credit' end" | \
     qsv luau map AbsAmount "math.abs(tonumber(Amount))"
 
@@ -56,7 +56,7 @@ Some usage examples:
   so they are read from the filesystem.  With the debitcredit.script file, we use the
   "file:" prefix to read it from the filesystem.
 
-    $ qsv luau map Type -B init.lua -x file:debitcredit.script -E end.luau
+    $ qsv luau map Type -B init.lua file:debitcredit.script -E end.luau
 
 With "luau map", if the MAIN script is invalid for a row, "<ERROR>" followed by a 
 detailed error message is returned for that row.
