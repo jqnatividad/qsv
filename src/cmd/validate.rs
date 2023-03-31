@@ -1,7 +1,9 @@
 static USAGE: &str = r#"
-Validate CSV data with a JSON Schema Validation, putting invalid records into a separate file.
+Validate CSV data with JSON Schema Validation, putting invalid records into a separate file.
 Uses https://json-schema.org/draft/2020-12/json-schema-validation.html.
 When run without JSON Schema, only a simple CSV check (RFC 4180) is performed.
+
+You can create a JSON Schema from a CSV file using the `qsv schema` command.
 
 Example output files from `mydata.csv`. If piped from stdin, then filename is `stdin.csv`.
 
