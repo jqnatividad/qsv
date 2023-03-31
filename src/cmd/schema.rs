@@ -1,11 +1,16 @@
 static USAGE: &str = r#"
 Generate JSON Schema from CSV data.
 
-This command generates reference JSON Schema (Draft 7) from CSV data, 
+This command derives a JSON Schema Validation (Draft 7) file from CSV data, 
 including validation rules based on data type and input data domain/range.
+https://json-schema.org/draft/2020-12/json-schema-validation.html
 
 Running `validate` command on original input CSV with generated schema 
 should not flag any invalid records.
+
+The intended workflow is to use `schema` command to generate a schema file from
+representative CSV data, adjust the schema file as needed, and then use `validate`
+command to validate other CSV data using the generated schema.
 
 Generated schema file has `.schema.json` postfix appended. For example, 
 for input `mydata.csv`, schema file would be `mydata.csv.schema.json`.
@@ -30,7 +35,9 @@ Schema options:
                                columns are inferred as date/datetime, they are set
                                to type "string" in the schema instead of
                                "date" or "date-time".
-    --pattern-columns <args>   Select columns to add pattern constraints
+    --pattern-columns <args>   Select columns to derive regex pattern constraints.
+                               That is, this will create a regular expression
+                               that matches all values for the specified columns.
     --dates-whitelist <list>   The case-insensitive patterns to look for when 
                                shortlisting fields for date inference.
                                i.e. if the field's name has any of these patterns,
