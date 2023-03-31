@@ -714,7 +714,7 @@ fn sequential_mode(
                 let err_msg = format!("<ERROR> _IDX: {idx} error({error_count}): {e:?}");
                 log::error!("{err_msg}");
 
-                mlua::ToLua::to_lua(err_msg, luau)
+                mlua::IntoLua::into_lua(err_msg, luau)
                     .map_err(|e| format!("Failed to convert error message to Lua: {e}"))?
             }
         };
@@ -808,7 +808,7 @@ fn sequential_mode(
                 log::error!("{err_msg}");
                 log::error!("END globals: {globals:?}");
 
-                mlua::ToLua::to_lua(err_msg, luau)
+                mlua::IntoLua::into_lua(err_msg, luau)
                     .map_err(|e| format!("Failed to convert error message to Lua: {e}"))?
             }
         };
@@ -1050,7 +1050,7 @@ fn random_acess_mode(
                 let err_msg = format!("<ERROR> _IDX: {curr_record} error({error_count}): {e:?}");
                 log::error!("{err_msg}");
 
-                mlua::ToLua::to_lua(err_msg, luau)
+                mlua::IntoLua::into_lua(err_msg, luau)
                     .map_err(|e| format!("Failed to convert error message to Lua: {e}"))?
             }
         };
@@ -1147,7 +1147,7 @@ fn random_acess_mode(
                 log::error!("{err_msg}");
                 log::error!("END globals: {globals:?}");
 
-                mlua::ToLua::to_lua(err_msg, luau)
+                mlua::IntoLua::into_lua(err_msg, luau)
                     .map_err(|e| format!("Failed to convert error message to Lua: {e}"))?
             }
         };
