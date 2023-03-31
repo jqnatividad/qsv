@@ -385,7 +385,10 @@ pub fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<M
 
         if !enum_list.is_empty() {
             field_map.insert("enum".to_string(), Value::Array(enum_list.clone()));
-            winfo!("Enum list generated for field '{header_string}' ({} value/s)", enum_list.len());
+            winfo!(
+                "Enum list generated for field '{header_string}' ({} value/s)",
+                enum_list.len()
+            );
         }
 
         // add current field definition to properties map
