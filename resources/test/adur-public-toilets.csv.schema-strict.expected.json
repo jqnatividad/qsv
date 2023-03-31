@@ -281,7 +281,7 @@
       "type": [
         "string"
       ],
-      "pattern": "^\\w{9}\\d(?:\\d)?@\\w{4}\\-\\w{8}\\.\\w{3}\\.\\w\\w$"
+      "pattern": "^surveyor_(?:(?:1[0-5]|[2-9])|1)@adur\\-worthing\\.gov\\.uk$"
     },
     "ReportTel": {
       "description": "ReportTel column from adur-public-toilets.csv",
