@@ -581,8 +581,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             )
                         });
                     };
+                } else if float_val.fract() > 0.0 {
+                    let mut buffer = ryu::Buffer::new();
+                    record.push_field(buffer.format_finite(float_val));
                 } else {
-                    record.push_field(&float_val.to_string());
+                    let mut buffer = itoa::Buffer::new();
+                    record.push_field(buffer.format(float_val as i64));
                 }
             }
         }
