@@ -72,11 +72,8 @@ Excel options:
     --date-format <format>     Optional date format to use when formatting dates.
                                See https://docs.rs/chrono/latest/chrono/format/strftime/index.html
                                for the full list of supported formats.
-                               Note that if a date format requires time components and there is no
-                               time component in the cell, the time component will be set to 00:00:00.
-    --keep-zero-time           If a formatted date ends with "T00:00:00+00:00", keep the time
-                               instead of removing it. This is useful only when the date format is
-                               "%+" (ISO 8601 / RFC 3339 date format) and the date has no time component.
+                               Note that if a date format is invalid, qsv will fall back and
+                               return the date as if no date-format was specified.
 
      --range <range>           An Excel format range, like C:T or C3:T25, to extract to the CSV.
 
@@ -86,7 +83,7 @@ Common options:
     -Q, --quiet                Do not display export summary message.
 "#;
 
-use std::{cmp, path::PathBuf};
+use std::{cmp, fmt::Write, path::PathBuf};
 
 use calamine::{open_workbook_auto, DataType, Range, Reader};
 use itertools::Itertools;
@@ -107,7 +104,6 @@ struct Args {
     flag_output:          Option<String>,
     flag_quiet:           bool,
     flag_date_format:     Option<String>,
-    flag_keep_zero_time:  bool,
     flag_range:           String,
 }
 
@@ -509,8 +505,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } else {
         String::new()
     };
-    let mut formatted_date;
-    let mut date_dtutc;
     let mut work_date;
 
     info!("exporting sheet ({sheet})...");
@@ -587,47 +581,36 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 if cell_date_flag {
                     work_date = if float_val.fract() > 0.0 {
                         if let Some(dt) = cell.as_datetime() {
-                            dt.to_string()
+                            if date_format.is_empty() {
+                                // no date format specified, so we'll just use the default
+                                // format for the datetime
+                                dt.to_string()
+                            } else {
+                                // a date format was specified, so we'll use it
+                                let mut formatted = String::new();
+                                if write!(formatted, "{}", dt.format(&date_format)).is_err() {
+                                    // if there was a format error, revert to the default format
+                                    formatted = dt.to_string();
+                                }
+                                formatted
+                            }
                         } else {
                             format!("ERROR: Cannot convert {float_val} to datetime")
                         }
                     } else if let Some(d) = cell.as_date() {
-                        d.to_string()
+                        if date_format.is_empty() {
+                            d.to_string()
+                        } else {
+                            let mut formatted = String::new();
+                            if write!(formatted, "{}", d.format(&date_format)).is_err() {
+                                formatted = d.to_string();
+                            }
+                            formatted
+                        }
                     } else {
                         format!("ERROR: Cannot convert {float_val} to date")
                     };
-
-                    if date_format.is_empty() {
-                        // there's no --date-format, so we just push the date as-is
-                        record.push_field(&work_date);
-                    } else {
-                        if work_date.len() <= 10 {
-                            // its a date, not a datetime. Append zero time
-                            // component so we don't get random time components
-                            // if a data format with time components is used and there
-                            // are no time components in the date
-                            work_date.push_str(" 00:00:00");
-                        }
-
-                        date_dtutc = qsv_dateparser::parse(&work_date);
-                        if let Ok(format_date) = date_dtutc {
-                            formatted_date = format_date.format(&date_format).to_string();
-
-                            record.push_field(&if !args.flag_keep_zero_time
-                                && formatted_date.ends_with("T00:00:00+00:00")
-                                && date_format == "%+"
-                            {
-                                formatted_date[..10].to_string()
-                            } else {
-                                formatted_date
-                            });
-                        } else {
-                            record.push_field(&format!(
-                                "ERROR: Cannot convert {work_date} to date using format \
-                                 {date_format}"
-                            ));
-                        }
-                    }
+                    record.push_field(&work_date);
                 } else if float_val.fract() > 0.0 {
                     let mut buffer = ryu::Buffer::new();
                     record.push_field(buffer.format_finite(float_val));

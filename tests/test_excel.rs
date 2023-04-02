@@ -129,16 +129,17 @@ fn excel_date_xls_dateformat() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["date_col", "num_col", "col_Petsa", "just another col"],
-        svec!["2001-12-25T05:00:00+00:00", "1", "33423", "foo"],
-        svec!["2001-09-11T12:30:00+00:00", "3", "44202", "bar"],
+        svec!["2001-12-25", "1", "33423", "foo"],
+        // the date format only applies to this one row
+        svec!["2001-09-11 08:30:00", "3", "44202", "bar"],
         svec![
             "This is not a date and will be passed through",
             "5",
             "37145",
             "was"
         ],
-        svec!["1970-01-01T05:00:00+00:00", "7", "39834", "here"],
-        svec!["1989-12-31T05:00:00+00:00", "11", "42461", "42"],
+        svec!["1970-01-01", "7", "39834", "here"],
+        svec!["1989-12-31", "11", "42461", "42"],
     ];
     assert_eq!(got, expected);
 }
@@ -159,18 +160,18 @@ fn excel_date_xlsx_date_format() {
     let expected = vec![
         svec!["date", "plaincol"],
         svec![
-            "Thu 1980-12-25 05:00:00",
+            "1980-12-25",
             "it will still parse the dates below as date even if plaincol is not in the default \
              --dates-whitelist because the cell format was set to date"
         ],
-        svec!["Tue 2001-09-11 12:30:00", "Tue 2001-09-11 04:00:00"],
-        svec!["not a date", "Tue 2001-09-11 12:30:00"],
+        svec!["Tue 2001-09-11 08:30:00", "2001-09-11"],
+        svec!["not a date", "Tue 2001-09-11 08:30:00"],
         svec![
             "Wednesday, Mar-14-2012",
             "the date below is not parsed as a date coz we didn't explicitly set the cell format \
              to a date format and \"plaincol\" is not in the --dates-whitelist"
         ],
-        svec!["Tue 2001-09-11 04:00:00", "9/11/01 8:30 am"],
+        svec!["2001-09-11", "9/11/01 8:30 am"],
     ];
     assert_eq!(got, expected);
 }
