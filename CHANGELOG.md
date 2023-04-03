@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.96.1] - 2023-04-03
+
+### Fixed
+* bump mimalloc down from 0.1.35 to 0.1.34 due to build errors on non-Windows platforms
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.96.0...0.96.1
+
 ## [0.96.0] - 2023-04-03
 
 ### Added
