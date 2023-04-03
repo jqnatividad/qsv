@@ -6,6 +6,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.96.0] - 2023-04-03
+
+### Added
+* `excel`: add --date-format option in https://github.com/jqnatividad/qsv/pull/897 and https://github.com/jqnatividad/qsv/commit/6a7db997c8d150854405a2cb2ac392479c3534b9
+* `luau`: add qsv_fileexists() helper fn https://github.com/jqnatividad/qsv/commit/f4cc60f87c3c7c85a7736260356daa3051d2a879
+
+### Changed
+* `excel`: speed up float conversion by using ryu and itoa together rather than going thru core::fmt::Formatter https://github.com/jqnatividad/qsv/commit/e722753c377e385ebdffca199557ab3cf848ce7b
+* `joinp`: --cross option does not require columns; added CI tests https://github.com/jqnatividad/qsv/pull/894
+* `schema`: better, more human-readable regex patterns are generated when inferring pattern attribute; more interactive messages https://github.com/jqnatividad/qsv/commit/1620477b752e64b6b2844aafeee4adf9256d4de8
+* `schema` & `validate`: improve usage text; added JSON Schema Validation info https://github.com/jqnatividad/qsv/commit/3da68474d0fa4b6ec2170bf69dbfb27ab0d5f8a3
+* Bump tokio from 1.26.0 to 1.27.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/887
+* Bump reqwest from 0.11.15 to 0.11.16 by @dependabot in https://github.com/jqnatividad/qsv/pull/888
+* Bump serde_json from 1.0.94 to 1.0.95 by @dependabot in https://github.com/jqnatividad/qsv/pull/889
+* Bump serde from 1.0.158 to 1.0.159 by @dependabot in https://github.com/jqnatividad/qsv/pull/890
+* Bump tempfile from 3.4.0 to 3.5.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/891
+* Bump polars from 0.27.2 to 0.28.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/893
+* Bump mimalloc from 0.1.34 to 0.1.35 by @dependabot in https://github.com/jqnatividad/qsv/pull/899
+* Bump mlua from 0.8 to 0.9.0-beta.1 https://github.com/jqnatividad/qsv/commit/9b7e984cba4079f8e826f7e74209a90ce7856bc7
+* bump MSRV to Rust 1.68.2
+* cargo update bump several indirect dependencies
+* pin Rust nightly to 2023-04-02
+
+### Removed
+* `luau`: removed unnecessary --exec option https://github.com/jqnatividad/qsv/commit/0d4ccdaab95ab5471bb71d99aa7f9056dabf48c3
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.95.1...0.96.0
+
 ## [0.95.1] - 2023-03-27
 
 ### Changed
