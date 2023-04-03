@@ -47,7 +47,7 @@ jobs:
             musl-prep: true
             use-cross: false
             addl-build-args: --features=apply,generate,fetch,foreach,self_update
-            default-features: --no-default-features
+            default-features:
             addl-qsvdp-features:
           - os: ubuntu-22.04
             os-name: linux
@@ -103,7 +103,7 @@ jobs:
             architecture: aarch64
             use-cross: true
             addl-build-args: --features=apply,generate,fetch,foreach,self_update
-            default-features: --no-default-features
+            default-features:
             addl-qsvdp-features:
           # - os: ubuntu-20.04
           #   os-name: linux
