@@ -29,7 +29,7 @@ jobs:
             musl-prep: true
             use-cross: false
             addl-build-args: --features=apply,generate,fetch,foreach,self_update
-            default-features:
+            default-features: --no-default-features
             addl-qsvdp-features:
           - os: ubuntu-latest
             os-name: linux
