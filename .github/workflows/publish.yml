@@ -103,7 +103,7 @@ jobs:
             architecture: aarch64
             use-cross: true
             addl-build-args: --features=apply,generate,fetch,foreach,self_update
-            default-features:
+            default-features: --no-default-features
             addl-qsvdp-features:
           # - os: ubuntu-20.04
           #   os-name: linux
