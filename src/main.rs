@@ -137,7 +137,7 @@ fn main() -> QsvExitCode {
     );
 
     #[cfg(all(feature = "polars", feature = "full"))]
-    enabled_commands.push_str("    joinp     Join CSV files using the Pola.rs engine\n");
+    enabled_commands.push_str("    joinp       Join CSV files using the Pola.rs engine\n");
 
     enabled_commands.push_str("    jsonl       Convert newline-delimited JSON files to CSV\n");
 
