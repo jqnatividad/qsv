@@ -179,7 +179,7 @@ The `--select` option and several commands (`apply`, `schema`, `search`, `search
 
 *"Its syntax is similar to Perl-style regular expressions, but lacks a few features like look around and back references. In exchange, all searches execute in linear time with respect to the size of the regular expression and search text."*
 
-Its syntax can be found [here](https://docs.rs/regex/latest/regex/#syntax).
+Its syntax can be found [here](https://docs.rs/regex/latest/regex/#syntax). If you want to test your regular expressions, [regex101](https://regex101.com) supports the syntax used by the `regex` crate. Just select the "Rust" flavor.
 
 ## File formats
 
