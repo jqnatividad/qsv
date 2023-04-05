@@ -88,9 +88,9 @@ exclude_test!(include, |wrk: Workdir,
 
 #[test]
 fn exclude_utf8_issue778_aliases_posiions() {
-    let wrk = Workdir::new("exclude_utf8_aliases_posiions");
-    let aliases_file = wrk.load_test_file("exclude/aliases.csv");
-    let positions_file = wrk.load_test_file("exclude/positions.csv");
+    let wrk = Workdir::new("exclude_utf8_issue778_aliases_posiions");
+    let aliases_file = wrk.load_test_file("aliases.csv");
+    let positions_file = wrk.load_test_file("positions.csv");
 
     let mut cmd = wrk.command("exclude");
     cmd.arg("position")
@@ -106,9 +106,9 @@ fn exclude_utf8_issue778_aliases_posiions() {
 
 #[test]
 fn exclude_utf8_issue778_positions_aliases() {
-    let wrk = Workdir::new("exclude_utf8_positions_posiions");
-    let aliases_file = wrk.load_test_file("exclude/aliases.csv");
-    let positions_file = wrk.load_test_file("exclude/positions.csv");
+    let wrk = Workdir::new("exclude_utf8_issue778_aliases_posiions_aliases");
+    let aliases_file = wrk.load_test_file("aliases.csv");
+    let positions_file = wrk.load_test_file("positions.csv");
 
     let mut cmd = wrk.command("exclude");
     cmd.arg("position")
