@@ -26,7 +26,7 @@ const DEFAULT_SNIFFER_SAMPLE: usize = 100;
 // file size at which we warn user that a large file has not been indexed
 const NO_INDEX_WARNING_FILESIZE: u64 = 100_000_000; // 100MB
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Delimiter(pub u8);
 
 /// Delimiter represents values that can be passed from the command line that
