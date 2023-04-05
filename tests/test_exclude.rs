@@ -99,7 +99,7 @@ fn exclude_utf8_issue778_aliases_posiions() {
         .arg(positions_file);
 
     let got: String = wrk.stdout(&mut cmd);
-    let expected = wrk.load_test_resource("exclude/aliases-positions-expected.csv");
+    let expected = wrk.load_test_resource("aliases-positions-expected.csv");
 
     assert_eq!(got, expected.trim_end());
 }
@@ -117,7 +117,7 @@ fn exclude_utf8_issue778_positions_aliases() {
         .arg(aliases_file);
 
     let got: String = wrk.stdout(&mut cmd);
-    let expected = wrk.load_test_resource("exclude/positions-aliases-expected.csv");
+    let expected = wrk.load_test_resource("positions-aliases-expected.csv");
 
     assert_eq!(got, expected.trim_end());
 }
