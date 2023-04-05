@@ -158,3 +158,9 @@ impl From<regex::Error> for CliError {
         CliError::Other(format!("Regex error: {err:?}"))
     }
 }
+
+impl From<serde_json::Error> for CliError {
+    fn from(err: serde_json::Error) -> CliError {
+        CliError::Other(format!("JSON error: {err:?}"))
+    }
+}

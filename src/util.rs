@@ -404,9 +404,9 @@ pub fn mem_file_check(path: &Path, version_check: bool, no_memcheck: bool) -> Re
 
     let mut sys = System::new();
     sys.refresh_memory();
-    let total_mem = sys.total_memory();
     let avail_mem = sys.available_memory();
     let free_swap = sys.free_swap();
+    let total_mem = sys.total_memory();
     let mut mem_pct = env::var("QSV_FREEMEMORY_HEADROOM_PCT")
         .unwrap_or_else(|_| DEFAULT_FREEMEMORY_HEADROOM_PCT.to_string())
         .parse::<u8>()

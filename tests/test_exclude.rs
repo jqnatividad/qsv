@@ -88,9 +88,9 @@ exclude_test!(include, |wrk: Workdir,
 
 #[test]
 fn exclude_utf8_issue778_aliases_posiions() {
-    let wrk = Workdir::new("exclude_utf8_aliases_posiions");
-    let aliases_file = wrk.load_test_file("exclude/aliases.csv");
-    let positions_file = wrk.load_test_file("exclude/positions.csv");
+    let wrk = Workdir::new("exclude_utf8_issue778_aliases_posiions");
+    let aliases_file = wrk.load_test_file("aliases.csv");
+    let positions_file = wrk.load_test_file("positions.csv");
 
     let mut cmd = wrk.command("exclude");
     cmd.arg("position")
@@ -99,16 +99,16 @@ fn exclude_utf8_issue778_aliases_posiions() {
         .arg(positions_file);
 
     let got: String = wrk.stdout(&mut cmd);
-    let expected = wrk.load_test_resource("exclude/aliases-positions-expected.csv");
+    let expected = wrk.load_test_resource("aliases-positions-expected.csv");
 
     assert_eq!(got, expected.trim_end());
 }
 
 #[test]
 fn exclude_utf8_issue778_positions_aliases() {
-    let wrk = Workdir::new("exclude_utf8_positions_posiions");
-    let aliases_file = wrk.load_test_file("exclude/aliases.csv");
-    let positions_file = wrk.load_test_file("exclude/positions.csv");
+    let wrk = Workdir::new("exclude_utf8_issue778_aliases_posiions_aliases");
+    let aliases_file = wrk.load_test_file("aliases.csv");
+    let positions_file = wrk.load_test_file("positions.csv");
 
     let mut cmd = wrk.command("exclude");
     cmd.arg("position")
@@ -117,7 +117,7 @@ fn exclude_utf8_issue778_positions_aliases() {
         .arg(aliases_file);
 
     let got: String = wrk.stdout(&mut cmd);
-    let expected = wrk.load_test_resource("exclude/positions-aliases-expected.csv");
+    let expected = wrk.load_test_resource("positions-aliases-expected.csv");
 
     assert_eq!(got, expected.trim_end());
 }

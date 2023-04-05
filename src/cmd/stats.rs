@@ -1,5 +1,11 @@
 static USAGE: &str = r#"
-Compute summary statistics & infers data types for each column in a CSV.
+Compute summary statistics & infers data types for each column in a CSV. 
+
+Caches the results in <FILESTEM>.stats.csv (e.g., qsv stats nyc311.csv will create nyc311.stats.csv),
+and the arguments used to generate the stats in <FILESTEM>.stats.csv.json.
+
+If stats have already been computed for the input file with the same arguments and the file
+hasn't changed, the stats will be loaded from the cache instead of recomputing it.
 
 Summary statistics includes sum, min/max/range, min/max length, mean, stddev, variance,
 nullcount, sparsity, quartiles, interquartile range (IQR), lower/upper fences, skewness, median, 
@@ -142,16 +148,18 @@ with ~470 tests.
 use std::{
     borrow::ToOwned,
     default::Default,
-    fmt, io,
+    fmt, fs, io,
+    io::Write,
     iter::repeat,
-    str::{self, FromStr},
+    path::{Path, PathBuf},
+    str,
     sync::atomic::{AtomicBool, Ordering},
 };
 
 use itertools::Itertools;
 use once_cell::sync::OnceCell;
 use qsv_dateparser::parse_with_preference;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use simdutf8::basic::from_utf8;
 use stats::{merge_all, Commute, MinMax, OnlineStats, Unsorted};
 use tempfile::NamedTempFile;
@@ -188,6 +196,26 @@ pub struct Args {
     pub flag_no_memcheck:     bool,
 }
 
+#[derive(Clone, Serialize, Deserialize, PartialEq, Default)]
+struct StatsArgs {
+    arg_input:            String,
+    flag_select:          String,
+    flag_everything:      bool,
+    flag_typesonly:       bool,
+    flag_mode:            bool,
+    flag_cardinality:     bool,
+    flag_median:          bool,
+    flag_mad:             bool,
+    flag_quartiles:       bool,
+    flag_round:           u32,
+    flag_nulls:           bool,
+    flag_infer_dates:     bool,
+    flag_dates_whitelist: String,
+    flag_prefer_dmy:      bool,
+    flag_no_headers:      bool,
+    flag_delimiter:       String,
+}
+
 static INFER_DATE_FLAGS: once_cell::sync::OnceCell<Vec<bool>> = OnceCell::new();
 static DMY_PREFERENCE: AtomicBool = AtomicBool::new(false);
 static RECORD_COUNT: once_cell::sync::OnceCell<u64> = OnceCell::new();
@@ -209,76 +237,206 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         args.flag_mad = false;
     }
 
-    let mut wtr = Config::new(&args.flag_output).writer()?;
+    // set stdout output flag
+    let stdout_output_flag = args.flag_output.is_none();
+
+    // save the current args, we'll use it to generate
+    // the stats.csv.json file
+    let current_stats_args = StatsArgs {
+        arg_input:            format!("{:?}", args.arg_input),
+        flag_select:          format!("{:?}", args.flag_select),
+        flag_everything:      args.flag_everything,
+        flag_typesonly:       args.flag_typesonly,
+        flag_mode:            args.flag_mode,
+        flag_cardinality:     args.flag_cardinality,
+        flag_median:          args.flag_median,
+        flag_mad:             args.flag_mad,
+        flag_quartiles:       args.flag_quartiles,
+        flag_round:           args.flag_round,
+        flag_nulls:           args.flag_nulls,
+        flag_infer_dates:     args.flag_infer_dates,
+        flag_dates_whitelist: args.flag_dates_whitelist.clone(),
+        flag_prefer_dmy:      args.flag_prefer_dmy,
+        flag_no_headers:      args.flag_no_headers,
+        flag_delimiter:       format!("{:?}", args.flag_delimiter.clone()),
+    };
+
+    // create a temporary file to store the <FILESTEM>.stats.csv file
+    let stats_csv_tempfile = NamedTempFile::new()?;
+    let stats_csv_tempfile_fname = stats_csv_tempfile.path().to_str().unwrap().to_owned();
+
+    // we will write the stats to a temp file
+    let mut wtr = Config::new(&Some(stats_csv_tempfile_fname.clone())).writer()?;
     let mut fconfig = args.rconfig();
-    let mut tempfile_path = None;
+    let mut stdin_tempfile_path = None;
 
     if fconfig.is_stdin() {
         // read from stdin and write to a temp file
-        log::debug!("Reading from stdin");
+        log::info!("Reading from stdin");
         let mut stdin_file = NamedTempFile::new()?;
         let stdin = std::io::stdin();
         let mut stdin_handle = stdin.lock();
         std::io::copy(&mut stdin_handle, &mut stdin_file)?;
         drop(stdin_handle);
-        let (_file, path) = stdin_file
+        let (_file, tempfile_path) = stdin_file
             .keep()
             .or(Err("Cannot keep temporary file".to_string()))?;
-        tempfile_path = Some(path.clone());
-        args.arg_input = Some(path.as_os_str().to_os_string().into_string().unwrap());
-        fconfig.path = Some(path);
+        stdin_tempfile_path = Some(tempfile_path.clone());
+        args.arg_input = Some(
+            tempfile_path
+                .as_os_str()
+                .to_os_string()
+                .into_string()
+                .unwrap(),
+        );
+        fconfig.path = Some(tempfile_path);
     }
 
-    let record_count = RECORD_COUNT.get_or_init(|| util::count_rows(&fconfig).unwrap());
+    let mut compute_stats = true;
 
+    // check if <FILESTEM>.stats.csv file already exists
     if let Some(path) = fconfig.path.clone() {
-        // we're loading the entire file into memory, we need to check avail mem
-        if args.flag_everything
-            || args.flag_mode
-            || args.flag_cardinality
-            || args.flag_median
-            || args.flag_quartiles
-            || args.flag_mad
-        {
-            util::mem_file_check(&path, false, args.flag_no_memcheck)?;
-        }
-    }
+        let path_file_stem = path.file_stem().unwrap().to_str().unwrap();
+        let stats_file = stats_path(&path, false);
+        if stats_file.exists() {
+            // check if the existing stats were compiled using the same args
+            let stats_args_json_file = stats_file.with_extension("csv.json");
+            let existing_stats_args_json_str =
+                match fs::read_to_string(stats_args_json_file.clone()) {
+                    Ok(s) => s,
+                    Err(e) => {
+                        log::warn!(
+                            "Could not read {path_file_stem}.stats.csv.json: {e:?}, \
+                             regenerating..."
+                        );
+                        fs::remove_file(&stats_file)?;
+                        fs::remove_file(&stats_args_json_file)?;
+                        String::new()
+                    }
+                };
+            let existing_stats_args_json: StatsArgs =
+                serde_json::from_str(&existing_stats_args_json_str)?;
 
-    log::info!("scanning {record_count} records...");
-    let (headers, stats) = match fconfig.indexed()? {
-        None => args.sequential_stats(&args.flag_dates_whitelist),
-        Some(idx) => {
-            let idx_count = idx.count();
-            if let Some(num_jobs) = args.flag_jobs {
-                if num_jobs == 1 {
-                    args.sequential_stats(&args.flag_dates_whitelist)
-                } else {
-                    args.parallel_stats(&args.flag_dates_whitelist, idx_count)
-                }
+            // check if the stats are current
+            let input_file_modified = fs::metadata(&path)?.modified()?;
+            let stats_file_modified = fs::metadata(&stats_file)?.modified()?;
+            if stats_file_modified > input_file_modified
+                && existing_stats_args_json == current_stats_args
+            {
+                log::info!("{path_file_stem}.stats.csv already exists and is current, skipping...",);
+                compute_stats = false;
             } else {
-                args.parallel_stats(&args.flag_dates_whitelist, idx_count)
+                log::info!(
+                    "{path_file_stem}.stats.csv already exists, but is older than the input file \
+                     or the args have changed, regenerating...",
+                );
+                fs::remove_file(&stats_file)?;
             }
         }
-    }?;
-    let stats = args.stats_to_records(stats);
+        if compute_stats {
+            // we're loading the entire file into memory, we need to check avail mem
+            if args.flag_everything
+                || args.flag_mode
+                || args.flag_cardinality
+                || args.flag_median
+                || args.flag_quartiles
+                || args.flag_mad
+            {
+                util::mem_file_check(&path, false, args.flag_no_memcheck)?;
+            }
 
-    wtr.write_record(&args.stat_headers())?;
-    let fields = headers.iter().zip(stats.into_iter());
-    for (i, (header, stat)) in fields.enumerate() {
-        let header = if args.flag_no_headers {
-            i.to_string().into_bytes()
-        } else {
-            header.to_vec()
-        };
-        let stat = stat.iter().map(str::as_bytes);
-        wtr.write_record(vec![&*header].into_iter().chain(stat))?;
+            let record_count = RECORD_COUNT.get_or_init(|| util::count_rows(&fconfig).unwrap());
+
+            log::info!("scanning {record_count} records...");
+            let (headers, stats) = match fconfig.indexed()? {
+                None => args.sequential_stats(&args.flag_dates_whitelist),
+                Some(idx) => {
+                    let idx_count = idx.count();
+                    if let Some(num_jobs) = args.flag_jobs {
+                        if num_jobs == 1 {
+                            args.sequential_stats(&args.flag_dates_whitelist)
+                        } else {
+                            args.parallel_stats(&args.flag_dates_whitelist, idx_count)
+                        }
+                    } else {
+                        args.parallel_stats(&args.flag_dates_whitelist, idx_count)
+                    }
+                }
+            }?;
+            let stats = args.stats_to_records(stats);
+
+            wtr.write_record(&args.stat_headers())?;
+            let fields = headers.iter().zip(stats.into_iter());
+            for (i, (header, stat)) in fields.enumerate() {
+                let header = if args.flag_no_headers {
+                    i.to_string().into_bytes()
+                } else {
+                    header.to_vec()
+                };
+                let stat = stat.iter().map(str::as_bytes);
+                wtr.write_record(vec![&*header].into_iter().chain(stat))?;
+            }
+        }
     }
+
     wtr.flush()?;
 
-    if tempfile_path.is_some() {
+    if stdin_tempfile_path.is_some() {
         // remove the temp file we created to store stdin
-        log::debug!("delete temp file");
-        std::fs::remove_file(tempfile_path.unwrap())?;
+        log::info!("deleting stdin temp file");
+        std::fs::remove_file(stdin_tempfile_path.unwrap())?;
+    }
+
+    let currstats_filename = if compute_stats {
+        // we computed the stats, use the stats temp file
+        stats_csv_tempfile_fname
+    } else {
+        // we didn't compute the stats, re-use the existing stats file
+        stats_path(fconfig.path.as_ref().unwrap(), false)
+            .to_str()
+            .unwrap()
+            .to_owned()
+    };
+
+    if fconfig.is_stdin() {
+        // if we read from stdin, copy the temp stats file to "stdin.stats.csv"
+        let mut stats_path = stats_path(fconfig.path.as_ref().unwrap(), true);
+        fs::copy(currstats_filename.clone(), stats_path.clone())?;
+
+        // save the stats args to "stdin.stats.csv.json"
+        stats_path.set_extension("csv.json");
+        std::fs::write(
+            stats_path,
+            serde_json::to_string_pretty(&current_stats_args).unwrap(),
+        )?;
+    } else if let Some(path) = fconfig.path {
+        // if we read from a file, copy the temp stats file to "<FILESTEM>.stats.csv"
+        let mut stats_path = path;
+        stats_path.set_extension("stats.csv");
+        if currstats_filename != stats_path.to_str().unwrap() {
+            // if the stats file is not the same as the input file, copy it
+            fs::copy(currstats_filename.clone(), stats_path.clone())?;
+        }
+
+        // save the stats args to "<FILESTEM>.stats.csv.json"
+        stats_path.set_extension("csv.json");
+        std::fs::write(
+            stats_path,
+            serde_json::to_string_pretty(&current_stats_args).unwrap(),
+        )?;
+    }
+
+    if stdout_output_flag {
+        // if we're outputting to stdout, copy the stats file to stdout
+        let currstats = fs::read_to_string(currstats_filename)?;
+        io::stdout().write_all(currstats.as_bytes())?;
+        io::stdout().flush()?;
+    } else if let Some(output) = args.flag_output {
+        // if we're outputting to a file, copy the stats file to the output file
+        if currstats_filename != output {
+            // if the stats file is not the same as the output file, copy it
+            fs::copy(currstats_filename, output)?;
+        }
     }
 
     Ok(())
@@ -484,6 +642,40 @@ impl Args {
         }
         csv::StringRecord::from(fields)
     }
+}
+
+fn stats_path(stats_csv_path: &Path, stdin_flag: bool) -> PathBuf {
+    let mut p = stats_csv_path
+        .to_path_buf()
+        .into_os_string()
+        .into_string()
+        .unwrap();
+
+    let fname = stats_csv_path
+        .file_name()
+        .unwrap()
+        .to_os_string()
+        .into_string()
+        .unwrap();
+    let fstem = stats_csv_path
+        .file_stem()
+        .unwrap()
+        .to_os_string()
+        .into_string()
+        .unwrap();
+
+    if let Some(nofn) = p.strip_suffix(&fname) {
+        p = nofn.to_string();
+    } else {
+        p = String::new();
+    }
+    if stdin_flag {
+        p.push_str("stdin.stats.csv");
+    } else {
+        p.push_str(&format!("{fstem}.stats.csv"));
+    }
+
+    PathBuf::from(&p)
 }
 
 #[inline]
@@ -1368,7 +1560,7 @@ impl Commute for TypedMinMax {
 
 #[allow(clippy::inline_always)]
 #[inline(always)]
-fn from_bytes<T: FromStr>(bytes: &[u8]) -> Option<T> {
+fn from_bytes<T: std::str::FromStr>(bytes: &[u8]) -> Option<T> {
     if let Ok(x) = from_utf8(bytes) {
         x.parse().ok()
     } else {

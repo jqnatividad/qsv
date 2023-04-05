@@ -196,12 +196,6 @@ impl From<csvs_convert::DescribeError> for CliError {
     }
 }
 
-impl From<serde_json::Error> for CliError {
-    fn from(err: serde_json::Error) -> CliError {
-        CliError::Other(format!("JSON error: {err:?}"))
-    }
-}
-
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
     debug!("'to' command running");
