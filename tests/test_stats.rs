@@ -730,7 +730,7 @@ fn stats_with_date_inference() {
 
 #[test]
 fn stats_with_date_type() {
-    let wrk = Workdir::new("stats_with_date_inference");
+    let wrk = Workdir::new("stats_with_date_type");
     let test_file = wrk.load_test_file("boston311-100-notime.csv");
 
     let mut cmd = wrk.command("stats");
@@ -808,7 +808,7 @@ fn stats_everything_utf8_japanese_issue817() {
 
 #[test]
 fn stats_leading_zero_handling() {
-    let wrk = Workdir::new("stats");
+    let wrk = Workdir::new("stats_leading_zero_handling");
 
     wrk.create(
         "data.csv",
