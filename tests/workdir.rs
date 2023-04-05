@@ -21,6 +21,14 @@ pub struct Workdir {
     flexible: bool,
 }
 
+impl Drop for Workdir {
+    fn drop(&mut self) {
+        if let Err(err) = fs::remove_dir_all(&self.dir) {
+            panic!("Could not remove '{:?}': {err}", self.dir);
+        }
+    }
+}
+
 impl Workdir {
     pub fn new(name: &str) -> Workdir {
         let id = NEXT_ID.fetch_add(1, atomic::Ordering::SeqCst);
@@ -187,14 +195,22 @@ impl Workdir {
         self.from_str::<String>(path.as_path())
     }
 
-    // returns absolute file path in resources/test directory
+    // copy the file in resources/test directory to the working directory
+    // returns absolute file path of the copied file
     pub fn load_test_file(&self, filename: &str) -> String {
         // locate resources/test relative to crate base dir
         let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         path.push("resources/test/");
         path.push(filename);
 
-        path.into_os_string().into_string().unwrap()
+        let resource_file_path = path.into_os_string().into_string().unwrap();
+
+        let mut wrkdir_path = self.dir.clone();
+        wrkdir_path.push(filename);
+
+        fs::copy(resource_file_path, wrkdir_path.clone()).unwrap();
+
+        wrkdir_path.into_os_string().into_string().unwrap()
     }
 
     #[allow(clippy::wrong_self_convention)]
