@@ -3,7 +3,7 @@ use serial_test::serial;
 use crate::workdir::Workdir;
 
 #[test]
-#[ignore = "Temporarily skip this as it seems https://zippopotam.us is not currently available"]
+// #[ignore = "Temporarily skip this as it seems https://zippopotam.us is not currently available"]
 fn fetch_simple() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -35,7 +35,7 @@ fn fetch_simple() {
 }
 
 #[test]
-#[ignore = "Temporarily skip this as it seems https://zippopotam.us is not currently available"]
+// #[ignore = "Temporarily skip this as it seems https://zippopotam.us is not currently available"]
 fn fetch_simple_new_col() {
     let wrk = Workdir::new("fetch_simple_new_col");
     wrk.create(
@@ -88,7 +88,7 @@ fn fetch_simple_new_col() {
 }
 
 #[test]
-#[ignore = "Temporarily skip this as it seems https://zippopotam.us is not currently available"]
+// #[ignore = "Temporarily skip this as it seems https://zippopotam.us is not currently available"]
 fn fetch_simple_report() {
     let wrk = Workdir::new("fetch_simple_report");
     wrk.create(
@@ -149,7 +149,7 @@ fn fetch_simple_report() {
 }
 
 #[test]
-#[ignore = "Temporarily skip this as it seems https://zippopotam.us is not currently available"]
+// #[ignore = "Temporarily skip this as it seems https://zippopotam.us is not currently available"]
 fn fetch_simple_url_template() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -179,7 +179,7 @@ fn fetch_simple_url_template() {
 }
 
 #[test]
-#[ignore = "Temporarily skip this as it seems https://zippopotam.us is not currently available"]
+// #[ignore = "Temporarily skip this as it seems https://zippopotam.us is not currently available"]
 fn fetch_simple_redis() {
     // if there is no local redis server, skip fetch_simple_redis test
     let redis_client = redis::Client::open("redis://127.0.0.1:6379").unwrap();
@@ -221,7 +221,7 @@ fn fetch_simple_redis() {
 }
 
 #[test]
-#[ignore = "Temporarily skip this as it seems https://zippopotam.us is not currently available"]
+// #[ignore = "Temporarily skip this as it seems https://zippopotam.us is not currently available"]
 fn fetch_jql_single() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -255,7 +255,7 @@ fn fetch_jql_single() {
 }
 
 #[test]
-#[ignore = "Temporarily skip this as it seems https://zippopotam.us is not currently available"]
+// #[ignore = "Temporarily skip this as it seems https://zippopotam.us is not currently available"]
 fn fetch_jql_single_file() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -289,7 +289,7 @@ fn fetch_jql_single_file() {
 }
 
 #[test]
-#[ignore = "Temporarily skip this as it seems https://zippopotam.us is not currently available"]
+// #[ignore = "Temporarily skip this as it seems https://zippopotam.us is not currently available"]
 fn fetch_jqlfile_doesnotexist_error() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -316,7 +316,7 @@ fn fetch_jqlfile_doesnotexist_error() {
 }
 
 #[test]
-#[ignore = "Temporarily skip this as it seems https://zippopotam.us is not currently available"]
+// #[ignore = "Temporarily skip this as it seems https://zippopotam.us is not currently available"]
 fn fetch_jql_jqlfile_error() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -341,7 +341,7 @@ fn fetch_jql_jqlfile_error() {
 }
 
 #[test]
-#[ignore = "Temporarily skip this as it seems https://zippopotam.us is not currently available"]
+// #[ignore = "Temporarily skip this as it seems https://zippopotam.us is not currently available"]
 fn fetch_jql_multiple() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -372,7 +372,7 @@ fn fetch_jql_multiple() {
 }
 
 #[test]
-#[ignore = "Temporarily skip this as it seems https://zippopotam.us is not currently available"]
+// #[ignore = "Temporarily skip this as it seems https://zippopotam.us is not currently available"]
 fn fetch_jql_multiple_file() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -406,7 +406,7 @@ fn fetch_jql_multiple_file() {
 }
 
 #[test]
-#[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
+// #[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
 fn fetch_custom_header() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -429,7 +429,7 @@ fn fetch_custom_header() {
 }
 
 #[test]
-#[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
+// #[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
 fn fetch_custom_invalid_header_error() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -448,7 +448,7 @@ fn fetch_custom_invalid_header_error() {
     wrk.assert_err(&mut cmd);
 }
 #[test]
-#[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
+// #[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
 fn fetch_custom_invalid_user_agent_error() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -469,7 +469,7 @@ fn fetch_custom_invalid_user_agent_error() {
 }
 
 #[test]
-#[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
+// #[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
 fn fetch_custom_user_agent() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -490,7 +490,7 @@ fn fetch_custom_user_agent() {
 }
 
 #[test]
-#[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
+// #[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
 fn fetch_custom_invalid_value_error() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -510,7 +510,7 @@ fn fetch_custom_invalid_value_error() {
 }
 
 #[test]
-#[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
+// #[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
 fn fetchpost_custom_invalid_header_error() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -535,7 +535,7 @@ fn fetchpost_custom_invalid_header_error() {
 }
 
 #[test]
-#[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
+// #[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
 fn fetchpost_custom_invalid_value_error() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -560,7 +560,7 @@ fn fetchpost_custom_invalid_value_error() {
 }
 
 #[test]
-#[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
+// #[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
 fn fetchpost_custom_invalid_user_agent_error() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -586,7 +586,7 @@ fn fetchpost_custom_invalid_user_agent_error() {
 }
 
 #[test]
-#[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
+// #[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
 fn fetchpost_custom_user_agent() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -866,7 +866,7 @@ fn fetch_complex_url_template() {
 }
 
 #[test]
-#[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
+// #[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
 fn fetchpost_simple_test() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -1036,7 +1036,7 @@ fn fetchpost_compress_test() {
 }
 
 #[test]
-#[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
+// #[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
 fn fetchpost_jqlfile_doesnotexist_error() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -1066,7 +1066,7 @@ fn fetchpost_jqlfile_doesnotexist_error() {
 }
 
 #[test]
-#[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
+// #[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
 fn fetchpost_literalurl_test() {
     let wrk = Workdir::new("fetch_literalurl_test");
     wrk.create(
@@ -1131,7 +1131,7 @@ fn fetchpost_literalurl_test() {
 }
 
 #[test]
-#[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
+// #[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
 fn fetchpost_simple_report() {
     let wrk = Workdir::new("fetchpost_simple_report");
     wrk.create(
