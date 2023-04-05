@@ -135,7 +135,7 @@ qsv-sniffer = { version = "0.8", default-features = false, features = [
 ] }
 rand = "0.8"
 rayon = "1.7"
-redis = { version = "0.22", features = [
+redis = { version = "0.23", features = [
     "ahash",
 ], default-features = false, optional = true }
 regex = "1"
