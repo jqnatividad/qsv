@@ -93,7 +93,7 @@ jobs:
         command: build
         use-cross: false
         toolchain: ${{ matrix.rust }}
-        args: --profile release-nightly --bin qsv -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }},full ${{ matrix.job.default-features }}
+        args: --profile release-nightly --bin qsv -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }},feature_capable ${{ matrix.job.default-features }}
     - name: Build qsvlite-nightly
       env:
         RUSTFLAGS: --emit=asm

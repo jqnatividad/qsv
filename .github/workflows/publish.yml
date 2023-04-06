@@ -146,7 +146,7 @@ jobs:
         command: build
         use-cross: ${{ matrix.job.use-cross }}
         toolchain: ${{ matrix.rust }}
-        args: --release --locked --bin qsv --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }},full ${{ matrix.job.default-features }}
+        args: --release --locked --bin qsv --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }},feature_capable ${{ matrix.job.default-features }}
     - name: Build qsvlite
       env:
         RUSTFLAGS: --emit=asm
