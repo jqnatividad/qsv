@@ -31,7 +31,7 @@ test              = true
 bench             = false
 doctest           = false
 path              = "src/main.rs"
-required-features = ["full"]
+required-features = ["feature_capable"]
 
 [[bin]]
 name              = "qsvlite"
@@ -198,8 +198,8 @@ tabwriter = { git = "https://github.com/jqnatividad/tabwriter", branch = "tweaks
 
 [features]
 default = ["mimalloc"]
-all_full = [
-    "full",
+all_features = [
+    "feature_capable",
     "apply",
     "fetch",
     "foreach",
@@ -244,7 +244,7 @@ python = ["pyo3"]
 to = ["csvs_convert"]
 lite = []
 datapusher_plus = ["dynfmt", "self_update"]
-full = []
+feature_capable = []
 nightly = [
     "regex/unstable",
     "rand/nightly",
