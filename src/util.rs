@@ -600,13 +600,18 @@ impl<'de> Deserialize<'de> for FilenameTemplate {
     }
 }
 
-pub fn init_logger() -> String {
+pub fn init_logger() -> (String, flexi_logger::LoggerHandle) {
     use flexi_logger::{Cleanup, Criterion, FileSpec, Logger, Naming};
 
     let qsv_log_env = env::var("QSV_LOG_LEVEL").unwrap_or_else(|_| "off".to_string());
     let qsv_log_dir = env::var("QSV_LOG_DIR").unwrap_or_else(|_| ".".to_string());
+    let write_mode = if env::var("QSV_LOG_UNBUFFERED").is_ok() {
+        flexi_logger::WriteMode::Direct
+    } else {
+        flexi_logger::WriteMode::BufferAndFlush
+    };
 
-    Logger::try_with_env_or_str(qsv_log_env)
+    let logger = Logger::try_with_env_or_str(qsv_log_env)
         .unwrap()
         .use_utc()
         .log_to_file(
@@ -614,6 +619,7 @@ pub fn init_logger() -> String {
                 .directory(qsv_log_dir)
                 .suppress_timestamp(),
         )
+        .write_mode(write_mode)
         .format_for_files(flexi_logger::detailed_format)
         .o_append(true)
         .rotate(
@@ -630,7 +636,7 @@ pub fn init_logger() -> String {
         String::new()
     };
     log::info!("START: {qsv_args}");
-    qsv_args
+    (qsv_args, logger)
 }
 
 #[cfg(feature = "self_update")]
