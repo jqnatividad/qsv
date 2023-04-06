@@ -416,6 +416,7 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
         flag_infer_dates:     true,
         flag_dates_whitelist: args.flag_dates_whitelist.to_string(),
         flag_prefer_dmy:      args.flag_prefer_dmy,
+        flag_force:           false,
         flag_jobs:            Some(util::njobs(args.flag_jobs)),
         flag_output:          None,
         flag_no_headers:      args.flag_no_headers,
