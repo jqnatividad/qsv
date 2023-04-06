@@ -1,12 +1,6 @@
 static USAGE: &str = r#"
 Compute summary statistics & infers data types for each column in a CSV. 
 
-Caches the results in <FILESTEM>.stats.csv (e.g., qsv stats nyc311.csv will create nyc311.stats.csv),
-and the arguments used to generate the stats in <FILESTEM>.stats.csv.json.
-
-If stats have already been computed for the input file with the same arguments and the file
-hasn't changed, the stats will be loaded from the cache instead of recomputing it.
-
 Summary statistics includes sum, min/max/range, min/max length, mean, stddev, variance,
 nullcount, sparsity, quartiles, interquartile range (IQR), lower/upper fences, skewness, median, 
 cardinality, mode/s & antimode/s, and median absolute deviation (MAD). Note that some
@@ -51,6 +45,12 @@ https://github.com/jqnatividad/belt/tree/main/dateparser#accepted-date-formats.
 
 Computing statistics on a large file can be made much faster if you create an index for it
 first with 'qsv index' to enable multithreading.
+
+Caches the results in <FILESTEM>.stats.csv (e.g., qsv stats nyc311.csv will create nyc311.stats.csv),
+and the arguments used to generate the stats in <FILESTEM>.stats.csv.json.
+
+If stats have already been computed for the input file with the same arguments and the file
+hasn't changed, the stats will be loaded from the cache instead of recomputing it.
 
 For examples, see the "boston311" test files in https://github.com/jqnatividad/qsv/tree/master/resources/test
 and https://github.com/jqnatividad/qsv/blob/f7f9c4297fb3dea685b5d0f631932b6b2ca4a99a/tests/test_stats.rs#L544.
@@ -109,6 +109,7 @@ stats options:
                               [default: date,time,due,open,close,created]
     --prefer-dmy              Parse dates in dmy format. Otherwise, use mdy format.
                               Ignored if --infer-dates is false.
+    --force                   Force recomputing stats even if the cache exists.
     -j, --jobs <arg>          The number of jobs to run in parallel.
                               This works only when the given CSV has an index.
                               Note that a file handle is opened for each job.
@@ -189,6 +190,7 @@ pub struct Args {
     pub flag_infer_dates:     bool,
     pub flag_dates_whitelist: String,
     pub flag_prefer_dmy:      bool,
+    pub flag_force:           bool,
     pub flag_jobs:            Option<usize>,
     pub flag_output:          Option<String>,
     pub flag_no_headers:      bool,
@@ -294,11 +296,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut compute_stats = true;
 
-    // check if <FILESTEM>.stats.csv file already exists
     if let Some(path) = fconfig.path.clone() {
         let path_file_stem = path.file_stem().unwrap().to_str().unwrap();
         let stats_file = stats_path(&path, false);
-        if stats_file.exists() {
+        // check if <FILESTEM>.stats.csv file already exists and
+        // if it does, check if it was compiled using the same args.
+        // However, if the --force flag is set, we will regenerate the stats
+        if stats_file.exists() && !args.flag_force {
             // check if the existing stats were compiled using the same args
             let stats_args_json_file = stats_file.with_extension("csv.json");
             let existing_stats_args_json_str =
@@ -317,11 +321,28 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let existing_stats_args_json: StatsArgs =
                 serde_json::from_str(&existing_stats_args_json_str)?;
 
-            // check if the stats are current
+            // check if the cached stats are current, use the same args or if the --everything flag
+            // was set & all the other non-stats args are equal. If so, we don't need to recompute
+            // the stats
             let input_file_modified = fs::metadata(&path)?.modified()?;
             let stats_file_modified = fs::metadata(&stats_file)?.modified()?;
+            #[allow(clippy::nonminimal_bool)]
             if stats_file_modified > input_file_modified
-                && existing_stats_args_json == current_stats_args
+                && (existing_stats_args_json == current_stats_args
+                    || existing_stats_args_json.flag_everything
+                        && existing_stats_args_json.flag_infer_dates
+                            == current_stats_args.flag_infer_dates
+                        && existing_stats_args_json.flag_dates_whitelist
+                            == current_stats_args.flag_dates_whitelist
+                        && existing_stats_args_json.flag_prefer_dmy
+                            == current_stats_args.flag_prefer_dmy
+                        && existing_stats_args_json.flag_no_headers
+                            == current_stats_args.flag_no_headers
+                        && existing_stats_args_json.flag_dates_whitelist
+                            == current_stats_args.flag_dates_whitelist
+                        && existing_stats_args_json.flag_delimiter
+                            == current_stats_args.flag_delimiter
+                        && existing_stats_args_json.flag_nulls == current_stats_args.flag_nulls)
             {
                 log::info!("{path_file_stem}.stats.csv already exists and is current, skipping...",);
                 compute_stats = false;
