@@ -52,7 +52,7 @@ Common options:
 
 use std::{borrow::Cow, env};
 
-#[cfg(any(feature = "full", feature = "lite"))]
+#[cfg(any(feature = "feature_capable", feature = "lite"))]
 use indicatif::{HumanCount, ProgressBar, ProgressDrawTarget};
 use regex::bytes::RegexBuilder;
 use serde::Deserialize;
@@ -120,12 +120,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     // prep progress bar
-    #[cfg(any(feature = "full", feature = "lite"))]
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     let show_progress =
         (args.flag_progressbar || std::env::var("QSV_PROGRESSBAR").is_ok()) && !rconfig.is_stdin();
-    #[cfg(any(feature = "full", feature = "lite"))]
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     let progress = ProgressBar::with_draw_target(None, ProgressDrawTarget::stderr_with_hz(5));
-    #[cfg(any(feature = "full", feature = "lite"))]
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     if show_progress {
         util::prep_progress(&progress, util::count_rows(&rconfig)?);
     } else {
@@ -134,18 +134,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut record = csv::ByteRecord::new();
     let mut total_match_ctr: u64 = 0;
-    #[cfg(any(feature = "full", feature = "lite"))]
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     let mut rows_with_matches_ctr: u64 = 0;
-    #[cfg(any(feature = "full", feature = "lite"))]
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     let mut match_found;
 
     while rdr.read_byte_record(&mut record)? {
-        #[cfg(any(feature = "full", feature = "lite"))]
+        #[cfg(any(feature = "feature_capable", feature = "lite"))]
         if show_progress {
             progress.inc(1);
         }
 
-        #[cfg(any(feature = "full", feature = "lite"))]
+        #[cfg(any(feature = "feature_capable", feature = "lite"))]
         {
             match_found = false;
         }
@@ -156,7 +156,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 if sel_indices.contains(&i) {
                     if pattern.is_match(v) {
                         total_match_ctr += 1;
-                        #[cfg(any(feature = "full", feature = "lite"))]
+                        #[cfg(any(feature = "feature_capable", feature = "lite"))]
                         {
                             match_found = true;
                         }
@@ -170,7 +170,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             })
             .collect();
 
-        #[cfg(any(feature = "full", feature = "lite"))]
+        #[cfg(any(feature = "feature_capable", feature = "lite"))]
         if match_found {
             rows_with_matches_ctr += 1;
         }
@@ -180,7 +180,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     wtr.flush()?;
 
-    #[cfg(any(feature = "full", feature = "lite"))]
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     if show_progress {
         progress.set_message(format!(
             r#" - {} total matches replaced with "{}" in {} out of {} records."#,

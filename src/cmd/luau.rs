@@ -217,7 +217,7 @@ use std::{
 };
 
 use csv_index::RandomAccessSimple;
-#[cfg(any(feature = "full", feature = "lite"))]
+#[cfg(any(feature = "feature_capable", feature = "lite"))]
 use indicatif::{ProgressBar, ProgressDrawTarget, ProgressStyle};
 use log::{debug, info, log_enabled};
 use mlua::{Lua, LuaSerdeExt, Value};
@@ -650,12 +650,12 @@ fn sequential_mode(
     #[cfg(feature = "datapusher_plus")]
     let show_progress = false;
 
-    #[cfg(any(feature = "full", feature = "lite"))]
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     let show_progress =
         (args.flag_progressbar || std::env::var("QSV_PROGRESSBAR").is_ok()) && !rconfig.is_stdin();
-    #[cfg(any(feature = "full", feature = "lite"))]
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     let progress = ProgressBar::with_draw_target(None, ProgressDrawTarget::stderr_with_hz(5));
-    #[cfg(any(feature = "full", feature = "lite"))]
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     if show_progress {
         util::prep_progress(&progress, util::count_rows(rconfig)?);
     } else {
@@ -673,7 +673,7 @@ fn sequential_mode(
     // main loop
     // without an index, we stream the CSV in sequential order
     'main: while rdr.read_record(&mut record)? {
-        #[cfg(any(feature = "full", feature = "lite"))]
+        #[cfg(any(feature = "feature_capable", feature = "lite"))]
         if show_progress {
             progress.inc(1);
         }
@@ -835,7 +835,7 @@ fn sequential_mode(
     }
 
     wtr.flush()?;
-    #[cfg(any(feature = "full", feature = "lite"))]
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     if show_progress {
         util::finish_progress(&progress);
     }
@@ -980,12 +980,12 @@ fn random_acess_mode(
     #[cfg(feature = "datapusher_plus")]
     let show_progress = false;
 
-    #[cfg(any(feature = "full", feature = "lite"))]
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     let show_progress =
         (args.flag_progressbar || std::env::var("QSV_PROGRESSBAR").is_ok()) && !rconfig.is_stdin();
-    #[cfg(any(feature = "full", feature = "lite"))]
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     let progress = ProgressBar::with_draw_target(None, ProgressDrawTarget::stderr_with_hz(5));
-    #[cfg(any(feature = "full", feature = "lite"))]
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     if show_progress {
         progress.set_style(
             ProgressStyle::default_bar()
@@ -1013,7 +1013,7 @@ fn random_acess_mode(
     'main: while idx_file.read_record(&mut record)? {
         globals.set("_IDX", curr_record)?;
 
-        #[cfg(any(feature = "full", feature = "lite"))]
+        #[cfg(any(feature = "feature_capable", feature = "lite"))]
         if show_progress {
             progress.set_position(curr_record + 1);
         }
@@ -1175,7 +1175,7 @@ fn random_acess_mode(
 
     wtr.flush()?;
     let msg = format!("RANDOM ACCESS MODE: Processed {processed_count} record/s.");
-    #[cfg(any(feature = "full", feature = "lite"))]
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     if show_progress {
         progress.abandon_with_message(msg.clone());
     }

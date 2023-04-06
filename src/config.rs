@@ -202,7 +202,7 @@ impl Config {
         self
     }
 
-    #[cfg(any(feature = "full", feature = "lite"))]
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     pub const fn crlf(mut self, yes: bool) -> Config {
         if yes {
             self.terminator = csv::Terminator::CRLF;
@@ -212,7 +212,7 @@ impl Config {
         self
     }
 
-    #[cfg(any(feature = "full", feature = "lite"))]
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     pub const fn terminator(mut self, term: csv::Terminator) -> Config {
         self.terminator = term;
         self
@@ -298,7 +298,7 @@ impl Config {
         }
     }
 
-    #[cfg(any(feature = "full", feature = "lite"))]
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     pub fn reader_file_stdin(&self) -> io::Result<csv::Reader<Box<dyn SeekRead + 'static>>> {
         Ok(match self.path {
             None => {

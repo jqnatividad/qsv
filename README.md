@@ -115,7 +115,7 @@ For Windows, this means installing [Visual Studio 2022](https://visualstudio.mic
 the Windows 10 or 11 SDK & the English language pack, along with any other language packs your require.
 
 ```bash
-cargo install qsv --locked --features all_full
+cargo install qsv --locked --features all_features
 ```
 
 The binary will be installed in `~/.cargo/bin`.
@@ -124,9 +124,9 @@ To install different [variants](#variants) and enable optional features, use car
 
 ```bash
 # to install qsv with all features enabled
-cargo install qsv --locked --features apply,generate,luau,fetch,foreach,python,to,self_update,full
+cargo install qsv --locked --features apply,generate,luau,fetch,foreach,python,to,self_update,feature_capable
 # or shorthand
-cargo install qsv --locked -F all_full
+cargo install qsv --locked -F all_features
 
 # or to install qsvlite
 cargo install qsv --locked -F lite
@@ -142,7 +142,7 @@ Compiling from source also works similarly[^1]:
 ```bash
 git clone https://github.com/jqnatividad/qsv.git
 cd qsv
-cargo build --release --locked --features all_full
+cargo build --release --locked --features all_features
 ```
 
 The compiled binary will end up in `./target/release/`.
@@ -151,9 +151,9 @@ To compile different [variants](#variants) and enable optional [features](#featu
 
 ```bash
 # to compile qsv with all features enabled
-cargo build --release --locked --features apply,generate,luau,fetch,foreach,python,to,self_update,full
+cargo build --release --locked --features apply,generate,luau,fetch,foreach,python,to,self_update,feature_capable
 # shorthand
-cargo build --release --locked -F all_full
+cargo build --release --locked -F all_features
 
 # for qsvlite
 cargo build --release --locked -F lite
@@ -356,8 +356,8 @@ Relevant env vars are defined as anything that starts with `QSV_` & `MIMALLOC_` 
 * `self_update` - enable self-update engine, checking GitHub for the latest release. Note that if you manually built qsv, `self-update` will only check for new releases.
 It will NOT offer the choice to update itself to the prebuilt binaries published on GitHub. You need not worry that your manually built qsv will be overwritten by a self-update.
 
-* `full` - enable to build `qsv` binary variant which is feature-capable.
-* `all_full` - enable to build `qsv` binary variant with all features enabled (apply,fetch,foreach,generate,luau,python,to,self_update).
+* `feature_capable` - enable to build `qsv` binary variant which is feature-capable.
+* `all_features` - enable to build `qsv` binary variant with all features enabled (apply,fetch,foreach,generate,luau,python,to,self_update).
 * `lite` - enable to build `qsvlite` binary variant with all features disabled.
 * `datapusher_plus` - enable to build `qsvdp` binary variant - the [DataPusher+](https://github.com/dathere/datapusher-plus) optimized qsv binary.
 * `nightly` - enable to turn on nightly/unstable features in the `rand`, `regex`, `hashbrown`, `parking_lot`, `polars` & `pyo3` crates when building with Rust nightly/unstable.
@@ -394,7 +394,7 @@ To test each binary variant:
 
 ```bash
 # to test qsv
-cargo test --feature all_full
+cargo test --feature all_features
 
 # to test qsvlite
 cargo test --feature lite
@@ -405,7 +405,7 @@ cargo test --feature datapusher_plus
 # to test a specific command
 # here we test only stats and use the
 # -F shortcut for --feature
-cargo test stats -F all_full
+cargo test stats -F all_features
 ```
 
 ## License
