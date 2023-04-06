@@ -183,7 +183,7 @@ fn main() -> QsvExitCode {
     let num_commands = enabled_commands.split('\n').count();
 
     let now = Instant::now();
-    let qsv_args = util::init_logger();
+    let (qsv_args, _logger_handle) = util::init_logger();
 
     let args: Args = Docopt::new(USAGE)
         .and_then(|d| {
