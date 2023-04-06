@@ -58,7 +58,7 @@ use std::{
 };
 
 use csv::ByteRecord;
-#[cfg(any(feature = "full", feature = "lite"))]
+#[cfg(any(feature = "feature_capable", feature = "lite"))]
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use itertools::Itertools;
 use jsonschema::{output::BasicOutput, paths::PathChunk, JSONSchema};
@@ -119,7 +119,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         Ordering::Relaxed,
     );
 
-    #[cfg(any(feature = "full", feature = "lite"))]
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     let mut rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers);
@@ -131,14 +131,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut rdr = rconfig.reader()?;
 
     // prep progress bar
-    #[cfg(any(feature = "full", feature = "lite"))]
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     let progress = ProgressBar::with_draw_target(None, ProgressDrawTarget::stderr_with_hz(5));
 
-    #[cfg(any(feature = "full", feature = "lite"))]
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     let show_progress =
         (args.flag_progressbar || std::env::var("QSV_PROGRESSBAR").is_ok()) && !rconfig.is_stdin();
 
-    #[cfg(any(feature = "full", feature = "lite"))]
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     if show_progress {
         // for full row count, prevent CSV reader from aborting on inconsistent column count
         rconfig = rconfig.flexible(true);
@@ -193,7 +193,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         let mut record_idx: u64 = 0;
         for result in rdr.records() {
-            #[cfg(any(feature = "full", feature = "lite"))]
+            #[cfg(any(feature = "feature_capable", feature = "lite"))]
             if show_progress {
                 progress.inc(1);
             }
@@ -228,7 +228,7 @@ Use `qsv input` to fix formatting and to transcode to utf8 if required."#
             record_idx += 1;
         }
 
-        #[cfg(any(feature = "full", feature = "lite"))]
+        #[cfg(any(feature = "feature_capable", feature = "lite"))]
         if show_progress {
             progress.set_message(format!(
                 " validated {} records.",
@@ -374,7 +374,7 @@ Use `qsv input` to fix formatting and to transcode to utf8 if required."#
             }
         }
 
-        #[cfg(any(feature = "full", feature = "lite"))]
+        #[cfg(any(feature = "feature_capable", feature = "lite"))]
         if show_progress {
             progress.inc(batch.len() as u64);
         }
@@ -386,7 +386,7 @@ Use `qsv input` to fix formatting and to transcode to utf8 if required."#
         }
     } // end batch loop
 
-    #[cfg(any(feature = "full", feature = "lite"))]
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     if show_progress {
         progress.set_message(format!(
             " validated {} records.",

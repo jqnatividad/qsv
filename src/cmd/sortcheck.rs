@@ -57,7 +57,7 @@ Common options:
 use std::cmp;
 
 use csv::ByteRecord;
-#[cfg(any(feature = "full", feature = "lite"))]
+#[cfg(any(feature = "feature_capable", feature = "lite"))]
 use indicatif::{HumanCount, ProgressBar, ProgressDrawTarget};
 use serde::{Deserialize, Serialize};
 
@@ -105,12 +105,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let record_count;
 
     // prep progress bar
-    #[cfg(any(feature = "full", feature = "lite"))]
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     let show_progress =
         (args.flag_progressbar || std::env::var("QSV_PROGRESSBAR").is_ok()) && !rconfig.is_stdin();
-    #[cfg(any(feature = "full", feature = "lite"))]
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     let progress = ProgressBar::with_draw_target(None, ProgressDrawTarget::stderr_with_hz(5));
-    #[cfg(any(feature = "full", feature = "lite"))]
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     {
         record_count = if show_progress {
             let count = util::count_rows(&rconfig)?;
@@ -137,7 +137,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     rdr.read_byte_record(&mut record)?;
     loop {
-        #[cfg(any(feature = "full", feature = "lite"))]
+        #[cfg(any(feature = "feature_capable", feature = "lite"))]
         if show_progress {
             progress.inc(1);
         }
@@ -173,7 +173,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     } // end loop
 
-    #[cfg(any(feature = "full", feature = "lite"))]
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     if show_progress {
         if sorted {
             progress.set_message(format!(

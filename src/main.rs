@@ -89,7 +89,7 @@ struct Args {
 
 fn main() -> QsvExitCode {
     let mut enabled_commands = String::new();
-    #[cfg(all(feature = "apply", feature = "full"))]
+    #[cfg(all(feature = "apply", feature = "feature_capable"))]
     enabled_commands.push_str("    apply       Apply series of transformations to a column\n");
 
     enabled_commands.push_str(
@@ -106,7 +106,7 @@ fn main() -> QsvExitCode {
     extsort     Sort arbitrarily large text file\n",
     );
 
-    #[cfg(all(feature = "fetch", feature = "full"))]
+    #[cfg(all(feature = "fetch", feature = "feature_capable"))]
     enabled_commands.push_str(
         "    fetch       Fetches data from web services for every row using HTTP Get.
     fetchpost   Fetches data from web services for every row using HTTP Post.\n",
@@ -119,7 +119,7 @@ fn main() -> QsvExitCode {
     fmt         Format CSV output (change field delimiter)\n",
     );
 
-    #[cfg(all(feature = "foreach", feature = "full"))]
+    #[cfg(all(feature = "foreach", feature = "feature_capable"))]
     enabled_commands
         .push_str("    foreach     Loop over a CSV file to execute bash commands (*nix only)\n");
 
@@ -136,12 +136,12 @@ fn main() -> QsvExitCode {
     join        Join CSV files\n",
     );
 
-    #[cfg(all(feature = "polars", feature = "full"))]
+    #[cfg(all(feature = "polars", feature = "feature_capable"))]
     enabled_commands.push_str("    joinp       Join CSV files using the Pola.rs engine\n");
 
     enabled_commands.push_str("    jsonl       Convert newline-delimited JSON files to CSV\n");
 
-    #[cfg(all(feature = "luau", feature = "full"))]
+    #[cfg(all(feature = "luau", feature = "feature_capable"))]
     enabled_commands.push_str("    luau        Execute Luau script on CSV data\n");
 
     enabled_commands.push_str(
@@ -149,7 +149,7 @@ fn main() -> QsvExitCode {
     pseudo      Pseudonymise the values of a column\n",
     );
 
-    #[cfg(all(feature = "python", feature = "full"))]
+    #[cfg(all(feature = "python", feature = "feature_capable"))]
     enabled_commands.push_str("    py          Evaluate a Python expression on CSV data\n");
 
     enabled_commands.push_str(
@@ -172,7 +172,7 @@ fn main() -> QsvExitCode {
     tojsonl     Convert CSV to newline-delimited JSON\n",
     );
 
-    #[cfg(all(feature = "to", feature = "full"))]
+    #[cfg(all(feature = "to", feature = "feature_capable"))]
     enabled_commands
         .push_str("    to          Convert CSVs to PostgreSQL/XLSX/Parquet/SQLite/Data Package\n");
 
@@ -268,7 +268,7 @@ sponsored by datHere - Data Infrastructure Engineering
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "lowercase")]
 enum Command {
-    #[cfg(all(feature = "apply", feature = "full"))]
+    #[cfg(all(feature = "apply", feature = "feature_capable"))]
     Apply,
     Behead,
     Cat,
@@ -281,9 +281,9 @@ enum Command {
     Explode,
     ExtDedup,
     ExtSort,
-    #[cfg(all(feature = "fetch", feature = "full"))]
+    #[cfg(all(feature = "fetch", feature = "feature_capable"))]
     Fetch,
-    #[cfg(all(feature = "fetch", feature = "full"))]
+    #[cfg(all(feature = "fetch", feature = "feature_capable"))]
     FetchPost,
     Fill,
     FixLengths,
@@ -292,21 +292,21 @@ enum Command {
     #[cfg(all(feature = "foreach", target_family = "unix", not(feature = "lite")))]
     ForEach,
     Frequency,
-    #[cfg(all(feature = "generate", feature = "full"))]
+    #[cfg(all(feature = "generate", feature = "feature_capable"))]
     Generate,
     Headers,
     Help,
     Index,
     Input,
     Join,
-    #[cfg(all(feature = "polars", feature = "full"))]
+    #[cfg(all(feature = "polars", feature = "feature_capable"))]
     JoinP,
     Jsonl,
-    #[cfg(all(feature = "luau", feature = "full"))]
+    #[cfg(all(feature = "luau", feature = "feature_capable"))]
     Luau,
     Partition,
     Pseudo,
-    #[cfg(all(feature = "python", feature = "full"))]
+    #[cfg(all(feature = "python", feature = "feature_capable"))]
     Py,
     Rename,
     Replace,
@@ -325,7 +325,7 @@ enum Command {
     Stats,
     Table,
     Transpose,
-    #[cfg(all(feature = "to", feature = "full"))]
+    #[cfg(all(feature = "to", feature = "feature_capable"))]
     To,
     Tojsonl,
     Validate,
@@ -345,7 +345,7 @@ impl Command {
         }
         match self {
             Command::Behead => cmd::behead::run(argv),
-            #[cfg(all(feature = "apply", feature = "full"))]
+            #[cfg(all(feature = "apply", feature = "feature_capable"))]
             Command::Apply => cmd::apply::run(argv),
             Command::Cat => cmd::cat::run(argv),
             Command::Count => cmd::count::run(argv),
@@ -357,9 +357,9 @@ impl Command {
             Command::Explode => cmd::explode::run(argv),
             Command::ExtDedup => cmd::extdedup::run(argv),
             Command::ExtSort => cmd::extsort::run(argv),
-            #[cfg(all(feature = "fetch", feature = "full"))]
+            #[cfg(all(feature = "fetch", feature = "feature_capable"))]
             Command::Fetch => cmd::fetch::run(argv),
-            #[cfg(all(feature = "fetch", feature = "full"))]
+            #[cfg(all(feature = "fetch", feature = "feature_capable"))]
             Command::FetchPost => cmd::fetchpost::run(argv),
             #[cfg(all(feature = "foreach", target_family = "unix", not(feature = "lite")))]
             Command::ForEach => cmd::foreach::run(argv),
@@ -368,7 +368,7 @@ impl Command {
             Command::Flatten => cmd::flatten::run(argv),
             Command::Fmt => cmd::fmt::run(argv),
             Command::Frequency => cmd::frequency::run(argv),
-            #[cfg(all(feature = "generate", feature = "full"))]
+            #[cfg(all(feature = "generate", feature = "feature_capable"))]
             Command::Generate => cmd::generate::run(argv),
             Command::Headers => cmd::headers::run(argv),
             Command::Help => {
@@ -379,14 +379,14 @@ impl Command {
             Command::Index => cmd::index::run(argv),
             Command::Input => cmd::input::run(argv),
             Command::Join => cmd::join::run(argv),
-            #[cfg(all(feature = "polars", feature = "full"))]
+            #[cfg(all(feature = "polars", feature = "feature_capable"))]
             Command::JoinP => cmd::joinp::run(argv),
             Command::Jsonl => cmd::jsonl::run(argv),
-            #[cfg(all(feature = "luau", feature = "full"))]
+            #[cfg(all(feature = "luau", feature = "feature_capable"))]
             Command::Luau => cmd::luau::run(argv),
             Command::Partition => cmd::partition::run(argv),
             Command::Pseudo => cmd::pseudo::run(argv),
-            #[cfg(all(feature = "python", feature = "full"))]
+            #[cfg(all(feature = "python", feature = "feature_capable"))]
             Command::Py => cmd::python::run(argv),
             Command::Rename => cmd::rename::run(argv),
             Command::Replace => cmd::replace::run(argv),
@@ -408,7 +408,7 @@ impl Command {
             Command::Stats => cmd::stats::run(argv),
             Command::Table => cmd::table::run(argv),
             Command::Transpose => cmd::transpose::run(argv),
-            #[cfg(all(feature = "to", feature = "full"))]
+            #[cfg(all(feature = "to", feature = "feature_capable"))]
             Command::To => cmd::to::run(argv),
             Command::Tojsonl => cmd::tojsonl::run(argv),
             Command::Validate => cmd::validate::run(argv),

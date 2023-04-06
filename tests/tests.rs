@@ -34,34 +34,34 @@ mod workdir;
 mod test_apply;
 #[cfg(feature = "datapusher_plus")]
 mod test_applydp;
-#[cfg(any(feature = "full", feature = "lite"))]
+#[cfg(any(feature = "feature_capable", feature = "lite"))]
 mod test_behead;
-#[cfg(any(feature = "full", feature = "lite"))]
+#[cfg(any(feature = "feature_capable", feature = "lite"))]
 mod test_cat;
 mod test_combos;
 mod test_comments;
 mod test_count;
 mod test_dedup;
-#[cfg(feature = "full")]
+#[cfg(feature = "feature_capable")]
 mod test_diff;
-#[cfg(any(feature = "full", feature = "lite"))]
+#[cfg(any(feature = "feature_capable", feature = "lite"))]
 mod test_enumerate;
 mod test_excel;
 mod test_exclude;
-#[cfg(any(feature = "full", feature = "lite"))]
+#[cfg(any(feature = "feature_capable", feature = "lite"))]
 mod test_explode;
 mod test_extdedup;
-#[cfg(any(feature = "full", feature = "lite"))]
+#[cfg(any(feature = "feature_capable", feature = "lite"))]
 mod test_extsort;
 #[cfg(feature = "fetch")]
 mod test_fetch;
-#[cfg(any(feature = "full", feature = "lite"))]
+#[cfg(any(feature = "feature_capable", feature = "lite"))]
 mod test_fill;
-#[cfg(any(feature = "full", feature = "lite"))]
+#[cfg(any(feature = "feature_capable", feature = "lite"))]
 mod test_fixlengths;
-#[cfg(any(feature = "full", feature = "lite"))]
+#[cfg(any(feature = "feature_capable", feature = "lite"))]
 mod test_flatten;
-#[cfg(any(feature = "full", feature = "lite"))]
+#[cfg(any(feature = "feature_capable", feature = "lite"))]
 mod test_fmt;
 #[cfg(all(feature = "foreach", target_family = "unix"))]
 mod test_foreach;
@@ -69,26 +69,26 @@ mod test_frequency;
 mod test_headers;
 mod test_index;
 mod test_input;
-#[cfg(any(feature = "full", feature = "lite"))]
+#[cfg(any(feature = "feature_capable", feature = "lite"))]
 mod test_join;
-#[cfg(all(feature = "full", feature = "polars"))]
+#[cfg(all(feature = "feature_capable", feature = "polars"))]
 mod test_joinp;
-#[cfg(any(feature = "full", feature = "lite"))]
+#[cfg(any(feature = "feature_capable", feature = "lite"))]
 mod test_jsonl;
 #[cfg(feature = "luau")]
 mod test_luau;
-#[cfg(any(feature = "full", feature = "lite"))]
+#[cfg(any(feature = "feature_capable", feature = "lite"))]
 mod test_partition;
 mod test_pseudo;
 #[cfg(feature = "python")]
 mod test_py;
 mod test_rename;
 mod test_replace;
-#[cfg(any(feature = "full", feature = "lite"))]
+#[cfg(any(feature = "feature_capable", feature = "lite"))]
 mod test_reverse;
 mod test_safenames;
 mod test_sample;
-#[cfg(any(feature = "full", feature = "lite"))]
+#[cfg(any(feature = "feature_capable", feature = "lite"))]
 mod test_schema;
 mod test_search;
 mod test_searchset;
@@ -97,14 +97,14 @@ mod test_slice;
 mod test_sniff;
 mod test_sort;
 mod test_sortcheck;
-#[cfg(any(feature = "full", feature = "lite"))]
+#[cfg(any(feature = "feature_capable", feature = "lite"))]
 mod test_split;
 mod test_stats;
-#[cfg(any(feature = "full", feature = "lite"))]
+#[cfg(any(feature = "feature_capable", feature = "lite"))]
 mod test_table;
-#[cfg(any(feature = "full", feature = "lite"))]
+#[cfg(any(feature = "feature_capable", feature = "lite"))]
 mod test_tojsonl;
-#[cfg(any(feature = "full", feature = "lite"))]
+#[cfg(any(feature = "feature_capable", feature = "lite"))]
 mod test_transpose;
 mod test_validate;
 

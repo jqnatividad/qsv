@@ -61,7 +61,7 @@ Common options:
 
 use std::env;
 
-#[cfg(any(feature = "full", feature = "lite"))]
+#[cfg(any(feature = "feature_capable", feature = "lite"))]
 use indicatif::{HumanCount, ProgressBar, ProgressDrawTarget};
 use log::{debug, info};
 use regex::bytes::RegexBuilder;
@@ -132,12 +132,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     // prep progress bar
-    #[cfg(any(feature = "full", feature = "lite"))]
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     let show_progress =
         (args.flag_progressbar || std::env::var("QSV_PROGRESSBAR").is_ok()) && !rconfig.is_stdin();
-    #[cfg(any(feature = "full", feature = "lite"))]
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     let progress = ProgressBar::with_draw_target(None, ProgressDrawTarget::stderr_with_hz(5));
-    #[cfg(any(feature = "full", feature = "lite"))]
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     if show_progress {
         util::prep_progress(&progress, util::count_rows(&rconfig)?);
     } else {
@@ -153,7 +153,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut matched_rows = String::with_capacity(20); // to save on allocs
     while rdr.read_byte_record(&mut record)? {
         row_ctr += 1;
-        #[cfg(any(feature = "full", feature = "lite"))]
+        #[cfg(any(feature = "feature_capable", feature = "lite"))]
         if show_progress {
             progress.inc(1);
         }
@@ -184,7 +184,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
     wtr.flush()?;
 
-    #[cfg(any(feature = "full", feature = "lite"))]
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     if show_progress {
         progress.set_message(format!(
             " - {} matches found in {} records.",
