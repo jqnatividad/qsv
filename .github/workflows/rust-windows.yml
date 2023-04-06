@@ -34,4 +34,4 @@ jobs:
       run: |
         mkdir DLLs   
     - name: Run tests
-      run: cargo test --verbose --locked --features=apply,fetch,foreach,generate,luau,python,feature-capable
+      run: cargo test --verbose --locked --features=apply,fetch,foreach,generate,luau,python,feature_capable
