@@ -46,10 +46,11 @@ https://github.com/jqnatividad/belt/tree/main/dateparser#accepted-date-formats.
 Computing statistics on a large file can be made much faster if you create an index for it
 first with 'qsv index' to enable multithreading.
 
-Caches the results in <FILESTEM>.stats.csv (e.g., qsv stats nyc311.csv will create nyc311.stats.csv),
-and the arguments used to generate the stats in <FILESTEM>.stats.csv.json.
+This command caches the results in <FILESTEM>.stats.csv (e.g., qsv stats nyc311.csv
+will create nyc311.stats.csv), and the arguments used to generate the stats are saved in
+<FILESTEM>.stats.csv.json.
 
-If stats have already been computed for the input file with the same arguments and the file
+If stats have already been computed for the input file with similar arguments and the file
 hasn't changed, the stats will be loaded from the cache instead of recomputing it.
 
 For examples, see the "boston311" test files in https://github.com/jqnatividad/qsv/tree/master/resources/test
@@ -198,6 +199,9 @@ pub struct Args {
     pub flag_no_memcheck:     bool,
 }
 
+// this struct is used to serialize/deserialize the stats to
+// the "".stats.csv.json" file which we check to see
+// if we can skip recomputing stats.
 #[derive(Clone, Serialize, Deserialize, PartialEq, Default)]
 struct StatsArgs {
     arg_input:            String,
@@ -421,28 +425,28 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     if fconfig.is_stdin() {
         // if we read from stdin, copy the temp stats file to "stdin.stats.csv"
-        let mut stats_path = stats_path(fconfig.path.as_ref().unwrap(), true);
-        fs::copy(currstats_filename.clone(), stats_path.clone())?;
+        let mut stats_pathbuf = stats_path(fconfig.path.as_ref().unwrap(), true);
+        fs::copy(currstats_filename.clone(), stats_pathbuf.clone())?;
 
         // save the stats args to "stdin.stats.csv.json"
-        stats_path.set_extension("csv.json");
+        stats_pathbuf.set_extension("csv.json");
         std::fs::write(
-            stats_path,
+            stats_pathbuf,
             serde_json::to_string_pretty(&current_stats_args).unwrap(),
         )?;
     } else if let Some(path) = fconfig.path {
         // if we read from a file, copy the temp stats file to "<FILESTEM>.stats.csv"
-        let mut stats_path = path;
-        stats_path.set_extension("stats.csv");
-        if currstats_filename != stats_path.to_str().unwrap() {
+        let mut stats_pathbuf = path;
+        stats_pathbuf.set_extension("stats.csv");
+        if currstats_filename != stats_pathbuf.to_str().unwrap() {
             // if the stats file is not the same as the input file, copy it
-            fs::copy(currstats_filename.clone(), stats_path.clone())?;
+            fs::copy(currstats_filename.clone(), stats_pathbuf.clone())?;
         }
 
         // save the stats args to "<FILESTEM>.stats.csv.json"
-        stats_path.set_extension("csv.json");
+        stats_pathbuf.set_extension("csv.json");
         std::fs::write(
-            stats_path,
+            stats_pathbuf,
             serde_json::to_string_pretty(&current_stats_args).unwrap(),
         )?;
     }
