@@ -15,6 +15,7 @@ builds
 *.zip
 .DS_store
 .DS_Store
+src/.DS_Store
 *.txt
 *.svg
 perf.data*
