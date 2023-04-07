@@ -6,6 +6,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.98.0] - 2023-04-07
+
+### Added
+* `stats`: added stats caching and storing the [computed stats as metadata](https://github.com/jqnatividad/qsv/issues/713). Doing so not only prevents unnecessary recomputation of stats, especially for very large files, it also sets the foundation for summary statistics to be used more widely across qsv to support new commands that leverages these stats - e.g. [`fixdata`](https://github.com/jqnatividad/qsv/issues/613), [`outliers`](https://github.com/jqnatividad/qsv/issues/107), [`describegpt`](https://github.com/jqnatividad/qsv/issues/896), [`fake`](https://github.com/jqnatividad/qsv/issues/235), [`statsviz`](https://github.com/jqnatividad/qsv/issues/302) and [multi-pass stats](https://github.com/jqnatividad/qsv/issues/895), etc. https://github.com/jqnatividad/qsv/pull/902
+* `stats`: added `--force` option to force recomputation of stats https://github.com/jqnatividad/qsv/commit/2f91d0cd981ce9be6c36424cd946f3bcce42b909
+* `luau`: add qsv_loadcsv helper function https://github.com/jqnatividad/qsv/pull/908
+* added more info about regular expression syntax and link to https://regex101.com which now supports the Rust flavor of regex
+
+### Changed
+* logging is now buffered by default https://github.com/jqnatividad/qsv/pull/903
+* renamed features to be more easily understandable: "full" -> "feature_capable", "all_full" -> "all_features" https://github.com/jqnatividad/qsv/pull/906
+* changed GitHub Actions workflows to use the new feature names
+* Bump redis from 0.22.3 to 0.23.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/901
+* Bump filetime from 0.2.20 to 0.2.21 by @dependabot in https://github.com/jqnatividad/qsv/pull/904
+* reenabled `fetch` and `fetchpost` CI tests
+* cargo upadte bump several indirect dependencies
+* pin Rust nightly to 2023-04-06
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.97.0...0.98.0
+
 ## [0.97.0] - 2023-04-04
 
 Since 0.96.x was not published, 0.97.0 contains the changes from 0.96.x after fixing the mimalloc build errors on non-Windows platforms.
