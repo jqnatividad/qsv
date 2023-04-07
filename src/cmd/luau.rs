@@ -1612,7 +1612,7 @@ fn setup_helpers(
     //        filepath: the path of the CSV file to load
     //      key_column: the name of the column to use as the key for the table.
     //                  If the column name is empty, the row number will be used as the key.
-    //         returns: a Luau table containing the CSV data.
+    //         returns: Luau table of column/header names.
     //                  A Luau runtime error if the filepath is invalid.
     //
     let qsv_loadcsv = luau.create_function(
