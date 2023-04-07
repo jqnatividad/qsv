@@ -1644,8 +1644,13 @@ fn setup_helpers(
                 }
             };
 
-            let key_idx = if !key_column.is_empty() {
-                match headers.iter().position(|x| x == &key_column) {
+            let key_idx = if key_column.is_empty() {
+                // if the key column is empty, set key_idx to a sentinel value
+                // that will never match a valid column index, indicating that
+                // we should use the row number as the key.
+                usize::MAX
+            } else {
+                match headers.iter().position(|x| x == key_column) {
                     Some(idx) => idx,
                     None => {
                         return helper_err!(
@@ -1654,20 +1659,14 @@ fn setup_helpers(
                         );
                     }
                 }
-            } else {
-                // if the key column is empty, set key_idx to a sentinel value
-                // that will never match a valid column index, indicating that
-                // we should use the row number as the key.
-                usize::MAX
             };
 
-            let mut row_idx = 0_u64;
-            for result in rdr.records() {
+            for (row_idx, result) in rdr.records().enumerate() {
                 record = result.unwrap_or_default();
-                row_idx += 1;
 
                 let key = if key_idx == usize::MAX {
-                    row_idx.to_string()
+                    let mut buffer = itoa::Buffer::new();
+                    buffer.format(row_idx).to_owned()
                 } else {
                     record.get(key_idx).unwrap_or_default().trim().to_string()
                 };
