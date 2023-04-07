@@ -1037,7 +1037,7 @@ impl Stats {
         // stats is also called by the `schema` and `tojsonl` commands to infer a schema,
         // sparsity is not required by those cmds and we don't necessarily have the
         // record_count when called by those cmds, so just set sparsity to nullcount
-        // (div by 1) so we don't panic.
+        // (i.e. divide by 1) so we don't panic.
         #[allow(clippy::cast_precision_loss)]
         let sparsity: f64 = self.nullcount as f64 / *RECORD_COUNT.get().unwrap_or(&1) as f64;
         pieces.push(util::round_num(sparsity, round_places));
