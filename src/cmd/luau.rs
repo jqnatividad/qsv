@@ -1605,6 +1605,96 @@ fn setup_helpers(
     })?;
     luau.globals().set("qsv_fileexists", qsv_fileexists)?;
 
+    // this is a helper function to load a CSV into a Luau table.
+    //
+    //   qsv_loadcsv(table_name: string, filepath: string, key_column: string)
+    //      table_name: the name of the Luau table to load the CSV data into.
+    //        filepath: the path of the CSV file to load
+    //      key_column: the name of the column to use as the key for the table.
+    //                  If the column name is empty, the row number will be used as the key.
+    //         returns: a Luau table containing the CSV data.
+    //                  A Luau runtime error if the filepath is invalid.
+    //
+    let qsv_loadcsv = luau.create_function(
+        move |luau, (table_name, filepath, key_column): (String, String, String)| {
+            if filepath.is_empty() {
+                return helper_err!("qsv_loadcsv", "filepath cannot be empty.");
+            }
+
+            let path = Path::new(&filepath);
+            if !path.exists() {
+                return helper_err!("qsv_loadcsv", "\"{}\" does not exist.", path.display());
+            }
+
+            let csv_table = luau.create_table()?;
+            #[allow(unused_assignments)]
+            let mut record = csv::StringRecord::new();
+
+            let conf = Config::new(&Some(filepath.clone()))
+                .delimiter(delimiter)
+                .comment(Some(b'#'))
+                .no_headers(false);
+
+            let mut rdr = conf.reader()?;
+
+            let headers = match rdr.headers() {
+                Ok(headers) => headers.clone(),
+                Err(e) => {
+                    return helper_err!("qsv_loadcsv", "Cannot read headers of CSV: {e}");
+                }
+            };
+
+            let key_idx = if !key_column.is_empty() {
+                match headers.iter().position(|x| x == &key_column) {
+                    Some(idx) => idx,
+                    None => {
+                        return helper_err!(
+                            "qsv_loadcsv",
+                            "Cannot find key column \"{key_column}\" in CSV."
+                        );
+                    }
+                }
+            } else {
+                // if the key column is empty, set key_idx to a sentinel value
+                // that will never match a valid column index, indicating that
+                // we should use the row number as the key.
+                usize::MAX
+            };
+
+            let mut row_idx = 0_u64;
+            for result in rdr.records() {
+                record = result.unwrap_or_default();
+                row_idx += 1;
+
+                let key = if key_idx == usize::MAX {
+                    row_idx.to_string()
+                } else {
+                    record.get(key_idx).unwrap_or_default().trim().to_string()
+                };
+                let inside_table = luau.create_table()?;
+                for (i, header) in headers.iter().enumerate() {
+                    let val = record.get(i).unwrap_or_default().trim();
+                    inside_table.raw_set(header, val)?;
+                }
+                csv_table.raw_set(key, inside_table)?;
+            }
+
+            luau.globals().raw_set(table_name, csv_table)?;
+
+            // now that we've successfully loaded the CSV, we return the headers
+            // as a table so the user can use them to access the values
+            let headers_table = luau.create_table()?;
+            for (i, header) in headers.iter().enumerate() {
+                headers_table.raw_set(i, header)?;
+            }
+
+            info!("{filepath} successfully loaded CSV.");
+
+            Ok(headers_table)
+        },
+    )?;
+    luau.globals().set("qsv_loadcsv", qsv_loadcsv)?;
+
     // this is a helper function that can be called from the BEGIN, MAIN & END scripts to write to
     // a file. The file will be created if it does not exist. The file will be appended to if it
     // already exists. The filename will be sanitized and will be written to the current working

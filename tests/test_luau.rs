@@ -868,6 +868,73 @@ END {
 }
 
 #[test]
+fn luau_qsv_loadcsv() {
+    let wrk = Workdir::new("luau_qsv_loadcsv");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["letter", "Amount"],
+            svec!["a", "13"],
+            svec!["b", "24"],
+            svec!["c", "72"],
+            svec!["d", "7"],
+        ],
+    );
+
+    wrk.create(
+        "datatoload.csv",
+        vec![
+            svec!["letter", "description"],
+            svec!["a", "alpha"],
+            svec!["b", "bravo"],
+            svec!["c", "charlie"],
+            svec!["d", "delta"],
+        ],
+    );
+
+    wrk.create_from_string(
+        "test_loadcsv.LUAU",
+        r#"
+BEGIN {
+    -- this is the BEGIN block, which is executed once at the beginning
+    -- where we typically initialize variables
+    qsv_loadcsv("datatoload_tbl", "datatoload.csv", "letter");
+}!
+
+-- this is the MAIN script, which is executed for each row
+return datatoload_tbl[letter]["description"];
+
+END {
+    -- and this is the END block, which is executed once at the end
+    return (`{_ROWCOUNT} rows`);
+}!
+"#,
+    );
+
+    let mut cmd = wrk.command("luau");
+    cmd.arg("map")
+        .arg("description")
+        .arg("test_loadcsv.LUAU")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["letter", "Amount", "description"],
+        svec!["a", "13", "alpha"],
+        svec!["b", "24", "bravo"],
+        svec!["c", "72", "charlie"],
+        svec!["d", "7", "delta"],
+    ];
+    assert_eq!(got, expected);
+
+    let end = wrk.output_stderr(&mut cmd);
+    let expected_end = "4 rows\n".to_string();
+    assert_eq!(end, expected_end);
+
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
 fn luau_qsv_cmd() {
     let wrk = Workdir::new("luau_qsv_cmd_test");
     wrk.create(
