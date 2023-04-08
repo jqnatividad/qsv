@@ -1,5 +1,5 @@
 static USAGE: &str = r#"
-Creates the difference between two CSVs.
+Find the difference between two CSVs.
 
 Note that diff does not support stdin. A file path is required for both arguments.
 
