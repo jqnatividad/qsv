@@ -97,7 +97,7 @@ fn main() -> QsvExitCode {
     cat         Concatenate by row or column
     count       Count records
     dedup       Remove redundant rows
-    diff        Create the difference between two CSVs
+    diff        Find the difference between two CSVs
     enum        Add a new column enumerating CSV lines
     excel       Exports an Excel sheet to a CSV
     exclude     Excludes the records in one CSV from another
