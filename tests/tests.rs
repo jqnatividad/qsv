@@ -42,7 +42,6 @@ mod test_combos;
 mod test_comments;
 mod test_count;
 mod test_dedup;
-#[cfg(feature = "feature_capable")]
 mod test_diff;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 mod test_enumerate;

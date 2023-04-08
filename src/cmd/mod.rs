@@ -8,7 +8,6 @@ pub mod behead;
 pub mod cat;
 pub mod count;
 pub mod dedup;
-#[cfg(feature = "feature_capable")]
 pub mod diff;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 pub mod enumerate;

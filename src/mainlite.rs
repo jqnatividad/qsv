@@ -22,6 +22,7 @@ macro_rules! command_list {
     cat         Concatenate by row or column
     count       Count records
     dedup       Remove redundant rows
+    diff        Find the difference between two CSVs
     enum        Add a new column enumerating CSV lines
     excel       Exports an Excel sheet to a CSV
     exclude     Excludes the records in one CSV from another
@@ -185,6 +186,7 @@ enum Command {
     Cat,
     Count,
     Dedup,
+    Diff,
     Enum,
     Excel,
     Exclude,
@@ -241,6 +243,7 @@ impl Command {
             Command::Behead => cmd::behead::run(argv),
             Command::Cat => cmd::cat::run(argv),
             Command::Count => cmd::count::run(argv),
+            Command::Diff => cmd::diff::run(argv),
             Command::Dedup => cmd::dedup::run(argv),
             Command::Enum => cmd::enumerate::run(argv),
             Command::Excel => cmd::excel::run(argv),
