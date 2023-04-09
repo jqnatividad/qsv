@@ -110,8 +110,5 @@ fn check<R: Read>(src: R) -> bool {
     // read the first 50 or less bytes of a file
     // the snap decoder will return an error if the file is not a valid snappy file
     let mut buffer = Vec::with_capacity(51);
-    if src.take(50).read_to_end(&mut buffer).is_err() {
-        return false;
-    }
-    true
+    src.take(50).read_to_end(&mut buffer).is_ok()
 }
