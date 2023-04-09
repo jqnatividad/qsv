@@ -46,9 +46,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
     if args.arg_input.to_lowercase().ends_with(".sz") {
-        return fail_clierror!(
-            "Cannot index an a snappy file."
-        );
+        return fail_clierror!("Cannot index an a snappy file.");
     }
 
     let pidx = match args.flag_output {
