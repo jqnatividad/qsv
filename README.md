@@ -20,7 +20,7 @@
 
 </div>
 
-> ℹ️ **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's May 2018 release](https://github.com/BurntSushi/xsv/issues/267). On top of xsv's 20 commands, it adds numerous new features; 32 additional commands; 6 `apply` subcommands & 35 operations; 5 `to` subcommands; and 3 `cat` subcommands (for a total of 101).
+> ℹ️ **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's May 2018 release](https://github.com/BurntSushi/xsv/issues/267). On top of xsv's 20 commands, it adds numerous new features; 33 additional commands; 6 `apply` subcommands & 35 operations; 5 `to` subcommands; 3 `cat` subcommands; and 3 `snappy` subcommands (for a total of 104).
 See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for more details.
 
 ## Available commands
@@ -69,6 +69,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [searchset](/src/cmd/searchset.rs#L3) | **Run multiple regexes over a CSV in a single pass.** Applies the regexes to each field individually & shows only matching rows.  |
 | [select](/src/cmd/select.rs#L2) | Select, re-order, duplicate or drop columns.  |
 | [slice](/src/cmd/slice.rs#L2)<br>📇 | Slice rows from any part of a CSV. When an index is present, this only has to parse the rows in the slice (instead of all rows leading up to the start of the slice).  |
+| [snappy](/src/cmd/snappy.rs#L2)<br>📇 | Does streaming compression/decompression of the input using the [Snappy](https://google.github.io/snappy/) format. |
 | [sniff](/src/cmd/sniff.rs#L2) | Quickly sniff & infer CSV metadata (delimiter, header row, preamble rows, quote character, flexible, is_utf8, average record length, number of records, content length & estimated number of records if sniffing a CSV on a URL, number of fields, field names & data types). |
 | [sort](/src/cmd/sort.rs#L2)<br>🚀🗜️ | Sorts CSV data in alphabetical (with case-insensitive option), numerical, reverse, unique or random (with optional seed) order (See also `extsort` & `sortcheck` commands).  |
 | [sortcheck](/src/cmd/sortcheck.rs#L2)<br>📇 | Check if a CSV is sorted. With the --json options, also retrieve record count, sort breaks & duplicate count. |
@@ -200,6 +201,11 @@ The `schema` command produces a [JSON Schema Validation (Draft 7)](https://json-
 The `excel` command recognizes Excel & Open Document Spreadsheet(ODS) files (`.xls`, `.xlsx`, `.xlsm`, `.xlsb` & `.ods` files).
 
 The `to` command produces produces `.xlsx`, [Parquet](https://parquet.apache.org) & [Data Package](https://datahub.io/docs/data-packages/tabular) files, and populates [PostgreSQL](https://www.postgresql.org) and [SQLite](https://www.sqlite.org/index.html) databases.
+
+Finally, qsv supports the streaming Snappy compression format for CSV/TSV files with the `.sz` file extension (except the `index`, `sniff`, `extdedup` & `extsort` commands).
+If the input file has an extended CSV/TSV `.sz` extension (e.g nyc311.csv.sz/nyc311.tsv.sz/nyc311.tab.sz), qsv will automatically do streaming decompression as it reads it.
+Similarly, if the `--output` file has an extended CSV/TSV `.sz` extension, qsv will automatically do streaming compression as it writes it.
+Note however that snappy compressed files cannot be indexed, so index-accelerated commands like `stats` & `slice` will not be multi-threaded. Random access is also not supported.
 
 ## RFC 4180
 
