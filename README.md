@@ -402,17 +402,17 @@ To test each binary variant:
 
 ```bash
 # to test qsv
-cargo test --feature all_features
+cargo test --features all_features
 
 # to test qsvlite
-cargo test --feature lite
+cargo test --features lite
 
 # to test qsvdp
-cargo test --feature datapusher_plus
+cargo test --features datapusher_plus,luau
 
 # to test a specific command
 # here we test only stats and use the
-# -F shortcut for --feature
+# -F shortcut for --features
 cargo test stats -F all_features
 ```
 
