@@ -74,6 +74,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let input_reader: Box<dyn BufRead> = match &args.arg_input {
         Some(input_path) => {
+            if input_path.to_lowercase().ends_with(".sz") {
+                return fail_clierror!(
+                    "Input file cannot be a .sz file. Use 'qsv snappy decompress' first."
+                );
+            }
             let file = fs::File::open(input_path)?;
             Box::new(io::BufReader::with_capacity(
                 config::DEFAULT_RDR_BUFFER_CAPACITY,

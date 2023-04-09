@@ -226,6 +226,10 @@ async fn get_file_to_sniff(args: &Args) -> CliResult<SniffFileStruct> {
         match uri {
             // its a URL, download sample to temp file
             url if Url::parse(&url).is_ok() && url.starts_with("http") => {
+                if url.to_lowercase().ends_with(".sz") {
+                    return fail_clierror!("Cannot remotely sniff .sz files.");
+                }
+
                 let client = match Client::builder()
                     .user_agent(util::DEFAULT_USER_AGENT)
                     .brotli(true)
@@ -403,6 +407,12 @@ async fn get_file_to_sniff(args: &Args) -> CliResult<SniffFileStruct> {
             }
             // its a file, passthrough the path along with its size
             path => {
+                if path.to_lowercase().ends_with(".sz") {
+                    return fail_clierror!(
+                        "Cannot sniff .sz files. Use 'qsv snappy decompress' first."
+                    );
+                }
+
                 let metadata = fs::metadata(&path)
                     .map_err(|_| format!("Cannot get metadata for file '{path}'"))?;
 
