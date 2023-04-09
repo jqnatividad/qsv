@@ -247,7 +247,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 options,
             )?;
         }
-        debug!("conversion to xlsx complete");
+        debug!("conversion to sqlite complete");
     } else if args.cmd_parquet {
         debug!("converting to parquet");
         if args.arg_input.is_empty() {
