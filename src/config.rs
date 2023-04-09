@@ -67,6 +67,7 @@ impl<'de> Deserialize<'de> for Delimiter {
     }
 }
 
+#[derive(Debug)]
 pub struct Config {
     pub path:          Option<PathBuf>, // None implies <stdin>
     idx_path:          Option<PathBuf>,
@@ -85,6 +86,7 @@ pub struct Config {
     autoindex:         bool,
     prefer_dmy:        bool,
     comment:           Option<u8>,
+    snappy:            bool, // flag to enable snappy compression/decompression
 }
 
 // Empty trait as an alias for Seek and Read that avoids auto trait errors
@@ -97,9 +99,9 @@ impl Config {
             Ok(delim) => Delimiter::decode_delimiter(&delim).unwrap().as_byte(),
             _ => b',',
         };
-        let (path, mut delim) = match *path {
-            None => (None, default_delim),
-            Some(ref s) if &**s == "-" => (None, default_delim),
+        let (path, mut delim, snappy) = match *path {
+            None => (None, default_delim, false),
+            Some(ref s) if &**s == "-" => (None, default_delim, false),
             Some(ref s) => {
                 let path = PathBuf::from(s);
                 let file_extension = path
@@ -108,14 +110,24 @@ impl Config {
                     .to_str()
                     .unwrap()
                     .to_lowercase();
+                let mut snappy = false;
                 let delim = if file_extension == "tsv" || file_extension == "tab" {
                     b'\t'
                 } else if file_extension == "csv" {
                     b','
                 } else {
-                    default_delim
+                    let filename = path.file_name().unwrap().to_str().unwrap();
+                    if filename.ends_with(".csv.sz") {
+                        snappy = true;
+                        b','
+                    } else if filename.ends_with(".tsv.sz") || filename.ends_with(".tab.sz") {
+                        snappy = true;
+                        b'\t'
+                    } else {
+                        default_delim
+                    }
                 };
-                (Some(path), delim)
+                (Some(path), delim, snappy || file_extension.ends_with("sz"))
             }
         };
         let sniff =
@@ -162,6 +174,7 @@ impl Config {
             autoindex: env::var("QSV_AUTOINDEX").is_ok(),
             prefer_dmy: env::var("QSV_PREFER_DMY").is_ok(),
             comment: None,
+            snappy,
         }
     }
 
@@ -258,6 +271,11 @@ impl Config {
         self.path.is_none()
     }
 
+    // comment out for now until we have a use case for this
+    // pub const fn is_snappy(&self) -> bool {
+    //     self.snappy
+    // }
+
     #[inline]
     pub fn selection(&self, first_record: &csv::ByteRecord) -> Result<Selection, String> {
         match self.select_columns {
@@ -315,6 +333,11 @@ impl Config {
     fn autoindex_file(&self) {
         // autoindex_file should never panic. It should silently fail as its a "convenience fn"
         // that's why we have a lot of let-else returns, in lieu of unwraps
+        if self.snappy {
+            // cannot index snappy compressed files
+            return;
+        }
+
         let Some(path_buf) = &self.path else { return };
 
         let pidx = util::idx_path(Path::new(path_buf));
@@ -340,6 +363,13 @@ impl Config {
                 ));
             }
             (Some(p), &None) => {
+                if self.snappy {
+                    return Err(io::Error::new(
+                        io::ErrorKind::InvalidInput,
+                        "Cannot use snappy compressed files with indexes",
+                    ));
+                }
+
                 // We generally don't want to report an error here, since we're
                 // passively trying to find an index, so we just log the warning...
                 let idx_file = match fs::File::open(util::idx_path(p)) {
@@ -414,7 +444,14 @@ impl Config {
         Ok(match self.path {
             None => Box::new(io::stdin()),
             Some(ref p) => match fs::File::open(p) {
-                Ok(x) => Box::new(x),
+                Ok(x) => {
+                    if self.snappy {
+                        info!("decoding snappy-compressed file: {}", p.display());
+                        Box::new(snap::read::FrameDecoder::new(x))
+                    } else {
+                        Box::new(x)
+                    }
+                }
                 Err(err) => {
                     let msg = format!("failed to open {}: {}", p.display(), err);
                     return Err(io::Error::new(io::ErrorKind::NotFound, msg));
@@ -456,6 +493,9 @@ impl Config {
                 if p_str == "sink" {
                     // sink is /dev/null
                     Box::new(io::sink())
+                } else if self.snappy {
+                    info!("writing snappy-compressed file: {p:?}");
+                    Box::new(snap::write::FrameEncoder::new(fs::File::create(p)?))
                 } else {
                     Box::new(fs::File::create(p)?)
                 }
