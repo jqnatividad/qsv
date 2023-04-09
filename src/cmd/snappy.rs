@@ -80,10 +80,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         compress(input_reader, output_writer)?;
     } else if args.cmd_decompress {
         decompress(input_reader, output_writer)?;
-    } else if args.cmd_check {
-        if !check(input_reader) {
-            return fail_clierror!("Not a snappy file.");
-        }
+    } else if args.cmd_check && !check(input_reader) {
+        return fail_clierror!("Not a snappy file.");
     }
 
     Ok(())
