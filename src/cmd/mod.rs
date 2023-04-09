@@ -63,6 +63,7 @@ pub mod search;
 pub mod searchset;
 pub mod select;
 pub mod slice;
+pub mod snappy;
 pub mod sniff;
 pub mod sort;
 pub mod sortcheck;

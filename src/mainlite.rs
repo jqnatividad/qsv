@@ -52,6 +52,7 @@ macro_rules! command_list {
     searchset   Search CSV data with a regex set
     select      Select, re-order, duplicate or drop columns
     slice       Slice records from CSV
+    snappy      Compress/decompress data using the Snappy algorithm
     sniff       Quickly sniff CSV metadata
     sort        Sort CSV data in alphabetical, numerical, reverse or random order
     sortcheck   Check if a CSV is sorted
@@ -216,6 +217,7 @@ enum Command {
     SearchSet,
     Select,
     Slice,
+    Snappy,
     Sniff,
     Sort,
     SortCheck,
@@ -278,6 +280,7 @@ impl Command {
             Command::SearchSet => cmd::searchset::run(argv),
             Command::Select => cmd::select::run(argv),
             Command::Slice => cmd::slice::run(argv),
+            Command::Snappy => cmd::snappy::run(argv),
             Command::Sniff => {
                 let rt = tokio::runtime::Runtime::new().unwrap();
                 rt.block_on(cmd::sniff::run(argv))
