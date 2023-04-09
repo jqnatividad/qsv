@@ -202,9 +202,11 @@ The `excel` command recognizes Excel & Open Document Spreadsheet(ODS) files (`.x
 
 The `to` command produces produces `.xlsx`, [Parquet](https://parquet.apache.org) & [Data Package](https://datahub.io/docs/data-packages/tabular) files, and populates [PostgreSQL](https://www.postgresql.org) and [SQLite](https://www.sqlite.org/index.html) databases.
 
-Finally, qsv supports the streaming Snappy compression format for CSV/TSV files with the `.sz` file extension (except the `index`, `sniff`, `extdedup` & `extsort` commands).
-If the input file has an extended CSV/TSV `.sz` extension (e.g nyc311.csv.sz/nyc311.tsv.sz/nyc311.tab.sz), qsv will automatically do streaming decompression as it reads it.
-Similarly, if the `--output` file has an extended CSV/TSV `.sz` extension, qsv will automatically do streaming compression as it writes it.
+Finally, qsv supports the [streaming Snappy frame compression format](https://github.com/google/snappy/blob/main/framing_format.txt) for CSV/TSV files with the ".sz" file extension (except the `index`, `sniff`, `extdedup` & `extsort` commands).
+If the input file has an extended CSV/TSV ".sz" extension (e.g nyc311.csv.sz/nyc311.tsv.sz/nyc311.tab.sz), qsv will automatically do streaming decompression as it reads it.   
+
+Similarly, if the `--output` file has an extended CSV/TSV ".sz" extension, qsv will automatically do streaming compression as it writes it.   
+
 Note however that snappy compressed files cannot be indexed, so index-accelerated commands like `stats` & `slice` will not be multi-threaded. Random access is also not supported.
 
 ## RFC 4180
