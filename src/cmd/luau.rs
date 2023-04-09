@@ -1336,6 +1336,11 @@ fn create_index(arg_input: &Option<String>) -> Result<bool, CliError> {
         return Ok(false);
     };
 
+    if input.to_lowercase().ends_with(".sz") {
+        log::warn!("qsv_autoindex() does not work with snappy files.");
+        return Ok(false);
+    }
+
     let pidx = util::idx_path(Path::new(&input));
     debug!("Creating index file {pidx:?} for {input:?}.");
 

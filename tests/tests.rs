@@ -93,6 +93,7 @@ mod test_search;
 mod test_searchset;
 mod test_select;
 mod test_slice;
+mod test_snappy;
 mod test_sniff;
 mod test_sort;
 mod test_sortcheck;

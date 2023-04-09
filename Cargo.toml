@@ -160,6 +160,7 @@ self_update = { version = "0.36", features = [
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 serde_urlencoded = { version = "0.7", optional = true }
+snap = "1"
 strsim = { version = "0.10", optional = true }
 strum = "0.24"
 strum_macros = "0.24"

@@ -66,6 +66,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut input_reader: Box<dyn BufRead> = match &args.arg_input {
         Some(input_path) => {
+            if input_path.to_lowercase().ends_with(".sz") {
+                return fail_clierror!(
+                    "Input file cannot be a .sz file. Use 'qsv snappy decompress' first."
+                );
+            }
             let file = fs::File::open(input_path)?;
             Box::new(io::BufReader::with_capacity(
                 config::DEFAULT_RDR_BUFFER_CAPACITY,
@@ -76,10 +81,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     let mut output_writer: Box<dyn Write> = match &args.arg_output {
-        Some(output_path) => Box::new(io::BufWriter::with_capacity(
-            RW_BUFFER_CAPACITY,
-            fs::File::create(output_path)?,
-        )),
+        Some(output_path) => {
+            if output_path.to_lowercase().ends_with(".sz") {
+                return fail_clierror!(
+                    "Output file cannot be a .sz file. Compress it after sorting with 'qsv snappy \
+                     compress'."
+                );
+            }
+            Box::new(io::BufWriter::with_capacity(
+                RW_BUFFER_CAPACITY,
+                fs::File::create(output_path)?,
+            ))
+        }
         None => Box::new(io::BufWriter::with_capacity(
             RW_BUFFER_CAPACITY,
             stdout().lock(),

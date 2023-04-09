@@ -220,6 +220,7 @@ struct StatsArgs {
     flag_prefer_dmy:      bool,
     flag_no_headers:      bool,
     flag_delimiter:       String,
+    flag_output_snappy:   bool,
 }
 
 static INFER_DATE_FLAGS: once_cell::sync::OnceCell<Vec<bool>> = OnceCell::new();
@@ -265,10 +266,23 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         flag_prefer_dmy:      args.flag_prefer_dmy,
         flag_no_headers:      args.flag_no_headers,
         flag_delimiter:       format!("{:?}", args.flag_delimiter.clone()),
+        // when we write to stdout, we don't use snappy compression
+        // when we write to a file with the --output option, we use
+        // snappy compression if the file ends with ".sz"
+        flag_output_snappy:   if stdout_output_flag {
+            false
+        } else {
+            let p = args.flag_output.clone().unwrap();
+            p.to_lowercase().ends_with(".sz")
+        },
     };
 
     // create a temporary file to store the <FILESTEM>.stats.csv file
-    let stats_csv_tempfile = NamedTempFile::new()?;
+    let stats_csv_tempfile = if current_stats_args.flag_output_snappy {
+        tempfile::Builder::new().suffix(".sz").tempfile()?
+    } else {
+        NamedTempFile::new()?
+    };
     let stats_csv_tempfile_fname = stats_csv_tempfile.path().to_str().unwrap().to_owned();
 
     // we will write the stats to a temp file
