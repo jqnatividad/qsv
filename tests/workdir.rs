@@ -272,3 +272,28 @@ fn create_dir_all<P: AsRef<Path>>(p: P) -> io::Result<()> {
     }
     Err(last_err.unwrap())
 }
+
+pub fn is_same_file(file1: &Path, file2: &Path) -> Result<bool, std::io::Error> {
+    use std::io::BufReader;
+
+    let f1 = File::open(file1)?;
+    let f2 = File::open(file2)?;
+
+    // Check if file sizes are different
+    if f1.metadata().unwrap().len() != f2.metadata().unwrap().len() {
+        return Ok(false);
+    }
+
+    // Use buf readers since they are much faster
+    let f1 = BufReader::new(f1);
+    let f2 = BufReader::new(f2);
+
+    // Do a byte to byte comparison of the two files
+    for (b1, b2) in f1.bytes().zip(f2.bytes()) {
+        if b1.unwrap() != b2.unwrap() {
+            return Ok(false);
+        }
+    }
+
+    return Ok(true);
+}
