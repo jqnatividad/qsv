@@ -220,7 +220,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         process_input(
             &mut arg_input,
             &tmpdir,
-            "Need to add connection string as first argument then the input CSVs",
+            "No data on stdin. Need to add connection string as first argument then the input CSVs",
         )?;
         if args.flag_dump {
             options.dump_file = args.arg_postgres.expect("checked above");
@@ -238,7 +238,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         process_input(
             &mut arg_input,
             &tmpdir,
-            "Need to add the name of a sqlite db as first argument then the input CSVs",
+            "No data on stdin. Need to add the name of a sqlite db as first argument then the \
+             input CSVs",
         )?;
         if args.flag_dump {
             options.dump_file = args.arg_sqlite.expect("checked above");
@@ -253,14 +254,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         debug!("conversion to sqlite complete");
     } else if args.cmd_parquet {
         debug!("converting to parquet");
-        process_input(
-            &mut arg_input,
-            &tmpdir,
-            "Need to add the directory of the parquet files as first argument then the input CSVs",
-        )?;
+        if args.arg_input.is_empty() {
+            return fail_clierror!(
+                "Need to add the directory of the parquet files as first argument then the input \
+                 CSVs"
+            );
+        }
         output = csvs_to_parquet_with_options(
             args.arg_parquet.expect("checked above"),
-            arg_input,
+            args.arg_input,
             options,
         )?;
         debug!("conversion to parquet complete");
