@@ -121,7 +121,7 @@ fn compress<R: Read, W: Write + Send + 'static>(mut src: R, dst: W, jobs: usize)
     // the buffer size must be at least 32768 bytes, otherwise, ParCompressBuilder panics
     // as it expects the buffer size to be greater than its DICT_SIZE which is 32768
     if buffer_size < 32768 {
-        buffer_size = 32768
+        buffer_size = 32768;
     };
 
     let mut writer = ParCompressBuilder::<Snap>::new()
