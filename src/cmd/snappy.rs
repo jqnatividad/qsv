@@ -3,12 +3,21 @@ Does streaming compression/decompression of the input using the Snappy format.
 https://google.github.io/snappy/
 
 It has three subcommands:
-    compress:   Compress the input.
+    compress:   Compress the input (multi-threaded).
     decompress: Decompress the input.
     check:      Check if the input is a valid Snappy file. Returns exitcode 0 if valid,
                 exitcode 1 otherwise.
 
-Note that this command is not specific to CSV data, it can compress/decompress any file.
+Note that most qsv commands will automatically decompress Snappy files if the
+input file has an ".sz" extension. It will also automatically compress the output
+file (though only single-threaded) if the --output file has an ".sz" extension.
+
+This command's multi-threaded compression is 4-5x faster than qsv's automatic 
+single-threaded compression. However, the number of --jobs is capped at 8 threads
+as benchmarks indicate diminishing returns beyond that.
+https://raw.githubusercontent.com/sstadick/gzp/main/violin.svg
+
+Also, this command is not specific to CSV data, it can compress/decompress any file.
 
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_snappy.rs.
 
@@ -21,16 +30,20 @@ Usage:
 snappy arguments:
     <input>  The input file to compress/decompress. If not specified, stdin is used.
 
-Common options:
+options:
     -h, --help           Display this message
     -o, --output <file>  Write output to <output> instead of stdout.
+    -j, --jobs <arg>     The number of jobs to run in parallel when compressing.
+                         When not set, the number of jobs is set to 8 or the number
+                         of CPUs detected, whichever is smaller.
 "#;
 
 use std::{
     fs,
-    io::{self, stdin, stdout, BufRead, Read, Write},
+    io::{self, stdin, BufRead, Read, Write},
 };
 
+use gzp::{par::compress::ParCompressBuilder, snap::Snap};
 use serde::Deserialize;
 use snap;
 
@@ -43,6 +56,7 @@ struct Args {
     cmd_compress:   bool,
     cmd_decompress: bool,
     cmd_check:      bool,
+    flag_jobs:      Option<usize>,
 }
 
 impl From<snap::Error> for CliError {
@@ -65,32 +79,55 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         None => Box::new(io::BufReader::new(stdin().lock())),
     };
 
-    let output_writer: Box<dyn Write> = match &args.flag_output {
+    let output_writer: Box<dyn Write + Send + 'static> = match &args.flag_output {
         Some(output_path) => Box::new(io::BufWriter::with_capacity(
             config::DEFAULT_WTR_BUFFER_CAPACITY,
             fs::File::create(output_path)?,
         )),
         None => Box::new(io::BufWriter::with_capacity(
             config::DEFAULT_WTR_BUFFER_CAPACITY,
-            stdout().lock(),
+            io::stdout(),
         )),
     };
 
     if args.cmd_compress {
-        compress(input_reader, output_writer)?;
+        let mut jobs = util::njobs(args.flag_jobs);
+        if jobs > 8 {
+            jobs = 8;
+        }
+
+        compress(input_reader, output_writer, jobs)?;
     } else if args.cmd_decompress {
         decompress(input_reader, output_writer)?;
-    } else if args.cmd_check && !check(input_reader) {
-        return fail_clierror!("Not a snappy file.");
+    } else if args.cmd_check {
+        if check(input_reader) {
+            eprintln!("Snappy file.");
+        } else {
+            return fail_clierror!("Not a snappy file.");
+        }
     }
 
     Ok(())
 }
 
-// streaming snappy compression
-fn compress<R: Read, W: Write>(mut src: R, dst: W) -> CliResult<()> {
-    let mut dst = snap::write::FrameEncoder::new(dst);
-    io::copy(&mut src, &mut dst)?;
+// multi-threaded streaming snappy compression
+fn compress<R: Read, W: Write + Send + 'static>(mut src: R, dst: W, jobs: usize) -> CliResult<()> {
+    // the buffer size must be at least 32768 bytes, otherwise, ParCompressBuilder panics
+    // as it expects the buffer size to be greater than its DICT_SIZE which is 32768
+    let buffer_size = if config::DEFAULT_RDR_BUFFER_CAPACITY < 32768 {
+        32768
+    } else {
+        config::DEFAULT_RDR_BUFFER_CAPACITY
+    };
+
+    let mut writer = ParCompressBuilder::<Snap>::new()
+        .num_threads(jobs)
+        .unwrap()
+        .buffer_size(buffer_size)
+        .unwrap()
+        .pin_threads(Some(0))
+        .from_writer(dst);
+    io::copy(&mut src, &mut writer)?;
 
     Ok(())
 }
