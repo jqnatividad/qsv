@@ -363,13 +363,6 @@ impl Config {
                 ));
             }
             (Some(p), &None) => {
-                if self.snappy {
-                    return Err(io::Error::new(
-                        io::ErrorKind::InvalidInput,
-                        "Cannot use snappy compressed files with indexes",
-                    ));
-                }
-
                 // We generally don't want to report an error here, since we're
                 // passively trying to find an index, so we just log the warning...
                 let idx_file = match fs::File::open(util::idx_path(p)) {
