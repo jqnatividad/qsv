@@ -144,7 +144,9 @@ fn decompress<R: Read, W: Write>(src: R, mut dst: W) -> CliResult<()> {
     Ok(())
 }
 
-// check if a file is a valid snappy file
+// check if a file is a snappy file
+// note that we only read the first 50 bytes of the file
+// and do not check the entire file for validity
 fn check<R: Read>(src: R) -> bool {
     let src = snap::read::FrameDecoder::new(src);
 
