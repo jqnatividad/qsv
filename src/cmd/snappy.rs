@@ -39,7 +39,7 @@ options:
 "#;
 
 use std::{
-    fs,
+    env, fs,
     io::{self, stdin, BufRead, Read, Write},
 };
 
@@ -112,12 +112,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
 // multi-threaded streaming snappy compression
 fn compress<R: Read, W: Write + Send + 'static>(mut src: R, dst: W, jobs: usize) -> CliResult<()> {
+    let rdr_capacitys = env::var("QSV_RDR_BUFFER_CAPACITY")
+        .unwrap_or_else(|_| config::DEFAULT_RDR_BUFFER_CAPACITY.to_string());
+    let mut buffer_size: usize = rdr_capacitys
+        .parse()
+        .unwrap_or(config::DEFAULT_RDR_BUFFER_CAPACITY);
+
     // the buffer size must be at least 32768 bytes, otherwise, ParCompressBuilder panics
     // as it expects the buffer size to be greater than its DICT_SIZE which is 32768
-    let buffer_size = if config::DEFAULT_RDR_BUFFER_CAPACITY < 32768 {
-        32768
-    } else {
-        config::DEFAULT_RDR_BUFFER_CAPACITY
+    if buffer_size < 32768 {
+        buffer_size = 32768
     };
 
     let mut writer = ParCompressBuilder::<Snap>::new()
