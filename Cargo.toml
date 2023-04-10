@@ -100,7 +100,9 @@ futures = "0.3"
 futures-util = "0.3"
 governor = { version = "0.5", optional = true }
 grex = { version = "1.4", default-features = false }
-gzp = { version = "0.11", default-features = false, features = ["snappy_default"] }
+gzp = { version = "0.11", default-features = false, features = [
+    "snappy_default",
+] }
 hashbrown = { version = "0.13", optional = true }
 indexmap = "1.9"
 indicatif = "0.17"
@@ -115,7 +117,10 @@ jsonxf = { version = "1", optional = true }
 jql = { version = "5.2", default-features = false, optional = true }
 log = "0.4"
 mimalloc = { version = "0.1", default-features = false, optional = true }
-mlua = { version = "0.9.0-beta.1", features = ["luau", "serialize"], optional = true }
+mlua = { version = "0.9.0-beta.1", features = [
+    "luau",
+    "serialize",
+], optional = true }
 num_cpus = "1"
 odht = "0.3"
 once_cell = { version = "1.17", features = ["parking_lot"] }
