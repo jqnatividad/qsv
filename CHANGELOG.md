@@ -6,6 +6,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.99.0] - 2023-04-10
+### Added
+* added [Snappy](https://google.github.io/snappy/) auto-compression/decompression support. The Snappy format was chosen primarily
+because it supported streaming compression/decompression and is designed for performance. https://github.com/jqnatividad/qsv/pull/911
+* added `snappy` command. Although files ending with the ".sz" extension are automatically compressed/decompressed, the `snappy` command offers 4-5x faster multi-threaded compression. It can also be used to check if a file is Snappy-compressed or not, and can be used to compress/decompress any file. https://github.com/jqnatividad/qsv/pull/911 and https://github.com/jqnatividad/qsv/pull/916
+* `diff` command added to `qsvlite` and `qsvdp` binary variants https://github.com/jqnatividad/qsv/pull/910
+* `to`: added stdin support https://github.com/jqnatividad/qsv/pull/913
+
+### Changed
+* cargo update bump several indirect dependencies
+* pin Rust nightly to 2023-04-09
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.98.0...0.99.0
+
 ## [0.98.0] - 2023-04-07
 
 ### Added
@@ -21,7 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Bump redis from 0.22.3 to 0.23.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/901
 * Bump filetime from 0.2.20 to 0.2.21 by @dependabot in https://github.com/jqnatividad/qsv/pull/904
 * reenabled `fetch` and `fetchpost` CI tests
-* cargo upadte bump several indirect dependencies
+* cargo update bump several indirect dependencies
 * pin Rust nightly to 2023-04-06
 
 **Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.97.0...0.98.0
