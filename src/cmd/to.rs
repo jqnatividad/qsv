@@ -212,82 +212,85 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .build();
 
     let output;
+    let mut arg_input = args.arg_input.clone();
+    let tmpdir = tempfile::tempdir()?;
+
     if args.cmd_postgres {
         debug!("converting to postgres");
-        if args.arg_input.is_empty() {
-            return fail_clierror!(
-                "Need to add connection string as first argument then the input CSVs"
-            );
-        }
+        process_input(
+            &mut arg_input,
+            &tmpdir,
+            "Need to add connection string as first argument then the input CSVs",
+        )?;
         if args.flag_dump {
             options.dump_file = args.arg_postgres.expect("checked above");
-            output = csvs_to_postgres_with_options(String::new(), args.arg_input, options)?;
+            output = csvs_to_postgres_with_options(String::new(), arg_input, options)?;
         } else {
             output = csvs_to_postgres_with_options(
                 args.arg_postgres.expect("checked above"),
-                args.arg_input,
+                arg_input,
                 options,
             )?;
         }
         debug!("conversion to postgres complete");
     } else if args.cmd_sqlite {
         debug!("converting to sqlite");
-        if args.arg_input.is_empty() {
-            return fail_clierror!(
-                "Need to add the name of a sqlite db as first argument then the input CSVs"
-            );
-        }
+        process_input(
+            &mut arg_input,
+            &tmpdir,
+            "Need to add the name of a sqlite db as first argument then the input CSVs",
+        )?;
         if args.flag_dump {
             options.dump_file = args.arg_sqlite.expect("checked above");
-            output = csvs_to_sqlite_with_options(String::new(), args.arg_input, options)?;
+            output = csvs_to_sqlite_with_options(String::new(), arg_input, options)?;
         } else {
             output = csvs_to_sqlite_with_options(
                 args.arg_sqlite.expect("checked above"),
-                args.arg_input,
+                arg_input,
                 options,
             )?;
         }
         debug!("conversion to sqlite complete");
     } else if args.cmd_parquet {
         debug!("converting to parquet");
-        if args.arg_input.is_empty() {
-            return fail_clierror!(
-                "Need to add the directory of the parquet files as first argument then the input \
-                 CSVs"
-            );
-        }
+        process_input(
+            &mut arg_input,
+            &tmpdir,
+            "Need to add the directory of the parquet files as first argument then the input CSVs",
+        )?;
         output = csvs_to_parquet_with_options(
             args.arg_parquet.expect("checked above"),
-            args.arg_input,
+            arg_input,
             options,
         )?;
         debug!("conversion to parquet complete");
     } else if args.cmd_xlsx {
         debug!("converting to xlsx");
-        if args.arg_input.is_empty() {
-            return fail_clierror!(
-                "Need to add the name of a xlsx file as first argument then the input CSVs"
-            );
-        }
-        output = csvs_to_xlsx_with_options(
-            args.arg_xlsx.expect("checked above"),
-            args.arg_input,
-            options,
+        process_input(
+            &mut arg_input,
+            &tmpdir,
+            "No data on stdin. Need to add the name of an xlsx file as first argument then the \
+             input CSVs",
         )?;
+
+        output =
+            csvs_to_xlsx_with_options(args.arg_xlsx.expect("checked above"), arg_input, options)?;
         debug!("conversion to xlsx complete");
     } else if args.cmd_datapackage {
         debug!("creating datapackage");
-        if args.arg_input.is_empty() {
-            return fail_clierror!(
-                "Need to add the name of a datapackage file as first argument then the input CSVs"
-            );
-        }
+        process_input(
+            &mut arg_input,
+            &tmpdir,
+            "No data on stdin. Need to add the name of a datapackage file as first argument then \
+             the input CSVs",
+        )?;
+
         let describe_options = DescribeOptions::builder()
             .delimiter(options.delimiter)
             .stats(options.stats)
             .threads(options.threads)
             .stats_csv(options.stats_csv);
-        output = make_datapackage(args.arg_input, PathBuf::new(), &describe_options.build())?;
+        output = make_datapackage(arg_input, PathBuf::new(), &describe_options.build())?;
         let file = std::fs::File::create(args.arg_datapackage.expect("checked above"))?;
         serde_json::to_writer_pretty(file, &output)?;
         debug!("datapackage complete");
@@ -361,5 +364,24 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         writeln!(&mut stdout)?;
     }
 
+    Ok(())
+}
+
+fn process_input(
+    arg_input: &mut Vec<PathBuf>,
+    tmpdir: &tempfile::TempDir,
+    empty_stdin_errmsg: &str,
+) -> Result<(), CliError> {
+    if arg_input.is_empty() {
+        // copy stdin to a file named stdin in a temp directory
+        let tmp_filename = tmpdir.path().join("stdin");
+        let mut tmp_file = std::fs::File::create(&tmp_filename)?;
+        let nbytes = std::io::copy(&mut std::io::stdin(), &mut tmp_file)?;
+        if nbytes == 0 {
+            return fail_clierror!("{empty_stdin_errmsg}");
+        }
+        tmp_file.flush()?;
+        arg_input.push(tmp_filename);
+    }
     Ok(())
 }
