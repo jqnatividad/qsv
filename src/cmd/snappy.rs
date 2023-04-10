@@ -112,7 +112,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
 // multi-threaded streaming snappy compression
 fn compress<R: Read, W: Write + Send + 'static>(mut src: R, dst: W, jobs: usize) -> CliResult<()> {
-
     // the buffer size must be at least 32768 bytes, otherwise, ParCompressBuilder panics
     // as it expects the buffer size to be greater than its DICT_SIZE which is 32768
     let buffer_size = if config::DEFAULT_RDR_BUFFER_CAPACITY < 32768 {
