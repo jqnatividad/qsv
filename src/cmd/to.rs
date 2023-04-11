@@ -24,6 +24,10 @@ Load same files into a new/existing postgres database whose connection string is
 
   $ qsv to postgres 'env=DATABASE_URL' file1.csv file2.csv
 
+Load files inside a directory to a local database 'test' with user `testuser`, password `pass`.
+
+  $ qsv to postgres 'postgres://testuser:pass@localhost/test' dir1 
+
 Drop tables if they exist before loading.
 
   $ qsv to postgres 'postgres://testuser:pass@localhost/test' --drop file1.csv file2.csv
@@ -52,6 +56,10 @@ Examples:
 Load `file1.csv` and `file2.csv' files to sqlite database `test.db`
 
   $ qsv to sqlite test.db file1.csv file2.csv
+
+Load all files in dir1 to sqlite database `test.db`
+
+  $ qsv to sqlite test.db dir
 
 Drop tables if they exist before loading.
 
@@ -107,6 +115,10 @@ Generate a `datapackage.json` file from `file1.csv` and `file2.csv' files.
 Add more stats to datapackage.
 
   $ qsv to datapackage datapackage.json --stats file1.csv file2.csv
+
+Generate a `datapackage.json` file from all the files in dir1
+
+  $ qsv to datapackage datapackage.json dir1
 
 For all other conversions you can output the datapackage created by specifying `--print-package`.
 
@@ -369,12 +381,21 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     Ok(())
 }
 
+/// Process the input files and return a vector of paths to the input files
+///
+/// If the input is empty, try to copy stdin to a file named stdin in the passed temp directory
+/// If the input is empty and stdin is empty, return an error
+/// If it's not empty, check the input files if they exist
+///
+/// If the input is a directory, add all the files in the directory to the input
+/// If the input is a file, add the file to the input
+/// If the input are snappy compressed files, uncompress them before adding them to the input
 fn process_input(
     arg_input: Vec<PathBuf>,
     tmpdir: &tempfile::TempDir,
     empty_stdin_errmsg: &str,
 ) -> Result<Vec<PathBuf>, CliError> {
-    let mut processed_input = Vec::new();
+    let mut processed_input = Vec::with_capacity(arg_input.len());
 
     if arg_input.is_empty() {
         // copy stdin to a file named stdin in a temp directory
@@ -387,8 +408,25 @@ fn process_input(
         tmp_file.flush()?;
         processed_input.push(tmp_filename);
     } else {
+        let mut work_input = Vec::with_capacity(arg_input.len());
+
+        // is the input a directory?
+        if arg_input.len() == 1 && arg_input[0].is_dir() {
+            // if so, add all the files in the directory to the input
+            let dir = std::fs::read_dir(arg_input[0].clone())?;
+            for entry in dir {
+                let entry = entry?;
+                let path = entry.path();
+                if path.is_file() {
+                    work_input.push(path);
+                }
+            }
+        } else {
+            work_input = arg_input.clone();
+        }
+
         // check the input files
-        for path in arg_input {
+        for path in work_input {
             // does the input file exist?
             if !path.exists() {
                 return fail_clierror!("Input file '{}' does not exist", path.display());
