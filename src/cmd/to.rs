@@ -422,7 +422,7 @@ fn process_input(
                 }
             }
         } else {
-            work_input = arg_input.clone();
+            work_input = arg_input;
         }
 
         // check the input files
