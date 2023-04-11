@@ -217,8 +217,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     if args.cmd_postgres {
         debug!("converting to postgres");
-        process_input(
-            &mut arg_input,
+        arg_input = process_input(
+            arg_input,
             &tmpdir,
             "No data on stdin. Need to add connection string as first argument then the input CSVs",
         )?;
@@ -235,8 +235,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         debug!("conversion to postgres complete");
     } else if args.cmd_sqlite {
         debug!("converting to sqlite");
-        process_input(
-            &mut arg_input,
+        arg_input = process_input(
+            arg_input,
             &tmpdir,
             "No data on stdin. Need to add the name of a sqlite db as first argument then the \
              input CSVs",
@@ -254,7 +254,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         debug!("conversion to sqlite complete");
     } else if args.cmd_parquet {
         debug!("converting to parquet");
-        if args.arg_input.is_empty() {
+        if arg_input.is_empty() {
             return fail_clierror!(
                 "Need to add the directory of the parquet files as first argument then the input \
                  CSVs"
@@ -262,14 +262,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
         output = csvs_to_parquet_with_options(
             args.arg_parquet.expect("checked above"),
-            args.arg_input,
+            arg_input,
             options,
         )?;
         debug!("conversion to parquet complete");
     } else if args.cmd_xlsx {
         debug!("converting to xlsx");
-        process_input(
-            &mut arg_input,
+        arg_input = process_input(
+            arg_input,
             &tmpdir,
             "No data on stdin. Need to add the name of an xlsx file as first argument then the \
              input CSVs",
@@ -280,8 +280,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         debug!("conversion to xlsx complete");
     } else if args.cmd_datapackage {
         debug!("creating datapackage");
-        process_input(
-            &mut arg_input,
+        arg_input = process_input(
+            arg_input,
             &tmpdir,
             "No data on stdin. Need to add the name of a datapackage file as first argument then \
              the input CSVs",
@@ -370,10 +370,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 }
 
 fn process_input(
-    arg_input: &mut Vec<PathBuf>,
+    arg_input: Vec<PathBuf>,
     tmpdir: &tempfile::TempDir,
     empty_stdin_errmsg: &str,
-) -> Result<(), CliError> {
+) -> Result<Vec<PathBuf>, CliError> {
+    let mut processed_input = Vec::new();
+
     if arg_input.is_empty() {
         // copy stdin to a file named stdin in a temp directory
         let tmp_filename = tmpdir.path().join("stdin");
@@ -383,7 +385,29 @@ fn process_input(
             return fail_clierror!("{empty_stdin_errmsg}");
         }
         tmp_file.flush()?;
-        arg_input.push(tmp_filename);
+        processed_input.push(tmp_filename);
+    } else {
+        // check the input files
+        for path in arg_input {
+            // does the input file exist?
+            if !path.exists() {
+                return fail_clierror!("Input file '{}' does not exist", path.display());
+            }
+            // is the input file snappy compressed?
+            if path.extension().unwrap_or_default() == "sz" {
+                // if so, decompress the file
+                let mut snappy_file = std::fs::File::open(path.clone())?;
+                let mut snappy_reader = snap::read::FrameDecoder::new(&mut snappy_file);
+                let file_stem = path.file_stem().unwrap_or_default();
+                let decompressed_filepath = tmpdir.path().join(file_stem);
+                let mut decompressed_file = std::fs::File::create(decompressed_filepath.clone())?;
+                std::io::copy(&mut snappy_reader, &mut decompressed_file)?;
+                decompressed_file.flush()?;
+                processed_input.push(decompressed_filepath);
+            } else {
+                processed_input.push(path.clone());
+            }
+        }
     }
-    Ok(())
+    Ok(processed_input)
 }
