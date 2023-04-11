@@ -102,7 +102,7 @@ mod test_split;
 mod test_stats;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 mod test_table;
-#[cfg(any(feature = "feature_capable", feature = "to"))]
+#[cfg(all(feature = "to", feature = "feature_capable"))]
 mod test_to;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 mod test_tojsonl;
