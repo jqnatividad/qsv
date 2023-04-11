@@ -1,0 +1,29 @@
+{
+  "profile": "tabular-data-package",
+  "resources": [
+    {
+      "profile": "tabular-data-resource",
+      "name": "in",
+      "row_count": 8,
+      "schema": {
+        "fields": [
+          {
+            "name": "Col1",
+            "type": "integer",
+            "format": "integer"
+          },
+          {
+            "name": "Description",
+            "type": "string",
+            "format": "string"
+          }
+        ]
+      },
+      "path": "in.csv",
+      "dialect": {
+        "delimiter": ",",
+        "quoteChar": "\""
+      }
+    }
+  ]
+}
