@@ -1,5 +1,6 @@
-use std::path::Path;
+use std::{fs::File, path::Path};
 
+use assert_json_diff::assert_json_eq;
 use rusqlite::Connection;
 
 use crate::workdir::{is_same_file, Workdir};
@@ -114,12 +115,12 @@ fn to_datapackage() {
     ];
     wrk.create("in.csv", thedata.clone());
 
-    let testdp_json_file = wrk.path("testdp.json");
-    let testdp_json_filename = testdp_json_file.to_string_lossy().to_string();
+    let generateddp_json_path = wrk.path("generateddp.json");
+    let generateddp_json_filename = generateddp_json_path.to_string_lossy().to_string();
 
     let mut cmd = wrk.command("to");
     cmd.arg("datapackage")
-        .arg(testdp_json_filename.clone())
+        .arg(generateddp_json_filename.clone())
         .arg("in.csv");
 
     wrk.assert_success(&mut cmd);
@@ -133,10 +134,13 @@ Description  string      string"#
         .to_string();
     assert_eq!(got, expected);
 
-    let expected = wrk.load_test_file("testdp.json");
-    let expected_path = Path::new(&expected);
+    let generated_json_file = File::open(generateddp_json_path).unwrap();
+    let generated_json: serde_json::Value = serde_json::from_reader(generated_json_file).unwrap();
 
-    assert!(is_same_file(&testdp_json_file, expected_path).unwrap());
+    let expecteddp_json_string = wrk.load_test_resource("testdp.json");
+    let expecteddp_json: serde_json::Value = serde_json::from_str(&expecteddp_json_string).unwrap();
+
+    assert_json_eq!(expecteddp_json, generated_json);
 }
 
 #[test]
