@@ -124,6 +124,7 @@ For all other conversions you can output the datapackage created by specifying `
 
   $ qsv to xlsx datapackage.xlsx --stats --print-package file1.csv file2.csv
 
+For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_to.rs.
 
 Usage:
     qsv to postgres [options] <postgres> [<input>...]
@@ -133,7 +134,7 @@ Usage:
     qsv to datapackage [options] <datapackage> [<input>...]
     qsv to --help
 
-options:
+To options:
     -k --print-package     Print statistics as datapackage, by default will print field summary.
     -u --dump              Create database dump file for use with `psql` or `sqlite3` command line tools (postgres/sqlite only).
     -a --stats             Produce extra statistics about the data beyond just type guessing.
