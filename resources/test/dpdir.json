@@ -1,0 +1,53 @@
+{
+  "profile": "tabular-data-package",
+  "resources": [
+    {
+      "profile": "tabular-data-resource",
+      "name": "places",
+      "row_count": 4,
+      "schema": {
+        "fields": [
+          {
+            "name": "city",
+            "type": "string",
+            "format": "string"
+          },
+          {
+            "name": "place",
+            "type": "string",
+            "format": "string"
+          }
+        ]
+      },
+      "path": "places.csv",
+      "dialect": {
+        "delimiter": ",",
+        "quoteChar": "\""
+      }
+    },
+    {
+      "profile": "tabular-data-resource",
+      "name": "cities",
+      "row_count": 4,
+      "schema": {
+        "fields": [
+          {
+            "name": "city",
+            "type": "string",
+            "format": "string"
+          },
+          {
+            "name": "state",
+            "type": "string",
+            "format": "string"
+          }
+        ]
+      },
+      "path": "cities.csv",
+      "dialect": {
+        "delimiter": ",",
+        "quoteChar": "\""
+      }
+    }
+  ]
+}

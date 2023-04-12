@@ -43,6 +43,53 @@ fn to_xlsx_roundtrip() {
 }
 
 #[test]
+fn to_xlsx_dir() {
+    let wrk = Workdir::new("to_xlsx_dir");
+
+    let cities = vec![
+        svec!["city", "state"],
+        svec!["Boston", "MA"],
+        svec!["New York", "NY"],
+        svec!["San Francisco", "CA"],
+        svec!["Buffalo", "NY"],
+    ];
+    let places = vec![
+        svec!["city", "place"],
+        svec!["Boston", "Logan Airport"],
+        svec!["Boston", "Boston Garden"],
+        svec!["Buffalo", "Ralph Wilson Stadium"],
+        svec!["Orlando", "Disney World"],
+    ];
+
+    wrk.create("cities.csv", cities.clone());
+    wrk.create("places.csv", places.clone());
+
+    let xlsx_file = wrk.path("testxlsx.xlsx").to_string_lossy().to_string();
+    log::info!("xlsx_file: {}", xlsx_file);
+
+    let mut cmd = wrk.command("to");
+    cmd.arg("xlsx").arg(xlsx_file.clone()).arg(wrk.path(""));
+
+    wrk.assert_success(&mut cmd);
+
+    let mut cmd2 = wrk.command("excel");
+    cmd2.arg(xlsx_file.clone()).args(&["--sheet", "cities"]);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd2);
+    assert_eq!(got, cities);
+
+    wrk.assert_success(&mut cmd2);
+
+    let mut cmd2 = wrk.command("excel");
+    cmd2.arg(xlsx_file).args(&["--sheet", "places"]);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd2);
+    assert_eq!(got, places);
+
+    wrk.assert_success(&mut cmd2);
+}
+
+#[test]
 fn to_datapackage() {
     let wrk = Workdir::new("to_datapackage");
 
@@ -88,4 +135,55 @@ Description  string      string"#
     let expected_path = Path::new(&expected);
 
     assert!(is_same_file(&testdp_json_file, expected_path).unwrap());
+}
+
+#[test]
+fn to_datapackage_dir() {
+    let wrk = Workdir::new("to_datapackage_dir");
+
+    let cities = vec![
+        svec!["city", "state"],
+        svec!["Boston", "MA"],
+        svec!["New York", "NY"],
+        svec!["San Francisco", "CA"],
+        svec!["Buffalo", "NY"],
+    ];
+    let places = vec![
+        svec!["city", "place"],
+        svec!["Boston", "Logan Airport"],
+        svec!["Boston", "Boston Garden"],
+        svec!["Buffalo", "Ralph Wilson Stadium"],
+        svec!["Orlando", "Disney World"],
+    ];
+
+    wrk.create("cities.csv", cities.clone());
+    wrk.create("places.csv", places.clone());
+
+    let dp_file = wrk.path("dpdir.json");
+    let dp_file_filename = dp_file.to_string_lossy().to_string();
+
+    let mut cmd = wrk.command("to");
+    cmd.arg("datapackage")
+        .arg(dp_file_filename.clone())
+        .arg(wrk.path(""));
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected: String = r#"Table 'places' (4 rows)
+
+Field Name  Field Type  Field Format
+city        string      string
+place       string      string
+
+Table 'cities' (4 rows)
+
+Field Name  Field Type  Field Format
+city        string      string
+state       string      string"#
+        .to_string();
+    assert_eq!(got, expected);
+
+    let expected = wrk.load_test_file("dpdir.json");
+    let expected_path = Path::new(&expected);
+
+    assert!(is_same_file(&dp_file, expected_path).unwrap());
 }
