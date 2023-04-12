@@ -2,7 +2,7 @@ static USAGE: &str = r#"
 Does streaming compression/decompression of the input using the Snappy format.
 https://google.github.io/snappy/
 
-It has three subcommands:
+It has four subcommands:
     compress:   Compress the input (multi-threaded).
     decompress: Decompress the input.
     check:      Check if the input is a Snappy file. Returns exitcode 0 if the
