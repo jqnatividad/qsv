@@ -107,6 +107,30 @@ fn snappy_check_invalid() {
 }
 
 #[test]
+fn snappy_validate() {
+    let wrk = Workdir::new("snappy_validate");
+
+    let test_file = wrk.load_test_file("boston311-100.csv.sz");
+
+    let mut cmd = wrk.command("snappy");
+    cmd.arg("validate").arg(test_file);
+
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn snappy_validate_invalid() {
+    let wrk = Workdir::new("snappy_validate_invalid");
+
+    let test_file = wrk.load_test_file("boston311-100-invalidsnappy.csv.sz");
+
+    let mut cmd = wrk.command("snappy");
+    cmd.arg("validate").arg(test_file);
+
+    wrk.assert_err(&mut cmd);
+}
+
+#[test]
 fn snappy_automatic_decompression() {
     let wrk = Workdir::new("snappy_automatic_decompression");
 
