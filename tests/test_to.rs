@@ -251,7 +251,9 @@ state       string      string"#
         ]
     );
 
-    let mut stmt = db.prepare("SELECT * FROM places ORDER BY city, place").unwrap();
+    let mut stmt = db
+        .prepare("SELECT * FROM places ORDER BY city, place")
+        .unwrap();
     let places_iter = stmt
         .query_map([], |row| Ok((row.get(0).unwrap(), row.get(1).unwrap())))
         .unwrap();
