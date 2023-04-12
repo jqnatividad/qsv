@@ -92,8 +92,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     if args.cmd_compress {
         let mut jobs = util::njobs(args.flag_jobs);
-        if jobs > 8 {
-            jobs = 8;
+        if jobs > 1 {
+            jobs -= 1; // save one thread for other tasks
         }
 
         compress(input_reader, output_writer, jobs)?;
