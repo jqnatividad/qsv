@@ -3665,6 +3665,7 @@ dependencies = [
  "regex",
  "reqwest",
  "reverse_geocoder",
+ "rusqlite",
  "rust_decimal",
  "ryu",
  "sanitise-file-name",
