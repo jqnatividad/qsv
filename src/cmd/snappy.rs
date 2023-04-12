@@ -12,12 +12,10 @@ Note that most qsv commands will automatically decompress Snappy files if the
 input file has an ".sz" extension. It will also automatically compress the output
 file (though only single-threaded) if the --output file has an ".sz" extension.
 
-This command's multi-threaded compression is 4-5x faster than qsv's automatic 
-single-threaded compression. However, the number of --jobs is capped at 8 threads
-as benchmarks indicate diminishing returns beyond that.
-https://raw.githubusercontent.com/sstadick/gzp/main/violin.svg
+This command's multi-threaded compression is 5-6x faster than qsv's automatic 
+single-threaded compression.
 
-Also, this command is not specific to CSV data, it can compress/decompress any file.
+Also, this command is not specific to CSV data, it can compress/decompress ANY file.
 
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_snappy.rs.
 
