@@ -5,7 +5,10 @@ https://google.github.io/snappy/
 It has three subcommands:
     compress:   Compress the input (multi-threaded).
     decompress: Decompress the input.
-    check:      Check if the input is a valid Snappy file. Returns exitcode 0 if valid,
+    check:      Check if the input is a Snappy file. Returns exitcode 0 if the
+                first 50 bytes of the input are valid Snappy data.
+                exitcode 1 otherwise.
+    validate:   Check if the input is a valid Snappy file. Returns exitcode 0 if valid,
                 exitcode 1 otherwise.
 
 Note that most qsv commands will automatically decompress Snappy files if the
@@ -23,6 +26,7 @@ Usage:
     qsv snappy compress [options] [<input>]
     qsv snappy decompress [options] [<input>]
     qsv snappy check [<input>]
+    qsv snappy validate [<input>]
     qsv snappy --help
 
 snappy arguments:
@@ -54,6 +58,7 @@ struct Args {
     cmd_compress:   bool,
     cmd_decompress: bool,
     cmd_check:      bool,
+    cmd_validate:   bool,
     flag_jobs:      Option<usize>,
 }
 
@@ -97,6 +102,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         compress(input_reader, output_writer, jobs)?;
     } else if args.cmd_decompress {
         decompress(input_reader, output_writer)?;
+    } else if args.cmd_validate {
+        if validate(input_reader) {
+            eprintln!("Valid snappy file.");
+        } else {
+            return fail_clierror!("Not a valid snappy file.");
+        }
     } else if args.cmd_check {
         if check(input_reader) {
             eprintln!("Snappy file.");
@@ -117,7 +128,7 @@ fn compress<R: Read, W: Write + Send + 'static>(mut src: R, dst: W, jobs: usize)
         .unwrap_or(config::DEFAULT_RDR_BUFFER_CAPACITY);
 
     // the buffer size must be at least 32768 bytes, otherwise, ParCompressBuilder panics
-    // as it expects the buffer size to be greater than its DICT_SIZE which is 32768
+    // as it expects the buffer size to be >= its DICT_SIZE which is 32768
     if buffer_size < 32768 {
         buffer_size = 32768;
     };
@@ -134,7 +145,7 @@ fn compress<R: Read, W: Write + Send + 'static>(mut src: R, dst: W, jobs: usize)
     Ok(())
 }
 
-// streaming snappy decompression
+// streaming, single-threaded snappy decompression
 fn decompress<R: Read, W: Write>(src: R, mut dst: W) -> CliResult<()> {
     let mut src = snap::read::FrameDecoder::new(src);
     io::copy(&mut src, &mut dst)?;
@@ -152,4 +163,15 @@ fn check<R: Read>(src: R) -> bool {
     // the snap decoder will return an error if the file is not a valid snappy file
     let mut buffer = Vec::with_capacity(51);
     src.take(50).read_to_end(&mut buffer).is_ok()
+}
+
+// validate an entire snappy file by decompressing it
+// to sink (i.e. /dev/null). This is useful for checking
+// if a snappy file is corrupted.
+// Note that this is more expensive than check() as it has to
+// decompress the entire file.
+fn validate<R: Read>(src: R) -> bool {
+    let mut src = snap::read::FrameDecoder::new(src);
+    let mut sink = io::sink();
+    io::copy(&mut src, &mut sink).is_ok()
 }
