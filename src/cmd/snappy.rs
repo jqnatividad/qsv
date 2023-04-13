@@ -45,12 +45,11 @@ options:
 "#;
 
 use std::{
-    env, fs,
+    fs,
     io::{self, stdin, BufRead, Read, Write},
-    path::Path,
 };
 
-use gzp::{par::compress::ParCompressBuilder, snap::Snap};
+use gzp::{par::compress::ParCompressBuilder, snap::Snap, ZWriter};
 use serde::Deserialize;
 use snap;
 
@@ -74,18 +73,30 @@ impl From<snap::Error> for CliError {
     }
 }
 
+impl From<gzp::GzpError> for CliError {
+    fn from(err: gzp::GzpError) -> CliError {
+        CliError::Other(format!("Gzp error: {err:?}"))
+    }
+}
+
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
+
+    let input_bytes;
 
     let input_reader: Box<dyn BufRead> = match &args.arg_input {
         Some(path) => {
             let file = fs::File::open(path)?;
+            input_bytes = file.metadata()?.len();
             Box::new(io::BufReader::with_capacity(
                 config::DEFAULT_RDR_BUFFER_CAPACITY,
                 file,
             ))
         }
-        None => Box::new(io::BufReader::new(stdin().lock())),
+        None => {
+            input_bytes = 0;
+            Box::new(io::BufReader::new(stdin().lock()))
+        }
     };
 
     let output_writer: Box<dyn Write + Send + 'static> = match &args.flag_output {
@@ -106,25 +117,66 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         compress(input_reader, output_writer, jobs)?;
+        let compressed_bytes = if let Some(path) = &args.flag_output {
+            fs::metadata(path)?.len()
+        } else {
+            0
+        };
+        if !args.flag_quiet && compressed_bytes > 0 {
+            let compression_ratio = input_bytes as f64 / compressed_bytes as f64;
+            winfo!(
+                "Compression successful. Compressed bytes: {}, Decompressed bytes: {}, \
+                 Compression ratio: {:.3}:1, Space savings: {} - {:.2}%",
+                indicatif::HumanBytes(compressed_bytes),
+                indicatif::HumanBytes(input_bytes),
+                compression_ratio,
+                indicatif::HumanBytes(
+                    input_bytes
+                        .checked_sub(compressed_bytes)
+                        .unwrap_or_default()
+                ),
+                (1.0 - (compressed_bytes as f64 / input_bytes as f64)) * 100.0
+            );
+        }
     } else if args.cmd_decompress {
-        decompress(input_reader, output_writer)?;
+        let decompressed_bytes = decompress(input_reader, output_writer)?;
+        if !args.flag_quiet {
+            let compression_ratio = decompressed_bytes as f64 / input_bytes as f64;
+            winfo!(
+                "Decompression successful. Compressed bytes: {}, Decompressed bytes: {}, \
+                 Compression ratio: {:.3}:1, Space savings: {} - {:.2}%",
+                indicatif::HumanBytes(input_bytes),
+                indicatif::HumanBytes(decompressed_bytes),
+                compression_ratio,
+                indicatif::HumanBytes(
+                    decompressed_bytes
+                        .checked_sub(input_bytes)
+                        .unwrap_or_default()
+                ),
+                (1.0 - (input_bytes as f64 / decompressed_bytes as f64)) * 100.0
+            );
+        }
     } else if args.cmd_validate {
         if args.arg_input.is_none() {
             return fail_clierror!("stdin is not supported by the snappy validate subcommand.");
         }
-        let Ok((compressed_bytes, decompressed_bytes)) = validate(input_reader, args.arg_input) else {
+        let Ok(decompressed_bytes) = validate(input_reader) else {
             return fail_clierror!("Not a valid snappy file.");
         };
         if !args.flag_quiet {
-            let compression_ratio = decompressed_bytes as f64 / compressed_bytes as f64;
+            let compression_ratio = decompressed_bytes as f64 / input_bytes as f64;
             winfo!(
                 "Valid snappy file. Compressed bytes: {}, Decompressed bytes: {}, Compression \
                  ratio: {:.3}:1, Space savings: {} - {:.2}%",
-                indicatif::HumanBytes(compressed_bytes),
+                indicatif::HumanBytes(input_bytes),
                 indicatif::HumanBytes(decompressed_bytes),
                 compression_ratio,
-                indicatif::HumanBytes(decompressed_bytes - compressed_bytes),
-                (1.0 - (compressed_bytes as f64 / decompressed_bytes as f64)) * 100.0
+                indicatif::HumanBytes(
+                    decompressed_bytes
+                        .checked_sub(input_bytes)
+                        .unwrap_or_default()
+                ),
+                (1.0 - (input_bytes as f64 / decompressed_bytes as f64)) * 100.0
             );
         }
     } else if args.cmd_check {
@@ -146,36 +198,25 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
 // multi-threaded streaming snappy compression
 fn compress<R: Read, W: Write + Send + 'static>(mut src: R, dst: W, jobs: usize) -> CliResult<()> {
-    let rdr_capacitys = env::var("QSV_RDR_BUFFER_CAPACITY")
-        .unwrap_or_else(|_| config::DEFAULT_RDR_BUFFER_CAPACITY.to_string());
-    let mut buffer_size: usize = rdr_capacitys
-        .parse()
-        .unwrap_or(config::DEFAULT_RDR_BUFFER_CAPACITY);
-
-    // the buffer size must be at least 32768 bytes, otherwise, ParCompressBuilder panics
-    // as it expects the buffer size to be >= its DICT_SIZE which is 32768
-    if buffer_size < 32768 {
-        buffer_size = 32768;
-    };
-
     let mut writer = ParCompressBuilder::<Snap>::new()
         .num_threads(jobs)
         .unwrap()
-        .buffer_size(buffer_size)
+        .buffer_size(gzp::BUFSIZE)
         .unwrap()
         .pin_threads(Some(0))
         .from_writer(dst);
     io::copy(&mut src, &mut writer)?;
+    writer.finish()?;
 
     Ok(())
 }
 
 // single-threaded streaming snappy decompression
-fn decompress<R: Read, W: Write>(src: R, mut dst: W) -> CliResult<()> {
+fn decompress<R: Read, W: Write>(src: R, mut dst: W) -> CliResult<u64> {
     let mut src = snap::read::FrameDecoder::new(src);
-    io::copy(&mut src, &mut dst)?;
+    let decompressed_bytes = io::copy(&mut src, &mut dst)?;
 
-    Ok(())
+    Ok(decompressed_bytes)
 }
 
 // check if a file is a snappy file
@@ -193,18 +234,11 @@ fn check<R: Read>(src: R) -> bool {
 // validate an entire snappy file by decompressing it to sink (i.e. /dev/null). This is useful for
 // checking if a snappy file is corrupted.
 // Note that this is more expensive than check() as it has to decompress the entire file.
-fn validate<R: Read>(src: R, input_path: Option<String>) -> CliResult<(u64, u64)> {
-    let compressed_bytes = if let Some(path) = input_path {
-        let input_path = Path::new(&path).to_path_buf();
-        fs::metadata(input_path).unwrap().len()
-    } else {
-        0
-    };
-
+fn validate<R: Read>(src: R) -> CliResult<u64> {
     let mut src = snap::read::FrameDecoder::new(src);
     let mut sink = io::sink();
     match io::copy(&mut src, &mut sink) {
-        Ok(decompressed_bytes) => Ok((compressed_bytes, decompressed_bytes)),
+        Ok(decompressed_bytes) => Ok(decompressed_bytes),
         Err(err) => fail_clierror!("Error validating snappy file: {err:?}"),
     }
 }
