@@ -222,7 +222,7 @@ fn to_sqlite_dir() {
     let mut cmd = wrk.command("to");
     cmd.arg("sqlite")
         .arg(sqlite_file_filename.clone())
-        .arg(wrk.path(""));
+        .arg(wrk.path("."));
 
     let got: String = wrk.stdout(&mut cmd);
     let expected: String = r#"Table 'places' (4 rows)
@@ -274,4 +274,142 @@ state       string      string"#
             (String::from("Orlando"), String::from("Disney World")),
         ]
     );
+}
+
+#[test]
+fn to_sqlite() {
+    let wrk = Workdir::new("to_sqlite");
+
+    let cities = vec![
+        svec!["city", "state"],
+        svec!["Boston", "MA"],
+        svec!["New York", "NY"],
+        svec!["San Francisco", "CA"],
+        svec!["Buffalo", "NY"],
+    ];
+    let places = vec![
+        svec!["city", "place"],
+        svec!["Boston", "Logan Airport"],
+        svec!["Boston", "Boston Garden"],
+        svec!["Buffalo", "Ralph Wilson Stadium"],
+        svec!["Orlando", "Disney World"],
+    ];
+
+    wrk.create("cities.csv", cities.clone());
+    wrk.create("places.csv", places.clone());
+
+    let sqlite_file = wrk.path("test_to_sqlite.db");
+    let sqlite_file_filename = sqlite_file.to_string_lossy().to_string();
+
+    let mut cmd = wrk.command("to");
+    cmd.arg("sqlite")
+        .arg(sqlite_file_filename.clone())
+        .arg("places.csv")
+        .arg("cities.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected: String = r#"Table 'places' (4 rows)
+
+Field Name  Field Type  Field Format
+city        string      string
+place       string      string
+
+Table 'cities' (4 rows)
+
+Field Name  Field Type  Field Format
+city        string      string
+state       string      string"#
+        .to_string();
+    assert_eq!(got, expected);
+
+    let db = Connection::open(sqlite_file_filename).unwrap();
+    let mut stmt = db.prepare("SELECT * FROM cities ORDER BY city").unwrap();
+    let cities_iter = stmt
+        .query_map([], |row| Ok((row.get(0).unwrap(), row.get(1).unwrap())))
+        .unwrap();
+    let cities: Vec<(String, String)> = cities_iter.map(|r| r.unwrap()).collect();
+    assert_eq!(
+        cities,
+        vec![
+            (String::from("Boston"), String::from("MA")),
+            (String::from("Buffalo"), String::from("NY")),
+            (String::from("New York"), String::from("NY")),
+            (String::from("San Francisco"), String::from("CA")),
+        ]
+    );
+
+    let mut stmt = db
+        .prepare("SELECT * FROM places ORDER BY city, place")
+        .unwrap();
+    let places_iter = stmt
+        .query_map([], |row| Ok((row.get(0).unwrap(), row.get(1).unwrap())))
+        .unwrap();
+    let places: Vec<(String, String)> = places_iter.map(|r| r.unwrap()).collect();
+    assert_eq!(
+        places,
+        vec![
+            (String::from("Boston"), String::from("Boston Garden")),
+            (String::from("Boston"), String::from("Logan Airport")),
+            (
+                String::from("Buffalo"),
+                String::from("Ralph Wilson Stadium")
+            ),
+            (String::from("Orlando"), String::from("Disney World")),
+        ]
+    );
+}
+
+#[test]
+fn to_parquet_dir() {
+    let wrk = Workdir::new("to_sqlite_dir");
+
+    let cities = vec![
+        svec!["city", "state"],
+        svec!["Boston", "MA"],
+        svec!["New York", "NY"],
+        svec!["San Francisco", "CA"],
+        svec!["Buffalo", "NY"],
+    ];
+    let places = vec![
+        svec!["city", "place"],
+        svec!["Boston", "Logan Airport"],
+        svec!["Boston", "Boston Garden"],
+        svec!["Buffalo", "Ralph Wilson Stadium"],
+        svec!["Orlando", "Disney World"],
+    ];
+
+    wrk.create("cities.csv", cities.clone());
+    wrk.create("places.csv", places.clone());
+
+    let parquet_dir = wrk.path("test_parquet_dir");
+    let parquet_dirname = parquet_dir.to_string_lossy().to_string();
+
+    let mut cmd = wrk.command("to");
+    cmd.arg("parquet")
+        .arg(parquet_dirname.clone())
+        .arg("places.csv")
+        .arg("cities.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected: String = r#"Table 'places' (4 rows)
+
+Field Name  Field Type  Field Format
+city        string      string
+place       string      string
+
+Table 'cities' (4 rows)
+
+Field Name  Field Type  Field Format
+city        string      string
+state       string      string"#
+        .to_string();
+    assert_eq!(got, expected);
+
+    // check that the parquet files were created
+    let files = std::fs::read_dir(parquet_dir).unwrap();
+    let mut file_names = files
+        .map(|f| f.unwrap().file_name().into_string().unwrap())
+        .collect::<Vec<_>>();
+    file_names.sort();
+    assert_eq!(file_names, vec!["cities.parquet", "places.parquet"]);
 }
