@@ -237,24 +237,29 @@ pub fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<M
     let mut field_map: Map<String, Value> = Map::with_capacity(10);
     let mut type_list: Vec<Value> = Vec::with_capacity(4);
     let mut enum_list: Vec<Value> = Vec::with_capacity(args.flag_enum_threshold);
+    let mut header_byte_slice;
+    let mut header_string;
+    let mut stats_record;
+    let mut col_type;
+    let mut col_null_count;
 
     // generate definition for each CSV column/field and add to properties_map
     for i in 0..csv_fields.len() {
-        let header_byte_slice = csv_fields.get(i).unwrap();
+        header_byte_slice = csv_fields.get(i).unwrap();
         // convert csv header to string
-        let header_string = convert_to_string(header_byte_slice)?;
+        header_string = convert_to_string(header_byte_slice)?;
 
         // grab stats record for current column
-        let stats_record = csv_stats.get(i).unwrap().clone().to_record(4);
+        stats_record = csv_stats.get(i).unwrap().clone().to_record(4);
 
         if log::log_enabled!(log::Level::Debug) {
             debug!("stats[{header_string}]: {stats_record:?}");
         }
 
         // get Type from stats record
-        let col_type = stats_record.get(stats_col_index_map["type"]).unwrap();
+        col_type = stats_record.get(stats_col_index_map["type"]).unwrap();
         // get NullCount
-        let col_null_count = if let Some(s) = stats_record.get(stats_col_index_map["nullcount"]) {
+        col_null_count = if let Some(s) = stats_record.get(stats_col_index_map["nullcount"]) {
             s.parse::<usize>().unwrap_or(0_usize)
         } else {
             0_usize
@@ -533,10 +538,11 @@ fn construct_map_of_unique_values(
     frequency_tables: &[Frequencies<Vec<u8>>],
 ) -> CliResult<AHashMap<String, Vec<String>>> {
     let mut unique_values_map: AHashMap<String, Vec<String>> = AHashMap::new();
+    let mut unique_values = Vec::with_capacity(freq_csv_fields.len());
 
     // iterate through fields and gather unique values for each field
     for (i, header_byte_slice) in freq_csv_fields.iter().enumerate() {
-        let mut unique_values = Vec::new();
+        unique_values.clear();
 
         for (val_byte_vec, _count) in frequency_tables[i].most_frequent() {
             let val_string = convert_to_string(val_byte_vec.as_slice())?;
@@ -556,7 +562,7 @@ fn construct_map_of_unique_values(
                 unique_values
             );
         }
-        unique_values_map.insert(header_string, unique_values);
+        unique_values_map.insert(header_string, unique_values.clone());
     }
 
     // dbg!(&unique_values_map);
