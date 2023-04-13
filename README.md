@@ -133,7 +133,7 @@ cargo install qsv --locked -F all_features
 cargo install qsv --locked -F lite
 
 # or to install qsvdp
-cargo install qsv --locked -F datapusher_plus
+cargo install qsv --locked -F datapusher_plus,luau
 ```
 
 ### Option 4: Compile from Source
