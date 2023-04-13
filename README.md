@@ -160,7 +160,7 @@ cargo build --release --locked -F all_features
 cargo build --release --locked -F lite
 
 # for qsvdp
-cargo build --release --locked -F datapusher_plus
+cargo build --release --locked -F datapusher_plus,luau
 ```
 
 ### Variants
@@ -396,7 +396,7 @@ echo "complete -F _docopt_wordlist_commands qsv" >> $HOME/.bash_completion
 ```
 
 ## Testing
-qsv has ~1,084 tests in the [tests](https://github.com/jqnatividad/qsv/tree/master/tests) directory.
+qsv has ~1,090 tests in the [tests](https://github.com/jqnatividad/qsv/tree/master/tests) directory.
 Each command has its own test suite in a separate file with the convention `test_<COMMAND>.rs`.
 Apart from preventing regressions, the tests also serve as good illustrative examples, and are often linked from the usage text of each corresponding command.
 
