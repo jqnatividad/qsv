@@ -412,4 +412,8 @@ state       string      string"#
         .collect::<Vec<_>>();
     file_names.sort();
     assert_eq!(file_names, vec!["cities.parquet", "places.parquet"]);
+
+    // TODO: check that the parquet files are valid and contain the correct data
 }
+
+// TODO: add tests for to postgres
