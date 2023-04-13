@@ -251,7 +251,7 @@ luau = ["mlua", "sanitise-file-name"]
 python = ["pyo3"]
 to = ["csvs_convert"]
 lite = []
-datapusher_plus = ["dynfmt", "self_update"]
+datapusher_plus = ["dynfmt", "self_update", "luau"]
 feature_capable = []
 nightly = [
     "regex/unstable",

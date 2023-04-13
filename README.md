@@ -410,7 +410,7 @@ cargo test --features all_features
 cargo test --features lite
 
 # to test qsvdp
-cargo test --features datapusher_plus,luau
+cargo test --features datapusher_plus
 
 # to test a specific command
 # here we test only stats and use the
