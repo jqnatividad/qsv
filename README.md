@@ -414,8 +414,8 @@ cargo test --features datapusher_plus,luau
 
 # to test a specific command
 # here we test only stats and use the
-# -F shortcut for --features
-cargo test stats -F all_features
+# t alias for test and the -F shortcut for --features
+cargo t stats -F all_features
 ```
 
 ## License
