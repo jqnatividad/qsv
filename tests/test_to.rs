@@ -361,7 +361,7 @@ state       string      string"#
 
 #[test]
 fn to_parquet_dir() {
-    let wrk = Workdir::new("to_sqlite_dir");
+    let wrk = Workdir::new("to_parquet_dir");
 
     let cities = vec![
         svec!["city", "state"],
