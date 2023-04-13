@@ -119,10 +119,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let compression_ratio = decompressed_bytes as f64 / compressed_bytes as f64;
             winfo!(
                 "Valid snappy file. Compressed bytes: {}, Decompressed bytes: {}, Compression \
-                 ratio: {:.3}:1, Space savings: {:.2}%",
+                 ratio: {:.3}:1, Space savings: {} - {:.2}%",
                 indicatif::HumanBytes(compressed_bytes),
                 indicatif::HumanBytes(decompressed_bytes),
                 compression_ratio,
+                indicatif::HumanBytes(decompressed_bytes - compressed_bytes),
                 (1.0 - (compressed_bytes as f64 / decompressed_bytes as f64)) * 100.0
             );
         }
