@@ -235,13 +235,9 @@ fn check<R: Read>(src: R) -> bool {
 // Note that this is more expensive than check() as it has to decompress the entire file.
 fn validate<R: Read>(src: R) -> CliResult<u64> {
     let mut src = snap::read::FrameDecoder::new(src);
-    // use a 1MB buffered sink
-    let mut buffered_sink = io::BufWriter::with_capacity(1_048_576, io::sink());
-    match io::copy(&mut src, &mut buffered_sink) {
-        Ok(decompressed_bytes) => {
-            buffered_sink.flush()?;
-            Ok(decompressed_bytes)
-        }
+    let mut sink = io::sink();
+    match io::copy(&mut src, &mut sink) {
+        Ok(decompressed_bytes) => Ok(decompressed_bytes),
         Err(err) => fail_clierror!("Error validating snappy file: {err:?}"),
     }
 }
