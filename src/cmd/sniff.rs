@@ -58,7 +58,7 @@ Common options:
     -p, --progressbar        Show progress bars. Only valid for URL input.
 "#;
 
-use std::{cmp::min, fmt, fs, io::Write, time::Duration};
+use std::{cmp::min, fmt, fs, io::Write, path::Path, time::Duration};
 
 use bytes::Bytes;
 use futures::executor::block_on;
@@ -113,7 +113,24 @@ struct SniffStruct {
 }
 impl fmt::Display for SniffStruct {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f, "Path: {}", self.path)?;
+        writeln!(
+            f,
+            "Path: {}",
+            // when sniffing a snappy compressed file, it is first decompressed
+            // to a temporary file. The original file name is stored in the
+            // temporary file name, so we extract the original file name
+            if self.path.ends_with("__qsv_temp_decompressed") {
+                // use a regular expression to extract the original file name
+                // the original file name is between "qsv__" and "__qsv_temp_decompressed"
+                let re =
+                    regex::Regex::new(r"qsv__(?P<filename>.*)__qsv_temp_decompressed").unwrap();
+                let caps = re.captures(&self.path).unwrap();
+                let filename = caps.name("filename").unwrap().as_str();
+                filename.to_string()
+            } else {
+                self.path.clone()
+            }
+        )?;
         writeln!(f, "Sniff Timestamp: {}", self.sniff_timestamp)?;
         writeln!(
             f,
@@ -221,7 +238,7 @@ const fn rowcount(
     (final_rowcount, estimated)
 }
 
-async fn get_file_to_sniff(args: &Args) -> CliResult<SniffFileStruct> {
+async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult<SniffFileStruct> {
     if let Some(uri) = args.arg_input.clone() {
         match uri {
             // its a URL, download sample to temp file
@@ -407,10 +424,20 @@ async fn get_file_to_sniff(args: &Args) -> CliResult<SniffFileStruct> {
             }
             // its a file, passthrough the path along with its size
             path => {
+                let mut path = path;
+
                 if path.to_lowercase().ends_with(".sz") {
-                    return fail_clierror!(
-                        "Cannot sniff .sz files. Use 'qsv snappy decompress' first."
-                    );
+                    let mut snappy_file = std::fs::File::open(path.clone())?;
+                    let mut snappy_reader = snap::read::FrameDecoder::new(&mut snappy_file);
+                    let file_stem = Path::new(&path).file_stem().unwrap().to_str().unwrap();
+                    let decompressed_filepath = tmpdir
+                        .path()
+                        .join(format!("qsv__{file_stem}__qsv_temp_decompressed"));
+                    let mut decompressed_file =
+                        std::fs::File::create(decompressed_filepath.clone())?;
+                    std::io::copy(&mut snappy_reader, &mut decompressed_file)?;
+                    decompressed_file.flush()?;
+                    path = format!("{}", decompressed_filepath.display());
                 }
 
                 let metadata = fs::metadata(&path)
@@ -491,8 +518,9 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     let sniffed_ts = chrono::Utc::now().to_rfc3339();
+    let tmpdir = tempfile::tempdir()?;
 
-    let future = get_file_to_sniff(&args);
+    let future = get_file_to_sniff(&args, &tmpdir);
     let sfile_info = block_on(future)?;
     let tempfile_to_delete = sfile_info.file_to_sniff.clone();
 
@@ -521,7 +549,7 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
         // sfile_info.sampled_records
         // usize::MAX is a sentinel value to let us
         // know that we need to estimate the number of records
-        // since we only downloaded a sample,not the entire file
+        // since we only downloaded a sample, not the entire file
         usize::MAX
     };
 
