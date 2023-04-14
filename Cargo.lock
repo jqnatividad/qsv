@@ -1648,8 +1648,9 @@ checksum = "95cb9bf0969366245682aedd5197be1491f2a044fc99c45564710b22b0e9ac87"
 
 [[package]]
 name = "ext-sort"
-version = "0.1.2"
-source = "git+https://github.com/jqnatividad/ext-sort-rs?branch=perf-tweaks#7072d7eeba8a23b0b0830b3ebd896cde09132466"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "63f2521badec51c348f87d8618ba3424f70f638e9d0cf678d5088baa5e90ab86"
 dependencies = [
  "deepsize",
  "log",
@@ -4075,9 +4076,9 @@ dependencies = [
 
 [[package]]
 name = "rmp-serde"
-version = "1.1.1"
+version = "0.15.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c5b13be192e0220b8afb7222aa5813cb62cc269ebb5cac346ca6487681d2913e"
+checksum = "723ecff9ad04f4ad92fe1c8ca6c20d2196d9286e9c60727c4cb5511629260e9d"
 dependencies = [
  "byteorder",
  "rmp",
