@@ -393,8 +393,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                 if snappy_flag {
                     // we downloaded a snappy compressed file, we need to decompress it
                     // before we can sniff it
-                    wtr_file_path =
-                        decompress_snappy_file(file.path().to_str().unwrap().to_string(), tmpdir)?;
+                    wtr_file_path = decompress_snappy_file(file.path().to_str().unwrap(), tmpdir)?;
                 } else {
                     // we downloaded a non-snappy file, rewrite it so we only have the exact
                     // sample size and truncate potentially incomplete lines. We streamed the
@@ -457,7 +456,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                 let mut path = path;
 
                 if path.to_lowercase().ends_with(".sz") {
-                    path = decompress_snappy_file(path, tmpdir)?;
+                    path = decompress_snappy_file(&path, tmpdir)?;
                 }
 
                 let metadata = fs::metadata(&path)
@@ -509,8 +508,8 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
     }
 }
 
-fn decompress_snappy_file(path: String, tmpdir: &self_update::TempDir) -> Result<String, CliError> {
-    let mut snappy_file = std::fs::File::open(path.clone())?;
+fn decompress_snappy_file(path: &str, tmpdir: &self_update::TempDir) -> Result<String, CliError> {
+    let mut snappy_file = std::fs::File::open(path.to_string())?;
     let mut snappy_reader = snap::read::FrameDecoder::new(&mut snappy_file);
     let file_stem = Path::new(&*path).file_stem().unwrap().to_str().unwrap();
     let decompressed_filepath = tmpdir
