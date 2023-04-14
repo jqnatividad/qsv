@@ -185,6 +185,8 @@ whatlang = { version = "0.16", optional = true }
 
 [target.'cfg(not(target_arch = "aarch64"))'.dependencies]
 simdutf8 = "0.1"
+
+# use SIMD on aarch64 (Apple Silicon, Raspberry Pi 4, etc.)
 [target.'cfg(target_arch = "aarch64")'.dependencies]
 simdutf8 = { version = "0.1", features = ["aarch64_neon"] }
 
