@@ -463,7 +463,6 @@ state       string      string"#
         .to_string();
     assert_eq!(got, expected);
 
-    // check the the postgres database contains the correct data
     let mut client =
         Client::connect("postgres://testuser:test123@localhost/testdb", NoTls).unwrap();
     let mut cities_result: Vec<(String, String)> = vec![];
