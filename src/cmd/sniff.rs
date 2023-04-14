@@ -509,9 +509,9 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
 }
 
 fn decompress_snappy_file(path: &str, tmpdir: &self_update::TempDir) -> Result<String, CliError> {
-    let mut snappy_file = std::fs::File::open(path.to_string())?;
+    let mut snappy_file = std::fs::File::open(path)?;
     let mut snappy_reader = snap::read::FrameDecoder::new(&mut snappy_file);
-    let file_stem = Path::new(&*path).file_stem().unwrap().to_str().unwrap();
+    let file_stem = Path::new(path).file_stem().unwrap().to_str().unwrap();
     let decompressed_filepath = tmpdir
         .path()
         .join(format!("qsv__{file_stem}__qsv_temp_decompressed"));
