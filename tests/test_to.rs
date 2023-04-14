@@ -1,6 +1,7 @@
 use std::{fs::File, path::Path};
 
 use assert_json_diff::assert_json_eq;
+use postgres::{Client, NoTls};
 use rusqlite::Connection;
 
 use crate::workdir::{is_same_file, Workdir};
@@ -416,4 +417,93 @@ state       string      string"#
     // TODO: check that the parquet files are valid and contain the correct data
 }
 
-// TODO: add tests for to postgres
+#[test]
+#[ignore = "Testing postgres support requires a running, properly configured postgres server, \
+            which is not available on CI"]
+fn to_postgres() {
+    let wrk = Workdir::new("to_postgres");
+
+    let cities = vec![
+        svec!["city", "state"],
+        svec!["Boston", "MA"],
+        svec!["New York", "NY"],
+        svec!["San Francisco", "CA"],
+        svec!["Buffalo", "NY"],
+    ];
+    let places = vec![
+        svec!["city", "place"],
+        svec!["Boston", "Logan Airport"],
+        svec!["Boston", "Boston Garden"],
+        svec!["Buffalo", "Ralph Wilson Stadium"],
+        svec!["Orlando", "Disney World"],
+    ];
+
+    wrk.create("cities.csv", cities.clone());
+    wrk.create("places.csv", places.clone());
+
+    let mut cmd = wrk.command("to");
+    cmd.arg("postgres")
+        .arg("postgres://testuser:test123@localhost/testdb")
+        .arg("places.csv")
+        .arg("cities.csv")
+        .arg("--drop");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected: String = r#"Table 'places' (4 rows)
+
+Field Name  Field Type  Field Format
+city        string      string
+place       string      string
+
+Table 'cities' (4 rows)
+
+Field Name  Field Type  Field Format
+city        string      string
+state       string      string"#
+        .to_string();
+    assert_eq!(got, expected);
+
+    // check the the postgres database contains the correct data
+    let mut client =
+        Client::connect("postgres://testuser:test123@localhost/testdb", NoTls).unwrap();
+    let mut cities_result: Vec<(String, String)> = vec![];
+    for row in client
+        .query("SELECT * FROM cities ORDER BY city", &[])
+        .unwrap()
+    {
+        let city: String = row.get(0);
+        let state: String = row.get(1);
+        cities_result.push((city, state));
+    }
+    assert_eq!(
+        cities_result,
+        vec![
+            (String::from("Boston"), String::from("MA")),
+            (String::from("Buffalo"), String::from("NY")),
+            (String::from("New York"), String::from("NY")),
+            (String::from("San Francisco"), String::from("CA")),
+        ]
+    );
+
+    let mut places_result: Vec<(String, String)> = vec![];
+    for row in client
+        .query("SELECT * FROM places ORDER BY city, place", &[])
+        .unwrap()
+    {
+        let city: String = row.get(0);
+        let place: String = row.get(1);
+        places_result.push((city, place));
+    }
+    assert_eq!(
+        places_result,
+        vec![
+            (String::from("Boston"), String::from("Boston Garden")),
+            (String::from("Boston"), String::from("Logan Airport")),
+            (
+                String::from("Buffalo"),
+                String::from("Ralph Wilson Stadium")
+            ),
+            (String::from("Orlando"), String::from("Disney World")),
+        ]
+    );
+}

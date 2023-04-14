@@ -3653,6 +3653,7 @@ dependencies = [
  "once_cell",
  "parking_lot 0.12.1",
  "polars",
+ "postgres",
  "pyo3",
  "qsv-dateparser",
  "qsv-sniffer",
