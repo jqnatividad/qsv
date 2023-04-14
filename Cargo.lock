@@ -4617,7 +4617,8 @@ dependencies = [
 [[package]]
 name = "tabwriter"
 version = "1.2.1"
-source = "git+https://github.com/jqnatividad/tabwriter?branch=tweaks-2023#9015c7f4ad3296cf4bb6a7448715fe2f33128eb4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "36205cfc997faadcc4b0b87aaef3fbedafe20d38d4959a7ca6ff803564051111"
 dependencies = [
  "unicode-width",
 ]

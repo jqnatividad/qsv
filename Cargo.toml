@@ -200,9 +200,6 @@ quickcheck = { version = "1", default-features = false }
 rusqlite = { version = "0.29.0", features = ["bundled"] }
 serial_test = "2.0"
 
-[patch.crates-io]
-tabwriter = { git = "https://github.com/jqnatividad/tabwriter", branch = "tweaks-2023" }
-
 [features]
 default = ["mimalloc"]
 all_features = [
