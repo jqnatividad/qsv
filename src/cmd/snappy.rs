@@ -1,19 +1,18 @@
+#![allow(clippy::cast_precision_loss)]
 static USAGE: &str = r#"
 Does streaming compression/decompression of the input using the Snappy format.
 https://google.github.io/snappy/
 
 It has four subcommands:
     compress:   Compress the input (multi-threaded).
-    decompress: Decompress the input.
-    check:      Check if the input is a Snappy file. Returns exitcode 0 if the
+    decompress: Decompress the input (single-threaded).
+    check:      Quickly check if the input is a Snappy file. Returns exitcode 0 if the
                 first 50 bytes of the input are valid Snappy data.
                 exitcode 1 otherwise.
-    validate:   Check if the input is a valid Snappy file. Returns exitcode 0 if valid,
+    validate:   Validate if the input is a valid Snappy file. Returns exitcode 0 if valid,
                 exitcode 1 otherwise.
-                Sends to stderr the compressed size, uncompressed size, the compression ratio,
-                and the storage savings (in percent) if the input is valid.
 
-Note that most qsv commands will automatically decompress Snappy files if the
+Note that most qsv commands already automatically decompresses Snappy files if the
 input file has an ".sz" extension. It will also automatically compress the output
 file (though only single-threaded) if the --output file has an ".sz" extension.
 
@@ -38,9 +37,8 @@ options:
     -h, --help           Display this message
     -o, --output <file>  Write output to <output> instead of stdout.
     -j, --jobs <arg>     The number of jobs to run in parallel when compressing.
-                         When not set, the number of jobs is set to 8 or the number
-                         of CPUs detected, whichever is smaller.
-    -Q, --quiet          Supress messages to stderr.
+                         When not set, its set to the number of CPUs - 1
+    -Q, --quiet          Suppress messages to stderr.
 
 "#;
 
