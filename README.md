@@ -212,7 +212,7 @@ Similarly, if the `--output` file has an extended CSV/TSV ".sz" extension, qsv w
 
 Note however that snappy compressed files cannot be indexed, so index-accelerated commands (`frequency`, `schema`, `split`, `stats`, `tojsonl`) will not be multi-threaded. Random access is also not supported without an index so `slice` will not be accelerated and `luau`'s random-access mode will not be available.
 
-There is also a dedicated [`snappy`](/src/cmd/snappy.rs#L2) command with extended operations = a multithreaded `compress` subcommand (4-5x faster than the built-in, single-threaded auto-compression); a `decompress` subcommand with detailed compression metadata; a `check` subcommand to inspect if a file has a Snappy header; and a `validate` subcommand to confirm if a Snappy file is valid.
+There is also a dedicated [`snappy`](/src/cmd/snappy.rs#L2) command with extended operations — a multithreaded `compress` subcommand (4-5x faster than the built-in, single-threaded auto-compression); a `decompress` subcommand with detailed compression metadata; a `check` subcommand to inspect if a file has a Snappy header; and a `validate` subcommand to confirm if a Snappy file is valid.
 
 ## RFC 4180
 
