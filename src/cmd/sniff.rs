@@ -560,6 +560,7 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
         .flexible(true)
         .delimiter(args.flag_delimiter);
     let n_rows = if sfile_info.downloaded_records == 0 {
+        //if we have the whole file and not just a sample, we can count the number of rows
         match util::count_rows(&conf) {
             Ok(n) => n as usize,
             Err(e) => {
