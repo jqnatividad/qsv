@@ -131,6 +131,7 @@ fn main() -> QsvExitCode {
     enabled_commands.push_str(
         "    headers     Show header names
     help        Show this usage message
+    implode     Implode rows based on some column separator
     index       Create CSV index for faster access
     input       Read CSVs w/ special quoting, skipping, trimming & transcoding rules
     join        Join CSV files\n",
@@ -297,6 +298,7 @@ enum Command {
     Generate,
     Headers,
     Help,
+    Implode,
     Index,
     Input,
     Join,
@@ -378,6 +380,7 @@ impl Command {
                 util::qsv_check_for_update(true, false)?;
                 Ok(())
             }
+            Command::Implode => cmd::implode::run(argv),
             Command::Index => cmd::index::run(argv),
             Command::Input => cmd::input::run(argv),
             Command::Join => cmd::join::run(argv),

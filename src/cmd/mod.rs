@@ -36,6 +36,7 @@ pub mod frequency;
 #[cfg(all(feature = "generate", feature = "feature_capable"))]
 pub mod generate;
 pub mod headers;
+pub mod implode;
 pub mod index;
 pub mod input;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
