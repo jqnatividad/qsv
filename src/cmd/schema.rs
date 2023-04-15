@@ -502,7 +502,7 @@ fn build_low_cardinality_column_selector_arg(
     column_select_arg
 }
 
-/// get frequency tables from `cmd::stats`
+/// get frequency tables from `cmd::frequency`
 /// returns map of unique values keyed by header
 fn get_unique_values(
     args: &Args,
