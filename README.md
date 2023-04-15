@@ -69,7 +69,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [searchset](/src/cmd/searchset.rs#L3) | *Run multiple regexes over a CSV in a single pass.* Applies the regexes to each field individually & shows only matching rows.  |
 | [select](/src/cmd/select.rs#L2) | Select, re-order, duplicate or drop columns.  |
 | [slice](/src/cmd/slice.rs#L2)<br>📇 | Slice rows from any part of a CSV. When an index is present, this only has to parse the rows in the slice (instead of all rows leading up to the start of the slice).  |
-| <a name="snappy_deeplink"></a>[snappy](/src/cmd/snappy.rs#L2)<br>🚀 | Does streaming compression/decompression of the input using Google's [Snappy](https://github.com/google/snappy/blob/main/docs/README.md) framing format.<br>Compresses NYC's 311 data (15gb, 28m rows) to 4.95 gb in 5.77 seconds with the multithreaded `compress` subcommand - *2.58 gb/sec* with a 0.33 (3.01:1) compression ratio.<br>Compare that to [zip 3.0](https://infozip.sourceforge.net/Zip.html), which compressed the same file to 2.9 gb in 248.3 seconds - 43x slower at 0.06 gb/sec with a 0.19 (5.17:1) compression ratio - for just an additional 14% (2.45 gb) of saved space. |
+| <a name="snappy_deeplink"></a>[snappy](/src/cmd/snappy.rs#L2)<br>🚀 | Does streaming compression/decompression of the input using Google's [Snappy](https://github.com/google/snappy/blob/main/docs/README.md) framing format ([more info](#snappy-compressiondecompression)). |
 | [sniff](/src/cmd/sniff.rs#L2) | Quickly sniff & infer CSV metadata (delimiter, header row, preamble rows, quote character, flexible, is_utf8, average record length, number of records, content length & estimated number of records if sniffing a CSV on a URL, number of fields, field names & data types). |
 | [sort](/src/cmd/sort.rs#L2)<br>🚀🗜️ | Sorts CSV data in alphabetical (with case-insensitive option), numerical, reverse, unique or random (with optional seed) order (See also `extsort` & `sortcheck` commands).  |
 | [sortcheck](/src/cmd/sortcheck.rs#L2)<br>📇 | Check if a CSV is sorted. With the --json options, also retrieve record count, sort breaks & duplicate count. |
@@ -214,6 +214,10 @@ If the output file has an extended CSV/TSV ".sz" extension, qsv will also use th
 Note however that compressed files cannot be indexed, so index-accelerated commands (`frequency`, `schema`, `split`, `stats`, `tojsonl`) will not be multi-threaded. Random access is also not supported without an index so `slice` will not be accelerated and `luau`'s random-access mode will not be available.
 
 There is also a dedicated [`snappy`](/src/cmd/snappy.rs#L2) command with extended operations — a multithreaded `compress` subcommand (4-5x faster than the built-in, single-threaded auto-compression); a `decompress` subcommand with detailed compression metadata; a `check` subcommand to inspect if a file has a Snappy header; and a `validate` subcommand to confirm if a Snappy file is valid. It can be used to compress/decompress ANY file, not just CSV/TSV files.
+
+Using the `snappy` command, we can compress NYC's 311 data (15gb, 28m rows) to 4.95 gb in *5.77 seconds* with the multithreaded `compress` subcommand - *2.58 gb/sec* with a 0.33 (3.01:1) compression ratio.
+
+Compare that to [zip 3.0](https://infozip.sourceforge.net/Zip.html), which compressed the same file to 2.9 gb in *248.3 seconds - 43x slower at 0.06 gb/sec* with a 0.19 (5.17:1) compression ratio - for just an additional 14% (2.45 gb) of saved space.
 
 ## RFC 4180 CSV Standard
 
