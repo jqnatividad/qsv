@@ -204,15 +204,16 @@ The `to` command produces produces `.xlsx`, [Parquet](https://parquet.apache.org
 
 ## Snappy Compression/Decompression
 
-qsv supports the [streaming Snappy frame compression format](https://github.com/google/snappy/blob/main/framing_format.txt) for CSV/TSV files with the ".sz" file extension (except the `index`, `extdedup` & `extsort` commands).   
+qsv supports *automatic compression/decompression* using the [Snappy frame format](https://github.com/google/snappy/blob/main/framing_format.txt). Snappy was chosen instead of more popular compression formats like gzip because it was designed for [high-performance streaming compression/decompression](https://github.com/google/snappy/tree/main/docs#readme).
 
-If the input file has an extended CSV/TSV ".sz" extension (e.g nyc311.csv.sz/nyc311.tsv.sz/nyc311.tab.sz), qsv will *automatically* do streaming decompression as it reads it.   
+For all commands, except the `index`, `extdedup` & `extsort` commands, if the input file has an ".sz" extension, qsv will *automatically* do streaming decompression as it reads it. Further, if the input file has an extended CSV/TSV ".sz" extension (e.g nyc311.csv.sz/nyc311.tsv.sz/nyc311.tab.sz), qsv will also use the file extension to determine the delimiter to use.   
 
-Similarly, if the `--output` file has an extended CSV/TSV ".sz" extension, qsv will *automatically* do streaming compression as it writes it.   
+Similarly, if the `--output` file has an ".sz" extension, qsv will *automatically* do streaming compression as it writes it.
+If the output file has an extended CSV/TSV ".sz" extension, qsv will also use the file extension to determine the delimiter to use.  
 
 Note however that snappy compressed files cannot be indexed, so index-accelerated commands (`frequency`, `schema`, `split`, `stats`, `tojsonl`) will not be multi-threaded. Random access is also not supported without an index so `slice` will not be accelerated and `luau`'s random-access mode will not be available.
 
-There is also a dedicated [`snappy`](/src/cmd/snappy.rs#L2) command with extended operations — a multithreaded `compress` subcommand (4-5x faster than the built-in, single-threaded auto-compression); a `decompress` subcommand with detailed compression metadata; a `check` subcommand to inspect if a file has a Snappy header; and a `validate` subcommand to confirm if a Snappy file is valid.
+There is also a dedicated [`snappy`](/src/cmd/snappy.rs#L2) command with extended operations — a multithreaded `compress` subcommand (4-5x faster than the built-in, single-threaded auto-compression); a `decompress` subcommand with detailed compression metadata; a `check` subcommand to inspect if a file has a Snappy header; and a `validate` subcommand to confirm if a Snappy file is valid. It can be used to compress/decompress ANY file, not just CSV/TSV files.
 
 ## RFC 4180
 
