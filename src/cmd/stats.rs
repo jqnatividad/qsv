@@ -338,8 +338,21 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         String::new()
                     }
                 };
+
+            // deserialize the existing stats args json
             let existing_stats_args_json: StatsArgs =
-                serde_json::from_str(&existing_stats_args_json_str)?;
+                match serde_json::from_str(&existing_stats_args_json_str) {
+                    Ok(stat_args) => stat_args,
+                    Err(e) => {
+                        log::warn!(
+                            "Could not serialize {path_file_stem}.stats.csv.json: {e:?}, \
+                             regenerating..."
+                        );
+                        fs::remove_file(&stats_file)?;
+                        fs::remove_file(&stats_args_json_file)?;
+                        StatsArgs::default()
+                    }
+                };
 
             // check if the cached stats are current, use the same args or if the --everything flag
             // was set & all the other non-stats args are equal. If so, we don't need to recompute
