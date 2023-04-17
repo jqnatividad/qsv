@@ -26,7 +26,8 @@ macro_rules! werr {
     ($($arg:tt)*) => ({
         use std::io::Write;
         use log::error;
-        error!("{}", $($arg)*);
+        let error = format!($($arg)*);
+        error!("{error}");
         (writeln!(&mut ::std::io::stderr(), $($arg)*)).unwrap();
     });
 }
