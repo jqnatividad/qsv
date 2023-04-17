@@ -116,6 +116,7 @@ stats options:
                               Note that a file handle is opened for each job.
                               When not set, the number of jobs is set to the
                               number of CPUs detected.
+    --stats-binout <file>     Write the stats to <file> in binary format.
 
 Common options:
     -h, --help             Display this message
@@ -175,7 +176,7 @@ use crate::{
 };
 
 #[allow(clippy::unsafe_derive_deserialize)]
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Deserialize, Debug)]
 pub struct Args {
     pub arg_input:            Option<String>,
     pub flag_select:          SelectColumns,
@@ -197,6 +198,7 @@ pub struct Args {
     pub flag_no_headers:      bool,
     pub flag_delimiter:       Option<Delimiter>,
     pub flag_no_memcheck:     bool,
+    pub flag_stats_binout:    Option<String>,
 }
 
 // this struct is used to serialize/deserialize the stats to
@@ -402,6 +404,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     }
                 }
             }?;
+
+            // write binary version of the computed stats to file if --stats_binout is set
+            // we do this so we can load the stats into memory for a CSV without having to recompute
+            // them, if it hasn't changed if the CSV is large, this can save a lot of time
+            if let Some(stats_binout) = args.flag_stats_binout.clone() {
+                let mut f = fs::File::create(stats_binout)?;
+                bincode::serialize_into(&mut f, &stats).unwrap();
+                f.flush()?;
+            }
+
             let stats = args.stats_to_records(stats);
 
             wtr.write_record(&args.stat_headers())?;
@@ -768,8 +780,8 @@ fn init_date_inference(
     Ok(())
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
-struct WhichStats {
+#[derive(Clone, Debug, Eq, PartialEq, Default, Serialize, Deserialize)]
+pub struct WhichStats {
     include_nulls: bool,
     sum:           bool,
     range:         bool,
@@ -789,7 +801,7 @@ impl Commute for WhichStats {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct Stats {
     typ:       FieldType,
     sum:       Option<TypedSum>,
@@ -1264,7 +1276,7 @@ impl Commute for Stats {
 }
 
 #[allow(clippy::enum_variant_names)]
-#[derive(Clone, Copy, PartialEq, Default)]
+#[derive(Clone, Copy, PartialEq, Default, Serialize, Deserialize)]
 pub enum FieldType {
     // The default - TNull, is the most specific type.
     // Type inference proceeds by assuming the most specific type and then
@@ -1389,7 +1401,7 @@ impl fmt::Debug for FieldType {
 
 /// `TypedSum` keeps a rolling sum of the data seen.
 /// It sums integers until it sees a float, at which point it sums floats.
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Serialize, Deserialize, Debug, PartialEq)]
 struct TypedSum {
     integer: i64,
     float:   Option<f64>,
@@ -1467,7 +1479,7 @@ impl Commute for TypedSum {
 
 /// `TypedMinMax` keeps track of minimum/maximum/range values for each possible type
 /// where min/max/range makes sense.
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Serialize, Deserialize, Debug, PartialEq)]
 struct TypedMinMax {
     strings:  MinMax<Vec<u8>>,
     str_len:  MinMax<usize>,
@@ -1485,35 +1497,24 @@ impl TypedMinMax {
             return;
         }
         self.strings.add(sample.to_vec());
-        // safety: we can use unwrap_unchecked below since we know the data type of the sample
-        unsafe {
-            match typ {
-                TString | TNull => {}
-                TFloat => {
-                    let n = from_utf8(sample)
-                        .unwrap_unchecked()
-                        .parse::<f64>()
-                        .unwrap_unchecked();
+        // safety: we can use unwrap below since we know the data type of the sample
+        match typ {
+            TString | TNull => {}
+            TFloat => {
+                let n = from_utf8(sample).unwrap().parse::<f64>().unwrap();
 
-                    self.floats.add(n);
-                    self.integers.add(n as i64);
-                }
-                TInteger => {
-                    let n = from_utf8(sample)
-                        .unwrap_unchecked()
-                        .parse::<i64>()
-                        .unwrap_unchecked();
-                    self.integers.add(n);
-                    #[allow(clippy::cast_precision_loss)]
-                    self.floats.add(n as f64);
-                }
-                TDate | TDateTime => {
-                    let n = from_utf8(sample)
-                        .unwrap_unchecked()
-                        .parse::<i64>()
-                        .unwrap_unchecked();
-                    self.dates.add(n);
-                }
+                self.floats.add(n);
+                self.integers.add(n as i64);
+            }
+            TInteger => {
+                let n = from_utf8(sample).unwrap().parse::<i64>().unwrap();
+                self.integers.add(n);
+                #[allow(clippy::cast_precision_loss)]
+                self.floats.add(n as f64);
+            }
+            TDate | TDateTime => {
+                let n = from_utf8(sample).unwrap().parse::<i64>().unwrap();
+                self.dates.add(n);
             }
         }
     }
