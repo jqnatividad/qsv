@@ -392,6 +392,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // check if the BEGIN script uses _INDEX
     index_file_used =
         index_file_used || begin_script.contains("_INDEX") || begin_script.contains("_LASTROW");
+
+    let qsv_register_lookup_used = begin_script.contains("qsv_register_lookup(");
     debug!("BEGIN script: {begin_script:?}");
 
     // check if an END script was specified
@@ -506,20 +508,22 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     setup_helpers(&luau, args.flag_delimiter, ckan_api, ckan_token)?;
 
-    // check the QSV_CACHE_DIR environment variable
-    if let Ok(cache_path) = std::env::var("QSV_CACHE_DIR") {
-        // if QSV_CACHE_DIR env var is set, check if it exists. If it doesn't, create it.
-        if !Path::new(&cache_path).exists() {
-            fs::create_dir_all(&cache_path)?;
+    // check if qsv_registerlookup_used is set, if it is, setup the qsv_cache directory
+    if qsv_register_lookup_used {
+        if let Ok(cache_path) = std::env::var("QSV_CACHE_DIR") {
+            // if QSV_CACHE_DIR env var is set, check if it exists. If it doesn't, create it.
+            if !Path::new(&cache_path).exists() {
+                fs::create_dir_all(&cache_path)?;
+            }
+            info!("Using cache directory: {cache_path}");
+            globals.set("_QSV_CACHE_DIR", cache_path)?;
+        } else {
+            if !Path::new(&args.flag_cache_dir).exists() {
+                fs::create_dir_all(&args.flag_cache_dir)?;
+            }
+            info!("Using cache directory: {}", args.flag_cache_dir);
+            globals.set("_QSV_CACHE_DIR", args.flag_cache_dir.clone())?;
         }
-        info!("Using cache directory: {cache_path}");
-        globals.set("_QSV_CACHE_DIR", cache_path)?;
-    } else {
-        if !Path::new(&args.flag_cache_dir).exists() {
-            fs::create_dir_all(&args.flag_cache_dir)?;
-        }
-        info!("Using cache directory: {}", args.flag_cache_dir);
-        globals.set("_QSV_CACHE_DIR", args.flag_cache_dir.clone())?;
     }
 
     debug!("Main processing");
