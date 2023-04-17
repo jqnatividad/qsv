@@ -145,7 +145,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         match infer_schema_from_stats(&args, &input_filename) {
             Ok(map) => map,
             Err(e) => {
-                return fail_clierror!("Failed to infer schema via stats and frequency: {e}");
+                return fail_clierror!(
+                    "Failed to infer schema via stats and frequency from {input_filename}: {e}"
+                );
             }
         };
 
@@ -427,30 +429,73 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
         flag_no_headers:      args.flag_no_headers,
         flag_delimiter:       args.flag_delimiter,
         flag_no_memcheck:     args.flag_no_memcheck,
+        flag_stats_binout:    None,
     };
 
-    let (csv_fields, csv_stats) = match stats_args.rconfig().indexed() {
-        Ok(o) => {
-            if let Some(idx) = o {
-                winfo!("index found... triggering parallel stats");
-                let idx_count = idx.count();
-                stats_args.parallel_stats(&stats_args.flag_dates_whitelist, idx_count)
+    let tempfile = tempfile::Builder::new()
+        .suffix("-stats.csv")
+        .tempfile()
+        .unwrap();
+    let tempfile_path = tempfile.path().to_str().unwrap().to_string();
+
+    let tempfile_statsbin = tempfile::Builder::new()
+        .suffix("-stats.bin")
+        .tempfile()
+        .unwrap();
+    let tempfile_statsbin_path = tempfile_statsbin.path().to_str().unwrap().to_string();
+
+    let mut stats_args_str = format!(
+        "stats {input} --infer-dates --dates-whitelist {dates_whitelist} --round 4 --cardinality \
+         --output {output} --stats-binout {binout} --force",
+        input = {
+            if let Some(arg_input) = stats_args.arg_input.clone() {
+                arg_input
             } else {
-                winfo!(
-                    "no index, triggering sequential stats. Consider indexing your data if schema \
-                     inferencing is slow. "
-                );
-                stats_args.sequential_stats(&stats_args.flag_dates_whitelist)
+                "-".to_string()
             }
+        },
+        dates_whitelist = stats_args.flag_dates_whitelist,
+        output = tempfile_path,
+        binout = tempfile_statsbin_path,
+    );
+    if args.flag_prefer_dmy {
+        stats_args_str = format!("{stats_args_str} --prefer-dmy");
+    }
+    if args.flag_no_headers {
+        stats_args_str = format!("{stats_args_str} --no-headers");
+    }
+    if let Some(delimiter) = args.flag_delimiter {
+        let delim = delimiter.as_byte() as char;
+        stats_args_str = format!("{stats_args_str} --delimiter {delim}");
+    }
+    if args.flag_no_memcheck {
+        stats_args_str = format!("{stats_args_str} --no-memcheck");
+    }
+    if let Some(mut jobs) = stats_args.flag_jobs {
+        if jobs > 2 {
+            jobs -= 1; // leave one core for the main thread
         }
-        Err(e) => {
-            wwarn!("error determining if indexed, triggering sequential stats: {e}");
-            stats_args.sequential_stats(&stats_args.flag_dates_whitelist)
-        }
-    }?;
+        stats_args_str = format!("{stats_args_str} --jobs {jobs}");
+    }
+    debug!("stats_args_str: {stats_args_str}");
+
+    let stats_args_vec: Vec<&str> = stats_args_str.split_whitespace().collect();
+
+    let qsv_bin = std::env::current_exe().unwrap();
+    let mut stats_cmd = std::process::Command::new(qsv_bin);
+    stats_cmd.args(stats_args_vec);
+    let stats_output = stats_cmd.output().unwrap();
+    debug!("stats_output: {stats_output:?}");
+
+    let mut bin_file = File::open(tempfile_statsbin_path).unwrap();
+    let csv_stats: Vec<Stats> = bincode::deserialize_from(&mut bin_file).unwrap();
+
+    // get the headers from the input file
+    let mut rdr = csv::Reader::from_path(stats_args.arg_input.clone().unwrap()).unwrap();
+    let csv_fields = rdr.byte_headers()?.clone();
+    drop(rdr);
 
     let stats_columns = stats_args.stat_headers();
-    debug!("stats columns: {stats_columns:?}");
 
     let mut stats_col_index_map = AHashMap::new();
 
