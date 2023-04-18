@@ -118,8 +118,8 @@ stats options:
                               When not set, the number of jobs is set to the
                               number of CPUs detected.
     --stats-binout <file>     Write the stats to <file> in binary format.
-                              This is used by other qsv commands (currently only `schema`)
-                              to load the stats into memory without having to
+                              This is used by other qsv commands (currently `schema` and
+                              `tojsonl`) to load the stats into memory without having to
                               process/parse the CSV again.
 
 Common options:
@@ -519,7 +519,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 }
 
 impl Args {
-    pub fn sequential_stats(&self, whitelist: &str) -> CliResult<(csv::ByteRecord, Vec<Stats>)> {
+    fn sequential_stats(&self, whitelist: &str) -> CliResult<(csv::ByteRecord, Vec<Stats>)> {
         let mut rdr = self.rconfig().reader()?;
         let (headers, sel) = self.sel_headers(&mut rdr)?;
 
@@ -534,7 +534,7 @@ impl Args {
         Ok((headers, stats))
     }
 
-    pub fn parallel_stats(
+    fn parallel_stats(
         &self,
         whitelist: &str,
         idx_count: u64,
