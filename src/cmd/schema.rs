@@ -248,6 +248,7 @@ pub fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<M
     // generate definition for each CSV column/field and add to properties_map
     for i in 0..csv_fields.len() {
         header_byte_slice = csv_fields.get(i).unwrap();
+
         // convert csv header to string
         header_string = convert_to_string(header_byte_slice)?;
 
@@ -454,14 +455,26 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
         false
     };
 
+    let mut stats_bin_loaded = false;
+
     // if stats.bin file exists and is current, use it
-    let csv_stats = if stats_bin_current {
-        let mut bin_file = File::open(stats_binary_encoded_path).unwrap();
-        let decoded_stats: Vec<Stats> = bincode::deserialize_from(&mut bin_file).unwrap();
-        decoded_stats
-    } else {
+    let mut csv_stats: Vec<Stats> = Vec::with_capacity(100_000_000);
+
+    if stats_bin_current {
+        let mut bin_file = File::open(stats_binary_encoded_path)?;
+        match bincode::deserialize_from(&mut bin_file) {
+            Ok(stats) => {
+                csv_stats = stats;
+                stats_bin_loaded = true;
+            }
+            Err(e) => {
+                wwarn!("Error reading stats.csv.bin file: {e:?}. Regenerating stats.bin file.");
+            }
+        }
+    }
+
+    if !stats_bin_loaded {
         // otherwise, run stats command to generate stats.csv.bin file
-        debug!("Running stats command to generate stats.csv.bin file");
         let tempfile = tempfile::Builder::new()
             .suffix(".stats.csv")
             .tempfile()
@@ -507,7 +520,6 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
             }
             stats_args_str = format!("{stats_args_str} --jobs {jobs}");
         }
-        debug!("stats_args_str: {stats_args_str}");
 
         let stats_args_vec: Vec<&str> = stats_args_str.split_whitespace().collect();
 
@@ -517,8 +529,11 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
         let _stats_output = stats_cmd.output()?;
 
         let mut bin_file = File::open(tempfile_statsbin_path).unwrap();
-        let decoded_stats: Vec<Stats> = bincode::deserialize_from(&mut bin_file).unwrap();
-        decoded_stats
+
+        #[allow(unused_assignments)]
+        let mut decoded_stats: Vec<Stats> = Vec::with_capacity(100_000_000); // minimize allocs
+        decoded_stats = bincode::deserialize_from(&mut bin_file).unwrap();
+        csv_stats = decoded_stats;
     };
 
     // get the headers from the input file
@@ -604,7 +619,6 @@ fn get_unique_values(
     }?;
 
     let unique_values_map = construct_map_of_unique_values(&headers, &ftables)?;
-
     Ok(unique_values_map)
 }
 
@@ -615,7 +629,6 @@ fn construct_map_of_unique_values(
 ) -> CliResult<AHashMap<String, Vec<String>>> {
     let mut unique_values_map: AHashMap<String, Vec<String>> = AHashMap::new();
     let mut unique_values = Vec::with_capacity(freq_csv_fields.len());
-
     // iterate through fields and gather unique values for each field
     for (i, header_byte_slice) in freq_csv_fields.iter().enumerate() {
         unique_values.clear();
@@ -630,17 +643,17 @@ fn construct_map_of_unique_values(
         // sort the values so enum list so schema can be diff'ed between runs
         unique_values.sort_unstable();
 
-        if log::log_enabled!(log::Level::Debug) {
-            // we do this as this debug is relatively expensive
-            debug!(
-                "enum[{header_string}]: len={}, val={:?}",
-                unique_values.len(),
-                unique_values
-            );
-        }
+        // if log::log_enabled!(log::Level::Debug) {
+        //     // we do this as this debug is relatively expensive
+        //     debug!(
+        //         "enum[{header_string}]: len={}, val={:?}",
+        //         unique_values.len(),
+        //         unique_values
+        //     );
+        // }
         unique_values_map.insert(header_string, unique_values.clone());
     }
-
+    debug!("FINISHED construct_map_of_unique_values");
     // dbg!(&unique_values_map);
 
     Ok(unique_values_map)
@@ -727,8 +740,7 @@ fn generate_string_patterns(
         }
     }
 
-    debug!("unique values for eligible pattern columns: {unique_values_map:?}");
-
+    // build regex pattern for each header
     pattern_map.reserve(unique_values_map.len());
     for (header, value_set) in unique_values_map.iter() {
         // Convert Set to Vector
