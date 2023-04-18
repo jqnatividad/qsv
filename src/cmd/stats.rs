@@ -314,6 +314,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         fconfig.path = Some(tempfile_path);
     }
 
+    // create stats_binary_encoded_vec to store the stats in binary format
+    let mut stats_binary_encoded_vec: Vec<u8> = Vec::new();
+
     let mut compute_stats = true;
 
     if let Some(path) = fconfig.path.clone() {
@@ -418,14 +421,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 }
             }?;
 
-            // write binary version of the computed stats to file if --stats_binout is set
-            // we do this so we can load the stats into memory for a CSV without having to recompute
-            // them, if it hasn't changed if the CSV is large, this can save a lot of time
-            if let Some(stats_binout) = args.flag_stats_binout.clone() {
-                let mut f = fs::File::create(stats_binout)?;
-                bincode::serialize_into(&mut f, &stats).unwrap();
-                f.flush()?;
-            }
+            // store binary version of the stats in memory, so we can write it to disk later
+            stats_binary_encoded_vec = bincode::serialize(&stats).unwrap();
 
             let stats = args.stats_to_records(stats);
 
@@ -485,9 +482,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // save the stats args to "<FILESTEM>.stats.csv.json"
         stats_pathbuf.set_extension("csv.json");
         std::fs::write(
-            stats_pathbuf,
+            stats_pathbuf.clone(),
             serde_json::to_string_pretty(&current_stats_args).unwrap(),
         )?;
+
+        // save the binary encoded stats to "<FILESTEM>.stats.csv.bin"
+        stats_pathbuf.set_extension("bin");
+        if stats_binary_encoded_vec.len() > 0 {
+            fs::write(stats_pathbuf.clone(), stats_binary_encoded_vec)?;
+
+            // if the user specified --stats-binout, copy the binary stats to that file as well
+            if let Some(stats_binout) = args.flag_stats_binout {
+                fs::copy(stats_pathbuf, stats_binout)?;
+            }
+        }
     }
 
     if stdout_output_flag {

@@ -405,7 +405,7 @@ pub fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<M
     Ok(properties_map)
 }
 
-/// get stats records from `cmd::stats`
+/// get stats records from stats.bin file, or if its invalid, by running the stats command
 /// returns tuple (`csv_fields`, `csv_stats`, `stats_col_index_map`)
 fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap<String, usize>)> {
     let stats_args = crate::cmd::stats::Args {
@@ -432,66 +432,97 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
         flag_stats_binout:    None,
     };
 
-    let tempfile = tempfile::Builder::new()
-        .suffix("-stats.csv")
-        .tempfile()
-        .unwrap();
-    let tempfile_path = tempfile.path().to_str().unwrap().to_string();
+    let stats_binary_encoded_path = args.arg_input.clone().unwrap();
+    let stats_binary_encoded_path = Path::new(&stats_binary_encoded_path)
+        .to_path_buf()
+        .with_extension("stats.csv.bin");
 
-    let tempfile_statsbin = tempfile::Builder::new()
-        .suffix("-stats.bin")
-        .tempfile()
-        .unwrap();
-    let tempfile_statsbin_path = tempfile_statsbin.path().to_str().unwrap().to_string();
+    let stats_bin_current = if stats_binary_encoded_path.exists() {
+        let stats_bin_metadata = std::fs::metadata(&stats_binary_encoded_path)?;
 
-    let mut stats_args_str = format!(
-        "stats {input} --infer-dates --dates-whitelist {dates_whitelist} --round 4 --cardinality \
-         --output {output} --stats-binout {binout} --force",
-        input = {
-            if let Some(arg_input) = stats_args.arg_input.clone() {
-                arg_input
-            } else {
-                "-".to_string()
-            }
-        },
-        dates_whitelist = stats_args.flag_dates_whitelist,
-        output = tempfile_path,
-        binout = tempfile_statsbin_path,
-    );
-    if args.flag_prefer_dmy {
-        stats_args_str = format!("{stats_args_str} --prefer-dmy");
-    }
-    if args.flag_no_headers {
-        stats_args_str = format!("{stats_args_str} --no-headers");
-    }
-    if let Some(delimiter) = args.flag_delimiter {
-        let delim = delimiter.as_byte() as char;
-        stats_args_str = format!("{stats_args_str} --delimiter {delim}");
-    }
-    if args.flag_no_memcheck {
-        stats_args_str = format!("{stats_args_str} --no-memcheck");
-    }
-    if let Some(mut jobs) = stats_args.flag_jobs {
-        if jobs > 2 {
-            jobs -= 1; // leave one core for the main thread
+        let input_metadata = std::fs::metadata(&args.arg_input.clone().unwrap())?;
+
+        if stats_bin_metadata.modified()? > input_metadata.modified()? {
+            info!("Valid stats.csv.bin file found!");
+            true
+        } else {
+            info!("stats.csv.bin file is older than input file. Regenerating stats.bin file.");
+            false
         }
-        stats_args_str = format!("{stats_args_str} --jobs {jobs}");
-    }
-    debug!("stats_args_str: {stats_args_str}");
+    } else {
+        info!("stats.csv.bin file does not exist: {stats_binary_encoded_path:?}");
+        false
+    };
 
-    let stats_args_vec: Vec<&str> = stats_args_str.split_whitespace().collect();
+    // if stats.bin file exists and is current, use it
+    let csv_stats = if stats_bin_current {
+        let mut bin_file = File::open(stats_binary_encoded_path).unwrap();
+        let decoded_stats: Vec<Stats> = bincode::deserialize_from(&mut bin_file).unwrap();
+        decoded_stats
+    } else {
+        // otherwise, run stats command to generate stats.csv.bin file
+        debug!("Running stats command to generate stats.csv.bin file");
+        let tempfile = tempfile::Builder::new()
+            .suffix(".stats.csv")
+            .tempfile()
+            .unwrap();
+        let tempfile_path = tempfile.path().to_str().unwrap().to_string();
 
-    let qsv_bin = std::env::current_exe().unwrap();
-    let mut stats_cmd = std::process::Command::new(qsv_bin);
-    stats_cmd.args(stats_args_vec);
-    let stats_output = stats_cmd.output().unwrap();
-    debug!("stats_output: {stats_output:?}");
+        let tempfile_statsbin = tempfile::Builder::new()
+            .suffix(".stats.csv.bin")
+            .tempfile()
+            .unwrap();
+        let tempfile_statsbin_path = tempfile_statsbin.path().to_str().unwrap().to_string();
 
-    let mut bin_file = File::open(tempfile_statsbin_path).unwrap();
-    let csv_stats: Vec<Stats> = bincode::deserialize_from(&mut bin_file).unwrap();
+        let mut stats_args_str = format!(
+            "stats {input} --infer-dates --dates-whitelist {dates_whitelist} --round 4 \
+             --cardinality --output {output} --stats-binout {binout} --force",
+            input = {
+                if let Some(arg_input) = stats_args.arg_input.clone() {
+                    arg_input
+                } else {
+                    "-".to_string()
+                }
+            },
+            dates_whitelist = stats_args.flag_dates_whitelist,
+            output = tempfile_path,
+            binout = tempfile_statsbin_path,
+        );
+        if args.flag_prefer_dmy {
+            stats_args_str = format!("{stats_args_str} --prefer-dmy");
+        }
+        if args.flag_no_headers {
+            stats_args_str = format!("{stats_args_str} --no-headers");
+        }
+        if let Some(delimiter) = args.flag_delimiter {
+            let delim = delimiter.as_byte() as char;
+            stats_args_str = format!("{stats_args_str} --delimiter {delim}");
+        }
+        if args.flag_no_memcheck {
+            stats_args_str = format!("{stats_args_str} --no-memcheck");
+        }
+        if let Some(mut jobs) = stats_args.flag_jobs {
+            if jobs > 2 {
+                jobs -= 1; // leave one core for the main thread
+            }
+            stats_args_str = format!("{stats_args_str} --jobs {jobs}");
+        }
+        debug!("stats_args_str: {stats_args_str}");
+
+        let stats_args_vec: Vec<&str> = stats_args_str.split_whitespace().collect();
+
+        let qsv_bin = std::env::current_exe().unwrap();
+        let mut stats_cmd = std::process::Command::new(qsv_bin);
+        stats_cmd.args(stats_args_vec);
+        let _stats_output = stats_cmd.output()?;
+
+        let mut bin_file = File::open(tempfile_statsbin_path).unwrap();
+        let decoded_stats: Vec<Stats> = bincode::deserialize_from(&mut bin_file).unwrap();
+        decoded_stats
+    };
 
     // get the headers from the input file
-    let mut rdr = csv::Reader::from_path(stats_args.arg_input.clone().unwrap()).unwrap();
+    let mut rdr = csv::Reader::from_path(args.arg_input.clone().unwrap()).unwrap();
     let csv_fields = rdr.byte_headers()?.clone();
     drop(rdr);
 
