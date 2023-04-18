@@ -147,12 +147,12 @@ pub fn version() -> String {
     // get max_file_size & memory info. max_file_size is based on QSV_FREEMEMORY_HEADROOM_PCT
     // setting and is only enforced when qsv is running in "non-streaming" mode (i.e. needs to
     // load the entire file into memory).
-    let max_file_size = mem_file_check(Path::new(""), true, false).unwrap_or(0) as u64;
-    let mut sys = System::new_with_specifics(sysinfo::RefreshKind::new().with_memory());
+    let mut sys = System::new_all();
     sys.refresh_memory();
     let avail_mem = sys.available_memory();
     let total_mem = sys.total_memory();
     let free_swap = sys.free_swap();
+    let max_file_size = mem_file_check(Path::new(""), true, false).unwrap_or(0) as u64;
 
     #[cfg(feature = "mimalloc")]
     let malloc_kind = "mimalloc";
@@ -402,7 +402,7 @@ pub fn mem_file_check(path: &Path, version_check: bool, no_memcheck: bool) -> Re
 
     let no_memcheck_work = env::var("QSV_NO_MEMORY_CHECK").is_ok() || no_memcheck;
 
-    let mut sys = System::new_with_specifics(sysinfo::RefreshKind::new().with_memory());
+    let mut sys = sysinfo::System::new();
     sys.refresh_memory();
     let avail_mem = sys.available_memory();
     let free_swap = sys.free_swap();
