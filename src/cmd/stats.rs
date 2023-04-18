@@ -584,7 +584,7 @@ impl Args {
         Ok((headers, merge_all(recv.iter()).unwrap_or_default()))
     }
 
-    pub fn stats_to_records(&self, stats: Vec<Stats>) -> Vec<csv::StringRecord> {
+    fn stats_to_records(&self, stats: Vec<Stats>) -> Vec<csv::StringRecord> {
         let round_places = self.flag_round;
         let mut records = Vec::with_capacity(stats.len());
         records.extend(repeat(csv::StringRecord::new()).take(stats.len()));
@@ -635,7 +635,7 @@ impl Args {
         Ok((sel.select(&headers).collect(), sel))
     }
 
-    pub fn rconfig(&self) -> Config {
+    fn rconfig(&self) -> Config {
         Config::new(&self.arg_input)
             .delimiter(self.flag_delimiter)
             .no_headers(self.flag_no_headers)
@@ -806,7 +806,7 @@ fn init_date_inference(
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Default, Serialize, Deserialize)]
-pub struct WhichStats {
+struct WhichStats {
     include_nulls: bool,
     sum:           bool,
     range:         bool,
@@ -1302,7 +1302,7 @@ impl Commute for Stats {
 
 #[allow(clippy::enum_variant_names)]
 #[derive(Clone, Copy, PartialEq, Default, Serialize, Deserialize)]
-pub enum FieldType {
+enum FieldType {
     // The default - TNull, is the most specific type.
     // Type inference proceeds by assuming the most specific type and then
     // relaxing the type as counter-examples are found.
