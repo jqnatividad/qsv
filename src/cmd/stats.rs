@@ -46,9 +46,10 @@ https://github.com/jqnatividad/belt/tree/main/dateparser#accepted-date-formats.
 Computing statistics on a large file can be made much faster if you create an index for it
 first with 'qsv index' to enable multithreading.
 
-This command caches the results in <FILESTEM>.stats.csv (e.g., qsv stats nyc311.csv
-will create nyc311.stats.csv), and the arguments used to generate the stats are saved in
-<FILESTEM>.stats.csv.json.
+This command caches the results in <FILESTEM>.stats.csv and <FILESTEM>.stats.csv.bin
+(e.g., qsv stats nyc311.csv will create nyc311.stats.csv and nyc311.stats.csv.bin).
+The .bin file is the binary format of the computed stats. The arguments used to generate the
+cached stats are saved in <FILESTEM>.stats.csv.json.
 
 If stats have already been computed for the input file with similar arguments and the file
 hasn't changed, the stats will be loaded from the cache instead of recomputing it.
@@ -117,6 +118,9 @@ stats options:
                               When not set, the number of jobs is set to the
                               number of CPUs detected.
     --stats-binout <file>     Write the stats to <file> in binary format.
+                              This is used by other qsv commands (currently only `schema`)
+                              to load the stats into memory without having to
+                              process/parse the CSV again.
 
 Common options:
     -h, --help             Display this message
