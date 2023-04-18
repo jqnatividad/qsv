@@ -653,7 +653,6 @@ fn construct_map_of_unique_values(
         // }
         unique_values_map.insert(header_string, unique_values.clone());
     }
-    debug!("FINISHED construct_map_of_unique_values");
     // dbg!(&unique_values_map);
 
     Ok(unique_values_map)
