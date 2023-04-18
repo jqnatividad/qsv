@@ -319,7 +319,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     // create stats_binary_encoded_vec to store the stats in binary format
-    let mut stats_binary_encoded_vec: Vec<u8> = Vec::new();
+    let mut stats_binary_encoded_vec: Vec<u8> = Vec::with_capacity(100_000_000);
 
     let mut compute_stats = true;
 
