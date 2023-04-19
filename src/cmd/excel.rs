@@ -15,8 +15,9 @@ fractional components (e.g. 40729 is 2011-07-05, 37145.354166666664 is 2001-09-1
 We need a whitelist so we know to only do this date conversions for date fields and
 not all columns with numeric values.
 
-With the modern XML-based, XLSX format however, qsv will automatically process a cell as a date,
-even if its not its not in the --dates-whitelist, if the cell's format has been explicitly set to date.
+With the modern XML-based, XLSX format however (Excel 2007 and later), qsv will automatically process
+a cell as a date, even if its not its not in the --dates-whitelist, if the cell's format has been
+explicitly set to date.
 
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_excel.rs.
 
@@ -573,10 +574,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 DataType::Bool(ref b) => record.push_field(&b.to_string()),
             };
 
-            // dates are stored as floats in Excel
-            // that's why we need the --dates-whitelist, so we can convert the float to a date.
-            // However, with the XLSX format, we can get a cell's format as an attribute. So we can
-            // automatically process a cell as a date, even if its column is NOT in the whitelist
+            // Dates are stored as floats in Excel's older binary format (XLS - Excel 97-2003.)
+            // That's why we need the --dates-whitelist, so we can convert the float to a date.
+            // However, with the more recent XLSX format (Excel 2007 & later), we can get a cell's
+            // format as a cell attribute. So we can automatically process a cell as a date,
+            // even if its column is NOT in the whitelist
             if float_flag {
                 if cell_date_flag {
                     work_date = if float_val.fract() > 0.0 {
