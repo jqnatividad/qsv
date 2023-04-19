@@ -1914,11 +1914,22 @@ fn setup_helpers(
                 mv, nl, pwd, sed, sort, tail, touch, tr, uname, uniq, wc, whoami")
         };
 
-        let mut cmd = std::process::Command::new(shellcmd_string.clone());
         let args_string = args.as_str().to_string();
         let args_vec: Vec<&str> = args_string.split_whitespace().collect();
+
+        let result = if cfg!(target_os = "windows") {
+            std::process::Command::new("cmd")
+                .args(["/C", &shellcmd_string])
+                .args(args_vec)
+                .output()
+        } else {
+            std::process::Command::new("sh")
+                .arg("-c")
+                .arg(&shellcmd_string)
+                .args(args_vec)
+                .output()
+        };
         log::info!("Invoking qsv_shellcmd: {shellcmd_string} {args_string}");
-        let result = cmd.args(args_vec).output();
 
         match result {
             Ok(output) => {
