@@ -866,3 +866,136 @@ fn excel_range_double_letter_cols() {
     assert_eq!(got, expected);
     wrk.assert_success(&mut cmd);
 }
+
+#[test]
+fn excel_neg_float() {
+    let wrk = Workdir::new("excel_neg_float");
+
+    let xls_file = wrk.load_test_file("excel-rounding.xlsx");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--range").arg("b2:b").arg(xls_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["-100.01"],
+        svec!["-200.02"],
+    ];
+
+    assert_eq!(got, expected);
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn excel_small_neg_float() {
+    let wrk = Workdir::new("excel_small_neg_float");
+
+    let xls_file = wrk.load_test_file("excel-rounding.xlsx");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--range").arg("c2:c").arg(xls_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["-0.01"],
+        svec!["-0.02"],
+    ];
+
+    assert_eq!(got, expected);
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn excel_neg_int() {
+    let wrk = Workdir::new("excel_neg_int");
+
+    let xls_file = wrk.load_test_file("excel-rounding.xlsx");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--range").arg("d2:d").arg(xls_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["-1"],
+        svec!["-2"],
+    ];
+
+    assert_eq!(got, expected);
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn excel_zero() {
+    let wrk = Workdir::new("excel_zero");
+
+    let xls_file = wrk.load_test_file("excel-rounding.xlsx");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--range").arg("e2:e").arg(xls_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["0"],
+        svec!["0"],
+    ];
+
+    assert_eq!(got, expected);
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn excel_small_pos_float() {
+    let wrk = Workdir::new("excel_small_pos_float");
+
+    let xls_file = wrk.load_test_file("excel-rounding.xlsx");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--range").arg("f2:f").arg(xls_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["0.01"],
+        svec!["0.02"],
+    ];
+
+    assert_eq!(got, expected);
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn excel_pos_float() {
+    let wrk = Workdir::new("excel_pos_float");
+
+    let xls_file = wrk.load_test_file("excel-rounding.xlsx");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--range").arg("g2:g").arg(xls_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["100.01"],
+        svec!["200.02"],
+    ];
+
+    assert_eq!(got, expected);
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn excel_pos_int() {
+    let wrk = Workdir::new("excel_pos_int");
+
+    let xls_file = wrk.load_test_file("excel-rounding.xlsx");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--range").arg("h2:h").arg(xls_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["1"],
+        svec!["2"],
+    ];
+
+    assert_eq!(got, expected);
+    wrk.assert_success(&mut cmd);
+}
