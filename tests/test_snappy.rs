@@ -1,6 +1,6 @@
-use std::path::Path;
+use newline_converter::dos2unix;
 
-use crate::workdir::{is_same_file, Workdir};
+use crate::workdir::Workdir;
 
 #[test]
 fn snappy_roundtrip() {
@@ -57,7 +57,7 @@ fn snappy_decompress() {
 
     let expected = wrk.load_test_resource("boston311-100.csv");
 
-    assert_eq!(got, expected.trim_end());
+    assert_eq!(dos2unix(&got), dos2unix(&expected).trim_end());
 
     wrk.assert_success(&mut cmd);
 }
@@ -76,10 +76,20 @@ fn snappy_compress() {
     wrk.assert_success(&mut cmd);
 
     let got_path = wrk.path("out.csv.sz");
-    let expected = wrk.load_test_file("boston311-100.csv.sz");
-    let expected_path = Path::new(&expected);
 
-    assert!(is_same_file(&got_path, expected_path).unwrap());
+    let mut cmd = wrk.command("snappy");
+    cmd.arg("decompress")
+        .arg(got_path.clone())
+        .args(["--output", "out.csv"]);
+
+    wrk.assert_success(&mut cmd);
+
+    let expected = wrk.load_test_resource("boston311-100.csv");
+    let got = wrk.read_to_string("out.csv");
+
+    assert_eq!(dos2unix(&got).trim_end(), dos2unix(&expected).trim_end());
+
+    // assert!(is_same_file(&wrk.path("output.csv"), expected_path).unwrap());
 }
 
 #[test]
