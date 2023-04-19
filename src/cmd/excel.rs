@@ -611,7 +611,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         format!("ERROR: Cannot convert {float_val} to date")
                     };
                     record.push_field(&work_date);
-                } else if float_val.fract() > 0.0 {
+                } else if float_val.fract().abs() > 0.0
+                    || float_val > i64::MAX as f64
+                    || float_val < i64::MIN as f64
+                {
                     let mut buffer = ryu::Buffer::new();
                     record.push_field(buffer.format_finite(float_val));
                 } else {
