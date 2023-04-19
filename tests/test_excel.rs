@@ -877,10 +877,7 @@ fn excel_neg_float() {
     cmd.arg("--range").arg("b2:b").arg(xls_file);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![
-        svec!["-100.01"],
-        svec!["-200.02"],
-    ];
+    let expected = vec![svec!["-100.01"], svec!["-200.02"]];
 
     assert_eq!(got, expected);
     wrk.assert_success(&mut cmd);
@@ -896,10 +893,7 @@ fn excel_small_neg_float() {
     cmd.arg("--range").arg("c2:c").arg(xls_file);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![
-        svec!["-0.01"],
-        svec!["-0.02"],
-    ];
+    let expected = vec![svec!["-0.01"], svec!["-0.02"]];
 
     assert_eq!(got, expected);
     wrk.assert_success(&mut cmd);
@@ -915,10 +909,7 @@ fn excel_neg_int() {
     cmd.arg("--range").arg("d2:d").arg(xls_file);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![
-        svec!["-1"],
-        svec!["-2"],
-    ];
+    let expected = vec![svec!["-1"], svec!["-2"]];
 
     assert_eq!(got, expected);
     wrk.assert_success(&mut cmd);
@@ -934,10 +925,7 @@ fn excel_zero() {
     cmd.arg("--range").arg("e2:e").arg(xls_file);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![
-        svec!["0"],
-        svec!["0"],
-    ];
+    let expected = vec![svec!["0"], svec!["0"]];
 
     assert_eq!(got, expected);
     wrk.assert_success(&mut cmd);
@@ -953,10 +941,7 @@ fn excel_small_pos_float() {
     cmd.arg("--range").arg("f2:f").arg(xls_file);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![
-        svec!["0.01"],
-        svec!["0.02"],
-    ];
+    let expected = vec![svec!["0.01"], svec!["0.02"]];
 
     assert_eq!(got, expected);
     wrk.assert_success(&mut cmd);
@@ -972,10 +957,7 @@ fn excel_pos_float() {
     cmd.arg("--range").arg("g2:g").arg(xls_file);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![
-        svec!["100.01"],
-        svec!["200.02"],
-    ];
+    let expected = vec![svec!["100.01"], svec!["200.02"]];
 
     assert_eq!(got, expected);
     wrk.assert_success(&mut cmd);
@@ -991,10 +973,23 @@ fn excel_pos_int() {
     cmd.arg("--range").arg("h2:h").arg(xls_file);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![
-        svec!["1"],
-        svec!["2"],
-    ];
+    let expected = vec![svec!["1"], svec!["2"]];
+
+    assert_eq!(got, expected);
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn excel_large_floats() {
+    let wrk = Workdir::new("excel_large_floats");
+
+    let xls_file = wrk.load_test_file("excel-large-floats.xlsx");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg(xls_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![svec!["A"], svec!["9.22337203685478e19"]];
 
     assert_eq!(got, expected);
     wrk.assert_success(&mut cmd);
