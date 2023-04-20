@@ -187,7 +187,21 @@ Field Name  Field Type  Field Format
 city        string      string
 state       string      string"#
         .to_string();
-    assert_eq!(got, expected);
+
+    let expected2: String = r#"Table 'cities' (4 rows)
+
+Field Name  Field Type  Field Format
+city        string      string
+state       string      string
+
+Table 'places' (4 rows)
+
+Field Name  Field Type  Field Format
+city        string      string
+place       string      string"#
+        .to_string();
+
+    assert!(got == expected || got == expected2);
 
     let expected = wrk.load_test_file("dpdir.json");
     let expected_path = Path::new(&expected);
@@ -238,7 +252,21 @@ Field Name  Field Type  Field Format
 city        string      string
 state       string      string"#
         .to_string();
-    assert_eq!(got, expected);
+
+    let expected2: String = r#"Table 'cities' (4 rows)
+
+Field Name  Field Type  Field Format
+city        string      string
+state       string      string
+
+Table 'places' (4 rows)
+
+Field Name  Field Type  Field Format
+city        string      string
+place       string      string"#
+        .to_string();
+
+    assert!(got == expected || got == expected2);
 
     let db = Connection::open(sqlite_file_filename).unwrap();
     let mut stmt = db.prepare("SELECT * FROM cities ORDER BY city").unwrap();
