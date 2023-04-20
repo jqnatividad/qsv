@@ -88,8 +88,6 @@ fn snappy_compress() {
     let got = wrk.read_to_string("out.csv");
 
     assert_eq!(dos2unix(&got).trim_end(), dos2unix(&expected).trim_end());
-
-    // assert!(is_same_file(&wrk.path("output.csv"), expected_path).unwrap());
 }
 
 #[test]
