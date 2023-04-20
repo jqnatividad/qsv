@@ -433,9 +433,8 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
         flag_stats_binout:    None,
     };
 
-    let stats_binary_encoded_path = args.arg_input.clone().unwrap();
-    let stats_binary_encoded_path = Path::new(&stats_binary_encoded_path)
-        .to_path_buf()
+    let stats_binary_encoded_path = Path::new(&args.arg_input.clone().unwrap())
+        .canonicalize()?
         .with_extension("stats.csv.bin");
 
     let stats_bin_current = if stats_binary_encoded_path.exists() {
@@ -530,10 +529,16 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
 
         let mut bin_file = File::open(tempfile_statsbin_path).unwrap();
 
-        #[allow(unused_assignments)]
-        let mut decoded_stats: Vec<Stats> = Vec::with_capacity(100_000_000); // minimize allocs
-        decoded_stats = bincode::deserialize_from(&mut bin_file).unwrap();
-        csv_stats = decoded_stats;
+        match bincode::deserialize_from(&mut bin_file) {
+            Ok(stats) => {
+                csv_stats = stats;
+            }
+            Err(e) => {
+                return fail_clierror!(
+                    "Error reading stats.csv.bin file: {e:?}. Schema generation aborted."
+                );
+            }
+        }
     };
 
     // get the headers from the input file
