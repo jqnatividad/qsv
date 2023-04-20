@@ -215,6 +215,7 @@ impl Workdir {
 
     #[allow(clippy::wrong_self_convention)]
     pub fn from_str<T: FromStr>(&self, name: &Path) -> T {
+        log::debug!("reading file: {name:?}");
         let mut o = String::new();
         fs::File::open(name)
             .unwrap()
