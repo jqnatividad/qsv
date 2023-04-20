@@ -1,3 +1,4 @@
+#![cfg(target_family = "unix")]
 use newline_converter::dos2unix;
 use serial_test::serial;
 
