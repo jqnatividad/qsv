@@ -1,8 +1,10 @@
 use newline_converter::dos2unix;
+use serial_test::serial;
 
 use crate::workdir::Workdir;
 
 #[test]
+#[serial]
 fn tojsonl_simple() {
     let wrk = Workdir::new("tojsonl_simple");
     wrk.create(
@@ -26,6 +28,7 @@ fn tojsonl_simple() {
 }
 
 #[test]
+#[serial]
 fn tojsonl_boolean() {
     let wrk = Workdir::new("tojsonl");
     wrk.create(
@@ -49,6 +52,7 @@ fn tojsonl_boolean() {
 }
 
 #[test]
+#[serial]
 fn tojsonl_boolean_tf() {
     let wrk = Workdir::new("tojsonl");
     wrk.create(
@@ -72,6 +76,7 @@ fn tojsonl_boolean_tf() {
 }
 
 #[test]
+#[serial]
 fn tojsonl_boolean_upper_tf() {
     let wrk = Workdir::new("tojsonl");
     wrk.create(
@@ -95,6 +100,7 @@ fn tojsonl_boolean_upper_tf() {
 }
 
 #[test]
+#[serial]
 fn tojsonl_boolean_1or0() {
     let wrk = Workdir::new("tojsonl");
     wrk.create(
@@ -118,6 +124,7 @@ fn tojsonl_boolean_1or0() {
 }
 
 #[test]
+#[serial]
 fn tojsonl_not_boolean_case_sensitive() {
     let wrk = Workdir::new("tojsonl");
     wrk.create(
@@ -143,6 +150,7 @@ fn tojsonl_not_boolean_case_sensitive() {
 }
 
 #[test]
+#[serial]
 fn tojsonl_is_boolean_case_sensitive() {
     let wrk = Workdir::new("tojsonl");
     wrk.create(
@@ -168,6 +176,7 @@ fn tojsonl_is_boolean_case_sensitive() {
 }
 
 #[test]
+#[serial]
 fn tojsonl_boolean_yes() {
     let wrk = Workdir::new("tojsonl");
     wrk.create(
@@ -191,6 +200,7 @@ fn tojsonl_boolean_yes() {
 }
 
 #[test]
+#[serial]
 fn tojsonl_boolean_null() {
     let wrk = Workdir::new("tojsonl");
     wrk.create(
@@ -214,6 +224,7 @@ fn tojsonl_boolean_null() {
 }
 
 #[test]
+#[serial]
 fn tojsonl_boolean_yes_null() {
     let wrk = Workdir::new("tojsonl");
     wrk.create(
@@ -237,6 +248,7 @@ fn tojsonl_boolean_yes_null() {
 }
 
 #[test]
+#[serial]
 fn tojsonl_nested() {
     let wrk = Workdir::new("tojsonl_nested");
     wrk.create(
@@ -268,6 +280,7 @@ fn tojsonl_nested() {
 }
 
 #[test]
+#[serial]
 fn tojsonl_boston() {
     let wrk = Workdir::new("tojsonl");
     let test_file = wrk.load_test_file("boston311-100.csv");
