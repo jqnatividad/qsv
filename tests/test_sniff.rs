@@ -1,3 +1,5 @@
+use newline_converter::dos2unix;
+
 use crate::workdir::Workdir;
 
 static EXPECTED_CSV: &str = "\
@@ -41,7 +43,7 @@ Fields:
     1:  Unsigned  h2
     2:  Text      h3"#;
 
-    assert!(got.ends_with(expected_end));
+    assert!(dos2unix(&got).trim_end().ends_with(expected_end));
 }
 
 #[test]
@@ -97,7 +99,7 @@ Fields:
     27:  Float     longitude
     28:  Text      source"#;
 
-    assert!(got.ends_with(expected_end.trim_end()));
+    assert!(dos2unix(&got).trim_end().ends_with(expected_end.trim_end()));
 }
 
 #[test]
@@ -153,7 +155,7 @@ Fields:
     27:  Float     longitude
     28:  Text      source"#;
 
-    assert!(got.ends_with(expected_end.trim_end()));
+    assert!(dos2unix(&got).trim_end().ends_with(expected_end.trim_end()));
 }
 
 #[test]
@@ -184,7 +186,7 @@ Fields:
     1:  Unsigned  h2
     2:  Text      h3"#;
 
-    assert!(got.ends_with(expected_end.trim_end()));
+    assert!(dos2unix(&got).trim_end().ends_with(expected_end.trim_end()));
 }
 
 #[test]
@@ -291,7 +293,7 @@ fn sniff_pretty_json() {
   ]
 }"#;
 
-    assert!(got.ends_with(expected_end));
+    assert!(dos2unix(&got).trim_end().ends_with(expected_end));
 }
 
 #[test]
