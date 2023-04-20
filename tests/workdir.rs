@@ -9,6 +9,8 @@ use std::{
     time::Duration,
 };
 
+use uuid::Uuid;
+
 use crate::Csv;
 
 static QSV_INTEGRATION_TEST_DIR: &str = "xit";
@@ -43,7 +45,7 @@ impl Workdir {
         let dir = root
             .join(QSV_INTEGRATION_TEST_DIR)
             .join(name)
-            .join(format!("test-{id}"));
+            .join(format!("test-{id}-{}", Uuid::new_v4()));
         if let Err(err) = create_dir_all(&dir) {
             panic!("Could not create '{dir:?}': {err}");
         }
