@@ -2,13 +2,16 @@ use std::path::Path;
 
 use assert_json_diff::assert_json_eq;
 use serde_json::Value;
+use serial_test::serial;
 
 use crate::workdir::Workdir;
 
 #[test]
+#[serial]
 fn generate_schema_with_defaults_and_validate_with_no_errors() {
     // create workspace and invoke schema command with value constraints flag
-    let wrk = Workdir::new("schema").flexible(true);
+    let wrk =
+        Workdir::new("fn generate_schema_with_defaults_and_validate_with_no_errors").flexible(true);
     wrk.clear_contents().unwrap();
 
     // copy csv file to workdir
@@ -53,9 +56,11 @@ fn generate_schema_with_defaults_and_validate_with_no_errors() {
 }
 
 #[test]
+#[serial]
 fn generate_schema_with_optional_flags_and_validate_with_errors() {
     // create workspace and invoke schema command with value constraints flag
-    let wrk = Workdir::new("schema").flexible(true);
+    let wrk =
+        Workdir::new("generate_schema_with_optional_flags_and_validate_with_errors").flexible(true);
     wrk.clear_contents().unwrap();
 
     // copy csv file to workdir
@@ -135,9 +140,10 @@ fn generate_schema_with_optional_flags_and_validate_with_errors() {
 }
 
 #[test]
+#[serial]
 fn generate_schema_with_defaults_to_stdout() {
     // create workspace and invoke schema command with value constraints flag
-    let wrk = Workdir::new("schema_stdout").flexible(true);
+    let wrk = Workdir::new("generate_schema_with_defaults_to_stdout").flexible(true);
     wrk.clear_contents().unwrap();
 
     // copy csv file to workdir
@@ -146,9 +152,15 @@ fn generate_schema_with_defaults_to_stdout() {
 
     // run schema command
     let mut cmd = wrk.command("schema");
-    cmd.arg("--stdout").arg("adur-public-toilets.csv");
-    let stdout = wrk.stdout::<String>(&mut cmd);
-    let output_schema_json: Value = serde_json::from_str(&stdout).unwrap();
+    cmd.arg("adur-public-toilets.csv");
+    let _stdout = wrk.stdout::<String>(&mut cmd);
+    let schema_json_file = wrk
+        .path("adur-public-toilets.csv.schema.json")
+        .to_string_lossy()
+        .into_owned();
+    // load schema_json_file into a string
+    let schema_json = std::fs::read_to_string(&schema_json_file).unwrap();
+    let output_schema_json: Value = serde_json::from_str(&schema_json).unwrap();
 
     // diff output json with expected json
     let expected_schema: String =
