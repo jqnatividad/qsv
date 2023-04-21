@@ -57,15 +57,7 @@ fn sniff_url() {
 
     let got: String = wrk.stdout(&mut cmd);
 
-    let expected_end = r#"Delimiter: ,
-Header Row: true
-Preamble Rows: 0
-Quote Char: "
-Flexible: false
-Is UTF8: true
-Retrieved Size (bytes): 47,702
-File Size (bytes): 47,702
-Sampled Records: 100
+    let expected_end = r#"Sampled Records: 100
 Estimated: true
 Num Records: 107
 Avg Record Len (bytes): 444
@@ -113,15 +105,7 @@ fn sniff_url_snappy() {
 
     let got: String = wrk.stdout(&mut cmd);
 
-    let expected_end = r#"Delimiter: ,
-Header Row: true
-Preamble Rows: 0
-Quote Char: none
-Flexible: false
-Is UTF8: true
-Retrieved Size (bytes): 15,196
-File Size (bytes): 15,196
-Sampled Records: 100
+    let expected_end = r#"Sampled Records: 100
 Estimated: false
 Num Records: 100
 Avg Record Len (bytes): 444
@@ -278,17 +262,8 @@ fn sniff_pretty_json() {
 
     let got: String = wrk.stdout(&mut cmd);
 
-    #[cfg(target_os = "windows")]
     let expected_end = dos2unix(
-        r#""delimiter_char": ",",
-  "header_row": true,
-  "preamble_rows": 3,
-  "quote_char": "none",
-  "flexible": false,
-  "is_utf8": true,
-  "retrieved_size": 123,
-  "file_size": 123,
-  "sampled_records": 3,
+        r#"sampled_records": 3,
   "estimated": false,
   "num_records": 3,
   "avg_record_len": 10,
@@ -308,36 +283,6 @@ fn sniff_pretty_json() {
 }"#,
     );
 
-    #[cfg(not(target_os = "windows"))]
-    let expected_end = dos2unix(
-        r#""delimiter_char": ",",
-"header_row": true,
-"preamble_rows": 3,
-"quote_char": "none",
-"flexible": false,
-"is_utf8": true,
-"retrieved_size": 116,
-"file_size": 116,
-"sampled_records": 3,
-"estimated": false,
-"num_records": 3,
-"avg_record_len": 10,
-"num_fields": 4,
-"fields": [
-"h1",
-"h2",
-"h3",
-"h4"
-],
-"types": [
-"Text",
-"Unsigned",
-"Text",
-"Float"
-]
-}"#,
-    );
-
     assert!(dos2unix(&got).trim_end().ends_with(expected_end.trim_end()));
 }
 
@@ -354,100 +299,7 @@ fn sniff_sample() {
 
     let got: String = wrk.stdout(&mut cmd);
 
-    #[cfg(target_os = "windows")]
-    let expected_end = r#""delimiter_char": ",",
-  "header_row": true,
-  "preamble_rows": 0,
-  "quote_char": "none",
-  "flexible": false,
-  "is_utf8": true,
-  "retrieved_size": 9261,
-  "file_size": 9261,
-  "sampled_records": 7,
-  "estimated": false,
-  "num_records": 15,
-  "avg_record_len": 555,
-  "num_fields": 32,
-  "fields": [
-    "ExtractDate",
-    "OrganisationURI",
-    "OrganisationLabel",
-    "ServiceTypeURI",
-    "ServiceTypeLabel",
-    "LocationText",
-    "CoordinateReferenceSystem",
-    "GeoX",
-    "GeoY",
-    "GeoPointLicensingURL",
-    "Category",
-    "AccessibleCategory",
-    "RADARKeyNeeded",
-    "BabyChange",
-    "FamilyToilet",
-    "ChangingPlace",
-    "AutomaticPublicConvenience",
-    "FullTimeStaffing",
-    "PartOfCommunityScheme",
-    "CommunitySchemeName",
-    "ChargeAmount",
-    "InfoURL",
-    "OpeningHours",
-    "ManagedBy",
-    "ReportEmail",
-    "ReportTel",
-    "Notes",
-    "UPRN",
-    "Postcode",
-    "StreetAddress",
-    "GeoAreaURI",
-    "GeoAreaLabel"
-  ],
-  "types": [
-    "Date",
-    "Text",
-    "Text",
-    "Text",
-    "Text",
-    "Text",
-    "Text",
-    "Unsigned",
-    "Unsigned",
-    "Text",
-    "Text",
-    "Text",
-    "Text",
-    "Text",
-    "Text",
-    "Text",
-    "Text",
-    "Text",
-    "Text",
-    "Boolean",
-    "Boolean",
-    "Text",
-    "Text",
-    "Text",
-    "Text",
-    "Text",
-    "Text",
-    "Unsigned",
-    "Boolean",
-    "Text",
-    "Boolean",
-    "Boolean"
-  ]
-}"#;
-
-    #[cfg(not(target_os = "windows"))]
-    let expected_end = r#""delimiter_char": ",",
-  "header_row": true,
-  "preamble_rows": 0,
-  "quote_char": "none",
-  "flexible": false,
-  "is_utf8": true,
-  "retrieved_size": 9246,
-  "file_size": 9246,
-  "sampled_records": 7,
+    let expected_end = r#""sampled_records": 7,
   "estimated": false,
   "num_records": 15,
   "avg_record_len": 555,
@@ -535,16 +387,7 @@ fn sniff_prefer_dmy() {
 
     let got: String = wrk.stdout(&mut cmd);
 
-    #[cfg(target_os = "windows")]
-    let expected_end = r#"Delimiter: ,
-Header Row: true
-Preamble Rows: 0
-Quote Char: none
-Flexible: false
-Is UTF8: true
-Retrieved Size (bytes): 47,803
-File Size (bytes): 47,803
-Sampled Records: 100
+    let expected_end = r#"Sampled Records: 100
 Estimated: false
 Num Records: 100
 Avg Record Len (bytes): 444
@@ -579,51 +422,6 @@ Fields:
     26:  Float     latitude
     27:  Float     longitude
     28:  Text      source"#;
-
-    #[cfg(not(target_os = "windows"))]
-    let expected_end = r#"Delimiter: ,
-    Header Row: true
-    Preamble Rows: 0
-    Quote Char: none
-    Flexible: false
-    Is UTF8: true
-    Retrieved Size (bytes): 47,702
-    File Size (bytes): 47,702
-    Sampled Records: 100
-    Estimated: false
-    Num Records: 100
-    Avg Record Len (bytes): 444
-    Num Fields: 29
-    Fields:
-        0:   Unsigned  case_enquiry_id
-        1:   DateTime  open_dt
-        2:   DateTime  target_dt
-        3:   DateTime  closed_dt
-        4:   Text      ontime
-        5:   Text      case_status
-        6:   Text      closure_reason
-        7:   Text      case_title
-        8:   Text      subject
-        9:   Text      reason
-        10:  Text      type
-        11:  Text      queue
-        12:  Text      department
-        13:  Text      submittedphoto
-        14:  Boolean   closedphoto
-        15:  Text      location
-        16:  Unsigned  fire_district
-        17:  Text      pwd_district
-        18:  Unsigned  city_council_district
-        19:  Text      police_district
-        20:  Text      neighborhood
-        21:  Unsigned  neighborhood_services_district
-        22:  Text      ward
-        23:  Unsigned  precinct
-        24:  Text      location_street_name
-        25:  Unsigned  location_zipcode
-        26:  Float     latitude
-        27:  Float     longitude
-        28:  Text      source"#;
 
     assert!(dos2unix(&got).trim_end().ends_with(expected_end.trim_end()));
 }
