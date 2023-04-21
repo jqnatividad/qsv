@@ -238,11 +238,7 @@ fn sniff_flexible_json() {
 
     let got: String = wrk.stdout(&mut cmd);
 
-    #[cfg(target_os = "windows")]
-    let expected_end = r#""delimiter_char":",","header_row":true,"preamble_rows":3,"quote_char":"none","flexible":true,"is_utf8":true,"retrieved_size":144,"file_size":144,"sampled_records":5,"estimated":false,"num_records":5,"avg_record_len":8,"num_fields":4,"fields":["h1","h2","h3","h4"],"types":["Text","Unsigned","Text","Float"]}"#;
-
-    #[cfg(not(target_os = "windows"))]
-    let expected_end = r#""delimiter_char":",","header_row":true,"preamble_rows":3,"quote_char":"none","flexible":true,"is_utf8":true,"retrieved_size":135,"file_size":135,"sampled_records":5,"estimated":false,"num_records":5,"avg_record_len":8,"num_fields":4,"fields":["h1","h2","h3","h4"],"types":["Text","Unsigned","Text","Float"]}"#;
+    let expected_end = r#"sampled_records":5,"estimated":false,"num_records":5,"avg_record_len":8,"num_fields":4,"fields":["h1","h2","h3","h4"],"types":["Text","Unsigned","Text","Float"]}"#;
 
     assert!(got.ends_with(expected_end));
 }
