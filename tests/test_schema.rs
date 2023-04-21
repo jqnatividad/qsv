@@ -1,3 +1,4 @@
+#![cfg(target_family = "unix")]
 use std::path::Path;
 
 use assert_json_diff::assert_json_eq;
