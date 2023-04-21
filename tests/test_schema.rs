@@ -2,12 +2,12 @@ use std::path::Path;
 
 use assert_json_diff::assert_json_eq;
 use serde_json::Value;
-use serial_test::serial;
+use serial_test::file_serial;
 
 use crate::workdir::Workdir;
 
 #[test]
-#[serial]
+#[file_serial]
 fn generate_schema_with_defaults_and_validate_with_no_errors() {
     // create workspace and invoke schema command with value constraints flag
     let wrk =
@@ -56,7 +56,7 @@ fn generate_schema_with_defaults_and_validate_with_no_errors() {
 }
 
 #[test]
-#[serial]
+#[file_serial]
 fn generate_schema_with_optional_flags_and_validate_with_errors() {
     // create workspace and invoke schema command with value constraints flag
     let wrk =
@@ -140,7 +140,7 @@ fn generate_schema_with_optional_flags_and_validate_with_errors() {
 }
 
 #[test]
-#[serial]
+#[file_serial]
 fn generate_schema_with_defaults_to_stdout() {
     // create workspace and invoke schema command with value constraints flag
     let wrk = Workdir::new("generate_schema_with_defaults_to_stdout").flexible(true);
