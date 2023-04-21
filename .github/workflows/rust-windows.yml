@@ -33,7 +33,5 @@ jobs:
     - name: make empty DLLs directory to prevent spurious python warning
       run: |
         mkdir DLLs   
-    - name: install cargo-nextest
-      run: cargo install cargo-nextest
     - name: Run tests
-      run: cargo nextest run --verbose --locked --features=apply,fetch,foreach,generate,luau,python,feature_capable
+      run: cargo test --verbose --locked --features=apply,fetch,foreach,generate,luau,python,feature_capable
