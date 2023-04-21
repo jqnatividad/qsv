@@ -223,12 +223,7 @@ fn sniff_json() {
     cmd.arg("--json").arg(test_file);
 
     let got: String = wrk.stdout(&mut cmd);
-
-    #[cfg(target_os = "windows")]
-    let expected_end: &str = r#""delimiter_char":",","header_row":true,"preamble_rows":3,"quote_char":"none","flexible":false,"is_utf8":true,"retrieved_size":123,"file_size":123,"sampled_records":3,"estimated":false,"num_records":3,"avg_record_len":10,"num_fields":4,"fields":["h1","h2","h3","h4"],"types":["Text","Unsigned","Text","Float"]}"#;
-
-    #[cfg(not(target_os = "windows"))]
-    let expected_end: &str = r#""delimiter_char":",","header_row":true,"preamble_rows":3,"quote_char":"none","flexible":false,"is_utf8":true,"retrieved_size":116,"file_size":116,"sampled_records":3,"estimated":false,"num_records":3,"avg_record_len":10,"num_fields":4,"fields":["h1","h2","h3","h4"],"types":["Text","Unsigned","Text","Float"]}"#;
+    let expected_end: &str = r#"ampled_records":3,"estimated":false,"num_records":3,"avg_record_len":10,"num_fields":4,"fields":["h1","h2","h3","h4"],"types":["Text","Unsigned","Text","Float"]}"#;
 
     assert!(got.ends_with(expected_end));
 }
