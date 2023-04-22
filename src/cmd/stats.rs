@@ -413,6 +413,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 util::mem_file_check(&path, false, args.flag_no_memcheck)?;
             }
 
+            // we need to count the number of records in the file to calculate sparsity
             let record_count = RECORD_COUNT.get_or_init(|| util::count_rows(&fconfig).unwrap());
 
             log::info!("scanning {record_count} records...");
@@ -740,6 +741,8 @@ impl Args {
     }
 }
 
+// returns the path to the stats file
+// safety: unwraps are safe because we know stats_csv_path is a valid path
 fn stats_path(stats_csv_path: &Path, stdin_flag: bool) -> PathBuf {
     let mut p = stats_csv_path
         .to_path_buf()
