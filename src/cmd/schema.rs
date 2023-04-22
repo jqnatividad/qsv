@@ -62,7 +62,7 @@ Common options:
                                appear as the header row in the output.
     -d, --delimiter <arg>      The field delimiter for reading CSV data.
                                Must be a single character. [default: ,]
-    --no-memcheck              Do not check if there is enough memory to load the
+    --memcheck                 Check if there is enough memory to load the
                                entire CSV into memory.
 "#;
 
@@ -101,7 +101,7 @@ pub struct Args {
     pub flag_no_headers:      bool,
     pub flag_delimiter:       Option<Delimiter>,
     pub arg_input:            Option<String>,
-    pub flag_no_memcheck:     bool,
+    pub flag_memcheck:        bool,
 }
 
 const STDIN_CSV: &str = "stdin.csv";
@@ -135,7 +135,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     util::mem_file_check(
         &std::path::PathBuf::from(&input_path),
         false,
-        args.flag_no_memcheck,
+        args.flag_memcheck,
     )?;
 
     // we can do this directly here, since args is mutable and
@@ -434,7 +434,7 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
         flag_output:          None,
         flag_no_headers:      args.flag_no_headers,
         flag_delimiter:       args.flag_delimiter,
-        flag_no_memcheck:     args.flag_no_memcheck,
+        flag_memcheck:        args.flag_memcheck,
         flag_stats_binout:    None,
     };
 
@@ -518,8 +518,8 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
             let delim = delimiter.as_byte() as char;
             stats_args_str = format!("{stats_args_str} --delimiter {delim}");
         }
-        if args.flag_no_memcheck {
-            stats_args_str = format!("{stats_args_str} --no-memcheck");
+        if args.flag_memcheck {
+            stats_args_str = format!("{stats_args_str} --memcheck");
         }
         if let Some(mut jobs) = stats_args.flag_jobs {
             if jobs > 2 {
@@ -617,16 +617,16 @@ fn get_unique_values(
 ) -> CliResult<AHashMap<String, Vec<String>>> {
     // prepare arg for invoking cmd::frequency
     let freq_args = crate::cmd::frequency::Args {
-        arg_input:        args.arg_input.clone(),
-        flag_select:      crate::select::SelectColumns::parse(column_select_arg).unwrap(),
-        flag_limit:       args.flag_enum_threshold,
-        flag_asc:         false,
-        flag_no_nulls:    true,
-        flag_jobs:        Some(util::njobs(args.flag_jobs)),
-        flag_output:      None,
-        flag_no_headers:  args.flag_no_headers,
-        flag_delimiter:   args.flag_delimiter,
-        flag_no_memcheck: args.flag_no_memcheck,
+        arg_input:       args.arg_input.clone(),
+        flag_select:     crate::select::SelectColumns::parse(column_select_arg).unwrap(),
+        flag_limit:      args.flag_enum_threshold,
+        flag_asc:        false,
+        flag_no_nulls:   true,
+        flag_jobs:       Some(util::njobs(args.flag_jobs)),
+        flag_output:     None,
+        flag_no_headers: args.flag_no_headers,
+        flag_delimiter:  args.flag_delimiter,
+        flag_memcheck:   args.flag_memcheck,
     };
 
     let (headers, ftables) = match freq_args.rconfig().indexed()? {
