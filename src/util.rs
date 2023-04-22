@@ -391,7 +391,13 @@ pub fn file_metadata(md: &fs::Metadata) -> (u64, u64) {
     (last_modified, fsize)
 }
 
-pub fn mem_file_check(path: &Path, version_check: bool, no_memcheck: bool) -> Result<i64, String> {
+/// Check if there is enough memory to process the file.
+/// Return the maximum file size that can be processed.
+/// If the file is larger than the maximum file size, return an error.
+/// If memcheck is true, check memory in CONSERVATIVE mode (i.e., Filesize < AVAIL memory + SWAP -
+/// headroom) If memcheck is false, check memory in NORMAL mode (i.e., Filesize < TOTAL memory -
+/// headroom)
+pub fn mem_file_check(path: &Path, version_check: bool, memcheck: bool) -> Result<i64, String> {
     // if we're NOT calling this from the version() and the file doesn't exist,
     // we don't need to check memory as file existence is checked before this function is called.
     // If we do get here with a non-existent file, that means we're using stdin,
@@ -400,7 +406,7 @@ pub fn mem_file_check(path: &Path, version_check: bool, no_memcheck: bool) -> Re
         return Ok(-1_i64);
     }
 
-    let no_memcheck_work = env::var("QSV_NO_MEMORY_CHECK").is_ok() || no_memcheck;
+    let memcheck_work = env::var("QSV_MEMORY_CHECK").is_ok() || memcheck;
 
     let mut sys = sysinfo::System::new();
     sys.refresh_memory();
@@ -417,10 +423,10 @@ pub fn mem_file_check(path: &Path, version_check: bool, no_memcheck: bool) -> Re
     mem_pct = mem_pct.clamp(10, 90);
 
     #[allow(clippy::cast_precision_loss)]
-    let max_avail_mem = if no_memcheck_work {
-        (total_mem as f32 * ((100 - mem_pct) as f32 / 100.0_f32)) as u64
-    } else {
+    let max_avail_mem = if memcheck_work {
         ((avail_mem + free_swap) as f32 * ((100 - mem_pct) as f32 / 100.0_f32)) as u64
+    } else {
+        (total_mem as f32 * ((100 - mem_pct) as f32 / 100.0_f32)) as u64
     };
 
     // if we're calling this from version(), we don't need to check the file size
@@ -429,9 +435,14 @@ pub fn mem_file_check(path: &Path, version_check: bool, no_memcheck: bool) -> Re
             fs::metadata(path).map_err(|e| format!("Failed to get file size: {e}"))?;
         let fsize = file_metadata.len();
         let detail_msg = format!(
-            "qsv running in non-streaming mode. Total memory: {total_mem} Available memory: \
-             {avail_mem}. Free swap: {free_swap} Max Available memory/Max input file size: \
-             {max_avail_mem}. QSV_FREEMEMORY_HEADROOM_PCT: {mem_pct}%. File size: {fsize}.",
+            "qsv running in non-streaming {mode} mode. Total memory: {total_mem} Available \
+             memory: {avail_mem}. Free swap: {free_swap} Max Available memory/Max input file \
+             size: {max_avail_mem}. QSV_FREEMEMORY_HEADROOM_PCT: {mem_pct}%. File size: {fsize}.",
+            mode = if memcheck_work {
+                "CONSERVATIVE"
+            } else {
+                "NORMAL"
+            },
             total_mem = indicatif::HumanBytes(total_mem),
             avail_mem = indicatif::HumanBytes(avail_mem),
             free_swap = indicatif::HumanBytes(free_swap),
