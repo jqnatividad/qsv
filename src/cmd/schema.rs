@@ -66,7 +66,12 @@ Common options:
                                entire CSV into memory.
 "#;
 
-use std::{collections::HashSet, fs::File, io::Write, path::Path};
+use std::{
+    collections::HashSet,
+    fs::File,
+    io::{BufReader, Write},
+    path::Path,
+};
 
 use ahash::AHashMap;
 use csv::ByteRecord;
@@ -79,7 +84,7 @@ use stats::Frequencies;
 
 use crate::{
     cmd::stats::Stats,
-    config::{Config, Delimiter},
+    config::{Config, Delimiter, DEFAULT_RDR_BUFFER_CAPACITY},
     select::SelectColumns,
     util, CliResult,
 };
@@ -457,10 +462,13 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
     let mut stats_bin_loaded = false;
 
     // if stats.bin file exists and is current, use it
-    let mut csv_stats: Vec<Stats> = Vec::with_capacity(100_000_000);
+    let mut csv_stats: Vec<Stats> = Vec::new();
 
     if stats_bin_current {
-        let mut bin_file = File::open(stats_binary_encoded_path)?;
+        let mut bin_file = BufReader::with_capacity(
+            DEFAULT_RDR_BUFFER_CAPACITY,
+            File::open(stats_binary_encoded_path)?,
+        );
         match bincode::deserialize_from(&mut bin_file) {
             Ok(stats) => {
                 csv_stats = stats;
@@ -527,7 +535,10 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
         stats_cmd.args(stats_args_vec);
         let _stats_output = stats_cmd.output()?;
 
-        let mut bin_file = File::open(tempfile_statsbin_path).unwrap();
+        let mut bin_file = BufReader::with_capacity(
+            DEFAULT_RDR_BUFFER_CAPACITY,
+            File::open(tempfile_statsbin_path).unwrap(),
+        );
 
         match bincode::deserialize_from(&mut bin_file) {
             Ok(stats) => {

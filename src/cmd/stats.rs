@@ -156,7 +156,7 @@ use std::{
     borrow::ToOwned,
     default::Default,
     fmt, fs, io,
-    io::Write,
+    io::{BufWriter, Write},
     iter::repeat,
     path::{Path, PathBuf},
     str,
@@ -174,7 +174,7 @@ use threadpool::ThreadPool;
 
 use self::FieldType::{TDate, TDateTime, TFloat, TInteger, TNull, TString};
 use crate::{
-    config::{Config, Delimiter},
+    config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY},
     select::{SelectColumns, Selection},
     util, CliResult,
 };
@@ -496,7 +496,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // we do the binary encoding inside a block so that the encoded_file
         // gets dropped/flushed before we copy it to the output file
         {
-            let encoded_file = io::BufWriter::new(fs::File::create(stats_pathbuf.clone())?);
+            let encoded_file = BufWriter::with_capacity(
+                DEFAULT_WTR_BUFFER_CAPACITY,
+                fs::File::create(stats_pathbuf.clone())?,
+            );
             bincode::serialize_into(encoded_file, &stats_for_encoding).unwrap();
         }
 
