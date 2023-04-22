@@ -1347,7 +1347,11 @@ impl FieldType {
             return (FieldType::TString, None);
         }
 
-        let string = from_utf8(sample).unwrap();
+        let Ok(string) = from_utf8(sample) else {
+            // if the string is not valid utf8, we assume it is a binary string
+            // and return a string type
+            return (FieldType::TString, None);
+        };
 
         if current_type == FieldType::TFloat
             || current_type == FieldType::TInteger
