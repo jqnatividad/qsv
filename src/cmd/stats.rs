@@ -487,6 +487,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         stats_pathbuf.set_extension("csv.json");
         std::fs::write(
             stats_pathbuf.clone(),
+            // safety: we know that current_stats_args is JSON serializable
             serde_json::to_string_pretty(&current_stats_args).unwrap(),
         )?;
 
@@ -500,7 +501,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 DEFAULT_WTR_BUFFER_CAPACITY,
                 fs::File::create(stats_pathbuf.clone())?,
             );
-            bincode::serialize_into(encoded_file, &stats_for_encoding).unwrap();
+            if let Err(e) = bincode::serialize_into(encoded_file, &stats_for_encoding) {
+                return fail_clierror!(
+                    "Failed to write binary encoded stats {}: {e:?}",
+                    stats_pathbuf.display()
+                );
+            }
         }
 
         // if the user specified --stats-binout, copy the binary stats to that file as well
