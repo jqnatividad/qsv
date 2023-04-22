@@ -316,6 +316,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 .unwrap(),
         );
         fconfig.path = Some(tempfile_path);
+    } else {
+        // check if the input file exists
+        if let Some(path) = fconfig.path.clone() {
+            if !path.exists() {
+                return fail_clierror!("File {:?} does not exist", path.display());
+            }
+        }
     }
 
     // create stats_for_encoding to store the stats in binary format
@@ -326,11 +333,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if let Some(path) = fconfig.path.clone() {
         let path_file_stem = path.file_stem().unwrap().to_str().unwrap();
         let stats_file = stats_path(&path, false);
-        // check if <FILESTEM>.stats.csv file already exists and
-        // if it does, check if it was compiled using the same args.
-        // However, if the --force flag is set, we will regenerate the stats
+        // check if <FILESTEM>.stats.csv file already exists.
+        // If it does, check if it was compiled using the same args.
+        // However, if the --force flag is set,
+        // regenerate the stats even if the args are the same.
         if stats_file.exists() && !args.flag_force {
-            // check if the existing stats were compiled using the same args
             let stats_args_json_file = stats_file.with_extension("csv.json");
             let existing_stats_args_json_str =
                 match fs::read_to_string(stats_args_json_file.clone()) {
@@ -361,9 +368,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     }
                 };
 
-            // check if the cached stats are current, use the same args or if the --everything flag
-            // was set & all the other non-stats args are equal. If so, we don't need to recompute
-            // the stats
+            // check if the cached stats are current (ie the stats file is newer than the input
+            // file), use the same args or if the --everything flag was set, and
+            // all the other non-stats args are equal. If so, we don't need to recompute the stats
             let input_file_modified = fs::metadata(&path)?.modified()?;
             let stats_file_modified = fs::metadata(&stats_file)?.modified()?;
             #[allow(clippy::nonminimal_bool)]
