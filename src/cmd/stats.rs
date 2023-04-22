@@ -130,7 +130,7 @@ Common options:
                            in statistics.
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
-    --no-memcheck          Do not check if there is enough memory to load the
+    --memcheck             Check if there is enough memory to load the
                            entire CSV into memory.
 "#;
 
@@ -201,7 +201,7 @@ pub struct Args {
     pub flag_output:          Option<String>,
     pub flag_no_headers:      bool,
     pub flag_delimiter:       Option<Delimiter>,
-    pub flag_no_memcheck:     bool,
+    pub flag_memcheck:        bool,
     pub flag_stats_binout:    Option<String>,
 }
 
@@ -410,7 +410,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 || args.flag_quartiles
                 || args.flag_mad
             {
-                util::mem_file_check(&path, false, args.flag_no_memcheck)?;
+                util::mem_file_check(&path, false, args.flag_memcheck)?;
             }
 
             // we need to count the number of records in the file to calculate sparsity

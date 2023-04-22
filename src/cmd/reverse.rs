@@ -19,7 +19,7 @@ Common options:
                            appear as the header row in the output.
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
-    --no-memcheck          Do not check if there is enough memory to load the
+    --memcheck             Check if there is enough memory to load the
                            entire CSV into memory.
 "#;
 
@@ -32,11 +32,11 @@ use crate::{
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input:        Option<String>,
-    flag_output:      Option<String>,
-    flag_no_headers:  bool,
-    flag_delimiter:   Option<Delimiter>,
-    flag_no_memcheck: bool,
+    arg_input:       Option<String>,
+    flag_output:     Option<String>,
+    flag_no_headers: bool,
+    flag_delimiter:  Option<Delimiter>,
+    flag_memcheck:   bool,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -49,7 +49,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // we're loading the entire file into memory, we need to check avail mem
     if let Some(path) = rconfig.path.clone() {
-        util::mem_file_check(&path, false, args.flag_no_memcheck)?;
+        util::mem_file_check(&path, false, args.flag_memcheck)?;
     }
 
     let mut all = rdr.byte_records().collect::<Result<Vec<_>, _>>()?;

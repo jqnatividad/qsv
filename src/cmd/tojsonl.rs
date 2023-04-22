@@ -25,7 +25,7 @@ Common options:
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
     -o, --output <file>    Write output to <file> instead of stdout.
-    --no-memcheck          Do not check if there is enough memory to load the
+    --memcheck             Check if there is enough memory to load the
                            entire CSV into memory.
 "#;
 
@@ -44,11 +44,11 @@ use crate::{
 
 #[derive(Deserialize, Clone)]
 struct Args {
-    arg_input:        Option<String>,
-    flag_jobs:        Option<usize>,
-    flag_delimiter:   Option<Delimiter>,
-    flag_output:      Option<String>,
-    flag_no_memcheck: bool,
+    arg_input:      Option<String>,
+    flag_jobs:      Option<usize>,
+    flag_delimiter: Option<Delimiter>,
+    flag_output:    Option<String>,
+    flag_memcheck:  bool,
 }
 
 impl From<std::fmt::Error> for CliError {
@@ -98,7 +98,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // we're loading the entire file into memory, we need to check avail mem
     if let Some(path) = conf.path.clone() {
-        util::mem_file_check(&path, false, args.flag_no_memcheck)?;
+        util::mem_file_check(&path, false, args.flag_memcheck)?;
     }
 
     // we're calling the schema command to infer data types and enums
@@ -118,7 +118,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         flag_no_headers:      false,
         flag_delimiter:       args.flag_delimiter,
         arg_input:            args.arg_input.clone(),
-        flag_no_memcheck:     args.flag_no_memcheck,
+        flag_memcheck:        args.flag_memcheck,
     };
     // build schema for each field by their inferred type, min/max value/length, and unique values
     let properties_map: Map<String, Value> =

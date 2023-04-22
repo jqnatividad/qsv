@@ -296,23 +296,29 @@ There are a number of commands/modes however (denoted by the clamp emoji - 🗜�
 
 In addition, `frequency`, `schema` and `tojsonl` - though they do not load the entire file into memory, uses additional memory proportional to the cardinality (number of unique values) of each column compared to other "streaming" commands (denoted by the accordion emoji - 🪗).
 
-qsv uses the heuristic below when running these "non-streaming" commands:
+For very large files, this can be a problem, as qsv will run of memory and crash.
+To prevent this, qsv has two memory check heuristics when running "non-streaming" commands:
 
+### NORMAL mode
+1. at startup, get the TOTAL memory of the system
+2. if the size of the CSV file is greater than TOTAL memory - HEADROOM (default: 20%), qsv will abort with an error
+
+### CONSERVATIVE mode
 1. at startup, compute total available memory by adding the current available memory and free swap space 
 2. subtract a percentage headroom from the total available memory (default: 20%)
 3. if this adjusted total available memory is less than the size of the CSV file, qsv will abort with an error
 
 The percentage headroom can be changed by setting the `QSV_MEMORY_HEADROOM_PCT` environment variable to a value between 10 and 90 (default: 20).
 
-This heuristic is conservative by design to prevent Out-of-Memory (OOM) panics. However, modern operating systems can do a fair bit of juggling to handle file sizes larger than what this heuristic will allow, as it dynamically swaps apps to the swapfile, expand the swapfile, compress memory, etc.
+This CONSERVATIVE heuristic can have false positives however, as modern operating systems can do a fair bit of juggling to handle file sizes larger than what this heuristic will allow, as it dynamically swaps apps to the swapfile, expand the swapfile, compress memory, etc.
 
 For example, on a 16gb Mac mini running several common apps, it only allowed ~3gb csv files, but in practice, it was able to handle files up to 8gb before this heuristic was added.
 
-To override this heuristic, you can use the command's `--no-memcheck` option or set the `QSV_NO_MEMORY_CHECK` environment variable. This will disable this heuristic, though it will still stop processing if the input file's size is larger than the total memory of the computer minus `QSV_MEMORY_HEADROOM_PCT`.
+To apply this CONSERVATIVE heuristic, you can use the command's `--memcheck` option or set the `QSV_MEMORY_CHECK` environment variable.
 
-We still do this to prevent OOM panics, but it's not as conservative as the default heuristic. (e.g. if you have a 16gb computer, the maximum input file size is 12.8gb file - 16gb minus 20% headroom).
+Otherwise, the default memory check heuristic (NORMAL mode) will only check if the input file's size is larger than the TOTAL memory of the computer minus `QSV_MEMORY_HEADROOM_PCT`.  We still do this to prevent OOM panics, but it's not as restrictive as the CONSERVATIVE heuristic. (e.g. if you have a 16gb computer, the maximum input file size is 12.8gb file - 16gb minus 20% headroom).
 
-> NOTE: This heuristic is also not invoked when using stdin as input, as the size of the input file is not known. Though `schema` and `tojsonl` will still abort if stdin is too large per this heuristic as it creates a temporary file from stdin before inferring the schema.
+> NOTE: These memory checks are not invoked when using stdin as input, as the size of the input file is not known. Though `schema` and `tojsonl` will still abort if stdin is too large per this memory check as it creates a temporary file from stdin before inferring the schema.
 
 ## Environment Variables
 
@@ -334,7 +340,7 @@ We still do this to prevent OOM panics, but it's not as conservative as the defa
 | `QSV_RDR_BUFFER_CAPACITY` | reader buffer size (default (bytes): 16384) |
 | `QSV_WTR_BUFFER_CAPACITY` | writer buffer size (default (bytes): 65536) |
 | `QSV_FREEMEMORY_HEADROOM_PCT` | the percentage of free available memory required when running qsv in "non-streaming" mode (i.e. the entire file needs to be loaded into memory). If the incoming file is greater than the available memory (free memory + free swap) after the headroom is subtracted, qsv will not proceed. (default: (percent) 20 ) |
-| `QSV_NO_MEMORY_CHECK` | if set, do not check free available memory when running in "non-streaming" mode. For safety, however, qsv will still check if the incoming file is greater than the TOTAL memory after the headroom is subtracted, qsv will not proceed. |
+| `QSV_MEMORY_CHECK` | if set, check if input file size < AVAILABLE memory - HEADROOM (CONSERVATIVE mode) when running in "non-streaming" mode. Otherwise, qsv will only check if the input file size < TOTAL memory - HEADROOM (NORMAL mode). This is done to prevent Out-of-Memory errors. |
 | `QSV_LOG_LEVEL` | desired level (default - off; `error`, `warn`, `info`, `trace`, `debug`). |
 | `QSV_LOG_DIR` | when logging is enabled, the directory where the log files will be stored. If the specified directory does not exist, qsv will attempt to create it. If not set, the log files are created in the directory where qsv was started. See [Logging](docs/Logging.md#logging) for more info. |
 | `QSV_LOG_UNBUFFERED` | if set, log messages are written directly to disk, without buffering. Otherwise, log messages are buffered before being written to the log file (8k buffer, flushing every second). See https://docs.rs/flexi_logger/latest/flexi_logger/enum.WriteMode.html for details. |

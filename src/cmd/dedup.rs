@@ -46,7 +46,7 @@ Common options:
     -d, --delimiter <arg>      The field delimiter for reading CSV data.
                                Must be a single character. (default: ,)
     -Q, --quiet                Do not print duplicate count to stderr.
-    --no-memcheck              Do not check if there is enough memory to load the
+    --memcheck                 Check if there is enough memory to load the
                                entire CSV into memory.
 "#;
 
@@ -76,7 +76,7 @@ struct Args {
     flag_human_readable: bool,
     flag_jobs:           Option<usize>,
     flag_quiet:          bool,
-    flag_no_memcheck:    bool,
+    flag_memcheck:       bool,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -140,7 +140,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } else {
         // we're loading the entire file into memory, we need to check avail mem
         if let Some(path) = rconfig.path.clone() {
-            util::mem_file_check(&path, false, args.flag_no_memcheck)?;
+            util::mem_file_check(&path, false, args.flag_memcheck)?;
         }
 
         // set RAYON_NUM_THREADS for parallel sort
