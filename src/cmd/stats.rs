@@ -318,8 +318,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         fconfig.path = Some(tempfile_path);
     }
 
-    // create stats_binary_encoded_vec to store the stats in binary format
-    let mut stats_binary_encoded_vec: Vec<u8> = Vec::with_capacity(100_000_000);
+    // create stats_for_encoding to store the stats in binary format
+    let mut stats_for_encoding: Vec<Stats> = Vec::new();
 
     let mut compute_stats = true;
 
@@ -425,8 +425,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 }
             }?;
 
-            // store binary version of the stats in memory, so we can write it to disk later
-            stats_binary_encoded_vec = bincode::serialize(&stats).unwrap();
+            // clone a copy of stats so we can binary encode it to disk later
+            stats_for_encoding = stats.clone();
 
             let stats = args.stats_to_records(stats);
 
@@ -476,7 +476,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         )?;
     } else if let Some(path) = fconfig.path {
         // if we read from a file, copy the temp stats file to "<FILESTEM>.stats.csv"
-        let mut stats_pathbuf = path;
+        let mut stats_pathbuf = path.clone();
         stats_pathbuf.set_extension("stats.csv");
         if currstats_filename != stats_pathbuf.to_str().unwrap() {
             // if the stats file is not the same as the input file, copy it
@@ -490,15 +490,19 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             serde_json::to_string_pretty(&current_stats_args).unwrap(),
         )?;
 
-        // save the binary encoded stats to "<FILESTEM>.stats.csv.bin"
-        stats_pathbuf.set_extension("bin");
-        if stats_binary_encoded_vec.len() > 0 {
-            fs::write(stats_pathbuf.clone(), stats_binary_encoded_vec)?;
+        // binary encode the stats to "<FILESTEM>.stats.csv.bin"
+        let mut stats_pathbuf = path;
+        stats_pathbuf.set_extension("stats.csv.bin");
+        // we do the binary encoding inside a block so that the encoded_file
+        // gets dropped/flushed before we copy it to the output file
+        {
+            let encoded_file = io::BufWriter::new(fs::File::create(stats_pathbuf.clone())?);
+            bincode::serialize_into(encoded_file, &stats_for_encoding).unwrap();
+        }
 
-            // if the user specified --stats-binout, copy the binary stats to that file as well
-            if let Some(stats_binout) = args.flag_stats_binout {
-                fs::copy(stats_pathbuf, stats_binout)?;
-            }
+        // if the user specified --stats-binout, copy the binary stats to that file as well
+        if let Some(stats_binout) = args.flag_stats_binout {
+            fs::copy(stats_pathbuf, stats_binout)?;
         }
     }
 
