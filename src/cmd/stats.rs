@@ -446,10 +446,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     wtr.flush()?;
 
-    if stdin_tempfile_path.is_some() {
+    if let Some(pb) = stdin_tempfile_path {
         // remove the temp file we created to store stdin
         log::info!("deleting stdin temp file");
-        std::fs::remove_file(stdin_tempfile_path.unwrap())?;
+        std::fs::remove_file(pb)?;
     }
 
     let currstats_filename = if compute_stats {
