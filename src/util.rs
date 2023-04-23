@@ -1117,3 +1117,72 @@ pub fn transform(bs: &[u8], casei: bool) -> ByteString {
         bs.to_vec()
     }
 }
+
+pub fn load_envprofiles(env: Option<String>) -> Result<(), String> {
+    // If the user specified an env file using the --env option, use it.
+    // Otherwise, use the default .env file in the current directory.
+    // If there is no .env file in the current directory, check if there is
+    // an .env file with the same filestem as the binary, in the same directory as the binary.
+    // If there is, use that. Failing that, qsv proceeds with its default settings and
+    // whatever manually set environment variables are present.
+
+    let qsv_binary_path = std::env::current_exe().unwrap();
+
+    let qsv_dir = qsv_binary_path.parent().unwrap();
+
+    let qsv_binary_filestem = qsv_binary_path
+        .file_stem()
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .to_string();
+
+    let mut qsv_binary_envprofile = qsv_dir.to_path_buf();
+    qsv_binary_envprofile.set_file_name(format!("{qsv_binary_filestem}.env"));
+
+    if let Some(profile) = env {
+        // the --env option was used, specifying a profile
+        log::info!("Using environment file: {profile}.env");
+        if let Err(e) = dotenvy::from_filename_override(format!("{}.env", profile.clone())) {
+            let emsg = format!("Cannot process {profile}.env file: {e}");
+            log::error!("{emsg}");
+            return Err(emsg);
+        }
+    } else {
+        // the --env option was not used
+        // now check if there is an .env file in the current directory
+        match dotenvy::from_filename_override(".env") {
+            Ok(_) => {
+                log::info!("Using .env file in current directory.");
+            }
+            Err(_) => {
+                // no .env file in the current directory or it was invalid
+                // now check if there is an .env file with the same name as the executable
+                // in the same directory as the executable
+                if std::path::Path::new(&qsv_binary_envprofile).exists() {
+                    log::info!(
+                        "Using binary environment file: {}",
+                        qsv_binary_envprofile.display()
+                    );
+                    if let Err(e) = dotenvy::from_filename_override(qsv_binary_envprofile.clone()) {
+                        let emsg = format!(
+                            "Cannot process {} file: {e}",
+                            qsv_binary_envprofile.display()
+                        );
+                        log::error!("{emsg}");
+                        return Err(emsg);
+                    }
+                } else {
+                    // there is no binary .env file, just use the default settings
+                    // and whatever manually set environment variables are present
+                    log::info!(
+                        "No valid .env file found. Proceeding with default settings and current \
+                         environment variable settings."
+                    );
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
