@@ -363,6 +363,16 @@ Several dependencies also have environment variables that influence qsv's perfor
 > ℹ️ **NOTE:** To get a list of all active qsv-relevant environment variables, run `qsv --envlist`.
 Relevant env vars are defined as anything that starts with `QSV_` & `MIMALLOC_` & the proxy variables listed above.
 
+### .env File Support
+qsv support the use of `.env` files to set environment variables. The `.env` file is a simple text file that contains key-value pairs, one per line. 
+
+It processes `.env` files as follows:
+
+* If the `--env` option is specified, it will use the specified file (e.g. `--env production` will look for a file named `production.env` in the current working directory)
+* If the `--env` option is not specified, it will look for a file named `.env` in the current working directory.
+* If the `--env` option is not specified & an `.env` file is not found in the current working directory, it will look for an `.env` file with the same filestem as the binary in the directory where qsv binary is (e.g. if `qsv`/`qsvlite`/`qsvdp` is in `/usr/local/bin`, it will look for `/usr/loca/bin/qsv.env`, `/usr/local/bin/qsvlite.env` or `/usr/local/bin/qsvdp.env` respectively).
+* If no `.env` files are found, qsv will proceed with its default settings and the current  environment variables, which may include "QSV_" variables.
+
 ## Feature Flags
 
 `qsv` has several features:
