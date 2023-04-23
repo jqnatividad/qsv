@@ -84,6 +84,7 @@ csv-diff = "0.1.0-beta.4"
 csv-index = "0.1"
 csvs_convert = { version = "0.8", optional = true }
 data-encoding = { version = "2.3", optional = true }
+dotenvy = "0.15.7"
 dynfmt = { version = "0.1", default-features = false, features = [
     "curly",
 ], optional = true }
