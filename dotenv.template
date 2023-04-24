@@ -44,8 +44,13 @@
 # QSV_CKAN_TOKEN = YOUR_CKAN_API_TOKEN
 
 # set to an ascii character. If set, any lines(including the header) that start
-# with this character are ignored.
-# QSV_COMMENT_CHAR = #
+# with this character are ignored. Note that when you want to use the pound sign
+# as a comment char, you need to enclose it in single quotes as its a reserved
+# character for dotenv files.
+# QSV_COMMENT_CHAR = '#'
+
+# Otherwise, you can just use the character without enclosing it in single quotes
+# QSV_COMMENT_CHAR = !
 
 # number of jobs to use for multithreaded commands (currently `apply`, `dedup`,
 # `extsort`, `frequency`, `schema`, `sort`, `split`, `stats`, `to`, `tojsonl` &
