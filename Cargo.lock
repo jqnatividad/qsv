@@ -726,9 +726,9 @@ checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 
 [[package]]
 name = "bitflags"
-version = "2.1.0"
+version = "2.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c70beb79cbb5ce9c4f8e20849978f34225931f665bb49efa6982875a4d5facb3"
+checksum = "24a6904aef64d73cf10ab17ebace7befb918b82164785cb89907993be7f83813"
 
 [[package]]
 name = "block-buffer"
@@ -2620,9 +2620,9 @@ dependencies = [
 
 [[package]]
 name = "luau0-src"
-version = "0.5.5+luau571"
+version = "0.5.6+luau573"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4f5ca9896e79eb03c2ba5ac22ac4b1ca32698e53342775f89c42d0b1c4cf67b2"
+checksum = "fd5280f9a7f35d23b9167c2e3749955e11b0b44d052a0711f596ac61c735b5ea"
 dependencies = [
  "cc",
 ]
@@ -4126,7 +4126,7 @@ version = "0.29.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "549b9d036d571d42e6e85d1c1425e2ac83491075078ca9a15be021c56b1641f2"
 dependencies = [
- "bitflags 2.1.0",
+ "bitflags 2.2.1",
  "fallible-iterator",
  "fallible-streaming-iterator",
  "hashlink",
