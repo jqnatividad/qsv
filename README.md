@@ -343,7 +343,7 @@ Otherwise, the default memory check heuristic (NORMAL mode) will only check if t
 | `QSV_MEMORY_CHECK` | if set, check if input file size < AVAILABLE memory - HEADROOM (CONSERVATIVE mode) when running in "non-streaming" mode. Otherwise, qsv will only check if the input file size < TOTAL memory - HEADROOM (NORMAL mode). This is done to prevent Out-of-Memory errors. |
 | `QSV_LOG_LEVEL` | desired level (default - off; `error`, `warn`, `info`, `trace`, `debug`). |
 | `QSV_LOG_DIR` | when logging is enabled, the directory where the log files will be stored. If the specified directory does not exist, qsv will attempt to create it. If not set, the log files are created in the directory where qsv was started. See [Logging](docs/Logging.md#logging) for more info. |
-| `QSV_LOG_UNBUFFERED` | if set, log messages are written directly to disk, without buffering. Otherwise, log messages are buffered before being written to the log file (8k buffer, flushing every second). See https://docs.rs/flexi_logger/latest/flexi_logger/enum.WriteMode.html for details. |
+| `QSV_LOG_UNBUFFERED` | if set, log messages are written directly to disk, without buffering. Otherwise, log messages are buffered before being written to the log file (8k buffer, flushing every second). See [flexi_logger](https://docs.rs/flexi_logger/latest/flexi_logger/enum.WriteMode.html) for details. |
 | `QSV_PROGRESSBAR` | if set, enable the --progressbar option on the `apply`, `fetch`, `fetchpost`, `foreach`, `luau`, `py`, `replace`, `search`, `searchset`, `sortcheck` & `validate` commands.  |
 | `QSV_REDIS_CONNSTR` | the `fetch` command can use [Redis](https://redis.io/) to cache responses. Set to connect to the desired Redis instance. (default: `redis:127.0.0.1:6379/1`). For more info on valid Redis connection string formats, click [here](https://docs.rs/redis/latest/redis/#connection-parameters). |
 | `QSV_FP_REDIS_CONNSTR` | the `fetchpost` command can also use Redis to cache responses (default: `redis:127.0.0.1:6379/2`). Note that `fetchpost` connects to database 2, as opposed to `fetch` which connects to database 1. |
@@ -377,7 +377,7 @@ When processing `.env` files, qsv will:
 * where multiple declarations of the same variable exist, the last one will be used
 * ignore any lines that start with `#` (comments)
 
-To facilitate the use of `.env` files, a `dotenv.template` file is included in the qsv distribution. This file contains all the environment variables that qsv recognizes, along with their default values. You can copy this file to `.env` and modify it to suit your needs.
+To facilitate the use of `.env` files, a [`dotenv.template`](dotenv.template) file is included in the qsv distribution. This file contains all the environment variables that qsv recognizes, along with their default values. You can copy this file to `.env` and modify it to suit your needs.
 
 ## Feature Flags
 
