@@ -367,10 +367,10 @@ impl Config {
                 // passively trying to find an index, so we just log the warning...
                 let idx_file = match fs::File::open(util::idx_path(p)) {
                     Err(e) => {
-                        if self.autoindex {
+                        if self.autoindex && !self.snappy {
                             // however, if QSV_AUTOINDEX is set, we create the index automatically
                             self.autoindex_file();
-                            fs::File::open(util::idx_path(p)).unwrap()
+                            fs::File::open(util::idx_path(p))?
                         } else {
                             warn!("No index file found - {p:?}: {e}");
 
@@ -406,7 +406,7 @@ impl Config {
         let (data_modified, _) = util::file_metadata(&csv_file.metadata()?);
         let (idx_modified, _) = util::file_metadata(&idx_file.metadata()?);
         if data_modified > idx_modified {
-            if self.autoindex {
+            if self.autoindex && !self.snappy {
                 info!("index stale... autoindexing...");
                 self.autoindex_file();
             } else {
