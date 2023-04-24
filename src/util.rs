@@ -397,7 +397,7 @@ pub fn file_metadata(md: &fs::Metadata) -> (u64, u64) {
 /// If memcheck is true, check memory in CONSERVATIVE mode (i.e., Filesize < AVAIL memory + SWAP -
 /// headroom) If memcheck is false, check memory in NORMAL mode (i.e., Filesize < TOTAL memory -
 /// headroom)
-pub fn mem_file_check(path: &Path, version_check: bool, memcheck: bool) -> Result<i64, String> {
+pub fn mem_file_check(path: &Path, version_check: bool, memcheck: bool) -> CliResult<i64> {
     // if we're NOT calling this from the version() and the file doesn't exist,
     // we don't need to check memory as file existence is checked before this function is called.
     // If we do get here with a non-existent file, that means we're using stdin,
@@ -434,27 +434,24 @@ pub fn mem_file_check(path: &Path, version_check: bool, memcheck: bool) -> Resul
         let file_metadata =
             fs::metadata(path).map_err(|e| format!("Failed to get file size: {e}"))?;
         let fsize = file_metadata.len();
-        let detail_msg = format!(
-            "qsv running in non-streaming {mode} mode. Total memory: {total_mem} Available \
-             memory: {avail_mem}. Free swap: {free_swap} Max Available memory/Max input file \
-             size: {max_avail_mem}. QSV_FREEMEMORY_HEADROOM_PCT: {mem_pct}%. File size: {fsize}.",
-            mode = if memcheck_work {
-                "CONSERVATIVE"
-            } else {
-                "NORMAL"
-            },
-            total_mem = indicatif::HumanBytes(total_mem),
-            avail_mem = indicatif::HumanBytes(avail_mem),
-            free_swap = indicatif::HumanBytes(free_swap),
-            max_avail_mem = indicatif::HumanBytes(max_avail_mem),
-            mem_pct = mem_pct,
-            fsize = indicatif::HumanBytes(fsize)
-        );
-        log::info!("{detail_msg}");
         if fsize > max_avail_mem {
-            return fail!(format!(
-                "Not enough memory to process the file. {detail_msg}"
-            ));
+            return fail_clierror!(
+                "Not enough memory to process the file. qsv running in non-streaming {mode} mode. \
+                 Total memory: {total_mem} Available memory: {avail_mem}. Free swap: {free_swap} \
+                 Max Available memory/Max input file size: {max_avail_mem}. \
+                 QSV_FREEMEMORY_HEADROOM_PCT: {mem_pct}%. File size: {fsize}.",
+                mode = if memcheck_work {
+                    "CONSERVATIVE"
+                } else {
+                    "NORMAL"
+                },
+                total_mem = indicatif::HumanBytes(total_mem),
+                avail_mem = indicatif::HumanBytes(avail_mem),
+                free_swap = indicatif::HumanBytes(free_swap),
+                max_avail_mem = indicatif::HumanBytes(max_avail_mem),
+                mem_pct = mem_pct,
+                fsize = indicatif::HumanBytes(fsize)
+            );
         }
     }
 
