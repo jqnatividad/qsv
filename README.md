@@ -368,10 +368,16 @@ qsv support the use of `.env` files to set environment variables. The `.env` fil
 
 It processes `.env` files as follows:
 
-* If the `--env` option is specified, it will use the specified file (e.g. `--env production` will look for a file named `production.env` in the current working directory)
-* If the `--env` option is not specified, it will look for a file named `.env` in the current working directory.
-* If the `--env` option is not specified & an `.env` file is not found in the current working directory, it will look for an `.env` file with the same filestem as the binary in the directory where qsv binary is (e.g. if `qsv`/`qsvlite`/`qsvdp` is in `/usr/local/bin`, it will look for `/usr/loca/bin/qsv.env`, `/usr/local/bin/qsvlite.env` or `/usr/local/bin/qsvdp.env` respectively).
-* If no `.env` files are found, qsv will proceed with its default settings and the current  environment variables, which may include "QSV_" variables.
+* Upon invocation, qsv will look for a file named `.env` in the current working directory. If one is found, it will be processed.
+* If no `.env` file is not found in the current working directory, qsv will next look for an `.env` file with the same filestem as the binary in the directory where the binary is (e.g. if `qsv`/`qsvlite`/`qsvdp` is in `/usr/local/bin`, it will look for `/usr/loca/bin/qsv.env`, `/usr/local/bin/qsvlite.env` or `/usr/local/bin/qsvdp.env` respectively).
+* If no `.env` files are found, qsv will proceed with its default settings and the current environment variables, which may include "QSV_" variables.
+
+When processing `.env` files, qsv will:
+* overwrite any existing environment variables with the same name
+* where multiple declarations of the same variable exist, the last one will be used
+* ignore any lines that start with `#` (comments)
+
+To facilitate the use of `.env` files, a `dotenv.template` file is included in the qsv distribution. This file contains all the environment variables that qsv recognizes, along with their default values. You can copy this file to `.env` and modify it to suit your needs.
 
 ## Feature Flags
 
