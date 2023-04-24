@@ -67,7 +67,6 @@ Usage:
 
 Options:
     --list               List all commands available.
-    --env <profile>      Load environment variables from <profile>.env file.
     --envlist            List all qsv-relevant environment variables.
     -u, --update         Update qsv to the latest release from GitHub.
     -U, --updatenow      Update qsv to the latest release from GitHub without confirming.
@@ -84,7 +83,6 @@ struct Args {
     arg_command:    Option<Command>,
     flag_list:      bool,
     flag_envlist:   bool,
-    flag_env:       Option<String>,
     flag_update:    bool,
     flag_updatenow: bool,
 }
@@ -196,7 +194,7 @@ fn main() -> QsvExitCode {
         })
         .unwrap_or_else(|e| e.exit());
 
-    if util::load_envprofiles(args.flag_env).is_err() {
+    if util::load_dotenv().is_err() {
         return QsvExitCode::Bad;
     }
 
