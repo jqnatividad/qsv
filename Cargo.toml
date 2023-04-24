@@ -165,6 +165,7 @@ self_update = { version = "0.36", features = [
     "compression-zip-deflate",
     "rustls",
 ], default-features = false, optional = true }
+semver = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 serde_urlencoded = { version = "0.7", optional = true }

@@ -3699,6 +3699,7 @@ dependencies = [
  "ryu",
  "sanitise-file-name",
  "self_update",
+ "semver",
  "serde",
  "serde_json",
  "serde_urlencoded",

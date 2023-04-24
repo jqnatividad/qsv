@@ -690,7 +690,14 @@ pub fn qsv_check_for_update(check_only: bool, no_confirm: bool) -> Result<bool, 
     log::info!("Current version: {curr_version} Latest Release: {latest_release}");
 
     let mut updated = false;
-    if latest_release > &curr_version.to_string() {
+    let Ok(latest_release_sv) = semver::Version::parse(latest_release) else {
+        return fail!(format!("Can't parse latest release version: {latest_release}"));
+    };
+    let Ok(curr_version_sv) = semver::Version::parse(&curr_version) else {
+        return fail!(format!("Can't parse current version: {curr_version}"));
+    };
+
+    if latest_release_sv > curr_version_sv {
         eprintln!("Update {latest_release} available. Current version is {curr_version}.");
         eprintln!(
             "Release notes: https://github.com/jqnatividad/qsv/releases/tag/{latest_release}\n"
