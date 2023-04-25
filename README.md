@@ -204,16 +204,18 @@ The `to` command produces produces `.xlsx`, [Parquet](https://parquet.apache.org
 
 ## Snappy Compression/Decompression
 
-qsv supports *automatic compression/decompression* using the [Snappy frame format](https://github.com/google/snappy/blob/main/framing_format.txt). Snappy was chosen instead of more popular compression formats like gzip because it was designed for [high-performance streaming compression/decompression](https://github.com/google/snappy/tree/main/docs#readme).
+qsv supports *automatic compression/decompression* using the [Snappy frame format](https://github.com/google/snappy/blob/main/framing_format.txt). Snappy was chosen instead of more popular compression formats like gzip because it was designed for [high-performance streaming compression & decompression](https://github.com/google/snappy/tree/main/docs#readme).
 
 For all commands except the `index`, `extdedup` & `extsort` commands, if the input file has an ".sz" extension, qsv will *automatically* do streaming decompression as it reads it. Further, if the input file has an extended CSV/TSV ".sz" extension (e.g nyc311.csv.sz/nyc311.tsv.sz/nyc311.tab.sz), qsv will also use the file extension to determine the delimiter to use.   
 
 Similarly, if the `--output` file has an ".sz" extension, qsv will *automatically* do streaming compression as it writes it.
 If the output file has an extended CSV/TSV ".sz" extension, qsv will also use the file extension to determine the delimiter to use.  
 
-Note however that compressed files cannot be indexed, so index-accelerated commands (`frequency`, `schema`, `split`, `stats`, `tojsonl`) will not be multi-threaded. Random access is also not supported without an index so `slice` will not be accelerated and `luau`'s random-access mode will not be available.
+Note however that compressed files cannot be indexed, so index-accelerated commands (`frequency`, `schema`, `split`, `stats`, `tojsonl`) will NOT be multi-threaded. Random access is also disabled without an index so `slice` will not be accelerated and `luau`'s random-access mode will not be available.
 
-There is also a dedicated [`snappy`](/src/cmd/snappy.rs#L2) command with extended operations — a multithreaded `compress` subcommand (4-5x faster than the built-in, single-threaded auto-compression); a `decompress` subcommand with detailed compression metadata; a `check` subcommand to inspect if a file has a Snappy header; and a `validate` subcommand to confirm if a Snappy file is valid. It can be used to compress/decompress ANY file, not just CSV/TSV files.
+There is also a dedicated [`snappy`](/src/cmd/snappy.rs#L2) command four subcommands for direct snappy file operations — a multithreaded `compress` subcommand (4-5x faster than the built-in, single-threaded auto-compression); a `decompress` subcommand with detailed compression metadata; a `check` subcommand to quickly inspect if a file has a Snappy header; and a `validate` subcommand to confirm if a Snappy file is valid.
+
+The `snappy` command can be used to compress/decompress ANY file, not just CSV/TSV files.
 
 Using the `snappy` command, we can compress NYC's 311 data (15gb, 28m rows) to 4.95 gb in *5.77 seconds* with the multithreaded `compress` subcommand - *2.58 gb/sec* with a 0.33 (3.01:1) compression ratio.
 
@@ -271,7 +273,7 @@ Finally, as [qsv's DSL](#luau_deeplink) (👑), `luau` will gain even more featu
 
 ### Python
 
-The `python` feature is NOT enabled by default on the prebuilt binaries, as doing so requires it to dynamically link to python libraries at runtime, which presents distribution issues, as various operating systems have differing bundled Python versions.
+The `python` feature is NOT enabled by default on the prebuilt binaries, as doing so requires it to dynamically link to python libraries at runtime, which presents distribution issues, as various operating systems have differing Python versions.
 
 If you wish to enable the `python` feature - you'll just have to install/compile from source, making sure you have the development libraries for the desired Python version (Python 3.7 to 3.11 are supported) installed when doing so.
 
