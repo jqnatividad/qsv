@@ -46,8 +46,8 @@ Common options:
     -d, --delimiter <arg>      The field delimiter for reading CSV data.
                                Must be a single character. (default: ,)
     -Q, --quiet                Do not print duplicate count to stderr.
-    --memcheck                 Check if there is enough memory to load the
-                               entire CSV into memory.
+    --memcheck                 Check if there is enough memory to load the entire
+                               CSV into memory using CONSERVATIVE heuristics.
 "#;
 
 use std::cmp;

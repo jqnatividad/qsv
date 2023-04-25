@@ -130,8 +130,8 @@ Common options:
                            in statistics.
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
-    --memcheck             Check if there is enough memory to load the
-                           entire CSV into memory.
+    --memcheck             Check if there is enough memory to load the entire
+                           CSV into memory using CONSERVATIVE heuristics.
 "#;
 
 /*
