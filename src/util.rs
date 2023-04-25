@@ -397,7 +397,11 @@ pub fn file_metadata(md: &fs::Metadata) -> (u64, u64) {
 /// If memcheck is true, check memory in CONSERVATIVE mode (i.e., Filesize < AVAIL memory + SWAP -
 /// headroom) If memcheck is false, check memory in NORMAL mode (i.e., Filesize < TOTAL memory -
 /// headroom)
-pub fn mem_file_check(path: &Path, version_check: bool, memcheck: bool) -> CliResult<i64> {
+pub fn mem_file_check(
+    path: &Path,
+    version_check: bool,
+    conservative_memcheck: bool,
+) -> CliResult<i64> {
     // if we're NOT calling this from the version() and the file doesn't exist,
     // we don't need to check memory as file existence is checked before this function is called.
     // If we do get here with a non-existent file, that means we're using stdin,
@@ -406,7 +410,7 @@ pub fn mem_file_check(path: &Path, version_check: bool, memcheck: bool) -> CliRe
         return Ok(-1_i64);
     }
 
-    let memcheck_work = env::var("QSV_MEMORY_CHECK").is_ok() || memcheck;
+    let conservative_memcheck_work = env::var("QSV_MEMORY_CHECK").is_ok() || conservative_memcheck;
 
     let mut sys = sysinfo::System::new();
     sys.refresh_memory();
@@ -423,7 +427,7 @@ pub fn mem_file_check(path: &Path, version_check: bool, memcheck: bool) -> CliRe
     mem_pct = mem_pct.clamp(10, 90);
 
     #[allow(clippy::cast_precision_loss)]
-    let max_avail_mem = if memcheck_work {
+    let max_avail_mem = if conservative_memcheck_work {
         ((avail_mem + free_swap) as f32 * ((100 - mem_pct) as f32 / 100.0_f32)) as u64
     } else {
         (total_mem as f32 * ((100 - mem_pct) as f32 / 100.0_f32)) as u64
@@ -440,7 +444,7 @@ pub fn mem_file_check(path: &Path, version_check: bool, memcheck: bool) -> CliRe
                  Total memory: {total_mem} Available memory: {avail_mem}. Free swap: {free_swap} \
                  Max Available memory/Max input file size: {max_avail_mem}. \
                  QSV_FREEMEMORY_HEADROOM_PCT: {mem_pct}%. File size: {fsize}.",
-                mode = if memcheck_work {
+                mode = if conservative_memcheck_work {
                     "CONSERVATIVE"
                 } else {
                     "NORMAL"
