@@ -213,11 +213,11 @@ If the output file has an extended CSV/TSV ".sz" extension, qsv will also use th
 
 Note however that compressed files cannot be indexed, so index-accelerated commands (`frequency`, `schema`, `split`, `stats`, `tojsonl`) will NOT be multi-threaded. Random access is also disabled without an index so `slice` will not be accelerated and `luau`'s random-access mode will not be available.
 
-There is also a dedicated [`snappy`](/src/cmd/snappy.rs#L2) command four subcommands for direct snappy file operations — a multithreaded `compress` subcommand (4-5x faster than the built-in, single-threaded auto-compression); a `decompress` subcommand with detailed compression metadata; a `check` subcommand to quickly inspect if a file has a Snappy header; and a `validate` subcommand to confirm if a Snappy file is valid.
+There is also a dedicated [`snappy`](/src/cmd/snappy.rs#L2) command with four subcommands for direct snappy file operations — a multithreaded `compress` subcommand (4-5x faster than the built-in, single-threaded auto-compression); a `decompress` subcommand with detailed compression metadata; a `check` subcommand to quickly inspect if a file has a Snappy header; and a `validate` subcommand to confirm if a Snappy file is valid.
 
 The `snappy` command can be used to compress/decompress ANY file, not just CSV/TSV files.
 
-Using the `snappy` command, we can compress NYC's 311 data (15gb, 28m rows) to 4.95 gb in *5.77 seconds* with the multithreaded `compress` subcommand - *2.58 gb/sec* with a 0.33 (3.01:1) compression ratio.
+Using the `snappy` command, we can compress NYC's 311 data (15gb, 28m rows) to 4.95 gb in *5.77 seconds* with the multithreaded `compress` subcommand - *2.58 gb/sec* with a 0.33 (3.01:1) compression ratio.  With `snappy decompress`, we can roundtrip decompress the same file in *16.71 seconds* - *0.89 gb/sec*.
 
 Compare that to [zip 3.0](https://infozip.sourceforge.net/Zip.html), which compressed the same file to 2.9 gb in *248.3 seconds - 43x slower at 0.06 gb/sec* with a 0.19 (5.17:1) compression ratio - for just an additional 14% (2.45 gb) of saved space.
 
