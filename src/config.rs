@@ -130,8 +130,8 @@ impl Config {
                 (Some(path), delim, snappy || file_extension.ends_with("sz"))
             }
         };
-        let sniff =
-            env::var("QSV_SNIFF_DELIMITER").is_ok() || env::var("QSV_SNIFF_PREAMBLE").is_ok();
+        let sniff = util::get_envvar_flag("QSV_SNIFF_DELIMITER")
+            || util::get_envvar_flag("QSV_SNIFF_PREAMBLE");
         let mut preamble = 0_u64;
         if sniff && path.is_some() {
             let sniff_path = path.as_ref().unwrap().to_str().unwrap();
@@ -171,8 +171,8 @@ impl Config {
             quoting: true,
             preamble_rows: preamble,
             trim: csv::Trim::None,
-            autoindex: env::var("QSV_AUTOINDEX").is_ok(),
-            prefer_dmy: env::var("QSV_PREFER_DMY").is_ok(),
+            autoindex: util::get_envvar_flag("QSV_AUTOINDEX"),
+            prefer_dmy: util::get_envvar_flag("QSV_PREFER_DMY"),
             comment: None,
             snappy,
         }
@@ -202,7 +202,7 @@ impl Config {
         if env::var("QSV_TOGGLE_HEADERS").unwrap_or_else(|_| "0".to_owned()) == "1" {
             yes = !yes;
         }
-        if env::var("QSV_NO_HEADERS").is_ok() {
+        if util::get_envvar_flag("QSV_NO_HEADERS") {
             self.no_headers = true;
         } else {
             self.no_headers = yes;

@@ -77,7 +77,6 @@ Common options:
 "#;
 
 use std::{
-    env,
     fs::File,
     io::{self, BufRead, BufReader},
 };
@@ -153,7 +152,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         regex_labels.push(label);
     }
 
-    let regex_unicode = if env::var("QSV_REGEX_UNICODE").is_ok() {
+    let regex_unicode = if util::get_envvar_flag("QSV_REGEX_UNICODE") {
         true
     } else {
         args.flag_unicode
@@ -193,7 +192,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // prep progress bar
     #[cfg(any(feature = "feature_capable", feature = "lite"))]
     let show_progress =
-        (args.flag_progressbar || std::env::var("QSV_PROGRESSBAR").is_ok()) && !rconfig.is_stdin();
+        (args.flag_progressbar || util::get_envvar_flag("QSV_PROGRESSBAR")) && !rconfig.is_stdin();
     #[cfg(any(feature = "feature_capable", feature = "lite"))]
     let progress = ProgressBar::with_draw_target(None, ProgressDrawTarget::stderr_with_hz(5));
     #[cfg(any(feature = "feature_capable", feature = "lite"))]

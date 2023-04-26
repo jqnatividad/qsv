@@ -299,7 +299,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
 
                 // prep progress bar
                 let show_progress =
-                    args.flag_progressbar || std::env::var("QSV_PROGRESSBAR").is_ok();
+                    args.flag_progressbar || util::get_envvar_flag("QSV_PROGRESSBAR");
 
                 let progress = ProgressBar::with_draw_target(
                     Some(total_size.try_into().unwrap_or(u64::MAX)),
