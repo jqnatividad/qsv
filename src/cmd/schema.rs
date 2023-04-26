@@ -140,7 +140,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // we can do this directly here, since args is mutable and
     // Config has not been created yet at this point
-    args.flag_prefer_dmy = args.flag_prefer_dmy || std::env::var("QSV_PREFER_DMY").is_ok();
+    args.flag_prefer_dmy = args.flag_prefer_dmy || util::get_envvar_flag("QSV_PREFER_DMY");
     if args.flag_prefer_dmy {
         winfo!("Prefer DMY set.");
     }

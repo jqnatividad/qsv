@@ -656,7 +656,7 @@ fn sequential_mode(
 
     #[cfg(any(feature = "feature_capable", feature = "lite"))]
     let show_progress =
-        (args.flag_progressbar || std::env::var("QSV_PROGRESSBAR").is_ok()) && !rconfig.is_stdin();
+        (args.flag_progressbar || util::get_envvar_flag("QSV_PROGRESSBAR")) && !rconfig.is_stdin();
     #[cfg(any(feature = "feature_capable", feature = "lite"))]
     let progress = ProgressBar::with_draw_target(None, ProgressDrawTarget::stderr_with_hz(5));
     #[cfg(any(feature = "feature_capable", feature = "lite"))]
@@ -986,7 +986,7 @@ fn random_acess_mode(
 
     #[cfg(any(feature = "feature_capable", feature = "lite"))]
     let show_progress =
-        (args.flag_progressbar || std::env::var("QSV_PROGRESSBAR").is_ok()) && !rconfig.is_stdin();
+        (args.flag_progressbar || util::get_envvar_flag("QSV_PROGRESSBAR")) && !rconfig.is_stdin();
     #[cfg(any(feature = "feature_capable", feature = "lite"))]
     let progress = ProgressBar::with_draw_target(None, ProgressDrawTarget::stderr_with_hz(5));
     #[cfg(any(feature = "feature_capable", feature = "lite"))]

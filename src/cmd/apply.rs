@@ -611,7 +611,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // prep progress bar
     let show_progress =
-        (args.flag_progressbar || std::env::var("QSV_PROGRESSBAR").is_ok()) && !rconfig.is_stdin();
+        (args.flag_progressbar || util::get_envvar_flag("QSV_PROGRESSBAR")) && !rconfig.is_stdin();
 
     let progress = ProgressBar::with_draw_target(None, ProgressDrawTarget::stderr_with_hz(5));
     if show_progress {

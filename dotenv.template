@@ -1,4 +1,5 @@
-# this is .env template
+# .env TEMPLATE
+# =============================================================================
 # Customize this and copy it as an `.env` file to the directory where you want
 # qsv to set the environment variables specified.
 # You can also copy the customized file to the directory where the qsv binary
@@ -14,22 +15,22 @@
 # the file extension - i.e. comma for `.csv`, tab for `.tsv` & `.tab` files.
 # QSV_DEFAULT_DELIMITER = , 
 
-# if set, the delimiter is automatically detected. Overrides QSV_DEFAULT_DELIMITER
+# if true, the delimiter is automatically detected. Overrides QSV_DEFAULT_DELIMITER
 # and `--delimiter` option. Note that this does not work with stdin.
-# QSV_SNIFF_DELIMITER = 1
+# QSV_SNIFF_DELIMITER = False
 
-# if set, the first row will **NOT** be interpreted as headers.
+# if true, the first row will **NOT** be interpreted as headers.
 # Supersedes QSV_TOGGLE_HEADERS.
-# QSV_NO_HEADERS = 1
+# QSV_NO_HEADERS = False
 
 # if set to `1`, toggles header setting - i.e. inverts qsv header behavior,
 # with no headers being the default, & setting `--no-headers` will actually
 # mean headers will not be ignored.
-# QSV_TOGGLE_HEADERS = 1 
+# QSV_TOGGLE_HEADERS = 1
 
-# if set, automatically create an index when none is detected.
+# if true, automatically create an index when none is detected.
 # Also automatically updates stale indices.
-# QSV_AUTOINDEX = 1
+# QSV_AUTOINDEX = False
 
 # The directory to use for caching downloaded lookup_table resources using
 # the `luau` qsv_register_lookup() helper function.
@@ -58,20 +59,20 @@
 # processors.  See PERFORMANCE-Multithreading section for more info.
 # QSV_MAX_JOBS = 8
 
-# if set, prohibit self-update version check for the latest qsv release 
+# if true, prohibit self-update version check for the latest qsv release 
 # published on GitHub.
-# QSV_NO_UPDATE = 1
+# QSV_NO_UPDATE = False
 
-# if set, date parsing will use DMY format. Otherwise, use MDY format
+# if true, date parsing will use DMY format. Otherwise, use MDY format
 # (used with `apply datefmt`, `schema`, `sniff` & `stats` commands).
-# QSV_PREFER_DMY = 1
+# QSV_PREFER_DMY = False
 
-# if set, makes `search`, `searchset` & `replace` commands unicode-aware.
+# if true, makes `search`, `searchset` & `replace` commands unicode-aware.
 # For increased performance, these commands are not unicode-aware by default &
 # will ignore unicode values when matching & will abort when unicode characters
 # are used in the regex. Note that the `apply operations regex_replace`
 # operation is always unicode-aware.
-# QSV_REGEX_UNICODE = 1
+# QSV_REGEX_UNICODE = False
 
 # reader buffer size (default (bytes): 16384)
 # QSV_RDR_BUFFER_CAPACITY = 16384
@@ -86,11 +87,11 @@
 # (default: (percent) 20 )
 # QSV_FREEMEMORY_HEADROOM_PCT = 20
 
-# if set, check if input file size < AVAILABLE memory - HEADROOM (CONSERVATIVE mode)
+# if true, check if input file size < AVAILABLE memory - HEADROOM (CONSERVATIVE mode)
 # when running in "non-streaming" mode. Otherwise, qsv will only check if the
 # input file size < TOTAL memory - HEADROOM (NORMAL mode). This is done to prevent
 # Out-of-Memory errors.
-# QSV_MEMORY_CHECK = 1
+# QSV_MEMORY_CHECK = False
 
 # desired level (default - off; `error`, `warn`, `info`, `trace`, `debug`).
 # QSV_LOG_LEVEL = debug
@@ -105,12 +106,12 @@
 # Otherwise, log messages are buffered before being written to the log file
 # (8k buffer, flushing every second).
 # See https://docs.rs/flexi_logger/latest/flexi_logger/enum.WriteMode.html for details.
-# QSV_LOG_UNBUFFERED = 1
+# QSV_LOG_UNBUFFERED = False
 
-# if set, enable the --progressbar option on the `apply`, `fetch`, `fetchpost`,
+# if true, enable the --progressbar option on the `apply`, `fetch`, `fetchpost`,
 # `foreach`, `luau`, `py`, `replace`, `search`, `searchset`, `sortcheck` &
 # `validate` commands.
-# QSV_PROGRESSBAR = 1
+# QSV_PROGRESSBAR = False
 
 # the `fetch` command can use [Redis](https://redis.io/) to cache responses.
 # Set to connect to the desired Redis instance. (default: `redis:127.0.0.1:6379/1`).
@@ -129,8 +130,8 @@
 # set time-to-live of Redis cached values (default (seconds): 2419200 (28 days)).
 # QSV_REDIS_TTL_SECONDS = 2419200
 
-# if set, enables cache hits to refresh TTL of cached values.
-# QSV_REDIS_TTL_REFRESH = 1
+# if true, enables cache hits to refresh TTL of cached values.
+# QSV_REDIS_TTL_REFRESH = False
 
 # for commands with a --timeout option (`fetch`, `fetchpost`, `luau`, `sniff` &
 # `validate`), the number of seconds before a web request times out (default: 30).

@@ -289,7 +289,7 @@ impl RedisConfig {
                 .unwrap_or_else(|_| DEFAULT_REDIS_TTL_SECS.to_string())
                 .parse()
                 .unwrap_or(DEFAULT_REDIS_TTL_SECS),
-            ttl_refresh:   std::env::var("QSV_REDIS_TTL_REFRESH").is_ok(),
+            ttl_refresh:   util::get_envvar_flag("QSV_REDIS_TTL_REFRESH"),
         }
     }
 }
@@ -481,7 +481,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // prep progress bars
     let show_progress =
-        (args.flag_progressbar || std::env::var("QSV_PROGRESSBAR").is_ok()) && !rconfig.is_stdin();
+        (args.flag_progressbar || util::get_envvar_flag("QSV_PROGRESSBAR")) && !rconfig.is_stdin();
 
     // create multi_progress to stderr with a maximum refresh of 5 per second
     let multi_progress = MultiProgress::with_draw_target(ProgressDrawTarget::stderr_with_hz(5));

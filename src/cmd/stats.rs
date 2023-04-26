@@ -785,7 +785,7 @@ fn init_date_inference(
     flag_whitelist: &str,
 ) -> Result<(), String> {
     if infer_dates {
-        let dmy_preferred = prefer_dmy || std::env::var("QSV_PREFER_DMY").is_ok();
+        let dmy_preferred = prefer_dmy || util::get_envvar_flag("QSV_PREFER_DMY");
         DMY_PREFERENCE.store(dmy_preferred, Ordering::Relaxed);
 
         let whitelist_lower = flag_whitelist.to_lowercase();
