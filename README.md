@@ -379,7 +379,7 @@ When processing `.env` files, qsv will:
 * where multiple declarations of the same variable exist, the last one will be used
 * ignore any lines that start with `#` (comments)
 
-To facilitate the use of `.env` files, a [`dotenv.template`](dotenv.template) file is included in the qsv distribution. This file contains all the environment variables that qsv recognizes, along with their default values. You can copy this file to `.env` and modify it to suit your needs.
+To facilitate the use of `.env` files, a [`dotenv.template.yaml`](dotenv.template.yaml) file is included in the qsv distribution. This file contains all the environment variables that qsv recognizes, along with their default values. Copy the template a file named '.env' and modify it to suit your needs.
 
 ## Feature Flags
 
