@@ -62,10 +62,10 @@ QSV_COMMENT_CHAR = '#'
 # Otherwise, you can just use the character without enclosing it in single quotes
 # QSV_COMMENT_CHAR = !
 
-# number of jobs to use for multithreaded commands (currently `apply`, `dedup`,
-# `extsort`, `frequency`, `schema`, `sort`, `split`, `stats`, `to`, `tojsonl` &
-# `validate`). If not set, max_jobs is set to the detected number of logical 
-# processors.  See PERFORMANCE-Multithreading section for more info.
+# number of jobs to use for multithreaded commands (currently `apply`, `applydp`, 
+# `dedup`, `diff`, `extsort`, `frequency`, `joinp`, `schema`, `snappy`, `sort`, `split`,
+# `stats`, `to`, `tojsonl` & # `validate`). If not set, max_jobs is set to the detected
+# number of logical processors.  See PERFORMANCE-Multithreading section for more info.
 # QSV_MAX_JOBS = 8
 
 # if true, prohibit self-update version check for the latest qsv release 
