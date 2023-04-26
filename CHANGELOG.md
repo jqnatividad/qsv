@@ -7,9 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ## [0.99.1] - 2023-04-24
-Even though this is a patch version bump, it actually contains a lot of new features and improvements.
-This was done so that qsv version 0.98.0 and below can upgrade to this version, as the self-update logic
-in older versions compared versions as strings, and not as semvers, preventing them from updating.
+Even though this is a patch release, it actually contains a lot of new features and improvements.
+This was done so that qsv version 0.99.0 and below can upgrade to this release, as the self-update logic
+in older versions compared versions as strings, and not as semvers, preventing the older versions from
+updating as the yanked 0.100.0 is less than anything 0.99.0 and below when compared as strings.
 
 The changelog below is a combination of the changelog of the yanked 0.100.0 and the changes since 0.99.0.
 
