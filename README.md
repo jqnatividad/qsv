@@ -341,8 +341,8 @@ Otherwise, the default memory check heuristic (NORMAL mode) will only check if t
 | `QSV_REGEX_UNICODE` | if set, makes `search`, `searchset` & `replace` commands unicode-aware. For increased performance, these commands are not unicode-aware by default & will ignore unicode values when matching & will abort when unicode characters are used in the regex. Note that the `apply operations regex_replace` operation is always unicode-aware. |
 | `QSV_RDR_BUFFER_CAPACITY` | reader buffer size (default (bytes): 16384) |
 | `QSV_WTR_BUFFER_CAPACITY` | writer buffer size (default (bytes): 65536) |
-| `QSV_FREEMEMORY_HEADROOM_PCT` | the percentage of free available memory required when running qsv in "non-streaming" mode (i.e. the entire file needs to be loaded into memory). If the incoming file is greater than the available memory (free memory + free swap) after the headroom is subtracted, qsv will not proceed. (default: (percent) 20 ) |
-| `QSV_MEMORY_CHECK` | if set, check if input file size < AVAILABLE memory - HEADROOM (CONSERVATIVE mode) when running in "non-streaming" mode. Otherwise, qsv will only check if the input file size < TOTAL memory - HEADROOM (NORMAL mode). This is done to prevent Out-of-Memory errors. |
+| `QSV_FREEMEMORY_HEADROOM_PCT` | the percentage of free available memory required when running qsv in "non-streaming" mode (i.e. the entire file needs to be loaded into memory). If the incoming file is greater than the available memory after the headroom is subtracted, qsv will not proceed. See [Memory Management](#memory-management) for more info. (default: (percent) 20 ) |
+| `QSV_MEMORY_CHECK` | if set, check if input file size < AVAILABLE memory - HEADROOM (CONSERVATIVE mode) when running in "non-streaming" mode. Otherwise, qsv will only check if the input file size < TOTAL memory - HEADROOM (NORMAL mode). This is done to prevent Out-of-Memory errors. See [Memory Management](#memory-management) for more info. |
 | `QSV_LOG_LEVEL` | desired level (default - off; `error`, `warn`, `info`, `trace`, `debug`). |
 | `QSV_LOG_DIR` | when logging is enabled, the directory where the log files will be stored. If the specified directory does not exist, qsv will attempt to create it. If not set, the log files are created in the directory where qsv was started. See [Logging](docs/Logging.md#logging) for more info. |
 | `QSV_LOG_UNBUFFERED` | if set, log messages are written directly to disk, without buffering. Otherwise, log messages are buffered before being written to the log file (8k buffer, flushing every second). See [flexi_logger](https://docs.rs/flexi_logger/latest/flexi_logger/enum.WriteMode.html) for details. |
@@ -366,12 +366,12 @@ Several dependencies also have environment variables that influence qsv's perfor
 Relevant env vars are defined as anything that starts with `QSV_` & `MIMALLOC_` & the proxy variables listed above.
 
 ### .env File Support
-qsv support the use of `.env` files to set environment variables. The `.env` file is a simple text file that contains key-value pairs, one per line. 
+qsv supports the use of `.env` files to set environment variables. The `.env` file is a simple text file that contains key-value pairs, one per line. 
 
 It processes `.env` files as follows:
 
 * Upon invocation, qsv will look for a file named `.env` in the current working directory. If one is found, it will be processed.
-* If no `.env` file is not found in the current working directory, qsv will next look for an `.env` file with the same filestem as the binary in the directory where the binary is (e.g. if `qsv`/`qsvlite`/`qsvdp` is in `/usr/local/bin`, it will look for `/usr/loca/bin/qsv.env`, `/usr/local/bin/qsvlite.env` or `/usr/local/bin/qsvdp.env` respectively).
+* If no `.env` file is not found in the current working directory, qsv will next look for an `.env` file with the same filestem as the binary in the directory where the binary is (e.g. if `qsv`/`qsvlite`/`qsvdp` is in `/usr/local/bin`, it will look for `/usr/local/bin/qsv.env`, `/usr/local/bin/qsvlite.env` or `/usr/local/bin/qsvdp.env` respectively).
 * If no `.env` files are found, qsv will proceed with its default settings and the current environment variables, which may include "QSV_" variables.
 
 When processing `.env` files, qsv will:
