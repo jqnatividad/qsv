@@ -410,7 +410,7 @@ pub fn mem_file_check(
         return Ok(-1_i64);
     }
 
-    let conservative_memcheck_work = env::var("QSV_MEMORY_CHECK").is_ok() || conservative_memcheck;
+    let conservative_memcheck_work = get_envvar_flag("QSV_MEMORY_CHECK") || conservative_memcheck;
 
     let mut sys = sysinfo::System::new();
     sys.refresh_memory();
@@ -617,7 +617,7 @@ pub fn init_logger() -> (String, flexi_logger::LoggerHandle) {
 
     let qsv_log_env = env::var("QSV_LOG_LEVEL").unwrap_or_else(|_| "off".to_string());
     let qsv_log_dir = env::var("QSV_LOG_DIR").unwrap_or_else(|_| ".".to_string());
-    let write_mode = if env::var("QSV_LOG_UNBUFFERED").is_ok() {
+    let write_mode = if get_envvar_flag("QSV_LOG_UNBUFFERED") {
         flexi_logger::WriteMode::Direct
     } else {
         flexi_logger::WriteMode::BufferAndFlush
@@ -657,7 +657,7 @@ pub fn qsv_check_for_update(check_only: bool, no_confirm: bool) -> Result<bool, 
     const GITHUB_RATELIMIT_MSG: &str =
         "Github is rate-limiting self-update checks at the moment. Try again in an hour.";
 
-    if env::var("QSV_NO_UPDATE").is_ok() {
+    if get_envvar_flag("QSV_NO_UPDATE") {
         return Ok(false);
     }
 
@@ -1179,4 +1179,17 @@ pub fn load_dotenv() -> CliResult<()> {
     }
 
     Ok(())
+}
+
+pub fn get_envvar_flag(key: &str) -> bool {
+    if let Ok(tf_val) = std::env::var(key) {
+        let tf_val = tf_val.to_lowercase();
+        match tf_val {
+            s if s == "true" || s == "t" || s == "1" || s == "yes" || s == "y" => true,
+            s if s == "false" || s == "f" || s == "0" || s == "no" || s == "n" => false,
+            _ => false,
+        }
+    } else {
+        false
+    }
 }
