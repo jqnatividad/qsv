@@ -1127,8 +1127,7 @@ pub fn transform(bs: &[u8], casei: bool) -> ByteString {
 }
 
 pub fn load_dotenv() -> CliResult<()> {
-    // If the user specified an env file using the --env option, use it.
-    // Otherwise, use the default .env file in the current directory.
+    // Use the default .env file in the current directory.
     // If there is no .env file in the current directory, check if there is
     // an .env file with the same filestem as the binary, in the same directory as the binary.
     // If there is, use that. Failing that, qsv proceeds with its default settings and
@@ -1160,12 +1159,12 @@ pub fn load_dotenv() -> CliResult<()> {
 
         if std::path::Path::new(&qsv_binary_envprofile).exists() {
             log::info!(
-                "Using binary environment file: {}",
+                "Using binary .env file: {}",
                 qsv_binary_envprofile.display()
             );
             if let Err(e) = dotenvy::from_filename_override(qsv_binary_envprofile.clone()) {
                 return fail_clierror!(
-                    "Cannot process {} file: {e}",
+                    "Cannot process binary .env file - {}: {e}",
                     qsv_binary_envprofile.display()
                 );
             }
