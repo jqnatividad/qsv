@@ -1,11 +1,20 @@
 # .env TEMPLATE
 # =============================================================================
-# Customize this and copy it as an `.env` file to the directory where you want
-# qsv to set the environment variables specified.
+# Customize this and copy it to a file named '.env' to the directory where you
+# want qsv to use the environment variables specified.
+#
 # You can also copy the customized file to the directory where the qsv binary
 # variant is stored and name it to the variant name for which you want the 
 # environment variables settings to be the default (e.g. if qsv is in
 # /usr/local/bin, copy the file to /usr/local/bin/qsv.env)
+#
+# On startup, qsv will try to use the '.env' file in the current working directory.
+# If none is available, it will try to use the binary .env file.
+# If no binary .env file is set, qsv will proceed with its default settings
+# and the current environment variables.
+#
+# # Note that lines starting with '#' are ignored.
+# ==============================================================================
 
 # single ascii character to use as delimiter.  Overrides `--delimeter` option.
 # Defaults to "," (comma) for CSV files & "\t" (tab) for TSV files when not set.
@@ -47,7 +56,7 @@
 # set to an ascii character. If set, any lines(including the header) that start
 # with this character are ignored. Note that when you want to use the pound sign
 # as a comment char, you need to enclose it in single quotes as its a reserved
-# character for dotenv files.
+# character for dotenv files, e.g.
 # QSV_COMMENT_CHAR = '#'
 
 # Otherwise, you can just use the character without enclosing it in single quotes
@@ -82,15 +91,15 @@
 
 # the percentage of free available memory required when running qsv in
 # "non-streaming" mode (i.e. the entire file needs to be loaded into memory).
-# If the incoming file is greater than the available memory (free memory + 
-# free swap) after the headroom is subtracted, qsv will not proceed.
+# If the incoming file is greater than the available memory after the headroom
+# is subtracted, qsv will not proceed. See Memory Management for more info.
 # (default: (percent) 20 )
 # QSV_FREEMEMORY_HEADROOM_PCT = 20
 
 # if true, check if input file size < AVAILABLE memory - HEADROOM (CONSERVATIVE mode)
 # when running in "non-streaming" mode. Otherwise, qsv will only check if the
 # input file size < TOTAL memory - HEADROOM (NORMAL mode). This is done to prevent
-# Out-of-Memory errors.
+# Out-of-Memory errors. See Memory Management for more info.
 # QSV_MEMORY_CHECK = False
 
 # desired level (default - off; `error`, `warn`, `info`, `trace`, `debug`).
@@ -113,10 +122,10 @@
 # `validate` commands.
 # QSV_PROGRESSBAR = False
 
-# the `fetch` command can use [Redis](https://redis.io/) to cache responses.
+# the `fetch` command can use Redis to cache responses.
 # Set to connect to the desired Redis instance. (default: `redis:127.0.0.1:6379/1`).
 # For more info on valid Redis connection string formats, 
-# click https://docs.rs/redis/latest/redis/#connection-parameters.
+# see https://docs.rs/redis/latest/redis/#connection-parameters.
 # QSV_REDIS_CONNSTR = redis:127.0.0.1:6379/1
 
 # the `fetchpost` command can also use Redis to cache responses
