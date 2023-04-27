@@ -718,7 +718,7 @@ pub fn qsv_check_for_update(check_only: bool, no_confirm: bool) -> Result<bool, 
     let Ok(latest_release_sv) = semver::Version::parse(latest_release) else {
         return fail!(format!("Can't parse latest release version: {latest_release}"));
     };
-    let Ok(curr_version_sv) = semver::Version::parse(&curr_version) else {
+    let Ok(curr_version_sv) = semver::Version::parse(curr_version) else {
         return fail!(format!("Can't parse current version: {curr_version}"));
     };
 
