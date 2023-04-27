@@ -149,6 +149,9 @@ QSV_REDIS_TTL_REFRESH = False
 # `validate`), the number of seconds before a web request times out (default: 30).
 QSV_TIMEOUT = 30
 
-# the user agent string to use for web requests 
+# the user agent string to use for web requests.
+# When specifying a custom user agent, try to conform to the IETF RFC 7231 standard 
+# (https://tools.ietf.org/html/rfc7231#section-5.5.3). For examples, see 
+# https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
 # (default: <qsv_variant>/<version> (<target>; https://github.com/jqnatividad/qsv)).
 # QSV_USER_AGENT = qsv/0.99.1 (x86_64-apple-darwin; https://github.com/jqnatividad/qsv)
