@@ -911,7 +911,9 @@ fn load_json(uri: &str) -> Result<String, String> {
                 std::time::Duration::from_secs(TIMEOUT_SECS.load(Ordering::Relaxed) as u64);
 
             let client = match Client::builder()
-                .user_agent(util::DEFAULT_USER_AGENT)
+                // safety: we're using a validated QSV_USER_AGENT or if it's not set,
+                // the default user agent
+                .user_agent(util::set_user_agent(None).unwrap())
                 .brotli(true)
                 .gzip(true)
                 .deflate(true)
