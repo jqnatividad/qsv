@@ -41,10 +41,12 @@ pub fn num_cpus() -> usize {
 }
 
 pub static DEFAULT_USER_AGENT: &str = concat!(
-    env!("CARGO_PKG_NAME"),
+    env!("CARGO_BIN_NAME"),
     "/",
     env!("CARGO_PKG_VERSION"),
-    " (https://github.com/jqnatividad/qsv)",
+    " (",
+    env!("TARGET"),
+    "; https://github.com/jqnatividad/qsv)",
 );
 const TARGET: &str = match option_env!("TARGET") {
     Some(target) => target,
@@ -96,6 +98,25 @@ pub fn timeout_secs(timeout: u16) -> Result<u64, String> {
     }
     log::info!("TIMEOUT: {timeout}");
     Ok(timeout as u64)
+}
+
+/// sets user agent
+/// if user agent is not set, then use the default user agent
+pub fn set_user_agent(user_agent: Option<String>) -> CliResult<String> {
+    use reqwest::header::HeaderValue;
+
+    let ua = match user_agent {
+        Some(ua_arg) => ua_arg,
+        None => env::var("QSV_USER_AGENT").unwrap_or_else(|_| DEFAULT_USER_AGENT.to_string()),
+    };
+
+    match HeaderValue::from_str(ua.as_str()) {
+        Ok(_) => (),
+        Err(e) => return fail_clierror!("Invalid user-agent value: {e}"),
+    };
+
+    log::info!("set user agent: {ua}");
+    Ok(ua)
 }
 
 pub fn version() -> String {
