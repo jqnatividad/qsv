@@ -174,7 +174,7 @@ There are three binary variants of qsv:
 
 ## Regular Expression Syntax
 
-The `--select` option and several commands (`apply`, `schema`, `search`, `searchset`, `select` & `replace`) allow the user to specify regular expressions. We use the [`regex`](https://docs.rs/regex) crate to parse, compile and execute these expressions. [^3]
+The `--select` option and several commands (`apply`, `applydp`, `schema`, `search`, `searchset`, `select` & `replace`) allow the user to specify regular expressions. We use the [`regex`](https://docs.rs/regex) crate to parse, compile and execute these expressions. [^3]
 
 [^3]: This is the same regex engine used by [`ripgrep`](https://github.com/BurntSushi/ripgrep#ripgrep-rg) - the [blazingly fast grep replacement](https://blog.burntsushi.net/ripgrep/) that powers Visual Studio's [magical](https://lab.cccb.org/en/arthur-c-clarke-any-sufficiently-advanced-technology-is-indistinguishable-from-magic/) ["Find in Files"](https://github.com/microsoft/vscode-ripgrep) feature.
 
@@ -227,6 +227,8 @@ qsv validates against the [RFC 4180](https://datatracker.ietf.org/doc/html/rfc41
 qsv leverages the awesome [Rust CSV](https://docs.rs/csv/latest/csv/) crate to read/write CSV files.
 
 Click [here](https://docs.rs/csv-core/latest/csv_core/struct.Reader.html#rfc-4180) to find out more about how qsv conforms to the standard using this crate.
+
+When dealing with "atypical" CSV files, you can use the `input` command to normalize them to be RFC 4180-compliant.
 
 ## UTF-8 Encoding
 
@@ -353,6 +355,7 @@ Otherwise, the default memory check heuristic (NORMAL mode) will only check if t
 | `QSV_REDIS_TTL_SECONDS` | set time-to-live of Redis cached values (default (seconds): 2419200 (28 days)). |
 | `QSV_REDIS_TTL_REFRESH`| if set, enables cache hits to refresh TTL of cached values. |
 | `QSV_TIMEOUT`| for commands with a --timeout option (`fetch`, `fetchpost`, `luau`, `sniff` and `validate`), the number of seconds before a web request times out (default: 30). |
+| `QSV_USER_AGENT`| for commands with a --user-agent option (`fetch`, `fetchpost`, `luau`, `sniff` and `validate`), the user-agent to use when interfacing with web servers. (default: QSV_BINARY_NAME/QSV_VERSION - e.g. qsv/0.99.1). |
 
 Several dependencies also have environment variables that influence qsv's performance & behavior:
 
