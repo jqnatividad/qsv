@@ -12,8 +12,11 @@
 # If none is available, it will try to use the binary .env file.
 # If no binary .env file is set, qsv will proceed with its default settings
 # and the current environment variables.
+#  
+# Valid boolean values are (case-insensitive): true/t, false/f, yes/y,  no/n, 1, 0
+# Invalid boolean values will be interpreted as false.
 #
-# # Note that lines starting with '#' are ignored.
+# Lines that start with a '#' are ignored.
 # ==============================================================================
 
 # single ascii character to use as delimiter.  Overrides `--delimeter` option.
@@ -145,3 +148,7 @@ QSV_REDIS_TTL_REFRESH = False
 # for commands with a --timeout option (`fetch`, `fetchpost`, `luau`, `sniff` &
 # `validate`), the number of seconds before a web request times out (default: 30).
 QSV_TIMEOUT = 30
+
+# the user agent string to use for web requests 
+# (default: <qsv_variant>/<version> (<target>; https://github.com/jqnatividad/qsv)).
+# QSV_USER_AGENT = qsv/0.99.1 (x86_64-apple-darwin; https://github.com/jqnatividad/qsv)
