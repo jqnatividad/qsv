@@ -394,15 +394,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
     info!("RATE LIMIT: {rate_limit}");
 
-    let user_agent = match args.flag_user_agent {
-        Some(ua) => match HeaderValue::from_str(ua.as_str()) {
-            Ok(_) => ua,
-            Err(e) => return fail_clierror!("Invalid user-agent value: {e}"),
-        },
-        None => util::DEFAULT_USER_AGENT.to_string(),
-    };
-    info!("USER-AGENT: {user_agent}");
-
     let http_headers: HeaderMap = {
         let mut map = HeaderMap::with_capacity(args.flag_http_header.len() + 1);
         for header in args.flag_http_header {
@@ -453,7 +444,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let client_timeout = time::Duration::from_secs(*TIMEOUT_FP_SECS.get().unwrap_or(&30));
     let client = Client::builder()
-        .user_agent(user_agent)
+        .user_agent(util::set_user_agent(args.flag_user_agent)?)
         .default_headers(http_headers)
         .cookie_store(args.flag_cookies)
         .brotli(true)
