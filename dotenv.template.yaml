@@ -75,7 +75,9 @@ QSV_COMMENT_CHAR = '#'
 # published on GitHub.
 QSV_NO_UPDATE = False
 
-# if true, date parsing will use DMY format. Otherwise, use MDY format
+# if true, date parsing will prefer DMY format. Otherwise, prefer MDY format.
+# Dates like 01/02/03 will be interpreted as 2003-02-01 if true, 
+# and 2003-01-02 if false.
 # (used with `apply datefmt`, `schema`, `sniff` & `stats` commands).
 QSV_PREFER_DMY = False
 
