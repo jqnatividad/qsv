@@ -119,7 +119,7 @@ jsonxf = { version = "1", optional = true }
 jql = { version = "5.2", default-features = false, optional = true }
 log = "0.4"
 mimalloc = { version = "0.1", default-features = false, optional = true }
-mlua = { version = "0.9.0-beta.1", features = [
+mlua = { version = "0.9.0-beta.2", features = [
     "luau",
     "serialize",
 ], optional = true }
