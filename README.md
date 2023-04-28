@@ -294,7 +294,7 @@ To prevent this, the `py` command processes CSVs in batches (default: 30,000 rec
 ## Memory Management
 qsv supports three memory allocators - mimalloc (default), jemalloc and the standard allocator. See [Memory Allocator](docs/PERFORMANCE.md#memory-allocator) for more info.
 
-It also has Out-of-Memory prevention, with two modes - NORMAL (default) & CONSERVATIVE. See [Out-of-Memory Prevention](docs/PERFORMANCE.md#out-of-memory-prevention) for more info.
+It also has Out-of-Memory prevention, with two modes - NORMAL (default) & CONSERVATIVE. See [Out-of-Memory Prevention](docs/PERFORMANCE.md#out-of-memory-oom-prevention) for more info.
 
 ## Environment Variables and .env file support
 
