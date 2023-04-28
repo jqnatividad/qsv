@@ -42,7 +42,7 @@ Several dependencies also have environment variables that influence qsv's perfor
 > ℹ️ **NOTE:** To get a list of all active qsv-relevant environment variables, run `qsv --envlist`.
 Relevant env vars are defined as anything that starts with `QSV_` & `MIMALLOC_` & the proxy variables listed above.
 
-### .env File Support
+## .env File Support
 qsv supports the use of `.env` files to set environment variables. The `.env` file is a simple text file that contains key-value pairs, one per line. 
 
 It processes `.env` files as follows:
