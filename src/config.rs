@@ -343,7 +343,7 @@ impl Config {
         let pidx = util::idx_path(Path::new(path_buf));
         let Ok(idxfile) = fs::File::create(pidx) else { return };
         let Ok(mut rdr) = self.reader_file() else { return };
-        let mut wtr = io::BufWriter::new(idxfile);
+        let mut wtr = io::BufWriter::with_capacity(DEFAULT_WTR_BUFFER_CAPACITY, idxfile);
         match csv_index::RandomAccessSimple::create(&mut rdr, &mut wtr) {
             Ok(_) => {
                 let Ok(_) = io::Write::flush(&mut wtr) else { return };

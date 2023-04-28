@@ -226,7 +226,7 @@ use strum_macros::IntoStaticStr;
 use tempfile;
 
 use crate::{
-    config::{Config, Delimiter},
+    config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY},
     util, CliError, CliResult,
 };
 
@@ -1350,7 +1350,8 @@ fn create_index(arg_input: &Option<String>) -> Result<bool, CliError> {
 
     let rconfig = Config::new(&Some(input.to_string()));
     let mut rdr = rconfig.reader_file()?;
-    let mut wtr = io::BufWriter::new(fs::File::create(pidx)?);
+    let mut wtr =
+        io::BufWriter::with_capacity(DEFAULT_WTR_BUFFER_CAPACITY, fs::File::create(pidx)?);
     if RandomAccessSimple::create(&mut rdr, &mut wtr).is_err() {
         return Ok(false);
     };

@@ -34,7 +34,10 @@ use std::{
 use csv_index::RandomAccessSimple;
 use serde::Deserialize;
 
-use crate::{config::Config, util, CliResult};
+use crate::{
+    config::{Config, DEFAULT_WTR_BUFFER_CAPACITY},
+    util, CliResult,
+};
 
 #[derive(Deserialize)]
 struct Args {
@@ -56,7 +59,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let rconfig = Config::new(&Some(args.arg_input));
     let mut rdr = rconfig.reader_file()?;
-    let mut wtr = io::BufWriter::new(fs::File::create(pidx)?);
+    let mut wtr =
+        io::BufWriter::with_capacity(DEFAULT_WTR_BUFFER_CAPACITY, fs::File::create(pidx)?);
     RandomAccessSimple::create(&mut rdr, &mut wtr)?;
     io::Write::flush(&mut wtr)?;
 
