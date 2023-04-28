@@ -71,6 +71,39 @@ cargo build --release --no-default-features --features all_full
 
 To find out what memory allocator qsv is using, run `qsv --version`. After the qsv version number, the allocator used is displayed ("`standard`", "`mimalloc`" or "`jemalloc`"). Note that mimalloc is not supported on the `x86_64-pc-windows-gnu` and `arm` targets, and you'll need to use the "standard" allocator on those platforms.
 
+## Out-of-Memory (OOM) Prevention
+Most qsv commands use a "streaming" approach to processing CSVs - "streaming" in the input record-by-record while processing it. This allows it to process arbitrarily large CSVs with constant memory.
+
+There are a number of commands/modes however (denoted by the clamp emoji - 🗜️), that require qsv to load the entire CSV into memory - `dedup` (when not using the --sorted option), `reverse`, `sort`, `stats` (when calculating the "non-streaming" extended stats), `table` and `transpose` (when not running in --multipass mode).
+
+> NOTE: Though not as flexible, `dedup` and `sort` have corresponding "external" versions - `extdedup` and `extsort` respectively, that use external memory (i.e. disk) to process arbitrarily large CSVs.
+
+In addition, `frequency`, `schema` and `tojsonl` - though they do not load the entire file into memory, uses additional memory proportional to the cardinality (number of unique values) of each column compared to other "streaming" commands (denoted by the accordion emoji - 🪗).
+
+For very large files, this can be a problem, as qsv will run of memory and crash.
+To prevent this, qsv has two memory check heuristics when running "non-streaming" commands:
+
+### NORMAL mode
+1. at startup, get the TOTAL memory of the system
+2. if the size of the CSV file is greater than TOTAL memory - HEADROOM (default: 20%), qsv will abort with an error
+
+### CONSERVATIVE mode
+1. at startup, compute total available memory by adding the current available memory and free swap space 
+2. subtract a percentage headroom from the total available memory (default: 20%)
+3. if this adjusted total available memory is less than the size of the CSV file, qsv will abort with an error
+
+The percentage headroom can be changed by setting the `QSV_MEMORY_HEADROOM_PCT` environment variable to a value between 10 and 90 (default: 20).
+
+This CONSERVATIVE heuristic can have false positives however, as modern operating systems can do a fair bit of juggling to handle file sizes larger than what this heuristic will allow, as it dynamically swaps apps to the swapfile, expand the swapfile, compress memory, etc.
+
+For example, on a 16gb Mac mini running several common apps, it only allowed ~3gb csv files, but in practice, it was able to handle files up to 8gb before this heuristic was added.
+
+To apply this CONSERVATIVE heuristic, you can use the command's `--memcheck` option or set the `QSV_MEMORY_CHECK` environment variable.
+
+Otherwise, the default memory check heuristic (NORMAL mode) will only check if the input file's size is larger than the TOTAL memory of the computer minus `QSV_MEMORY_HEADROOM_PCT`.  We still do this to prevent OOM panics, but it's not as restrictive as the CONSERVATIVE heuristic. (e.g. if you have a 16gb computer, the maximum input file size is 12.8gb file - 16gb minus 20% headroom).
+
+> NOTE: These memory checks are not invoked when using stdin as input, as the size of the input file is not known. Though `schema` and `tojsonl` will still abort if stdin is too large per this memory check as it creates a temporary file from stdin before inferring the schema.
+
 ## Buffer size
 
 Depending on your filesystem's configuration (e.g. block size, file system type, writing to remote file systems (e.g. sshfs, efs, nfs),
