@@ -292,9 +292,9 @@ The `py` command cannot do aggregations because [PyO3's GIL-bound memory](https:
 To prevent this, the `py` command processes CSVs in batches (default: 30,000 records), with a GIL pool for each batch, so no globals are available across batches.
 
 ## Memory Management
-qsv supports three memory allocators - mimalloc (default), jemalloc and the standard allocator. See [Memory Allocator](docs/PERFORMANCE.md#memory-allocator) for more info.
+qsv supports three memory allocators - mimalloc (default), jemalloc and the standard allocator.<br>See [Memory Allocator](docs/PERFORMANCE.md#memory-allocator) for more info.
 
-It also has Out-of-Memory prevention, with two modes - NORMAL (default) & CONSERVATIVE. See [Out-of-Memory Prevention](docs/PERFORMANCE.md#out-of-memory-oom-prevention) for more info.
+It also has Out-of-Memory prevention, with two modes - NORMAL (default) & CONSERVATIVE.<br>See [Out-of-Memory Prevention](docs/PERFORMANCE.md#out-of-memory-oom-prevention) for more info.
 
 ## Environment Variables and .env file support
 
