@@ -60,7 +60,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [pseudo](/src/cmd/pseudo.rs#L2) | [Pseudonymise](https://en.wikipedia.org/wiki/Pseudonymization) the value of the given column by replacing them with an incremental identifier.  |
 | [py](/src/cmd/python.rs#L2)<br>✨ | Create a new computed column or filter rows by evaluating a python expression on every row of a CSV file. Python's [f-strings](https://www.freecodecamp.org/news/python-f-strings-tutorial-how-to-use-f-strings-for-string-formatting/) is particularly useful for extended formatting, [with the ability to evaluate Python expressions as well](https://github.com/jqnatividad/qsv/blob/4cd00dca88addf0d287247fa27d40563b6d46985/src/cmd/python.rs#L23-L31). |
 | [rename](/src/cmd/rename.rs#L2) |  Rename the columns of a CSV efficiently.  |
-| [replace](/src/cmd/replace.rs#L2) | Replace CSV data using a regex.  |
+| [replace](/src/cmd/replace.rs#L2) | Replace CSV data using a regex. Applies the regex to each field individually. |
 | [reverse](/src/cmd/reverse.rs#L2)<br>🗜️ | Reverse order of rows in a CSV. Unlike the `sort --reverse` command, it preserves the order of rows with the same key.  |
 | [safenames](/src/cmd/safenames.rs#L2) | Modify headers of a CSV to only have ["safe" names](/src/cmd/safenames.rs#L5-L14) - guaranteed "database-ready" names.  |
 | [sample](/src/cmd/sample.rs#L2)<br>📇 | Randomly draw rows (with optional seed) from a CSV using [reservoir sampling](https://en.wikipedia.org/wiki/Reservoir_sampling) (i.e., use memory proportional to the size of the sample).  |
