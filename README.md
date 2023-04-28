@@ -328,7 +328,7 @@ Otherwise, the default memory check heuristic (NORMAL mode) will only check if t
 
 qsv supports an extensive list of environment variables and supports `.env` files to set them.
 
-For details, see [Environment Variables](docs/ENVIRONMENT_VARIABLES.md).
+For details, see [Environment Variables](docs/ENVIRONMENT_VARIABLES.md) and the [`dotenv.template.yaml`](dotenv.template.yaml) file.
 ## Feature Flags
 
 `qsv` has several features:
