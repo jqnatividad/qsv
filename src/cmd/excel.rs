@@ -26,7 +26,7 @@ Usage:
     qsv excel --help
 
 Excel options:
-    -s, --sheet <name/index>   Name or zero-based index of sheet to export.
+    -s, --sheet <name/index>   Name (case-insensitive) or zero-based index of sheet to export.
                                Negative indices start from the end (-1 = last sheet). 
                                If the sheet cannot be found, qsv will read the first sheet.
                                [default: 0]
