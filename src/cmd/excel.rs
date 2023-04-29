@@ -424,6 +424,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         } else {
             // failing all else, get the first sheet
+            // safety: its safe to use index access here as sheet_names is guaranteed to have at
+            // least one element as we check if its not empty in  the beginning
             let first_sheet = sheet_names[0].to_string();
             info!(
                 r#"Invalid sheet "{}". Using the first sheet "{}" instead."#,
@@ -437,7 +439,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let sheet_index = if let Some(idx) = lower_sheet_names.iter().position(|s| *s == sheet) {
         // set to actual name of the sheet, not the one passed using the --sheet option,
         // as we process the option case insensitively
-        // safety: it's safe to use index access here because lower_sheet_names is a lowercase copy of sheet_names
+        // safety: it's safe to use index access here because lower_sheet_names is a lowercase copy
+        // of sheet_names
         sheet = sheet_names[idx].clone();
         idx
     } else {
