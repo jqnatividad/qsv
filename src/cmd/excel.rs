@@ -405,8 +405,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // otherwise, if --sheet is a number, its a zero-based index, fetch it
         if let Ok(sheet_index) = args.flag_sheet.parse::<i32>() {
             if sheet_index >= 0 {
-                if sheet_index as usize <= sheet_names.len() {
-                    sheet_names[sheet_index as usize].to_string()
+                if let Some(sheet_name) = sheet_names.get(sheet_index as usize) {
+                    sheet_name.to_string()
                 } else {
                     return fail_clierror!(
                         "sheet index {sheet_index} is greater than number of sheets {}",
