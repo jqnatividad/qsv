@@ -581,6 +581,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             // However, with the more recent XLSX format (Excel 2007 & later), we can get a cell's
             // format as a cell attribute. So we can automatically process a cell as a date,
             // even if its column is NOT in the whitelist
+            #[allow(clippy::cast_precision_loss)]
             if float_flag {
                 if cell_date_flag {
                     // its a date, so convert it
