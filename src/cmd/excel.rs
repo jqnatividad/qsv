@@ -342,16 +342,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
         match metadata_mode {
             MetadataMode::Csv => {
-                record.push_field("index");
-                record.push_field("sheet_name");
-                record.push_field("headers");
-                record.push_field("num_columns");
-                record.push_field("num_rows");
-                record.push_field("safe_headers");
-                record.push_field("safe_headers_count");
-                record.push_field("unsafe_headers");
-                record.push_field("unsafe_headers_count");
-                record.push_field("duplicate_headers_count");
+                let mut metadata_fields = Vec::with_capacity(10);
+                metadata_fields.extend_from_slice(&[
+                    "index",
+                    "sheet_name",
+                    "headers",
+                    "num_columns",
+                    "num_rows",
+                    "safe_headers",
+                    "safe_headers_count",
+                    "unsafe_headers",
+                    "unsafe_headers_count",
+                    "duplicate_headers_count",
+                ]);
+                record = csv::StringRecord::from(metadata_fields);
 
                 wtr.write_record(&record)?;
 
