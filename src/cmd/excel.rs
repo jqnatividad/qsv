@@ -494,7 +494,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut trimmed_record = csv::StringRecord::with_capacity(200, 20);
     let mut date_flag: Vec<bool> = Vec::with_capacity(20);
 
-    let mut cell_date_flag: bool;
+    let mut cell_date_flag: bool = false;
     let mut float_val = 0_f64;
     let mut float_flag: bool;
     let mut row_count = 0_usize;
@@ -549,7 +549,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 info!("date_flag: {date_flag:?}");
                 continue;
             }
-            cell_date_flag = false;
             float_flag = false;
             match *cell {
                 DataType::Empty => record.push_field(""),
