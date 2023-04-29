@@ -544,12 +544,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // the fetch report has the following columns:
         // url - URL used, status - HTTP status code, cache_hit - cache hit flag,
         // retries - retry attempts, elapsed - elapsed time (milliseconds) & response.
-        report_headers.push_field(format!("{rptcol_prefix}url").as_bytes());
-        report_headers.push_field(format!("{rptcol_prefix}status").as_bytes());
-        report_headers.push_field(format!("{rptcol_prefix}cache_hit").as_bytes());
-        report_headers.push_field(format!("{rptcol_prefix}retries").as_bytes());
-        report_headers.push_field(format!("{rptcol_prefix}elapsed_ms").as_bytes());
-        report_headers.push_field(format!("{rptcol_prefix}response").as_bytes());
+        let report_header_fields = vec![
+            format!("{rptcol_prefix}url"),
+            format!("{rptcol_prefix}status"),
+            format!("{rptcol_prefix}cache_hit"),
+            format!("{rptcol_prefix}retries"),
+            format!("{rptcol_prefix}elapsed_ms"),
+            format!("{rptcol_prefix}response"),
+        ];
+        report_headers = csv::ByteRecord::from(report_header_fields);
+
         report_wtr.write_byte_record(&report_headers)?;
     }
 
