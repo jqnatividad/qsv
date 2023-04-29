@@ -579,7 +579,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             // even if its column is NOT in the whitelist
             if float_flag {
                 if cell_date_flag {
+                    // its a date, so convert it
                     work_date = if float_val.fract() > 0.0 {
+                        // if it has a fractional part, then its a datetime
                         if let Some(dt) = cell.as_datetime() {
                             if date_format.is_empty() {
                                 // no date format specified, so we'll just use the default
@@ -598,6 +600,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             format!("ERROR: Cannot convert {float_val} to datetime")
                         }
                     } else if let Some(d) = cell.as_date() {
+                        // if it has no fractional part and calamine can return it as_date
+                        // then its a date
                         if date_format.is_empty() {
                             d.to_string()
                         } else {
@@ -611,6 +615,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         format!("ERROR: Cannot convert {float_val} to date")
                     };
                     record.push_field(&work_date);
+                // its not a date, so just push the ryu-formatted float value if its not an integer
+                // or the candidate integer is too big or too small to be an i64
                 } else if float_val.fract().abs() > 0.0
                     || float_val > i64::MAX as f64
                     || float_val < i64::MIN as f64
@@ -618,6 +624,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     let mut buffer = ryu::Buffer::new();
                     record.push_field(buffer.format_finite(float_val));
                 } else {
+                    // its an i64 integer. We can't use ryu to format it, because it will
+                    // be formatted as a float (have a ".0"). So we use itoa.
                     let mut buffer = itoa::Buffer::new();
                     record.push_field(buffer.format(float_val as i64));
                 }
