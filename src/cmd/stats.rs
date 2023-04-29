@@ -730,12 +730,14 @@ impl Args {
             fields.push("cardinality");
         }
         if self.flag_mode || all {
-            fields.push("mode");
-            fields.push("mode_count");
-            fields.push("mode_occurrences");
-            fields.push("antimode");
-            fields.push("antimode_count");
-            fields.push("antimode_occurrences");
+            fields.extend_from_slice(&[
+                "mode",
+                "mode_count",
+                "mode_occurrences",
+                "antimode",
+                "antimode_count",
+                "antimode_occurrences",
+            ]);
         }
         csv::StringRecord::from(fields)
     }
@@ -1047,34 +1049,25 @@ impl Stats {
             .as_ref()
             .and_then(|mm| mm.show(typ, round_places))
         {
-            pieces.push(mm.0);
-            pieces.push(mm.1);
-            pieces.push(mm.2);
+            pieces.extend_from_slice(&[mm.0, mm.1, mm.2]);
         } else {
-            pieces.push(empty());
-            pieces.push(empty());
-            pieces.push(empty());
+            pieces.extend_from_slice(&[empty(), empty(), empty()]);
         }
 
         // min/max length
         if typ == FieldType::TDate || typ == FieldType::TDateTime {
             // returning min/max length for dates doesn't make sense
             // especially since we convert the date stats to rfc3339 format
-            pieces.push(empty());
-            pieces.push(empty());
+            pieces.extend_from_slice(&[empty(), empty()]);
         } else if let Some(mm) = self.minmax.as_ref().and_then(TypedMinMax::len_range) {
-            pieces.push(mm.0);
-            pieces.push(mm.1);
+            pieces.extend_from_slice(&[mm.0, mm.1]);
         } else {
-            pieces.push(empty());
-            pieces.push(empty());
+            pieces.extend_from_slice(&[empty(), empty()]);
         }
 
         // mean, stddev & variance
         if typ == TString || typ == TNull {
-            pieces.push(empty());
-            pieces.push(empty());
-            pieces.push(empty());
+            pieces.extend_from_slice(&[empty(), empty(), empty()]);
         } else if let Some(ref v) = self.online {
             if self.typ == TFloat || self.typ == TInteger {
                 pieces.push(util::round_num(v.mean(), round_places));
@@ -1098,9 +1091,7 @@ impl Stats {
                 pieces.push(empty());
             }
         } else {
-            pieces.push(empty());
-            pieces.push(empty());
-            pieces.push(empty());
+            pieces.extend_from_slice(&[empty(), empty(), empty()]);
         }
 
         // nullcount
@@ -1163,15 +1154,17 @@ impl Stats {
         }) {
             None => {
                 if self.which.quartiles {
-                    pieces.push(empty());
-                    pieces.push(empty());
-                    pieces.push(empty());
-                    pieces.push(empty());
-                    pieces.push(empty());
-                    pieces.push(empty());
-                    pieces.push(empty());
-                    pieces.push(empty());
-                    pieces.push(empty());
+                    pieces.extend_from_slice(&[
+                        empty(),
+                        empty(),
+                        empty(),
+                        empty(),
+                        empty(),
+                        empty(),
+                        empty(),
+                        empty(),
+                        empty(),
+                    ]);
                 }
             }
             Some((q1, q2, q3)) => {
@@ -1242,10 +1235,7 @@ impl Stats {
                     pieces.push(empty());
                 }
                 if self.which.mode {
-                    pieces.push(empty());
-                    pieces.push(empty());
-                    pieces.push(empty());
-                    pieces.push(empty());
+                    pieces.extend_from_slice(&[empty(), empty(), empty(), empty()]);
                 }
             }
             Some(ref mut v) => {
@@ -1653,7 +1643,7 @@ impl Commute for TypedMinMax {
 #[allow(clippy::inline_always)]
 #[inline(always)]
 fn from_bytes<T: std::str::FromStr>(bytes: &[u8]) -> Option<T> {
-    if let Ok(x) = from_utf8(bytes) {
+    if let Ok(x) = simdutf8::basic::from_utf8(bytes) {
         x.parse().ok()
     } else {
         None
