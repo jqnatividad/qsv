@@ -437,6 +437,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let sheet_index = if let Some(idx) = lower_sheet_names.iter().position(|s| *s == sheet) {
         // set to actual name of the sheet, not the one passed using the --sheet option,
         // as we process the option case insensitively
+        // safety: it's safe to use index access here because lower_sheet_names is a lowercase copy of sheet_names
         sheet = sheet_names[idx].clone();
         idx
     } else {
