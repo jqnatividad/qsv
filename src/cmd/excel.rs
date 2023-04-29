@@ -431,9 +431,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             );
             first_sheet
         }
-    };
-    let lower_sheet = sheet.to_lowercase();
-    let sheet_index = if let Some(idx) = lower_sheet_names.iter().position(|s| *s == lower_sheet) {
+    }
+    .to_lowercase();
+
+    let sheet_index = if let Some(idx) = lower_sheet_names.iter().position(|s| *s == sheet) {
         // set to actual name of the sheet, not the one passed using the --sheet option,
         // as we process the option case insensitively
         sheet = sheet_names[idx].clone();
