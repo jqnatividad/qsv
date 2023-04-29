@@ -393,10 +393,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     // convert sheet_names to lowercase so we can do a case-insensitive compare
-    let mut lower_sheet_names: Vec<String> = Vec::with_capacity(num_sheets);
-    for s in sheet_names {
-        lower_sheet_names.push(s.to_lowercase());
-    }
+    let lower_sheet_names: Vec<String> = sheet_names.iter().map(|s| s.to_lowercase()).collect();
 
     // if --sheet name was passed, see if its a valid sheet name.
     let mut sheet = if lower_sheet_names.contains(&args.flag_sheet.to_lowercase()) {
