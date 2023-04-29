@@ -360,17 +360,19 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 wtr.write_record(&record)?;
 
                 for sheetmetadata in excelmetadata_struct.sheet {
-                    record.clear();
-                    record.push_field(&sheetmetadata.index.to_string());
-                    record.push_field(&sheetmetadata.name);
-                    record.push_field(&format!("{:?}", sheetmetadata.headers));
-                    record.push_field(&sheetmetadata.num_columns.to_string());
-                    record.push_field(&sheetmetadata.num_rows.to_string());
-                    record.push_field(&format!("{:?}", sheetmetadata.safe_headers));
-                    record.push_field(&sheetmetadata.safe_headers_count.to_string());
-                    record.push_field(&format!("{:?}", sheetmetadata.unsafe_headers));
-                    record.push_field(&sheetmetadata.unsafe_headers_count.to_string());
-                    record.push_field(&sheetmetadata.duplicate_headers_count.to_string());
+                    let metadata_values = vec![
+                        sheetmetadata.index.to_string(),
+                        sheetmetadata.name,
+                        format!("{:?}", sheetmetadata.headers),
+                        sheetmetadata.num_columns.to_string(),
+                        sheetmetadata.num_rows.to_string(),
+                        format!("{:?}", sheetmetadata.safe_headers),
+                        sheetmetadata.safe_headers_count.to_string(),
+                        format!("{:?}", sheetmetadata.unsafe_headers),
+                        sheetmetadata.unsafe_headers_count.to_string(),
+                        sheetmetadata.duplicate_headers_count.to_string(),
+                    ];
+                    record = csv::StringRecord::from(metadata_values);
 
                     wtr.write_record(&record)?;
                 }
