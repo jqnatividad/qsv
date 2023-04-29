@@ -266,9 +266,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             num_sheets,
             sheet: vec![],
         };
-        #[allow(clippy::needless_range_loop)]
-        for i in 0..num_sheets {
-            let sheet_name = sheet_vec[i].clone();
+        for (i, sheet_name) in sheet_vec.iter().enumerate() {
 
             let range = if let Some(result) = workbook.worksheet_range_at(i) {
                 match result {
@@ -330,7 +328,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 };
             let sheetmetadata_struct = SheetMetadata {
                 index: i,
-                name: sheet_name,
+                name: sheet_name.to_string(),
                 headers: header_vec,
                 num_columns,
                 num_rows,
