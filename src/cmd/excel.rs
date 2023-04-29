@@ -267,7 +267,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             sheet: vec![],
         };
         for (i, sheet_name) in sheet_vec.iter().enumerate() {
-
             let range = if let Some(result) = workbook.worksheet_range_at(i) {
                 match result {
                     Ok(result) => result,
@@ -565,7 +564,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 DataType::Float(ref f) => {
                     float_val = *f;
                     float_flag = true;
-                    cell_date_flag = date_flag[col_idx];
+                    cell_date_flag = *date_flag.get(col_idx).unwrap_or(&false);
                 }
                 DataType::Error(ref e) => record.push_field(&format!("{e:?}")),
                 DataType::Bool(ref b) => record.push_field(&b.to_string()),
