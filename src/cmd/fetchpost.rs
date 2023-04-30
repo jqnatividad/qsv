@@ -53,8 +53,8 @@ Given the data.csv above, fetch the JSON response.
 Note the output will be a JSONL file - with a minified JSON response per line, not a CSV file.
 
 Now, if we want to generate a CSV file with a parsed response - getting only the "form" property,
-we use the new-column and jql options. (See https://github.com/yamafaktory/jql#jql for more info 
-on how to use the jql JSON Query Language)
+we use the new-column and jql options. (See https://github.com/yamafaktory/jql#%EF%B8%8F-usage 
+for more info on how to use the jql JSON Query Language)
 
 $ qsv fetchpost URL zipcode,country --new-column form --jql '"form"' data.csv > data_with_response.csv
 

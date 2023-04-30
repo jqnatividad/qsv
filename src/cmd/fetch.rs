@@ -44,8 +44,8 @@ Given the data.csv above, fetch the JSON response.
 Note the output will be a JSONL file - with a minified JSON response per line, not a CSV file.
 
 Now, if we want to generate a CSV file with the parsed City and State, we use the 
-new-column and jql options. (See https://github.com/yamafaktory/jql#jql for more info on
-how to use the jql JSON Query Language)
+new-column and jql options. (See https://github.com/yamafaktory/jql#%EF%B8%8F-usage 
+for more info on how to use the jql JSON Query Language)
 
 $ qsv fetch URL --new-column CityState --jql '"places"[0]"place name","places"[0]"state abbreviation"' 
   data.csv > data_with_CityState.csv
