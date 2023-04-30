@@ -53,8 +53,8 @@ Given the data.csv above, fetch the JSON response.
 Note the output will be a JSONL file - with a minified JSON response per line, not a CSV file.
 
 Now, if we want to generate a CSV file with a parsed response - getting only the "form" property,
-we use the new-column and jql options. (See https://github.com/yamafaktory/jql#jql for more info 
-on how to use the jql JSON Query Language)
+we use the new-column and jql options. (See https://github.com/yamafaktory/jql#%EF%B8%8F-usage 
+for more info on how to use the jql JSON Query Language)
 
 $ qsv fetchpost URL zipcode,country --new-column form --jql '"form"' data.csv > data_with_response.csv
 
@@ -200,7 +200,7 @@ use simdutf8::basic::from_utf8;
 use url::Url;
 
 use crate::{
-    cmd::fetch::apply_jql,
+    cmd::fetch::process_jql,
     config::{Config, Delimiter},
     select::SelectColumns,
     util, CliError, CliResult,
@@ -290,7 +290,6 @@ struct FetchResponse {
 }
 
 static REDISCONFIG: Lazy<RedisConfig> = Lazy::new(RedisConfig::load);
-static JQL_GROUPS: once_cell::sync::OnceCell<Vec<jql::Group>> = OnceCell::new();
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
@@ -987,11 +986,7 @@ fn get_response(
                 error_flag = false;
                 // apply JQL selector if provided
                 if let Some(selectors) = flag_jql {
-                    // instead of repeatedly parsing the jql selector,
-                    // we compile it only once and cache it for performance using once_cell
-                    let jql_groups =
-                        JQL_GROUPS.get_or_init(|| jql::selectors_parser(selectors).unwrap());
-                    match apply_jql(&api_value, jql_groups) {
+                    match process_jql(&api_value, selectors) {
                         Ok(s) => {
                             final_value = s;
                         }

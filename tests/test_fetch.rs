@@ -239,16 +239,16 @@ fn fetch_jql_single() {
         .arg("--new-column")
         .arg("City")
         .arg("--jql")
-        .arg(r#"."places"[0]."place name""#)
+        .arg(r#""places"[0]"place name""#)
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["URL", "City"],
-        svec!["http://api.zippopotam.us/us/90210", "Beverly Hills"],
-        svec!["http://api.zippopotam.us/us/94105", "San Francisco"],
+        svec!["http://api.zippopotam.us/us/90210", "\"Beverly Hills\""],
+        svec!["http://api.zippopotam.us/us/94105", "\"San Francisco\""],
         svec!["thisisnotaurl", ""],
-        svec!["https://api.zippopotam.us/us/92802", "Anaheim"],
+        svec!["https://api.zippopotam.us/us/92802", "\"Anaheim\""],
     ];
 
     assert_eq!(got, expected);
@@ -281,9 +281,9 @@ fn fetch_jql_single_file() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["URL", "City"],
-        svec!["http://api.zippopotam.us/us/90210", "Beverly Hills"],
-        svec!["http://api.zippopotam.us/us/94105", "San Francisco"],
-        svec!["https://api.zippopotam.us/us/92802", "Anaheim"],
+        svec!["http://api.zippopotam.us/us/90210", "\"Beverly Hills\""],
+        svec!["http://api.zippopotam.us/us/94105", "\"San Francisco\""],
+        svec!["https://api.zippopotam.us/us/92802", "\"Anaheim\""],
     ];
     assert_eq!(got, expected);
 }
@@ -331,7 +331,7 @@ fn fetch_jql_jqlfile_error() {
             "/resources/test/fetch_jql_single.jql"
         ))
         .arg("--jql")
-        .arg(r#"."places"[0]."place name""#)
+        .arg(r#""places"[0]"place name""#)
         .arg("data.csv");
 
     let got: String = wrk.output_stderr(&mut cmd);
@@ -358,15 +358,21 @@ fn fetch_jql_multiple() {
         .arg("--new-column")
         .arg("CityState")
         .arg("--jql")
-        .arg(r#""places"[0]."place name","places"[0]."state abbreviation""#)
+        .arg(r#""places"[0]"place name","places"[0]"state abbreviation""#)
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["URL", "CityState"],
-        svec!["http://api.zippopotam.us/us/90210", "Beverly Hills, CA"],
-        svec!["http://api.zippopotam.us/us/94105", "San Francisco, CA"],
-        svec!["https://api.zippopotam.us/us/92802", "Anaheim, CA"],
+        svec![
+            "http://api.zippopotam.us/us/90210",
+            "[\"Beverly Hills\",\"CA\"]"
+        ],
+        svec![
+            "http://api.zippopotam.us/us/94105",
+            "[\"San Francisco\",\"CA\"]"
+        ],
+        svec!["https://api.zippopotam.us/us/92802", "[\"Anaheim\",\"CA\"]"],
     ];
     assert_eq!(got, expected);
 }
@@ -398,9 +404,15 @@ fn fetch_jql_multiple_file() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["URL", "CityState"],
-        svec!["http://api.zippopotam.us/us/90210", "Beverly Hills, CA"],
-        svec!["http://api.zippopotam.us/us/94105", "San Francisco, CA"],
-        svec!["https://api.zippopotam.us/us/92802", "Anaheim, CA"],
+        svec![
+            "http://api.zippopotam.us/us/90210",
+            "[\"Beverly Hills\",\"CA\"]"
+        ],
+        svec![
+            "http://api.zippopotam.us/us/94105",
+            "[\"San Francisco\",\"CA\"]"
+        ],
+        svec!["https://api.zippopotam.us/us/92802", "[\"Anaheim\",\"CA\"]"],
     ];
     assert_eq!(got, expected);
 }
@@ -420,11 +432,11 @@ fn fetch_custom_header() {
         .arg("-H")
         .arg("X-Api-Secret :ABC123XYZ")
         .arg("--jql")
-        .arg(r#""headers"."X-Api-Key","headers"."X-Api-Secret""#)
+        .arg(r#""headers""X-Api-Key","headers""X-Api-Secret""#)
         .arg("data.csv");
 
     let got = wrk.stdout::<String>(&mut cmd);
-    let expected = "DEMO_KEY, ABC123XYZ";
+    let expected = "[\"DEMO_KEY\",\"ABC123XYZ\"]";
     assert_eq!(got, expected);
 }
 
@@ -734,7 +746,7 @@ fn fetch_ratelimit() {
         .arg("--new-column")
         .arg("Fullname")
         .arg("--jql")
-        .arg(r#"."fullname""#)
+        .arg(r#""fullname""#)
         .arg("--rate-limit")
         .arg("4")
         .arg("data.csv");
@@ -742,31 +754,31 @@ fn fetch_ratelimit() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["URL", "Fullname"],
-        svec![test_url!("user/Smurfette"), "Smurfette Smurf"],
-        svec![test_url!("user/Papa"), "Papa Smurf"],
-        svec![test_url!("user/Clumsy"), "Clumsy Smurf"],
-        svec![test_url!("user/Brainy"), "Brainy Smurf"],
-        svec![test_url!("user/Grouchy"), "Grouchy Smurf"],
-        svec![test_url!("user/Hefty"), "Hefty Smurf"],
-        svec![test_url!("user/Greedy"), "Greedy Smurf"],
-        svec![test_url!("user/Jokey"), "Jokey Smurf"],
-        svec![test_url!("user/Chef"), "Chef Smurf"],
-        svec![test_url!("user/Vanity"), "Vanity Smurf"],
-        svec![test_url!("user/Handy"), "Handy Smurf"],
-        svec![test_url!("user/Scaredy"), "Scaredy Smurf"],
-        svec![test_url!("user/Tracker"), "Tracker Smurf"],
-        svec![test_url!("user/Sloppy"), "Sloppy Smurf"],
-        svec![test_url!("user/Harmony"), "Harmony Smurf"],
-        svec![test_url!("user/Painter"), "Painter Smurf"],
-        svec![test_url!("user/Poet"), "Poet Smurf"],
-        svec![test_url!("user/Farmer"), "Farmer Smurf"],
-        svec![test_url!("user/Natural"), "Natural Smurf"],
-        svec![test_url!("user/Snappy"), "Snappy Smurf"],
+        svec![test_url!("user/Smurfette"), "\"Smurfette Smurf\""],
+        svec![test_url!("user/Papa"), "\"Papa Smurf\""],
+        svec![test_url!("user/Clumsy"), "\"Clumsy Smurf\""],
+        svec![test_url!("user/Brainy"), "\"Brainy Smurf\""],
+        svec![test_url!("user/Grouchy"), "\"Grouchy Smurf\""],
+        svec![test_url!("user/Hefty"), "\"Hefty Smurf\""],
+        svec![test_url!("user/Greedy"), "\"Greedy Smurf\""],
+        svec![test_url!("user/Jokey"), "\"Jokey Smurf\""],
+        svec![test_url!("user/Chef"), "\"Chef Smurf\""],
+        svec![test_url!("user/Vanity"), "\"Vanity Smurf\""],
+        svec![test_url!("user/Handy"), "\"Handy Smurf\""],
+        svec![test_url!("user/Scaredy"), "\"Scaredy Smurf\""],
+        svec![test_url!("user/Tracker"), "\"Tracker Smurf\""],
+        svec![test_url!("user/Sloppy"), "\"Sloppy Smurf\""],
+        svec![test_url!("user/Harmony"), "\"Harmony Smurf\""],
+        svec![test_url!("user/Painter"), "\"Painter Smurf\""],
+        svec![test_url!("user/Poet"), "\"Poet Smurf\""],
+        svec![test_url!("user/Farmer"), "\"Farmer Smurf\""],
+        svec![test_url!("user/Natural"), "\"Natural Smurf\""],
+        svec![test_url!("user/Snappy"), "\"Snappy Smurf\""],
         svec![
             test_url!(
                 "user/The quick brown fox jumped over the lazy dog by the zigzag quarry site"
             ),
-            "The quick brown fox jumped over the lazy dog by the zigzag quarry site Smurf"
+            "\"The quick brown fox jumped over the lazy dog by the zigzag quarry site Smurf\""
         ],
     ];
     assert_eq!(got, expected);
@@ -828,7 +840,7 @@ fn fetch_complex_url_template() {
         .arg("--new-column")
         .arg("Fullname")
         .arg("--jql")
-        .arg(r#"."fullname""#)
+        .arg(r#""fullname""#)
         .arg("--rate-limit")
         .arg("4")
         .arg("data.csv");
@@ -836,26 +848,26 @@ fn fetch_complex_url_template() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["first name", "color", "Fullname"],
-        svec!["Smurfette", "blue", "Smurfette blue Smurf"],
-        svec!["Papa", "blue", "Papa blue Smurf"],
-        svec!["Clumsy", "blue", "Clumsy blue Smurf"],
-        svec!["Brainy", "blue", "Brainy blue Smurf"],
-        svec!["Grouchy", "blue", "Grouchy blue Smurf"],
-        svec!["Hefty", "blue", "Hefty blue Smurf"],
-        svec!["Greedy", "green", "Greedy green Smurf"],
-        svec!["Jokey", "blue", "Jokey blue Smurf"],
-        svec!["Chef", "blue", "Chef blue Smurf"],
-        svec!["Vanity", "blue", "Vanity blue Smurf"],
-        svec!["Handy", "blue", "Handy blue Smurf"],
-        svec!["Scaredy", "black", "Scaredy black Smurf"],
-        svec!["Tracker", "blue", "Tracker blue Smurf"],
-        svec!["Sloppy", "blue", "Sloppy blue Smurf"],
-        svec!["Harmony", "blue", "Harmony blue Smurf"],
-        svec!["Painter", "multicolor", "Painter multicolor Smurf"],
-        svec!["Poet", "blue", "Poet blue Smurf"],
-        svec!["Farmer", "blue", "Farmer blue Smurf"],
-        svec!["Natural", "blue", "Natural blue Smurf"],
-        svec!["Snappy", "blue", "Snappy blue Smurf"],
+        svec!["Smurfette", "blue", "\"Smurfette blue Smurf\""],
+        svec!["Papa", "blue", "\"Papa blue Smurf\""],
+        svec!["Clumsy", "blue", "\"Clumsy blue Smurf\""],
+        svec!["Brainy", "blue", "\"Brainy blue Smurf\""],
+        svec!["Grouchy", "blue", "\"Grouchy blue Smurf\""],
+        svec!["Hefty", "blue", "\"Hefty blue Smurf\""],
+        svec!["Greedy", "green", "\"Greedy green Smurf\""],
+        svec!["Jokey", "blue", "\"Jokey blue Smurf\""],
+        svec!["Chef", "blue", "\"Chef blue Smurf\""],
+        svec!["Vanity", "blue", "\"Vanity blue Smurf\""],
+        svec!["Handy", "blue", "\"Handy blue Smurf\""],
+        svec!["Scaredy", "black", "\"Scaredy black Smurf\""],
+        svec!["Tracker", "blue", "\"Tracker blue Smurf\""],
+        svec!["Sloppy", "blue", "\"Sloppy blue Smurf\""],
+        svec!["Harmony", "blue", "\"Harmony blue Smurf\""],
+        svec!["Painter", "multicolor", "\"Painter multicolor Smurf\""],
+        svec!["Poet", "blue", "\"Poet blue Smurf\""],
+        svec!["Farmer", "blue", "\"Farmer blue Smurf\""],
+        svec!["Natural", "blue", "\"Natural blue Smurf\""],
+        svec!["Snappy", "blue", "\"Snappy blue Smurf\""],
     ];
 
     assert_eq!(got, expected);
@@ -910,36 +922,31 @@ fn fetchpost_simple_test() {
             "a",
             "42",
             "true",
-            "{\"bool_col\": String(\"true\"), \"col1\": String(\"a\"), \"number col\": \
-             String(\"42\")}"
+            "{\"bool_col\":\"true\",\"col1\":\"a\",\"number col\":\"42\"}"
         ],
         svec![
             "b",
             "3.14",
             "false",
-            "{\"bool_col\": String(\"false\"), \"col1\": String(\"b\"), \"number col\": \
-             String(\"3.14\")}"
+            "{\"bool_col\":\"false\",\"col1\":\"b\",\"number col\":\"3.14\"}"
         ],
         svec![
             "c",
             "666",
             "true",
-            "{\"bool_col\": String(\"true\"), \"col1\": String(\"c\"), \"number col\": \
-             String(\"666\")}"
+            "{\"bool_col\":\"true\",\"col1\":\"c\",\"number col\":\"666\"}"
         ],
         svec![
             "d",
             "33",
             "true",
-            "{\"bool_col\": String(\"true\"), \"col1\": String(\"d\"), \"number col\": \
-             String(\"33\")}"
+            "{\"bool_col\":\"true\",\"col1\":\"d\",\"number col\":\"33\"}"
         ],
         svec![
             "e",
             "0",
             "false",
-            "{\"bool_col\": String(\"false\"), \"col1\": String(\"e\"), \"number col\": \
-             String(\"0\")}"
+            "{\"bool_col\":\"false\",\"col1\":\"e\",\"number col\":\"0\"}"
         ],
     ];
 
@@ -1108,22 +1115,19 @@ fn fetchpost_literalurl_test() {
             "a",
             "42",
             "true",
-            "{\"bool_col\": String(\"true\"), \"col1\": String(\"a\"), \"number col\": \
-             String(\"42\")}"
+            "{\"bool_col\":\"true\",\"col1\":\"a\",\"number col\":\"42\"}"
         ],
         svec![
             "b",
             "3.14",
             "false",
-            "{\"bool_col\": String(\"false\"), \"col1\": String(\"b\"), \"number col\": \
-             String(\"3.14\")}"
+            "{\"bool_col\":\"false\",\"col1\":\"b\",\"number col\":\"3.14\"}"
         ],
         svec![
             "c",
             "666",
             "true",
-            "{\"bool_col\": String(\"true\"), \"col1\": String(\"c\"), \"number col\": \
-             String(\"666\")}"
+            "{\"bool_col\":\"true\",\"col1\":\"c\",\"number col\":\"666\"}"
         ],
     ];
 

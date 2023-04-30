@@ -44,17 +44,17 @@ Given the data.csv above, fetch the JSON response.
 Note the output will be a JSONL file - with a minified JSON response per line, not a CSV file.
 
 Now, if we want to generate a CSV file with the parsed City and State, we use the 
-new-column and jql options. (See https://github.com/yamafaktory/jql#jql for more info on
-how to use the jql JSON Query Language)
+new-column and jql options. (See https://github.com/yamafaktory/jql#%EF%B8%8F-usage 
+for more info on how to use the jql JSON Query Language)
 
-$ qsv fetch URL --new-column CityState --jql '"places"[0]."place name","places"[0]."state abbreviation"' 
+$ qsv fetch URL --new-column CityState --jql '"places"[0]"place name","places"[0]"state abbreviation"' 
   data.csv > data_with_CityState.csv
 
 data_with_CityState.csv
   URL, CityState,
-  https://api.zippopotam.us/us/90210, "Beverly Hills, CA"
-  https://api.zippopotam.us/us/94105, "San Francisco, CA"
-  https://api.zippopotam.us/us/92802, "Anaheim, CA"
+  https://api.zippopotam.us/us/90210, "[\"Beverly Hills\",\"CA\"]"
+  https://api.zippopotam.us/us/94105, "[\"San Francisco\",\"CA\"]"
+  https://api.zippopotam.us/us/92802, "[\"Anaheim\",\"CA\"]"
 
 As you can see, entering jql selectors on the command line is error prone and can quickly become cumbersome.
 Alternatively, the jql selector can be saved and loaded from a file using the --jqlfile option.
@@ -89,7 +89,7 @@ Geocode addresses in addresses.csv, pass the "street address" and "zip-code" fie
 and use jql to parse placename from the JSON response into a new column in addresses_with_placename.csv.
 Note how field name non-alphanumeric characters (space and hyphen) in the url-template were replaced with _.
 
-$ qsv fetch --jql '"features"[0]."properties","name"' addresses.csv -c placename --url-template 
+$ qsv fetch --jql '"features"[0]"properties","name"' addresses.csv -c placename --url-template 
   "https://api.geocode.earth/v1/search/structured?address={street_address}&postalcode={zip_code}"
   > addresses_with_placename.csv
 
@@ -203,7 +203,7 @@ use reqwest::{
     header::{HeaderMap, HeaderName, HeaderValue},
 };
 use serde::{Deserialize, Serialize};
-use serde_json::json;
+use serde_json::{json, Value};
 use simdutf8::basic::from_utf8;
 use url::Url;
 
@@ -302,7 +302,6 @@ struct FetchResponse {
 }
 
 static REDISCONFIG: Lazy<RedisConfig> = Lazy::new(RedisConfig::load);
-static JQL_GROUPS: once_cell::sync::OnceCell<Vec<jql::Group>> = OnceCell::new();
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
@@ -962,11 +961,7 @@ fn get_response(
                 error_flag = false;
                 // apply JQL selector if provided
                 if let Some(selectors) = flag_jql {
-                    // instead of repeatedly parsing the jql selector,
-                    // we compile it only once and cache it for performance using once_cell
-                    let jql_groups =
-                        JQL_GROUPS.get_or_init(|| jql::selectors_parser(selectors).unwrap());
-                    match apply_jql(&api_value, jql_groups) {
+                    match process_jql(&api_value, selectors) {
                         Ok(s) => {
                             final_value = s;
                         }
@@ -1170,85 +1165,52 @@ fn get_response(
     }
 }
 
-use jql::groups_walker;
-use serde_json::{Deserializer, Value};
+impl From<jql_runner::errors::JqlRunnerError> for CliError {
+    fn from(err: jql_runner::errors::JqlRunnerError) -> CliError {
+        CliError::Other(format!("jql runner error: {err:?}"))
+    }
+}
 
 #[inline]
-pub fn apply_jql(json: &str, groups: &[jql::Group]) -> Result<String, String> {
-    // check if api returned valid JSON before applying JQL selector
-    if let Err(error) = serde_json::from_str::<Value>(json) {
-        return fail_format!("Invalid json: {error:?}");
-    }
+pub fn process_jql(json: &str, query: &str) -> CliResult<String> {
+    let mut deserializer = serde_json::Deserializer::from_str(json);
 
-    let mut result: Result<String, _> = Ok(String::default());
+    deserializer.disable_recursion_limit();
 
-    Deserializer::from_str(json)
-        .into_iter::<Value>()
-        .for_each(|value| match value {
-            Ok(valid_json) => {
-                // Walk through the JSON content with the provided selectors as
-                // input.
-                match groups_walker(&valid_json, groups) {
-                    Ok(selection) => {
-                        fn get_value_string(v: &Value) -> String {
-                            if v.is_null() {
-                                "null".to_string()
-                            } else if v.is_boolean() {
-                                v.as_bool().unwrap().to_string()
-                            } else if v.is_f64() {
-                                v.as_f64().unwrap().to_string()
-                            } else if v.is_i64() {
-                                v.as_i64().unwrap().to_string()
-                            } else if v.is_u64() {
-                                v.as_u64().unwrap().to_string()
-                            } else if v.is_string() {
-                                v.as_str().unwrap().to_string()
-                            } else {
-                                v.to_string()
-                            }
-                        }
+    let deserializer = serde_stacker::Deserializer::new(&mut deserializer);
 
-                        match &selection {
-                            Value::Array(array) => {
-                                let mut concat_string = String::new();
+    let value = match serde_json::Value::deserialize(deserializer) {
+        Ok(valid_value) => valid_value,
+        Err(e) => return fail_clierror!("Failed to deserialize the JSON data: {e:?}"),
+    };
+    let result: Value = jql_runner::runner::raw(query, &value)?;
 
-                                let mut values = array.iter();
-
-                                if let Some(v) = values.next() {
-                                    let str_val = get_value_string(v);
-                                    concat_string.push_str(&str_val);
-                                }
-
-                                for v in values {
-                                    let str_val = get_value_string(v);
-                                    concat_string.push_str(", ");
-                                    concat_string.push_str(&str_val);
-                                }
-
-                                result = Ok(concat_string);
-                            }
-                            Value::Object(object) => {
-                                // if Value::Object, then just set to debug display of object
-                                result = Ok(format!("{object:?}"));
-                            }
-                            _ => {
-                                result = Ok(get_value_string(&selection));
-                            }
-                        }
-                    }
-                    Err(error) => {
-                        result = Err(format!("{error:?}"));
-                    }
-                }
-            }
-            Err(error) => {
-                // shouldn't happen, but do same thing earlier when checking for invalid json
-                result = Err(format!("Invalid json: {error:?}"));
-            }
-        });
-
-    result
+    Ok(serde_json::to_string(&result)?)
 }
+
+// TODO: use this in the future to process JQL with pre-parsed tokens
+// pub fn process_json_with_tokens(
+//     json: &str,
+//     tokens_vec: &Vec<jql_parser::tokens::Token>,
+// ) -> CliResult<String> {
+//     if let Err(error) = serde_json::from_str::<Value>(json) {
+//         return fail_clierror!("Invalid json: {error:?}");
+//     }
+
+//     let mut deserializer = serde_json::Deserializer::from_str(json);
+
+//     deserializer.disable_recursion_limit();
+
+//     let deserializer = serde_stacker::Deserializer::new(&mut deserializer);
+
+//     let value = match serde_json::Value::deserialize(deserializer) {
+//         Ok(valid_value) => valid_value,
+//         Err(e) => return fail_clierror!("Failed to deserialize the JSON data: {e:?}"),
+//     };
+//     let result: Value = jql_runner::runner::token(tokens_vec, &value)?;
+
+//     Ok(serde_json::to_string(&result)?)
+// }
 
 #[test]
 fn test_apply_jql_invalid_json() {
@@ -1256,11 +1218,10 @@ fn test_apply_jql_invalid_json() {
         r#"<!doctype html><html lang="en"><meta charset=utf-8><title>shortest html5</title>"#;
     let selectors = r#"."places"[0]."place name""#;
 
-    let jql_groups = jql::selectors_parser(selectors).unwrap();
-    let value: String = apply_jql(json, &jql_groups).unwrap_err();
+    let value = process_jql(json, selectors).unwrap_err().to_string();
 
     assert_eq!(
-        "Invalid json: Error(\"expected value\", line: 1, column: 1)",
+        "Failed to deserialize the JSON data: Error(\"expected value\", line: 1, column: 1)",
         value
     );
 }
@@ -1270,30 +1231,41 @@ fn test_apply_jql_invalid_selector() {
     let json = r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": "-118.4065", "state": "California", "state abbreviation": "CA", "latitude": "34.0901"}]}"#;
     let selectors = r#"."place"[0]."place name""#;
 
-    let jql_groups = jql::selectors_parser(selectors).unwrap();
-    let value = apply_jql(json, &jql_groups).unwrap_err();
+    let value = process_jql(json, selectors).unwrap_err().to_string();
 
-    assert_eq!(r#""Node \"place\" not found on the parent element""#, value);
+    assert_eq!(
+        r#"jql runner error: ParsingError(ParsingError { tokens: "", unparsed: ".\"place\"[0].\"place name\"" })"#,
+        value
+    );
 }
 
 #[test]
 fn test_apply_jql_string() {
     let json = r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": "-118.4065", "state": "California", "state abbreviation": "CA", "latitude": "34.0901"}]}"#;
-    let selectors = r#"."places"[0]."place name""#;
+    let selectors = r#""places"[0]"place name""#;
 
-    let jql_groups = jql::selectors_parser(selectors).unwrap();
-    let value: String = apply_jql(json, &jql_groups).unwrap();
+    let value = process_jql(json, selectors).unwrap();
 
-    assert_eq!("Beverly Hills", value);
+    assert_eq!(r#""Beverly Hills""#, value);
 }
+
+// #[test]
+// fn test_apply_jql_string_with_tokens_vec() {
+//     let json = r#"{"post code": "90210", "country": "United States", "country abbreviation":
+// "US", "places": [{"place name": "Beverly Hills", "longitude": "-118.4065", "state": "California",
+// "state abbreviation": "CA", "latitude": "34.0901"}]}"#;     let selectors = r#""places"[0]"place
+// name""#;
+//     let token_vec = jql_parser::parser::parse(&selectors).unwrap();
+//     let value = process_json_with_token(json, &token_vec).unwrap();
+//     assert_eq!(r#""Beverly Hills""#, value);
+// }
 
 #[test]
 fn test_apply_jql_number() {
     let json = r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": -118.4065, "state": "California", "state abbreviation": "CA", "latitude": 34.0901}]}"#;
-    let selectors = r#"."places"[0]."longitude""#;
+    let selectors = r#""places"[0]"longitude""#;
 
-    let jql_groups = jql::selectors_parser(selectors).unwrap();
-    let value: String = apply_jql(json, &jql_groups).unwrap();
+    let value = process_jql(json, selectors).unwrap();
 
     assert_eq!("-118.4065", value);
 }
@@ -1301,10 +1273,9 @@ fn test_apply_jql_number() {
 #[test]
 fn test_apply_jql_bool() {
     let json = r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": -118.4065, "state": "California", "state abbreviation": "CA", "latitude": 34.0901, "expensive": true}]}"#;
-    let selectors = r#"."places"[0]."expensive""#;
+    let selectors = r#""places"[0]"expensive""#;
 
-    let jql_groups = jql::selectors_parser(selectors).unwrap();
-    let value: String = apply_jql(json, &jql_groups).unwrap();
+    let value = process_jql(json, selectors).unwrap();
 
     assert_eq!("true", value);
 }
@@ -1312,10 +1283,9 @@ fn test_apply_jql_bool() {
 #[test]
 fn test_apply_jql_null() {
     let json = r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": -118.4065, "state": "California", "state abbreviation": "CA", "latitude": 34.0901, "university":null}]}"#;
-    let selectors = r#"."places"[0]."university""#;
+    let selectors = r#""places"[0]"university""#;
 
-    let jql_groups = jql::selectors_parser(selectors).unwrap();
-    let value: String = apply_jql(json, &jql_groups).unwrap();
+    let value = process_jql(json, selectors).unwrap();
 
     assert_eq!("null", value);
 }
@@ -1323,12 +1293,11 @@ fn test_apply_jql_null() {
 #[test]
 fn test_apply_jql_array() {
     let json = r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": -118.4065, "state": "California", "state abbreviation": "CA", "latitude": 34.0901}]}"#;
-    let selectors = r#"."places"[0]."longitude",."places"[0]."latitude""#;
+    let selectors = r#""places"[0]"longitude","places"[0]"latitude""#;
 
-    let jql_groups = jql::selectors_parser(selectors).unwrap();
-    let value: String = apply_jql(json, &jql_groups).unwrap();
+    let value = process_jql(json, selectors).unwrap();
 
-    assert_eq!("-118.4065, 34.0901", value);
+    assert_eq!("[-118.4065,34.0901]", value);
 }
 
 #[test]
@@ -1336,13 +1305,12 @@ fn test_root_out_of_bounds() {
     // test for out_of_bounds root element handling
     // see https://github.com/yamafaktory/jql/issues/129
     let json = r#"[{"page":1,"pages":1,"per_page":"50","total":1},[{"id":"BRA","iso2Code":"BR","name":"Brazil","region":{"id":"LCN","iso2code":"ZJ","value":"Latin America & Caribbean (all income levels)"},"adminregion":{"id":"LAC","iso2code":"XJ","value":"Latin America & Caribbean (developing only)"},"incomeLevel":{"id":"UMC","iso2code":"XT","value":"Upper middle income"},"lendingType":{"id":"IBD","iso2code":"XF","value":"IBRD"},"capitalCity":"Brasilia","longitude":"-47.9292","latitude":"-15.7801"}]]"#;
-    let selectors = r#"[2].[0]."incomeLevel"."value"'"#;
+    let selectors = r#"[2][0]"incomeLevel""value"'"#;
 
-    let jql_groups = jql::selectors_parser(selectors).unwrap();
-    let value = apply_jql(json, &jql_groups).unwrap_err();
+    let value = process_jql(json, selectors).unwrap_err().to_string();
 
     assert_eq!(
-        r#""Index [2] is out of bound, root element has a length of 2""#,
+        r#"jql runner error: ParsingError(ParsingError { tokens: "Array Index Selector [Index (2)], Array Index Selector [Index (0)], Key Selector \"incomeLevel\", Key Selector \"value\"", unparsed: "'" })"#,
         value
     );
 }
