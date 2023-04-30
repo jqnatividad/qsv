@@ -116,7 +116,7 @@ jsonschema = { version = "0.17", features = [
     "resolve-http",
 ], default-features = false }
 jsonxf = { version = "1", optional = true }
-jql = { version = "5.2", default-features = false, optional = true }
+jql-runner = { version = "6.0.6", default-features = false, optional = true }
 log = "0.4"
 mimalloc = { version = "0.1", default-features = false, optional = true }
 mlua = { version = "0.9.0-beta.2", features = [
@@ -168,6 +168,7 @@ self_update = { version = "0.36", features = [
 semver = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
+serde_stacker = { version = "0.1", optional = true }
 serde_urlencoded = { version = "0.7", optional = true }
 snap = "1"
 strsim = { version = "0.10", optional = true }
@@ -242,9 +243,10 @@ fetch = [
     "flate2",
     "governor",
     "hashbrown",
-    "jql",
+    "jql-runner",
     "jsonxf",
     "redis",
+    "serde_stacker",
     "serde_urlencoded",
 ]
 foreach = []
