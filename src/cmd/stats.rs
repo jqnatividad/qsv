@@ -227,6 +227,11 @@ struct StatsArgs {
     flag_no_headers:      bool,
     flag_delimiter:       String,
     flag_output_snappy:   bool,
+    canonical_input_path: String,
+    canonical_stats_path: String,
+    record_count:         u64,
+    date_generated:       String,
+    compute_duration_ms:  u64,
 }
 
 static INFER_DATE_FLAGS: once_cell::sync::OnceCell<Vec<bool>> = OnceCell::new();
@@ -255,7 +260,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // save the current args, we'll use it to generate
     // the stats.csv.json file
-    let current_stats_args = StatsArgs {
+    let mut current_stats_args = StatsArgs {
         arg_input:            format!("{:?}", args.arg_input),
         flag_select:          format!("{:?}", args.flag_select),
         flag_everything:      args.flag_everything,
@@ -281,6 +286,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let p = args.flag_output.clone().unwrap();
             p.to_lowercase().ends_with(".sz")
         },
+        canonical_input_path: String::new(),
+        canonical_stats_path: String::new(),
+        record_count:         0,
+        date_generated:       String::new(),
+        compute_duration_ms:  0,
     };
 
     // create a temporary file to store the <FILESTEM>.stats.csv file
@@ -355,8 +365,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
             // deserialize the existing stats args json
             let existing_stats_args_json: StatsArgs =
-                match serde_json::from_str(&existing_stats_args_json_str) {
-                    Ok(stat_args) => stat_args,
+                match serde_json::from_str::<StatsArgs>(&existing_stats_args_json_str) {
+                    Ok(mut stat_args) => {
+                        // we init these fields to empty values because we don't want to compare
+                        // them when checking if the args are the same
+                        stat_args.canonical_input_path = String::new();
+                        stat_args.canonical_stats_path = String::new();
+                        stat_args.record_count = 0;
+                        stat_args.date_generated = String::new();
+                        stat_args.compute_duration_ms = 0;
+                        stat_args
+                    }
                     Err(e) => {
                         log::warn!(
                             "Could not serialize {path_file_stem}.stats.csv.json: {e:?}, \
@@ -402,6 +421,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         }
         if compute_stats {
+            let start_time = std::time::Instant::now();
+
             // we're loading the entire file into memory, we need to check avail mem
             if args.flag_everything
                 || args.flag_mode
@@ -449,6 +470,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 let stat = stat.iter().map(str::as_bytes);
                 wtr.write_record(vec![&*header].into_iter().chain(stat))?;
             }
+
+            // update the stats args json file
+            current_stats_args.canonical_input_path =
+                path.canonicalize()?.to_str().unwrap().to_string();
+            current_stats_args.record_count = *record_count;
+            current_stats_args.compute_duration_ms = start_time.elapsed().as_millis() as u64;
+            current_stats_args.date_generated = chrono::Utc::now().to_rfc3339();
         }
     }
 
@@ -491,34 +519,52 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             fs::copy(currstats_filename.clone(), stats_pathbuf.clone())?;
         }
 
-        // save the stats args to "<FILESTEM>.stats.csv.json"
-        stats_pathbuf.set_extension("csv.json");
-        std::fs::write(
-            stats_pathbuf.clone(),
-            // safety: we know that current_stats_args is JSON serializable
-            serde_json::to_string_pretty(&current_stats_args).unwrap(),
-        )?;
+        // only create the stats args json and binary encoded files if we computed the stats
+        if compute_stats {
+            // save the stats args to "<FILESTEM>.stats.csv.json"
+            stats_pathbuf.set_extension("csv.json");
+            // write empty file first so we can canonicalize it
+            std::fs::File::create(stats_pathbuf.clone())?;
+            current_stats_args.canonical_stats_path = stats_pathbuf
+                .clone()
+                .canonicalize()?
+                .to_str()
+                .unwrap()
+                .to_string();
+            std::fs::write(
+                stats_pathbuf.clone(),
+                // safety: we know that current_stats_args is JSON serializable
+                serde_json::to_string_pretty(&current_stats_args).unwrap(),
+            )?;
 
-        // binary encode the stats to "<FILESTEM>.stats.csv.bin"
-        stats_pathbuf.set_extension("stats.csv.bin");
-        // we do the binary encoding inside a block so that the encoded_file
-        // gets dropped/flushed before we copy it to the output file
-        {
-            let encoded_file = BufWriter::with_capacity(
-                DEFAULT_WTR_BUFFER_CAPACITY,
-                fs::File::create(stats_pathbuf.clone())?,
-            );
-            if let Err(e) = bincode::serialize_into(encoded_file, &stats_for_encoding) {
-                return fail_clierror!(
-                    "Failed to write binary encoded stats {}: {e:?}",
-                    stats_pathbuf.display()
+            // binary encode the stats to "<FILESTEM>.stats.csv.bin"
+            let mut stats_pathbuf = path.clone();
+            stats_pathbuf.set_extension("stats.csv.bin");
+            // we do the binary encoding inside a block so that the encoded_file
+            // gets dropped/flushed before we copy it to the output file
+            {
+                let encoded_file = BufWriter::with_capacity(
+                    DEFAULT_WTR_BUFFER_CAPACITY * 2,
+                    fs::File::create(stats_pathbuf.clone())?,
                 );
+                if let Err(e) = bincode::serialize_into(encoded_file, &stats_for_encoding) {
+                    return fail_clierror!(
+                        "Failed to write binary encoded stats {}: {e:?}",
+                        stats_pathbuf.display()
+                    );
+                }
             }
         }
 
         // if the user specified --stats-binout, copy the binary stats to that file as well
         if let Some(stats_binout) = args.flag_stats_binout {
-            fs::copy(stats_pathbuf, stats_binout)?;
+            let mut stats_pathbuf = path;
+            stats_pathbuf.set_extension("stats.csv.bin");
+            if let Err(e) = fs::copy(stats_pathbuf, stats_binout.clone()) {
+                return fail_clierror!(
+                    "Failed to copy binary encoded stats to {stats_binout}: {e:?}"
+                );
+            }
         }
     }
 
