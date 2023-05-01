@@ -466,7 +466,7 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
 
     if stats_bin_current {
         let mut bin_file = BufReader::with_capacity(
-            DEFAULT_RDR_BUFFER_CAPACITY,
+            DEFAULT_RDR_BUFFER_CAPACITY * 4,
             File::open(stats_binary_encoded_path)?,
         );
         match bincode::deserialize_from(&mut bin_file) {
