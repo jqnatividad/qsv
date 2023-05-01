@@ -6,6 +6,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.101.0] - 2023-05-01
+We're back to the future! The qsv release train is back on track, as we jump to 0.101.0 over the yanked
+0.100.0 release now that self-update logic has been fixed.
+
+### Added
+* `stats`: added more metadata to stats arg cache json - https://github.com/jqnatividad/qsv/commit/5767e5650690a8f39d537ccdc428a6688762cd77
+* added target-triple to user-agent string, and changed agent name to qsv binary variant https://github.com/jqnatividad/qsv/commit/063b08031e361b5c1f26ed504870f0bc1bfd7678, https://github.com/jqnatividad/qsv/commit/70f4ea3b2d0d88b54358c470dd8e964e89adf16d
+
+### Changed
+* `excel`: performance, safety & documentation refinements https://github.com/jqnatividad/qsv/commit/e9a283d51fe84cc4c4e004c0e7b9b2ef12db683d, https://github.com/jqnatividad/qsv/commit/3800d250223619963bc9072ade9c43200ca1bdaf, https://github.com/jqnatividad/qsv/commit/252b01e2207bb995d09154af546a12174d532d6a, https://github.com/jqnatividad/qsv/commit/6a6df0f045cb4f1e58d07433e73a41579ca1262f, https://github.com/jqnatividad/qsv/commit/6a6df0f045cb4f1e58d07433e73a41579ca1262f, https://github.com/jqnatividad/qsv/commit/67ccd85cbe5441b1ad0188ae524b3e832c817d30, https://github.com/jqnatividad/qsv/commit/f2908ce020316087ed756d614c357373727f2664, https://github.com/jqnatividad/qsv/commit/6d5105deaa00f3b8e350d522b196ef4ed3676fc4, https://github.com/jqnatividad/qsv/commit/dbcea393cfba08b4ffe3b6b6d0acd364a59cb342, https://github.com/jqnatividad/qsv/commit/faa8ef9b3f9d6de6af47ddced0d80a5ad5b4e763
+* `replace`: clarify that it works on a field-by-field basis https://github.com/jqnatividad/qsv/commit/c0e2012dc011a6269359ed0ff2c7dc157bae5cd0
+* `stats`: use extend_from_slice when possible - https://github.com/jqnatividad/qsv/commit/c71ad4ee3d7992f4ef1cdc37e32d740756340ba9
+* `fetch` & `fetchpost`: replace multiple push_fields with a csv from vec - https://github.com/jqnatividad/qsv/commit/f4e0479e508c845f49d320967af443fe5a247327
+* `fetch` & `fetchpost`: Migrate to jql 6 https://github.com/jqnatividad/qsv/pull/955
+* `schema`: made bincode reader buffer bigger - https://github.com/jqnatividad/qsv/commit/39b4bb5f89bab7ada2dda40d66d1e40bb51cbe0a
+* `index`: * use increased default buffer size when creating index https://github.com/jqnatividad/qsv/commit/60fe7d64b7eeb322625d2cc44d196bd5633bd79c
+* standard  ized user_agent processing https://github.com/jqnatividad/qsv/commit/4c063015a8d664b9ef105243b2ea6541b3cc6b59, https://github.com/jqnatividad/qsv/commit/010c565912c6ae5ba09620cee7f90aeb294c4d14
+* User agent environment variable; standardized user agent processing https://github.com/jqnatividad/qsv/pull/951
+* more robust Environment Variables processing https://github.com/jqnatividad/qsv/pull/946
+* move Environment Variables to its own markdown file https://github.com/jqnatividad/qsv/commit/77c167fe3942ce464bc5a675b76b3371cf75e84b
+* Bump tokio from 1.27.0 to 1.28.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/945
+* Bump mimalloc from 0.1.36 to 0.1.37 by @dependabot in https://github.com/jqnatividad/qsv/pull/944
+* Bump mlua from 0.9.0-beta.1 to 0.9.0-beta.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/952
+* Bump flate2 from 1.0.25 to 1.0.26 by @dependabot in https://github.com/jqnatividad/qsv/pull/954
+* Bump reqwest from 0.11.16 to 0.11.17 by @dependabot in https://github.com/jqnatividad/qsv/pull/953
+* cargo update bump indirect dependencies
+* pin Rust nightly to 2023-04-30
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.99.1...0.101.0
+
 ## [0.99.1] - 2023-04-24
 Even though this is a patch release, it actually contains a lot of new features and improvements.
 This was done so that qsv version 0.99.0 and below can upgrade to this release, as the self-update logic
