@@ -500,7 +500,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         )?;
 
         // binary encode the stats to "<FILESTEM>.stats.csv.bin"
-        let mut stats_pathbuf = path;
         stats_pathbuf.set_extension("stats.csv.bin");
         // we do the binary encoding inside a block so that the encoded_file
         // gets dropped/flushed before we copy it to the output file
@@ -865,6 +864,7 @@ pub struct Stats {
     which:     WhichStats,
 }
 
+#[inline]
 fn timestamp_ms_to_rfc3339(timestamp: i64, typ: FieldType) -> String {
     use chrono::{DateTime, NaiveDateTime, Utc};
 
