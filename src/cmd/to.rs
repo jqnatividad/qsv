@@ -435,14 +435,8 @@ fn process_input(
             // is the input file snappy compressed?
             if path.extension().unwrap_or_default() == "sz" {
                 // if so, decompress the file
-                let mut snappy_file = std::fs::File::open(path.clone())?;
-                let mut snappy_reader = snap::read::FrameDecoder::new(&mut snappy_file);
-                let file_stem = path.file_stem().unwrap_or_default();
-                let decompressed_filepath = tmpdir.path().join(file_stem);
-                let mut decompressed_file = std::fs::File::create(decompressed_filepath.clone())?;
-                std::io::copy(&mut snappy_reader, &mut decompressed_file)?;
-                decompressed_file.flush()?;
-                processed_input.push(decompressed_filepath);
+                let decompressed_filepath = util::decompress_snappy_file(path, tmpdir)?;
+                processed_input.push(PathBuf::from(PathBuf::from(decompressed_filepath)));
             } else {
                 processed_input.push(path.clone());
             }

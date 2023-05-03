@@ -61,7 +61,7 @@ Common options:
     -p, --progressbar        Show progress bars. Only valid for URL input.
 "#;
 
-use std::{cmp::min, fmt, fs, io::Write, path::Path, time::Duration};
+use std::{cmp::min, fmt, fs, io::Write, path::PathBuf, time::Duration};
 
 use bytes::Bytes;
 use futures::executor::block_on;
@@ -78,7 +78,7 @@ use url::Url;
 
 use crate::{
     config::{Config, Delimiter},
-    util, CliError, CliResult,
+    util, CliResult,
 };
 
 #[derive(Deserialize)]
@@ -397,13 +397,14 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                 if snappy_flag {
                     // we downloaded a snappy compressed file, we need to decompress it
                     // before we can sniff it
-                    wtr_file_path = decompress_snappy_file(file.path().to_str().unwrap(), tmpdir)?;
+                    wtr_file_path =
+                        util::decompress_snappy_file(file.path().to_path_buf(), tmpdir)?;
                 } else {
                     // we downloaded a non-snappy file, rewrite it so we only have the exact
                     // sample size and truncate potentially incomplete lines. We streamed the
                     // download and the downloaded file may be more than the sample size, and the
                     // final line may be incomplete.
-                    wtr_file_path = path.to_str().unwrap().to_string();
+                    wtr_file_path = path.display().to_string();
                     let mut wtr = Config::new(&Some(wtr_file_path.clone()))
                         .no_headers(false)
                         .flexible(true)
@@ -460,7 +461,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                 let mut path = path;
 
                 if path.to_lowercase().ends_with(".sz") {
-                    path = decompress_snappy_file(&path, tmpdir)?;
+                    path = util::decompress_snappy_file(PathBuf::from(path), tmpdir)?;
                 }
 
                 let metadata = fs::metadata(&path)
@@ -510,19 +511,6 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
             downloaded_records: 0,
         })
     }
-}
-
-fn decompress_snappy_file(path: &str, tmpdir: &tempfile::TempDir) -> Result<String, CliError> {
-    let mut snappy_file = std::fs::File::open(path)?;
-    let mut snappy_reader = snap::read::FrameDecoder::new(&mut snappy_file);
-    let file_stem = Path::new(path).file_stem().unwrap().to_str().unwrap();
-    let decompressed_filepath = tmpdir
-        .path()
-        .join(format!("qsv__{file_stem}__qsv_temp_decompressed"));
-    let mut decompressed_file = std::fs::File::create(decompressed_filepath.clone())?;
-    std::io::copy(&mut snappy_reader, &mut decompressed_file)?;
-    decompressed_file.flush()?;
-    Ok(format!("{}", decompressed_filepath.display()))
 }
 
 fn cleanup_tempfile(

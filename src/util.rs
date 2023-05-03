@@ -2,6 +2,7 @@
 use std::borrow::Cow;
 use std::{
     env, fs,
+    io::Write,
     path::{Path, PathBuf},
     str,
 };
@@ -1229,4 +1230,20 @@ pub fn get_envvar_flag(key: &str) -> bool {
     } else {
         false
     }
+}
+
+pub fn decompress_snappy_file(
+    path: PathBuf,
+    tmpdir: &tempfile::TempDir,
+) -> Result<String, CliError> {
+    let mut snappy_file = std::fs::File::open(path.clone())?;
+    let mut snappy_reader = snap::read::FrameDecoder::new(&mut snappy_file);
+    let file_stem = Path::new(&path).file_stem().unwrap().to_str().unwrap();
+    let decompressed_filepath = tmpdir
+        .path()
+        .join(format!("qsv__{file_stem}__qsv_temp_decompressed"));
+    let mut decompressed_file = std::fs::File::create(decompressed_filepath.clone())?;
+    std::io::copy(&mut snappy_reader, &mut decompressed_file)?;
+    decompressed_file.flush()?;
+    Ok(format!("{}", decompressed_filepath.display()))
 }
