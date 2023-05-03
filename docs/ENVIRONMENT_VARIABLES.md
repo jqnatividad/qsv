@@ -33,14 +33,18 @@
 
 Several dependencies also have environment variables that influence qsv's performance & behavior:
 
-* Memory Management ([mimalloc](https://docs.rs/mimalloc/latest/mimalloc/))   
-  When incorporating qsv into a data pipeline that runs in batch mode, particularly with very large CSV files using qsv commands that load entire CSV files into memory, you can
-  [fine-tune Mimalloc's behavior using its environment variables](https://github.com/microsoft/mimalloc#environment-options).
+* Memory Allocator   
+  When incorporating qsv into a data pipeline that runs in batch mode, particularly with very large CSV files using qsv commands that load entire CSV files into memory, you can fine tune qsv's memory allocator run-time behavior using the environment variables for the allocator you're using:
+
+  * [mimalloc](https://github.com/microsoft/mimalloc#environment-options)
+
+  * [jemalloc](https://jemalloc.net/jemalloc.3.html#environment)
+    
 * Network Access ([reqwest](https://docs.rs/reqwest/latest/reqwest/))   
-  qsv uses reqwest for its `fetch`, `validate` & `--update` functions & will honor [proxy settings](https://docs.rs/reqwest/latest/reqwest/index.html#proxies) set through the `HTTP_PROXY`, `HTTPS_PROXY` & `NO_PROXY` environment variables.
+  qsv uses reqwest and will honor [proxy settings](https://docs.rs/reqwest/latest/reqwest/index.html#proxies) set through the `HTTP_PROXY`, `HTTPS_PROXY` & `NO_PROXY` environment variables.
   
 > ℹ️ **NOTE:** To get a list of all active qsv-relevant environment variables, run `qsv --envlist`.
-Relevant env vars are defined as anything that starts with `QSV_` & `MIMALLOC_` & the proxy variables listed above.
+Relevant env vars are defined as anything that starts with `QSV_`, `MIMALLOC_`, `JEMALLOC_`, `MALLOC_CONF` & the proxy variables listed above.
 
 ## .env File Support
 qsv supports the use of `.env` files to set environment variables. The `.env` file is a simple text file that contains key-value pairs, one per line. 

@@ -231,6 +231,8 @@ pub fn show_env_vars() {
         let env_var = n.into_string().unwrap();
         if env_var.starts_with("QSV_")
             || env_var.starts_with("MIMALLOC_")
+            || env_var.starts_with("JEMALLOC_")
+            || env_var.starts_with("MALLOC_CONF")
             || OTHER_ENV_VARS.contains(&env_var.to_lowercase().as_str())
         {
             env_var_set = true;
