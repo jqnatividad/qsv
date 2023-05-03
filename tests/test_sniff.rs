@@ -430,3 +430,33 @@ fn sniff_flaky_delimiter_guess() {
     // guess the wrong delimiter if we don't explicitly set it.
     wrk.assert_success(&mut cmd);
 }
+
+#[test]
+fn sniff_consistent_results_issue_956() {
+    let wrk = Workdir::new("sniff_consistent_results_issue_956");
+
+    let test_file = wrk.load_test_file("spendover25kdownloadSep.csv");
+    let mut cmd = wrk.command("sniff");
+    cmd.arg(test_file);
+    wrk.assert_err(&mut cmd);
+
+    let test_file = wrk.load_test_file("311011.csv");
+    let mut cmd = wrk.command("sniff");
+    cmd.arg(test_file);
+    wrk.assert_err(&mut cmd);
+
+    let test_file = wrk.load_test_file("FCOServices_TransparencySpend_May2011.csv");
+    let mut cmd = wrk.command("sniff");
+    cmd.arg(test_file);
+    wrk.assert_err(&mut cmd);
+
+    let test_file = wrk.load_test_file("iwfg09_Phos_river_200911.csv");
+    let mut cmd = wrk.command("sniff");
+    cmd.arg(test_file);
+    wrk.assert_err(&mut cmd);
+
+    let test_file = wrk.load_test_file("Inpatients_MHA_Machine_readable_dataset_1011.csv");
+    let mut cmd = wrk.command("sniff");
+    cmd.arg(test_file);
+    wrk.assert_err(&mut cmd);
+}
