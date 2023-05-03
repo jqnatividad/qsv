@@ -47,6 +47,9 @@ sniff options:
                              Valid only when input is a URL.
     --timeout <secs>         Timeout for URL requests in seconds.
                              [default: 30]
+    --user-agent <agent>     Specify a custom user agent to use when sniffing a CSV on a URL.
+                             Try to follow the syntax here -
+                             https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
 
 Common options:
     -h, --help               Display this message
@@ -89,6 +92,7 @@ struct Args {
     flag_delimiter:      Option<Delimiter>,
     flag_progressbar:    bool,
     flag_timeout:        u16,
+    flag_user_agent:     Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Default, Debug)]
@@ -247,7 +251,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
 
                 // setup the reqwest client
                 let client = match Client::builder()
-                    .user_agent(util::DEFAULT_USER_AGENT)
+                    .user_agent(util::set_user_agent(args.flag_user_agent.clone())?)
                     .brotli(true)
                     .gzip(true)
                     .deflate(true)
