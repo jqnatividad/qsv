@@ -58,8 +58,8 @@ fn sniff_url() {
     let got: String = wrk.stdout(&mut cmd);
 
     let expected_end = r#"Sampled Records: 100
-Estimated: true
-Num Records: 107
+Estimated: false
+Num Records: 100
 Avg Record Len (bytes): 444
 Num Fields: 29
 Fields:

@@ -61,7 +61,13 @@ Common options:
     -p, --progressbar        Show progress bars. Only valid for URL input.
 "#;
 
-use std::{cmp::min, fmt, fs, io::Write, path::PathBuf, time::Duration};
+use std::{
+    cmp::min,
+    fmt, fs,
+    io::Write,
+    path::PathBuf,
+    time::{Duration, SystemTime},
+};
 
 use bytes::Bytes;
 use futures::executor::block_on;
@@ -99,6 +105,7 @@ struct Args {
 struct SniffStruct {
     path:            String,
     sniff_timestamp: String,
+    last_modified:   String,
     delimiter_char:  char,
     header_row:      bool,
     preamble_rows:   usize,
@@ -136,6 +143,7 @@ impl fmt::Display for SniffStruct {
             }
         )?;
         writeln!(f, "Sniff Timestamp: {}", self.sniff_timestamp)?;
+        writeln!(f, "Last Modified: {}", self.last_modified)?;
         writeln!(
             f,
             "Delimiter: {}",
@@ -211,10 +219,11 @@ struct SniffFileStruct {
     tempfile_flag:      bool,
     retrieved_size:     usize,
     file_size:          usize,
+    last_modified:      String,
     downloaded_records: usize,
 }
 
-const fn rowcount(
+fn rowcount(
     metadata: &qsv_sniffer::metadata::Metadata,
     sniff_file_info: &SniffFileStruct,
     count: usize,
@@ -222,10 +231,35 @@ const fn rowcount(
     let mut estimated = false;
     let rowcount = if count == usize::MAX {
         // if the file is usize::MAX, it's a sentinel value for "Unknown" as the server
-        // didn't provide a Content-Length header, so we estimate the rowcount by
-        // dividing the file_size by avg_rec_len
-        estimated = true;
-        sniff_file_info.file_size / metadata.avg_record_len
+        // didn't provide a Content-Length header
+        if sniff_file_info.retrieved_size <= sniff_file_info.file_size {
+            // if the file size <= retrieved size, we can count the records
+            // as we have the whole file
+            estimated = false;
+            // actually count the records
+            let conf = Config::new(&Some(sniff_file_info.file_to_sniff.clone())).flexible(true);
+            let mut rdr = conf.reader().unwrap();
+            let mut count = 0_usize;
+
+            let idxfile = conf.indexed().unwrap();
+            count = if let Some(idxfile) = idxfile {
+                // if the file is indexed, we can use the index to count the records
+                idxfile.count() as usize
+            } else {
+                // if the file is not indexed, we have to count the records manually
+                let mut record = csv::ByteRecord::new();
+                while rdr.read_byte_record(&mut record).unwrap() {
+                    count += 1;
+                }
+                count
+            };
+            count
+        } else {
+            // we don't have the whole file, so we estimate the rowcount by
+            // dividing the file_size by avg_rec_len
+            estimated = true;
+            sniff_file_info.file_size / metadata.avg_record_len
+        }
     } else {
         count
     };
@@ -273,6 +307,19 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                     .send()
                     .await
                     .or(Err(format!("Failed to GET from '{url}'")))?;
+
+                let last_modified = match res.headers().get("Last-Modified") {
+                    Some(lm) => match lm.to_str() {
+                        Ok(s) => {
+                            // convert Last-Modified RFC2822 to RFC3339 format
+                            let dt = chrono::DateTime::parse_from_rfc2822(s).unwrap();
+                            dt.to_rfc3339_opts(chrono::SecondsFormat::Secs, false)
+                        }
+                        // server did not return Last-Modified header
+                        Err(_) => String::from("Unknown"),
+                    },
+                    None => String::new(),
+                };
 
                 let total_size = match res.content_length() {
                     Some(l) => l as usize,
@@ -398,7 +445,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                     // we downloaded a snappy compressed file, we need to decompress it
                     // before we can sniff it
                     wtr_file_path =
-                        util::decompress_snappy_file(file.path().to_path_buf(), tmpdir)?;
+                        util::decompress_snappy_file(&file.path().to_path_buf(), tmpdir)?;
                 } else {
                     // we downloaded a non-snappy file, rewrite it so we only have the exact
                     // sample size and truncate potentially incomplete lines. We streamed the
@@ -453,6 +500,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                     } else {
                         total_size
                     },
+                    last_modified,
                     downloaded_records,
                 })
             }
@@ -461,22 +509,38 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                 let mut path = path;
 
                 if path.to_lowercase().ends_with(".sz") {
-                    path = util::decompress_snappy_file(PathBuf::from(path), tmpdir)?;
+                    path = util::decompress_snappy_file(&PathBuf::from(path), tmpdir)?;
                 }
 
                 let metadata = fs::metadata(&path)
                     .map_err(|_| format!("Cannot get metadata for file '{path}'"))?;
 
-                let fsize = metadata.len() as usize;
+                let file_size = metadata.len() as usize;
+                let last_modified = match metadata.modified() {
+                    Ok(time) => {
+                        let timestamp = time
+                            .duration_since(SystemTime::UNIX_EPOCH)
+                            .unwrap()
+                            .as_secs();
+                        let naive = chrono::NaiveDateTime::from_timestamp_opt(timestamp as i64, 0)
+                            .unwrap_or_default();
+                        let datetime =
+                            chrono::DateTime::<chrono::Utc>::from_utc(naive, chrono::Utc);
+                        // format the datetime to RFC3339
+                        format!("{datetime}", datetime = datetime.format("%+"))
+                    }
+                    Err(_) => "N/A".to_string(),
+                };
 
                 let canonical_path = fs::canonicalize(&path)?.to_str().unwrap().to_string();
 
                 Ok(SniffFileStruct {
-                    display_path:       canonical_path,
-                    file_to_sniff:      path,
-                    tempfile_flag:      false,
-                    retrieved_size:     fsize,
-                    file_size:          fsize,
+                    display_path: canonical_path,
+                    file_to_sniff: path,
+                    tempfile_flag: false,
+                    retrieved_size: file_size,
+                    file_size,
+                    last_modified,
                     downloaded_records: 0,
                 })
             }
@@ -496,18 +560,33 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
             .metadata()
             .map_err(|_| "Cannot get metadata for stdin file".to_string())?;
 
-        let fsize = metadata.len() as usize;
+        let file_size = metadata.len() as usize;
+        let last_modified = match metadata.modified() {
+            Ok(time) => {
+                let timestamp = time
+                    .duration_since(SystemTime::UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs();
+                let naive = chrono::NaiveDateTime::from_timestamp_opt(timestamp as i64, 0)
+                    .unwrap_or_default();
+                let datetime = chrono::DateTime::<chrono::Utc>::from_utc(naive, chrono::Utc);
+                // format the datetime to RFC3339
+                format!("{datetime}", datetime = datetime.format("%+"))
+            }
+            Err(_) => "N/A".to_string(),
+        };
         let path_string = path
             .into_os_string()
             .into_string()
             .unwrap_or_else(|_| "???".to_string());
 
         Ok(SniffFileStruct {
-            display_path:       "stdin".to_string(),
-            file_to_sniff:      path_string,
-            tempfile_flag:      true,
-            retrieved_size:     fsize,
-            file_size:          fsize,
+            display_path: "stdin".to_string(),
+            file_to_sniff: path_string,
+            tempfile_flag: true,
+            retrieved_size: file_size,
+            file_size,
+            last_modified,
             downloaded_records: 0,
         })
     }
@@ -682,6 +761,7 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
             processed_results = SniffStruct {
                 path: sfile_info.display_path,
                 sniff_timestamp: sniffed_ts,
+                last_modified: sfile_info.last_modified,
                 delimiter_char: metadata.dialect.delimiter as char,
                 header_row: metadata.dialect.header.has_header_row,
                 preamble_rows: metadata.dialect.header.num_preamble_rows,
