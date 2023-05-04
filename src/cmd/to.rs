@@ -435,8 +435,8 @@ fn process_input(
             // is the input file snappy compressed?
             if path.extension().unwrap_or_default() == "sz" {
                 // if so, decompress the file
-                let decompressed_filepath = util::decompress_snappy_file(path, tmpdir)?;
-                processed_input.push(PathBuf::from(PathBuf::from(decompressed_filepath)));
+                let decompressed_filepath = util::decompress_snappy_file(&path, tmpdir)?;
+                processed_input.push(PathBuf::from(decompressed_filepath));
             } else {
                 processed_input.push(path.clone());
             }

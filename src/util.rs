@@ -1233,7 +1233,7 @@ pub fn get_envvar_flag(key: &str) -> bool {
 }
 
 pub fn decompress_snappy_file(
-    path: PathBuf,
+    path: &PathBuf,
     tmpdir: &tempfile::TempDir,
 ) -> Result<String, CliError> {
     let mut snappy_file = std::fs::File::open(path.clone())?;
