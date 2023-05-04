@@ -231,35 +231,10 @@ fn rowcount(
     let mut estimated = false;
     let rowcount = if count == usize::MAX {
         // if the file is usize::MAX, it's a sentinel value for "Unknown" as the server
-        // didn't provide a Content-Length header
-        if sniff_file_info.retrieved_size <= sniff_file_info.file_size {
-            // if the file size <= retrieved size, we can count the records
-            // as we have the whole file
-            estimated = false;
-            // actually count the records
-            let conf = Config::new(&Some(sniff_file_info.file_to_sniff.clone())).flexible(true);
-            let mut rdr = conf.reader().unwrap();
-            let mut count = 0_usize;
-
-            let idxfile = conf.indexed().unwrap();
-            count = if let Some(idxfile) = idxfile {
-                // if the file is indexed, we can use the index to count the records
-                idxfile.count() as usize
-            } else {
-                // if the file is not indexed, we have to count the records manually
-                let mut record = csv::ByteRecord::new();
-                while rdr.read_byte_record(&mut record).unwrap() {
-                    count += 1;
-                }
-                count
-            };
-            count
-        } else {
-            // we don't have the whole file, so we estimate the rowcount by
-            // dividing the file_size by avg_rec_len
-            estimated = true;
-            sniff_file_info.file_size / metadata.avg_record_len
-        }
+        // didn't provide a Content-Length header, so we estimate the rowcount by
+        // dividing the file_size by avg_rec_len
+        estimated = true;
+        sniff_file_info.file_size / metadata.avg_record_len
     } else {
         count
     };
@@ -630,7 +605,9 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
     let conf = Config::new(&Some(sfile_info.file_to_sniff.clone()))
         .flexible(true)
         .delimiter(args.flag_delimiter);
-    let n_rows = if sfile_info.downloaded_records == 0 {
+    let n_rows = if sfile_info.downloaded_records == 0
+        || sfile_info.retrieved_size <= sfile_info.file_size
+    {
         //if we have the whole file and not just a sample, we can count the number of rows
         match util::count_rows(&conf) {
             Ok(n) => n as usize,
