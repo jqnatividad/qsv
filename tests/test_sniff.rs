@@ -145,6 +145,56 @@ Fields:
 }
 
 #[test]
+fn sniff_file_snappy() {
+    let wrk = Workdir::new("sniff_file_snappy");
+
+    let test_file = wrk.load_test_file("boston311-100.csv.sz");
+
+    let mut cmd = wrk.command("sniff");
+    cmd.arg(test_file);
+
+    let got: String = wrk.stdout(&mut cmd);
+
+    let expected_end = r#"Sampled Records: 100
+Estimated: false
+Num Records: 100
+Avg Record Len (bytes): 444
+Num Fields: 29
+Fields:
+    0:   Unsigned  case_enquiry_id
+    1:   DateTime  open_dt
+    2:   DateTime  target_dt
+    3:   DateTime  closed_dt
+    4:   Text      ontime
+    5:   Text      case_status
+    6:   Text      closure_reason
+    7:   Text      case_title
+    8:   Text      subject
+    9:   Text      reason
+    10:  Text      type
+    11:  Text      queue
+    12:  Text      department
+    13:  Text      submittedphoto
+    14:  Boolean   closedphoto
+    15:  Text      location
+    16:  Unsigned  fire_district
+    17:  Text      pwd_district
+    18:  Unsigned  city_council_district
+    19:  Text      police_district
+    20:  Text      neighborhood
+    21:  Unsigned  neighborhood_services_district
+    22:  Text      ward
+    23:  Unsigned  precinct
+    24:  Text      location_street_name
+    25:  Unsigned  location_zipcode
+    26:  Float     latitude
+    27:  Float     longitude
+    28:  Text      source"#;
+
+    assert!(dos2unix(&got).trim_end().ends_with(expected_end.trim_end()));
+}
+
+#[test]
 fn sniff_tab() {
     let wrk = Workdir::new("sniff_tab");
     wrk.create_with_delim("in.file", data(), b'\t');
