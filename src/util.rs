@@ -2,7 +2,7 @@
 use std::borrow::Cow;
 use std::{
     env, fs,
-    io::Write,
+    io::{BufReader, Read, Write},
     path::{Path, PathBuf},
     str,
 };
@@ -17,6 +17,7 @@ use serde::de::{Deserialize, Deserializer, Error};
 use sysinfo::{System, SystemExt};
 
 use crate::{
+    config,
     config::{Config, Delimiter},
     CliError, CliResult,
 };
@@ -1246,4 +1247,23 @@ pub fn decompress_snappy_file(
     std::io::copy(&mut snappy_reader, &mut decompressed_file)?;
     decompressed_file.flush()?;
     Ok(format!("{}", decompressed_filepath.display()))
+}
+
+/// load the first BUFFER*4 (128k) bytes of the file and check if it is utf8
+pub fn isutf8_file(path: &Path) -> Result<bool, CliError> {
+    let metadata = std::fs::metadata(path)?;
+    let buffer_len = config::DEFAULT_RDR_BUFFER_CAPACITY * 4;
+    let file_size = metadata.len() as usize;
+    let bytes_to_read: usize = if file_size < buffer_len {
+        file_size
+    } else {
+        buffer_len
+    };
+
+    let file = std::fs::File::open(path)?;
+    let mut reader = BufReader::new(file);
+    let mut buffer = Vec::with_capacity(bytes_to_read);
+    reader.read_to_end(&mut buffer)?;
+
+    Ok(simdutf8::basic::from_utf8(&buffer).is_ok())
 }
