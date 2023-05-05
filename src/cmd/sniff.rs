@@ -223,7 +223,7 @@ struct SniffFileStruct {
     downloaded_records: usize,
 }
 
-fn rowcount(
+const fn rowcount(
     metadata: &qsv_sniffer::metadata::Metadata,
     sniff_file_info: &SniffFileStruct,
     count: usize,
@@ -362,10 +362,16 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                 let mut downloaded_lines = 0_usize;
                 #[allow(unused_assignments)]
                 let mut chunk = Bytes::new(); // amortize the allocation
+                let mut notutf8_flag = false;
 
                 // download chunks until we have the desired sample size
                 while let Some(item) = stream.next().await {
                     chunk = item.or(Err("Error while downloading file".to_string()))?;
+                    // check if chunk is utf8
+                    if simdutf8::basic::from_utf8(&chunk).is_err() {
+                        notutf8_flag = true;
+                    }
+
                     file.write_all(&chunk)
                         .map_err(|_| "Error while writing to file".to_string())?;
                     let chunk_len = chunk.len();
@@ -422,7 +428,12 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                     wtr_file_path =
                         util::decompress_snappy_file(&file.path().to_path_buf(), tmpdir)?;
                 } else {
-                    // we downloaded a non-snappy file, rewrite it so we only have the exact
+                    // we downloaded a non-snappy file. First, check if it's utf8/text file.
+                    if notutf8_flag {
+                        return fail_clierror!("File is not UTF8-encoded nor a text/CSV file");
+                    }
+
+                    // It's utf8-encoded/text file. Rewrite it so we only have the exact
                     // sample size and truncate potentially incomplete lines. We streamed the
                     // download and the downloaded file may be more than the sample size, and the
                     // final line may be incomplete.
@@ -479,12 +490,46 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                     downloaded_records,
                 })
             }
-            // its a file, passthrough the path along with its size
+            // its a file. If its a snappy file, decompress it first
+            // aftwerwards, check if its one of the supported file types
+            // finally, check if its a utf8 file
             path => {
                 let mut path = path;
 
-                if path.to_lowercase().ends_with(".sz") {
-                    path = util::decompress_snappy_file(&PathBuf::from(path), tmpdir)?;
+                let mut pathbuf = PathBuf::from(path.clone());
+                let file_ext = pathbuf.extension();
+                match file_ext {
+                    Some(ext) => {
+                        let mut lower_ext =
+                            ext.to_str().unwrap().to_lowercase().as_str().to_owned();
+                        if lower_ext == "sz" {
+                            path = util::decompress_snappy_file(&pathbuf, tmpdir)?;
+                            pathbuf = PathBuf::from(path.clone());
+                            lower_ext = pathbuf
+                                .extension()
+                                .unwrap()
+                                .to_os_string()
+                                .into_string()
+                                .unwrap();
+                        }
+                        match lower_ext.as_str() {
+                            "csv" | "tsv" | "txt" | "tab" => {}
+                            ext if ext.ends_with("_decompressed") => {}
+                            _ => {
+                                return fail_clierror!(
+                                    "File extension '{lower_ext}' is not supported",
+                                    // ext = ext.to_str().unwrap()
+                                );
+                            }
+                        }
+                    }
+                    None => {
+                        return fail_clierror!("File extension not found");
+                    }
+                }
+
+                if !util::isutf8_file(&pathbuf)? {
+                    return fail_clierror!("File is not UTF8-encoded nor a text/CSV file");
                 }
 
                 let metadata = fs::metadata(&path)
@@ -530,6 +575,10 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
         let (file, path) = stdin_file
             .keep()
             .or(Err("Cannot keep temporary file".to_string()))?;
+
+        if !util::isutf8_file(&path)? {
+            return fail_clierror!("File is not UTF8-encoded nor a text/CSV file");
+        }
 
         let metadata = file
             .metadata()

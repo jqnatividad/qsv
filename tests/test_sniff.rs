@@ -18,10 +18,10 @@ fn data() -> Vec<Vec<String>> {
 #[test]
 fn sniff() {
     let wrk = Workdir::new("sniff");
-    wrk.create_with_delim("in.file", data(), b',');
+    wrk.create_with_delim("in.CSV", data(), b',');
 
     let mut cmd = wrk.command("sniff");
-    cmd.arg("in.file");
+    cmd.arg("in.CSV");
 
     let got: String = wrk.stdout(&mut cmd);
 
@@ -197,10 +197,10 @@ Fields:
 #[test]
 fn sniff_tab() {
     let wrk = Workdir::new("sniff_tab");
-    wrk.create_with_delim("in.file", data(), b'\t');
+    wrk.create_with_delim("in.TAB", data(), b'\t');
 
     let mut cmd = wrk.command("sniff");
-    cmd.arg("in.file");
+    cmd.arg("in.TAB");
 
     let got: String = wrk.stdout(&mut cmd);
 
