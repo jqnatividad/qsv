@@ -174,7 +174,7 @@ snap = "1"
 strsim = { version = "0.10", optional = true }
 strum = "0.24"
 strum_macros = "0.24"
-sysinfo = "0.28"
+sysinfo = "0.29"
 tabwriter = "1.2"
 tempfile = "3"
 test-data-generation = { version = "0.3", optional = true }
