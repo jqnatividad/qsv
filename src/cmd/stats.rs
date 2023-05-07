@@ -242,7 +242,6 @@ struct StatsArgs {
 
 static INFER_DATE_FLAGS: once_cell::sync::OnceCell<Vec<bool>> = OnceCell::new();
 static DMY_PREFERENCE: AtomicBool = AtomicBool::new(false);
-static INFER_BOOLEAN: AtomicBool = AtomicBool::new(false);
 static RECORD_COUNT: once_cell::sync::OnceCell<u64> = OnceCell::new();
 
 // number of milliseconds per day
@@ -266,9 +265,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if args.flag_infer_boolean && !args.flag_cardinality {
         args.flag_cardinality = true;
     }
-
-    // set the global INFER_BOOLEAN flag
-    INFER_BOOLEAN.store(args.flag_infer_boolean, Ordering::Relaxed);
 
     // set stdout output flag
     let stdout_output_flag = args.flag_output.is_none();
@@ -668,6 +664,7 @@ impl Args {
 
     fn stats_to_records(&self, stats: Vec<Stats>) -> Vec<csv::StringRecord> {
         let round_places = self.flag_round;
+        let infer_boolean = self.flag_infer_boolean;
         let mut records = Vec::with_capacity(stats.len());
         records.extend(repeat(csv::StringRecord::new()).take(stats.len()));
         let pool = ThreadPool::new(util::njobs(self.flag_jobs));
@@ -676,7 +673,10 @@ impl Args {
             let (send, recv) = channel::bounded(0);
             results.push(recv);
             pool.execute(move || {
-                unsafe { send.send(stat.to_record(round_places)).unwrap_unchecked() };
+                unsafe {
+                    send.send(stat.to_record(round_places, infer_boolean))
+                        .unwrap_unchecked()
+                };
             });
         }
         for (i, recv) in results.into_iter().enumerate() {
@@ -1080,8 +1080,7 @@ impl Stats {
     }
 
     #[allow(clippy::wrong_self_convention)]
-    pub fn to_record(&mut self, round_places: u32) -> csv::StringRecord {
-        let infer_boolean = INFER_BOOLEAN.load(Ordering::Relaxed);
+    pub fn to_record(&mut self, round_places: u32, infer_boolean: bool) -> csv::StringRecord {
         // we're doing typesonly and not inferring boolean, just return the type
         if self.which.typesonly && !infer_boolean {
             return csv::StringRecord::from(vec![self.typ.to_string()]);
@@ -1199,7 +1198,7 @@ impl Stats {
             pieces.push(typ.to_string());
         }
 
-        // we're doing --typesonly with --infer-boolean
+        // we're doing --typesonly with --infer-boolean, we don't need to calculate anything else
         if self.which.typesonly && infer_boolean {
             return csv::StringRecord::from(pieces);
         }

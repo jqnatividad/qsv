@@ -258,7 +258,7 @@ pub fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<M
         header_string = convert_to_string(header_byte_slice)?;
 
         // grab stats record for current column
-        stats_record = csv_stats.get(i).unwrap().clone().to_record(4);
+        stats_record = csv_stats.get(i).unwrap().clone().to_record(4, false);
 
         if log::log_enabled!(log::Level::Debug) {
             debug!("stats[{header_string}]: {stats_record:?}");
@@ -585,7 +585,7 @@ fn build_low_cardinality_column_selector_arg(
     // identify low cardinality columns
     for i in 0..csv_fields.len() {
         // grab stats record for current column
-        let stats_record = csv_stats.get(i).unwrap().clone().to_record(4);
+        let stats_record = csv_stats.get(i).unwrap().clone().to_record(4, false);
 
         // get Cardinality
         let col_cardinality = match stats_record.get(stats_col_index_map["cardinality"]) {
