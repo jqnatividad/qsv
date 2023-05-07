@@ -77,7 +77,7 @@ Fields:
     11:  Text      queue
     12:  Text      department
     13:  Text      submittedphoto
-    14:  Boolean   closedphoto
+    14:  NULL      closedphoto
     15:  Text      location
     16:  Unsigned  fire_district
     17:  Text      pwd_district
@@ -125,7 +125,7 @@ Fields:
     11:  Text      queue
     12:  Text      department
     13:  Text      submittedphoto
-    14:  Boolean   closedphoto
+    14:  NULL      closedphoto
     15:  Text      location
     16:  Unsigned  fire_district
     17:  Text      pwd_district
@@ -175,7 +175,7 @@ Fields:
     11:  Text      queue
     12:  Text      department
     13:  Text      submittedphoto
-    14:  Boolean   closedphoto
+    14:  NULL      closedphoto
     15:  Text      location
     16:  Unsigned  fire_district
     17:  Text      pwd_district
@@ -392,15 +392,15 @@ fn sniff_sample() {
     "Text",
     "Text",
     "Text",
-    "Text",
-    "Text",
-    "Text",
-    "Text",
-    "Text",
-    "Text",
-    "Text",
     "Boolean",
     "Boolean",
+    "Boolean",
+    "Boolean",
+    "Boolean",
+    "Boolean",
+    "Boolean",
+    "NULL",
+    "NULL",
     "Text",
     "Text",
     "Text",
@@ -408,10 +408,10 @@ fn sniff_sample() {
     "Text",
     "Text",
     "Unsigned",
-    "Boolean",
+    "NULL",
     "Text",
-    "Boolean",
-    "Boolean"
+    "NULL",
+    "NULL"
   ]
 }"#;
 
@@ -448,7 +448,7 @@ Fields:
     11:  Text      queue
     12:  Text      department
     13:  Text      submittedphoto
-    14:  Boolean   closedphoto
+    14:  NULL      closedphoto
     15:  Text      location
     16:  Unsigned  fire_district
     17:  Text      pwd_district
