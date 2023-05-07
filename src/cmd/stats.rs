@@ -70,6 +70,10 @@ stats options:
     --typesonly               Infer data types only and do not compute statistics.
                               Note that if you want to infer dates, you'll still need to use
                               the --infer-dates and --dates-whitelist options.
+    --infer-boolean           Infer boolean data type. This automatically enables
+                              the --cardinality option, and when a column's cardinality
+                              is 2, and the values' first character are 0/1, t/f & y/n
+                              case-insensitive, the data type is inferred as boolean.
     --mode                    Show the mode/s & antimode/s. Multimodal-aware.
                               This requires loading all CSV data in memory.
     --cardinality             Show the cardinality.
@@ -186,6 +190,7 @@ pub struct Args {
     pub flag_select:          SelectColumns,
     pub flag_everything:      bool,
     pub flag_typesonly:       bool,
+    pub flag_infer_boolean:   bool,
     pub flag_mode:            bool,
     pub flag_cardinality:     bool,
     pub flag_median:          bool,
@@ -214,6 +219,7 @@ struct StatsArgs {
     flag_select:          String,
     flag_everything:      bool,
     flag_typesonly:       bool,
+    flag_infer_boolean:   bool,
     flag_mode:            bool,
     flag_cardinality:     bool,
     flag_median:          bool,
@@ -236,6 +242,7 @@ struct StatsArgs {
 
 static INFER_DATE_FLAGS: once_cell::sync::OnceCell<Vec<bool>> = OnceCell::new();
 static DMY_PREFERENCE: AtomicBool = AtomicBool::new(false);
+static INFER_BOOLEAN: AtomicBool = AtomicBool::new(false);
 static RECORD_COUNT: once_cell::sync::OnceCell<u64> = OnceCell::new();
 
 // number of milliseconds per day
@@ -255,6 +262,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         args.flag_mad = false;
     }
 
+    // inferring boolean requires inferring cardinality
+    if args.flag_infer_boolean && !args.flag_cardinality {
+        args.flag_cardinality = true;
+    }
+
+    // set the global INFER_BOOLEAN flag
+    INFER_BOOLEAN.store(args.flag_infer_boolean, Ordering::Relaxed);
+
     // set stdout output flag
     let stdout_output_flag = args.flag_output.is_none();
 
@@ -265,6 +280,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         flag_select:          format!("{:?}", args.flag_select),
         flag_everything:      args.flag_everything,
         flag_typesonly:       args.flag_typesonly,
+        flag_infer_boolean:   args.flag_infer_boolean,
         flag_mode:            args.flag_mode,
         flag_cardinality:     args.flag_cardinality,
         flag_median:          args.flag_median,
@@ -679,13 +695,16 @@ impl Args {
         // safety: we use unsafe in this hot loop so we skip unnecessary bounds checking
         // that we are certain is safe
         unsafe {
+            let infer_date_flags = INFER_DATE_FLAGS.get_unchecked();
             for row in it {
                 sel.select(&row.unwrap_unchecked())
                     .enumerate()
                     .for_each(|(i, field)| {
-                        stats
-                            .get_unchecked_mut(i)
-                            .add(field, *INFER_DATE_FLAGS.get_unchecked().get_unchecked(i));
+                        stats.get_unchecked_mut(i).add(
+                            field,
+                            *infer_date_flags.get_unchecked(i),
+                            self.flag_infer_boolean,
+                        );
                     });
             }
         }
@@ -715,7 +734,7 @@ impl Args {
             repeat(Stats::new(WhichStats {
                 include_nulls: self.flag_nulls,
                 sum:           !self.flag_typesonly,
-                range:         !self.flag_typesonly,
+                range:         !self.flag_typesonly || self.flag_infer_boolean,
                 dist:          !self.flag_typesonly,
                 cardinality:   self.flag_everything || self.flag_cardinality,
                 median:        !self.flag_everything && self.flag_median && !self.flag_quartiles,
@@ -967,12 +986,14 @@ impl Stats {
     }
 
     #[inline]
-    fn add(&mut self, sample: &[u8], infer_dates: bool) {
+    fn add(&mut self, sample: &[u8], infer_dates: bool, infer_boolean: bool) {
         let (sample_type, timestamp_val) = FieldType::from_sample(infer_dates, sample, self.typ);
         self.typ.merge(sample_type);
 
-        // we're inferring typesonly, don't add samples to compute statistics
-        if self.which.typesonly {
+        // we're inferring --typesonly, so don't add samples to compute statistics
+        // unless we need to --infer-boolean. In which case, we need --cardinality
+        // and --range, so we need to add samples.
+        if self.which.typesonly && !infer_boolean {
             return;
         }
 
@@ -1060,8 +1081,9 @@ impl Stats {
 
     #[allow(clippy::wrong_self_convention)]
     pub fn to_record(&mut self, round_places: u32) -> csv::StringRecord {
-        // we're doing typesonly
-        if self.which.typesonly {
+        let infer_boolean = INFER_BOOLEAN.load(Ordering::Relaxed);
+        // we're doing typesonly and not inferring boolean, just return the type
+        if self.which.typesonly && !infer_boolean {
             return csv::StringRecord::from(vec![self.typ.to_string()]);
         }
 
@@ -1071,8 +1093,116 @@ impl Stats {
         let mut pieces = Vec::with_capacity(30);
         let empty = String::new;
 
+        // mode/modes & cardinality
+        // we do this first because we need to know the cardinality to --infer-boolean
+        // should that be enabled
+        let mut cardinality: usize = 0_usize;
+        let mut mc_pieces = Vec::with_capacity(7);
+        match self.modes.as_mut() {
+            None => {
+                if self.which.cardinality {
+                    mc_pieces.push(empty());
+                }
+                if self.which.mode {
+                    mc_pieces.extend_from_slice(&[empty(), empty(), empty(), empty()]);
+                }
+            }
+            Some(ref mut v) => {
+                if self.which.cardinality {
+                    cardinality = v.cardinality();
+                    let mut buffer = itoa::Buffer::new();
+                    mc_pieces.push(buffer.format(cardinality).to_owned());
+                }
+                if self.which.mode {
+                    // mode/s
+                    let (modes_result, modes_count, mode_occurrences) = v.modes();
+                    let modes_list = modes_result
+                        .iter()
+                        .map(|c| String::from_utf8_lossy(c))
+                        .join(",");
+                    mc_pieces.push(modes_list);
+                    mc_pieces.push(modes_count.to_string());
+                    mc_pieces.push(mode_occurrences.to_string());
+
+                    // antimode/s
+                    if mode_occurrences == 0 {
+                        // all the values are unique
+                        // so instead of returning everything, just say *ALL
+                        mc_pieces.push("*ALL".to_string());
+                        mc_pieces.push("0".to_string());
+                        mc_pieces.push("1".to_string());
+                    } else {
+                        let (antimodes_result, antimodes_count, antimode_occurrences) =
+                            v.antimodes();
+                        let mut antimodes_list = String::new();
+
+                        // We only store the first 10 antimodes
+                        // so if antimodes_count > 10, add the "*PREVIEW: " prefix
+                        if antimodes_count > 10 {
+                            antimodes_list.push_str("*PREVIEW: ");
+                        }
+
+                        let antimodes_vals = &antimodes_result
+                            .iter()
+                            .map(|c| String::from_utf8_lossy(c))
+                            .join(",");
+                        if antimodes_vals.starts_with(',') {
+                            antimodes_list.push_str("NULL");
+                        }
+                        antimodes_list.push_str(antimodes_vals);
+
+                        // and truncate at 100 characters with an ellipsis
+                        if antimodes_list.len() > 100 {
+                            util::utf8_truncate(&mut antimodes_list, 101);
+                            antimodes_list.push_str("...");
+                        }
+
+                        mc_pieces.push(antimodes_list);
+                        mc_pieces.push(antimodes_count.to_string());
+                        mc_pieces.push(antimode_occurrences.to_string());
+                    }
+                }
+            }
+        }
+
+        // min/max/range
+        // we also do this before --infer-boolean because we need to know the min/max values
+        // to determine if the range is equal to the supported boolean ranges (0/1, f/t, n/y)
+        let mut minmax_range_pieces = Vec::with_capacity(3);
+        let mut minval_lower: char = '\0';
+        let mut maxval_lower: char = '\0';
+        if let Some(mm) = self
+            .minmax
+            .as_ref()
+            .and_then(|mm| mm.show(typ, round_places))
+        {
+            // get first character of min/max values
+            minval_lower = mm.0.chars().next().unwrap_or_default().to_ascii_lowercase();
+            maxval_lower = mm.1.chars().next().unwrap_or_default().to_ascii_lowercase();
+            minmax_range_pieces.extend_from_slice(&[mm.0, mm.1, mm.2]);
+        } else {
+            minmax_range_pieces.extend_from_slice(&[empty(), empty(), empty()]);
+        }
+
         // type
-        pieces.push(typ.to_string());
+        if cardinality == 2 && infer_boolean {
+            // if cardinality is 2, it's a boolean if its values' first character are 0/1, f/t, n/y
+            if (minval_lower == '0' && maxval_lower == '1')
+                || (minval_lower == 'f' && maxval_lower == 't')
+                || (minval_lower == 'n' && maxval_lower == 'y')
+            {
+                pieces.push("Boolean".to_string());
+            } else {
+                pieces.push(typ.to_string());
+            }
+        } else {
+            pieces.push(typ.to_string());
+        }
+
+        // we're doing --typesonly with --infer-boolean
+        if self.which.typesonly && infer_boolean {
+            return csv::StringRecord::from(pieces);
+        }
 
         // sum
         if let Some(sum) = self.sum.as_ref().and_then(|sum| sum.show(typ)) {
@@ -1090,15 +1220,8 @@ impl Stats {
         }
 
         // min/max/range
-        if let Some(mm) = self
-            .minmax
-            .as_ref()
-            .and_then(|mm| mm.show(typ, round_places))
-        {
-            pieces.extend_from_slice(&[mm.0, mm.1, mm.2]);
-        } else {
-            pieces.extend_from_slice(&[empty(), empty(), empty()]);
-        }
+        // actually append it here - to preserve legacy ordering of columns
+        pieces.extend_from_slice(&minmax_range_pieces);
 
         // min/max length
         if typ == FieldType::TDate || typ == FieldType::TDateTime {
@@ -1274,72 +1397,10 @@ impl Stats {
             }
         }
 
-        // mode/modes & cardinality
-        match self.modes.as_mut() {
-            None => {
-                if self.which.cardinality {
-                    pieces.push(empty());
-                }
-                if self.which.mode {
-                    pieces.extend_from_slice(&[empty(), empty(), empty(), empty()]);
-                }
-            }
-            Some(ref mut v) => {
-                if self.which.cardinality {
-                    let mut buffer = itoa::Buffer::new();
-                    pieces.push(buffer.format(v.cardinality()).to_owned());
-                }
-                if self.which.mode {
-                    // mode/s
-                    let (modes_result, modes_count, mode_occurrences) = v.modes();
-                    let modes_list = modes_result
-                        .iter()
-                        .map(|c| String::from_utf8_lossy(c))
-                        .join(",");
-                    pieces.push(modes_list);
-                    pieces.push(modes_count.to_string());
-                    pieces.push(mode_occurrences.to_string());
+        // mode/modes/antimodes & cardinality
+        // append it here to preserve legacy ordering of columns
+        pieces.extend_from_slice(&mc_pieces);
 
-                    // antimode/s
-                    if mode_occurrences == 0 {
-                        // all the values are unique
-                        // so instead of returning everything, just say *ALL
-                        pieces.push("*ALL".to_string());
-                        pieces.push("0".to_string());
-                        pieces.push("1".to_string());
-                    } else {
-                        let (antimodes_result, antimodes_count, antimode_occurrences) =
-                            v.antimodes();
-                        let mut antimodes_list = String::new();
-
-                        // We only store the first 10 antimodes
-                        // so if antimodes_count > 10, add the "*PREVIEW: " prefix
-                        if antimodes_count > 10 {
-                            antimodes_list.push_str("*PREVIEW: ");
-                        }
-
-                        let antimodes_vals = &antimodes_result
-                            .iter()
-                            .map(|c| String::from_utf8_lossy(c))
-                            .join(",");
-                        if antimodes_vals.starts_with(',') {
-                            antimodes_list.push_str("NULL");
-                        }
-                        antimodes_list.push_str(antimodes_vals);
-
-                        // and truncate at 100 characters with an ellipsis
-                        if antimodes_list.len() > 100 {
-                            util::utf8_truncate(&mut antimodes_list, 101);
-                            antimodes_list.push_str("...");
-                        }
-
-                        pieces.push(antimodes_list);
-                        pieces.push(antimodes_count.to_string());
-                        pieces.push(antimode_occurrences.to_string());
-                    }
-                }
-            }
-        }
         csv::StringRecord::from(pieces)
     }
 }

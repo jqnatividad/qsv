@@ -419,6 +419,7 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
         flag_select:          crate::select::SelectColumns::parse("").unwrap(),
         flag_everything:      false,
         flag_typesonly:       false,
+        flag_infer_boolean:   false,
         flag_mode:            false,
         flag_cardinality:     true,
         flag_median:          false,

@@ -1,0 +1,31 @@
+field,type,sum,min,max,range,min_length,max_length,mean,stddev,variance,nullcount,sparsity,cardinality
+case_enquiry_id,Integer,1010041354742,101004113298,101004155594,42296,12,12,101004135474.2,14747.2697,217481962.3498,0,0,10
+open_dt,String,,2022-01-01 00:16:00,2022-01-31 11:46:00,,19,19,,,,0,0,10
+target_dt,String,,2022-01-11 08:30:00,2022-05-20 13:03:21,,0,19,,,,4,0.4,6
+closed_dt,String,,2022-01-09 06:43:06,2022-01-20 08:45:12,,0,19,,,,5,0.5,6
+ontime,String,,ONTIME,OVERDUE,,6,7,,,,0,0,2
+case_status,String,,Closed,Open,,4,6,,,,0,0,2
+case_status_boolean,Boolean,,False,True,,4,5,,,,0,0,2
+closure_reason,String,, ,Case Closed. Closed date : Wed Jan 19 11:42:16 EST 2022 Resolved Removed df  ,,1,82,,,,0,0,6
+case_title,String,,BTDT: Complaint,Sidewalk Cover / Manhole,,13,57,,,,0,0,8
+subject,String,,Boston Police Department,Public Works Department,,21,31,,,,0,0,5
+reason,String,,Administrative & General Requests,Street Cleaning,,7,33,,,,0,0,7
+type,String,,CE Collection,Unsatisfactory Utilities - Electrical  Plumbing,,13,47,,,,0,0,8
+queue,String,,BTDT_Parking Enforcement,PWDx_Snow Cases,,15,46,,,,0,0,7
+department,String,,BTDT,PWDx,,3,4,,,,0,0,5
+submittedphoto,NULL,,,,,0,0,,,,10,1,1
+closedphoto,NULL,,,,,0,0,,,,10,1,1
+location,String,, ,850 South St  Roslindale  MA  02131,,1,40,,,,0,0,10
+fire_district,String,, ,9,,1,1,,,,0,0,4
+pwd_district,String,, ,1C,,1,2,,,,0,0,6
+city_council_district,String,, ,8,,1,1,,,,0,0,6
+police_district,String,, ,E5,,1,3,,,,0,0,6
+neighborhood,String,, ,South End,,1,13,,,,0,0,8
+neighborhood_services_district,String,, ,6,,1,2,,,,0,0,7
+ward,String,, ,Ward 9,,1,7,,,,0,0,8
+precinct,String,, ,2004,,1,4,,,,0,0,9
+location_street_name,String,,12 Derne St,850 South St,,0,20,,,,1,0.1,10
+location_zipcode,String,,02113,02131,,0,5,,,,1,0.1,8
+latitude,Float,423.4656,42.2884,42.3735,0.0851,7,7,42.3466,0.0252,0.0006,0,0,9
+longitude,Float,-710.782,-71.133,-71.0566,0.0764,6,8,-71.0782,0.0246,0.0006,0,0,10
+source,String,,City Worker App,Constituent Call,,15,16,,,,0,0,2
