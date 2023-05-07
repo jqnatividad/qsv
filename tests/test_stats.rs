@@ -789,6 +789,51 @@ fn stats_typesonly_with_dates() {
 }
 
 #[test]
+fn stats_infer_boolean_1_0() {
+    let wrk = Workdir::new("stats_infer_boolean_1_0");
+    let test_file = wrk.load_test_file("boston311-10-boolean-1or0.csv");
+
+    let mut cmd = wrk.command("stats");
+    cmd.arg("--infer-boolean").arg(test_file);
+
+    let got: String = wrk.stdout(&mut cmd);
+
+    let expected = wrk.load_test_resource("boston311-10-boolean-1or0-stats.csv");
+
+    assert_eq!(dos2unix(&got), dos2unix(&expected).trim_end());
+}
+
+#[test]
+fn stats_infer_boolean_t_f() {
+    let wrk = Workdir::new("stats_infer_boolean_t_f");
+    let test_file = wrk.load_test_file("boston311-10-boolean-tf.csv");
+
+    let mut cmd = wrk.command("stats");
+    cmd.arg("--infer-boolean").arg(test_file);
+
+    let got: String = wrk.stdout(&mut cmd);
+
+    let expected = wrk.load_test_resource("boston311-10-boolean-tf-stats.csv");
+
+    assert_eq!(dos2unix(&got), dos2unix(&expected).trim_end());
+}
+
+#[test]
+fn stats_typesonly_infer_boolean_t_f() {
+    let wrk = Workdir::new("stats_typesonly_infer_boolean_t_f");
+    let test_file = wrk.load_test_file("boston311-10-boolean-tf.csv");
+
+    let mut cmd = wrk.command("stats");
+    cmd.arg("--typesonly").arg("--infer-boolean").arg(test_file);
+
+    let got: String = wrk.stdout(&mut cmd);
+
+    let expected = wrk.load_test_resource("boston311-10-typesonly-boolean-tf-stats.csv");
+
+    assert_eq!(dos2unix(&got), dos2unix(&expected).trim_end());
+}
+
+#[test]
 fn stats_everything_utf8_japanese_issue817() {
     let wrk = Workdir::new("stats_everything_utf8_japanese");
     let test_file = wrk.load_test_file("utf8-japanesedata.csv");
