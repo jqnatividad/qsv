@@ -116,7 +116,7 @@ jsonschema = { version = "0.17", features = [
     "resolve-http",
 ], default-features = false }
 jsonxf = { version = "1", optional = true }
-jql-runner = { version = "6.0.6", default-features = false, optional = true }
+jql-runner = { version = "6.0.7", default-features = false, optional = true }
 log = "0.4"
 mimalloc = { version = "0.1", default-features = false, optional = true }
 mlua = { version = "0.9.0-beta.2", features = [
