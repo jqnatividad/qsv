@@ -50,6 +50,8 @@ sniff options:
     --user-agent <agent>     Specify a custom user agent to use when sniffing a CSV on a URL.
                              Try to follow the syntax here -
                              https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
+    --stats-types            Use the same data type names as `stats`.
+                             (Unsigned, Signed => Integer, Text => String, everything else the same)
 
 Common options:
     -h, --help               Display this message
@@ -99,6 +101,7 @@ struct Args {
     flag_progressbar:    bool,
     flag_timeout:        u16,
     flag_user_agent:     Option<String>,
+    flag_stats_types:    bool,
 }
 
 #[derive(Serialize, Deserialize, Default, Debug)]
@@ -119,6 +122,7 @@ struct SniffStruct {
     num_records:     usize,
     avg_record_len:  usize,
     num_fields:      usize,
+    stats_types:     bool,
     fields:          Vec<String>,
     types:           Vec<String>,
 }
@@ -189,16 +193,25 @@ impl fmt::Display for SniffStruct {
             self.avg_record_len.separate_with_commas()
         )?;
         writeln!(f, "Num Fields: {}", self.num_fields.separate_with_commas())?;
+        writeln!(f, "Stats Types: {}", self.stats_types)?;
         writeln!(f, "Fields:")?;
 
         let mut tabwtr = TabWriter::new(vec![]);
 
         for (i, ty) in self.types.iter().enumerate() {
+            let data_type = if self.stats_types {
+                match ty.as_str() {
+                    "Unsigned" | "Signed" => "Integer",
+                    "Text" => "String",
+                    _ => ty,
+                }
+            } else {
+                ty
+            };
+
             writeln!(
                 &mut tabwtr,
-                "\t{}:\t{}\t{}",
-                i,
-                ty,
+                "\t{i}:\t{data_type}\t{}",
                 self.fields.get(i).unwrap_or(&String::new())
             )
             .unwrap_or_default();
@@ -810,6 +823,7 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
                 num_fields: metadata.num_fields,
                 fields: sniffedfields,
                 types: sniffedtypes,
+                stats_types: args.flag_stats_types,
             };
         }
         Err(e) => {

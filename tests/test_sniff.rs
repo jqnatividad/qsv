@@ -39,10 +39,45 @@ Estimated: false
 Num Records: 2
 Avg Record Len (bytes): 6
 Num Fields: 3
+Stats Types: false
 Fields:
     0:  Text      h1
     1:  Unsigned  h2
     2:  Text      h3"#,
+    );
+
+    assert!(dos2unix(&got).trim_end().ends_with(expected_end.trim_end()));
+}
+
+#[test]
+fn sniff_stats_types() {
+    let wrk = Workdir::new("sniff_stats_types");
+    wrk.create_with_delim("in.CSV", data(), b',');
+
+    let mut cmd = wrk.command("sniff");
+    cmd.arg("--stats-types").arg("in.CSV");
+
+    let got: String = wrk.stdout(&mut cmd);
+
+    let expected_end = dos2unix(
+        r#"Delimiter: ,
+Header Row: true
+Preamble Rows: 0
+Quote Char: none
+Flexible: false
+Is UTF8: true
+Retrieved Size (bytes): 27
+File Size (bytes): 27
+Sampled Records: 2
+Estimated: false
+Num Records: 2
+Avg Record Len (bytes): 6
+Num Fields: 3
+Stats Types: true
+Fields:
+    0:  String   h1
+    1:  Integer  h2
+    2:  String   h3"#,
     );
 
     assert!(dos2unix(&got).trim_end().ends_with(expected_end.trim_end()));
@@ -62,6 +97,7 @@ Estimated: false
 Num Records: 100
 Avg Record Len (bytes): 444
 Num Fields: 29
+Stats Types: false
 Fields:
     0:   Unsigned  case_enquiry_id
     1:   DateTime  open_dt
@@ -110,6 +146,7 @@ Estimated: false
 Num Records: 100
 Avg Record Len (bytes): 444
 Num Fields: 29
+Stats Types: false
 Fields:
     0:   Unsigned  case_enquiry_id
     1:   DateTime  open_dt
@@ -160,6 +197,7 @@ Estimated: false
 Num Records: 100
 Avg Record Len (bytes): 444
 Num Fields: 29
+Stats Types: false
 Fields:
     0:   Unsigned  case_enquiry_id
     1:   DateTime  open_dt
@@ -217,6 +255,7 @@ Estimated: false
 Num Records: 2
 Avg Record Len (bytes): 6
 Num Fields: 3
+Stats Types: false
 Fields:
     0:  Text      h1
     1:  Unsigned  h2
@@ -273,7 +312,7 @@ fn sniff_json() {
     cmd.arg("--json").arg(test_file);
 
     let got: String = wrk.stdout(&mut cmd);
-    let expected_end: &str = r#"ampled_records":3,"estimated":false,"num_records":3,"avg_record_len":10,"num_fields":4,"fields":["h1","h2","h3","h4"],"types":["Text","Unsigned","Text","Float"]}"#;
+    let expected_end: &str = r#"ampled_records":3,"estimated":false,"num_records":3,"avg_record_len":10,"num_fields":4,"stats_types":false,"fields":["h1","h2","h3","h4"],"types":["Text","Unsigned","Text","Float"]}"#;
 
     assert!(got.ends_with(expected_end));
 }
@@ -288,7 +327,7 @@ fn sniff_flexible_json() {
 
     let got: String = wrk.stdout(&mut cmd);
 
-    let expected_end = r#"sampled_records":5,"estimated":false,"num_records":5,"avg_record_len":8,"num_fields":4,"fields":["h1","h2","h3","h4"],"types":["Text","Unsigned","Text","Float"]}"#;
+    let expected_end = r#"sampled_records":5,"estimated":false,"num_records":5,"avg_record_len":8,"num_fields":4,"stats_types":false,"fields":["h1","h2","h3","h4"],"types":["Text","Unsigned","Text","Float"]}"#;
 
     assert!(got.ends_with(expected_end));
 }
@@ -309,6 +348,7 @@ fn sniff_pretty_json() {
   "num_records": 3,
   "avg_record_len": 10,
   "num_fields": 4,
+  "stats_types": false,
   "fields": [
     "h1",
     "h2",
@@ -345,6 +385,7 @@ fn sniff_sample() {
   "num_records": 15,
   "avg_record_len": 555,
   "num_fields": 32,
+  "stats_types": false,
   "fields": [
     "ExtractDate",
     "OrganisationURI",
@@ -433,6 +474,7 @@ Estimated: false
 Num Records: 100
 Avg Record Len (bytes): 444
 Num Fields: 29
+Stats Types: false
 Fields:
     0:   Unsigned  case_enquiry_id
     1:   DateTime  open_dt
