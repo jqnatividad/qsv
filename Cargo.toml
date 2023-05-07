@@ -138,7 +138,7 @@ qsv-dateparser = "0.8"
 qsv_docopt = "1.2"
 qsv-stats = "0.9"
 qsv_currency = { version = "0.6", optional = true }
-qsv-sniffer = { version = "0.8", default-features = false, features = [
+qsv-sniffer = { version = "0.9", default-features = false, features = [
     "runtime-dispatch-simd",
 ] }
 rand = "0.8"
