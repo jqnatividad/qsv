@@ -168,7 +168,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         // check the first domain value, if its a string
                         // get the first character of val1 lowercase
                         if let Some(str_val) = vals[0].as_str() {
-                            first_lower_char(str_val)
+                            boolcheck_first_lower_char(str_val)
                         } else if let Some(int_val) = vals[0].as_u64() {
                             // else, its an integer (as we only do enum constraints
                             // for string and integers), and see if its 1 or 0
@@ -185,7 +185,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     let val2 = if vals[1].is_null() {
                         '_'
                     } else if let Some(str_val) = vals[1].as_str() {
-                        first_lower_char(str_val)
+                        boolcheck_first_lower_char(str_val)
                     } else if let Some(int_val) = vals[1].as_u64() {
                         match int_val {
                             1 => '1',
@@ -263,7 +263,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     JsonlType::Null => "null",
                     JsonlType::Integer | JsonlType::Number => field,
                     JsonlType::Boolean => {
-                        if let 't' | 'y' | '1' = first_lower_char(field) {
+                        if let 't' | 'y' | '1' = boolcheck_first_lower_char(field) {
                             "true"
                         } else {
                             "false"
@@ -291,6 +291,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 }
 
 #[inline]
-fn first_lower_char(field_str: &str) -> char {
-    field_str.chars().next().unwrap_or('_').to_ascii_lowercase()
+fn boolcheck_first_lower_char(field_str: &str) -> char {
+    let first_char = field_str.chars().nth(0).unwrap_or('_').to_ascii_lowercase();
+    let second_char = field_str.chars().nth(1).unwrap_or('_').to_ascii_lowercase();
+
+    // screen for false positive matches for boolean fields
+    // e.g. 100 and 04 are not boolean, even though the first char is
+    // 1 and 0 respectively
+    if first_char == '1' && second_char != '_' {
+        'f'
+    } else if first_char == '0' && second_char != '_' {
+        'f'
+    } else {
+        first_char
+    }
 }

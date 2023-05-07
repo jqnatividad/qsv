@@ -126,6 +126,30 @@ fn tojsonl_boolean_1or0() {
 
 #[test]
 #[serial]
+fn tojsonl_boolean_1or0_false_positive_handling() {
+    let wrk = Workdir::new("tojsonl");
+    wrk.create(
+        "in.csv",
+        vec![
+            svec!["col1", "col2"],
+            svec!["15", "Mark"],
+            svec!["02", "John"],
+            svec!["02", "Bob"],
+        ],
+    );
+
+    let mut cmd = wrk.command("tojsonl");
+    cmd.arg("in.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = r#"{"col1":"15","col2":"Mark"}
+{"col1":"02","col2":"John"}
+{"col1":"02","col2":"Bob"}"#;
+    assert_eq!(got, expected);
+}
+
+#[test]
+#[serial]
 fn tojsonl_not_boolean_case_sensitive() {
     let wrk = Workdir::new("tojsonl");
     wrk.create(
