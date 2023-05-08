@@ -18,6 +18,9 @@ jobs:
     - uses: actions/setup-python@v4.6.0
       with:
         python-version: '3.11'
+    - name: Install libmagic
+      run: |
+        sudo apt-get install libmagic1 libmagic-dev
     - name: Update Rust Beta
       run: |
         rustup update beta
