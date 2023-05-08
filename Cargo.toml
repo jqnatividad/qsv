@@ -195,7 +195,7 @@ simdutf8 = "0.1"
 simdutf8 = { version = "0.1", features = ["aarch64_neon"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
-magic = "0.13"
+magic = { version = "0.13", optional = true }
 
 [dev-dependencies]
 actix-governor = "0.4"
