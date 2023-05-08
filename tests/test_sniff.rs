@@ -84,52 +84,55 @@ Fields:
 }
 
 #[test]
-fn sniff_url() {
-    let wrk = Workdir::new("sniff_url");
+fn sniff_url_notcsv() {
+    let wrk = Workdir::new("sniff_url_notcsv");
 
     let mut cmd = wrk.command("sniff");
-    cmd.arg("https://github.com/jqnatividad/qsv/raw/master/resources/test/boston311-100.csv");
+    cmd.arg("https://github.com/jqnatividad/qsv/raw/master/resources/test/excel-xls.xls");
 
-    let got: String = wrk.stdout(&mut cmd);
+    let got_error = wrk.output_stderr(&mut cmd);
 
-    let expected_end = r#"Sampled Records: 100
-Estimated: false
-Num Records: 100
-Avg Record Len (bytes): 444
-Num Fields: 29
-Stats Types: false
-Fields:
-    0:   Unsigned  case_enquiry_id
-    1:   DateTime  open_dt
-    2:   DateTime  target_dt
-    3:   DateTime  closed_dt
-    4:   Text      ontime
-    5:   Text      case_status
-    6:   Text      closure_reason
-    7:   Text      case_title
-    8:   Text      subject
-    9:   Text      reason
-    10:  Text      type
-    11:  Text      queue
-    12:  Text      department
-    13:  Text      submittedphoto
-    14:  NULL      closedphoto
-    15:  Text      location
-    16:  Unsigned  fire_district
-    17:  Text      pwd_district
-    18:  Unsigned  city_council_district
-    19:  Text      police_district
-    20:  Text      neighborhood
-    21:  Unsigned  neighborhood_services_district
-    22:  Text      ward
-    23:  Unsigned  precinct
-    24:  Text      location_street_name
-    25:  Unsigned  location_zipcode
-    26:  Float     latitude
-    27:  Float     longitude
-    28:  Text      source"#;
+    let expected;
+    #[cfg(target_os = "linux")]
+    {
+        expected = "File is not a CSV file. Detected mime type: application/octet-stream";
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        expected = "File is not a CSV file.";
+    }
 
-    assert!(dos2unix(&got).trim_end().ends_with(expected_end.trim_end()));
+    assert_eq!(
+        dos2unix(&got_error).trim_end(),
+        dos2unix(expected).trim_end()
+    );
+}
+
+#[test]
+fn sniff_notcsv() {
+    let wrk = Workdir::new("sniff_notcsv");
+
+    let test_file = wrk.load_test_file("excel-xls.xls");
+
+    let mut cmd = wrk.command("sniff");
+    cmd.arg(test_file);
+
+    let got_error = wrk.output_stderr(&mut cmd);
+
+    let expected;
+    #[cfg(target_os = "linux")]
+    {
+        expected = "File is not a CSV file. Detected mime type: application/vnd.ms-excel";
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        expected = "File is not a CSV file.";
+    }
+
+    assert_eq!(
+        dos2unix(&got_error).trim_end(),
+        dos2unix(expected).trim_end()
+    );
 }
 
 #[test]
