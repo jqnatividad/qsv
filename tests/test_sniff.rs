@@ -78,7 +78,7 @@ fn sniff_url_notcsv() {
     let mut cmd = wrk.command("sniff");
     cmd.arg("https://github.com/jqnatividad/qsv/raw/master/resources/test/excel-xls.xls");
 
-    #[cfg(target_os = "linux")]
+    #[cfg(all(target_os = "linux", feature = "magic"))]
     {
         let got_error = wrk.output_stderr(&mut cmd);
 
@@ -88,7 +88,7 @@ fn sniff_url_notcsv() {
             dos2unix(expected).trim_end()
         );
     }
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(not(feature = "magic"))]
     {
         wrk.assert_err(&mut cmd);
     }
@@ -106,11 +106,11 @@ fn sniff_notcsv() {
     let got_error = wrk.output_stderr(&mut cmd);
 
     let expected;
-    #[cfg(target_os = "linux")]
+    #[cfg(all(target_os = "linux", feature = "magic"))]
     {
         expected = "File is not a CSV file. Detected mime type: application/vnd.ms-excel";
     }
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(not(feature = "magic"))]
     {
         expected = "File extension 'xls' is not supported";
     }
@@ -233,7 +233,7 @@ fn sniff_tab() {
 
     let expected_end;
 
-    #[cfg(target_os = "linux")]
+    #[cfg(all(target_os = "linux", feature = "magic"))]
     {
         expected_end = r#"Delimiter: tab
 Header Row: true
@@ -255,7 +255,7 @@ Fields:
     1:  Unsigned  h2
     2:  Text      h3"#;
     }
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(not(feature = "magic"))]
     {
         expected_end = r#"Delimiter: tab
 Header Row: true

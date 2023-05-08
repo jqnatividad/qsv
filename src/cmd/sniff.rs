@@ -118,7 +118,7 @@ struct SniffStruct {
     quote_char:      String,
     flexible:        bool,
     is_utf8:         bool,
-    #[cfg(target_os = "linux")]
+    #[cfg(all(target_os = "linux", feature = "magic"))]
     detected_mime:   String,
     retrieved_size:  usize,
     file_size:       usize,
@@ -171,7 +171,7 @@ impl fmt::Display for SniffStruct {
         writeln!(f, "Quote Char: {}", self.quote_char)?;
         writeln!(f, "Flexible: {}", self.flexible)?;
         writeln!(f, "Is UTF8: {}", self.is_utf8)?;
-        #[cfg(target_os = "linux")]
+        #[cfg(all(target_os = "linux", feature = "magic"))]
         writeln!(f, "Detected Mime Type: {}", self.detected_mime)?;
         writeln!(
             f,
@@ -525,7 +525,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                         }
                         // on linux, we don't need to check the extension
                         // because we use magic to get the file type
-                        #[cfg(not(target_os = "linux"))]
+                        #[cfg(not(feature = "magic"))]
                         match lower_ext.as_str() {
                             "csv" | "tsv" | "txt" | "tab" => {}
                             ext if ext.ends_with("_decompressed") => {}
@@ -540,9 +540,9 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                     None => {
                         // on linux, we log a warning and continue if no
                         // extension is found. On other platforms, we fail
-                        #[cfg(not(target_os = "linux"))]
+                        #[cfg(not(feature = "magic"))]
                         return fail_clierror!("File extension not found");
-                        #[cfg(target_os = "linux")]
+                        #[cfg(all(target_os = "linux", feature = "magic"))]
                         log::warn!("File extension not found");
                     }
                 }
@@ -668,9 +668,9 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
 
     // on linux, check what kind of file we have
     // if its NOT a CSV or a text file, we fail, showing the detected mime type
-    #[cfg(target_os = "linux")]
+    #[cfg(all(target_os = "linux", feature = "magic"))]
     let file_type = util::get_filetype(&sfile_info.file_to_sniff)?;
-    #[cfg(target_os = "linux")]
+    #[cfg(all(target_os = "linux", feature = "magic"))]
     if file_type != "application/csv" && !file_type.starts_with("text/") {
         cleanup_tempfile(sfile_info.tempfile_flag, tempfile_to_delete)?;
         if args.flag_json || args.flag_pretty_json {
@@ -834,7 +834,7 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
                 },
                 flexible: metadata.dialect.flexible,
                 is_utf8: metadata.dialect.is_utf8,
-                #[cfg(target_os = "linux")]
+                #[cfg(all(target_os = "linux", feature = "magic"))]
                 detected_mime: file_type,
                 retrieved_size: sfile_info.retrieved_size,
                 file_size: sfile_info.file_size, // sfile_info.file_size,
@@ -853,11 +853,11 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
             };
         }
         Err(e) => {
-            #[cfg(target_os = "linux")]
+            #[cfg(all(target_os = "linux", feature = "magic"))]
             {
                 sniffing_error = Some(format!("{e}. Detected mime type: {file_type}"));
             }
-            #[cfg(not(target_os = "linux"))]
+            #[cfg(not(feature = "magic"))]
             {
                 sniffing_error = Some(format!("{e}"));
             }
