@@ -375,15 +375,10 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                 let mut downloaded_lines = 0_usize;
                 #[allow(unused_assignments)]
                 let mut chunk = Bytes::new(); // amortize the allocation
-                let mut notutf8_flag = false;
 
                 // download chunks until we have the desired sample size
                 while let Some(item) = stream.next().await {
                     chunk = item.or(Err("Error while downloading file".to_string()))?;
-                    // check if chunk is utf8
-                    if simdutf8::basic::from_utf8(&chunk).is_err() {
-                        notutf8_flag = true;
-                    }
 
                     file.write_all(&chunk)
                         .map_err(|_| "Error while writing to file".to_string())?;
@@ -441,12 +436,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                     wtr_file_path =
                         util::decompress_snappy_file(&file.path().to_path_buf(), tmpdir)?;
                 } else {
-                    // we downloaded a non-snappy file. First, check if it's utf8/text file.
-                    if notutf8_flag {
-                        return fail_clierror!("File is not UTF8-encoded nor a text/CSV file");
-                    }
-
-                    // It's utf8-encoded/text file. Rewrite it so we only have the exact
+                    // we downloaded a non-snappy file. Rewrite it so we only have the exact
                     // sample size and truncate potentially incomplete lines. We streamed the
                     // download and the downloaded file may be more than the sample size, and the
                     // final line may be incomplete.
@@ -524,7 +514,11 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                                 .to_os_string()
                                 .into_string()
                                 .unwrap();
+                            log::info!("Decompressed {lower_ext} file to {path}");
                         }
+                        // on linux, we don't need to check the extension
+                        // because we use magic to get the file type
+                        #[cfg(not(target_os = "linux"))]
                         match lower_ext.as_str() {
                             "csv" | "tsv" | "txt" | "tab" => {}
                             ext if ext.ends_with("_decompressed") => {}
@@ -537,12 +531,13 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                         }
                     }
                     None => {
+                        // on linux, we log a warning and continue if no
+                        // extension is found. On other platforms, we fail
+                        #[cfg(not(target_os = "linux"))]
                         return fail_clierror!("File extension not found");
+                        #[cfg(target_os = "linux")]
+                        log::warn!("File extension not found");
                     }
-                }
-
-                if !util::isutf8_file(&pathbuf)? {
-                    return fail_clierror!("File is not UTF8-encoded nor a text/CSV file");
                 }
 
                 let metadata = fs::metadata(&path)
@@ -663,6 +658,28 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
     let future = get_file_to_sniff(&args, &tmpdir);
     let sfile_info = block_on(future)?;
     let tempfile_to_delete = sfile_info.file_to_sniff.clone();
+
+    // on linux, check what kind of file we have
+    // if its NOT a CSV or a text file, we fail, showing the detected mime type
+    #[cfg(target_os = "linux")]
+    let file_type = util::get_filetype(&sfile_info.file_to_sniff)?;
+    #[cfg(target_os = "linux")]
+    if file_type != "application/csv" && !file_type.starts_with("text/") {
+        cleanup_tempfile(sfile_info.tempfile_flag, tempfile_to_delete)?;
+        if args.flag_json || args.flag_pretty_json {
+            let json_result = json!({
+                "errors": [{
+                    "title": "sniff error",
+                    "detail": format!("File is not a CSV file. Detected mime type: {file_type}"),
+                }]
+            });
+            if args.flag_pretty_json {
+                return fail_clierror!("{}", serde_json::to_string_pretty(&json_result).unwrap());
+            }
+            return fail_clierror!("{json_result}");
+        }
+        return fail_clierror!("File is not a CSV file. Detected mime type: {file_type}");
+    }
 
     let conf = Config::new(&Some(sfile_info.file_to_sniff.clone()))
         .flexible(true)
@@ -827,7 +844,14 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
             };
         }
         Err(e) => {
-            sniffing_error = Some(e.to_string());
+            #[cfg(target_os = "linux")]
+            {
+                sniffing_error = Some(format!("{e}. Detected mime type: {file_type}"));
+            }
+            #[cfg(not(target_os = "linux"))]
+            {
+                sniffing_error = Some(format!("{e}"));
+            }
         }
     }
 

@@ -165,3 +165,10 @@ impl From<serde_json::Error> for CliError {
         CliError::Other(format!("JSON error: {err:?}"))
     }
 }
+
+#[cfg(target_os = "linux")]
+impl From<magic::MagicError> for CliError {
+    fn from(err: magic::MagicError) -> CliError {
+        CliError::Other(format!("magic error: {err:?}"))
+    }
+}

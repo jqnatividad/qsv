@@ -1630,6 +1630,17 @@ dependencies = [
 
 [[package]]
 name = "errno"
+version = "0.2.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f639046355ee4f37944e44f60642c6f3a7efa3cf6b78c78a0d989a8ce6c396a1"
+dependencies = [
+ "errno-dragonfly",
+ "libc",
+ "winapi",
+]
+
+[[package]]
+name = "errno"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4bcfec3a70f97c962c307b2d2c56e358cf1d00b558d74262b5f929ee8cc7e73a"
@@ -2666,6 +2677,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "magic"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "87142e3acb1f4daa62eaea96605421a534119d4777a9fb43fb2784798fd89665"
+dependencies = [
+ "bitflags 1.3.2",
+ "errno 0.2.8",
+ "libc",
+ "magic-sys",
+ "thiserror",
+]
+
+[[package]]
+name = "magic-sys"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eff86ae08895140d628119d407d568f3b657145ee8c265878064f717534bb3bc"
+dependencies = [
+ "libc",
+ "vcpkg",
+]
+
+[[package]]
 name = "maplit"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3666,6 +3700,7 @@ dependencies = [
  "jsonschema",
  "jsonxf",
  "log",
+ "magic",
  "mimalloc",
  "mlua",
  "newline-converter",
@@ -3733,9 +3768,9 @@ dependencies = [
 
 [[package]]
 name = "qsv-sniffer"
-version = "0.9.0"
+version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8219a2b20967eb87af389ad75b5a40207c3eb7e69a81ddbcef6f1a1a60d9f465"
+checksum = "48adc6866cb06705c32637557a1427b23f762a4efb32aa9b562085e3861cda80"
 dependencies = [
  "bitflags 2.2.1",
  "bytecount",
@@ -4173,7 +4208,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "acf8729d8542766f1b2cf77eb034d52f40d375bb8b615d0b147089946e16613d"
 dependencies = [
  "bitflags 1.3.2",
- "errno",
+ "errno 0.3.1",
  "io-lifetimes",
  "libc",
  "linux-raw-sys",
