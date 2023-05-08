@@ -126,6 +126,11 @@ jobs:
       run: |
         sudo apt-get install musl-tools musl-dev
         sudo ln -s /usr/bin/g++ /usr/bin/musl-g++        
+    - name: set MAGIC_STATIC false when cross-compiling
+      if: ${{ matrix.job.use-cross }}
+      env:
+        MAGIC_STATIC: false
+      uses: actions-rs/cargo@v1
     - name: Build qsv
       env:
         RUSTFLAGS: --emit=asm
