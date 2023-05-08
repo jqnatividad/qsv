@@ -1267,3 +1267,18 @@ pub fn isutf8_file(path: &Path) -> Result<bool, CliError> {
 
     Ok(simdutf8::basic::from_utf8(&buffer).is_ok())
 }
+
+/// find out what kind of file we have using magic
+/// by scanning the first 2k of a file
+#[cfg(target_os = "linux")]
+pub fn get_filetype(path: &str) -> Result<String, CliError> {
+    let file = std::fs::File::open(path)?;
+    let mut reader = BufReader::new(file);
+    let mut buffer = Vec::with_capacity(2048);
+    reader.read_to_end(&mut buffer)?;
+
+    let magic = magic::Cookie::open(magic::CookieFlags::MIME_TYPE)?;
+    let mime = magic.buffer(&buffer)?;
+
+    Ok(mime)
+}
