@@ -90,22 +90,22 @@ fn sniff_url_notcsv() {
     let mut cmd = wrk.command("sniff");
     cmd.arg("https://github.com/jqnatividad/qsv/raw/master/resources/test/excel-xls.xls");
 
-    let got_error = wrk.output_stderr(&mut cmd);
-
-    let expected;
     #[cfg(target_os = "linux")]
     {
-        expected = "File is not a CSV file. Detected mime type: application/octet-stream";
+        let got_error = wrk.output_stderr(&mut cmd);
+
+        let expected = "File is not a CSV file. Detected mime type: application/octet-stream";
+        assert_eq!(
+            dos2unix(&got_error).trim_end(),
+            dos2unix(expected).trim_end()
+        );
     }
     #[cfg(not(target_os = "linux"))]
     {
-        expected = "File is not a CSV file.";
+        wrk.assert_err(&mut cmd);
     }
 
-    assert_eq!(
-        dos2unix(&got_error).trim_end(),
-        dos2unix(expected).trim_end()
-    );
+
 }
 
 #[test]
@@ -126,7 +126,7 @@ fn sniff_notcsv() {
     }
     #[cfg(not(target_os = "linux"))]
     {
-        expected = "File is not a CSV file.";
+        expected = "File extension 'xls' is not supported";
     }
 
     assert_eq!(
