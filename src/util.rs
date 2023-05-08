@@ -1269,7 +1269,7 @@ pub fn isutf8_file(path: &Path) -> Result<bool, CliError> {
 }
 
 /// find out what kind of file we have using magic
-#[cfg(target_os = "linux")]
+#[cfg(all(target_os = "linux", feature = "magic"))]
 pub fn get_filetype(path: &str) -> Result<String, CliError> {
     // We just want the mime type
     let cookie = magic::Cookie::open(magic::CookieFlags::MIME_TYPE)?;
