@@ -525,6 +525,9 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                                 .into_string()
                                 .unwrap();
                         }
+                        // on linux, we don't need to check the extension
+                        // because we use magic to get the file type
+                        #[cfg(not(target_os = "linux"))]
                         match lower_ext.as_str() {
                             "csv" | "tsv" | "txt" | "tab" => {}
                             ext if ext.ends_with("_decompressed") => {}
@@ -537,7 +540,12 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                         }
                     }
                     None => {
+                        // on linux, we log a warning and continue if no
+                        // extension is found. On other platforms, we fail
+                        #[cfg(not(target_os = "linux"))]
                         return fail_clierror!("File extension not found");
+                        #[cfg(target_os = "linux")]
+                        log::warn!("File extension not found");
                     }
                 }
 
@@ -663,6 +671,25 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
     let future = get_file_to_sniff(&args, &tmpdir);
     let sfile_info = block_on(future)?;
     let tempfile_to_delete = sfile_info.file_to_sniff.clone();
+
+    // on linux, check what kind of file we have
+    // if its not a CSV/TSV file, we fail, showing the detected mime type
+    #[cfg(target_family = "linux")]
+    let file_type = util::get_filetype(&sfile_info.file_to_sniff)?;
+    #[cfg(target_family = "linux")]
+    if file_type != "text/csv" {
+        cleanup_tempfile(sfile_info.tempfile_flag, tempfile_to_delete)?;
+        if args.flag_json || args.flag_pretty_json {
+            let json_result = json!({
+                "errors": [{
+                    "title": "sniff error",
+                    "detail": "File is not a text/CSV file. Detected mime type: {file_type}",
+                }]
+            });
+            return fail_clierror!("{json_result}");
+        }
+        return fail_clierror!("File is not a text/CSV file. Detected mime type: {file_type}");
+    }
 
     let conf = Config::new(&Some(sfile_info.file_to_sniff.clone()))
         .flexible(true)
