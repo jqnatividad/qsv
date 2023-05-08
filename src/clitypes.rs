@@ -166,7 +166,7 @@ impl From<serde_json::Error> for CliError {
     }
 }
 
-#[cfg(target_family = "linux")]
+#[cfg(target_os = "linux")]
 impl From<magic::MagicError> for CliError {
     fn from(err: magic::MagicError) -> CliError {
         CliError::Other(format!("magic error: {err:?}"))
