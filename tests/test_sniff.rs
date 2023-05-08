@@ -104,8 +104,6 @@ fn sniff_url_notcsv() {
     {
         wrk.assert_err(&mut cmd);
     }
-
-
 }
 
 #[test]
