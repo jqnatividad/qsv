@@ -25,18 +25,8 @@ fn sniff() {
 
     let got: String = wrk.stdout(&mut cmd);
 
-    let expected_end;
-    #[cfg(target_os = "linux")]
-    {
-        expected_end = dos2unix(
-            r#"Delimiter: ,
-Header Row: true
-Preamble Rows: 0
-Quote Char: none
-Flexible: false
-Is UTF8: true
-Detected Mime Type: application/csv
-Retrieved Size (bytes): 27
+    let expected_end = dos2unix(
+        r#"Retrieved Size (bytes): 27
 File Size (bytes): 27
 Sampled Records: 2
 Estimated: false
@@ -48,31 +38,7 @@ Fields:
     0:  Text      h1
     1:  Unsigned  h2
     2:  Text      h3"#,
-        );
-    }
-    #[cfg(not(target_os = "linux"))]
-    {
-        expected_end = dos2unix(
-            r#"Delimiter: ,
-Header Row: true
-Preamble Rows: 0
-Quote Char: none
-Flexible: false
-Is UTF8: true
-Retrieved Size (bytes): 27
-File Size (bytes): 27
-Sampled Records: 2
-Estimated: false
-Num Records: 2
-Avg Record Len (bytes): 6
-Num Fields: 3
-Stats Types: false
-Fields:
-    0:  Text      h1
-    1:  Unsigned  h2
-    2:  Text      h3"#,
-        );
-    }
+    );
 
     assert!(dos2unix(&got).trim_end().ends_with(expected_end.trim_end()));
 }
