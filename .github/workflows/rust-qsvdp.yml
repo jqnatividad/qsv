@@ -30,4 +30,4 @@ jobs:
       with:
         key: qsvdp-cache
     - name: Run tests
-      run: cargo test --verbose --locked --features=datapusher_plus,luau
+      run: cargo test --verbose --locked --features=datapusher_plus,luau,magic
