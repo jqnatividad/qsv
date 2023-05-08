@@ -6,6 +6,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.102.0] - 2023-05-08
+A lot of work was done on `sniff` to make it not just a CSV dialect detector, but a general purpose file type detector leveraging :magic_wand: [magic](https://www.darwinsys.com/file/) :sparkles: - able to detect mime types even for files on URLs.  
+
+`sniff` can now also use the same data types as `stats` with the `--stats-types` option. This was primarily done to support metadata collection when registering CKAN resources not only during data entry, but also when checking resource links for bitrot, and when harvesting metadata from other systems, so `stats` & `sniff` can be used interchangeably based on the response time requirement and the data quality of the data source.
+
+For example, `sniff` can be used for quickly inferring metadata by just downloading a small sample from a very large data file DURING data entry (["Resource-first upload workflow"](https://github.com/dathere/datapusher-plus/blob/master/docs/RESOURCE_FIRST_WORKFLOW.md#Resource-first-Upload-Workflow)), with `stats` being used later on, when the data is actually being pushed to the Datastore with [Datapusher+](https://github.com/dathere/datapusher-plus#datapusher), when data type inferences need to be guaranteed, and the entire file will need to be scanned.
+
+### Added
+* `stats`: add `--infer-boolean` option https://github.com/jqnatividad/qsv/pull/967
+* `sniff`: add `--stats-types` option https://github.com/jqnatividad/qsv/pull/968
+* `sniff`: add magic mime-type detection on Linux https://github.com/jqnatividad/qsv/pull/970
+* `sniff`: add `--user-agent` option https://github.com/jqnatividad/qsv/commit/bd0bf788609c7dd5220cdab6061067170acf1ca2
+* `sniff`: add last_modified info https://github.com/jqnatividad/qsv/commit/ef68bff177ee7c9ce6bd45868488287c8114a91e
+
+### Changed
+* make `--envlist` option allocator-aware https://github.com/jqnatividad/qsv/commit/f3566dc0c4ab7c7236374cce936f5db7200e39de
+* Bump serde from 1.0.160 to 1.0.162 by @dependabot in https://github.com/jqnatividad/qsv/pull/962
+* Bump robinraju/release-downloader from 1.7 to 1.8 by @dependabot in https://github.com/jqnatividad/qsv/pull/960
+* Bump flexi_logger from 0.25.3 to 0.25.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/965
+* Bump sysinfo from 0.28.4 to 0.29.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/966
+* Bump jql-runner from 6.0.6 to 6.0.7 by @dependabot in https://github.com/jqnatividad/qsv/pull/969
+* Bump polars from 0.28.0 to 0.29.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/971
+* apply select clippy recommendations
+* cargo update bump indirect dependencies
+* change MSRV to 1.69.0
+* pin Rust nightly to 2023-05-07
+
+### Fixed
+* `sniff`: make sniff give more consistent results https://github.com/jqnatividad/qsv/pull/958. Fixes #956
+* Bump qsv-sniffer from 0.8.3 to 0.9.1. Replaced all assert with proper error-handling. https://github.com/jqnatividad/qsv/pull/961 https://github.com/jqnatividad/qsv/commit/a7c607a55be9bebca13148f5a0dddf1fea909df7 https://github.com/jqnatividad/qsv/commit/43d7eaf9201c72016682096e84400dba59b7cd95 
+* `sniff`: fixed rowcount calculation when sniffing a URL and the entire file was actually downloaded - https://github.com/jqnatividad/qsv/commit/ef68bff177ee7c9ce6bd45868488287c8114a91e
+
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.101.0...0.102.0
+
 ## [0.101.0] - 2023-05-01
 We're back to the future! The qsv release train is back on track, as we jump to 0.101.0 over the yanked
 0.100.0 release now that self-update logic has been fixed.
