@@ -115,6 +115,8 @@ struct SniffStruct {
     quote_char:      String,
     flexible:        bool,
     is_utf8:         bool,
+    #[cfg(target_os = "linux")]
+    detected_mime:   String,
     retrieved_size:  usize,
     file_size:       usize,
     sampled_records: usize,
@@ -166,6 +168,8 @@ impl fmt::Display for SniffStruct {
         writeln!(f, "Quote Char: {}", self.quote_char)?;
         writeln!(f, "Flexible: {}", self.flexible)?;
         writeln!(f, "Is UTF8: {}", self.is_utf8)?;
+        #[cfg(target_os = "linux")]
+        writeln!(f, "Detected Mime Type: {}", self.detected_mime)?;
         writeln!(
             f,
             "Retrieved Size (bytes): {}",
@@ -827,6 +831,8 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
                 },
                 flexible: metadata.dialect.flexible,
                 is_utf8: metadata.dialect.is_utf8,
+                #[cfg(target_os = "linux")]
+                detected_mime: file_type,
                 retrieved_size: sfile_info.retrieved_size,
                 file_size: sfile_info.file_size, // sfile_info.file_size,
                 sampled_records: if sampled_records > num_records {
