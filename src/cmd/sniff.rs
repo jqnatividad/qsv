@@ -12,6 +12,9 @@ to adjust).
 If you want more robust, guaranteed schemata, use the "schema" or "stats" commands
 instead as they scan the entire file.
 
+On Linux, the command will also return the detected mime type. It uses the "libmagic"
+library to do this. See https://github.com/robo9k/rust-magic for more info.
+
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_sniff.rs.
 
 Usage:
