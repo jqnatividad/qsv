@@ -292,15 +292,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
 #[inline]
 fn boolcheck_first_lower_char(field_str: &str) -> char {
+    #[allow(clippy::iter_nth_zero)]
     let first_char = field_str.chars().nth(0).unwrap_or('_').to_ascii_lowercase();
     let second_char = field_str.chars().nth(1).unwrap_or('_').to_ascii_lowercase();
 
     // screen for false positive matches for boolean fields
     // e.g. 100 and 04 are not boolean, even though the first char is
     // 1 and 0 respectively
-    if first_char == '1' && second_char != '_' {
-        'f'
-    } else if first_char == '0' && second_char != '_' {
+    if (first_char == '1' || first_char == '0') && second_char != '_' {
         'f'
     } else {
         first_char
