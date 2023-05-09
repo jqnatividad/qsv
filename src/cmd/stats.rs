@@ -32,7 +32,8 @@ Date range, stddev, MAD & IQR are returned in days, not timestamp milliseconds. 
 is currently not computed as the current streaming variance algorithm is not well suited to 
 unix epoch timestamp values.
 
-Each column's data type is also inferred (NULL, Integer, String, Float, Date & DateTime).
+Each column's data type is also inferred (NULL, Integer, String, Float, Date, DateTime and
+Boolean with --infer-boolean option).
 Unlike the sniff command, stats' data type inferences are GUARANTEED, as the entire file
 is scanned, and not just sampled.
 
@@ -43,7 +44,7 @@ with each format, having several variants.
 The date formats recognized and its sub-variants along with examples can be found at 
 https://github.com/jqnatividad/belt/tree/main/dateparser#accepted-date-formats.
 
-Computing statistics on a large file can be made much faster if you create an index for it
+Computing statistics on a large file can be made MUCH faster if you create an index for it
 first with 'qsv index' to enable multithreading.
 
 This command caches the results in <FILESTEM>.stats.csv and <FILESTEM>.stats.csv.bin
@@ -71,8 +72,8 @@ stats options:
                               Note that if you want to infer dates, you'll still need to use
                               the --infer-dates and --dates-whitelist options.
     --infer-boolean           Infer boolean data type. This automatically enables
-                              the --cardinality option, and when a column's cardinality
-                              is 2, and the values' first character are 0/1, t/f & y/n
+                              the --cardinality option. When a column's cardinality is 2,
+                              and the 2 values' first characters are 0/1, t/f & y/n
                               case-insensitive, the data type is inferred as boolean.
     --mode                    Show the mode/s & antimode/s. Multimodal-aware.
                               This requires loading all CSV data in memory.
@@ -153,7 +154,7 @@ quickly validate complex CSVs (NYC's 311 data) at almost 300,000 records/sec.
 These "unsafe" calls primarily skip unneeded bounds checking.
 
 To safeguard against undefined behavior, `stats` is the most extensively tested command,
-with ~470 tests.
+with ~480 tests.
 */
 
 use std::{
