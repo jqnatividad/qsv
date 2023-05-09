@@ -37,7 +37,7 @@ jobs:
             target: x86_64-unknown-linux-gnu
             architecture: x86_64
             use-cross: false
-            addl-build-args: --features=apply,generate,luau,fetch,foreach,self_update,to
+            addl-build-args: --features=apply,generate,luau,fetch,foreach,self_update,to,magic
             default-features:
             addl-qsvdp-features: luau
           - os: ubuntu-22.04
@@ -46,7 +46,7 @@ jobs:
             architecture: x86_64
             musl-prep: true
             use-cross: false
-            addl-build-args: --features=apply,generate,fetch,foreach,self_update
+            addl-build-args: --features=apply,generate,fetch,foreach,self_update,magic
             default-features:
             addl-qsvdp-features:
           - os: ubuntu-22.04
