@@ -676,7 +676,7 @@ impl Args {
             pool.execute(move || {
                 unsafe {
                     send.send(stat.to_record(round_places, infer_boolean))
-                        .unwrap_unchecked()
+                        .unwrap_unchecked();
                 };
             });
         }
