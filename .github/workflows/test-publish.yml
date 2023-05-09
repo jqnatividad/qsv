@@ -19,8 +19,8 @@ jobs:
             target: x86_64-unknown-linux-gnu
             architecture: x86_64
             use-cross: false
-            addl-build-args: --features=apply,generate,luau,fetch,foreach,self_update,to,polars,jemallocator,magic
-            default-features: --no-default-features
+            addl-build-args:  --features=apply,generate,luau,fetch,foreach,self_update,to,magic
+            default-features:
             addl-qsvdp-features: luau
           - os: ubuntu-latest
             os-name: linux
