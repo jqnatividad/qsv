@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.102.1] - 2023-05-09
+0.102.1 is a small patch release to fix issues in publishing the pre-built binary variants with magic for `sniff` when cross-compiling.
+
+### Changed
+* `stats`: refine `--infer-boolean` option info & update test count https://github.com/jqnatividad/qsv/commit/de6390b21a21b67ae0dd3f3f6d0153f2c0736cff
+* `tojsonl`: refine boolcheck_first_lower_char() fn https://github.com/jqnatividad/qsv/commit/241115e4718c67cd8e701c435b91e02556875eac
+
+### Fixed
+* tweaked GitHub Actions publishing workflows to enable building magic-enabled `sniff` on Linux. Disabled magic when cross-compiling for non-x86_64 Linux targets.
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.102.0...0.102.1
+
 ## [0.102.0] - 2023-05-08
 A lot of work was done on `sniff` to make it not just a CSV dialect detector, but a general purpose file type detector leveraging :magic_wand: [magic](https://www.darwinsys.com/file/) :sparkles: - able to detect mime types even for files on URLs.  
 
