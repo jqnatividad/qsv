@@ -593,7 +593,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
             .or(Err("Cannot keep temporary file".to_string()))?;
 
         if !util::isutf8_file(&path)? {
-            return fail_clierror!("File is not UTF8-encoded nor a text/CSV file");
+            return fail_clierror!("stdin input is not UTF8-encoded");
         }
 
         let metadata = file
@@ -601,20 +601,8 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
             .map_err(|_| "Cannot get metadata for stdin file".to_string())?;
 
         let file_size = metadata.len() as usize;
-        let last_modified = match metadata.modified() {
-            Ok(time) => {
-                let timestamp = time
-                    .duration_since(SystemTime::UNIX_EPOCH)
-                    .unwrap()
-                    .as_secs();
-                let naive = chrono::NaiveDateTime::from_timestamp_opt(timestamp as i64, 0)
-                    .unwrap_or_default();
-                let datetime = chrono::DateTime::<chrono::Utc>::from_utc(naive, chrono::Utc);
-                // format the datetime to RFC3339
-                format!("{datetime}", datetime = datetime.format("%+"))
-            }
-            Err(_) => "N/A".to_string(),
-        };
+        // set last_modified to now in RFC3339 format
+        let last_modified = chrono::Utc::now().format("%+").to_string();
         let path_string = path
             .into_os_string()
             .into_string()
@@ -672,6 +660,8 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
     #[cfg(all(target_os = "linux", feature = "magic"))]
     let file_type = util::get_filetype(&sfile_info.file_to_sniff)?;
     #[cfg(all(target_os = "linux", feature = "magic"))]
+    // we also accept text/* files, as sniff may still be able to suss out
+    // if the file is a CSV, even if its not using a CSV extension
     if file_type != "application/csv" && !file_type.starts_with("text/") {
         cleanup_tempfile(sfile_info.tempfile_flag, tempfile_to_delete)?;
         if args.flag_json || args.flag_pretty_json {
@@ -679,6 +669,9 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
                 "errors": [{
                     "title": "sniff error",
                     "detail": format!("File is not a CSV file. Detected mime type: {file_type}"),
+                    "meta": {
+                        "detected_mime_type": file_type
+                    }
                 }]
             });
             if args.flag_pretty_json {
