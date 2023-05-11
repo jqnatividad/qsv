@@ -570,27 +570,22 @@ fn to_json_instance(
     // iterate over each CSV field and convert to JSON type
     for (i, header) in headers.iter().enumerate() {
         // convert csv header to string. It's the key in the JSON object
-        let key_string = match from_utf8(header) {
-            Ok(s) => s.to_string(),
-            Err(_) => {
-                let s = String::from_utf8_lossy(header);
-                return fail!(format!("CSV header is not valid UTF-8: {s}"));
-            }
+        let key_string = if let Ok(s) = from_utf8(header) {
+            s.to_string()
+        } else {
+            let s = String::from_utf8_lossy(header);
+            return fail!(format!("CSV header is not valid UTF-8: {s}"));
         };
 
         // convert csv value to string; no trimming reqd as it's done on the record level beforehand
-        let value = match record.get(i) {
-            Some(v) => v,
-            None => {
-                return fail!("CSV record is missing value for header '{key_string}' at index {i}");
-            }
+        let Some(value) = record.get(i) else {
+            return fail!("CSV record is missing value for header '{key_string}' at index {i}");
         };
-        let value_string = match from_utf8(value) {
-            Ok(s) => s.to_string(),
-            Err(_) => {
-                let s = String::from_utf8_lossy(&value);
-                return fail!(format!("CSV value is not valid UTF-8: {s}"));
-            }
+        let value_string = if let Ok(s) = from_utf8(value) {
+            s.to_string()
+        } else {
+            let s = String::from_utf8_lossy(value);
+            return fail!(format!("CSV value is not valid UTF-8: {s}"));
         };
 
         // if value_string is empty, then just put an empty JSON String
