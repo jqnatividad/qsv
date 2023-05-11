@@ -558,8 +558,8 @@ fn to_json_instance(
 ) -> Result<Value, String> {
     // make sure schema has expected structure
     let Some(schema_properties) = schema.get("properties") else {
-                     return fail!("JSON Schema missing 'properties' object");
-                 };
+        return fail!("JSON Schema missing 'properties' object");
+    };
 
     // map holds individual CSV fields converted as serde_json::Value
     // we use with_capacity to minimize allocs
@@ -569,21 +569,38 @@ fn to_json_instance(
 
     // iterate over each CSV field and convert to JSON type
     for (i, header) in headers.iter().enumerate() {
-        // convert csv header to string
-        let header_string = from_utf8(header).unwrap().to_string();
+        // convert csv header to string. It's the key in the JSON object
+        let key_string = match from_utf8(header) {
+            Ok(s) => s.to_string(),
+            Err(_) => {
+                let s = String::from_utf8_lossy(header);
+                return fail!(format!("CSV header is not valid UTF-8: {s}"));
+            }
+        };
+
         // convert csv value to string; no trimming reqd as it's done on the record level beforehand
-        let value_string = from_utf8(&record[i]).unwrap().to_string();
+        let value = match record.get(i) {
+            Some(v) => v,
+            None => {
+                return fail!("CSV record is missing value for header '{key_string}' at index {i}");
+            }
+        };
+        let value_string = match from_utf8(value) {
+            Ok(s) => s.to_string(),
+            Err(_) => {
+                let s = String::from_utf8_lossy(&value);
+                return fail!(format!("CSV value is not valid UTF-8: {s}"));
+            }
+        };
 
         // if value_string is empty, then just put an empty JSON String
         if value_string.is_empty() {
-            json_object_map.insert(header_string, Value::Null);
+            json_object_map.insert(key_string, Value::Null);
             continue;
         }
 
         // get json type from schema; defaults to STRING if not specified
-        let field_def: &Value = schema_properties
-            .get(&header_string)
-            .unwrap_or(&Value::Null);
+        let field_def: &Value = schema_properties.get(&key_string).unwrap_or(&Value::Null);
 
         let field_type_def: &Value = field_def.get("type").unwrap_or(&Value::Null);
 
@@ -617,45 +634,45 @@ fn to_json_instance(
 
         // dbg!(i, &header_string, &value_string, &json_type);
 
-        // matching against a u8, rather than an str should a tad faster
+        // matching against a u8, rather than an str should be a tad faster
         match json_type {
             b's' => {
                 // string
-                json_object_map.insert(header_string, Value::String(value_string));
+                json_object_map.insert(key_string, Value::String(value_string));
             }
             b'n' => {
                 // number
                 if let Ok(float) = value_string.parse::<f64>() {
                     json_object_map.insert(
-                        header_string,
+                        key_string,
                         Value::Number(Number::from_f64(float).expect("not a valid f64 float")),
                     );
                 } else {
                     return fail_format!(
-                        "Can't cast into Float. header: {header_string}, value: {value_string}, \
-                         json type: number"
+                        "Can't cast into Float. key: {key_string}, value: {value_string}, json \
+                         type: number"
                     );
                 }
             }
             b'i' => {
                 // integer
                 if let Ok(int) = value_string.parse::<i64>() {
-                    json_object_map.insert(header_string, Value::Number(Number::from(int)));
+                    json_object_map.insert(key_string, Value::Number(Number::from(int)));
                 } else {
                     return fail_format!(
-                        "Can't cast into Integer. header: {header_string}, value: {value_string}, \
-                         json type: integer"
+                        "Can't cast into Integer. key: {key_string}, value: {value_string}, json \
+                         type: integer"
                     );
                 }
             }
             b'b' => {
                 // boolean
                 if let Ok(boolean) = value_string.parse::<bool>() {
-                    json_object_map.insert(header_string, Value::Bool(boolean));
+                    json_object_map.insert(key_string, Value::Bool(boolean));
                 } else {
                     return fail_format!(
-                        "Can't cast into Boolean. header: {header_string}, value: {value_string}, \
-                         json type: boolean"
+                        "Can't cast into Boolean. key: {key_string}, value: {value_string}, json \
+                         type: boolean"
                     );
                 }
             }
@@ -776,7 +793,7 @@ mod tests_for_csv_to_json_conversion {
         assert!(&result.is_err());
         let error = result.err().unwrap();
         assert_eq!(
-            "Can't cast into Integer. header: C, value: 3.0e8, json type: integer",
+            "Can't cast into Integer. key: C, value: 3.0e8, json type: integer",
             error
         );
     }
