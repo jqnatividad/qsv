@@ -12,8 +12,9 @@ to adjust).
 If you want more robust, guaranteed schemata, use the "schema" or "stats" commands
 instead as they scan the entire file.
 
-On Linux, the command will also return the detected mime type. It uses the "libmagic"
-library to do this. See https://github.com/robo9k/rust-magic for more info.
+On Linux, `sniff` also acts as a general file type detector and returns the detected
+mime type if the file is not a CSV. It uses the "libmagic" library to do this.
+See https://github.com/robo9k/rust-magic for more info.
 
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_sniff.rs.
 
@@ -22,7 +23,7 @@ Usage:
     qsv sniff --help
 
 sniff arguments:
-    <input>                  The CSV to sniff. This can be a local file, stdin 
+    <input>                  The file to sniff. This can be a local file, stdin 
                              or a URL (http and https schemes supported).
 
                              Note that when input is a URL, sniff will automatically
