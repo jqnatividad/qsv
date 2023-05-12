@@ -135,6 +135,10 @@ pub fn version() -> String {
     enabled_features.push_str("foreach;");
     #[cfg(all(feature = "generate", not(feature = "lite")))]
     enabled_features.push_str("generate;");
+    #[cfg(all(target_os = "linux", feature = "magic"))]
+    {
+        enabled_features.push_str(format!("magic-{};", magic::version()).as_str());
+    }
 
     #[cfg(all(feature = "luau", not(feature = "lite")))]
     {
