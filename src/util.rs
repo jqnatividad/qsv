@@ -35,6 +35,7 @@ const DEFAULT_FREEMEMORY_HEADROOM_PCT: u8 = 20;
 
 static ROW_COUNT: once_cell::sync::OnceCell<u64> = OnceCell::new();
 
+#[cfg(all(target_os = "linux", feature = "magic"))]
 pub const FIRST_CHUNK_BUFFER_SIZE: usize = 1024;
 
 pub type ByteString = Vec<u8>;
