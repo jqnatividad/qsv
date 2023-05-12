@@ -76,13 +76,14 @@ fn sniff_url_notcsv() {
     let wrk = Workdir::new("sniff_url_notcsv");
 
     let mut cmd = wrk.command("sniff");
-    cmd.arg("https://github.com/jqnatividad/qsv/raw/master/resources/test/excel-xls.xls");
+    cmd.arg("https://github.com/jqnatividad/qsv/raw/master/resources/test/excel-xlsx.xlsx");
 
     #[cfg(all(target_os = "linux", feature = "magic"))]
     {
         let got_error = wrk.output_stderr(&mut cmd);
 
-        let expected = "File is not a CSV file. Detected mime type: application/octet-stream";
+        let expected = "File is not a CSV file. Detected mime type: \
+                        application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
         assert_eq!(
             dos2unix(&got_error).trim_end(),
             dos2unix(expected).trim_end()
