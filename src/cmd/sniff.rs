@@ -384,7 +384,11 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                 #[allow(unused_assignments)]
                 let mut chunk = Bytes::new(); // amortize the allocation
 
+                // on linux, we can short-circuit downloading by
+                // checking the file type from the first chunk
+                #[allow(unused_mut)]
                 let mut shortcircuit_flag = false;
+                #[allow(unused_mut)]
                 let mut firstchunk = Bytes::new();
 
                 // download chunks until we have the desired sample size
