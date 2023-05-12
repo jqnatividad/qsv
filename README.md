@@ -314,6 +314,7 @@ For details, see [Environment Variables](docs/ENVIRONMENT_VARIABLES.md) and the 
 * `foreach` - enable `foreach` command (not valid for Windows).
 * `generate` - enable `generate` command.
 * `luau` - enable `luau` command. Embeds a [Luau](https://luau-lang.org) interpreter into qsv. [Luau has type-checking, sandboxing, additional language operators, increased performance & other improvements](https://luau-lang.org/2022/11/04/luau-origins-and-evolution.html) over Lua.
+* `magic` - enable mime-type detection for the `sniff` command using the [`libmagic`](https://man7.org/linux/man-pages/man3/libmagic.3.html) library. Currently only works on Linux.
 * `polars` - enables all [Polars](https://pola.rs)-powered commands (currently, only `joinp`). Note that Polars is a very powerful library, but it has a lot of dependencies that drastically increases both compile time and binary size.
 * `python` - enable `py` command. Note that qsv will look for the shared library for the Python version (Python 3.7 & above supported) it was compiled against & will abort on startup if the library is not found, even if you're not using the `py` command. Check [Python](#python) section for more info.
 * `to` - enables the `to` command. Note that enabling this feature will also noticeably increase both compile time and binary size.
