@@ -384,6 +384,13 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                 #[allow(unused_assignments)]
                 let mut chunk = Bytes::new(); // amortize the allocation
 
+                // on linux, we can short-circuit downloading by
+                // checking the file type from the first chunk
+                #[allow(unused_mut)]
+                let mut shortcircuit_flag = false;
+                #[allow(unused_mut)]
+                let mut firstchunk = Bytes::new();
+
                 // download chunks until we have the desired sample size
                 while let Some(item) = stream.next().await {
                     chunk = item.or(Err("Error while downloading file".to_string()))?;
@@ -391,6 +398,21 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                     file.write_all(&chunk)
                         .map_err(|_| "Error while writing to file".to_string())?;
                     let chunk_len = chunk.len();
+
+                    // on linux, we can short-circuit downloading
+                    // by checking the file type from the first chunk
+                    #[cfg(all(target_os = "linux", feature = "magic"))]
+                    if downloaded == 0 && !snappy_flag && chunk_len >= util::FIRST_CHUNK_BUFFER_SIZE
+                    {
+                        let mime = util::sniff_filetype_from_buffer(&chunk)?;
+                        if !mime.starts_with("text/") && mime != "application/csv" {
+                            shortcircuit_flag = true;
+                            downloaded = chunk_len;
+                            firstchunk = chunk.clone();
+                            break;
+                        }
+                    }
+
                     downloaded = min(downloaded + chunk_len, total_size);
                     if show_progress {
                         progress.inc(chunk_len as u64);
@@ -431,7 +453,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
 
                 // keep the temporary file around so we can sniff it later
                 // we'll delete it when we're done
-                let (_file, path) = wtr_file
+                let (mut tmp_file, path) = wtr_file
                     .keep()
                     .or(Err("Cannot keep temporary file".to_string()))?;
 
@@ -443,11 +465,19 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                     // before we can sniff it
                     wtr_file_path =
                         util::decompress_snappy_file(&file.path().to_path_buf(), tmpdir)?;
+                } else if shortcircuit_flag {
+                    // on linux, we can short-circuit downloading by checking the file type
+                    // from the first chunk. If the file is not a CSV file, we just write
+                    // the first chunk to a file and return
+                    wtr_file_path = path.display().to_string();
+                    tmp_file.write_all(&firstchunk)?;
+                    tmp_file.flush()?;
                 } else {
-                    // we downloaded a non-snappy file. Rewrite it so we only have the exact
-                    // sample size and truncate potentially incomplete lines. We streamed the
-                    // download and the downloaded file may be more than the sample size, and the
-                    // final line may be incomplete.
+                    // we downloaded a non-snappy file and it might be a CSV file.
+                    // Rewrite it so we only have the exact sample size and truncate potentially
+                    // incomplete lines. We do this coz we streamed the download and the downloaded
+                    // file may be more than the sample size, and the final line
+                    // may be incomplete.
                     wtr_file_path = path.display().to_string();
                     let mut wtr = Config::new(&Some(wtr_file_path.clone()))
                         .no_headers(false)

@@ -35,6 +35,9 @@ const DEFAULT_FREEMEMORY_HEADROOM_PCT: u8 = 20;
 
 static ROW_COUNT: once_cell::sync::OnceCell<u64> = OnceCell::new();
 
+#[cfg(all(target_os = "linux", feature = "magic"))]
+pub const FIRST_CHUNK_BUFFER_SIZE: usize = 1024;
+
 pub type ByteString = Vec<u8>;
 
 #[inline]
@@ -1278,6 +1281,24 @@ pub fn get_filetype(path: &str) -> Result<String, CliError> {
     cookie.load::<&str>(&[])?;
 
     let mime = cookie.file(path)?;
+
+    Ok(mime)
+}
+
+/// find out what kind of file we have using magic
+/// by sampling the FIRST_CHUNK_BUFFER_SIZE bytes of the file
+#[cfg(all(target_os = "linux", feature = "magic"))]
+pub fn sniff_filetype_from_buffer(in_buffer: &bytes::Bytes) -> Result<String, CliError> {
+    // We just want the mime type
+    let cookie = magic::Cookie::open(magic::CookieFlags::MIME_TYPE)?;
+
+    // Load libmagic's default database
+    cookie.load::<&str>(&[])?;
+
+    let mut buffer_wrk = bytes::BytesMut::with_capacity(FIRST_CHUNK_BUFFER_SIZE);
+    let buffer_len = std::cmp::min(in_buffer.len(), FIRST_CHUNK_BUFFER_SIZE);
+    buffer_wrk.extend_from_slice(&in_buffer[0..buffer_len]);
+    let mime = cookie.buffer(&buffer_wrk)?;
 
     Ok(mime)
 }
