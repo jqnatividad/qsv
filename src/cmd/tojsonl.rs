@@ -3,7 +3,7 @@ static USAGE: &str = r#"
 Smartly converts CSV to a newline-delimited JSON (JSONL/NDJSON).
 
 By scanning the CSV first, it "smartly" infers the appropriate JSON data type
-for each column.
+for each column (string, number, boolean, null).
 
 It will infer a column as boolean if it only has a domain of two values,
 and the first character of the values are one of the following case-insensitive
