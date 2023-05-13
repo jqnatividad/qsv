@@ -56,7 +56,7 @@ If stats have already been computed for the input file with similar arguments an
 hasn't changed, the stats will be loaded from the cache instead of recomputing it.
 
 For examples, see the "boston311" test files in https://github.com/jqnatividad/qsv/tree/master/resources/test
-and https://github.com/jqnatividad/qsv/blob/f7f9c4297fb3dea685b5d0f631932b6b2ca4a99a/tests/test_stats.rs#L544.
+and https://github.com/jqnatividad/qsv/blob/4529d51273218347fef6aca15ac24e22b85b2ec4/tests/test_stats.rs#L608.
 
 Usage:
     qsv stats [options] [<input>]
@@ -116,7 +116,8 @@ stats options:
                               [default: date,time,due,open,close,created]
     --prefer-dmy              Parse dates in dmy format. Otherwise, use mdy format.
                               Ignored if --infer-dates is false.
-    --force                   Force recomputing stats even if the cache exists.
+    --force                   Force recomputing stats even if valid precomputed stats
+                              cache exists.
     -j, --jobs <arg>          The number of jobs to run in parallel.
                               This works only when the given CSV has an index.
                               Note that a file handle is opened for each job.
@@ -137,6 +138,8 @@ Common options:
                            Must be a single character. (default: ,)
     --memcheck             Check if there is enough memory to load the entire
                            CSV into memory using CONSERVATIVE heuristics.
+                           This option is ignored when computing default, streaming
+                           statistics, as it is not needed.
 "#;
 
 /*
