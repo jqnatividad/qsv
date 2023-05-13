@@ -124,8 +124,8 @@ stats options:
                               When not set, the number of jobs is set to the
                               number of CPUs detected.
     --stats-binout <file>     Write the stats to <file> in binary format.
-                              This is used by other qsv commands (currently `schema` and
-                              `tojsonl`) to load the stats into memory without having to
+                              This is used internally by other qsv commands (currently `schema`
+                              and `tojsonl`) to load cached stats into memory without having to
                               process/parse the CSV again.
 
 Common options:
@@ -145,6 +145,7 @@ Common options:
 /*
 DEVELOPER NOTE: stats is heavily optimized and makes extensive use of "unsafe" calls
 (primarily to skip unneeded bounds checking).
+
 It is a central command, that is used by `schema`/`validate`, `tojsonl` and Datapusher+.
 
 It was the primary reason I created the qsv fork as I needed to do GUARANTEED data type
