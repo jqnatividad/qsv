@@ -1252,10 +1252,10 @@ impl Stats {
                     u32::max(round_places, DAY_DECIMAL_PLACES),
                 ));
                 // we don't know how to compute variance on timestamps
-                // it appears the current algorithm we use is not suited to the large timestamp
-                // values as the values we got during testing don't make sense, so
-                // leave it empty for now
-                // TODO: explore alternate algorithms for calculating variance
+                // it appears the current algorithm we're using is not well suited to large
+                // timestamp values as the variance we're getting during testing
+                // don't make sense, so leave it empty for now
+                // TODO: explore alternate algorithms for calculating variance for timestamps
                 // see https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
                 pieces.push(empty());
             }
