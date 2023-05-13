@@ -1120,17 +1120,21 @@ impl Stats {
                         .iter()
                         .map(|c| String::from_utf8_lossy(c))
                         .join(",");
-                    mc_pieces.push(modes_list);
-                    mc_pieces.push(modes_count.to_string());
-                    mc_pieces.push(mode_occurrences.to_string());
+                    mc_pieces.extend_from_slice(&[
+                        modes_list,
+                        modes_count.to_string(),
+                        mode_occurrences.to_string(),
+                    ]);
 
                     // antimode/s
                     if mode_occurrences == 0 {
                         // all the values are unique
                         // so instead of returning everything, just say *ALL
-                        mc_pieces.push("*ALL".to_string());
-                        mc_pieces.push("0".to_string());
-                        mc_pieces.push("1".to_string());
+                        mc_pieces.extend_from_slice(&[
+                            "*ALL".to_string(),
+                            "0".to_string(),
+                            "1".to_string(),
+                        ]);
                     } else {
                         let (antimodes_result, antimodes_count, antimode_occurrences) =
                             v.antimodes();
@@ -1157,9 +1161,11 @@ impl Stats {
                             antimodes_list.push_str("...");
                         }
 
-                        mc_pieces.push(antimodes_list);
-                        mc_pieces.push(antimodes_count.to_string());
-                        mc_pieces.push(antimode_occurrences.to_string());
+                        mc_pieces.extend_from_slice(&[
+                            antimodes_list,
+                            antimodes_count.to_string(),
+                            antimode_occurrences.to_string(),
+                        ]);
                     }
                 }
             }
@@ -1239,9 +1245,11 @@ impl Stats {
             pieces.extend_from_slice(&[empty(), empty(), empty()]);
         } else if let Some(ref v) = self.online {
             if self.typ == TFloat || self.typ == TInteger {
-                pieces.push(util::round_num(v.mean(), round_places));
-                pieces.push(util::round_num(v.stddev(), round_places));
-                pieces.push(util::round_num(v.variance(), round_places));
+                pieces.extend_from_slice(&[
+                    util::round_num(v.mean(), round_places),
+                    util::round_num(v.stddev(), round_places),
+                    util::round_num(v.variance(), round_places),
+                ]);
             } else {
                 pieces.push(timestamp_ms_to_rfc3339(v.mean() as i64, typ));
                 // instead of returning stdev in seconds, let's return it in
@@ -1367,31 +1375,31 @@ impl Stats {
                     // https://doc.rust-lang.org/reference/expressions/operator-expr.html#numeric-cast
                     // as values larger/smaller than what i64 can handle will automatically
                     // saturate to i64 max/min values.
-                    pieces.push(timestamp_ms_to_rfc3339(lof as i64, typ));
-                    pieces.push(timestamp_ms_to_rfc3339(lif as i64, typ));
-
-                    pieces.push(timestamp_ms_to_rfc3339(q1 as i64, typ));
-                    pieces.push(timestamp_ms_to_rfc3339(q2 as i64, typ)); // q2 = median
-                    pieces.push(timestamp_ms_to_rfc3339(q3 as i64, typ));
-                    // return iqr in days - there are 86,400,000 ms in a day
-                    pieces.push(util::round_num(
-                        (q3 - q1) / MS_IN_DAY,
-                        u32::max(round_places, DAY_DECIMAL_PLACES),
-                    ));
-
-                    pieces.push(timestamp_ms_to_rfc3339(uif as i64, typ));
-                    pieces.push(timestamp_ms_to_rfc3339(uof as i64, typ));
+                    pieces.extend_from_slice(&[
+                        timestamp_ms_to_rfc3339(lof as i64, typ),
+                        timestamp_ms_to_rfc3339(lif as i64, typ),
+                        timestamp_ms_to_rfc3339(q1 as i64, typ),
+                        timestamp_ms_to_rfc3339(q2 as i64, typ), // q2 = median
+                        timestamp_ms_to_rfc3339(q3 as i64, typ),
+                        // return iqr in days - there are 86,400,000 ms in a day
+                        util::round_num(
+                            (q3 - q1) / MS_IN_DAY,
+                            u32::max(round_places, DAY_DECIMAL_PLACES),
+                        ),
+                        timestamp_ms_to_rfc3339(uif as i64, typ),
+                        timestamp_ms_to_rfc3339(uof as i64, typ),
+                    ]);
                 } else {
-                    pieces.push(util::round_num(lof, round_places));
-                    pieces.push(util::round_num(lif, round_places));
-
-                    pieces.push(util::round_num(q1, round_places));
-                    pieces.push(util::round_num(q2, round_places)); // q2 = median
-                    pieces.push(util::round_num(q3, round_places));
-                    pieces.push(util::round_num(iqr, round_places));
-
-                    pieces.push(util::round_num(uif, round_places));
-                    pieces.push(util::round_num(uof, round_places));
+                    pieces.extend_from_slice(&[
+                        util::round_num(lof, round_places),
+                        util::round_num(lif, round_places),
+                        util::round_num(q1, round_places),
+                        util::round_num(q2, round_places), // q2 = median
+                        util::round_num(q3, round_places),
+                        util::round_num(iqr, round_places),
+                        util::round_num(uif, round_places),
+                        util::round_num(uof, round_places),
+                    ]);
                 }
                 pieces.push(util::round_num(skewness, round_places));
             }
