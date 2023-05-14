@@ -194,13 +194,13 @@ rustup update
 export RUSTFLAGS='-C target-cpu=native'
 
 # to build qsv on nightly with all features. The binary will be in the target/release-nightly folder.
-cargo build --profile release-nightly --bin qsv -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --features all_full,nightly --target x86_64-unknown-linux-gnu
+cargo build --profile release-nightly --bin qsv -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --features all_features.magic,nightly --target x86_64-unknown-linux-gnu
 
 # to build qsvlite
-cargo build --profile release-nightly --bin qsvlite -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --features lite,nightly --target x86_64-unknown-linux-gnu
+cargo build --profile release-nightly --bin qsvlite -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --features lite,magic,nightly --target x86_64-unknown-linux-gnu
 
 # to build qsvdp
-cargo build --profile release-nightly --bin qsvdp -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --features datapusher_plus,nightly --target x86_64-unknown-linux-gnu
+cargo build --profile release-nightly --bin qsvdp -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --features datapusher_plus,magic,nightly --target x86_64-unknown-linux-gnu
 ```
 
 With that said, there are times that Rust Nightly/Unstable does "break" qsv. That's why we include `qsv_rust_version_info.txt` in the 
