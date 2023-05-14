@@ -164,6 +164,8 @@ cargo build --release --locked -F lite
 cargo build --release --locked -F datapusher_plus,luau
 ```
 
+To build with Rust nightly, see [Nightly Release Builds](docs/PERFORMANCE.md#nightly-release-builds).
+
 ### Variants
 
 There are three binary variants of qsv:
