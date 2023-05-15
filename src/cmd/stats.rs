@@ -155,7 +155,7 @@ a JSONschema based on a CSV's summary statistics; and use the generated JSONsche
 quickly validate complex CSVs (NYC's 311 data) at almost 300,000 records/sec.
 
 To safeguard against undefined behavior, `stats` is the most extensively tested command,
-with ~483 tests.
+with ~484 tests.
 */
 
 use std::{
