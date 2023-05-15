@@ -240,6 +240,7 @@ struct StatsArgs {
     record_count:         u64,
     date_generated:       String,
     compute_duration_ms:  u64,
+    qsv_version:          String,
 }
 
 static INFER_DATE_FLAGS: once_cell::sync::OnceCell<Vec<bool>> = OnceCell::new();
@@ -305,6 +306,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         record_count:         0,
         date_generated:       String::new(),
         compute_duration_ms:  0,
+        qsv_version:          env!("CARGO_PKG_VERSION").to_string(),
     };
 
     // create a temporary file to store the <FILESTEM>.stats.csv file
@@ -422,7 +424,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             == current_stats_args.flag_dates_whitelist
                         && existing_stats_args_json.flag_delimiter
                             == current_stats_args.flag_delimiter
-                        && existing_stats_args_json.flag_nulls == current_stats_args.flag_nulls)
+                        && existing_stats_args_json.flag_nulls == current_stats_args.flag_nulls
+                        && existing_stats_args_json.qsv_version == current_stats_args.qsv_version)
             {
                 log::info!("{path_file_stem}.stats.csv already exists and is current, skipping...",);
                 compute_stats = false;
