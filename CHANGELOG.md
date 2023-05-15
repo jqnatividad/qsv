@@ -6,6 +6,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.103.0] - 2023-05-15
+
+### Added
+* `sniff`: On Linux, short-circuit sniffing a remote file when we already know its not a CSV https://github.com/jqnatividad/qsv/pull/976
+* `stats`: now computes variance for dates https://github.com/jqnatividad/qsv/commit/e3e678298de59f2485d5e70f622218d849a2e2c9
+* `stats`: now automatically invalidates cached stats across qsv releases https://github.com/jqnatividad/qsv/commit/6e929dd1feac692be3f7e1883ad88f99b3abc5b2
+* add magic version to --version option https://github.com/jqnatividad/qsv/commit/455c0f26e237c812bf9d88d6a7906e34c5a9cbeb
+* added CKAN-aware (![CKAN](https://github.com/jqnatividad/qsv/blob/master/docs/images/ckan.png?raw=true)) legend to List of Available Commands
+
+### Changed
+* `stats`: improve usage text
+* `stats`: use extend_from_slice for readability https://github.com/jqnatividad/qsv/commit/23275e2e8ef30bdc101293084bce71e651b3222a
+* `validate`: do not panic if the input is not UTF-8 https://github.com/jqnatividad/qsv/commit/532cd012de0866250be2dc19b6e02ffa27b3c9fb
+* `sniff`: simplify getting stdin last_modified property; return detected mime type in JSON error response https://github.com/jqnatividad/qsv/commit/01975912ae99fe0a7b38cf741f3dfbcf2b9dc486
+* `luau`: upadte embedded Luau from 0.573 to 0.576
+* Update nightly build instructions
+* Bump qsv-sniffer from 0.9.1 to 0.9.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/972
+* Bump tokio from 1.28.0 to 1.28.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/973
+* Bump serde from 1.0.162 to 1.0.163 by @dependabot in https://github.com/jqnatividad/qsv/pull/974
+* cargo update bump several indirect dependencies
+* pin Rust nightly to 2021-05-13
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.102.1...0.103.0
+
 ## [0.102.1] - 2023-05-09
 0.102.1 is a small patch release to fix issues in publishing the pre-built binary variants with magic for `sniff` when cross-compiling.
 
