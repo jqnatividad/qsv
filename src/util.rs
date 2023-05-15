@@ -145,11 +145,13 @@ pub fn version() -> String {
         let luau = mlua::Lua::new();
         match luau.load("return _VERSION").eval() {
             Ok(version_info) => {
-                if let mlua::Value::String(string_val) = version_info {
-                    enabled_features.push_str(&format!(
-                        "{};",
-                        string_val.to_str().unwrap_or("Luau - unknown version")
-                    ));
+                if let mlua::Value::String(luaustring_val) = version_info {
+                    let string_val = luaustring_val.to_str().unwrap_or("Luau - invalid version");
+                    if string_val == "Luau" {
+                        enabled_features.push_str("Luau - version not specified;");
+                    } else {
+                        enabled_features.push_str(&format!("{string_val};"));
+                    }
                 } else {
                     enabled_features.push_str("Luau - ?;");
                 }
