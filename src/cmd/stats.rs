@@ -28,9 +28,7 @@ to zero. The resulting frequency table will have all the antimode values.
 
 Summary statistics for dates are also computed when --infer-dates is enabled, with DateTime
 results in rfc3339 format and Date results in "yyyy-mm-dd" format in the UTC timezone.
-Date range, stddev, MAD & IQR are returned in days, not timestamp milliseconds. Date variance
-is currently not computed as the current streaming variance algorithm is not well suited to 
-unix epoch timestamp values.
+Date range, stddev, variance, MAD & IQR are returned in days, not timestamp milliseconds.
 
 Each column's data type is also inferred (NULL, Integer, String, Float, Date, DateTime and
 Boolean with --infer-boolean option).
@@ -1262,13 +1260,10 @@ impl Stats {
                     v.stddev() / MS_IN_DAY,
                     u32::max(round_places, DAY_DECIMAL_PLACES),
                 ));
-                // we don't know how to compute variance on timestamps
-                // it appears the current algorithm we're using is not well suited to large
-                // timestamp values as the variance we're getting during testing
-                // don't make sense, so leave it empty for now
-                // TODO: explore alternate algorithms for calculating variance for timestamps
-                // see https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
-                pieces.push(empty());
+                pieces.push(util::round_num(
+                    v.variance() / (MS_IN_DAY * MS_IN_DAY),
+                    u32::max(round_places, DAY_DECIMAL_PLACES),
+                ));
             }
         } else {
             pieces.extend_from_slice(&[empty(), empty(), empty()]);
