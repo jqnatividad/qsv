@@ -50,7 +50,7 @@ pub static DEFAULT_USER_AGENT: &str = concat!(
     "/",
     env!("CARGO_PKG_VERSION"),
     " (",
-    env!("TARGET"),
+    env!("CARGO_BUILD_TARGET"),
     "; https://github.com/jqnatividad/qsv)",
 );
 const TARGET: &str = match option_env!("TARGET") {
