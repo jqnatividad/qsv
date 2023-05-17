@@ -59,10 +59,11 @@ use serde::Deserialize;
 use crate::{
     config::{Config, Delimiter},
     select::{SelectColumns, Selection},
-    util, CliResult,
+    util,
+    util::ByteString,
+    CliResult,
 };
 
-type ByteString = Vec<u8>;
 type BoxedWriter = csv::Writer<Box<dyn io::Write + 'static>>;
 type BoxedReader = csv::Reader<Box<dyn io::Read + Send + 'static>>;
 

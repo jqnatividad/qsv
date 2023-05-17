@@ -60,7 +60,9 @@ use crate::{
     config::{Config, Delimiter},
     index::Indexed,
     select::{SelectColumns, Selection},
-    util, CliResult,
+    util,
+    util::ByteString,
+    CliResult,
 };
 
 #[derive(Clone, Deserialize)]
@@ -109,7 +111,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     Ok(())
 }
 
-type ByteString = Vec<u8>;
 type Headers = csv::ByteRecord;
 type FTable = Frequencies<Vec<u8>>;
 type FTables = Vec<Frequencies<Vec<u8>>>;

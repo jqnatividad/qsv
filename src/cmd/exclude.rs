@@ -49,10 +49,8 @@ use crate::{
     config::{Config, Delimiter},
     index::Indexed,
     select::{SelectColumns, Selection},
-    util, CliResult,
+    util, CliResult, util::ByteString
 };
-
-type ByteString = Vec<u8>;
 
 #[derive(Deserialize)]
 struct Args {
