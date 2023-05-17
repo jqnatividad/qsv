@@ -45,14 +45,13 @@ pub fn num_cpus() -> usize {
     num_cpus::get()
 }
 
-pub static DEFAULT_USER_AGENT: &str = concat!(
-    env!("CARGO_BIN_NAME"),
-    "/",
-    env!("CARGO_PKG_VERSION"),
-    " (",
-    env!("TARGET"),
-    "; https://github.com/jqnatividad/qsv)",
-);
+const CARGO_BIN_NAME: &str = env!("CARGO_BIN_NAME");
+const CARGO_PKG_VERSION: &str = env!("CARGO_PKG_VERSION");
+
+fn default_user_agent() -> String {
+    format!("{CARGO_BIN_NAME}/{CARGO_PKG_VERSION} ({TARGET}; https://github.com/jqnatividad/qsv)")
+}
+
 const TARGET: &str = match option_env!("TARGET") {
     Some(target) => target,
     None => "Unknown_target",
@@ -112,7 +111,7 @@ pub fn set_user_agent(user_agent: Option<String>) -> CliResult<String> {
 
     let ua = match user_agent {
         Some(ua_arg) => ua_arg,
-        None => env::var("QSV_USER_AGENT").unwrap_or_else(|_| DEFAULT_USER_AGENT.to_string()),
+        None => env::var("QSV_USER_AGENT").unwrap_or_else(|_| default_user_agent()),
     };
 
     match HeaderValue::from_str(ua.as_str()) {
@@ -879,7 +878,7 @@ fn send_hwsurvey(
         log::info!("Survey dry run. hw survey compiled successfully, but not sent.");
     } else {
         let client = match reqwest::blocking::Client::builder()
-            .user_agent(DEFAULT_USER_AGENT)
+            .user_agent(default_user_agent())
             .brotli(true)
             .gzip(true)
             .deflate(true)
