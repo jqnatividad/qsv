@@ -3742,14 +3742,15 @@ dependencies = [
 
 [[package]]
 name = "qsv-sniffer"
-version = "0.9.2"
+version = "0.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4a523ebdfc02057342ceee7d962623db1cf006ab2905c8cc3a2941a4942f6d5e"
+checksum = "8a3943925bff21e3b706b3a88f63bb8d06bc8d14d01a4116536d40d3fdc060e9"
 dependencies = [
  "bitflags 2.3.0",
  "bytecount",
  "csv",
  "csv-core",
+ "hashbrown 0.13.2",
  "memchr",
  "qsv-dateparser",
  "regex",
