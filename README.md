@@ -126,15 +126,15 @@ To install different [variants](#variants) and enable optional features, use car
 
 ```bash
 # to install qsv with all features enabled
-cargo install qsv --locked --features apply,generate,luau,fetch,foreach,python,to,self_update,feature_capable
+cargo install qsv --locked --bin qsv --features apply,generate,luau,fetch,foreach,python,to,self_update,feature_capable
 # or shorthand
-cargo install qsv --locked -F all_features
+cargo install qsv --locked --bin qsv -F all_features
 
 # or to install qsvlite
-cargo install qsv --locked -F lite
+cargo install qsv --locked --bin qsvlite -F lite
 
 # or to install qsvdp
-cargo install qsv --locked -F datapusher_plus,luau
+cargo install qsv --locked --bin qsvdp -F datapusher_plus,luau
 ```
 
 ### Option 4: Compile from Source
@@ -144,7 +144,7 @@ Compiling from source also works similarly[^1]:
 ```bash
 git clone https://github.com/jqnatividad/qsv.git
 cd qsv
-cargo build --release --locked --features all_features
+cargo build --release --locked --bin qsv --features all_features
 ```
 
 The compiled binary will end up in `./target/release/`.
@@ -153,15 +153,15 @@ To compile different [variants](#variants) and enable optional [features](#featu
 
 ```bash
 # to compile qsv with all features enabled
-cargo build --release --locked --features apply,generate,luau,fetch,foreach,python,to,self_update,feature_capable
+cargo build --release --locked --bin qsv --features apply,generate,luau,fetch,foreach,python,to,self_update,feature_capable
 # shorthand
-cargo build --release --locked -F all_features
+cargo build --release --locked --bin qsv -F all_features
 
 # for qsvlite
-cargo build --release --locked -F lite
+cargo build --release --locked --bin qsvlite -F lite
 
 # for qsvdp
-cargo build --release --locked -F datapusher_plus,luau
+cargo build --release --locked --bin qsvdp -F datapusher_plus,luau
 ```
 
 To build with Rust nightly, see [Nightly Release Builds](docs/PERFORMANCE.md#nightly-release-builds).
