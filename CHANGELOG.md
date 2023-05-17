@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.103.1] - 2023-05-17
+
+### Changed
+* Bump reqwest from 0.11.17 to 0.11.18 by @dependabot in https://github.com/jqnatividad/qsv/pull/978
+* cargo update bump indirect dependencies
+
+### Fixed
+* fix `cargo install` failing as it is trying to fetch cargo environment variables that are only set for `cargo build`, but not `cargo install` #977 
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.103.0...0.103.1
+
 ## [0.103.0] - 2023-05-15
 
 ### Added
