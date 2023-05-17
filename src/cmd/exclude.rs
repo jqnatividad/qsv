@@ -49,7 +49,9 @@ use crate::{
     config::{Config, Delimiter},
     index::Indexed,
     select::{SelectColumns, Selection},
-    util, CliResult, util::ByteString
+    util,
+    util::ByteString,
+    CliResult,
 };
 
 #[derive(Deserialize)]
