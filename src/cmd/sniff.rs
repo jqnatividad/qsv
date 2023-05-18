@@ -16,6 +16,12 @@ On Linux, `sniff` also acts as a general file type detector and returns the dete
 mime type if the file is not a CSV. It uses the "libmagic" library to do this.
 See https://github.com/robo9k/rust-magic for more info.
 
+On macOS and Windows however, `sniff` is only a CSV dialect detector and does not
+detect other file types. It can only sniff files with the "csv", "tsv", "tab" and
+"txt" extensions, and snappy compressed variants of these formats (e.g. "csv.sz",
+"tsv.sz", etc).
+extensions.
+
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_sniff.rs.
 
 Usage:
@@ -27,7 +33,7 @@ sniff arguments:
                              or a URL (http and https schemes supported).
 
                              Note that when input is a URL, sniff will automatically
-                             download the file to a temporary file and sniff it. It
+                             download the sample to a temporary file and sniff it. It
                              will create the file using csv::QuoteStyle::NonNumeric
                              so the sniffed schema may not be the same as the original.
                              This is done to increase the chances of sniffing the
