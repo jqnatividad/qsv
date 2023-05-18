@@ -19,8 +19,7 @@ See https://github.com/robo9k/rust-magic for more info.
 On macOS and Windows however, `sniff` is only a CSV dialect detector and does not
 detect other file types. It can only sniff files with the "csv", "tsv", "tab" and
 "txt" extensions, and snappy compressed variants of these formats (e.g. "csv.sz",
-"tsv.sz", etc).
-extensions.
+"tsv.sz", etc.) extensions.
 
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_sniff.rs.
 
