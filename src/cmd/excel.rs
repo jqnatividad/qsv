@@ -470,6 +470,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             parsed_range.start.0, parsed_range.start.1
         );
         info!("Range end: {} {}", parsed_range.end.0, parsed_range.end.1);
+        if parsed_range.start < range.start().unwrap_or((0, 0))
+            || parsed_range.end > range.end().unwrap_or((0, 0))
+        {
+            return fail_clierror!("Cannot retrieve range {requested_range}: larger than sheet");
+        }
         range = range.range(parsed_range.start, parsed_range.end);
     }
 

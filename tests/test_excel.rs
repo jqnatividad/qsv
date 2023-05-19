@@ -994,3 +994,22 @@ fn excel_large_floats() {
     assert_eq!(got, expected);
     wrk.assert_success(&mut cmd);
 }
+
+#[test]
+fn excel_range_empty_sheet() {
+    let wrk = Workdir::new("excel_range_empty_sheet");
+
+    let xls_file = wrk.load_test_file("excel-range.xlsx");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg(xls_file);
+    cmd.arg("--range").arg("a2:b");
+    cmd.arg("-s").arg("Sheet2");
+
+    assert!(wrk
+        .output_stderr(&mut cmd)
+        .matches("larger than sheet")
+        .min()
+        .is_some());
+    wrk.assert_err(&mut cmd);
+}
