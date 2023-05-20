@@ -91,8 +91,8 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 🐻‍❄️: command powered by [Pola.rs](https://pola.rs) engine.   
 🏎️: multithreaded when an index is available.   
 🚀: multithreaded even without an index.   
-![CKAN](docs/images/ckan.png) : has [CKAN](https://ckan.org)-aware integration options
-🌐: has web-aware options
+![CKAN](docs/images/ckan.png) : has [CKAN](https://ckan.org)-aware integration options.    
+🌐: has web-aware options.
 
 ## Installation Options
 
