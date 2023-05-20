@@ -132,10 +132,11 @@ struct SheetMetadata {
 
 #[derive(Serialize, Deserialize)]
 struct MetadataStruct {
-    filename:   String,
-    format:     String,
-    num_sheets: usize,
-    sheet:      Vec<SheetMetadata>,
+    filename:           String,
+    canonical_filename: String,
+    format:             String,
+    num_sheets:         usize,
+    sheet:              Vec<SheetMetadata>,
 }
 
 struct RequestedRange {
@@ -198,6 +199,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .and_then(std::ffi::OsStr::to_str)
         .unwrap_or_default()
         .to_string();
+    let canonical_filename = sce.canonicalize().unwrap_or_default().display().to_string();
     let format = sce
         .extension()
         .and_then(std::ffi::OsStr::to_str)
@@ -259,6 +261,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if metadata_mode != MetadataMode::None {
         let mut excelmetadata_struct = MetadataStruct {
             filename,
+            canonical_filename,
             format,
             num_sheets,
             sheet: vec![],
