@@ -47,7 +47,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [flatten](/src/cmd/flatten.rs#L2) | A flattened view of CSV records. Useful for viewing one record at a time.<br />e.g. `qsv slice -i 5 data.csv \| qsv flatten`. |
 | [fmt](/src/cmd/fmt.rs#L2) | Reformat a CSV with different delimiters, record terminators or quoting rules. (Supports ASCII delimited data.)  |
 | [foreach](/src/cmd/foreach.rs#L3)<br>✨ | Loop over a CSV to execute shell commands. (not available on Windows)  |
-| [frequency](/src/cmd/frequency.rs#L2)<br>📇🪗🏎️ | Build [frequency tables](https://statisticsbyjim.com/basics/frequency-table/) of each column. Uses multithreading to go faster if an index is present. |
+| [frequency](/src/cmd/frequency.rs#L2)<br>📇😣🏎️ | Build [frequency tables](https://statisticsbyjim.com/basics/frequency-table/) of each column. Uses multithreading to go faster if an index is present. |
 | [generate](/src/cmd/generate.rs#L2)<br>✨ | Generate test data by profiling a CSV using [Markov decision process](https://crates.io/crates/test-data-generation) machine learning.  |
 | [headers](/src/cmd/headers.rs#L2) | Show the headers of a CSV. Or show the intersection of all headers between many CSV files. |
 | [index](/src/cmd/index.rs#L2) | Create an index for a CSV. This is very quick (even the 15gb, 28m row NYC 311 dataset takes all of 15 seconds to index) & provides constant time indexing/random access into the CSV file. Accelerates  the `count`, `sample` & `slice` commands; enables random access mode in `luau`; and enables multithreading (🏎️) for the `frequency`, `split`, `stats`, `schema` & `tojsonl` commands. |
@@ -64,7 +64,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [reverse](/src/cmd/reverse.rs#L2)<br>🤯 | Reverse order of rows in a CSV. Unlike the `sort --reverse` command, it preserves the order of rows with the same key.  |
 | <a name="safenames_deeplink"></a>[safenames](/src/cmd/safenames.rs#L2)<br>![CKAN](docs/images/ckan.png) | Modify headers of a CSV to only have ["safe" names](/src/cmd/safenames.rs#L5-L14) - guaranteed "database-ready"/"CKAN-ready" names.  |
 | [sample](/src/cmd/sample.rs#L2)<br>📇 | Randomly draw rows (with optional seed) from a CSV using [reservoir sampling](https://en.wikipedia.org/wiki/Reservoir_sampling) (i.e., use memory proportional to the size of the sample).  |
-| [schema](/src/cmd/schema.rs#L2)<br>📇🪗🏎️ | Infer schema from CSV data, replete with data type & domain/range validation & output in [JSON Schema](https://json-schema.org/) format. Uses multithreading to go faster if an index is present. See `validate` command to use the generated JSON Schema to validate if similar CSVs comply with the schema. |
+| [schema](/src/cmd/schema.rs#L2)<br>📇😣🏎️ | Infer schema from CSV data, replete with data type & domain/range validation & output in [JSON Schema](https://json-schema.org/) format. Uses multithreading to go faster if an index is present. See `validate` command to use the generated JSON Schema to validate if similar CSVs comply with the schema. |
 | [search](/src/cmd/search.rs#L2) | Run a regex over a CSV. Applies the regex to each field individually & shows only matching rows.  |
 | [searchset](/src/cmd/searchset.rs#L3) | *Run multiple regexes over a CSV in a single pass.* Applies the regexes to each field individually & shows only matching rows.  |
 | [select](/src/cmd/select.rs#L2) | Select, re-order, duplicate or drop columns.  |
@@ -77,7 +77,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [stats](/src/cmd/stats.rs#L2)<br>📇🤯🏎️ | Compute [summary statistics](https://en.wikipedia.org/wiki/Summary_statistics) (sum, min/max/range, min/max length, mean, stddev, variance, nullcount, sparsity, quartiles, IQR, lower/upper fences, skewness, median, mode/s, antimode/s & cardinality) & make GUARANTEED data type inferences (Null, String, Float, Integer, Date, DateTime, Boolean) for each column in a CSV.<br>Uses multithreading to go faster if an index is present (with an index, can compile "streaming" stats on NYC's 311 data (15gb, 28m rows) in less than 20 seconds). |
 | [table](/src/cmd/table.rs#L2)<br>🤯 | Show aligned output of a CSV using [elastic tabstops](https://github.com/BurntSushi/tabwriter).  To interactively view CSV files, qsv pairs well with [csvlens](https://github.com/YS-L/csvlens#csvlens). |
 | [to](/src/cmd/to.rs#L2)<br>✨🚀 | Convert CSV files to [PostgreSQL](https://www.postgresql.org), [SQLite](https://www.sqlite.org/index.html), XLSX, [Parquet](https://parquet.apache.org) and [Data Package](https://datahub.io/docs/data-packages/tabular). |
-| [tojsonl](/src/cmd/tojsonl.rs#L3)<br>📇🪗🏎️ | Smartly converts CSV to a newline-delimited JSON ([JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/)). By scanning the CSV first, it "smartly" infers the appropriate JSON data type for each column. See `jsonl` command to convert JSONL to CSV. Uses multithreading to go faster if an index is present. |
+| [tojsonl](/src/cmd/tojsonl.rs#L3)<br>📇😣🏎️ | Smartly converts CSV to a newline-delimited JSON ([JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/)). By scanning the CSV first, it "smartly" infers the appropriate JSON data type for each column. See `jsonl` command to convert JSONL to CSV. Uses multithreading to go faster if an index is present. |
 | [transpose](/src/cmd/transpose.rs#L2)<br>🤯 | Transpose rows/columns of a CSV.  |
 | [validate](/src/cmd/validate.rs#L2)<br>📇🚀🌐 | Validate CSV data blazingly-fast using [JSON Schema Validation](https://json-schema.org/draft/2020-12/json-schema-validation.html) & put invalid records into a separate file with an accompanying detailed validation error report file (e.g. *up to 350,000 rows/second* using [NYC's 311 schema](https://github.com/jqnatividad/qsv/blob/master/resources/test/311_Service_Requests_from_2010_to_Present-2022-03-04.csv.schema.json) generated by the `schema` command).<br>If no JSON schema file is provided, validates if a CSV conforms to the [RFC 4180 standard](#rfc-4180-csv-standard). |
 
@@ -86,7 +86,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 ✨: enabled by a feature flag on `qsv`. Not available on `qsvlite` or `qsvdp`.   
 📇: uses an index when available. `join` creates its own in-memory index automatically.   
 🤯: loads entire CSV into memory, though `dedup`, `stats` & `transpose` have "streaming" modes as well.   
-🪗: uses additional memory proportional to the cardinality of the columns in the CSV.   
+😣: uses additional memory proportional to the cardinality of the columns in the CSV.   
 🧠: expensive operations are memoized (cached) with available inter-session Redis caching for fetch commands.    
 🐻‍❄️: command powered by [Pola.rs](https://pola.rs) engine.   
 🏎️: multithreaded when an index is available.   
