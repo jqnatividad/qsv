@@ -513,7 +513,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut cell_date_flag: bool = false;
     let mut float_val = 0_f64;
-    let mut float_flag: bool;
+    let mut float_flag: bool = false;
 
     let date_format = if let Some(df) = args.flag_date_format {
         df
@@ -565,7 +565,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 info!("date_flag: {date_flag:?}");
                 continue;
             }
-            float_flag = false;
             match *cell {
                 DataType::Empty => record.push_field(""),
                 DataType::String(ref s) => record.push_field(s),
@@ -645,6 +644,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     let mut buffer = itoa::Buffer::new();
                     record.push_field(buffer.format(float_val as i64));
                 }
+                // set the float flag to false, so we don't try to process the next cell as a float
+                float_flag = false;
             }
         }
 
