@@ -180,8 +180,8 @@ impl RequestedRange {
         Ok(RequestedRange {
             start: (start_row.unwrap_or(0), start_col.unwrap_or(0)),
             end:   (
-                end_row.unwrap_or((worksheet_size.0 as u32).saturating_sub(1)),
-                end_col.unwrap_or((worksheet_size.1 as u32).saturating_sub(1)),
+                end_row.unwrap_or_else(|| (worksheet_size.0 as u32).saturating_sub(1)),
+                end_col.unwrap_or_else(|| (worksheet_size.1 as u32).saturating_sub(1)),
             ),
         })
     }
