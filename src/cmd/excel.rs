@@ -256,9 +256,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     };
 
-    // use with_capacity to minimize reallocation
-    let mut record = csv::StringRecord::with_capacity(200, 20);
-
     if metadata_mode != MetadataMode::None {
         let mut excelmetadata_struct = MetadataStruct {
             filename,
@@ -266,6 +263,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             num_sheets,
             sheet: vec![],
         };
+        let mut metadata_record;
+
         for (i, sheet_name) in sheet_vec.iter().enumerate() {
             let range = if let Some(result) = workbook.worksheet_range_at(i) {
                 match result {
@@ -355,9 +354,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     "unsafe_headers_count",
                     "duplicate_headers_count",
                 ]);
-                record = csv::StringRecord::from(metadata_fields);
+                metadata_record = csv::StringRecord::from(metadata_fields);
 
-                wtr.write_record(&record)?;
+                wtr.write_record(&metadata_record)?;
 
                 for sheetmetadata in excelmetadata_struct.sheet {
                     let metadata_values = vec![
@@ -372,9 +371,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         sheetmetadata.unsafe_headers_count.to_string(),
                         sheetmetadata.duplicate_headers_count.to_string(),
                     ];
-                    record = csv::StringRecord::from(metadata_values);
+                    metadata_record = csv::StringRecord::from(metadata_values);
 
-                    wtr.write_record(&record)?;
+                    wtr.write_record(&metadata_record)?;
                 }
                 wtr.flush()?;
             }
@@ -502,14 +501,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         dates_whitelist.sort_unstable();
     }
 
+    let (row_count, col_count) = range.get_size();
+
     // use with_capacity to minimize reallocations
-    let mut trimmed_record = csv::StringRecord::with_capacity(200, 20);
-    let mut date_flag: Vec<bool> = Vec::with_capacity(20);
+    let mut record = csv::StringRecord::with_capacity(500, col_count);
+    let mut trimmed_record = csv::StringRecord::with_capacity(500, col_count);
+    let mut date_flag: Vec<bool> = Vec::with_capacity(col_count);
 
     let mut cell_date_flag: bool = false;
     let mut float_val = 0_f64;
     let mut float_flag: bool;
-    let mut row_count = 0_usize;
 
     let date_format = if let Some(df) = args.flag_date_format {
         df
@@ -658,7 +659,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         } else {
             wtr.write_record(&record)?;
         }
-        row_count += 1;
     }
     wtr.flush()?;
 
@@ -667,7 +667,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             "{} {}-column rows exported from \"{sheet}\" sheet",
             // don't count the header in row count
             row_count.saturating_sub(1).separate_with_commas(),
-            record.len().separate_with_commas(),
+            col_count.separate_with_commas(),
         );
         winfo!("{end_msg}");
     }
