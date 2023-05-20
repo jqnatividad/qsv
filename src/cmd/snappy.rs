@@ -198,10 +198,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 // multi-threaded streaming snappy compression
 fn compress<R: Read, W: Write + Send + 'static>(mut src: R, dst: W, jobs: usize) -> CliResult<()> {
     let mut writer = ParCompressBuilder::<Snap>::new()
-        .num_threads(jobs)
-        .unwrap()
-        .buffer_size(gzp::BUFSIZE)
-        .unwrap()
+        .num_threads(jobs)?
+        .buffer_size(gzp::BUFSIZE)?
         .pin_threads(Some(0))
         .from_writer(dst);
     io::copy(&mut src, &mut writer)?;
