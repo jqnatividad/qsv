@@ -74,7 +74,7 @@ To find out what memory allocator qsv is using, run `qsv --version`. After the q
 ## Out-of-Memory (OOM) Prevention
 Most qsv commands use a "streaming" approach to processing CSVs - "streaming" in the input record-by-record while processing it. This allows it to process arbitrarily large CSVs with constant memory.
 
-There are a number of commands/modes however (denoted by the clamp emoji - 🗜️), that require qsv to load the entire CSV into memory - `dedup` (when not using the --sorted option), `reverse`, `sort`, `stats` (when calculating the "non-streaming" extended stats), `table` and `transpose` (when not running in --multipass mode).
+There are a number of commands/modes however (denoted by the "exploding head" emoji - 🤯), that require qsv to load the entire CSV into memory - `dedup` (when not using the --sorted option), `reverse`, `sort`, `stats` (when calculating the "non-streaming" extended stats), `table` and `transpose` (when not running in --multipass mode).
 
 > NOTE: Though not as flexible, `dedup` and `sort` have corresponding "external" versions - `extdedup` and `extsort` respectively, that use external memory (i.e. disk) to process arbitrarily large CSVs.
 
