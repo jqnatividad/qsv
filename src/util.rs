@@ -1316,8 +1316,13 @@ pub async fn download_file(
     };
 
     // progressbar setup
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     let show_progress = (show_progress || get_envvar_flag("QSV_PROGRESSBAR")) && total_size > 0;
+
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     let pb = ProgressBar::with_draw_target(Some(total_size), ProgressDrawTarget::stderr_with_hz(5));
+
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     if show_progress {
         pb.set_style(
             ProgressStyle::default_bar()
@@ -1348,14 +1353,18 @@ pub async fn download_file(
             .map_err(|_| "Error while writing to file")?;
         let new = min(downloaded + (chunk.len() as u64), total_size);
         downloaded = new;
+
+        #[cfg(any(feature = "feature_capable", feature = "lite"))]
         if show_progress {
             pb.set_position(new);
         }
+
         if sample_size > 0 && downloaded >= sample_size {
             break;
         }
     }
 
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     if show_progress {
         pb.finish_with_message(format!("Downloaded {url}"));
         eprintln!(""); // newline after progress bar
