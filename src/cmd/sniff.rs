@@ -307,7 +307,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                     ))
                     .send()
                     .await
-                    .or(Err(format!("Failed to GET from '{url}'")))?;
+                    .map_err(|e| format!("Download failed: {e}"))?;
 
                 let last_modified = match res.headers().get("Last-Modified") {
                     Some(lm) => match lm.to_str() {
@@ -398,10 +398,10 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
 
                 // download chunks until we have the desired sample size
                 while let Some(item) = stream.next().await {
-                    chunk = item.or(Err("Error while downloading file".to_string()))?;
+                    chunk = item.map_err(|_| "Error while downloading file")?;
 
                     file.write_all(&chunk)
-                        .map_err(|_| "Error while writing to file".to_string())?;
+                        .map_err(|_| "Error while writing to file")?;
                     let chunk_len = chunk.len();
 
                     // on linux, we can short-circuit downloading
@@ -458,9 +458,8 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
 
                 // keep the temporary file around so we can sniff it later
                 // we'll delete it when we're done
-                let (mut tmp_file, path) = wtr_file
-                    .keep()
-                    .or(Err("Cannot keep temporary file".to_string()))?;
+                let (mut tmp_file, path) =
+                    wtr_file.keep().map_err(|_| "Cannot keep temporary file")?;
 
                 let wtr_file_path;
                 let mut downloaded_records = 0_usize;
@@ -625,7 +624,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
         drop(stdin_handle);
         let (file, path) = stdin_file
             .keep()
-            .or(Err("Cannot keep temporary file".to_string()))?;
+            .map_err(|_| "Cannot keep temporary file")?;
 
         if !util::isutf8_file(&path)? {
             return fail_clierror!("stdin input is not UTF8-encoded");
@@ -633,7 +632,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
 
         let metadata = file
             .metadata()
-            .map_err(|_| "Cannot get metadata for stdin file".to_string())?;
+            .map_err(|_| "Cannot get metadata for stdin file")?;
 
         let file_size = metadata.len() as usize;
         // set last_modified to now in RFC3339 format
