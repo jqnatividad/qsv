@@ -5,10 +5,9 @@ length and estimated number of records if sniffing a URL, file size, number of f
 field names & data types) using a Viterbi algorithm.
 (https://en.wikipedia.org/wiki/Viterbi_algorithm)
 
-On Linux, `sniff` also acts as a general file type detector and returns the detected
-mime type if the file is not a CSV (it also returns file size and last modified date
-with the --json options). It uses the "libmagic" library to do this.
-See https://github.com/robo9k/rust-magic for more info.
+On Linux, `sniff` also acts as a general file type detector using the libmagic library
+and returns the detected mime type, file size and last modified date if the file is not
+a CSV. If --no-infer is enabled, it doesn't even bother to infer the CSV's schema.
 
 On macOS and Windows however, `sniff` is only a CSV dialect detector and does not
 detect other file types. It can only sniff files with the "csv", "tsv", "tab" and
@@ -62,6 +61,8 @@ sniff options:
                              https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
     --stats-types            Use the same data type names as `stats`.
                              (Unsigned, Signed => Integer, Text => String, everything else the same)
+    --no-infer               Do not infer the schema. Only return the file's mime type, size and
+                             last modified date. Valid only on Linux.
 
 Common options:
     -h, --help               Display this message
@@ -112,6 +113,7 @@ struct Args {
     flag_timeout:        u16,
     flag_user_agent:     Option<String>,
     flag_stats_types:    bool,
+    flag_no_infer:       bool,
 }
 
 #[derive(Serialize, Deserialize, Default, Debug)]
@@ -711,31 +713,66 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
     #[cfg(all(target_os = "linux", feature = "magic"))]
     // we also accept text/* files, as sniff may still be able to suss out
     // if the file is a CSV, even if its not using a CSV extension
-    if file_type != "application/csv" && !file_type.starts_with("text/") {
+    // we can also be here if the user has specified --no-infer
+    if (file_type != "application/csv" && !file_type.starts_with("text/")) || args.flag_no_infer {
         cleanup_tempfile(sfile_info.tempfile_flag, tempfile_to_delete)?;
+
+        let size = if sfile_info.file_size >= usize::MAX - 1 {
+            "Unknown".to_string()
+        } else {
+            sfile_info.file_size.to_string()
+        };
+        let last_modified = sfile_info.last_modified.clone();
+
         if args.flag_json || args.flag_pretty_json {
-            let size = if sfile_info.file_size >= usize::MAX - 1 {
-                "Unknown".to_string()
-            } else {
-                sfile_info.file_size.to_string()
-            };
-            let json_result = json!({
-                "errors": [{
-                    "title": "sniff error",
+            if args.flag_no_infer {
+                let json_result = json!({
+                    "title": "sniff mime type",
                     "detail": format!("File is not a CSV file. Detected mime type: {file_type}"),
                     "meta": {
                         "detected_mime_type": file_type,
                         "size": size,
-                        "last_modified": sfile_info.last_modified,
+                        "last_modified": last_modified,
                     }
-                }]
-            });
-            if args.flag_pretty_json {
-                return fail_clierror!("{}", serde_json::to_string_pretty(&json_result).unwrap());
+                });
+                if args.flag_pretty_json {
+                    woutinfo!("{}", serde_json::to_string_pretty(&json_result).unwrap());
+                    return Ok(());
+                }
+                woutinfo!("{json_result}");
+                return Ok(());
+            } else {
+                let json_result = json!({
+                    "errors": [{
+                        "title": "sniff error",
+                        "detail": format!("File is not a CSV file. Detected mime type: {file_type}"),
+                        "meta": {
+                            "detected_mime_type": file_type,
+                            "size": size,
+                            "last_modified": last_modified,
+                        }
+                    }]
+                });
+                if args.flag_pretty_json {
+                    return fail_clierror!(
+                        "{}",
+                        serde_json::to_string_pretty(&json_result).unwrap()
+                    );
+                }
+                return fail_clierror!("{json_result}");
             }
-            return fail_clierror!("{json_result}");
         }
-        return fail_clierror!("File is not a CSV file. Detected mime type: {file_type}");
+        if args.flag_no_infer {
+            woutinfo!(
+                "Detected mime type: {file_type}, size: {size}, last modified: {last_modified}"
+            );
+            return Ok(());
+        } else {
+            return fail_clierror!(
+                "File is not a CSV file. Detected mime type: {file_type}, size: {size}, last \
+                 modified: {last_modified}"
+            );
+        }
     }
 
     let conf = Config::new(&Some(sfile_info.file_to_sniff.clone()))

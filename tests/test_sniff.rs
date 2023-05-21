@@ -84,10 +84,7 @@ fn sniff_url_notcsv() {
 
         let expected = "File is not a CSV file. Detected mime type: \
                         application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-        assert_eq!(
-            dos2unix(&got_error).trim_end(),
-            dos2unix(expected).trim_end()
-        );
+        assert!(got_error.starts_with(expected));
     }
     #[cfg(not(feature = "magic"))]
     {
@@ -110,16 +107,16 @@ fn sniff_notcsv() {
     #[cfg(all(target_os = "linux", feature = "magic"))]
     {
         expected = "File is not a CSV file. Detected mime type: application/vnd.ms-excel";
+        assert!(got_error.starts_with(expected));
     }
     #[cfg(not(feature = "magic"))]
     {
         expected = "File extension 'xls' is not supported";
+        assert_eq!(
+            dos2unix(&got_error).trim_end(),
+            dos2unix(expected).trim_end()
+        );
     }
-
-    assert_eq!(
-        dos2unix(&got_error).trim_end(),
-        dos2unix(expected).trim_end()
-    );
 }
 
 #[test]
