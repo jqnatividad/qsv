@@ -32,15 +32,23 @@ Usage:
     qsv snappy --help
 
 snappy arguments:
-    <input>  The input file to compress/decompress. If not specified, stdin is used.
+    <input>               The input file to compress/decompress. This can be a local file, stdin,
+                          or a URL (http and https schemes supported).
 
-options:
-    -h, --help           Display this message
-    -o, --output <file>  Write output to <output> instead of stdout.
-    -j, --jobs <arg>     The number of jobs to run in parallel when compressing.
-                         When not set, its set to the number of CPUs - 1
-    -Q, --quiet          Suppress messages to stderr.
+snappy options:
+    --user-agent <agent>  Specify a custom user agent to use when the input is a URL.
+                          Try to follow the syntax here -
+                          https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
+    --timeout <secs>      Timeout for downloading URLs in seconds.
+                          [default: 60]
 
+Common options:
+    -h, --help            Display this message
+    -o, --output <file>   Write output to <output> instead of stdout.
+    -j, --jobs <arg>      The number of jobs to run in parallel when compressing.
+                          When not set, its set to the number of CPUs - 1
+    -Q, --quiet           Suppress status messages to stderr.
+    -p, --progressbar     Show download progress bars. Only valid for URL input.
 "#;
 
 use std::{
@@ -51,19 +59,24 @@ use std::{
 use gzp::{par::compress::ParCompressBuilder, snap::Snap, ZWriter};
 use serde::Deserialize;
 use snap;
+use tempfile::NamedTempFile;
+use url::Url;
 
 use crate::{config, util, CliError, CliResult};
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input:      Option<String>,
-    flag_output:    Option<String>,
-    cmd_compress:   bool,
-    cmd_decompress: bool,
-    cmd_check:      bool,
-    cmd_validate:   bool,
-    flag_jobs:      Option<usize>,
-    flag_quiet:     bool,
+    arg_input:        Option<String>,
+    flag_output:      Option<String>,
+    cmd_compress:     bool,
+    cmd_decompress:   bool,
+    cmd_check:        bool,
+    cmd_validate:     bool,
+    flag_user_agent:  Option<String>,
+    flag_timeout:     u16,
+    flag_jobs:        Option<usize>,
+    flag_quiet:       bool,
+    flag_progressbar: bool,
 }
 
 impl From<snap::Error> for CliError {
@@ -83,8 +96,35 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let input_bytes;
 
+    // create a temporary file to write the download file to
+    // this is automatically deleted when temp_download goes out of scope
+    let temp_download = NamedTempFile::new()?;
+
     let input_reader: Box<dyn BufRead> = match &args.arg_input {
-        Some(path) => {
+        Some(uri) => {
+            let path = if Url::parse(uri).is_ok() && uri.starts_with("http") {
+                // its a remote file, download it first
+                let temp_download_path = temp_download.path().to_str().unwrap().to_string();
+
+                let future = util::download_file(
+                    uri,
+                    &temp_download_path,
+                    args.flag_progressbar && !args.cmd_check && !args.flag_quiet,
+                    args.flag_user_agent,
+                    Some(args.flag_timeout),
+                    if args.cmd_check {
+                        Some(50) // only download 50 bytes when checking for a snappy header
+                    } else {
+                        None
+                    },
+                );
+                tokio::runtime::Runtime::new()?.block_on(future)?;
+                temp_download_path
+            } else {
+                // its a local file
+                uri.to_string()
+            };
+
             let file = fs::File::open(path)?;
             input_bytes = file.metadata()?.len();
             Box::new(io::BufReader::with_capacity(
@@ -143,16 +183,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let compression_ratio = decompressed_bytes as f64 / input_bytes as f64;
             winfo!(
                 "Decompression successful. Compressed bytes: {}, Decompressed bytes: {}, \
-                 Compression ratio: {:.3}:1, Space savings: {} - {:.2}%",
+                 Compression ratio: {:.3}:1",
                 indicatif::HumanBytes(input_bytes),
                 indicatif::HumanBytes(decompressed_bytes),
                 compression_ratio,
-                indicatif::HumanBytes(
-                    decompressed_bytes
-                        .checked_sub(input_bytes)
-                        .unwrap_or_default()
-                ),
-                (1.0 - (input_bytes as f64 / decompressed_bytes as f64)) * 100.0
             );
         }
     } else if args.cmd_validate {

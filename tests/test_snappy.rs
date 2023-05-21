@@ -63,6 +63,23 @@ fn snappy_decompress() {
 }
 
 #[test]
+fn snappy_decompress_url() {
+    let wrk = Workdir::new("snappy_decompress_url");
+
+    let mut cmd = wrk.command("snappy");
+    cmd.arg("decompress")
+        .arg("https://github.com/jqnatividad/qsv/raw/master/resources/test/boston311-100.csv.sz");
+
+    let got: String = wrk.stdout(&mut cmd);
+
+    let expected = wrk.load_test_resource("boston311-100.csv");
+
+    assert_eq!(dos2unix(&got), dos2unix(&expected).trim_end());
+
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
 fn snappy_compress() {
     let wrk = Workdir::new("snappy_compress");
 

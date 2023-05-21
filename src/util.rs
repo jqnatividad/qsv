@@ -1,7 +1,9 @@
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 use std::borrow::Cow;
 use std::{
+    cmp::min,
     env, fs,
+    fs::File,
     io::{BufReader, Read, Write},
     path::{Path, PathBuf},
     str,
@@ -9,8 +11,10 @@ use std::{
 
 use docopt::Docopt;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
-use indicatif::{HumanCount, ProgressBar, ProgressStyle};
+use indicatif::{HumanCount, ProgressBar, ProgressDrawTarget, ProgressStyle};
+use log::log_enabled;
 use once_cell::sync::OnceCell;
+use reqwest::Client;
 use serde::de::DeserializeOwned;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 use serde::de::{Deserialize, Deserializer, Error};
@@ -1255,6 +1259,109 @@ pub fn decompress_snappy_file(
     std::io::copy(&mut snappy_reader, &mut decompressed_file)?;
     decompressed_file.flush()?;
     Ok(format!("{}", decompressed_filepath.display()))
+}
+
+/// downloads a file from a url and saves it to a path
+/// if show_progress is true, a progress bar will be shown
+/// if custom_user_agent is Some, it will be used as the user agent
+/// if download_timeout is Some, it will be used as the timeout in seconds
+/// if sample_size is Some, it will be used as the number of bytes to download
+pub async fn download_file(
+    url: &str,
+    path: &str,
+    show_progress: bool,
+    custom_user_agent: Option<String>,
+    download_timeout: Option<u16>,
+    sample_size: Option<u64>,
+) -> CliResult<()> {
+    use futures_util::StreamExt;
+
+    let user_agent = set_user_agent(custom_user_agent)?;
+
+    let download_timeout = match download_timeout {
+        Some(t) => std::time::Duration::from_secs(timeout_secs(t).unwrap_or(30)),
+        None => std::time::Duration::from_secs(30),
+    };
+
+    // setup the reqwest client
+    let client = match Client::builder()
+        .user_agent(user_agent)
+        .brotli(true)
+        .gzip(true)
+        .deflate(true)
+        .use_rustls_tls()
+        .http2_adaptive_window(true)
+        .connection_verbose(log_enabled!(log::Level::Debug) || log_enabled!(log::Level::Trace))
+        .timeout(download_timeout)
+        .build()
+    {
+        Ok(c) => c,
+        Err(e) => {
+            return fail_clierror!("Cannot build reqwest client: {e}.");
+        }
+    };
+
+    let res = client
+        .get(url)
+        .send()
+        .await
+        .map_err(|e| format!("Download failed: {e}"))?;
+
+    let total_size = match res.content_length() {
+        Some(l) => l,
+        None => {
+            // if we can't get the content length, set it to sentinel value
+            u64::MAX
+        }
+    };
+
+    // progressbar setup
+    let show_progress = (show_progress || get_envvar_flag("QSV_PROGRESSBAR")) && total_size > 0;
+    let pb = ProgressBar::with_draw_target(Some(total_size), ProgressDrawTarget::stderr_with_hz(5));
+    if show_progress {
+        pb.set_style(
+            ProgressStyle::default_bar()
+                .template(if total_size == u64::MAX {
+                    // only do a spinner if we don't know the total size
+                    "{msg}\n{spinner:.green} ({bytes_per_sec})"
+                } else {
+                    "{msg}\n{spinner:.green} [{elapsed_precise}] [{wide_bar:.white/blue}] \
+                     {bytes}/{total_bytes} ({bytes_per_sec}, {eta})"
+                })
+                .unwrap(),
+        );
+        pb.set_message(format!("Downloading {url}"));
+    } else {
+        pb.set_draw_target(ProgressDrawTarget::hidden());
+    }
+
+    let sample_size = sample_size.unwrap_or(0);
+
+    // download chunks
+    let mut file = File::create(path).map_err(|_| format!("Failed to create file '{path}'"))?;
+    let mut downloaded: u64 = 0;
+    let mut stream = res.bytes_stream();
+
+    while let Some(item) = stream.next().await {
+        let chunk = item.map_err(|_| "Error while downloading file")?;
+        file.write_all(&chunk)
+            .map_err(|_| "Error while writing to file")?;
+        let new = min(downloaded + (chunk.len() as u64), total_size);
+        downloaded = new;
+        if show_progress {
+            pb.set_position(new);
+        }
+        if sample_size > 0 && downloaded >= sample_size {
+            break;
+        }
+    }
+
+    if show_progress {
+        pb.finish_with_message(format!("Downloaded {url}"));
+        eprintln!(""); // newline after progress bar
+    }
+
+    Ok(())
 }
 
 /// load the first BUFFER*4 (128k) bytes of the file and check if it is utf8
