@@ -724,7 +724,7 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
                     "title": "sniff error",
                     "detail": format!("File is not a CSV file. Detected mime type: {file_type}"),
                     "meta": {
-                        "detected_mime_type": file_type
+                        "detected_mime_type": file_type,
                         "size": size,
                         "last_modified": sfile_info.last_modified,
                     }
