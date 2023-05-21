@@ -5,21 +5,22 @@ length and estimated number of records if sniffing a URL, file size, number of f
 field names & data types) using a Viterbi algorithm.
 (https://en.wikipedia.org/wiki/Viterbi_algorithm)
 
-NOTE: This command "sniffs" a CSV's schema by sampling the first n rows of a file.
-Its inferences are sometimes wrong if the sample is not large enough (use --sample 
-to adjust). 
-
-If you want more robust, guaranteed schemata, use the "schema" or "stats" commands
-instead as they scan the entire file.
-
 On Linux, `sniff` also acts as a general file type detector and returns the detected
-mime type if the file is not a CSV. It uses the "libmagic" library to do this.
+mime type if the file is not a CSV (it also returns file size and last modified date
+with the --json options). It uses the "libmagic" library to do this.
 See https://github.com/robo9k/rust-magic for more info.
 
 On macOS and Windows however, `sniff` is only a CSV dialect detector and does not
 detect other file types. It can only sniff files with the "csv", "tsv", "tab" and
 "txt" extensions, and snappy compressed variants of these formats (e.g. "csv.sz",
 "tsv.sz", etc.) extensions.
+
+NOTE: This command "sniffs" a CSV's schema by sampling the first n rows (default: 1000)
+of a file. Its inferences are sometimes wrong if the sample is not large enough 
+(use --sample to adjust) or the file is too small to infer a pattern. 
+
+If you want more robust, guaranteed schemata, use the "schema" or "stats" commands
+instead as they scan the entire file.
 
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_sniff.rs.
 
@@ -391,10 +392,14 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
 
                 // on linux, we can short-circuit downloading by
                 // checking the file type from the first chunk
+                // the unused_muts are here to suppress warnings
+                // when the magic feature is not enabled
                 #[allow(unused_mut)]
                 let mut shortcircuit_flag = false;
                 #[allow(unused_mut)]
                 let mut firstchunk = Bytes::new();
+                #[allow(unused_mut)]
+                let mut magic_flag = false;
 
                 // download chunks until we have the desired sample size
                 while let Some(item) = stream.next().await {
@@ -403,6 +408,12 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                     file.write_all(&chunk)
                         .map_err(|_| "Error while writing to file")?;
                     let chunk_len = chunk.len();
+
+                    #[cfg(all(target_os = "linux", feature = "magic"))]
+                    {
+                        // we're using magic!
+                        magic_flag = true;
+                    }
 
                     // on linux, we can short-circuit downloading
                     // by checking the file type from the first chunk
@@ -523,7 +534,11 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                     file_to_sniff: wtr_file_path,
                     tempfile_flag: true,
                     retrieved_size: downloaded,
-                    file_size: if total_size == usize::MAX {
+                    file_size: if magic_flag && total_size == usize::MAX {
+                        // we're using magic and the server didn't give us content length
+                        // so send usize::MAX - 1 to indicate that we don't know the file size
+                        usize::MAX - 1
+                    } else if total_size == usize::MAX {
                         // the server didn't give us content length, so we just
                         // downloaded the entire file. downloaded variable
                         // is the total size of the file
@@ -699,12 +714,19 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
     if file_type != "application/csv" && !file_type.starts_with("text/") {
         cleanup_tempfile(sfile_info.tempfile_flag, tempfile_to_delete)?;
         if args.flag_json || args.flag_pretty_json {
+            let size = if sfile_info.file_size >= usize::MAX - 1 {
+                "Unknown".to_string()
+            } else {
+                sfile_info.file_size.to_string()
+            };
             let json_result = json!({
                 "errors": [{
                     "title": "sniff error",
                     "detail": format!("File is not a CSV file. Detected mime type: {file_type}"),
                     "meta": {
                         "detected_mime_type": file_type
+                        "size": size,
+                        "last_modified": sfile_info.last_modified,
                     }
                 }]
             });
