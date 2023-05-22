@@ -114,6 +114,7 @@ struct Args {
     flag_timeout:        u16,
     flag_user_agent:     Option<String>,
     flag_stats_types:    bool,
+    #[cfg(all(target_os = "linux", feature = "magic"))]
     flag_no_infer:       bool,
 }
 
