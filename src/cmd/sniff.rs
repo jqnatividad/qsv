@@ -420,8 +420,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                     // on linux, we can short-circuit downloading
                     // by checking the file type from the first chunk
                     #[cfg(all(target_os = "linux", feature = "magic"))]
-                    if downloaded == 0 && !snappy_flag && chunk_len >= util::FIRST_CHUNK_BUFFER_SIZE
-                    {
+                    if downloaded == 0 && !snappy_flag {
                         let mime = util::sniff_filetype_from_buffer(&chunk)?;
                         if !mime.starts_with("text/") && mime != "application/csv" {
                             shortcircuit_flag = true;
