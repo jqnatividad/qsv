@@ -718,18 +718,23 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
     if (file_type != "application/csv" && !file_type.starts_with("text/")) || args.flag_no_infer {
         cleanup_tempfile(sfile_info.tempfile_flag, tempfile_to_delete)?;
 
+        // these could be unknown if we're checking a remote file
+        // and the server did not return content-length or last-modified
         let size = if sfile_info.file_size >= usize::MAX - 1 {
             "Unknown".to_string()
         } else {
             sfile_info.file_size.to_string()
         };
-        let last_modified = sfile_info.last_modified.clone();
+        let last_modified = if sfile_info.last_modified.is_empty() {
+            "Unknown".to_string()
+        } else {
+            sfile_info.last_modified.to_owned()
+        };
 
         if args.flag_json || args.flag_pretty_json {
             if args.flag_no_infer {
                 let json_result = json!({
                     "title": "sniff mime type",
-                    "detail": format!("File is not a CSV file. Detected mime type: {file_type}"),
                     "meta": {
                         "detected_mime_type": file_type,
                         "size": size,
