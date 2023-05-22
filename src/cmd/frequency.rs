@@ -194,9 +194,9 @@ impl Args {
             row_work = row?;
             for (i, field) in nsel.select(row_work.into_iter()).enumerate() {
                 field_work = {
-                    match String::from_utf8(field.to_vec()) {
+                    match simdutf8::basic::from_utf8(field) {
                         Ok(s) => s.trim().as_bytes().to_vec(),
-                        Err(bs) => bs.into_bytes(),
+                        Err(_) => field.to_vec(),
                     }
                 };
                 if !field_work.is_empty() {
