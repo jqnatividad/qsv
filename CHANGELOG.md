@@ -6,6 +6,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.104.0] - 2023-05-22
+
+### Added
+* `sniff`: add --no-infer option only available on Linux. Using this option makes `sniff` work acts as a general mime type detector, retrieving detected mime type, file size (content-length when sniffing a URL), and last modified date.   
+When sniffing a URL with --no-infer, it only sniff's the first downloaded chunk, making it very fast even for very large remote files. This option was designed to facilitate accelerated harvesting and broken/stale link checking on CKAN. https://github.com/jqnatividad/qsv/pull/987
+* `excel`: add canonical_filename to metadata https://github.com/jqnatividad/qsv/pull/985
+* `snappy`: now accepts url input https://github.com/jqnatividad/qsv/pull/986
+* `sample`: support url input https://github.com/jqnatividad/qsv/pull/989
+
+### Changed
+* Bump qsv-sniffer from 0.9.2 to 0.9.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/979
+* Bump console from 0.15.5 to 0.15.6 by @dependabot in https://github.com/jqnatividad/qsv/pull/980
+* Bump jql-runner from 6.0.7 to 6.0.8 by @dependabot in https://github.com/jqnatividad/qsv/pull/981
+* Bump console from 0.15.6 to 0.15.7 by @dependabot in https://github.com/jqnatividad/qsv/pull/988
+* Bump embedded Luau from 0.576 to 0.577
+* apply select clippy recommendations
+* tweaked emojis used in Available Commands legend - 🗜️ to 🤯 to denote memory-intensive commands that load the entire CSV into memory; 🪗 to 😣 to denote commands that need addl memory proportional to the cardinality of the columns being processed; 🌐 to denote commands that have web-aware options
+* cargo update bump several indirect dependencies
+* pin Rust nightly to 2021-05-21
+
+### Fixed
+* `excel`: Handle ranges larger than the sheet by @bluepython508 in https://github.com/jqnatividad/qsv/pull/984
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.103.1...0.104.0
+
 ## [0.103.1] - 2023-05-17
 
 ### Changed
