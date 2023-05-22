@@ -127,16 +127,18 @@ To install different [variants](#variants) and enable optional features, use car
 
 ```bash
 # to install qsv with all features enabled
-cargo install qsv --locked --bin qsv --features apply,generate,luau,fetch,foreach,python,to,self_update,feature_capable
+cargo install qsv --locked --bin qsv --features apply,generate,luau,fetch,foreach,python,to,self_update,polars,magic,feature_capable
 # or shorthand
-cargo install qsv --locked --bin qsv -F all_features
+cargo install qsv --locked --bin qsv -F all_features,magic
 
 # or to install qsvlite
-cargo install qsv --locked --bin qsvlite -F lite
+cargo install qsv --locked --bin qsvlite -F lite,magic
 
 # or to install qsvdp
-cargo install qsv --locked --bin qsvdp -F datapusher_plus,luau
+cargo install qsv --locked --bin qsvdp -F datapusher_plus,luau,magic
 ```
+
+NOTE: the `magic` feature is only available on Linux with the libmagic-dev library installed.
 
 ### Option 4: Compile from Source
 
@@ -145,7 +147,7 @@ Compiling from source also works similarly[^1]:
 ```bash
 git clone https://github.com/jqnatividad/qsv.git
 cd qsv
-cargo build --release --locked --bin qsv --features all_features
+cargo build --release --locked --bin qsv --features all_features,magic
 ```
 
 The compiled binary will end up in `./target/release/`.
@@ -154,18 +156,19 @@ To compile different [variants](#variants) and enable optional [features](#featu
 
 ```bash
 # to compile qsv with all features enabled
-cargo build --release --locked --bin qsv --features apply,generate,luau,fetch,foreach,python,to,self_update,feature_capable
+cargo build --release --locked --bin qsv --features apply,generate,luau,fetch,foreach,python,to,self_update,polars,feature_capable
 # shorthand
-cargo build --release --locked --bin qsv -F all_features
+cargo build --release --locked --bin qsv -F all_features,magic
 
 # for qsvlite
-cargo build --release --locked --bin qsvlite -F lite
+cargo build --release --locked --bin qsvlite -F lite,magic
 
 # for qsvdp
-cargo build --release --locked --bin qsvdp -F datapusher_plus,luau
+cargo build --release --locked --bin qsvdp -F datapusher_plus,luau,magic
 ```
 
-To build with Rust nightly, see [Nightly Release Builds](docs/PERFORMANCE.md#nightly-release-builds).
+NOTE: To build with Rust nightly, see [Nightly Release Builds](docs/PERFORMANCE.md#nightly-release-builds).
+Also, the `magic` feature is only available on Linux with the libmagic-dev library installed.
 
 ### Variants
 
@@ -317,7 +320,7 @@ For details, see [Environment Variables](docs/ENVIRONMENT_VARIABLES.md) and the 
 * `foreach` - enable `foreach` command (not valid for Windows).
 * `generate` - enable `generate` command.
 * `luau` - enable `luau` command. Embeds a [Luau](https://luau-lang.org) interpreter into qsv. [Luau has type-checking, sandboxing, additional language operators, increased performance & other improvements](https://luau-lang.org/2022/11/04/luau-origins-and-evolution.html) over Lua.
-* `magic` - enable mime-type detection for the `sniff` command using the [`libmagic`](https://man7.org/linux/man-pages/man3/libmagic.3.html) library. Currently only works on Linux.
+* `magic` - enable mime-type detection for the `sniff` command using the [`libmagic`](https://man7.org/linux/man-pages/man3/libmagic.3.html) library. Currently only works on Linux with the libmagic-dev package installed.
 * `polars` - enables all [Polars](https://pola.rs)-powered commands (currently, only `joinp`). Note that Polars is a very powerful library, but it has a lot of dependencies that drastically increases both compile time and binary size.
 * `python` - enable `py` command. Note that qsv will look for the shared library for the Python version (Python 3.7 & above supported) it was compiled against & will abort on startup if the library is not found, even if you're not using the `py` command. Check [Python](#python) section for more info.
 * `to` - enables the `to` command. Note that enabling this feature will also noticeably increase both compile time and binary size.
