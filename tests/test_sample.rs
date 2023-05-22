@@ -34,6 +34,30 @@ fn sample_seed() {
 }
 
 #[test]
+fn sample_seed_url() {
+    let wrk = Workdir::new("sample_seed_url");
+
+    let mut cmd = wrk.command("sample");
+    cmd.args(["--seed", "42"])
+        .arg("5")
+        .arg("https://github.com/jqnatividad/qsv/raw/master/resources/test/aliases.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        ["position", "title"],
+        ["Q107145064", "embajador de España en Macedonia del Norte"],
+        ["Q107133795", "ambassadrice d'Espagne aux Palaos"],
+        ["Q107126367", "ambassador to Mali"],
+        ["Q106807027", "Minister of Industry, Trade and Tourism"],
+        [
+            "Q105325251",
+            "Consejero de Sanidad, Trabajo y Seguridad Social",
+        ],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn sample_percentage_seed_no_index_error() {
     let wrk = Workdir::new("sample_percentage");
     wrk.create(

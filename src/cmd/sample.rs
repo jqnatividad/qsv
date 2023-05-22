@@ -6,9 +6,6 @@ When an index is present and a seed is not specified, this command will use
 random indexing if the sample size is less than 10% of the total number of records.
 This allows for efficient sampling such that the entire CSV file is not parsed.
 
-When sample-size is between 0 and 1 exclusive, it is treated as a percentage
-of the CSV to sample (e.g. 0.20 is 20 percent).
-
 This command is intended to provide a means to sample from a CSV data set that
 is too big to fit into memory (for example, for use with commands like 'qsv
 frequency' or 'qsv stats'). It will however visit every CSV record exactly
@@ -22,8 +19,20 @@ Usage:
     qsv sample [options] <sample-size> [<input>]
     qsv sample --help
 
+sample arguments:
+    <input>                The CSV file to sample. This can be a local file,
+                           stdin, or a URL (http and https schemes supported).
+    <sample-size>          The number of records to sample. If this is between
+                           0 and 1 exclusive, it is treated as a percentage of
+                           the CSV to sample (e.g. 0.20 is 20 percent).
+
 sample options:
     --seed <number>        Random number generator seed.
+    --user-agent <agent>   Specify a custom user agent to use when the input is a URL.
+                           Try to follow the syntax here -
+                           https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
+    --timeout <secs>       Timeout for downloading URLs in seconds.
+                           [default: 30]
 
 Common options:
     -h, --help             Display this message
@@ -41,6 +50,8 @@ use std::io;
 use log::debug;
 use rand::{self, rngs::StdRng, seq::SliceRandom, Rng, SeedableRng};
 use serde::Deserialize;
+use tempfile::NamedTempFile;
+use url::Url;
 
 use crate::{
     config::{Config, Delimiter},
@@ -56,14 +67,42 @@ struct Args {
     flag_no_headers: bool,
     flag_delimiter:  Option<Delimiter>,
     flag_seed:       Option<usize>,
+    flag_user_agent: Option<String>,
+    flag_timeout:    Option<u16>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
-    let args: Args = util::get_args(USAGE, argv)?;
+    let mut args: Args = util::get_args(USAGE, argv)?;
 
     if args.arg_sample_size.is_sign_negative() {
         return fail!("Sample size cannot be negative.");
     }
+
+    let temp_download = NamedTempFile::new()?;
+
+    args.arg_input = match args.arg_input {
+        Some(uri) => {
+            if Url::parse(&uri).is_ok() && uri.starts_with("http") {
+                // its a remote file, download it first
+                let temp_download_path = temp_download.path().to_str().unwrap().to_string();
+
+                let future = util::download_file(
+                    &uri,
+                    &temp_download_path,
+                    false,
+                    args.flag_user_agent,
+                    args.flag_timeout,
+                    None,
+                );
+                tokio::runtime::Runtime::new()?.block_on(future)?;
+                Some(temp_download_path)
+            } else {
+                // its a local file
+                Some(uri)
+            }
+        }
+        None => None,
+    };
 
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
