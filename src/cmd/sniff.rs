@@ -46,15 +46,15 @@ sniff options:
                              When it is zero, the entire file will be sampled.
                              When the input is a URL, the sample size dictates
                              how many lines to sample without having to
-                             download the entire file.
+                             download the entire file. Ignored when --no-infer is enabled.
                              [default: 1000]
-    --prefer-dmy             Prefer to parse dates in dmy format.
-                             Otherwise, use mdy format.
+    --prefer-dmy             Prefer to parse dates in dmy format. Otherwise, use mdy format.
+                             Ignored when --no-infer is enabled.
     --json                   Return results in JSON format.
     --pretty-json            Return results in pretty JSON format.
     --save-urlsample <file>  Save the URL sample to a file.
                              Valid only when input is a URL.
-    --timeout <secs>         Timeout for URL requests in seconds.
+    --timeout <secs>         Timeout when sniffing URLs in seconds.
                              [default: 30]
     --user-agent <agent>     Specify a custom user agent to use when sniffing a CSV on a URL.
                              Try to follow the syntax here -
@@ -62,7 +62,8 @@ sniff options:
     --stats-types            Use the same data type names as `stats`.
                              (Unsigned, Signed => Integer, Text => String, everything else the same)
     --no-infer               Do not infer the schema. Only return the file's mime type, size and
-                             last modified date. Valid only on Linux.
+                             last modified date. Use this to use sniff as a general mime type detector.
+                             Valid only on Linux.
 
 Common options:
     -h, --help               Display this message
