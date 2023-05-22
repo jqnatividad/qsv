@@ -35,7 +35,8 @@ jobs:
             architecture: x86_64
             addl-build-args: --features=apply,generate,luau,fetch,foreach,nightly,to,self_update,magic
             default-features:
-            addl-qsvdp-features: luau
+            addl-qsvlite-features: magic
+            addl-qsvdp-features: luau,magic
           # - os: ubuntu-latest
           #   os-name: linux
           #   target: x86_64-unknown-linux-musl
@@ -49,6 +50,7 @@ jobs:
             architecture: x86_64
             addl-build-args: --features=apply,generate,luau,fetch,nightly,to,self_update,polars
             default-features:
+            addl-qsvlite-features:
             addl-qsvdp-features: luau
           - os: windows-latest
             os-name: windows
@@ -56,6 +58,7 @@ jobs:
             architecture: x86_64
             addl-build-args: --features=apply,generate,luau,fetch,nightly,self_update,polars
             default-features: --no-default-features 
+            addl-qsvlite-features:
             addl-qsvdp-features: luau
           - os: macos-latest
             os-name: macos
@@ -63,6 +66,7 @@ jobs:
             architecture: x86_64
             addl-build-args: --features=apply,generate,luau,fetch,foreach,nightly,to,self_update,polars
             default-features:
+            addl-qsvlite-features:
             addl-qsvdp-features: luau
 
     steps:
@@ -106,7 +110,7 @@ jobs:
         command: build
         use-cross: false
         toolchain: ${{ matrix.rust }}
-        args: --profile release-nightly --bin qsvlite -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --features=lite,self_update --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}
+        args: --profile release-nightly --bin qsvlite -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --features=lite,self_update,${{ matrix.job.addl-qsvlite-features }} --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}
     - name: Build qsvdp-nightly
       env:
         RUSTFLAGS: --emit=asm

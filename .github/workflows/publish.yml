@@ -39,7 +39,8 @@ jobs:
             use-cross: false
             addl-build-args: --features=apply,generate,luau,fetch,foreach,self_update,to,magic
             default-features:
-            addl-qsvdp-features: luau
+            addl-qsvlite-features: magic
+            addl-qsvdp-features: luau,magic
           - os: ubuntu-22.04
             os-name: linux
             target: x86_64-unknown-linux-musl
@@ -48,7 +49,8 @@ jobs:
             use-cross: false
             addl-build-args: --features=apply,generate,fetch,foreach,self_update,magic
             default-features:
-            addl-qsvdp-features:
+            addl-qsvlite-features: magic
+            addl-qsvdp-features: magic
           - os: ubuntu-22.04
             os-name: linux
             target: i686-unknown-linux-gnu
@@ -56,6 +58,7 @@ jobs:
             use-cross: true
             addl-build-args: --features=apply,generate,fetch,foreach,self_update
             default-features:
+            addl-qsvlite-features:
             addl-qsvdp-features:
           - os: windows-latest
             os-name: windows
@@ -64,6 +67,7 @@ jobs:
             use-cross: false
             addl-build-args: --features=apply,generate,luau,fetch,self_update,to,polars
             default-features:
+            addl-qsvlite-features:
             addl-qsvdp-features: luau
           - os: windows-latest
             os-name: windows
@@ -72,6 +76,7 @@ jobs:
             use-cross: true
             addl-build-args: --features=apply,generate,fetch,self_update
             default-features:
+            addl-qsvlite-features:
             addl-qsvdp-features:
           - os: windows-latest
             os-name: windows
@@ -80,6 +85,7 @@ jobs:
             use-cross: false
             addl-build-args: --features=apply,generate,luau,fetch,self_update,polars
             default-features: --no-default-features
+            addl-qsvlite-features:
             addl-qsvdp-features: luau
           - os: macos-12
             os-name: macos
@@ -88,6 +94,7 @@ jobs:
             use-cross: false
             addl-build-args: --features=apply,generate,luau,fetch,foreach,self_update,to,polars
             default-features: --no-default-features
+            addl-qsvlite-features:
             addl-qsvdp-features: luau
           - os: macos-12
             os-name: macos
@@ -96,6 +103,7 @@ jobs:
             use-cross: true
             addl-build-args: --features=apply,generate,fetch,foreach,self_update
             default-features: --no-default-features
+            addl-qsvlite-features:
             addl-qsvdp-features:
           - os: ubuntu-22.04
             os-name: linux
@@ -104,6 +112,7 @@ jobs:
             use-cross: true
             addl-build-args: --features=apply,generate,fetch,foreach,self_update
             default-features:
+            addl-qsvlite-features:
             addl-qsvdp-features:
           # - os: ubuntu-20.04
           #   os-name: linux
@@ -159,7 +168,7 @@ jobs:
         command: build
         use-cross: ${{ matrix.job.use-cross }}
         toolchain: ${{ matrix.rust }}
-        args: --release --locked --bin qsvlite --features=lite,self_update --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}
+        args: --release --locked --bin qsvlite --features=lite,self_update,${{ matrix.job.addl-qsvlite-features }} --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}
     - name: Build qsvdp
       env:
         RUSTFLAGS: --emit=asm
