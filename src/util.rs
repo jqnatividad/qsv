@@ -1420,6 +1420,13 @@ pub fn sniff_filetype_from_buffer(in_buffer: &bytes::Bytes) -> Result<String, Cl
         buffer_wrk.extend_from_slice(&in_buffer[0..buffer_len]);
         let mime = cookie.buffer(&buffer_wrk)?;
 
+        if log_enabled!(log::Level::Debug) {
+            log::debug!(
+                "scanned first {buffer_len} bytes - detected mime: {}",
+                mime.clone()
+            );
+        }
+
         Ok(mime)
     } else {
         // if we have no bytes, we can't determine the mime type
