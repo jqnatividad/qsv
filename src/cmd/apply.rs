@@ -1089,9 +1089,11 @@ fn apply_operations(
                 *cell = BASE64.encode(cell.as_bytes());
             }
             Operations::Decode => {
-                let mut output = vec![0; BASE64.decode_len(cell.len()).unwrap()];
+                let mut output = vec![0; BASE64.decode_len(cell.len()).unwrap_or_default()];
                 *cell = match BASE64.decode_mut(cell.as_bytes(), &mut output) {
-                    Ok(len) => String::from_utf8(output[0..len].to_vec()).unwrap(),
+                    Ok(len) => simdutf8::basic::from_utf8(&output[0..len])
+                        .unwrap_or_default()
+                        .to_owned(),
                     Err(e) => format!("decoding error: {e:?}"),
                 };
             }
