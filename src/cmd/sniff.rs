@@ -5,8 +5,8 @@ length and estimated number of records if sniffing a URL, file size, number of f
 field names & data types) using a Viterbi algorithm.
 (https://en.wikipedia.org/wiki/Viterbi_algorithm)
 
-On Linux, `sniff` also acts as a general file type detector using the libmagic library
-and returns the detected mime type, file size and last modified date if the file is not
+On Linux, `sniff` also acts as a general file type detector using the libmagic library,
+returning the detected mime type, file size and last modified date if the file is not
 a CSV. If --no-infer is enabled, it doesn't even bother to infer the CSV's schema.
 
 On macOS and Windows however, `sniff` is only a CSV dialect detector and does not
@@ -38,6 +38,10 @@ sniff arguments:
                              This is done to increase the chances of sniffing the
                              correct schema.
 
+                             When input is a URL and --no-infer is enabled, sniff will
+                             only download the first chunk of the file and return the
+                             detected mime type, file size and last modified date.
+                             
 sniff options:
     --sample <size>          First n rows to sample to sniff out the metadata.
                              When sample size is between 0 and 1 exclusive, 
@@ -114,7 +118,6 @@ struct Args {
     flag_timeout:        u16,
     flag_user_agent:     Option<String>,
     flag_stats_types:    bool,
-    #[cfg(all(target_os = "linux", feature = "magic"))]
     flag_no_infer:       bool,
 }
 
@@ -686,6 +689,18 @@ fn cleanup_tempfile(
 pub async fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
+    #[cfg(not(target_os = "linux"))]
+    if args.flag_no_infer {
+        return fail_clierror!(
+            "--no-infer is only supported on Linux with the 'magic' feature enabled"
+        );
+    }
+
+    #[cfg(all(target_os = "linux", not(feature = "magic")))]
+    if args.flag_no_infer {
+        return fail_clierror!("--no-infer is only supported when the 'magic' feature is enabled");
+    }
+
     let mut sample_size = args.flag_sample;
     if sample_size < 0.0 {
         if args.flag_json || args.flag_pretty_json {
@@ -718,18 +733,12 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
     if (file_type != "application/csv" && !file_type.starts_with("text/")) || args.flag_no_infer {
         cleanup_tempfile(sfile_info.tempfile_flag, tempfile_to_delete)?;
 
-        // these could be unknown if we're checking a remote file
-        // and the server did not return content-length or last-modified
         let size = if sfile_info.file_size >= usize::MAX - 1 {
             "Unknown".to_string()
         } else {
             sfile_info.file_size.to_string()
         };
-        let last_modified = if sfile_info.last_modified.is_empty() {
-            "Unknown".to_string()
-        } else {
-            sfile_info.last_modified.to_owned()
-        };
+        let last_modified = sfile_info.last_modified.clone();
 
         if args.flag_json || args.flag_pretty_json {
             if args.flag_no_infer {
