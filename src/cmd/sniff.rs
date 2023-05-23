@@ -1,11 +1,11 @@
 static USAGE: &str = r#"
-Quickly sniff and infer CSV metadata (delimiter, header row, number of preamble rows,
-quote character, flexible, is_utf8, average record length, number of records, content
-length and estimated number of records if sniffing a URL, file size, number of fields,
+Quickly sniff the first n rows and infer CSV metadata (delimiter, header row, number of
+preamble rows, quote character, flexible, is_utf8, average record length, number of records,
+content length and estimated number of records if sniffing a URL, file size, number of fields,
 field names & data types) using a Viterbi algorithm.
 (https://en.wikipedia.org/wiki/Viterbi_algorithm)
 
-On Linux, `sniff` also acts as a general file type detector using the libmagic library,
+On Linux, `sniff` also acts as a general mime type detector using the libmagic library,
 returning the detected mime type, file size and last modified date if the file is not
 a CSV. If --no-infer is enabled, it doesn't even bother to infer the CSV's schema.
 
@@ -28,19 +28,21 @@ Usage:
     qsv sniff --help
 
 sniff arguments:
-    <input>                  The file to sniff. This can be a local file, stdin 
-                             or a URL (http and https schemes supported).
+    <input>                  The file to sniff. This can be a local file, stdin or a
+                             URL (http and https schemes supported).
 
-                             Note that when input is a URL, sniff will automatically
-                             download the sample to a temporary file and sniff it. It
-                             will create the file using csv::QuoteStyle::NonNumeric
-                             so the sniffed schema may not be the same as the original.
-                             This is done to increase the chances of sniffing the
-                             correct schema.
+                             Note that when input is a URL and is a CSV candidate,
+                             sniff will automatically download a sample to a temporary
+                             file and sniff it.
 
-                             When input is a URL and --no-infer is enabled, sniff will
-                             only download the first chunk of the file and return the
-                             detected mime type, file size and last modified date.
+                             If the file sample is not a CSV, sniff will return as an error
+                             - the detected mime type, file size & last modified date.
+
+                             When --no-infer is enabled, sniff will not bother to infer the
+                             CSV schema and just work as a general mime type detector -
+                             returning the detected mime type, file size and last modified date.
+                             When sniffing a local file, it will scan the file to detect the mime type.
+                             When sniffing a URL, it will only download the first chunk of the file.
                              
 sniff options:
     --sample <size>          First n rows to sample to sniff out the metadata.
