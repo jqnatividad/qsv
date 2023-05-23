@@ -117,7 +117,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .map(|piece| {
                 let clean_piece = cleaner_pattern.replace_all(piece.as_bytes(), NoExpand(b""));
 
-                String::from_utf8(clean_piece.into_owned()).unwrap_or_default()
+                simdutf8::basic::from_utf8(&clean_piece)
+                    .unwrap_or_default()
+                    .to_string()
             })
             .collect();
 
