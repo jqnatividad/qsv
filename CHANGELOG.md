@@ -6,6 +6,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.104.1] - 2023-05-23
+
+### Added
+* added new publishing workflow to build binary variants using older glibc 2.31 instead of glibc 2.35 and musl 1.1.24 instead of musl 1.2.2. This will allow users running on older Linux distros (e.g. Debian, Ubuntu 20.04) to run qsv prebuilt binaries with  "older" glibc/musl versions. https://github.com/jqnatividad/qsv/commit/1a08b920240b39ff57282645cc92686b42e3c278
+
+### Changed
+* `sniff`: improved usage text https://github.com/jqnatividad/qsv/commit/d2b32ac6631589230484cb84506b5113c8f75192
+* `sniff`: if sniffing a URL, and server does not return content-length or last-modified headers, set filesize and last-modified to "Unknown" https://github.com/jqnatividad/qsv/commit/d4a64ac2e7147e7ab5452864fe6063a97f37f76b
+* `frequency`: use simdutf8 validation in hot loop https://github.com/jqnatividad/qsv/commit/33406a15f554d03ca117e0196efa6362f104e3cc
+* `foreach`: use simdut8 validation https://github.com/jqnatividad/qsv/commit/df6b4f8ae967bde8ca22bc6dd217938ae5238add
+* `apply`: tweak decode operation to avoid panics (however unlikely) https://github.com/jqnatividad/qsv/commit/adf7052db39a08aeda2401774892a884be98223c
+* update install & build instructions with magic
+* Bump regex from 1.8.1 to 1.8.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/990
+* Bump bumpalo from 3.12.2 to 3.13.0
+* pin Rust nightly to 2021-05-22
+
+### Removed
+* `sniff`: disabled --progressbar option on qsvdp binary variant.
+
+### Fixed
+* updated publishing workflows to properly enable magic feature (for sniff mime type detection) https://github.com/jqnatividad/qsv/commit/136211fcd9134f3421223979a5272ff53d77f03b
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.104.0...0.104.1
+
 ## [0.104.0] - 2023-05-22
 
 ### Added
