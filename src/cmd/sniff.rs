@@ -92,6 +92,7 @@ use std::{
 use bytes::Bytes;
 use futures::executor::block_on;
 use futures_util::StreamExt;
+#[cfg(any(feature = "feature_capable", feature = "lite"))]
 use indicatif::{HumanBytes, HumanCount, ProgressBar, ProgressDrawTarget, ProgressStyle};
 use qsv_sniffer::{DatePreference, SampleSize, Sniffer};
 use reqwest::Client;
@@ -360,13 +361,16 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                 };
 
                 // prep progress bar
+                #[cfg(any(feature = "feature_capable", feature = "lite"))]
                 let show_progress =
                     args.flag_progressbar || util::get_envvar_flag("QSV_PROGRESSBAR");
 
+                #[cfg(any(feature = "feature_capable", feature = "lite"))]
                 let progress = ProgressBar::with_draw_target(
                     Some(total_size.try_into().unwrap_or(u64::MAX)),
                     ProgressDrawTarget::stderr_with_hz(5),
                 );
+                #[cfg(any(feature = "feature_capable", feature = "lite"))]
                 if show_progress {
                     progress.set_style(
                         ProgressStyle::default_bar()
@@ -438,6 +442,8 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                     }
 
                     downloaded = min(downloaded + chunk_len, total_size);
+
+                    #[cfg(any(feature = "feature_capable", feature = "lite"))]
                     if show_progress {
                         progress.inc(chunk_len as u64);
                     }
@@ -458,6 +464,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                 }
                 drop(client);
 
+                #[cfg(any(feature = "feature_capable", feature = "lite"))]
                 if show_progress {
                     if snappy_flag {
                         progress.finish_with_message(format!(
