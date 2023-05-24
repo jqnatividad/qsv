@@ -915,7 +915,7 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     let mut processed_results = SniffStruct::default();
-    let mut sniffing_error: Option<String> = None;
+    let mut sniff_error: Option<String> = None;
 
     match sniff_results {
         Ok(metadata) => {
@@ -935,7 +935,7 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
             processed_results = SniffStruct {
                 path: sfile_info.display_path,
                 sniff_timestamp: sniffed_ts,
-                last_modified: sfile_info.last_modified,
+                last_modified: sfile_info.last_modified.clone(),
                 delimiter_char: metadata.dialect.delimiter as char,
                 header_row: metadata.dialect.header.has_header_row,
                 preamble_rows: metadata.dialect.header.num_preamble_rows,
@@ -948,7 +948,7 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
                 #[cfg(all(target_os = "linux", feature = "magic"))]
                 detected_mime: file_type,
                 retrieved_size: sfile_info.retrieved_size,
-                file_size: sfile_info.file_size, // sfile_info.file_size,
+                file_size: sfile_info.file_size,
                 sampled_records: if sampled_records > num_records {
                     num_records
                 } else {
@@ -964,21 +964,15 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
             };
         }
         Err(e) => {
-            #[cfg(all(target_os = "linux", feature = "magic"))]
-            {
-                sniffing_error = Some(format!("{e}. Detected mime type: {file_type}"));
-            }
-            #[cfg(not(feature = "magic"))]
-            {
-                sniffing_error = Some(format!("{e}"));
-            }
+            sniff_error = Some(format!("{e}"));
         }
     }
 
     cleanup_tempfile(sfile_info.tempfile_flag, tempfile_to_delete)?;
 
+    // safety: we just created all these json values above, so they are safe to unwrap
     if args.flag_json || args.flag_pretty_json {
-        if sniffing_error.is_none() {
+        if sniff_error.is_none() {
             if args.flag_pretty_json {
                 println!(
                     "{}",
@@ -989,18 +983,47 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
             };
             Ok(())
         } else {
-            let json_error = json!({
-                "errors": [{
+            let sniff_error_json;
+            #[cfg(all(target_os = "linux", feature = "magic"))]
+            {
+                sniff_error_json = json!({
                     "title": "sniff error",
-                    "detail": sniffing_error.unwrap()
-                }]
-            });
-            fail_clierror!("{json_error}")
+                    "detail": format!("{}", sniff_error.unwrap()),
+                    "meta": {
+                        "detected_mime_type": file_type,
+                        "size": sfile_info.file_size,
+                        "last_modified": sfile_info.last_modified,
+                    }
+                });
+            }
+            #[cfg(not(feature = "magic"))]
+            {
+                sniff_error_json = json!({
+                    "title": "sniff error",
+                    "detail": format!("{}", sniff_error.unwrap()),
+                    "meta": {
+                        "detected_mime_type": "Unknown",
+                        "size": sfile_info.file_size,
+                        "last_modified": sfile_info.last_modified,
+                    }
+                });
+            }
+            let error_msg = if args.flag_pretty_json {
+                serde_json::to_string_pretty(&sniff_error_json).unwrap()
+            } else {
+                serde_json::to_string(&sniff_error_json).unwrap()
+            };
+            fail_clierror!("{error_msg}")
         }
-    } else if sniffing_error.is_none() {
+    } else if sniff_error.is_none() {
         println!("{processed_results}");
-        return Ok(());
+        Ok(())
     } else {
-        return fail_clierror!("{}", sniffing_error.unwrap());
+        fail_clierror!(
+            "{error}; size: {size}, last_modified: {last_modified}",
+            error = sniff_error.unwrap(),
+            size = sfile_info.file_size,
+            last_modified = sfile_info.last_modified
+        )
     }
 }
