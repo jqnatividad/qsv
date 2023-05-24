@@ -3,6 +3,7 @@
 comment_width                = 100
 wrap_comments                = true
 format_strings               = true
+reorder_impl_items           = true
 group_imports                = "StdExternalCrate"
 imports_granularity          = "Crate"
 enum_discrim_align_threshold = 20

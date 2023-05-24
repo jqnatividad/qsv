@@ -12,6 +12,7 @@ pub struct Indexed<R, I> {
 
 impl<R, I> ops::Deref for Indexed<R, I> {
     type Target = csv::Reader<R>;
+
     fn deref(&self) -> &csv::Reader<R> {
         &self.csv_rdr
     }

@@ -133,6 +133,7 @@ impl Csv for CsvVecs {
     fn to_vecs(self) -> CsvVecs {
         self
     }
+
     fn from_vecs(vecs: CsvVecs) -> CsvVecs {
         vecs
     }
@@ -151,6 +152,7 @@ impl CsvRecord {
 #[allow(clippy::needless_lifetimes)]
 impl ops::Deref for CsvRecord {
     type Target = [String];
+
     fn deref<'a>(&'a self) -> &'a [String] {
         &self.0
     }
@@ -191,6 +193,7 @@ impl Csv for Vec<CsvRecord> {
     fn to_vecs(self) -> CsvVecs {
         unsafe { transmute(self) }
     }
+
     fn from_vecs(vecs: CsvVecs) -> Vec<CsvRecord> {
         unsafe { transmute(vecs) }
     }
@@ -218,6 +221,7 @@ impl CsvData {
 #[allow(clippy::needless_lifetimes)]
 impl ops::Deref for CsvData {
     type Target = [CsvRecord];
+
     fn deref<'a>(&'a self) -> &'a [CsvRecord] {
         &self.data
     }
@@ -271,6 +275,7 @@ impl Csv for CsvData {
     fn to_vecs(self) -> CsvVecs {
         unsafe { transmute(self.data) }
     }
+
     fn from_vecs(vecs: CsvVecs) -> CsvData {
         CsvData {
             data: unsafe { transmute(vecs) },

@@ -127,8 +127,9 @@ impl iter::FromIterator<ByteString> for ByteRecord {
 }
 
 impl iter::IntoIterator for ByteRecord {
-    type Item = ByteString;
     type IntoIter = ::std::vec::IntoIter<ByteString>;
+    type Item = ByteString;
+
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()
     }
@@ -136,6 +137,7 @@ impl iter::IntoIterator for ByteRecord {
 
 impl ops::Deref for ByteRecord {
     type Target = [ByteString];
+
     fn deref(&self) -> &[ByteString] {
         &self.0
     }

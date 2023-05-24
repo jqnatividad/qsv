@@ -9,26 +9,27 @@ struct ExtDedupConfig;
 const CHUNK_SIZE: usize = 127;
 
 impl Config for ExtDedupConfig {
-    type Key = [u8; CHUNK_SIZE + 1];
-    type Value = bool;
-
     type EncodedKey = [u8; CHUNK_SIZE + 1];
     type EncodedValue = [u8; 1];
-
     type H = FxHashFn;
+    type Key = [u8; CHUNK_SIZE + 1];
+    type Value = bool;
 
     #[inline]
     fn encode_key(k: &Self::Key) -> Self::EncodedKey {
         *k
     }
+
     #[inline]
     fn encode_value(v: &Self::Value) -> Self::EncodedValue {
         [*v as u8; 1]
     }
+
     #[inline]
     fn decode_key(k: &Self::EncodedKey) -> Self::Key {
         *k
     }
+
     #[inline]
     fn decode_value(v: &Self::EncodedValue) -> Self::Value {
         v[0] == 1
