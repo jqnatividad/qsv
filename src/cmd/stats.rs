@@ -684,6 +684,7 @@ impl Args {
                 };
             });
         }
+        assert!(results.len() == records.len());
         for (i, recv) in results.into_iter().enumerate() {
             records[i] = unsafe { recv.recv().unwrap_unchecked() };
         }
@@ -702,15 +703,14 @@ impl Args {
         unsafe {
             let infer_date_flags = INFER_DATE_FLAGS.get_unchecked();
             for row in it {
-                sel.select(&row.unwrap_unchecked())
-                    .enumerate()
-                    .for_each(|(i, field)| {
-                        stats.get_unchecked_mut(i).add(
-                            field,
-                            *infer_date_flags.get_unchecked(i),
-                            self.flag_infer_boolean,
-                        );
-                    });
+                for (i, field) in sel.select(&row.unwrap_unchecked())
+                    .enumerate() {
+                    stats.get_unchecked_mut(i).add(
+                        field,
+                        *infer_date_flags.get_unchecked(i),
+                        self.flag_infer_boolean,
+                    );
+                }
             }
         }
         stats
