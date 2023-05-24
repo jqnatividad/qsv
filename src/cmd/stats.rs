@@ -703,8 +703,7 @@ impl Args {
         unsafe {
             let infer_date_flags = INFER_DATE_FLAGS.get_unchecked();
             for row in it {
-                for (i, field) in sel.select(&row.unwrap_unchecked())
-                    .enumerate() {
+                for (i, field) in sel.select(&row.unwrap_unchecked()).enumerate() {
                     stats.get_unchecked_mut(i).add(
                         field,
                         *infer_date_flags.get_unchecked(i),
