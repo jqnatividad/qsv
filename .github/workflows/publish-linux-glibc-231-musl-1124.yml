@@ -37,6 +37,7 @@ jobs:
             default-features:
             addl-qsvlite-features: magic
             addl-qsvdp-features: luau,magic
+            name-suffix: glibc-2.31
           - os: ubuntu-20.04
             os-name: linux
             target: x86_64-unknown-linux-musl
@@ -46,6 +47,7 @@ jobs:
             default-features:
             addl-qsvlite-features: magic
             addl-qsvdp-features: magic
+            name-suffix: musl-1.1.24
 
     steps:
     - name: Installing Rust toolchain
@@ -103,10 +105,10 @@ jobs:
         rm target/${{ matrix.job.target }}/release/*.d 
         cp target/${{ matrix.job.target }}/release/qsv* qsv-${{ needs.analyze-tags.outputs.previous-tag }}
         cd qsv-${{ needs.analyze-tags.outputs.previous-tag }}
-        mv qsv qsv_older
-        mv qsvlite qsvlite_older
-        mv qsvdp qsvdp_older
-        rustup show > qsv_older_rust_version_info.txt
+        mv qsv qsv_${{ matrix.job.name-suffix }}
+        mv qsvlite qsvlite_${{ matrix.job.name-suffix }}
+        mv qsvdp qsvdp_${{ matrix.job.name-suffix }}
+        rustup show > qsv_${{ matrix.job.name-suffix }}_rust_version_info.txt
         cd ..
     - name: Download latest release zip
       uses: robinraju/release-downloader@v1.8
