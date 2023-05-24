@@ -946,7 +946,7 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
                 flexible: metadata.dialect.flexible,
                 is_utf8: metadata.dialect.is_utf8,
                 #[cfg(all(target_os = "linux", feature = "magic"))]
-                detected_mime: file_type,
+                detected_mime: file_type.clone(),
                 retrieved_size: sfile_info.retrieved_size,
                 file_size: sfile_info.file_size,
                 sampled_records: if sampled_records > num_records {
