@@ -684,6 +684,8 @@ impl Args {
                 };
             });
         }
+        // assert hints the compiler that the length of results is the same as records
+        // so it doesn't have to bounds check records index access in the loop below
         assert!(results.len() == records.len());
         for (i, recv) in results.into_iter().enumerate() {
             records[i] = unsafe { recv.recv().unwrap_unchecked() };
