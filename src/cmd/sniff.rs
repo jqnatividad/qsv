@@ -42,7 +42,8 @@ sniff arguments:
                              CSV schema and just work as a general mime type detector -
                              returning the detected mime type, file size and last modified date.
                              When sniffing a local file, it will scan the file to detect the mime type.
-                             When sniffing a URL, it will only download the first chunk of the file.
+                             When sniffing a URL, it will only download the first chunk of the file if 
+                             the --quick option is enabled, otherwise it will download the entire file.
                              
 sniff options:
     --sample <size>          First n rows to sample to sniff out the metadata.
@@ -69,6 +70,10 @@ sniff options:
                              (Unsigned, Signed => Integer, Text => String, everything else the same)
     --no-infer               Do not infer the schema. Only return the file's mime type, size and
                              last modified date. Use this to use sniff as a general mime type detector.
+                             Valid only on Linux.
+    --quick                  When sniffing a non-CSV remote file, only download the first chunk of the file
+                             before attempting to detect the mime type. This is faster but less accurate as
+                             some mime types cannot be detected with just the first chunk.
                              Valid only on Linux.
 
 Common options:
@@ -122,6 +127,7 @@ struct Args {
     flag_user_agent:     Option<String>,
     flag_stats_types:    bool,
     flag_no_infer:       bool,
+    flag_quick:          bool,
 }
 
 #[derive(Serialize, Deserialize, Default, Debug)]
@@ -403,12 +409,8 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                 #[allow(unused_assignments)]
                 let mut chunk = Bytes::new(); // amortize the allocation
 
-                // on linux, we can short-circuit downloading by
-                // checking the file type from the first chunk
                 // the unused_muts are here to suppress warnings
                 // when the magic feature is not enabled
-                #[allow(unused_mut)]
-                let mut shortcircuit_flag = false;
                 #[allow(unused_mut)]
                 let mut firstchunk = Bytes::new();
                 #[allow(unused_mut)]
@@ -430,11 +432,11 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
 
                     // on linux, we can short-circuit downloading
                     // by checking the file type from the first chunk
+                    // when --quick is enabled
                     #[cfg(all(target_os = "linux", feature = "magic"))]
-                    if downloaded == 0 && !snappy_flag {
+                    if downloaded == 0 && !snappy_flag && args.flag_quick {
                         let mime = util::sniff_filetype_from_buffer(&chunk)?;
                         if !mime.starts_with("text/") && mime != "application/csv" {
-                            shortcircuit_flag = true;
                             downloaded = chunk_len;
                             firstchunk = chunk.clone();
                             break;
@@ -495,10 +497,10 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                     // before we can sniff it
                     wtr_file_path =
                         util::decompress_snappy_file(&file.path().to_path_buf(), tmpdir)?;
-                } else if shortcircuit_flag {
-                    // on linux, we can short-circuit downloading by checking the file type
-                    // from the first chunk. If the file is not a CSV file, we just write
-                    // the first chunk to a file and return
+                } else if args.flag_quick && magic_flag {
+                    // on linux, when --quiick is enabled, we short-circuit downloading by checking
+                    // the file type from the first chunk. If the file is not a CSV,
+                    // we just write the first chunk to a file and return
                     wtr_file_path = path.display().to_string();
                     tmp_file.write_all(&firstchunk)?;
                     tmp_file.flush()?;
