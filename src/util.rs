@@ -105,8 +105,10 @@ pub fn timeout_secs(timeout: u16) -> Result<u64, String> {
     Ok(timeout as u64)
 }
 
-/// sets user agent
+/// sets custom user agent
 /// if user agent is not set, then use the default user agent
+/// it supports four special LITERALs: $QSV_BIN_NAME, $QSV_VERSION, $QSV_TARGET, and $QSV_KIND
+/// which will be replaced with the actual values during runtime
 pub fn set_user_agent(user_agent: Option<String>) -> CliResult<String> {
     use reqwest::header::HeaderValue;
 
@@ -114,6 +116,13 @@ pub fn set_user_agent(user_agent: Option<String>) -> CliResult<String> {
         Some(ua_arg) => ua_arg,
         None => env::var("QSV_USER_AGENT").unwrap_or_else(|_| default_user_agent()),
     };
+
+    // look for special literals - $QSV_VERSION and $QSV_TARGET and replace them
+    let ua = ua
+        .replace("$QSV_BIN_NAME", CARGO_BIN_NAME)
+        .replace("$QSV_VERSION", CARGO_PKG_VERSION)
+        .replace("$QSV_TARGET", TARGET)
+        .replace("$QSV_KIND", QSV_KIND);
 
     match HeaderValue::from_str(ua.as_str()) {
         Ok(_) => (),
