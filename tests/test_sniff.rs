@@ -169,6 +169,29 @@ Fields:
 }
 
 #[test]
+fn sniff_url_snappy_noinfer() {
+    let wrk = Workdir::new("sniff_url_snappy_noinfer");
+
+    let mut cmd = wrk.command("sniff");
+    cmd.arg("https://github.com/jqnatividad/qsv/raw/master/resources/test/boston311-100.csv.sz")
+        .arg("--no-infer");
+
+    #[cfg(all(target_os = "linux", feature = "magic"))]
+    {
+        let got: String = wrk.stdout(&mut cmd);
+
+        let expected = "Detected mime type: application/x-snappy-framed";
+
+        assert!(got.starts_with(expected));
+    }
+
+    #[cfg(not(feature = "magic"))]
+    {
+        wrk.assert_err(&mut cmd);
+    }
+}
+
+#[test]
 fn sniff_file_snappy() {
     let wrk = Workdir::new("sniff_file_snappy");
 

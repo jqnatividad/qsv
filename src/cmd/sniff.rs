@@ -769,9 +769,10 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
     #[cfg(all(target_os = "linux", feature = "magic"))]
     {
         // if we have a detected mime type earlier, we can skip the sniffing
-        // unless it was a snappy file, as we need to sniff the uncompressed file
+        // unless it was a snappy file and --no-infer is disabled,
+        // as we need to sniff the uncompressed file
         if sfile_info.detected_mime.is_empty()
-            || sfile_info.detected_mime == "application/x-snappy-framed"
+            || sfile_info.detected_mime == "application/x-snappy-framed" && !args.flag_no_infer
         {
             file_type = util::get_filetype(&sfile_info.file_to_sniff)?;
         } else {
