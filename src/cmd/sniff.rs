@@ -89,7 +89,7 @@ Common options:
 use std::{
     cmp::min,
     fmt, fs,
-    io::Write,
+    io::{copy, Seek, SeekFrom, Write},
     path::PathBuf,
     time::{Duration, SystemTime},
 };
@@ -259,6 +259,8 @@ impl fmt::Display for SniffStruct {
 struct SniffFileStruct {
     display_path:       String,
     file_to_sniff:      String,
+    #[cfg(all(target_os = "linux", feature = "magic"))]
+    detected_mime:      String,
     tempfile_flag:      bool,
     retrieved_size:     usize,
     file_size:          usize,
@@ -436,6 +438,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                     #[cfg(all(target_os = "linux", feature = "magic"))]
                     if downloaded == 0 && !snappy_flag && args.flag_quick {
                         let mime = util::sniff_filetype_from_buffer(&chunk)?;
+                        log::debug!("scanned first {chunk_len} bytes - detected mime: {mime}");
                         if !mime.starts_with("text/") && mime != "application/csv" {
                             downloaded = chunk_len;
                             firstchunk = chunk.clone();
@@ -465,6 +468,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                     }
                 }
                 drop(client);
+                file.flush()?;
 
                 #[cfg(any(feature = "feature_capable", feature = "lite"))]
                 if show_progress {
@@ -481,6 +485,19 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                     }
                 }
 
+                let wtr_file_path;
+                #[allow(unused_mut)]
+                let mut csv_candidate = true;
+                let mut detected_mime = String::new();
+
+                #[cfg(all(target_os = "linux", feature = "magic"))]
+                if !args.flag_quick {
+                    detected_mime =
+                        util::get_filetype(&file.path().to_path_buf().display().to_string())?;
+                    csv_candidate =
+                        detected_mime.starts_with("text/") || detected_mime == "application/csv";
+                }
+
                 // create a temporary file to write the download file to
                 let wtr_file = NamedTempFile::new()?;
 
@@ -489,7 +506,6 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                 let (mut tmp_file, path) =
                     wtr_file.keep().map_err(|_| "Cannot keep temporary file")?;
 
-                let wtr_file_path;
                 let mut downloaded_records = 0_usize;
 
                 if snappy_flag {
@@ -504,7 +520,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                     wtr_file_path = path.display().to_string();
                     tmp_file.write_all(&firstchunk)?;
                     tmp_file.flush()?;
-                } else {
+                } else if csv_candidate {
                     // we downloaded a non-snappy file and it might be a CSV file.
                     // Rewrite it so we only have the exact sample size and truncate potentially
                     // incomplete lines. We do this coz we streamed the download and the downloaded
@@ -544,11 +560,20 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                         wtr.write_byte_record(&record)?;
                     }
                     wtr.flush()?;
+                } else {
+                    // we downloaded a non-snappy file and its not a CSV file
+                    // just copy it over
+                    wtr_file_path = path.display().to_string();
+                    file.seek(SeekFrom::Start(0))?;
+                    copy(&mut file, &mut tmp_file)?;
+                    log::debug!("Not a CSV file, just copy it over");
                 }
 
                 Ok(SniffFileStruct {
                     display_path: url,
                     file_to_sniff: wtr_file_path,
+                    #[cfg(all(target_os = "linux", feature = "magic"))]
+                    detected_mime,
                     tempfile_flag: true,
                     retrieved_size: downloaded,
                     file_size: if magic_flag && total_size == usize::MAX {
@@ -639,6 +664,8 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                 Ok(SniffFileStruct {
                     display_path: canonical_path,
                     file_to_sniff: path,
+                    #[cfg(all(target_os = "linux", feature = "magic"))]
+                    detected_mime: "".to_string(),
                     tempfile_flag: false,
                     retrieved_size: file_size,
                     file_size,
@@ -677,6 +704,8 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
         Ok(SniffFileStruct {
             display_path: "stdin".to_string(),
             file_to_sniff: path_string,
+            #[cfg(all(target_os = "linux", feature = "magic"))]
+            detected_mime: "".to_string(),
             tempfile_flag: true,
             retrieved_size: file_size,
             file_size,
@@ -732,72 +761,88 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
     let future = get_file_to_sniff(&args, &tmpdir);
     let sfile_info = block_on(future)?;
     let tempfile_to_delete = sfile_info.file_to_sniff.clone();
+    #[allow(unused_assignments)]
+    let mut file_type = String::new();
 
     // on linux, check what kind of file we have
     // if its NOT a CSV or a text file, we fail, showing the detected mime type
     #[cfg(all(target_os = "linux", feature = "magic"))]
-    let file_type = util::get_filetype(&sfile_info.file_to_sniff)?;
-    #[cfg(all(target_os = "linux", feature = "magic"))]
-    // we also accept text/* files, as sniff may still be able to suss out
-    // if the file is a CSV, even if its not using a CSV extension
-    // we can also be here if the user has specified --no-infer
-    if (file_type != "application/csv" && !file_type.starts_with("text/")) || args.flag_no_infer {
-        cleanup_tempfile(sfile_info.tempfile_flag, tempfile_to_delete)?;
-
-        let size = if sfile_info.file_size >= usize::MAX - 1 {
-            "Unknown".to_string()
+    {
+        // if we have a detected mime type earlier, we can skip the sniffing
+        // unless it was a snappy file, as we need to sniff the uncompressed file
+        if sfile_info.detected_mime.is_empty()
+            || sfile_info.detected_mime == "application/x-snappy-framed"
+        {
+            file_type = util::get_filetype(&sfile_info.file_to_sniff)?;
         } else {
-            sfile_info.file_size.to_string()
-        };
-        let last_modified = sfile_info.last_modified.clone();
+            file_type = sfile_info.detected_mime.clone();
+        }
 
-        if args.flag_json || args.flag_pretty_json {
-            if args.flag_no_infer {
-                let json_result = json!({
-                    "title": "sniff mime type",
-                    "meta": {
-                        "detected_mime_type": file_type,
-                        "size": size,
-                        "last_modified": last_modified,
-                    }
-                });
-                if args.flag_pretty_json {
-                    woutinfo!("{}", serde_json::to_string_pretty(&json_result).unwrap());
-                    return Ok(());
-                }
-                woutinfo!("{json_result}");
-                return Ok(());
+        // we also accept text/* files, as sniff may still be able to suss out
+        // if the file is a CSV, even if its not using a CSV extension
+        // we can also be here if the user has specified --no-infer
+        if (file_type != "application/csv" && !file_type.starts_with("text/")) || args.flag_no_infer
+        {
+            cleanup_tempfile(sfile_info.tempfile_flag, tempfile_to_delete)?;
+
+            let size = if sfile_info.file_size >= usize::MAX - 1 {
+                "Unknown".to_string()
             } else {
-                let json_result = json!({
-                    "errors": [{
-                        "title": "sniff error",
-                        "detail": format!("File is not a CSV file. Detected mime type: {file_type}"),
+                sfile_info.file_size.to_string()
+            };
+            let mut last_modified = sfile_info.last_modified;
+            if last_modified.is_empty() {
+                last_modified = "Unknown".to_string();
+            }
+
+            if args.flag_json || args.flag_pretty_json {
+                if args.flag_no_infer {
+                    let json_result = json!({
+                        "title": "sniff mime type",
                         "meta": {
                             "detected_mime_type": file_type,
                             "size": size,
                             "last_modified": last_modified,
                         }
-                    }]
-                });
-                if args.flag_pretty_json {
-                    return fail_clierror!(
-                        "{}",
-                        serde_json::to_string_pretty(&json_result).unwrap()
-                    );
+                    });
+                    if args.flag_pretty_json {
+                        woutinfo!("{}", serde_json::to_string_pretty(&json_result).unwrap());
+                        return Ok(());
+                    }
+                    woutinfo!("{json_result}");
+                    return Ok(());
+                } else {
+                    let json_result = json!({
+                        "errors": [{
+                            "title": "sniff error",
+                            "detail": format!("File is not a CSV file. Detected mime type: {file_type}"),
+                            "meta": {
+                                "detected_mime_type": file_type,
+                                "size": size,
+                                "last_modified": last_modified,
+                            }
+                        }]
+                    });
+                    if args.flag_pretty_json {
+                        return fail_clierror!(
+                            "{}",
+                            serde_json::to_string_pretty(&json_result).unwrap()
+                        );
+                    }
+                    return fail_clierror!("{json_result}");
                 }
-                return fail_clierror!("{json_result}");
             }
-        }
-        if args.flag_no_infer {
-            woutinfo!(
-                "Detected mime type: {file_type}, size: {size}, last modified: {last_modified}"
-            );
-            return Ok(());
-        } else {
-            return fail_clierror!(
-                "File is not a CSV file. Detected mime type: {file_type}, size: {size}, last \
-                 modified: {last_modified}"
-            );
+            if args.flag_no_infer {
+                woutinfo!(
+                    "Detected mime type: {file_type}, size: {size}, last modified: {last_modified}"
+                );
+                return Ok(());
+            } else {
+                return fail_clierror!(
+                    "File is not a CSV file. Detected mime type: {file_type}, size: {size}, last \
+                     modified: {last_modified}"
+                );
+            }
         }
     }
 

@@ -1420,19 +1420,9 @@ pub fn sniff_filetype_from_buffer(in_buffer: &bytes::Bytes) -> Result<String, Cl
         buffer_wrk.extend_from_slice(&in_buffer[0..buffer_len]);
         let mime = cookie.buffer(&buffer_wrk)?;
 
-        if log_enabled!(log::Level::Debug) {
-            log::debug!(
-                "scanned first {buffer_len} bytes - detected mime: {}",
-                mime.clone()
-            );
-        }
-
         Ok(mime)
     } else {
-        // if we have no bytes, we can't determine the mime type
-        // so we return application/octet-stream per
-        // https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types#important_mime_types_for_web_developers
-        // and https://stackoverflow.com/questions/1176022/unknown-file-type-mime
-        Ok("application/octet-stream".to_string())
+        // empty file, so we return inode/x-empty
+        Ok("inode/x-empty".to_string())
     }
 }
