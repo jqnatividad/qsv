@@ -7,7 +7,9 @@ field names & data types) using a Viterbi algorithm.
 
 On Linux, `sniff` also acts as a general mime type detector using the libmagic library,
 returning the detected mime type, file size and last modified date if the file is not
-a CSV. If --no-infer is enabled, it doesn't even bother to infer the CSV's schema.
+a CSV. If --no-infer is enabled, it doesn't even bother to infer the CSV's schema. This
+makes it especially useful for accelerated CKAN harvesting and for checking stale/broken
+resource URLs.
 
 On macOS and Windows however, `sniff` is only a CSV dialect detector and does not
 detect other file types. It can only sniff files with the "csv", "tsv", "tab" and
@@ -64,7 +66,8 @@ sniff options:
     --timeout <secs>         Timeout when sniffing URLs in seconds.
                              [default: 30]
     --user-agent <agent>     Specify a custom user agent to use when sniffing a CSV on a URL.
-                             Try to follow the syntax here -
+                             It supports the following variables - $QSV_VERSION, $QSV_TARGET,
+                             $QSV_BIN_NAME and $QSV_KIND. Try to follow the syntax here -
                              https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
     --stats-types            Use the same data type names as `stats`.
                              (Unsigned, Signed => Integer, Text => String, everything else the same)
@@ -75,13 +78,17 @@ sniff options:
                              before attempting to detect the mime type. This is faster but less accurate as
                              some mime types cannot be detected with just the first chunk.
                              Valid only on Linux.
+    --harvest-mode           This is a convenience flag when using sniff in CKAN harvesters. 
+                             It is equivalent to --quick --timeout 10 --stats-types --json
+                             and --user-agent "CKAN-harvest/$QSV_VERSION ($QSV_TARGET; $QSV_BIN_NAME)"
+                             Valid only on Linux.
 
 Common options:
     -h, --help               Display this message
     -d, --delimiter <arg>    The field delimiter for reading CSV data.
                              Specify this when the delimiter is known beforehand,
                              as the delimiter guessing algorithm can sometimes be
-                             wrong if not enough delimiters are present in the sample.
+                               wrong if not enough delimiters are present in the sample.
                              Must be a single ascii character.
     -p, --progressbar        Show progress bars. Only valid for URL input.
 "#;
@@ -128,6 +135,7 @@ struct Args {
     flag_stats_types:    bool,
     flag_no_infer:       bool,
     flag_quick:          bool,
+    flag_harvest_mode:   bool,
 }
 
 #[derive(Serialize, Deserialize, Default, Debug)]
@@ -727,18 +735,29 @@ fn cleanup_tempfile(
 
 #[allow(clippy::unused_async)] // false positive lint
 pub async fn run(argv: &[&str]) -> CliResult<()> {
-    let args: Args = util::get_args(USAGE, argv)?;
+    let mut args: Args = util::get_args(USAGE, argv)?;
+
+    if args.flag_harvest_mode {
+        args.flag_quick = true;
+        args.flag_timeout = 10;
+        args.flag_stats_types = true;
+        args.flag_json = true;
+        args.flag_user_agent =
+            Some("CKAN-harvest/$QSV_VERSION ($QSV_TARGET; $QSV_BIN_NAME)".to_string());
+    }
 
     #[cfg(not(target_os = "linux"))]
-    if args.flag_no_infer {
+    if args.flag_no_infer || args.flag_quick {
         return fail_clierror!(
-            "--no-infer is only supported on Linux with the 'magic' feature enabled"
+            "--no-infer and --quick are only supported on Linux with the 'magic' feature enabled"
         );
     }
 
     #[cfg(all(target_os = "linux", not(feature = "magic")))]
-    if args.flag_no_infer {
-        return fail_clierror!("--no-infer is only supported when the 'magic' feature is enabled");
+    if args.flag_no_infer || args.flag_quick {
+        return fail_clierror!(
+            "--no-infer and --quick are only supported when the 'magic' feature is enabled"
+        );
     }
 
     let mut sample_size = args.flag_sample;
