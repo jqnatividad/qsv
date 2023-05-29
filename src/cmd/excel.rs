@@ -2,23 +2,6 @@ static USAGE: &str = r#"
 Exports a specified Excel/ODS sheet to a CSV file.
 The first row of a sheet is assumed to be the header row.
 
-NOTE: Excel 97-2003 Binary File Format (.XLS) stores dates as number of days since 1900.
-https://support.microsoft.com/en-us/office/date-systems-in-excel-e7fe7167-48a9-4b96-bb53-5612a800b487
-
-Because of this, this command uses a --dates-whitelist to determine if it
-will attempt to transform a numeric value to an ISO 8601 date based on its name.
-
-If the column name satisfies the whitelist and a row value for a candidate date column
-is a float - it will infer a date for whole numbers and a datetime for float values with
-fractional components (e.g. 40729 is 2011-07-05, 37145.354166666664 is 2001-09-11 8:30:00).
-
-We need a whitelist so we know to only do this date conversions for date fields and
-not all columns with numeric values.
-
-With the modern XML-based, XLSX format however (Excel 2007 and later), qsv will automatically process
-a cell as a date, even if its not its not in the --dates-whitelist, if the cell's format has been
-explicitly set to date.
-
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_excel.rs.
 
 Usage:
@@ -53,29 +36,11 @@ Excel options:
                                from the previous record.
     --trim                     Trim all fields so that leading & trailing whitespaces are removed.
                                Also removes embedded linebreaks.
-    --dates-whitelist <list>   The case-insensitive patterns to look for when 
-                               shortlisting columns for date processing.
-                               i.e. if the column's name has any of these patterns,
-                               it is interpreted as a date column.
-
-                               Otherwise, Excel date columns that do not satisfy the
-                               whitelist will be returned as number of days since 1900.
-
-                               Set to "all" to interpret ALL numeric columns as date types.
-                               Note that this will cause false positive date conversions
-                               for all numeric columns that are not dates.
-
-                               Conversely, set to "none" to stop date processing altogether.
-
-                               If the list is all integers, its interpreted as the zero-based
-                               index of all the date columns for date processing.
-                               [default: date,time,due,open,close,created]
     --date-format <format>     Optional date format to use when formatting dates.
                                See https://docs.rs/chrono/latest/chrono/format/strftime/index.html
                                for the full list of supported formats.
                                Note that if a date format is invalid, qsv will fall back and
                                return the date as if no date-format was specified.
-
      --range <range>           An Excel format range, like C:T or C3:T25, to extract to the CSV.
 
 Common options:
@@ -87,7 +52,6 @@ Common options:
 use std::{cmp, fmt::Write, path::PathBuf};
 
 use calamine::{open_workbook_auto, DataType, Range, Reader};
-use itertools::Itertools;
 use log::info;
 use serde::{Deserialize, Serialize};
 use thousands::Separable;
@@ -96,16 +60,15 @@ use crate::{config::Config, util, CliResult};
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input:            String,
-    flag_sheet:           String,
-    flag_metadata:        String,
-    flag_flexible:        bool,
-    flag_trim:            bool,
-    flag_dates_whitelist: String,
-    flag_output:          Option<String>,
-    flag_quiet:           bool,
-    flag_date_format:     Option<String>,
-    flag_range:           String,
+    arg_input:        String,
+    flag_sheet:       String,
+    flag_metadata:    String,
+    flag_flexible:    bool,
+    flag_trim:        bool,
+    flag_output:      Option<String>,
+    flag_quiet:       bool,
+    flag_date_format: Option<String>,
+    flag_range:       String,
 }
 
 #[derive(PartialEq)]
@@ -480,36 +443,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         range = range.range(parsed_range.start, parsed_range.end);
     }
 
-    let whitelist_lower = args.flag_dates_whitelist.to_lowercase();
-    info!("using date-whitelist: {whitelist_lower}");
-
-    // an all number whitelist means we're being given
-    // the column indices of the date column names
-    let mut all_numbers_whitelist = true;
-
-    let mut dates_whitelist = whitelist_lower
-        .split(',')
-        .map(|s| {
-            if all_numbers_whitelist && s.parse::<u16>().is_err() {
-                all_numbers_whitelist = false;
-                info!("NOT a column index dates whitelist");
-            }
-            s.trim().to_string()
-        })
-        .collect_vec();
-
-    // we sort the whitelist, so we can do the faster binary_search() instead of contains()
-    // with an all_numbers_whitelist
-    if all_numbers_whitelist {
-        dates_whitelist.sort_unstable();
-    }
-
     let (row_count, col_count) = range.get_size();
 
     // use with_capacity to minimize reallocations
     let mut record = csv::StringRecord::with_capacity(500, col_count);
     let mut trimmed_record = csv::StringRecord::with_capacity(500, col_count);
-    let mut date_flag: Vec<bool> = Vec::with_capacity(col_count);
 
     let mut cell_date_flag: bool = false;
     let mut float_val = 0_f64;
@@ -525,7 +463,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     info!("exporting sheet ({sheet})...");
     for (row_idx, row) in range.rows().enumerate() {
         record.clear();
-        for (col_idx, cell) in row.iter().enumerate() {
+        for cell in row {
             if row_idx == 0 {
                 // its the header row, check the dates whitelist
                 info!("processing first row...");
@@ -536,33 +474,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     DataType::Int(ref i) => i.to_string(),
                     DataType::DateTime(ref f) | DataType::Float(ref f) => f.to_string(),
                     DataType::Bool(ref b) => b.to_string(),
+                    DataType::DateTimeIso(ref dt) => dt.to_string(),
+                    DataType::DurationIso(ref d) => d.to_string(),
                 };
                 record.push_field(&col_name);
-                match whitelist_lower.as_str() {
-                    // "all" - all numeric fields are to be treated as dates
-                    "all" => date_flag.insert(col_idx, true),
-                    // "none" - date processing will not be attempted
-                    "none" => date_flag.insert(col_idx, false),
-                    // check if the column name is in the dates_whitelist
-                    _ => date_flag.insert(
-                        col_idx,
-                        if all_numbers_whitelist {
-                            dates_whitelist.binary_search(&col_idx.to_string()).is_ok()
-                        } else {
-                            let mut date_found = false;
-                            let col_name_lower = col_name.to_lowercase();
-                            for whitelist_item in &dates_whitelist {
-                                if col_name_lower.contains(whitelist_item) {
-                                    date_found = true;
-                                    info!("date-whitelisted: {col_name}");
-                                    break;
-                                }
-                            }
-                            date_found
-                        },
-                    ),
-                }
-                info!("date_flag: {date_flag:?}");
                 continue;
             }
             match *cell {
@@ -580,10 +495,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 DataType::Float(ref f) => {
                     float_val = *f;
                     float_flag = true;
-                    cell_date_flag = *date_flag.get(col_idx).unwrap_or(&false);
+                    cell_date_flag = false;
                 }
                 DataType::Error(ref e) => record.push_field(&format!("{e:?}")),
                 DataType::Bool(ref b) => record.push_field(&b.to_string()),
+                DataType::DateTimeIso(ref dt) => record.push_field(&dt.to_string()),
+                DataType::DurationIso(ref d) => record.push_field(&d.to_string()),
             };
 
             // Dates are stored as floats in Excel's older binary format (XLS - Excel 97-2003.)
