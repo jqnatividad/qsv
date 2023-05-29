@@ -109,7 +109,7 @@ use indicatif::{HumanBytes, HumanCount, ProgressBar, ProgressDrawTarget, Progres
 use qsv_sniffer::{DatePreference, SampleSize, Sniffer};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use serde_json::json;
+use serde_json::{json, Value};
 use tabwriter::TabWriter;
 use tempfile::NamedTempFile;
 use thousands::Separable;
@@ -497,6 +497,8 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                 #[allow(unused_mut)]
                 let mut csv_candidate = true;
                 #[allow(unused_mut)]
+                #[allow(unused_assignments)]
+                #[allow(unused_variables)]
                 let mut detected_mime = String::new();
 
                 #[cfg(all(target_os = "linux", feature = "magic"))]
@@ -734,10 +736,17 @@ fn cleanup_tempfile(
     Ok(())
 }
 
-#[allow(clippy::unused_async)] // false positive lint
-pub async fn run(argv: &[&str]) -> CliResult<()> {
-    let mut args: Args = util::get_args(USAGE, argv)?;
+pub fn run(argv: &[&str]) -> CliResult<()> {
+    let args: Args = util::get_args(USAGE, argv)?;
 
+    let rt = tokio::runtime::Runtime::new().unwrap();
+    rt.block_on(sniff_main(args))?;
+
+    Ok(())
+}
+
+#[allow(clippy::unused_async)] // false positive lint
+async fn sniff_main(mut args: Args) -> CliResult<()> {
     if args.flag_harvest_mode {
         args.flag_quick = true;
         args.flag_timeout = 10;
@@ -783,6 +792,7 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
     let tempfile_to_delete = sfile_info.file_to_sniff.clone();
     #[allow(unused_assignments)]
     #[allow(unused_mut)]
+    #[allow(unused_variables)]
     let mut file_type = String::new();
 
     // on linux, check what kind of file we have
@@ -1052,7 +1062,8 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
             };
             Ok(())
         } else {
-            let mut sniff_error_json: serde_json::Value = Default::default();
+            #[allow(unused_assignments)]
+            let mut sniff_error_json: serde_json::Value = Value::default();
             #[cfg(all(target_os = "linux", feature = "magic"))]
             {
                 sniff_error_json = json!({
