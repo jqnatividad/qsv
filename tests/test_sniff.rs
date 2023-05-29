@@ -110,6 +110,8 @@ fn sniff_notcsv() {
     }
     #[cfg(not(feature = "magic"))]
     {
+        let got_error = wrk.output_stderr(&mut cmd);
+
         let expected = "File extension 'xls' is not supported";
         assert_eq!(
             dos2unix(&got_error).trim_end(),

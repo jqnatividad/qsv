@@ -1052,7 +1052,7 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
             };
             Ok(())
         } else {
-            let sniff_error_json: serde_json::Value = Default::default();
+            let mut sniff_error_json: serde_json::Value = Default::default();
             #[cfg(all(target_os = "linux", feature = "magic"))]
             {
                 sniff_error_json = json!({
