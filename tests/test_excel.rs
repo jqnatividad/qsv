@@ -100,16 +100,16 @@ fn excel_date_xls() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["date_col", "num_col", "col_Petsa", "just another col"],
-        svec!["2001-12-25", "1", "33423", "foo"],
-        svec!["2001-09-11 08:30:00", "3", "44202", "bar"],
+        svec!["2001-12-25", "1", "1991-07-04", "foo"],
+        svec!["2001-09-11 08:30:00", "3", "2021-01-06", "bar"],
         svec![
             "This is not a date and will be passed through",
             "5",
-            "37145",
+            "2001-09-11",
             "was"
         ],
-        svec!["1970-01-01", "7", "39834", "here"],
-        svec!["1989-12-31", "11", "42461", "42"],
+        svec!["1970-01-01", "7", "2009-01-21", "here"],
+        svec!["1989-12-31", "11", "2016-04-01", "42"],
     ];
     assert_eq!(got, expected);
 }
@@ -129,17 +129,17 @@ fn excel_date_xls_dateformat() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["date_col", "num_col", "col_Petsa", "just another col"],
-        svec!["2001-12-25", "1", "33423", "foo"],
+        svec!["2001-12-25", "1", "1991-07-04", "foo"],
         // the date format only applies to this one row
-        svec!["2001-09-11 08:30:00", "3", "44202", "bar"],
+        svec!["2001-09-11 08:30:00", "3", "2021-01-06", "bar"],
         svec![
             "This is not a date and will be passed through",
             "5",
-            "37145",
+            "2001-09-11",
             "was"
         ],
-        svec!["1970-01-01", "7", "39834", "here"],
-        svec!["1989-12-31", "11", "42461", "42"],
+        svec!["1970-01-01", "7", "2009-01-21", "here"],
+        svec!["1989-12-31", "11", "2016-04-01", "42"],
     ];
     assert_eq!(got, expected);
 }
@@ -206,94 +206,6 @@ fn excel_date_xlsx() {
 }
 
 #[test]
-fn excel_date_whitelist_xls() {
-    let wrk = Workdir::new("excel_date_whitelist_xls");
-
-    let xls_file = wrk.load_test_file("excel-xls.xls");
-
-    let mut cmd = wrk.command("excel");
-    cmd.arg("--sheet")
-        .arg("date test")
-        .args(["--dates-whitelist", "date,petsa"])
-        .arg(xls_file);
-
-    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![
-        svec!["date_col", "num_col", "col_Petsa", "just another col"],
-        svec!["2001-12-25", "1", "1991-07-04", "foo"],
-        svec!["2001-09-11 08:30:00", "3", "2021-01-06", "bar"],
-        svec![
-            "This is not a date and will be passed through",
-            "5",
-            "2001-09-11",
-            "was"
-        ],
-        svec!["1970-01-01", "7", "2009-01-21", "here"],
-        svec!["1989-12-31", "11", "2016-04-01", "42"],
-    ];
-    assert_eq!(got, expected);
-}
-
-#[test]
-fn excel_date_whitelist_none_xls() {
-    let wrk = Workdir::new("excel_date_whitelist_none_xls");
-
-    let xls_file = wrk.load_test_file("excel-xls.xls");
-
-    let mut cmd = wrk.command("excel");
-    cmd.arg("--sheet")
-        .arg("date test")
-        .args(["--dates-whitelist", "none"])
-        .arg(xls_file);
-
-    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![
-        svec!["date_col", "num_col", "col_Petsa", "just another col"],
-        svec!["37250", "1", "33423", "foo"],
-        svec!["37145.354166666664", "3", "44202", "bar"],
-        svec![
-            "This is not a date and will be passed through",
-            "5",
-            "37145",
-            "was"
-        ],
-        svec!["25569", "7", "39834", "here"],
-        svec!["32873", "11", "42461", "42"],
-    ];
-
-    assert_eq!(got, expected);
-}
-
-#[test]
-fn excel_colidx_date_whitelist_xls() {
-    let wrk = Workdir::new("excel_colidx_date_whitelist_xls");
-
-    let xls_file = wrk.load_test_file("excel-xls.xls");
-
-    let mut cmd = wrk.command("excel");
-    cmd.arg("--sheet")
-        .arg("date test")
-        .args(["--dates-whitelist", "0,2"])
-        .arg(xls_file);
-
-    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![
-        svec!["date_col", "num_col", "col_Petsa", "just another col"],
-        svec!["2001-12-25", "1", "1991-07-04", "foo"],
-        svec!["2001-09-11 08:30:00", "3", "2021-01-06", "bar"],
-        svec![
-            "This is not a date and will be passed through",
-            "5",
-            "2001-09-11",
-            "was"
-        ],
-        svec!["1970-01-01", "7", "2009-01-21", "here"],
-        svec!["1989-12-31", "11", "2016-04-01", "42"],
-    ];
-    assert_eq!(got, expected);
-}
-
-#[test]
 fn excel_open_ods() {
     let wrk = Workdir::new("excel_open_ods");
 
@@ -346,13 +258,13 @@ fn excel_open_xlsx() {
             "http://api.zippopotam.us/us/10013",
             "Manhattan",
             "1.5",
-            "1900-05-02 10:48:00"
+            "123.45"
         ],
         svec![
             "google.com",
             "Mountain View",
             "20.02",
-            "2021-07-04 22:02:59.999"
+            "2021-07-04 22:03:00"
         ],
         svec!["apple.com", "Cupertino", "37", "Wednesday, March 14, 2012"],
         svec!["amazon.com", "Seattle", "14.23", "2012-03-14"],
