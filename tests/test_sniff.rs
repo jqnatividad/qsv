@@ -101,17 +101,16 @@ fn sniff_notcsv() {
     let mut cmd = wrk.command("sniff");
     cmd.arg(test_file);
 
-    let got_error = wrk.output_stderr(&mut cmd);
-
-    let expected;
     #[cfg(all(target_os = "linux", feature = "magic"))]
     {
-        expected = "File is not a CSV file. Detected mime type: application/vnd.ms-excel";
+        let got_error = wrk.output_stderr(&mut cmd);
+
+        let expected = "File is not a CSV file. Detected mime type: application/vnd.ms-excel";
         assert!(got_error.starts_with(expected));
     }
     #[cfg(not(feature = "magic"))]
     {
-        expected = "File extension 'xls' is not supported";
+        let expected = "File extension 'xls' is not supported";
         assert_eq!(
             dos2unix(&got_error).trim_end(),
             dos2unix(expected).trim_end()
@@ -250,13 +249,11 @@ fn sniff_tab() {
     let mut cmd = wrk.command("sniff");
     cmd.arg("in.TAB");
 
-    let got: String = wrk.stdout(&mut cmd);
-
-    let expected_end;
-
     #[cfg(all(target_os = "linux", feature = "magic"))]
     {
-        expected_end = r#"Delimiter: tab
+        let got: String = wrk.stdout(&mut cmd);
+
+        let expected_end = r#"Delimiter: tab
 Header Row: true
 Preamble Rows: 0
 Quote Char: none
@@ -275,10 +272,14 @@ Fields:
     0:  Text      h1
     1:  Unsigned  h2
     2:  Text      h3"#;
+
+        assert!(dos2unix(&got).trim_end().ends_with(expected_end.trim_end()));
     }
     #[cfg(not(feature = "magic"))]
     {
-        expected_end = r#"Delimiter: tab
+        let got: String = wrk.stdout(&mut cmd);
+
+        let expected_end = r#"Delimiter: tab
 Header Row: true
 Preamble Rows: 0
 Quote Char: none
@@ -296,9 +297,9 @@ Fields:
     0:  Text      h1
     1:  Unsigned  h2
     2:  Text      h3"#;
-    }
 
-    assert!(dos2unix(&got).trim_end().ends_with(expected_end.trim_end()));
+        assert!(dos2unix(&got).trim_end().ends_with(expected_end.trim_end()));
+    }
 }
 
 #[test]
