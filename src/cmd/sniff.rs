@@ -496,6 +496,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                 let wtr_file_path;
                 #[allow(unused_mut)]
                 let mut csv_candidate = true;
+                #[allow(unused_mut)]
                 let mut detected_mime = String::new();
 
                 #[cfg(all(target_os = "linux", feature = "magic"))]
@@ -781,6 +782,7 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
     let sfile_info = block_on(future)?;
     let tempfile_to_delete = sfile_info.file_to_sniff.clone();
     #[allow(unused_assignments)]
+    #[allow(unused_mut)]
     let mut file_type = String::new();
 
     // on linux, check what kind of file we have
@@ -1050,7 +1052,7 @@ pub async fn run(argv: &[&str]) -> CliResult<()> {
             };
             Ok(())
         } else {
-            let sniff_error_json;
+            let sniff_error_json: serde_json::Value = Default::default();
             #[cfg(all(target_os = "linux", feature = "magic"))]
             {
                 sniff_error_json = json!({
