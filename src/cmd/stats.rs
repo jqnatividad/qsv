@@ -141,8 +141,7 @@ Common options:
 "#;
 
 /*
-DEVELOPER NOTE: stats is heavily optimized is a central command, that is used by
-`schema`/`validate`, `tojsonl` and Datapusher+.
+DEVELOPER NOTE: stats is heavily optimized and is a central command in qsv.
 
 It was the primary reason I created the qsv fork as I needed to do GUARANTEED data type
 inferencing & to compile smart Data Dictionaries in the most performant way possible
@@ -150,10 +149,13 @@ for Datapusher+ (https://github.com/dathere/datapusher-plus).
 
 It underpins the `schema` and `validate` commands - enabling the automatic creation of
 a JSONschema based on a CSV's summary statistics; and use the generated JSONschema to
-quickly validate complex CSVs (NYC's 311 data) at almost 300,000 records/sec.
+quickly validate complex CSVs (NYC's 311 data) at almost 350,000 records/sec.
+
+It's type inferences are also used by the `tojsonl` command to generate properly typed
+JSONL files.
 
 To safeguard against undefined behavior, `stats` is the most extensively tested command,
-with ~484 tests.
+with >480 tests.
 */
 
 use std::{
