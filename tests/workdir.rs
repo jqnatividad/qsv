@@ -187,7 +187,7 @@ impl Workdir {
         );
     }
 
-    // returns contents of specified file in resources/test directory
+    /// returns contents of specified file in resources/test directory
     pub fn load_test_resource(&self, filename: &str) -> String {
         // locate resources/test relative to crate base dir
         let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
@@ -197,8 +197,8 @@ impl Workdir {
         self.from_str::<String>(path.as_path())
     }
 
-    // copy the file in resources/test directory to the working directory
-    // returns absolute file path of the copied file
+    /// copy the file in resources/test directory to the working directory
+    /// returns absolute file path of the copied file
     pub fn load_test_file(&self, filename: &str) -> String {
         // locate resources/test relative to crate base dir
         let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
@@ -276,6 +276,7 @@ fn create_dir_all<P: AsRef<Path>>(p: P) -> io::Result<()> {
     Err(last_err.unwrap())
 }
 
+#[cfg(all(feature = "to", feature = "feature_capable"))]
 pub fn is_same_file(file1: &Path, file2: &Path) -> Result<bool, std::io::Error> {
     use std::io::BufReader;
 
