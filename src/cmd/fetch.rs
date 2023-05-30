@@ -908,7 +908,7 @@ fn get_response(
 
     // wait until RateLimiter gives Okay or we timeout
     let mut limiter_total_wait: u64;
-    let timeout_secs = *TIMEOUT_SECS.get().unwrap_or(30);
+    let timeout_secs = *TIMEOUT_SECS.get().unwrap_or(&30_u64);
     let governor_timeout_ms = timeout_secs * 1_000;
 
     let mut retries = 0_u8;
