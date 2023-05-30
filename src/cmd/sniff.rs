@@ -65,7 +65,7 @@ sniff options:
                              Valid only when input is a URL.
     --timeout <secs>         Timeout when sniffing URLs in seconds.
                              [default: 30]
-    --user-agent <agent>     Specify a custom user agent to use when sniffing a CSV on a URL.
+    --user-agent <agent>     Specify custom user agent to use when sniffing a CSV on a URL.
                              It supports the following variables - $QSV_VERSION, $QSV_TARGET,
                              $QSV_BIN_NAME and $QSV_KIND. Try to follow the syntax here -
                              https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent

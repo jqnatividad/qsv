@@ -36,7 +36,9 @@ snappy arguments:
                           or a URL (http and https schemes supported).
 
 snappy options:
-    --user-agent <agent>  Specify a custom user agent to use when the input is a URL.
+    --user-agent <agent>  Specify custom user agent to use when the input is a URL.
+                          It supports the following variables -
+                          $QSV_VERSION, $QSV_TARGET, $QSV_BIN_NAME and $QSV_KIND.
                           Try to follow the syntax here -
                           https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
     --timeout <secs>      Timeout for downloading URLs in seconds.

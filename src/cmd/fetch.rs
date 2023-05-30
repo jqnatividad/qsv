@@ -95,9 +95,9 @@ $ qsv fetch --jql '"features"[0]"properties","name"' addresses.csv -c placename 
 
 USING THE HTTP-HEADER OPTION:
 
-The --http-header option allows you to append arbitrary key value pairs (a valid pair is a key and value separated by a colon) 
-to the HTTP header (to authenticate against an API, pass custom header fields, etc.). Note that you can 
-pass as many key-value pairs by using --http-header option repeatedly. For example:
+The --http-header option allows you to append arbitrary key value pairs (a valid pair is a key and value
+separated by a colon) to the HTTP header (to authenticate against an API, pass custom header fields, etc.).
+Note that you can pass as many key-value pairs by using --http-header option repeatedly. For example:
 
 $ qsv fetch URL data.csv --http-header "X-Api-Key:TEST_KEY" -H "X-Api-Secret:ABC123XYZ" -H "Accept-Language: fr-FR"
 
@@ -146,7 +146,9 @@ Fetch options:
                                the cached error is returned. Otherwise, the fetch is attempted again 
                                for --max-retries.
     --cookies                  Allow cookies.
-    --user-agent <agent>       Specify a custom user agent. Try to follow the syntax here -
+    --user-agent <agent>       Specify custom user agent. It supports the following variables -
+                               $QSV_VERSION, $QSV_TARGET, $QSV_BIN_NAME and $QSV_KIND. 
+                               Try to follow the syntax here -
                                https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
     --report <d|s>             Creates a report of the fetch job. The report has the same name as the input file
                                with the ".fetch-report" suffix. 
