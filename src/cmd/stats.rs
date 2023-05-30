@@ -141,10 +141,8 @@ Common options:
 "#;
 
 /*
-DEVELOPER NOTE: stats is heavily optimized and makes extensive use of "unsafe" calls
-(primarily to skip unneeded bounds checking).
-
-It is a central command, that is used by `schema`/`validate`, `tojsonl` and Datapusher+.
+DEVELOPER NOTE: stats is heavily optimized is a central command, that is used by
+`schema`/`validate`, `tojsonl` and Datapusher+.
 
 It was the primary reason I created the qsv fork as I needed to do GUARANTEED data type
 inferencing & to compile smart Data Dictionaries in the most performant way possible
@@ -185,7 +183,6 @@ use crate::{
     util, CliResult,
 };
 
-#[allow(clippy::unsafe_derive_deserialize)]
 #[derive(Clone, Deserialize, Debug)]
 pub struct Args {
     pub arg_input:            Option<String>,
@@ -644,24 +641,18 @@ impl Args {
         let pool = ThreadPool::new(util::njobs(self.flag_jobs));
         let (send, recv) = channel::bounded(0);
         for i in 0..nchunks {
-            // safety: the index file call is always safe
-            // seeking may fail and you have a bigger problem
-            // as the index file was modified while stats is running
-            // so we need to abort if that happens
-            unsafe {
-                let (send, args, sel) = (send.clone(), self.clone(), sel.clone());
-                pool.execute(move || {
-                    let mut idx = args
-                        .rconfig()
-                        .indexed()
-                        .unwrap_unchecked()
-                        .unwrap_unchecked();
-                    idx.seek((i * chunk_size) as u64)
-                        .expect("File seek failed.");
-                    let it = idx.byte_records().take(chunk_size);
-                    send.send(args.compute(&sel, it)).unwrap_unchecked();
-                });
-            }
+            // safety: the index file call is always safe seeking may fail and you have a bigger
+            // problem as the index file was modified WHILE stats is running and you
+            // NEED to abort if that happens, however unlikely
+            let (send, args, sel) = (send.clone(), self.clone(), sel.clone());
+            pool.execute(move || {
+                let mut idx = args.rconfig().indexed().unwrap().unwrap();
+                idx.seek((i * chunk_size) as u64)
+                    .expect("File seek failed.");
+                let it = idx.byte_records().take(chunk_size);
+                // safety: this will only return an Error if the channel has been disconnected
+                send.send(args.compute(&sel, it)).unwrap();
+            });
         }
         drop(send);
         Ok((headers, merge_all(recv.iter()).unwrap_or_default()))
@@ -678,17 +669,18 @@ impl Args {
             let (send, recv) = channel::bounded(0);
             results.push(recv);
             pool.execute(move || {
-                unsafe {
-                    send.send(stat.to_record(round_places, infer_boolean))
-                        .unwrap_unchecked();
-                };
+                // safety: this will only return an Error if the channel has been disconnected
+                // which will not happen in this case
+                send.send(stat.to_record(round_places, infer_boolean))
+                    .unwrap();
             });
         }
-        // assert hints the compiler that the length of results is the same as records
-        // so it doesn't have to bounds check records index access in the loop below
         assert!(results.len() == records.len());
         for (i, recv) in results.into_iter().enumerate() {
-            records[i] = unsafe { recv.recv().unwrap_unchecked() };
+            // safety: the assert above guarantees that records index access is safe and
+            // doesn't require a bounds check.
+            // The unwrap on recv.recv() is safe as the channel is bounded
+            records[i] = recv.recv().unwrap();
         }
         records
     }
@@ -698,25 +690,29 @@ impl Args {
     where
         I: Iterator<Item = csv::Result<csv::ByteRecord>>,
     {
-        let mut stats = self.new_stats(sel.len());
+        let sel_len = sel.len();
 
-        // safety: we use unsafe in this hot loop so we skip unnecessary bounds checking
-        // that we are certain is safe
-        unsafe {
-            let infer_date_flags = INFER_DATE_FLAGS.get_unchecked();
-            for row in it {
-                for (i, field) in sel.select(&row.unwrap_unchecked()).enumerate() {
-                    stats.get_unchecked_mut(i).add(
-                        field,
-                        *infer_date_flags.get_unchecked(i),
-                        self.flag_infer_boolean,
-                    );
-                }
+        let mut stats = self.new_stats(sel_len);
+        assert!(stats.len() == sel_len);
+
+        let infer_date_flags = INFER_DATE_FLAGS.get().unwrap();
+        assert!(infer_date_flags.len() == sel_len);
+
+        // safety: the asserts above guarantee that the following unwraps are safe
+        // and doesn't require a bounds check.
+        for row in it {
+            for (i, field) in sel.select(&row.unwrap()).enumerate() {
+                stats.get_mut(i).unwrap().add(
+                    field,
+                    *infer_date_flags.get(i).unwrap(),
+                    self.flag_infer_boolean,
+                );
             }
         }
         stats
     }
 
+    #[inline]
     fn sel_headers<R: io::Read>(
         &self,
         rdr: &mut csv::Reader<R>,
@@ -726,6 +722,7 @@ impl Args {
         Ok((sel.select(&headers).collect(), sel))
     }
 
+    #[inline]
     fn rconfig(&self) -> Config {
         Config::new(&self.arg_input)
             .delimiter(self.flag_delimiter)
@@ -1096,12 +1093,13 @@ impl Stats {
         // prealloc memory for performance
         // we have 30 columns at most with --everything
         let mut pieces = Vec::with_capacity(30);
+
         let empty = String::new;
 
         // mode/modes & cardinality
         // we do this first because we need to know the cardinality to --infer-boolean
         // should that be enabled
-        let mut cardinality: usize = 0_usize;
+        let mut cardinality = 0_usize;
         let mut mc_pieces = Vec::with_capacity(7);
         match self.modes.as_mut() {
             None => {
@@ -1690,6 +1688,7 @@ impl TypedMinMax {
         }
     }
 
+    #[inline]
     fn show(&self, typ: FieldType, round_places: u32) -> Option<(String, String, String)> {
         match typ {
             TNull => None,
