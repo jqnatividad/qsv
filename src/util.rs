@@ -49,10 +49,6 @@ pub fn num_cpus() -> usize {
 const CARGO_BIN_NAME: &str = env!("CARGO_BIN_NAME");
 const CARGO_PKG_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-fn default_user_agent() -> String {
-    format!("{CARGO_BIN_NAME}/{CARGO_PKG_VERSION} ({TARGET}; https://github.com/jqnatividad/qsv)")
-}
-
 const TARGET: &str = match option_env!("TARGET") {
     Some(target) => target,
     None => "Unknown_target",
@@ -61,6 +57,10 @@ const QSV_KIND: &str = match option_env!("QSV_KIND") {
     Some(kind) => kind,
     None => "installed",
 };
+
+fn default_user_agent() -> String {
+    format!("{CARGO_BIN_NAME}/{CARGO_PKG_VERSION} ({TARGET}; {QSV_KIND}; https://github.com/jqnatividad/qsv)")
+}
 
 pub fn max_jobs() -> usize {
     let num_cpus = num_cpus();
