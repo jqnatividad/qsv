@@ -565,7 +565,8 @@ fn to_json_instance(
     // we use with_capacity to minimize allocs
     let mut json_object_map: Map<String, Value> = Map::with_capacity(headers_len);
 
-    let null_type = unsafe { NULL_TYPE.get_unchecked() };
+    // safety: we set NULL_TYPE in main() and it's never changed
+    let null_type = NULL_TYPE.get().unwrap();
 
     // iterate over each CSV field and convert to JSON type
     for (i, header) in headers.iter().enumerate() {
