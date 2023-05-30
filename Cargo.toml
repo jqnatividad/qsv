@@ -75,7 +75,7 @@ cached = { version = "0.43", default-features = false, features = [
 ], optional = true }
 calamine = { version = "0.20", features = ["dates"] }
 censor = { version = "0.3", optional = true }
-chrono = { version = "=0.4.24", default-features = false }
+chrono = { version = "0.4", default-features = false }
 console = { version = "0.15", optional = true }
 cpc = { version = "1.9", optional = true }
 crossbeam-channel = "0.5"
