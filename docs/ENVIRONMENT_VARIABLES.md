@@ -29,7 +29,7 @@
 | `QSV_REDIS_TTL_SECONDS` | set time-to-live of Redis cached values (default (seconds): 2419200 (28 days)). |
 | `QSV_REDIS_TTL_REFRESH`| if set, enables cache hits to refresh TTL of cached values. |
 | `QSV_TIMEOUT`| for commands with a --timeout option (`fetch`, `fetchpost`, `luau`, `sniff` and `validate`), the number of seconds before a web request times out (default: 30). |
-| `QSV_USER_AGENT`| the user-agent to use for web requests. When specifying a custom user agent, try to conform to the [IETF RFC 72321 standard](https://tools.ietf.org/html/rfc7231#section-5.5.3). See [here](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent) for examples.<br>(default: QSV_BINARY_VARIANT/QSV_VERSION (TARGET-TRIPLE; https://github.com/jqnatividad/qsv) - e.g.<br>`qsv/0.99.1 (x86_64-unknown-linux; https://github.com/jqnatividad/qsv)`).|
+| `QSV_USER_AGENT`| the user-agent to use for web requests. When specifying a custom user agent. It supports the following variables - $QSV_VERSION, $QSV_TARGET, $QSV_BIN_NAME and $QSV_KIND. Try to conform to the [IETF RFC 72321 standard](https://tools.ietf.org/html/rfc7231#section-5.5.3). See [here](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent) for examples.<br>(default: $QSV_BIN_NAME/$QSV_VERSION ($QSV_TARGET; $QSV_KIND; https://github.com/jqnatividad/qsv) - e.g.<br>`qsv/0.105.0 (x86_64-unknown-linux; prebuilt; https://github.com/jqnatividad/qsv)`).|
 
 Several dependencies also have environment variables that influence qsv's performance & behavior:
 
