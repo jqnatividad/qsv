@@ -2747,9 +2747,9 @@ dependencies = [
 
 [[package]]
 name = "mio"
-version = "0.8.7"
+version = "0.8.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eebffdb73fe72e917997fad08bdbf31ac50b0fa91cec93e69a0662e4264d454c"
+checksum = "927a765cd3fc26206e66b296465fa9d3e5ab003e651c1b3c060e7956d96b19d2"
 dependencies = [
  "libc",
  "log",
@@ -3720,9 +3720,9 @@ dependencies = [
 
 [[package]]
 name = "qsv-dateparser"
-version = "0.8.0"
+version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b6c542eaf1fe3960b12657a0cd19d941973785097a82067e7d0080b6c497e0ef"
+checksum = "96fe49cb4b9a6ccb9e51d860fc0724cfb5a5c1a2dff0458a590b2b42e1b419c0"
 dependencies = [
  "anyhow",
  "chrono",
