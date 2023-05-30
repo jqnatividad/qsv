@@ -6,6 +6,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.105.0] - 2023-05-30
+
+### Added
+* `sniff`: add --harvest-mode convenience option https://github.com/jqnatividad/qsv/pull/997
+* `sniff`: added --quick option on Linux https://github.com/jqnatividad/qsv/commit/e16df6fbbad9318cc4efeb500409f80b76cd50e2
+* qsv (pronounced "Quicksilver") now has a tagline - [_"Hi ho, QuickSilver! Away!"_](https://www.youtube.com/watch?v=p9lf76xOA5k) :smile: https://github.com/jqnatividad/qsv/commit/d32aeb1afe7a90c4887b00a0c2a20481a91722fe
+
+### Changed
+* `sniff`: if --no-infer is enabled when sniffing a snappy file, just return the snappy mime type https://github.com/jqnatividad/qsv/pull/996
+* `sniff`: now returns filesize and last-modified date in errors. https://github.com/jqnatividad/qsv/commit/2162659bd574122e93e204cb14b5114bd7ca5344
+* `stats`: minor performance tweaks in hot compute loop https://github.com/jqnatividad/qsv/commit/f61198c2057545fb76a9b30bd12adfd3a3bbf8ba
+* qsv binary variants built using older glibc/musl libraries are now published with their respective glibc/musl version suffixes (glibc-2.31/musl-1.1.24) in the filename, instead of just the "older" suffix.
+* pin chrono to 0.4.24 as the new 0.4.25 is breaking CI tests https://github.com/jqnatividad/qsv/commit/cde3623b27fcb583a1248fc736aaf11f569f5085
+* Bump calamine from 0.19.1 to 0.20.0 https://github.com/jqnatividad/qsv/commit/ec7e2df70e33756d4ef49567bf4f5acba3eb19d4
+* Bump actions/setup-python from 4.6.0 to 4.6.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/991
+* Bump flexi_logger from 0.25.4 to 0.25.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/992
+* Bump regex from 1.8.2 to 1.8.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/993
+* Bump csvs_convert from 0.8.3 to 0.8.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/994
+* Bump log from 0.4.17 to 0.4.18 by @dependabot in https://github.com/jqnatividad/qsv/pull/998
+* Bump polars from 0.29.0 to 0.30.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/999
+* Bump tokio from 1.28.1 to 1.28.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1000
+* Bump once_cell from 1.17.1 to 1.17.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1003
+* Bump indicatif from 0.17.3 to 0.17.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1001
+* cargo bump update several indirect dependencies
+* pin Rust nightly to 2023-05-28
+
+### Removed
+* `excel`: removed kludgy --dates-whitelist option https://github.com/jqnatividad/qsv/pull/1005
+
+### Fixed
+* `sniff`: fix inconsistent mime type detection https://github.com/jqnatividad/qsv/pull/995
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.104.1...0.105.0
+
 ## [0.104.1] - 2023-05-23
 
 ### Added
