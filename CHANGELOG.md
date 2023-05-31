@@ -6,6 +6,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.105.1] - 2023-05-30
+
+### Changed
+* `stats`: remove all unsafes https://github.com/jqnatividad/qsv/commit/4a4c0107f98dcd3a2fac7a793101624ec46762df
+* `fetch` & `fetchpost`: remove unsafe https://github.com/jqnatividad/qsv/commit/1826bb3cbe24f731973d2e2ce8edc1927dc87d4b
+* `validate`: remove unsafe https://github.com/jqnatividad/qsv/commit/742ccb3b36fd6a0fb9690d9150bec5b2e4d44b0a
+* normalize `--user-agent` option across all of qsv https://github.com/jqnatividad/qsv/commit/feff90bba4d6840f7d2aa2100897cfaad7efe08f & https://github.com/jqnatividad/qsv/commit/feff90bba4d6840f7d2aa2100897cfaad7efe08f
+* bump qsv-dateparser from 0.8.1 to 0.8.2 which also uses chrono 0.4.26
+* pin sventaro/upload-release-action to v2.5 as v2.6 was overwriting release body text https://github.com/jqnatividad/qsv/commit/4e6bb702d2de7457b559bc6dad69b4071f745289
+* cargo update bump several indirect dependencies
+* pin Rust nightly to 2023-05-29
+
+### Fixed
+* remove chrono pin to 0.4.24 and upgrade to 0.4.26 which fixed 0.4.25 CI test failures https://github.com/jqnatividad/qsv/commit/7636d82bdcf3428e59b800b6ff9f53dcd52cddd9
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.105.0...0.105.1
+
 ## [0.105.0] - 2023-05-30
 
 ### Added
