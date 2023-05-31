@@ -120,7 +120,7 @@ jobs:
     - name: add/update "older" glibc 2.31/musl 1.1.24 files to zip
       run: 7z u -tzip qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/qsv* -mx=9 -mmt=on
     - name: Upload zipped binaries to release
-      uses: svenstaro/upload-release-action@v2.5.0
+      uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         file: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip
