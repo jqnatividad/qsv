@@ -3434,9 +3434,9 @@ dependencies = [
 
 [[package]]
 name = "portable-atomic"
-version = "1.3.2"
+version = "1.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dc59d1bcc64fc5d021d67521f818db868368028108d37f0e98d74e33f68297b5"
+checksum = "767eb9f07d4a5ebcb39bbf2d452058a93c011373abf6832e24194a1c3f004794"
 
 [[package]]
 name = "postgres"
@@ -3628,7 +3628,7 @@ dependencies = [
 
 [[package]]
 name = "qsv"
-version = "0.105.0"
+version = "0.105.1"
 dependencies = [
  "actix-governor",
  "actix-web",
