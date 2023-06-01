@@ -283,18 +283,18 @@ Finally, as [qsv's DSL](#luau_deeplink) (👑), `luau` will gain even more featu
 
 ### Python
 
-The `python` feature is NOT enabled by default on the prebuilt binaries, as doing so requires it to dynamically link to python libraries at runtime, which presents distribution issues, as various operating systems have differing Python versions.
+The `python` feature is NOT enabled by default on the prebuilt binaries as its dynamically linked to python libraries at runtime, which presents distribution issues, as various operating systems have differing Python versions.
 
-If you wish to enable the `python` feature - you'll just have to install/compile from source, making sure you have the development libraries for the desired Python version (Python 3.7 to 3.11 are supported) installed when doing so.
+If you wish to enable the `python` feature - you'll just have to install/compile from source, making sure you have the development libraries for the desired Python version (Python 3.7 and above are supported) installed when doing so.
 
 If you plan to distribute your manually built `qsv` with the `python` feature, `qsv` will look for the specific version of Python shared libraries (libpython* on Linux/macOS, python*.dll on Windows) against which it was compiled starting with the current directory & abort with an error if not found, detailing the Python library it was looking for. 
 
-Note that this will happen on qsv startup, even if you're not running the `py` command.
+Note that this will happen on qsv startup, even if you're NOT running the `py` command.
 
 When building from source - [PyO3](https://pyo3.rs) - the underlying crate that enables the `python` feature, uses a build script to determine the Python version & set the correct linker arguments. By default it uses the python3 executable.
 You can override this by setting `PYO3_PYTHON` (e.g., `PYO3_PYTHON=python3.7`), before installing/compiling qsv. See the [PyO3 User Guide](https://pyo3.rs/v0.17.1/building_and_distribution.html) for more information.
 
-Consider using the [`luau`](/src/cmd/luau.rs#L2) command instead of the [`py`]((/src/cmd/python.rs#L2)) command if the operation you're trying to do can be done with `luau` - as `luau` is much faster than `py`, can do aggregations, supports random access, and allows mapping of multiple new columns. 
+Consider using the [`luau`](/src/cmd/luau.rs#L2) command instead of the [`py`]((/src/cmd/python.rs#L2)) command if the operation you're trying to do can be done with `luau` - as `luau` is statically linked, has no external dependencies, much faster than `py`, can do aggregations, supports random access, has a bevy of qsv helper functions, and allows mapping of multiple new columns. 
 
 The `py` command cannot do aggregations because [PyO3's GIL-bound memory](https://pyo3.rs/v0.17.2/memory.html#gil-bound-memory) limitations will quickly consume a lot of memory (see [issue 449](https://github.com/jqnatividad/qsv/issues/449#issuecomment-1226095316) for details).
 To prevent this, the `py` command processes CSVs in batches (default: 30,000 records), with a GIL pool for each batch, so no globals are available across batches.
@@ -322,7 +322,7 @@ For details, see [Environment Variables](docs/ENVIRONMENT_VARIABLES.md) and the 
 * `luau` - enable `luau` command. Embeds a [Luau](https://luau-lang.org) interpreter into qsv. [Luau has type-checking, sandboxing, additional language operators, increased performance & other improvements](https://luau-lang.org/2022/11/04/luau-origins-and-evolution.html) over Lua.
 * `magic` - enable mime-type detection for the `sniff` command using the [`libmagic`](https://man7.org/linux/man-pages/man3/libmagic.3.html) library. Currently only works on Linux with the libmagic-dev package installed.
 * `polars` - enables all [Polars](https://pola.rs)-powered commands (currently, only `joinp`). Note that Polars is a very powerful library, but it has a lot of dependencies that drastically increases both compile time and binary size.
-* `python` - enable `py` command. Note that qsv will look for the shared library for the Python version (Python 3.7 & above supported) it was compiled against & will abort on startup if the library is not found, even if you're not using the `py` command. Check [Python](#python) section for more info.
+* `python` - enable `py` command. Note that qsv will look for the shared library for the Python version (Python 3.7 & above supported) it was compiled against & will abort on startup if the library is not found, even if you're NOT using the `py` command. Check [Python](#python) section for more info.
 * `to` - enables the `to` command. Note that enabling this feature will also noticeably increase both compile time and binary size.
 * `self_update` - enable self-update engine, checking GitHub for the latest release. Note that if you manually built qsv, `self-update` will only check for new releases.
 It will NOT offer the choice to update itself to the prebuilt binaries published on GitHub. You need not worry that your manually built qsv will be overwritten by a self-update.
