@@ -1,0 +1,49 @@
+name: QSV Installer
+
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install Wix Toolset
+        run: |
+          # Download the latest stable release of Wix Toolset
+          $url = 'https://github.com/wixtoolset/wix3/releases/latest/download/wix311-binaries.zip'
+          Invoke-WebRequest -Uri $url -OutFile 'wix.zip'
+
+          # Extract the downloaded zip file
+          Expand-Archive -Path 'wix.zip' -DestinationPath 'wix'
+
+      - name: Build Wix Installer
+        run: |
+          # Set the path to the Wix Toolset bin folder
+          $env:PATH += ';$(Agent.WorkFolder)\wix\bin'
+
+       - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+
+      - name: Install cargo-wix
+        run: cargo install cargo-wix
+
+      - name: Build Wix Installer
+        run: cargo wix 
+
+      - name: Upload Wix Installer
+        uses: actions/upload-release-asset@v1
+        with:
+          asset_path: target/wix/*.msi
+          name: MyAppInstaller.msi
+          mime_type: application/octet-stream
+          token: ${{ secrets.GITHUB_TOKEN }}
+
