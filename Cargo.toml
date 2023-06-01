@@ -133,7 +133,7 @@ polars = { version = "0.30", features = [
     "cross_join",
     "semi_anti_join",
 ], optional = true }
-pyo3 = { version = "0.18", features = ["auto-initialize"], optional = true }
+pyo3 = { version = "0.19", features = ["auto-initialize"], optional = true }
 qsv-dateparser = "0.8"
 qsv_docopt = "1.2"
 qsv-stats = "0.9"
