@@ -346,7 +346,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                         // server did not return Last-Modified header
                         Err(_) => String::from("Unknown"),
                     },
-                    None => String::new(),
+                    None => String::from("Unknown"),
                 };
 
                 let total_size = match res.content_length() {
@@ -524,7 +524,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                     // before we can sniff it
                     wtr_file_path =
                         util::decompress_snappy_file(&file.path().to_path_buf(), tmpdir)?;
-                } else if args.flag_quick && magic_flag {
+                } else if args.flag_quick && magic_flag && !csv_candidate {
                     // on linux, when --quiick is enabled, we short-circuit downloading by checking
                     // the file type from the first chunk. If the file is not a CSV,
                     // we just write the first chunk to a file and return
@@ -822,10 +822,7 @@ async fn sniff_main(mut args: Args) -> CliResult<()> {
             } else {
                 sfile_info.file_size.to_string()
             };
-            let mut last_modified = sfile_info.last_modified;
-            if last_modified.is_empty() {
-                last_modified = "Unknown".to_string();
-            }
+            let last_modified = sfile_info.last_modified;
 
             if args.flag_json || args.flag_pretty_json {
                 if args.flag_no_infer {
