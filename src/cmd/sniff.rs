@@ -283,7 +283,7 @@ const fn rowcount(
 ) -> (usize, bool) {
     let mut estimated = false;
     let rowcount = if count == usize::MAX {
-        // if the file is usize::MAX, it's a sentinel value for "Unknown" as the server
+        // if the count == usize::MAX, it's a sentinel value for "Unknown" as the server
         // didn't provide a Content-Length header, so we estimate the rowcount by
         // dividing the file_size by avg_rec_len
         estimated = true;
@@ -589,8 +589,8 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                     retrieved_size: downloaded,
                     file_size: if magic_flag && total_size == usize::MAX {
                         // we're using magic and the server didn't give us content length
-                        // so send usize::MAX - 1 to indicate that we don't know the file size
-                        usize::MAX - 1
+                        // so send usize::MAX to indicate that we don't know the file size
+                        usize::MAX
                     } else if total_size == usize::MAX {
                         // the server didn't give us content length, so we just
                         // downloaded the entire file. downloaded variable
@@ -817,7 +817,7 @@ async fn sniff_main(mut args: Args) -> CliResult<()> {
         {
             cleanup_tempfile(sfile_info.tempfile_flag, tempfile_to_delete)?;
 
-            let size = if sfile_info.file_size >= usize::MAX - 1 {
+            let size = if sfile_info.file_size == usize::MAX {
                 "Unknown".to_string()
             } else {
                 sfile_info.file_size.to_string()
@@ -878,9 +878,7 @@ async fn sniff_main(mut args: Args) -> CliResult<()> {
     let conf = Config::new(&Some(sfile_info.file_to_sniff.clone()))
         .flexible(true)
         .delimiter(args.flag_delimiter);
-    let n_rows = if sfile_info.downloaded_records == 0
-        || sfile_info.retrieved_size <= sfile_info.file_size
-    {
+    let n_rows = if sfile_info.downloaded_records == 0 {
         //if we have the whole file and not just a sample, we can count the number of rows
         match util::count_rows(&conf) {
             Ok(n) => n as usize,
