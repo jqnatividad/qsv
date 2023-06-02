@@ -366,7 +366,7 @@ Common options:
     -p, --progressbar           Show progress bars. Not valid for stdin.
 "#;
 
-use std::str::FromStr;
+use std::{str::FromStr, sync::OnceLock};
 
 use cached::proc_macro::cached;
 use censor::{Censor, Sex, Zealous};
@@ -376,7 +376,6 @@ use dynfmt::Format;
 use eudex::Hash;
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::debug;
-use once_cell::sync::OnceCell;
 use qsv_currency::Currency;
 use qsv_dateparser::parse_with_preference;
 use rayon::{
@@ -399,7 +398,7 @@ use whatlang::detect;
 use crate::{
     clitypes::CliError,
     config::{Config, Delimiter},
-    regex_once_cell,
+    regex_oncelock,
     select::SelectColumns,
     util, CliResult,
 };
@@ -472,15 +471,15 @@ struct Args {
     flag_progressbar:    bool,
 }
 
-static CENSOR: OnceCell<Censor> = OnceCell::new();
-static LOCS: OnceCell<Locations> = OnceCell::new();
-static GEOCODER: OnceCell<ReverseGeocoder> = OnceCell::new();
-static EUDEX_COMPARAND_HASH: OnceCell<eudex::Hash> = OnceCell::new();
-static REGEX_REPLACE: OnceCell<Regex> = OnceCell::new();
-static SENTIMENT_ANALYZER: OnceCell<SentimentIntensityAnalyzer> = OnceCell::new();
-static THOUSANDS_POLICY: OnceCell<SeparatorPolicy> = OnceCell::new();
-static ROUND_PLACES: OnceCell<u32> = OnceCell::new();
-static WHATLANG_CONFIDENCE_THRESHOLD: OnceCell<f64> = OnceCell::new();
+static CENSOR: OnceLock<Censor> = OnceLock::new();
+static LOCS: OnceLock<Locations> = OnceLock::new();
+static GEOCODER: OnceLock<ReverseGeocoder> = OnceLock::new();
+static EUDEX_COMPARAND_HASH: OnceLock<eudex::Hash> = OnceLock::new();
+static REGEX_REPLACE: OnceLock<Regex> = OnceLock::new();
+static SENTIMENT_ANALYZER: OnceLock<SentimentIntensityAnalyzer> = OnceLock::new();
+static THOUSANDS_POLICY: OnceLock<SeparatorPolicy> = OnceLock::new();
+static ROUND_PLACES: OnceLock<u32> = OnceLock::new();
+static WHATLANG_CONFIDENCE_THRESHOLD: OnceLock<f64> = OnceLock::new();
 
 // default confidence threshold for whatlang language detection - 90% confidence
 const DEFAULT_THRESHOLD: f64 = 0.9;
@@ -564,7 +563,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
         // first, get the fields used in the dynfmt template
         let (safe_headers, _) = util::safe_header_names(&headers, false, false, None, "");
-        let formatstr_re: &'static Regex = crate::regex_once_cell!(r"\{(?P<key>\w+)?\}");
+        let formatstr_re: &'static Regex = crate::regex_oncelock!(r"\{(?P<key>\w+)?\}");
         for format_fields in formatstr_re.captures_iter(&args.flag_formatstr) {
             dynfmt_fields.push(format_fields.name("key").unwrap().as_str());
         }
@@ -1059,11 +1058,11 @@ fn apply_operations(
                 *cell = cell.to_uppercase();
             }
             Operations::Squeeze => {
-                let squeezer: &'static Regex = regex_once_cell!(r"\s+");
+                let squeezer: &'static Regex = regex_oncelock!(r"\s+");
                 *cell = squeezer.replace_all(cell, " ").to_string();
             }
             Operations::Squeeze0 => {
-                let squeezer: &'static Regex = regex_once_cell!(r"\s+");
+                let squeezer: &'static Regex = regex_oncelock!(r"\s+");
                 *cell = squeezer.replace_all(cell, "").to_string();
             }
             Operations::Trim => {
@@ -1168,7 +1167,7 @@ fn apply_operations(
                 // handle currency amounts properly with three decimal places
                 // to get around this limitation, we append a 0 at the end to make it four
                 // decimal places without affecting the value
-                let fract_3digits: &'static Regex = regex_once_cell!(r"\.\d\d\d$");
+                let fract_3digits: &'static Regex = regex_oncelock!(r"\.\d\d\d$");
                 let cell_val = if fract_3digits.is_match(cell) {
                     format!("{cell}0")
                 } else {
@@ -1191,7 +1190,7 @@ fn apply_operations(
             }
             Operations::Numtocurrency => {
                 // same 3 decimal place workaround as currencytonum
-                let fract_3digits2: &'static Regex = regex_once_cell!(r"\.\d\d\d$");
+                let fract_3digits2: &'static Regex = regex_oncelock!(r"\.\d\d\d$");
                 let cell_val = if fract_3digits2.is_match(cell) {
                     format!("{cell}0")
                 } else {
@@ -1276,9 +1275,8 @@ fn search_cached(cell: &str, formatstr: &str) -> Option<String> {
         GEOCODER.get_or_init(|| ReverseGeocoder::new(LOCS.get_or_init(Locations::from_memory)));
 
     // regex for Location field. Accepts (lat, long) & lat, long
-    let locregex: &'static Regex = regex_once_cell!(
-        r"(?-u)([+-]?[0-9]+\.?[0-9]*|\.[0-9]+),\s*([+-]?[0-9]+\.?[0-9]*|\.[0-9]+)"
-    );
+    let locregex: &'static Regex =
+        regex_oncelock!(r"(?-u)([+-]?[0-9]+\.?[0-9]*|\.[0-9]+),\s*([+-]?[0-9]+\.?[0-9]*|\.[0-9]+)");
 
     let loccaps = locregex.captures(cell);
     loccaps.and_then(|loccaps| {
