@@ -59,6 +59,14 @@ sniff options:
                              [default: 1000]
     --prefer-dmy             Prefer to parse dates in dmy format. Otherwise, use mdy format.
                              Ignored when --no-infer is enabled.
+    -d, --delimiter <arg>    The field delimiter for reading CSV data.
+                             Specify this when the delimiter is known beforehand,
+                             as the delimiter inferencing algorithm can sometimes fail.
+                             Must be a single ascii character.
+    -q, --quote <arg>        The quote character for reading CSV data.
+                             Specify this when the quote character is known beforehand,
+                             as the quote char inferencing algorithm can sometimes fail.
+                             Must be a single ascii character.
     --json                   Return results in JSON format.
     --pretty-json            Return results in pretty JSON format.
     --save-urlsample <file>  Save the URL sample to a file.
@@ -85,11 +93,6 @@ sniff options:
 
 Common options:
     -h, --help               Display this message
-    -d, --delimiter <arg>    The field delimiter for reading CSV data.
-                             Specify this when the delimiter is known beforehand,
-                             as the delimiter guessing algorithm can sometimes be
-                               wrong if not enough delimiters are present in the sample.
-                             Must be a single ascii character.
     -p, --progressbar        Show progress bars. Only valid for URL input.
 "#;
 
@@ -129,6 +132,7 @@ struct Args {
     flag_save_urlsample: Option<String>,
     flag_pretty_json:    bool,
     flag_delimiter:      Option<Delimiter>,
+    flag_quote:          Option<char>,
     flag_progressbar:    bool,
     flag_timeout:        u16,
     flag_user_agent:     Option<String>,
@@ -953,6 +957,13 @@ async fn sniff_main(mut args: Args) -> CliResult<()> {
         fs::copy(sfile_info.file_to_sniff.clone(), save_urlsample)?;
     }
 
+    let quote_char = match args.flag_quote {
+        Some(quote_char) => {
+            qsv_sniffer::metadata::Quote::Some(*quote_char.to_string().as_bytes().first().unwrap())
+        }
+        _ => qsv_sniffer::metadata::Quote::None,
+    };
+
     let sniff_results = if sample_all {
         log::info!("Sniffing ALL rows...");
         if let Some(delimiter) = args.flag_delimiter {
@@ -960,6 +971,7 @@ async fn sniff_main(mut args: Args) -> CliResult<()> {
                 .sample_size(SampleSize::All)
                 .date_preference(dt_preference)
                 .delimiter(delimiter.as_byte())
+                .quote(quote_char)
                 .sniff_reader(rdr.into_inner())
         } else {
             Sniffer::new()
@@ -979,6 +991,7 @@ async fn sniff_main(mut args: Args) -> CliResult<()> {
                 .sample_size(SampleSize::Records(sniff_size))
                 .date_preference(dt_preference)
                 .delimiter(delimiter.as_byte())
+                .quote(quote_char)
                 .sniff_reader(rdr.into_inner())
         } else {
             Sniffer::new()
