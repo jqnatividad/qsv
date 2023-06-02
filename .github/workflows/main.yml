@@ -1,9 +1,9 @@
-name: QSV Installer
+name: qsv Windows Installer
 
 on:
   release:
     types:
-      - published
+      - prebuilt
 
 jobs:
   build:
@@ -27,7 +27,7 @@ jobs:
           # Set the path to the Wix Toolset bin folder
           $env:PATH += ';$(Agent.WorkFolder)\wix\bin'
 
-       - name: Set up Rust
+      - name: Set up Rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
@@ -36,6 +36,9 @@ jobs:
       - name: Install cargo-wix
         run: cargo install cargo-wix
 
+      - name: Init cargo-wix
+        run: cargo install wix init
+
       - name: Build Wix Installer
         run: cargo wix 
 
@@ -43,7 +46,7 @@ jobs:
         uses: actions/upload-release-asset@v1
         with:
           asset_path: target/wix/*.msi
-          name: MyAppInstaller.msi
+          name: qsv-installer.msi
           mime_type: application/octet-stream
           token: ${{ secrets.GITHUB_TOKEN }}
 
