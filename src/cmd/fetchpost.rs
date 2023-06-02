@@ -169,7 +169,7 @@ Common options:
     -p, --progressbar          Show progress bars. Not valid for stdin.
 "#;
 
-use std::{fs, io::Write, num::NonZeroU32, thread, time};
+use std::{fs, io::Write, num::NonZeroU32, sync::OnceLock, thread, time};
 
 use cached::{
     proc_macro::{cached, io_cached},
@@ -187,7 +187,6 @@ use log::{
     debug, error, info, log_enabled, warn,
     Level::{Debug, Info, Trace, Warn},
 };
-use once_cell::sync::{Lazy, OnceCell};
 use rand::Rng;
 use redis;
 use regex::Regex;
@@ -240,7 +239,7 @@ struct Args {
 static DEFAULT_FP_REDIS_CONN_STR: &str = "redis://127.0.0.1:6379/2";
 static DEFAULT_FP_REDIS_TTL_SECS: u64 = 60 * 60 * 24 * 28; // 28 days in seconds
 static DEFAULT_FP_REDIS_POOL_SIZE: u32 = 20;
-static TIMEOUT_FP_SECS: OnceCell<u64> = OnceCell::new();
+static TIMEOUT_FP_SECS: OnceLock<u64> = OnceLock::new();
 
 const FETCHPOST_REPORT_PREFIX: &str = "qsv_fetchp_";
 const FETCHPOST_REPORT_SUFFIX: &str = ".fetchpost-report.tsv";
@@ -260,6 +259,7 @@ enum ReportKind {
     None,
 }
 
+#[derive(Debug)]
 struct RedisConfig {
     conn_str:      String,
     max_pool_size: u32,
@@ -267,7 +267,7 @@ struct RedisConfig {
     ttl_refresh:   bool,
 }
 impl RedisConfig {
-    fn load() -> Self {
+    fn new() -> RedisConfig {
         Self {
             conn_str:      std::env::var("QSV_FP_REDIS_CONNSTR")
                 .unwrap_or_else(|_| DEFAULT_FP_REDIS_CONN_STR.to_string()),
@@ -291,7 +291,7 @@ struct FetchResponse {
     retries:     u8,
 }
 
-static REDISCONFIG: Lazy<RedisConfig> = Lazy::new(RedisConfig::load);
+static REDISCONFIG: OnceLock<RedisConfig> = OnceLock::new();
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
@@ -301,8 +301,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .unwrap();
 
     if args.flag_redis {
+        // initialize Redis Config
+        REDISCONFIG.set(RedisConfig::new()).unwrap();
+
         // check if redis connection is valid
-        let conn_str = &REDISCONFIG.conn_str;
+        let conn_str = &REDISCONFIG.get().unwrap().conn_str;
         let redis_client = match redis::Client::open(conn_str.to_string()) {
             Ok(rc) => rc,
             Err(e) => {
@@ -831,11 +834,12 @@ fn get_cached_response(
     key = "String",
     convert = r#"{ format!("{}{:?}{:?}{}{}{}{}", url, form_body_jsonmap, flag_jql, flag_store_error, flag_pretty, flag_compress, include_existing_columns) }"#,
     create = r##" {
-        RedisCache::new("fp", REDISCONFIG.ttl_secs)
+        let redis_config = REDISCONFIG.get().unwrap();
+        RedisCache::new("fp", redis_config.ttl_secs)
             .set_namespace("q")
-            .set_refresh(REDISCONFIG.ttl_refresh)
-            .set_connection_string(&REDISCONFIG.conn_str)
-            .set_connection_pool_max_size(REDISCONFIG.max_pool_size)
+            .set_refresh(redis_config.ttl_refresh)
+            .set_connection_string(&redis_config.conn_str)
+            .set_connection_pool_max_size(redis_config.max_pool_size)
             .build()
             .expect("error building redis cache")
     } "##,
