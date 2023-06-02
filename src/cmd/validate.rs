@@ -54,7 +54,10 @@ use std::{
     fs::File,
     io::{BufReader, BufWriter, Read, Write},
     str,
-    sync::atomic::{AtomicU16, Ordering},
+    sync::{
+        atomic::{AtomicU16, Ordering},
+        OnceLock,
+    },
 };
 
 use csv::ByteRecord;
@@ -63,7 +66,6 @@ use indicatif::{ProgressBar, ProgressDrawTarget};
 use itertools::Itertools;
 use jsonschema::{output::BasicOutput, paths::PathChunk, JSONSchema};
 use log::{debug, info, log_enabled};
-use once_cell::sync::OnceCell;
 use rayon::{
     iter::{IndexedParallelIterator, ParallelIterator},
     prelude::IntoParallelRefIterator,
@@ -79,7 +81,7 @@ use crate::{
 };
 
 // to save on repeated init/allocs
-static NULL_TYPE: once_cell::sync::OnceCell<Value> = OnceCell::new();
+static NULL_TYPE: OnceLock<Value> = OnceLock::new();
 
 static TIMEOUT_SECS: AtomicU16 = AtomicU16::new(15);
 

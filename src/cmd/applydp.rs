@@ -214,11 +214,10 @@ Common options:
                                 Must be a single character. (default: ,)
 "#;
 
-use std::str::FromStr;
+use std::{str::FromStr, sync::OnceLock};
 
 use dynfmt::Format;
 use log::debug;
-use once_cell::sync::OnceCell;
 use qsv_dateparser::parse_with_preference;
 use rayon::{
     iter::{IndexedParallelIterator, ParallelIterator},
@@ -283,8 +282,8 @@ struct Args {
     flag_delimiter:      Option<Delimiter>,
 }
 
-static REGEX_REPLACE: OnceCell<Regex> = OnceCell::new();
-static ROUND_PLACES: OnceCell<u32> = OnceCell::new();
+static REGEX_REPLACE: OnceLock<Regex> = OnceLock::new();
+static ROUND_PLACES: OnceLock<u32> = OnceLock::new();
 
 // default number of decimal places to round to
 const DEFAULT_ROUND_PLACES: u32 = 3;

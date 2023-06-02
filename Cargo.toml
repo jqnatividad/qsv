@@ -12,7 +12,7 @@ categories = ["command-line-utilities", "parser-implementations"]
 license = "MIT OR Unlicense"
 autotests = false
 edition = "2021"
-rust-version = "1.69.0"
+rust-version = "1.70.0"
 autobins = false
 include = [
     "src/**/*",
@@ -125,8 +125,6 @@ mlua = { version = "0.9.0-beta.2", features = [
 ], optional = true }
 num_cpus = "1"
 odht = "0.3"
-once_cell = { version = "1.17", features = ["parking_lot"] }
-parking_lot = { version = "0.12", features = ["hardware-lock-elision"] }
 polars = { version = "0.30", features = [
     "lazy",
     "streaming",
@@ -264,7 +262,6 @@ nightly = [
     "regex/unstable",
     "rand/nightly",
     "rand/simd_support",
-    "parking_lot/nightly",
     "pyo3/nightly",
     "hashbrown/nightly",
 ]

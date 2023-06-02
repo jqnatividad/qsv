@@ -7,13 +7,13 @@ use std::{
     io::{BufReader, Read, Write},
     path::{Path, PathBuf},
     str,
+    sync::OnceLock,
 };
 
 use docopt::Docopt;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 use indicatif::{HumanCount, ProgressBar, ProgressDrawTarget, ProgressStyle};
 use log::log_enabled;
-use once_cell::sync::OnceCell;
 use reqwest::Client;
 use serde::de::DeserializeOwned;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
@@ -27,9 +27,9 @@ use crate::{
 };
 
 #[macro_export]
-macro_rules! regex_once_cell {
+macro_rules! regex_oncelock {
     ($re:literal $(,)?) => {{
-        static RE: once_cell::sync::OnceCell<regex::Regex> = once_cell::sync::OnceCell::new();
+        static RE: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
         RE.get_or_init(|| regex::Regex::new($re).unwrap())
     }};
 }
@@ -37,7 +37,7 @@ macro_rules! regex_once_cell {
 // leave at least 20% of the available memory free
 const DEFAULT_FREEMEMORY_HEADROOM_PCT: u8 = 20;
 
-static ROW_COUNT: once_cell::sync::OnceCell<u64> = OnceCell::new();
+static ROW_COUNT: OnceLock<u64> = OnceLock::new();
 
 pub type ByteString = Vec<u8>;
 
@@ -946,7 +946,7 @@ pub fn safe_header_names(
     } else {
         unsafe_prefix
     };
-    let safename_regex = regex_once_cell!(r"[^A-Za-z0-9]");
+    let safename_regex = regex_oncelock!(r"[^A-Za-z0-9]");
     let mut changed_count = 0_u16;
     let mut name_vec: Vec<String> = Vec::with_capacity(headers.len());
 
@@ -1019,7 +1019,7 @@ pub fn is_safe_name(header_name: &str) -> bool {
     if first_character.is_ascii_digit() || first_character.is_ascii_whitespace() {
         return false;
     }
-    let safename_re = regex_once_cell!(r"^[\w\-\s]+$");
+    let safename_re = regex_oncelock!(r"^[\w\-\s]+$");
     safename_re.is_match(header_name)
 }
 
