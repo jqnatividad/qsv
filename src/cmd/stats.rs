@@ -166,11 +166,13 @@ use std::{
     iter::repeat,
     path::{Path, PathBuf},
     str,
-    sync::atomic::{AtomicBool, Ordering},
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        OnceLock,
+    },
 };
 
 use itertools::Itertools;
-use once_cell::sync::OnceCell;
 use qsv_dateparser::parse_with_preference;
 use serde::{Deserialize, Serialize};
 use simdutf8::basic::from_utf8;
@@ -242,9 +244,9 @@ struct StatsArgs {
     qsv_version:          String,
 }
 
-static INFER_DATE_FLAGS: once_cell::sync::OnceCell<Vec<bool>> = OnceCell::new();
+static INFER_DATE_FLAGS: OnceLock<Vec<bool>> = OnceLock::new();
 static DMY_PREFERENCE: AtomicBool = AtomicBool::new(false);
-static RECORD_COUNT: once_cell::sync::OnceCell<u64> = OnceCell::new();
+static RECORD_COUNT: OnceLock<u64> = OnceLock::new();
 
 // number of milliseconds per day
 const MS_IN_DAY: f64 = 86_400_000.0;
