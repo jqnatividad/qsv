@@ -230,7 +230,7 @@ use strum_macros::EnumString;
 use crate::{
     clitypes::CliError,
     config::{Config, Delimiter},
-    regex_once_cell,
+    regex_oncelock,
     select::SelectColumns,
     util, CliResult,
 };
@@ -347,7 +347,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
         // first, get the fields used in the dynfmt template
         let (safe_headers, _) = util::safe_header_names(&headers, false, false, None, "");
-        let formatstr_re: &'static Regex = crate::regex_once_cell!(r"\{(?P<key>\w+)?\}");
+        let formatstr_re: &'static Regex = crate::regex_oncelock!(r"\{(?P<key>\w+)?\}");
         for format_fields in formatstr_re.captures_iter(&args.flag_formatstr) {
             dynfmt_fields.push(format_fields.name("key").unwrap().as_str());
         }
@@ -642,11 +642,11 @@ fn applydp_operations(
                 *cell = cell.to_uppercase();
             }
             Operations::Squeeze => {
-                let squeezer: &'static Regex = regex_once_cell!(r"\s+");
+                let squeezer: &'static Regex = regex_oncelock!(r"\s+");
                 *cell = squeezer.replace_all(cell, " ").to_string();
             }
             Operations::Squeeze0 => {
-                let squeezer: &'static Regex = regex_once_cell!(r"\s+");
+                let squeezer: &'static Regex = regex_oncelock!(r"\s+");
                 *cell = squeezer.replace_all(cell, "").to_string();
             }
             Operations::Trim => {
