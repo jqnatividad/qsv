@@ -17,8 +17,11 @@ detect other file types. It can only sniff files with the "csv", "tsv", "tab" an
 "tsv.sz", etc.) extensions.
 
 NOTE: This command "sniffs" a CSV's schema by sampling the first n rows (default: 1000)
-of a file. Its inferences are sometimes wrong if the sample is not large enough 
-(use --sample to adjust) or the file is too small to infer a pattern. 
+of a file. Its inferences are sometimes wrong if the the file is too small to infer a pattern
+or if the CSV has unusual formatting - with atypical delimiters, quotes, etc.
+
+In such cases, selectively use the --sample, --delimiter and --quote options to improve
+the accuracy of the sniffed schema.
 
 If you want more robust, guaranteed schemata, use the "schema" or "stats" commands
 instead as they scan the entire file.
@@ -59,14 +62,15 @@ sniff options:
                              [default: 1000]
     --prefer-dmy             Prefer to parse dates in dmy format. Otherwise, use mdy format.
                              Ignored when --no-infer is enabled.
-    -d, --delimiter <arg>    The field delimiter for reading CSV data.
+    -d, --delimiter <arg>    The delimiter for reading CSV data.
                              Specify this when the delimiter is known beforehand,
                              as the delimiter inferencing algorithm can sometimes fail.
                              Must be a single ascii character.
     -q, --quote <arg>        The quote character for reading CSV data.
                              Specify this when the quote character is known beforehand,
                              as the quote char inferencing algorithm can sometimes fail.
-                             Must be a single ascii character.
+                             Must be a single ascii character - typically, double quote ("),
+                             single quote ('), or backtick (`).
     --json                   Return results in JSON format.
     --pretty-json            Return results in pretty JSON format.
     --save-urlsample <file>  Save the URL sample to a file.
