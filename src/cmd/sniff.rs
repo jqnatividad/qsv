@@ -6,10 +6,9 @@ field names & data types) using a Viterbi algorithm.
 (https://en.wikipedia.org/wiki/Viterbi_algorithm)
 
 On Linux, `sniff` also acts as a general mime type detector using the libmagic library,
-returning the detected mime type, file size and last modified date if the file is not
-a CSV. If --no-infer is enabled, it doesn't even bother to infer the CSV's schema. This
-makes it especially useful for accelerated CKAN harvesting and for checking stale/broken
-resource URLs.
+returning the detected mime type, file size and last modified date. If --no-infer is enabled,
+it doesn't even bother to infer the CSV's schema. This makes it especially useful for accelerated
+CKAN harvesting and for checking stale/broken resource URLs.
 
 On macOS and Windows however, `sniff` is only a CSV dialect detector and does not
 detect other file types. It can only sniff files with the "csv", "tsv", "tab" and
@@ -46,6 +45,7 @@ sniff arguments:
                              When --no-infer is enabled, sniff will not bother to infer the
                              CSV schema and just work as a general mime type detector -
                              returning the detected mime type, file size and last modified date.
+
                              When sniffing a local file, it will scan the file to detect the mime type.
                              When sniffing a URL, it will only download the first chunk of the file if 
                              the --quick option is enabled, otherwise it will download the entire file.
