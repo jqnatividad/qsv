@@ -69,7 +69,7 @@ ahash = "0.8"
 bincode = "1.3"
 byteorder = "1.4"
 bytes = "1"
-cached = { version = "0.43", default-features = false, features = [
+cached = { version = "0.44", default-features = false, features = [
     "proc_macro",
     "redis_ahash",
 ], optional = true }
