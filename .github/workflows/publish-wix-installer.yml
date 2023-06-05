@@ -38,9 +38,40 @@ jobs:
 
       - name: Init cargo-wix
         run: cargo install wix init
+        
+      - name: Fetch Release
+        id: release
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const release = await github.repos.getLatestRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+            core.setOutput('release', release.data);
 
+      - name: Download Release Asset
+        id: download
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const asset = await github.repos.getReleaseAsset({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              asset_id: ${{ steps.release.outputs.release.assets[6].id }}
+            });
+            console.log(`Downloaded asset: ${asset.data.name}`);
+            core.setOutput('asset_name', asset.data.name);
+            core.setOutput('asset_url', asset.data.url);
+
+      - name: Extract and Copy
+        run: |
+          mkdir extracted_files
+          unzip -q ${{ steps.download.outputs.asset_name }} -d extracted_files
+          cp extracted_files/qsv.exe /contib/wix
+          
       - name: Build Wix Installer
-        run: cargo wix 
+        run: cargo wix /contib/wix/main.wxs
 
       - name: Upload Wix Installer
         uses: actions/upload-release-asset@v1
