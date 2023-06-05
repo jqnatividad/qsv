@@ -167,8 +167,16 @@ fn main() -> QsvExitCode {
     sniff       Quickly sniff CSV metadata
     sort        Sort CSV data in alphabetical, numerical, reverse or random order
     sortcheck   Check if a CSV is sorted
-    split       Split CSV data into many files
-    stats       Infer data types and compute summary statistics
+    split       Split CSV data into many files\n",
+    );
+
+    #[cfg(all(feature = "polars", feature = "feature_capable"))]
+    enabled_commands.push_str(
+        "    sqlp        Run a SQL query against several CSVs using the Pola.rs engine\n",
+    );
+
+    enabled_commands.push_str(
+        "    stats       Infer data types and compute summary statistics
     table       Align CSV data into columns
     tojsonl     Convert CSV to newline-delimited JSON\n",
     );
@@ -329,6 +337,8 @@ enum Command {
     Sort,
     SortCheck,
     Split,
+    #[cfg(all(feature = "polars", feature = "feature_capable"))]
+    SqlP,
     Stats,
     Table,
     Transpose,
@@ -410,6 +420,8 @@ impl Command {
             Command::Sort => cmd::sort::run(argv),
             Command::SortCheck => cmd::sortcheck::run(argv),
             Command::Split => cmd::split::run(argv),
+            #[cfg(all(feature = "polars", feature = "feature_capable"))]
+            Command::SqlP => cmd::sqlp::run(argv),
             Command::Stats => cmd::stats::run(argv),
             Command::Table => cmd::table::run(argv),
             Command::Transpose => cmd::transpose::run(argv),
