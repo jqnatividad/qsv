@@ -106,7 +106,7 @@
                     -->
 
                     <Component Id='License' Guid='*'>
-                        <File Id='LicenseFile' Name='LICENSE-MIT' DiskId='1' Source='$(var.CargoTargetBinDir)\License-MIT.md' KeyPath='yes'/>
+                        <File Id='LicenseFile' Name='LICENSE-MIT' DiskId='1' Source='wix\contrib\License-MIT.md' KeyPath='yes'/>
                     </Component>
 
 
@@ -126,7 +126,7 @@
                                 Id='exe0'
                                 Name='qsv.exe'
                                 DiskId='1'
-                                Source='$(var.CargoTargetBinDir)\qsv.exe'
+                                Source='wix\contrib\qsv.exe'
                                 KeyPath='yes'/>
                         </Component>
                     </Directory>
@@ -172,7 +172,7 @@
           The product icon is the graphic that appears in the Add/Remove
           Programs control panel for the application.
         -->
-        <Icon Id='ProductICO' SourceFile='$(var.CargoTargetBinDir)\dathere_icon.ico'/>
+        <Icon Id='ProductICO' SourceFile='wix\contrib\dathere_icon.ico'/>
         <Property Id='ARPPRODUCTICON' Value='ProductICO' />
 
         <Property Id='ARPHELPLINK' Value='https://github.com/jqnatividad/qsv#qsv-ultra-fast-csv-data-wrangling-toolkit'/>
@@ -203,7 +203,7 @@
           the following `WixUILicenseRTF` tag and changing the `Value`
           attribute.
         -->
-         <WixVariable Id='WixUILicenseRtf' Value='$(var.CargoTargetBinDir)\QSV-PRO-EULA.rtf'/> 
+         <WixVariable Id='WixUILicenseRtf' Value='wix\contrib\QSV-PRO-EULA.rtf'/> 
 
         
         <!--
@@ -225,7 +225,7 @@
 
           The dialog BMP dimensions are 493 x 312 pixels.
         -->
-        <WixVariable Id='WixUIDialogBmp' Value='$(var.CargoTargetBinDir)\qsv-splash-screen.bmp'/>
+        <WixVariable Id='WixUIDialogBmp' Value='wix\contrib\qsv-splash-screen.bmp'/>
 
     </Product>
 
