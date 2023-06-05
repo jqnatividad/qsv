@@ -41,7 +41,7 @@ jobs:
         
       - name: Fetch Release
         id: release
-        uses: actions/github-script@v5
+        uses: actions/github-script@v6
         with:
           script: |
             const release = await github.repos.getLatestRelease({
@@ -52,7 +52,7 @@ jobs:
 
       - name: Download Release Asset
         id: download
-        uses: actions/github-script@v5
+        uses: actions/github-script@v6
         with:
           script: |
             const asset = await github.repos.getReleaseAsset({
