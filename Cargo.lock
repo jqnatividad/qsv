@@ -611,11 +611,13 @@ checksum = "15ae0428d69ab31d7b2adad22a752d6f11fef2e901d2262d0cad4f5cb08b7093"
 dependencies = [
  "ahash 0.8.3",
  "arrow-format",
+ "base64",
  "bytemuck",
  "chrono",
  "dyn-clone",
  "either",
  "ethnum",
+ "fallible-streaming-iterator",
  "foreign_vec",
  "futures",
  "getrandom",
@@ -624,10 +626,12 @@ dependencies = [
  "lz4",
  "multiversion",
  "num-traits",
+ "parquet2",
  "regex",
  "regex-syntax 0.6.29",
  "rustc_version",
  "simdutf8",
+ "streaming-iterator",
  "strength_reduce",
  "zstd",
 ]
@@ -654,6 +658,28 @@ dependencies = [
  "memchr",
  "pin-project-lite",
  "tokio",
+]
+
+[[package]]
+name = "async-stream"
+version = "0.3.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cd56dd203fef61ac097dd65721a419ddccb106b2d2b70ba60a6b529f03961a51"
+dependencies = [
+ "async-stream-impl",
+ "futures-core",
+ "pin-project-lite",
+]
+
+[[package]]
+name = "async-stream-impl"
+version = "0.3.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "16e62a023e7c117e27523144c5d2459f4397fcc3cab0085af8e2224f643a0193"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.18",
 ]
 
 [[package]]
@@ -1723,6 +1749,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "float-cmp"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "98de4bbd547a563b716d8dfa9aad1cb19bfab00f4fa09a6a4ed21dbcf44ce9c4"
+dependencies = [
+ "num-traits",
+]
+
+[[package]]
 name = "flume"
 version = "0.10.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1993,6 +2028,16 @@ checksum = "02b4af3693f1b705df946e9fe5631932443781d0aabb423b62fcd4d73f6d2fd0"
 dependencies = [
  "crunchy",
  "num-traits",
+]
+
+[[package]]
+name = "halfbrown"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f985624e90f861184145c13b736873a0f83cdb998a292dbb0653598ab03aecbf"
+dependencies = [
+ "hashbrown 0.13.2",
+ "serde",
 ]
 
 [[package]]
@@ -3090,6 +3135,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "parquet-format-safe"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1131c54b167dd4e4799ce762e1ab01549ebb94d5bdd13e6ec1b467491c378e1f"
+dependencies = [
+ "async-trait",
+ "futures",
+]
+
+[[package]]
+name = "parquet2"
+version = "0.17.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "579fe5745f02cef3d5f236bfed216fd4693e49e4e920a13475c6132233283bce"
+dependencies = [
+ "async-stream",
+ "brotli",
+ "flate2",
+ "futures",
+ "lz4",
+ "parquet-format-safe",
+ "seq-macro",
+ "snap",
+ "streaming-decompression",
+ "zstd",
+]
+
+[[package]]
 name = "paste"
 version = "1.0.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3294,12 +3367,33 @@ dependencies = [
  "polars-arrow",
  "polars-core",
  "polars-error",
+ "polars-json",
  "polars-time",
  "polars-utils",
  "rayon",
  "regex",
+ "serde_json",
+ "simd-json",
  "simdutf8",
  "tokio",
+]
+
+[[package]]
+name = "polars-json"
+version = "0.30.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7370203bca4ee29da6da4210200894eea6abf81d7c430e192159dabcba8441a4"
+dependencies = [
+ "ahash 0.8.3",
+ "arrow2",
+ "fallible-streaming-iterator",
+ "hashbrown 0.13.2",
+ "indexmap",
+ "num-traits",
+ "polars-arrow",
+ "polars-error",
+ "polars-utils",
+ "simd-json",
 ]
 
 [[package]]
@@ -3315,6 +3409,7 @@ dependencies = [
  "polars-arrow",
  "polars-core",
  "polars-io",
+ "polars-json",
  "polars-ops",
  "polars-pipe",
  "polars-plan",
@@ -4306,6 +4401,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bebd363326d05ec3e2f532ab7660680f3b02130d780c299bca73469d521bc0ed"
 
 [[package]]
+name = "seq-macro"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e6b44e8fc93a14e66336d230954dda83d18b4605ccace8fe09bc7514a71ad0bc"
+
+[[package]]
 name = "serde"
 version = "1.0.163"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4472,6 +4573,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "simd-json"
+version = "0.10.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a3d0815e7ff0f1f05e09d4b029f86d8a330f0ab15b35b28736f3758325f59e14"
+dependencies = [
+ "ahash 0.8.3",
+ "halfbrown",
+ "lexical-core",
+ "once_cell",
+ "serde",
+ "serde_json",
+ "simdutf8",
+ "value-trait",
+]
+
+[[package]]
 name = "simdutf8"
 version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4599,6 +4716,21 @@ name = "static_assertions"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
+
+[[package]]
+name = "streaming-decompression"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bf6cc3b19bfb128a8ad11026086e31d3ce9ad23f8ea37354b31383a187c44cf3"
+dependencies = [
+ "fallible-streaming-iterator",
+]
+
+[[package]]
+name = "streaming-iterator"
+version = "0.1.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2b2231b7c3057d5e4ad0156fb3dc807d900806020c5ffa3ee6ff2c8c76fb8520"
 
 [[package]]
 name = "streaming-stats"
@@ -5133,6 +5265,18 @@ dependencies = [
  "maplit",
  "regex",
  "unicase",
+]
+
+[[package]]
+name = "value-trait"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "09a5b6c8ceb01263b969cac48d4a6705134d490ded13d889e52c0cfc80c6945e"
+dependencies = [
+ "float-cmp",
+ "halfbrown",
+ "itoa",
+ "ryu",
 ]
 
 [[package]]
