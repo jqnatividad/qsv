@@ -99,6 +99,8 @@ mod test_sort;
 mod test_sortcheck;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 mod test_split;
+#[cfg(all(feature = "feature_capable", feature = "polars"))]
+mod test_sqlp;
 mod test_stats;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 mod test_table;
