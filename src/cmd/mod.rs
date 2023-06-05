@@ -69,6 +69,8 @@ pub mod sort;
 pub mod sortcheck;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 pub mod split;
+#[cfg(all(feature = "polars", feature = "feature_capable"))]
+pub mod sqlp;
 pub mod stats;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 pub mod table;

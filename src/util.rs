@@ -1435,3 +1435,67 @@ pub fn sniff_filetype_from_buffer(in_buffer: &bytes::Bytes) -> Result<String, Cl
         Ok("inode/x-empty".to_string())
     }
 }
+
+/// Process the input files and return a vector of paths to the input files
+///
+/// If the input is empty, try to copy stdin to a file named stdin in the passed temp directory
+/// If the input is empty and stdin is empty, return an error
+/// If it's not empty, check the input files if they exist
+///
+/// If the input is a directory, add all the files in the directory to the input
+/// If the input is a file, add the file to the input
+/// If the input are snappy compressed files, uncompress them before adding them to the input
+#[cfg(any(feature = "to", feature = "polars"))]
+pub fn process_input(
+    arg_input: Vec<PathBuf>,
+    tmpdir: &tempfile::TempDir,
+    empty_stdin_errmsg: &str,
+) -> Result<Vec<PathBuf>, CliError> {
+    let mut processed_input = Vec::with_capacity(arg_input.len());
+
+    if arg_input.is_empty() || arg_input[0] == PathBuf::from("-") {
+        // copy stdin to a file named stdin in a temp directory
+        let tmp_filename = tmpdir.path().join("stdin");
+        let mut tmp_file = std::fs::File::create(&tmp_filename)?;
+        let nbytes = std::io::copy(&mut std::io::stdin(), &mut tmp_file)?;
+        if nbytes == 0 {
+            return fail_clierror!("{empty_stdin_errmsg}");
+        }
+        tmp_file.flush()?;
+        processed_input.push(tmp_filename);
+    } else {
+        let mut work_input = Vec::with_capacity(arg_input.len());
+
+        // is the input a directory?
+        if arg_input.len() == 1 && arg_input[0].is_dir() {
+            // if so, add all the files in the directory to the input
+            let dir = std::fs::read_dir(arg_input[0].clone())?;
+            for entry in dir {
+                let entry = entry?;
+                let path = entry.path();
+                if path.is_file() {
+                    work_input.push(path);
+                }
+            }
+        } else {
+            work_input = arg_input;
+        }
+
+        // check the input files
+        for path in work_input {
+            // does the input file exist?
+            if !path.exists() {
+                return fail_clierror!("Input file '{}' does not exist", path.display());
+            }
+            // is the input file snappy compressed?
+            if path.extension().unwrap_or_default() == "sz" {
+                // if so, decompress the file
+                let decompressed_filepath = decompress_snappy_file(&path, tmpdir)?;
+                processed_input.push(PathBuf::from(decompressed_filepath));
+            } else {
+                processed_input.push(path.clone());
+            }
+        }
+    }
+    Ok(processed_input)
+}

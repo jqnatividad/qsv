@@ -232,7 +232,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 }
 
 // multi-threaded streaming snappy compression
-fn compress<R: Read, W: Write + Send + 'static>(mut src: R, dst: W, jobs: usize) -> CliResult<()> {
+pub fn compress<R: Read, W: Write + Send + 'static>(
+    mut src: R,
+    dst: W,
+    jobs: usize,
+) -> CliResult<()> {
     let mut writer = ParCompressBuilder::<Snap>::new()
         .num_threads(jobs)?
         .buffer_size(gzp::BUFSIZE)?

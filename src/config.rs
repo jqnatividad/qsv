@@ -39,7 +39,7 @@ impl Delimiter {
         self.0
     }
 
-    fn decode_delimiter(s: &str) -> Result<Delimiter, String> {
+    pub fn decode_delimiter(s: &str) -> Result<Delimiter, String> {
         if s == r"\t" {
             return Ok(Delimiter(b'\t'));
         }
