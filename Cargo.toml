@@ -186,7 +186,7 @@ threadpool = "1.8"
 titlecase = { version = "2", optional = true }
 tokio = "1"
 uuid = { version = "1", features = ["v4"] }
-url = "2.3"
+url = "2.4"
 vader_sentiment = { version = "0.1", optional = true }
 whatlang = { version = "0.16", optional = true }
 
