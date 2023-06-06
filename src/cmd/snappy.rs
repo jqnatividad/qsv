@@ -262,8 +262,8 @@ fn decompress<R: Read, W: Write>(src: R, mut dst: W) -> CliResult<u64> {
 fn check<R: Read>(src: R) -> bool {
     let src = snap::read::FrameDecoder::new(src);
 
-    // read the first 50 or less bytes of a file
-    // the snap decoder will return an error if the file is not a valid snappy file
+    // read the first 50 or less bytes of a file. The snap decoder will return an error
+    // if the file does not start with a valid snappy header
     let mut buffer = Vec::with_capacity(50);
     src.take(50).read_to_end(&mut buffer).is_ok()
 }
