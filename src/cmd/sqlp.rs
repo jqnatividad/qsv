@@ -6,8 +6,9 @@ Polars SQL is a subset of ANSI SQL, converting SQL queries to fast Polars LazyFr
 (see https://www.confessionsofadataguy.com/polars-laziness-and-sql-context/).
 
 For a list of SQL functions and keywords supported by Polars SQL, see
-https://github.com/pola-rs/polars/blob/main/polars/polars-sql/src/functions.rs and
-https://github.com/pola-rs/polars/blob/main/polars/polars-sql/src/keywords.rs
+https://github.com/pola-rs/polars/blob/main/polars/polars-sql/src/functions.rs,
+https://github.com/pola-rs/polars/blob/main/polars/polars-sql/src/keywords.rs and
+https://github.com/pola-rs/polars/issues/7227
 
 Returns the shape of the query result (number of rows, number of columns) to stderr.
 
