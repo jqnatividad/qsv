@@ -33,7 +33,7 @@ jobs:
             os-name: linux
             target: x86_64-unknown-linux-gnu
             architecture: x86_64
-            addl-build-args: --features=apply,generate,luau,fetch,foreach,nightly,to,self_update,magic
+            addl-build-args: --features=apply,generate,luau,fetch,foreach,nightly,self_update,magic,polars
             default-features:
             addl-qsvlite-features: magic
             addl-qsvdp-features: luau,magic
