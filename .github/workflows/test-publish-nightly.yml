@@ -18,9 +18,9 @@ jobs:
             os-name: linux
             target: x86_64-unknown-linux-gnu
             architecture: x86_64
-            addl-build-args: --features=apply,generate,luau,fetch,foreach,nightly,to,self_update
+            addl-build-args: --features=apply,generate,luau,fetch,foreach,nightly,to,self_update,polars
             default-features:
-            addl-qsvdp-features: luau
+            addl-qsvdp-features: luau,magic
           # - os: ubuntu-latest
           #   os-name: linux
           #   target: x86_64-unknown-linux-musl
