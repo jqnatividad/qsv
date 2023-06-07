@@ -4,6 +4,8 @@ on:
   release:
     types:
       - prebuilt
+      
+  workflow_dispatch:
 
 jobs:
   build:
