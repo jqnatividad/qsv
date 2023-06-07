@@ -3083,9 +3083,6 @@ name = "once_cell"
 version = "1.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dd8b5dd2ae5ed71462c540258bedcb51965123ad7e7ccf4b9a8cafaa4a63576d"
-dependencies = [
- "parking_lot_core 0.9.7",
-]
 
 [[package]]
 name = "ord_subset"
@@ -3810,7 +3807,7 @@ dependencies = [
  "polars",
  "postgres",
  "pyo3",
- "qsv-dateparser 0.9.0",
+ "qsv-dateparser",
  "qsv-sniffer",
  "qsv-stats",
  "qsv_currency",
@@ -3854,19 +3851,6 @@ dependencies = [
 
 [[package]]
 name = "qsv-dateparser"
-version = "0.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "00323e3684bbf4d852071d0bab0552c4295604b4d55b29b96567971e032a215a"
-dependencies = [
- "anyhow",
- "chrono",
- "once_cell",
- "parking_lot 0.12.1",
- "regex",
-]
-
-[[package]]
-name = "qsv-dateparser"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "adcc85ad9d956e322fdaa0ee93386fa00fdb728ba860eb6d1a7cc9e3e6a6a4eb"
@@ -3878,17 +3862,17 @@ dependencies = [
 
 [[package]]
 name = "qsv-sniffer"
-version = "0.9.3"
+version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8a3943925bff21e3b706b3a88f63bb8d06bc8d14d01a4116536d40d3fdc060e9"
+checksum = "549dd1a06877311fdc2d096f006e60239a99709c1161694f18bc8baf0c4392d2"
 dependencies = [
  "bitflags 2.3.1",
  "bytecount",
  "csv",
  "csv-core",
- "hashbrown 0.13.2",
+ "hashbrown 0.14.0",
  "memchr",
- "qsv-dateparser 0.8.2",
+ "qsv-dateparser",
  "regex",
  "simdutf8",
  "tabwriter",
