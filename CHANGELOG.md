@@ -6,6 +6,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.106.0] - 2023-06-07
+This release features the new [Polars](https://www.pola.rs/)-powered `sqlp` command which allows you to run SQL queries against CSVs.
+
+Initial tests show that its competitive with [DuckDB](https://duckdb.org/) and faster than [DataFusion](https://arrow.apache.org/datafusion/) on identical SQL queries, and it just runs rings around [pandasql](https://github.com/yhat/pandasql/#pandasql).
+
+It converts Polars SQL (a subset of ANSI SQL) queries to multi-threaded LazyFrames expressions and then executes them. This is a very powerful feature and allows you to do things like joins, aggregations, group bys, etc. on larger than memory CSVs. The `sqlp` command is still experimental and we are looking for feedback on it. Please try it out and let us know what you think.
+
+### Added
+* `sqlp`: new command to allow Polars SQL queries against CSVs https://github.com/jqnatividad/qsv/pull/1015
+
+### Changed
+* Bump csv from 1.2.1 to 1.2.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1008
+* Bump pyo3 from 0.18.3 to 0.19.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1007
+* workflow for creating msi for qsv by @minhajuddin2510 in https://github.com/jqnatividad/qsv/pull/1009
+* migrate from once_cell to std::sync::oncelock https://github.com/jqnatividad/qsv/pull/1010
+* Bump qsv_docopt from 1.2.2 to 1.3.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1011
+* Bump self_update from 0.36.0 to 0.37.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1014
+* Bump indicatif from 0.17.4 to 0.17.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/1013
+* Bump cached from 0.43.0 to 0.44.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1012
+* Bump url from 2.3.1 to 2.4.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1016
+* Wix changes by @minhajuddin2510 in https://github.com/jqnatividad/qsv/pull/1017
+* Bump actions/github-script from 5 to 6 by @dependabot in https://github.com/jqnatividad/qsv/pull/1018
+* Bump regex from 1.8.3 to 1.8.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1019
+* Bump hashbrown from 0.13.2 to 0.14.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1020
+* Bump tempfile from 3.5.0 to 3.6.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1021
+* Bump sysinfo from 0.29.0 to 0.29.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1023
+* Bump qsv-dateparser from 0.8.2 to 0.9.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1022
+* Bump qsv-sniffer from 0.9.3 to 0.9.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1024
+* Bump qsv-stats from 0.9.0 to 0.10.0 https://github.com/jqnatividad/qsv/commit/38035793d2bb3bf4bee1d3e4cbfc62a6f0235fb6
+* Bump embedded luau from 0.577 to 0.579
+* Bump data-encoding from 2.3.3 to 2.4.0 https://github.com/jqnatividad/qsv/commit/2285a12eab6a7997f97cb39f908684c3adae3ec9
+* cargo update bump several indirect dependencies
+* change MSRV to 1.70.0
+* pin Rust nightly to 2023-06-06
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.105.1...0.106.0
+
 ## [0.105.1] - 2023-05-30
 
 ### Changed
