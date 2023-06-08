@@ -47,8 +47,8 @@ jobs:
         id: download
         uses: dsaltares/fetch-gh-release-asset@master
         with:
-          repo: '/jqnatividad/qsv/'
-          version: 'latest'
+          repo: '/jqnatividad'
+          version: 'qsv/latest'
           file: 'qsv-0.106.0-x86_64-pc-windows-msvc.zip'
           target: 'release.zip'
 
