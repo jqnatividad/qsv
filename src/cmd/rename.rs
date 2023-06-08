@@ -1,11 +1,19 @@
 static USAGE: &str = r#"
-Rename the columns of CSV data efficiently.
+Rename the columns of a CSV efficiently.
 
-This command lets you rename the columns in CSV data. You must specify
-all of the headers, and separate them by a comma.
+This command lets you rename the columns in a CSV. The new column names
+are given as a comma-separated list of names. The number of column names
+given must match the number of columns in the CSV unless "_all_generic"
+is used.
 
   Change the name of the columns:
   $ qsv rename id,name,title
+
+  Replace the headers with generic column names:
+    $ qsv rename _all_generic
+
+  Add generic column names to a CSV with no headers:
+    $ qsv rename _all_generic --no-headers
 
   Use column names that contains commas and conflict with the separator:
   $ qsv rename '"Date - Opening","Date - Actual Closing"'
@@ -15,6 +23,13 @@ For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test
 Usage:
     qsv rename [options] [--] <headers> [<input>]
     qsv rename --help
+
+rename arguments:
+    <headers>              The new headers to use for the CSV.
+                           Separate multiple headers with a comma.
+                           If "_all_generic" is given, the headers will be renamed
+                           to generic column names, where the column name uses
+                           the format "_col_N" where N is the 1-based column index.
 
 Common options:
     -h, --help             Display this message
@@ -41,7 +56,7 @@ struct Args {
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
-    let args: Args = util::get_args(USAGE, argv)?;
+    let mut args: Args = util::get_args(USAGE, argv)?;
 
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
@@ -50,6 +65,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut rdr = rconfig.reader()?;
     let mut wtr = Config::new(&args.flag_output).writer()?;
     let headers = rdr.byte_headers()?;
+
+    if args.arg_headers.to_lowercase() == "_all_generic" {
+        let mut generic_headers = String::new();
+        for (i, _) in headers.iter().enumerate() {
+            generic_headers.push_str(&format!("_col_{},", i + 1));
+        }
+        // remove the trailing comma
+        generic_headers.pop();
+        args.arg_headers = generic_headers;
+    }
 
     let mut new_rdr = csv::Reader::from_reader(args.arg_headers.as_bytes());
     let new_headers = new_rdr.byte_headers()?;
