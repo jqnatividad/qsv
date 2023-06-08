@@ -28,7 +28,7 @@ fn rename() {
 
 #[test]
 fn rename_generic() {
-    let wrk = Workdir::new("rename");
+    let wrk = Workdir::new("rename_generic");
     wrk.create(
         "in.csv",
         vec![
@@ -75,7 +75,7 @@ fn rename_noheaders() {
 
 #[test]
 fn rename_noheaders_generic() {
-    let wrk = Workdir::new("rename_noheaders");
+    let wrk = Workdir::new("rename_noheaders_generic");
     wrk.create(
         "in.csv",
         vec![svec!["1", "b"], svec!["2", "a"], svec!["3", "d"]],
