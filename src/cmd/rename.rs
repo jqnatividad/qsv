@@ -1,22 +1,21 @@
 static USAGE: &str = r#"
 Rename the columns of a CSV efficiently.
 
-This command lets you rename the columns in a CSV. The new column names
-are given as a comma-separated list of names. The number of column names
-given must match the number of columns in the CSV unless "_all_generic"
-is used.
+The new column names are given as a comma-separated list of names.
+The number of column names given must match the number of columns in the
+CSV unless "_all_generic" is used.
 
-  Change the name of the columns:
-  $ qsv rename id,name,title
+  Change the column names of a CSV with three columns:
+    $ qsv rename id,name,title
 
-  Replace the headers with generic column names:
+  Replace the column names with generic ones (_col_N):
     $ qsv rename _all_generic
 
   Add generic column names to a CSV with no headers:
     $ qsv rename _all_generic --no-headers
 
   Use column names that contains commas and conflict with the separator:
-  $ qsv rename '"Date - Opening","Date - Actual Closing"'
+    $ qsv rename '"Date - Opening","Date - Actual Closing"'
 
 For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_rename.rs.
 
