@@ -46,8 +46,8 @@ jobs:
       - name: Download Release Asset
         id: download
         run: |
-          LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
-          url="https://github.com/jqnatividad/qsv/releases/latest/download/qsv-${LATEST_TAG}-x86_64-pc-windows-msvc.zip"
+          $LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
+          $url="https://github.com/jqnatividad/qsv/releases/latest/download/qsv-${LATEST_TAG}-x86_64-pc-windows-msvc.zip"
           Invoke-WebRequest -Uri $url -OutFile 'release.zip'
 
 
