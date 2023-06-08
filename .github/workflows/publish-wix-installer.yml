@@ -39,7 +39,7 @@ jobs:
         run: cargo install cargo-wix
 
       - name: Init cargo-wix
-        run: cargo install wix init
+        run: cargo wix init
         
       - name: Fetch Release
         id: release
