@@ -152,6 +152,70 @@ fn sqlp_boston311_groupby_orderby() {
     let test_file = wrk.load_test_file("boston311-100.csv");
 
     let mut cmd = wrk.command("sqlp");
+
+    // we qupte "boston311-100" as contains a hyphen in its name, which is a special character
+    // in SQL, so we need to make it a quoted identifer
+    cmd.arg(&test_file)
+        .arg(r#"select ward, count(*) as cnt from "boston311-100" group by ward order by cnt desc, ward asc"#);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["ward", "cnt"],
+        svec!["Ward 3", "10"],
+        svec!["Ward 6", "7"],
+        svec!["Ward 1", "6"],
+        svec!["3", "5"],
+        svec!["Ward 20", "5"],
+        svec!["Ward 4", "5"],
+        svec!["Ward 5", "5"],
+        svec!["14", "4"],
+        svec!["Ward 13", "4"],
+        svec!["Ward 16", "4"],
+        svec!["Ward 18", "3"],
+        svec!["Ward 19", "3"],
+        svec!["Ward 7", "3"],
+        svec!["Ward 8", "3"],
+        svec!["03", "2"],
+        svec!["17", "2"],
+        svec!["22", "2"],
+        svec!["Ward 11", "2"],
+        svec!["Ward 21", "2"],
+        svec![" ", "1"],
+        svec!["01", "1"],
+        svec!["02", "1"],
+        svec!["04", "1"],
+        svec!["06", "1"],
+        svec!["07", "1"],
+        svec!["1", "1"],
+        svec!["10", "1"],
+        svec!["16", "1"],
+        svec!["18", "1"],
+        svec!["19", "1"],
+        svec!["21", "1"],
+        svec!["7", "1"],
+        svec!["8", "1"],
+        svec!["9", "1"],
+        svec!["Ward 10", "1"],
+        svec!["Ward 12", "1"],
+        svec!["Ward 14", "1"],
+        svec!["Ward 15", "1"],
+        svec!["Ward 17", "1"],
+        svec!["Ward 2", "1"],
+        svec!["Ward 22", "1"],
+        svec!["Ward 9", "1"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn sqlp_boston311_groupby_orderby_with_table_alias() {
+    let wrk = Workdir::new("sqlp_boston311_groupby_orderby");
+    let test_file = wrk.load_test_file("boston311-100.csv");
+
+    let mut cmd = wrk.command("sqlp");
+
+    // we use _t_1 alias as "boston311-100" contains a hyphen in its name, which is a special
+    // character in SQL
     cmd.arg(&test_file)
         .arg("select ward, count(*) as cnt from _t_1 group by ward order by cnt desc, ward asc");
 
@@ -258,4 +322,29 @@ fn sqlp_boston311_try_parsedates() {
         svec!["18", "507000000.0"],
     ];
     assert_eq!(got, expected);
+}
+
+#[test]
+fn sqlp_boston311_explain() {
+    let wrk = Workdir::new("sqlp_boston311_explain");
+    let test_file = wrk.load_test_file("boston311-100.csv");
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg(&test_file).arg("--try-parsedates").arg(
+        "explain select ward, cast(avg(closed_dt - open_dt) as float) as avg_tat from _t_1 where \
+         case_status = 'Closed' group by ward order by avg_tat desc, ward asc",
+    );
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected_begin = r#"Logical Plan
+"SORT BY [col(""avg_tat""), col(""ward"")]"
+"  FAST_PROJECT: [ward, avg_tat]"
+    AGGREGATE
+"    	[[(col(""closed_dt"")) - (col(""open_dt""))].mean().cast(Float32).alias(""avg_tat"")] BY [col(""ward"")] FROM""#;
+    assert!(got.starts_with(expected_begin));
+
+    let expected_end = r#"boston311-100.csv
+  PROJECT 4/29 COLUMNS
+"  SELECTION: [(col(""case_status"")) == (Utf8(Closed))]""#;
+    assert!(got.ends_with(expected_end));
 }
