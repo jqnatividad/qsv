@@ -24,6 +24,9 @@ sqlp arguments:
                            be used.
                            If the input are snappy compressed file(s), it will be
                            decompressed automatically.
+                           Column headers are required. Use 'qsv rename _all_generic --no-headers'
+                           to add generic column names (_col_N) to a CSV with no headers.
+
     sql                    The SQL query to run. Each input file will be available as a table
                            named after the file name (without the extension), or as "_t_N"
                            where N is the 1-based index.
@@ -95,6 +98,8 @@ enum OutputMode {
     Arrow,
 }
 
+// shamelessly copied from
+// https://github.com/pola-rs/polars/blob/main/polars-cli/src/main.rs
 impl OutputMode {
     fn execute_query(
         &self,
