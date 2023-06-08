@@ -41,35 +41,21 @@ jobs:
       - name: Init cargo-wix
         run: cargo wix init
         
-      - name: Fetch Release
-        id: release
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const release = await github.repos.getLatestRelease({
-              owner: context.repo.owner,
-              repo: context.repo.repo
-            });
-            core.setOutput('release', release.data);
+
 
       - name: Download Release Asset
         id: download
-        uses: actions/github-script@v6
+        uses: dsaltares/fetch-gh-release-asset@master
         with:
-          script: |
-            const asset = await github.repos.getReleaseAsset({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              asset_id: ${{ steps.release.outputs.release.assets[6].id }}
-            });
-            console.log(`Downloaded asset: ${asset.data.name}`);
-            core.setOutput('asset_name', asset.data.name);
-            core.setOutput('asset_url', asset.data.url);
+          repo: '/jqnatividad/qsv'
+          version: 'latest'
+          file: 'qsv-0.106.0-x86_64-pc-windows-msvc.zip'
+          target: 'release.zip'
 
       - name: Extract and Copy
         run: |
           mkdir extracted_files
-          unzip -q ${{ steps.download.outputs.asset_name }} -d extracted_files
+          unzip -q release.zip -d extracted_files
           cp extracted_files/qsv.exe /contib/wix
           
       - name: Build Wix Installer
