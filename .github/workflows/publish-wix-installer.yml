@@ -45,12 +45,11 @@ jobs:
 
       - name: Download Release Asset
         id: download
-        uses: dsaltares/fetch-gh-release-asset@master
-        with:
-          repo: '/jqnatividad'
-          version: 'qsv/latest'
-          file: 'qsv-0.106.0-x86_64-pc-windows-msvc.zip'
-          target: 'release.zip'
+        run: |
+          LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
+          url="https://github.com/jqnatividad/qsv/releases/latest/download/qsv-${LATEST_TAG}-x86_64-pc-windows-msvc.zip"
+          Invoke-WebRequest -Uri $url -OutFile 'release.zip'
+
 
       - name: Extract and Copy
         run: |
