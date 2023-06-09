@@ -73,9 +73,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ github.event.release.upload_url }}
           asset_path: target/wix/*.msi
-          name: qsv-installer.msi
-          mime_type: application/octet-stream
-          token: ${{ secrets.GITHUB_TOKEN }}
+          asset_name: qsv-installer.msi
+          upload_url: ${{ github.event.release.upload_url }}
+
+
 
