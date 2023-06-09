@@ -60,10 +60,10 @@ jobs:
         run: |
           mkdir extracted_files
           unzip -q release.zip -d extracted_files
-          cp extracted_files/qsv.exe contib/wix
+          cp extracted_files/qsv.exe contrib/wix
           
       - name: Build Wix Installer
-        run: cargo wix contib/wix/main.wxs
+        run: cargo wix contrib/wix/main.wxs
 
       - name: Upload Wix Installer
         uses: actions/upload-release-asset@v1
