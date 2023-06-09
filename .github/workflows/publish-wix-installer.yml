@@ -46,7 +46,7 @@ jobs:
       - name: Download Release Asset
         id: download
         run: |
-          $LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
+          $LATEST_TAG=$(git describe --tags --abbrev=0)
           Write-Output "Latest tag: $LATEST_TAG"
           $url="https://github.com/jqnatividad/qsv/releases/latest/download/qsv-${LATEST_TAG}-x86_64-pc-windows-msvc.zip"
           Write-Output "URL: $url"
