@@ -153,7 +153,7 @@ fn sqlp_boston311_groupby_orderby() {
 
     let mut cmd = wrk.command("sqlp");
 
-    // we qupte "boston311-100" as contains a hyphen in its name, which is a special character
+    // we quote "boston311-100" as contains a hyphen in its name, which is a special character
     // in SQL, so we need to make it a quoted identifer
     cmd.arg(&test_file)
         .arg(r#"select ward, count(*) as cnt from "boston311-100" group by ward order by cnt desc, ward asc"#);
@@ -347,4 +347,67 @@ fn sqlp_boston311_explain() {
   PROJECT 4/29 COLUMNS
 "  SELECTION: [(col(""case_status"")) == (Utf8(Closed))]""#;
     assert!(got.ends_with(expected_end));
+}
+
+#[test]
+fn sqlp_boston311_sql_script() {
+    let wrk = Workdir::new("sqlp_boston311_sql_script");
+    let test_file = wrk.load_test_file("boston311-100.csv");
+
+    wrk.create_from_string(
+        "test.sql",
+        r#"create table temp_table as select * from "boston311-100" where ontime = 'OVERDUE';
+create table temp_table2 as select * from temp_table limit 10;
+select ward,count(*) as cnt from temp_table2 group by ward order by cnt desc, ward asc;"#,
+    );
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg(&test_file).arg("test.sql");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["ward", "cnt"],
+        svec!["Ward 3", "2"],
+        svec![" ", "1"],
+        svec!["04", "1"],
+        svec!["3", "1"],
+        svec!["Ward 13", "1"],
+        svec!["Ward 17", "1"],
+        svec!["Ward 19", "1"],
+        svec!["Ward 21", "1"],
+        svec!["Ward 6", "1"],
+    ];
+
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn sqlp_boston311_sql_script_json() {
+    let wrk = Workdir::new("sqlp_boston311_sql_script_json");
+    let test_file = wrk.load_test_file("boston311-100.csv");
+
+    wrk.create_from_string(
+        "test.sql",
+        r#"create table temp_table as select * from "boston311-100" where ontime = 'OVERDUE';
+create table temp_table2 as select * from temp_table limit 10;
+select ward,count(*) as cnt from temp_table2 group by ward order by cnt desc, ward asc;"#,
+    );
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg(&test_file)
+        .arg("test.sql")
+        .args(["--format", "json"]);
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = r#"{"ward":"Ward 3","cnt":2}
+{"ward":" ","cnt":1}
+{"ward":"04","cnt":1}
+{"ward":"3","cnt":1}
+{"ward":"Ward 13","cnt":1}
+{"ward":"Ward 17","cnt":1}
+{"ward":"Ward 19","cnt":1}
+{"ward":"Ward 21","cnt":1}
+{"ward":"Ward 6","cnt":1}"#;
+
+    assert_eq!(got, expected);
 }

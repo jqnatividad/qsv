@@ -30,6 +30,9 @@ sqlp arguments:
     sql                    The SQL query to run. Each input file will be available as a table
                            named after the file name (without the extension), or as "_t_N"
                            where N is the 1-based index.
+                           If the input ends with ".sql", the file will be read as a SQL script, with
+                           each SQL statement separated by a semicolon. It will execute the statements
+                           in order, and the result of the last statement will be returned.
 
 sqlp options:
     --format <arg>         The output format to use. Valid values are:
@@ -54,10 +57,11 @@ use std::{
     env,
     fs::File,
     io,
-    io::{BufWriter, Write},
+    io::{BufWriter, Read, Write},
     path::{Path, PathBuf},
     str,
     str::FromStr,
+    sync::OnceLock,
 };
 
 use polars::{
@@ -89,6 +93,8 @@ struct Args {
     flag_quiet:          bool,
 }
 
+static WTR_BUFFER_CAPACITY: OnceLock<usize> = OnceLock::new();
+
 #[derive(Debug, Default, Clone)]
 enum OutputMode {
     #[default]
@@ -111,8 +117,12 @@ impl OutputMode {
         let execute_inner = || {
             let w = match output {
                 Some(x) => {
-                    let path = Path::new(&x);
-                    Box::new(File::create(path)?) as Box<dyn Write>
+                    if x == "sink" {
+                        Box::new(io::sink()) as Box<dyn Write>
+                    } else {
+                        let path = Path::new(&x);
+                        Box::new(File::create(path)?) as Box<dyn Write>
+                    }
                 }
                 None => Box::new(io::stdout()) as Box<dyn Write>,
             };
@@ -121,10 +131,8 @@ impl OutputMode {
                 .execute(query)
                 .and_then(polars::prelude::LazyFrame::collect)?;
 
-            let wtr_capacitys = env::var("QSV_WTR_BUFFER_CAPACITY")
-                .unwrap_or_else(|_| DEFAULT_WTR_BUFFER_CAPACITY.to_string());
-            let wtr_buffer: usize = wtr_capacitys.parse().unwrap_or(DEFAULT_WTR_BUFFER_CAPACITY);
-            let mut w = io::BufWriter::with_capacity(wtr_buffer, w);
+            let wtr_buffer_capacity = WTR_BUFFER_CAPACITY.get().unwrap();
+            let mut w = io::BufWriter::with_capacity(*wtr_buffer_capacity, w);
 
             let out_result = match self {
                 OutputMode::Csv => CsvWriter::new(&mut w).finish(&mut df),
@@ -182,6 +190,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     };
 
+    let wtr_capacitys = env::var("QSV_WTR_BUFFER_CAPACITY")
+        .unwrap_or_else(|_| DEFAULT_WTR_BUFFER_CAPACITY.to_string());
+    let wtr_buffer_capacity: usize = wtr_capacitys.parse().unwrap_or(DEFAULT_WTR_BUFFER_CAPACITY);
+    WTR_BUFFER_CAPACITY.set(wtr_buffer_capacity).unwrap();
+
     let optimize_all = polars::lazy::frame::OptState {
         projection_pushdown: true,
         predicate_pushdown:  true,
@@ -220,19 +233,55 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         log::debug!("Table(s) registered in SQL Context: {tables_in_context:?}");
     }
 
-    // replace aliases in query
-    let mut query = args.arg_sql;
-    for (table_name, table_alias) in &table_aliases {
-        // we quote the table name to avoid issues with reserved keywords and
-        // other characters that are not allowed in identifiers
-        let quoted_table_name = format!(r#""{table_name}""#);
-        query = query.replace(table_alias, &quoted_table_name);
-    }
+    let mut sql_script = String::new();
 
-    log::debug!("Executing query: {query}");
-    let query_result_shape =
-        output_mode.execute_query(&query, &mut ctx, args.flag_output.clone())?;
-    log::debug!("Query successfully executed! result shape: {query_result_shape:?}");
+    // check if the query is a SQL script
+    let queries = if std::path::Path::new(&args.arg_sql)
+        .extension()
+        .map_or(false, |ext| ext.eq_ignore_ascii_case("sql"))
+    {
+        let mut file = File::open(&args.arg_sql)?;
+        file.read_to_string(&mut sql_script)?;
+        sql_script
+            .split(';')
+            .map(std::string::ToString::to_string)
+            .filter(|s| s.trim().len() > 0)
+            .collect()
+    } else {
+        // its not a sql script, just a single query
+        vec![args.arg_sql.clone()]
+    };
+
+    log::debug!("Executing query/ies: {queries:?}");
+
+    let num_queries = queries.len();
+    let mut query_result_shape = (0_usize, 0_usize);
+
+    for (idx, query) in queries.iter().enumerate() {
+        // we need to clone the table aliases because we need to pass a mutable
+        // reference to the query string
+        let table_aliases = table_aliases.clone();
+
+        // check if this is the last query in the script
+        let is_last_query = idx == num_queries - 1;
+
+        // replace aliases in query
+        let mut current_query = query.to_string();
+        for (table_name, table_alias) in &table_aliases {
+            // we quote the table name to avoid issues with reserved keywords and
+            // other characters that are not allowed in identifiers
+            let quoted_table_name = format!(r#""{table_name}""#);
+            current_query = current_query.replace(table_alias, &quoted_table_name);
+        }
+
+        log::debug!("Executing query {idx}: {query}");
+        query_result_shape = if is_last_query {
+            output_mode.execute_query(&current_query, &mut ctx, args.flag_output.clone())?
+        } else {
+            output_mode.execute_query(&current_query, &mut ctx, Some("sink".to_string()))?
+        };
+        log::debug!("Query {idx} successfully executed! result shape: {query_result_shape:?}");
+    }
 
     if let Some(output) = args.flag_output {
         // if output ends with .sz, we snappy compress the output
