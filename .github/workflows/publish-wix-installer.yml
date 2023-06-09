@@ -63,7 +63,7 @@ jobs:
           cp extracted_files/qsv.exe contrib/wix
           
       - name: Build Wix Installer
-        run: cargo wix -I contrib/wix/app.wxs
+        run: cargo wix -I contrib/wix/app.wxs --nocapture
 
       - name: Upload Wix Installer
         uses: actions/upload-release-asset@v1
