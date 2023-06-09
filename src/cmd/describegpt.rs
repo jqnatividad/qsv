@@ -1,24 +1,25 @@
 static USAGE: &str = r#"
-Prints a count of the number of records in the CSV data.
+Infers extended metadata about a CSV using summary statistics.
 
-Note that the count will not include the header row (unless --no-headers is
-given).
+Note that this command uses a LLM for inference and is therefore prone to inaccurate
+information being produced. Ensure verification of output results before using them.
 
-For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_count.rs.
+For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_describegpt.rs.
 
 Usage:
-    qsv count [options] [<input>]
-    qsv count --help
+    qsv describegpt [options] [<input>]
+    qsv describegpt --help
 
-count options:
-    -H, --human-readable   Comma separate row count.
-    --width                Also return the length of the longest record.
-                           The count and width are separated by a semicolon.
+describegpt options:
+    -A, --all              Print all extended metadata options output.
+    --description          Print a general description of the dataset.
+    --dictionary           For each field, prints an inferred type, a 
+                           human-readable label, and a description.
+    --tags                 Prints tags that categorize the dataset. Useful
+                           for grouping datasets and filtering.
 
 Common options:
     -h, --help             Display this message
-    -n, --no-headers       When set, the first row will be included in
-                           the count.
 "#;
 
 use log::info;
