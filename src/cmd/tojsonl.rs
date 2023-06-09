@@ -15,7 +15,7 @@ Usage:
     qsv tojsonl [options] [<input>]
     qsv tojsonl --help
 
-Tojsonl optionns:
+Tojsonl options:
     -j, --jobs <arg>       The number of jobs to run in parallel.
                            When not set, the number of jobs is set to the
                            number of CPUs detected.
