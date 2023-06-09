@@ -1,5 +1,5 @@
 static USAGE: &str = r#"
-Run a blazing-fast Polars SQL query against several CSVs - replete with joins, aggregations,
+Run blazing-fast Polars SQL queries against several CSVs - replete with joins, aggregations,
 grouping, sorting, and more - working on larger than memory CSV files.
 
 Polars SQL is a subset of ANSI SQL, converting SQL queries to fast Polars LazyFrame expressions
