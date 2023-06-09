@@ -22,9 +22,6 @@ include = [
     "resources/luau/vendor/luadate/date.lua",
 ]
 
-[registries.crates-io]
-protocol = "sparse"
-
 [[bin]]
 name              = "qsv"
 test              = true
