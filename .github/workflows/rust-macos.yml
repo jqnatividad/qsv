@@ -31,4 +31,4 @@ jobs:
       with:
         key: qsv-macoscache
     - name: Run tests
-      run: cargo test --verbose --locked --features=apply,fetch,foreach,generate,luau,python,polars,feature_capable
+      run: cargo test --verbose --locked --features=apply,fetch,foreach,generate,luau,python,polars,to,feature_capable
