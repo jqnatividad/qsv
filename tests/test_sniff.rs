@@ -166,7 +166,7 @@ Fields:
     27:  Float     longitude
     28:  Text      source"#;
 
-    assert!(dos2unix(&got).trim_end().ends_with(expected_end.trim_end()));
+    assert!(got.ends_with(expected_end));
 }
 
 #[test]
