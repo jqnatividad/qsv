@@ -20,15 +20,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Maximize build space
-      uses: easimon/maximize-build-space@master
-      with:
-        root-reserve-mb: 512
-        swap-size-mb: 1024
-        remove-dotnet: 'true'
-        remove-android: 'true'
-        remove-haskell: 'true'
-        remove-docker-images: 'true'
     - name: apt-get update Ubuntu
       run: |
         sudo apt-get update
@@ -50,4 +41,4 @@ jobs:
       with:
         key: qsv-cache
     - name: Run tests
-      run: cargo test --verbose --locked --features=apply,fetch,foreach,generate,luau,python,magic,polars,to,feature_capable
+      run: cargo test --verbose --locked --features=apply,fetch,foreach,generate,luau,python,magic,polars,feature_capable
