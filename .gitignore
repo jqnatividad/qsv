@@ -31,3 +31,6 @@ tmp/*
 *.rsbak
 *.luau
 *.png
+*.sql
+.history
+*.rswip
