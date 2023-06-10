@@ -165,7 +165,7 @@ dependencies = [
  "serde_urlencoded",
  "smallvec",
  "socket2 0.4.9",
- "time 0.3.21",
+ "time 0.3.22",
  "url",
 ]
 
@@ -1151,7 +1151,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e859cd57d0710d9e06c381b550c06e76992472a8c6d527aecd2fc673dcc231fb"
 dependencies = [
  "percent-encoding",
- "time 0.3.21",
+ "time 0.3.22",
  "version_check",
 ]
 
@@ -1167,7 +1167,7 @@ dependencies = [
  "publicsuffix",
  "serde",
  "serde_json",
- "time 0.3.21",
+ "time 0.3.22",
  "url",
 ]
 
@@ -2430,7 +2430,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
- "time 0.3.21",
+ "time 0.3.22",
  "url",
  "uuid",
 ]
@@ -3641,9 +3641,9 @@ checksum = "dc375e1527247fe1a97d8b7156678dfe7c1af2fc075c9a4db3690ecd2a148068"
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.59"
+version = "1.0.60"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6aeca18b86b413c660b781aa319e4e2648a3e6f9eadc9b47e9038e6fe9f3451b"
+checksum = "dec2b086b7a862cf4de201096214fa870344cf922b2b30c167badb3af3195406"
 dependencies = [
  "unicode-ident",
 ]
@@ -4958,9 +4958,9 @@ dependencies = [
 
 [[package]]
 name = "time"
-version = "0.3.21"
+version = "0.3.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8f3403384eaacbca9923fa06940178ac13e4edb725486d70e8e15881d0c836cc"
+checksum = "ea9e1b3cf1243ae005d9e74085d4d542f3125458f3a81af210d901dcd7411efd"
 dependencies = [
  "itoa",
  "serde",
@@ -5074,9 +5074,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-rustls"
-version = "0.24.0"
+version = "0.24.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e0d409377ff5b1e3ca6437aa86c1eb7d40c134bfec254e44c830defa92669db5"
+checksum = "c28327cf380ac148141087fbfb9de9d7bd4e84ab5d2c28fbc911d753de8a7081"
 dependencies = [
  "rustls",
  "tokio",
@@ -5714,7 +5714,7 @@ dependencies = [
  "crc32fast",
  "crossbeam-utils",
  "flate2",
- "time 0.3.21",
+ "time 0.3.22",
 ]
 
 [[package]]
