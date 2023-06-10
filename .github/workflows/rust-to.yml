@@ -1,0 +1,37 @@
+name: Linux - to feature
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-linux-tests-${{ github.ref }}-1
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: apt-get update Ubuntu
+      run: |
+        sudo apt-get update
+    - uses: actions/checkout@v3
+    - name: Install libmagic
+      run: |
+        sudo apt-get install libmagic1 libmagic-dev
+    - name: Update Rust
+      run: rustup update
+    - name: Setup Rust-cache
+      uses: Swatinem/rust-cache@v2
+      with:
+        key: qsv-cache
+    - name: Run tests
+      run: cargo test --verbose --locked --features=magic,to,feature_capable
