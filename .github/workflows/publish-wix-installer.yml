@@ -75,13 +75,14 @@ jobs:
         run: |
           rm wix/main.wxs
           cargo wix -I contrib/wix/app.wxs --nocapture
-    
+          cp target\wix\*.msi qsv-${{ needs.analyze-tags.outputs.previous-tag }}.msi
+          
       - name: Upload zipped binaries to release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: target\wix\*.msi
-          asset_name: qsv-installer.msi
+          file: qsv-${{ needs.analyze-tags.outputs.previous-tag }}.msi
+          asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}.msi
           overwrite: true
           tag: ${{ needs.analyze-tags.outputs.previous-tag }} 
           
