@@ -3,17 +3,31 @@ name: qsv Windows Installer
 on:
   release:
     types:
-      - prebuilt
-      
+      - created
+
   workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: windows-latest
+  analyze-tags:
+    runs-on: ubuntu-20.04
+    outputs:
+      previous-tag: ${{ steps.previoustag.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Get previous tag
+        id: previoustag
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
 
+  build:
+    needs: analyze-tags
+    runs-on: windows-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Install Wix Toolset
         run: |
@@ -39,47 +53,38 @@ jobs:
         run: cargo install cargo-wix
 
       - name: Init cargo-wix
-        run: cargo install wix init
-        
-      - name: Fetch Release
-        id: release
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const release = await github.repos.getLatestRelease({
-              owner: context.repo.owner,
-              repo: context.repo.repo
-            });
-            core.setOutput('release', release.data);
+        run: cargo wix init
 
       - name: Download Release Asset
         id: download
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const asset = await github.repos.getReleaseAsset({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              asset_id: ${{ steps.release.outputs.release.assets[6].id }}
-            });
-            console.log(`Downloaded asset: ${asset.data.name}`);
-            core.setOutput('asset_name', asset.data.name);
-            core.setOutput('asset_url', asset.data.url);
+        run: |
+          $LATEST_TAG=$(git describe --tags --abbrev=0)
+          Write-Output "Latest tag: $LATEST_TAG"
+          $url="https://github.com/jqnatividad/qsv/releases/latest/download/qsv-${LATEST_TAG}-x86_64-pc-windows-msvc.zip"
+          Write-Output "URL: $url"
+          Invoke-WebRequest -Uri $url -OutFile 'release.zip'
 
       - name: Extract and Copy
         run: |
           mkdir extracted_files
-          unzip -q ${{ steps.download.outputs.asset_name }} -d extracted_files
-          cp extracted_files/qsv.exe /contib/wix
-          
-      - name: Build Wix Installer
-        run: cargo wix /contib/wix/main.wxs
+          unzip -q release.zip -d extracted_files
+          cp extracted_files/qsv.exe contrib/wix
 
-      - name: Upload Wix Installer
-        uses: actions/upload-release-asset@v1
+      - name: Build Wix Installer
+        run: |
+          rm wix/main.wxs
+          cargo wix -I contrib/wix/app.wxs --nocapture
+          cp target\wix\*.msi qsv-${{ needs.analyze-tags.outputs.previous-tag }}.msi
+          
+      - name: Upload zipped binaries to release
+        uses: svenstaro/upload-release-action@v2
         with:
-          asset_path: target/wix/*.msi
-          name: qsv-installer.msi
-          mime_type: application/octet-stream
-          token: ${{ secrets.GITHUB_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: qsv-${{ needs.analyze-tags.outputs.previous-tag }}.msi
+          asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}.msi
+          overwrite: true
+          tag: ${{ needs.analyze-tags.outputs.previous-tag }} 
+          
+
+
 
