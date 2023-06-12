@@ -14,9 +14,11 @@ describegpt options:
     -A, --all              Print all extended metadata options output.
     --description          Print a general description of the dataset.
     --dictionary           For each field, prints an inferred type, a 
-                           human-readable label, and a description.
+                           human-readable label, a description, and stats.
     --tags                 Prints tags that categorize the dataset. Useful
                            for grouping datasets and filtering.
+    --json                 Return results in JSON format.
+    --pretty-json          Return results in pretty JSON format.
 
 Common options:
     -h, --help             Display this message
