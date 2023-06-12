@@ -8,6 +8,19 @@ on:
   workflow_dispatch:
 
 jobs:
+  analyze-tags:
+    runs-on: ubuntu-20.04
+    outputs:
+      previous-tag: ${{ steps.previoustag.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      #▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼#
+      - name: Get previous tag
+        id: previoustag
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+      #▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲#
   build:
     runs-on: windows-latest
 
@@ -67,16 +80,15 @@ jobs:
         run: |
           rm wix/main.wxs
           cargo wix -I contrib/wix/app.wxs --nocapture
-
-      - name: Upload Wix Installer
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload zipped binaries to release
+        uses: svenstaro/upload-release-action@v2
         with:
-          asset_path: target/wix/*.msi
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: target/wix/*.msi
           asset_name: qsv-installer.msi
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_content_type: application/octet-stream
+          overwrite: true
+          tag: ${{ needs.analyze-tags.outputs.previous-tag }} 
+          
 
 
 
