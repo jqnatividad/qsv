@@ -3,7 +3,7 @@ name: qsv Windows Installer
 on:
   release:
     types:
-      - prebuilt
+      - created
       
   workflow_dispatch:
 
@@ -76,6 +76,7 @@ jobs:
           asset_path: target/wix/*.msi
           asset_name: qsv-installer.msi
           upload_url: ${{ github.event.release.upload_url }}
+          asset_content_type: application/octet-stream
 
 
 
