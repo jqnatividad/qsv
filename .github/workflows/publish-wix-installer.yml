@@ -27,7 +27,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          ref: update-wix
           fetch-depth: 0
 
       - name: Install Wix Toolset
