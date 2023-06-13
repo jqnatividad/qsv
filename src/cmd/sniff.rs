@@ -23,7 +23,9 @@ In such cases, selectively use the --sample, --delimiter and --quote options to 
 the accuracy of the sniffed schema.
 
 If you want more robust, guaranteed schemata, use the "schema" or "stats" commands
-instead as they scan the entire file.
+instead as they scan the entire file. However, they only work on local files and well-formed
+CSVs, unlike `sniff` which can work with remote files, various CSV dialects and is very fast
+regardless of file size.
 
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_sniff.rs.
 
@@ -88,7 +90,7 @@ sniff options:
                              Valid only on Linux.
     --quick                  When sniffing a non-CSV remote file, only download the first chunk of the file
                              before attempting to detect the mime type. This is faster but less accurate as
-                             some mime types cannot be detected with just the first chunk.
+                             some mime types cannot be detected with just the first downloaded chunk.
                              Valid only on Linux.
     --harvest-mode           This is a convenience flag when using sniff in CKAN harvesters. 
                              It is equivalent to --quick --timeout 10 --stats-types --json
