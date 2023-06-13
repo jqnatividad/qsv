@@ -476,6 +476,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     DataType::Bool(ref b) => b.to_string(),
                     DataType::DateTimeIso(ref dt) => dt.to_string(),
                     DataType::DurationIso(ref d) => d.to_string(),
+                    DataType::Duration(ref d) => d.to_string(),
                 };
                 record.push_field(&col_name);
                 continue;
@@ -501,6 +502,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 DataType::Bool(ref b) => record.push_field(&b.to_string()),
                 DataType::DateTimeIso(ref dt) => record.push_field(&dt.to_string()),
                 DataType::DurationIso(ref d) => record.push_field(&d.to_string()),
+                DataType::Duration(ref d) => {
+                    let mut buffer = ryu::Buffer::new();
+                    record.push_field(buffer.format(*d));
+                }
             };
 
             // Dates are stored as floats in Excel's older binary format (XLS - Excel 97-2003.)
