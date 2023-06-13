@@ -62,6 +62,7 @@ use std::{
     str,
     str::FromStr,
     sync::OnceLock,
+    time::Instant,
 };
 
 use polars::{
@@ -102,6 +103,7 @@ enum OutputMode {
     Json,
     Parquet,
     Arrow,
+    None,
 }
 
 // shamelessly copied from
@@ -115,21 +117,22 @@ impl OutputMode {
     ) -> CliResult<(usize, usize)> {
         let mut df = DataFrame::default();
         let execute_inner = || {
-            let w = match output {
-                Some(x) => {
-                    if x == "sink" {
-                        Box::new(io::sink()) as Box<dyn Write>
-                    } else {
-                        let path = Path::new(&x);
-                        Box::new(File::create(path)?) as Box<dyn Write>
-                    }
-                }
-                None => Box::new(io::stdout()) as Box<dyn Write>,
-            };
-
             df = ctx
                 .execute(query)
                 .and_then(polars::prelude::LazyFrame::collect)?;
+
+            // we don't want to write anything if the output mode is None
+            if matches!(self, OutputMode::None) {
+                return Ok(());
+            }
+
+            let w = match output {
+                Some(x) => {
+                    let path = Path::new(&x);
+                    Box::new(File::create(path)?) as Box<dyn Write>
+                }
+                None => Box::new(io::stdout()) as Box<dyn Write>,
+            };
 
             let wtr_buffer_capacity = WTR_BUFFER_CAPACITY.get().unwrap();
             let mut w = io::BufWriter::with_capacity(*wtr_buffer_capacity, w);
@@ -139,6 +142,7 @@ impl OutputMode {
                 OutputMode::Json => JsonWriter::new(&mut w).finish(&mut df),
                 OutputMode::Parquet => ParquetWriter::new(&mut w).finish(&mut df).map(|_| ()),
                 OutputMode::Arrow => IpcWriter::new(&mut w).finish(&mut df),
+                OutputMode::None => Ok(()),
             };
 
             w.flush()?;
@@ -180,6 +184,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     )?;
 
     let output_mode: OutputMode = args.flag_format.parse().unwrap_or(OutputMode::Csv);
+    let no_output: OutputMode = OutputMode::None;
 
     let delim = if let Some(delimiter) = args.flag_delimiter {
         delimiter.as_byte()
@@ -256,12 +261,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let num_queries = queries.len();
     let mut query_result_shape = (0_usize, 0_usize);
+    let mut now = Instant::now();
 
     for (idx, query) in queries.iter().enumerate() {
-        // we need to clone the table aliases because we need to pass a mutable
-        // reference to the query string
-        let table_aliases = table_aliases.clone();
-
         // check if this is the last query in the script
         let is_last_query = idx == num_queries - 1;
 
@@ -274,13 +276,23 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             current_query = current_query.replace(table_alias, &quoted_table_name);
         }
 
-        log::debug!("Executing query {idx}: {query}");
+        if log::log_enabled!(log::Level::Debug) {
+            log::debug!("Executing query {idx}: {query}");
+            now = Instant::now();
+        }
         query_result_shape = if is_last_query {
+            // if this is the last query, we use the output mode specified by the user
             output_mode.execute_query(&current_query, &mut ctx, args.flag_output.clone())?
         } else {
-            output_mode.execute_query(&current_query, &mut ctx, Some("sink".to_string()))?
+            // this is not the last query, we only execute the query, but don't write the output
+            no_output.execute_query(&current_query, &mut ctx, None)?
         };
-        log::debug!("Query {idx} successfully executed! result shape: {query_result_shape:?}");
+        if log::log_enabled!(log::Level::Debug) {
+            log::debug!(
+                "Query {idx} successfully executed in {elapsed:?} seconds: {query_result_shape:?}",
+                elapsed = now.elapsed().as_secs_f32()
+            );
+        }
     }
 
     if let Some(output) = args.flag_output {
