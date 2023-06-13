@@ -70,7 +70,7 @@ cached = { version = "0.44", default-features = false, features = [
     "proc_macro",
     "redis_ahash",
 ], optional = true }
-calamine = { version = "0.20", features = ["dates"] }
+calamine = { version = "0.21", features = ["dates"] }
 censor = { version = "0.3", optional = true }
 chrono = { version = "0.4", default-features = false }
 console = { version = "0.15", optional = true }
