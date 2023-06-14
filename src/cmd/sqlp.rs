@@ -61,6 +61,11 @@ sqlp options:
                            (default: csv)
     --try-parsedates       Automatically try to parse dates/datetimes and time.
                            If parsing fails, columns remain as strings.
+    --infer-schema-len     The number of rows to use when inferring the schema of the CSV.
+                           Set to 0 to do a full table scan (warning: very slow).
+                           (default: 1000)
+    --ignore-errors        Ignore errors when parsing CSVs. If set, rows with errors
+                           will be skipped. If not set, the query will fail.
 
 Common options:
     -h, --help             Display this message
@@ -103,13 +108,15 @@ use crate::{
 
 #[derive(Deserialize, Debug)]
 struct Args {
-    arg_input:           Vec<PathBuf>,
-    arg_sql:             String,
-    flag_format:         String,
-    flag_try_parsedates: bool,
-    flag_output:         Option<String>,
-    flag_delimiter:      Option<Delimiter>,
-    flag_quiet:          bool,
+    arg_input:             Vec<PathBuf>,
+    arg_sql:               String,
+    flag_format:           String,
+    flag_try_parsedates:   bool,
+    flag_infer_schema_len: usize,
+    flag_ignore_errors:    bool,
+    flag_output:           Option<String>,
+    flag_delimiter:        Option<Delimiter>,
+    flag_quiet:            bool,
 }
 
 static WTR_BUFFER_CAPACITY: OnceLock<usize> = OnceLock::new();
@@ -219,14 +226,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let wtr_buffer_capacity: usize = wtr_capacitys.parse().unwrap_or(DEFAULT_WTR_BUFFER_CAPACITY);
     WTR_BUFFER_CAPACITY.set(wtr_buffer_capacity).unwrap();
 
-    let optimize_all = polars::lazy::frame::OptState {
-        projection_pushdown: true,
-        predicate_pushdown:  true,
-        type_coercion:       true,
-        simplify_expr:       true,
-        file_caching:        true,
-        slice_pushdown:      true,
-        streaming:           true,
+    let num_rows = if args.flag_infer_schema_len == 0 {
+        None
+    } else {
+        Some(args.flag_infer_schema_len)
     };
 
     let mut ctx = SQLContext::new();
@@ -246,10 +249,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .has_header(true)
             .with_missing_is_null(true)
             .with_delimiter(delim)
+            .with_infer_schema_length(num_rows)
             .with_try_parse_dates(args.flag_try_parsedates)
+            .with_ignore_errors(args.flag_ignore_errors)
             .finish()?;
 
-        ctx.register(table_name, lf.with_optimizations(optimize_all));
+        ctx.register(table_name, lf);
     }
 
     if log::log_enabled!(log::Level::Debug) {
