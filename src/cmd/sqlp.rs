@@ -12,7 +12,25 @@ https://github.com/pola-rs/polars/issues/7227
 
 Returns the shape of the query result (number of rows, number of columns) to stderr.
 
-For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_sqlp.rs.
+Example queries:
+
+  qsv sqlp data.csv 'SELECT * FROM data where col1 > 10 order by col2 desc limit 20'
+
+  qsv sqlp data.csv 'SELECT col1, col2, col3 as friendlyname FROM data' --format parquet --output data.parquet
+
+  qsv sqlp data.csv data2.csv 'SELECT * FROM data JOIN data2 ON data.colname = data2.colname'
+
+  qsv sqlp data.csv data2.csv 'SELECT * FROM _t_1 JOIN _t_2 ON _t_1.colname = _t_2.colname'
+
+  qsv sqlp data.csv 'SELECT col1, count(*) as cnt from data GROUP BY col1 ORDER BY cnt DESC, col1 ASC'
+
+  qsv sqlp data.csv data2.csv script.sql --format json --output data.json
+
+  qsv sqlp data.csv "SELECT col1, col2, col3 FROM data WHERE col1 = 'foo' AND col2 > 10"
+
+  qsv sqlp data.csv "SELECT data.col1, tbl2.col1 FROM data JOIN read_parquet('data2.parquet') as tbl2 ON data.col1 = tbl2.col1"
+
+For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_sqlp.rs.
 
 Usage:
     qsv sqlp [options] <input>... <sql>
@@ -32,7 +50,7 @@ sqlp arguments:
                            where N is the 1-based index.
                            If the input ends with ".sql", the file will be read as a SQL script, with
                            each SQL statement separated by a semicolon. It will execute the statements
-                           in order, and the result of the last statement will be returned.
+                           in order, and the result of the LAST statement will be returned.
 
 sqlp options:
     --format <arg>         The output format to use. Valid values are:
