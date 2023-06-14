@@ -269,6 +269,35 @@ fn sqlp_boston311_groupby_orderby_with_table_alias() {
 }
 
 #[test]
+fn sqlp_boston311_null_value() {
+    let wrk = Workdir::new("sqlp_boston311_null_value");
+    let test_file = wrk.load_test_file("boston311-100.csv");
+
+    let mut cmd = wrk.command("sqlp");
+
+    cmd.arg(&test_file)
+        .args(["--null-value", "Not Specified"])
+        .arg(
+            "select location_street_name, location_zipcode from _t_1 where location_zipcode is \
+             null order by location_street_name limit 5",
+        );
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["location_street_name", "location_zipcode"],
+        svec!["Not Specified", "Not Specified"],
+        svec!["INTERSECTION Asticou Rd & Washington St", "Not Specified"],
+        svec![
+            "INTERSECTION Charles River Plz & Cambridge St",
+            "Not Specified"
+        ],
+        svec!["INTERSECTION Columbia Rd & E Cottage St", "Not Specified"],
+        svec!["INTERSECTION E Canton St & Albany St", "Not Specified"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn sqlp_boston311_try_parsedates() {
     let wrk = Workdir::new("sqlp_boston311_try_parsedates");
     let test_file = wrk.load_test_file("boston311-100.csv");
@@ -320,6 +349,55 @@ fn sqlp_boston311_try_parsedates() {
         svec!["8", "1757000000.0"],
         svec!["02", "1650000000.0"],
         svec!["18", "507000000.0"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn sqlp_boston311_try_parsedates_precision() {
+    let wrk = Workdir::new("sqlp_boston311_try_parsedates_precision");
+    let test_file = wrk.load_test_file("boston311-100.csv");
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg(&test_file)
+        .arg("--try-parsedates")
+        .args(["--float-precision", "3"])
+        .arg(
+            "select ward, cast(avg(closed_dt - open_dt) as float) as avg_tat from _t_1 where \
+             case_status = 'Closed' group by ward order by avg_tat desc, ward asc limit 5",
+        );
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["ward", "avg_tat"],
+        svec!["Ward 11", "4847759785984.000"],
+        svec!["01", "4818270158848.000"],
+        svec!["Ward 13", "1518365704192.000"],
+        svec!["Ward 15", "1278925996032.000"],
+        svec!["Ward 21", "878445985792.000"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn sqlp_boston311_try_parsedates_format() {
+    let wrk = Workdir::new("sqlp_boston311_try_parsedates_format");
+    let test_file = wrk.load_test_file("boston311-100.csv");
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg(&test_file)
+        .arg("--try-parsedates")
+        .args(["--datetime-format", "%a %Y-%m-%d %H:%M:%S"])
+        .arg("select closed_dt, open_dt from _t_1 where case_status = 'Closed' limit 5");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["closed_dt", "open_dt"],
+        svec!["Wed 2022-01-19 11:42:16", "Wed 2022-01-19 11:18:00"],
+        svec!["Sun 2022-01-09 06:43:06", "Sat 2022-01-08 12:54:49"],
+        svec!["Mon 2022-01-10 08:42:23", "Sat 2022-01-01 00:16:00"],
+        svec!["Thu 2022-01-20 08:45:03", "Thu 2022-01-20 08:07:49"],
+        svec!["Thu 2022-01-20 08:45:12", "Thu 2022-01-20 08:15:45"],
     ];
     assert_eq!(got, expected);
 }
