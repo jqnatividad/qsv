@@ -17,6 +17,8 @@ describegpt options:
                            human-readable label, a description, and stats.
     --tags                 Prints tags that categorize the dataset. Useful
                            for grouping datasets and filtering.
+    --max-tokens           Limits the number of generated tokens in the
+                           output.
     --json                 Return results in JSON format.
     --pretty-json          Return results in pretty JSON format.
 
