@@ -211,7 +211,7 @@ The `excel` command recognizes Excel & Open Document Spreadsheet(ODS) files (`.x
 
 The `to` command converts CSVs to `.xlsx`, [Parquet](https://parquet.apache.org) & [Data Package](https://datahub.io/docs/data-packages/tabular) files, and populates [PostgreSQL](https://www.postgresql.org) and [SQLite](https://www.sqlite.org/index.html) databases.
 
-The `sqlp` command produces query results in CSV, JSON, Parquet & [Arrow IPC](https://arrow.apache.org/docs/format/Columnar.html#ipc-file-format) formats.
+The `sqlp` command produces query results in CSV, JSON, Parquet & [Arrow IPC](https://arrow.apache.org/docs/format/Columnar.html#ipc-file-format) formats. Polars SQL also supports reading external files directly with its `read_ndjson`, `read_csv`, `read_parquet` & `read_ipc` [table functions](https://github.com/pola-rs/polars/blob/c7fa66a1340418789ec66bdedad6654281afa0ab/polars/polars-sql/src/table_functions.rs#L9-L36).
 
 ### Snappy Compression/Decompression
 
