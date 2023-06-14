@@ -14,21 +14,21 @@ Returns the shape of the query result (number of rows, number of columns) to std
 
 Example queries:
 
-  qsv sqlp data.csv 'SELECT * FROM data where col1 > 10 order by col2 desc limit 20'
+  qsv sqlp data.csv 'select * from data where col1 > 10 order by col2 desc limit 20'
 
-  qsv sqlp data.csv 'SELECT col1, col2, col3 as friendlyname FROM data' --format parquet --output data.parquet
+  qsv sqlp data.csv 'select col1, col2, col3 as friendlyname from data' --format parquet --output data.parquet
 
-  qsv sqlp data.csv data2.csv 'SELECT * FROM data JOIN data2 ON data.colname = data2.colname'
+  qsv sqlp data.csv data2.csv 'select * from data join data2 on data.colname = data2.colname'
 
-  qsv sqlp data.csv data2.csv 'SELECT * FROM _t_1 JOIN _t_2 ON _t_1.colname = _t_2.colname'
+  qsv sqlp data.csv data2.csv 'select * from _t_1 join _t_2 on _t_1.colname = _t_2.colname'
 
-  qsv sqlp data.csv 'SELECT col1, count(*) as cnt from data GROUP BY col1 ORDER BY cnt DESC, col1 ASC'
+  qsv sqlp data.csv 'SELECT col1, count(*) AS cnt FROM data GROUP BY col1 ORDER BY cnt DESC, col1 ASC'
 
   qsv sqlp data.csv data2.csv script.sql --format json --output data.json
 
-  qsv sqlp data.csv "SELECT col1, col2, col3 FROM data WHERE col1 = 'foo' AND col2 > 10"
+  qsv sqlp data.csv "select col1, col2, col3 from data WHERE col1 = 'foo' AND col2 > 10"
 
-  qsv sqlp data.csv "SELECT data.col1, tbl2.col1 FROM data JOIN read_parquet('data2.parquet') as tbl2 ON data.col1 = tbl2.col1"
+  qsv sqlp data.csv "select data.col1, tbl2.col1 from data join read_parquet('data2.parquet') as tbl2 ON data.col1 = tbl2.col1"
 
 For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_sqlp.rs.
 
@@ -61,11 +61,13 @@ sqlp options:
                            (default: csv)
     --try-parsedates       Automatically try to parse dates/datetimes and time.
                            If parsing fails, columns remain as strings.
-    --infer-schema-len     The number of rows to use when inferring the schema of the CSV.
+    --infer-schema-len     The number of rows to scan when inferring the schema of the CSV.
                            Set to 0 to do a full table scan (warning: very slow).
                            (default: 1000)
     --ignore-errors        Ignore errors when parsing CSVs. If set, rows with errors
                            will be skipped. If not set, the query will fail.
+                           Only use this when debugging queries, as polars does batched
+                           parsing and will skip the entire batch where the error occurred.
 
 Common options:
     -h, --help             Display this message
