@@ -47,7 +47,7 @@ sqlp options:
 Common options:
     -h, --help             Display this message
     -o, --output <file>    Write output to <file> instead of stdout.
-    -d, --delimiter <arg>  The field delimiter for reading CSV data.
+    -d, --delimiter <arg>  The field delimiter for reading and writing CSV data.
                            Must be a single character. (default: ,)
     -Q, --quiet            Do not return result shape to stderr.
 "#;
@@ -113,6 +113,7 @@ impl OutputMode {
         &self,
         query: &str,
         ctx: &mut SQLContext,
+        delim: u8,
         output: Option<String>,
     ) -> CliResult<(usize, usize)> {
         let mut df = DataFrame::default();
@@ -138,7 +139,7 @@ impl OutputMode {
             let mut w = io::BufWriter::with_capacity(*wtr_buffer_capacity, w);
 
             let out_result = match self {
-                OutputMode::Csv => CsvWriter::new(&mut w).finish(&mut df),
+                OutputMode::Csv => CsvWriter::new(&mut w).with_delimiter(delim).finish(&mut df),
                 OutputMode::Json => JsonWriter::new(&mut w).finish(&mut df),
                 OutputMode::Parquet => ParquetWriter::new(&mut w).finish(&mut df).map(|_| ()),
                 OutputMode::Arrow => IpcWriter::new(&mut w).finish(&mut df),
@@ -282,10 +283,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
         query_result_shape = if is_last_query {
             // if this is the last query, we use the output mode specified by the user
-            output_mode.execute_query(&current_query, &mut ctx, args.flag_output.clone())?
+            output_mode.execute_query(&current_query, &mut ctx, delim, args.flag_output.clone())?
         } else {
             // this is not the last query, we only execute the query, but don't write the output
-            no_output.execute_query(&current_query, &mut ctx, None)?
+            no_output.execute_query(&current_query, &mut ctx, delim, None)?
         };
         if log::log_enabled!(log::Level::Debug) {
             log::debug!(
