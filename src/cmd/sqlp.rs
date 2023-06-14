@@ -53,21 +53,32 @@ sqlp arguments:
                            in order, and the result of the LAST statement will be returned.
 
 sqlp options:
-    --format <arg>         The output format to use. Valid values are:
-                               csv      Comma-separated values
-                               json     JSON
-                               parquet  Apache Parquet
-                               arrow    Apache Arrow IPC
-                           (default: csv)
-    --try-parsedates       Automatically try to parse dates/datetimes and time.
-                           If parsing fails, columns remain as strings.
-    --infer-schema-len     The number of rows to scan when inferring the schema of the CSV.
-                           Set to 0 to do a full table scan (warning: very slow).
-                           (default: 1000)
-    --ignore-errors        Ignore errors when parsing CSVs. If set, rows with errors
-                           will be skipped. If not set, the query will fail.
-                           Only use this when debugging queries, as polars does batched
-                           parsing and will skip the entire batch where the error occurred.
+    --format <arg>            The output format to use. Valid values are:
+                                csv      Comma-separated values
+                                json     JSON
+                                parquet  Apache Parquet
+                                arrow    Apache Arrow IPC
+                              (default: csv)
+    --try-parsedates          Automatically try to parse dates/datetimes and time.
+                              If parsing fails, columns remain as strings.
+    --infer-schema-len        The number of rows to scan when inferring the schema of the CSV.
+                              Set to 0 to do a full table scan (warning: very slow).
+                              (default: 1000)
+    --ignore-errors           Ignore errors when parsing CSVs. If set, rows with errors
+                              will be skipped. If not set, the query will fail.
+                              Only use this when debugging queries, as polars does batched
+                              parsing and will skip the entire batch where the error occurred.
+
+                              CSV FORMAT ONLY:
+    --datetime-format <fmt>   The datetime format to use writing datetimes.
+                              See https://docs.rs/chrono/latest/chrono/format/strftime/index.html
+                              for the list of valid format specifiers.
+    --date-format <fmt>       The date format to use writing dates.
+    --time-format <fmt>       The time format to use writing times.
+    --float-precision <arg>   The number of digits of precision to use when writing floats.
+                              (default: 6)
+    --null-value <arg>        The string to use when writing null values.
+                              (default: <empty string>)
 
 Common options:
     -h, --help             Display this message
@@ -86,7 +97,6 @@ use std::{
     path::{Path, PathBuf},
     str,
     str::FromStr,
-    sync::OnceLock,
     time::Instant,
 };
 
@@ -116,12 +126,15 @@ struct Args {
     flag_try_parsedates:   bool,
     flag_infer_schema_len: usize,
     flag_ignore_errors:    bool,
+    flag_datetime_format:  Option<String>,
+    flag_date_format:      Option<String>,
+    flag_time_format:      Option<String>,
+    flag_float_precision:  Option<usize>,
+    flag_null_value:       String,
     flag_output:           Option<String>,
     flag_delimiter:        Option<Delimiter>,
     flag_quiet:            bool,
 }
-
-static WTR_BUFFER_CAPACITY: OnceLock<usize> = OnceLock::new();
 
 #[derive(Debug, Default, Clone)]
 enum OutputMode {
@@ -141,6 +154,11 @@ impl OutputMode {
         query: &str,
         ctx: &mut SQLContext,
         delim: u8,
+        datetime_format: Option<String>,
+        date_format: Option<String>,
+        time_format: Option<String>,
+        float_precision: Option<usize>,
+        null_value: String,
         output: Option<String>,
     ) -> CliResult<(usize, usize)> {
         let mut df = DataFrame::default();
@@ -161,12 +179,17 @@ impl OutputMode {
                 }
                 None => Box::new(io::stdout()) as Box<dyn Write>,
             };
-
-            let wtr_buffer_capacity = WTR_BUFFER_CAPACITY.get().unwrap();
-            let mut w = io::BufWriter::with_capacity(*wtr_buffer_capacity, w);
+            let mut w = io::BufWriter::new(w);
 
             let out_result = match self {
-                OutputMode::Csv => CsvWriter::new(&mut w).with_delimiter(delim).finish(&mut df),
+                OutputMode::Csv => CsvWriter::new(&mut w)
+                    .with_delimiter(delim)
+                    .with_datetime_format(datetime_format)
+                    .with_date_format(date_format)
+                    .with_time_format(time_format)
+                    .with_float_precision(float_precision)
+                    .with_null_value(null_value)
+                    .finish(&mut df),
                 OutputMode::Json => JsonWriter::new(&mut w).finish(&mut df),
                 OutputMode::Parquet => ParquetWriter::new(&mut w).finish(&mut df).map(|_| ()),
                 OutputMode::Arrow => IpcWriter::new(&mut w).finish(&mut df),
@@ -211,6 +234,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         "No data on stdin. Please provide at least one input file or pipe data to stdin.",
     )?;
 
+    let null_value = if args.flag_null_value == "<empty string>" {
+        String::new()
+    } else {
+        args.flag_null_value
+    };
+
     let output_mode: OutputMode = args.flag_format.parse().unwrap_or(OutputMode::Csv);
     let no_output: OutputMode = OutputMode::None;
 
@@ -222,11 +251,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             _ => b',',
         }
     };
-
-    let wtr_capacitys = env::var("QSV_WTR_BUFFER_CAPACITY")
-        .unwrap_or_else(|_| DEFAULT_WTR_BUFFER_CAPACITY.to_string());
-    let wtr_buffer_capacity: usize = wtr_capacitys.parse().unwrap_or(DEFAULT_WTR_BUFFER_CAPACITY);
-    WTR_BUFFER_CAPACITY.set(wtr_buffer_capacity).unwrap();
 
     let num_rows = if args.flag_infer_schema_len == 0 {
         None
@@ -308,10 +332,30 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
         query_result_shape = if is_last_query {
             // if this is the last query, we use the output mode specified by the user
-            output_mode.execute_query(&current_query, &mut ctx, delim, args.flag_output.clone())?
+            output_mode.execute_query(
+                &current_query,
+                &mut ctx,
+                delim,
+                args.flag_datetime_format.clone(),
+                args.flag_date_format.clone(),
+                args.flag_time_format.clone(),
+                args.flag_float_precision,
+                null_value.clone(),
+                args.flag_output.clone(),
+            )?
         } else {
             // this is not the last query, we only execute the query, but don't write the output
-            no_output.execute_query(&current_query, &mut ctx, delim, None)?
+            no_output.execute_query(
+                &current_query,
+                &mut ctx,
+                delim,
+                args.flag_datetime_format.clone(),
+                args.flag_date_format.clone(),
+                args.flag_time_format.clone(),
+                args.flag_float_precision,
+                null_value.clone(),
+                None,
+            )?
         };
         if log::log_enabled!(log::Level::Debug) {
             log::debug!(
@@ -322,7 +366,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     if let Some(output) = args.flag_output {
-        // if output ends with .sz, we snappy compress the output
+        // if the output ends with ".sz", we snappy compress the output
         if std::path::Path::new(&output)
             .extension()
             .map_or(false, |ext| ext.eq_ignore_ascii_case("sz"))
