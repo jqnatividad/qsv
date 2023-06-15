@@ -308,14 +308,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         log::debug!("Table(s) registered in SQL Context: {tables_in_context:?}");
     }
 
-    let mut sql_script = String::new();
-
     // check if the query is a SQL script
     let queries = if std::path::Path::new(&args.arg_sql)
         .extension()
         .map_or(false, |ext| ext.eq_ignore_ascii_case("sql"))
     {
         let mut file = File::open(&args.arg_sql)?;
+        let mut sql_script = String::new();
         file.read_to_string(&mut sql_script)?;
         sql_script
             .split(';')
