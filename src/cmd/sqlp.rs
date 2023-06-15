@@ -37,20 +37,20 @@ Usage:
     qsv sqlp --help
 
 sqlp arguments:
-    input                  The CSV file(s) to query. Use '-' for standard input.
-                           If input is a directory, all files in the directory will
+    input                  The CSV file/s to query. Use '-' for standard input.
+                           If input is a directory, all CSV files in the directory will
                            be used.
                            If the input are snappy compressed file(s), it will be
                            decompressed automatically.
                            Column headers are required. Use 'qsv rename _all_generic --no-headers'
                            to add generic column names (_col_N) to a CSV with no headers.
 
-    sql                    The SQL query to run. Each input file will be available as a table
+    sql                    The SQL query/ies to run. Each input file will be available as a table
                            named after the file name (without the extension), or as "_t_N"
                            where N is the 1-based index.
-                           If the input ends with ".sql", the file will be read as a SQL script, with
-                           each SQL statement separated by a semicolon. It will execute the statements
-                           in order, and the result of the LAST statement will be returned.
+                           If the input ends with ".sql", the input will be read as a SQL script file,
+                           with each SQL statement separated by a semicolon. It will execute the
+                           statements in order, and the result of the LAST statement will be returned.
 
 sqlp options:
     --format <arg>            The output format to use. Valid values are:
@@ -74,7 +74,7 @@ sqlp options:
                               Only use this when debugging queries, as polars does batched
                               parsing and will skip the entire batch where the error occurred.
 
-                              CSV FORMAT ONLY:
+                              CSV OUTPUT FORMAT ONLY:
     --datetime-format <fmt>   The datetime format to use writing datetimes.
                               See https://docs.rs/chrono/latest/chrono/format/strftime/index.html
                               for the list of valid format specifiers.
