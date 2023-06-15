@@ -249,7 +249,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         delimiter.as_byte()
     } else {
         match env::var("QSV_DEFAULT_DELIMITER") {
-            Ok(delim) => Delimiter::decode_delimiter(&delim).unwrap().as_byte(),
+            Ok(delim) => Delimiter::decode_delimiter(&delim)?.as_byte(),
             _ => b',',
         }
     };
@@ -265,10 +265,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut table_ctr_suffix = 1_u8;
 
     for table in &arg_input {
+        // as we are using the table name as alias, we need to make sure that the table name is a
+        // valid identifier if its not utf8, we use the lossy version
+        let lossy_table_name = table.to_string_lossy();
         let table_name = Path::new(table)
             .file_stem()
             .and_then(std::ffi::OsStr::to_str)
-            .unwrap_or_else(|| table.to_str().unwrap());
+            .unwrap_or(&lossy_table_name);
 
         table_aliases.insert(table_name.to_string(), format!("_t_{table_ctr_suffix}"));
 
@@ -329,7 +332,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         if log::log_enabled!(log::Level::Debug) {
-            log::debug!("Executing query {idx}: {query}");
+            log::debug!("Executing query {idx}: {current_query}");
             now = Instant::now();
         }
         query_result_shape = if is_last_query {
@@ -381,6 +384,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             io::copy(&mut File::open(output.clone())?, tempfile.as_file_mut())?;
             tempfile.flush()?;
 
+            // safety: we just created the tempfile, so we know that the path is valid utf8
+            // https://github.com/Stebalien/tempfile/issues/192
             let input_fname = tempfile.path().to_str().unwrap();
             let input = File::open(input_fname)?;
             let output_sz_writer = BufWriter::with_capacity(
