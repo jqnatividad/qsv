@@ -59,6 +59,8 @@ sqlp options:
                                 parquet  Apache Parquet
                                 arrow    Apache Arrow IPC
                               (default: csv)
+
+                              POLARS CSV PARSING OPTIONS:
     --try-parsedates          Automatically try to parse dates/datetimes and time.
                               If parsing fails, columns remain as strings.
     --infer-schema-len        The number of rows to scan when inferring the schema of the CSV.
