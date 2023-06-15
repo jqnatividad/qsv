@@ -6,6 +6,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.107.0] - 2023-06-14
+We continue to improve the new [`sqlp`](https://github.com/jqnatividad/qsv/blob/master/src/cmd/sqlp.rs#L2) command. It now supports scripts, Polars CSV parsing and CSV format options. We also added a new special value for the `rename` command which allows you to rename all columns in a CSV. This was done to make it easier to prepare CSVs with no headers for use with `sqlp`.
+
+This release also features a Windows MSI installer. This is a big step forward for qsv and we hope to make it easier for Windows users to install and use qsv. Thanks @minhajuddin2510 for all the work on pulling this together!
+
+### Added
+* `sqlp`: added script support https://github.com/jqnatividad/qsv/pull/1037
+* `sqlp`: added CSV format options https://github.com/jqnatividad/qsv/pull/1048
+* `rename`: add `"_all generic"` special value for headers https://github.com/jqnatividad/qsv/pull/1031
+
+### Changed
+* `excel`: now supports Duration type with calamine upgrade to 0.21.0 https://github.com/jqnatividad/qsv/pull/1045
+* Update publish-wix-installer.yml by @minhajuddin2510 in https://github.com/jqnatividad/qsv/pull/1032
+* Bump mlua from 0.9.0-beta.2 to 0.9.0-beta.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1030
+* Bump serde from 1.0.163 to 1.0.164 by @dependabot in https://github.com/jqnatividad/qsv/pull/1029
+* Bump csvs_convert from 0.8.4 to 0.8.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/1028
+* Bump sysinfo from 0.29.1 to 0.29.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1027
+* Bump log from 0.4.18 to 0.4.19 by @dependabot in https://github.com/jqnatividad/qsv/pull/1039
+* Bump uuid from 1.3.3 to 1.3.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1041
+* Bump jql-runner from 6.0.8 to 6.0.9 by @dependabot in https://github.com/jqnatividad/qsv/pull/1043
+* cargo update bump several indirect dependencies
+* pin Rust nightly to 2021-06-13
+
+### Fixed
+* Remove redundant registries protocol by @icp1994 in https://github.com/jqnatividad/qsv/pull/1034
+* fix typo in tojsonl.rs (optionns -> options) by @rzmk in https://github.com/jqnatividad/qsv/pull/1035
+* Fix eula by @minhajuddin2510 in https://github.com/jqnatividad/qsv/pull/1046
+
+## New Contributors
+* @icp1994 made their first contribution in https://github.com/jqnatividad/qsv/pull/1034
+* @rzmk made their first contribution in https://github.com/jqnatividad/qsv/pull/1035
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.106.0...0.107.0
+
 ## [0.106.0] - 2023-06-07
 This release features the new [Polars](https://www.pola.rs/)-powered `sqlp` command which allows you to run SQL queries against CSVs.
 
