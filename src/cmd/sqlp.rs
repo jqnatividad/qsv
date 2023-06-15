@@ -66,6 +66,9 @@ sqlp options:
     --infer-schema-len        The number of rows to scan when inferring the schema of the CSV.
                               Set to 0 to do a full table scan (warning: very slow).
                               (default: 1000)
+    --low-memory              Use low memory mode when parsing CSVs. This will use less memory
+                              but will be slower. It will also process LazyFrames in streaming mode.
+                              Only use this when you are running out of memory parsing CSVs.
     --ignore-errors           Ignore errors when parsing CSVs. If set, rows with errors
                               will be skipped. If not set, the query will fail.
                               Only use this when debugging queries, as polars does batched
@@ -127,6 +130,7 @@ struct Args {
     flag_format:           String,
     flag_try_parsedates:   bool,
     flag_infer_schema_len: usize,
+    flag_low_memory:       bool,
     flag_ignore_errors:    bool,
     flag_datetime_format:  Option<String>,
     flag_date_format:      Option<String>,
@@ -260,6 +264,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         Some(args.flag_infer_schema_len)
     };
 
+    let optimize_all = polars::lazy::frame::OptState {
+        projection_pushdown: true,
+        predicate_pushdown:  true,
+        type_coercion:       true,
+        simplify_expr:       true,
+        file_caching:        !args.flag_low_memory,
+        slice_pushdown:      true,
+        streaming:           args.flag_low_memory,
+    };
+
     let mut ctx = SQLContext::new();
     let mut table_aliases = HashMap::with_capacity(args.arg_input.len());
     let mut table_ctr_suffix = 1_u8;
@@ -283,9 +297,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .with_infer_schema_length(num_rows)
             .with_try_parse_dates(args.flag_try_parsedates)
             .with_ignore_errors(args.flag_ignore_errors)
+            .low_memory(args.flag_low_memory)
             .finish()?;
 
-        ctx.register(table_name, lf);
+        ctx.register(table_name, lf.with_optimizations(optimize_all));
     }
 
     if log::log_enabled!(log::Level::Debug) {
