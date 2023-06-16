@@ -1,4 +1,4 @@
-name: Publish Nightly
+name: Publish Nightly glibc 2.31/musl 1.1.24 binaries
 
 on:
   workflow_dispatch:
