@@ -1,0 +1,132 @@
+name: Publish Nightly
+
+on:
+  workflow_dispatch:
+
+env:
+  QSV_KIND: prebuilt-nightly-older
+
+jobs:
+  analyze-tags:
+    runs-on: ubuntu-20.04
+    outputs:
+      previous-tag: ${{ steps.previoustag.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      #▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼#
+      - name: Get previous tag
+        id: previoustag
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+      #▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲#
+
+  publish:
+    name: Publish for ${{ matrix.job.target }}
+    needs: analyze-tags
+    runs-on: ${{ matrix.job.os }}
+    strategy:
+      matrix:
+        rust: [nightly-2023-06-13]
+        job:
+          - os: ubuntu-20.04
+            os-name: linux
+            target: x86_64-unknown-linux-gnu
+            architecture: x86_64
+            addl-build-args: --features=apply,generate,luau,fetch,foreach,nightly,self_update,magic,polars
+            default-features:
+            addl-qsvlite-features: magic
+            addl-qsvdp-features: luau,magic
+            name-suffix: glibc-2.31
+          - os: ubuntu-20.04
+            os-name: linux
+            target: x86_64-unknown-linux-musl
+            architecture: x86_64
+            musl-prep: true
+            addl-build-args: --features=apply,generate,fetch,foreach,nightly,self_update,polars
+            default-features:
+            addl-qsvlite-features: magic
+            addl-qsvdp-features: magic
+            name-suffix: musl-1.1.24
+
+    steps:
+    - name: Installing Rust toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: ${{ matrix.rust }}
+        profile: minimal
+        components: rust-src
+        target: ${{ matrix.job.target }}
+        override: true
+        default: true
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        submodules: recursive
+        ref: ${{ needs.analyze-tags.outputs.previous-tag }}
+    - name: Install libmagic on linux
+      if: ${{ matrix.job.os-name == 'linux' }}
+      run: |
+        sudo apt-get install libmagic1 libmagic-dev
+    - name: build prep for x86_64-unknown-linux-musl
+      if: ${{ matrix.job.musl-prep }}
+      run: |
+        sudo apt-get install musl-tools musl-dev
+        sudo ln -s /usr/bin/g++ /usr/bin/musl-g++        
+    - name: Build qsv-nightly
+      env:
+        RUSTFLAGS: --emit=asm
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        use-cross: false
+        toolchain: ${{ matrix.rust }}
+        args: --profile release-nightly --bin qsv -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }},feature_capable ${{ matrix.job.default-features }}
+    - name: Build qsvlite-nightly
+      env:
+        RUSTFLAGS: --emit=asm
+      uses: actions-rs/cargo@v1   
+      with:
+        command: build
+        use-cross: false
+        toolchain: ${{ matrix.rust }}
+        args: --profile release-nightly --bin qsvlite -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --features=lite,self_update,${{ matrix.job.addl-qsvlite-features }} --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}
+    - name: Build qsvdp-nightly
+      env:
+        RUSTFLAGS: --emit=asm
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        use-cross: false
+        toolchain: ${{ matrix.rust }}
+        args: --profile release-nightly --bin qsvdp -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --features=datapusher_plus,${{ matrix.job.addl-qsvdp-features }} --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}
+    - name: Copy binaries to working dir
+      shell: bash
+      run: |
+        mkdir qsv-${{ needs.analyze-tags.outputs.previous-tag }}
+        rm target/${{ matrix.job.target }}/release/*.d 
+        cp target/${{ matrix.job.target }}/release/qsv* qsv-${{ needs.analyze-tags.outputs.previous-tag }}
+        cd qsv-${{ needs.analyze-tags.outputs.previous-tag }}
+        mv qsv qsv_nightly_${{ matrix.job.name-suffix }}
+        mv qsvlite qsvlite_nightly_${{ matrix.job.name-suffix }}
+        mv qsvdp qsvdp_nightly_${{ matrix.job.name-suffix }}
+        rustup show > qsv_nightly_${{ matrix.job.name-suffix }}_rust_version_info.txt
+        cd ..
+    - name: Download latest release zip
+      uses: robinraju/release-downloader@v1.8
+      with:
+        repository: "jqnatividad/qsv"
+        latest: true
+        token: ${{ secrets.GITHUB_TOKEN }}
+        fileName: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip
+    - name: add/update nightly files to zip
+      run: 7z u -tzip qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/qsv* -mx=9 -mmt=on
+    - name: Upload zipped binaries to release
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip
+        asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip
+        overwrite: true
+        tag: ${{ needs.analyze-tags.outputs.previous-tag }}    
+ 
