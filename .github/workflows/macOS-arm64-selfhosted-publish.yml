@@ -102,7 +102,7 @@ jobs:
       run: |
         cat docs/publishing_assets/README.txt docs/publishing_assets/qsv-${{ matrix.job.target }}.txt > qsv-${{ needs.analyze-tags.outputs.previous-tag }}/README
     - name: zip up binaries
-      run: 7z a -tzip qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/* -mx=9 -mmt=on
+      run: 7zz a -tzip qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/* -mx=9 -mmt=on
     - name: Upload zipped binaries to release
       uses: svenstaro/upload-release-action@v2
       with:
