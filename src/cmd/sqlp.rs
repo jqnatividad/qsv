@@ -94,6 +94,7 @@ Common options:
 "#;
 
 use std::{
+    borrow::Cow,
     collections::HashMap,
     env,
     fs::File,
@@ -251,11 +252,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let delim = if let Some(delimiter) = args.flag_delimiter {
         delimiter.as_byte()
+    } else if let Ok(delim) = env::var("QSV_DEFAULT_DELIMITER") {
+        Delimiter::decode_delimiter(&delim)?.as_byte()
     } else {
-        match env::var("QSV_DEFAULT_DELIMITER") {
-            Ok(delim) => Delimiter::decode_delimiter(&delim)?.as_byte(),
-            _ => b',',
-        }
+        b','
     };
 
     let num_rows = if args.flag_infer_schema_len == 0 {
@@ -276,20 +276,21 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut ctx = SQLContext::new();
     let mut table_aliases = HashMap::with_capacity(args.arg_input.len());
-    let mut table_ctr_suffix = 1_u8;
+    let mut lossy_table_name = Cow::default();
 
-    for table in &arg_input {
+    for (idx, table) in arg_input.iter().enumerate() {
         // as we are using the table name as alias, we need to make sure that the table name is a
-        // valid identifier if its not utf8, we use the lossy version
-        let lossy_table_name = table.to_string_lossy();
+        // valid identifier. if its not utf8, we use the lossy version
         let table_name = Path::new(table)
             .file_stem()
             .and_then(std::ffi::OsStr::to_str)
-            .unwrap_or(&lossy_table_name);
+            .unwrap_or_else(|| {
+                lossy_table_name = table.to_string_lossy();
+                &lossy_table_name
+            });
 
-        table_aliases.insert(table_name.to_string(), format!("_t_{table_ctr_suffix}"));
+        table_aliases.insert(table_name.to_string(), format!("_t_{}", idx + 1));
 
-        table_ctr_suffix += 1;
         let lf = LazyCsvReader::new(table)
             .has_header(true)
             .with_missing_is_null(true)
