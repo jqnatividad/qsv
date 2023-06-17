@@ -186,7 +186,7 @@ impl OutputMode {
                 }
                 None => Box::new(io::stdout()) as Box<dyn Write>,
             };
-            let mut w = io::BufWriter::new(w);
+            let mut w = io::BufWriter::with_capacity(128_000, w);
 
             let out_result = match self {
                 OutputMode::Csv => CsvWriter::new(&mut w)
@@ -198,7 +198,10 @@ impl OutputMode {
                     .with_null_value(null_value)
                     .finish(&mut df),
                 OutputMode::Json => JsonWriter::new(&mut w).finish(&mut df),
-                OutputMode::Parquet => ParquetWriter::new(&mut w).finish(&mut df).map(|_| ()),
+                OutputMode::Parquet => ParquetWriter::new(&mut w)
+                    .with_row_group_size(Some(768 ^ 2))
+                    .finish(&mut df)
+                    .map(|_| ()),
                 OutputMode::Arrow => IpcWriter::new(&mut w).finish(&mut df),
                 OutputMode::None => Ok(()),
             };
@@ -330,12 +333,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     log::debug!("Executing query/ies: {queries:?}");
 
     let num_queries = queries.len();
+    let last_query: usize = num_queries.saturating_sub(1);
     let mut query_result_shape = (0_usize, 0_usize);
     let mut now = Instant::now();
 
     for (idx, query) in queries.iter().enumerate() {
         // check if this is the last query in the script
-        let is_last_query = idx == num_queries - 1;
+        let is_last_query = idx == last_query;
 
         // replace aliases in query
         let mut current_query = query.to_string();
