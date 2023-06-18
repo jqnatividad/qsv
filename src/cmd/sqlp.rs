@@ -276,10 +276,9 @@ impl FromStr for PqtCompression {
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut args: Args = util::get_args(USAGE, argv)?;
 
-    let mut arg_input = args.arg_input.clone();
     let tmpdir = tempfile::tempdir()?;
-    arg_input = process_input(
-        arg_input,
+    args.arg_input = process_input(
+        args.arg_input,
         &tmpdir,
         "No data on stdin. Please provide at least one input file or pipe data to stdin.",
     )?;
@@ -326,7 +325,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut table_aliases = HashMap::with_capacity(args.arg_input.len());
     let mut lossy_table_name = Cow::default();
 
-    for (idx, table) in arg_input.iter().enumerate() {
+    for (idx, table) in args.arg_input.iter().enumerate() {
         // as we are using the table name as alias, we need to make sure that the table name is a
         // valid identifier. if its not utf8, we use the lossy version
         let table_name = Path::new(table)
