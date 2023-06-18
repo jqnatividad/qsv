@@ -85,6 +85,12 @@ sqlp options:
     --null-value <arg>        The string to use when writing null values.
                               (default: <empty string>)
 
+                              PARQUET OUTPUT FORMAT ONLY:
+    --compression <arg>       The compression codec to use when writing parquet files.
+                                Valid values are: lz4raw, gzip, snappy, uncompressed
+                              (default: lz4raw)
+    --statistics              Compute column statistics when writing parquet files.
+    
 Common options:
     -h, --help             Display this message
     -o, --output <file>    Write output to <file> instead of stdout.
@@ -109,7 +115,7 @@ use std::{
 use polars::{
     prelude::{
         CsvWriter, DataFrame, IpcWriter, JsonWriter, LazyCsvReader, LazyFileListReader,
-        ParquetWriter, SerWriter,
+        ParquetCompression, ParquetWriter, SerWriter,
     },
     sql::SQLContext,
 };
@@ -124,7 +130,7 @@ use crate::{
     CliResult,
 };
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 struct Args {
     arg_input:             Vec<PathBuf>,
     arg_sql:               String,
@@ -138,6 +144,8 @@ struct Args {
     flag_time_format:      Option<String>,
     flag_float_precision:  Option<usize>,
     flag_null_value:       String,
+    flag_compression:      String,
+    flag_statistics:       bool,
     flag_output:           Option<String>,
     flag_delimiter:        Option<Delimiter>,
     flag_quiet:            bool,
@@ -161,12 +169,9 @@ impl OutputMode {
         query: &str,
         ctx: &mut SQLContext,
         delim: u8,
-        datetime_format: Option<String>,
-        date_format: Option<String>,
-        time_format: Option<String>,
-        float_precision: Option<usize>,
-        null_value: String,
+        compression: PqtCompression,
         output: Option<String>,
+        args: Args,
     ) -> CliResult<(usize, usize)> {
         let mut df = DataFrame::default();
         let execute_inner = || {
@@ -186,22 +191,35 @@ impl OutputMode {
                 }
                 None => Box::new(io::stdout()) as Box<dyn Write>,
             };
-            let mut w = io::BufWriter::with_capacity(128_000, w);
+            let mut w = io::BufWriter::with_capacity(256_000, w);
 
             let out_result = match self {
                 OutputMode::Csv => CsvWriter::new(&mut w)
                     .with_delimiter(delim)
-                    .with_datetime_format(datetime_format)
-                    .with_date_format(date_format)
-                    .with_time_format(time_format)
-                    .with_float_precision(float_precision)
-                    .with_null_value(null_value)
+                    .with_datetime_format(args.flag_datetime_format)
+                    .with_date_format(args.flag_date_format)
+                    .with_time_format(args.flag_time_format)
+                    .with_float_precision(args.flag_float_precision)
+                    .with_null_value(args.flag_null_value)
                     .finish(&mut df),
                 OutputMode::Json => JsonWriter::new(&mut w).finish(&mut df),
-                OutputMode::Parquet => ParquetWriter::new(&mut w)
-                    .with_row_group_size(Some(768 ^ 2))
-                    .finish(&mut df)
-                    .map(|_| ()),
+                OutputMode::Parquet => {
+                    let parquet_compression = match compression {
+                        PqtCompression::Uncompressed => ParquetCompression::Uncompressed,
+                        PqtCompression::Gzip => ParquetCompression::Gzip(Some(
+                            polars::prelude::GzipLevel::try_new(5_u8)?,
+                        )),
+                        PqtCompression::Snappy => ParquetCompression::Snappy,
+                        PqtCompression::Lz4Raw => ParquetCompression::Lz4Raw,
+                    };
+
+                    ParquetWriter::new(&mut w)
+                        .with_row_group_size(Some(768 ^ 2))
+                        .with_statistics(args.flag_statistics)
+                        .with_compression(parquet_compression)
+                        .finish(&mut df)
+                        .map(|_| ())
+                }
                 OutputMode::Arrow => IpcWriter::new(&mut w).finish(&mut df),
                 OutputMode::None => Ok(()),
             };
@@ -223,7 +241,7 @@ impl FromStr for OutputMode {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
+        match s.to_lowercase().as_str() {
             "csv" => Ok(OutputMode::Csv),
             "json" => Ok(OutputMode::Json),
             "parquet" => Ok(OutputMode::Parquet),
@@ -233,8 +251,31 @@ impl FromStr for OutputMode {
     }
 }
 
+#[derive(Debug, Default, Copy, Clone)]
+enum PqtCompression {
+    Uncompressed,
+    Gzip,
+    Snappy,
+    #[default]
+    Lz4Raw,
+}
+
+impl FromStr for PqtCompression {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "uncompressed" => Ok(PqtCompression::Uncompressed),
+            "gzip" => Ok(PqtCompression::Gzip),
+            "snappy" => Ok(PqtCompression::Snappy),
+            "lz4raw" => Ok(PqtCompression::Lz4Raw),
+            _ => Err(format!("Invalid compression format: {s}")),
+        }
+    }
+}
+
 pub fn run(argv: &[&str]) -> CliResult<()> {
-    let args: Args = util::get_args(USAGE, argv)?;
+    let mut args: Args = util::get_args(USAGE, argv)?;
 
     let mut arg_input = args.arg_input.clone();
     let tmpdir = tempfile::tempdir()?;
@@ -244,7 +285,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         "No data on stdin. Please provide at least one input file or pipe data to stdin.",
     )?;
 
-    let null_value = if args.flag_null_value == "<empty string>" {
+    args.flag_null_value = if args.flag_null_value == "<empty string>" {
         String::new()
     } else {
         args.flag_null_value
@@ -252,6 +293,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let output_mode: OutputMode = args.flag_format.parse().unwrap_or(OutputMode::Csv);
     let no_output: OutputMode = OutputMode::None;
+
+    let compression: PqtCompression = args
+        .flag_compression
+        .parse()
+        .unwrap_or(PqtCompression::Lz4Raw);
 
     let delim = if let Some(delimiter) = args.flag_delimiter {
         delimiter.as_byte()
@@ -360,12 +406,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 &current_query,
                 &mut ctx,
                 delim,
-                args.flag_datetime_format.clone(),
-                args.flag_date_format.clone(),
-                args.flag_time_format.clone(),
-                args.flag_float_precision,
-                null_value.clone(),
+                compression,
                 args.flag_output.clone(),
+                args.clone(),
             )?
         } else {
             // this is not the last query, we only execute the query, but don't write the output
@@ -373,12 +416,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 &current_query,
                 &mut ctx,
                 delim,
-                args.flag_datetime_format.clone(),
-                args.flag_date_format.clone(),
-                args.flag_time_format.clone(),
-                args.flag_float_precision,
-                null_value.clone(),
+                compression,
                 None,
+                args.clone(),
             )?
         };
         if log::log_enabled!(log::Level::Debug) {
