@@ -170,7 +170,6 @@ impl OutputMode {
         ctx: &mut SQLContext,
         delim: u8,
         compression: PqtCompression,
-        output: Option<String>,
         args: Args,
     ) -> CliResult<(usize, usize)> {
         let mut df = DataFrame::default();
@@ -184,7 +183,7 @@ impl OutputMode {
                 return Ok(());
             }
 
-            let w = match output {
+            let w = match args.flag_output {
                 Some(x) => {
                     let path = Path::new(&x);
                     Box::new(File::create(path)?) as Box<dyn Write>
@@ -402,24 +401,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
         query_result_shape = if is_last_query {
             // if this is the last query, we use the output mode specified by the user
-            output_mode.execute_query(
-                &current_query,
-                &mut ctx,
-                delim,
-                compression,
-                args.flag_output.clone(),
-                args.clone(),
-            )?
+            output_mode.execute_query(&current_query, &mut ctx, delim, compression, args.clone())?
         } else {
             // this is not the last query, we only execute the query, but don't write the output
-            no_output.execute_query(
-                &current_query,
-                &mut ctx,
-                delim,
-                compression,
-                None,
-                args.clone(),
-            )?
+            no_output.execute_query(&current_query, &mut ctx, delim, compression, args.clone())?
         };
         if log::log_enabled!(log::Level::Debug) {
             log::debug!(
