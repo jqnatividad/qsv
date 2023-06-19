@@ -283,10 +283,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         "No data on stdin. Please provide at least one input file or pipe data to stdin.",
     )?;
 
-    args.flag_null_value = if args.flag_null_value == "<empty string>" {
-        String::new()
-    } else {
-        args.flag_null_value
+    if args.flag_null_value == "<empty string>" {
+        args.flag_null_value.clear();
     };
 
     let output_mode: OutputMode = args.flag_format.parse().unwrap_or(OutputMode::Csv);
