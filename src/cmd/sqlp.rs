@@ -68,7 +68,7 @@ sqlp options:
                               (default: 1000)
     --low-memory              Use low memory mode when parsing CSVs. This will use less memory
                               but will be slower. It will also process LazyFrames in streaming mode.
-                              Only use this when you are running out of memory parsing CSVs.
+                              Only use this in memory constrained environments.
     --ignore-errors           Ignore errors when parsing CSVs. If set, rows with errors
                               will be skipped. If not set, the query will fail.
                               Only use this when debugging queries, as polars does batched
@@ -169,7 +169,6 @@ impl OutputMode {
         query: &str,
         ctx: &mut SQLContext,
         delim: u8,
-        compression: PqtCompression,
         args: Args,
     ) -> CliResult<(usize, usize)> {
         let mut df = DataFrame::default();
@@ -203,6 +202,11 @@ impl OutputMode {
                     .finish(&mut df),
                 OutputMode::Json => JsonWriter::new(&mut w).finish(&mut df),
                 OutputMode::Parquet => {
+                    let compression: PqtCompression = args
+                        .flag_compression
+                        .parse()
+                        .unwrap_or(PqtCompression::Lz4Raw);
+
                     let parquet_compression = match compression {
                         PqtCompression::Uncompressed => ParquetCompression::Uncompressed,
                         PqtCompression::Gzip => ParquetCompression::Gzip(Some(
@@ -289,11 +293,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let output_mode: OutputMode = args.flag_format.parse().unwrap_or(OutputMode::Csv);
     let no_output: OutputMode = OutputMode::None;
-
-    let compression: PqtCompression = args
-        .flag_compression
-        .parse()
-        .unwrap_or(PqtCompression::Lz4Raw);
 
     let delim = if let Some(delimiter) = args.flag_delimiter {
         delimiter.as_byte()
@@ -398,10 +397,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
         query_result_shape = if is_last_query {
             // if this is the last query, we use the output mode specified by the user
-            output_mode.execute_query(&current_query, &mut ctx, delim, compression, args.clone())?
+            output_mode.execute_query(&current_query, &mut ctx, delim, args.clone())?
         } else {
             // this is not the last query, we only execute the query, but don't write the output
-            no_output.execute_query(&current_query, &mut ctx, delim, compression, args.clone())?
+            no_output.execute_query(&current_query, &mut ctx, delim, args.clone())?
         };
         if log::log_enabled!(log::Level::Debug) {
             log::debug!(
