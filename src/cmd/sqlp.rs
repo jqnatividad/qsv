@@ -65,7 +65,7 @@ sqlp options:
                               If parsing fails, columns remain as strings.
     --infer-schema-len <arg>  The number of rows to scan when inferring the schema of the CSV.
                               Set to 0 to do a full table scan (warning: very slow).
-                              (default: 1000)
+                              (default: 250)
     --low-memory              Use low memory mode when parsing CSVs. This will use less memory
                               but will be slower. It will also process LazyFrames in streaming mode.
                               Only use this in memory constrained environments.
