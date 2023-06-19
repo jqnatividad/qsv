@@ -173,7 +173,7 @@ serde_urlencoded = { version = "0.7", optional = true }
 snap = "1"
 strsim = { version = "0.10", optional = true }
 strum = "0.25"
-strum_macros = "0.24"
+strum_macros = "0.25"
 sysinfo = "0.29"
 tabwriter = "1.2"
 tempfile = "3"
