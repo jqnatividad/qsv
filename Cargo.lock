@@ -1098,7 +1098,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7e959d788268e3bf9d35ace83e81b124190378e4c91c9067524675e33394b8ba"
 dependencies = [
  "crossterm",
- "strum",
+ "strum 0.24.1",
  "strum_macros",
  "unicode-width",
 ]
@@ -1552,7 +1552,7 @@ dependencies = [
  "memchr",
  "rust_decimal",
  "smallvec",
- "strum",
+ "strum 0.24.1",
 ]
 
 [[package]]
@@ -3825,7 +3825,7 @@ dependencies = [
  "simdutf8",
  "snap",
  "strsim",
- "strum",
+ "strum 0.25.0",
  "strum_macros",
  "sysinfo",
  "tabwriter",
@@ -4784,6 +4784,12 @@ checksum = "063e6045c0e62079840579a7e47a355ae92f60eb74daaf156fb1e84ba164e63f"
 dependencies = [
  "strum_macros",
 ]
+
+[[package]]
+name = "strum"
+version = "0.25.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "290d54ea6f91c969195bdbcd7442c8c2a2ba87da8bf60a7ee86a235d4bc1e125"
 
 [[package]]
 name = "strum_macros"

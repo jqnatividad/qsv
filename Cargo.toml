@@ -172,7 +172,7 @@ serde_stacker = { version = "0.1", optional = true }
 serde_urlencoded = { version = "0.7", optional = true }
 snap = "1"
 strsim = { version = "0.10", optional = true }
-strum = "0.24"
+strum = "0.25"
 strum_macros = "0.24"
 sysinfo = "0.29"
 tabwriter = "1.2"
