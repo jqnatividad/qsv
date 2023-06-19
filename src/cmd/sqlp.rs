@@ -335,6 +335,21 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         table_aliases.insert(table_name.to_string(), format!("_t_{}", idx + 1));
 
+        if log::log_enabled!(log::Level::Debug) {
+            log::debug!(
+                "Registering table: {table_name} as {alias} -  Delimiter: {delim} \
+                 Infer_schema_len: {num_rows:?} try_parse_dates: {parse_dates} ignore_errors: \
+                 {ignore_errors}, low_memory: {low_memory}",
+                table_name = table_name,
+                alias = table_aliases.get(table_name).unwrap(),
+                delim = delim,
+                num_rows = num_rows,
+                parse_dates = args.flag_try_parsedates,
+                ignore_errors = args.flag_ignore_errors,
+                low_memory = args.flag_low_memory
+            );
+        }
+
         let lf = LazyCsvReader::new(table)
             .has_header(true)
             .with_missing_is_null(true)
