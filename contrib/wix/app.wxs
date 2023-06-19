@@ -195,8 +195,9 @@
           Enabling the EULA dialog in the installer requires uncommenting
           the following `WixUILicenseRTF` tag and changing the `Value`
           attribute.
-        -->
+
          <WixVariable Id='WixUILicenseRtf' Value='contrib\wix\QSV-PRO-EULA.rtf'/> 
+        -->
 
         
         <!--
