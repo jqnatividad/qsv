@@ -260,21 +260,14 @@ impl JoinStruct {
                 .force_parallel(true)
                 .finish()
                 .collect()?
-        } else if asof_join {
-            // we need to sort by the asof column, as asof joins require sorted data
-            self.lf1 = self.lf1.sort(&self.sel1, SortOptions::default());
-            self.lf2 = self.lf2.sort(&self.sel2, SortOptions::default());
-
-            self.lf1
-                .with_optimizations(optimize_all)
-                .join_builder()
-                .with(self.lf2.with_optimizations(optimize_all))
-                .on(selcols1)
-                .how(jointype)
-                .force_parallel(true)
-                .finish()
-                .collect()?
         } else {
+            if asof_join {
+                // we need to sort by the asof columns, as asof joins require sorted join column
+                // data
+                self.lf1 = self.lf1.sort(&self.sel1, SortOptions::default());
+                self.lf2 = self.lf2.sort(&self.sel2, SortOptions::default());
+            }
+
             self.lf1
                 .with_optimizations(optimize_all)
                 .join_builder()
