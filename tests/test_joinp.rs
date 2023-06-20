@@ -85,9 +85,9 @@ joinp_test!(
 );
 
 joinp_test!(
-    joinp_outer_full,
+    joinp_full,
     |wrk: Workdir, mut cmd: process::Command| {
-        cmd.arg("--outer");
+        cmd.arg("--full");
         let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
         let expected1 = make_rows(
             false,
@@ -115,15 +115,15 @@ joinp_test!(
     }
 );
 
-joinp_test!(joinp_semi, |wrk: Workdir, mut cmd: process::Command| {
-    cmd.arg("--semi");
+joinp_test!(joinp_left_semi, |wrk: Workdir, mut cmd: process::Command| {
+    cmd.arg("--left-semi");
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = make_rows(true, vec![svec!["Boston", "MA"], svec!["Buffalo", "NY"]]);
     assert_eq!(got, expected);
 });
 
-joinp_test!(joinp_anti, |wrk: Workdir, mut cmd: process::Command| {
-    cmd.arg("--anti");
+joinp_test!(joinp_left_anti, |wrk: Workdir, mut cmd: process::Command| {
+    cmd.arg("--left-anti");
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = make_rows(
         true,
