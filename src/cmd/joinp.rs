@@ -4,8 +4,8 @@ Joins two sets of CSV data on the specified columns using the Pola.rs engine.
 The default join operation is an 'inner' join. This corresponds to the
 intersection of rows on the keys specified.
 
-Unlike the join command, it can process files larger than RAM, is multi-threaded,
-supports an asof join & the output does not have duplicate columns. However, it
+Unlike the join command, joinp can process files larger than RAM, is multi-threaded,
+supports an asof join & the output does not have duplicate columns. However, joinp
 cannot do case-insensitive joins and does not support a right outer join.
 
 The columns arguments specify the columns to join for each input. Columns can
