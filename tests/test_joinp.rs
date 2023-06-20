@@ -84,53 +84,56 @@ joinp_test!(
     }
 );
 
+joinp_test!(joinp_full, |wrk: Workdir, mut cmd: process::Command| {
+    cmd.arg("--full");
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected1 = make_rows(
+        false,
+        vec![
+            svec!["Boston", "MA", "Logan Airport"],
+            svec!["Boston", "MA", "Boston Garden"],
+            svec!["Buffalo", "NY", "Ralph Wilson Stadium"],
+            svec!["Orlando", "", "Disney World"],
+            svec!["San Francisco", "CA", ""],
+            svec!["New York", "NY", ""],
+        ],
+    );
+    let expected2 = make_rows(
+        false,
+        vec![
+            svec!["Boston", "MA", "Logan Airport"],
+            svec!["Boston", "MA", "Boston Garden"],
+            svec!["Buffalo", "NY", "Ralph Wilson Stadium"],
+            svec!["Orlando", "", "Disney World"],
+            svec!["New York", "NY", ""],
+            svec!["San Francisco", "CA", ""],
+        ],
+    );
+    assert!(got == expected1 || got == expected2);
+});
+
 joinp_test!(
-    joinp_full,
+    joinp_left_semi,
     |wrk: Workdir, mut cmd: process::Command| {
-        cmd.arg("--full");
+        cmd.arg("--left-semi");
         let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-        let expected1 = make_rows(
-            false,
-            vec![
-                svec!["Boston", "MA", "Logan Airport"],
-                svec!["Boston", "MA", "Boston Garden"],
-                svec!["Buffalo", "NY", "Ralph Wilson Stadium"],
-                svec!["Orlando", "", "Disney World"],
-                svec!["San Francisco", "CA", ""],
-                svec!["New York", "NY", ""],
-            ],
-        );
-        let expected2 = make_rows(
-            false,
-            vec![
-                svec!["Boston", "MA", "Logan Airport"],
-                svec!["Boston", "MA", "Boston Garden"],
-                svec!["Buffalo", "NY", "Ralph Wilson Stadium"],
-                svec!["Orlando", "", "Disney World"],
-                svec!["New York", "NY", ""],
-                svec!["San Francisco", "CA", ""],
-            ],
-        );
-        assert!(got == expected1 || got == expected2);
+        let expected = make_rows(true, vec![svec!["Boston", "MA"], svec!["Buffalo", "NY"]]);
+        assert_eq!(got, expected);
     }
 );
 
-joinp_test!(joinp_left_semi, |wrk: Workdir, mut cmd: process::Command| {
-    cmd.arg("--left-semi");
-    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = make_rows(true, vec![svec!["Boston", "MA"], svec!["Buffalo", "NY"]]);
-    assert_eq!(got, expected);
-});
-
-joinp_test!(joinp_left_anti, |wrk: Workdir, mut cmd: process::Command| {
-    cmd.arg("--left-anti");
-    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = make_rows(
-        true,
-        vec![svec!["New York", "NY"], svec!["San Francisco", "CA"]],
-    );
-    assert_eq!(got, expected);
-});
+joinp_test!(
+    joinp_left_anti,
+    |wrk: Workdir, mut cmd: process::Command| {
+        cmd.arg("--left-anti");
+        let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+        let expected = make_rows(
+            true,
+            vec![svec!["New York", "NY"], svec!["San Francisco", "CA"]],
+        );
+        assert_eq!(got, expected);
+    }
+);
 
 #[test]
 fn joinp_cross() {
