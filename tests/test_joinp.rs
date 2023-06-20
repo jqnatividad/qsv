@@ -160,3 +160,88 @@ fn joinp_cross() {
     ];
     assert_eq!(got, expected);
 }
+
+#[test]
+fn joinp_asof_date() {
+    let wrk = Workdir::new("join_asof_date");
+    wrk.create(
+        "gdp.csv",
+        vec![
+            svec!["date", "gdp"],
+            svec!["2016-01-01", "4164"],
+            svec!["2017-01-01", "4411"],
+            svec!["2018-01-01", "4566"],
+            svec!["2019-01-01", "4696"],
+        ],
+    );
+    wrk.create(
+        "population.csv",
+        vec![
+            svec!["date", "population"],
+            svec!["2016-05-12", "82.19"],
+            svec!["2017-05-12", "82.66"],
+            svec!["2018-05-12", "83.12"],
+            svec!["2019-05-12", "83.52"],
+        ],
+    );
+
+    let mut cmd = wrk.command("joinp");
+    cmd.arg("--asof")
+        .args(["date", "population.csv", "date", "gdp.csv"]);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["date", "population", "gdp"],
+        svec!["2016-05-12", "82.19", "4164"],
+        svec!["2017-05-12", "82.66", "4411"],
+        svec!["2018-05-12", "83.12", "4566"],
+        svec!["2019-05-12", "83.52", "4696"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn joinp_asof_nearest_date() {
+    let wrk = Workdir::new("join_asof_nearest_date");
+    wrk.create(
+        "gdp.csv",
+        vec![
+            svec!["date", "gdp"],
+            svec!["2016-01-01", "4164"],
+            svec!["2017-01-22", "4422"],
+            svec!["2017-01-10", "4410"],
+            svec!["2018-01-01", "4501"],
+            svec!["2018-01-05", "4505"],
+            svec!["2018-01-14", "4514"],
+            svec!["2019-01-01", "4696"],
+        ],
+    );
+    wrk.create(
+        "population.csv",
+        vec![
+            svec!["date", "population"],
+            svec!["2016-05-12", "82.19"],
+            svec!["2017-05-12", "82.66"],
+            svec!["2018-05-12", "83.12"],
+            svec!["2019-05-12", "83.52"],
+        ],
+    );
+
+    let mut cmd = wrk.command("joinp");
+    cmd.arg("--asof").args(["--strategy", "nearest"]).args([
+        "date",
+        "population.csv",
+        "date",
+        "gdp.csv",
+    ]);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["date", "population", "gdp"],
+        svec!["2016-05-12", "82.19", "4164"],
+        svec!["2017-05-12", "82.66", "4422"],
+        svec!["2018-05-12", "83.12", "4514"],
+        svec!["2019-05-12", "83.52", "4696"],
+    ];
+    assert_eq!(got, expected);
+}

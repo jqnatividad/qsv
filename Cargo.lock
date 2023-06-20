@@ -3342,6 +3342,7 @@ dependencies = [
  "rand_distr",
  "rayon",
  "regex",
+ "serde_json",
  "smartstring",
  "thiserror",
  "wasm-timer",

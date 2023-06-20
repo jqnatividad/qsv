@@ -125,6 +125,8 @@ odht = "0.3"
 polars = { version = "0.30", features = [
     "lazy",
     "streaming",
+    "object",
+    "asof_join",
     "cross_join",
     "semi_anti_join",
     "sql",
