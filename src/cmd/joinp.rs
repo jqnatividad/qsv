@@ -95,8 +95,8 @@ joinp options:
                            as dates. If the parse fails, the join will fail
                            This is useful when the join columns are formatted as 
                            dates in one CSV data set and strings in the other.
-                           Note that this will be automatically enabled if
-                           the date tolerange language is used.
+                           Note that this will be automatically enabled when
+                           using asof joins.
 
 Common options:
     -h, --help             Display this message
@@ -189,16 +189,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
             if asof_strategy == AsofStrategy::Nearest {
                 if let Some(ref tolerance) = args.flag_tolerance {
-                    // set try_parse_dates to true if the tolerance is set to a
+                    // set is_date_tolerance to true if the tolerance is set to a
                     // non-numerical value, indicating that it is a
-                    // tolerance date string language
-                    let try_parse_dates = if let Some(tolerance) = &args.flag_tolerance {
+                    // tolerance date language
+                    let is_date_tolerance = if let Some(tolerance) = &args.flag_tolerance {
                         tolerance.parse::<i64>().is_err()
                     } else {
                         false
                     };
 
-                    if try_parse_dates {
+                    if is_date_tolerance {
                         asof_options.tolerance_str = Some(tolerance.into());
                     } else {
                         let numeric_tolerance = tolerance.parse::<i64>().unwrap();
