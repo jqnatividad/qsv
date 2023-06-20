@@ -21,9 +21,9 @@ dependencies = [
 
 [[package]]
 name = "actix-governor"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "43ca3a2b04bda362f1f84625218947a4a03167d7573fc98372a9ade8503a5b18"
+checksum = "46ff2d40f2bc627b8054c5e20fa6b0b0cf9428699b54bd41634e9ae3098ad555"
 dependencies = [
  "actix-http",
  "actix-web",
