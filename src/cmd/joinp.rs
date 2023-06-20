@@ -4,6 +4,10 @@ Joins two sets of CSV data on the specified columns using the Pola.rs engine.
 The default join operation is an 'inner' join. This corresponds to the
 intersection of rows on the keys specified.
 
+Unlike the join command, it can process files larger than RAM, is multi-threaded &
+the output does not have duplicate columns. However, it cannot do case-insensitive joins
+and does not have the right outer join.
+
 The columns arguments specify the columns to join for each input. Columns can
 be referenced by name. Specify multiple columns by separating them with a comma.
 Both columns1 and columns2 must specify exactly the same number of columns.
@@ -24,7 +28,14 @@ joinp options:
                            corresponding row in the second data set. When no
                            corresponding row exists, it is padded out with
                            empty fields.
-    --outer                Do a 'full outer' join. This returns all rows in
+    --left-anti            This returns only the rows in the first CSV data set
+                           that do not have a corresponding row in the second
+                           data set. The output schema is the same as the
+                           first dataset.
+    --left-semi            This returns only the rows in the first CSV data set
+                           that have a corresponding row in the second data set.
+                           The output schema is the same as the first data set.
+    --full                 Do a 'full outer' join. This returns all rows in
                            both data sets with matching records joined. If
                            there is no match, the missing side will be padded
                            out with empty fields.
@@ -34,13 +45,6 @@ joinp options:
                            equal to N * M, where N and M correspond to the
                            number of rows in the given data sets, respectively.
                            The columns1 and columns2 arguments are ignored.
-    --semi                 This returns only the rows in the first CSV data set
-                           that have a corresponding row in the second CSV data
-                           set. The output schema is the same as the first data set.
-    --anti                 This returns only the rows in the first CSV data set
-                           that do not have a corresponding row in the second
-                           CSV data set. The output schema is the same as the
-                           first dataset.
     --nulls                When set, joins will work on empty fields.
                            Otherwise, empty fields are completely ignored.
 
@@ -74,10 +78,10 @@ struct Args {
     arg_columns2:   String,
     arg_input2:     String,
     flag_left:      bool,
-    flag_outer:     bool,
+    flag_left_anti: bool,
+    flag_left_semi: bool,
+    flag_full:      bool,
     flag_cross:     bool,
-    flag_semi:      bool,
-    flag_anti:      bool,
     flag_output:    Option<String>,
     flag_nulls:     bool,
     flag_delimiter: Option<Delimiter>,
@@ -95,17 +99,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let join = args.new_join()?;
     let join_shape = match (
         args.flag_left,
-        args.flag_outer,
+        args.flag_left_anti,
+        args.flag_left_semi,
+        args.flag_full,
         args.flag_cross,
-        args.flag_semi,
-        args.flag_anti,
     ) {
         (false, false, false, false, false) => join.polars_join(JoinType::Inner),
         (true, false, false, false, false) => join.polars_join(JoinType::Left),
-        (false, true, false, false, false) => join.polars_join(JoinType::Outer),
-        (false, false, true, false, false) => join.polars_join(JoinType::Cross),
-        (false, false, false, true, false) => join.polars_join(JoinType::Semi),
-        (false, false, false, false, true) => join.polars_join(JoinType::Anti),
+        (false, true, false, false, false) => join.polars_join(JoinType::Anti),
+        (false, false, true, false, false) => join.polars_join(JoinType::Semi),
+        (false, false, false, true, false) => join.polars_join(JoinType::Outer),
+        (false, false, false, false, true) => join.polars_join(JoinType::Cross),
         _ => fail!("Please pick exactly one join operation."),
     }?;
 
