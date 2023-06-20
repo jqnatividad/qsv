@@ -4,9 +4,9 @@ Joins two sets of CSV data on the specified columns using the Pola.rs engine.
 The default join operation is an 'inner' join. This corresponds to the
 intersection of rows on the keys specified.
 
-Unlike the join command, it can process files larger than RAM, is multi-threaded &
-the output does not have duplicate columns. However, it cannot do case-insensitive joins
-and does not have the right outer join.
+Unlike the join command, it can process files larger than RAM, is multi-threaded,
+supports an asof join & the output does not have duplicate columns. However, it
+cannot do case-insensitive joins and does not support a right outer join.
 
 The columns arguments specify the columns to join for each input. Columns can
 be referenced by name. Specify multiple columns by separating them with a comma.
