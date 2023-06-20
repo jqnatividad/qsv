@@ -48,10 +48,9 @@ joinp options:
 
     --asof                 Do an 'asof' join. This is similar to a left outer
                            join, except we match on nearest key rather than
-                           equal keys. Both CSV data sets must be sorted on
-                           the join columns. The output schema is the same as
-                           the first data set.
-    --strategy <arg>       The strategy to use for the asof join. The available are:
+                           equal keys. Note that both CSV data sets will be SORTED
+                           AUTOMATICALLY on the join columns.
+    --strategy <arg>       The strategy to use for the asof join:
                              backward - For each row in the first CSV data set,
                                         we find the last row in the second data set
                                         whose key is less than or equal to the key
@@ -71,7 +70,7 @@ joinp options:
 
                            If the join is done on a column of type Date, Time or
                            DateTime, then the tolerance is interpreted using
-                           the following string language:
+                           the following language:
                                 1d - 1 day
                                 1h - 1 hour
                                 1m - 1 minute
@@ -96,6 +95,8 @@ joinp options:
                            as dates. If the parse fails, the join will fail
                            This is useful when the join columns are formatted as 
                            dates in one CSV data set and strings in the other.
+                           Note that this will be automatically enabled if
+                           the date tolerange language is used.
 
 Common options:
     -h, --help             Display this message
