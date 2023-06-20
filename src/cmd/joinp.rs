@@ -14,6 +14,8 @@ Both columns1 and columns2 must specify exactly the same number of columns.
 
 Returns the shape of the join result (number of rows, number of columns) to stderr.
 
+For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_joinp.rs.
+
 Usage:
     qsv joinp [options] <columns1> <input1> <columns2> <input2>
     qsv joinp --cross <input1> <input2>
