@@ -94,11 +94,11 @@ joinp options:
     --nulls                When set, joins will work on empty fields.
                            Otherwise, empty fields are completely ignored.
     --try-parsedates       When set, the join will attempt to parse the columns
-                           as dates. If the parse fails, the join will fail
+                           as dates. If the parse fails, columns remain as strings.
                            This is useful when the join columns are formatted as 
-                           dates in one CSV data set and strings in the other.
-                           Note that this will be automatically enabled when
-                           using asof joins.
+                           dates with differing date formats, as the date formats
+                           will be normalized. Note that this will be automatically 
+                           enabled when using asof joins.
 
 Common options:
     -h, --help             Display this message
@@ -265,8 +265,7 @@ impl JoinStruct {
                 .collect()?
         } else {
             if asof_join {
-                // we need to sort by the asof columns, as asof joins require sorted join column
-                // data
+                // sort by the asof columns, as asof joins require sorted join column data
                 self.lf1 = self.lf1.sort(&self.sel1, SortOptions::default());
                 self.lf2 = self.lf2.sort(&self.sel2, SortOptions::default());
             }
