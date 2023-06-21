@@ -5,8 +5,11 @@ The default join operation is an 'inner' join. This corresponds to the
 intersection of rows on the keys specified.
 
 Unlike the join command, joinp can process files larger than RAM, is multi-threaded,
-supports an asof join & the output does not have duplicate columns. However, joinp
-cannot do case-insensitive joins and does not support a right outer join.
+supports asof joins & its output does not have duplicate columns.
+
+However, joinp does not have an --ignore-case option (though a case insensitve join 
+can be done using SQL functions, e.g. lower(t1.col1) = lower(t2.col1)) and it
+does not support right outer joins.
 
 The columns arguments specify the columns to join for each input. Columns can
 be referenced by name. Specify multiple columns by separating them with a comma.
