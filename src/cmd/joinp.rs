@@ -7,12 +7,10 @@ intersection of rows on the keys specified.
 Unlike the join command, joinp can process files larger than RAM, is multi-threaded,
 supports asof joins & its output does not have duplicate columns.
 
-However, joinp does not have an --ignore-case option (though a case insensitve join 
-can be done using SQL functions, e.g. lower(t1.col1) = lower(t2.col1)) and it
-does not support right outer joins.
+However, joinp doesn't have an --ignore-case option & it doesn't support right outer joins.
 
-The columns arguments specify the columns to join for each input. Columns can
-be referenced by name. Specify multiple columns by separating them with a comma.
+The columns arguments specify the columns to join for each input. Columns are referenced
+by name. Specify multiple columns by separating them with a comma.
 Both columns1 and columns2 must specify exactly the same number of columns.
 
 Returns the shape of the join result (number of rows, number of columns) to stderr.
