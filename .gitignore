@@ -31,3 +31,4 @@ tmp/*
 *.rsbak
 *.luau
 *.png
+.env

@@ -20,12 +20,12 @@ describegpt options:
     --max-tokens           Limits the number of generated tokens in the
                            output.
     --json                 Return results in JSON format.
-    --pretty-json          Return results in pretty JSON format.
 
 Common options:
     -h, --help             Display this message
 "#;
 
+use std::env;
 use log::info;
 use serde::Deserialize;
 
@@ -34,89 +34,30 @@ use crate::{config::Config, util, CliResult};
 #[derive(Deserialize)]
 struct Args {
     arg_input:           Option<String>,
-    flag_human_readable: bool,
-    flag_width:          bool,
-    flag_no_headers:     bool,
+    flag_all:            Option<bool>,
+    flag_dictionary:     Option<bool>,
+    flag_description:    Option<bool>,
+    flag_tags:           Option<bool>,
+    flag_max_tokens:     Option<i32>,
+    flag_json:           Option<bool>,
 }
+
+// Config
+const MODEL: &str = "gpt-3.5-turbo-16k";
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
-    let conf = Config::new(&args.arg_input)
-        .no_headers(args.flag_no_headers)
-        // we also want to count the quotes when computing width
-        .quoting(!args.flag_width)
-        // and ignore differing column counts as well
-        .flexible(args.flag_width);
 
-    // this comment left here for Logging.md example
-    // log::debug!(
-    //     "input: {:?}, no_header: {}",
-    //     (args.arg_input).clone().unwrap(),
-    //     &args.flag_no_headers,
-    // );
-
-    let (count, width) = if args.flag_width {
-        count_input(&conf, args.flag_width)?
-    } else {
-        match conf.indexed().unwrap_or_else(|_| {
-            info!("index is stale");
-            None
-        }) {
-            Some(idx) => {
-                info!("index used");
-                (idx.count(), 0)
-            }
-            None => count_input(&conf, args.flag_width)?,
+    // Check for OpenAI API Key in environment variables
+    let api_key = match env::var("OPENAI_API_KEY") {
+        Ok(val) => val,
+        Err(_) => {
+            eprintln!("Error: OPENAI_API_KEY environment variable not found.");
+            std::process::exit(1);
         }
     };
 
-    if args.flag_human_readable {
-        use thousands::Separable;
-
-        if args.flag_width {
-            woutinfo!(
-                "{};{}",
-                count.separate_with_commas(),
-                width.separate_with_commas()
-            );
-        } else {
-            woutinfo!("{}", count.separate_with_commas());
-        }
-    } else if args.flag_width {
-        woutinfo!("{count};{width}");
-    } else {
-        woutinfo!("{count}");
-    }
+    // Warning message
+    println!("Note that this command uses a LLM for inference and is therefore prone to inaccurate\ninformation being produced. Ensure verification of output results before using them.");
     Ok(())
-}
-
-fn count_input(
-    conf: &Config,
-    compute_width: bool,
-) -> Result<(u64, usize), crate::clitypes::CliError> {
-    info!("counting...");
-    let mut rdr = conf.reader()?;
-    let mut count = 0_u64;
-    let mut max_width = 0_usize;
-    let mut record_numfields = 0_usize;
-    let mut record = csv::ByteRecord::new();
-
-    if compute_width {
-        while rdr.read_byte_record(&mut record)? {
-            count += 1;
-
-            let curr_width = record.as_slice().len();
-            if curr_width > max_width {
-                record_numfields = record.len();
-                max_width = curr_width;
-            }
-        }
-    } else {
-        while rdr.read_byte_record(&mut record)? {
-            count += 1;
-        }
-    }
-    // record_numfields is a count of the delimiters
-    // which we also want to count when returning width
-    Ok((count, max_width + record_numfields))
 }
