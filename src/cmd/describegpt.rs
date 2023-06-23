@@ -48,7 +48,7 @@ struct Args {
 // Config
 const MODEL: &str = "gpt-3.5-turbo-16k";
 
-fn get_completion(api_key: &str, content: &str) -> Result<String, reqwest::Error> {
+fn get_completion(api_key: &str, content: &str) -> String {
     let mut client = Client::new();
 
     let request_data = json!({
@@ -62,15 +62,37 @@ fn get_completion(api_key: &str, content: &str) -> Result<String, reqwest::Error
         .header("Authorization", format!("Bearer {}", api_key))
         .header("Content-Type", "application/json")
         .body(request_data.to_string())
-        .send()?;
+        .send();
 
-    let response_body = response.text()?;
+    // Check for error
+    let response = match response {
+        Ok(val) => val,
+        Err(_) => {
+            eprintln!("Error: Unable to send request to OpenAI API.");
+            std::process::exit(1);
+        }
+    };
 
-    Ok(response_body)
+    let response_body = response.text();
+
+    // Return string
+    match response_body {
+        Ok(val) => val,
+        Err(_) => {
+            eprintln!("Error: Unable to get response body from OpenAI API.");
+            std::process::exit(1);
+        }
+    }
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
+
+    // If no input file, print error message
+    if args.arg_input.is_none() {
+        eprintln!("Error: No input file specified.");
+        std::process::exit(1);
+    }
 
     // Check for OpenAI API Key in environment variables
     let api_key = match env::var("OPENAI_API_KEY") {
@@ -201,26 +223,24 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         prompt
     }
 
-    // Set prompt based on flags, if no --description, --dictionary, or --tags flags, then default to --all
-    // Which gets all three
-    let prompt = if args.flag_description.is_some() {
-        get_description_prompt(Some(stats_str), Some(frequency_str), args.flag_json.unwrap_or(false))
-    } else if args.flag_dictionary.is_some() {
-        get_dictionary_prompt(Some(stats_str), Some(frequency_str), args.flag_json.unwrap_or(false))
-    } else if args.flag_tags.is_some() {
-        get_tags_prompt(Some(stats_str), Some(frequency_str), args.flag_json.unwrap_or(false))
-    } else {
-        get_description_prompt(Some(stats_str), Some(frequency_str), args.flag_json.unwrap_or(false))
+    // If args.json is true, then set to true, else false
+    let args_json = match args.flag_json {
+        Some(true) => true,
+        _ => false
     };
 
-    // Run the async function get_completion with Result
-    let completion = match get_completion(&api_key, &prompt) {
-        Ok(val) => val,
-        Err(_) => {
-            eprintln!("Error: Unable to get completion from OpenAI API.");
+    // Set prompt based on flags where --all is not true, but --description, --dictionary, or --tags flags may be true
+    let prompt = match (args.flag_description, args.flag_dictionary, args.flag_tags) {
+        (Some(true), _, _) => get_description_prompt(Some(stats_str), Some(frequency_str), args_json),
+        (_, Some(true), _) => get_dictionary_prompt(Some(stats_str), Some(frequency_str), args_json),
+        (_, _, Some(true)) => get_tags_prompt(Some(stats_str), Some(frequency_str), args_json),
+        _ => {
+            eprintln!("Error: No flags specified.");
             std::process::exit(1);
         }
     };
+
+    let completion = get_completion(&api_key, &prompt);
 
     // Parse the completion JSON
     let completion_json: serde_json::Value = match serde_json::from_str(&completion) {
