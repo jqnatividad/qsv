@@ -140,11 +140,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
     // If no inference flags specified, print error message.
     if args.flag_all.is_none() && args.flag_dictionary.is_none() && args.flag_description.is_none() && args.flag_tags.is_none() {
-        eprintln!("Error: No inference flags specified.");
+        eprintln!("Error: No inference options specified.");
         std::process::exit(1);
-    // If --all flag is specified, but other flags are also specified, print error message.
+    // If --all flag is specified, but other inference flags are also specified, print error message.
     } else if args.flag_all.is_some() && (args.flag_dictionary.is_some() || args.flag_description.is_some() || args.flag_tags.is_some()) {
-        eprintln!("Error: --all flag cannot be specified with other flags.");
+        eprintln!("Error: --all option cannot be specified with other inference flags.");
         std::process::exit(1);
     }
     // If --max-tokens is not specified, print warning message that maximum token limit will be used.
@@ -279,13 +279,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     // Set prompt based on flags where --all is not true, but --description, --dictionary, or --tags flags may be true
-    // TODO: Check for multiple true flags
+    // TODO: Allow for multiple true flags and --all
     let prompt = match (args.flag_description, args.flag_dictionary, args.flag_tags) {
         (Some(true), _, _) => get_description_prompt(Some(stats_str), Some(frequency_str), args_json),
         (_, Some(true), _) => get_dictionary_prompt(Some(stats_str), Some(frequency_str), args_json),
         (_, _, Some(true)) => get_tags_prompt(Some(stats_str), Some(frequency_str), args_json),
         _ => {
-            eprintln!("Error: No flags specified.");
+            eprintln!("Error: No options specified.");
             std::process::exit(1);
         }
     };
