@@ -181,16 +181,19 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         (false, false, false, false, false, true) => {
             // safety: flag_strategy is always is_some() as it has a default value
             args.flag_strategy = Some(args.flag_strategy.unwrap().to_lowercase());
-            let asof_strategy = match args.flag_strategy.as_deref() {
+            let strategy = match args.flag_strategy.as_deref() {
                 Some("backward") | None => AsofStrategy::Backward,
                 Some("forward") => AsofStrategy::Forward,
                 Some("nearest") => AsofStrategy::Nearest,
                 Some(s) => return fail_clierror!("Invalid asof strategy: {}", s),
             };
-            let mut asof_options = AsOfOptions::default();
-            asof_options.strategy = asof_strategy;
 
-            if asof_strategy == AsofStrategy::Nearest {
+            let mut asof_options = AsOfOptions {
+                strategy,
+                ..Default::default()
+            };
+
+            if strategy == AsofStrategy::Nearest {
                 if let Some(ref tolerance) = args.flag_tolerance {
                     // set is_date_tolerance to true if the tolerance is set to a
                     // non-numerical value, indicating that it is a
