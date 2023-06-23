@@ -249,13 +249,14 @@ impl JoinStruct {
         }
 
         let optimize_all = polars::lazy::frame::OptState {
-            projection_pushdown: true,
-            predicate_pushdown:  true,
-            type_coercion:       true,
-            simplify_expr:       true,
-            file_caching:        true,
-            slice_pushdown:      true,
-            streaming:           true,
+            projection_pushdown:        true,
+            predicate_pushdown:         true,
+            type_coercion:              true,
+            simplify_expr:              true,
+            file_caching:               true,
+            slice_pushdown:             true,
+            common_subplan_elimination: true,
+            streaming:                  true,
         };
 
         let mut join_results = if jointype == JoinType::Cross {
