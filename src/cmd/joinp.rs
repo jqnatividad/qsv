@@ -195,20 +195,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
             if strategy == AsofStrategy::Nearest {
                 if let Some(ref tolerance) = args.flag_tolerance {
-                    // set is_date_tolerance to true if the tolerance is set to a
-                    // non-numerical value, indicating that it is a
-                    // tolerance date language
-                    let is_date_tolerance = if let Some(tolerance) = &args.flag_tolerance {
-                        tolerance.parse::<i64>().is_err()
-                    } else {
-                        false
-                    };
-
-                    if is_date_tolerance {
-                        asof_options.tolerance_str = Some(tolerance.into());
-                    } else {
-                        let numeric_tolerance = tolerance.parse::<i64>().unwrap();
+                    // If the tolerance is an integer, it is tolerance number of rows.
+                    // Otherwise, it is a tolerance date language spec.
+                    if let Ok(numeric_tolerance) = tolerance.parse::<i64>() {
                         asof_options.tolerance = Some(AnyValue::Int64(numeric_tolerance));
+                    } else {
+                        asof_options.tolerance_str = Some(tolerance.into());
                     }
                 }
             }
