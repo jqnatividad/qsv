@@ -25,21 +25,22 @@ Common options:
     -h, --help             Display this message
 "#;
 
-use std::env;
-use reqwest::blocking::{Client};
+use crate::{util, CliResult};
+use reqwest::blocking::Client;
 use serde::Deserialize;
 use serde_json::json;
-use std::process::Command;
-use std::time::Duration;
-
-use crate::{util, CliResult};
+use std::{
+    env,
+    process::Command,
+    time::Duration
+};
 
 #[derive(Deserialize)]
 struct Args {
     arg_input:           Option<String>,
     flag_all:            Option<bool>,
-    flag_dictionary:     Option<bool>,
     flag_description:    Option<bool>,
+    flag_dictionary:     Option<bool>,
     flag_tags:           Option<bool>,
     flag_max_tokens:     Option<i32>,
     flag_json:           Option<bool>,
@@ -70,7 +71,7 @@ fn get_completion(api_key: &str, content: &str, max_tokens: Option<i32>) -> Stri
         .body(request_data.to_string())
         .send();
 
-    // Check for error and print it
+    // Get response from OpenAI API
     let response = match response {
         Ok(val) => val,
         Err(err) => {
@@ -96,7 +97,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // Check for OpenAI API Key in environment variables
     let api_key = match env::var("OPENAI_API_KEY") {
-        // If empty, print error message
         Ok(val) => {
             if val.is_empty() {
                 eprintln!("Error: OPENAI_API_KEY environment variable is empty.");
@@ -106,7 +106,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
         Err(_) => {
             eprintln!("Error: OPENAI_API_KEY environment variable not found.");
-            // Warning message
+            // Warning message for new command users
             eprintln!("Note that this command uses a LLM for inference and is therefore prone to inaccurate\ninformation being produced. Ensure verification of output results before using them.\n");
             std::process::exit(1);
         }
@@ -133,7 +133,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     }
 
-    // If --all and is used, it is not currently supported.
+    // --all is not currently supported.
     if args.flag_all.is_some() {
         eprintln!("Error: --all is not currently supported.");
         std::process::exit(1);
@@ -192,6 +192,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     };
 
+    // Get addition to prompt based on --json flag
     fn json_addition(flag_json: bool) -> String {
         if flag_json {
             " in JSON format".to_string()
@@ -200,6 +201,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     }
     
+    // --dictionary
     fn get_dictionary_prompt(stats: Option<&str>, frequency: Option<&str>, flag_json: bool) -> String {
         let json_add = json_addition(flag_json);
         let prompt = format!(
@@ -226,6 +228,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         prompt
     }
     
+    // --description
     fn get_description_prompt(stats: Option<&str>, frequency: Option<&str>, flag_json: bool) -> String {
         let json_add = json_addition(flag_json);
         let mut prompt = format!(
@@ -249,6 +252,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         prompt
     }
     
+    // --tags
     fn get_tags_prompt(stats: Option<&str>, frequency: Option<&str>, flag_json: bool) -> String {
         let json_add = json_addition(flag_json);
         let prompt = format!(
@@ -302,8 +306,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             std::process::exit(1);
         }
     };
-
-    // If error, print error message
+    // If OpenAI API returns error, print error message
     match completion_json {
         serde_json::Value::Object(ref map) => {
             if map.contains_key("error") {
@@ -314,10 +317,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         _ => {}
     }
 
-    // Print the message content
+    // Set the completion output
     let message = &completion_json["choices"][0]["message"]["content"];
     // Convert escaped characters to normal characters
     let formatted_message = message.to_string().replace("\\n", "\n").replace("\\t", "\t").replace("\\\"", "\"").replace("\\'", "'").replace("\\`", "`");
+    // Print the completion output
     println!("{}", formatted_message);
 
     Ok(())
