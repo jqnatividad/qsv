@@ -1609,6 +1609,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "equivalent"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "88bffebc5d80432c9b140ee17875ff173a8ab62faad5b257da912bd2f6c1c0a1"
+
+[[package]]
 name = "erased-serde"
 version = "0.3.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2021,7 +2027,7 @@ dependencies = [
  "futures-sink",
  "futures-util",
  "http",
- "indexmap",
+ "indexmap 1.9.3",
  "slab",
  "tokio",
  "tokio-util",
@@ -2271,6 +2277,16 @@ dependencies = [
  "autocfg",
  "hashbrown 0.12.3",
  "serde",
+]
+
+[[package]]
+name = "indexmap"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d5477fe2230a79769d8dc68e0eabf5437907c0457a5614a9e8dddb67f65eb65d"
+dependencies = [
+ "equivalent",
+ "hashbrown 0.14.0",
 ]
 
 [[package]]
@@ -3230,7 +3246,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4dd7d28ee937e54fe3080c91faa1c3a46c06de6252988a7f4592ba2310ef22a4"
 dependencies = [
  "fixedbitset",
- "indexmap",
+ "indexmap 1.9.3",
 ]
 
 [[package]]
@@ -3341,7 +3357,7 @@ dependencies = [
  "comfy-table",
  "either",
  "hashbrown 0.13.2",
- "indexmap",
+ "indexmap 1.9.3",
  "num-traits",
  "once_cell",
  "polars-arrow",
@@ -3414,7 +3430,7 @@ dependencies = [
  "arrow2",
  "fallible-streaming-iterator",
  "hashbrown 0.13.2",
- "indexmap",
+ "indexmap 1.9.3",
  "num-traits",
  "polars-arrow",
  "polars-error",
@@ -3792,7 +3808,7 @@ dependencies = [
  "grex",
  "gzp",
  "hashbrown 0.14.0",
- "indexmap",
+ "indexmap 1.9.3",
  "indicatif",
  "itertools 0.11.0",
  "itoa",
@@ -4462,11 +4478,11 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.97"
+version = "1.0.99"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bdf3bf93142acad5821c99197022e170842cdbc1c30482b98750c688c640842a"
+checksum = "46266871c240a00b8f503b877622fe33430b3c7d963bdc0f2adc511e54a1eae3"
 dependencies = [
- "indexmap",
+ "indexmap 2.0.0",
  "itoa",
  "ryu",
  "serde",
@@ -4500,7 +4516,7 @@ version = "0.8.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "578a7433b776b56a35785ed5ce9a7e777ac0598aac5a6dd1b4b18a307c7fc71b"
 dependencies = [
- "indexmap",
+ "indexmap 1.9.3",
  "ryu",
  "serde",
  "yaml-rust",
@@ -4920,7 +4936,7 @@ checksum = "640e18df4252c8ccb6c1c3abd1e48c9f2c674a61eb3136936811b79b9b7f58d6"
 dependencies = [
  "crossbeam",
  "csv",
- "indexmap",
+ "indexmap 1.9.3",
  "levenshtein",
  "log",
  "once_cell",
