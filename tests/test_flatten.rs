@@ -65,6 +65,21 @@ h2  stuvwx";
 }
 
 #[test]
+fn flatten_field_separator() {
+    let (wrk, mut cmd) = setup("flatten_separator");
+    cmd.args(["--field-separator", "!:!"]);
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = "\
+h1  !:!abcdef
+h2  !:!ghijkl
+#
+h1  !:!mnopqr
+h2  !:!stuvwx";
+    assert_eq!(got, expected.to_string());
+}
+
+#[test]
 fn flatten_condense() {
     let (wrk, mut cmd) = setup("flatten_condense");
     cmd.args(["--condense", "2"]);
