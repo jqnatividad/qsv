@@ -116,7 +116,7 @@ The same is true with the write buffer (default: 64k) with the `QSV_WTR_BUFFER_C
 
 ## Multithreading
 
-Several commands support multithreading - `stats`, `frequency`, `schema`, `split` and `tojsonl` (when an index is available); `apply`, `applydp`, `dedup`, `diff`, `extsort`, `joinp`, `snappy`, `sort`, `to` and `validate` (no index required).
+Several commands support multithreading - `stats`, `frequency`, `schema`, `split` and `tojsonl` (when an index is available); `apply`, `applydp`, `dedup`, `diff`, `extsort`, `joinp`, `snappy`, `sort`, `sqlp`, `to` and `validate` (no index required).
 
 qsv will automatically spawn parallel jobs equal to the detected number of logical processors. Should you want to manually override this, use the `--jobs` command-line option or the `QSV_MAX_JOBS` environment variable.
 
@@ -126,12 +126,12 @@ To find out your jobs setting, call `qsv --version`.
 The `--version` option shows a lot of information about qsv. It displays:
 * qsv version
 * the memory allocator (`standard`, `mimalloc` or `jemalloc`)
-* all enabled features (`apply`, `fetch`, `foreach`, `generate`, `luau`, `python`, `self_update` & `to`)
+* all enabled features (`apply`, `fetch`, `foreach`, `generate`, `luau`, `polars`, `python`, `self_update` & `to`)
 * Python version linked if the `python` feature was enabled
 * Luau version embedded if the `luau` feature was enabled
 * the number of processors to use for multi-threading commands
 * the number of logical processors detected
-* memory-related information (max "non-streaming" input file size, free swap memory, available memory & total memory)
+* memory-related OOM prevention info (max "non-streaming" input file size, free swap memory, available memory & total memory)
 * the target platform
 * the Rust version used to compile qsv
 * QSV_KIND - `prebuilt`, `prebuilt-nightly`, `installed` & `compiled`.
