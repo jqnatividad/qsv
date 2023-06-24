@@ -146,10 +146,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             total_lines -= preamble_rows;
         }
     }
-    // the first rdr record is the header, since
-    // we have no_headers = true, we manually trim the first record
+    // the first rdr record is the header, since we have no_headers = true.
+    // If trim_setting is equal to Headers or All, we "manually" trim the first record
     if trim_setting == csv::Trim::Headers || trim_setting == csv::Trim::All {
-        debug!("trimming...");
+        debug!("trimming headers...");
         rdr.read_byte_record(&mut row)?;
         row.trim();
 
