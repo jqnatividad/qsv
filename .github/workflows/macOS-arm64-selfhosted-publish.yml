@@ -55,10 +55,6 @@ jobs:
       with:
         submodules: recursive
         ref: ${{ needs.analyze-tags.outputs.previous-tag }}
-    - name: Install libmagic on linux
-      if: ${{ matrix.job.os-name == 'linux' }}
-      run: |
-        sudo apt-get install libmagic1 libmagic-dev    
     - name: build prep for x86_64-unknown-linux-musl
       if: ${{ matrix.job.musl-prep }}
       run: |

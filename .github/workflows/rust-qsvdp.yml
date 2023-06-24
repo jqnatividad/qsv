@@ -22,12 +22,9 @@ jobs:
     - uses: actions/checkout@v3
     - name: Update Rust
       run: rustup update
-    - name: Install libmagic
-      run: |
-        sudo apt-get install libmagic1 libmagic-dev
     - name: Setup Rust-cache
       uses: Swatinem/rust-cache@v2
       with:
         key: qsvdp-cache
     - name: Run tests
-      run: cargo test --verbose --locked --features=datapusher_plus,luau,magic
+      run: cargo test --verbose --locked --features=datapusher_plus,luau

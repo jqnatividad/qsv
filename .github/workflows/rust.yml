@@ -27,9 +27,6 @@ jobs:
     - uses: actions/setup-python@v4.6.1
       with:
         python-version: '3.11'
-    - name: Install libmagic
-      run: |
-        sudo apt-get install libmagic1 libmagic-dev
     - name: Install and Run Redis
       run: |
         sudo apt-get install redis-server
@@ -41,4 +38,4 @@ jobs:
       with:
         key: qsv-cache
     - name: Run tests
-      run: cargo test --verbose --locked --features=apply,fetch,foreach,generate,luau,python,magic,polars,feature_capable
+      run: cargo test --verbose --locked --features=apply,fetch,foreach,generate,luau,python,polars,feature_capable

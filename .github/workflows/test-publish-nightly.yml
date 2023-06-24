@@ -20,7 +20,7 @@ jobs:
             architecture: x86_64
             addl-build-args: --features=apply,generate,luau,fetch,foreach,nightly,to,self_update,polars
             default-features:
-            addl-qsvdp-features: luau,magic
+            addl-qsvdp-features: luau
           # - os: ubuntu-latest
           #   os-name: linux
           #   target: x86_64-unknown-linux-musl

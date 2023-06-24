@@ -37,20 +37,20 @@ jobs:
             target: x86_64-unknown-linux-gnu
             architecture: x86_64
             use-cross: false
-            addl-build-args: --features=apply,generate,luau,fetch,foreach,self_update,magic,polars
+            addl-build-args: --features=apply,generate,luau,fetch,foreach,self_update,polars
             default-features:
-            addl-qsvlite-features: magic
-            addl-qsvdp-features: luau,magic
+            addl-qsvlite-features:
+            addl-qsvdp-features: luau
           - os: ubuntu-22.04
             os-name: linux
             target: x86_64-unknown-linux-musl
             architecture: x86_64
             musl-prep: true
             use-cross: false
-            addl-build-args: --features=apply,generate,fetch,foreach,self_update,magic
+            addl-build-args: --features=apply,generate,fetch,foreach,self_update
             default-features:
-            addl-qsvlite-features: magic
-            addl-qsvdp-features: magic
+            addl-qsvlite-features:
+            addl-qsvdp-features:
           - os: ubuntu-22.04
             os-name: linux
             target: i686-unknown-linux-gnu
@@ -142,10 +142,6 @@ jobs:
       with:
         submodules: recursive
         ref: ${{ needs.analyze-tags.outputs.previous-tag }}
-    - name: Install libmagic on linux
-      if: ${{ matrix.job.os-name == 'linux' }}
-      run: |
-        sudo apt-get install libmagic1 libmagic-dev    
     - name: build prep for x86_64-unknown-linux-musl
       if: ${{ matrix.job.musl-prep }}
       run: |

@@ -33,4 +33,4 @@ jobs:
         override: true
         default: true
     - name: Run tests
-      run: cargo test --verbose --locked --features=apply,fetch,foreach,generate,luau,python,feature_capable,nightly,magic,polars
+      run: cargo test --verbose --locked --features=apply,fetch,foreach,generate,luau,python,feature_capable,nightly,polars

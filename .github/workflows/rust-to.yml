@@ -24,9 +24,6 @@ jobs:
       run: |
         sudo apt-get update
     - uses: actions/checkout@v3
-    - name: Install libmagic
-      run: |
-        sudo apt-get install libmagic1 libmagic-dev
     - name: Update Rust
       run: rustup update
     - name: Setup Rust-cache
@@ -34,4 +31,4 @@ jobs:
       with:
         key: qsvto-cache
     - name: Run tests
-      run: cargo test --verbose --locked --features=magic,to,feature_capable
+      run: cargo test --verbose --locked --features=to,feature_capable
