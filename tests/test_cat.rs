@@ -120,6 +120,111 @@ fn cat_rowskey() {
 }
 
 #[test]
+fn cat_rowskey_grouping() {
+    let wrk = Workdir::new("cat_rowskey_grouping");
+    wrk.create(
+        "in1.csv",
+        vec![
+            svec!["a", "b", "c"],
+            svec!["1", "2", "3"],
+            svec!["2", "3", "4"],
+        ],
+    );
+
+    wrk.create(
+        "in2.csv",
+        vec![
+            svec!["c", "a", "b"],
+            svec!["3", "1", "2"],
+            svec!["4", "2", "3"],
+        ],
+    );
+
+    wrk.create(
+        "in3.csv",
+        vec![
+            svec!["a", "b", "d", "c"],
+            svec!["1", "2", "4", "3"],
+            svec!["2", "3", "5", "4"],
+            svec!["z", "y", "w", "x"],
+        ],
+    );
+
+    let mut cmd = wrk.command("cat");
+    cmd.arg("rowskey")
+        .arg("--group")
+        .arg("in1.csv")
+        .arg("in2.csv")
+        .arg("in3.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["file", "a", "b", "c", "d"],
+        svec!["in1", "1", "2", "3", ""],
+        svec!["in1", "2", "3", "4", ""],
+        svec!["in2", "1", "2", "3", ""],
+        svec!["in2", "2", "3", "4", ""],
+        svec!["in3", "1", "2", "3", "4"],
+        svec!["in3", "2", "3", "4", "5"],
+        svec!["in3", "z", "y", "x", "w"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn cat_rowskey_grouping_customname() {
+    let wrk = Workdir::new("cat_rowskey_grouping_customname");
+    wrk.create(
+        "in1.csv",
+        vec![
+            svec!["a", "b", "c"],
+            svec!["1", "2", "3"],
+            svec!["2", "3", "4"],
+        ],
+    );
+
+    wrk.create(
+        "in2.csv",
+        vec![
+            svec!["c", "a", "b"],
+            svec!["3", "1", "2"],
+            svec!["4", "2", "3"],
+        ],
+    );
+
+    wrk.create(
+        "in3.csv",
+        vec![
+            svec!["a", "b", "d", "c"],
+            svec!["1", "2", "4", "3"],
+            svec!["2", "3", "5", "4"],
+            svec!["z", "y", "w", "x"],
+        ],
+    );
+
+    let mut cmd = wrk.command("cat");
+    cmd.arg("rowskey")
+        .arg("--group")
+        .args(&["--group-name", "file group label"])
+        .arg("in1.csv")
+        .arg("in2.csv")
+        .arg("in3.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["file group label", "a", "b", "c", "d"],
+        svec!["in1", "1", "2", "3", ""],
+        svec!["in1", "2", "3", "4", ""],
+        svec!["in2", "1", "2", "3", ""],
+        svec!["in2", "2", "3", "4", ""],
+        svec!["in3", "1", "2", "3", "4"],
+        svec!["in3", "2", "3", "4", "5"],
+        svec!["in3", "z", "y", "x", "w"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn cat_rowskey_insertion_order() {
     let wrk = Workdir::new("cat_rowskey_insertion_order");
     wrk.create(
