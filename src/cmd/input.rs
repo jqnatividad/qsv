@@ -161,6 +161,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     let mut idx = 1_u64;
+    let mut temp_field;
+    let mut lossy_field = String::new();
     loop {
         match rdr.read_byte_record(&mut row) {
             Ok(moredata) => {
@@ -175,7 +177,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         str_row.clear();
         for field in row.iter() {
-            str_row.push_field(&String::from_utf8_lossy(field));
+            temp_field = simdutf8::basic::from_utf8(field).unwrap_or_else(|_| {
+                lossy_field = String::from_utf8_lossy(field).to_string();
+                &lossy_field
+            });
+            str_row.push_field(temp_field);
         }
         wtr.write_record(&str_row)?;
         idx += 1;
