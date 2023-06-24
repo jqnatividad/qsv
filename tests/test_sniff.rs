@@ -78,18 +78,11 @@ fn sniff_url_notcsv() {
     let mut cmd = wrk.command("sniff");
     cmd.arg("https://github.com/jqnatividad/qsv/raw/master/resources/test/excel-xlsx.xlsx");
 
-    #[cfg(all(target_os = "linux", feature = "magic"))]
-    {
-        let got_error = wrk.output_stderr(&mut cmd);
+    let got_error = wrk.output_stderr(&mut cmd);
 
-        let expected = "File is not a CSV file. Detected mime type: \
-                        application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-        assert!(got_error.starts_with(expected));
-    }
-    #[cfg(not(feature = "magic"))]
-    {
-        wrk.assert_err(&mut cmd);
-    }
+    let expected = "File is not a CSV file. Detected mime type: \
+                    application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    assert!(got_error.starts_with(expected));
 }
 
 #[test]
@@ -101,23 +94,10 @@ fn sniff_notcsv() {
     let mut cmd = wrk.command("sniff");
     cmd.arg(test_file);
 
-    #[cfg(all(target_os = "linux", feature = "magic"))]
-    {
-        let got_error = wrk.output_stderr(&mut cmd);
+    let got_error = wrk.output_stderr(&mut cmd);
 
-        let expected = "File is not a CSV file. Detected mime type: application/vnd.ms-excel";
-        assert!(got_error.starts_with(expected));
-    }
-    #[cfg(not(feature = "magic"))]
-    {
-        let got_error = wrk.output_stderr(&mut cmd);
-
-        let expected = "File extension 'xls' is not supported";
-        assert_eq!(
-            dos2unix(&got_error).trim_end(),
-            dos2unix(expected).trim_end()
-        );
-    }
+    let expected = "File is not a CSV file. Detected mime type: application/vnd.ms-excel";
+    assert!(got_error.starts_with(expected));
 }
 
 #[test]
@@ -177,19 +157,11 @@ fn sniff_url_snappy_noinfer() {
     cmd.arg("https://github.com/jqnatividad/qsv/raw/master/resources/test/boston311-100.csv.sz")
         .arg("--no-infer");
 
-    #[cfg(all(target_os = "linux", feature = "magic"))]
-    {
-        let got: String = wrk.stdout(&mut cmd);
+    let got: String = wrk.stdout(&mut cmd);
 
-        let expected = "Detected mime type: application/x-snappy-framed";
+    let expected = "Detected mime type: application/x-snappy-framed";
 
-        assert!(got.starts_with(expected));
-    }
-
-    #[cfg(not(feature = "magic"))]
-    {
-        wrk.assert_err(&mut cmd);
-    }
+    assert!(got.starts_with(expected));
 }
 
 #[test]
@@ -251,11 +223,9 @@ fn sniff_tab() {
     let mut cmd = wrk.command("sniff");
     cmd.arg("in.TAB");
 
-    #[cfg(all(target_os = "linux", feature = "magic"))]
-    {
-        let got: String = wrk.stdout(&mut cmd);
+    let got: String = wrk.stdout(&mut cmd);
 
-        let expected_end = r#"Delimiter: tab
+    let expected_end = r#"Delimiter: tab
 Header Row: true
 Preamble Rows: 0
 Quote Char: none
@@ -275,33 +245,7 @@ Fields:
     1:  Unsigned  h2
     2:  Text      h3"#;
 
-        assert!(dos2unix(&got).trim_end().ends_with(expected_end.trim_end()));
-    }
-    #[cfg(not(feature = "magic"))]
-    {
-        let got: String = wrk.stdout(&mut cmd);
-
-        let expected_end = r#"Delimiter: tab
-Header Row: true
-Preamble Rows: 0
-Quote Char: none
-Flexible: false
-Is UTF8: true
-Retrieved Size (bytes): 27
-File Size (bytes): 27
-Sampled Records: 2
-Estimated: false
-Num Records: 2
-Avg Record Len (bytes): 6
-Num Fields: 3
-Stats Types: false
-Fields:
-    0:  Text      h1
-    1:  Unsigned  h2
-    2:  Text      h3"#;
-
-        assert!(dos2unix(&got).trim_end().ends_with(expected_end.trim_end()));
-    }
+    assert!(dos2unix(&got).trim_end().ends_with(expected_end.trim_end()));
 }
 
 #[test]
