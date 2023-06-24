@@ -90,6 +90,7 @@ ext-sort = { version = "0.1", features = [
     "memory-limit",
 ], default-features = false }
 flate2 = { version = "1", optional = true }
+file-format = {version = "0.17", features = ["reader"] }
 filetime = "0.2"
 flexi_logger = { version = "0.25", features = [
     "async",
@@ -196,9 +197,6 @@ simdutf8 = "0.1"
 # use SIMD on aarch64 (Apple Silicon, Raspberry Pi 4, etc.)
 [target.'cfg(target_arch = "aarch64")'.dependencies]
 simdutf8 = { version = "0.1", features = ["aarch64_neon"] }
-
-[target.'cfg(target_os = "linux")'.dependencies]
-magic = { version = "0.13", optional = true }
 
 [dev-dependencies]
 actix-governor = "0.4"
