@@ -48,7 +48,7 @@ Common options:
                              Must be a single character. (default: ,)
 "#;
 
-use log::info;
+use log::debug;
 use serde::Deserialize;
 
 use crate::{
@@ -119,7 +119,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 "--skip-lastlines: {skip_llines} is greater than row_count: {row_count}."
             );
         }
-        info!("Set to skip last {skip_llines} lines...");
+        debug!("Set to skip last {skip_llines} lines...");
         total_lines = row_count - skip_llines;
     }
 
@@ -129,7 +129,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut str_row = csv::StringRecord::new();
 
     let preamble_rows: u64 = if args.flag_auto_skip {
-        info!("auto-skip on...");
+        debug!("auto-skip on...");
         rconfig.preamble_rows
     } else if args.flag_skip_lines.is_some() {
         args.flag_skip_lines.unwrap()
@@ -138,7 +138,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     if preamble_rows > 0 {
-        info!("skipping {preamble_rows} preamble rows...");
+        debug!("skipping {preamble_rows} preamble rows...");
         for _i in 1..=preamble_rows {
             rdr.read_byte_record(&mut row)?;
         }
@@ -149,7 +149,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // the first rdr record is the header, since
     // we have no_headers = true, we manually trim the first record
     if trim_setting == csv::Trim::Headers || trim_setting == csv::Trim::All {
-        info!("trimming...");
+        debug!("trimming...");
         rdr.read_byte_record(&mut row)?;
         row.trim();
 
@@ -163,11 +163,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut idx = 1_u64;
     let mut temp_field;
     let mut lossy_field = String::new();
-    loop {
+    'main: loop {
         match rdr.read_byte_record(&mut row) {
             Ok(moredata) => {
                 if !moredata {
-                    break;
+                    break 'main;
                 }
             }
             Err(e) => {
@@ -187,10 +187,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         idx += 1;
 
         if total_lines > 0 && idx > total_lines {
-            break;
+            break 'main;
         }
     }
-    info!("Wrote {} rows...", idx - 1);
-    wtr.flush()?;
-    Ok(())
+    debug!("Wrote {} rows...", idx - 1);
+    Ok(wtr.flush()?)
 }
