@@ -14,14 +14,16 @@ Usage:
     qsv flatten --help
 
 flatten options:
-    -c, --condense <arg>  Limits the length of each field to the value
-                           specified. If the field is UTF-8 encoded, then
-                           <arg> refers to the number of code points.
-                           Otherwise, it refers to the number of bytes.
-    -s, --separator <arg>  A string of characters to write after each record.
-                           When non-empty, a new line is automatically
-                           appended to the separator.
-                           [default: #]
+    -c, --condense <arg>          Limits the length of each field to the value
+                                  specified. If the field is UTF-8 encoded, then
+                                  <arg> refers to the number of code points.
+                                  Otherwise, it refers to the number of bytes.
+    -f, --field-separator <arg>   A string of character to write between a column name
+                                  and its value.
+    -s, --separator <arg>         A string of characters to write after each record.
+                                  When non-empty, a new line is automatically
+                                  appended to the separator.
+                                  [default: #]
 
 Common options:
     -h, --help             Display this message
@@ -47,11 +49,12 @@ use crate::{
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input:       Option<String>,
-    flag_condense:   Option<usize>,
-    flag_separator:  String,
-    flag_no_headers: bool,
-    flag_delimiter:  Option<Delimiter>,
+    arg_input:            Option<String>,
+    flag_condense:        Option<usize>,
+    flag_field_separator: Option<String>,
+    flag_separator:       String,
+    flag_no_headers:      bool,
+    flag_delimiter:       Option<Delimiter>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -77,6 +80,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 wtr.write_all(header)?;
             }
             wtr.write_all(b"\t")?;
+            if let Some(sep) = &args.flag_field_separator {
+                wtr.write_all(sep.as_bytes())?;
+            }
             wtr.write_all(&util::condense(Cow::Borrowed(field), args.flag_condense))?;
             wtr.write_all(b"\n")?;
         }
