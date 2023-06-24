@@ -144,10 +144,6 @@ pub fn version() -> String {
     enabled_features.push_str("foreach;");
     #[cfg(all(feature = "generate", not(feature = "lite")))]
     enabled_features.push_str("generate;");
-    #[cfg(all(target_os = "linux", feature = "magic"))]
-    {
-        enabled_features.push_str(format!("magic-{};", magic::version()).as_str());
-    }
 
     #[cfg(all(feature = "luau", not(feature = "lite")))]
     {
@@ -1396,44 +1392,6 @@ pub fn isutf8_file(path: &Path) -> Result<bool, CliError> {
     reader.read_to_end(&mut buffer)?;
 
     Ok(simdutf8::basic::from_utf8(&buffer).is_ok())
-}
-
-/// find out what kind of file we have using magic
-#[cfg(all(target_os = "linux", feature = "magic"))]
-pub fn get_filetype(path: &str) -> Result<String, CliError> {
-    // We just want the mime type
-    let cookie = magic::Cookie::open(magic::CookieFlags::MIME_TYPE)?;
-
-    // Load libmagic's default database
-    cookie.load::<&str>(&[])?;
-
-    let mime = cookie.file(path)?;
-
-    Ok(mime)
-}
-
-/// find out what kind of file we have using magic
-/// by sampling the provided bytes of the file
-#[cfg(all(target_os = "linux", feature = "magic"))]
-pub fn sniff_filetype_from_buffer(in_buffer: &bytes::Bytes) -> Result<String, CliError> {
-    // We just want the mime type
-    let cookie = magic::Cookie::open(magic::CookieFlags::MIME_TYPE)?;
-
-    // Load libmagic's default database
-    cookie.load::<&str>(&[])?;
-
-    let buffer_len = in_buffer.len();
-
-    if buffer_len > 0 {
-        let mut buffer_wrk = bytes::BytesMut::with_capacity(buffer_len);
-        buffer_wrk.extend_from_slice(&in_buffer[0..buffer_len]);
-        let mime = cookie.buffer(&buffer_wrk)?;
-
-        Ok(mime)
-    } else {
-        // empty file, so we return inode/x-empty
-        Ok("inode/x-empty".to_string())
-    }
 }
 
 /// Process the input files and return a vector of paths to the input files
