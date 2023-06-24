@@ -188,7 +188,7 @@ pub fn version() -> String {
     // get max_file_size & memory info. max_file_size is based on QSV_FREEMEMORY_HEADROOM_PCT
     // setting and is only enforced when qsv is running in "non-streaming" mode (i.e. needs to
     // load the entire file into memory).
-    let mut sys = System::new_all();
+    let mut sys = System::new();
     sys.refresh_memory();
     let avail_mem = sys.available_memory();
     let total_mem = sys.total_memory();
@@ -839,7 +839,7 @@ fn send_hwsurvey(
     static HW_SURVEY_URL: &str =
         "https://4dhmneehnl.execute-api.us-east-1.amazonaws.com/dev/qsv-hwsurvey";
 
-    let mut sys = System::new_all();
+    let mut sys = System::new();
     sys.refresh_all();
     let total_mem = sys.total_memory();
     let kernel_version = sys
