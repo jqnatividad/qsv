@@ -172,6 +172,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         args.flag_cross,
         args.flag_asof,
     ) {
+        // TODO: add support for join_asof_by()
         (false, false, false, false, false, false) => join.polars_join(JoinType::Inner, false),
         (true, false, false, false, false, false) => join.polars_join(JoinType::Left, false),
         (false, true, false, false, false, false) => join.polars_join(JoinType::Anti, false),
