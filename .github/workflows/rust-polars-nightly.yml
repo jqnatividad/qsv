@@ -1,0 +1,37 @@
+name: Linux Nightly using Polars pinned nightly version
+
+on:
+  schedule:
+    - cron: "0 */24 * * *"
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4.6.1
+      with:
+        python-version: '3.11'
+    - name: Install and Run Redis
+      run: |
+        sudo apt-get install redis-server
+        sudo service redis-server start
+    - name: Installing Rust toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        # get nightly version Polars is using
+        # https://github.com/pola-rs/polars/blob/main/rust-toolchain.toml
+        toolchain: nightly-2023-06-23
+        profile: minimal
+        components: rust-src
+        target: x86_64-unknown-linux-gnu
+        override: true
+        default: true
+    - name: Run tests
+      run: cargo test --verbose --locked --features=apply,fetch,foreach,generate,luau,python,feature_capable,nightly,polars
