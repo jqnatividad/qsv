@@ -193,7 +193,7 @@ fn sortcheck_simple_json() {
 
 #[test]
 fn sortcheck_simple_all_json_progressbar() {
-    let wrk = Workdir::new("sortcheck_simple_all_json_progessbar");
+    let wrk = Workdir::new("sortcheck_simple_all_json_progressbar");
     wrk.create(
         "in.csv",
         vec![

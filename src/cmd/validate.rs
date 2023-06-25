@@ -363,8 +363,8 @@ Use `qsv input` to fix formatting and to transcode to utf8 if required."#
             .collect_into_vec(&mut validation_results);
 
         // write to validation error report, but keep Vec<bool> to gen valid/invalid files later
-        // because Rayon collect() guaranteeds original order, can sequentially append results to
-        // vector with each batch
+        // because Rayon collect() guarantees original order, we can sequentially append results
+        // to vector with each batch
         for result in &validation_results {
             if let Some(validation_error_msg) = result {
                 invalid_count += 1;

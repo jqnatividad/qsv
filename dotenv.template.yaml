@@ -19,7 +19,7 @@
 # Lines that start with a '#' are ignored.
 # ==============================================================================
 
-# single ascii character to use as delimiter.  Overrides `--delimeter` option.
+# single ascii character to use as delimiter.  Overrides `--delimiter` option.
 # Defaults to "," (comma) for CSV files & "\t" (tab) for TSV files when not set.
 # Note that this will also set the delimiter for qsv's output to stdout.
 # However, using the `--output` option, regardless of this environment variable,

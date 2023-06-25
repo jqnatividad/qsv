@@ -135,7 +135,7 @@ Luau arguments:
     MAIN script by using the "BEGIN { ... }!" and "END { ... }!" syntax.
 
     The BEGIN script is embedded in the MAIN script by adding a BEGIN block at the top of the script.
-    The BEGIN block must start at the beggining of the line. It can contain multiple statements.
+    The BEGIN block must start at the beginning of the line. It can contain multiple statements.
 
     The MAIN script is the main Luau script to execute. It can contain multiple statements and should
     end with a "return" statement. In map mode, the return value is/are the new value/s of the mapped
@@ -529,7 +529,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     debug!("Main processing");
     if index_file_used {
         info!("RANDOM ACCESS MODE (_INDEX or _LASTROW special variables used)");
-        random_acess_mode(
+        random_access_mode(
             &rconfig,
             &args,
             &luau,
@@ -856,7 +856,7 @@ fn sequential_mode(
 // we use the special variable _INDEX or _LASTROW in the Luau scripts.
 // the primary difference being that we use an Indexed File rdr in the main loop.
 // differences pointed out in comments below
-fn random_acess_mode(
+fn random_access_mode(
     rconfig: &Config,
     args: &Args,
     luau: &Lua,

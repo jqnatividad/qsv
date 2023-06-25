@@ -841,7 +841,7 @@ fn send_hwsurvey(
     let kernel_version = sys
         .kernel_version()
         .unwrap_or_else(|| "Unknown kernel".to_string());
-    let long_os_verion = sys
+    let long_os_version = sys
         .long_os_version()
         .unwrap_or_else(|| "Unknown OS version".to_string());
     let cpu_count = sys.cpus().len();
@@ -872,7 +872,7 @@ fn send_hwsurvey(
             "cpu_freq": cpu_freq,
             "mem": total_mem,
             "kernel": kernel_version,
-            "os": long_os_verion,
+            "os": long_os_version,
             "target": TARGET,
         }
     );
