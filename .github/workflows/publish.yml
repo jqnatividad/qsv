@@ -96,15 +96,15 @@ jobs:
             default-features: --no-default-features
             addl-qsvlite-features:
             addl-qsvdp-features: luau
-          - os: macos-12
-            os-name: macos
-            target: aarch64-apple-darwin
-            architecture: aarch64
-            use-cross: true
-            addl-build-args: --features=apply,generate,fetch,foreach,self_update
-            default-features: --no-default-features
-            addl-qsvlite-features:
-            addl-qsvdp-features:
+          # - os: macos-12
+          #   os-name: macos
+          #   target: aarch64-apple-darwin
+          #   architecture: aarch64
+          #   use-cross: true
+          #   addl-build-args: --features=apply,generate,fetch,foreach,self_update
+          #   default-features: --no-default-features
+          #   addl-qsvlite-features:
+          #   addl-qsvdp-features:
           - os: ubuntu-22.04
             os-name: linux
             target: aarch64-unknown-linux-gnu
