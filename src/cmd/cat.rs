@@ -150,8 +150,9 @@ impl Args {
         #[allow(unused_assignments)]
         let mut grouping_value = String::with_capacity(64);
         let mut rdr;
-        let mut h;
+        let mut h: &csv::ByteRecord;
         let mut columns_of_this_file = IndexMap::with_capacity(num_columns_global);
+        let mut row: csv::ByteRecord;
 
         for conf in self.configs()? {
             rdr = conf.reader()?;
@@ -182,8 +183,8 @@ impl Args {
                 .to_string_lossy()
                 .to_string();
 
-            for row in rdr.byte_records() {
-                let row = row?;
+            for current_row in rdr.byte_records() {
+                row = current_row?;
                 for (col_idx, c) in columns_global.iter().enumerate() {
                     if let Some(idx) = columns_of_this_file.get(c) {
                         if let Some(d) = row.get(*idx) {
