@@ -39,7 +39,7 @@ cat options:
                              ROWSKEY OPTIONS:
     -g, --group              When concatenating with rowskey, use the file stem of each
                              input file as a grouping value. A new column will be added
-                             to the beginning of each row with the name given by --group-name.
+                             to the beginning of each row, using --group-name.
     -N, --group-name <arg>   When concatenating with rowskey, this flag provides the name
                              for the new grouping column. [default: file]
                              
@@ -125,6 +125,7 @@ impl Args {
         // First pass, add all column headers to an IndexSet
         for conf in &self.configs()? {
             if conf.is_stdin() {
+                // TODO: support stdin by writing to a temporary file
                 return fail_clierror!(
                     "cat rowskey does not support stdin, as we need to scan files twice."
                 );
@@ -145,14 +146,18 @@ impl Args {
         }
         wtr.write_byte_record(&csv::ByteRecord::new())?;
 
+        // amortize allocations
         #[allow(unused_assignments)]
-        let mut grouping_value = String::with_capacity(64); // amortize allocation
+        let mut grouping_value = String::with_capacity(64);
+        let mut rdr;
+        let mut h;
+        let mut columns_of_this_file = IndexMap::with_capacity(num_columns_global);
 
         for conf in self.configs()? {
-            let mut rdr = conf.reader()?;
-            let h = rdr.byte_headers()?;
+            rdr = conf.reader()?;
+            h = rdr.byte_headers()?;
 
-            let mut columns_of_this_file = IndexMap::with_capacity(num_columns_global);
+            columns_of_this_file.clear();
 
             for (n, field) in h.iter().enumerate() {
                 let fi = field.to_vec().into_boxed_slice();
@@ -187,6 +192,8 @@ impl Args {
                             wtr.write_field(b"")?;
                         }
                     } else if self.flag_group && col_idx == 0 {
+                        // we are in the first column, and --group is set
+                        // so we write the grouping value
                         wtr.write_field(&grouping_value)?;
                     } else {
                         wtr.write_field(b"")?;
