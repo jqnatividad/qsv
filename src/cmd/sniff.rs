@@ -359,7 +359,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                 #[allow(clippy::cast_precision_loss)]
                 let lines_sample_size = if snappy_flag {
                     // if it's a snappy compressed file, we need to download the entire file
-                    // to sniff it
+                    // to uncompress and sniff it
                     usize::MAX
                 } else if args.flag_sample > 1.0 {
                     args.flag_sample.round() as usize
@@ -725,9 +725,8 @@ async fn sniff_main(mut args: Args) -> CliResult<()> {
     let sfile_info = block_on(future)?;
     let tempfile_to_delete = sfile_info.file_to_sniff.clone();
 
-    // if we have a detected mime type earlier, we can skip the sniffing
-    // unless it was a snappy file and --no-infer is disabled,
-    // as we need to sniff the uncompressed file
+    // if we don't have a mime type or its a snappy file and --no-infer is disabled,
+    // let's try to infer the mime type
     let file_type = if sfile_info.detected_mime.is_empty()
         || sfile_info.detected_mime == "application/x-snappy-framed" && !args.flag_no_infer
     {
@@ -879,6 +878,7 @@ async fn sniff_main(mut args: Args) -> CliResult<()> {
         _ => qsv_sniffer::metadata::Quote::None,
     };
 
+    // now that we have all the sniffing parameters, we can sniff the file
     let sniff_results = if sample_all {
         log::info!("Sniffing ALL rows...");
         if let Some(delimiter) = args.flag_delimiter {
