@@ -111,6 +111,7 @@ impl Args {
 
     fn cat_rowskey(&self) -> CliResult<()> {
         // this algorithm is largely inspired by https://github.com/vi/csvcatrow by @vi
+        // https://github.com/jqnatividad/qsv/issues/527
         if self.flag_no_headers {
             return fail_clierror!(
                 "cat rowskey does not support --no-headers, as we use column headers as keys."
@@ -173,7 +174,8 @@ impl Args {
             }
 
             // use the file stem as the grouping value
-            // safety: we know that this is a file path
+            // safety: we know that this is a file path and if the file path
+            // is not valid utf8, we convert it to lossy utf8
             grouping_value = conf
                 .path
                 .clone()
