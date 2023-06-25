@@ -5,7 +5,7 @@ content length and estimated number of records if sniffing a URL, file size, num
 field names & data types) using a Viterbi algorithm.
 (https://en.wikipedia.org/wiki/Viterbi_algorithm)
 
-`sniff` is also a general mime type detector, returning the detected mime type, file size and
+`sniff` is also a mime type detector, returning the detected mime type, file size and
 last modified date. If --no-infer is enabled, it doesn't even bother to infer the CSV's schema.
 This makes it especially useful for accelerated CKAN harvesting and for checking stale/broken
 resource URLs.
@@ -742,9 +742,8 @@ async fn sniff_main(mut args: Args) -> CliResult<()> {
         file_type = sfile_info.detected_mime.clone();
     }
 
-    // we also accept text/* files, as sniff may still be able to suss out
-    // if the file is a CSV, even if its not using a CSV extension
-    // we can also be here if the user has specified --no-infer
+    // if the file is not a CSV candidate or --no-infer is specified,
+    // we can just return the file type and exit
     if (file_type != "application/csv" && !file_type.starts_with("text/")) || args.flag_no_infer {
         cleanup_tempfile(sfile_info.tempfile_flag, tempfile_to_delete)?;
 
@@ -939,11 +938,12 @@ async fn sniff_main(mut args: Args) -> CliResult<()> {
                 .map(std::string::ToString::to_string)
                 .collect();
 
+            let delimiter_char = metadata.dialect.delimiter as char;
             processed_results = SniffStruct {
                 path: sfile_info.display_path,
                 sniff_timestamp: sniffed_ts,
                 last_modified: sfile_info.last_modified.clone(),
-                delimiter_char: metadata.dialect.delimiter as char,
+                delimiter_char,
                 header_row: metadata.dialect.header.has_header_row,
                 preamble_rows: metadata.dialect.header.num_preamble_rows,
                 quote_char: match metadata.dialect.quote {
@@ -952,7 +952,11 @@ async fn sniff_main(mut args: Args) -> CliResult<()> {
                 },
                 flexible: metadata.dialect.flexible,
                 is_utf8: metadata.dialect.is_utf8,
-                detected_mime: file_type.clone(),
+                detected_mime: if delimiter_char == ',' {
+                    "application/csv".to_string()
+                } else {
+                    file_type.clone()
+                },
                 retrieved_size: sfile_info.retrieved_size,
                 file_size: sfile_info.file_size,
                 sampled_records: if sampled_records > num_records {
