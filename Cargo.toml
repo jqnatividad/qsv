@@ -265,7 +265,6 @@ nightly = [
     "regex/unstable",
     "rand/nightly",
     "rand/simd_support",
-    "polars/nightly",
     "pyo3/nightly",
     "hashbrown/nightly",
 ]
