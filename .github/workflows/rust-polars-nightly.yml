@@ -1,8 +1,6 @@
 name: Linux Nightly using Polars pinned nightly version
 
 on:
-  schedule:
-    - cron: "0 */24 * * *"
   workflow_dispatch:
 
 env:
@@ -27,7 +25,7 @@ jobs:
       with:
         # get nightly version Polars is using
         # https://github.com/pola-rs/polars/blob/main/rust-toolchain.toml
-        toolchain: nightly-2023-06-23
+        toolchain: nightly
         profile: minimal
         components: rust-src
         target: x86_64-unknown-linux-gnu
