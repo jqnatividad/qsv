@@ -26,7 +26,7 @@ input options:
     --escape <arg>           The escape character to use. When not specified,
                              quotes are escaped by doubling them.
     --no-quoting             Disable quoting completely. 
-                             Othwerwise, input uses csv::QuoteStyle::NonNumeric,
+                             Otherwise, input uses csv::QuoteStyle::NonNumeric,
                              which puts quotes around all fields that are non-numeric.
                              Namely, when writing a field that doesn't parse as a valid
                              float or integer, quotes will be used.

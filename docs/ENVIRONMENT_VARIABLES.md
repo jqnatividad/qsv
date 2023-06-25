@@ -2,7 +2,7 @@
 
 | Variable | Description |
 | --- | --- |
-| `QSV_DEFAULT_DELIMITER` | single ascii character to use as delimiter.  Overrides `--delimeter` option. Defaults to "," (comma) for CSV files & "\t" (tab) for TSV files when not set. Note that this will also set the delimiter for qsv's output to stdout.<br>However, using the `--output` option, regardless of this environment variable, will automatically change the delimiter used in the generated file based on the file extension - i.e. comma for `.csv`, tab for `.tsv` & `.tab` files. |
+| `QSV_DEFAULT_DELIMITER` | single ascii character to use as delimiter.  Overrides `--delimiter` option. Defaults to "," (comma) for CSV files & "\t" (tab) for TSV files when not set. Note that this will also set the delimiter for qsv's output to stdout.<br>However, using the `--output` option, regardless of this environment variable, will automatically change the delimiter used in the generated file based on the file extension - i.e. comma for `.csv`, tab for `.tsv` & `.tab` files. |
 | `QSV_SNIFF_DELIMITER` | if set, the delimiter is automatically detected. Overrides `QSV_DEFAULT_DELIMITER` & `--delimiter` option. Note that this does not work with stdin. |
 | `QSV_NO_HEADERS` | if set, the first row will **NOT** be interpreted as headers. Supersedes `QSV_TOGGLE_HEADERS`. |
 | `QSV_TOGGLE_HEADERS` | if set to `1`, toggles header setting - i.e. inverts qsv header behavior, with no headers being the default, & setting `--no-headers` will actually mean headers will not be ignored. |

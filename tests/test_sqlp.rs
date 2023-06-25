@@ -154,7 +154,7 @@ fn sqlp_boston311_groupby_orderby() {
     let mut cmd = wrk.command("sqlp");
 
     // we quote "boston311-100" as contains a hyphen in its name, which is a special character
-    // in SQL, so we need to make it a quoted identifer
+    // in SQL, so we need to make it a quoted identifier
     cmd.arg(&test_file)
         .arg(r#"select ward, count(*) as cnt from "boston311-100" group by ward order by cnt desc, ward asc"#);
 
