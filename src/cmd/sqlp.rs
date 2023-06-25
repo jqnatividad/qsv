@@ -87,8 +87,15 @@ sqlp options:
 
                               PARQUET OUTPUT FORMAT ONLY:
     --compression <arg>       The compression codec to use when writing parquet files.
-                                Valid values are: lz4raw, gzip, snappy, uncompressed
-                              (default: lz4raw)
+                                Valid values are: zstd, lz4raw, gzip, snappy, uncompressed
+                              (default: zstd)
+    --compress-level <arg>    The compression level to use when using zstd or gzip compression.
+                              When using zstd, valid values are -7 to 22, with -7 being the
+                              lowest compression level and 22 being the highest compression level.
+                              When using gzip, valid values are 1-9, with 1 being the lowest
+                              compression level and 9 being the highest compression level.
+                              Higher compression levels are slower.
+                              The zstd default is 3, and the gzip default is 6.
     --statistics              Compute column statistics when writing parquet files.
     
 Common options:
@@ -114,8 +121,8 @@ use std::{
 
 use polars::{
     prelude::{
-        CsvWriter, DataFrame, IpcWriter, JsonWriter, LazyCsvReader, LazyFileListReader,
-        ParquetCompression, ParquetWriter, SerWriter,
+        CsvWriter, DataFrame, GzipLevel, IpcWriter, JsonWriter, LazyCsvReader, LazyFileListReader,
+        ParquetCompression, ParquetWriter, SerWriter, ZstdLevel,
     },
     sql::SQLContext,
 };
@@ -129,6 +136,9 @@ use crate::{
     util::process_input,
     CliResult,
 };
+
+static DEFAULT_GZIP_COMPRESSION_LEVEL: u8 = 6;
+static DEFAULT_ZSTD_COMPRESSION_LEVEL: i32 = 3;
 
 #[derive(Deserialize, Debug, Clone)]
 struct Args {
@@ -145,6 +155,7 @@ struct Args {
     flag_float_precision:  Option<usize>,
     flag_null_value:       String,
     flag_compression:      String,
+    flag_compress_level:   Option<i32>,
     flag_statistics:       bool,
     flag_output:           Option<String>,
     flag_delimiter:        Option<Delimiter>,
@@ -209,11 +220,21 @@ impl OutputMode {
 
                     let parquet_compression = match compression {
                         PqtCompression::Uncompressed => ParquetCompression::Uncompressed,
-                        PqtCompression::Gzip => ParquetCompression::Gzip(Some(
-                            polars::prelude::GzipLevel::try_new(5_u8)?,
-                        )),
                         PqtCompression::Snappy => ParquetCompression::Snappy,
                         PqtCompression::Lz4Raw => ParquetCompression::Lz4Raw,
+                        PqtCompression::Gzip => {
+                            let gzip_level = args
+                                .flag_compress_level
+                                .unwrap_or_else(|| DEFAULT_GZIP_COMPRESSION_LEVEL.into())
+                                as u8;
+                            ParquetCompression::Gzip(Some(GzipLevel::try_new(gzip_level)?))
+                        }
+                        PqtCompression::Zstd => {
+                            let zstd_level = args
+                                .flag_compress_level
+                                .unwrap_or(DEFAULT_ZSTD_COMPRESSION_LEVEL);
+                            ParquetCompression::Zstd(Some(ZstdLevel::try_new(zstd_level)?))
+                        }
                     };
 
                     ParquetWriter::new(&mut w)
@@ -260,6 +281,7 @@ enum PqtCompression {
     Gzip,
     Snappy,
     #[default]
+    Zstd,
     Lz4Raw,
 }
 
@@ -272,6 +294,7 @@ impl FromStr for PqtCompression {
             "gzip" => Ok(PqtCompression::Gzip),
             "snappy" => Ok(PqtCompression::Snappy),
             "lz4raw" => Ok(PqtCompression::Lz4Raw),
+            "zstd" => Ok(PqtCompression::Zstd),
             _ => Err(format!("Invalid compression format: {s}")),
         }
     }
