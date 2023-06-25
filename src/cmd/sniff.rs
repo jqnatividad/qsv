@@ -2,13 +2,11 @@ static USAGE: &str = r#"
 Quickly sniff the first n rows and infer CSV metadata (delimiter, header row, number of
 preamble rows, quote character, flexible, is_utf8, average record length, number of records,
 content length and estimated number of records if sniffing a URL, file size, number of fields,
-field names & data types) using a Viterbi algorithm.
-(https://en.wikipedia.org/wiki/Viterbi_algorithm)
+field names & data types) using a Viterbi algorithm. (https://en.wikipedia.org/wiki/Viterbi_algorithm)
 
 `sniff` is also a mime type detector, returning the detected mime type, file size and
 last modified date. If --no-infer is enabled, it doesn't even bother to infer the CSV's schema.
-This makes it especially useful for accelerated CKAN harvesting and for checking stale/broken
-resource URLs.
+This makes it useful for accelerated CKAN harvesting and for checking stale/broken resource URLs.
 
 NOTE: This command "sniffs" a CSV's schema by sampling the first n rows (default: 1000)
 of a file. Its inferences are sometimes wrong if the the file is too small to infer a pattern
@@ -111,7 +109,7 @@ use indicatif::{HumanBytes, HumanCount, ProgressBar, ProgressDrawTarget, Progres
 use qsv_sniffer::{DatePreference, SampleSize, Sniffer};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::json;
 use tabwriter::TabWriter;
 use tempfile::NamedTempFile;
 use thousands::Separable;
@@ -726,21 +724,19 @@ async fn sniff_main(mut args: Args) -> CliResult<()> {
     let future = get_file_to_sniff(&args, &tmpdir);
     let sfile_info = block_on(future)?;
     let tempfile_to_delete = sfile_info.file_to_sniff.clone();
-    #[allow(unused_assignments)]
-    let mut file_type = String::new();
 
     // if we have a detected mime type earlier, we can skip the sniffing
     // unless it was a snappy file and --no-infer is disabled,
     // as we need to sniff the uncompressed file
-    if sfile_info.detected_mime.is_empty()
+    let file_type = if sfile_info.detected_mime.is_empty()
         || sfile_info.detected_mime == "application/x-snappy-framed" && !args.flag_no_infer
     {
-        file_type = FileFormat::from_file(&sfile_info.file_to_sniff)?
+        FileFormat::from_file(&sfile_info.file_to_sniff)?
             .media_type()
-            .to_string();
+            .to_string()
     } else {
-        file_type = sfile_info.detected_mime.clone();
-    }
+        sfile_info.detected_mime.clone()
+    };
 
     // if the file is not a CSV candidate or --no-infer is specified,
     // we can just return the file type and exit
@@ -991,29 +987,26 @@ async fn sniff_main(mut args: Args) -> CliResult<()> {
             } else {
                 println!("{}", serde_json::to_string(&processed_results).unwrap());
             };
-            Ok(())
-        } else {
-            #[allow(unused_assignments)]
-            let mut sniff_error_json: serde_json::Value = Value::default();
-            {
-                sniff_error_json = json!({
-                    "title": "sniff error",
-                    "detail": format!("{}", sniff_error.unwrap()),
-                    "meta": {
-                        "detected_mime_type": file_type,
-                        "size": sfile_info.file_size,
-                        "last_modified": sfile_info.last_modified,
-                    }
-                });
-            }
-            let error_msg = if args.flag_pretty_json {
-                serde_json::to_string_pretty(&sniff_error_json).unwrap()
-            } else {
-                serde_json::to_string(&sniff_error_json).unwrap()
-            };
-            fail_clierror!("{error_msg}")
+            return Ok(());
         }
-    } else if sniff_error.is_none() {
+        let sniff_error_json = json!({
+            "title": "sniff error",
+            "detail": format!("{}", sniff_error.unwrap()),
+            "meta": {
+                "detected_mime_type": file_type,
+                "size": sfile_info.file_size,
+                "last_modified": sfile_info.last_modified,
+            }
+        });
+        let error_msg = if args.flag_pretty_json {
+            serde_json::to_string_pretty(&sniff_error_json).unwrap()
+        } else {
+            serde_json::to_string(&sniff_error_json).unwrap()
+        };
+        return fail_clierror!("{error_msg}");
+    }
+
+    if sniff_error.is_none() {
         println!("{processed_results}");
         Ok(())
     } else {
