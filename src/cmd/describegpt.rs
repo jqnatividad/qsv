@@ -29,21 +29,17 @@ use crate::{util, CliResult};
 use reqwest::blocking::Client;
 use serde::Deserialize;
 use serde_json::json;
-use std::{
-    env,
-    process::Command,
-    time::Duration
-};
+use std::{env, process::Command, time::Duration};
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input:           Option<String>,
-    flag_all:            Option<bool>,
-    flag_description:    Option<bool>,
-    flag_dictionary:     Option<bool>,
-    flag_tags:           Option<bool>,
-    flag_max_tokens:     Option<i32>,
-    flag_json:           Option<bool>,
+    arg_input: Option<String>,
+    flag_all: Option<bool>,
+    flag_description: Option<bool>,
+    flag_dictionary: Option<bool>,
+    flag_tags: Option<bool>,
+    flag_max_tokens: Option<i32>,
+    flag_json: Option<bool>,
 }
 
 // OpenAI API model
@@ -52,20 +48,17 @@ const MODEL: &str = "gpt-3.5-turbo-16k";
 fn get_completion(api_key: &str, messages: serde_json::Value, max_tokens: Option<i32>) -> String {
     // Create client with timeout
     let timeout_duration = Duration::from_secs(60);
-    let client = Client::builder()
-        .timeout(timeout_duration)
-        .build()
-        .unwrap();
+    let client = Client::builder().timeout(timeout_duration).build().unwrap();
 
-        let mut request_data = json!({
-            "model": MODEL,
-            "messages": messages
-        });
-        
-        // If max_tokens is specified, add it to the request data
-        if max_tokens.is_some() {
-            request_data["max_tokens"] = json!(max_tokens.unwrap());
-        }
+    let mut request_data = json!({
+        "model": MODEL,
+        "messages": messages
+    });
+
+    // If max_tokens is specified, add it to the request data
+    if max_tokens.is_some() {
+        request_data["max_tokens"] = json!(max_tokens.unwrap());
+    }
 
     let response = client
         .post("https://api.openai.com/v1/chat/completions")
@@ -137,11 +130,19 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     // If no inference flags specified, print error message.
-    if args.flag_all.is_none() && args.flag_dictionary.is_none() && args.flag_description.is_none() && args.flag_tags.is_none() {
+    if args.flag_all.is_none()
+        && args.flag_dictionary.is_none()
+        && args.flag_description.is_none()
+        && args.flag_tags.is_none()
+    {
         eprintln!("Error: No inference options specified.");
         std::process::exit(1);
     // If --all flag is specified, but other inference flags are also specified, print error message.
-    } else if args.flag_all.is_some() && (args.flag_dictionary.is_some() || args.flag_description.is_some() || args.flag_tags.is_some()) {
+    } else if args.flag_all.is_some()
+        && (args.flag_dictionary.is_some()
+            || args.flag_description.is_some()
+            || args.flag_tags.is_some())
+    {
         eprintln!("Error: --all option cannot be specified with other inference flags.");
         std::process::exit(1);
     }
@@ -156,7 +157,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     // Get stats from qsv stats on input file with --everything flag
-    println!("Generating stats from {} using qsv stats --everything...", args.arg_input.clone().unwrap());
+    println!(
+        "Generating stats from {} using qsv stats --everything...",
+        args.arg_input.clone().unwrap()
+    );
     let stats = Command::new("qsv")
         .arg("stats")
         .arg("--everything")
@@ -174,7 +178,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     // Get frequency from qsv frequency on input file
-    println!("Generating frequency from {} using qsv frequency...", args.arg_input.clone().unwrap());
+    println!(
+        "Generating frequency from {} using qsv frequency...",
+        args.arg_input.clone().unwrap()
+    );
     let frequency = Command::new("qsv")
         .arg("frequency")
         .arg(args.arg_input.clone().unwrap())
@@ -198,9 +205,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             String::new()
         }
     }
-    
+
     // --dictionary
-    fn get_dictionary_prompt(stats: Option<&str>, frequency: Option<&str>, flag_json: bool) -> String {
+    fn get_dictionary_prompt(
+        stats: Option<&str>,
+        frequency: Option<&str>,
+        flag_json: bool,
+    ) -> String {
         let json_add = json_addition(flag_json);
         let prompt = format!(
             "\nHere are the columns for each field in a data dictionary:\n\n\
@@ -225,9 +236,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         );
         prompt
     }
-    
+
     // --description
-    fn get_description_prompt(stats: Option<&str>, frequency: Option<&str>, flag_json: bool) -> String {
+    fn get_description_prompt(
+        stats: Option<&str>,
+        frequency: Option<&str>,
+        flag_json: bool,
+    ) -> String {
         let json_add = json_addition(flag_json);
         let mut prompt = format!(
             "\nGenerate only a description that is within 8 sentences{} about the entire dataset based on the {}",
@@ -249,7 +264,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         prompt.push_str(" Do not output the summary statistics for each field. Do not output the frequency for each field. Do not output data about each field individually, but instead output about the dataset as a whole in one 1-8 sentence description.");
         prompt
     }
-    
+
     // --tags
     fn get_tags_prompt(stats: Option<&str>, frequency: Option<&str>, flag_json: bool) -> String {
         let json_add = json_addition(flag_json);
@@ -277,11 +292,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // If args.json is true, then set to true, else false
     let args_json = match args.flag_json {
         Some(true) => true,
-        _ => false
+        _ => false,
     };
 
     // Generates output for all inference options
-    fn run_inference_options(args: &Args, api_key: &str, stats_str: Option<&str>, frequency_str: Option<&str>, args_json: bool) {
+    fn run_inference_options(
+        args: &Args,
+        api_key: &str,
+        stats_str: Option<&str>,
+        frequency_str: Option<&str>,
+        args_json: bool,
+    ) {
         // Get completion from OpenAI API
         println!("Interacting with OpenAI API...\n");
         fn get_completion_output(completion: &str) -> String {
@@ -306,7 +327,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             // Set the completion output
             let message = &completion_json["choices"][0]["message"]["content"];
             // Convert escaped characters to normal characters
-            let formatted_message = message.to_string().replace("\\n", "\n").replace("\\t", "\t").replace("\\\"", "\"").replace("\\'", "'").replace("\\`", "`");
+            let formatted_message = message
+                .to_string()
+                .replace("\\n", "\n")
+                .replace("\\t", "\t")
+                .replace("\\\"", "\"")
+                .replace("\\'", "'")
+                .replace("\\`", "`");
             formatted_message
         }
 
@@ -314,7 +341,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         if args.flag_dictionary.is_some() || args.flag_all.is_some() {
             let prompt = get_dictionary_prompt(stats_str, frequency_str, args_json);
             println!("Generating data dictionary from OpenAI API...");
-            let dictionary_completion = get_completion(&api_key, json!([{"role": "user", "content": prompt}]), args.flag_max_tokens);
+            let dictionary_completion = get_completion(
+                &api_key,
+                json!([{"role": "user", "content": prompt}]),
+                args.flag_max_tokens,
+            );
             dictionary_completion_output = get_completion_output(&dictionary_completion);
             println!("Dictionary output:\n{}", dictionary_completion_output);
         }
@@ -323,7 +354,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         fn get_messages(prompt: &str, dictionary_completion_output: &str) -> serde_json::Value {
             let messages = match dictionary_completion_output.is_empty() {
                 true => json!([{"role": "user", "content": prompt}]),
-                false => json!([{"role": "assistant", "content": dictionary_completion_output}, {"role": "user", "content": prompt}])
+                false => {
+                    json!([{"role": "assistant", "content": dictionary_completion_output}, {"role": "user", "content": prompt}])
+                }
             };
             messages
         }
@@ -344,11 +377,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let completion_output = get_completion_output(&completion);
             println!("Tags output:\n{}", completion_output);
         }
-
     }
 
     // Run inference options
-    run_inference_options(&args, &api_key, Some(stats_str), Some(frequency_str), args_json);
+    run_inference_options(
+        &args,
+        &api_key,
+        Some(stats_str),
+        Some(frequency_str),
+        args_json,
+    );
 
     Ok(())
 }
