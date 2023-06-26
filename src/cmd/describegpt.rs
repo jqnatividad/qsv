@@ -46,7 +46,10 @@ struct Args {
     flag_json:           Option<bool>,
 }
 
-fn get_completion(api_key: &str, content: &str, max_tokens: Option<i32>) -> String {
+// OpenAI API model
+const MODEL: &str = "gpt-3.5-turbo-16k";
+
+fn get_completion(api_key: &str, messages: serde_json::Value, max_tokens: Option<i32>) -> String {
     // Create client with timeout
     let timeout_duration = Duration::from_secs(60);
     let client = Client::builder()
@@ -55,8 +58,8 @@ fn get_completion(api_key: &str, content: &str, max_tokens: Option<i32>) -> Stri
         .unwrap();
 
         let mut request_data = json!({
-            "model": "gpt-3.5-turbo-16k",
-            "messages": [{"role": "user", "content": content}],
+            "model": MODEL,
+            "messages": messages
         });
         
         // If max_tokens is specified, add it to the request data
@@ -133,11 +136,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     }
 
-    // --all is not currently supported.
-    if args.flag_all.is_some() {
-        eprintln!("Error: --all is not currently supported.");
-        std::process::exit(1);
-    }
     // If no inference flags specified, print error message.
     if args.flag_all.is_none() && args.flag_dictionary.is_none() && args.flag_description.is_none() && args.flag_tags.is_none() {
         eprintln!("Error: No inference options specified.");
@@ -179,7 +177,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     println!("Generating frequency from {} using qsv frequency...", args.arg_input.clone().unwrap());
     let frequency = Command::new("qsv")
         .arg("frequency")
-        .arg(args.arg_input.unwrap())
+        .arg(args.arg_input.clone().unwrap())
         .output()
         .expect("Error: Unable to get frequency from qsv.");
 
@@ -282,47 +280,75 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         _ => false
     };
 
-    // Set prompt based on flags where --all is not true, but --description, --dictionary, or --tags flags may be true
-    // TODO: Allow for multiple true flags and --all
-    let prompt = match (args.flag_description, args.flag_dictionary, args.flag_tags) {
-        (Some(true), _, _) => get_description_prompt(Some(stats_str), Some(frequency_str), args_json),
-        (_, Some(true), _) => get_dictionary_prompt(Some(stats_str), Some(frequency_str), args_json),
-        (_, _, Some(true)) => get_tags_prompt(Some(stats_str), Some(frequency_str), args_json),
-        _ => {
-            eprintln!("Error: No options specified.");
-            std::process::exit(1);
-        }
-    };
-
-    // Get completion from OpenAI API
-    println!("Requesting completion from OpenAI API...\n");
-    let completion = get_completion(&api_key, &prompt, args.flag_max_tokens);
-
-    // Parse the completion JSON
-    let completion_json: serde_json::Value = match serde_json::from_str(&completion) {
-        Ok(val) => val,
-        Err(_) => {
-            eprintln!("Error: Unable to parse completion JSON.");
-            std::process::exit(1);
-        }
-    };
-    // If OpenAI API returns error, print error message
-    match completion_json {
-        serde_json::Value::Object(ref map) => {
-            if map.contains_key("error") {
-                eprintln!("Error: {}", map["error"]);
-                std::process::exit(1);
+    // Generates output for all inference options
+    fn run_inference_options(args: &Args, api_key: &str, stats_str: Option<&str>, frequency_str: Option<&str>, args_json: bool) {
+        // Get completion from OpenAI API
+        println!("Interacting with OpenAI API...\n");
+        fn get_completion_output(completion: &str) -> String {
+            // Parse the completion JSON
+            let completion_json: serde_json::Value = match serde_json::from_str(&completion) {
+                Ok(val) => val,
+                Err(_) => {
+                    eprintln!("Error: Unable to parse completion JSON.");
+                    std::process::exit(1);
+                }
+            };
+            // If OpenAI API returns error, print error message
+            match completion_json {
+                serde_json::Value::Object(ref map) => {
+                    if map.contains_key("error") {
+                        eprintln!("Error: {}", map["error"]);
+                        std::process::exit(1);
+                    }
+                }
+                _ => {}
             }
+            // Set the completion output
+            let message = &completion_json["choices"][0]["message"]["content"];
+            // Convert escaped characters to normal characters
+            let formatted_message = message.to_string().replace("\\n", "\n").replace("\\t", "\t").replace("\\\"", "\"").replace("\\'", "'").replace("\\`", "`");
+            formatted_message
         }
-        _ => {}
+
+        let mut dictionary_completion_output = "".to_string();
+        if args.flag_dictionary.is_some() || args.flag_all.is_some() {
+            let prompt = get_dictionary_prompt(stats_str, frequency_str, args_json);
+            println!("Generating data dictionary from OpenAI API...");
+            let dictionary_completion = get_completion(&api_key, json!([{"role": "user", "content": prompt}]), args.flag_max_tokens);
+            dictionary_completion_output = get_completion_output(&dictionary_completion);
+            println!("Dictionary output:\n{}", dictionary_completion_output);
+        }
+
+        // Add --dictionary output as context if it is not empty
+        fn get_messages(prompt: &str, dictionary_completion_output: &str) -> serde_json::Value {
+            let messages = match dictionary_completion_output.is_empty() {
+                true => json!([{"role": "user", "content": prompt}]),
+                false => json!([{"role": "assistant", "content": dictionary_completion_output}, {"role": "user", "content": prompt}])
+            };
+            messages
+        }
+
+        if args.flag_description.is_some() || args.flag_all.is_some() {
+            let prompt = get_description_prompt(stats_str, frequency_str, args_json);
+            let messages = get_messages(&prompt, &dictionary_completion_output);
+            println!("Generating description from OpenAI API...");
+            let completion = get_completion(&api_key, messages, args.flag_max_tokens);
+            let completion_output = get_completion_output(&completion);
+            println!("Description output:\n{}", completion_output);
+        }
+        if args.flag_tags.is_some() || args.flag_all.is_some() {
+            let prompt = get_tags_prompt(stats_str, frequency_str, args_json);
+            let messages = get_messages(&prompt, &dictionary_completion_output);
+            println!("Generating tags from OpenAI API...");
+            let completion = get_completion(&api_key, messages, args.flag_max_tokens);
+            let completion_output = get_completion_output(&completion);
+            println!("Tags output:\n{}", completion_output);
+        }
+
     }
 
-    // Set the completion output
-    let message = &completion_json["choices"][0]["message"]["content"];
-    // Convert escaped characters to normal characters
-    let formatted_message = message.to_string().replace("\\n", "\n").replace("\\t", "\t").replace("\\\"", "\"").replace("\\'", "'").replace("\\`", "`");
-    // Print the completion output
-    println!("{}", formatted_message);
+    // Run inference options
+    run_inference_options(&args, &api_key, Some(stats_str), Some(frequency_str), args_json);
 
     Ok(())
 }
