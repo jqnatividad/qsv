@@ -169,7 +169,7 @@ select_test!(
     ["a", "b", "d", "e"]
 );
 
-select_test_err!(select_err_unknown_header, "dne");
+select_test_err!(select_err_unknown_header, "done");
 select_test_err!(select_err_oob_low, "0");
 select_test_err!(select_err_oob_high, "6");
 select_test_err!(select_err_idx_as_name, "1[0]");

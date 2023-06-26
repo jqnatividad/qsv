@@ -1,8 +1,6 @@
-name: Linux Nightly Bleeding Edge
+name: Linux Nightly using Polars pinned nightly version
 
 on:
-  schedule:
-    - cron: "0 */24 * * *"
   workflow_dispatch:
 
 env:
@@ -25,7 +23,8 @@ jobs:
     - name: Installing Rust toolchain
       uses: actions-rs/toolchain@v1
       with:
-        # get the LATEST rust nightly
+        # get nightly version Polars is using
+        # https://github.com/pola-rs/polars/blob/main/rust-toolchain.toml
         toolchain: nightly
         profile: minimal
         components: rust-src

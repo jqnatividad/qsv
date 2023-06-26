@@ -6,6 +6,96 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.108.0] - 2023-06-25
+Another big Quicksilver release with lots of new features and improvements!
+
+The two [Polars](https://www.pola.rs)-powered commands - `joinp` and `sqlp` - have received significant attention. `joinp` now supports [asof joins](https://pola-rs.github.io/polars/py-polars/html/reference/dataframe/api/polars.DataFrame.join_asof.html) and the `--try-parsedates` option. `sqlp` now has several Parquet format options, along with a `--low-memory` option.
+
+Other new features include:
+
+* A new `cat rowskey --group` option that [emulates csvkit's `csvstack` command](https://github.com/jqnatividad/qsv/discussions/1053).
+* SIMD-accelerated UTF-8 validation for the `input` command.
+* A `--field-separator` option for the `flatten` command.
+* The `sniff` command now uses the excellent [`file-format`](https://github.com/mmalecot/file-format#file-format) crate for mime-type detection on __ALL__ platforms, not just Linux, as was the case when we were using the libmagic library.
+
+Also, QuickSilver now has optimized builds for Apple Silicon. These builds are created using native Apple Silicon self-hosted Action Runners, which means we can enable all qsv features without being constrained by cross-compilation limitations and GitHub’s Action Runner’s disk/memory constraints. Additionally, we compile Apple Silicon builds with M1/M2 chip optimizations enabled to maximize performance.
+
+Finally, qsv startup should be noticeably faster, thanks to @vi’s [PR to avoid sysinfo::System::new_all](https://github.com/jqnatividad/qsv/pull/1064).
+
+### Added
+* `joinp`: added asof join & --try-parsedates option https://github.com/jqnatividad/qsv/pull/1059
+* `cat`: emulate csvkit's csvstack https://github.com/jqnatividad/qsv/pull/1067
+* `input`: SIMD-accelerated utf8 validation https://github.com/jqnatividad/qsv/commit/88e1df2757b4a9a6f9dbaf55a99b87fc15b18a65
+* `sniff`: replace magic with file-format crate, enabling mime-type detection on all platforms https://github.com/jqnatividad/qsv/pull/1069
+* `sqlp`: add --low-memory option https://github.com/jqnatividad/qsv/commit/d95048e7be1a9d34cc7a22feebbd792a5c27c604
+* `sqlp`: added parquet format options https://github.com/jqnatividad/qsv/commit/c179cf49e02343138b058d02783332394029a050 https://github.com/jqnatividad/qsv/commit/a861ebf246d22db0f4bcbce1b76788413cfdd1e7
+* `flatten`: add --field-separator option https://github.com/jqnatividad/qsv/pull/1068
+* Apple Silicon binaries built on native Apple Silicon self-hosted Action Runners, enabling all features and optimized for M1/M2 chips
+
+### Changed
+* `input`: minor improvements https://github.com/jqnatividad/qsv/commit/62cff74b4679e2ba207916392cab5de573ce0a59
+* `joinp`: align option names with `join` command https://github.com/jqnatividad/qsv/pull/1058
+* `sqlp`: minor improvements
+* changed all GitHub action workflows to account for the new Apple Silicon builds
+* Bump rust_decimal from 1.29.1 to 1.30.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1049
+* Bump serde_json from 1.0.96 to 1.0.97 by @dependabot in https://github.com/jqnatividad/qsv/pull/1051
+* Bump calamine from 0.21.0 to 0.21.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1052
+* Bump strum from 0.24.1 to 0.25.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1055
+* Bump actix-governor from 0.4.0 to 0.4.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1060
+* Bump csvs_convert from 0.8.5 to 0.8.6 by @dependabot in https://github.com/jqnatividad/qsv/pull/1061
+* Bump itertools from 0.10.5 to 0.11.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1062
+* Bump serde_json from 1.0.97 to 1.0.99 by @dependabot in https://github.com/jqnatividad/qsv/pull/1065
+* Bump indexmap from 1.9.3 to 2.0.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1066
+* Bump calamine from 0.21.1 to 0.21.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1071
+* cargo update bump various indirect dependencies
+* pin Rust nightly to 2021-06-23
+
+### Fixed
+* Avoid sysinfo::System::new_all by @vi in https://github.com/jqnatividad/qsv/pull/1064
+* correct typos project-wide https://github.com/jqnatividad/qsv/pull/1072
+
+### Removed
+* removed libmagic dependency from all GitHub action workflows
+
+## New Contributors
+* @vi made their first contribution in https://github.com/jqnatividad/qsv/pull/1064
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.107.0...0.108.0
+
+## [0.107.0] - 2023-06-14
+We continue to improve the new [`sqlp`](https://github.com/jqnatividad/qsv/blob/master/src/cmd/sqlp.rs#L2) command. It now supports scripts, Polars CSV parsing and CSV format options. We also added a new special value for the `rename` command which allows you to rename all columns in a CSV. This was done to make it easier to prepare CSVs with no headers for use with `sqlp`.
+
+This release also features a Windows MSI installer. This is a big step forward for qsv and we hope to make it easier for Windows users to install and use qsv. Thanks @minhajuddin2510 for all the work on pulling this together!
+
+### Added
+* `sqlp`: added script support https://github.com/jqnatividad/qsv/pull/1037
+* `sqlp`: added CSV format options https://github.com/jqnatividad/qsv/pull/1048
+* `rename`: add `"_all generic"` special value for headers https://github.com/jqnatividad/qsv/pull/1031
+
+### Changed
+* `excel`: now supports Duration type with calamine upgrade to 0.21.0 https://github.com/jqnatividad/qsv/pull/1045
+* Update publish-wix-installer.yml by @minhajuddin2510 in https://github.com/jqnatividad/qsv/pull/1032
+* Bump mlua from 0.9.0-beta.2 to 0.9.0-beta.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1030
+* Bump serde from 1.0.163 to 1.0.164 by @dependabot in https://github.com/jqnatividad/qsv/pull/1029
+* Bump csvs_convert from 0.8.4 to 0.8.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/1028
+* Bump sysinfo from 0.29.1 to 0.29.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1027
+* Bump log from 0.4.18 to 0.4.19 by @dependabot in https://github.com/jqnatividad/qsv/pull/1039
+* Bump uuid from 1.3.3 to 1.3.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1041
+* Bump jql-runner from 6.0.8 to 6.0.9 by @dependabot in https://github.com/jqnatividad/qsv/pull/1043
+* cargo update bump several indirect dependencies
+* pin Rust nightly to 2021-06-13
+
+### Fixed
+* Remove redundant registries protocol by @icp1994 in https://github.com/jqnatividad/qsv/pull/1034
+* fix typo in tojsonl.rs (optionns -> options) by @rzmk in https://github.com/jqnatividad/qsv/pull/1035
+* Fix eula by @minhajuddin2510 in https://github.com/jqnatividad/qsv/pull/1046
+
+## New Contributors
+* @icp1994 made their first contribution in https://github.com/jqnatividad/qsv/pull/1034
+* @rzmk made their first contribution in https://github.com/jqnatividad/qsv/pull/1035
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.106.0...0.107.0
+
 ## [0.106.0] - 2023-06-07
 This release features the new [Polars](https://www.pola.rs/)-powered `sqlp` command which allows you to run SQL queries against CSVs.
 

@@ -1,6 +1,6 @@
 [package]
 name = "qsv"
-version = "0.106.0" #:version
+version = "0.108.0" #:version
 authors = ["Joel Natividad <joel@datHere.com>"]
 description = "A high performance CSV data-wrangling toolkit."
 documentation = "https://github.com/jqnatividad/qsv#qsv-ultra-fast-csv-data-wrangling-toolkit"
@@ -70,7 +70,7 @@ cached = { version = "0.44", default-features = false, features = [
     "proc_macro",
     "redis_ahash",
 ], optional = true }
-calamine = { version = "0.20", features = ["dates"] }
+calamine = { version = "0.21", features = ["dates"] }
 censor = { version = "0.3", optional = true }
 chrono = { version = "0.4", default-features = false }
 console = { version = "0.15", optional = true }
@@ -90,6 +90,7 @@ ext-sort = { version = "0.1", features = [
     "memory-limit",
 ], default-features = false }
 flate2 = { version = "1", optional = true }
+file-format = {version = "0.17", features = ["reader"] }
 filetime = "0.2"
 flexi_logger = { version = "0.25", features = [
     "async",
@@ -103,9 +104,9 @@ gzp = { version = "0.11", default-features = false, features = [
     "snappy_default",
 ] }
 hashbrown = { version = "0.14", optional = true }
-indexmap = "1.9"
+indexmap = "2.0"
 indicatif = "0.17"
-itertools = "0.10"
+itertools = "0.11"
 itoa = "1"
 jemallocator = { version = "0.5", optional = true }
 jsonschema = { version = "0.17", features = [
@@ -125,6 +126,8 @@ odht = "0.3"
 polars = { version = "0.30", features = [
     "lazy",
     "streaming",
+    "object",
+    "asof_join",
     "cross_join",
     "semi_anti_join",
     "sql",
@@ -132,6 +135,7 @@ polars = { version = "0.30", features = [
     "parquet",
     "ipc",
     "temporal",
+    "performant",
 ], optional = true }
 pyo3 = { version = "0.19", features = ["auto-initialize"], optional = true }
 qsv-dateparser = "0.9"
@@ -157,7 +161,7 @@ reqwest = { version = "0.11", features = [
     "stream",
 ], default-features = false }
 reverse_geocoder = { version = "3", optional = true }
-rust_decimal = "1.29"
+rust_decimal = "1.30"
 ryu = "1"
 sanitise-file-name = { version = "1.0", optional = true }
 self_update = { version = "0.37", features = [
@@ -172,8 +176,8 @@ serde_stacker = { version = "0.1", optional = true }
 serde_urlencoded = { version = "0.7", optional = true }
 snap = "1"
 strsim = { version = "0.10", optional = true }
-strum = "0.24"
-strum_macros = "0.24"
+strum = "0.25"
+strum_macros = "0.25"
 sysinfo = "0.29"
 tabwriter = "1.2"
 tempfile = "3"
@@ -193,9 +197,6 @@ simdutf8 = "0.1"
 # use SIMD on aarch64 (Apple Silicon, Raspberry Pi 4, etc.)
 [target.'cfg(target_arch = "aarch64")'.dependencies]
 simdutf8 = { version = "0.1", features = ["aarch64_neon"] }
-
-[target.'cfg(target_os = "linux")'.dependencies]
-magic = { version = "0.13", optional = true }
 
 [dev-dependencies]
 actix-governor = "0.4"

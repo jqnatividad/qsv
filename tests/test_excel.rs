@@ -366,7 +366,7 @@ fn excel_xls_float_handling_516() {
 }
 
 #[test]
-fn excel_case_insensitve_sheet_name() {
+fn excel_case_insensitive_sheet_name() {
     let wrk = Workdir::new("excel_case_insensitive_sheet_name");
 
     let xls_file = wrk.load_test_file("excel-xls.xls");

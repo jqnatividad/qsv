@@ -31,10 +31,18 @@ Usage:
     qsv cat --help
 
 cat options:
-    -p, --pad              When concatenating columns, this flag will cause
-                           all records to appear. It will pad each row if
-                           other CSV data isn't long enough.
+                             COLUMNS OPTION:
+    -p, --pad                When concatenating columns, this flag will cause
+                             all records to appear. It will pad each row if
+                             other CSV data isn't long enough.
 
+                             ROWSKEY OPTIONS:
+    -g, --group              When concatenating with rowskey, use the file stem of each
+                             input file as a grouping value. A new column will be added
+                             to the beginning of each row, using --group-name.
+    -N, --group-name <arg>   When concatenating with rowskey, this flag provides the name
+                             for the new grouping column. [default: file]
+                             
 Common options:
     -h, --help             Display this message
     -o, --output <file>    Write output to <file> instead of stdout.
@@ -58,6 +66,8 @@ struct Args {
     cmd_rows:        bool,
     cmd_rowskey:     bool,
     cmd_columns:     bool,
+    flag_group:      bool,
+    flag_group_name: String,
     arg_input:       Vec<String>,
     flag_pad:        bool,
     flag_output:     Option<String>,
@@ -101,6 +111,7 @@ impl Args {
 
     fn cat_rowskey(&self) -> CliResult<()> {
         // this algorithm is largely inspired by https://github.com/vi/csvcatrow by @vi
+        // https://github.com/jqnatividad/qsv/issues/527
         if self.flag_no_headers {
             return fail_clierror!(
                 "cat rowskey does not support --no-headers, as we use column headers as keys."
@@ -108,9 +119,14 @@ impl Args {
         }
         let mut columns_global: IndexSet<Box<[u8]>> = IndexSet::with_capacity(32);
 
+        if self.flag_group {
+            columns_global.insert(self.flag_group_name.as_bytes().to_vec().into_boxed_slice());
+        }
+
         // First pass, add all column headers to an IndexSet
         for conf in &self.configs()? {
             if conf.is_stdin() {
+                // TODO: support stdin by writing to a temporary file
                 return fail_clierror!(
                     "cat rowskey does not support stdin, as we need to scan files twice."
                 );
@@ -131,11 +147,19 @@ impl Args {
         }
         wtr.write_byte_record(&csv::ByteRecord::new())?;
 
-        for conf in self.configs()? {
-            let mut rdr = conf.reader()?;
-            let h = rdr.byte_headers()?;
+        // amortize allocations
+        #[allow(unused_assignments)]
+        let mut grouping_value = String::with_capacity(64);
+        let mut rdr;
+        let mut h: &csv::ByteRecord;
+        let mut columns_of_this_file = IndexMap::with_capacity(num_columns_global);
+        let mut row: csv::ByteRecord;
 
-            let mut columns_of_this_file = IndexMap::with_capacity(num_columns_global);
+        for conf in self.configs()? {
+            rdr = conf.reader()?;
+            h = rdr.byte_headers()?;
+
+            columns_of_this_file.clear();
 
             for (n, field) in h.iter().enumerate() {
                 let fi = field.to_vec().into_boxed_slice();
@@ -149,15 +173,31 @@ impl Args {
                 columns_of_this_file.insert(fi, n);
             }
 
-            for row in rdr.byte_records() {
-                let row = row?;
-                for c in &columns_global {
+            // use the file stem as the grouping value
+            // safety: we know that this is a file path and if the file path
+            // is not valid utf8, we convert it to lossy utf8
+            grouping_value = conf
+                .path
+                .clone()
+                .unwrap()
+                .file_stem()
+                .unwrap()
+                .to_string_lossy()
+                .to_string();
+
+            for current_row in rdr.byte_records() {
+                row = current_row?;
+                for (col_idx, c) in columns_global.iter().enumerate() {
                     if let Some(idx) = columns_of_this_file.get(c) {
                         if let Some(d) = row.get(*idx) {
                             wtr.write_field(d)?;
                         } else {
                             wtr.write_field(b"")?;
                         }
+                    } else if self.flag_group && col_idx == 0 {
+                        // we are in the first column, and --group is set
+                        // so we write the grouping value
+                        wtr.write_field(&grouping_value)?;
                     } else {
                         wtr.write_field(b"")?;
                     }

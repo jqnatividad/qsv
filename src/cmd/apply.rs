@@ -80,7 +80,7 @@ It has 36 supported operations:
        It should work on other European languages that use the Latin alphabet.
   * sentiment: Normalized VADER sentiment score (English only - between -1.0 to 1.0).
   * whatlang: Language Detection for 87 supported languages, with default confidence threshold
-       of 0.9, which can be overriden by assigning 0.0 to 1.0 to --comparand.
+       of 0.9, which can be overridden by assigning 0.0 to 1.0 to --comparand.
        If language detection confidence is below the threshold, it will still show the best language
        guess, followed by the confidence score, ending with a question mark.
        If you want to always displays the confidence score, end the --comparand value with a

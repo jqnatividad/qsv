@@ -125,6 +125,7 @@ stats options:
                               This is used internally by other qsv commands (currently `schema`
                               and `tojsonl`) to load cached stats into memory without having to
                               process/parse the CSV again.
+                              If <file> is "NONE", the stats cache will not be written.
 
 Common options:
     -h, --help             Display this message
@@ -357,6 +358,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut compute_stats = true;
 
+    let mut stats_binout = String::new();
+    let write_stats_cache = if let Some(s) = args.flag_stats_binout.clone() {
+        stats_binout = s;
+        stats_binout.to_lowercase() != "none"
+    } else {
+        true
+    };
+
     if let Some(path) = fconfig.path.clone() {
         let path_file_stem = path.file_stem().unwrap().to_str().unwrap();
         let stats_file = stats_path(&path, false);
@@ -473,12 +482,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }?;
 
             // clone a copy of stats so we can binary encode it to disk later
-            stats_for_encoding = stats.clone();
+            if write_stats_cache {
+                stats_for_encoding = stats.clone();
+            }
 
-            let stats = args.stats_to_records(stats);
+            let stats_sr_vec = args.stats_to_records(stats);
 
             wtr.write_record(&args.stat_headers())?;
-            let fields = headers.iter().zip(stats.into_iter());
+            let fields = headers.iter().zip(stats_sr_vec.into_iter());
             for (i, (header, stat)) in fields.enumerate() {
                 let header = if args.flag_no_headers {
                     i.to_string().into_bytes()
@@ -490,11 +501,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
 
             // update the stats args json file
-            current_stats_args.canonical_input_path =
-                path.canonicalize()?.to_str().unwrap().to_string();
-            current_stats_args.record_count = *record_count;
-            current_stats_args.compute_duration_ms = start_time.elapsed().as_millis() as u64;
-            current_stats_args.date_generated = chrono::Utc::now().to_rfc3339();
+            if write_stats_cache {
+                current_stats_args.canonical_input_path =
+                    path.canonicalize()?.to_str().unwrap().to_string();
+                current_stats_args.record_count = *record_count;
+                current_stats_args.compute_duration_ms = start_time.elapsed().as_millis() as u64;
+                current_stats_args.date_generated = chrono::Utc::now().to_rfc3339();
+            }
         }
     }
 
@@ -538,7 +551,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         // only create the stats args json and binary encoded files if we computed the stats
-        if compute_stats {
+        if compute_stats && write_stats_cache {
             // save the stats args to "<FILESTEM>.stats.csv.json"
             stats_pathbuf.set_extension("csv.json");
             // write empty file first so we can canonicalize it
@@ -575,7 +588,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         // if the user specified --stats-binout, copy the binary stats to that file as well
-        if let Some(stats_binout) = args.flag_stats_binout {
+        if write_stats_cache && !stats_binout.is_empty() {
             let mut stats_pathbuf = path;
             stats_pathbuf.set_extension("stats.csv.bin");
             if let Err(e) = fs::copy(stats_pathbuf, stats_binout.clone()) {

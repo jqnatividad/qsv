@@ -19,7 +19,7 @@ jobs:
             target: x86_64-unknown-linux-gnu
             architecture: x86_64
             use-cross: false
-            addl-build-args:  --features=apply,generate,luau,fetch,foreach,self_update,to,magic
+            addl-build-args:  --features=apply,generate,luau,fetch,foreach,self_update,to
             default-features:
             addl-qsvdp-features: luau
           - os: ubuntu-latest
@@ -28,7 +28,7 @@ jobs:
             architecture: x86_64
             musl-prep: true
             use-cross: false
-            addl-build-args: --features=apply,generate,fetch,foreach,self_update,magic
+            addl-build-args: --features=apply,generate,fetch,foreach,self_update
             default-features:
             addl-qsvdp-features:
           - os: ubuntu-latest
@@ -126,11 +126,6 @@ jobs:
       run: |
         sudo apt-get install musl-tools musl-dev
         sudo ln -s /usr/bin/g++ /usr/bin/musl-g++        
-    - name: set MAGIC_STATIC false when cross-compiling
-      if: ${{ matrix.job.use-cross }}
-      env:
-        MAGIC_STATIC: false
-      uses: actions-rs/cargo@v1
     - name: Build qsv
       env:
         RUSTFLAGS: --emit=asm

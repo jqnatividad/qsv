@@ -1,13 +1,14 @@
-name: qsvlite
+name: Linux - to feature
 
 on:
   push:
     branches: [ master ]
   pull_request:
     branches: [ master ]
+  workflow_dispatch:
 
 concurrency:
-  group: ci-qsvlite-tests-${{ github.ref }}-1
+  group: ci-linux-to-tests-${{ github.ref }}-1
   cancel-in-progress: true
 
 env:
@@ -19,12 +20,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: apt-get update Ubuntu
+      run: |
+        sudo apt-get update
     - uses: actions/checkout@v3
     - name: Update Rust
       run: rustup update
     - name: Setup Rust-cache
       uses: Swatinem/rust-cache@v2
       with:
-        key: qsvlite-cache
+        key: qsvto-cache
     - name: Run tests
-      run: cargo test --verbose --locked --features=lite
+      run: cargo test --verbose --locked --features=to,feature_capable

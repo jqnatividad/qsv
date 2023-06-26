@@ -144,10 +144,6 @@ pub fn version() -> String {
     enabled_features.push_str("foreach;");
     #[cfg(all(feature = "generate", not(feature = "lite")))]
     enabled_features.push_str("generate;");
-    #[cfg(all(target_os = "linux", feature = "magic"))]
-    {
-        enabled_features.push_str(format!("magic-{};", magic::version()).as_str());
-    }
 
     #[cfg(all(feature = "luau", not(feature = "lite")))]
     {
@@ -188,7 +184,7 @@ pub fn version() -> String {
     // get max_file_size & memory info. max_file_size is based on QSV_FREEMEMORY_HEADROOM_PCT
     // setting and is only enforced when qsv is running in "non-streaming" mode (i.e. needs to
     // load the entire file into memory).
-    let mut sys = System::new_all();
+    let mut sys = System::new();
     sys.refresh_memory();
     let avail_mem = sys.available_memory();
     let total_mem = sys.total_memory();
@@ -817,7 +813,7 @@ Self-update only works with prebuilt binaries released on GitHub https://github.
 }
 
 #[cfg(not(feature = "self_update"))]
-pub fn qsv_check_for_update(_check_only: bool, _no_confirm: bool) -> Result<bool, String> {
+pub const fn qsv_check_for_update(_check_only: bool, _no_confirm: bool) -> Result<bool, String> {
     Ok(true)
 }
 
@@ -839,13 +835,13 @@ fn send_hwsurvey(
     static HW_SURVEY_URL: &str =
         "https://4dhmneehnl.execute-api.us-east-1.amazonaws.com/dev/qsv-hwsurvey";
 
-    let mut sys = System::new_all();
+    let mut sys = System::new();
     sys.refresh_all();
     let total_mem = sys.total_memory();
     let kernel_version = sys
         .kernel_version()
         .unwrap_or_else(|| "Unknown kernel".to_string());
-    let long_os_verion = sys
+    let long_os_version = sys
         .long_os_version()
         .unwrap_or_else(|| "Unknown OS version".to_string());
     let cpu_count = sys.cpus().len();
@@ -876,7 +872,7 @@ fn send_hwsurvey(
             "cpu_freq": cpu_freq,
             "mem": total_mem,
             "kernel": kernel_version,
-            "os": long_os_verion,
+            "os": long_os_version,
             "target": TARGET,
         }
     );
@@ -1396,44 +1392,6 @@ pub fn isutf8_file(path: &Path) -> Result<bool, CliError> {
     reader.read_to_end(&mut buffer)?;
 
     Ok(simdutf8::basic::from_utf8(&buffer).is_ok())
-}
-
-/// find out what kind of file we have using magic
-#[cfg(all(target_os = "linux", feature = "magic"))]
-pub fn get_filetype(path: &str) -> Result<String, CliError> {
-    // We just want the mime type
-    let cookie = magic::Cookie::open(magic::CookieFlags::MIME_TYPE)?;
-
-    // Load libmagic's default database
-    cookie.load::<&str>(&[])?;
-
-    let mime = cookie.file(path)?;
-
-    Ok(mime)
-}
-
-/// find out what kind of file we have using magic
-/// by sampling the provided bytes of the file
-#[cfg(all(target_os = "linux", feature = "magic"))]
-pub fn sniff_filetype_from_buffer(in_buffer: &bytes::Bytes) -> Result<String, CliError> {
-    // We just want the mime type
-    let cookie = magic::Cookie::open(magic::CookieFlags::MIME_TYPE)?;
-
-    // Load libmagic's default database
-    cookie.load::<&str>(&[])?;
-
-    let buffer_len = in_buffer.len();
-
-    if buffer_len > 0 {
-        let mut buffer_wrk = bytes::BytesMut::with_capacity(buffer_len);
-        buffer_wrk.extend_from_slice(&in_buffer[0..buffer_len]);
-        let mime = cookie.buffer(&buffer_wrk)?;
-
-        Ok(mime)
-    } else {
-        // empty file, so we return inode/x-empty
-        Ok("inode/x-empty".to_string())
-    }
 }
 
 /// Process the input files and return a vector of paths to the input files

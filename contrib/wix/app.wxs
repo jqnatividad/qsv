@@ -1,13 +1,10 @@
 <?xml version='1.0' encoding='windows-1252'?>
 <!--
   Copyright (C) 2017 Christopher R. Field.
-
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
   You may obtain a copy of the License at
-
   http://www.apache.org/licenses/LICENSE-2.0
-
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,7 +16,6 @@
   The "cargo wix" subcommand provides a variety of predefined variables available
   for customization of this template. The values for each variable are set at
   installer creation time. The following variables are available:
-
   TargetTriple      = The rustc target triple name.
   TargetEnv         = The rustc target environment. This is typically either
                       "msvc" or "gnu" depending on the toolchain downloaded and
@@ -92,7 +88,6 @@
                     
                     <!--
                       Enabling the license sidecar file in the installer is a four step process:
-
                       1. Uncomment the `Component` tag and its contents.
                       2. Change the value for the `Source` attribute in the `File` tag to a path
                          to the file that should be included as the license sidecar file. The path
@@ -106,7 +101,7 @@
                     -->
 
                     <Component Id='License' Guid='*'>
-                        <File Id='LicenseFile' Name='LICENSE-MIT' DiskId='1' Source='wix\contrib\License-MIT.md' KeyPath='yes'/>
+                        <File Id='LicenseFile' Name='LICENSE-MIT' DiskId='1' Source='contrib\wix\License-MIT.md' KeyPath='yes'/>
                     </Component>
 
 
@@ -126,7 +121,7 @@
                                 Id='exe0'
                                 Name='qsv.exe'
                                 DiskId='1'
-                                Source='wix\contrib\qsv.exe'
+                                Source='contrib\wix\qsv.exe'
                                 KeyPath='yes'/>
                         </Component>
                     </Directory>
@@ -168,11 +163,10 @@
         
         <!--
           Uncomment the following `Icon` and `Property` tags to change the product icon.
-
           The product icon is the graphic that appears in the Add/Remove
           Programs control panel for the application.
         -->
-        <Icon Id='ProductICO' SourceFile='wix\contrib\dathere_icon.ico'/>
+        <Icon Id='ProductICO' SourceFile='contrib\wix\dathere_icon.ico'/>
         <Property Id='ARPPRODUCTICON' Value='ProductICO' />
 
         <Property Id='ARPHELPLINK' Value='https://github.com/jqnatividad/qsv#qsv-ultra-fast-csv-data-wrangling-toolkit'/>
@@ -182,10 +176,9 @@
             
             <!--
               Enabling the EULA dialog in the installer is a three step process:
-
                 1. Comment out or remove the two `Publish` tags that follow the
                    `WixVariable` tag.
-                2. Uncomment the `<WixVariable Id='WixUILicenseRtf' Value='Path\to\Eula.rft'>` tag futher down
+                2. Uncomment the `<WixVariable Id='WixUILicenseRtf' Value='Path\to\Eula.rft'>` tag further down
                 3. Replace the `Value` attribute of the `WixVariable` tag with
                    the path to a RTF file that will be used as the EULA and
                    displayed in the license agreement dialog.
@@ -202,16 +195,16 @@
           Enabling the EULA dialog in the installer requires uncommenting
           the following `WixUILicenseRTF` tag and changing the `Value`
           attribute.
+
+         <WixVariable Id='WixUILicenseRtf' Value='contrib\wix\QSV-PRO-EULA.rtf'/> 
         -->
-         <WixVariable Id='WixUILicenseRtf' Value='wix\contrib\QSV-PRO-EULA.rtf'/> 
 
         
         <!--
-          Uncomment the next `WixVaraible` tag to customize the installer's
+          Uncomment the next `WixVariable` tag to customize the installer's
           Graphical User Interface (GUI) and add a custom banner image across
           the top of each screen. See the WiX Toolset documentation for details
           about customization.
-
           The banner BMP dimensions are 493 x 58 pixels.
         -->
 
@@ -222,10 +215,9 @@
           Graphical User Interface (GUI) and add a custom image to the first
           dialog, or screen. See the WiX Toolset documentation for details about
           customization.
-
           The dialog BMP dimensions are 493 x 312 pixels.
         -->
-        <WixVariable Id='WixUIDialogBmp' Value='wix\contrib\qsv-splash-screen.bmp'/>
+        <WixVariable Id='WixUIDialogBmp' Value='contrib\wix\qsv-splash-screen.bmp'/>
 
     </Product>
 

@@ -64,7 +64,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // and up to --memory-limit (capped at 50%),
     // otherwise, if we cannot detect the free memory use a default of 100 MB
     let mem_limited_buffer = if System::IS_SUPPORTED {
-        let mut sys = System::new_all();
+        let mut sys = System::new();
         sys.refresh_memory();
         (sys.total_memory() * 1000) / u8::min(args.flag_memory_limit.unwrap_or(10), 50) as u64
     } else {
@@ -171,7 +171,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 #[test]
 fn test_extdedup_mem_check() {
     // check to see if sysinfo return meminfo without segfaulting
-    let mut sys = System::new_all();
+    let mut sys = System::new();
     sys.refresh_memory();
     let mem10percent = (sys.total_memory() * 1000) / 10; // 10 percent of total memory
     assert!(mem10percent > 0);

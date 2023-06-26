@@ -1,14 +1,17 @@
-name: Publish glibc 2.31/musl 1.1.24 binaries
+name: Publish Apple Silicon - Nightly
 
 on:
+  push:
+    tags:
+      - '*'
   workflow_dispatch:
 
 env:
-  QSV_KIND: prebuilt-older
+  QSV_KIND: prebuilt-nightly
 
 jobs:
   analyze-tags:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     outputs:
       previous-tag: ${{ steps.previoustag.outputs.tag }}
     steps:
@@ -24,30 +27,20 @@ jobs:
   publish:
     name: Publish for ${{ matrix.job.target }}
     needs: analyze-tags
-    runs-on: ${{ matrix.job.os }}
+    runs-on: self-hosted
     strategy:
       matrix:
-        rust: [stable]
+        rust: [nightly-2023-06-23]
         job:
-          - os: ubuntu-20.04
-            os-name: linux
-            target: x86_64-unknown-linux-gnu
-            architecture: x86_64
-            addl-build-args: --features=apply,generate,luau,fetch,foreach,self_update,polars
-            default-features:
+          - os: macos
+            os-name: macos
+            target: aarch64-apple-darwin
+            architecture: aarch64
+            use-cross: false
+            addl-build-args: --features=apply,generate,fetch,foreach,self_update,luau,polars,to
+            default-features: --no-default-features
             addl-qsvlite-features:
             addl-qsvdp-features: luau
-            name-suffix: glibc-2.31
-          - os: ubuntu-20.04
-            os-name: linux
-            target: x86_64-unknown-linux-musl
-            architecture: x86_64
-            musl-prep: true
-            addl-build-args: --features=apply,generate,fetch,foreach,self_update
-            default-features:
-            addl-qsvlite-features:
-            addl-qsvdp-features:
-            name-suffix: musl-1.1.24
 
     steps:
     - name: Installing Rust toolchain
@@ -55,57 +48,58 @@ jobs:
       with:
         toolchain: ${{ matrix.rust }}
         profile: minimal
+        components: rust-src
         target: ${{ matrix.job.target }}
         override: true
+        default: true
     - name: Checkout repository
       uses: actions/checkout@v3
       with:
         submodules: recursive
         ref: ${{ needs.analyze-tags.outputs.previous-tag }}
-    - name: build prep for x86_64-unknown-linux-musl
-      if: ${{ matrix.job.musl-prep }}
-      run: |
-        sudo apt-get install musl-tools musl-dev
-        sudo ln -s /usr/bin/g++ /usr/bin/musl-g++        
     - name: Build qsv
       env:
-        RUSTFLAGS: --emit=asm
+        RUSTFLAGS: --emit=asm -C target-cpu=native
       uses: actions-rs/cargo@v1
       with:
         command: build
         use-cross: ${{ matrix.job.use-cross }}
         toolchain: ${{ matrix.rust }}
-        args: --release --locked --bin qsv --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }},feature_capable ${{ matrix.job.default-features }}
+        args: --profile release-nightly --locked --bin qsv -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }},feature_capable,nightly ${{ matrix.job.default-features }}
     - name: Build qsvlite
       env:
-        RUSTFLAGS: --emit=asm
+        RUSTFLAGS: --emit=asm -C target-cpu=native
       uses: actions-rs/cargo@v1
       with:
         command: build
         use-cross: ${{ matrix.job.use-cross }}
         toolchain: ${{ matrix.rust }}
-        args: --release --locked --bin qsvlite --features=lite,self_update,${{ matrix.job.addl-qsvlite-features }} --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}
+        args: --profile release-nightly --locked --bin qsvlite -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --features=lite,self_update,nightly,${{ matrix.job.addl-qsvlite-features }} --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}
     - name: Build qsvdp
       env:
-        RUSTFLAGS: --emit=asm
+        RUSTFLAGS: --emit=asm -C target-cpu=native
       uses: actions-rs/cargo@v1
       with:
         command: build
         use-cross: ${{ matrix.job.use-cross }}
         toolchain: ${{ matrix.rust }}
-        args: --release --locked --bin qsvdp --features=datapusher_plus,${{ matrix.job.addl-qsvdp-features }} --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}  
+        args: --profile release-nightly --locked --bin qsvdp -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --features=datapusher_plus,nightly,${{ matrix.job.addl-qsvdp-features }} --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}
     - name: Copy binaries to working dir
       shell: bash
       run: |
         mkdir qsv-${{ needs.analyze-tags.outputs.previous-tag }}
-        rm target/${{ matrix.job.target }}/release/*.d 
-        cp target/${{ matrix.job.target }}/release/qsv* qsv-${{ needs.analyze-tags.outputs.previous-tag }}
+        rm target/${{ matrix.job.target }}/release-nightly/*.d 
+        cp -v target/${{ matrix.job.target }}/release-nightly/qsv* qsv-${{ needs.analyze-tags.outputs.previous-tag }}
         cd qsv-${{ needs.analyze-tags.outputs.previous-tag }}
-        mv qsv qsv_${{ matrix.job.name-suffix }}
-        mv qsvlite qsvlite_${{ matrix.job.name-suffix }}
-        mv qsvdp qsvdp_${{ matrix.job.name-suffix }}
-        rustup show > qsv_${{ matrix.job.name-suffix }}_rust_version_info.txt
+        mv qsv qsv_nightly
+        mv qsvlite qsvlite_nightly
+        mv qsvdp qsvdp_nightly
+        rustup show > qsv_nightly_rust_version_info.txt
         cd ..
+    - name: Create README
+      shell: bash
+      run: |
+        cat docs/publishing_assets/README.txt docs/publishing_assets/qsv-${{ matrix.job.target }}.txt > qsv-${{ needs.analyze-tags.outputs.previous-tag }}/README
     - name: Download latest release zip
       uses: robinraju/release-downloader@v1.8
       with:
@@ -113,8 +107,8 @@ jobs:
         latest: true
         token: ${{ secrets.GITHUB_TOKEN }}
         fileName: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip
-    - name: add/update "older" glibc 2.31/musl 1.1.24 files to zip
-      run: 7z u -tzip qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/qsv* -mx=9 -mmt=on
+    - name: add/update nightly files to zip
+      run: 7zz u -tzip qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/* -mx=9 -mmt=on
     - name: Upload zipped binaries to release
       uses: svenstaro/upload-release-action@v2
       with:

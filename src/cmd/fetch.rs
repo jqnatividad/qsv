@@ -1198,10 +1198,8 @@ pub fn process_jql(json: &str, query: &str) -> CliResult<String> {
 // pub fn process_json_with_tokens(
 //     json: &str,
 //     tokens_vec: &Vec<jql_parser::tokens::Token>,
-// ) -> CliResult<String> {
-//     if let Err(error) = serde_json::from_str::<Value>(json) {
-//         return fail_clierror!("Invalid json: {error:?}");
-//     }
+// ) -> CliResult<String> { if let Err(error) = serde_json::from_str::<Value>(json) { return
+//   fail_clierror!("Invalid json: {error:?}"); }
 
 //     let mut deserializer = serde_json::Deserializer::from_str(json);
 
