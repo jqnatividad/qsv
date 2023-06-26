@@ -48,7 +48,7 @@ struct Args {
 
 fn get_completion(api_key: &str, content: &str, max_tokens: Option<i32>) -> String {
     // Create client with timeout
-    let timeout_duration = Duration::from_secs(300);
+    let timeout_duration = Duration::from_secs(60);
     let client = Client::builder()
         .timeout(timeout_duration)
         .build()
