@@ -1,0 +1,111 @@
+name: Publish - Windows x86_64 self-hosted
+
+on:
+  workflow_dispatch:
+
+env:
+  QSV_KIND: prebuilt
+
+jobs:
+  analyze-tags:
+    runs-on: ubuntu-22.04
+    outputs:
+      previous-tag: ${{ steps.previoustag.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      #▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼#
+      - name: Get previous tag
+        id: previoustag
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+      #▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲#
+
+  publish:
+    name: Publish for ${{ matrix.job.target }}
+    needs: analyze-tags
+    runs-on: self-hosted
+    strategy:
+      matrix:
+        rust: [stable]
+        job:
+          - os: windows
+            os-name: windows
+            target: x86_64-pc-windows-msvc
+            architecture: x86_64
+            use-cross: false
+            addl-build-args: --features=apply,generate,luau,fetch,self_update,to,polars
+            default-features:
+            addl-qsvlite-features:
+            addl-qsvdp-features: luau
+          - os: windows
+            os-name: windows
+            target: x86_64-pc-windows-gnu
+            architecture: x86_64
+            use-cross: false
+            addl-build-args: --features=apply,generate,luau,fetch,self_update,polars
+            default-features: --no-default-features
+            addl-qsvlite-features:
+            addl-qsvdp-features: luau
+
+    steps:
+    - name: Installing Rust toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: ${{ matrix.rust }}
+        profile: minimal
+        target: ${{ matrix.job.target }}
+        override: true
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        submodules: recursive
+        ref: ${{ needs.analyze-tags.outputs.previous-tag }}
+    - name: Build qsv
+      env:
+        RUSTFLAGS: --emit=asm
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        use-cross: ${{ matrix.job.use-cross }}
+        toolchain: ${{ matrix.rust }}
+        args: --release --locked --bin qsv --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }},feature_capable ${{ matrix.job.default-features }}
+    - name: Build qsvlite
+      env:
+        RUSTFLAGS: --emit=asm
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        use-cross: ${{ matrix.job.use-cross }}
+        toolchain: ${{ matrix.rust }}
+        args: --release --locked --bin qsvlite --features=lite,self_update,${{ matrix.job.addl-qsvlite-features }} --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}
+    - name: Build qsvdp
+      env:
+        RUSTFLAGS: --emit=asm
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        use-cross: ${{ matrix.job.use-cross }}
+        toolchain: ${{ matrix.rust }}
+        args: --release --locked --bin qsvdp --features=datapusher_plus,${{ matrix.job.addl-qsvdp-features }} --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}
+    - name: Copy binaries to working dir
+      shell: bash
+      run: |
+        mkdir qsv-${{ needs.analyze-tags.outputs.previous-tag }}
+        rm target/${{ matrix.job.target }}/release/*.d 
+        cp -v target/${{ matrix.job.target }}/release/qsv* qsv-${{ needs.analyze-tags.outputs.previous-tag }}
+    - name: Create README
+      shell: bash
+      run: |
+        cat docs/publishing_assets/README.txt docs/publishing_assets/qsv-${{ matrix.job.target }}.txt > qsv-${{ needs.analyze-tags.outputs.previous-tag }}/README
+    - name: zip up binaries
+      run: 7z a -tzip qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/* -mx=9 -mmt=on
+    - name: Upload zipped binaries to release
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip
+        asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip
+        overwrite: true
+        tag: ${{ needs.analyze-tags.outputs.previous-tag }}    
+ 
