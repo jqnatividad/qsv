@@ -55,6 +55,7 @@ macro_rules! command_list {
         "
     applydp     Apply series of transformations to a column
     count       Count records
+    describegpt Infer extended metadata using a LLM
     diff        Find the difference between two CSVs
     dedup       Remove redundant rows
     excel       Exports an Excel sheet to a CSV
@@ -211,6 +212,7 @@ enum Command {
     ApplyDP,
     Count,
     Dedup,
+    Describegpt,
     Diff,
     Excel,
     Exclude,
@@ -255,6 +257,7 @@ impl Command {
             Command::ApplyDP => cmd::applydp::run(argv),
             Command::Count => cmd::count::run(argv),
             Command::Dedup => cmd::dedup::run(argv),
+            Command::Describegpt => cmd::describegpt::run(argv),
             Command::Diff => cmd::diff::run(argv),
             Command::Excel => cmd::excel::run(argv),
             Command::Exclude => cmd::exclude::run(argv),

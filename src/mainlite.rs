@@ -22,6 +22,7 @@ macro_rules! command_list {
     cat         Concatenate by row or column
     count       Count records
     dedup       Remove redundant rows
+    describegpt Infer extended metadata using a LLM
     diff        Find the difference between two CSVs
     enum        Add a new column enumerating CSV lines
     excel       Exports an Excel sheet to a CSV
@@ -192,6 +193,7 @@ enum Command {
     Cat,
     Count,
     Dedup,
+    Describegpt,
     Diff,
     Enum,
     Excel,
@@ -252,6 +254,7 @@ impl Command {
             Command::Count => cmd::count::run(argv),
             Command::Diff => cmd::diff::run(argv),
             Command::Dedup => cmd::dedup::run(argv),
+            Command::Describegpt => cmd::describegpt::run(argv),
             Command::Enum => cmd::enumerate::run(argv),
             Command::Excel => cmd::excel::run(argv),
             Command::Exclude => cmd::exclude::run(argv),
