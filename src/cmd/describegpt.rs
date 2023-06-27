@@ -62,7 +62,8 @@ fn get_completion(api_key: &str, messages: serde_json::Value, max_tokens: Option
         request_data["max_tokens"] = json!(max_tokens.unwrap());
     }
 
-    let response = client
+    // Send request to OpenAI API
+    let request = client
         .post("https://api.openai.com/v1/chat/completions")
         .header("Authorization", format!("Bearer {}", api_key))
         .header("Content-Type", "application/json")
@@ -70,7 +71,7 @@ fn get_completion(api_key: &str, messages: serde_json::Value, max_tokens: Option
         .send();
 
     // Get response from OpenAI API
-    let response = match response {
+    let response = match request {
         Ok(val) => val,
         Err(err) => {
             eprintln!("Error: {}", err);
