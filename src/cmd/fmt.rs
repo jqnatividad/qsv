@@ -17,7 +17,8 @@ fmt options:
     -t, --out-delimiter <arg>  The field delimiter for writing CSV data.
                                [default: ,]
     --crlf                     Use '\r\n' line endings in the output.
-    --ascii                    Use ASCII field and record separators.
+    --ascii                    Use ASCII field and record separators. Use Substitute (U+00A1) as the
+                               quote character.
     --quote <arg>              The quote character to use. [default: "]
     --quote-always             Put quotes around every value.
     --quote-never              Never put quotes around any value.
@@ -53,7 +54,7 @@ struct Args {
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
-    let args: Args = util::get_args(USAGE, argv)?;
+    let mut args: Args = util::get_args(USAGE, argv)?;
 
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
@@ -66,6 +67,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         wconfig = wconfig
             .delimiter(Some(Delimiter(b'\x1f')))
             .terminator(csv::Terminator::Any(b'\x1e'));
+        args.flag_quote = Delimiter(b'\x1a');
     }
     if args.flag_quote_always {
         wconfig = wconfig.quote_style(csv::QuoteStyle::Always);
