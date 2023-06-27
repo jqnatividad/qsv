@@ -25,21 +25,23 @@ Common options:
     -h, --help             Display this message
 "#;
 
-use crate::{util, CliResult};
+use std::{env, process::Command, time::Duration};
+
 use reqwest::blocking::Client;
 use serde::Deserialize;
 use serde_json::json;
-use std::{env, process::Command, time::Duration};
+
+use crate::{util, CliResult};
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input: Option<String>,
-    flag_all: Option<bool>,
+    arg_input:        Option<String>,
+    flag_all:         Option<bool>,
     flag_description: Option<bool>,
-    flag_dictionary: Option<bool>,
-    flag_tags: Option<bool>,
-    flag_max_tokens: Option<i32>,
-    flag_json: Option<bool>,
+    flag_dictionary:  Option<bool>,
+    flag_tags:        Option<bool>,
+    flag_max_tokens:  Option<i32>,
+    flag_json:        Option<bool>,
 }
 
 // OpenAI API model
@@ -103,7 +105,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         Err(_) => {
             eprintln!("Error: OPENAI_API_KEY environment variable not found.");
             // Warning message for new command users
-            eprintln!("Note that this command uses a LLM for inference and is therefore prone to inaccurate\ninformation being produced. Ensure verification of output results before using them.\n");
+            eprintln!(
+                "Note that this command uses a LLM for inference and is therefore prone to \
+                 inaccurate\ninformation being produced. Ensure verification of output results \
+                 before using them.\n"
+            );
             std::process::exit(1);
         }
     };
@@ -137,7 +143,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     {
         eprintln!("Error: No inference options specified.");
         std::process::exit(1);
-    // If --all flag is specified, but other inference flags are also specified, print error message.
+    // If --all flag is specified, but other inference flags are also specified, print error
+    // message.
     } else if args.flag_all.is_some()
         && (args.flag_dictionary.is_some()
             || args.flag_description.is_some()
@@ -146,7 +153,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         eprintln!("Error: --all option cannot be specified with other inference flags.");
         std::process::exit(1);
     }
-    // If --max-tokens is not specified, print warning message that maximum token limit will be used.
+    // If --max-tokens is not specified, print warning message that maximum token limit will be
+    // used.
     if args.flag_max_tokens.is_none() {
         eprintln!("Warning: No --max-tokens specified. Defaulting to maximum token limit.");
     }
@@ -214,19 +222,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     ) -> String {
         let json_add = json_addition(flag_json);
         let prompt = format!(
-            "\nHere are the columns for each field in a data dictionary:\n\n\
-            - Type: the data type of this column\n\
-            - Label: a human-friendly label for this column\n\
-            - Description: a full description for this column (can be multiple sentences)\n\n\
-            Generate a data dictionary{} as aforementioned where each field has Name, Type, Label, and Description (so four columns in total) based on the {}",
-            if json_add.is_empty() { " (as a table with elastic tabstops)" } else { " (in JSON format)" },
+            "\nHere are the columns for each field in a data dictionary:\n\n- Type: the data type \
+             of this column\n- Label: a human-friendly label for this column\n- Description: a \
+             full description for this column (can be multiple sentences)\n\nGenerate a data \
+             dictionary{} as aforementioned where each field has Name, Type, Label, and \
+             Description (so four columns in total) based on the {}",
+            if json_add.is_empty() {
+                " (as a table with elastic tabstops)"
+            } else {
+                " (in JSON format)"
+            },
             if stats.is_some() && frequency.is_some() {
                 format!(
-                    "following summary statistics and frequency data from a CSV file.\n\n\
-                    Summary Statistics:\n\n\
-                    {}\n\n\
-                    Frequency:\n\n\
-                    {}",
+                    "following summary statistics and frequency data from a CSV file.\n\nSummary \
+                     Statistics:\n\n{}\n\nFrequency:\n\n{}",
                     stats.unwrap(),
                     frequency.unwrap()
                 )
@@ -245,15 +254,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     ) -> String {
         let json_add = json_addition(flag_json);
         let mut prompt = format!(
-            "\nGenerate only a description that is within 8 sentences{} about the entire dataset based on the {}",
+            "\nGenerate only a description that is within 8 sentences{} about the entire dataset \
+             based on the {}",
             json_add,
             if stats.is_some() && frequency.is_some() {
                 format!(
-                    "following summary statistics and frequency data derived from the CSV file it came from.\n\n\
-                    Summary Statistics:\n\n\
-                    {}\n\n\
-                    Frequency:\n\n\
-                    {}",
+                    "following summary statistics and frequency data derived from the CSV file it \
+                     came from.\n\nSummary Statistics:\n\n{}\n\nFrequency:\n\n{}",
                     stats.unwrap(),
                     frequency.unwrap()
                 )
@@ -261,7 +268,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 "dataset.".to_string()
             }
         );
-        prompt.push_str(" Do not output the summary statistics for each field. Do not output the frequency for each field. Do not output data about each field individually, but instead output about the dataset as a whole in one 1-8 sentence description.");
+        prompt.push_str(
+            " Do not output the summary statistics for each field. Do not output the frequency \
+             for each field. Do not output data about each field individually, but instead output \
+             about the dataset as a whole in one 1-8 sentence description.",
+        );
         prompt
     }
 
@@ -269,16 +280,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     fn get_tags_prompt(stats: Option<&str>, frequency: Option<&str>, flag_json: bool) -> String {
         let json_add = json_addition(flag_json);
         let prompt = format!(
-            "\nA tag is a keyword or label that categorizes datasets with other, similar datasets. Using the right tags makes it easier for others to find and use datasets.\n\n\
-            Generate single-word tags{} about the dataset (lowercase only and remove all whitespace) based on the {}",
+            "\nA tag is a keyword or label that categorizes datasets with other, similar \
+             datasets. Using the right tags makes it easier for others to find and use \
+             datasets.\n\nGenerate single-word tags{} about the dataset (lowercase only and \
+             remove all whitespace) based on the {}",
             json_add,
             if stats.is_some() && frequency.is_some() {
                 format!(
-                    "following summary statistics and frequency data from a CSV file.\n\n\
-                    Summary Statistics:\n\n\
-                    {}\n\n\
-                    Frequency:\n\n\
-                    {}",
+                    "following summary statistics and frequency data from a CSV file.\n\nSummary \
+                     Statistics:\n\n{}\n\nFrequency:\n\n{}",
                     stats.unwrap(),
                     frequency.unwrap()
                 )
