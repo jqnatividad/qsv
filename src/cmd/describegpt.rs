@@ -371,7 +371,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             };
             let messages = get_messages(&prompt, &dictionary_completion_output);
             println!("Generating description from OpenAI API...");
-            let completion = get_completion(&api_key, messages, args.flag_max_tokens);
+            let completion = get_completion(api_key, messages, args.flag_max_tokens);
             let completion_output = get_completion_output(&completion);
             println!("Description output:\n{}", completion_output);
         }
@@ -382,7 +382,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             };
             let messages = get_messages(&prompt, &dictionary_completion_output);
             println!("Generating tags from OpenAI API...");
-            let completion = get_completion(&api_key, messages, args.flag_max_tokens);
+            let completion = get_completion(api_key, messages, args.flag_max_tokens);
             let completion_output = get_completion_output(&completion);
             println!("Tags output:\n{}", completion_output);
         }
