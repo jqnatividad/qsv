@@ -119,7 +119,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     match args.arg_input {
         Some(ref val) => {
             // If input file is not a CSV, print error message
-            if !val.ends_with(".csv") {
+            if !std::path::Path::new(val)
+                .extension()
+                .map_or(false, |ext| ext.eq_ignore_ascii_case("csv"))
+            {
                 eprintln!("Error: Input file must be a CSV.");
                 std::process::exit(1);
             }
