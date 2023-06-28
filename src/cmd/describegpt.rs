@@ -315,7 +315,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         println!("Interacting with OpenAI API...\n");
         fn get_completion_output(completion: &str) -> String {
             // Parse the completion JSON
-            let completion_json: serde_json::Value = match serde_json::from_str(&completion) {
+            let completion_json: serde_json::Value = match serde_json::from_str(completion) {
                 Ok(val) => val,
                 Err(_) => {
                     eprintln!("Error: Unable to parse completion JSON.");
