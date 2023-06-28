@@ -1436,20 +1436,44 @@ pub fn process_input(
             if !path.exists() {
                 return fail_clierror!("Input file '{}' does not exist", path.display());
             }
+
             // is the input file snappy compressed?
-            if let Some(ext) = path.extension().and_then(std::ffi::OsStr::to_str) {
-                if ext == "sz" {
-                    // if so, decompress the file
-                    let decompressed_filepath = decompress_snappy_file(&path, tmpdir)?;
-                    processed_input.push(PathBuf::from(decompressed_filepath));
-                    continue;
-                }
+            if path.extension().and_then(std::ffi::OsStr::to_str) == Some("sz") {
+                // if so, decompress the file
+                let decompressed_filepath = decompress_snappy_file(&path, tmpdir)?;
+
+                // rename the decompressed file to the original filename, but still
+                // inside the temp directory. this is so that the decompressed file can be
+                // processed as if it was the original file without the "sz" extension
+                let original_filepath = path.with_extension("");
+                let original_filename = original_filepath
+                    .file_name()
+                    .ok_or_else(|| {
+                        CliError::Other(format!(
+                            "Failed to get filename from path '{}'",
+                            original_filepath.display()
+                        ))
+                    })
+                    .and_then(|filename| {
+                        filename.to_str().ok_or_else(|| {
+                            CliError::Other(format!(
+                                "Failed to convert filename to string from path '{}'",
+                                original_filepath.display()
+                            ))
+                        })
+                    })?;
+                let final_decompressed_filepath = tmpdir.path().join(original_filename);
+                std::fs::rename(&decompressed_filepath, &final_decompressed_filepath)?;
+
+                processed_input.push(final_decompressed_filepath);
+            } else {
+                processed_input.push(path);
             }
-            processed_input.push(path);
         }
     }
     if processed_input.is_empty() {
         return fail_clierror!("{empty_stdin_errmsg}");
     }
+    log::debug!("processed input: {:?}", processed_input);
     Ok(processed_input)
 }
