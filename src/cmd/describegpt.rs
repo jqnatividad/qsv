@@ -356,13 +356,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         // Add --dictionary output as context if it is not empty
         fn get_messages(prompt: &str, dictionary_completion_output: &str) -> serde_json::Value {
-            let messages = match dictionary_completion_output.is_empty() {
+            match dictionary_completion_output.is_empty() {
                 true => json!([{"role": "user", "content": prompt}]),
                 false => {
                     json!([{"role": "assistant", "content": dictionary_completion_output}, {"role": "user", "content": prompt}])
                 }
-            };
-            messages
+            }
         }
 
         if args.flag_description.is_some() || args.flag_all.is_some() {
