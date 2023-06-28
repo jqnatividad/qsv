@@ -346,7 +346,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let prompt = get_dictionary_prompt(stats_str, frequency_str, args_json);
             println!("Generating data dictionary from OpenAI API...");
             let dictionary_completion = get_completion(
-                &api_key,
+                api_key,
                 json!([{"role": "user", "content": prompt}]),
                 args.flag_max_tokens,
             );
