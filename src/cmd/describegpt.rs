@@ -65,7 +65,7 @@ fn get_completion(api_key: &str, messages: serde_json::Value, max_tokens: Option
     // Send request to OpenAI API
     let request = client
         .post("https://api.openai.com/v1/chat/completions")
-        .header("Authorization", format!("Bearer {}", api_key))
+        .header("Authorization", format!("Bearer {api_key}"))
         .header("Content-Type", "application/json")
         .body(request_data.to_string())
         .send();
@@ -74,7 +74,7 @@ fn get_completion(api_key: &str, messages: serde_json::Value, max_tokens: Option
     let response = match request {
         Ok(val) => val,
         Err(err) => {
-            eprintln!("Error: {}", err);
+            eprintln!("Error: {err}");
             std::process::exit(1);
         }
     };
@@ -351,7 +351,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 args.flag_max_tokens,
             );
             dictionary_completion_output = get_completion_output(&dictionary_completion);
-            println!("Dictionary output:\n{}", dictionary_completion_output);
+            println!("Dictionary output:\n{dictionary_completion_output}");
         }
 
         // Add --dictionary output as context if it is not empty
@@ -373,7 +373,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             println!("Generating description from OpenAI API...");
             let completion = get_completion(api_key, messages, args.flag_max_tokens);
             let completion_output = get_completion_output(&completion);
-            println!("Description output:\n{}", completion_output);
+            println!("Description output:\n{completion_output}");
         }
         if args.flag_tags.is_some() || args.flag_all.is_some() {
             let prompt = match args.flag_dictionary.is_some() {
@@ -384,7 +384,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             println!("Generating tags from OpenAI API...");
             let completion = get_completion(api_key, messages, args.flag_max_tokens);
             let completion_output = get_completion_output(&completion);
-            println!("Tags output:\n{}", completion_output);
+            println!("Tags output:\n{completion_output}");
         }
     }
 
