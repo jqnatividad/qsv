@@ -91,8 +91,8 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 😣: uses additional memory proportional to the cardinality of the columns in the CSV.   
 🧠: expensive operations are memoized (cached) with available inter-session Redis caching for fetch commands.    
 🐻‍❄️: command powered by [Pola.rs](https://pola.rs) engine.   
-🤖: command uses Natural Language Processing and General AI techniques.  
-🏎️: multithreaded when an index is available.   
+🤖: command uses Natural Language Processing & General AI techniques.  
+🏎️: multithreaded when an index (📇) is available.   
 🚀: multithreaded even without an index.   
 ![CKAN](docs/images/ckan.png) : has [CKAN](https://ckan.org)-aware integration options.    
 🌐: has web-aware options.
