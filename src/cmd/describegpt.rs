@@ -181,12 +181,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .expect("Error: Unable to get stats from qsv.");
 
     // Parse the stats as &str
-    let stats_str = match std::str::from_utf8(&stats.stdout) {
-        Ok(val) => val,
-        Err(_) => {
-            eprintln!("Error: Unable to parse stats as &str.");
-            std::process::exit(1);
-        }
+    let Ok(stats_str) = std::str::from_utf8(&stats.stdout) else {
+        eprintln!("Error: Unable to parse stats as &str.");
+        std::process::exit(1);
     };
 
     // Get frequency from qsv frequency on input file
