@@ -335,14 +335,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             // Set the completion output
             let message = &completion_json["choices"][0]["message"]["content"];
             // Convert escaped characters to normal characters
-            let formatted_message = message
+            message
                 .to_string()
                 .replace("\\n", "\n")
                 .replace("\\t", "\t")
                 .replace("\\\"", "\"")
                 .replace("\\'", "'")
-                .replace("\\`", "`");
-            formatted_message
+                .replace("\\`", "`")
         }
 
         let mut dictionary_completion_output = "".to_string();
