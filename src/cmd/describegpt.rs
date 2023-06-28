@@ -323,14 +323,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 }
             };
             // If OpenAI API returns error, print error message
-            match completion_json {
-                serde_json::Value::Object(ref map) => {
-                    if map.contains_key("error") {
-                        eprintln!("Error: {}", map["error"]);
-                        std::process::exit(1);
-                    }
+            if let serde_json::Value::Object(ref map) = completion_json {
+                if map.contains_key("error") {
+                    eprintln!("Error: {}", map["error"]);
+                    std::process::exit(1);
                 }
-                _ => {}
             }
             // Set the completion output
             let message = &completion_json["choices"][0]["message"]["content"];
