@@ -1398,7 +1398,7 @@ pub fn isutf8_file(path: &Path) -> Result<bool, CliError> {
 ///
 /// If the input is empty, try to copy stdin to a file named stdin in the passed temp directory
 /// If the input is empty and stdin is empty, return an error
-/// If it's not empty, check the input files if they exist
+/// If it's not empty, check the input files if they exist, and return an error if they don't
 ///
 /// If the input is a directory, add all the files in the directory to the input
 /// If the input is a file, add the file to the input
@@ -1411,33 +1411,24 @@ pub fn process_input(
 ) -> Result<Vec<PathBuf>, CliError> {
     let mut processed_input = Vec::with_capacity(arg_input.len());
 
+    // if the input is empty or "-", its stdin. try to copy stdin to a file named
+    // "stdin" in the passed temp directory
     if arg_input.is_empty() || arg_input[0] == PathBuf::from("-") {
         // copy stdin to a file named stdin in a temp directory
         let tmp_filename = tmpdir.path().join("stdin");
         let mut tmp_file = std::fs::File::create(&tmp_filename)?;
-        let nbytes = std::io::copy(&mut std::io::stdin(), &mut tmp_file)?;
-        if nbytes == 0 {
-            return fail_clierror!("{empty_stdin_errmsg}");
-        }
+        std::io::copy(&mut std::io::stdin(), &mut tmp_file)?;
         tmp_file.flush()?;
         processed_input.push(tmp_filename);
     } else {
-        let mut work_input = Vec::with_capacity(arg_input.len());
-
-        // is the input a directory?
-        if arg_input.len() == 1 && arg_input[0].is_dir() {
-            // if so, add all the files in the directory to the input
-            let dir = std::fs::read_dir(arg_input[0].clone())?;
-            for entry in dir {
-                let entry = entry?;
-                let path = entry.path();
-                if path.is_file() {
-                    work_input.push(path);
-                }
-            }
+        let work_input = if arg_input.len() == 1 && arg_input[0].is_dir() {
+            // if the input is a directory, add all the files in the directory to the input
+            std::fs::read_dir(&arg_input[0])?
+                .map(|entry| entry.map(|e| e.path()))
+                .collect::<Result<Vec<_>, _>>()?
         } else {
-            work_input = arg_input;
-        }
+            arg_input
+        };
 
         // check the input files
         for path in work_input {
@@ -1446,14 +1437,19 @@ pub fn process_input(
                 return fail_clierror!("Input file '{}' does not exist", path.display());
             }
             // is the input file snappy compressed?
-            if path.extension().unwrap_or_default() == "sz" {
-                // if so, decompress the file
-                let decompressed_filepath = decompress_snappy_file(&path, tmpdir)?;
-                processed_input.push(PathBuf::from(decompressed_filepath));
-            } else {
-                processed_input.push(path.clone());
+            if let Some(ext) = path.extension().and_then(std::ffi::OsStr::to_str) {
+                if ext == "sz" {
+                    // if so, decompress the file
+                    let decompressed_filepath = decompress_snappy_file(&path, tmpdir)?;
+                    processed_input.push(PathBuf::from(decompressed_filepath));
+                    continue;
+                }
             }
+            processed_input.push(path);
         }
+    }
+    if processed_input.is_empty() {
+        return fail_clierror!("{empty_stdin_errmsg}");
     }
     Ok(processed_input)
 }
