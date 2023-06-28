@@ -1446,22 +1446,9 @@ pub fn process_input(
                 // inside the temp directory. this is so that the decompressed file can be
                 // processed as if it was the original file without the "sz" extension
                 let original_filepath = path.with_extension("");
-                let original_filename = original_filepath
-                    .file_name()
-                    .ok_or_else(|| {
-                        CliError::Other(format!(
-                            "Failed to get filename from path '{}'",
-                            original_filepath.display()
-                        ))
-                    })
-                    .and_then(|filename| {
-                        filename.to_str().ok_or_else(|| {
-                            CliError::Other(format!(
-                                "Failed to convert filename to string from path '{}'",
-                                original_filepath.display()
-                            ))
-                        })
-                    })?;
+                // safety: we know the path has a filename
+                let original_filename = original_filepath.file_name().unwrap();
+
                 let final_decompressed_filepath = tmpdir.path().join(original_filename);
                 std::fs::rename(&decompressed_filepath, &final_decompressed_filepath)?;
 
