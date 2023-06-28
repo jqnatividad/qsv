@@ -344,7 +344,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 .replace("\\`", "`")
         }
 
-        let mut dictionary_completion_output = "".to_string();
+        let mut dictionary_completion_output = String::new();
         if args.flag_dictionary.is_some() || args.flag_all.is_some() {
             let prompt = get_dictionary_prompt(stats_str, frequency_str, args_json);
             println!("Generating data dictionary from OpenAI API...");
