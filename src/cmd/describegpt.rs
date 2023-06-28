@@ -201,12 +201,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .expect("Error: Unable to get frequency from qsv.");
 
     // Parse the frequency as &str
-    let frequency_str = match std::str::from_utf8(&frequency.stdout) {
-        Ok(val) => val,
-        Err(_) => {
-            eprintln!("Error: Unable to parse frequency as &str.");
-            std::process::exit(1);
-        }
+    let Ok(frequency_str) = std::str::from_utf8(&frequency.stdout) else {
+        eprintln!("Error: Unable to parse frequency as &str.");
+        std::process::exit(1);
     };
 
     // Get addition to prompt based on --json flag
