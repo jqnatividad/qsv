@@ -329,10 +329,10 @@ For details, see [Environment Variables](docs/ENVIRONMENT_VARIABLES.md) and the 
 It will NOT offer the choice to update itself to the prebuilt binaries published on GitHub. You need not worry that your manually built qsv will be overwritten by a self-update.
 
 * `feature_capable` - enable to build `qsv` binary variant which is feature-capable.
-* `all_features` - enable to build `qsv` binary variant with all features enabled (apply,fetch,foreach,generate,luau,python,to,self_update).
+* `all_features` - enable to build `qsv` binary variant with all features enabled (apply,fetch,foreach,generate,luau,polars,python,to,self_update).
 * `lite` - enable to build `qsvlite` binary variant with all features disabled.
 * `datapusher_plus` - enable to build `qsvdp` binary variant - the [DataPusher+](https://github.com/dathere/datapusher-plus) optimized qsv binary.
-* `nightly` - enable to turn on nightly/unstable features in the `rand`, `regex`, `hashbrown`, `polars` & `pyo3` crates when building with Rust nightly/unstable.
+* `nightly` - enable to turn on nightly/unstable features in the `rand`, `regex`, `hashbrown` & `pyo3` crates when building with Rust nightly/unstable.
 
 > ℹ️ **NOTE:** `qsvlite`, as the name implies, always has **non-default features disabled**. `qsv` can be built with any combination of the above features using the cargo `--features` & `--no-default-features` flags. The prebuilt `qsv` binaries has **all applicable features valid for the target platform**[^2].
 
