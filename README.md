@@ -85,7 +85,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 
 <div style="text-align: right"><sub><sup>Performance metrics compiled on an M2 Pro 12-core Mac Mini with 32gb RAM</sup></sub></div>
 
-✨: enabled by a feature flag.   
+✨: enabled by a [feature flag](#feature-flags).   
 📇: uses an index when available.   
 🤯: loads entire CSV into memory, though `dedup`, `stats` & `transpose` have "streaming" modes as well.   
 😣: uses additional memory proportional to the cardinality of the columns in the CSV.   
