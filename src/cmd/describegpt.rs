@@ -301,10 +301,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     // If args.json is true, then set to true, else false
-    let args_json = match args.flag_json {
-        Some(true) => true,
-        _ => false,
-    };
+    let args_json = matches!(args.flag_json, Some(true));
 
     // Generates output for all inference options
     fn run_inference_options(
