@@ -367,9 +367,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         if args.flag_description.is_some() || args.flag_all.is_some() {
-            let prompt = match args.flag_dictionary.is_some() {
-                true => get_description_prompt(None, None, args_json),
-                false => get_description_prompt(stats_str, frequency_str, args_json),
+            let prompt = if args.flag_dictionary.is_some() {
+                get_description_prompt(None, None, args_json)
+            } else {
+                get_description_prompt(stats_str, frequency_str, args_json)
             };
             let messages = get_messages(&prompt, &dictionary_completion_output);
             println!("Generating description from OpenAI API...");
@@ -378,9 +379,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             println!("Description output:\n{completion_output}");
         }
         if args.flag_tags.is_some() || args.flag_all.is_some() {
-            let prompt = match args.flag_dictionary.is_some() {
-                true => get_tags_prompt(None, None, args_json),
-                false => get_tags_prompt(stats_str, frequency_str, args_json),
+            let prompt = if args.flag_dictionary.is_some() {
+                get_tags_prompt(None, None, args_json)
+            } else {
+                get_tags_prompt(stats_str, frequency_str, args_json)
             };
             let messages = get_messages(&prompt, &dictionary_completion_output);
             println!("Generating tags from OpenAI API...");
