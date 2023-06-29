@@ -47,7 +47,7 @@ struct Args {
 // OpenAI API model
 const MODEL: &str = "gpt-3.5-turbo-16k";
 
-fn get_completion(api_key: &str, messages: serde_json::Value, max_tokens: Option<i32>) -> String {
+fn get_completion(api_key: &str, messages: &serde_json::Value, max_tokens: Option<i32>) -> String {
     // Create client with timeout
     let timeout_duration = Duration::from_secs(60);
     let client = Client::builder().timeout(timeout_duration).build().unwrap();
@@ -338,15 +338,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 .replace("\\`", "`")
         }
 
+        let mut messages: serde_json::Value;
         let mut dictionary_completion_output = String::new();
         if args.flag_dictionary.is_some() || args.flag_all.is_some() {
             let prompt = get_dictionary_prompt(stats_str, frequency_str, args_json);
             println!("Generating data dictionary from OpenAI API...");
-            let dictionary_completion = get_completion(
-                api_key,
-                json!([{"role": "user", "content": prompt}]),
-                args.flag_max_tokens,
-            );
+            messages = json!([{"role": "user", "content": prompt}]);
+            let dictionary_completion = get_completion(api_key, &messages, args.flag_max_tokens);
             dictionary_completion_output = get_completion_output(&dictionary_completion);
             println!("Dictionary output:\n{dictionary_completion_output}");
         }
@@ -366,9 +364,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             } else {
                 get_description_prompt(stats_str, frequency_str, args_json)
             };
-            let messages = get_messages(&prompt, &dictionary_completion_output);
+            messages = get_messages(&prompt, &dictionary_completion_output);
             println!("Generating description from OpenAI API...");
-            let completion = get_completion(api_key, messages, args.flag_max_tokens);
+            let completion = get_completion(api_key, &messages, args.flag_max_tokens);
             let completion_output = get_completion_output(&completion);
             println!("Description output:\n{completion_output}");
         }
@@ -378,9 +376,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             } else {
                 get_tags_prompt(stats_str, frequency_str, args_json)
             };
-            let messages = get_messages(&prompt, &dictionary_completion_output);
+            messages = get_messages(&prompt, &dictionary_completion_output);
             println!("Generating tags from OpenAI API...");
-            let completion = get_completion(api_key, messages, args.flag_max_tokens);
+            let completion = get_completion(api_key, &messages, args.flag_max_tokens);
             let completion_output = get_completion_output(&completion);
             println!("Tags output:\n{completion_output}");
         }
