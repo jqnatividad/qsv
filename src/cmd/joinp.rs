@@ -48,7 +48,16 @@ joinp options:
                            equal to N * M, where N and M correspond to the
                            number of rows in the given data sets, respectively.
                            The columns1 and columns2 arguments are ignored.
+    --nulls                When set, joins will work on empty fields.
+                           Otherwise, empty fields are completely ignored.
+    --try-parsedates       When set, the join will attempt to parse the columns
+                           as dates. If the parse fails, columns remain as strings.
+                           This is useful when the join columns are formatted as 
+                           dates with differing date formats, as the date formats
+                           will be normalized. Note that this will be automatically 
+                           enabled when using asof joins.                           
 
+                           ASOF JOIN OPTIONS:
     --asof                 Do an 'asof' join. This is similar to a left outer
                            join, except we match on nearest key rather than
                            equal keys. Note that both CSV data sets will be SORTED
@@ -92,15 +101,6 @@ joinp options:
                              large for their month should saturate at the largest date
                              (e.g. 2022-02-29 -> 2022-02-28) instead of erroring.
 
-    --nulls                When set, joins will work on empty fields.
-                           Otherwise, empty fields are completely ignored.
-    --try-parsedates       When set, the join will attempt to parse the columns
-                           as dates. If the parse fails, columns remain as strings.
-                           This is useful when the join columns are formatted as 
-                           dates with differing date formats, as the date formats
-                           will be normalized. Note that this will be automatically 
-                           enabled when using asof joins.
-
 Common options:
     -h, --help             Display this message
     -o, --output <file>    Write output to <file> instead of stdout.
@@ -137,11 +137,11 @@ struct Args {
     flag_left_semi:      bool,
     flag_full:           bool,
     flag_cross:          bool,
+    flag_nulls:          bool,
+    flag_try_parsedates: bool,
     flag_asof:           bool,
     flag_strategy:       Option<String>,
     flag_tolerance:      Option<String>,
-    flag_nulls:          bool,
-    flag_try_parsedates: bool,
     flag_output:         Option<String>,
     flag_delimiter:      Option<Delimiter>,
     flag_quiet:          bool,
