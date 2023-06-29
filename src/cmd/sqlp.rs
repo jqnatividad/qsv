@@ -30,6 +30,10 @@ Example queries:
 
   qsv sqlp data.csv "select data.col1, tbl2.col1 from data join read_parquet('data2.parquet') as tbl2 ON data.col1 = tbl2.col1"
 
+  qsv sqlp data.csv "select data.col1, tbl2.col1 from data join read_ndjson('data2.jsonl') as tbl2 ON data.col1 = tbl2.col1"
+
+  cat file.cvs | qsv  sqlp - 'select * from stdin'
+
 For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_sqlp.rs.
 
 Usage:

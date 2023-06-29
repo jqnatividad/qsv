@@ -1431,6 +1431,7 @@ pub fn process_input(
         };
 
         // check the input files
+        // TODO: allow multiple input with stdin (e.g. cat file1.csv | qsv sqlp - file2.csv ...)
         for path in work_input {
             // does the input file exist?
             if !path.exists() {
