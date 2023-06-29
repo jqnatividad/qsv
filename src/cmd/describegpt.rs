@@ -224,39 +224,42 @@ fn run_inference_options(
             .replace("\\`", "`")
     }
 
+    let mut prompt: String;
     let mut messages: serde_json::Value;
+    let mut completion: String;
+    let mut completion_output = String::new();
     let mut dictionary_completion_output = String::new();
     if args.flag_dictionary.is_some() || args.flag_all.is_some() {
-        let prompt = get_dictionary_prompt(stats_str, frequency_str, args_json);
+        prompt = get_dictionary_prompt(stats_str, frequency_str, args_json);
         println!("Generating data dictionary from OpenAI API...");
         messages = json!([{"role": "user", "content": prompt}]);
-        let dictionary_completion = get_completion(api_key, &messages, args.flag_max_tokens);
-        dictionary_completion_output = get_completion_output(&dictionary_completion);
-        println!("Dictionary output:\n{dictionary_completion_output}");
+        completion = get_completion(api_key, &messages, args.flag_max_tokens);
+        dictionary_completion_output = get_completion_output(&completion);
+        println!("Dictionary output:\n{completion_output}");
     }
 
     if args.flag_description.is_some() || args.flag_all.is_some() {
-        let prompt = if args.flag_dictionary.is_some() {
+        prompt = if args.flag_dictionary.is_some() {
             get_description_prompt(None, None, args_json)
         } else {
             get_description_prompt(stats_str, frequency_str, args_json)
         };
         messages = get_messages(&prompt, &dictionary_completion_output);
         println!("Generating description from OpenAI API...");
-        let completion = get_completion(api_key, &messages, args.flag_max_tokens);
-        let completion_output = get_completion_output(&completion);
+        completion = get_completion(api_key, &messages, args.flag_max_tokens);
+        completion_output = get_completion_output(&completion);
         println!("Description output:\n{completion_output}");
     }
     if args.flag_tags.is_some() || args.flag_all.is_some() {
-        let prompt = if args.flag_dictionary.is_some() {
+        prompt = if args.flag_dictionary.is_some() {
             get_tags_prompt(None, None, args_json)
         } else {
             get_tags_prompt(stats_str, frequency_str, args_json)
         };
         messages = get_messages(&prompt, &dictionary_completion_output);
         println!("Generating tags from OpenAI API...");
-        let completion = get_completion(api_key, &messages, args.flag_max_tokens);
-        let completion_output = get_completion_output(&completion);
+        completion = get_completion(api_key, &messages, args.flag_max_tokens);
+        completion_output = get_completion_output(&completion);
         println!("Tags output:\n{completion_output}");
     }
 }
