@@ -55,7 +55,10 @@ joinp options:
                            This is useful when the join columns are formatted as 
                            dates with differing date formats, as the date formats
                            will be normalized. Note that this will be automatically 
-                           enabled when using asof joins.                           
+                           enabled when using asof joins.
+    --streaming            When set, the join will be done in a streaming fashion.
+                           This is useful when joining large files that do not fit
+                           in memory. Note that this will make the join slower.                       
 
                            ASOF JOIN OPTIONS:
     --asof                 Do an 'asof' join. This is similar to a left outer
@@ -139,6 +142,7 @@ struct Args {
     flag_cross:          bool,
     flag_nulls:          bool,
     flag_try_parsedates: bool,
+    flag_streaming:      bool,
     flag_asof:           bool,
     flag_strategy:       Option<String>,
     flag_tolerance:      Option<String>,
@@ -218,12 +222,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 }
 
 struct JoinStruct {
-    lf1:    LazyFrame,
-    sel1:   String,
-    lf2:    LazyFrame,
-    sel2:   String,
-    output: Option<String>,
-    delim:  u8,
+    lf1:       LazyFrame,
+    sel1:      String,
+    lf2:       LazyFrame,
+    sel2:      String,
+    output:    Option<String>,
+    delim:     u8,
+    streaming: bool,
 }
 
 impl JoinStruct {
@@ -249,7 +254,7 @@ impl JoinStruct {
             file_caching:               true,
             slice_pushdown:             true,
             common_subplan_elimination: true,
-            streaming:                  true,
+            streaming:                  self.streaming,
         };
 
         let mut join_results = if jointype == JoinType::Cross {
@@ -330,6 +335,7 @@ impl Args {
             sel2: self.arg_columns2.clone(),
             output: self.flag_output.clone(),
             delim,
+            streaming: self.flag_streaming,
         })
     }
 }
