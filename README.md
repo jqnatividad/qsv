@@ -187,7 +187,7 @@ The `--select` option and several commands (`apply`, `applydp`, `schema`, `searc
 
 Its syntax can be found [here](https://docs.rs/regex/latest/regex/#syntax) and *"is similar to Perl-style regular expressions, but lacks a few features like look around and back references. In exchange, all searches execute in linear time with respect to the size of the regular expression and search text."*
 
- If you want to test your regular expressions, [regex101](https://regex101.com) supports the syntax used by the `regex` crate. Just select the "Rust" flavor.
+If you want to test your regular expressions, [regex101](https://regex101.com) supports the syntax used by the `regex` crate. Just select the "Rust" flavor.
 
 ## File formats
 
@@ -203,8 +203,7 @@ The `fetch` & `fetchpost` commands also produces JSONL files when its invoked wi
 
 The `excel`, `safenames`, `sniff`, `sortcheck` & `validate` commands produce JSON files with their JSON options following the [JSON API 1.1 specification](https://jsonapi.org/format/).
 
-The `schema` command produces a [JSON Schema Validation (Draft 7)](https://json-schema.org/draft/2020-12/json-schema-validation.html) file with the ".schema.json" file extension, which can be used with the `validate` command
-to validate other CSV files with a similar schema.
+The `schema` command produces a [JSON Schema Validation (Draft 7)](https://json-schema.org/draft/2020-12/json-schema-validation.html) file with the ".schema.json" file extension, which can be used with the `validate` command to validate other CSV files with a similar schema.
 
 The `excel` command recognizes Excel & Open Document Spreadsheet(ODS) files (`.xls`, `.xlsx`, `.xlsm`, `.xlsb` & `.ods` files).
 
@@ -221,7 +220,7 @@ For all commands except the `index`, `extdedup` & `extsort` commands, if the inp
 Similarly, if the `--output` file has an ".sz" extension, qsv will *automatically* do streaming compression as it writes it.
 If the output file has an extended CSV/TSV ".sz" extension, qsv will also use the file extension to determine the delimiter to use.  
 
-Note however that compressed files cannot be indexed, so index-accelerated commands (`frequency`, `schema`, `split`, `stats`, `tojsonl`) will not be multi-threaded. Random access is also disabled without an index, so `slice` will not be accelerated and `luau`'s random-access mode will not be available.
+Note however that compressed files cannot be indexed, so index-accelerated commands (`frequency`, `schema`, `split`, `stats`, `tojsonl`) will not be multi-threaded. Random access is also disabled without an index, so `slice` will not be instantaneous and `luau`'s random-access mode will not be available.
 
 There is also a dedicated [`snappy`](/src/cmd/snappy.rs#L2) command with four subcommands for direct snappy file operations — a multithreaded `compress` subcommand (4-5x faster than the built-in, single-threaded auto-compression); a `decompress` subcommand with detailed compression metadata; a `check` subcommand to quickly inspect if a file has a Snappy header; and a `validate` subcommand to confirm if a Snappy file is valid.
 
@@ -229,11 +228,11 @@ The `snappy` command can be used to compress/decompress ANY file, not just CSV/T
 
 Using the `snappy` command, we can compress NYC's 311 data (15gb, 28m rows) to 4.95 gb in *5.77 seconds* with the multithreaded `compress` subcommand - *2.58 gb/sec* with a 0.33 (3.01:1) compression ratio.  With `snappy decompress`, we can roundtrip decompress the same file in *16.71 seconds* - *0.89 gb/sec*.
 
-Compare that to [zip 3.0](https://infozip.sourceforge.net/Zip.html), which compressed the same file to 2.9 gb in *248.3 seconds - 43x slower at 0.06 gb/sec* with a 0.19 (5.17:1) compression ratio - for just an additional 14% (2.45 gb) of saved space. zip also took 4.3x longer to roundtrip decompress the same file in *72 seconds* - *0.20 gb/sec*.
+Compare that to [zip 3.0](https://infozip.sourceforge.net/Zip.html), which compressed the same file to 2.9 gb in *248.3 seconds on the same machine - 43x slower at 0.06 gb/sec* with a 0.19 (5.17:1) compression ratio - for just an additional 14% (2.45 gb) of saved space. zip also took 4.3x longer to roundtrip decompress the same file in *72 seconds* - *0.20 gb/sec*.
 
 ## RFC 4180 CSV Standard
 
-qsv validates against the [RFC 4180](https://datatracker.ietf.org/doc/html/rfc4180) CSV standard. However IRL, CSV formats vary significantly & qsv is actually not strictly compliant with the specification so it can process "real-world" CSV files.
+qsv hews closely to the [RFC 4180](https://datatracker.ietf.org/doc/html/rfc4180) CSV standard. However, in real life, CSV formats vary significantly & qsv is actually not strictly compliant with the specification so it can process "real-world" CSV files.
 qsv leverages the awesome [Rust CSV](https://docs.rs/csv/latest/csv/) crate to read/write CSV files.
 
 Click [here](https://docs.rs/csv-core/latest/csv_core/struct.Reader.html#rfc-4180) to find out more about how qsv conforms to the standard using this crate.
