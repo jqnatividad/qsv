@@ -175,11 +175,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         str_row.clear();
         for field in row.iter() {
-            match simdutf8::basic::from_utf8(field) {
-                Ok(utf8_field) => str_row.push_field(utf8_field),
-                Err(_) => {
-                    str_row.push_field(&String::from_utf8_lossy(field));
-                }
+            if let Ok(utf8_field) = simdutf8::basic::from_utf8(field) {
+                str_row.push_field(utf8_field);
+            } else {
+                str_row.push_field(&String::from_utf8_lossy(field));
             };
         }
         wtr.write_record(&str_row)?;
