@@ -35,3 +35,4 @@ tmp/*
 .history
 *.rswip
 .env
+*.db
