@@ -28,9 +28,9 @@ Example queries:
 
   qsv sqlp data.csv "select col1, col2, col3 from data WHERE col1 = 'foo' AND col2 > 10"
 
-  qsv sqlp data.csv "select data.col1, tbl2.col1 from data join read_parquet('data2.parquet') as tbl2 ON data.col1 = tbl2.col1"
-
-  qsv sqlp data.csv "select data.col1, tbl2.col1 from data join read_ndjson('data2.jsonl') as tbl2 ON data.col1 = tbl2.col1"
+  qsv sqlp data.csv "select data.col1, t2.col1 from data join read_parquet('data2.parquet') as t2 ON data.col1 = t2.col1"
+  qsv sqlp data.csv "select data.col1, t2.col1 from data join read_ndjson('data2.jsonl') as t2 on data.col1 = t2.col1"
+  qsv sqlp data.csv "select data.col1, t2.col1 from data join read_ipc('data2.arrow') as t2 ON data.col1 = t2.col1"
 
   cat file.csv | qsv sqlp - 'select * from stdin'
 
