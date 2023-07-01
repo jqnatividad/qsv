@@ -1405,7 +1405,7 @@ pub fn isutf8_file(path: &Path) -> Result<bool, CliError> {
 /// If the input are snappy compressed files, uncompress them before adding them to the input
 #[cfg(any(feature = "to", feature = "polars"))]
 pub fn process_input(
-    arg_input: Vec<PathBuf>,
+    mut arg_input: Vec<PathBuf>,
     tmpdir: &tempfile::TempDir,
     empty_stdin_errmsg: &str,
 ) -> Result<Vec<PathBuf>, CliError> {
@@ -1420,45 +1420,48 @@ pub fn process_input(
         std::io::copy(&mut std::io::stdin(), &mut tmp_file)?;
         tmp_file.flush()?;
         processed_input.push(tmp_filename);
+        // remove the "-" from the input
+        // if the input was empty, this does nothing
+        arg_input.remove(0);
+    }
+
+    let work_input = if arg_input.len() == 1 && arg_input[0].is_dir() {
+        // if the input is a directory, add all the files in the directory to the input
+        std::fs::read_dir(&arg_input[0])?
+            .map(|entry| entry.map(|e| e.path()))
+            .collect::<Result<Vec<_>, _>>()?
     } else {
-        let work_input = if arg_input.len() == 1 && arg_input[0].is_dir() {
-            // if the input is a directory, add all the files in the directory to the input
-            std::fs::read_dir(&arg_input[0])?
-                .map(|entry| entry.map(|e| e.path()))
-                .collect::<Result<Vec<_>, _>>()?
+        arg_input
+    };
+
+    // check the input files
+    for path in work_input {
+        // does the input file exist?
+        if !path.exists() {
+            return fail_clierror!("Input file '{}' does not exist", path.display());
+        }
+
+        // is the input file snappy compressed?
+        if path.extension().and_then(std::ffi::OsStr::to_str) == Some("sz") {
+            // if so, decompress the file
+            let decompressed_filepath = decompress_snappy_file(&path, tmpdir)?;
+
+            // rename the decompressed file to the original filename, but still
+            // inside the temp directory. this is so that the decompressed file can be
+            // processed as if it was the original file without the "sz" extension
+            let original_filepath = path.with_extension("");
+            // safety: we know the path has a filename
+            let original_filename = original_filepath.file_name().unwrap();
+
+            let final_decompressed_filepath = tmpdir.path().join(original_filename);
+            std::fs::rename(&decompressed_filepath, &final_decompressed_filepath)?;
+
+            processed_input.push(final_decompressed_filepath);
         } else {
-            arg_input
-        };
-
-        // check the input files
-        // TODO: allow multiple input with stdin (e.g. cat file1.csv | qsv sqlp - file2.csv ...)
-        for path in work_input {
-            // does the input file exist?
-            if !path.exists() {
-                return fail_clierror!("Input file '{}' does not exist", path.display());
-            }
-
-            // is the input file snappy compressed?
-            if path.extension().and_then(std::ffi::OsStr::to_str) == Some("sz") {
-                // if so, decompress the file
-                let decompressed_filepath = decompress_snappy_file(&path, tmpdir)?;
-
-                // rename the decompressed file to the original filename, but still
-                // inside the temp directory. this is so that the decompressed file can be
-                // processed as if it was the original file without the "sz" extension
-                let original_filepath = path.with_extension("");
-                // safety: we know the path has a filename
-                let original_filename = original_filepath.file_name().unwrap();
-
-                let final_decompressed_filepath = tmpdir.path().join(original_filename);
-                std::fs::rename(&decompressed_filepath, &final_decompressed_filepath)?;
-
-                processed_input.push(final_decompressed_filepath);
-            } else {
-                processed_input.push(path);
-            }
+            processed_input.push(path);
         }
     }
+
     if processed_input.is_empty() {
         return fail_clierror!("{empty_stdin_errmsg}");
     }
