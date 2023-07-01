@@ -32,7 +32,8 @@ Example queries:
   qsv sqlp data.csv "select data.col1, t2.col1 from data join read_ndjson('data2.jsonl') as t2 on data.col1 = t2.col1"
   qsv sqlp data.csv "select data.col1, t2.col1 from data join read_ipc('data2.arrow') as t2 ON data.col1 = t2.col1"
 
-  cat file.csv | qsv sqlp - 'select * from stdin'
+  cat data.csv | qsv sqlp - 'select * from stdin'
+  cat data.csv | qsv sqlp - data2.csv 'select * from stdin join data2 on stdin.col1 = data2.col1'
 
 For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_sqlp.rs.
 
