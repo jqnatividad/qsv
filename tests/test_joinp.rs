@@ -201,6 +201,229 @@ fn joinp_asof_date() {
 }
 
 #[test]
+fn joinp_asofby_1() {
+    let wrk = Workdir::new("join_asofby_timeseries");
+    wrk.create(
+        "trades.csv",
+        vec![
+            svec!["time", "ticker", "groups_numeric", "bid"],
+            svec!["2016-01-01 12:23:00", "MSFT", "1", "51.95"],
+            svec!["2016-01-01 12:38:00", "MSFT", "1", "51.95"],
+            svec!["2016-01-01 12:48:00", "GOOG", "2", "720.77"],
+            svec!["2016-01-01 12:48:00", "GOOG", "2", "720.92"],
+            svec!["2016-01-01 12:48:00", "AAPL", "3", "98.0"],
+        ],
+    );
+    wrk.create(
+        "quotes.csv",
+        vec![
+            svec!["time", "ticker", "groups_numeric", "bid"],
+            svec!["2016-01-01 12:23:00", "GOOG", "2", "720.50"],
+            svec!["2016-01-01 12:23:00", "MSFT", "1", "51.95"],
+            svec!["2016-01-01 12:30:00", "MSFT", "1", "51.97"],
+            svec!["2016-01-01 12:41:00", "MSFT", "1", "51.99"],
+            svec!["2016-01-01 12:48:00", "GOOG", "2", "720.50"],
+            svec!["2016-01-01 12:49:00", "AAPL", "3", "97.99"],
+            svec!["2016-01-01 12:52:00", "GOOG", "2", "720.50"],
+            svec!["2016-01-01 12:55:00", "MSFT", "1", "52.01"],
+        ],
+    );
+
+    let mut cmd = wrk.command("joinp");
+    cmd.arg("--asof")
+        .args(["time", "trades.csv", "time", "quotes.csv"])
+        .args(["--left_by", "ticker"])
+        .args(["--right_by", "ticker"])
+        .args(["--datetime-format", "%Y-%m-%d %H:%M"]);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec![
+            "time",
+            "ticker",
+            "groups_numeric",
+            "bid",
+            "ticker_right",
+            "groups_numeric_right",
+            "bid_right"
+        ],
+        svec![
+            "2016-01-01 12:23",
+            "MSFT",
+            "1",
+            "51.95",
+            "MSFT",
+            "1",
+            "51.95"
+        ],
+        svec![
+            "2016-01-01 12:38",
+            "MSFT",
+            "1",
+            "51.95",
+            "MSFT",
+            "1",
+            "51.97"
+        ],
+        svec![
+            "2016-01-01 12:48",
+            "GOOG",
+            "2",
+            "720.77",
+            "GOOG",
+            "2",
+            "720.5"
+        ],
+        svec![
+            "2016-01-01 12:48",
+            "GOOG",
+            "2",
+            "720.92",
+            "GOOG",
+            "2",
+            "720.5"
+        ],
+        svec![
+            "2016-01-01 12:48",
+            "AAPL",
+            "3",
+            "98.0",
+            "GOOG",
+            "2",
+            "720.5"
+        ],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn joinp_asofby_left_place_date() {
+    let wrk = Workdir::new("join_asofby_left_place_date");
+    wrk.create(
+        "gdp.csv",
+        vec![
+            svec!["date", "gdp", "place"],
+            svec!["2016-01-01", "4164", "US"],
+            svec!["2017-01-01", "4411", "US"],
+            svec!["2018-01-01", "4566", "Asia"],
+            svec!["2019-01-01", "4696", "EU"],
+        ],
+    );
+    wrk.create(
+        "population.csv",
+        vec![
+            svec!["date", "population", "place"],
+            svec!["2016-05-12", "82.19", "US"],
+            svec!["2017-05-12", "82.66", "US"],
+            svec!["2018-05-12", "83.12", "Asia"],
+            svec!["2018-05-12", "84.12", "Asia"],
+            svec!["2019-05-12", "83.52", "EU"],
+        ],
+    );
+
+    let mut cmd = wrk.command("joinp");
+    cmd.arg("--asof")
+        .args(["date", "population.csv", "date", "gdp.csv"])
+        .args(["--left_by", "place"]);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["date", "population", "place", "gdp", "place_right"],
+        svec!["2016-05-12", "82.19", "US", "4164", "US"],
+        svec!["2017-05-12", "82.66", "US", "4411", "US"],
+        svec!["2018-05-12", "83.12", "Asia", "4566", "Asia"],
+        svec!["2018-05-12", "84.12", "Asia", "4566", "Asia"],
+        svec!["2019-05-12", "83.52", "EU", "4696", "EU"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn joinp_asofby_right_place_date() {
+    let wrk = Workdir::new("join_asofby_right_place_date");
+    wrk.create(
+        "gdp.csv",
+        vec![
+            svec!["date", "gdp", "place"],
+            svec!["2016-01-01", "4164", "US"],
+            svec!["2017-01-01", "4411", "US"],
+            svec!["2018-01-01", "4566", "Asia"],
+            svec!["2019-01-01", "4696", "EU"],
+        ],
+    );
+    wrk.create(
+        "population.csv",
+        vec![
+            svec!["date", "population", "place"],
+            svec!["2016-05-12", "82.19", "US"],
+            svec!["2017-05-12", "82.66", "US"],
+            svec!["2018-05-12", "83.12", "Asia"],
+            svec!["2018-05-12", "84.12", "Asia"],
+            svec!["2019-05-12", "83.52", "EU"],
+        ],
+    );
+
+    let mut cmd = wrk.command("joinp");
+    cmd.arg("--asof")
+        .args(["date", "population.csv", "date", "gdp.csv"])
+        .args(["--right_by", "place"]);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["date", "population", "place", "gdp", "place_right"],
+        svec!["2016-05-12", "82.19", "US", "4164", "US"],
+        svec!["2017-05-12", "82.66", "US", "4411", "US"],
+        svec!["2018-05-12", "83.12", "Asia", "4566", "Asia"],
+        svec!["2018-05-12", "84.12", "Asia", "4566", "Asia"],
+        svec!["2019-05-12", "83.52", "EU", "4696", "EU"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn joinp_asofby_leftright_place_date() {
+    let wrk = Workdir::new("join_asofby_leftright_place_date");
+    wrk.create(
+        "gdp.csv",
+        vec![
+            svec!["date", "gdp", "place"],
+            svec!["2016-01-01", "4164", "US"],
+            svec!["2017-01-01", "4411", "US"],
+            svec!["2018-01-01", "4566", "Asia"],
+            svec!["2019-01-01", "4696", "EU"],
+        ],
+    );
+    wrk.create(
+        "population.csv",
+        vec![
+            svec!["date", "population", "other_place"],
+            svec!["2016-05-12", "82.19", "US"],
+            svec!["2017-05-12", "82.66", "US"],
+            svec!["2018-05-12", "83.12", "Asia"],
+            svec!["2018-05-12", "84.12", "Asia"],
+            svec!["2019-05-12", "83.52", "EU"],
+        ],
+    );
+
+    let mut cmd = wrk.command("joinp");
+    cmd.arg("--asof")
+        .args(["date", "population.csv", "date", "gdp.csv"])
+        .args(["--left_by", "place"])
+        .args(["--right_by", "other_place"]);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["date", "population", "other_place", "gdp", "place"],
+        svec!["2016-05-12", "82.19", "US", "4164", "US"],
+        svec!["2017-05-12", "82.66", "US", "4411", "US"],
+        svec!["2018-05-12", "83.12", "Asia", "4566", "Asia"],
+        svec!["2018-05-12", "84.12", "Asia", "4566", "Asia"],
+        svec!["2019-05-12", "83.52", "EU", "4696", "EU"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn joinp_asof_nearest_date() {
     let wrk = Workdir::new("join_asof_nearest_date");
     wrk.create(
