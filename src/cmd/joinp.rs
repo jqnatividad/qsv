@@ -65,6 +65,13 @@ joinp options:
                            join, except we match on nearest key rather than
                            equal keys. Note that both CSV data sets will be SORTED
                            AUTOMATICALLY on the join columns.
+    --left_by <arg>        Do an 'asof_by' join - a special implementation of the asof
+                           join that searches for the nearest keys within a subgroup
+                           set by the asof_by columns. This specifies the column/s for
+                           the left CSV. Columns are referenced by name. Specify
+                           multiple columns by separating them with a comma.
+    --right_by <arg>       Do an 'asof_by' join. This specifies the column/s for
+                           the right CSV.     
     --strategy <arg>       The strategy to use for the asof join:
                              backward - For each row in the first CSV data set,
                                         we find the last row in the second data set
@@ -104,6 +111,17 @@ joinp options:
                              large for their month should saturate at the largest date
                              (e.g. 2022-02-29 -> 2022-02-28) instead of erroring.
 
+                             OUTPUT FORMAT OPTIONS:
+   --datetime-format <fmt>   The datetime format to use writing datetimes.
+                             See https://docs.rs/chrono/latest/chrono/format/strftime/index.html
+                             for the list of valid format specifiers.
+   --date-format <fmt>       The date format to use writing dates.
+   --time-format <fmt>       The time format to use writing times.
+   --float-precision <arg>   The number of digits of precision to use when writing floats.
+                             (default: 6)
+   --null-value <arg>        The string to use when writing null values.
+                             (default: <empty string>)                             
+
 Common options:
     -h, --help             Display this message
     -o, --output <file>    Write output to <file> instead of stdout.
@@ -126,29 +144,37 @@ use polars::{
     prelude::{CsvWriter, LazyCsvReader, LazyFileListReader, LazyFrame, SerWriter, SortOptions},
 };
 use serde::Deserialize;
+use smartstring;
 
 use crate::{config::Delimiter, util, CliError, CliResult};
 
 #[derive(Deserialize)]
 struct Args {
-    arg_columns1:        String,
-    arg_input1:          String,
-    arg_columns2:        String,
-    arg_input2:          String,
-    flag_left:           bool,
-    flag_left_anti:      bool,
-    flag_left_semi:      bool,
-    flag_full:           bool,
-    flag_cross:          bool,
-    flag_nulls:          bool,
-    flag_try_parsedates: bool,
-    flag_streaming:      bool,
-    flag_asof:           bool,
-    flag_strategy:       Option<String>,
-    flag_tolerance:      Option<String>,
-    flag_output:         Option<String>,
-    flag_delimiter:      Option<Delimiter>,
-    flag_quiet:          bool,
+    arg_columns1:         String,
+    arg_input1:           String,
+    arg_columns2:         String,
+    arg_input2:           String,
+    flag_left:            bool,
+    flag_left_anti:       bool,
+    flag_left_semi:       bool,
+    flag_full:            bool,
+    flag_cross:           bool,
+    flag_nulls:           bool,
+    flag_try_parsedates:  bool,
+    flag_streaming:       bool,
+    flag_asof:            bool,
+    flag_left_by:         Option<String>,
+    flag_right_by:        Option<String>,
+    flag_strategy:        Option<String>,
+    flag_tolerance:       Option<String>,
+    flag_datetime_format: Option<String>,
+    flag_date_format:     Option<String>,
+    flag_time_format:     Option<String>,
+    flag_float_precision: Option<usize>,
+    flag_null_value:      String,
+    flag_output:          Option<String>,
+    flag_delimiter:       Option<Delimiter>,
+    flag_quiet:           bool,
 }
 
 impl From<polars::error::PolarsError> for CliError {
@@ -176,7 +202,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         args.flag_cross,
         args.flag_asof,
     ) {
-        // TODO: add support for join_asof_by()
         (false, false, false, false, false, false) => join.polars_join(JoinType::Inner, false),
         (true, false, false, false, false, false) => join.polars_join(JoinType::Left, false),
         (false, true, false, false, false, false) => join.polars_join(JoinType::Anti, false),
@@ -209,6 +234,24 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     }
                 }
             }
+            if args.flag_left_by.is_some() {
+                asof_options.left_by = Some(
+                    args.flag_left_by
+                        .unwrap()
+                        .split(',')
+                        .map(smartstring::SmartString::from)
+                        .collect(),
+                );
+            }
+            if args.flag_right_by.is_some() {
+                asof_options.right_by = Some(
+                    args.flag_right_by
+                        .unwrap()
+                        .split(',')
+                        .map(smartstring::SmartString::from)
+                        .collect(),
+                );
+            }
             join.polars_join(JoinType::AsOf(asof_options), true)
         }
         _ => fail!("Please pick exactly one join operation."),
@@ -222,13 +265,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 }
 
 struct JoinStruct {
-    lf1:       LazyFrame,
-    sel1:      String,
-    lf2:       LazyFrame,
-    sel2:      String,
-    output:    Option<String>,
-    delim:     u8,
-    streaming: bool,
+    lf1:             LazyFrame,
+    sel1:            String,
+    lf2:             LazyFrame,
+    sel2:            String,
+    output:          Option<String>,
+    delim:           u8,
+    streaming:       bool,
+    datetime_format: Option<String>,
+    date_format:     Option<String>,
+    time_format:     Option<String>,
+    float_precision: Option<usize>,
+    null_value:      String,
 }
 
 impl JoinStruct {
@@ -300,6 +348,11 @@ impl JoinStruct {
         CsvWriter::new(&mut out_writer)
             .has_header(true)
             .with_delimiter(self.delim)
+            .with_datetime_format(self.datetime_format)
+            .with_date_format(self.date_format)
+            .with_time_format(self.time_format)
+            .with_float_precision(self.float_precision)
+            .with_null_value(self.null_value)
             .finish(&mut join_results)?;
 
         Ok(join_shape)
@@ -336,6 +389,15 @@ impl Args {
             output: self.flag_output.clone(),
             delim,
             streaming: self.flag_streaming,
+            datetime_format: self.flag_datetime_format.clone(),
+            date_format: self.flag_date_format.clone(),
+            time_format: self.flag_time_format.clone(),
+            float_precision: self.flag_float_precision,
+            null_value: if self.flag_null_value == "<empty string>" {
+                String::new()
+            } else {
+                self.flag_null_value.clone()
+            },
         })
     }
 }
