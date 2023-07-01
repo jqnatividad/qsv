@@ -61,7 +61,7 @@ joinp options:
                            in memory. Note that this will make the join slower.                       
 
                            ASOF JOIN OPTIONS:
-    --asof                 Do an 'asof' join. This is similar to a left outer
+    --asof                 Do an 'asof' join. This is similar to a left inner
                            join, except we match on nearest key rather than
                            equal keys. Note that both CSV data sets will be SORTED
                            AUTOMATICALLY on the join columns.
