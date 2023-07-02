@@ -336,13 +336,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .keep()
             .or(Err("Cannot keep temporary file".to_string()))?;
         stdin_tempfile_path = Some(tempfile_path.clone());
-        args.arg_input = Some(
-            tempfile_path
-                .as_os_str()
-                .to_os_string()
-                .into_string()
-                .unwrap(),
-        );
+        args.arg_input = Some(tempfile_path.to_string_lossy().to_string());
         fconfig.path = Some(tempfile_path);
     } else {
         // check if the input file exists
