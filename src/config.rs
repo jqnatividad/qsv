@@ -341,12 +341,18 @@ impl Config {
         let Some(path_buf) = &self.path else { return };
 
         let pidx = util::idx_path(Path::new(path_buf));
-        let Ok(idxfile) = fs::File::create(pidx) else { return };
-        let Ok(mut rdr) = self.reader_file() else { return };
+        let Ok(idxfile) = fs::File::create(pidx) else {
+            return;
+        };
+        let Ok(mut rdr) = self.reader_file() else {
+            return;
+        };
         let mut wtr = io::BufWriter::with_capacity(DEFAULT_WTR_BUFFER_CAPACITY, idxfile);
         match csv_index::RandomAccessSimple::create(&mut rdr, &mut wtr) {
             Ok(_) => {
-                let Ok(_) = io::Write::flush(&mut wtr) else { return };
+                let Ok(_) = io::Write::flush(&mut wtr) else {
+                    return;
+                };
                 debug!("autoindex of {path_buf:?} successful.");
             }
             Err(e) => debug!("autoindex of {path_buf:?} failed: {e}"),

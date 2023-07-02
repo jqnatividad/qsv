@@ -134,7 +134,9 @@ impl RequestedRange {
     pub fn from_string(range: &str, worksheet_size: (usize, usize)) -> CliResult<RequestedRange> {
         // worksheet_size is from range.getsize, height,width.  1 indexed.
 
-        let Some((start,end)) = range.split_once(':') else { return fail_clierror!("Unable to parse range string") };
+        let Some((start, end)) = range.split_once(':') else {
+            return fail_clierror!("Unable to parse range string");
+        };
 
         let start_row = Self::parse_row(start);
         let end_row = Self::parse_row(end);

@@ -877,7 +877,9 @@ fn random_access_mode(
 
     // we abort RANDOM ACCESS mode if the index file is not found
     let Some(mut idx_file) = rconfig.indexed()? else {
-        return fail!(r#"Index required but no index file found. Use "qsv_autoindex()" in your BEGIN script."#); 
+        return fail!(
+            r#"Index required but no index file found. Use "qsv_autoindex()" in your BEGIN script."#
+        );
     };
 
     globals.set("cols", "{}")?;
@@ -1335,7 +1337,7 @@ fn beginend_insertrecord(
 fn create_index(arg_input: &Option<String>) -> Result<bool, CliError> {
     // this is a utility function that creates an index file for the current CSV.
     // it is called when "qsv_autoindex()" is called in the BEGIN script.
-    let Some(input ) = &arg_input else {
+    let Some(input) = &arg_input else {
         log::warn!("qsv_autoindex() does not work for stdin.");
         return Ok(false);
     };
@@ -1909,10 +1911,12 @@ fn setup_helpers(
 
         let shellcmd_string = shellcmd.to_ascii_lowercase();
         let Ok(_) = ShellCmd::from_str(&shellcmd_string) else {
-            return helper_err!("qsv_shellcmd", "Invalid shell command: \"{shellcmd}\". \
-                Only the following commands are allowed: \
-                awk, cat, cp, cut, df, echo, rg, grep, head, ls, mkdir, \
-                mv, nl, pwd, sed, sort, tail, touch, tr, uname, uniq, wc, whoami")
+            return helper_err!(
+                "qsv_shellcmd",
+                "Invalid shell command: \"{shellcmd}\". Only the following commands are allowed: \
+                 awk, cat, cp, cut, df, echo, rg, grep, head, ls, mkdir, mv, nl, pwd, sed, sort, \
+                 tail, touch, tr, uname, uniq, wc, whoami"
+            );
         };
 
         let args_string = args.as_str().to_string();
