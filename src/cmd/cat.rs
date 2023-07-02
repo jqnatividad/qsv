@@ -1,5 +1,5 @@
 static USAGE: &str = r#"
-Concatenates CSV data by column or by row.
+Concatenate CSV files by row or by column.
 
 When concatenating by column, the columns will be written in the same order as
 the inputs given. The number of rows in the result is always equivalent to
@@ -18,9 +18,7 @@ Concatenating by rows can be done in two ways:
 'rowskey' subcommand:
    CSV data can have different numbers of columns and in different orders. All
    columns are written in insertion order. Does not work with --no-headers, as
-   the column header names are used as keys. Nor does it work with stdin, as 
-   input files are scanned twice - once for collecting all the column names, and
-   the second time for writing the output.
+   the column header names are used as keys.
 
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_cat.rs.
 
@@ -55,6 +53,7 @@ Common options:
 
 use indexmap::{IndexMap, IndexSet};
 use serde::Deserialize;
+use tempfile;
 
 use crate::{
     config::{Config, Delimiter},
@@ -123,13 +122,17 @@ impl Args {
             columns_global.insert(self.flag_group_name.as_bytes().to_vec().into_boxed_slice());
         }
 
+        // we're creating a temp_dir in case we have stdin input as we need to scan
+        // the files twice. temp_dir will be automatically deleted when it goes out of scope.
+        let temp_dir = tempfile::tempdir()?;
+        let mut stdin_tempfilename = std::path::PathBuf::new();
+
         // First pass, add all column headers to an IndexSet
         for conf in &self.configs()? {
             if conf.is_stdin() {
-                // TODO: support stdin by writing to a temporary file
-                return fail_clierror!(
-                    "cat rowskey does not support stdin, as we need to scan files twice."
-                );
+                stdin_tempfilename = temp_dir.path().join("stdin");
+                let mut tmp_file = std::fs::File::create(&stdin_tempfilename)?;
+                std::io::copy(&mut std::io::stdin(), &mut tmp_file)?;
             }
             let mut rdr = conf.reader()?;
             let h = rdr.byte_headers()?;
@@ -150,13 +153,21 @@ impl Args {
         // amortize allocations
         #[allow(unused_assignments)]
         let mut grouping_value = String::with_capacity(64);
+        let mut conf_path;
         let mut rdr;
         let mut h: &csv::ByteRecord;
         let mut columns_of_this_file = IndexMap::with_capacity(num_columns_global);
         let mut row: csv::ByteRecord;
 
         for conf in self.configs()? {
-            rdr = conf.reader()?;
+            if conf.is_stdin() {
+                rdr = Config::new(&Some(stdin_tempfilename.to_string_lossy().to_string()))
+                    .reader()?;
+                conf_path = Some(stdin_tempfilename.clone());
+            } else {
+                rdr = conf.reader()?;
+                conf_path = conf.path.clone();
+            }
             h = rdr.byte_headers()?;
 
             columns_of_this_file.clear();
@@ -176,9 +187,7 @@ impl Args {
             // use the file stem as the grouping value
             // safety: we know that this is a file path and if the file path
             // is not valid utf8, we convert it to lossy utf8
-            grouping_value = conf
-                .path
-                .clone()
+            grouping_value = conf_path
                 .unwrap()
                 .file_stem()
                 .unwrap()
