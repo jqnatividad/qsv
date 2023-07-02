@@ -6,9 +6,10 @@ We welcome and encourage all contributions to the project. Please read the follo
 
 For code contributions, we follow several conventions:
 
-* we use rustfmt nightly as we use [rustfmt settings](https://github.com/jqnatividad/qsv/blob/master/rustfmt.toml) that require nightly. Please run `cargo +nightly fmt` before submitting a pull request.
-* we use docopt for command line argument parsing as we fully take advantage of its ability to parse command line arguments from the contiguous, verbose usage text that is at the beginning of each command's source code that more popular libraries like clap or structopt do not offer. However, since [docopt.rs is unmaintained](https://github.com/docopt/docopt.rs#this-crate-is-unmaintained), we have a [fork](https://github.com/jqnatividad/docopt.rs) that will be maintained along with this project.
-* unwrap/expect are allowed, but there should be an accompanying comment detailing safety
+* Please run `cargo +nightly fmt` before submitting a pull request. We use [rustfmt settings](https://github.com/jqnatividad/qsv/blob/master/rustfmt.toml) that require nightly.
+* We use docopt for command line argument parsing as we fully take advantage of its ability to parse command line arguments from the contiguous, verbose usage text that is at the beginning of each command's source code that more popular libraries like clap or structopt do not offer.   
+However, since [docopt.rs is unmaintained](https://github.com/docopt/docopt.rs#this-crate-is-unmaintained), we have a [fork](https://github.com/jqnatividad/docopt.rs) that will be maintained along with this project. See this [discussion thread](https://github.com/jqnatividad/qsv/discussions/463) for more details.
+* `unwrap()` and `expect()` are allowed, but there should be an accompanying comment detailing safety
 * TODO: explaining testing conventions, and test helpers
 * TODO: release practices
 * TODO: explain the various GitHub Action workflows
