@@ -1,5 +1,6 @@
-# NOTE: these options require nightly
+# NOTE: some options require nightly, i.e.:
 # cargo +nightly fmt
+# see https://rust-lang.github.io/rustfmt/ for more info
 comment_width                = 100
 wrap_comments                = true
 format_strings               = true
