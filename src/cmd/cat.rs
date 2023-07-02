@@ -122,7 +122,8 @@ impl Args {
             columns_global.insert(self.flag_group_name.as_bytes().to_vec().into_boxed_slice());
         }
 
-        // we're creating a temp_dir in case we have stdin input as we need to scan
+        // we're creating a temp_dir in case we have stdin input, as we need to save it to a
+        // file named "stdin" under the temp_dir. This is required as we need to scan
         // the files twice. temp_dir will be automatically deleted when it goes out of scope.
         let temp_dir = tempfile::tempdir()?;
         let mut stdin_tempfilename = std::path::PathBuf::new();
