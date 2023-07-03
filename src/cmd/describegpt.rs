@@ -83,7 +83,6 @@ fn get_completion(
         .post("https://api.openai.com/v1/chat/completions")
         .header("Authorization", format!("Bearer {api_key}"))
         .header("Content-Type", "application/json")
-        .header("User-Agent", user_agent)
         .body(request_data.to_string())
         .send();
 
