@@ -42,7 +42,7 @@ extern crate qsv_docopt as docopt;
 use docopt::Docopt;
 use serde::Deserialize;
 
-use crate::clitypes::{CliError, CliResult, QsvExitCode};
+use crate::clitypes::{CliError, CliResult, QsvExitCode, CURRENT_COMMAND};
 
 #[cfg(feature = "mimalloc")]
 #[global_allocator]
@@ -362,6 +362,8 @@ impl Command {
                 argv[1].to_lowercase()
             )));
         }
+
+        CURRENT_COMMAND.get_or_init(|| argv[1].to_lowercase());
         match self {
             Command::Behead => cmd::behead::run(argv),
             #[cfg(all(feature = "apply", feature = "feature_capable"))]
