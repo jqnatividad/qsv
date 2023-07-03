@@ -23,7 +23,7 @@ use sysinfo::{System, SystemExt};
 use crate::{
     config,
     config::{Config, Delimiter},
-    CliError, CliResult,
+    CliError, CliResult, CURRENT_COMMAND,
 };
 
 #[macro_export]
@@ -59,7 +59,9 @@ const QSV_KIND: &str = match option_env!("QSV_KIND") {
 };
 
 fn default_user_agent() -> String {
-    format!("{CARGO_BIN_NAME}/{CARGO_PKG_VERSION} ({TARGET}; {QSV_KIND}; https://github.com/jqnatividad/qsv)")
+    let unknown_command = "Unknown".to_string();
+    let current_command = CURRENT_COMMAND.get().unwrap_or(&unknown_command);
+    format!("{CARGO_BIN_NAME}/{CARGO_PKG_VERSION} ({TARGET}; {current_command}; {QSV_KIND}; https://github.com/jqnatividad/qsv)")
 }
 
 pub fn max_jobs() -> usize {
@@ -107,8 +109,8 @@ pub fn timeout_secs(timeout: u16) -> Result<u64, String> {
 
 /// sets custom user agent
 /// if user agent is not set, then use the default user agent
-/// it supports four special LITERALs: $QSV_BIN_NAME, $QSV_VERSION, $QSV_TARGET, and $QSV_KIND
-/// which will be replaced with the actual values during runtime
+/// it supports four special LITERALs: $QSV_BIN_NAME, $QSV_VERSION, $QSV_TARGET, $QSV_KIND
+/// and $QSV_COMMAND which will be replaced with the actual values during runtime
 pub fn set_user_agent(user_agent: Option<String>) -> CliResult<String> {
     use reqwest::header::HeaderValue;
 
@@ -117,12 +119,16 @@ pub fn set_user_agent(user_agent: Option<String>) -> CliResult<String> {
         None => env::var("QSV_USER_AGENT").unwrap_or_else(|_| default_user_agent()),
     };
 
+    let unknown_command = "Unknown".to_string();
+    let current_command = CURRENT_COMMAND.get().unwrap_or(&unknown_command);
+
     // look for special literals - $QSV_VERSION and $QSV_TARGET and replace them
     let ua = ua
         .replace("$QSV_BIN_NAME", CARGO_BIN_NAME)
         .replace("$QSV_VERSION", CARGO_PKG_VERSION)
         .replace("$QSV_TARGET", TARGET)
-        .replace("$QSV_KIND", QSV_KIND);
+        .replace("$QSV_KIND", QSV_KIND)
+        .replace("$QSV_COMMAND", current_command);
 
     match HeaderValue::from_str(ua.as_str()) {
         Ok(_) => (),
@@ -346,8 +352,7 @@ macro_rules! update_cache_info {
 
         match $cache_instance.lock() {
             Ok(cache) => {
-                let cache_size = cache.cache_size();
-                if cache_size > 0 {
+                if cache.cache_size() > 0 {
                     let hits = cache.cache_hits().unwrap_or_default();
                     let misses = cache.cache_misses().unwrap_or(1);
                     let hit_ratio = (hits as f64 / (hits + misses) as f64) * 100.0;
