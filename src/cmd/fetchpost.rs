@@ -138,7 +138,7 @@ Fetchpost options:
                                for --max-retries.
     --cookies                  Allow cookies.
     --user-agent <agent>       Specify custom user agent. It supports the following variables -
-                               $QSV_VERSION, $QSV_TARGET, $QSV_BIN_NAME and $QSV_KIND. 
+                               $QSV_VERSION, $QSV_TARGET, $QSV_BIN_NAME, $QSV_KIND and $QSV_COMMAND.
                                Try to follow the syntax here -
                                https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
     --report <d|s>             Creates a report of the fetchpost job. The report has the same name as the

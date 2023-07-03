@@ -3,6 +3,7 @@ use std::{
     borrow::ToOwned,
     fmt, io,
     process::{ExitCode, Termination},
+    sync::OnceLock,
 };
 
 macro_rules! wout {
@@ -80,6 +81,8 @@ macro_rules! fail_format {
         Err(err)
     }};
 }
+
+pub static CURRENT_COMMAND: OnceLock<String> = OnceLock::new();
 
 #[repr(u8)]
 pub enum QsvExitCode {
