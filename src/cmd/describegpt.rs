@@ -20,7 +20,10 @@ describegpt options:
     --max-tokens <value>   Limits the number of generated tokens in the
                            output.
     --json                 Return results in JSON format.
-
+    --user-agent <agent>   Specify custom user agent. It supports the following variables -
+                           $QSV_VERSION, $QSV_TARGET, $QSV_BIN_NAME, $QSV_KIND and $QSV_COMMAND.
+                           Try to follow the syntax here -
+                           https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
 Common options:
     -h, --help             Display this message
 "#;
