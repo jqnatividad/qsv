@@ -503,6 +503,24 @@ fn fetch_custom_user_agent() {
 
 #[test]
 // #[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
+fn fetch_user_agent() {
+    let wrk = Workdir::new("fetch_user_agent");
+    wrk.create(
+        "data.csv",
+        vec![svec!["URL"], svec!["http://httpbin.org/get"]],
+    );
+    let mut cmd = wrk.command("fetch");
+    cmd.arg("URL").arg("data.csv");
+
+    let got = wrk.stdout::<String>(&mut cmd);
+    // the default user agent should contain the name of the qsv command used,
+    // in this case "fetch"
+    assert!(got.contains("; fetch; "));
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+// #[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
 fn fetch_custom_invalid_value_error() {
     let wrk = Workdir::new("fetch");
     wrk.create(
