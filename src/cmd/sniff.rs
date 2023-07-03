@@ -74,7 +74,7 @@ sniff options:
                              [default: 30]
     --user-agent <agent>     Specify custom user agent to use when sniffing a CSV on a URL.
                              It supports the following variables - $QSV_VERSION, $QSV_TARGET,
-                             $QSV_BIN_NAME and $QSV_KIND. Try to follow the syntax here -
+                             $QSV_BIN_NAME, $QSV_KIND and $QSV_COMMAND. Try to follow the syntax here -
                              https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
     --stats-types            Use the same data type names as `stats`.
                              (Unsigned, Signed => Integer, Text => String, everything else the same)
