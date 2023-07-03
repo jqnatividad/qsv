@@ -680,7 +680,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     }
                     ApplySubCmd::Operations => {
                         let mut cell = String::new();
-                        for col_index in sel.iter() {
+                        for col_index in &*sel {
                             record[*col_index].clone_into(&mut cell);
                             apply_operations(
                                 &ops_vec,
@@ -698,7 +698,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     }
                     ApplySubCmd::EmptyReplace => {
                         let mut cell = String::new();
-                        for col_index in sel.iter() {
+                        for col_index in &*sel {
                             record[*col_index].clone_into(&mut cell);
                             if cell.trim().is_empty() {
                                 cell = args.flag_replacement.clone();
@@ -712,7 +712,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     }
                     ApplySubCmd::DateFmt => {
                         let mut cell = String::new();
-                        for col_index in sel.iter() {
+                        for col_index in &*sel {
                             record[*col_index].clone_into(&mut cell);
                             if !cell.is_empty() {
                                 let parsed_date = parse_with_preference(&cell, prefer_dmy);
