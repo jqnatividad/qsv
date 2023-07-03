@@ -49,7 +49,7 @@ impl SelectColumns {
         let mut map = vec![];
         for sel in &self.selectors {
             let idxs = sel.indices(first_record, use_names);
-            map.extend(idxs?.into_iter());
+            map.extend(idxs?);
         }
         if self.invert {
             let set: HashSet<_> = map.into_iter().collect();

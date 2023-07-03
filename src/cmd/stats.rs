@@ -483,7 +483,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let stats_sr_vec = args.stats_to_records(stats);
 
             wtr.write_record(&args.stat_headers())?;
-            let fields = headers.iter().zip(stats_sr_vec.into_iter());
+            let fields = headers.iter().zip(stats_sr_vec);
             for (i, (header, stat)) in fields.enumerate() {
                 let header = if args.flag_no_headers {
                     i.to_string().into_bytes()
