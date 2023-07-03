@@ -51,8 +51,12 @@ struct Args {
 // OpenAI API model
 const MODEL: &str = "gpt-3.5-turbo-16k";
 
-fn get_completion(api_key: &str, messages: &serde_json::Value, max_tokens: Option<i32>, flag_user_agent: Option<String>) -> String {
-
+fn get_completion(
+    api_key: &str,
+    messages: &serde_json::Value,
+    max_tokens: Option<i32>,
+    flag_user_agent: Option<String>,
+) -> String {
     // If --user-agent is not specified, use an empty string as the default value
     let user_agent = flag_user_agent.unwrap_or_default();
 
@@ -246,7 +250,12 @@ fn run_inference_options(
         prompt = get_dictionary_prompt(stats_str, frequency_str, args_json);
         println!("Generating data dictionary from OpenAI API...");
         messages = json!([{"role": "user", "content": prompt}]);
-        completion = get_completion(api_key, &messages, args.flag_max_tokens, args.flag_user_agent.clone());
+        completion = get_completion(
+            api_key,
+            &messages,
+            args.flag_max_tokens,
+            args.flag_user_agent.clone(),
+        );
         dictionary_completion_output = get_completion_output(&completion);
         println!("Dictionary output:\n{completion_output}");
     }
@@ -259,7 +268,12 @@ fn run_inference_options(
         };
         messages = get_messages(&prompt, &dictionary_completion_output);
         println!("Generating description from OpenAI API...");
-        completion = get_completion(api_key, &messages, args.flag_max_tokens, args.flag_user_agent.clone());
+        completion = get_completion(
+            api_key,
+            &messages,
+            args.flag_max_tokens,
+            args.flag_user_agent.clone(),
+        );
         completion_output = get_completion_output(&completion);
         println!("Description output:\n{completion_output}");
     }
@@ -271,7 +285,12 @@ fn run_inference_options(
         };
         messages = get_messages(&prompt, &dictionary_completion_output);
         println!("Generating tags from OpenAI API...");
-        completion = get_completion(api_key, &messages, args.flag_max_tokens, args.flag_user_agent.clone());
+        completion = get_completion(
+            api_key,
+            &messages,
+            args.flag_max_tokens,
+            args.flag_user_agent.clone(),
+        );
         completion_output = get_completion_output(&completion);
         println!("Tags output:\n{completion_output}");
     }
