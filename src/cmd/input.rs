@@ -153,7 +153,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         rdr.read_byte_record(&mut row)?;
         row.trim();
 
-        for field in row.iter() {
+        for field in &row {
             // we also trim excess quotes from the header, to be consistent with safenames
             str_row.push_field(String::from_utf8_lossy(field).trim_matches('"'));
         }
@@ -174,7 +174,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         };
 
         str_row.clear();
-        for field in row.iter() {
+        for field in &row {
             if let Ok(utf8_field) = simdutf8::basic::from_utf8(field) {
                 str_row.push_field(utf8_field);
             } else {

@@ -180,7 +180,7 @@ impl<R: io::Read + io::Seek, W: io::Write> IoState<R, W> {
             let row = row?;
             let key = get_row_key(&self.sel1, &row, self.casei);
             if let Some(rows) = validx.values.get(&key) {
-                for &rowi in rows.iter() {
+                for &rowi in rows {
                     validx.idx.seek(rowi as u64)?;
 
                     validx.idx.read_byte_record(&mut scratch)?;
@@ -205,7 +205,7 @@ impl<R: io::Read + io::Seek, W: io::Write> IoState<R, W> {
             let row = row?;
             let key = get_row_key(&self.sel1, &row, self.casei);
             if let Some(rows) = validx.values.get(&key) {
-                for &rowi in rows.iter() {
+                for &rowi in rows {
                     validx.idx.seek(rowi as u64)?;
                     let row1 = row.iter();
                     validx.idx.read_byte_record(&mut scratch)?;
@@ -259,7 +259,7 @@ impl<R: io::Read + io::Seek, W: io::Write> IoState<R, W> {
             let row1 = row1?;
             let key = get_row_key(&self.sel1, &row1, self.casei);
             if let Some(rows) = validx.values.get(&key) {
-                for &rowi in rows.iter() {
+                for &rowi in rows {
                     rdr2_written[rowi] = true;
 
                     validx.idx.seek(rowi as u64)?;

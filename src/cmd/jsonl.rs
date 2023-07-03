@@ -43,7 +43,7 @@ struct Args {
 fn recurse_to_infer_headers(value: &Value, headers: &mut Vec<Vec<String>>, path: Vec<String>) {
     match value {
         Value::Object(map) => {
-            for (key, value) in map.iter() {
+            for (key, value) in map {
                 match value {
                     Value::Null
                     | Value::Bool(_)
@@ -83,7 +83,7 @@ fn infer_headers(value: &Value) -> Vec<Vec<String>> {
 fn get_value_at_path(value: &Value, path: &[String]) -> Option<Value> {
     let mut current = value;
 
-    for key in path.iter() {
+    for key in path {
         match current.get(key) {
             Some(new_value) => {
                 current = new_value;

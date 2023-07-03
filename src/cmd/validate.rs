@@ -163,7 +163,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             match fields_result {
                 Ok(fields) => {
                     header_len = fields.len();
-                    for field in fields.iter() {
+                    for field in fields {
                         field_vec.push(field.to_string());
                     }
                     let field_list = field_vec.join(r#"", ""#);

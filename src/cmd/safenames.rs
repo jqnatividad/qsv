@@ -205,7 +205,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let mut checkednames_map: HashMap<String, u16, RandomState> = HashMap::default();
         let mut temp_string;
 
-        for header_name in headers.iter() {
+        for header_name in &headers {
             if safe_headers.contains(&header_name.to_string()) {
                 if !safenames_vec.contains(&header_name.to_string()) {
                     safenames_vec.push(header_name.to_string());

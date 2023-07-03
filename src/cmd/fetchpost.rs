@@ -602,7 +602,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         // construct body per the column-list
         form_body_jsonmap.clear();
-        for col_idx in col_list.iter() {
+        for col_idx in &*col_list {
             let header_key = String::from_utf8_lossy(headers.get(*col_idx).unwrap());
             let value_string = from_utf8(&record[*col_idx]).unwrap_or_default().to_string();
             form_body_jsonmap.insert(

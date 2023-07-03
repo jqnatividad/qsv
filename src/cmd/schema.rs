@@ -160,7 +160,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let pattern_map = generate_string_patterns(&args, &properties_map)?;
 
     // enrich properties map with pattern constraint for String fields
-    for (field_name, field_def) in properties_map.iter_mut() {
+    for (field_name, field_def) in &mut properties_map {
         // dbg!(&field_name, &field_def);
         if pattern_map.contains_key(field_name) && should_emit_pattern_constraint(field_def) {
             let field_def_map = field_def.as_object_mut().unwrap();
@@ -758,7 +758,7 @@ fn generate_string_patterns(
 
     // build regex pattern for each header
     pattern_map.reserve(unique_values_map.len());
-    for (header, value_set) in unique_values_map.iter() {
+    for (header, value_set) in &unique_values_map {
         // Convert Set to Vector
         let values: Vec<&String> = Vec::from_iter(value_set);
 
