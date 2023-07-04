@@ -30,4 +30,4 @@ Just go to the [Cookbook](https://github.com/jqnatividad/qsv/wiki/Cookbook#cookb
 
 We are always looking for ways to improve the documentation. If you find a typo, or have a suggestion for improvement, please submit a pull request.
 
-And if you want to add a new page to the Wiki, please do! Just make sure to add section headers to your Wiki contributions, so it automaticalyl shows up in the sidebar.
+And if you want to add a new page to the Wiki, please do! Just make sure to add section headers to your Wiki contributions, so it automatically shows up in the sidebar.
