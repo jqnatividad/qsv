@@ -51,12 +51,7 @@ struct Args {
 // OpenAI API model
 const MODEL: &str = "gpt-3.5-turbo-16k";
 
-fn get_completion(
-    api_key: &str,
-    messages: &serde_json::Value,
-    args: &Args,
-) -> String {
-
+fn get_completion(api_key: &str, messages: &serde_json::Value, args: &Args) -> String {
     // Create client with timeout
     let timeout_duration = Duration::from_secs(60);
     let client = Client::builder()
@@ -246,11 +241,7 @@ fn run_inference_options(
         prompt = get_dictionary_prompt(stats_str, frequency_str, args_json);
         println!("Generating data dictionary from OpenAI API...");
         messages = json!([{"role": "user", "content": prompt}]);
-        completion = get_completion(
-            api_key,
-            &messages,
-            args
-        );
+        completion = get_completion(api_key, &messages, args);
         dictionary_completion_output = get_completion_output(&completion);
         println!("Dictionary output:\n{completion_output}");
     }
@@ -263,11 +254,7 @@ fn run_inference_options(
         };
         messages = get_messages(&prompt, &dictionary_completion_output);
         println!("Generating description from OpenAI API...");
-        completion = get_completion(
-            api_key,
-            &messages,
-            args
-        );
+        completion = get_completion(api_key, &messages, args);
         completion_output = get_completion_output(&completion);
         println!("Description output:\n{completion_output}");
     }
@@ -279,11 +266,7 @@ fn run_inference_options(
         };
         messages = get_messages(&prompt, &dictionary_completion_output);
         println!("Generating tags from OpenAI API...");
-        completion = get_completion(
-            api_key,
-            &messages,
-            args
-        );
+        completion = get_completion(api_key, &messages, args);
         completion_output = get_completion_output(&completion);
         println!("Tags output:\n{completion_output}");
     }
