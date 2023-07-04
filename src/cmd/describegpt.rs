@@ -39,12 +39,12 @@ use crate::{util, CliResult};
 #[derive(Deserialize)]
 struct Args {
     arg_input:        Option<String>,
-    flag_all:         Option<bool>,
-    flag_description: Option<bool>,
-    flag_dictionary:  Option<bool>,
-    flag_tags:        Option<bool>,
+    flag_all:         bool,
+    flag_description: bool,
+    flag_dictionary:  bool,
+    flag_tags:        bool,
     flag_max_tokens:  Option<i32>,
-    flag_json:        Option<bool>,
+    flag_json:        bool,
     flag_user_agent:  Option<String>,
 }
 
@@ -237,7 +237,7 @@ fn run_inference_options(
     let mut completion: String;
     let mut completion_output = String::new();
     let mut dictionary_completion_output = String::new();
-    if args.flag_dictionary.is_some() || args.flag_all.is_some() {
+    if args.flag_dictionary || args.flag_all {
         prompt = get_dictionary_prompt(stats_str, frequency_str, args_json);
         println!("Generating data dictionary from OpenAI API...");
         messages = json!([{"role": "user", "content": prompt}]);
@@ -246,8 +246,8 @@ fn run_inference_options(
         println!("Dictionary output:\n{completion_output}");
     }
 
-    if args.flag_description.is_some() || args.flag_all.is_some() {
-        prompt = if args.flag_dictionary.is_some() {
+    if args.flag_description || args.flag_all {
+        prompt = if args.flag_dictionary {
             get_description_prompt(None, None, args_json)
         } else {
             get_description_prompt(stats_str, frequency_str, args_json)
@@ -258,8 +258,8 @@ fn run_inference_options(
         completion_output = get_completion_output(&completion);
         println!("Description output:\n{completion_output}");
     }
-    if args.flag_tags.is_some() || args.flag_all.is_some() {
-        prompt = if args.flag_dictionary.is_some() {
+    if args.flag_tags || args.flag_all {
+        prompt = if args.flag_dictionary {
             get_tags_prompt(None, None, args_json)
         } else {
             get_tags_prompt(stats_str, frequency_str, args_json)
@@ -321,20 +321,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     // If no inference flags specified, print error message.
-    if args.flag_all.is_none()
-        && args.flag_dictionary.is_none()
-        && args.flag_description.is_none()
-        && args.flag_tags.is_none()
-    {
+    if !args.flag_all && !args.flag_dictionary && !args.flag_description && !args.flag_tags {
         eprintln!("Error: No inference options specified.");
         std::process::exit(1);
     // If --all flag is specified, but other inference flags are also specified, print error
     // message.
-    } else if args.flag_all.is_some()
-        && (args.flag_dictionary.is_some()
-            || args.flag_description.is_some()
-            || args.flag_tags.is_some())
-    {
+    } else if args.flag_all && (args.flag_dictionary || args.flag_description || args.flag_tags) {
         eprintln!("Error: --all option cannot be specified with other inference flags.");
         std::process::exit(1);
     }
@@ -384,16 +376,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         std::process::exit(1);
     };
 
-    // If args.json is true, then set to true, else false
-    let args_json = matches!(args.flag_json, Some(true));
-
     // Run inference options
     run_inference_options(
         &args,
         &api_key,
         Some(stats_str),
         Some(frequency_str),
-        args_json,
+        args.flag_json,
     );
 
     Ok(())
