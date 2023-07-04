@@ -20,7 +20,10 @@ describegpt options:
     --max-tokens <value>   Limits the number of generated tokens in the
                            output.
     --json                 Return results in JSON format.
-
+    --user-agent <agent>   Specify custom user agent. It supports the following variables -
+                           $QSV_VERSION, $QSV_TARGET, $QSV_BIN_NAME, $QSV_KIND and $QSV_COMMAND.
+                           Try to follow the syntax here -
+                           https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
 Common options:
     -h, --help             Display this message
 "#;
@@ -42,15 +45,20 @@ struct Args {
     flag_tags:        Option<bool>,
     flag_max_tokens:  Option<i32>,
     flag_json:        Option<bool>,
+    flag_user_agent:  Option<String>,
 }
 
 // OpenAI API model
 const MODEL: &str = "gpt-3.5-turbo-16k";
 
-fn get_completion(api_key: &str, messages: &serde_json::Value, max_tokens: Option<i32>) -> String {
+fn get_completion(api_key: &str, messages: &serde_json::Value, args: &Args) -> String {
     // Create client with timeout
     let timeout_duration = Duration::from_secs(60);
-    let client = Client::builder().timeout(timeout_duration).build().unwrap();
+    let client = Client::builder()
+        .user_agent(util::set_user_agent(args.flag_user_agent.clone()).unwrap())
+        .timeout(timeout_duration)
+        .build()
+        .unwrap();
 
     let mut request_data = json!({
         "model": MODEL,
@@ -58,8 +66,8 @@ fn get_completion(api_key: &str, messages: &serde_json::Value, max_tokens: Optio
     });
 
     // If max_tokens is specified, add it to the request data
-    if max_tokens.is_some() {
-        request_data["max_tokens"] = json!(max_tokens.unwrap());
+    if args.flag_max_tokens.is_some() {
+        request_data["max_tokens"] = json!(args.flag_max_tokens.unwrap());
     }
 
     // Send request to OpenAI API
@@ -233,7 +241,7 @@ fn run_inference_options(
         prompt = get_dictionary_prompt(stats_str, frequency_str, args_json);
         println!("Generating data dictionary from OpenAI API...");
         messages = json!([{"role": "user", "content": prompt}]);
-        completion = get_completion(api_key, &messages, args.flag_max_tokens);
+        completion = get_completion(api_key, &messages, args);
         dictionary_completion_output = get_completion_output(&completion);
         println!("Dictionary output:\n{completion_output}");
     }
@@ -246,7 +254,7 @@ fn run_inference_options(
         };
         messages = get_messages(&prompt, &dictionary_completion_output);
         println!("Generating description from OpenAI API...");
-        completion = get_completion(api_key, &messages, args.flag_max_tokens);
+        completion = get_completion(api_key, &messages, args);
         completion_output = get_completion_output(&completion);
         println!("Description output:\n{completion_output}");
     }
@@ -258,7 +266,7 @@ fn run_inference_options(
         };
         messages = get_messages(&prompt, &dictionary_completion_output);
         println!("Generating tags from OpenAI API...");
-        completion = get_completion(api_key, &messages, args.flag_max_tokens);
+        completion = get_completion(api_key, &messages, args);
         completion_output = get_completion_output(&completion);
         println!("Tags output:\n{completion_output}");
     }
