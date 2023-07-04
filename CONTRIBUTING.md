@@ -7,8 +7,12 @@ We welcome and encourage all contributions to the project. Please read the follo
 For code contributions, we follow several conventions:
 
 * Please run `cargo +nightly fmt` before submitting a pull request. We use [rustfmt settings](https://github.com/jqnatividad/qsv/blob/master/rustfmt.toml) that require nightly.
-* Please run `cargo +nightly clippy -F all_features -- -W clippy::perf` before submitting a pull request. The project has its clippy preferences set [here](https://github.com/jqnatividad/qsv/blob/bb4f4c7d683719a30f5e9552d16fba96a6872ce9/src/main.rs#L1-L36), and we generally apply clippy lint suggestions that are flagged after those preferences are applied unless there is a good reason not to.   
-In that case, our practice is to suppress lints for each specific instance (e.g. `#[allow(clippy::unused_assignments)]`) so that it does not show up again in future clippy runs.
+* Please run `cargo +nightly clippy -F all_features -- -W clippy::perf` before submitting a pull request. The project has its clippy preferences set [here](https://github.com/jqnatividad/qsv/blob/bb4f4c7d683719a30f5e9552d16fba96a6872ce9/src/main.rs#L1-L36), and we generally apply clippy's suggestions with those preferences unless there is a good reason not to.   
+In that case, our practice is to suppress lints for each specific instance with an optional comment so it does not show up again in future clippy runs, e.g:   
+```rust 
+#[allow(clippy::unused_assignments)]
+let var_a = String::with_capacity(10); // amortize allocation
+```
 * We use docopt for command line argument parsing as we fully take advantage of its ability to parse command line arguments from the contiguous, verbose usage text that is at the beginning of each command's source code that more popular libraries like clap or structopt do not offer.   
 However, since [docopt.rs is unmaintained](https://github.com/docopt/docopt.rs#this-crate-is-unmaintained), we have a [fork](https://github.com/jqnatividad/docopt.rs) that will be maintained along with this project. See this [discussion thread](https://github.com/jqnatividad/qsv/discussions/463) for more details.
 * `unwrap()` and `expect()` are allowed, but there should be an accompanying comment detailing safety
