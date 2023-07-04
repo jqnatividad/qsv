@@ -232,7 +232,7 @@ Compare that to [zip 3.0](https://infozip.sourceforge.net/Zip.html), which compr
 
 ## RFC 4180 CSV Standard
 
-qsv hews closely to the [RFC 4180](https://datatracker.ietf.org/doc/html/rfc4180) CSV standard. However, in real life, CSV formats vary significantly & qsv is actually not strictly compliant with the specification so it can process "real-world" CSV files.
+qsv follows the [RFC 4180](https://datatracker.ietf.org/doc/html/rfc4180) CSV standard. However, in real life, CSV formats vary significantly & qsv is actually not strictly compliant with the specification so it can process "real-world" CSV files.
 qsv leverages the awesome [Rust CSV](https://docs.rs/csv/latest/csv/) crate to read/write CSV files.
 
 Click [here](https://docs.rs/csv-core/latest/csv_core/struct.Reader.html#rfc-4180) to find out more about how qsv conforms to the standard using this crate.
