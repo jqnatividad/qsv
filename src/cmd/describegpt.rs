@@ -54,17 +54,14 @@ const MODEL: &str = "gpt-3.5-turbo-16k";
 fn get_completion(
     api_key: &str,
     messages: &serde_json::Value,
-    max_tokens: Option<i32>,
-    flag_user_agent: Option<String>,
+    args: &Args,
 ) -> String {
-    // If --user-agent is not specified, use an empty string as the default value
-    let user_agent = flag_user_agent.unwrap_or_default();
 
     // Create client with timeout
     let timeout_duration = Duration::from_secs(60);
     let client = Client::builder()
+        .user_agent(util::set_user_agent(args.flag_user_agent.clone()).unwrap())
         .timeout(timeout_duration)
-        .user_agent(user_agent.clone())
         .build()
         .unwrap();
 
@@ -74,8 +71,8 @@ fn get_completion(
     });
 
     // If max_tokens is specified, add it to the request data
-    if max_tokens.is_some() {
-        request_data["max_tokens"] = json!(max_tokens.unwrap());
+    if args.flag_max_tokens.is_some() {
+        request_data["max_tokens"] = json!(args.flag_max_tokens.unwrap());
     }
 
     // Send request to OpenAI API
@@ -252,8 +249,7 @@ fn run_inference_options(
         completion = get_completion(
             api_key,
             &messages,
-            args.flag_max_tokens,
-            args.flag_user_agent.clone(),
+            args
         );
         dictionary_completion_output = get_completion_output(&completion);
         println!("Dictionary output:\n{completion_output}");
@@ -270,8 +266,7 @@ fn run_inference_options(
         completion = get_completion(
             api_key,
             &messages,
-            args.flag_max_tokens,
-            args.flag_user_agent.clone(),
+            args
         );
         completion_output = get_completion_output(&completion);
         println!("Description output:\n{completion_output}");
@@ -287,8 +282,7 @@ fn run_inference_options(
         completion = get_completion(
             api_key,
             &messages,
-            args.flag_max_tokens,
-            args.flag_user_agent.clone(),
+            args
         );
         completion_output = get_completion_output(&completion);
         println!("Tags output:\n{completion_output}");
