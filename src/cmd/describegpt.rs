@@ -191,7 +191,6 @@ fn run_inference_options(
     api_key: &str,
     stats_str: Option<&str>,
     frequency_str: Option<&str>,
-    args_json: bool,
 ) {
     // Add --dictionary output as context if it is not empty
     fn get_messages(prompt: &str, dictionary_completion_output: &str) -> serde_json::Value {
@@ -232,6 +231,7 @@ fn run_inference_options(
             .replace("\\`", "`")
     }
 
+    let args_json = args.flag_json;
     let mut prompt: String;
     let mut messages: serde_json::Value;
     let mut completion: String;
@@ -377,13 +377,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     // Run inference options
-    run_inference_options(
-        &args,
-        &api_key,
-        Some(stats_str),
-        Some(frequency_str),
-        args.flag_json,
-    );
+    run_inference_options(&args, &api_key, Some(stats_str), Some(frequency_str));
 
     Ok(())
 }
