@@ -13,7 +13,7 @@ In that case, our practice is to suppress lints for each specific instance with 
 #[allow(clippy::unused_assignments)]
 let mut var_a = String::with_capacity(10); // amortize allocation
 ```
-* Ensure you have the latest version of Rust installed. We use the latest stable version of Rust, and the latest nightly version of Rust for clippy and rustfmt. In particular, running `cargo +nightly fmt` and `cargo +nightly clippy` may return different results if you are not using the latest nightly version of Rust.
+* Ensure you have the latest version of Rust nightly installed (`rustup toolchain update nightly`), as we use it for clippy and rustfmt. Running `cargo +nightly fmt` and `cargo +nightly clippy` may return different results if you are not using the latest nightly version of Rust.
 * We use docopt for command line argument parsing as we fully take advantage of its ability to parse command line arguments from the contiguous, verbose usage text that is at the beginning of each command's source code that more popular libraries like clap or structopt do not offer.   
 However, since [docopt.rs is unmaintained](https://github.com/docopt/docopt.rs#this-crate-is-unmaintained), we have a [fork](https://github.com/jqnatividad/docopt.rs) that will be maintained along with this project. See this [discussion thread](https://github.com/jqnatividad/qsv/discussions/463) for more details.
 * `unwrap()` and `expect()` are allowed, but there should be an accompanying comment detailing safety
