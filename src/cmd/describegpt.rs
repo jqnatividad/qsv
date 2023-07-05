@@ -210,7 +210,7 @@ fn run_inference_options(
         let completion_json: serde_json::Value = match serde_json::from_str(completion) {
             Ok(val) => val,
             Err(_) => {
-                return fail_clierror!("Error: Unable to parse completion JSON.");
+                return fail!("Error: Unable to parse completion JSON.");
             }
         };
         // If OpenAI API returns error, print error message
@@ -284,8 +284,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let api_key = match env::var("QSV_OPENAI_API_KEY") {
         Ok(val) => {
             if val.is_empty() {
-                eprintln!("Error: QSV_OPENAI_API_KEY environment variable is empty.");
-                std::process::exit(1);
+                return fail!("Error: QSV_OPENAI_API_KEY environment variable is empty.");
             }
             val
         }
@@ -293,19 +292,19 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             // Check if the --key flag is present
             if let Some(api_key) = args.flag_key.clone() {
                 if api_key.is_empty() {
-                    eprintln!("Error: QSV_OPENAI_API_KEY environment variable not set.");
-                    std::process::exit(1);
+                    return fail!(
+                        "Error: QSV_OPENAI_API_KEY environment variable not found.\nNote that \
+                         this command uses OpenAI's LLMs for inferencing and is therefore prone to \
+                         inaccurate information being produced. Verify output results before using them."
+                    );
                 }
                 api_key
             } else {
-                eprintln!("Error: QSV_OPENAI_API_KEY environment variable not set.");
-                // Warning message for new command users
-                eprintln!(
-                    "Note that this command uses a LLM for inference and is therefore prone to \
-                     inaccurate information being produced. Ensure verification of output results \
-                     before using them.\n"
+                return fail!(
+                    "Error: QSV_OPENAI_API_KEY environment variable not found.\nNote that \
+                     this command uses OpenAI's LLMs for inferencing and is therefore prone to \
+                     inaccurate information being produced. Verify output results before using them."
                 );
-                std::process::exit(1);
             }
         }
     };
@@ -318,31 +317,26 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 .extension()
                 .map_or(false, |ext| ext.eq_ignore_ascii_case("csv"))
             {
-                eprintln!("Error: Input file must be a CSV.");
-                std::process::exit(1);
+                return fail!("Error: Input file must be a CSV.");
             }
             // If input file does not exist, print error message
             if !std::path::Path::new(val).exists() {
-                eprintln!("Error: Input file does not exist.");
-                std::process::exit(1);
+                return fail!("Error: Input file does not exist.");
             }
         }
         // If no input file, print error message
         None => {
-            eprintln!("Error: No input file specified.");
-            std::process::exit(1);
+            return fail!("Error: No input file specified.");
         }
     }
 
     // If no inference flags specified, print error message.
     if !args.flag_all && !args.flag_dictionary && !args.flag_description && !args.flag_tags {
-        eprintln!("Error: No inference options specified.");
-        std::process::exit(1);
+        return fail!("Error: No inference options specified.");
     // If --all flag is specified, but other inference flags are also specified, print error
     // message.
     } else if args.flag_all && (args.flag_dictionary || args.flag_description || args.flag_tags) {
-        eprintln!("Error: --all option cannot be specified with other inference flags.");
-        std::process::exit(1);
+        return fail!("Error: --all option cannot be specified with other inference flags.");
     }
 
     // Get stats from qsv stats on input file with --everything flag
@@ -350,17 +344,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         "Generating stats from {} using qsv stats --everything...",
         args.arg_input.clone().unwrap()
     );
-    let stats = Command::new("qsv")
+    let Ok(stats) = Command::new("qsv")
         .arg("stats")
         .arg("--everything")
         .arg(args.arg_input.clone().unwrap())
         .output()
-        .expect("Error: Unable to get stats from qsv.");
+    else {
+        return fail!("Error: Unable to parse stats as &str.");
+    };
 
     // Parse the stats as &str
     let Ok(stats_str) = std::str::from_utf8(&stats.stdout) else {
-        eprintln!("Error: Unable to parse stats as &str.");
-        std::process::exit(1);
+        return fail!("Error: Unable to parse stats as &str.");
     };
 
     // Get frequency from qsv frequency on input file
@@ -368,16 +363,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         "Generating frequency from {} using qsv frequency...",
         args.arg_input.clone().unwrap()
     );
-    let frequency = Command::new("qsv")
+    let Ok(frequency) = Command::new("qsv")
         .arg("frequency")
         .arg(args.arg_input.clone().unwrap())
         .output()
-        .expect("Error: Unable to get frequency from qsv.");
+    else {
+        return fail!("Error: Unable to get frequency from qsv.");
+    };
 
     // Parse the frequency as &str
     let Ok(frequency_str) = std::str::from_utf8(&frequency.stdout) else {
-        eprintln!("Error: Unable to parse frequency as &str.");
-        std::process::exit(1);
+        return fail!("Error: Unable to parse frequency as &str.");
     };
 
     // Run inference options
