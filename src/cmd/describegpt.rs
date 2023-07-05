@@ -313,7 +313,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // which is automatically deleted after the command finishes
     let tmpdir = tempfile::tempdir()?;
     let work_input = process_input(
-        vec![PathBuf::from(args.arg_input.clone().unwrap())],
+        vec![PathBuf::from(
+            // if no input file is specified, read from stdin "-"
+            args.arg_input.clone().unwrap_or("-".to_string()),
+        )],
         &tmpdir,
         "No data on stdin. Please provide at least one input file or pipe data to stdin.",
     )?;
