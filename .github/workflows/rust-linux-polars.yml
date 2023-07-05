@@ -31,6 +31,7 @@ jobs:
     - name: apt-get update Ubuntu
       run: |
         sudo apt-get update
+    - uses: actions/checkout@v3        
     - name: Update Rust
       run: rustup update
     - name: Setup Rust-cache
