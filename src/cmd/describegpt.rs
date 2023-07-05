@@ -68,7 +68,7 @@ fn get_completion(api_key: &str, messages: &serde_json::Value, args: &Args) -> C
     // Create client with timeout
     let timeout_duration = Duration::from_secs(args.flag_timeout.into());
     let client = Client::builder()
-        .user_agent(util::set_user_agent(args.flag_user_agent.clone()).unwrap())
+        .user_agent(util::set_user_agent(args.flag_user_agent.clone())?)
         .brotli(true)
         .gzip(true)
         .deflate(true)
