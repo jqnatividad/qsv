@@ -52,7 +52,7 @@ struct Args {
     flag_json:        bool,
     flag_user_agent:  Option<String>,
     flag_timeout:     u16,
-    flag_key:         Option<String>
+    flag_key:         Option<String>,
 }
 
 // OpenAI API model
@@ -294,16 +294,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 if api_key.is_empty() {
                     return fail!(
                         "Error: QSV_OPENAI_API_KEY environment variable not found.\nNote that \
-                         this command uses OpenAI's LLMs for inferencing and is therefore prone to \
-                         inaccurate information being produced. Verify output results before using them."
+                         this command uses OpenAI's LLMs for inferencing and is therefore prone \
+                         to inaccurate information being produced. Verify output results before \
+                         using them."
                     );
                 }
                 api_key
             } else {
                 return fail!(
-                    "Error: QSV_OPENAI_API_KEY environment variable not found.\nNote that \
-                     this command uses OpenAI's LLMs for inferencing and is therefore prone to \
-                     inaccurate information being produced. Verify output results before using them."
+                    "Error: QSV_OPENAI_API_KEY environment variable not found.\nNote that this \
+                     command uses OpenAI's LLMs for inferencing and is therefore prone to \
+                     inaccurate information being produced. Verify output results before using \
+                     them."
                 );
             }
         }
