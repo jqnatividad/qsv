@@ -32,6 +32,7 @@ Common options:
 
 use std::{env, process::Command, time::Duration};
 
+use log::log_enabled;
 use reqwest::blocking::Client;
 use serde::Deserialize;
 use serde_json::json;
@@ -59,6 +60,12 @@ fn get_completion(api_key: &str, messages: &serde_json::Value, args: &Args) -> C
     let timeout_duration = Duration::from_secs(args.flag_timeout.into());
     let client = Client::builder()
         .user_agent(util::set_user_agent(args.flag_user_agent.clone()).unwrap())
+        .brotli(true)
+        .gzip(true)
+        .deflate(true)
+        .use_rustls_tls()
+        .http2_adaptive_window(true)
+        .connection_verbose(log_enabled!(log::Level::Debug) || log_enabled!(log::Level::Trace))
         .timeout(timeout_duration)
         .build()?;
 
@@ -223,7 +230,7 @@ fn run_inference_options(
 
     // Get completion from OpenAI API
     println!("Interacting with OpenAI API...\n");
-    
+
     let args_json = args.flag_json;
     let mut prompt: String;
     let mut messages: serde_json::Value;
