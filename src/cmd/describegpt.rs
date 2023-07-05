@@ -30,14 +30,14 @@ Common options:
     -h, --help             Display this message
 "#;
 
-use std::{env, process::Command, time::Duration};
+use std::{env, path::PathBuf, process::Command, time::Duration};
 
 use log::log_enabled;
 use reqwest::blocking::Client;
 use serde::Deserialize;
 use serde_json::json;
 
-use crate::{util, CliResult};
+use crate::{util, util::process_input, CliResult};
 
 #[derive(Deserialize)]
 struct Args {
@@ -295,45 +295,37 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     };
 
-    // Check for input file errors
-    match args.arg_input {
-        Some(ref val) => {
-            // If input file is not a CSV, print error message
-            if !std::path::Path::new(val)
-                .extension()
-                .map_or(false, |ext| ext.eq_ignore_ascii_case("csv"))
-            {
-                return fail!("Error: Input file must be a CSV.");
-            }
-            // If input file does not exist, print error message
-            if !std::path::Path::new(val).exists() {
-                return fail!("Error: Input file does not exist.");
-            }
-        }
-        // If no input file, print error message
-        None => {
-            return fail!("Error: No input file specified.");
-        }
-    }
+    // Process input file
+    // support stdin and auto-decompress snappy file
+    // stdin is written to a temporary file in tmpdir
+    // which is automatically deleted after the command finishes
+    let tmpdir = tempfile::tempdir()?;
+    let work_input = process_input(
+        vec![PathBuf::from(args.arg_input.clone().unwrap())],
+        &tmpdir,
+        "No data on stdin. Please provide at least one input file or pipe data to stdin.",
+    )?;
+    // safety: we just checked that there is at least one input file
+    let arg_input = work_input[0]
+        .clone()
+        .into_os_string()
+        .into_string()
+        .unwrap();
 
     // If no inference flags specified, print error message.
     if !args.flag_all && !args.flag_dictionary && !args.flag_description && !args.flag_tags {
         return fail!("Error: No inference options specified.");
-    // If --all flag is specified, but other inference flags are also specified, print error
-    // message.
+    // If --all flag is specified, but other inference flags are also set, print error message.
     } else if args.flag_all && (args.flag_dictionary || args.flag_description || args.flag_tags) {
         return fail!("Error: --all option cannot be specified with other inference flags.");
     }
 
     // Get stats from qsv stats on input file with --everything flag
-    println!(
-        "Generating stats from {} using qsv stats --everything...",
-        args.arg_input.clone().unwrap()
-    );
+    println!("Generating stats from {arg_input} using qsv stats --everything...");
     let Ok(stats) = Command::new("qsv")
         .arg("stats")
         .arg("--everything")
-        .arg(args.arg_input.clone().unwrap())
+        .arg(arg_input.clone())
         .output()
     else {
         return fail!("Error: Unable to parse stats as &str.");
@@ -345,13 +337,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     // Get frequency from qsv frequency on input file
-    println!(
-        "Generating frequency from {} using qsv frequency...",
-        args.arg_input.clone().unwrap()
-    );
+    println!("Generating frequency from {arg_input} using qsv frequency...");
     let Ok(frequency) = Command::new("qsv")
         .arg("frequency")
-        .arg(args.arg_input.clone().unwrap())
+        .arg(arg_input.clone())
         .output()
     else {
         return fail!("Error: Unable to get frequency from qsv.");

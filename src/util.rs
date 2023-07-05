@@ -1408,7 +1408,6 @@ pub fn isutf8_file(path: &Path) -> Result<bool, CliError> {
 /// If the input is a directory, add all the files in the directory to the input
 /// If the input is a file, add the file to the input
 /// If the input are snappy compressed files, uncompress them before adding them to the input
-#[cfg(any(feature = "to", feature = "polars"))]
 pub fn process_input(
     mut arg_input: Vec<PathBuf>,
     tmpdir: &tempfile::TempDir,
