@@ -43,7 +43,7 @@ struct Args {
     flag_description: bool,
     flag_dictionary:  bool,
     flag_tags:        bool,
-    flag_max_tokens:  Option<i32>,
+    flag_max_tokens:  u16,
     flag_json:        bool,
     flag_user_agent:  Option<String>,
 }
@@ -60,15 +60,11 @@ fn get_completion(api_key: &str, messages: &serde_json::Value, args: &Args) -> S
         .build()
         .unwrap();
 
-    let mut request_data = json!({
+    let request_data = json!({
         "model": MODEL,
+        "max_tokens": args.flag_max_tokens,
         "messages": messages
     });
-
-    // If max_tokens is specified, add it to the request data
-    if args.flag_max_tokens.is_some() {
-        request_data["max_tokens"] = json!(args.flag_max_tokens.unwrap());
-    }
 
     // Send request to OpenAI API
     let request = client
@@ -328,11 +324,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // message.
     } else if args.flag_all && (args.flag_dictionary || args.flag_description || args.flag_tags) {
         eprintln!("Error: --all option cannot be specified with other inference flags.");
-        std::process::exit(1);
-    }
-    // If --max-tokens is specified as 0 or less, print error message.
-    if args.flag_max_tokens.is_some() && args.flag_max_tokens.unwrap() <= 0 {
-        eprintln!("Error: --max-tokens must be greater than 0.");
         std::process::exit(1);
     }
 
