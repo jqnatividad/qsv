@@ -195,8 +195,6 @@ fn run_inference_options(
         }
     }
 
-    // Get completion from OpenAI API
-    println!("Interacting with OpenAI API...\n");
     fn get_completion_output(completion: &str) -> CliResult<String> {
         // Parse the completion JSON
         let completion_json: serde_json::Value = match serde_json::from_str(completion) {
@@ -223,6 +221,9 @@ fn run_inference_options(
             .replace("\\`", "`"))
     }
 
+    // Get completion from OpenAI API
+    println!("Interacting with OpenAI API...\n");
+    
     let args_json = args.flag_json;
     let mut prompt: String;
     let mut messages: serde_json::Value;
