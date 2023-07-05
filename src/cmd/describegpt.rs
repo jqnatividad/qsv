@@ -1,8 +1,8 @@
 static USAGE: &str = r#"
 Infers extended metadata about a CSV using summary statistics.
 
-Note that this command uses a LLM for inference and is therefore prone to inaccurate
-information being produced. Ensure verification of output results before using them.
+Note that this command uses OpenAI's LLMs for inferencing and is therefore prone to
+inaccurate information being produced. Verify output results before using them.
 
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_describegpt.rs.
 
@@ -20,7 +20,7 @@ describegpt options:
     --max-tokens <value>   Limits the number of generated tokens in the output.
                            [default: 50]
     --json                 Return results in JSON format.
-    --timeout <secs>       Timeout for downloading URLs in seconds.
+    --timeout <secs>       Timeout for OpenAI completions in seconds.
                            [default: 60]
     --user-agent <agent>   Specify custom user agent. It supports the following variables -
                            $QSV_VERSION, $QSV_TARGET, $QSV_BIN_NAME, $QSV_KIND and $QSV_COMMAND.
