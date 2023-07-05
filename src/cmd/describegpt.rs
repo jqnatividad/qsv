@@ -17,6 +17,8 @@ describegpt options:
                            human-readable label, a description, and stats.
     --tags                 Prints tags that categorize the dataset. Useful
                            for grouping datasets and filtering.
+    --openai-key <key>     The OpenAI API key to use.
+                           If the QSV_OPENAI_KEY envvar is set, it will be used instead.                           
     --max-tokens <value>   Limits the number of generated tokens in the output.
                            [default: 50]
     --json                 Return results in JSON format.
@@ -26,8 +28,7 @@ describegpt options:
                            $QSV_VERSION, $QSV_TARGET, $QSV_BIN_NAME, $QSV_KIND and $QSV_COMMAND.
                            Try to follow the syntax here -
                            https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
-    --key <key>            The OpenAI API key to use.
-                           If the QSV_OPENAI_API_KEY envvar is set, it will be used instead.
+
 Common options:
     -h, --help             Display this message
 "#;
@@ -48,15 +49,20 @@ struct Args {
     flag_description: bool,
     flag_dictionary:  bool,
     flag_tags:        bool,
+    flag_openai_key:  Option<String>,
     flag_max_tokens:  u16,
     flag_json:        bool,
     flag_user_agent:  Option<String>,
     flag_timeout:     u16,
-    flag_key:         Option<String>,
 }
 
 // OpenAI API model
 const MODEL: &str = "gpt-3.5-turbo-16k";
+
+const OPENAI_KEY_ERROR: &str = "Error: QSV_OPENAI_KEY environment variable not found.\nNote that \
+                                this command uses OpenAI's LLMs for inferencing and is therefore \
+                                prone to inaccurate information being produced. Verify output \
+                                results before using them.";
 
 fn get_completion(api_key: &str, messages: &serde_json::Value, args: &Args) -> CliResult<String> {
     // Create client with timeout
@@ -280,33 +286,23 @@ fn run_inference_options(
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
-    // Check for QSV_OPENAI_API_KEY in environment variables
-    let api_key = match env::var("QSV_OPENAI_API_KEY") {
+    // Check for QSV_OPENAI_KEY in environment variables
+    let api_key = match env::var("QSV_OPENAI_KEY") {
         Ok(val) => {
             if val.is_empty() {
-                return fail!("Error: QSV_OPENAI_API_KEY environment variable is empty.");
+                return fail!("Error: QSV_OPENAI_KEY environment variable is empty.");
             }
             val
         }
         Err(_) => {
             // Check if the --key flag is present
-            if let Some(api_key) = args.flag_key.clone() {
+            if let Some(api_key) = args.flag_openai_key.clone() {
                 if api_key.is_empty() {
-                    return fail!(
-                        "Error: QSV_OPENAI_API_KEY environment variable not found.\nNote that \
-                         this command uses OpenAI's LLMs for inferencing and is therefore prone \
-                         to inaccurate information being produced. Verify output results before \
-                         using them."
-                    );
+                    return fail!(OPENAI_KEY_ERROR);
                 }
                 api_key
             } else {
-                return fail!(
-                    "Error: QSV_OPENAI_API_KEY environment variable not found.\nNote that this \
-                     command uses OpenAI's LLMs for inferencing and is therefore prone to \
-                     inaccurate information being produced. Verify output results before using \
-                     them."
-                );
+                return fail!(OPENAI_KEY_ERROR);
             }
         }
     };
@@ -354,11 +350,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // Get frequency from qsv frequency on input file
     println!("Generating frequency from {arg_input} using qsv frequency...");
-    let Ok(frequency) = Command::new("qsv")
-        .arg("frequency")
-        .arg(arg_input)
-        .output()
-    else {
+    let Ok(frequency) = Command::new("qsv").arg("frequency").arg(arg_input).output() else {
         return fail!("Error: Unable to get frequency from qsv.");
     };
 
