@@ -26,6 +26,8 @@ describegpt options:
                            $QSV_VERSION, $QSV_TARGET, $QSV_BIN_NAME, $QSV_KIND and $QSV_COMMAND.
                            Try to follow the syntax here -
                            https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
+    --key <key>            The OpenAI API key to use.
+                           If the QSV_OPENAI_API_KEY envvar is set, it will be used instead.
 Common options:
     -h, --help             Display this message
 "#;
@@ -50,6 +52,7 @@ struct Args {
     flag_json:        bool,
     flag_user_agent:  Option<String>,
     flag_timeout:     u16,
+    flag_key:         Option<String>,
 }
 
 // OpenAI API model
@@ -277,21 +280,34 @@ fn run_inference_options(
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
-    // Check for OpenAI API Key in environment variables
-    let api_key = match env::var("OPENAI_API_KEY") {
+    // Check for QSV_OPENAI_API_KEY in environment variables
+    let api_key = match env::var("QSV_OPENAI_API_KEY") {
         Ok(val) => {
             if val.is_empty() {
-                return fail!("Error: OPENAI_API_KEY environment variable is empty.");
+                return fail!("Error: QSV_OPENAI_API_KEY environment variable is empty.");
             }
             val
         }
         Err(_) => {
-            // Warning message for new command users
-            return fail!(
-                "Error: OPENAI_API_KEY environment variable not found.\nNote that this command \
-                 uses a LLM for inference and is therefore prone to inaccurate\ninformation being \
-                 produced. Ensure verification of output results before using them.\n"
-            );
+            // Check if the --key flag is present
+            if let Some(api_key) = args.flag_key.clone() {
+                if api_key.is_empty() {
+                    return fail!(
+                        "Error: QSV_OPENAI_API_KEY environment variable not found.\nNote that \
+                         this command uses OpenAI's LLMs for inferencing and is therefore prone \
+                         to inaccurate information being produced. Verify output results before \
+                         using them."
+                    );
+                }
+                api_key
+            } else {
+                return fail!(
+                    "Error: QSV_OPENAI_API_KEY environment variable not found.\nNote that this \
+                     command uses OpenAI's LLMs for inferencing and is therefore prone to \
+                     inaccurate information being produced. Verify output results before using \
+                     them."
+                );
+            }
         }
     };
 

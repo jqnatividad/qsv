@@ -56,6 +56,9 @@ QSV_AUTOINDEX = False
 # when using the "ckan://" scheme. Only required to access private resources.
 # QSV_CKAN_TOKEN = YOUR_CKAN_API_TOKEN
 
+# The OpenAI API key to use with the `describegpt` command.
+# QSV_OPENAI_API_KEY = YOUR_OPENAI_API_KEY
+
 # set to an ascii character. If set, any lines(including the header) that start
 # with this character are ignored. Note that when you want to use the pound sign
 # as a comment char, you need to enclose it in single quotes as its a reserved
