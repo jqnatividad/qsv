@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ci-linux-tests-${{ github.ref }}-1
+  group: ci-linux-polars-tests-${{ github.ref }}-1
   cancel-in-progress: true
 
 env:
