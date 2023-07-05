@@ -20,6 +20,8 @@ describegpt options:
     --max-tokens <value>   Limits the number of generated tokens in the output.
                            [default: 50]
     --json                 Return results in JSON format.
+    --timeout <secs>       Timeout for downloading URLs in seconds.
+                           [default: 60]
     --user-agent <agent>   Specify custom user agent. It supports the following variables -
                            $QSV_VERSION, $QSV_TARGET, $QSV_BIN_NAME, $QSV_KIND and $QSV_COMMAND.
                            Try to follow the syntax here -
@@ -46,6 +48,7 @@ struct Args {
     flag_max_tokens:  u16,
     flag_json:        bool,
     flag_user_agent:  Option<String>,
+    flag_timeout:     u16,
 }
 
 // OpenAI API model
@@ -53,7 +56,7 @@ const MODEL: &str = "gpt-3.5-turbo-16k";
 
 fn get_completion(api_key: &str, messages: &serde_json::Value, args: &Args) -> String {
     // Create client with timeout
-    let timeout_duration = Duration::from_secs(60);
+    let timeout_duration = Duration::from_secs(args.flag_timeout.into());
     let client = Client::builder()
         .user_agent(util::set_user_agent(args.flag_user_agent.clone()).unwrap())
         .timeout(timeout_duration)
