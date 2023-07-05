@@ -280,11 +280,11 @@ fn run_inference_options(
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
-    // Check for OpenAI API Key in environment variables
-    let api_key = match env::var("OPENAI_API_KEY") {
+    // Check for QSV_OPENAI_API_KEY in environment variables
+    let api_key = match env::var("QSV_OPENAI_API_KEY") {
         Ok(val) => {
             if val.is_empty() {
-                eprintln!("Error: OPENAI_API_KEY environment variable is empty.");
+                eprintln!("Error: QSV_OPENAI_API_KEY environment variable is empty.");
                 std::process::exit(1);
             }
             val
@@ -293,12 +293,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             // Check if the --key flag is present
             if let Some(api_key) = args.flag_key.clone() {
                 if api_key.is_empty() {
-                    eprintln!("Error: OPENAI_API_KEY environment variable not specified.");
+                    eprintln!("Error: QSV_OPENAI_API_KEY environment variable not set.");
                     std::process::exit(1);
                 }
                 api_key
             } else {
-                eprintln!("Error: OPENAI_API_KEY environment variable not specified.");
+                eprintln!("Error: QSV_OPENAI_API_KEY environment variable not set.");
                 // Warning message for new command users
                 eprintln!(
                     "Note that this command uses a LLM for inference and is therefore prone to \
