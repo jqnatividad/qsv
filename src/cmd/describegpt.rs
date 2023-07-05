@@ -26,6 +26,8 @@ describegpt options:
                            $QSV_VERSION, $QSV_TARGET, $QSV_BIN_NAME, $QSV_KIND and $QSV_COMMAND.
                            Try to follow the syntax here -
                            https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
+    --key <key>            The OpenAI API key to use.
+                           If the QSV_OPENAI_API_KEY envvar is set, it will be used instead.
 Common options:
     -h, --help             Display this message
 "#;
@@ -50,6 +52,7 @@ struct Args {
     flag_json:        bool,
     flag_user_agent:  Option<String>,
     flag_timeout:     u16,
+    flag_key:         Option<String>
 }
 
 // OpenAI API model
@@ -287,14 +290,23 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             val
         }
         Err(_) => {
-            eprintln!("Error: OPENAI_API_KEY environment variable not found.");
-            // Warning message for new command users
-            eprintln!(
-                "Note that this command uses a LLM for inference and is therefore prone to \
-                 inaccurate\ninformation being produced. Ensure verification of output results \
-                 before using them.\n"
-            );
-            std::process::exit(1);
+            // Check if the --key flag is present
+            if let Some(api_key) = args.flag_key.clone() {
+                if api_key.is_empty() {
+                    eprintln!("Error: OPENAI_API_KEY environment variable not specified.");
+                    std::process::exit(1);
+                }
+                api_key
+            } else {
+                eprintln!("Error: OPENAI_API_KEY environment variable not specified.");
+                // Warning message for new command users
+                eprintln!(
+                    "Note that this command uses a LLM for inference and is therefore prone to \
+                     inaccurate information being produced. Ensure verification of output results \
+                     before using them.\n"
+                );
+                std::process::exit(1);
+            }
         }
     };
 
