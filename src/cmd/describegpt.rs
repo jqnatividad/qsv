@@ -238,7 +238,7 @@ fn run_inference_options(
     }
 
     // Get completion from OpenAI API
-    println!("Interacting with OpenAI API...\n");
+    eprintln!("Interacting with OpenAI API...\n");
 
     let args_json = args.flag_json;
     let mut prompt: String;
@@ -248,11 +248,12 @@ fn run_inference_options(
     let mut dictionary_completion_output = String::new();
     if args.flag_dictionary || args.flag_all {
         prompt = get_dictionary_prompt(stats_str, frequency_str, args_json);
-        println!("Generating data dictionary from OpenAI API...");
+        eprintln!("Generating data dictionary from OpenAI API...");
         messages = json!([{"role": "user", "content": prompt}]);
         completion = get_completion(api_key, &messages, args)?;
         dictionary_completion_output = get_completion_output(&completion)?;
-        println!("Dictionary output:\n{completion_output}");
+        eprintln!("Received dictionary completion output.");
+        println!("{dictionary_completion_output}");
     }
 
     if args.flag_description || args.flag_all {
@@ -265,7 +266,8 @@ fn run_inference_options(
         println!("Generating description from OpenAI API...");
         completion = get_completion(api_key, &messages, args)?;
         completion_output = get_completion_output(&completion)?;
-        println!("Description output:\n{completion_output}");
+        eprintln!("Received description completion output.");
+        println!("{completion_output}");
     }
     if args.flag_tags || args.flag_all {
         prompt = if args.flag_dictionary {
@@ -277,7 +279,8 @@ fn run_inference_options(
         println!("Generating tags from OpenAI API...");
         completion = get_completion(api_key, &messages, args)?;
         completion_output = get_completion_output(&completion)?;
-        println!("Tags output:\n{completion_output}");
+        eprintln!("Received tags completion output.");
+        println!("{completion_output}");
     }
 
     Ok(())
@@ -333,7 +336,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     // Get stats from qsv stats on input file with --everything flag
-    println!("Generating stats from {arg_input} using qsv stats --everything...");
+    eprintln!("Generating stats from {arg_input} using qsv stats --everything...");
     let Ok(stats) = Command::new("qsv")
         .arg("stats")
         .arg("--everything")
@@ -349,7 +352,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     // Get frequency from qsv frequency on input file
-    println!("Generating frequency from {arg_input} using qsv frequency...");
+    eprintln!("Generating frequency from {arg_input} using qsv frequency...");
     let Ok(frequency) = Command::new("qsv").arg("frequency").arg(arg_input).output() else {
         return fail!("Error: Unable to get frequency from qsv.");
     };
