@@ -309,7 +309,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // Process input file
     // support stdin and auto-decompress snappy file
-    // stdin is written to a temporary file in tmpdir
+    // stdin/decompressed file is written to a temporary file in tmpdir
     // which is automatically deleted after the command finishes
     let tmpdir = tempfile::tempdir()?;
     let work_input = process_input(
