@@ -17,8 +17,8 @@ describegpt options:
                            human-readable label, a description, and stats.
     --tags                 Prints tags that categorize the dataset. Useful
                            for grouping datasets and filtering.
-    --max-tokens <value>   Limits the number of generated tokens in the
-                           output.
+    --max-tokens <value>   Limits the number of generated tokens in the output.
+                           [default: 50]
     --json                 Return results in JSON format.
     --user-agent <agent>   Specify custom user agent. It supports the following variables -
                            $QSV_VERSION, $QSV_TARGET, $QSV_BIN_NAME, $QSV_KIND and $QSV_COMMAND.
@@ -329,11 +329,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } else if args.flag_all && (args.flag_dictionary || args.flag_description || args.flag_tags) {
         eprintln!("Error: --all option cannot be specified with other inference flags.");
         std::process::exit(1);
-    }
-    // If --max-tokens is not specified, print warning message that maximum token limit will be
-    // used.
-    if args.flag_max_tokens.is_none() {
-        eprintln!("Warning: No --max-tokens specified. Defaulting to maximum token limit.");
     }
     // If --max-tokens is specified as 0 or less, print error message.
     if args.flag_max_tokens.is_some() && args.flag_max_tokens.unwrap() <= 0 {
