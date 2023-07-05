@@ -340,7 +340,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     println!("Generating frequency from {arg_input} using qsv frequency...");
     let Ok(frequency) = Command::new("qsv")
         .arg("frequency")
-        .arg(arg_input.clone())
+        .arg(arg_input)
         .output()
     else {
         return fail!("Error: Unable to get frequency from qsv.");
