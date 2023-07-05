@@ -266,11 +266,6 @@ enum ReportKind {
     None,
 }
 
-impl From<reqwest::Error> for CliError {
-    fn from(err: reqwest::Error) -> CliError {
-        CliError::Other(err.to_string())
-    }
-}
 #[derive(Debug)]
 struct RedisConfig {
     conn_str:      String,

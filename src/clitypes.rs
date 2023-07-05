@@ -168,3 +168,9 @@ impl From<serde_json::Error> for CliError {
         CliError::Other(format!("JSON error: {err:?}"))
     }
 }
+
+impl From<reqwest::Error> for CliError {
+    fn from(err: reqwest::Error) -> CliError {
+        CliError::Other(err.to_string())
+    }
+}
