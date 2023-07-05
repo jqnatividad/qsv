@@ -17,9 +17,11 @@ describegpt options:
                            human-readable label, a description, and stats.
     --tags                 Prints tags that categorize the dataset. Useful
                            for grouping datasets and filtering.
-    --max-tokens <value>   Limits the number of generated tokens in the
-                           output.
+    --max-tokens <value>   Limits the number of generated tokens in the output.
+                           [default: 50]
     --json                 Return results in JSON format.
+    --timeout <secs>       Timeout for downloading URLs in seconds.
+                           [default: 60]
     --user-agent <agent>   Specify custom user agent. It supports the following variables -
                            $QSV_VERSION, $QSV_TARGET, $QSV_BIN_NAME, $QSV_KIND and $QSV_COMMAND.
                            Try to follow the syntax here -
@@ -30,6 +32,7 @@ Common options:
 
 use std::{env, process::Command, time::Duration};
 
+use log::log_enabled;
 use reqwest::blocking::Client;
 use serde::Deserialize;
 use serde_json::json;
@@ -43,32 +46,34 @@ struct Args {
     flag_description: bool,
     flag_dictionary:  bool,
     flag_tags:        bool,
-    flag_max_tokens:  Option<i32>,
+    flag_max_tokens:  u16,
     flag_json:        bool,
     flag_user_agent:  Option<String>,
+    flag_timeout:     u16,
 }
 
 // OpenAI API model
 const MODEL: &str = "gpt-3.5-turbo-16k";
 
-fn get_completion(api_key: &str, messages: &serde_json::Value, args: &Args) -> String {
+fn get_completion(api_key: &str, messages: &serde_json::Value, args: &Args) -> CliResult<String> {
     // Create client with timeout
-    let timeout_duration = Duration::from_secs(60);
+    let timeout_duration = Duration::from_secs(args.flag_timeout.into());
     let client = Client::builder()
         .user_agent(util::set_user_agent(args.flag_user_agent.clone()).unwrap())
+        .brotli(true)
+        .gzip(true)
+        .deflate(true)
+        .use_rustls_tls()
+        .http2_adaptive_window(true)
+        .connection_verbose(log_enabled!(log::Level::Debug) || log_enabled!(log::Level::Trace))
         .timeout(timeout_duration)
-        .build()
-        .unwrap();
+        .build()?;
 
-    let mut request_data = json!({
+    let request_data = json!({
         "model": MODEL,
+        "max_tokens": args.flag_max_tokens,
         "messages": messages
     });
-
-    // If max_tokens is specified, add it to the request data
-    if args.flag_max_tokens.is_some() {
-        request_data["max_tokens"] = json!(args.flag_max_tokens.unwrap());
-    }
 
     // Send request to OpenAI API
     let request = client
@@ -81,20 +86,16 @@ fn get_completion(api_key: &str, messages: &serde_json::Value, args: &Args) -> S
     // Get response from OpenAI API
     let response = match request {
         Ok(val) => val,
-        Err(err) => {
-            eprintln!("Error: {err}");
-            std::process::exit(1);
-        }
+        Err(e) => return fail_clierror!("OpenAI API Error: {e}"),
     };
 
     let response_body = response.text();
 
     // Return completion output
     match response_body {
-        Ok(val) => val,
-        Err(_) => {
-            eprintln!("Error: Unable to get response body from OpenAI API.");
-            std::process::exit(1);
+        Ok(val) => Ok(val),
+        Err(e) => {
+            fail_clierror!("Error: Unable to get response body from OpenAI API. {e}")
         }
     }
 }
@@ -191,7 +192,7 @@ fn run_inference_options(
     api_key: &str,
     stats_str: Option<&str>,
     frequency_str: Option<&str>,
-) {
+) -> CliResult<()> {
     // Add --dictionary output as context if it is not empty
     fn get_messages(prompt: &str, dictionary_completion_output: &str) -> serde_json::Value {
         if dictionary_completion_output.is_empty() {
@@ -201,35 +202,34 @@ fn run_inference_options(
         }
     }
 
-    // Get completion from OpenAI API
-    println!("Interacting with OpenAI API...\n");
-    fn get_completion_output(completion: &str) -> String {
+    fn get_completion_output(completion: &str) -> CliResult<String> {
         // Parse the completion JSON
         let completion_json: serde_json::Value = match serde_json::from_str(completion) {
             Ok(val) => val,
             Err(_) => {
-                eprintln!("Error: Unable to parse completion JSON.");
-                std::process::exit(1);
+                return fail_clierror!("Error: Unable to parse completion JSON.");
             }
         };
         // If OpenAI API returns error, print error message
         if let serde_json::Value::Object(ref map) = completion_json {
             if map.contains_key("error") {
-                eprintln!("Error: {}", map["error"]);
-                std::process::exit(1);
+                return fail_clierror!("OpenAI API Error: {}", map["error"]);
             }
         }
         // Set the completion output
         let message = &completion_json["choices"][0]["message"]["content"];
         // Convert escaped characters to normal characters
-        message
+        Ok(message
             .to_string()
             .replace("\\n", "\n")
             .replace("\\t", "\t")
             .replace("\\\"", "\"")
             .replace("\\'", "'")
-            .replace("\\`", "`")
+            .replace("\\`", "`"))
     }
+
+    // Get completion from OpenAI API
+    println!("Interacting with OpenAI API...\n");
 
     let args_json = args.flag_json;
     let mut prompt: String;
@@ -241,8 +241,8 @@ fn run_inference_options(
         prompt = get_dictionary_prompt(stats_str, frequency_str, args_json);
         println!("Generating data dictionary from OpenAI API...");
         messages = json!([{"role": "user", "content": prompt}]);
-        completion = get_completion(api_key, &messages, args);
-        dictionary_completion_output = get_completion_output(&completion);
+        completion = get_completion(api_key, &messages, args)?;
+        dictionary_completion_output = get_completion_output(&completion)?;
         println!("Dictionary output:\n{completion_output}");
     }
 
@@ -254,8 +254,8 @@ fn run_inference_options(
         };
         messages = get_messages(&prompt, &dictionary_completion_output);
         println!("Generating description from OpenAI API...");
-        completion = get_completion(api_key, &messages, args);
-        completion_output = get_completion_output(&completion);
+        completion = get_completion(api_key, &messages, args)?;
+        completion_output = get_completion_output(&completion)?;
         println!("Description output:\n{completion_output}");
     }
     if args.flag_tags || args.flag_all {
@@ -266,10 +266,12 @@ fn run_inference_options(
         };
         messages = get_messages(&prompt, &dictionary_completion_output);
         println!("Generating tags from OpenAI API...");
-        completion = get_completion(api_key, &messages, args);
-        completion_output = get_completion_output(&completion);
+        completion = get_completion(api_key, &messages, args)?;
+        completion_output = get_completion_output(&completion)?;
         println!("Tags output:\n{completion_output}");
     }
+
+    Ok(())
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -330,16 +332,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         eprintln!("Error: --all option cannot be specified with other inference flags.");
         std::process::exit(1);
     }
-    // If --max-tokens is not specified, print warning message that maximum token limit will be
-    // used.
-    if args.flag_max_tokens.is_none() {
-        eprintln!("Warning: No --max-tokens specified. Defaulting to maximum token limit.");
-    }
-    // If --max-tokens is specified as 0 or less, print error message.
-    if args.flag_max_tokens.is_some() && args.flag_max_tokens.unwrap() <= 0 {
-        eprintln!("Error: --max-tokens must be greater than 0.");
-        std::process::exit(1);
-    }
 
     // Get stats from qsv stats on input file with --everything flag
     println!(
@@ -377,7 +369,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     // Run inference options
-    run_inference_options(&args, &api_key, Some(stats_str), Some(frequency_str));
+    run_inference_options(&args, &api_key, Some(stats_str), Some(frequency_str))?;
 
     Ok(())
 }
