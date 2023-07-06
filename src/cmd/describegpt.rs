@@ -22,6 +22,7 @@ describegpt options:
     --max-tokens <value>   Limits the number of generated tokens in the output.
                            [default: 50]
     --json                 Return results in JSON format.
+    -o, --output <file>    Write output to <file> instead of stdout.
     --timeout <secs>       Timeout for OpenAI completions in seconds.
                            [default: 60]
     --user-agent <agent>   Specify custom user agent. It supports the following variables -
@@ -33,7 +34,7 @@ Common options:
     -h, --help             Display this message
 "#;
 
-use std::{env, path::PathBuf, process::Command, time::Duration};
+use std::{env, fs, io::Write, path::PathBuf, process::Command, time::Duration};
 
 use log::log_enabled;
 use reqwest::blocking::Client;
@@ -52,6 +53,7 @@ struct Args {
     flag_openai_key:  Option<String>,
     flag_max_tokens:  u16,
     flag_json:        bool,
+    flag_output:      Option<String>,
     flag_user_agent:  Option<String>,
     flag_timeout:     u16,
 }
@@ -195,6 +197,15 @@ fn get_tags_prompt(stats: Option<&str>, frequency: Option<&str>, flag_json: bool
     prompt
 }
 
+// Replace escaped characters with normal characters
+fn replace_escape_chars(str: &str) -> String {
+    str.replace("\\n", "\n")
+        .replace("\\t", "\t")
+        .replace("\\\"", "\"")
+        .replace("\\'", "'")
+        .replace("\\`", "`")
+}
+
 // Generates output for all inference options
 fn run_inference_options(
     args: &Args,
@@ -228,19 +239,54 @@ fn run_inference_options(
         // Set the completion output
         let message = &completion_json["choices"][0]["message"]["content"];
         // Convert escaped characters to normal characters
-        Ok(message
-            .to_string()
-            .replace("\\n", "\n")
-            .replace("\\t", "\t")
-            .replace("\\\"", "\"")
-            .replace("\\'", "'")
-            .replace("\\`", "`"))
+        Ok(replace_escape_chars(message.as_str().unwrap()))
+    }
+
+    fn process_output(
+        option: &str,
+        output: &str,
+        total_json_output: &mut serde_json::Value,
+        args: &Args,
+    ) -> () {
+        // If --json is used, expect JSON
+        if args.flag_json {
+            // Parse the completion JSON
+            let completion_json: serde_json::Value = match serde_json::from_str(output) {
+                // Output is valid JSON
+                Ok(val) => val,
+                // Output is not valid JSON
+                Err(_) => {
+                    // Default error message in JSON format
+                    let error_json = json!({"error": "Error: Unable to parse completion JSON."});
+                    // Print error message in JSON format
+                    eprintln!("{}", error_json);
+                    error_json
+                }
+            };
+            total_json_output[option] = completion_json;
+        }
+        // If --json is not used, expect plaintext
+        else {
+            let formatted_output = replace_escape_chars(output);
+            println!("{}", formatted_output);
+            // If --output is used, append plaintext to file, do not overwrite
+            if let Some(output) = args.flag_output.clone() {
+                fs::OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open(output)
+                    .unwrap()
+                    .write_all(formatted_output.as_bytes())
+                    .unwrap();
+            }
+        }
     }
 
     // Get completion from OpenAI API
     eprintln!("Interacting with OpenAI API...\n");
 
     let args_json = args.flag_json;
+    let mut total_json_output: serde_json::Value = json!({});
     let mut prompt: String;
     let mut messages: serde_json::Value;
     let mut completion: String;
@@ -253,7 +299,12 @@ fn run_inference_options(
         completion = get_completion(api_key, &messages, args)?;
         dictionary_completion_output = get_completion_output(&completion)?;
         eprintln!("Received dictionary completion output.");
-        println!("{dictionary_completion_output}");
+        process_output(
+            "dictionary",
+            &dictionary_completion_output,
+            &mut total_json_output,
+            args,
+        );
     }
 
     if args.flag_description || args.flag_all {
@@ -263,11 +314,16 @@ fn run_inference_options(
             get_description_prompt(stats_str, frequency_str, args_json)
         };
         messages = get_messages(&prompt, &dictionary_completion_output);
-        println!("Generating description from OpenAI API...");
+        eprintln!("Generating description from OpenAI API...");
         completion = get_completion(api_key, &messages, args)?;
         completion_output = get_completion_output(&completion)?;
         eprintln!("Received description completion output.");
-        println!("{completion_output}");
+        process_output(
+            "description",
+            &completion_output,
+            &mut total_json_output,
+            args,
+        );
     }
     if args.flag_tags || args.flag_all {
         prompt = if args.flag_dictionary {
@@ -276,11 +332,22 @@ fn run_inference_options(
             get_tags_prompt(stats_str, frequency_str, args_json)
         };
         messages = get_messages(&prompt, &dictionary_completion_output);
-        println!("Generating tags from OpenAI API...");
+        eprintln!("Generating tags from OpenAI API...");
         completion = get_completion(api_key, &messages, args)?;
         completion_output = get_completion_output(&completion)?;
         eprintln!("Received tags completion output.");
-        println!("{completion_output}");
+        process_output("tags", &completion_output, &mut total_json_output, args);
+    }
+
+    if args.flag_json {
+        // Print all JSON output
+        let formatted_output =
+            replace_escape_chars(&serde_json::to_string_pretty(&total_json_output).unwrap());
+        println!("{}", formatted_output);
+        // If --output is used, write JSON to file
+        if let Some(output) = args.flag_output.clone() {
+            fs::write(output, formatted_output).unwrap();
+        }
     }
 
     Ok(())
