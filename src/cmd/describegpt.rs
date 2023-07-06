@@ -259,7 +259,7 @@ fn run_inference_options(
                     // Default error message in JSON format
                     let error_json = json!({"error": "Error: Unable to parse completion JSON."});
                     // Print error message in JSON format
-                    eprintln!("{}", error_json);
+                    eprintln!("{error_json}");
                     error_json
                 }
             };
@@ -268,7 +268,7 @@ fn run_inference_options(
         // If --json is not used, expect plaintext
         else {
             let formatted_output = replace_escape_chars(output);
-            println!("{}", formatted_output);
+            println!("{formatted_output}");
             // If --output is used, append plaintext to file, do not overwrite
             if let Some(output) = args.flag_output.clone() {
                 fs::OpenOptions::new()
@@ -342,7 +342,7 @@ fn run_inference_options(
         // Print all JSON output
         let formatted_output =
             replace_escape_chars(&serde_json::to_string_pretty(&total_json_output).unwrap());
-        println!("{}", formatted_output);
+        println!("{formatted_output}");
         // If --output is used, write JSON to file
         if let Some(output) = args.flag_output.clone() {
             fs::write(output, formatted_output)?;
