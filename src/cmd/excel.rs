@@ -164,7 +164,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .and_then(std::ffi::OsStr::to_str)
         .unwrap_or_default()
         .to_string();
-    let canonical_filename = sce.canonicalize().unwrap_or_default().display().to_string();
+    let canonical_filename = sce.canonicalize()?.display().to_string();
     let format = sce
         .extension()
         .and_then(std::ffi::OsStr::to_str)
@@ -174,7 +174,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         "xls" | "xlsx" | "xlsm" | "xlsb" => (),
         "ods" => ods_flag = true,
         _ => {
-            return fail!(
+            return fail_clierror!(
                 "\"{format}\" not supported. The excel command only supports the following file \
                  formats - xls, xlsx, xlsm, xlsb and ods."
             );
