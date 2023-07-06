@@ -247,7 +247,7 @@ fn run_inference_options(
         output: &str,
         total_json_output: &mut serde_json::Value,
         args: &Args,
-    ) -> () {
+    ) -> CliResult<()> {
         // If --json is used, expect JSON
         if args.flag_json {
             // Parse the completion JSON
@@ -274,12 +274,11 @@ fn run_inference_options(
                 fs::OpenOptions::new()
                     .create(true)
                     .append(true)
-                    .open(output)
-                    .unwrap()
-                    .write_all(formatted_output.as_bytes())
-                    .unwrap();
+                    .open(output)?
+                    .write_all(formatted_output.as_bytes())?;
             }
         }
+        Ok(())
     }
 
     // Get completion from OpenAI API
@@ -290,7 +289,7 @@ fn run_inference_options(
     let mut prompt: String;
     let mut messages: serde_json::Value;
     let mut completion: String;
-    let mut completion_output = String::new();
+    let mut completion_output: String;
     let mut dictionary_completion_output = String::new();
     if args.flag_dictionary || args.flag_all {
         prompt = get_dictionary_prompt(stats_str, frequency_str, args_json);
@@ -304,7 +303,7 @@ fn run_inference_options(
             &dictionary_completion_output,
             &mut total_json_output,
             args,
-        );
+        )?;
     }
 
     if args.flag_description || args.flag_all {
@@ -323,7 +322,7 @@ fn run_inference_options(
             &completion_output,
             &mut total_json_output,
             args,
-        );
+        )?;
     }
     if args.flag_tags || args.flag_all {
         prompt = if args.flag_dictionary {
@@ -336,7 +335,7 @@ fn run_inference_options(
         completion = get_completion(api_key, &messages, args)?;
         completion_output = get_completion_output(&completion)?;
         eprintln!("Received tags completion output.");
-        process_output("tags", &completion_output, &mut total_json_output, args);
+        process_output("tags", &completion_output, &mut total_json_output, args)?;
     }
 
     if args.flag_json {
@@ -346,7 +345,7 @@ fn run_inference_options(
         println!("{}", formatted_output);
         // If --output is used, write JSON to file
         if let Some(output) = args.flag_output.clone() {
-            fs::write(output, formatted_output).unwrap();
+            fs::write(output, formatted_output)?;
         }
     }
 
