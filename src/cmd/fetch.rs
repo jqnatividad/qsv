@@ -18,6 +18,8 @@ By default, it will connect to a local Redis instance at redis://127.0.0.1:6379/
 with a cache expiry Time-to-Live (TTL) of 2,419,200 seconds (28 days),
 and cache hits NOT refreshing the TTL of cached values.
 
+If you don't want responses to be cached, use the --no-cache flag.
+
 Set the environment variables QSV_REDIS_CONNSTR, QSV_REDIS_TTL_SECONDS and 
 QSV_REDIS_TTL_REFRESH to change default Redis settings.
 
@@ -142,6 +144,7 @@ Fetch options:
                                Set to zero (0) to continue despite errors.
                                [default: 10 ]
     --store-error              On error, store error code/message instead of blank value.
+    --no-cache                 Do not cache responses.
     --cache-error              Cache error responses even if a request fails. If an identical URL is requested,
                                the cached error is returned. Otherwise, the fetch is attempted again 
                                for --max-retries.
@@ -228,6 +231,7 @@ struct Args {
     flag_max_retries:  u8,
     flag_max_errors:   u64,
     flag_store_error:  bool,
+    flag_no_cache:     bool,
     flag_cache_error:  bool,
     flag_cookies:      bool,
     flag_user_agent:   Option<String>,
@@ -666,6 +670,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     wwarn!(r#"Cannot remove Redis key "{key}""#);
                 };
             }
+        } else if args.flag_no_cache {
+            final_response = get_response(
+                &url,
+                &client,
+                &limiter,
+                &jql_selector,
+                args.flag_store_error,
+                args.flag_pretty,
+                include_existing_columns,
+                args.flag_max_retries,
+            );
+            was_cached = false;
         } else {
             intermediate_value = get_cached_response(
                 &url,
