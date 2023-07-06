@@ -629,7 +629,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         if url.is_empty() {
             final_response.clone_from(&empty_response);
             was_cached = false;
-        } else if args.flag_redis {
+        } else if args.flag_redis && !args.flag_no_cache {
             intermediate_redis_value = get_redis_response(
                 &url,
                 &form_body_jsonmap,
