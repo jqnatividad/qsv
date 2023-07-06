@@ -22,7 +22,6 @@ describegpt options:
     --max-tokens <value>   Limits the number of generated tokens in the output.
                            [default: 50]
     --json                 Return results in JSON format.
-    -o, --output <file>    Write output to <file> instead of stdout.
     --timeout <secs>       Timeout for OpenAI completions in seconds.
                            [default: 60]
     --user-agent <agent>   Specify custom user agent. It supports the following variables -
@@ -32,6 +31,7 @@ describegpt options:
 
 Common options:
     -h, --help             Display this message
+    -o, --output <file>    Write output to <file> instead of stdout.
 "#;
 
 use std::{env, fs, io::Write, path::PathBuf, process::Command, time::Duration};
@@ -53,9 +53,9 @@ struct Args {
     flag_openai_key:  Option<String>,
     flag_max_tokens:  u16,
     flag_json:        bool,
-    flag_output:      Option<String>,
     flag_user_agent:  Option<String>,
     flag_timeout:     u16,
+    flag_output:      Option<String>,
 }
 
 // OpenAI API model
