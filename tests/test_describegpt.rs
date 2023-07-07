@@ -52,7 +52,10 @@ fn describegpt_user_agent() {
     cmd.arg("in.csv")
         .arg("--all")
         .arg("--json")
-        .args(["--user-agent", "Mozilla/5.0 (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxversion"])
+        .args([
+            "--user-agent",
+            "Mozilla/5.0 (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxversion",
+        ])
         .args(["--max-tokens", "1000"]);
 
     // Check that the command ran successfully
