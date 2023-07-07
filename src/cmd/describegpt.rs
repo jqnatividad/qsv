@@ -406,15 +406,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     // Get qsv executable's directory
-    let mut root = env::current_exe()
-        .unwrap()
-        .parent()
-        .expect("executable's directory")
-        .to_path_buf();
+    let mut root = env::current_exe().unwrap();
 
     // Get stats from qsv stats on input file with --everything flag
     eprintln!("Generating stats from {arg_input} using qsv stats --everything...");
-    let Ok(stats) = Command::new(root.join("qsv"))
+    let Ok(stats) = Command::new(root.clone())
         .arg("stats")
         .arg("--everything")
         .arg(arg_input.clone())
@@ -430,11 +426,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // Get frequency from qsv frequency on input file
     eprintln!("Generating frequency from {arg_input} using qsv frequency...");
-    let Ok(frequency) = Command::new(root.join("qsv"))
-        .arg("frequency")
-        .arg(arg_input)
-        .output()
-    else {
+    let Ok(frequency) = Command::new(root).arg("frequency").arg(arg_input).output() else {
         return fail!("Error: Error while generating frequency.");
     };
 
