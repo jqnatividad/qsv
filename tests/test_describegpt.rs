@@ -25,6 +25,7 @@ fn describegpt_invalid_api_key() {
 
     // Error message
     let got_stderr = wrk.output_stderr(&mut cmd);
+    println!("{}", got_stderr);
     // Check that we receive the correct error message
     assert!(got_stderr.contains("Incorrect API key provided: INVALIDKEY"));
 }
