@@ -405,10 +405,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         return fail!("Error: --all option cannot be specified with other inference flags.");
     }
 
+    // Get qsv executable's directory
+    let mut root = env::current_exe()
+        .unwrap()
+        .parent()
+        .expect("executable's directory")
+        .to_path_buf();
+
     // Get stats from qsv stats on input file with --everything flag
     eprintln!("Generating stats from {arg_input} using qsv stats --everything...");
-    let Ok(stats) = Command::new("qsv")
-        .current_dir(tmpdir.path())
+    let Ok(stats) = Command::new(root.join("qsv"))
         .arg("stats")
         .arg("--everything")
         .arg(arg_input.clone())
@@ -424,8 +430,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // Get frequency from qsv frequency on input file
     eprintln!("Generating frequency from {arg_input} using qsv frequency...");
-    let Ok(frequency) = Command::new("qsv")
-        .current_dir(tmpdir.path())
+    let Ok(frequency) = Command::new(root.join("qsv"))
         .arg("frequency")
         .arg(arg_input)
         .output()
