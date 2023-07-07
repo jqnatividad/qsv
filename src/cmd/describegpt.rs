@@ -408,6 +408,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // Get stats from qsv stats on input file with --everything flag
     eprintln!("Generating stats from {arg_input} using qsv stats --everything...");
     let Ok(stats) = Command::new("qsv")
+        .current_dir(tmpdir.path())
         .arg("stats")
         .arg("--everything")
         .arg(arg_input.clone())
@@ -423,7 +424,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // Get frequency from qsv frequency on input file
     eprintln!("Generating frequency from {arg_input} using qsv frequency...");
-    let Ok(frequency) = Command::new("qsv").arg("frequency").arg(arg_input).output() else {
+    let Ok(frequency) = Command::new("qsv")
+        .current_dir(tmpdir.path())
+        .arg("frequency")
+        .arg(arg_input)
+        .output()
+    else {
         return fail!("Error: Error while generating frequency.");
     };
 
