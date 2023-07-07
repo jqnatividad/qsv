@@ -391,6 +391,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     )?;
     // safety: we just checked that there is at least one input file
     let arg_input = work_input[0]
+        .canonicalize()?
         .clone()
         .into_os_string()
         .into_string()
@@ -412,7 +413,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .arg(arg_input.clone())
         .output()
     else {
-        return fail!("Error: Unable to parse stats as &str.");
+        return fail!("Error: Error while generating stats.");
     };
 
     // Parse the stats as &str
@@ -423,7 +424,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // Get frequency from qsv frequency on input file
     eprintln!("Generating frequency from {arg_input} using qsv frequency...");
     let Ok(frequency) = Command::new("qsv").arg("frequency").arg(arg_input).output() else {
-        return fail!("Error: Unable to get frequency from qsv.");
+        return fail!("Error: Error while generating frequency.");
     };
 
     // Parse the frequency as &str
