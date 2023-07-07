@@ -27,4 +27,4 @@ jobs:
       with:
         key: qsvlite-cache
     - name: Run tests
-      run: cargo test --verbose --locked --features=lite -- --nocapture
+      run: cargo test --verbose --locked --features=lite

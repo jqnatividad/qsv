@@ -406,7 +406,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     // Get qsv executable's directory
-    let mut root = env::current_exe().unwrap();
+    let root = env::current_exe().unwrap();
 
     // Get stats from qsv stats on input file with --everything flag
     eprintln!("Generating stats from {arg_input} using qsv stats --everything...");
