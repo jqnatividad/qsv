@@ -31,8 +31,12 @@ The recipes need not be all that complicated or use `qsv` exclusively (feel free
 
 Just go to the [Cookbook](https://github.com/jqnatividad/qsv/wiki/Cookbook#cookbook) and add your recipe.
 
+Once you add a recipe, show it in action! Add a [_"Show and tell"_](https://github.com/jqnatividad/qsv/discussions/categories/show-and-tell) entry in [Discussions](https://github.com/jqnatividad/qsv/discussions), and link to your recipe.
+
 ## Documentation Contributions
 
 We are always looking for ways to improve the documentation. If you find a typo, or have a suggestion for improvement, please submit a pull request.
 
 And if you want to add a new page to the Wiki, please do! Just make sure to add section headers to your Wiki contributions, so it automatically shows up in the sidebar.
+
+If you are not familiar with GitHub Wikis, you can find a guide [here](https://docs.github.com/en/github/building-a-strong-community/adding-or-editing-wiki-pages#adding-wiki-pages).
