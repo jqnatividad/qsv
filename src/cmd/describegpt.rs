@@ -22,6 +22,8 @@ describegpt options:
     --max-tokens <value>   Limits the number of generated tokens in the output.
                            [default: 50]
     --json                 Return results in JSON format.
+    --model <model>        The model to use for inferencing.
+                           [default: gpt-3.5-turbo-16k]
     --timeout <secs>       Timeout for OpenAI completions in seconds.
                            [default: 60]
     --user-agent <agent>   Specify custom user agent. It supports the following variables -
@@ -52,14 +54,12 @@ struct Args {
     flag_tags:        bool,
     flag_openai_key:  Option<String>,
     flag_max_tokens:  u16,
+    flag_model:       String,
     flag_json:        bool,
     flag_user_agent:  Option<String>,
     flag_timeout:     u16,
     flag_output:      Option<String>,
 }
-
-// OpenAI API model
-const MODEL: &str = "gpt-3.5-turbo-16k";
 
 const OPENAI_KEY_ERROR: &str = "Error: QSV_OPENAI_KEY environment variable not found.\nNote that \
                                 this command uses OpenAI's LLMs for inferencing and is therefore \
@@ -81,7 +81,7 @@ fn get_completion(api_key: &str, messages: &serde_json::Value, args: &Args) -> C
         .build()?;
 
     let request_data = json!({
-        "model": MODEL,
+        "model": args.flag_model,
         "max_tokens": args.flag_max_tokens,
         "messages": messages
     });
