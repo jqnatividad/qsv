@@ -405,7 +405,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         return fail!("Error: --all option cannot be specified with other inference flags.");
     }
 
-    // Get qsv executable's directory
+    // Get qsv executable's path
     let root = env::current_exe().unwrap();
 
     // Get stats from qsv stats on input file with --everything flag
