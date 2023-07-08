@@ -142,9 +142,7 @@ fn is_valid_model(client: &Client, api_key: Option<&str>, args: &Args) -> CliRes
 
     // If response is an error, return the error with fail!
     if let Err(e) = response {
-        return fail_clierror!(
-            "Error while requesting OpenAI models: {e}",
-        );
+        return fail_clierror!("Error while requesting OpenAI models: {e}",);
     }
 
     // Verify model is valid from response {"data": [{"id": "model-id", ...}, ...]
@@ -195,10 +193,11 @@ fn get_completion(api_key: &str, messages: &serde_json::Value, args: &Args) -> C
     }
 
     // Get completion from response
-    let completion = response_json["choices"][0]["message"]["content"].as_str().unwrap();
+    let completion = response_json["choices"][0]["message"]["content"]
+        .as_str()
+        .unwrap();
 
     Ok(completion.to_string())
-
 }
 
 // Get addition to prompt based on --json flag
@@ -385,12 +384,7 @@ fn run_inference_options(
         eprintln!("Generating description from OpenAI API...");
         completion = get_completion(api_key, &messages, args)?;
         eprintln!("Received description completion.");
-        process_output(
-            "description",
-            &completion,
-            &mut total_json_output,
-            args,
-        )?;
+        process_output("description", &completion, &mut total_json_output, args)?;
     }
     if args.flag_tags || args.flag_all {
         prompt = if args.flag_dictionary {
