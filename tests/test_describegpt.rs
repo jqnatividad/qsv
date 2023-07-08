@@ -82,8 +82,7 @@ fn describegpt_valid() {
     // Run the command
     let mut cmd = wrk.command("describegpt");
     cmd.arg("in.csv")
-        .arg("--all")
-        .args(["--max-tokens", "1000"]);
+        .arg("--all");
 
     // Check that the command ran successfully
     wrk.assert_success(&mut cmd);
@@ -110,8 +109,7 @@ fn describegpt_valid_json() {
     let mut cmd = wrk.command("describegpt");
     cmd.arg("in.csv")
         .arg("--all")
-        .arg("--json")
-        .args(["--max-tokens", "1000"]);
+        .arg("--json");
 
     // Check that the output is valid JSON
     let got = wrk.stdout::<String>(&mut cmd);
