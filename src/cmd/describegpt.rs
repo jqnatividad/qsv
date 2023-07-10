@@ -186,23 +186,23 @@ fn get_prompt_file(args: &Args) -> CliResult<PromptFile> {
     // Otherwise, get default prompt file
     else {
         let default_prompt_file = PromptFile {
-            name:               "Default prompts".to_string(),
-            description:        "A default prompt file for describegpt.".to_string(),
-            author:             "qsv".to_string(),
+            name:               "My Prompt File".to_string(),
+            description:        "My prompt file for qsv's describegpt command.".to_string(),
+            author:             "My Name".to_string(),
             version:            "1.0.0".to_string(),
             tokens:             50,
             dictionary_prompt:  "Here are the columns for each field in a data dictionary:\n\n- \
                                  Type: the data type of this column\n- Label: a human-friendly \
                                  label for this column\n- Description: a full description for \
                                  this column (can be multiple sentences)\n\nGenerate a data \
-                                 dictionary as aforementioned (in JSON format) where each field \
+                                 dictionary as aforementioned (in JSON output) where each field \
                                  has Name, Type, Label, and Description (so four columns in \
                                  total) based on the following summary statistics and frequency \
                                  data from a CSV file.\n\nSummary \
                                  Statistics:\n\n{stats}\n\nFrequency:\n\n{frequency}"
                 .to_string(),
             description_prompt: "Generate only a description that is within 8 sentences about the \
-                                 entire dataset (in JSON format) based on the following summary \
+                                 entire dataset{json_add} based on the following summary \
                                  statistics and frequency data derived from the CSV file it came \
                                  from.\n\nSummary \
                                  Statistics:\n\n{stats}\n\nFrequency:\n\n{frequency}\n\nDo not \
@@ -214,20 +214,19 @@ fn get_prompt_file(args: &Args) -> CliResult<PromptFile> {
             tags_prompt:        "A tag is a keyword or label that categorizes datasets with \
                                  other, similar datasets. Using the right tags makes it easier \
                                  for others to find and use datasets.\n\nGenerate single-word \
-                                 tags (in JSON format) about the dataset (lowercase only and \
-                                 remove all whitespace) based on the following summary statistics \
-                                 and frequency data from a CSV file.\n\nSummary \
+                                 tags{json_add} about the dataset (lowercase only and remove all \
+                                 whitespace) based on the following summary statistics and \
+                                 frequency data from a CSV file.\n\nSummary \
                                  Statistics:\n\n{stats}\n\nFrequency:\n\n{frequency}"
                 .to_string(),
-            json:               false,
+            json:               true,
         };
         default_prompt_file
     };
     Ok(prompt_file)
 }
 
-// Generate prompt for given prompt type (guaranteed correct prompt type) based on either the prompt
-// file (if given) or default prompts
+// Generate prompt for prompt type based on either the prompt file (if given) or default prompts
 fn get_prompt(
     prompt_type: &str,
     stats: Option<&str>,
@@ -249,7 +248,15 @@ fn get_prompt(
     // Replace variable data in prompt
     let prompt = prompt
         .replace("{stats}", stats.unwrap_or(""))
-        .replace("{frequency}", frequency.unwrap_or(""));
+        .replace("{frequency}", frequency.unwrap_or(""))
+        .replace(
+            "{json_add}",
+            if prompt_file.json || (args.flag_prompt_file.is_none() && args.flag_json) {
+                " (in JSON format)"
+            } else {
+                ""
+            },
+        );
 
     // Return prompt
     Ok(prompt.to_string())
@@ -265,15 +272,12 @@ fn get_completion(api_key: &str, messages: &serde_json::Value, args: &Args) -> C
     }
 
     // Get max_tokens from prompt file if --prompt-file is used
-    let max_tokens = if let Some(prompt_file) = args.flag_prompt_file.clone() {
-        // Read prompt file
-        let prompt_file = get_prompt_file(args)?;
-        // Get max_tokens from prompt file
-        prompt_file.tokens
-    }
-    // Otherwise, get max_tokens from --max-tokens
-    else {
-        args.flag_max_tokens
+    let max_tokens = match args.flag_prompt_file.clone() {
+        Some(prompt_file) => {
+            let prompt_file = get_prompt_file(args)?;
+            prompt_file.tokens
+        }
+        None => args.flag_max_tokens,
     };
 
     // Create request data
@@ -332,6 +336,23 @@ fn run_inference_options(
             .replace("\\'", "'")
             .replace("\\`", "`")
     }
+    // Check if JSON output is expected
+    fn is_json_output(args: &Args) -> CliResult<bool> {
+        // By default expect plaintext output
+        let mut json_output = false;
+        // Set expect_json to true if --prompt-file is used & the "json" field is true
+        if args.flag_prompt_file.is_some() {
+            let prompt_file = get_prompt_file(args)?;
+            if prompt_file.json {
+                json_output = true;
+            }
+        }
+        // Set expect_json to true if --prompt-file is not used & --json is used
+        else if args.flag_json {
+            json_output = true;
+        }
+        Ok(json_output)
+    }
     // Generate the plaintext and/or JSON output of an inference option
     fn process_output(
         option: &str,
@@ -339,23 +360,8 @@ fn run_inference_options(
         total_json_output: &mut serde_json::Value,
         args: &Args,
     ) -> CliResult<()> {
-        // By default expect plaintext output
-        let mut expect_json = false;
-
-        // Set expect_json to true if --prompt-file is used & the "json" field is true
-        if args.flag_prompt_file.is_some() {
-            let prompt_file = get_prompt_file(args)?;
-            if prompt_file.json {
-                expect_json = true;
-            }
-        }
-        // Set expect_json to true if --prompt-file is not used & --json is used
-        else if args.flag_json {
-            expect_json = true;
-        }
-
         // Process JSON output
-        if expect_json {
+        if is_json_output(args)? {
             // Parse the completion JSON
             let completion_json: serde_json::Value = match serde_json::from_str(output) {
                 // Output is valid JSON
@@ -397,6 +403,8 @@ fn run_inference_options(
     let mut messages: serde_json::Value;
     let mut completion: String = String::new();
     let mut dictionary_completion = String::new();
+
+    // Generate dictionary output
     if args.flag_dictionary || args.flag_all {
         prompt = get_prompt("dictionary_prompt", stats_str, frequency_str, args)?;
         eprintln!("Generating data dictionary from OpenAI API...");
@@ -411,6 +419,7 @@ fn run_inference_options(
         )?;
     }
 
+    // Generate description output
     if args.flag_description || args.flag_all {
         prompt = if args.flag_dictionary {
             get_prompt("description_prompt", None, None, args)?
@@ -423,6 +432,8 @@ fn run_inference_options(
         eprintln!("Received description completion.");
         process_output("description", &completion, &mut total_json_output, args)?;
     }
+
+    // Generate tags output
     if args.flag_tags || args.flag_all {
         prompt = if args.flag_dictionary {
             get_prompt("tags_prompt", None, None, args)?
@@ -436,7 +447,7 @@ fn run_inference_options(
         process_output("tags", &completion, &mut total_json_output, args)?;
     }
 
-    if args.flag_json {
+    if is_json_output(args)? {
         // Print all JSON output
         let formatted_output =
             format_output(&serde_json::to_string_pretty(&total_json_output).unwrap());
