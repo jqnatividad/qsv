@@ -262,7 +262,12 @@ fn get_prompt(
     Ok(prompt.to_string())
 }
 
-fn get_completion(args: &Args, arg_is_some: impl Fn(&str) -> bool, api_key: &str, messages: &serde_json::Value) -> CliResult<String> {
+fn get_completion(
+    args: &Args,
+    arg_is_some: impl Fn(&str) -> bool,
+    api_key: &str,
+    messages: &serde_json::Value,
+) -> CliResult<String> {
     // Create client with timeout
     let client = create_client(args)?;
 
@@ -564,7 +569,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     // Run inference options
-    run_inference_options(&args, arg_is_some, &api_key, Some(stats_str), Some(frequency_str))?;
+    run_inference_options(
+        &args,
+        arg_is_some,
+        &api_key,
+        Some(stats_str),
+        Some(frequency_str),
+    )?;
 
     Ok(())
 }
