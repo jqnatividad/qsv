@@ -22,6 +22,8 @@ describegpt options:
     --max-tokens <value>   Limits the number of generated tokens in the output.
                            [default: 50]
     --json                 Return results in JSON format.
+    --model <model>        The model to use for inferencing.
+                           [default: gpt-3.5-turbo-16k]
     --timeout <secs>       Timeout for OpenAI completions in seconds.
                            [default: 60]
     --user-agent <agent>   Specify custom user agent. It supports the following variables -
@@ -52,21 +54,19 @@ struct Args {
     flag_tags:        bool,
     flag_openai_key:  Option<String>,
     flag_max_tokens:  u16,
+    flag_model:       Option<String>,
     flag_json:        bool,
     flag_user_agent:  Option<String>,
     flag_timeout:     u16,
     flag_output:      Option<String>,
 }
 
-// OpenAI API model
-const MODEL: &str = "gpt-3.5-turbo-16k";
-
 const OPENAI_KEY_ERROR: &str = "Error: QSV_OPENAI_KEY environment variable not found.\nNote that \
                                 this command uses OpenAI's LLMs for inferencing and is therefore \
                                 prone to inaccurate information being produced. Verify output \
                                 results before using them.";
 
-fn get_completion(api_key: &str, messages: &serde_json::Value, args: &Args) -> CliResult<String> {
+fn create_client(args: &Args) -> CliResult<Client> {
     // Create client with timeout
     let timeout_duration = Duration::from_secs(args.flag_timeout.into());
     let client = Client::builder()
@@ -79,36 +79,125 @@ fn get_completion(api_key: &str, messages: &serde_json::Value, args: &Args) -> C
         .connection_verbose(log_enabled!(log::Level::Debug) || log_enabled!(log::Level::Trace))
         .timeout(timeout_duration)
         .build()?;
+    Ok(client)
+}
 
+// Send an HTTP request using a client to a URL
+// Optionally include an API key and request data
+fn send_request(
+    client: &Client,
+    api_key: Option<&str>,
+    request_data: Option<&serde_json::Value>,
+    method: &str,
+    url: &str,
+) -> CliResult<reqwest::blocking::Response> {
+    // Send request to OpenAI API
+    let mut request = match method {
+        "GET" => client.get(url),
+        "POST" => client.post(url).body(request_data.unwrap().to_string()),
+        _ => {
+            // If --json is used, fail! with error message in JSON format
+            if let Some(_) = request_data {
+                return fail_clierror!("Error: Invalid HTTP method: {method}");
+            }
+            // If --json is not used, fail! with error message in plaintext
+            else {
+                return fail!("Error: Invalid HTTP method: {method}");
+            }
+        }
+    };
+
+    // If API key is provided, add it to the request header
+    if let Some(key) = api_key {
+        request = request.header("Authorization", format!("Bearer {}", key));
+    }
+    // If request data is provided, add it to the request header
+    if let Some(data) = request_data {
+        request = request
+            .header("Content-Type", "application/json")
+            .body(data.to_string());
+    }
+
+    // Get response
+    let response = request.send()?;
+
+    // If response is an error, return response
+    if !response.status().is_success() {
+        let output = response.text()?;
+        return fail_clierror!("Error response when making request: {output}");
+    }
+
+    Ok(response)
+}
+
+// Check if model is valid, including the default model https://api.openai.com/v1/models
+fn is_valid_model(client: &Client, api_key: Option<&str>, args: &Args) -> CliResult<bool> {
+    let response = send_request(
+        &client,
+        api_key,
+        None,
+        "GET",
+        "https://api.openai.com/v1/models",
+    );
+
+    // If response is an error, return the error with fail!
+    if let Err(e) = response {
+        return fail_clierror!("Error while requesting OpenAI models: {e}",);
+    }
+
+    // Verify model is valid from response {"data": [{"id": "model-id", ...}, ...]
+    let response_json: serde_json::Value = response.unwrap().json().unwrap();
+    let models = response_json["data"].as_array().unwrap();
+    for model in models {
+        if model["id"].as_str().unwrap() == args.flag_model.clone().unwrap() {
+            return Ok(true);
+        }
+    }
+
+    // If model is not valid, return false
+    Ok(false)
+}
+
+fn get_completion(api_key: &str, messages: &serde_json::Value, args: &Args) -> CliResult<String> {
+    // Create client with timeout
+    let client = create_client(args)?;
+
+    // Verify model is valid
+    if !is_valid_model(&client, Some(api_key), args)? {
+        return fail!("Error: Invalid model.");
+    }
+
+    // Create request data
     let request_data = json!({
-        "model": MODEL,
+        "model": args.flag_model,
         "max_tokens": args.flag_max_tokens,
         "messages": messages
     });
 
-    // Send request to OpenAI API
-    let request = client
-        .post("https://api.openai.com/v1/chat/completions")
-        .header("Authorization", format!("Bearer {api_key}"))
-        .header("Content-Type", "application/json")
-        .body(request_data.to_string())
-        .send();
+    // Get response from POST request to OpenAI Chat Completions API
+    let response = send_request(
+        &client,
+        Some(api_key),
+        Some(&request_data),
+        "POST",
+        "https://api.openai.com/v1/chat/completions",
+    )?;
 
-    // Get response from OpenAI API
-    let response = match request {
-        Ok(val) => val,
-        Err(e) => return fail_clierror!("OpenAI API Error: {e}"),
-    };
-
-    let response_body = response.text();
-
-    // Return completion output
-    match response_body {
-        Ok(val) => Ok(val),
-        Err(e) => {
-            fail_clierror!("Error: Unable to get response body from OpenAI API. {e}")
+    // Parse response as JSON
+    let response_json: serde_json::Value = response.json()?;
+    // If response is an error, print error message
+    if let serde_json::Value::Object(ref map) = response_json {
+        if map.contains_key("error") {
+            return fail_clierror!("OpenAI API Error: {}", map["error"]);
         }
     }
+
+    // Get completion from response
+    let completion = response_json["choices"][0]["message"]["content"]
+        .as_str()
+        .unwrap();
+
+    Ok(completion.to_string())
 }
 
 // Get addition to prompt based on --json flag
@@ -214,34 +303,14 @@ fn run_inference_options(
     frequency_str: Option<&str>,
 ) -> CliResult<()> {
     // Add --dictionary output as context if it is not empty
-    fn get_messages(prompt: &str, dictionary_completion_output: &str) -> serde_json::Value {
-        if dictionary_completion_output.is_empty() {
+    fn get_messages(prompt: &str, dictionary_completion: &str) -> serde_json::Value {
+        if dictionary_completion.is_empty() {
             json!([{"role": "user", "content": prompt}])
         } else {
-            json!([{"role": "assistant", "content": dictionary_completion_output}, {"role": "user", "content": prompt}])
+            json!([{"role": "assistant", "content": dictionary_completion}, {"role": "user", "content": prompt}])
         }
     }
-
-    fn get_completion_output(completion: &str) -> CliResult<String> {
-        // Parse the completion JSON
-        let completion_json: serde_json::Value = match serde_json::from_str(completion) {
-            Ok(val) => val,
-            Err(_) => {
-                return fail!("Error: Unable to parse completion JSON.");
-            }
-        };
-        // If OpenAI API returns error, print error message
-        if let serde_json::Value::Object(ref map) = completion_json {
-            if map.contains_key("error") {
-                return fail_clierror!("OpenAI API Error: {}", map["error"]);
-            }
-        }
-        // Set the completion output
-        let message = &completion_json["choices"][0]["message"]["content"];
-        // Convert escaped characters to normal characters
-        Ok(replace_escape_chars(message.as_str().unwrap()))
-    }
-
+    // Generate the plaintext and/or JSON output of an inference option
     fn process_output(
         option: &str,
         output: &str,
@@ -257,7 +326,8 @@ fn run_inference_options(
                 // Output is not valid JSON
                 Err(_) => {
                     // Default error message in JSON format
-                    let error_json = json!({"error": "Error: Unable to parse completion JSON."});
+                    let error_message = format!("Error: Invalid JSON output for {option}.");
+                    let error_json = json!({"error": error_message});
                     // Print error message in JSON format
                     eprintln!("{error_json}");
                     error_json
@@ -288,19 +358,17 @@ fn run_inference_options(
     let mut total_json_output: serde_json::Value = json!({});
     let mut prompt: String;
     let mut messages: serde_json::Value;
-    let mut completion: String;
-    let mut completion_output: String;
-    let mut dictionary_completion_output = String::new();
+    let mut completion: String = String::new();
+    let mut dictionary_completion = String::new();
     if args.flag_dictionary || args.flag_all {
         prompt = get_dictionary_prompt(stats_str, frequency_str, args_json);
         eprintln!("Generating data dictionary from OpenAI API...");
-        messages = json!([{"role": "user", "content": prompt}]);
-        completion = get_completion(api_key, &messages, args)?;
-        dictionary_completion_output = get_completion_output(&completion)?;
-        eprintln!("Received dictionary completion output.");
+        messages = get_messages(&prompt, &dictionary_completion);
+        dictionary_completion = get_completion(api_key, &messages, args)?;
+        eprintln!("Received dictionary completion.");
         process_output(
             "dictionary",
-            &dictionary_completion_output,
+            &dictionary_completion,
             &mut total_json_output,
             args,
         )?;
@@ -312,17 +380,11 @@ fn run_inference_options(
         } else {
             get_description_prompt(stats_str, frequency_str, args_json)
         };
-        messages = get_messages(&prompt, &dictionary_completion_output);
+        messages = get_messages(&prompt, &dictionary_completion);
         eprintln!("Generating description from OpenAI API...");
         completion = get_completion(api_key, &messages, args)?;
-        completion_output = get_completion_output(&completion)?;
-        eprintln!("Received description completion output.");
-        process_output(
-            "description",
-            &completion_output,
-            &mut total_json_output,
-            args,
-        )?;
+        eprintln!("Received description completion.");
+        process_output("description", &completion, &mut total_json_output, args)?;
     }
     if args.flag_tags || args.flag_all {
         prompt = if args.flag_dictionary {
@@ -330,12 +392,11 @@ fn run_inference_options(
         } else {
             get_tags_prompt(stats_str, frequency_str, args_json)
         };
-        messages = get_messages(&prompt, &dictionary_completion_output);
+        messages = get_messages(&prompt, &dictionary_completion);
         eprintln!("Generating tags from OpenAI API...");
         completion = get_completion(api_key, &messages, args)?;
-        completion_output = get_completion_output(&completion)?;
-        eprintln!("Received tags completion output.");
-        process_output("tags", &completion_output, &mut total_json_output, args)?;
+        eprintln!("Received tags completion.");
+        process_output("tags", &completion, &mut total_json_output, args)?;
     }
 
     if args.flag_json {
@@ -375,6 +436,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         }
     };
+
+    // Check if user gives arg_input
+    if args.arg_input.is_none() {
+        return fail!("Error: No input file specified.");
+    }
 
     // Process input file
     // support stdin and auto-decompress snappy file
