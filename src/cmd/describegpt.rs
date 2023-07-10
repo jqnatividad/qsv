@@ -262,7 +262,7 @@ fn get_prompt(
     Ok(prompt.to_string())
 }
 
-fn get_completion(api_key: &str, messages: &serde_json::Value, args: &Args) -> CliResult<String> {
+fn get_completion(args: &Args, arg_is_some: impl Fn(&str) -> bool, api_key: &str, messages: &serde_json::Value) -> CliResult<String> {
     // Create client with timeout
     let client = create_client(args)?;
 
@@ -271,13 +271,18 @@ fn get_completion(api_key: &str, messages: &serde_json::Value, args: &Args) -> C
         return fail!("Error: Invalid model.");
     }
 
-    // Get max_tokens from prompt file if --prompt-file is used
-    let max_tokens = match args.flag_prompt_file.clone() {
-        Some(prompt_file) => {
-            let prompt_file = get_prompt_file(args)?;
-            prompt_file.tokens
-        }
-        None => args.flag_max_tokens,
+    // If --max-tokens is specified, use it
+    let max_tokens = if arg_is_some("--max-tokens") {
+        args.flag_max_tokens
+    }
+    // If --prompt-file is used, use the tokens field from the prompt file
+    else if let Some(prompt_file) = args.flag_prompt_file.clone() {
+        let prompt_file = get_prompt_file(args)?;
+        prompt_file.tokens
+    }
+    // Else use the default max tokens value in USAGE
+    else {
+        args.flag_max_tokens
     };
 
     // Create request data
@@ -316,6 +321,7 @@ fn get_completion(api_key: &str, messages: &serde_json::Value, args: &Args) -> C
 // Generates output for all inference options
 fn run_inference_options(
     args: &Args,
+    arg_is_some: impl Fn(&str) -> bool,
     api_key: &str,
     stats_str: Option<&str>,
     frequency_str: Option<&str>,
@@ -409,7 +415,7 @@ fn run_inference_options(
         prompt = get_prompt("dictionary_prompt", stats_str, frequency_str, args)?;
         eprintln!("Generating data dictionary from OpenAI API...");
         messages = get_messages(&prompt, &dictionary_completion);
-        dictionary_completion = get_completion(api_key, &messages, args)?;
+        dictionary_completion = get_completion(args, &arg_is_some, api_key, &messages)?;
         eprintln!("Received dictionary completion.");
         process_output(
             "dictionary",
@@ -428,7 +434,7 @@ fn run_inference_options(
         };
         messages = get_messages(&prompt, &dictionary_completion);
         eprintln!("Generating description from OpenAI API...");
-        completion = get_completion(api_key, &messages, args)?;
+        completion = get_completion(args, &arg_is_some, api_key, &messages)?;
         eprintln!("Received description completion.");
         process_output("description", &completion, &mut total_json_output, args)?;
     }
@@ -442,7 +448,7 @@ fn run_inference_options(
         };
         messages = get_messages(&prompt, &dictionary_completion);
         eprintln!("Generating tags from OpenAI API...");
-        completion = get_completion(api_key, &messages, args)?;
+        completion = get_completion(args, &arg_is_some, api_key, &messages)?;
         eprintln!("Received tags completion.");
         process_output("tags", &completion, &mut total_json_output, args)?;
     }
@@ -463,6 +469,8 @@ fn run_inference_options(
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
+    // Closure to check if the user gives an argument
+    let arg_is_some = |arg: &str| -> bool { argv.contains(&arg) };
 
     // Check for QSV_OPENAI_KEY in environment variables
     let api_key = match env::var("QSV_OPENAI_KEY") {
@@ -556,7 +564,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     // Run inference options
-    run_inference_options(&args, &api_key, Some(stats_str), Some(frequency_str))?;
+    run_inference_options(&args, arg_is_some, &api_key, Some(stats_str), Some(frequency_str))?;
 
     Ok(())
 }
