@@ -6,6 +6,9 @@ inaccurate information being produced. Verify output results before using them.
 
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_describegpt.rs.
 
+For more detailed info on how describegpt works and how to prepare a prompt file, 
+see https://github.com/jqnatividad/qsv/blob/master/docs/Describegpt.md
+
 Usage:
     qsv describegpt [options] [<input>]
     qsv describegpt --help
