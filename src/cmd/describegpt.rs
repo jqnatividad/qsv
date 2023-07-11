@@ -185,6 +185,7 @@ fn get_prompt_file(args: &Args) -> CliResult<PromptFile> {
     }
     // Otherwise, get default prompt file
     else {
+        #[allow(clippy::let_and_return)]
         let default_prompt_file = PromptFile {
             name:               "My Prompt File".to_string(),
             description:        "My prompt file for qsv's describegpt command.".to_string(),
