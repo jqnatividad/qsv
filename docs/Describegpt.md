@@ -1,0 +1,87 @@
+# `describegpt` command
+
+`describegpt` allows users to infer extended metadata about a CSV dataset using large language models, in particular GPT chat completion models from OpenAI's API. It uses `qsv stats` and `qsv frequency` in the background to provide context to the model.
+
+Note that this command uses OpenAI's LLMs for inferencing and is therefore prone to inaccurate information being produced. Verify output results before using them.
+
+## QSV_OPENAI_KEY
+
+`describegpt` requires an OpenAI API key to use. You can set this key using the `QSV_OPENAI_KEY` environment variable. Check [/docs/ENVIRONMENT_VARIABLES.md](/docs/ENVIRONMENT_VARIABLES.md) for more info.
+
+## `--openai-key <key>`
+
+You can also specify your OpenAI API key directly in your CLI using the `--openai-key` option. However, the `QSV_OPENAI_KEY` environment variable takes precedence over this option.
+
+## `--json`
+
+You can use the `--json` option to expect JSON output. This is useful for piping the output to other commands for example.
+
+Note that **the `--json` option does not indicate to your prompt that you want to generate JSON output based on your dataset**. It instead ensures the command output is in JSON format. You must specify this within your prompts, such as adding the phrase "in JSON format" to your prompt.
+
+If the prompt output is not in valid JSON format but the `--json` option is specified, the command will generate a default error JSON output printed to `stdout`, such as the following:
+
+```json
+{
+    "option": {
+        "error": "Invalid JSON output for option."
+    }
+}
+```
+
+You may often see this error when `--max-tokens` is set too low and therefore the output is incomplete.
+
+The invalid output will be printed in `stderr`.
+
+## `--max-tokens <value>`
+
+`--max-tokens` is a option that allows you to specify the maximum number of tokens in the completion **output**. This is limited by the maximum number of tokens allowed by the model including the input tokens.
+
+Input tokens may include the output of `qsv stats` and `qsv frequency` from your dataset, which can be large based on your dataset's size. Therefore we use `gpt-3.5-turbo-16k` as the default model for `describegpt` as it has a maximum token limit of 16,384.
+
+It is highly recommended to set the `--max-tokens` option to set the maximum number of tokens in the completion output. Your output may be truncated if you set this value too low. The default is set to `50` as a safety measure.
+
+## `--prompt-file`
+
+With `describegpt` you can use a prompt file to add your own custom prompts and as an alternative to specifying certain options through the CLI. You can use the `--prompt-file` option to specify a prompt file to use.
+
+If you do not specify a prompt file, default prompts will be used.
+
+| Field                | Description                                                                              |
+| -------------------- | ---------------------------------------------------------------------------------------- |
+| `name`               | The name of your prompt file.                                                            |
+| `description`        | A description of your prompt file.                                                       |
+| `author`             | Your name.                                                                               |
+| `version`            | The version of your prompt file.                                                         |
+| `tokens`             | The maximum number of tokens in the completion output.                                   |
+| `dictionary_prompt`  | The prompt for the `--dictionary` option.                                                |
+| `description_prompt` | The prompt for the `--description` option.                                               |
+| `tags_prompt`        | The prompt for the `--tags` option.                                                      |
+| `json`               | Whether or not the output should be in JSON format (refer to [`--json`](#json) section). |
+
+All fields must be present in your prompt file. If you do not want to use a certain prompt, you can set it to an empty string.
+
+Within your prompts, you can use the following variables:
+
+-   `{stats}`
+-   `{frequency}`
+-   `{json_add}`
+
+These are replaced with the output of `qsv stats`, `qsv frequency` and conditionally ` (in JSON format)`. Note that `{json_add}` adds a space before `(in JSON format)`.
+
+Here is an example of a prompt:
+
+```json
+{
+    "name": "Sample prompt",
+    "description": "A sample prompt file for describegpt.",
+    "author": "qsv",
+    "version": "1.0.0",
+    "tokens": 50,
+    "dictionary_prompt": "Here are the columns for each field in a data dictionary:\n\n- Type: the data type of this column\n- Label: a human-friendly label for this column\n- Description: a full description for this column (can be multiple sentences)\n\nGenerate a data dictionary as aforementioned{json_add} where each field has Name, Type, Label, and Description (so four columns in total) based on the following summary statistics and frequency data from a CSV file.\n\nSummary Statistics:\n\n{stats}\n\nFrequency:\n\n{frequency}",
+    "description_prompt": "Generate only a description that is within 8 sentences about the entire dataset{json_add} based on the following summary statistics and frequency data derived from the CSV file it came from.\n\nSummary Statistics:\n\n{stats}\n\nFrequency:\n\n{frequency}\n\nDo not output the summary statistics for each field. Do not output the frequency for each field. Do not output data about each field individually, but instead output about the dataset as a whole in one 1-8 sentence description.",
+    "tags_prompt": "A tag is a keyword or label that categorizes datasets with other, similar datasets. Using the right tags makes it easier for others to find and use datasets.\n\nGenerate single-word tags{json_add} about the dataset (lowercase only and remove all whitespace) based on the following summary statistics and frequency data from a CSV file.\n\nSummary Statistics:\n\n{stats}\n\nFrequency:\n\n{frequency}",
+    "json": true
+}
+```
+
+Simply save this as a JSON file and use `--prompt-file` to run it with `describegpt`.

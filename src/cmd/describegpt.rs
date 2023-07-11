@@ -22,6 +22,8 @@ describegpt options:
     --max-tokens <value>   Limits the number of generated tokens in the output.
                            [default: 50]
     --json                 Return results in JSON format.
+    --prompt-file <file>   The JSON file containing the prompts to use for inferencing.
+                           If not specified, default prompts will be used.
     --model <model>        The model to use for inferencing.
                            [default: gpt-3.5-turbo-16k]
     --timeout <secs>       Timeout for OpenAI completions in seconds.
@@ -56,9 +58,23 @@ struct Args {
     flag_max_tokens:  u16,
     flag_model:       Option<String>,
     flag_json:        bool,
+    flag_prompt_file: Option<String>,
     flag_user_agent:  Option<String>,
     flag_timeout:     u16,
     flag_output:      Option<String>,
+}
+
+#[derive(Deserialize)]
+struct PromptFile {
+    name:               String,
+    description:        String,
+    author:             String,
+    version:            String,
+    tokens:             u16,
+    dictionary_prompt:  String,
+    description_prompt: String,
+    tags_prompt:        String,
+    json:               bool,
 }
 
 const OPENAI_KEY_ERROR: &str = "Error: QSV_OPENAI_KEY environment variable not found.\nNote that \
@@ -95,15 +111,9 @@ fn send_request(
     let mut request = match method {
         "GET" => client.get(url),
         "POST" => client.post(url).body(request_data.unwrap().to_string()),
-        _ => {
-            // If --json is used, fail! with error message in JSON format
-            if let Some(_) = request_data {
-                return fail_clierror!("Error: Invalid HTTP method: {method}");
-            }
-            // If --json is not used, fail! with error message in plaintext
-            else {
-                return fail!("Error: Invalid HTTP method: {method}");
-            }
+        other => {
+            let error_json = json!({"Error: Unsupported HTTP method ": other});
+            return fail_clierror!("{error_json}");
         }
     };
 
@@ -158,7 +168,106 @@ fn is_valid_model(client: &Client, api_key: Option<&str>, args: &Args) -> CliRes
     Ok(false)
 }
 
-fn get_completion(api_key: &str, messages: &serde_json::Value, args: &Args) -> CliResult<String> {
+fn get_prompt_file(args: &Args) -> CliResult<PromptFile> {
+    // Get prompt file if --prompt-file is used
+    let prompt_file = if let Some(prompt_file) = args.flag_prompt_file.clone() {
+        // Read prompt file
+        let prompt_file = fs::read_to_string(prompt_file)?;
+        // Try to parse prompt file as JSON, if error then show it in JSON format
+        let prompt_file: PromptFile = match serde_json::from_str(&prompt_file) {
+            Ok(val) => val,
+            Err(e) => {
+                let error_json = json!({"error": e.to_string()});
+                return fail_clierror!("{error_json}");
+            }
+        };
+        prompt_file
+    }
+    // Otherwise, get default prompt file
+    else {
+        let default_prompt_file = PromptFile {
+            name:               "My Prompt File".to_string(),
+            description:        "My prompt file for qsv's describegpt command.".to_string(),
+            author:             "My Name".to_string(),
+            version:            "1.0.0".to_string(),
+            tokens:             50,
+            dictionary_prompt:  "Here are the columns for each field in a data dictionary:\n\n- \
+                                 Type: the data type of this column\n- Label: a human-friendly \
+                                 label for this column\n- Description: a full description for \
+                                 this column (can be multiple sentences)\n\nGenerate a data \
+                                 dictionary as aforementioned (in JSON output) where each field \
+                                 has Name, Type, Label, and Description (so four columns in \
+                                 total) based on the following summary statistics and frequency \
+                                 data from a CSV file.\n\nSummary \
+                                 Statistics:\n\n{stats}\n\nFrequency:\n\n{frequency}"
+                .to_string(),
+            description_prompt: "Generate only a description that is within 8 sentences about the \
+                                 entire dataset{json_add} based on the following summary \
+                                 statistics and frequency data derived from the CSV file it came \
+                                 from.\n\nSummary \
+                                 Statistics:\n\n{stats}\n\nFrequency:\n\n{frequency}\n\nDo not \
+                                 output the summary statistics for each field. Do not output the \
+                                 frequency for each field. Do not output data about each field \
+                                 individually, but instead output about the dataset as a whole in \
+                                 one 1-8 sentence description."
+                .to_string(),
+            tags_prompt:        "A tag is a keyword or label that categorizes datasets with \
+                                 other, similar datasets. Using the right tags makes it easier \
+                                 for others to find and use datasets.\n\nGenerate single-word \
+                                 tags{json_add} about the dataset (lowercase only and remove all \
+                                 whitespace) based on the following summary statistics and \
+                                 frequency data from a CSV file.\n\nSummary \
+                                 Statistics:\n\n{stats}\n\nFrequency:\n\n{frequency}"
+                .to_string(),
+            json:               true,
+        };
+        default_prompt_file
+    };
+    Ok(prompt_file)
+}
+
+// Generate prompt for prompt type based on either the prompt file (if given) or default prompts
+fn get_prompt(
+    prompt_type: &str,
+    stats: Option<&str>,
+    frequency: Option<&str>,
+    args: &Args,
+) -> CliResult<String> {
+    // Get prompt file if --prompt-file is used, otherwise get default prompt file
+    let prompt_file = get_prompt_file(args)?;
+
+    // Get prompt from prompt file
+    let prompt = match prompt_type {
+        "dictionary_prompt" => prompt_file.dictionary_prompt,
+        "description_prompt" => prompt_file.description_prompt,
+        "tags_prompt" => prompt_file.tags_prompt,
+        _ => {
+            return fail_clierror!("Error: Invalid prompt type: {prompt_type}");
+        }
+    };
+    // Replace variable data in prompt
+    let prompt = prompt
+        .replace("{stats}", stats.unwrap_or(""))
+        .replace("{frequency}", frequency.unwrap_or(""))
+        .replace(
+            "{json_add}",
+            if prompt_file.json || (args.flag_prompt_file.is_none() && args.flag_json) {
+                " (in JSON format)"
+            } else {
+                ""
+            },
+        );
+
+    // Return prompt
+    Ok(prompt.to_string())
+}
+
+fn get_completion(
+    args: &Args,
+    arg_is_some: impl Fn(&str) -> bool,
+    api_key: &str,
+    messages: &serde_json::Value,
+) -> CliResult<String> {
     // Create client with timeout
     let client = create_client(args)?;
 
@@ -167,10 +276,24 @@ fn get_completion(api_key: &str, messages: &serde_json::Value, args: &Args) -> C
         return fail!("Error: Invalid model.");
     }
 
+    // If --max-tokens is specified, use it
+    let max_tokens = if arg_is_some("--max-tokens") {
+        args.flag_max_tokens
+    }
+    // If --prompt-file is used, use the tokens field from the prompt file
+    else if let Some(prompt_file) = args.flag_prompt_file.clone() {
+        let prompt_file = get_prompt_file(args)?;
+        prompt_file.tokens
+    }
+    // Else use the default max tokens value in USAGE
+    else {
+        args.flag_max_tokens
+    };
+
     // Create request data
     let request_data = json!({
         "model": args.flag_model,
-        "max_tokens": args.flag_max_tokens,
+        "max_tokens": max_tokens,
         "messages": messages
     });
 
@@ -200,104 +323,10 @@ fn get_completion(api_key: &str, messages: &serde_json::Value, args: &Args) -> C
     Ok(completion.to_string())
 }
 
-// Get addition to prompt based on --json flag
-fn json_addition(flag_json: bool) -> String {
-    if flag_json {
-        " in JSON format".to_string()
-    } else {
-        String::new()
-    }
-}
-
-// --dictionary
-fn get_dictionary_prompt(stats: Option<&str>, frequency: Option<&str>, flag_json: bool) -> String {
-    let json_add = json_addition(flag_json);
-    let prompt = format!(
-        "\nHere are the columns for each field in a data dictionary:\n\n- Type: the data type of \
-         this column\n- Label: a human-friendly label for this column\n- Description: a full \
-         description for this column (can be multiple sentences)\n\nGenerate a data dictionary{} \
-         as aforementioned where each field has Name, Type, Label, and Description (so four \
-         columns in total) based on the {}",
-        if json_add.is_empty() {
-            " (as a table with elastic tabstops)"
-        } else {
-            " (in JSON format)"
-        },
-        if stats.is_some() && frequency.is_some() {
-            format!(
-                "following summary statistics and frequency data from a CSV file.\n\nSummary \
-                 Statistics:\n\n{}\n\nFrequency:\n\n{}",
-                stats.unwrap(),
-                frequency.unwrap()
-            )
-        } else {
-            "dataset.".to_string()
-        }
-    );
-    prompt
-}
-
-// --description
-fn get_description_prompt(stats: Option<&str>, frequency: Option<&str>, flag_json: bool) -> String {
-    let json_add = json_addition(flag_json);
-    let mut prompt = format!(
-        "\nGenerate only a description that is within 8 sentences{} about the entire dataset \
-         based on the {}",
-        json_add,
-        if stats.is_some() && frequency.is_some() {
-            format!(
-                "following summary statistics and frequency data derived from the CSV file it \
-                 came from.\n\nSummary Statistics:\n\n{}\n\nFrequency:\n\n{}",
-                stats.unwrap(),
-                frequency.unwrap()
-            )
-        } else {
-            "dataset.".to_string()
-        }
-    );
-    prompt.push_str(
-        " Do not output the summary statistics for each field. Do not output the frequency for \
-         each field. Do not output data about each field individually, but instead output about \
-         the dataset as a whole in one 1-8 sentence description.",
-    );
-    prompt
-}
-
-// --tags
-fn get_tags_prompt(stats: Option<&str>, frequency: Option<&str>, flag_json: bool) -> String {
-    let json_add = json_addition(flag_json);
-    let prompt = format!(
-        "\nA tag is a keyword or label that categorizes datasets with other, similar datasets. \
-         Using the right tags makes it easier for others to find and use datasets.\n\nGenerate \
-         single-word tags{} about the dataset (lowercase only and remove all whitespace) based on \
-         the {}",
-        json_add,
-        if stats.is_some() && frequency.is_some() {
-            format!(
-                "following summary statistics and frequency data from a CSV file.\n\nSummary \
-                 Statistics:\n\n{}\n\nFrequency:\n\n{}",
-                stats.unwrap(),
-                frequency.unwrap()
-            )
-        } else {
-            "dataset.".to_string()
-        }
-    );
-    prompt
-}
-
-// Replace escaped characters with normal characters
-fn replace_escape_chars(str: &str) -> String {
-    str.replace("\\n", "\n")
-        .replace("\\t", "\t")
-        .replace("\\\"", "\"")
-        .replace("\\'", "'")
-        .replace("\\`", "`")
-}
-
 // Generates output for all inference options
 fn run_inference_options(
     args: &Args,
+    arg_is_some: impl Fn(&str) -> bool,
     api_key: &str,
     stats_str: Option<&str>,
     frequency_str: Option<&str>,
@@ -310,6 +339,31 @@ fn run_inference_options(
             json!([{"role": "assistant", "content": dictionary_completion}, {"role": "user", "content": prompt}])
         }
     }
+    // Format output by replacing escape characters
+    fn format_output(str: &str) -> String {
+        str.replace("\\n", "\n")
+            .replace("\\t", "\t")
+            .replace("\\\"", "\"")
+            .replace("\\'", "'")
+            .replace("\\`", "`")
+    }
+    // Check if JSON output is expected
+    fn is_json_output(args: &Args) -> CliResult<bool> {
+        // By default expect plaintext output
+        let mut json_output = false;
+        // Set expect_json to true if --prompt-file is used & the "json" field is true
+        if args.flag_prompt_file.is_some() {
+            let prompt_file = get_prompt_file(args)?;
+            if prompt_file.json {
+                json_output = true;
+            }
+        }
+        // Set expect_json to true if --prompt-file is not used & --json is used
+        else if args.flag_json {
+            json_output = true;
+        }
+        Ok(json_output)
+    }
     // Generate the plaintext and/or JSON output of an inference option
     fn process_output(
         option: &str,
@@ -317,8 +371,8 @@ fn run_inference_options(
         total_json_output: &mut serde_json::Value,
         args: &Args,
     ) -> CliResult<()> {
-        // If --json is used, expect JSON
-        if args.flag_json {
+        // Process JSON output
+        if is_json_output(args)? {
             // Parse the completion JSON
             let completion_json: serde_json::Value = match serde_json::from_str(output) {
                 // Output is valid JSON
@@ -330,14 +384,15 @@ fn run_inference_options(
                     let error_json = json!({"error": error_message});
                     // Print error message in JSON format
                     eprintln!("{error_json}");
+                    eprintln!("Output: {output}");
                     error_json
                 }
             };
             total_json_output[option] = completion_json;
         }
-        // If --json is not used, expect plaintext
+        // Process plaintext output
         else {
-            let formatted_output = replace_escape_chars(output);
+            let formatted_output = format_output(output);
             println!("{formatted_output}");
             // If --output is used, append plaintext to file, do not overwrite
             if let Some(output) = args.flag_output.clone() {
@@ -354,17 +409,18 @@ fn run_inference_options(
     // Get completion from OpenAI API
     eprintln!("Interacting with OpenAI API...\n");
 
-    let args_json = args.flag_json;
     let mut total_json_output: serde_json::Value = json!({});
     let mut prompt: String;
     let mut messages: serde_json::Value;
     let mut completion: String = String::new();
     let mut dictionary_completion = String::new();
+
+    // Generate dictionary output
     if args.flag_dictionary || args.flag_all {
-        prompt = get_dictionary_prompt(stats_str, frequency_str, args_json);
+        prompt = get_prompt("dictionary_prompt", stats_str, frequency_str, args)?;
         eprintln!("Generating data dictionary from OpenAI API...");
         messages = get_messages(&prompt, &dictionary_completion);
-        dictionary_completion = get_completion(api_key, &messages, args)?;
+        dictionary_completion = get_completion(args, &arg_is_some, api_key, &messages)?;
         eprintln!("Received dictionary completion.");
         process_output(
             "dictionary",
@@ -374,35 +430,38 @@ fn run_inference_options(
         )?;
     }
 
+    // Generate description output
     if args.flag_description || args.flag_all {
         prompt = if args.flag_dictionary {
-            get_description_prompt(None, None, args_json)
+            get_prompt("description_prompt", None, None, args)?
         } else {
-            get_description_prompt(stats_str, frequency_str, args_json)
+            get_prompt("description_prompt", stats_str, frequency_str, args)?
         };
         messages = get_messages(&prompt, &dictionary_completion);
         eprintln!("Generating description from OpenAI API...");
-        completion = get_completion(api_key, &messages, args)?;
+        completion = get_completion(args, &arg_is_some, api_key, &messages)?;
         eprintln!("Received description completion.");
         process_output("description", &completion, &mut total_json_output, args)?;
     }
+
+    // Generate tags output
     if args.flag_tags || args.flag_all {
         prompt = if args.flag_dictionary {
-            get_tags_prompt(None, None, args_json)
+            get_prompt("tags_prompt", None, None, args)?
         } else {
-            get_tags_prompt(stats_str, frequency_str, args_json)
+            get_prompt("tags_prompt", stats_str, frequency_str, args)?
         };
         messages = get_messages(&prompt, &dictionary_completion);
         eprintln!("Generating tags from OpenAI API...");
-        completion = get_completion(api_key, &messages, args)?;
+        completion = get_completion(args, &arg_is_some, api_key, &messages)?;
         eprintln!("Received tags completion.");
         process_output("tags", &completion, &mut total_json_output, args)?;
     }
 
-    if args.flag_json {
+    if is_json_output(args)? {
         // Print all JSON output
         let formatted_output =
-            replace_escape_chars(&serde_json::to_string_pretty(&total_json_output).unwrap());
+            format_output(&serde_json::to_string_pretty(&total_json_output).unwrap());
         println!("{formatted_output}");
         // If --output is used, write JSON to file
         if let Some(output) = args.flag_output.clone() {
@@ -415,6 +474,8 @@ fn run_inference_options(
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
+    // Closure to check if the user gives an argument
+    let arg_is_some = |arg: &str| -> bool { argv.contains(&arg) };
 
     // Check for QSV_OPENAI_KEY in environment variables
     let api_key = match env::var("QSV_OPENAI_KEY") {
@@ -456,7 +517,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         "No data on stdin. Please provide at least one input file or pipe data to stdin.",
     )?;
     // safety: we just checked that there is at least one input file
-    let arg_input = work_input[0]
+    let input_path = work_input[0]
         .canonicalize()?
         .clone()
         .into_os_string()
@@ -472,14 +533,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     // Get qsv executable's path
-    let root = env::current_exe().unwrap();
+    let qsv_path = env::current_exe().unwrap();
+    // Get input file's name
+    let input_filename = args.arg_input.clone().unwrap();
 
     // Get stats from qsv stats on input file with --everything flag
-    eprintln!("Generating stats from {arg_input} using qsv stats --everything...");
-    let Ok(stats) = Command::new(root.clone())
+    eprintln!("Generating stats from {input_filename} using qsv stats --everything...");
+    let Ok(stats) = Command::new(qsv_path.clone())
         .arg("stats")
         .arg("--everything")
-        .arg(arg_input.clone())
+        .arg(input_path.clone())
         .output()
     else {
         return fail!("Error: Error while generating stats.");
@@ -491,8 +554,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     // Get frequency from qsv frequency on input file
-    eprintln!("Generating frequency from {arg_input} using qsv frequency...");
-    let Ok(frequency) = Command::new(root).arg("frequency").arg(arg_input).output() else {
+    eprintln!("Generating frequency from {input_filename} using qsv frequency...");
+    let Ok(frequency) = Command::new(qsv_path)
+        .arg("frequency")
+        .arg(input_path)
+        .output()
+    else {
         return fail!("Error: Error while generating frequency.");
     };
 
@@ -502,7 +569,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     // Run inference options
-    run_inference_options(&args, &api_key, Some(stats_str), Some(frequency_str))?;
+    run_inference_options(
+        &args,
+        arg_is_some,
+        &api_key,
+        Some(stats_str),
+        Some(frequency_str),
+    )?;
 
     Ok(())
 }
