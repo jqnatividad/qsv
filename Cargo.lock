@@ -4516,9 +4516,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.100"
+version = "1.0.101"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0f1e14e89be7aa4c4b78bdbdc9eb5bf8517829a600ae8eaa39a6e1d960b5185c"
+checksum = "9e8ce1a9fbaeca48fe75743b1064d2a17ee0f88218edefa313c4d16e7c34f662"
 dependencies = [
  "indexmap 2.0.0",
  "itoa",
