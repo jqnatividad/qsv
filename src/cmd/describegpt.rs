@@ -412,7 +412,7 @@ fn run_inference_options(
     let mut total_json_output: serde_json::Value = json!({});
     let mut prompt: String;
     let mut messages: serde_json::Value;
-    let mut completion: String = String::new();
+    let mut completion: String;
     let mut dictionary_completion = String::new();
 
     // Generate dictionary output
