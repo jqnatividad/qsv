@@ -6,6 +6,9 @@ inaccurate information being produced. Verify output results before using them.
 
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_describegpt.rs.
 
+For more detailed info on how describegpt works and how to prepare a prompt file, 
+see https://github.com/jqnatividad/qsv/blob/master/docs/Describegpt.md
+
 Usage:
     qsv describegpt [options] [<input>]
     qsv describegpt --help
@@ -143,7 +146,7 @@ fn send_request(
 // Check if model is valid, including the default model https://api.openai.com/v1/models
 fn is_valid_model(client: &Client, api_key: Option<&str>, args: &Args) -> CliResult<bool> {
     let response = send_request(
-        &client,
+        client,
         api_key,
         None,
         "GET",
@@ -185,6 +188,7 @@ fn get_prompt_file(args: &Args) -> CliResult<PromptFile> {
     }
     // Otherwise, get default prompt file
     else {
+        #[allow(clippy::let_and_return)]
         let default_prompt_file = PromptFile {
             name:               "My Prompt File".to_string(),
             description:        "My prompt file for qsv's describegpt command.".to_string(),
@@ -281,7 +285,7 @@ fn get_completion(
         args.flag_max_tokens
     }
     // If --prompt-file is used, use the tokens field from the prompt file
-    else if let Some(prompt_file) = args.flag_prompt_file.clone() {
+    else if args.flag_prompt_file.clone().is_some() {
         let prompt_file = get_prompt_file(args)?;
         prompt_file.tokens
     }
@@ -412,7 +416,7 @@ fn run_inference_options(
     let mut total_json_output: serde_json::Value = json!({});
     let mut prompt: String;
     let mut messages: serde_json::Value;
-    let mut completion: String = String::new();
+    let mut completion: String;
     let mut dictionary_completion = String::new();
 
     // Generate dictionary output
