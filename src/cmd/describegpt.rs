@@ -143,7 +143,7 @@ fn send_request(
 // Check if model is valid, including the default model https://api.openai.com/v1/models
 fn is_valid_model(client: &Client, api_key: Option<&str>, args: &Args) -> CliResult<bool> {
     let response = send_request(
-        &client,
+        client,
         api_key,
         None,
         "GET",
