@@ -281,7 +281,7 @@ fn get_completion(
         args.flag_max_tokens
     }
     // If --prompt-file is used, use the tokens field from the prompt file
-    else if let Some(prompt_file) = args.flag_prompt_file.clone() {
+    else if args.flag_prompt_file.clone().is_some() {
         let prompt_file = get_prompt_file(args)?;
         prompt_file.tokens
     }
