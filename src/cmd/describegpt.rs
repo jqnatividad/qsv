@@ -22,6 +22,7 @@ describegpt options:
     --max-tokens <value>   Limits the number of generated tokens in the output.
                            [default: 50]
     --json                 Return results in JSON format.
+    --jsonl                Return results in JSON Lines format.
     --prompt-file <file>   The JSON file containing the prompts to use for inferencing.
                            If not specified, default prompts will be used.
     --model <model>        The model to use for inferencing.
@@ -58,6 +59,7 @@ struct Args {
     flag_max_tokens:  u16,
     flag_model:       Option<String>,
     flag_json:        bool,
+    flag_jsonl:       bool,
     flag_prompt_file: Option<String>,
     flag_user_agent:  Option<String>,
     flag_timeout:     u16,
@@ -457,7 +459,7 @@ fn run_inference_options(
         eprintln!("Received tags completion.");
         process_output("tags", &completion, &mut total_json_output, args)?;
     }
-
+    
     if is_json_output(args)? {
         // Print all JSON output
         let formatted_output =
@@ -466,6 +468,26 @@ fn run_inference_options(
         // If --output is used, write JSON to file
         if let Some(output) = args.flag_output.clone() {
             fs::write(output, formatted_output)?;
+        }
+    }
+
+    // Assuming `total_json_output` is a Vec<serde_json::Value>
+    if args.flag_jsonl {
+        // Print all JSONL output
+        let formatted_output = total_json_output
+            .as_array()
+            .unwrap() // Causes panic if `total_json_output` is not an array
+            .iter()
+            .map(|json| serde_json::to_string(json).unwrap())
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        // Print the formatted output
+        println!("{}", formatted_output);
+
+        // If --output is used, write JSONL to file
+        if let Some(output) = args.flag_output.clone() {
+            fs::write(output, &formatted_output)?;
         }
     }
 
