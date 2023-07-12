@@ -25,6 +25,7 @@ describegpt options:
     --max-tokens <value>   Limits the number of generated tokens in the output.
                            [default: 50]
     --json                 Return results in JSON format.
+    --jsonl                Return results in JSON Lines format.
     --prompt-file <file>   The JSON file containing the prompts to use for inferencing.
                            If not specified, default prompts will be used.
     --model <model>        The model to use for inferencing.
@@ -61,6 +62,7 @@ struct Args {
     flag_max_tokens:  u16,
     flag_model:       Option<String>,
     flag_json:        bool,
+    flag_jsonl:       bool,
     flag_prompt_file: Option<String>,
     flag_user_agent:  Option<String>,
     flag_timeout:     u16,
@@ -78,6 +80,7 @@ struct PromptFile {
     description_prompt: String,
     tags_prompt:        String,
     json:               bool,
+    jsonl:              bool,
 }
 
 const OPENAI_KEY_ERROR: &str = "Error: QSV_OPENAI_KEY environment variable not found.\nNote that \
@@ -224,6 +227,7 @@ fn get_prompt_file(args: &Args) -> CliResult<PromptFile> {
                                  Statistics:\n\n{stats}\n\nFrequency:\n\n{frequency}"
                 .to_string(),
             json:               true,
+            jsonl:              false,
         };
         default_prompt_file
     };
@@ -255,7 +259,10 @@ fn get_prompt(
         .replace("{frequency}", frequency.unwrap_or(""))
         .replace(
             "{json_add}",
-            if prompt_file.json || (args.flag_prompt_file.is_none() && args.flag_json) {
+            if prompt_file.json
+                || prompt_file.jsonl
+                || (args.flag_prompt_file.is_none() && (args.flag_json || args.flag_jsonl))
+            {
                 " (in JSON format)"
             } else {
                 ""
@@ -327,6 +334,41 @@ fn get_completion(
     Ok(completion.to_string())
 }
 
+// Check if JSON output is expected
+fn is_json_output(args: &Args) -> CliResult<bool> {
+    // By default expect plaintext output
+    let mut json_output = false;
+    // Set expect_json to true if --prompt-file is used & the "json" field is true
+    if args.flag_prompt_file.is_some() {
+        let prompt_file = get_prompt_file(args)?;
+        if prompt_file.json {
+            json_output = true;
+        }
+    }
+    // Set expect_json to true if --prompt-file is not used & --json is used
+    else if args.flag_json {
+        json_output = true;
+    }
+    Ok(json_output)
+}
+// Check if JSONL output is expected
+fn is_jsonl_output(args: &Args) -> CliResult<bool> {
+    // By default expect plaintext output
+    let mut jsonl_output = false;
+    // Set expect_jsonl to true if --prompt-file is used & the "jsonl" field is true
+    if args.flag_prompt_file.is_some() {
+        let prompt_file = get_prompt_file(args)?;
+        if prompt_file.jsonl {
+            jsonl_output = true;
+        }
+    }
+    // Set expect_jsonl to true if --prompt-file is not used & --jsonl is used
+    else if args.flag_jsonl {
+        jsonl_output = true;
+    }
+    Ok(jsonl_output)
+}
+
 // Generates output for all inference options
 fn run_inference_options(
     args: &Args,
@@ -351,23 +393,6 @@ fn run_inference_options(
             .replace("\\'", "'")
             .replace("\\`", "`")
     }
-    // Check if JSON output is expected
-    fn is_json_output(args: &Args) -> CliResult<bool> {
-        // By default expect plaintext output
-        let mut json_output = false;
-        // Set expect_json to true if --prompt-file is used & the "json" field is true
-        if args.flag_prompt_file.is_some() {
-            let prompt_file = get_prompt_file(args)?;
-            if prompt_file.json {
-                json_output = true;
-            }
-        }
-        // Set expect_json to true if --prompt-file is not used & --json is used
-        else if args.flag_json {
-            json_output = true;
-        }
-        Ok(json_output)
-    }
     // Generate the plaintext and/or JSON output of an inference option
     fn process_output(
         option: &str,
@@ -375,8 +400,8 @@ fn run_inference_options(
         total_json_output: &mut serde_json::Value,
         args: &Args,
     ) -> CliResult<()> {
-        // Process JSON output
-        if is_json_output(args)? {
+        // Process JSON output if expected or JSONL output is expected
+        if is_json_output(args)? || is_jsonl_output(args)? {
             // Parse the completion JSON
             let completion_json: serde_json::Value = match serde_json::from_str(output) {
                 // Output is valid JSON
@@ -462,14 +487,35 @@ fn run_inference_options(
         process_output("tags", &completion, &mut total_json_output, args)?;
     }
 
-    if is_json_output(args)? {
-        // Print all JSON output
+    // Expecting JSON output
+    if is_json_output(args)? && !is_jsonl_output(args)? {
+        // Format & print JSON output
         let formatted_output =
             format_output(&serde_json::to_string_pretty(&total_json_output).unwrap());
         println!("{formatted_output}");
-        // If --output is used, write JSON to file
-        if let Some(output) = args.flag_output.clone() {
-            fs::write(output, formatted_output)?;
+        // Write to file if --output is used, or overwrite if already exists
+        if let Some(output_file_path) = args.flag_output.clone() {
+            fs::write(output_file_path, formatted_output)?;
+        }
+    }
+    // Expecting JSONL output
+    else if is_jsonl_output(args)? {
+        // If --prompt-file is used, add prompt file name and timestamp to JSONL output
+        if args.flag_prompt_file.clone().is_some() {
+            let prompt_file = get_prompt_file(args)?;
+            total_json_output["prompt_file"] = json!(prompt_file.name);
+            total_json_output["timestamp"] = json!(chrono::offset::Utc::now().to_rfc3339());
+        }
+        // Format & print JSONL output
+        let formatted_output = format_output(&serde_json::to_string(&total_json_output).unwrap());
+        println!("{formatted_output}");
+        // Write to file if --output is used, or append if already exists
+        if let Some(output_file_path) = args.flag_output.clone() {
+            fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(output_file_path)?
+                .write_all(format!("\n{formatted_output}").as_bytes())?;
         }
     }
 
@@ -534,6 +580,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // If --all flag is specified, but other inference flags are also set, print error message.
     } else if args.flag_all && (args.flag_dictionary || args.flag_description || args.flag_tags) {
         return fail!("Error: --all option cannot be specified with other inference flags.");
+    }
+    // If --prompt-file flag is specified but the prompt file does not exist, print error message.
+    if let Some(prompt_file) = args.flag_prompt_file.clone() {
+        if !PathBuf::from(prompt_file.clone()).exists() {
+            let error_msg = format!("Error: Prompt file '{prompt_file}' does not exist.");
+            return fail!(error_msg);
+        }
+    }
+    // If --json and --jsonl flags are specified, print error message.
+    if is_json_output(&args)? && is_jsonl_output(&args)? {
+        return fail!("Error: --json and --jsonl options cannot be specified together.");
     }
 
     // Get qsv executable's path
