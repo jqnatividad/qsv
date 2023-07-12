@@ -473,6 +473,12 @@ fn run_inference_options(
 
     // Assuming `total_json_output` is a Vec<serde_json::Value>
     if args.flag_jsonl {
+        // If --prompt-file is used then provide the name as prompt_file in total_json_output and the timestamp like 1996-12-19T16:39:57-08:00
+        if let Some(prompt_file) = args.flag_prompt_file.clone() {
+            let prompt_file = get_prompt_file(args)?;
+            total_json_output["prompt_file"] = json!(prompt_file.name);
+            total_json_output["timestamp"] = json!(chrono::offset::Utc::now().to_rfc3339());
+        }
         // Print all JSONL output
         let formatted_output = total_json_output
             .as_array()
