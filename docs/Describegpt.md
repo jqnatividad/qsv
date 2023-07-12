@@ -32,6 +32,34 @@ You may often see this error when `--max-tokens` is set too low and therefore th
 
 The invalid output will be printed in `stderr`.
 
+Note that `--json` may not be used alongside `--jsonl`, nor may they both be set to true in a prompt file at the same time. This will result in an error.
+
+## `--jsonl`
+
+Similar to `--json`, you can use the the `--jsonl` option to expect [JSON Lines](https://jsonlines.org/) output.
+
+If you use `--output` with `--jsonl`, the output will be written to a new file if it doesn't exist and any lines after the first will be appended to the file. If the file already exists, the output will be appended to the file. Each inference option (`--dictionary`, `--description`, `--tags`) will be written to a new line in the file.
+
+If you use `--prompt-file` with `--jsonl`, the prompt name and timestamp will also be included in the JSONL output for each inference option.
+
+Note that **the `--jsonl` option does not indicate to your prompt that you want to generate JSONL output based on your dataset**. It instead ensures the command output is in JSONL format. You must specify in your prompt to make a completion in JSON format, such as adding the phrase "in JSON format" to your prompt, and this will then be parsed into JSONL format by `describegpt`.
+
+If the prompt output is not in valid JSON format but the `--jsonl` option is specified, the command will generate a default error JSON output printed to `stdout`, such as the following:
+
+```json
+{
+    "option": {
+        "error": "Invalid JSON output for option."
+    }
+}
+```
+
+You may often see this error when `--max-tokens` is set too low and therefore the output is incomplete.
+
+The invalid output will be printed in `stderr`.
+
+Note that `--jsonl` may not be used alongside `--json`, nor may they both be set to true in a prompt file at the same time. This will result in an error.
+
 ## `--max-tokens <value>`
 
 `--max-tokens` is a option that allows you to specify the maximum number of tokens in the completion **output**. This is limited by the maximum number of tokens allowed by the model including the input tokens.
@@ -80,7 +108,8 @@ Here is an example of a prompt:
     "dictionary_prompt": "Here are the columns for each field in a data dictionary:\n\n- Type: the data type of this column\n- Label: a human-friendly label for this column\n- Description: a full description for this column (can be multiple sentences)\n\nGenerate a data dictionary as aforementioned{json_add} where each field has Name, Type, Label, and Description (so four columns in total) based on the following summary statistics and frequency data from a CSV file.\n\nSummary Statistics:\n\n{stats}\n\nFrequency:\n\n{frequency}",
     "description_prompt": "Generate only a description that is within 8 sentences about the entire dataset{json_add} based on the following summary statistics and frequency data derived from the CSV file it came from.\n\nSummary Statistics:\n\n{stats}\n\nFrequency:\n\n{frequency}\n\nDo not output the summary statistics for each field. Do not output the frequency for each field. Do not output data about each field individually, but instead output about the dataset as a whole in one 1-8 sentence description.",
     "tags_prompt": "A tag is a keyword or label that categorizes datasets with other, similar datasets. Using the right tags makes it easier for others to find and use datasets.\n\nGenerate single-word tags{json_add} about the dataset (lowercase only and remove all whitespace) based on the following summary statistics and frequency data from a CSV file.\n\nSummary Statistics:\n\n{stats}\n\nFrequency:\n\n{frequency}",
-    "json": true
+    "json": true,
+    "jsonl": false
 }
 ```
 

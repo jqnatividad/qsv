@@ -255,7 +255,10 @@ fn get_prompt(
         .replace("{frequency}", frequency.unwrap_or(""))
         .replace(
             "{json_add}",
-            if prompt_file.json || (args.flag_prompt_file.is_none() && args.flag_json) {
+            if prompt_file.json
+                || prompt_file.jsonl
+                || (args.flag_prompt_file.is_none() && (args.flag_json || args.flag_jsonl))
+            {
                 " (in JSON format)"
             } else {
                 ""
@@ -434,7 +437,7 @@ fn run_inference_options(
     let mut total_json_output: serde_json::Value = json!({});
     let mut prompt: String;
     let mut messages: serde_json::Value;
-    let mut completion: String = String::new();
+    let mut completion: String;
     let mut dictionary_completion = String::new();
 
     // Generate dictionary output
@@ -480,13 +483,16 @@ fn run_inference_options(
         process_output("tags", &completion, &mut total_json_output, args)?;
     }
 
-    let mut formatted_output = String::new();
-
     // Expecting JSON output
     if is_json_output(args)? && !is_jsonl_output(args)? {
-        // Format JSON output
-        formatted_output =
+        // Format & print JSON output
+        let formatted_output =
             format_output(&serde_json::to_string_pretty(&total_json_output).unwrap());
+        println!("{formatted_output}");
+        // Write to file if --output is used, or overwrite if already exists
+        if let Some(output_file_path) = args.flag_output.clone() {
+            fs::write(output_file_path, formatted_output)?;
+        }
     }
     // Expecting JSONL output
     else if is_jsonl_output(args)? {
@@ -496,28 +502,16 @@ fn run_inference_options(
             total_json_output["prompt_file"] = json!(prompt_file.name);
             total_json_output["timestamp"] = json!(chrono::offset::Utc::now().to_rfc3339());
         }
-        // Format JSONL output
-        formatted_output = format_output(&serde_json::to_string(&total_json_output).unwrap());
-    } else {
-        // Format plaintext output
-        formatted_output = format_output(&completion);
-    }
-
-    // Print formatted output
-    println!("{formatted_output}");
-    // If --output is used, write to file, but if JSONL output is expected, append to file with \n
-    // before writing
-    if let Some(output) = args.flag_output.clone() {
-        if is_jsonl_output(args)? {
+        // Format & print JSONL output
+        let formatted_output = format_output(&serde_json::to_string(&total_json_output).unwrap());
+        println!("{formatted_output}");
+        // Write to file if --output is used, or append if already exists
+        if let Some(output_file_path) = args.flag_output.clone() {
             fs::OpenOptions::new()
                 .create(true)
                 .append(true)
-                .open(output)?
-                .write_all(
-                    format!("\n{formatted_output}", formatted_output = formatted_output).as_bytes(),
-                )?;
-        } else {
-            fs::write(output, formatted_output)?;
+                .open(output_file_path)?
+                .write_all(format!("\n{formatted_output}").as_bytes())?;
         }
     }
 
