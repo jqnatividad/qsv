@@ -687,8 +687,7 @@ fn sequential_mode(
 
         // Updating col
         {
-            let col =
-                luau.create_table_with_capacity(record.len().try_into().unwrap_or_default(), 1)?;
+            let col = luau.create_table_with_capacity(record.len(), 1)?;
 
             for (i, v) in record.iter().enumerate() {
                 col.set(i + 1, v)?;
@@ -1026,8 +1025,7 @@ fn random_access_mode(
 
         processed_count += 1;
         {
-            let col =
-                luau.create_table_with_capacity(record.len().try_into().unwrap_or_default(), 1)?;
+            let col = luau.create_table_with_capacity(record.len(), 1)?;
 
             for (i, v) in record.iter().enumerate() {
                 col.set(i + 1, v)?;
@@ -1286,7 +1284,7 @@ fn create_insertrecord(
 ) -> Result<(), CliError> {
     let mut columns_inserted = 0_usize;
 
-    for v in insertrecord_table.clone().raw_sequence_values::<String>() {
+    for v in insertrecord_table.clone().sequence_values::<String>() {
         let v = v?;
         insertrecord.push_field(&v);
 
@@ -1785,8 +1783,7 @@ fn setup_helpers(
     //      returns: None. Will always succeed.
     //
     let qsv_insertrecord = luau.create_function(|luau, mut args: mlua::MultiValue| {
-        let args_len = args.len().try_into().unwrap_or(10_i32);
-        let insertrecord_table = luau.create_table_with_capacity(args_len, 1)?;
+        let insertrecord_table = luau.create_table_with_capacity(args.len(), 1)?;
         // Luau tables are 1-based
         let mut idx = 1_u16;
 
