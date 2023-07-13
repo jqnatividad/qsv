@@ -346,7 +346,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             return fail!("dynfmt/calcconv subcommand requires headers.");
         }
         // first, get the fields used in the dynfmt template
-        let (safe_headers, _) = util::safe_header_names(&headers, false, false, None, "");
+        let (safe_headers, _) = util::safe_header_names(&headers, false, false, None, "", true);
         let formatstr_re: &'static Regex = crate::regex_oncelock!(r"\{(?P<key>\w+)?\}");
         for format_fields in formatstr_re.captures_iter(&args.flag_formatstr) {
             dynfmt_fields.push(format_fields.name("key").unwrap().as_str());
