@@ -125,7 +125,7 @@ fn send_request(
 
     // If API key is provided, add it to the request header
     if let Some(key) = api_key {
-        request = request.header("Authorization", format!("Bearer {}", key));
+        request = request.header("Authorization", format!("Bearer {key}"));
     }
     // If request data is provided, add it to the request header
     if let Some(data) = request_data {
@@ -270,7 +270,7 @@ fn get_prompt(
         );
 
     // Return prompt
-    Ok(prompt.to_string())
+    Ok(prompt)
 }
 
 fn get_completion(
@@ -403,19 +403,18 @@ fn run_inference_options(
         // Process JSON output if expected or JSONL output is expected
         if is_json_output(args)? || is_jsonl_output(args)? {
             // Parse the completion JSON
-            let completion_json: serde_json::Value = match serde_json::from_str(output) {
+            let completion_json: serde_json::Value = if let Ok(val) = serde_json::from_str(output) {
                 // Output is valid JSON
-                Ok(val) => val,
-                // Output is not valid JSON
-                Err(_) => {
-                    // Default error message in JSON format
-                    let error_message = format!("Error: Invalid JSON output for {option}.");
-                    let error_json = json!({"error": error_message});
-                    // Print error message in JSON format
-                    eprintln!("{error_json}");
-                    eprintln!("Output: {output}");
-                    error_json
-                }
+                val
+            } else {
+                // Output is invalid JSON
+                // Default error message in JSON format
+                let error_message = format!("Error: Invalid JSON output for {option}.");
+                let error_json = json!({"error": error_message});
+                // Print error message in JSON format
+                eprintln!("{error_json}");
+                eprintln!("Output: {output}");
+                error_json
             };
             total_json_output[option] = completion_json;
         }
@@ -561,7 +560,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let work_input = process_input(
         vec![PathBuf::from(
             // if no input file is specified, read from stdin "-"
-            args.arg_input.clone().unwrap_or("-".to_string()),
+            args.arg_input.clone().unwrap_or_else(|| "-".to_string()),
         )],
         &tmpdir,
         "No data on stdin. Please provide at least one input file or pipe data to stdin.",
@@ -569,7 +568,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // safety: we just checked that there is at least one input file
     let input_path = work_input[0]
         .canonicalize()?
-        .clone()
         .into_os_string()
         .into_string()
         .unwrap();
