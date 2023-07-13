@@ -95,7 +95,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }?;
 
     wtr.write_record(vec!["field", "value", "count"])?;
-    let head_ftables = headers.into_iter().zip(tables);
+    let head_ftables = headers.iter().zip(tables);
     for (i, (header, ftab)) in head_ftables.enumerate() {
         let header = if rconfig.no_headers {
             (i + 1).to_string().into_bytes()

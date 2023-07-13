@@ -63,18 +63,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } else {
         Box::new(TabWriter::new(io::stdout()))
     };
-    for (i, header) in headers.into_iter().enumerate() {
+    for (i, header) in headers.iter().enumerate() {
         if num_inputs == 1 && !args.flag_just_names {
             write!(&mut wtr, "{}\t", i + 1)?;
         }
         if args.flag_trim {
             wtr.write_all(
-                std::string::String::from_utf8_lossy(&header)
+                std::string::String::from_utf8_lossy(header)
                     .trim_matches(|c| c == '"' || c == ' ')
                     .as_bytes(),
             )?;
         } else {
-            wtr.write_all(&header)?;
+            wtr.write_all(header)?;
         }
         wtr.write_all(b"\n")?;
     }
