@@ -70,6 +70,7 @@ struct Args {
 }
 
 #[derive(Deserialize)]
+#[allow(dead_code)]
 struct PromptFile {
     name:               String,
     description:        String,
