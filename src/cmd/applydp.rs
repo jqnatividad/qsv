@@ -354,7 +354,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // we sort the fields so we can do binary_search
         dynfmt_fields.sort_unstable();
         // now, get the indices of the columns for the lookup vec
-        for (i, field) in safe_headers.into_iter().enumerate() {
+        for (i, field) in safe_headers.iter().enumerate() {
             if dynfmt_fields.binary_search(&field.as_str()).is_ok() {
                 let field_with_curly = format!("{{{field}}}");
                 let field_index = format!("{{{i}}}");
