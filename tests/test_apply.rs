@@ -339,6 +339,76 @@ fn apply_dynfmt() {
 }
 
 #[test]
+fn apply_dynfmt_keepcase() {
+    let wrk = Workdir::new("apply_dynfmt_keepcase");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec![
+                "qty-FRUIT/day",
+                "1fruit",
+                "another Col",
+                "unit cost USD",
+                "and another one"
+            ],
+            svec!["20.5", "mangoes", "a", "5", "z"],
+            svec!["10", "bananas", "b", "20", "y"],
+            svec!["3", "strawberries", "c", "3.50", "x"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("dynfmt")
+        .arg("--formatstr")
+        .arg(
+            "{qty_FRUIT_day} helpings of {1fruit} is good for you, even if it costs \
+             ${unit_cost_USD} each. {1fruit}, all {qty_FRUIT_day} - is just worth it!",
+        )
+        .arg("--new-column")
+        .arg("saying")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec![
+            "qty-FRUIT/day",
+            "1fruit",
+            "another Col",
+            "unit cost USD",
+            "and another one",
+            "saying"
+        ],
+        svec![
+            "20.5",
+            "mangoes",
+            "a",
+            "5",
+            "z",
+            "20.5 helpings of mangoes is good for you, even if it costs $5 each. mangoes, all \
+             20.5 - is just worth it!"
+        ],
+        svec![
+            "10",
+            "bananas",
+            "b",
+            "20",
+            "y",
+            "10 helpings of bananas is good for you, even if it costs $20 each. bananas, all 10 - \
+             is just worth it!"
+        ],
+        svec![
+            "3",
+            "strawberries",
+            "c",
+            "3.50",
+            "x",
+            "3 helpings of strawberries is good for you, even if it costs $3.50 each. \
+             strawberries, all 3 - is just worth it!"
+        ],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn apply_calcconv() {
     let wrk = Workdir::new("apply");
     wrk.create(

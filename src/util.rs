@@ -933,9 +933,10 @@ pub fn safe_header_names(
     conditional: bool,
     reserved_names: Option<Vec<String>>,
     unsafe_prefix: &str,
+    keep_case: bool,
 ) -> (Vec<String>, u16) {
     // Create "safe" var/key names - to support dynfmt/url-template, valid python vars & db-safe
-    // column names. Fold to lowercase. Trim leading & trailing whitespace.
+    // column names. Fold to lowercase if keep_case is false. Trim leading & trailing whitespace.
     // Replace whitespace/non-alphanumeric) with _. If name starts with a number & check_first_char
     // is true, prepend the unsafe_prefix. If a column with the same name already exists,
     // append a sequence suffix (e.g. _n). Names are limited to 60 characters in length.
@@ -953,10 +954,14 @@ pub fn safe_header_names(
 
     for header_name in headers {
         let reserved_found = if let Some(reserved_names_vec) = reserved_names.clone() {
-            let lower_header_name = header_name.to_lowercase();
+            let header_name = if keep_case {
+                header_name.to_string()
+            } else {
+                header_name.to_lowercase()
+            };
             reserved_names_vec
                 .iter()
-                .any(|reserved_name| reserved_name == lower_header_name.as_str())
+                .any(|reserved_name| reserved_name == header_name.as_str())
         } else {
             false
         };
@@ -986,7 +991,13 @@ pub fn safe_header_names(
                 .map(char::len_utf8)
                 .take(60)
                 .sum()]
-                .to_lowercase();
+                .to_string();
+
+            final_candidate = if keep_case {
+                final_candidate
+            } else {
+                final_candidate.to_lowercase()
+            };
 
             if prefix != "_" && final_candidate.starts_with('_') {
                 final_candidate = format!("{prefix}{final_candidate}");
