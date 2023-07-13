@@ -235,7 +235,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     // ensure col/header names are valid and safe python variables
-    let (header_vec, _) = util::safe_header_names(&headers, true, false, None, "_");
+    let (header_vec, _) = util::safe_header_names(&headers, true, false, None, "_", false);
 
     // amortize memory allocation by reusing record
     #[allow(unused_assignments)]

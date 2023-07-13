@@ -182,6 +182,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         safenames_mode == SafeNameMode::Conditional,
         Some(reserved_names_vec),
         &args.flag_prefix,
+        false,
     );
     if let SafeNameMode::Conditional | SafeNameMode::Always = safenames_mode {
         headers.clear();
