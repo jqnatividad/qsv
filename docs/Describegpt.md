@@ -62,7 +62,7 @@ Note that `--jsonl` may not be used alongside `--json`, nor may they both be set
 
 ## `--max-tokens <value>`
 
-`--max-tokens` is a option that allows you to specify the maximum number of tokens in the completion **output**. This is limited by the maximum number of tokens allowed by the model including the input tokens.
+`--max-tokens` is an option that allows you to specify the maximum number of tokens in the completion **output**. This is limited by the maximum number of tokens allowed by the model including the input tokens.
 
 Input tokens may include the output of `qsv stats` and `qsv frequency` from your dataset, which can be large based on your dataset's size. Therefore we use `gpt-3.5-turbo-16k` as the default model for `describegpt` as it has a maximum token limit of 16,384.
 
