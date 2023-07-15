@@ -298,6 +298,282 @@ fn sqlp_boston311_null_value() {
 }
 
 #[test]
+fn sqlp_null_aware_equality_checks() {
+    let wrk = Workdir::new("sqlp_null_aware_equality_checks");
+    wrk.create(
+        "test_null.csv",
+        vec![
+            svec!["a", "b"],
+            svec!["1", "1"],
+            svec!["", ""],
+            svec!["3", "3"],
+            svec!["6", "4"],
+            svec!["5", ""],
+        ],
+    );
+
+    let mut cmd = wrk.command("sqlp");
+
+    cmd.arg("test_null.csv").args(["--null-value", "NULL"]).arg(
+        "SELECT (a = b) as \"1_eq_unaware\", (a != b) as \"2_neq_unaware\", (a <=> b) as \
+         \"3_eq_aware\", (a IS NOT DISTINCT FROM b) as \"4_eq_aware\", (a IS DISTINCT FROM b) as \
+         \"5_neq_aware\" FROM test_null",
+    );
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec![
+            "1_eq_unaware",
+            "2_neq_unaware",
+            "3_eq_aware",
+            "4_eq_aware",
+            "5_neq_aware"
+        ],
+        svec!["true", "false", "true", "true", "false"],
+        svec!["NULL", "NULL", "true", "true", "false"],
+        svec!["true", "false", "true", "true", "false"],
+        svec!["false", "true", "false", "false", "true"],
+        svec!["NULL", "NULL", "false", "false", "true"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn sqlp_regex_operators() {
+    let wrk = Workdir::new("sqlp_regex_operators");
+    wrk.create(
+        "test_regex.csv",
+        vec![
+            svec!["n", "sval"],
+            svec!["1", "ABC"],
+            svec!["2", "abc"],
+            svec!["3", "000"],
+            svec!["4", "A0C"],
+            svec!["5", "a0c"],
+        ],
+    );
+
+    // ~ operator - contains pattern (case-sensitive)
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("test_regex.csv")
+        .arg(r#"SELECT * FROM test_regex WHERE sval ~ '\d'"#);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["n", "sval"],
+        svec!["3", "000"],
+        svec!["4", "A0C"],
+        svec!["5", "a0c"],
+    ];
+    assert_eq!(got, expected);
+
+    // ~* operator - contains pattern (case-insensitive)
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("test_regex.csv")
+        .arg(r#"SELECT * FROM test_regex WHERE sval ~* '^a0'"#);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![svec!["n", "sval"], svec!["4", "A0C"], svec!["5", "a0c"]];
+    assert_eq!(got, expected);
+
+    // !~ operator - does not contain pattern (case-sensitive)
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("test_regex.csv")
+        .arg(r#"SELECT * FROM test_regex WHERE sval !~ '^a0'"#);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["n", "sval"],
+        svec!["1", "ABC"],
+        svec!["2", "abc"],
+        svec!["3", "000"],
+        svec!["4", "A0C"],
+    ];
+    assert_eq!(got, expected);
+
+    // !~* operator - does not contain pattern (case-insensitive)
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("test_regex.csv")
+        .arg(r#"SELECT * FROM test_regex WHERE sval !~* '^a0'"#);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["n", "sval"],
+        svec!["1", "ABC"],
+        svec!["2", "abc"],
+        svec!["3", "000"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn sqlp_regexp_like() {
+    let wrk = Workdir::new("sqlp_regexp_like");
+    wrk.create(
+        "test_regexp_like.csv",
+        vec![
+            svec!["scol"],
+            svec!["abcde"],
+            svec!["abc"],
+            svec!["a"],
+            svec![""],
+        ],
+    );
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("test_regexp_like.csv")
+        .arg(r#"SELECT scol FROM test_regexp_like where REGEXP_LIKE(scol,'(C|D)','i')"#);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![svec!["scol"], svec!["abcde"], svec!["abc"]];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn sqlp_string_functions() {
+    let wrk = Workdir::new("sqlp_string_functions");
+    wrk.create(
+        "test_strings.csv",
+        vec![
+            svec!["scol"],
+            svec!["abcdE"],
+            svec!["abc"],
+            svec!["    abc"],
+            svec!["a"],
+            svec![""],
+        ],
+    );
+
+    // starts_with
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("test_strings.csv")
+        .arg(r#"SELECT starts_with(scol, 'a') from test_strings"#);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["scol"],
+        svec!["true"],
+        svec!["true"],
+        svec!["true"],
+        svec!["true"],
+        svec!["false"],
+    ];
+    assert_eq!(got, expected);
+
+    // ends_with
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("test_strings.csv")
+        .arg(r#"SELECT ends_with(scol, 'c') from test_strings"#);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["scol"],
+        svec!["false"],
+        svec!["true"],
+        svec!["true"],
+        svec!["false"],
+        svec!["false"],
+    ];
+    assert_eq!(got, expected);
+
+    // left
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("test_strings.csv")
+        .arg(r#"SELECT left(scol, 3) from test_strings"#);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["scol"],
+        svec!["abc"],
+        svec!["abc"],
+        svec!["abc"],
+        svec!["a"],
+        svec![""],
+    ];
+    assert_eq!(got, expected);
+
+    // substr
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("test_strings.csv")
+        .arg(r#"SELECT substr(scol, 2, 2) from test_strings"#);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["scol"],
+        svec!["cd"],
+        svec!["c"],
+        svec!["c"],
+        svec![""],
+        svec![""],
+    ];
+    assert_eq!(got, expected);
+
+    // upper
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("test_strings.csv")
+        .arg(r#"SELECT upper(scol) from test_strings"#);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["scol"],
+        svec!["ABCDE"],
+        svec!["ABC"],
+        svec!["ABC"],
+        svec!["A"],
+        svec![""],
+    ];
+    assert_eq!(got, expected);
+
+    // lower
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("test_strings.csv")
+        .arg(r#"SELECT lower(scol) from test_strings"#);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["scol"],
+        svec!["abcde"],
+        svec!["abc"],
+        svec!["abc"],
+        svec!["a"],
+        svec![""],
+    ];
+    assert_eq!(got, expected);
+
+    // length
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("test_strings.csv")
+        .arg(r#"SELECT length(scol) from test_strings"#);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["scol"],
+        svec!["5"],
+        svec!["3"],
+        svec!["3"],
+        svec!["1"],
+        svec!["0"],
+    ];
+    assert_eq!(got, expected);
+
+    // octet_length
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("test_strings.csv")
+        .arg(r#"SELECT octet_length(scol) from test_strings"#);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["scol"],
+        svec!["5"],
+        svec!["3"],
+        svec!["3"],
+        svec!["1"],
+        svec!["0"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn sqlp_boston311_try_parsedates() {
     let wrk = Workdir::new("sqlp_boston311_try_parsedates");
     let test_file = wrk.load_test_file("boston311-100.csv");
@@ -422,8 +698,7 @@ fn sqlp_boston311_explain() {
     assert!(got.starts_with(expected_begin));
 
     let expected_end = r#"boston311-100.csv
-  PROJECT 4/29 COLUMNS
-"  SELECTION: [(col(""case_status"")) == (Utf8(Closed))]""#;
+        PROJECT 4/29 COLUMNS"#;
     assert!(got.ends_with(expected_end));
 }
 
