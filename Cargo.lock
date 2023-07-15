@@ -1744,9 +1744,9 @@ dependencies = [
 
 [[package]]
 name = "file-format"
-version = "0.17.3"
+version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "805eab5eeca901cbdfabf3f54adb2f27464073617279fd4e14eedb2a0757222e"
+checksum = "fd991bcfc01ee8f9ed83108da842aeddfca8a9550962cbffc9579050109c2aa9"
 dependencies = [
  "cfb",
  "zip",
