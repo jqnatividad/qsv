@@ -232,6 +232,7 @@ Quote Char: none
 Flexible: false
 Is UTF8: true
 Detected Mime Type: text/plain
+Detected Kind: Text
 Retrieved Size (bytes): 27
 File Size (bytes): 27
 Sampled Records: 2
