@@ -151,6 +151,7 @@ struct SniffStruct {
     flexible:        bool,
     is_utf8:         bool,
     detected_mime:   String,
+    detected_kind:   String,
     retrieved_size:  usize,
     file_size:       usize,
     sampled_records: usize,
@@ -203,6 +204,7 @@ impl fmt::Display for SniffStruct {
         writeln!(f, "Flexible: {}", self.flexible)?;
         writeln!(f, "Is UTF8: {}", self.is_utf8)?;
         writeln!(f, "Detected Mime Type: {}", self.detected_mime)?;
+        writeln!(f, "Detected Kind: {}", self.detected_kind)?;
         writeln!(
             f,
             "Retrieved Size (bytes): {}",
@@ -267,6 +269,7 @@ struct SniffFileStruct {
     display_path:       String,
     file_to_sniff:      String,
     detected_mime:      String,
+    detected_kind:      String,
     tempfile_flag:      bool,
     retrieved_size:     usize,
     file_size:          usize,
@@ -478,9 +481,12 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                 let wtr_file_path;
                 let mut csv_candidate = true;
                 let mut detected_mime = String::new();
+                let mut detected_kind: String = String::new();
 
                 if !args.flag_quick {
-                    detected_mime = FileFormat::from_file(file.path())?.media_type().to_string();
+                    let file_format = FileFormat::from_file(file.path())?;
+                    detected_mime = file_format.media_type().to_string();
+                    detected_kind = format!("{:?}", file_format.kind());
                     csv_candidate =
                         detected_mime.starts_with("text/") || detected_mime == "application/csv";
                 }
@@ -558,6 +564,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                     display_path: url,
                     file_to_sniff: wtr_file_path,
                     detected_mime,
+                    detected_kind,
                     tempfile_flag: true,
                     retrieved_size: downloaded,
                     file_size: if total_size == usize::MAX {
@@ -626,6 +633,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                     display_path: canonical_path,
                     file_to_sniff: path,
                     detected_mime: String::new(),
+                    detected_kind: String::new(),
                     tempfile_flag: false,
                     retrieved_size: file_size,
                     file_size,
@@ -665,6 +673,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
             display_path: "stdin".to_string(),
             file_to_sniff: path_string,
             detected_mime: String::new(),
+            detected_kind: String::new(),
             tempfile_flag: true,
             retrieved_size: file_size,
             file_size,
@@ -727,13 +736,15 @@ async fn sniff_main(mut args: Args) -> CliResult<()> {
 
     // if we don't have a mime type or its a snappy file and --no-infer is disabled,
     // let's try to infer the mime type
+    let file_kind: String;
     let file_type = if sfile_info.detected_mime.is_empty()
         || sfile_info.detected_mime == "application/x-snappy-framed" && !args.flag_no_infer
     {
-        FileFormat::from_file(&sfile_info.file_to_sniff)?
-            .media_type()
-            .to_string()
+        let file_format = FileFormat::from_file(&sfile_info.file_to_sniff)?;
+        file_kind = format!("{:?}", file_format.kind());
+        file_format.media_type().to_string()
     } else {
+        file_kind = sfile_info.detected_kind.clone();
         sfile_info.detected_mime.clone()
     };
 
@@ -755,6 +766,7 @@ async fn sniff_main(mut args: Args) -> CliResult<()> {
                     "title": "sniff mime type",
                     "meta": {
                         "detected_mime_type": file_type,
+                        "detected_kind": file_kind,
                         "size": size,
                         "last_modified": last_modified,
                     }
@@ -772,6 +784,7 @@ async fn sniff_main(mut args: Args) -> CliResult<()> {
                     "detail": format!("File is not a CSV file. Detected mime type: {file_type}"),
                     "meta": {
                         "detected_mime_type": file_type,
+                        "detected_kind": file_kind,
                         "size": size,
                         "last_modified": last_modified,
                     }
@@ -953,6 +966,7 @@ async fn sniff_main(mut args: Args) -> CliResult<()> {
                 } else {
                     file_type.clone()
                 },
+                detected_kind: file_kind.clone(),
                 retrieved_size: sfile_info.retrieved_size,
                 file_size: sfile_info.file_size,
                 sampled_records: if sampled_records > num_records {
@@ -994,6 +1008,7 @@ async fn sniff_main(mut args: Args) -> CliResult<()> {
             "detail": format!("{}", sniff_error.unwrap()),
             "meta": {
                 "detected_mime_type": file_type,
+                "detected_kind": file_kind,
                 "size": sfile_info.file_size,
                 "last_modified": sfile_info.last_modified,
             }
