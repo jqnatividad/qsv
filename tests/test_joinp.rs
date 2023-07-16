@@ -84,6 +84,32 @@ joinp_test!(
     }
 );
 
+joinp_test!(
+    joinp_outer_left_filter_left,
+    |wrk: Workdir, mut cmd: process::Command| {
+        cmd.arg("--left").args(["--filter-left", "city = 'Boston'"]);
+        let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+        let expected = make_rows(
+            false,
+            vec![
+                svec!["Boston", "MA", "Logan Airport"],
+                svec!["Boston", "MA", "Boston Garden"],
+            ],
+        );
+        assert_eq!(got, expected);
+    }
+);
+
+joinp_test!(
+    joinp_inner_filter_right,
+    |wrk: Workdir, mut cmd: process::Command| {
+        cmd.args(["--filter-right", "place ~* 'w'"]);
+        let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+        let expected = make_rows(false, vec![svec!["Buffalo", "NY", "Ralph Wilson Stadium"]]);
+        assert_eq!(got, expected);
+    }
+);
+
 joinp_test!(joinp_full, |wrk: Workdir, mut cmd: process::Command| {
     cmd.arg("--full");
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);

@@ -48,6 +48,12 @@ joinp options:
                            equal to N * M, where N and M correspond to the
                            number of rows in the given data sets, respectively.
                            The columns1 and columns2 arguments are ignored.
+    --filter-left <arg>    Filter the left CSV data set by the given expression
+                           BEFORE the join. Only rows where the expression
+                           evaluates to true are kept.
+    --filter-right <arg>   Filter the right CSV data set by the given expression
+                           BEFORE the join. Only rows where the expression
+                           evaluates to true are kept.
     --nulls                When set, joins will work on empty fields.
                            Otherwise, empty fields are completely ignored.
     --try-parsedates       When set, the join will attempt to parse the columns
@@ -159,6 +165,8 @@ struct Args {
     flag_left_semi:       bool,
     flag_full:            bool,
     flag_cross:           bool,
+    flag_filter_left:     Option<String>,
+    flag_filter_right:    Option<String>,
     flag_nulls:           bool,
     flag_try_parsedates:  bool,
     flag_streaming:       bool,
@@ -367,19 +375,29 @@ impl Args {
             b','
         };
 
-        let lf1 = LazyCsvReader::new(&self.arg_input1)
+        let mut lf1 = LazyCsvReader::new(&self.arg_input1)
             .has_header(true)
             .with_missing_is_null(self.flag_nulls)
             .with_delimiter(delim)
             .with_try_parse_dates(try_parse_dates)
             .finish()?;
 
-        let lf2 = LazyCsvReader::new(&self.arg_input2)
+        if let Some(filter_left) = &self.flag_filter_left {
+            let filter_left_expr = polars::sql::sql_expr(filter_left)?;
+            lf1 = lf1.filter(filter_left_expr);
+        }
+
+        let mut lf2 = LazyCsvReader::new(&self.arg_input2)
             .has_header(true)
             .with_missing_is_null(self.flag_nulls)
             .with_delimiter(delim)
             .with_try_parse_dates(try_parse_dates)
             .finish()?;
+
+        if let Some(filter_right) = &self.flag_filter_right {
+            let filter_right_exprt = polars::sql::sql_expr(filter_right)?;
+            lf2 = lf2.filter(filter_right_exprt);
+        }
 
         Ok(JoinStruct {
             lf1,
