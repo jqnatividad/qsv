@@ -1,4 +1,3 @@
-#![cfg(target_family = "unix")]
 use newline_converter::dos2unix;
 use serial_test::serial;
 
@@ -309,6 +308,22 @@ fn tojsonl_nested() {
 fn tojsonl_boston() {
     let wrk = Workdir::new("tojsonl");
     let test_file = wrk.load_test_file("boston311-100.csv");
+
+    let mut cmd = wrk.command("tojsonl");
+    cmd.arg(test_file);
+
+    let got: String = wrk.stdout(&mut cmd);
+
+    let expected = wrk.load_test_resource("boston311-100.jsonl");
+
+    assert_eq!(dos2unix(&got), dos2unix(&expected).trim_end());
+}
+
+#[test]
+#[serial]
+fn tojsonl_boston_snappy() {
+    let wrk = Workdir::new("tojsonl");
+    let test_file = wrk.load_test_file("boston311-100.csv.sz");
 
     let mut cmd = wrk.command("tojsonl");
     cmd.arg(test_file);
