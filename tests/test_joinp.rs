@@ -5,6 +5,7 @@ macro_rules! joinp_test {
         mod $name {
             use std::process;
 
+            #[allow(unused_imports)]
             use super::{make_rows, setup};
             use crate::workdir::Workdir;
 
@@ -107,6 +108,39 @@ joinp_test!(
         let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
         let expected = make_rows(false, vec![svec!["Buffalo", "NY", "Ralph Wilson Stadium"]]);
         assert_eq!(got, expected);
+    }
+);
+
+joinp_test!(
+    joinp_outer_left_validate_none,
+    |wrk: Workdir, mut cmd: process::Command| {
+        cmd.arg("--left").args(["--validate", "none"]);
+        let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+        let expected = make_rows(
+            false,
+            vec![
+                svec!["Boston", "MA", "Logan Airport"],
+                svec!["Boston", "MA", "Boston Garden"],
+                svec!["New York", "NY", ""],
+                svec!["San Francisco", "CA", ""],
+                svec!["Buffalo", "NY", "Ralph Wilson Stadium"],
+            ],
+        );
+        assert_eq!(got, expected);
+    }
+);
+
+joinp_test!(
+    joinp_outer_left_validate_onetomany,
+    |wrk: Workdir, mut cmd: process::Command| {
+        cmd.arg("--left").args(["--validate", "onetomany"]);
+        let got: String = wrk.output_stderr(&mut cmd);
+        assert_eq!(
+            got,
+            "Polars error: ComputeError(ErrString(\"the join keys did not fulfil 1:m \
+             validation\"))\n"
+        );
+        wrk.assert_err(&mut cmd);
     }
 );
 
