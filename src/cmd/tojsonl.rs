@@ -29,12 +29,11 @@ Common options:
                            CSV into memory using CONSERVATIVE heuristics.
 "#;
 
-use std::{env::temp_dir, fmt::Write, fs::File, path::Path, str::FromStr};
+use std::{fmt::Write, path::PathBuf, str::FromStr};
 
 use serde::Deserialize;
 use serde_json::{Map, Value};
 use strum_macros::EnumString;
-use uuid::Uuid;
 
 use super::schema::infer_schema_from_stats;
 use crate::{
@@ -68,38 +67,32 @@ enum JsonlType {
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
-    let mut args: Args = util::get_args(USAGE, argv)?;
+    let args: Args = util::get_args(USAGE, argv)?;
 
-    let conf = Config::new(&args.arg_input).delimiter(args.flag_delimiter);
-    let mut is_stdin = false;
+    let tmpdir = tempfile::tempdir()?;
+    let work_input = util::process_input(
+        vec![PathBuf::from(
+            // if no input file is specified, read from stdin "-"
+            args.arg_input.clone().unwrap_or_else(|| "-".to_string()),
+        )],
+        &tmpdir,
+        "No data on stdin. Please provide at least one input file or pipe data to stdin.",
+    )?;
 
-    let stdin_fpath = format!("{}/{}.csv", temp_dir().to_string_lossy(), Uuid::new_v4());
-    let stdin_temp = stdin_fpath.clone();
-
-    // if using stdin, we create a stdin.csv file as stdin is not seekable and we need to
-    // open the file multiple times to compile stats/unique values, etc.
-    let input_filename = if args.arg_input.is_none() {
-        let mut stdin_file = File::create(stdin_fpath.clone())?;
-        let stdin = std::io::stdin();
-        let mut stdin_handle = stdin.lock();
-        std::io::copy(&mut stdin_handle, &mut stdin_file)?;
-        drop(stdin_handle);
-        args.arg_input = Some(stdin_fpath.clone());
-        is_stdin = true;
-        stdin_fpath
-    } else {
-        let filename = Path::new(args.arg_input.as_ref().unwrap())
-            .file_name()
-            .unwrap()
-            .to_string_lossy()
-            .to_string();
-        filename
-    };
+    // safety: there's at least one valid element in work_input
+    let input_filename = work_input[0]
+        .canonicalize()?
+        .into_os_string()
+        .into_string()
+        .unwrap();
+    let conf = Config::new(&Some(input_filename.clone())).delimiter(args.flag_delimiter);
 
     // we're loading the entire file into memory, we need to check avail mem
-    if let Some(path) = conf.path.clone() {
-        util::mem_file_check(&path, false, args.flag_memcheck)?;
-    }
+    util::mem_file_check(
+        &std::path::PathBuf::from(input_filename.clone()),
+        false,
+        args.flag_memcheck,
+    )?;
 
     // we're calling the schema command to infer data types and enums
     let schema_args = crate::cmd::schema::Args {
@@ -117,7 +110,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         flag_jobs:            Some(util::njobs(args.flag_jobs)),
         flag_no_headers:      false,
         flag_delimiter:       args.flag_delimiter,
-        arg_input:            args.arg_input.clone(),
+        arg_input:            Some(input_filename.clone()),
         flag_memcheck:        args.flag_memcheck,
     };
     // build schema for each field by their inferred type, min/max value/length, and unique values
@@ -129,13 +122,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         };
 
-    let mut rdr = if is_stdin {
-        Config::new(&Some(stdin_temp))
-            .delimiter(args.flag_delimiter)
-            .reader()?
-    } else {
-        conf.reader()?
-    };
+    let mut rdr = conf.reader()?;
 
     // TODO: instead of abusing csv writer to write jsonl file
     // just use a normal buffered writer
