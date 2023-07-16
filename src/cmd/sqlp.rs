@@ -26,7 +26,16 @@ Example queries:
 
   qsv sqlp data.csv data2.csv script.sql --format json --output data.json
 
-  qsv sqlp data.csv "select col1, col2, col3 from data WHERE col1 = 'foo' AND col2 > 10"
+  qsv sqlp data.csv "select lower(col1), substr(col2, 2, 4) from data WHERE starts_with(col1, 'foo')"
+
+  # regex operators: "~" (contains pattern, case-sensitive); "~*" (contains pattern, case-insensitive)
+  #   "!~" (does not contain pattern, case-sensitive); "!~*" (does not contain pattern, case-insensitive)
+    qsv sqlp data.csv "select * from data WHERE col1 ~ '^foo' AND col2 > 10"
+    qsv sqlp data.csv "select * from data WHERE col1 !~* 'bar$' AND col2 > 10"
+
+  qsv sqlp data.csv "select * from data WHERE regexp_like(col1, '^foo') AND col2 > 10"
+  # case-insensitive regexp_like
+  qsv sqlp data.csv "select * from data WHERE regexp_like(col1, '^foo', 'i') AND col2 > 10"
 
   qsv sqlp data.csv "select data.col1, t2.col1 from data join read_parquet('data2.parquet') as t2 ON data.col1 = t2.col1"
   qsv sqlp data.csv "select data.col1, t2.col1 from data join read_ndjson('data2.jsonl') as t2 on data.col1 = t2.col1"
@@ -68,12 +77,12 @@ sqlp options:
                               POLARS CSV PARSING OPTIONS:
     --try-parsedates          Automatically try to parse dates/datetimes and time.
                               If parsing fails, columns remain as strings.
-    --infer-schema-len <arg>  The number of rows to scan when inferring the schema of the CSV.
+    --infer-len <arg>         The number of rows to scan when inferring the schema of the CSV.
                               Set to 0 to do a full table scan (warning: very slow).
                               (default: 250)
     --low-memory              Use low memory mode when parsing CSVs. This will use less memory
                               but will be slower. It will also process LazyFrames in streaming mode.
-                              Only use this in memory constrained environments.
+                              Only use this when you get out of memory errors.
     --ignore-errors           Ignore errors when parsing CSVs. If set, rows with errors
                               will be skipped. If not set, the query will fail.
                               Only use this when debugging queries, as polars does batched
@@ -147,24 +156,24 @@ static DEFAULT_ZSTD_COMPRESSION_LEVEL: i32 = 3;
 
 #[derive(Deserialize, Debug, Clone)]
 struct Args {
-    arg_input:             Vec<PathBuf>,
-    arg_sql:               String,
-    flag_format:           String,
-    flag_try_parsedates:   bool,
-    flag_infer_schema_len: usize,
-    flag_low_memory:       bool,
-    flag_ignore_errors:    bool,
-    flag_datetime_format:  Option<String>,
-    flag_date_format:      Option<String>,
-    flag_time_format:      Option<String>,
-    flag_float_precision:  Option<usize>,
-    flag_null_value:       String,
-    flag_compression:      String,
-    flag_compress_level:   Option<i32>,
-    flag_statistics:       bool,
-    flag_output:           Option<String>,
-    flag_delimiter:        Option<Delimiter>,
-    flag_quiet:            bool,
+    arg_input:            Vec<PathBuf>,
+    arg_sql:              String,
+    flag_format:          String,
+    flag_try_parsedates:  bool,
+    flag_infer_len:       usize,
+    flag_low_memory:      bool,
+    flag_ignore_errors:   bool,
+    flag_datetime_format: Option<String>,
+    flag_date_format:     Option<String>,
+    flag_time_format:     Option<String>,
+    flag_float_precision: Option<usize>,
+    flag_null_value:      String,
+    flag_compression:     String,
+    flag_compress_level:  Option<i32>,
+    flag_statistics:      bool,
+    flag_output:          Option<String>,
+    flag_delimiter:       Option<Delimiter>,
+    flag_quiet:           bool,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -330,10 +339,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         b','
     };
 
-    let num_rows = if args.flag_infer_schema_len == 0 {
+    let num_rows = if args.flag_infer_len == 0 {
         None
     } else {
-        Some(args.flag_infer_schema_len)
+        Some(args.flag_infer_len)
     };
 
     let optimize_all = polars::lazy::frame::OptState {
