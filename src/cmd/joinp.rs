@@ -5,13 +5,10 @@ The default join operation is an 'inner' join. This corresponds to the
 intersection of rows on the keys specified.
 
 Unlike the join command, joinp can process files larger than RAM, is multi-threaded,
-supports asof joins & its output does not have duplicate columns.
+has join key validation, pre-join filtering, supports asof joins & its output doesn't
+have duplicate columns.
 
 However, joinp doesn't have an --ignore-case option & it doesn't support right outer joins.
-
-The columns arguments specify the columns to join for each input. Columns are referenced
-by name. Specify multiple columns by separating them with a comma.
-Both columns1 and columns2 must specify exactly the same number of columns.
 
 Returns the shape of the join result (number of rows, number of columns) to stderr.
 
@@ -24,6 +21,11 @@ Usage:
 
 joinp arguments:
     Both <input1> and <input2> files need to have headers. Stdin is not supported.
+
+    The columns arguments specify the columns to join for each input. Columns are referenced by name. Specify multiple columns by separating them with a comma.
+    Both <columns1> and <columns2> must specify exactly the same number of columns.
+
+    Note that <input1> is the left CSV data set and <input2> is the right CSV data set.
 
 joinp options:
     --left                 Do a 'left outer' join. This returns all rows in
@@ -50,11 +52,11 @@ joinp options:
                            The columns1 and columns2 arguments are ignored.
 
     --filter-left <arg>    Filter the left CSV data set by the given Polars SQL
-                           expression BEFORE the join. Only rows where it
-                           evaluates to true are kept.
+                           expression BEFORE the join. Only rows that evaluates
+                           to true are used in the join.
     --filter-right <arg>   Filter the right CSV data set by the given Polars SQL
-                           expression BEFORE the join. Only rows where it
-                           evaluates to true are kept.
+                           expression BEFORE the join. Only rows that evaluates
+                           to true are used in the join.
     --validate <arg>       Validate the join keys BEFORE performing the join.
                            Valid values are:
                              none - No validation is performed.
@@ -64,15 +66,27 @@ joinp options:
                            [default: none]
     --nulls                When set, joins will work on empty fields.
                            Otherwise, empty fields are completely ignored.
-    --try-parsedates       When set, the join will attempt to parse the columns
-                           as dates. If the parse fails, columns remain as strings.
-                           This is useful when the join columns are formatted as 
+    --streaming            When set, the join will be done in a streaming fashion.
+                           Note that this will make the join slower. Only use this
+                           when you get an out of memory error.
+
+                           POLARS CSV PARSING OPTIONS:
+    --try-parsedates       When set, will attempt to parse the columns as dates.
+                           If the parse fails, columns remain as strings.
+                           This is useful when the join keys are formatted as 
                            dates with differing date formats, as the date formats
                            will be normalized. Note that this will be automatically 
                            enabled when using asof joins.
-    --streaming            When set, the join will be done in a streaming fashion.
-                           This is useful when joining large files that do not fit
-                           in memory. Note that this will make the join slower.                       
+    --infer-len <arg>      The number of rows to scan when inferring the schema of the CSV.
+                           Set to 0 to do a full table scan (warning: very slow).
+                           (default: 250)
+    --low-memory           Use low memory mode when parsing CSVs. This will use less memory
+                           but will be slower. It will also process the join in streaming mode.
+                           Only use this when you get an out of memory error.
+    --ignore-errors        Ignore errors when parsing CSVs. If set, rows with errors
+                           will be skipped. If not set, the query will fail.
+                           Only use this when debugging queries, as polars does batched
+                           parsing and will skip the entire batch where the error occurred.
 
                            ASOF JOIN OPTIONS:
     --asof                 Do an 'asof' join. This is similar to a left inner
@@ -177,8 +191,11 @@ struct Args {
     flag_filter_right:    Option<String>,
     flag_validate:        Option<String>,
     flag_nulls:           bool,
-    flag_try_parsedates:  bool,
     flag_streaming:       bool,
+    flag_try_parsedates:  bool,
+    flag_infer_len:       usize,
+    flag_low_memory:      bool,
+    flag_ignore_errors:   bool,
     flag_asof:            bool,
     flag_left_by:         Option<String>,
     flag_right_by:        Option<String>,
@@ -209,7 +226,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if args.flag_asof {
         args.flag_try_parsedates = true;
     }
-    let join = args.new_join(args.flag_try_parsedates)?;
+    let join = args.new_join(
+        args.flag_try_parsedates,
+        args.flag_infer_len,
+        args.flag_low_memory,
+        args.flag_ignore_errors,
+    )?;
 
     // safety: flag_validate is always is_some() as it has a default value
     args.flag_validate = Some(args.flag_validate.unwrap().to_lowercase());
@@ -221,7 +243,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         Some(s) => return fail_clierror!("Invalid join validation: {s}"),
     };
 
-    let join_shape = match (
+    let join_shape: (usize, usize) = match (
         args.flag_left,
         args.flag_left_anti,
         args.flag_left_semi,
@@ -304,10 +326,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 }
 
 struct JoinStruct {
-    lf1:             LazyFrame,
-    sel1:            String,
-    lf2:             LazyFrame,
-    sel2:            String,
+    left_lf:         LazyFrame,
+    left_sel:        String,
+    right_lf:        LazyFrame,
+    right_sel:       String,
     output:          Option<String>,
     delim:           u8,
     streaming:       bool,
@@ -325,16 +347,24 @@ impl JoinStruct {
         validation: JoinValidation,
         asof_join: bool,
     ) -> CliResult<(usize, usize)> {
-        let selcols1: Vec<_> = self.sel1.split(',').map(polars::lazy::dsl::col).collect();
-        let selcols2: Vec<_> = self.sel2.split(',').map(polars::lazy::dsl::col).collect();
+        let left_selcols: Vec<_> = self
+            .left_sel
+            .split(',')
+            .map(polars::lazy::dsl::col)
+            .collect();
+        let right_selcols: Vec<_> = self
+            .right_sel
+            .split(',')
+            .map(polars::lazy::dsl::col)
+            .collect();
 
-        let selcols1_len = selcols1.len();
-        let selcols2_len = selcols2.len();
+        let left_selcols_len = left_selcols.len();
+        let right_selcols_len = right_selcols.len();
 
-        if selcols1_len != selcols2_len {
+        if left_selcols_len != right_selcols_len {
             return fail_clierror!(
-                "Both columns1 ({selcols1:?}) and columns2 ({selcols2:?}) must specify the same \
-                 number of columns ({selcols1_len } != {selcols2_len})."
+                "Both columns1 ({left_selcols:?}) and columns2 ({right_selcols:?}) must specify \
+                 the same number of columns ({left_selcols_len } != {right_selcols_len})."
             );
         }
 
@@ -350,10 +380,10 @@ impl JoinStruct {
         };
 
         let mut join_results = if jointype == JoinType::Cross {
-            self.lf1
+            self.left_lf
                 .with_optimizations(optimize_all)
                 .join_builder()
-                .with(self.lf2.with_optimizations(optimize_all))
+                .with(self.right_lf.with_optimizations(optimize_all))
                 .how(JoinType::Cross)
                 .validate(validation)
                 .force_parallel(true)
@@ -362,16 +392,16 @@ impl JoinStruct {
         } else {
             if asof_join {
                 // sort by the asof columns, as asof joins require sorted join column data
-                self.lf1 = self.lf1.sort(&self.sel1, SortOptions::default());
-                self.lf2 = self.lf2.sort(&self.sel2, SortOptions::default());
+                self.left_lf = self.left_lf.sort(&self.left_sel, SortOptions::default());
+                self.right_lf = self.right_lf.sort(&self.right_sel, SortOptions::default());
             }
 
-            self.lf1
+            self.left_lf
                 .with_optimizations(optimize_all)
                 .join_builder()
-                .with(self.lf2.with_optimizations(optimize_all))
-                .left_on(selcols1)
-                .right_on(selcols2)
+                .with(self.right_lf.with_optimizations(optimize_all))
+                .left_on(left_selcols)
+                .right_on(right_selcols)
                 .how(jointype)
                 .validate(validation)
                 .force_parallel(true)
@@ -406,42 +436,60 @@ impl JoinStruct {
 }
 
 impl Args {
-    fn new_join(&self, try_parse_dates: bool) -> CliResult<JoinStruct> {
+    fn new_join(
+        &self,
+        try_parsedates: bool,
+        infer_len: usize,
+        low_memory: bool,
+        ignore_errors: bool,
+    ) -> CliResult<JoinStruct> {
         let delim = if let Some(delimiter) = self.flag_delimiter {
             delimiter.as_byte()
         } else {
             b','
         };
 
-        let mut lf1 = LazyCsvReader::new(&self.arg_input1)
+        let num_rows = if infer_len == 0 {
+            None
+        } else {
+            Some(infer_len)
+        };
+
+        let mut left_lf = LazyCsvReader::new(&self.arg_input1)
             .has_header(true)
             .with_missing_is_null(self.flag_nulls)
             .with_delimiter(delim)
-            .with_try_parse_dates(try_parse_dates)
+            .with_infer_schema_length(num_rows)
+            .with_try_parse_dates(try_parsedates)
+            .low_memory(low_memory)
+            .with_ignore_errors(ignore_errors)
             .finish()?;
 
         if let Some(filter_left) = &self.flag_filter_left {
             let filter_left_expr = polars::sql::sql_expr(filter_left)?;
-            lf1 = lf1.filter(filter_left_expr);
+            left_lf = left_lf.filter(filter_left_expr);
         }
 
-        let mut lf2 = LazyCsvReader::new(&self.arg_input2)
+        let mut right_lf = LazyCsvReader::new(&self.arg_input2)
             .has_header(true)
             .with_missing_is_null(self.flag_nulls)
             .with_delimiter(delim)
-            .with_try_parse_dates(try_parse_dates)
+            .with_infer_schema_length(num_rows)
+            .with_try_parse_dates(try_parsedates)
+            .low_memory(low_memory)
+            .with_ignore_errors(ignore_errors)
             .finish()?;
 
         if let Some(filter_right) = &self.flag_filter_right {
             let filter_right_exprt = polars::sql::sql_expr(filter_right)?;
-            lf2 = lf2.filter(filter_right_exprt);
+            right_lf = right_lf.filter(filter_right_exprt);
         }
 
         Ok(JoinStruct {
-            lf1,
-            sel1: self.arg_columns1.clone(),
-            lf2,
-            sel2: self.arg_columns2.clone(),
+            left_lf,
+            left_sel: self.arg_columns1.clone(),
+            right_lf,
+            right_sel: self.arg_columns2.clone(),
             output: self.flag_output.clone(),
             delim,
             streaming: self.flag_streaming,
