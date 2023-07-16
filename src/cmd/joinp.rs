@@ -48,11 +48,12 @@ joinp options:
                            equal to N * M, where N and M correspond to the
                            number of rows in the given data sets, respectively.
                            The columns1 and columns2 arguments are ignored.
-    --filter-left <arg>    Filter the left CSV data set by the given expression
-                           BEFORE the join. Only rows where the expression
+
+    --filter-left <arg>    Filter the left CSV data set by the given Polars SQL
+                           expression BEFORE the join. Only rows where it
                            evaluates to true are kept.
-    --filter-right <arg>   Filter the right CSV data set by the given expression
-                           BEFORE the join. Only rows where the expression
+    --filter-right <arg>   Filter the right CSV data set by the given Polars SQL
+                           expression BEFORE the join. Only rows where it
                            evaluates to true are kept.
     --nulls                When set, joins will work on empty fields.
                            Otherwise, empty fields are completely ignored.
