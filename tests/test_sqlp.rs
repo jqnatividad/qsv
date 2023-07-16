@@ -315,9 +315,12 @@ fn sqlp_null_aware_equality_checks() {
     let mut cmd = wrk.command("sqlp");
 
     cmd.arg("test_null.csv").args(["--null-value", "NULL"]).arg(
-        "SELECT (a = b) as \"1_eq_unaware\", (a != b) as \"2_neq_unaware\", (a <=> b) as \
-         \"3_eq_aware\", (a IS NOT DISTINCT FROM b) as \"4_eq_aware\", (a IS DISTINCT FROM b) as \
-         \"5_neq_aware\" FROM test_null",
+        r#"SELECT (a = b) as "1_eq_unaware",
+           (a != b) as "2_neq_unaware", 
+           (a <=> b) as "3_eq_aware", 
+           (a IS NOT DISTINCT FROM b) as "4_eq_aware", 
+           (a IS DISTINCT FROM b) as "5_neq_aware" 
+         FROM test_null"#,
     );
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
