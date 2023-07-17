@@ -24,15 +24,24 @@ Example queries:
 
   qsv sqlp data.csv 'SELECT col1, count(*) AS cnt FROM data GROUP BY col1 ORDER BY cnt DESC, col1 ASC'
 
-  qsv sqlp data.csv data2.csv script.sql --format json --output data.json
+  qsv sqlp data.csv data2.csv data3.csv data4.csv script.sql --format json --output data.json
 
   qsv sqlp data.csv "select lower(col1), substr(col2, 2, 4) from data WHERE starts_with(col1, 'foo')"
+
+  # spaceship operator: "<=>" (three-way comparison operator)
+  #  returns -1 if left < right, 0 if left == right, 1 if left > right
+  # https://en.wikipedia.org/wiki/Three-way_comparison#Spaceship_operator
+  qsv sqlp data.csv data2.csv "select data.col2 <=> data2.col2 from data join data2 on data.col1 = data2.col1"
 
   # regex operators: "~" (contains pattern, case-sensitive); "~*" (contains pattern, case-insensitive)
   #   "!~" (does not contain pattern, case-sensitive); "!~*" (does not contain pattern, case-insensitive)
     qsv sqlp data.csv "select * from data WHERE col1 ~ '^foo' AND col2 > 10"
     qsv sqlp data.csv "select * from data WHERE col1 !~* 'bar$' AND col2 > 10"
 
+  # regexp_like function: regexp_like(<string>, <pattern>, <optional flags>)
+  # returns true if <string> matches <pattern>, false otherwise
+  #   <optional flags> can be one or more of the following:
+  #   'c' (case-sensitive - default), 'i' (case-insensitive), 'm' (multiline)
   qsv sqlp data.csv "select * from data WHERE regexp_like(col1, '^foo') AND col2 > 10"
   # case-insensitive regexp_like
   qsv sqlp data.csv "select * from data WHERE regexp_like(col1, '^foo', 'i') AND col2 > 10"
@@ -128,7 +137,6 @@ use std::{
     io,
     io::{BufWriter, Read, Write},
     path::{Path, PathBuf},
-    str,
     str::FromStr,
     time::Instant,
 };
@@ -154,7 +162,7 @@ use crate::{
 static DEFAULT_GZIP_COMPRESSION_LEVEL: u8 = 6;
 static DEFAULT_ZSTD_COMPRESSION_LEVEL: i32 = 3;
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Clone)]
 struct Args {
     arg_input:            Vec<PathBuf>,
     arg_sql:              String,
@@ -176,7 +184,7 @@ struct Args {
     flag_quiet:           bool,
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Default, Clone)]
 enum OutputMode {
     #[default]
     Csv,
@@ -289,7 +297,7 @@ impl FromStr for OutputMode {
     }
 }
 
-#[derive(Debug, Default, Copy, Clone)]
+#[derive(Default, Copy, Clone)]
 enum PqtCompression {
     Uncompressed,
     Gzip,
@@ -370,7 +378,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 lossy_table_name = table.to_string_lossy();
                 &lossy_table_name
             });
-
         table_aliases.insert(table_name.to_string(), format!("_t_{}", idx + 1));
 
         if log::log_enabled!(log::Level::Debug) {
@@ -378,16 +385,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 "Registering table: {table_name} as {alias} -  Delimiter: {delim} \
                  Infer_schema_len: {num_rows:?} try_parse_dates: {parse_dates} ignore_errors: \
                  {ignore_errors}, low_memory: {low_memory}",
-                table_name = table_name,
                 alias = table_aliases.get(table_name).unwrap(),
-                delim = delim,
-                num_rows = num_rows,
                 parse_dates = args.flag_try_parsedates,
                 ignore_errors = args.flag_ignore_errors,
                 low_memory = args.flag_low_memory
             );
         }
-
         let lf = LazyCsvReader::new(table)
             .has_header(true)
             .with_missing_is_null(true)
@@ -397,7 +400,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .with_ignore_errors(args.flag_ignore_errors)
             .low_memory(args.flag_low_memory)
             .finish()?;
-
         ctx.register(table_name, lf.with_optimizations(optimize_all));
     }
 
