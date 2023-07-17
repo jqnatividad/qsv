@@ -66,7 +66,7 @@ Note that `--jsonl` may not be used alongside `--json`, nor may they both be set
 
 Input tokens may include the output of `qsv stats` and `qsv frequency` from your dataset, which can be large based on your dataset's size. Therefore we use `gpt-3.5-turbo-16k` as the default model for `describegpt` as it has a maximum token limit of 16,384.
 
-It is highly recommended to set the `--max-tokens` option to set the maximum number of tokens in the completion output. Your output may be truncated if you set this value too low. The default is set to `50` as a safety measure.
+It is highly recommended to set the `--max-tokens` option to set the maximum number of tokens in the completion output. Your output may be truncated if you set this value too low or you may receive errors depending on your options. The default is set to `50` as a safety measure.
 
 ## `--prompt-file`
 
@@ -74,17 +74,18 @@ With `describegpt` you can use a prompt file to add your own custom prompts and 
 
 If you do not specify a prompt file, default prompts will be used.
 
-| Field                | Description                                                                              |
-| -------------------- | ---------------------------------------------------------------------------------------- |
-| `name`               | The name of your prompt file.                                                            |
-| `description`        | A description of your prompt file.                                                       |
-| `author`             | Your name.                                                                               |
-| `version`            | The version of your prompt file.                                                         |
-| `tokens`             | The maximum number of tokens in the completion output.                                   |
-| `dictionary_prompt`  | The prompt for the `--dictionary` option.                                                |
-| `description_prompt` | The prompt for the `--description` option.                                               |
-| `tags_prompt`        | The prompt for the `--tags` option.                                                      |
-| `json`               | Whether or not the output should be in JSON format (refer to [`--json`](#json) section). |
+| Field                | Description                                                                                 |
+| -------------------- | ------------------------------------------------------------------------------------------- |
+| `name`               | The name of your prompt file.                                                               |
+| `description`        | A description of your prompt file.                                                          |
+| `author`             | Your name.                                                                                  |
+| `version`            | The version of your prompt file.                                                            |
+| `tokens`             | The maximum number of tokens in the completion output.                                      |
+| `dictionary_prompt`  | The prompt for the `--dictionary` option.                                                   |
+| `description_prompt` | The prompt for the `--description` option.                                                  |
+| `tags_prompt`        | The prompt for the `--tags` option.                                                         |
+| `json`               | Whether or not the output should be in JSON format (refer to [`--json`](#json) section).    |
+| `jsonl`              | Whether or not the output should be in JSONL format (refer to [`--jsonl`](#jsonl) section). |
 
 All fields must be present in your prompt file. If you do not want to use a certain prompt, you can set it to an empty string.
 
@@ -113,4 +114,4 @@ Here is an example of a prompt:
 }
 ```
 
-Simply save this as a JSON file and use `--prompt-file` to run it with `describegpt`.
+Note that this example has `tokens` set to `50` by default but you may want to increase this value to not result in errors as mentioned in the [`--json`](#json) & [`--max-tokens`](#max-tokens-value) section.
