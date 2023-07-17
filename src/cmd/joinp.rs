@@ -68,7 +68,7 @@ joinp options:
                            Otherwise, empty fields are completely ignored.
     --streaming            When set, the join will be done in a streaming fashion.
                            Note that this will make the join slower. Only use this
-                           when you get an out of memory error.
+                           when you get out of memory errors.
 
                            POLARS CSV PARSING OPTIONS:
     --try-parsedates       When set, will attempt to parse the columns as dates.
@@ -82,7 +82,7 @@ joinp options:
                            (default: 250)
     --low-memory           Use low memory mode when parsing CSVs. This will use less memory
                            but will be slower. It will also process the join in streaming mode.
-                           Only use this when you get an out of memory error.
+                           Only use this when you get out of memory errors.
     --ignore-errors        Ignore errors when parsing CSVs. If set, rows with errors
                            will be skipped. If not set, the query will fail.
                            Only use this when debugging queries, as polars does batched
@@ -251,24 +251,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         args.flag_cross,
         args.flag_asof,
     ) {
-        (false, false, false, false, false, false) => {
-            join.polars_join(JoinType::Inner, validation, false)
-        }
-        (true, false, false, false, false, false) => {
-            join.polars_join(JoinType::Left, validation, false)
-        }
-        (false, true, false, false, false, false) => {
-            join.polars_join(JoinType::Anti, validation, false)
-        }
-        (false, false, true, false, false, false) => {
-            join.polars_join(JoinType::Semi, validation, false)
-        }
-        (false, false, false, true, false, false) => {
-            join.polars_join(JoinType::Outer, validation, false)
-        }
-        (false, false, false, false, true, false) => {
-            join.polars_join(JoinType::Cross, validation, false)
-        }
+        (false, false, false, false, false, false) => join.run(JoinType::Inner, validation, false),
+        (true, false, false, false, false, false) => join.run(JoinType::Left, validation, false),
+        (false, true, false, false, false, false) => join.run(JoinType::Anti, validation, false),
+        (false, false, true, false, false, false) => join.run(JoinType::Semi, validation, false),
+        (false, false, false, true, false, false) => join.run(JoinType::Outer, validation, false),
+        (false, false, false, false, true, false) => join.run(JoinType::Cross, validation, false),
         (false, false, false, false, false, true) => {
             // safety: flag_strategy is always is_some() as it has a default value
             args.flag_strategy = Some(args.flag_strategy.unwrap().to_lowercase());
@@ -313,7 +301,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         .collect(),
                 );
             }
-            join.polars_join(JoinType::AsOf(asof_options), validation, true)
+            join.run(JoinType::AsOf(asof_options), validation, true)
         }
         _ => fail!("Please pick exactly one join operation."),
     }?;
@@ -341,7 +329,7 @@ struct JoinStruct {
 }
 
 impl JoinStruct {
-    fn polars_join(
+    fn run(
         mut self,
         jointype: JoinType,
         validation: JoinValidation,
