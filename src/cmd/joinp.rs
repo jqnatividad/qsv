@@ -22,7 +22,8 @@ Usage:
 joinp arguments:
     Both <input1> and <input2> files need to have headers. Stdin is not supported.
 
-    The columns arguments specify the columns to join for each input. Columns are referenced by name. Specify multiple columns by separating them with a comma.
+    The columns arguments specify the columns to join for each input. Columns are
+    referenced by name. Specify multiple columns by separating them with a comma.
     Both <columns1> and <columns2> must specify exactly the same number of columns.
 
     Note that <input1> is the left CSV data set and <input2> is the right CSV data set.
