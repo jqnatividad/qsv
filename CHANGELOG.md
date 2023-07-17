@@ -6,6 +6,89 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.109.0] - 2023-07-17
+This is a monstrous👹 release with lots of new features and improvements!
+
+The biggest new feature is the `describegpt` command which allows you to use OpenAI's Large Language Models to generate extended metadata from a CSV. We created this command primarily for [CKAN](https://ckan.org) and [Datapusher+](https://github.com/dathere/datapusher-plus#datapusher) so we can infer descriptions, tags and to automatically created annotated data dictionaries using the CSV's summary statistics and frequency tables. In that way, it works even for very large CSV files without consuming too many Open AI tokens.
+This is a very powerful feature and we are looking forward to seeing what people do with it. Thanks @rzmk for all the work on this!
+
+This release also features major improvements in the `sqlp` and `joinp` commands thanks to all the new capabilities of [Polars 0.31.1](https://github.com/pola-rs/polars/releases/tag/rs-0.31.1). 
+
+Polars SQL's capabilities have been vastly improved in 0.31.1 with numerous new SQL functions and operators, and they're all available using the `sqlp` command.
+
+The `joinp` command has several new options for CSV parsing, for pre-join filtering (`--filter-left` and `--filter-right`), and pre-join validation with the `--validate` option. Two new asof join variants (`--left_by` and `right_by`) were also added.
+
+### Added
+* `describegpt` command by @rzmk in https://github.com/jqnatividad/qsv/pull/1036
+* `describegpt`: minor refactoring in https://github.com/jqnatividad/qsv/pull/1104
+* `describegpt`: `--key` & QSV_OPENAI_API_KEY by @rzmk in https://github.com/jqnatividad/qsv/pull/1105
+* `describegpt`: add `--user-agent` in help message by @rzmk in https://github.com/jqnatividad/qsv/pull/1095
+* `describegpt`: json output format for redirection by @rzmk in https://github.com/jqnatividad/qsv/pull/1107
+* `describegpt`: add testing (resolves #1114) by @rzmk in https://github.com/jqnatividad/qsv/pull/1115
+* `describegpt`: add `--model` option (resolves #1101) by @rzmk in https://github.com/jqnatividad/qsv/pull/1117
+* `describegpt`: polishing https://github.com/jqnatividad/qsv/pull/1122
+* `describegpt`: add `--jsonl` option (resolves #1086) by @rzmk in https://github.com/jqnatividad/qsv/pull/1127
+* `describegpt`: add `--prompt-file` option (resolves #1085) by @rzmk in https://github.com/jqnatividad/qsv/pull/1120
+* `joinp`: added  `asof_by` join variant; added CSV formatting options consistent with sqlp CSV format options https://github.com/jqnatividad/qsv/pull/1090
+* `joinp`: add `--filter-left` and `--filter-right` options https://github.com/jqnatividad/qsv/pull/1146
+* `joinp`: add `--validate` option https://github.com/jqnatividad/qsv/pull/1147
+* `fetch` & `fetchpost`: add `--no-cache` option https://github.com/jqnatividad/qsv/pull/1112
+* `sniff`: detect file kind along with mime type https://github.com/jqnatividad/qsv/pull/1137
+* user-agent metadata now contains the current command's name https://github.com/jqnatividad/qsv/pull/1093
+
+### Changed
+* `fetch` & `fetchpost`: --redis and --no-cache are mutually exclusive https://github.com/jqnatividad/qsv/pull/1113
+* `luau`: adapt to mlua 0.9.0-rc.1 API changes https://github.com/jqnatividad/qsv/pull/1129
+* upgrade to Polars 0.31.1 https://github.com/jqnatividad/qsv/pull/1139
+* Bump MSRV to latest Rust stable (1.71.0)
+* pin Rust nightly to 2023-07-15
+* Bump uuid from 1.3.4 to 1.4.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1073
+* Bump tokio from 1.28.2 to 1.29.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1077
+* Bump tokio from 1.29.0 to 1.29.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1087
+* Bump sysinfo from 0.29.2 to 0.29.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1088
+* build(deps): bump sysinfo from 0.29.4 to 0.29.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/1148
+* Bump jql-runner from 6.0.9 to 7.0.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1092
+* build(deps): bump jql-runner from 7.0.0 to 7.0.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1132
+* Bump itoa from 1.0.6 to 1.0.7 by @dependabot in https://github.com/jqnatividad/qsv/pull/1091
+* Bump itoa from 1.0.7 to 1.0.8 by @dependabot in https://github.com/jqnatividad/qsv/pull/1098
+* build(deps): bump itoa from 1.0.8 to 1.0.9 by @dependabot in https://github.com/jqnatividad/qsv/pull/1142
+* Bump serde from 1.0.164 to 1.0.165 by @dependabot in https://github.com/jqnatividad/qsv/pull/1094
+* Bump serde from 1.0.165 to 1.0.166 by @dependabot in https://github.com/jqnatividad/qsv/pull/1100
+* Bump serde from 1.0.166 to 1.0.167 by @dependabot in https://github.com/jqnatividad/qsv/pull/1116
+* build(deps): bump serde from 1.0.167 to 1.0.171 by @dependabot in https://github.com/jqnatividad/qsv/pull/1118
+* Bump pyo3 from 0.19.0 to 0.19.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1099
+* Bump ryu from 1.0.13 to 1.0.14 by @dependabot in https://github.com/jqnatividad/qsv/pull/1096
+* build(deps): bump ryu from 1.0.14 to 1.0.15 by @dependabot in https://github.com/jqnatividad/qsv/pull/1144
+* Bump strum_macros from 0.25.0 to 0.25.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1097
+* Bump serde_json from 1.0.99 to 1.0.100 by @dependabot in https://github.com/jqnatividad/qsv/pull/1103
+* build(deps): bump serde_json from 1.0.100 to 1.0.101 by @dependabot in https://github.com/jqnatividad/qsv/pull/1123
+* build(deps): bump serde_json from 1.0.101 to 1.0.102 by @dependabot in https://github.com/jqnatividad/qsv/pull/1125
+* build(deps): bump serde_json from 1.0.102 to 1.0.103 by @dependabot in https://github.com/jqnatividad/qsv/pull/1143
+* Bump serde_stacker from 0.1.8 to 0.1.9 by @dependabot in https://github.com/jqnatividad/qsv/pull/1110
+* Bump regex from 1.8.4 to 1.9.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1109
+* build(deps): bump regex from 1.9.0 to 1.9.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1119
+* Bump jsonschema from 0.17.0 to 0.17.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1108
+* build(deps): bump cpc from 1.9.1 to 1.9.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1121
+* build(deps): bump governor from 0.5.1 to 0.6.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1128
+* build(deps): bump actions/setup-python from 4.6.1 to 4.7.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1134
+* build(deps): bump file-format from 0.17.3 to 0.18.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1136
+* build(deps): bump serde_stacker from 0.1.9 to 0.1.10 by @dependabot in https://github.com/jqnatividad/qsv/pull/1141
+* build(deps): bump semver from 1.0.17 to 1.0.18 by @dependabot in https://github.com/jqnatividad/qsv/pull/1140
+* cargo update bump several indirect dependencies
+
+### Fixed
+* `fmt`: Quote ASCII format differently by @LemmingAvalanche in https://github.com/jqnatividad/qsv/pull/1075
+* `apply`: make `dynfmt` subcommand case sensitive. Fixes #1126 https://github.com/jqnatividad/qsv/pull/1130
+* `applydp`: make `dynfmt` case-sensitive  https://github.com/jqnatividad/qsv/pull/1131
+* `describegpt`: docs/Describegpt.md: typo 'a' --> 'an' by @rzmk in https://github.com/jqnatividad/qsv/pull/1135
+* `tojsonl`: support snappy-compressed input. Fixes #1133 https://github.com/jqnatividad/qsv/pull/1145
+* security.md: fix mailto text by @rzmk in https://github.com/jqnatividad/qsv/pull/1079
+
+## New Contributors
+* @LemmingAvalanche made their first contribution in https://github.com/jqnatividad/qsv/pull/1075
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.108.0...0.109.0
+
 ## [0.108.0] - 2023-06-25
 Another big Quicksilver release with lots of new features and improvements!
 
