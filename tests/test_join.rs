@@ -151,7 +151,11 @@ join_test!(join_left_semi, |wrk: Workdir,
                             headers: bool| {
     cmd.arg("--left-semi");
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = make_rows(headers, true, vec![svec!["Buffalo", "NY"]]);
+    let expected = make_rows(
+        headers,
+        true,
+        vec![svec!["Boston", "MA"], svec!["Buffalo", "NY"]],
+    );
     assert_eq!(got, expected);
 });
 

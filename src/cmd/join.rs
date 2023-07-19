@@ -226,23 +226,17 @@ impl<R: io::Read + io::Seek, W: io::Write> IoState<R, W> {
 
     fn left_join(mut self, anti: bool) -> CliResult<()> {
         let validx = ValueIndex::new(self.rdr2, &self.sel2, self.casei, self.nulls)?;
-        let mut first_row: bool = true;
-        for row in self.rdr1.byte_records() {
-            let row = row?;
-            let key = get_row_key(&self.sel1, &row, self.casei);
+        let mut row;
+        let mut key;
+        for curr_row in self.rdr1.byte_records() {
+            row = curr_row?;
+            key = get_row_key(&self.sel1, &row, self.casei);
             if validx.values.get(&key).is_none() {
                 if anti {
                     self.wtr.write_record(&row)?;
                 }
             } else if !anti {
-                // semi_join
-                if first_row {
-                    first_row = false;
-                } else {
-                    // since the first row in a left-semi is
-                    // the header, even if no-header is on
-                    self.wtr.write_record(&row)?;
-                }
+                self.wtr.write_record(&row)?;
             }
         }
         Ok(())
