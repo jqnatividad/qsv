@@ -2466,9 +2466,9 @@ checksum = "72167d68f5fce3b8655487b8038691a3c9984ee769590f93f2a631f4ad64e4f5"
 
 [[package]]
 name = "jql-parser"
-version = "7.0.1"
+version = "7.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b6bcdfd142d329ac9120c33d191ac0b0c4a1ad89417105bdfdc4e3b5d97bb222"
+checksum = "b301a6e63a415e6acb7583bd7c84f4f445fa84eb430e9a0922a29b317e10ae82"
 dependencies = [
  "nom",
  "thiserror",
@@ -2476,9 +2476,9 @@ dependencies = [
 
 [[package]]
 name = "jql-runner"
-version = "7.0.1"
+version = "7.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4716cee51c3817dcfee558ce1bdd75bb73a7d179f2a7fcb1badd2a1835bb7255"
+checksum = "ce72551e059c00d7a6508ec8d17af7790a2af3beb868f8f05dd185cd5a48c6f1"
 dependencies = [
  "jql-parser",
  "rayon",
