@@ -87,15 +87,15 @@ jobs:
             default-features: --no-default-features
             addl-qsvlite-features:
             addl-qsvdp-features: luau
-          - os: macos-12
-            os-name: macos
-            target: x86_64-apple-darwin
-            architecture: x86_64
-            use-cross: false
-            addl-build-args: --features=apply,generate,luau,fetch,foreach,self_update,polars
-            default-features: --no-default-features
-            addl-qsvlite-features:
-            addl-qsvdp-features: luau
+          # - os: macos-12
+          #   os-name: macos
+          #   target: x86_64-apple-darwin
+          #   architecture: x86_64
+          #   use-cross: false
+          #   addl-build-args: --features=apply,generate,luau,fetch,foreach,self_update,polars
+          #   default-features: --no-default-features
+          #   addl-qsvlite-features:
+          #   addl-qsvdp-features: luau
           # - os: macos-12
           #   os-name: macos
           #   target: aarch64-apple-darwin
