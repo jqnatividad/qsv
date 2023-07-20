@@ -20,7 +20,7 @@
 
 </div>
 
-> ℹ️ **NOTE:** qsv is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's May 2018 release](https://github.com/BurntSushi/xsv/issues/267). On top of xsv's 20 commands, it adds numerous new features; 36 additional commands; 6 `apply` subcommands & 35 operations; 5 `to` subcommands; 3 `cat` subcommands; and 4 `snappy` subcommands.
+> ℹ️ **NOTE:** Quicksilver (qsv) is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's May 2018 release](https://github.com/BurntSushi/xsv/issues/267). On top of xsv's 20 commands, it adds numerous new features; 36 additional commands; 6 `apply` subcommands & 35 operations; 5 `to` subcommands; 3 `cat` subcommands; and 4 `snappy` subcommands.
 See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for more details.
 
 ## Available commands
