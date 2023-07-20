@@ -467,7 +467,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         record.clear();
         for cell in row {
             if row_idx == 0 {
-                // its the header row, check the dates whitelist
                 info!("processing first row...");
                 let col_name: String = match *cell {
                     DataType::Empty => String::new(),
@@ -510,11 +509,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 }
             };
 
-            // Dates are stored as floats in Excel's older binary format (XLS - Excel 97-2003.)
-            // That's why we need the --dates-whitelist, so we can convert the float to a date.
-            // However, with the more recent XLSX format (Excel 2007 & later), we can get a cell's
-            // format as a cell attribute. So we can automatically process a cell as a date,
-            // even if its column is NOT in the whitelist
+            // Dates are stored as floats in Excel, so if its a float value, we need to check
+            // if its a date. If its a date, we need to convert it to a string using the
+            // specified date format. If its not a date, we need to convert it to a string
+            // using ryu.
             #[allow(clippy::cast_precision_loss)]
             if float_flag {
                 if cell_date_flag {
@@ -528,12 +526,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                                 dt.to_string()
                             } else {
                                 // a date format was specified, so we'll use it
-                                let mut formatted = String::new();
-                                if write!(formatted, "{}", dt.format(&date_format)).is_err() {
+                                let mut formatted_date = String::new();
+                                if write!(formatted_date, "{}", dt.format(&date_format)).is_err() {
                                     // if there was a format error, revert to the default format
-                                    formatted = dt.to_string();
+                                    formatted_date = dt.to_string();
                                 }
-                                formatted
+                                formatted_date
                             }
                         } else {
                             format!("ERROR: Cannot convert {float_val} to datetime")
@@ -544,11 +542,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         if date_format.is_empty() {
                             d.to_string()
                         } else {
-                            let mut formatted = String::new();
-                            if write!(formatted, "{}", d.format(&date_format)).is_err() {
-                                formatted = d.to_string();
+                            let mut formatted_date = String::new();
+                            if write!(formatted_date, "{}", d.format(&date_format)).is_err() {
+                                formatted_date = d.to_string();
                             }
-                            formatted
+                            formatted_date
                         }
                     } else {
                         format!("ERROR: Cannot convert {float_val} to date")
