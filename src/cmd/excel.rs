@@ -462,6 +462,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
     let mut work_date;
 
+    // TODO: Explore using rayon to parallelize this and make it faster
     info!("exporting sheet ({sheet})...");
     for (row_idx, row) in range.rows().enumerate() {
         record.clear();
