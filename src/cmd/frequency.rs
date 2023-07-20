@@ -152,7 +152,7 @@ impl Args {
 
     pub fn parallel_ftables(
         &self,
-        idx: &mut Indexed<fs::File, fs::File>,
+        idx: &Indexed<fs::File, fs::File>,
     ) -> CliResult<(Headers, FTables)> {
         let mut rdr = self.rconfig().reader()?;
         let (headers, sel) = self.sel_headers(&mut rdr)?;
