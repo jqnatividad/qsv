@@ -176,9 +176,11 @@ impl<R: io::Read + io::Seek, W: io::Write> IoState<R, W> {
     fn inner_join(mut self) -> CliResult<()> {
         let mut scratch = csv::ByteRecord::new();
         let mut validx = ValueIndex::new(self.rdr2, &self.sel2, self.casei, self.nulls)?;
-        for row in self.rdr1.byte_records() {
-            let row = row?;
-            let key = get_row_key(&self.sel1, &row, self.casei);
+        let mut row;
+        let mut key;
+        for curr_row in self.rdr1.byte_records() {
+            row = curr_row?;
+            key = get_row_key(&self.sel1, &row, self.casei);
             if let Some(rows) = validx.values.get(&key) {
                 for &rowi in rows {
                     validx.idx.seek(rowi as u64)?;
@@ -201,9 +203,11 @@ impl<R: io::Read + io::Seek, W: io::Write> IoState<R, W> {
         let mut scratch = csv::ByteRecord::new();
         let (_, pad2) = self.get_padding()?;
         let mut validx = ValueIndex::new(self.rdr2, &self.sel2, self.casei, self.nulls)?;
-        for row in self.rdr1.byte_records() {
-            let row = row?;
-            let key = get_row_key(&self.sel1, &row, self.casei);
+        let mut row;
+        let mut key;
+        for curr_row in self.rdr1.byte_records() {
+            row = curr_row?;
+            key = get_row_key(&self.sel1, &row, self.casei);
             if let Some(rows) = validx.values.get(&key) {
                 for &rowi in rows {
                     validx.idx.seek(rowi as u64)?;
@@ -249,9 +253,11 @@ impl<R: io::Read + io::Seek, W: io::Write> IoState<R, W> {
 
         // Keep track of which rows we've written from rdr2.
         let mut rdr2_written: Vec<_> = repeat(false).take(validx.num_rows).collect();
-        for row1 in self.rdr1.byte_records() {
-            let row1 = row1?;
-            let key = get_row_key(&self.sel1, &row1, self.casei);
+        let mut row1;
+        let mut key;
+        for curr_row1 in self.rdr1.byte_records() {
+            row1 = curr_row1?;
+            key = get_row_key(&self.sel1, &row1, self.casei);
             if let Some(rows) = validx.values.get(&key) {
                 for &rowi in rows {
                     rdr2_written[rowi] = true;
@@ -281,8 +287,9 @@ impl<R: io::Read + io::Seek, W: io::Write> IoState<R, W> {
         let mut pos = csv::Position::new();
         pos.set_byte(0);
         let mut row2 = csv::ByteRecord::new();
-        for row1 in self.rdr1.byte_records() {
-            let row1 = row1?;
+        let mut row1;
+        for curr_row1 in self.rdr1.byte_records() {
+            row1 = curr_row1?;
             self.rdr2.seek(pos.clone())?;
             if self.rdr2.has_headers() {
                 // Read and skip the header row, since CSV readers disable
