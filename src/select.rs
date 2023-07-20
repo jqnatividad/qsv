@@ -394,6 +394,7 @@ impl Selection {
         // This is horrifying.
         #[allow(clippy::unnecessary_wraps)]
         #[allow(clippy::trivially_copy_pass_by_ref)]
+        #[allow(clippy::needless_pass_by_ref_mut)]
         fn get_field<'c>(row: &mut &'c csv::ByteRecord, idx: &usize) -> Option<&'c [u8]> {
             Some(&row[*idx])
         }
@@ -451,6 +452,7 @@ impl NormalSelection {
         }
         #[allow(clippy::option_option)]
         #[allow(clippy::unnecessary_wraps)]
+        #[allow(clippy::needless_pass_by_ref_mut)]
         fn get_field<T>(set: &mut &[bool], t: (usize, T)) -> Option<Option<T>> {
             let (i, v) = t;
             if i < set.len() && set[i] {
