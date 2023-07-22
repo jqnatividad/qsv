@@ -24,9 +24,18 @@ Example queries:
 
   qsv sqlp data.csv 'SELECT col1, count(*) AS cnt FROM data GROUP BY col1 ORDER BY cnt DESC, col1 ASC'
 
+  qsv sqlp data.csv "select lower(col1), substr(col2, 2, 4) from data WHERE starts_with(col1, 'foo')"
+
+  # Use a SQL script to run a long, complex SQL query or to run SEVERAL SQL queries.
+  # When running several queries, each query needs to be separated by a semicolon,
+  # the last query will be returned as the result.
+  # Typically, earlier queries are used to create tables that can be used in later queries.
+  # See test_sqlp/sqlp_boston311_sql_script() for an example.
   qsv sqlp data.csv data2.csv data3.csv data4.csv script.sql --format json --output data.json
 
-  qsv sqlp data.csv "select lower(col1), substr(col2, 2, 4) from data WHERE starts_with(col1, 'foo')"
+  # use Common Table Expressions (CTEs) using WITH to simplify complex queries
+  qsv sqlp people.csv "WITH millenials AS (SELECT * FROM people WHERE age >= 25 and age <= 40) \
+    SELECT * FROM millenials WHERE STARTS_WITH(name,'C')"
 
   # spaceship operator: "<=>" (three-way comparison operator)
   #  returns -1 if left < right, 0 if left == right, 1 if left > right
@@ -46,10 +55,12 @@ Example queries:
   # case-insensitive regexp_like
   qsv sqlp data.csv "select * from data WHERE regexp_like(col1, '^foo', 'i') AND col2 > 10"
 
+  # use Parquet, JSONL and Arrow files in SQL queries
   qsv sqlp data.csv "select data.col1, t2.col1 from data join read_parquet('data2.parquet') as t2 ON data.col1 = t2.col1"
   qsv sqlp data.csv "select data.col1, t2.col1 from data join read_ndjson('data2.jsonl') as t2 on data.col1 = t2.col1"
   qsv sqlp data.csv "select data.col1, t2.col1 from data join read_ipc('data2.arrow') as t2 ON data.col1 = t2.col1"
 
+  # use stdin as input
   cat data.csv | qsv sqlp - 'select * from stdin'
   cat data.csv | qsv sqlp - data2.csv 'select * from stdin join data2 on stdin.col1 = data2.col1'
 
@@ -72,8 +83,8 @@ sqlp arguments:
                            named after the file name (without the extension), or as "_t_N"
                            where N is the 1-based index.
                            If the input ends with ".sql", the input will be read as a SQL script file,
-                           with each SQL statement separated by a semicolon. It will execute the
-                           statements in order, and the result of the LAST statement will be returned.
+                           with each SQL query separated by a semicolon. It will execute the queries
+                           in order, and the result of the LAST query will be returned as the result.
 
 sqlp options:
     --format <arg>            The output format to use. Valid values are:
