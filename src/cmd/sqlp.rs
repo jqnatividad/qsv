@@ -2,7 +2,7 @@ static USAGE: &str = r#"
 Run blazing-fast Polars SQL queries against several CSVs - replete with joins, aggregations,
 grouping, sorting, and more - working on larger than memory CSV files.
 
-Polars SQL is a subset of ANSI SQL, converting SQL queries to fast Polars LazyFrame expressions
+Polars SQL is a SQL dialect, converting SQL queries to fast Polars LazyFrame expressions
 (see https://pola-rs.github.io/polars-book/user-guide/sql/intro/).
 
 For a list of SQL functions and keywords supported by Polars SQL, see
