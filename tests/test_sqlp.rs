@@ -767,3 +767,54 @@ select ward,count(*) as cnt from temp_table2 group by ward order by cnt desc, wa
 
     assert_eq!(got, expected);
 }
+
+#[test]
+fn sqlp_boston311_cte_script() {
+    let wrk = Workdir::new("sqlp_boston311_cte");
+    let test_file = wrk.load_test_file("boston311-100.csv");
+
+    wrk.create_from_string(
+        "test.sql",
+        r#"with boston311_roxbury as (select * from "boston311-100" where neighborhood = 'Roxbury')
+select ward,count(*) as cnt from boston311_roxbury group by ward order by cnt desc, ward asc;"#,
+    );
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg(&test_file).arg("test.sql");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["ward", "cnt"],
+        svec!["Ward 11", "2"],
+        svec!["Ward 13", "2"],
+        svec!["Ward 8", "2"],
+        svec!["14", "1"],
+        svec!["Ward 12", "1"],
+    ];
+
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn sqlp_boston311_cte() {
+    let wrk = Workdir::new("sqlp_boston311_cte");
+    let test_file = wrk.load_test_file("boston311-100.csv");
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg(&test_file).arg(
+        r#"with boston311_roxbury as (select * from "boston311-100" where neighborhood = 'Roxbury')
+    select ward,count(*) as cnt from boston311_roxbury group by ward order by cnt desc, ward asc;"#,
+    );
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["ward", "cnt"],
+        svec!["Ward 11", "2"],
+        svec!["Ward 13", "2"],
+        svec!["Ward 8", "2"],
+        svec!["14", "1"],
+        svec!["Ward 12", "1"],
+    ];
+
+    assert_eq!(got, expected);
+}
