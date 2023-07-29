@@ -171,6 +171,7 @@ Luau options:
                              can "require" lua/luau library files from.
                              See https://www.lua.org/pil/8.1.html
                              [default: ?;?.luau;?.lua]
+    --no-jit                 Don't use luau's JIT compiler.
     --max-errors <count>     The maximum number of errors to tolerate before aborting.
                              Set to zero to disable error limit.
                              [default: 100]
@@ -242,6 +243,7 @@ struct Args {
     flag_begin:       Option<String>,
     flag_end:         Option<String>,
     flag_luau_path:   String,
+    flag_no_jit:      bool,
     flag_output:      Option<String>,
     flag_no_headers:  bool,
     flag_delimiter:   Option<Delimiter>,
@@ -489,6 +491,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
     // set default Luau compiler
     luau.set_compiler(luau_compiler.clone());
+
+    luau.enable_jit(!args.flag_no_jit);
 
     let globals = luau.globals();
 
