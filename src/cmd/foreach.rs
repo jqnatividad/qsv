@@ -133,7 +133,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             {
                 let stdout = cmd.stdout.as_mut().unwrap();
                 let stdout_reader = BufReader::new(stdout);
-                // let stdout_lines = stdout_reader.lines();
 
                 let mut stdout_rdr = csv::ReaderBuilder::new()
                     .delimiter(match &args.flag_delimiter {
@@ -171,10 +170,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 .args(cmd_args)
                 .stdout(Stdio::inherit())
                 .stderr(Stdio::inherit())
-                .spawn()
-                .unwrap();
+                .spawn()?;
 
-            cmd.wait().unwrap();
+            cmd.wait()?;
         }
     }
     if show_progress {
