@@ -119,6 +119,7 @@ log = "0.4"
 mimalloc = { version = "0.1", default-features = false, optional = true }
 mlua = { version = "0.9.0-rc.3", features = [
     "luau",
+    "luau-jit",
     "serialize",
 ], optional = true }
 num_cpus = "1"
