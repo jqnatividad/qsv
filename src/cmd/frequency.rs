@@ -94,17 +94,21 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         _ => args.sequential_ftables(),
     }?;
 
+    #[allow(unused_assignments)]
+    let mut header_vec: Vec<u8> = Vec::with_capacity(tables.len());
+    let mut buffer = itoa::Buffer::new();
+    let mut row;
+
     wtr.write_record(vec!["field", "value", "count"])?;
     let head_ftables = headers.iter().zip(tables);
     for (i, (header, ftab)) in head_ftables.enumerate() {
-        let header = if rconfig.no_headers {
+        header_vec = if rconfig.no_headers {
             (i + 1).to_string().into_bytes()
         } else {
             header.to_vec()
         };
         for (value, count) in args.counts(&ftab) {
-            let count = count.to_string();
-            let row = vec![&*header, &*value, count.as_bytes()];
+            row = vec![&*header_vec, &*value, buffer.format(count).as_bytes()];
             wtr.write_record(row)?;
         }
     }
