@@ -378,11 +378,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut ctx = SQLContext::new();
     let mut table_aliases = HashMap::with_capacity(args.arg_input.len());
     let mut lossy_table_name = Cow::default();
+    let mut table_name;
 
     for (idx, table) in args.arg_input.iter().enumerate() {
         // as we are using the table name as alias, we need to make sure that the table name is a
         // valid identifier. if its not utf8, we use the lossy version
-        let table_name = Path::new(table)
+        table_name = Path::new(table)
             .file_stem()
             .and_then(std::ffi::OsStr::to_str)
             .unwrap_or_else(|| {
@@ -441,20 +442,21 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let num_queries = queries.len();
     let last_query: usize = num_queries.saturating_sub(1);
+    let mut is_last_query;
+    let mut current_query = String::new();
     let mut query_result_shape = (0_usize, 0_usize);
     let mut now = Instant::now();
 
     for (idx, query) in queries.iter().enumerate() {
         // check if this is the last query in the script
-        let is_last_query = idx == last_query;
+        is_last_query = idx == last_query;
 
         // replace aliases in query
-        let mut current_query = query.to_string();
+        current_query.clone_from(&query);
         for (table_name, table_alias) in &table_aliases {
             // we quote the table name to avoid issues with reserved keywords and
             // other characters that are not allowed in identifiers
-            let quoted_table_name = format!(r#""{table_name}""#);
-            current_query = current_query.replace(table_alias, &quoted_table_name);
+            current_query = current_query.replace(table_alias, &(format!(r#""{table_name}""#)));
         }
 
         if log::log_enabled!(log::Level::Debug) {
