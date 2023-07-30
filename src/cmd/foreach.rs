@@ -1,7 +1,7 @@
 #![cfg(target_family = "unix")]
 static USAGE: &str = r#"
 Execute a shell command once per line in given CSV file. Only works in
-Linux, macOS and other Unix-like environments.
+Linux, macOS and other Unix-like environments (i.e. not Windows).
 
 Deleting all files whose filenames are listed in a column:
 
@@ -20,6 +20,12 @@ For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test
 Usage:
     qsv foreach [options] <column> <command> [<input>]
     qsv foreach --help
+
+foreach arguments:
+    column                The column to use as input for the command.
+    command               The command to execute. Use "{}" to substitute the value
+                          of the current input file line.
+    input                 The CSV file to read. If not provided, will read from stdin.
 
 foreach options:
     -u, --unify              If the output of execute command is CSV, will
@@ -77,8 +83,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut wtr = Config::new(&None).writer()?;
 
     #[allow(clippy::trivial_regex)]
+    // template_pattern matches pairs of curly braces, e.g. "{}".
     let template_pattern = Regex::new(r"\{\}")?;
-    let splitter_pattern = Regex::new(r#"(?:[\w-]+|"[^"]*"|'[^']*'|`[^`]*`)"#)?;
+
+    // splitter_pattern gets all the arguments to the command as tokens.
+    // The regular expression matches any sequence of characters that consists of one or more word
+    // characters (`a-z`, `A-Z`, `0-9`, `_`, `.`, `+`, `-`), or any of the following three types of
+    // quoted strings: double-quoted strings ("..."), single-quoted strings ('...'), or
+    // backtick-quoted strings (`...`).
+    let splitter_pattern = Regex::new(r#"(?:[a-zA-Z0-9_.+-]+|"[^"]*"|'[^']*'|`[^`]*`)"#)?;
+
+    // cleaner_pattern removes the quotes or backticks from the quoted strings matched by
+    // splitter_pattern.
     let cleaner_pattern = Regex::new(r#"(?:^["'`]|["'`]$)"#)?;
 
     let headers = rdr.byte_headers()?.clone();
@@ -164,7 +180,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 }
             }
 
-            cmd.wait().unwrap();
+            cmd.wait()?;
         } else {
             let mut cmd = Command::new(prog)
                 .args(cmd_args)
