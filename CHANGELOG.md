@@ -6,6 +6,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.110.0] - 2023-07-30
+### Added
+* `describegpt`: Add jsonl to prompt file doc section & more clarification by @rzmk in https://github.com/jqnatividad/qsv/pull/1149
+* `luau`: add `--no-jit` option  https://github.com/jqnatividad/qsv/pull/1170
+* `sqlp`: add CTE examples https://github.com/jqnatividad/qsv/commit/33f0218c6a78b9cef15e9bed6e227e5f17ef747a
+
+### Changed
+* `frequency`: minor optimizations https://github.com/jqnatividad/qsv/commit/ecac0be5777a50cef2bfe7937d80c5ffe071e4cd
+* `join`: performance optimizations https://github.com/jqnatividad/qsv/commit/4cb593783efc4e7c2026d632b8dc741cc2edc778 and https://github.com/jqnatividad/qsv/commit/4cb593783efc4e7c2026d632b8dc741cc2edc778
+* `sqlp`: reduce allocs in loop https://github.com/jqnatividad/qsv/commit/ae164b570c300845e75ce0fac3272221bdebfa66
+* Apple Silicon build now uses mimalloc allocator by default https://github.com/jqnatividad/qsv/commit/bfab24aba2d3b3f70f08ea407572d20feeda725d
+* build(deps): bump jql-runner from 7.0.1 to 7.0.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1151
+* build(deps): bump serde from 1.0.171 to 1.0.173 by @dependabot in https://github.com/jqnatividad/qsv/pull/1154
+* build(deps): bump tempfile from 3.6.0 to 3.7.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1155
+* build(deps): bump serde from 1.0.174 to 1.0.175 by @dependabot in https://github.com/jqnatividad/qsv/pull/1157
+* build(deps): bump redis from 0.23.0 to 0.23.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1164
+* build(deps): bump serde from 1.0.175 to 1.0.177 by @dependabot in https://github.com/jqnatividad/qsv/pull/1163
+* build(deps): bump serde_json from 1.0.103 to 1.0.104 by @dependabot in https://github.com/jqnatividad/qsv/pull/1160
+* build(deps): bump grex from 1.4.1 to 1.4.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1159
+* build(deps): bump sysinfo from 0.29.6 to 0.29.7 by @dependabot in https://github.com/jqnatividad/qsv/pull/1158
+* build(deps): bump mlua from 0.9.0-rc.1 to 0.9.0-rc.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1169
+* build(deps): bump flexi_logger from 0.25.5 to 0.25.6 by @dependabot in https://github.com/jqnatividad/qsv/pull/1168
+* build(deps): bump jemallocator from 0.5.0 to 0.5.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1167
+* build(deps): bump serde from 1.0.177 to 1.0.178 by @dependabot in https://github.com/jqnatividad/qsv/pull/1166
+* build(deps): bump rust_decimal from 1.30.0 to 1.31.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1172
+* build(deps): bump csvs_convert from 0.8.6 to 0.8.7 by @dependabot in https://github.com/jqnatividad/qsv/pull/1174
+* apply `clippy:needless_pass_by_ref_mut` lint in `select` and `frequency` https://github.com/jqnatividad/qsv/commit/ba6566e5ea73a1042d33c02035ed1736947b60d8 and https://github.com/jqnatividad/qsv/commit/83add7b30c6e32a49b412629acf60c4c7057df37
+* cargo update bump indirect dependencies
+* pin Rust nightly to 2023-07-29
+
+### Removed
+* `excel`: remove defunct dates-whitelist comments https://github.com/jqnatividad/qsv/commit/2a24d2dcd23c2ccd24dfef1055bf265085f10146
+
+### Fixed
+* `join`: fix left-semi join. Fixes #1150. https://github.com/jqnatividad/qsv/pull/1153
+* `foreach`: fix command argument token splitter pattern. Fixes #1171 https://github.com/jqnatividad/qsv/pull/1173
+
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.109.0...0.110.0
+
 ## [0.109.0] - 2023-07-17
 This is a monstrous👹 release with lots of new features and improvements!
 
