@@ -103,6 +103,8 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 
 Full-featured prebuilt [binary variants](#variants) of the latest qsv version for Windows, Linux & macOS are available [for download](https://github.com/jqnatividad/qsv/releases/latest), including binaries compiled with [Rust Nightly](https://stackoverflow.com/questions/70745970/rust-nightly-vs-beta-version) ([more info](https://github.com/jqnatividad/qsv/blob/master/docs/PERFORMANCE.md#nightly-release-builds)).
 
+For Windows, an MSI Installer is also available for download.
+
 ### Option 2: Homebrew
 
 For [macOS and Linux (64-bit)](https://formulae.brew.sh/formula/qsv), you can quickly install qsv with [Homebrew](https://brew.sh). However, only the `apply` and `luau` [features](#feature-flags) are enabled.
