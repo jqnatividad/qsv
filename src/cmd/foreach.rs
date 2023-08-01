@@ -25,6 +25,9 @@ foreach arguments:
     column                The column to use as input for the command.
     command               The command to execute. Use "{}" to substitute the value
                           of the current input file line.
+                          If you need to execute multiple commands, use a shell
+                          script. See foreach_multiple_commands_with_shell_script()
+                          in tests/test_foreach.rs for an example.
     input                 The CSV file to read. If not provided, will read from stdin.
 
 foreach options:

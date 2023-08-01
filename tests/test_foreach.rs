@@ -109,3 +109,25 @@ fn foreach_new_column() {
     ];
     assert_eq!(got, expected);
 }
+
+#[test]
+fn foreach_multiple_commands_with_shell_script() {
+    let wrk = Workdir::new("foreach_multiple_commands_with_shell_script");
+    wrk.create(
+        "data.csv",
+        vec![svec!["name"], svec!["John"], svec!["Mary"]],
+    );
+    wrk.create_from_string(
+        "multiple_commands.sh",
+        r#"REVERSED_NAME=$(echo $1 | rev)
+echo $1 $REVERSED_NAME"#,
+    );
+    let mut cmd = wrk.command("foreach");
+    cmd.arg("name")
+        .arg("sh multiple_commands.sh {}")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![svec!["John nhoJ"], svec!["Mary yraM"]];
+    assert_eq!(got, expected);
+}
