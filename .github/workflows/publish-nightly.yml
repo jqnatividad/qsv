@@ -48,7 +48,7 @@ jobs:
             os-name: windows
             target: x86_64-pc-windows-msvc
             architecture: x86_64
-            addl-build-args: --features=apply,generate,luau,fetch,nightly,self_update,polars
+            addl-build-args: --features=apply,luau,fetch,nightly,self_update,polars
             default-features:
             addl-qsvlite-features:
             addl-qsvdp-features: luau
