@@ -16,8 +16,6 @@ Example queries:
 
   qsv sqlp data.csv 'select * from data where col1 > 10 order by col2 desc limit 20'
 
-  qsv sqlp data.csv.sz 'select * from data where col1 > 10' --output result.csv.sz
-
   qsv sqlp data.csv 'select col1, col2 as friendlyname from data' --format parquet --output data.parquet
 
   qsv sqlp data.csv data2.csv 'select * from data join data2 on data.colname = data2.colname'
@@ -42,7 +40,7 @@ Example queries:
   # spaceship operator: "<=>" (three-way comparison operator)
   #  returns -1 if left < right, 0 if left == right, 1 if left > right
   # https://en.wikipedia.org/wiki/Three-way_comparison#Spaceship_operator
-  qsv sqlp data.csv data2.csv "select data.col2 <=> data2.col2 from data join data2 on data.col1 = data2.col1"
+  qsv sqlp data.csv data2.csv "select data.c2 <=> data2.c2 from data join data2 on data.c1 = data2.c1"
 
   # regex operators: "~" (contains pattern, case-sensitive); "~*" (contains pattern, case-insensitive)
   #   "!~" (does not contain pattern, case-sensitive); "!~*" (does not contain pattern, case-insensitive)
@@ -58,13 +56,19 @@ Example queries:
   qsv sqlp data.csv "select * from data WHERE regexp_like(col1, '^foo', 'i') AND col2 > 10"
 
   # use Parquet, JSONL and Arrow files in SQL queries
-  qsv sqlp data.csv "select data.col1, t2.col1 from data join read_parquet('data2.parquet') as t2 ON data.col1 = t2.col1"
-  qsv sqlp data.csv "select data.col1, t2.col1 from data join read_ndjson('data2.jsonl') as t2 on data.col1 = t2.col1"
-  qsv sqlp data.csv "select data.col1, t2.col1 from data join read_ipc('data2.arrow') as t2 ON data.col1 = t2.col1"
+  qsv sqlp data.csv "select * from data join read_parquet('data2.parquet') as t2 ON data.c1 = t2.c1"
+  qsv sqlp data.csv "select * from data join read_ndjson('data2.jsonl') as t2 on data.c1 = t2.c1"
+  qsv sqlp data.csv "select * from data join read_ipc('data2.arrow') as t2 ON data.c1 = t2.c1"
 
   # use stdin as input
   cat data.csv | qsv sqlp - 'select * from stdin'
   cat data.csv | qsv sqlp - data2.csv 'select * from stdin join data2 on stdin.col1 = data2.col1'
+
+  # automatic snappy decompression/compression
+  qsv sqlp data.csv.sz 'select * from data where col1 > 10' --output result.csv.sz
+
+  # explain query plan
+  qsv sqlp data.csv 'explain select * from data where col1 > 10 order by col2 desc limit 20'
 
 For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_sqlp.rs.
 
