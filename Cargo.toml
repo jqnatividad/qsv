@@ -139,7 +139,7 @@ polars = { version = "0.31", features = [
     "performant",
 ], optional = true }
 pyo3 = { version = "0.19", features = ["auto-initialize"], optional = true }
-qsv-dateparser = "0.9"
+qsv-dateparser = "0.10"
 qsv_docopt = "1.3"
 qsv-stats = "0.10"
 qsv_currency = { version = "0.6", optional = true }
