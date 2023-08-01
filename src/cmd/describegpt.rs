@@ -40,6 +40,7 @@ describegpt options:
 Common options:
     -h, --help             Display this message
     -o, --output <file>    Write output to <file> instead of stdout.
+    -Q, --quiet            Do not print status messages to stderr.
 "#;
 
 use std::{env, fs, io::Write, path::PathBuf, process::Command, time::Duration};
@@ -67,6 +68,7 @@ struct Args {
     flag_user_agent:  Option<String>,
     flag_timeout:     u16,
     flag_output:      Option<String>,
+    flag_quiet:       bool,
 }
 
 #[derive(Deserialize)]
@@ -88,6 +90,12 @@ const OPENAI_KEY_ERROR: &str = "Error: QSV_OPENAI_KEY environment variable not f
                                 this command uses OpenAI's LLMs for inferencing and is therefore \
                                 prone to inaccurate information being produced. Verify output \
                                 results before using them.";
+
+fn print_status(args: &Args, msg: &str) {
+    if !args.flag_quiet {
+        eprintln!("{msg}");
+    }
+}
 
 fn create_client(args: &Args) -> CliResult<Client> {
     // Create client with timeout
@@ -413,8 +421,8 @@ fn run_inference_options(
                 let error_message = format!("Error: Invalid JSON output for {option}.");
                 let error_json = json!({"error": error_message});
                 // Print error message in JSON format
-                eprintln!("{error_json}");
-                eprintln!("Output: {output}");
+                print_status(args, format!("{error_json}").as_str());
+                print_status(args, format!("Output: {output}").as_str());
                 error_json
             };
             total_json_output[option] = completion_json;
@@ -436,7 +444,7 @@ fn run_inference_options(
     }
 
     // Get completion from OpenAI API
-    eprintln!("Interacting with OpenAI API...\n");
+    print_status(args, "Interacting with OpenAI API...\n");
 
     let mut total_json_output: serde_json::Value = json!({});
     let mut prompt: String;
@@ -447,10 +455,10 @@ fn run_inference_options(
     // Generate dictionary output
     if args.flag_dictionary || args.flag_all {
         prompt = get_prompt("dictionary_prompt", stats_str, frequency_str, args)?;
-        eprintln!("Generating data dictionary from OpenAI API...");
+        print_status(args, "Generating data dictionary from OpenAI API...");
         messages = get_messages(&prompt, &dictionary_completion);
         dictionary_completion = get_completion(args, &arg_is_some, api_key, &messages)?;
-        eprintln!("Received dictionary completion.");
+        print_status(args, "Received dictionary completion.");
         process_output(
             "dictionary",
             &dictionary_completion,
@@ -467,9 +475,9 @@ fn run_inference_options(
             get_prompt("description_prompt", stats_str, frequency_str, args)?
         };
         messages = get_messages(&prompt, &dictionary_completion);
-        eprintln!("Generating description from OpenAI API...");
+        print_status(args, "Generating description from OpenAI API...");
         completion = get_completion(args, &arg_is_some, api_key, &messages)?;
-        eprintln!("Received description completion.");
+        print_status(args, "Received description completion.");
         process_output("description", &completion, &mut total_json_output, args)?;
     }
 
@@ -481,9 +489,9 @@ fn run_inference_options(
             get_prompt("tags_prompt", stats_str, frequency_str, args)?
         };
         messages = get_messages(&prompt, &dictionary_completion);
-        eprintln!("Generating tags from OpenAI API...");
+        print_status(args, "Generating tags from OpenAI API...");
         completion = get_completion(args, &arg_is_some, api_key, &messages)?;
-        eprintln!("Received tags completion.");
+        print_status(args, "Received tags completion.");
         process_output("tags", &completion, &mut total_json_output, args)?;
     }
 
@@ -598,7 +606,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let input_filename = args.arg_input.clone().unwrap();
 
     // Get stats from qsv stats on input file with --everything flag
-    eprintln!("Generating stats from {input_filename} using qsv stats --everything...");
+    print_status(
+        &args,
+        format!("Generating stats from {input_filename} using qsv stats --everything...").as_str(),
+    );
     let Ok(stats) = Command::new(qsv_path.clone())
         .arg("stats")
         .arg("--everything")
@@ -614,7 +625,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     // Get frequency from qsv frequency on input file
-    eprintln!("Generating frequency from {input_filename} using qsv frequency...");
+    print_status(
+        &args,
+        format!("Generating frequency from {input_filename} using qsv frequency...").as_str(),
+    );
     let Ok(frequency) = Command::new(qsv_path)
         .arg("frequency")
         .arg(input_path)
