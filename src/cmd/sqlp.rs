@@ -16,7 +16,9 @@ Example queries:
 
   qsv sqlp data.csv 'select * from data where col1 > 10 order by col2 desc limit 20'
 
-  qsv sqlp data.csv 'select col1, col2, col3 as friendlyname from data' --format parquet --output data.parquet
+  qsv sqlp data.csv.sz 'select * from data where col1 > 10' --output result.csv.sz
+
+  qsv sqlp data.csv 'select col1, col2 as friendlyname from data' --format parquet --output data.parquet
 
   qsv sqlp data.csv data2.csv 'select * from data join data2 on data.colname = data2.colname'
 
@@ -452,7 +454,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         is_last_query = idx == last_query;
 
         // replace aliases in query
-        current_query.clone_from(&query);
+        current_query.clone_from(query);
         for (table_name, table_alias) in &table_aliases {
             // we quote the table name to avoid issues with reserved keywords and
             // other characters that are not allowed in identifiers
