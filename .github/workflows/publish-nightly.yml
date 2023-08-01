@@ -82,7 +82,6 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
       with:
-        submodules: recursive
         ref: ${{ needs.analyze-tags.outputs.previous-tag }}
     - name: build prep for x86_64-unknown-linux-musl
       if: ${{ matrix.job.musl-prep }}
@@ -90,8 +89,8 @@ jobs:
         sudo apt-get install musl-tools musl-dev
         sudo ln -s /usr/bin/g++ /usr/bin/musl-g++        
     - name: Build qsv-nightly
-      env:
-        RUSTFLAGS: --emit=asm
+      # env:
+      #   RUSTFLAGS: --emit=asm
       uses: actions-rs/cargo@v1
       with:
         command: build
