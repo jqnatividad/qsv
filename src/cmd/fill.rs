@@ -279,10 +279,7 @@ impl Filler {
 
             // Handle buffering rows which still have nulls.
             if self.backfill && (self.select.iter().any(|&i| row[i] == b"")) {
-                self.buffer
-                    .entry(key.clone())
-                    .or_default()
-                    .push(row);
+                self.buffer.entry(key.clone()).or_default().push(row);
             } else {
                 if let Some(rows) = self.buffer.remove(&key) {
                     for buffered_row in rows {

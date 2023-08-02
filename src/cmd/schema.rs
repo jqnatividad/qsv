@@ -749,9 +749,7 @@ fn generate_string_patterns(
 
             let value_string: String = convert_to_string(value_byte_slice)?;
 
-            let set = unique_values_map
-                .entry(header_string)
-                .or_default();
+            let set = unique_values_map.entry(header_string).or_default();
             set.insert(value_string);
         }
     }
