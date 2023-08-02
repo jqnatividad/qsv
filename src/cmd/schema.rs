@@ -751,7 +751,7 @@ fn generate_string_patterns(
 
             let set = unique_values_map
                 .entry(header_string)
-                .or_insert_with(HashSet::<String>::new);
+                .or_default();
             set.insert(value_string);
         }
     }

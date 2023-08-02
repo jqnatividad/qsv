@@ -281,7 +281,7 @@ impl Filler {
             if self.backfill && (self.select.iter().any(|&i| row[i] == b"")) {
                 self.buffer
                     .entry(key.clone())
-                    .or_insert_with(Vec::new)
+                    .or_default()
                     .push(row);
             } else {
                 if let Some(rows) = self.buffer.remove(&key) {
