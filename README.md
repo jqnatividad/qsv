@@ -101,9 +101,9 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 
 ### Option 1: Download Prebuilt Binaries
 
-Full-featured prebuilt [binary variants](#variants) of the latest qsv version for Windows, Linux & macOS are available [for download](https://github.com/jqnatividad/qsv/releases/latest), including binaries compiled with [Rust Nightly](https://stackoverflow.com/questions/70745970/rust-nightly-vs-beta-version) ([more info](https://github.com/jqnatividad/qsv/blob/master/docs/PERFORMANCE.md#nightly-release-builds)).
+Full-featured prebuilt [binary variants](#variants) of the latest qsv version for Linux, macOS & Windows are available [for download](https://github.com/jqnatividad/qsv/releases/latest), including binaries compiled with [Rust Nightly](https://stackoverflow.com/questions/70745970/rust-nightly-vs-beta-version) ([more info](https://github.com/jqnatividad/qsv/blob/master/docs/PERFORMANCE.md#nightly-release-builds)).
 
-For Windows, an MSI Installer is also available for download.
+For Windows, an MSI Installer wrapping the x86_64-pc-windows-msvc build is also available for download.
 
 ### Option 2: Homebrew
 
@@ -132,9 +132,12 @@ To install different [variants](#variants) and enable optional features, use car
 
 ```bash
 # to install qsv with all features enabled
-cargo install qsv --locked --bin qsv --features apply,generate,luau,fetch,foreach,python,to,self_update,polars,feature_capable
+cargo install qsv --locked --bin qsv --features feature_capable,apply,generate,luau,fetch,foreach,python,to,self_update,polars
 # or shorthand
 cargo install qsv --locked --bin qsv -F all_features
+
+# or enable only the apply and polars features
+cargo install qsv --locked --bin qsv -F feature_capable,apply,polars
 
 # or to install qsvlite
 cargo install qsv --locked --bin qsvlite -F lite
@@ -159,9 +162,12 @@ To compile different [variants](#variants) and enable optional [features](#featu
 
 ```bash
 # to compile qsv with all features enabled
-cargo build --release --locked --bin qsv --features apply,generate,luau,fetch,foreach,python,to,self_update,polars,feature_capable
+cargo build --release --locked --bin qsv --features feature_capable,apply,generate,luau,fetch,foreach,python,to,self_update,polars
 # shorthand
 cargo build --release --locked --bin qsv -F all_features
+
+# or build qsv with only the fetch and foreach features enabled
+cargo build --release --locked --bin qsv -F feature_capable,fetch,foreach
 
 # for qsvlite
 cargo build --release --locked --bin qsvlite -F lite
