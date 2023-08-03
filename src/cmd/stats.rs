@@ -1056,7 +1056,7 @@ impl Stats {
                         v.add(n);
                     }
                     if let Some(v) = self.online.as_mut() {
-                        v.add(n);
+                        v.add(&n);
                     }
                 }
             }
@@ -1084,7 +1084,7 @@ impl Stats {
                         v.add(n);
                     }
                     if let Some(v) = self.online.as_mut() {
-                        v.add(n);
+                        v.add(&n);
                     }
                 }
             }
