@@ -431,11 +431,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     debug!("END script: {end_script:?}");
 
     // check if "require" was used in the scripts. If so, we need to setup LUAU_PATH;
-    // we check for "require \"" so we don't trigger on just the literal "require"
-    // which is a fairly common word (e.g. requirements, required, requires, etc.)
-    let require_used = main_script.contains("require \"")
-        || begin_script.contains("require \"")
-        || end_script.contains("require \"");
+    // we check for '= require "' using a robust regex pattern.
+    // \u0022 is the unicode codepoint for a double quote.
+    let requires_re = regex::Regex::new(r"(?mi)=[[:blank:]]*require[[:blank:]]+\u0022").unwrap();
+    let require_used = requires_re.is_match(&main_script)
+        || requires_re.is_match(&begin_script)
+        || requires_re.is_match(&end_script);
 
     // if require_used, create a temporary directory and copy date.lua there.
     // we do this outside the "require_used" setup below as the tempdir
