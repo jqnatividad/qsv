@@ -1060,6 +1060,8 @@ impl Stats {
                     }
                 }
             }
+            // do nothing for String type
+            TString => {}
             TDateTime | TDate => {
                 if sample_type == TNull {
                     if self.which.include_nulls {
@@ -1088,8 +1090,6 @@ impl Stats {
                     }
                 }
             }
-            // do nothing for String type
-            TString => {}
         }
     }
 
@@ -1455,9 +1455,11 @@ enum FieldType {
 }
 
 impl FieldType {
-    // infer data type
+    // infer data type from a given sample & current type inference
     // infer_dates signals if date inference should be attempted
-    // from a given sample & current type inference
+    // returns the inferred type and if infer_dates is true,
+    // the date in ms since the epoch if the type is a date or datetime
+    // otherwise, None
     #[inline]
     pub fn from_sample(
         infer_dates: bool,
@@ -1484,7 +1486,7 @@ impl FieldType {
             || current_type == FieldType::TNull
         {
             if let Ok(int_val) = string.parse::<i64>() {
-                // leading zero, its a string
+                // leading zero, its a string (e.g. zip codes)
                 if string.starts_with('0') && int_val != 0 {
                     return (TString, None);
                 }
