@@ -24,6 +24,8 @@ selected using regular expressions.
   Select columns using a regex using '/<regex>/':
   $ qsv select /^a/
   $ qsv select '/^.*\d.*$/'
+  # remove SSN, account_no and password columns
+  $ qsv select '!/SSN|account_no|password/'
 
   Re-order and duplicate columns arbitrarily:
   $ qsv select 3-1,Header3-Header1,Header1,Foo[2],Header1
