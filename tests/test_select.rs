@@ -161,6 +161,15 @@ select_test!(
     ["h1", "h2", "h1"],
     ["a", "b", "e"]
 );
+
+select_test!(
+    select_not_regex,
+    "!/h1|h2/",
+    "3,4",
+    ["h[]3", "h4"],
+    ["c", "d"]
+);
+
 select_test!(
     select_regex_digit,
     r#"/h\d/"#,
