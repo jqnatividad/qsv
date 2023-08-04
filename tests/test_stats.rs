@@ -745,7 +745,8 @@ fn stats_with_date_inference_default_whitelist() {
     cmd.arg("!/variance|stddev/").arg("in2.csv");
 
     let got2: String = wrk.stdout(&mut cmd);
-    let expected2 = wrk.load_test_resource("boston311-100-everything-inferdates-defaultwhitelist-stats.csv");
+    let expected2 =
+        wrk.load_test_resource("boston311-100-everything-inferdates-defaultwhitelist-stats.csv");
 
     assert_eq!(dos2unix(&got2), dos2unix(&expected2).trim_end());
 }
