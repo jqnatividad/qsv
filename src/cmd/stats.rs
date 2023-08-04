@@ -864,47 +864,48 @@ fn init_date_inference(
     headers: &csv::ByteRecord,
     flag_whitelist: &str,
 ) -> Result<(), String> {
-    if infer_dates {
-        let dmy_preferred = prefer_dmy || util::get_envvar_flag("QSV_PREFER_DMY");
-        DMY_PREFERENCE.store(dmy_preferred, Ordering::Relaxed);
-
-        let whitelist_lower = flag_whitelist.to_lowercase();
-        log::info!("inferring dates with date-whitelist: {whitelist_lower}");
-
-        if whitelist_lower == "all" {
-            log::info!("inferring dates for ALL fields with DMY preference: {dmy_preferred}");
-            if let Err(e) = INFER_DATE_FLAGS.set(vec![true; headers.len()]) {
-                return fail_format!("Cannot init date inference flags for ALL fields: {e:?}");
-            };
-        } else {
-            let whitelist = whitelist_lower
-                .split(',')
-                .map(|s| s.trim().to_string())
-                .collect_vec();
-
-            let mut infer_date_flags: Vec<bool> = Vec::with_capacity(headers.len());
-            for header in headers {
-                let header_str = from_bytes::<String>(header).unwrap().to_lowercase();
-                let mut date_found = false;
-                for whitelist_item in &whitelist {
-                    if header_str.contains(whitelist_item) {
-                        date_found = true;
-                        log::info!(
-                            "inferring dates for {header_str} with DMY preference: {dmy_preferred}"
-                        );
-                        break;
-                    }
-                }
-                infer_date_flags.push(date_found);
-            }
-            if let Err(e) = INFER_DATE_FLAGS.set(infer_date_flags) {
-                return fail_format!("Cannot init date inference flags: {e:?}");
-            };
-        }
-    // we're not inferring dates, set INFER_DATE_FLAGS to all false
-    } else if let Err(e) = INFER_DATE_FLAGS.set(vec![false; headers.len()]) {
-        return fail_format!("Cannot init empty date inference flags: {e:?}");
+    if !infer_dates {
+        // we're not inferring dates, set INFER_DATE_FLAGS to all false
+        INFER_DATE_FLAGS
+            .set(vec![false; headers.len()])
+            .map_err(|e| format!("Cannot init empty date inference flags: {e:?}"))?;
+        return Ok(());
     }
+
+    let dmy_preferred = prefer_dmy || util::get_envvar_flag("QSV_PREFER_DMY");
+    DMY_PREFERENCE.store(dmy_preferred, Ordering::Relaxed);
+
+    let whitelist_lower = flag_whitelist.to_lowercase();
+    log::info!("inferring dates with date-whitelist: {whitelist_lower}");
+
+    let infer_date_flags = if whitelist_lower == "all" {
+        log::info!("inferring dates for ALL fields with DMY preference: {dmy_preferred}");
+        vec![true; headers.len()]
+    } else {
+        let whitelist = whitelist_lower
+            .split(',')
+            .map(str::trim)
+            .collect::<Vec<_>>();
+        headers
+            .iter()
+            .map(|header| {
+                let header_str = from_bytes::<String>(header).unwrap().to_lowercase();
+                let date_found = whitelist
+                    .iter()
+                    .any(|whitelist_item| header_str.contains(whitelist_item));
+                if date_found {
+                    log::info!(
+                        "inferring dates for {header_str} with DMY preference: {dmy_preferred}"
+                    );
+                }
+                date_found
+            })
+            .collect()
+    };
+
+    INFER_DATE_FLAGS
+        .set(infer_date_flags)
+        .map_err(|e| format!("Cannot init date inference flags: {:?}", e))?;
     Ok(())
 }
 

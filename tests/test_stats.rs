@@ -729,6 +729,29 @@ fn stats_with_date_inference() {
 }
 
 #[test]
+fn stats_with_date_inference_default_whitelist() {
+    let wrk = Workdir::new("stats_with_date_inference_default_whitelist");
+    let test_file = wrk.load_test_file("boston311-100.csv");
+
+    let mut cmd = wrk.command("stats");
+    cmd.arg("--everything").arg(test_file).arg("--infer-dates");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+
+    wrk.create("in2.csv", got);
+
+    // removed variance & stddev columns as its causing flaky CI test for float values
+    let mut cmd = wrk.command("select");
+    cmd.arg("!/variance|stddev/").arg("in2.csv");
+
+    let got2: String = wrk.stdout(&mut cmd);
+    let expected2 =
+        wrk.load_test_resource("boston311-100-everything-inferdates-defaultwhitelist-stats.csv");
+
+    assert_eq!(dos2unix(&got2), dos2unix(&expected2).trim_end());
+}
+
+#[test]
 fn stats_with_date_inference_variance_stddev() {
     let wrk = Workdir::new("stats_with_date_inference_variance_stddev");
     let test_file = wrk.load_test_file("boston311-100.csv");
