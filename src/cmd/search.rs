@@ -146,6 +146,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut flag_rowi: u64 = 1;
     let mut match_ctr: u64 = 0;
     let mut row_ctr: u64 = 0;
+    let mut m;
 
     #[allow(unused_assignments)]
     let mut matched_rows = String::with_capacity(20); // to save on allocs
@@ -155,7 +156,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         if show_progress {
             progress.inc(1);
         }
-        let mut m = sel.select(&record).any(|f| pattern.is_match(f));
+        m = sel.select(&record).any(|f| pattern.is_match(f));
         if args.flag_invert_match {
             m = !m;
         }

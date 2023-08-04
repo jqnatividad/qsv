@@ -1,4 +1,3 @@
-#![allow(unused_assignments)]
 static USAGE: &str = r#"
 Filters CSV data by whether the given regex set matches a row.
 
@@ -208,13 +207,19 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut total_matches: u64 = 0;
     let mut row_ctr: u64 = 0;
 
-    // to save allocs - allow_unused_assignments lint turned off
-    // for searchset.rs for this
+    // minimize allocs
+    #[allow(unused_assignments)]
     let mut flag_column: Vec<u8> = Vec::with_capacity(20);
     let mut match_list_vec = Vec::with_capacity(20);
+    #[allow(unused_assignments)]
     let mut match_list = String::with_capacity(20);
     let mut matched_rows = String::with_capacity(20);
+    #[allow(unused_assignments)]
     let mut match_list_with_row = String::with_capacity(20);
+    let mut m;
+    let mut matched = false;
+    let mut matches: Vec<usize> = Vec::with_capacity(20);
+    let mut buffer = itoa::Buffer::new();
 
     while rdr.read_byte_record(&mut record)? {
         row_ctr += 1;
@@ -222,15 +227,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         if show_progress {
             progress.inc(1);
         }
-        let mut m = sel.select(&record).any(|f| {
-            let matched = pattern.is_match(f);
+        m = sel.select(&record).any(|f| {
+            matched = pattern.is_match(f);
             if matched && do_match_list {
-                let mut matches: Vec<usize> = pattern.matches(f).into_iter().collect();
+                matches = pattern.matches(f).into_iter().collect();
                 total_matches += matches.len() as u64;
                 for j in &mut matches {
                     *j += 1; // so the list is human readable - i.e. not zero-based
                 }
-                match_list_vec = matches;
+                match_list_vec.clone_from(&matches);
             }
             matched
         });
@@ -247,7 +252,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         if do_match_list {
             flag_rowi += 1;
             flag_column = if m {
-                let mut buffer = itoa::Buffer::new();
                 buffer.format(flag_rowi).clone_into(&mut matched_rows);
                 if args.flag_invert_match {
                     matched_rows.as_bytes().to_vec()
