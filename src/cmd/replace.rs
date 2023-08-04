@@ -50,7 +50,7 @@ Common options:
 
 "#;
 
-use std::{borrow::Cow, env};
+use std::{borrow::Cow, collections::HashSet, env};
 
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 use indicatif::{HumanCount, ProgressBar, ProgressDrawTarget};
@@ -111,9 +111,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let headers = rdr.byte_headers()?.clone();
     let sel = rconfig.selection(&headers)?;
 
-    // NOTE: using vec lookups is not the fastest thing in the world but
-    // I am not sure it would be worthwhile to rely on a set structure
-    let sel_indices = sel.to_vec();
+    // use a hash set for O(1) time complexity 
+    // instead of O(n) with the previous vector lookup
+    let sel_indices: HashSet<&usize> = sel.into_iter().collect();
 
     if !rconfig.no_headers {
         wtr.write_record(&headers)?;
