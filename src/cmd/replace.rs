@@ -113,7 +113,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // use a hash set for O(1) time complexity
     // instead of O(n) with the previous vector lookup
-    let sel_indices: HashSet<&usize> = sel.into_iter().collect();
+    let sel_indices: HashSet<&usize> = sel.iter().collect();
 
     if !rconfig.no_headers {
         wtr.write_record(&headers)?;
