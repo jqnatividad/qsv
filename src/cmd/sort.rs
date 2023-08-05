@@ -28,6 +28,19 @@ sort options:
     -j, --jobs <arg>        The number of jobs to run in parallel.
                             When not set, the number of jobs is set to the
                             number of CPUs detected.
+    --faster                When set, the sort will be faster. This is done by
+                            using a faster sorting algorithm that is not stable
+                            (i.e. the order of identical values is not guaranteed
+                            to be preserved). It has the added side benefit that the
+                            sort will also be in-place (i.e. does not allocate),
+                            which is useful for sorting large files that will 
+                            otherwise NOT fit in memory using the default allocating
+                            stable sort.
+                            
+                            For --random sorts, this means using an alternative
+                            random number generator (RNG) that uses the much faster
+                            Wyrand algorithm instead of the ChaCha algorithm used
+                            by the standard RNG.
 
 Common options:
     -h, --help              Display this message
@@ -44,6 +57,7 @@ Common options:
 
 use std::cmp;
 
+use fastrand; //DevSkim: ignore DS148264
 use rand::{rngs::StdRng, seq::SliceRandom, SeedableRng};
 use rayon::slice::ParallelSliceMut;
 use serde::Deserialize;
@@ -67,6 +81,7 @@ struct Args {
     flag_seed:        Option<u64>,
     flag_ignore_case: bool,
     flag_jobs:        Option<usize>,
+    flag_faster:      bool,
     flag_output:      Option<String>,
     flag_no_headers:  bool,
     flag_delimiter:   Option<Delimiter>,
@@ -79,14 +94,19 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let numeric = args.flag_numeric;
     let reverse = args.flag_reverse;
     let random = args.flag_random;
+    let faster = args.flag_faster;
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers)
         .select(args.flag_select);
 
-    // we're loading the entire file into memory, we need to check avail mem
+    // we're loading the entire file into memory, we need to check avail memory
     if let Some(path) = rconfig.path.clone() {
-        util::mem_file_check(&path, false, args.flag_memcheck)?;
+        // we only check if we're doing a stable sort and its not --random
+        // coz with --faster option, the sort algorithm sorts in-place (non-allocating)
+        if !faster && !random {
+            util::mem_file_check(&path, false, args.flag_memcheck)?;
+        }
     }
 
     let mut rdr = rconfig.reader()?;
@@ -103,8 +123,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let ignore_case = args.flag_ignore_case;
 
     let mut all = rdr.byte_records().collect::<Result<Vec<_>, _>>()?;
-    match (numeric, reverse, random) {
-        (_, _, true) => {
+    match (numeric, reverse, random, faster) {
+        // --random stable sort
+        (_, _, true, false) => {
             // we don't need cryptographically strong RNGs for this
             // add DevSkim lint ignores to suppress warning
             if let Some(val) = seed {
@@ -115,7 +136,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 SliceRandom::shuffle(&mut *all, &mut rng); //DevSkim: ignore DS148264
             }
         }
-        (false, false, false) => all.par_sort_by(|r1, r2| {
+        // --random --faster stable sort
+        (_, _, true, true) => {
+            // faster random sorts using Wyrand
+            if let Some(val) = seed {
+                fastrand::seed(val); //DevSkim: ignore DS148264
+            }
+            fastrand::shuffle(&mut all); //DevSkim: ignore DS148264
+        }
+
+        // default stable sort
+        (false, false, false, false) => all.par_sort_by(|r1, r2| {
             let a = sel.select(r1);
             let b = sel.select(r2);
             if ignore_case {
@@ -124,12 +155,32 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 iter_cmp(a, b)
             }
         }),
-        (true, false, false) => all.par_sort_by(|r1, r2| {
+        // default --faster unstable sort
+        (false, false, false, true) => all.par_sort_unstable_by(|r1, r2| {
+            let a = sel.select(r1);
+            let b = sel.select(r2);
+            if ignore_case {
+                iter_cmp_ignore_case(a, b)
+            } else {
+                iter_cmp(a, b)
+            }
+        }),
+
+        // --numeric stable sort
+        (true, false, false, false) => all.par_sort_by(|r1, r2| {
             let a = sel.select(r1);
             let b = sel.select(r2);
             iter_cmp_num(a, b)
         }),
-        (false, true, false) => all.par_sort_by(|r1, r2| {
+        // --numeric --faster unstable sort
+        (true, false, false, true) => all.par_sort_unstable_by(|r1, r2| {
+            let a = sel.select(r1);
+            let b = sel.select(r2);
+            iter_cmp_num(a, b)
+        }),
+
+        // --reverse stable sort
+        (false, true, false, false) => all.par_sort_by(|r1, r2| {
             let a = sel.select(r1);
             let b = sel.select(r2);
             if ignore_case {
@@ -138,7 +189,25 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 iter_cmp(b, a)
             }
         }),
-        (true, true, false) => all.par_sort_by(|r1, r2| {
+        // --reverse --faster unstable sort
+        (false, true, false, true) => all.par_sort_unstable_by(|r1, r2| {
+            let a = sel.select(r1);
+            let b = sel.select(r2);
+            if ignore_case {
+                iter_cmp_ignore_case(b, a)
+            } else {
+                iter_cmp(b, a)
+            }
+        }),
+
+        // --numeric --reverse stable sort
+        (true, true, false, false) => all.par_sort_by(|r1, r2| {
+            let a = sel.select(r1);
+            let b = sel.select(r2);
+            iter_cmp_num(b, a)
+        }),
+        // --numeric --reverse --faster unstable sort
+        (true, true, false, true) => all.par_sort_unstable_by(|r1, r2| {
             let a = sel.select(r1);
             let b = sel.select(r2);
             iter_cmp_num(b, a)
