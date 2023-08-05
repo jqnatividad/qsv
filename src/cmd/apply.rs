@@ -1132,7 +1132,7 @@ fn apply_operations(
                 *cell = censor.count(cell).to_string();
             }
             Operations::Thousands => {
-                if let Ok(num) = cell.parse::<f64>() {
+                if let Ok(num) = fast_float::parse::<f64, _>(&cell) {
                     let mut temp_string = num.separate_by_policy(*THOUSANDS_POLICY.get().unwrap());
 
                     // if there is a decimal separator (fractional part > 0.0), use the requested
@@ -1157,7 +1157,7 @@ fn apply_operations(
                 }
             }
             Operations::Round => {
-                if let Ok(num) = cell.parse::<f64>() {
+                if let Ok(num) = fast_float::parse::<f64, _>(&cell) {
                     *cell = util::round_num(num, *ROUND_PLACES.get().unwrap());
                 }
             }
@@ -1198,8 +1198,10 @@ fn apply_operations(
                 };
 
                 if let Ok(currency_value) = Currency::from_str(&cell_val) {
-                    let currency_wrk = currency_value
-                        .convert(replacement.parse::<f64>().unwrap_or(1.0_f64), comparand);
+                    let currency_wrk = currency_value.convert(
+                        fast_float::parse::<f64, _>(replacement).unwrap_or(1.0_f64),
+                        comparand,
+                    );
                     *cell = if formatstr.contains("euro") {
                         format!("{currency_wrk:e}")
                     } else {
@@ -1280,8 +1282,8 @@ fn search_cached(cell: &str, formatstr: &str) -> Option<String> {
 
     let loccaps = locregex.captures(cell);
     loccaps.and_then(|loccaps| {
-        let lat = loccaps[1].to_string().parse::<f64>().unwrap_or_default();
-        let long = loccaps[2].to_string().parse::<f64>().unwrap_or_default();
+        let lat = fast_float::parse(&loccaps[1]).unwrap_or_default();
+        let long = fast_float::parse(&loccaps[2]).unwrap_or_default();
         if (-90.0..=90.0).contains(&lat) && (-180.0..=180.0).contains(&long) {
             let search_result = geocoder.search((lat, long));
             search_result.map(|locdetails| {
