@@ -341,7 +341,7 @@ pub fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<M
                 type_list.push(Value::String("number".to_string()));
 
                 if let Some(min_str) = stats_record.get(stats_col_index_map["min"]) {
-                    let min = min_str.parse::<f64>().unwrap();
+                    let min = fast_float::parse::<f64, _>(min_str).unwrap();
                     field_map.insert(
                         "minimum".to_string(),
                         Value::Number(Number::from_f64(min).unwrap()),
@@ -349,7 +349,7 @@ pub fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<M
                 };
 
                 if let Some(max_str) = stats_record.get(stats_col_index_map["max"]) {
-                    let max = max_str.parse::<f64>().unwrap();
+                    let max = fast_float::parse::<f64, _>(max_str).unwrap();
                     field_map.insert(
                         "maximum".to_string(),
                         Value::Number(Number::from_f64(max).unwrap()),
