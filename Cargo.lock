@@ -3670,6 +3670,7 @@ dependencies = [
  "dynfmt",
  "eudex",
  "ext-sort",
+ "fast-float",
  "fastrand",
  "file-format",
  "filetime",
