@@ -689,7 +689,7 @@ fn applydp_operations(
                 *cell = regexreplace.replace_all(cell, replacement).to_string();
             }
             Operations::Round => {
-                if let Ok(num) = cell.parse::<f64>() {
+                if let Ok(num) = fast_float::parse(&cell) {
                     *cell = util::round_num(num, *ROUND_PLACES.get().unwrap());
                 }
             }
