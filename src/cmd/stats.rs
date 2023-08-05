@@ -1228,10 +1228,10 @@ impl Stats {
         // sum
         if let Some(sum) = self.sum.as_ref().and_then(|sum| sum.show(typ)) {
             if typ == FieldType::TFloat {
-                if let Ok(f64_val) = fast_float::parse::<f64, _>(sum) {
+                if let Ok(f64_val) = fast_float::parse::<f64, _>(&sum) {
                     pieces.push(util::round_num(f64_val, round_places));
                 } else {
-                    pieces.push("ERROR: Cannot convert sum to a float.".to_string());
+                    pieces.push(format!("ERROR: Cannot convert {sum} to a float."));
                 }
             } else {
                 pieces.push(sum);
