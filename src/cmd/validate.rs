@@ -640,10 +640,11 @@ fn to_json_instance(
             }
             b'n' => {
                 // number
-                if let Ok(float) = value_string.parse::<f64>() {
+                if let Ok(float) = fast_float::parse(&value_string) {
                     json_object_map.insert(
                         key_string,
-                        Value::Number(Number::from_f64(float).expect("not a valid f64 float")),
+                        // safety: we know it's a valid f64 from the fast_float::parse() above
+                        Value::Number(Number::from_f64(float).unwrap()),
                     );
                 } else {
                     return fail_format!(
