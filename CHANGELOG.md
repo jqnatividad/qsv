@@ -16,7 +16,7 @@ As Quicksilver matures, we will continue to tweak it in our goal to be the 🚀 
 * using new libraries that are faster than the ones we currently use
 * optimizing our code to take advantage of new features in the libraries we use
 * using new algorithms that are faster than the ones we currently use
-* taking more advantage of hardware features (SIMD, multi-core, etc.)
+* taking advantage of more hardware features (SIMD, multi-core, etc.)
 * adding reproducible benchmarks that are automatically updated on release to track our progress
 
 As it is, Quicksilver has an aggressive release tempo - with more than 160 releases since its initial release in December 2020.  This was made possible by the solid foundation of Rust and the [xsv](https://github.com/BurntSushi/xsv) project from which qsv was forked.  We will continue to build on this foundation by adding more CI tests and starting to track code coverage so we can continue to iterate aggressively with confidence.
