@@ -36,7 +36,7 @@ Note that `--json` may not be used alongside `--jsonl`, nor may they both be set
 
 ## `--jsonl`
 
-Similar to `--json`, you can use the the `--jsonl` option to expect [JSON Lines](https://jsonlines.org/) output.
+Similar to `--json`, you can use the `--jsonl` option to expect [JSON Lines](https://jsonlines.org/) output.
 
 If you use `--output` with `--jsonl`, the output will be written to a new file if it doesn't exist and any lines after the first will be appended to the file. If the file already exists, the output will be appended to the file. Each inference option (`--dictionary`, `--description`, `--tags`) will be written to a new line in the file.
 

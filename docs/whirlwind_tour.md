@@ -144,7 +144,7 @@ bg       Nadezhda
 ru       Rabog                 
 ```
 
-Whoops! The sample we got don't have population counts. It's quite pervasive.
+Whoops! The sample we got doesn't have population counts. It's quite pervasive.
 Exactly how many cities have empty (NULL) population counts?
 
 ```
@@ -215,7 +215,7 @@ $ qsv headers country_continent.csv
 1 # https://datahub.io/JohnSnowLabs/country-and-continent-codes-list
 ```
 
-Huh!?! That's not what we we were expecting. But if you look at the `country-continent.csv`
+Huh!?! That's not what we were expecting. But if you look at the `country-continent.csv`
 file, it starts with a comment with the `#` character. 
 
 ```
