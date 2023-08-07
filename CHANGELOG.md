@@ -6,6 +6,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.111.0] - 2023-08-07
+This is the first in a series of "[giddy-up](https://7esl.com/giddy-up/)" 🏇🏽 releases. 
+
+As Quicksilver matures, we will continue to tweak it in our goal to be the 🚀 fastest general purpose CSV data-wrangling CLI toolkit available.
+
+"Giddy-up" 🏇🏽 releases will do this by:
+* taking advantage of new [Rust features as they become available](https://releases.rs/)
+* using new libraries that are faster than the ones we currently use
+* optimizing our code to take advantage of new features in the libraries we use
+* using new algorithms that are faster than the ones we currently use
+* taking more advantage of hardware features (SIMD, multi-core, etc.)
+* adding reproducible benchmarks that are automatically updated on release to track our progress
+
+As it is, Quicksilver has an aggressive release tempo - with more than 160 releases since its initial release in December 2020.  This was made possible by the solid foundation of Rust and the [xsv](https://github.com/BurntSushi/xsv) project from which qsv was forked.  We will continue to build on this foundation by adding more CI tests and starting to track code coverage so we can continue to iterate aggressively with confidence.
+
+Apart from "giddy-up" releases, Quicksilver will also have "carousel" 🎠 releases that will focus on making the toolkit more accessible to non-technical users.
+
+"Carousel" 🎠 releases will include:
+* more documentation
+* more examples
+* more tutorials
+* more recipes in the Cookbook
+* multiple GUI wrappers around the CLI
+* integrations with common desktop tools like Excel, Google Sheets, Open Office, etc.
+
+Hopefully, this will make qsv more accessible to non-technical users, and help them get more value out of their data.
+
+Every now and then, we'll also have "Unicorn" 🦄 releases that will add MAJOR new features to the toolkit (e.g. 10x type features like the integration of [Pola.rs](https://pola.rs) into qsv).
+
+We will also add a new Technical Documentation section to the [wiki](https://github.com/jqnatividad/qsv/wiki] to document qsv's architecture and how each command works.  The hope is doing so will [lower the barrier to contributions](https://github.com/jqnatividad/qsv/blob/master/CONTRIBUTING.md) and help us grow the community of qsv contributors.
+
+
+### Added
+* build(deps): bump serde from 1.0.179 to 1.0.180 by @dependabot in https://github.com/jqnatividad/qsv/pull/1176
+* build(deps): bump pyo3 from 0.19.1 to 0.19.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1177
+* build(deps): bump qsv-dateparser from 0.9.0 to 0.10.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1178
+* describegpt: add -Q, --quiet option by @rzmk in https://github.com/jqnatividad/qsv/pull/1179
+* build(deps): bump qsv-sniffer from 0.9.4 to 0.10.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1180
+* build(deps): bump indicatif from 0.17.5 to 0.17.6 by @dependabot in https://github.com/jqnatividad/qsv/pull/1182
+* Bump to qsv stats 0.11 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1184
+* build(deps): bump serde from 1.0.180 to 1.0.181 by @dependabot in https://github.com/jqnatividad/qsv/pull/1185
+* build(deps): bump qsv_docopt from 1.3.0 to 1.4.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1186
+* `stats`: refactor init date inference by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1187
+* `search` &  `searchset`: amortize allocs by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1188
+* `sort`: add --faster option by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1190
+* `stats`: use fast-float to convert string to float by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1191
+* use fast-float project-wide by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1192
+* build(deps): bump filetime from 0.2.21 to 0.2.22 by @dependabot in https://github.com/jqnatividad/qsv/pull/1193
+* build(deps): bump regex from 1.9.1 to 1.9.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1194
+* build(deps): bump regex from 1.9.2 to 1.9.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1195
+* build(deps): bump serde from 1.0.181 to 1.0.182 by @dependabot in https://github.com/jqnatividad/qsv/pull/1196
+* build(deps): bump tempfile from 3.7.0 to 3.7.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1199
+* build(deps): bump strum_macros from 0.25.1 to 0.25.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1200
+* build(deps): bump serde from 1.0.182 to 1.0.183 by @dependabot in https://github.com/jqnatividad/qsv/pull/1201
+
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.110.0...0.111.0
+
 ## [0.110.0] - 2023-07-30
 ### Added
 * `describegpt`: Add jsonl to prompt file doc section & more clarification by @rzmk in https://github.com/jqnatividad/qsv/pull/1149
