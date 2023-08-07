@@ -37,6 +37,7 @@ jobs:
             default-features:
             addl-qsvlite-features:
             addl-qsvdp-features: luau
+            addl-rustflags: -C target-feature=+fxsr,+sse,+sse2,+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+fma
           # - os: ubuntu-latest
           #   os-name: linux
           #   target: x86_64-unknown-linux-musl
@@ -52,6 +53,7 @@ jobs:
             default-features:
             addl-qsvlite-features:
             addl-qsvdp-features: luau
+            addl-rustflags: -C target-feature=+fxsr,+sse,+sse2,+sse3,+sse4.1,+sse4.2
           - os: windows-latest
             os-name: windows
             target: x86_64-pc-windows-gnu
@@ -60,6 +62,7 @@ jobs:
             default-features: --no-default-features 
             addl-qsvlite-features:
             addl-qsvdp-features: luau
+            addl-rustflags: -C target-feature=+fxsr,+sse,+sse2,+sse3,+sse4.1,+sse4.2
           - os: macos-latest
             os-name: macos
             target: x86_64-apple-darwin
@@ -68,6 +71,7 @@ jobs:
             default-features:
             addl-qsvlite-features:
             addl-qsvdp-features: luau
+            addl-rustflags: -C target-feature=+fxsr,+sse,+sse2,+sse3,+sse4.1,+sse4.2
 
     steps:
     - name: Installing Rust toolchain
@@ -91,6 +95,8 @@ jobs:
     - name: Build qsv-nightly
       # env:
       #   RUSTFLAGS: --emit=asm
+      env:
+        RUSTFLAGS: ${{ matrix.job.addl-rustflags }}
       uses: actions-rs/cargo@v1
       with:
         command: build
@@ -99,7 +105,7 @@ jobs:
         args: --profile release-nightly --bin qsv -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }},feature_capable,nightly ${{ matrix.job.default-features }}
     - name: Build qsvlite-nightly
       env:
-        RUSTFLAGS: --emit=asm
+        RUSTFLAGS: --emit=asm ${{ matrix.job.addl-rustflags }}
       uses: actions-rs/cargo@v1   
       with:
         command: build
@@ -108,7 +114,7 @@ jobs:
         args: --profile release-nightly --bin qsvlite -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --features=lite,self_update,nightly,${{ matrix.job.addl-qsvlite-features }} --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}
     - name: Build qsvdp-nightly
       env:
-        RUSTFLAGS: --emit=asm
+        RUSTFLAGS: --emit=asm ${{ matrix.job.addl-rustflags }}
       uses: actions-rs/cargo@v1
       with:
         command: build

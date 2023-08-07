@@ -43,6 +43,7 @@ jobs:
             default-features:
             addl-qsvlite-features:
             addl-qsvdp-features: luau
+            addl-rustflags: -C target-feature=+fxsr,+sse,+sse2,+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+fma
           - os: ubuntu-22.04
             os-name: linux
             target: x86_64-unknown-linux-musl
@@ -53,6 +54,7 @@ jobs:
             default-features:
             addl-qsvlite-features:
             addl-qsvdp-features:
+            addl-rustflags: -C target-feature=+fxsr,+sse,+sse2,+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+fma
           - os: ubuntu-22.04
             os-name: linux
             target: i686-unknown-linux-gnu
@@ -62,6 +64,7 @@ jobs:
             default-features:
             addl-qsvlite-features:
             addl-qsvdp-features:
+            addl-rustflags:
           - os: windows-latest
             os-name: windows
             target: x86_64-pc-windows-msvc
@@ -71,6 +74,7 @@ jobs:
             default-features:
             addl-qsvlite-features:
             addl-qsvdp-features: luau
+            addl-rustflags: -C target-feature=+fxsr,+sse,+sse2,+sse3,+sse4.1,+sse4.2
           - os: windows-latest
             os-name: windows
             target: i686-pc-windows-msvc
@@ -80,6 +84,7 @@ jobs:
             default-features:
             addl-qsvlite-features:
             addl-qsvdp-features:
+            addl-rustflags:
           - os: windows-latest
             os-name: windows
             target: x86_64-pc-windows-gnu
@@ -89,6 +94,7 @@ jobs:
             default-features: --no-default-features
             addl-qsvlite-features:
             addl-qsvdp-features: luau
+            addl-rustflags: -C target-feature=+fxsr,+sse,+sse2,+sse3,+sse4.1,+sse4.2
           # - os: macos-12
           #   os-name: macos
           #   target: x86_64-apple-darwin
@@ -116,6 +122,7 @@ jobs:
             default-features:
             addl-qsvlite-features:
             addl-qsvdp-features:
+            addl-rustflags:
           # - os: ubuntu-20.04
           #   os-name: linux
           #   target: arm-unknown-linux-gnueabihf
@@ -151,6 +158,8 @@ jobs:
     - name: Build qsv
       # env:
       #   RUSTFLAGS: --emit=asm
+      env:
+        RUSTFLAGS: ${{ matrix.job.addl-rustflags }}
       uses: actions-rs/cargo@v1
       with:
         command: build
@@ -159,7 +168,7 @@ jobs:
         args: --release --locked --bin qsv --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }},feature_capable ${{ matrix.job.default-features }}
     - name: Build qsvlite
       env:
-        RUSTFLAGS: --emit=asm
+        RUSTFLAGS: --emit=asm ${{ matrix.job.addl-rustflags }}
       uses: actions-rs/cargo@v1
       with:
         command: build
@@ -168,7 +177,7 @@ jobs:
         args: --release --locked --bin qsvlite --features=lite,self_update,${{ matrix.job.addl-qsvlite-features }} --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}
     - name: Build qsvdp
       env:
-        RUSTFLAGS: --emit=asm
+        RUSTFLAGS: --emit=asm ${{ matrix.job.addl-rustflags }}
       uses: actions-rs/cargo@v1
       with:
         command: build
