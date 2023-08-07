@@ -269,7 +269,6 @@ feature_capable = []
 nightly = [
     "regex/unstable",
     "rand/nightly",
-    "rand/simd_support",
     "pyo3/nightly",
     "hashbrown/nightly",
 ]
