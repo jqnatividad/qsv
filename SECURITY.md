@@ -9,7 +9,7 @@ As such, only the latest release will have security updates.
 
 ## Reporting a Vulnerability
 
-If you've found a vulnerability, pleases [create an issue](https://github.com/jqnatividad/qsv/issues/new/choose) in GitHub.
+If you've found a vulnerability, please [create an issue](https://github.com/jqnatividad/qsv/issues/new/choose) in GitHub.
 
 However, if a vulnerability is severe and could lead to zero-day
 exploits, please send an email to [qsv-severe@datHere.com](mailto:qsv-severe@datHere.com) instead.

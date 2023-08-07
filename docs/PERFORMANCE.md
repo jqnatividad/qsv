@@ -80,7 +80,7 @@ There are a number of commands/modes however (denoted by the "exploding head" em
 
 In addition, `frequency`, `schema` and `tojsonl` - though they do not load the entire file into memory, uses additional memory proportional to the cardinality (number of unique values) of each column compared to other "streaming" commands (denoted by the "persevering face" emoji - 😣).
 
-For very large files, this can be a problem, as qsv will run of memory and panic.
+For very large files, this can be a problem, as qsv will run out of memory and panic.
 To prevent this, qsv has two memory check heuristics when running "non-streaming" commands:
 
 ### NORMAL mode
