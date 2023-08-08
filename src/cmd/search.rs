@@ -147,6 +147,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut match_ctr: u64 = 0;
     let mut row_ctr: u64 = 0;
     let mut m;
+    let mut buffer = itoa::Buffer::new();
 
     #[allow(unused_assignments)]
     let mut matched_rows = String::with_capacity(20); // to save on allocs
@@ -170,7 +171,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         if flag {
             flag_rowi += 1;
             record.push_field(if m {
-                let mut buffer = itoa::Buffer::new();
                 buffer.format(flag_rowi).clone_into(&mut matched_rows);
                 matched_rows.as_bytes()
             } else {
