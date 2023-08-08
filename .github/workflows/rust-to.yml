@@ -31,4 +31,6 @@ jobs:
       with:
         key: qsvto-cache
     - name: Run tests
+      env:
+        RUSTFLAGS: -C target-feature=+fxsr,+sse,+sse2,+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+fma
       run: cargo test --verbose --locked --features=to,feature_capable
