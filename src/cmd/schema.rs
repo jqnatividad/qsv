@@ -734,20 +734,24 @@ fn generate_string_patterns(
 
     #[allow(unused_assignments)]
     let mut record = csv::ByteRecord::new();
+    let mut header_byte_slice: &[u8];
+    let mut header_string: String;
+    let mut value_string: String;
+
     while rdr.read_byte_record(&mut record)? {
         for (i, value_byte_slice) in sel.select(&record).enumerate() {
             // get header based on column index in Selection array
-            let header_byte_slice: &[u8] = headers.get(sel[i]).unwrap();
+            header_byte_slice = headers.get(sel[i]).unwrap();
 
             // convert header and value byte arrays to UTF8 strings
-            let header_string: String = convert_to_string(header_byte_slice)?;
+            header_string = convert_to_string(header_byte_slice)?;
 
             // pattern validation only applies to String type, so skip if not String
             if !should_emit_pattern_constraint(&properties_map[&header_string]) {
                 continue;
             }
 
-            let value_string: String = convert_to_string(value_byte_slice)?;
+            value_string = convert_to_string(value_byte_slice)?;
 
             let set = unique_values_map.entry(header_string).or_default();
             set.insert(value_string);
@@ -756,12 +760,15 @@ fn generate_string_patterns(
 
     // build regex pattern for each header
     pattern_map.reserve(unique_values_map.len());
+    let mut values: Vec<&String>;
+    let mut regexp: String;
+
     for (header, value_set) in &unique_values_map {
         // Convert Set to Vector
-        let values: Vec<&String> = Vec::from_iter(value_set);
+        values = Vec::from_iter(value_set);
 
         // build regex based on unique values
-        let regexp: String = RegExpBuilder::from(&values)
+        regexp = RegExpBuilder::from(&values)
             .with_conversion_of_repetitions()
             .with_minimum_repetitions(2)
             .build();
