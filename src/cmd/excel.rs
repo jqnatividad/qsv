@@ -461,6 +461,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         String::new()
     };
     let mut work_date;
+    let mut col_name: String;
+    let mut ryu_buffer = ryu::Buffer::new();
+    let mut itoa_buffer = itoa::Buffer::new();
 
     // TODO: Explore using rayon to parallelize this and make it faster
     info!("exporting sheet ({sheet})...");
@@ -469,7 +472,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         for cell in row {
             if row_idx == 0 {
                 info!("processing first row...");
-                let col_name: String = match *cell {
+                col_name = match *cell {
                     DataType::Empty => String::new(),
                     DataType::Error(ref _e) => String::new(),
                     DataType::String(ref s) => s.to_string(),
@@ -504,10 +507,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 DataType::Bool(ref b) => record.push_field(&b.to_string()),
                 DataType::DateTimeIso(ref dt) => record.push_field(&dt.to_string()),
                 DataType::DurationIso(ref d) => record.push_field(&d.to_string()),
-                DataType::Duration(ref d) => {
-                    let mut buffer = ryu::Buffer::new();
-                    record.push_field(buffer.format(*d));
-                }
+                DataType::Duration(ref d) => record.push_field(ryu_buffer.format(*d)),
             };
 
             // Dates are stored as floats in Excel, so if its a float value, we need to check
@@ -559,13 +559,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     || float_val > i64::MAX as f64
                     || float_val < i64::MIN as f64
                 {
-                    let mut buffer = ryu::Buffer::new();
-                    record.push_field(buffer.format_finite(float_val));
+                    record.push_field(ryu_buffer.format_finite(float_val));
                 } else {
                     // its an i64 integer. We can't use ryu to format it, because it will
                     // be formatted as a float (have a ".0"). So we use itoa.
-                    let mut buffer = itoa::Buffer::new();
-                    record.push_field(buffer.format(float_val as i64));
+                    record.push_field(itoa_buffer.format(float_val as i64));
                 }
                 // set the float flag to false, so we don't try to process the next cell as a float
                 float_flag = false;
