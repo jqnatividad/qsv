@@ -69,7 +69,7 @@ jobs:
         sudo ln -s /usr/bin/g++ /usr/bin/musl-g++        
     - name: Build qsv
       env:
-        RUSTFLAGS: --emit=asm
+        RUSTFLAGS: -C target-feature=+fxsr,+sse,+sse2,+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+fma
       uses: actions-rs/cargo@v1
       with:
         command: build
@@ -78,7 +78,7 @@ jobs:
         args: --release --locked --bin qsv --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }},feature_capable ${{ matrix.job.default-features }}
     - name: Build qsvlite
       env:
-        RUSTFLAGS: --emit=asm
+        RUSTFLAGS: -C target-feature=+fxsr,+sse,+sse2,+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+fma
       uses: actions-rs/cargo@v1
       with:
         command: build
@@ -87,7 +87,7 @@ jobs:
         args: --release --locked --bin qsvlite --features=lite,self_update,${{ matrix.job.addl-qsvlite-features }} --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}
     - name: Build qsvdp
       env:
-        RUSTFLAGS: --emit=asm
+        RUSTFLAGS: -C target-feature=+fxsr,+sse,+sse2,+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+fma
       uses: actions-rs/cargo@v1
       with:
         command: build
