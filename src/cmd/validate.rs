@@ -570,11 +570,17 @@ fn to_json_instance(
     // safety: we set NULL_TYPE in main() and it's never changed
     let null_type = NULL_TYPE.get().unwrap();
 
+    let mut key_string: String;
+    let mut value_string: String;
+    let mut field_def: &Value;
+    let mut field_type_def: &Value;
+    let mut json_type: u8;
+
     // iterate over each CSV field and convert to JSON type
     for (i, header) in headers.iter().enumerate() {
         // convert csv header to string. It's the key in the JSON object
-        let key_string = if let Ok(s) = from_utf8(header) {
-            s.to_string()
+        key_string = if let Ok(s) = from_utf8(header) {
+            s.to_owned()
         } else {
             let s = String::from_utf8_lossy(header);
             return fail!(format!("CSV header is not valid UTF-8: {s}"));
@@ -584,8 +590,8 @@ fn to_json_instance(
         let Some(value) = record.get(i) else {
             return fail!("CSV record is missing value for header '{key_string}' at index {i}");
         };
-        let value_string = if let Ok(s) = from_utf8(value) {
-            s.to_string()
+        value_string = if let Ok(s) = from_utf8(value) {
+            s.to_owned()
         } else {
             let s = String::from_utf8_lossy(value);
             return fail!(format!("CSV value is not valid UTF-8: {s}"));
@@ -598,12 +604,12 @@ fn to_json_instance(
         }
 
         // get json type from schema; defaults to STRING if not specified
-        let field_def: &Value = schema_properties.get(&key_string).unwrap_or(&Value::Null);
+        field_def = schema_properties.get(&key_string).unwrap_or(&Value::Null);
 
-        let field_type_def: &Value = field_def.get("type").unwrap_or(&Value::Null);
+        field_type_def = field_def.get("type").unwrap_or(&Value::Null);
 
         // we do json_type as a u8 so match will be a tad faster below
-        let json_type: u8 = match field_type_def {
+        json_type = match field_type_def {
             Value::String(s) => s.as_bytes()[0],
             Value::Array(vec) => {
                 // if can't find usable type info, defaults to "string"
