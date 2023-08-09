@@ -20,6 +20,25 @@ fn excel_open_xls() {
 }
 
 #[test]
+fn excel_open_xls_delimiter() {
+    let wrk = Workdir::new("excel_open_xls_delimiter");
+
+    let xls_file = wrk.load_test_file("excel-xls.xls");
+
+    let mut cmd = wrk.command("excel");
+    cmd.args(["--delimiter", ";"]).arg(xls_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["URL;City"],
+        svec!["http://api.zippopotam.us/us/90210;Beverly Hills"],
+        svec!["http://api.zippopotam.us/us/94105;San Francisco"],
+        svec!["http://api.zippopotam.us/us/92802;Anaheim"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn excel_open_xlsx_readpassword() {
     let wrk = Workdir::new("excel_open_xlsx_readpassword");
 
