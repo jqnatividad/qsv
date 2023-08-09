@@ -32,8 +32,7 @@ Excel options:
                                
                                All other Excel options are ignored.
                                [default: none]
-    --flexible                 Continue even if the number of columns is different 
-                               from the previous record.
+    --flexible                 Continue even if the number of columns is different from row to row.
     --trim                     Trim all fields so that leading & trailing whitespaces are removed.
                                Also removes embedded linebreaks.
     --date-format <format>     Optional date format to use when formatting dates.
@@ -46,6 +45,8 @@ Excel options:
 Common options:
     -h, --help                 Display this message
     -o, --output <file>        Write output to <file> instead of stdout.
+    -d, --delimiter <arg>      The delimiter to use when writing CSV data.
+                               Must be a single character. [default: ,]
     -Q, --quiet                Do not display export summary message.
 "#;
 
@@ -56,7 +57,10 @@ use log::info;
 use serde::{Deserialize, Serialize};
 use thousands::Separable;
 
-use crate::{config::Config, util, CliResult};
+use crate::{
+    config::{Config, Delimiter},
+    util, CliResult,
+};
 
 #[derive(Deserialize)]
 struct Args {
@@ -66,6 +70,7 @@ struct Args {
     flag_flexible:    bool,
     flag_trim:        bool,
     flag_output:      Option<String>,
+    flag_delimiter:   Option<Delimiter>,
     flag_quiet:       bool,
     flag_date_format: Option<String>,
     flag_range:       String,
@@ -209,6 +214,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut wtr = Config::new(&args.flag_output)
         .flexible(args.flag_flexible)
+        .delimiter(args.flag_delimiter)
         .writer()?;
 
     // set Metadata Mode
@@ -586,8 +592,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         };
                         record.push_field(&work_date);
                     // its not a date, so just push the ryu-formatted float value if its not an
-                    // integer or the candidate integer is too big or too small
-                    // to be an i64
+                    // integer or the candidate integer is too big or too small to be an i64
                     } else if float_val.fract().abs() > 0.0
                         || float_val > i64::MAX as f64
                         || float_val < i64::MIN as f64
@@ -598,8 +603,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         // be formatted as a float (have a ".0"). So we use itoa.
                         record.push_field(itoa_buffer.format(float_val as i64));
                     }
-                    // set the float flag to false, so we don't try to process the next cell as a
-                    // float
+                    // reset the float flag
                     float_flag = false;
                 }
             }
