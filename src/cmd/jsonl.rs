@@ -20,6 +20,8 @@ jsonl options:
 Common options:
     -h, --help             Display this message
     -o, --output <file>    Write output to <file> instead of stdout.
+    -d, --delimiter <arg>  The delimiter to use when writing CSV data.
+                           Must be a single character. [default: ,]
 "#;
 
 use std::{
@@ -30,12 +32,16 @@ use std::{
 use serde::Deserialize;
 use serde_json::Value;
 
-use crate::{config::Config, util, CliResult};
+use crate::{
+    config::{Config, Delimiter},
+    util, CliResult,
+};
 
 #[derive(Deserialize)]
 struct Args {
     arg_input:          Option<String>,
     flag_output:        Option<String>,
+    flag_delimiter:     Option<Delimiter>,
     flag_ignore_errors: bool,
 }
 
@@ -131,7 +137,9 @@ fn json_line_to_csv_record(value: &Value, headers: &[Vec<String>]) -> csv::Strin
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
-    let mut wtr = Config::new(&args.flag_output).writer()?;
+    let mut wtr = Config::new(&args.flag_output)
+        .delimiter(args.flag_delimiter)
+        .writer()?;
 
     let rdr: Box<dyn BufRead> = match args.arg_input {
         None => Box::new(BufReader::new(io::stdin())),
