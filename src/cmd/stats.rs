@@ -701,23 +701,24 @@ impl Args {
     where
         I: Iterator<Item = csv::Result<csv::ByteRecord>>,
     {
-        let sel_len = sel.len();
+        let mut stats = self.new_stats(sel.len());
 
-        let mut stats = self.new_stats(sel_len);
-        assert!(stats.len() == sel_len);
-
+        // safety: we know INFER_DATE_FLAGS is Some because we called init_date_inference
         let infer_date_flags = INFER_DATE_FLAGS.get().unwrap();
-        assert!(infer_date_flags.len() == sel_len);
+        // so we don't need to get flag_infer_boolean from big args struct for each iteration
+        let infer_boolean = self.flag_infer_boolean;
 
-        // safety: the asserts above guarantee that the following unwraps are safe
-        // and doesn't require a bounds check.
-        for row in it {
-            for (i, field) in sel.select(&row.unwrap()).enumerate() {
-                stats.get_mut(i).unwrap().add(
-                    field,
-                    *infer_date_flags.get(i).unwrap(),
-                    self.flag_infer_boolean,
-                );
+        // safety: because we're using iterators and INFER_DATE_FLAGS has the same size,
+        // we know we don't need to bounds check
+        unsafe {
+            for row in it {
+                for (i, field) in sel.select(&row.unwrap_unchecked()).enumerate() {
+                    stats.get_unchecked_mut(i).add(
+                        field,
+                        *infer_date_flags.get_unchecked(i),
+                        infer_boolean,
+                    );
+                }
             }
         }
         stats
