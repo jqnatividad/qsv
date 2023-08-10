@@ -68,7 +68,7 @@ jobs:
         sudo ln -s /usr/bin/g++ /usr/bin/musl-g++        
     - name: Build qsv
       env:
-        RUSTFLAGS: -C linker=musl-cc -C target-feature=crt-static,+fxsr,+sse,+sse2,+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+fma
+        RUSTFLAGS: -C target-feature=crt-static,+fxsr,+sse,+sse2,+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+fma
       uses: actions-rs/cargo@v1
       with:
         command: build
