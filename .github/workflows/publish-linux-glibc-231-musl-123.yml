@@ -43,7 +43,7 @@ jobs:
             target: x86_64-unknown-linux-musl
             architecture: x86_64
             musl-prep: true
-            addl-build-args: --features=apply,generate,fetch,foreach,self_update
+            addl-build-args: --features=apply,generate,fetch,foreach,self_update,polars
             default-features:
             addl-qsvlite-features:
             addl-qsvdp-features:
@@ -60,7 +60,6 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
       with:
-        submodules: recursive
         ref: ${{ needs.analyze-tags.outputs.previous-tag }}
     - name: build prep for x86_64-unknown-linux-musl
       if: ${{ matrix.job.musl-prep }}
