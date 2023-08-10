@@ -2,7 +2,7 @@ use crate::workdir::Workdir;
 
 #[test]
 fn jsonl_simple() {
-    let wrk = Workdir::new("jsonl");
+    let wrk = Workdir::new("jsonl_simple");
     wrk.create_from_string(
         "data.jsonl",
         r#"{"id":1,"father":"Mark","mother":"Charlotte","oldest_child":"Tom","boy":true}
@@ -18,6 +18,28 @@ fn jsonl_simple() {
         svec!["1", "Mark", "Charlotte", "Tom", "true"],
         svec!["2", "John", "Ann", "Jessika", "false"],
         svec!["3", "Bob", "Monika", "Jerry", "true"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn jsonl_simple_delimiter() {
+    let wrk = Workdir::new("jsonl_simple_delimiter");
+    wrk.create_from_string(
+        "data.jsonl",
+        r#"{"id":1,"father":"Mark","mother":"Charlotte","oldest_child":"Tom","boy":true}
+{"id":2,"father":"John","mother":"Ann","oldest_child":"Jessika","boy":false}
+{"id":3,"father":"Bob","mother":"Monika","oldest_child":"Jerry","boy":true}"#,
+    );
+    let mut cmd = wrk.command("jsonl");
+    cmd.args(["--delimiter", ";"]).arg("data.jsonl");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["id;father;mother;oldest_child;boy"],
+        svec!["1;Mark;Charlotte;Tom;true"],
+        svec!["2;John;Ann;Jessika;false"],
+        svec!["3;Bob;Monika;Jerry;true"],
     ];
     assert_eq!(got, expected);
 }
