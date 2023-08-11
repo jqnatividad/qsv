@@ -1582,8 +1582,7 @@ struct TypedSum {
 impl TypedSum {
     #[inline]
     fn add(&mut self, typ: FieldType, sample: &[u8]) {
-        #[allow(clippy::len_zero)]
-        if sample.len() == 0 {
+        if b"" == sample {
             return;
         }
         #[allow(clippy::cast_precision_loss)]
