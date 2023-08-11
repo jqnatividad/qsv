@@ -1468,8 +1468,8 @@ impl FieldType {
         sample: &[u8],
         current_type: FieldType,
     ) -> (FieldType, Option<i64>) {
-        #[allow(clippy::len_zero)]
-        if sample.len() == 0 {
+        // faster than sample.len() == 0 or sample.is_empty() per microbenchmarks
+        if b"" == sample {
             return (TNull, None);
         }
         // no need to do type checking if current_type is already a String
