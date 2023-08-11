@@ -183,6 +183,7 @@ impl Args {
         Ok((headers, merge_all(recv.iter()).unwrap()))
     }
 
+    #[inline]
     fn ftables<I>(&self, sel: &Selection, it: I) -> CliResult<FTables>
     where
         I: Iterator<Item = csv::Result<csv::ByteRecord>>,
@@ -193,19 +194,21 @@ impl Args {
         #[allow(unused_assignments)]
         // amortize allocation
         let mut field_work: Vec<u8> = Vec::with_capacity(100);
-        let mut row_work: csv::ByteRecord;
+        let mut row_work: csv::ByteRecord = Default::default();
+        let flag_no_nulls = self.flag_no_nulls;
         for row in it {
-            row_work = row?;
+            row_work.clone_from(&row?);
             for (i, field) in nsel.select(row_work.into_iter()).enumerate() {
                 field_work = {
-                    match simdutf8::basic::from_utf8(field) {
-                        Ok(s) => s.trim().as_bytes().to_vec(),
-                        Err(_) => field.to_vec(),
+                    if let Ok(s) = simdutf8::basic::from_utf8(field) {
+                        s.trim().as_bytes().to_vec()
+                    } else {
+                        field.to_vec()
                     }
                 };
                 if !field_work.is_empty() {
                     tabs[i].add(field_work);
-                } else if !self.flag_no_nulls {
+                } else if !flag_no_nulls {
                     tabs[i].add(null.clone());
                 }
             }
