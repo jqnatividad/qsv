@@ -144,7 +144,7 @@ impl Args {
                             }
                         }
                         vacant.insert(wtr)
-                    }
+                    },
                 };
             if self.flag_drop {
                 wtr.write_record(row.iter().enumerate().filter_map(|(i, e)| {

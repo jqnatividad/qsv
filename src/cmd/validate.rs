@@ -171,7 +171,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         "{} columns (\"{field_list}\") and ",
                         header_len.separate_with_commas()
                     );
-                }
+                },
                 Err(e) => {
                     if args.flag_json || args.flag_pretty_json {
                         let header_error = json!({
@@ -189,7 +189,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         return fail!(json_error);
                     }
                     return fail_clierror!("Cannot read header ({e}).");
-                }
+                },
             }
         }
 
@@ -280,17 +280,17 @@ Use `qsv input` to fix formatting and to transcode to utf8 if required."#
                             Ok(schema) => (json, schema),
                             Err(e) => {
                                 return fail_clierror!("Cannot compile schema json. error: {e}");
-                            }
+                            },
                         }
-                    }
+                    },
                     Err(e) => {
                         return fail_clierror!("Unable to parse schema json. error: {e}");
-                    }
+                    },
                 }
-            }
+            },
             Err(e) => {
                 return fail_clierror!("Unable to retrieve json. error: {e}");
-            }
+            },
         };
 
     debug!("compiled schema: {:?}", &schema_compiled);
@@ -335,10 +335,10 @@ Use `qsv input` to fix formatting and to transcode to utf8 if required."#
                         // nothing else to add to batch
                         break;
                     }
-                }
+                },
                 Err(e) => {
                     return fail_clierror!("Error reading row: {row_number}: {e}");
-                }
+                },
             }
         }
 
@@ -532,7 +532,7 @@ fn do_json_validation(
             Ok(obj) => obj,
             Err(e) => {
                 return Some(format!("{row_number_string}\t<RECORD>\t{e}"));
-            }
+            },
         }),
         schema_compiled,
     )
@@ -629,11 +629,11 @@ fn to_json_instance(
                 }
 
                 return_val
-            }
+            },
             _ => {
                 // default to JSON String
                 b's'
-            }
+            },
         };
 
         // dbg!(i, &header_string, &value_string, &json_type);
@@ -643,7 +643,7 @@ fn to_json_instance(
             b's' => {
                 // string
                 json_object_map.insert(key_string, Value::String(value_string));
-            }
+            },
             b'n' => {
                 // number
                 if let Ok(float) = fast_float::parse(&value_string) {
@@ -658,7 +658,7 @@ fn to_json_instance(
                          type: number"
                     );
                 }
-            }
+            },
             b'i' => {
                 // integer
                 if let Ok(int) = value_string.parse::<i64>() {
@@ -669,7 +669,7 @@ fn to_json_instance(
                          type: integer"
                     );
                 }
-            }
+            },
             b'b' => {
                 // boolean
                 if let Ok(boolean) = value_string.parse::<bool>() {
@@ -680,10 +680,10 @@ fn to_json_instance(
                          type: boolean"
                     );
                 }
-            }
+            },
             _ => {
                 unreachable!("we should never get an unknown json type");
-            }
+            },
         }
     }
 
@@ -835,7 +835,7 @@ fn validate_json_instance(
             BasicOutput::Valid(_annotations) => {
                 // shouldn't happen
                 unreachable!("Unexpected error.");
-            }
+            },
         };
 
         Some(validation_errors)
@@ -950,14 +950,14 @@ fn load_json(uri: &str) -> Result<String, String> {
                 Ok(c) => c,
                 Err(e) => {
                     return fail_format!("Cannot build reqwest client: {e}.");
-                }
+                },
             };
 
             match client.get(url).send() {
                 Ok(response) => response.text().unwrap_or_default(),
                 Err(e) => return fail_format!("Cannot read JSON at url {url}: {e}."),
             }
-        }
+        },
         path => {
             let mut buffer = String::new();
             match File::open(path) {
@@ -965,11 +965,11 @@ fn load_json(uri: &str) -> Result<String, String> {
                     BufReader::new(p)
                         .read_to_string(&mut buffer)
                         .unwrap_or_default();
-                }
+                },
                 Err(e) => return fail_format!("Cannot read JSON file {path}: {e}."),
             }
             buffer
-        }
+        },
     };
 
     Ok(json_string)

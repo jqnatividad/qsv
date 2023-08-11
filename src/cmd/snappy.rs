@@ -133,11 +133,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 config::DEFAULT_RDR_BUFFER_CAPACITY,
                 file,
             ))
-        }
+        },
         None => {
             input_bytes = 0;
             Box::new(io::BufReader::new(stdin().lock()))
-        }
+        },
     };
 
     let output_writer: Box<dyn Write + Send + 'static> = match &args.flag_output {

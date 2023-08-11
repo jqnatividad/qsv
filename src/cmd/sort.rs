@@ -135,7 +135,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 let mut rng = ::rand::thread_rng();
                 SliceRandom::shuffle(&mut *all, &mut rng); //DevSkim: ignore DS148264
             }
-        }
+        },
         // --random --faster stable sort
         (_, _, true, true) => {
             // faster random sorts using Wyrand
@@ -143,7 +143,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 fastrand::seed(val); //DevSkim: ignore DS148264
             }
             fastrand::shuffle(&mut all); //DevSkim: ignore DS148264
-        }
+        },
 
         // default stable sort
         (false, false, false, false) => all.par_sort_by(|r1, r2| {
@@ -224,11 +224,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     cmp::Ordering::Equal => (),
                     _ => {
                         wtr.write_byte_record(&r)?;
-                    }
+                    },
                 },
                 None => {
                     wtr.write_byte_record(&r)?;
-                }
+                },
             }
 
             prev = Some(r);

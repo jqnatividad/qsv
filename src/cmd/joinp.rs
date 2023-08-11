@@ -303,7 +303,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 );
             }
             join.run(JoinType::AsOf(asof_options), validation, true)
-        }
+        },
         _ => fail!("Please pick exactly one join operation."),
     }?;
 
@@ -403,7 +403,7 @@ impl JoinStruct {
             Some(output_file) => {
                 let path = Path::new(&output_file);
                 Box::new(File::create(path).unwrap()) as Box<dyn Write>
-            }
+            },
             None => Box::new(io::stdout()) as Box<dyn Write>,
         };
 

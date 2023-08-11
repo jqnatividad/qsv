@@ -128,10 +128,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             diff_byte_records
                 .sort_by_columns(sort_cols)
                 .map_err(|e| CliError::Other(e.to_string()))?;
-        }
+        },
         None => {
             diff_byte_records.sort_by_line();
-        }
+        },
     }
 
     Ok(csv_diff_writer.write_diff_byte_records(diff_byte_records)?)
@@ -162,19 +162,19 @@ impl<W: Write> CsvDiffWriter<W> {
                 // not.
                 #[allow(clippy::let_underscore_untyped)]
                 let _ = rdr_right.byte_headers()?;
-            }
+            },
             (true, false) => {
                 let rdr_bh = rdr_left.byte_headers()?;
 
                 rdr_bh.write_diffresult_header(&mut self.csv_writer)?;
-            }
+            },
             (false, true) => {
                 let rdr_bh = rdr_right.byte_headers()?;
 
                 rdr_bh.write_diffresult_header(&mut self.csv_writer)?;
-            }
+            },
             // nothing to do, because there are no headers
-            (false, false) => {}
+            (false, false) => {},
         }
 
         Ok(())
@@ -200,7 +200,7 @@ impl<W: Write> CsvDiffWriter<W> {
                 let mut vec = vec![add_sign];
                 vec.extend(add.byte_record());
                 self.csv_writer.write_record(vec)
-            }
+            },
             DiffByteRecord::Modify {
                 delete,
                 add,
@@ -215,12 +215,12 @@ impl<W: Write> CsvDiffWriter<W> {
                 let mut vec_add = vec![add_sign];
                 vec_add.extend(add.byte_record());
                 self.csv_writer.write_record(vec_add)
-            }
+            },
             DiffByteRecord::Delete(del) => {
                 let mut vec = vec![remove_sign];
                 vec.extend(del.byte_record());
                 self.csv_writer.write_record(vec)
-            }
+            },
         }
     }
 }

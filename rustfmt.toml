@@ -9,3 +9,4 @@ group_imports                = "StdExternalCrate"
 imports_granularity          = "Crate"
 enum_discrim_align_threshold = 20
 struct_field_align_threshold = 20
+match_block_trailing_comma   = true

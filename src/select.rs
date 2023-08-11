@@ -183,7 +183,7 @@ impl SelectorParser {
             match self.cur() {
                 None => {
                     return fail!("Unclosed quote, missing closing \".");
-                }
+                },
                 Some('"') => {
                     self.bump();
                     if self.cur() == Some('"') {
@@ -193,11 +193,11 @@ impl SelectorParser {
                         continue;
                     }
                     break;
-                }
+                },
                 Some(c) => {
                     name.push(c);
                     self.bump();
-                }
+                },
             }
         }
         Ok(name)
@@ -212,15 +212,15 @@ impl SelectorParser {
             match self.cur() {
                 None => {
                     return fail!("Unclosed index bracket, missing closing ].");
-                }
+                },
                 Some(']') => {
                     self.bump();
                     break;
-                }
+                },
                 Some(c) => {
                     idx.push(c);
                     self.bump();
-                }
+                },
             }
         }
         FromStr::from_str(&idx)
@@ -283,9 +283,9 @@ impl Selector {
                             inds.push(i);
                         }
                         inds
-                    }
+                    },
                 })
-            }
+            },
             Selector::Regex(ref re) => {
                 let inds: Vec<usize> = first_record
                     .iter()
@@ -299,7 +299,7 @@ impl Selector {
                     );
                 }
                 Ok(inds)
-            }
+            },
         }
     }
 }
@@ -326,7 +326,7 @@ impl OneSelector {
                     // Indices given by user are 1-offset. Convert them here!
                     Ok(i - 1)
                 }
-            }
+            },
             OneSelector::IndexedName(ref s, sidx) => {
                 if !use_names {
                     return fail_format!(
@@ -354,7 +354,7 @@ impl OneSelector {
                         num_found - 1
                     )
                 }
-            }
+            },
         }
     }
 }

@@ -84,7 +84,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 config::DEFAULT_RDR_BUFFER_CAPACITY,
                 file,
             ))
-        }
+        },
         None => Box::new(io::BufReader::new(stdin().lock())),
     };
 

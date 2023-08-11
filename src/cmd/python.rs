@@ -260,10 +260,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         // nothing else to add to batch
                         break;
                     }
-                }
+                },
                 Err(e) => {
                     return fail_clierror!("Error reading file: {e}");
-                }
+                },
             }
         }
 

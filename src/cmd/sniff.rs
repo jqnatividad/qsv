@@ -325,7 +325,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                     Ok(c) => c,
                     Err(e) => {
                         return fail_clierror!("Cannot build reqwest client: {e}.");
-                    }
+                    },
                 };
 
                 let res = client
@@ -343,7 +343,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                             // convert Last-Modified RFC2822 to RFC3339 format
                             let dt = chrono::DateTime::parse_from_rfc2822(s).unwrap();
                             dt.to_rfc3339_opts(chrono::SecondsFormat::Secs, false)
-                        }
+                        },
                         // server did not return Last-Modified header
                         Err(_) => String::from("Unknown"),
                     },
@@ -356,7 +356,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                         // if we can't get the content length, just set it to a large value
                         // so we just end up downloading the entire file
                         usize::MAX
-                    }
+                    },
                 };
 
                 #[allow(clippy::cast_precision_loss)]
@@ -577,7 +577,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                     last_modified,
                     downloaded_records,
                 })
-            }
+            },
             // its a file. If its a snappy file, decompress it first
             // aftwerwards, check if its one of the supported file types
             // finally, check if its a utf8 file
@@ -601,10 +601,10 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                                 .unwrap();
                             log::info!("Decompressed {lower_ext} file to {path}");
                         }
-                    }
+                    },
                     None => {
                         log::warn!("File extension not found");
-                    }
+                    },
                 }
 
                 let metadata = fs::metadata(&path)
@@ -623,7 +623,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                             chrono::DateTime::<chrono::Utc>::from_utc(naive, chrono::Utc);
                         // format the datetime to RFC3339
                         format!("{datetime}", datetime = datetime.format("%+"))
-                    }
+                    },
                     Err(_) => "N/A".to_string(),
                 };
 
@@ -640,7 +640,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                     last_modified,
                     downloaded_records: 0,
                 })
-            }
+            },
         }
     } else {
         // read from stdin and write to a temp file
@@ -827,7 +827,7 @@ async fn sniff_main(mut args: Args) -> CliResult<()> {
                     return fail_clierror!("{json_result}");
                 }
                 return fail_clierror!("{}", e);
-            }
+            },
         }
     } else {
         // usize::MAX is a sentinel value to let us
@@ -887,7 +887,7 @@ async fn sniff_main(mut args: Args) -> CliResult<()> {
     let quote_char = match args.flag_quote {
         Some(quote_char) => {
             qsv_sniffer::metadata::Quote::Some(*quote_char.to_string().as_bytes().first().unwrap())
-        }
+        },
         _ => qsv_sniffer::metadata::Quote::None,
     };
 
@@ -982,10 +982,10 @@ async fn sniff_main(mut args: Args) -> CliResult<()> {
                 types: sniffedtypes,
                 stats_types: args.flag_stats_types,
             };
-        }
+        },
         Err(e) => {
             sniff_error = Some(format!("{e}"));
-        }
+        },
     }
 
     cleanup_tempfile(sfile_info.tempfile_flag, tempfile_to_delete)?;

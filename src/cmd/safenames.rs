@@ -152,7 +152,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         'J' => SafeNameMode::VerifyVerbosePrettyJSON,
         _ => {
             return fail_clierror!("Invalid mode: {}", args.flag_mode);
-        }
+        },
     };
 
     let reserved_names_vec: Vec<String> = args
@@ -250,7 +250,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     num_headers = headers_count,
                     num_safeheaders = safe_count
                 );
-            }
+            },
             SafeNameMode::VerifyVerboseJSON | SafeNameMode::VerifyVerbosePrettyJSON => {
                 if safenames_mode == SafeNameMode::VerifyVerbosePrettyJSON {
                     println!(
@@ -260,7 +260,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 } else {
                     println!("{}", serde_json::to_string(&safenames_struct).unwrap());
                 };
-            }
+            },
             _ => eprintln!("{unsafe_count}"),
         }
     }

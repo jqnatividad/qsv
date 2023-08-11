@@ -251,7 +251,7 @@ impl Args {
                         } else {
                             break 'OUTER;
                         }
-                    }
+                    },
                     Some(Err(err)) => return fail!(err),
                     Some(Ok(next)) => record.extend(&next),
                 }

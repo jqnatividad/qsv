@@ -153,7 +153,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 return fail_clierror!(
                     "Failed to infer schema via stats and frequency from {input_filename}: {e}"
                 );
-            }
+            },
         };
 
     // generate regex pattern for selected String columns
@@ -315,7 +315,7 @@ pub fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<M
                         enum_list.push(Value::String(value.to_string()));
                     }
                 }
-            }
+            },
             "Integer" => {
                 type_list.push(Value::String("integer".to_string()));
 
@@ -336,7 +336,7 @@ pub fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<M
                         enum_list.push(Value::Number(Number::from(int_value)));
                     }
                 }
-            }
+            },
             "Float" => {
                 type_list.push(Value::String("number".to_string()));
 
@@ -355,29 +355,29 @@ pub fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<M
                         Value::Number(Number::from_f64(max).unwrap()),
                     );
                 };
-            }
+            },
             "NULL" => {
                 type_list.push(Value::String("null".to_string()));
-            }
+            },
             "Date" => {
                 type_list.push(Value::String("string".to_string()));
 
                 if args.flag_strict_dates {
                     field_map.insert("format".to_string(), Value::String("date".to_string()));
                 }
-            }
+            },
             "DateTime" => {
                 type_list.push(Value::String("string".to_string()));
 
                 if args.flag_strict_dates {
                     field_map.insert("format".to_string(), Value::String("date-time".to_string()));
                 }
-            }
+            },
             _ => {
                 wwarn!("Stats gave unexpected field type '{col_type}', default to JSON String.");
                 // defaults to JSON String
                 type_list.push(Value::String("string".to_string()));
-            }
+            },
         }
 
         if col_null_count > 0 && !type_list.contains(&Value::String("null".to_string())) {
@@ -474,10 +474,10 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
             Ok(stats) => {
                 csv_stats = stats;
                 stats_bin_loaded = true;
-            }
+            },
             Err(e) => {
                 wwarn!("Error reading stats.csv.bin file: {e:?}. Regenerating stats.bin file.");
-            }
+            },
         }
     }
 
@@ -544,12 +544,12 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
         match bincode::deserialize_from(&mut bin_file) {
             Ok(stats) => {
                 csv_stats = stats;
-            }
+            },
             Err(e) => {
                 return fail_clierror!(
                     "Error reading stats.csv.bin file: {e:?}. Schema generation aborted."
                 );
-            }
+            },
         }
     };
 

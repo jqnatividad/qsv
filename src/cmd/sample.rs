@@ -102,7 +102,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 // its a local file
                 Some(uri)
             }
-        }
+        },
         None => None,
     };
 

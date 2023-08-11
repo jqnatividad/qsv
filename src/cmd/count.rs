@@ -60,7 +60,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             Some(idx) => {
                 info!("index used");
                 (idx.count(), 0)
-            }
+            },
             None => count_input(&conf, args.flag_width)?,
         }
     };

@@ -157,10 +157,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         match comparison {
             cmp::Ordering::Equal => {
                 dupe_count += 1;
-            }
+            },
             cmp::Ordering::Less => {
                 record.clone_from(&next_record);
-            }
+            },
             cmp::Ordering::Greater => {
                 sorted = false;
                 if args.flag_all || do_json {
@@ -169,7 +169,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 } else {
                     break;
                 }
-            }
+            },
         }
     } // end loop
 

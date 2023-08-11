@@ -129,7 +129,7 @@ fn send_request(
         other => {
             let error_json = json!({"Error: Unsupported HTTP method ": other});
             return fail_clierror!("{error_json}");
-        }
+        },
     };
 
     // If API key is provided, add it to the request header
@@ -194,7 +194,7 @@ fn get_prompt_file(args: &Args) -> CliResult<PromptFile> {
             Err(e) => {
                 let error_json = json!({"error": e.to_string()});
                 return fail_clierror!("{error_json}");
-            }
+            },
         };
         prompt_file
     }
@@ -260,7 +260,7 @@ fn get_prompt(
         "tags_prompt" => prompt_file.tags_prompt,
         _ => {
             return fail_clierror!("Error: Invalid prompt type: {prompt_type}");
-        }
+        },
     };
     // Replace variable data in prompt
     let prompt = prompt
@@ -542,7 +542,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 return fail!("Error: QSV_OPENAI_KEY environment variable is empty.");
             }
             val
-        }
+        },
         Err(_) => {
             // Check if the --key flag is present
             if let Some(api_key) = args.flag_openai_key.clone() {
@@ -553,7 +553,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             } else {
                 return fail!(OPENAI_KEY_ERROR);
             }
-        }
+        },
     };
 
     // Check if user gives arg_input

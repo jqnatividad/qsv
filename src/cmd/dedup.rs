@@ -125,16 +125,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     if dupes_output {
                         dupewtr.write_byte_record(&record)?;
                     }
-                }
+                },
                 cmp::Ordering::Less => {
                     wtr.write_byte_record(&record)?;
                     record.clone_from(&next_record);
-                }
+                },
                 cmp::Ordering::Greater => {
                     return fail_clierror!(
                         "Aborting! Input not sorted! {record:?} is greater than {next_record:?}"
                     );
-                }
+                },
             }
         }
     } else {
