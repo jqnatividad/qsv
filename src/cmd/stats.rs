@@ -380,7 +380,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         fs::remove_file(&stats_file)?;
                         fs::remove_file(&stats_args_json_file)?;
                         String::new()
-                    }
+                    },
                 };
 
             // deserialize the existing stats args json
@@ -395,7 +395,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         stat_args.date_generated = String::new();
                         stat_args.compute_duration_ms = 0;
                         stat_args
-                    }
+                    },
                     Err(e) => {
                         log::warn!(
                             "Could not serialize {path_file_stem}.stats.csv.json: {e:?}, \
@@ -404,7 +404,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         fs::remove_file(&stats_file)?;
                         fs::remove_file(&stats_args_json_file)?;
                         StatsArgs::default()
-                    }
+                    },
                 };
 
             // check if the cached stats are current (ie the stats file is newer than the input
@@ -472,7 +472,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     } else {
                         args.parallel_stats(&args.flag_dates_whitelist, idx_count)
                     }
-                }
+                },
             }?;
 
             // clone a copy of stats so we can binary encode it to disk later
@@ -1038,7 +1038,7 @@ impl Stats {
                         v.add_null();
                     };
                 }
-            }
+            },
             TFloat | TInteger => {
                 if sample_type == TNull {
                     if self.which.include_nulls {
@@ -1061,9 +1061,9 @@ impl Stats {
                         v.add(&n);
                     }
                 }
-            }
+            },
             // do nothing for String type
-            TString => {}
+            TString => {},
             TDateTime | TDate => {
                 if sample_type == TNull {
                     if self.which.include_nulls {
@@ -1091,7 +1091,7 @@ impl Stats {
                         v.add(&n);
                     }
                 }
-            }
+            },
         }
     }
 
@@ -1122,7 +1122,7 @@ impl Stats {
                 if self.which.mode {
                     mc_pieces.extend_from_slice(&[empty(), empty(), empty(), empty()]);
                 }
-            }
+            },
             Some(ref mut v) => {
                 if self.which.cardinality {
                     cardinality = v.cardinality();
@@ -1184,7 +1184,7 @@ impl Stats {
                         ]);
                     }
                 }
-            }
+            },
         }
 
         // min/max/range
@@ -1356,7 +1356,7 @@ impl Stats {
                         empty(),
                     ]);
                 }
-            }
+            },
             Some((q1, q2, q3)) => {
                 let iqr = q3 - q1;
 
@@ -1415,7 +1415,7 @@ impl Stats {
                     ]);
                 }
                 pieces.push(util::round_num(skewness, round_places));
-            }
+            },
         }
 
         // mode/modes/antimodes & cardinality
@@ -1593,12 +1593,12 @@ impl TypedSum {
                 match self.float {
                     None => {
                         self.float = Some((self.integer as f64) + float);
-                    }
+                    },
                     Some(ref mut f) => {
                         *f += float;
-                    }
+                    },
                 }
-            }
+            },
             TInteger => {
                 if let Some(ref mut float) = self.float {
                     *float += from_bytes::<f64>(sample).unwrap();
@@ -1608,8 +1608,8 @@ impl TypedSum {
                         .integer
                         .saturating_add(from_bytes::<i64>(sample).unwrap());
                 }
-            }
-            _ => {}
+            },
+            _ => {},
         }
     }
 
@@ -1625,13 +1625,13 @@ impl TypedSum {
                     _ => {
                         let mut buffer = itoa::Buffer::new();
                         Some(buffer.format(self.integer).to_owned())
-                    }
+                    },
                 }
-            }
+            },
             TFloat => {
                 let mut buffer = ryu::Buffer::new();
                 Some(buffer.format(self.float.unwrap_or(0.0)).to_owned())
-            }
+            },
         }
     }
 }
@@ -1671,23 +1671,23 @@ impl TypedMinMax {
         self.strings.add(sample.to_vec());
         // safety: we can use unwrap below since we know the data type of the sample
         match typ {
-            TString | TNull => {}
+            TString | TNull => {},
             TFloat => {
                 let n = fast_float::parse::<f64, _>(from_utf8(sample).unwrap()).unwrap();
 
                 self.floats.add(n);
                 self.integers.add(n as i64);
-            }
+            },
             TInteger => {
                 let n = from_utf8(sample).unwrap().parse::<i64>().unwrap();
                 self.integers.add(n);
                 #[allow(clippy::cast_precision_loss)]
                 self.floats.add(n as f64);
-            }
+            },
             TDate | TDateTime => {
                 let n = from_utf8(sample).unwrap().parse::<i64>().unwrap();
                 self.dates.add(n);
-            }
+            },
         }
     }
 
@@ -1715,7 +1715,7 @@ impl TypedMinMax {
                 } else {
                     None
                 }
-            }
+            },
             TInteger => {
                 if let (Some(min), Some(max)) = (self.integers.min(), self.integers.max()) {
                     let mut buffer = itoa::Buffer::new();
@@ -1727,7 +1727,7 @@ impl TypedMinMax {
                 } else {
                     None
                 }
-            }
+            },
             TFloat => {
                 if let (Some(min), Some(max)) = (self.floats.min(), self.floats.max()) {
                     let mut buffer = ryu::Buffer::new();
@@ -1739,7 +1739,7 @@ impl TypedMinMax {
                 } else {
                     None
                 }
-            }
+            },
             TDateTime | TDate => {
                 if let (Some(min), Some(max)) = (self.dates.min(), self.dates.max()) {
                     Some((
@@ -1755,7 +1755,7 @@ impl TypedMinMax {
                 } else {
                     None
                 }
-            }
+            },
         }
     }
 }

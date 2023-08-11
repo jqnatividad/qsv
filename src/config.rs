@@ -128,7 +128,7 @@ impl Config {
                     }
                 };
                 (Some(path), delim, snappy || file_extension.ends_with("sz"))
-            }
+            },
         };
         let sniff = util::get_envvar_flag("QSV_SNIFF_DELIMITER")
             || util::get_envvar_flag("QSV_SNIFF_PREAMBLE");
@@ -147,12 +147,12 @@ impl Config {
                         "sniffed delimiter {} and {preamble} preamble rows",
                         delim as char
                     );
-                }
+                },
                 Err(e) => {
                     // we only warn, as we don't want to stop processing the file
                     // if sniffing doesn't work
                     warn!("sniff error: {e}");
-                }
+                },
             }
         }
 
@@ -325,7 +325,7 @@ impl Config {
                 let stdin = io::stdin();
                 stdin.lock().read_to_end(&mut buffer)?;
                 self.from_reader(Box::new(io::Cursor::new(buffer)))
-            }
+            },
             Some(ref p) => self.from_reader(Box::new(fs::File::open(p).unwrap())),
         })
     }
@@ -354,7 +354,7 @@ impl Config {
                     return;
                 };
                 debug!("autoindex of {path_buf:?} successful.");
-            }
+            },
             Err(e) => debug!("autoindex of {path_buf:?} failed: {e}"),
         }
     }
@@ -367,7 +367,7 @@ impl Config {
                     io::ErrorKind::InvalidInput,
                     "Cannot use <stdin> with indexes",
                 ));
-            }
+            },
             (Some(p), &None) => {
                 // We generally don't want to report an error here, since we're
                 // passively trying to find an index, so we just log the warning...
@@ -398,11 +398,11 @@ impl Config {
                             }
                             return Ok(None);
                         }
-                    }
+                    },
                     Ok(f) => f,
                 };
                 (fs::File::open(p)?, idx_file)
-            }
+            },
             (Some(p), Some(ip)) => (fs::File::open(p)?, fs::File::open(ip)?),
         };
         // If the CSV data was last modified after the index file was last
@@ -450,11 +450,11 @@ impl Config {
                     } else {
                         Box::new(x)
                     }
-                }
+                },
                 Err(err) => {
                     let msg = format!("failed to open {}: {}", p.display(), err);
                     return Err(io::Error::new(io::ErrorKind::NotFound, msg));
-                }
+                },
             },
         })
     }
@@ -498,7 +498,7 @@ impl Config {
                 } else {
                     Box::new(fs::File::create(p)?)
                 }
-            }
+            },
         })
     }
 

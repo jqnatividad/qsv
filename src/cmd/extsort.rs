@@ -76,7 +76,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 config::DEFAULT_RDR_BUFFER_CAPACITY,
                 file,
             ))
-        }
+        },
         None => Box::new(io::BufReader::new(stdin().lock())),
     };
 
@@ -92,7 +92,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 RW_BUFFER_CAPACITY,
                 fs::File::create(output_path)?,
             ))
-        }
+        },
         None => Box::new(io::BufWriter::with_capacity(
             RW_BUFFER_CAPACITY,
             stdout().lock(),
@@ -110,7 +110,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             Ok(sorter) => sorter,
             Err(e) => {
                 return fail_clierror!("cannot create external sorter: {e}");
-            }
+            },
         };
 
     let mut header = String::new();

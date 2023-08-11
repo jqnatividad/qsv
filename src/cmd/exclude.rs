@@ -211,10 +211,10 @@ impl<R: io::Read + io::Seek> ValueIndex<R> {
                         let mut rows = Vec::with_capacity(4);
                         rows.push(rowi);
                         v.insert(rows);
-                    }
+                    },
                     Entry::Occupied(mut v) => {
                         v.get_mut().push(rowi);
-                    }
+                    },
                 }
             }
             rowi += 1;

@@ -236,7 +236,7 @@ impl OutputMode {
                 Some(x) => {
                     let path = Path::new(&x);
                     Box::new(File::create(path)?) as Box<dyn Write>
-                }
+                },
                 None => Box::new(io::stdout()) as Box<dyn Write>,
             };
             let mut w = io::BufWriter::with_capacity(256_000, w);
@@ -267,13 +267,13 @@ impl OutputMode {
                                 .unwrap_or_else(|| DEFAULT_GZIP_COMPRESSION_LEVEL.into())
                                 as u8;
                             ParquetCompression::Gzip(Some(GzipLevel::try_new(gzip_level)?))
-                        }
+                        },
                         PqtCompression::Zstd => {
                             let zstd_level = args
                                 .flag_compress_level
                                 .unwrap_or(DEFAULT_ZSTD_COMPRESSION_LEVEL);
                             ParquetCompression::Zstd(Some(ZstdLevel::try_new(zstd_level)?))
-                        }
+                        },
                     };
 
                     ParquetWriter::new(&mut w)
@@ -282,7 +282,7 @@ impl OutputMode {
                         .with_compression(parquet_compression)
                         .finish(&mut df)
                         .map(|_| ())
-                }
+                },
                 OutputMode::Arrow => IpcWriter::new(&mut w).finish(&mut df),
                 OutputMode::None => Ok(()),
             };
@@ -295,7 +295,7 @@ impl OutputMode {
             Ok(_) => Ok(df.shape()),
             Err(e) => {
                 fail_clierror!("Failed to execute query: {query}: {e}")
-            }
+            },
         }
     }
 }

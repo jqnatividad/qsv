@@ -321,14 +321,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             Ok(rc) => rc,
             Err(e) => {
                 return fail_clierror!(r#"Invalid Redis connection string "{conn_str}": {e:?}"#)
-            }
+            },
         };
 
         let mut redis_conn;
         match redis_client.get_connection() {
             Err(e) => {
                 return fail_clierror!(r#"Cannot connect to Redis using "{conn_str}": {e:?}"#)
-            }
+            },
             Ok(x) => redis_conn = x,
         }
 
@@ -654,7 +654,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         "Cannot deserialize Redis cache value. Try flushing the Redis cache with \
                          --flushdb: {e}"
                     )
-                }
+                },
             };
             if !args.flag_cache_error && final_response.status_code != 200 {
                 let key = format!(
@@ -918,7 +918,7 @@ fn get_response(
                 status_code: reqwest::StatusCode::NOT_FOUND.as_u16(),
                 retries:     0_u8,
             };
-        }
+        },
     };
     info!("Using URL: {valid_url}");
 
@@ -982,7 +982,7 @@ fn get_response(
                     match process_jql(&api_value, selectors) {
                         Ok(s) => {
                             final_value = s;
-                        }
+                        },
                         Err(e) => {
                             error!(
                                 "jql error. json: {api_value:?}, selectors: {selectors:?}, error: \
@@ -995,7 +995,7 @@ fn get_response(
                                 final_value = String::new();
                             }
                             error_flag = true;
-                        }
+                        },
                     }
                 } else if flag_pretty {
                     if let Ok(pretty_json) = jsonxf::pretty_print(&api_value) {

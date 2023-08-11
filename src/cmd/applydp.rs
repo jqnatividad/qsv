@@ -422,10 +422,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         // nothing else to add to batch
                         break;
                     }
-                }
+                },
                 Err(e) => {
                     return fail_clierror!("Error reading file: {e}");
-                }
+                },
             }
         }
 
@@ -456,7 +456,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                                 record = replace_column_value(&record, *col_index, &cell);
                             }
                         }
-                    }
+                    },
                     ApplydpSubCmd::EmptyReplace => {
                         let mut cell = String::new();
                         for col_index in sel.iter() {
@@ -470,7 +470,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                                 record = replace_column_value(&record, *col_index, &cell);
                             }
                         }
-                    }
+                    },
                     ApplydpSubCmd::DateFmt => {
                         let mut cell = String::new();
                         for col_index in sel.iter() {
@@ -495,7 +495,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                                 record = replace_column_value(&record, *col_index, &cell);
                             }
                         }
-                    }
+                    },
                     ApplydpSubCmd::DynFmt => {
                         let mut cell = record[column_index].to_owned();
                         if !cell.is_empty() {
@@ -514,7 +514,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         } else {
                             record = replace_column_value(&record, column_index, &cell);
                         }
-                    }
+                    },
                 }
 
                 record
@@ -558,12 +558,12 @@ fn validate_operations(
                     return fail!("--new_column (-c) is required for copy operation.");
                 }
                 copy_invokes = copy_invokes.saturating_add(1);
-            }
+            },
             Operations::Mtrim | Operations::Mltrim | Operations::Mrtrim => {
                 if flag_comparand.is_empty() {
                     return fail!("--comparand (-C) is required for match trim operations.");
                 }
-            }
+            },
             Operations::Regex_Replace => {
                 if flag_comparand.is_empty() || flag_replacement.is_empty() {
                     return fail!(
@@ -576,12 +576,12 @@ fn validate_operations(
                         Ok(re) => re,
                         Err(err) => {
                             return fail_clierror!("regex_replace expression error: {err:?}");
-                        }
+                        },
                     };
                     let _ = REGEX_REPLACE.set(re);
                 }
                 regex_replace_invokes = regex_replace_invokes.saturating_add(1);
-            }
+            },
             Operations::Replace => {
                 if flag_comparand.is_empty() || flag_replacement.is_empty() {
                     return fail!(
@@ -590,13 +590,13 @@ fn validate_operations(
                     );
                 }
                 replace_invokes = replace_invokes.saturating_add(1);
-            }
+            },
             Operations::Strip_Prefix | Operations::Strip_Suffix => {
                 if flag_comparand.is_empty() {
                     return fail!("--comparand (-C) is required for strip operations.");
                 }
                 strip_invokes = strip_invokes.saturating_add(1);
-            }
+            },
             Operations::Round => {
                 if ROUND_PLACES
                     .set(
@@ -608,8 +608,8 @@ fn validate_operations(
                 {
                     return fail!("Cannot initialize Round precision.");
                 };
-            }
-            _ => {}
+            },
+            _ => {},
         }
         ops_vec.push(operation);
     }
@@ -634,66 +634,66 @@ fn applydp_operations(
         match op {
             Operations::Len => {
                 *cell = cell.len().to_string();
-            }
+            },
             Operations::Lower => {
                 *cell = cell.to_lowercase();
-            }
+            },
             Operations::Upper => {
                 *cell = cell.to_uppercase();
-            }
+            },
             Operations::Squeeze => {
                 let squeezer: &'static Regex = regex_oncelock!(r"\s+");
                 *cell = squeezer.replace_all(cell, " ").to_string();
-            }
+            },
             Operations::Squeeze0 => {
                 let squeezer: &'static Regex = regex_oncelock!(r"\s+");
                 *cell = squeezer.replace_all(cell, "").to_string();
-            }
+            },
             Operations::Trim => {
                 *cell = String::from(cell.trim());
-            }
+            },
             Operations::Ltrim => {
                 *cell = String::from(cell.trim_start());
-            }
+            },
             Operations::Rtrim => {
                 *cell = String::from(cell.trim_end());
-            }
+            },
             Operations::Mtrim => {
                 let chars_to_trim: &[char] = &comparand.chars().collect::<Vec<_>>();
                 *cell = String::from(cell.trim_matches(chars_to_trim));
-            }
+            },
             Operations::Mltrim => {
                 *cell = String::from(cell.trim_start_matches(comparand));
-            }
+            },
             Operations::Mrtrim => {
                 *cell = String::from(cell.trim_end_matches(comparand));
-            }
+            },
             Operations::Escape => {
                 *cell = cell.escape_default().to_string();
-            }
+            },
             Operations::Strip_Prefix => {
                 if let Some(stripped) = cell.strip_prefix(comparand) {
                     *cell = String::from(stripped);
                 }
-            }
+            },
             Operations::Strip_Suffix => {
                 if let Some(stripped) = cell.strip_suffix(comparand) {
                     *cell = String::from(stripped);
                 }
-            }
+            },
             Operations::Replace => {
                 *cell = cell.replace(comparand, replacement);
-            }
+            },
             Operations::Regex_Replace => {
                 let regexreplace = REGEX_REPLACE.get().unwrap();
                 *cell = regexreplace.replace_all(cell, replacement).to_string();
-            }
+            },
             Operations::Round => {
                 if let Ok(num) = fast_float::parse(&cell) {
                     *cell = util::round_num(num, *ROUND_PLACES.get().unwrap());
                 }
-            }
-            Operations::Copy => {} // copy is a noop
+            },
+            Operations::Copy => {}, // copy is a noop
         }
     }
 }

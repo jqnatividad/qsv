@@ -60,21 +60,21 @@ fn recurse_to_infer_headers(value: &Value, headers: &mut Vec<Vec<String>>, path:
                         full_path.push(key.to_string());
 
                         headers.push(full_path);
-                    }
+                    },
                     Value::Object(_) => {
                         let mut new_path = path.clone();
                         new_path.push(key.to_string());
 
                         recurse_to_infer_headers(value, headers, new_path);
-                    }
+                    },
                     #[allow(unreachable_patterns)]
-                    _ => {}
+                    _ => {},
                 }
             }
-        }
+        },
         _ => {
             headers.push(vec![String::from("value")]);
-        }
+        },
     }
 }
 
@@ -93,10 +93,10 @@ fn get_value_at_path(value: &Value, path: &[String]) -> Option<Value> {
         match current.get(key) {
             Some(new_value) => {
                 current = new_value;
-            }
+            },
             None => {
                 return None;
-            }
+            },
         }
     }
 
@@ -117,7 +117,7 @@ fn json_line_to_csv_record(value: &Value, headers: &[Vec<String>]) -> csv::Strin
                     } else {
                         String::from("false")
                     }
-                }
+                },
                 Value::Number(v) => v.to_string(),
                 Value::String(v) => v,
                 Value::Array(v) => v
@@ -162,7 +162,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 Use `--ignore-errors` option to skip malformed input lines.
 Use `tojsonl` command to convert _to_ jsonl instead of _from_ jsonl."#,
                 );
-            }
+            },
         };
 
         if !headers_emitted {

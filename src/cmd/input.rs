@@ -167,10 +167,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 if !moredata {
                     break 'main;
                 }
-            }
+            },
             Err(e) => {
                 return fail_clierror!("Invalid CSV. Last valid row ({idx}): {e}");
-            }
+            },
         };
 
         str_row.clear();

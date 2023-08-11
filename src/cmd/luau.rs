@@ -446,12 +446,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             Ok(temp_dir) => {
                 let temp_dir_path = temp_dir.into_path();
                 Some(temp_dir_path)
-            }
+            },
             Err(e) => {
                 return fail_clierror!(
                     "Cannot create temporary directory to copy luadate library to: {e}"
                 )
-            }
+            },
         }
     } else {
         None
@@ -725,7 +725,7 @@ fn sequential_mode(
 
                 mlua::IntoLua::into_lua(err_msg, luau)
                     .map_err(|e| format!("Failed to convert error message to Lua: {e}"))?
-            }
+            },
         };
 
         if QSV_BREAK.load(Ordering::Relaxed) {
@@ -819,7 +819,7 @@ fn sequential_mode(
 
                 mlua::IntoLua::into_lua(err_msg, luau)
                     .map_err(|e| format!("Failed to convert error message to Lua: {e}"))?
-            }
+            },
         };
 
         // check if qsv_insertrecord() was called in the END script
@@ -835,7 +835,7 @@ fn sequential_mode(
                 return fail_clierror!(
                     "Unexpected END value type returned by provided Luau expression. {end_value:?}"
                 );
-            }
+            },
         };
         if !end_string.is_empty() && !show_progress {
             winfo!("{end_string}");
@@ -1062,7 +1062,7 @@ fn random_access_mode(
 
                 mlua::IntoLua::into_lua(err_msg, luau)
                     .map_err(|e| format!("Failed to convert error message to Lua: {e}"))?
-            }
+            },
         };
 
         if QSV_BREAK.load(Ordering::Relaxed) {
@@ -1159,7 +1159,7 @@ fn random_access_mode(
 
                 mlua::IntoLua::into_lua(err_msg, luau)
                     .map_err(|e| format!("Failed to convert error message to Lua: {e}"))?
-            }
+            },
         };
 
         // check if qsv_insertrecord() was called in the END script
@@ -1175,7 +1175,7 @@ fn random_access_mode(
                 return fail_clierror!(
                     "Unexpected END value type returned by provided Luau expression. {end_value:?}"
                 );
-            }
+            },
         };
         if !end_string.is_empty() && !show_progress {
             winfo!("{end_string}");
@@ -1210,21 +1210,21 @@ fn map_computedvalue(
     match computed_value {
         Value::String(string) => {
             record.push_field(&string.to_string_lossy());
-        }
+        },
         Value::Number(number) => {
             let mut buffer = ryu::Buffer::new();
             record.push_field(buffer.format(number));
-        }
+        },
         Value::Integer(number) => {
             let mut buffer = itoa::Buffer::new();
             record.push_field(buffer.format(number));
-        }
+        },
         Value::Boolean(boolean) => {
             record.push_field(if boolean { "true" } else { "false" });
-        }
+        },
         Value::Nil => {
             record.push_field("");
-        }
+        },
         Value::Table(table) => {
             if args.flag_remap {
                 // we're in remap mode, so we clear the record
@@ -1239,25 +1239,25 @@ fn map_computedvalue(
                     Value::Integer(intval) => {
                         let mut buffer = itoa::Buffer::new();
                         record.push_field(buffer.format(intval));
-                    }
+                    },
                     Value::String(strval) => {
                         record.push_field(&strval.to_string_lossy());
-                    }
+                    },
                     Value::Number(number) => {
                         let mut buffer = ryu::Buffer::new();
                         record.push_field(buffer.format(number));
-                    }
+                    },
                     Value::Boolean(boolean) => {
                         record.push_field(if boolean { "true" } else { "false" });
-                    }
+                    },
                     Value::Nil => {
                         record.push_field("");
-                    }
+                    },
                     _ => {
                         return fail_clierror!(
                             "Unexpected value type returned by provided Luau expression. {v:?}"
                         );
-                    }
+                    },
                 }
                 columns_inserted += 1;
                 if new_column_count > 0 && columns_inserted >= new_column_count {
@@ -1271,12 +1271,12 @@ fn map_computedvalue(
                 record.push_field("");
                 columns_inserted += 1;
             }
-        }
+        },
         _ => {
             return fail_clierror!(
                 "Unexpected value type returned by provided Luau expression. {computed_value:?}"
             );
-        }
+        },
     };
     Ok(())
 }
@@ -1430,7 +1430,7 @@ fn setup_helpers(
             "trace" => log::trace!("{log_msg}"),
             _ => {
                 log::info!("unknown log level: {log_level} msg: {log_msg}");
-            }
+            },
         }
         Ok(())
     })?;
@@ -1656,7 +1656,7 @@ fn setup_helpers(
                 Ok(headers) => headers.clone(),
                 Err(e) => {
                     return helper_err!("qsv_loadcsv", "Cannot read headers of CSV: {e}");
-                }
+                },
             };
 
             let key_idx = if key_column.is_empty() {
@@ -1672,7 +1672,7 @@ fn setup_helpers(
                             "qsv_loadcsv",
                             "Cannot find key column \"{key_column}\" in CSV."
                         );
-                    }
+                    },
                 }
             };
 
@@ -1859,10 +1859,10 @@ fn setup_helpers(
                 output_table.set("stderr", child_stderr)?;
 
                 Ok(output_table)
-            }
+            },
             Err(e) => {
                 helper_err!("qsv_cmd", "failed to execute qsv command: {qsv_args}: {e}")
-            }
+            },
         }
     })?;
     luau.globals().set("qsv_cmd", qsv_cmd)?;
@@ -1962,13 +1962,13 @@ fn setup_helpers(
                 output_table.set("stderr", child_stderr)?;
 
                 Ok(output_table)
-            }
+            },
             Err(e) => {
                 helper_err!(
                     "qsv_shellcmd",
                     "failed to execute shell command: {shellcmd_string} {args_string}: {e}"
                 )
-            }
+            },
         }
     })?;
     luau.globals().set("qsv_shellcmd", qsv_shellcmd)?;

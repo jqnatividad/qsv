@@ -197,18 +197,18 @@ fn get_field_value(wrk: &Workdir, cmd: &mut process::Command, field: &str) -> St
                     "lower_outer_fence" | "lower_inner_fence" | "q1" | "q2_median" | "q3"
                     | "iqr" | "upper_inner_fence" | "upper_outer_fence" => {
                         sequence.push(val);
-                    }
+                    },
                     "skewness" => {
                         sequence.push(val);
                         return sequence.join(",");
-                    }
-                    _ => {}
+                    },
+                    _ => {},
                 },
                 _ => {
                     if &**h == field {
                         return val.clone();
                     }
-                }
+                },
             }
         }
     }

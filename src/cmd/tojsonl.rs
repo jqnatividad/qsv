@@ -119,7 +119,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             Ok(map) => map,
             Err(e) => {
                 return fail_clierror!("Failed to infer field types: {e}");
-            }
+            },
         };
 
     let mut rdr = conf.reader()?;
@@ -248,7 +248,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             temp_string2 = temp_val.to_string();
                             &temp_string2
                         }
-                    }
+                    },
                     JsonlType::Null => "null",
                     JsonlType::Integer | JsonlType::Number => field,
                     JsonlType::Boolean => {
@@ -257,7 +257,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         } else {
                             "false"
                         }
-                    }
+                    },
                 }
             } else {
                 "null"

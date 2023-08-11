@@ -166,7 +166,7 @@ pub fn version() -> String {
                 } else {
                     enabled_features.push_str("Luau - ?;");
                 }
-            }
+            },
             Err(e) => enabled_features.push_str(&format!("Luau - cannot retrieve version: {e};")),
         };
     }
@@ -361,8 +361,8 @@ macro_rules! update_cache_info {
                         HumanCount($progress.length().unwrap()),
                     ));
                 }
-            }
-            _ => {}
+            },
+            _ => {},
         }
     };
     ($progress:expr, $cache_hits:expr, $num_rows:expr) => {
@@ -542,7 +542,7 @@ pub fn condense(val: Cow<[u8]>, n: Option<usize>) -> Cow<[u8]> {
                 s.extend(b"...".iter().copied());
                 Cow::Owned(s)
             }
-        }
+        },
     }
 }
 
@@ -564,7 +564,7 @@ pub fn range(start: Idx, end: Idx, len: Idx, index: Idx) -> Result<(usize, usize
         (_, _, _, Some(_)) => fail!("--index cannot be used with --start, --end or --len"),
         (_, Some(_), Some(_), None) => {
             fail!("--end and --len cannot be used at the same time.")
-        }
+        },
         (_, None, None, None) => Ok((start.unwrap_or(0), ::std::usize::MAX)),
         (_, Some(e), None, None) => {
             let s = start.unwrap_or(0);
@@ -576,11 +576,11 @@ pub fn range(start: Idx, end: Idx, len: Idx, index: Idx) -> Result<(usize, usize
             } else {
                 Ok((s, e))
             }
-        }
+        },
         (_, None, Some(l), None) => {
             let s = start.unwrap_or(0);
             Ok((s, s + l))
-        }
+        },
     }
 }
 
@@ -596,7 +596,7 @@ fn create_dir_all_threadsafe(path: &Path) -> std::io::Result<()> {
         match fs::create_dir_all(path) {
             // This happens if a directory in `path` doesn't exist when we
             // test for it, and another thread creates it before we can.
-            Err(ref err) if err.kind() == std::io::ErrorKind::AlreadyExists => {}
+            Err(ref err) if err.kind() == std::io::ErrorKind::AlreadyExists => {},
             other => return other,
         }
         // We probably don't need to sleep at all, because the intermediate
@@ -724,7 +724,7 @@ pub fn qsv_check_for_update(check_only: bool, no_confirm: bool) -> Result<bool, 
             } else {
                 return fail!("Can't get the exec stem name");
             }
-        }
+        },
         Err(e) => return fail_format!("Can't get the exec path: {e}"),
     };
 
@@ -784,7 +784,7 @@ pub fn qsv_check_for_update(check_only: bool, no_confirm: bool) -> Result<bool, 
                             status.version()
                         );
                         winfo!("{update_status}");
-                    }
+                    },
                     Err(e) => werr!("Update job error: {e}"),
                 },
                 Err(e) => werr!("Update builder error: {e}"),
@@ -912,11 +912,11 @@ fn send_hwsurvey(
                 log::debug!("hw_survey response sent: {:?}", &resp);
                 status = resp.status();
                 survey_done = status.is_success();
-            }
+            },
             Err(e) => {
                 log::warn!("Cannot send hw survey: {e}");
                 status = reqwest::StatusCode::BAD_REQUEST;
-            }
+            },
         };
     }
     if survey_done || dry_run {
@@ -1126,7 +1126,7 @@ impl ColumnNameParser {
             match self.cur() {
                 None => {
                     return fail!("Unclosed quote, missing \".");
-                }
+                },
                 Some('"') => {
                     self.bump();
                     if self.cur() == Some('"') {
@@ -1136,11 +1136,11 @@ impl ColumnNameParser {
                         continue;
                     }
                     break;
-                }
+                },
                 Some(c) => {
                     name.push(c);
                     self.bump();
-                }
+                },
             }
         }
         Ok(name)
@@ -1316,7 +1316,7 @@ pub async fn download_file(
         Ok(c) => c,
         Err(e) => {
             return fail_clierror!("Cannot build reqwest client: {e}.");
-        }
+        },
     };
 
     let res = client
@@ -1330,7 +1330,7 @@ pub async fn download_file(
         None => {
             // if we can't get the content length, set it to sentinel value
             u64::MAX
-        }
+        },
     };
 
     // progressbar setup

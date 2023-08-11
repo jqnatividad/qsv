@@ -270,7 +270,7 @@ impl Filler {
                 .or_insert_with(|| GroupValues::new(default_value));
 
             match (self.default_value.is_some(), self.first) {
-                (true, _) => {}
+                (true, _) => {},
                 (false, true) => group.memorize_first(&self.select, &record),
                 (false, false) => group.memorize(&self.select, &record),
             };
@@ -325,7 +325,7 @@ where
             ref mut sidx if (self.selection.get(*sidx) == Some(&self.index)) => {
                 *sidx += 1;
                 Some((self.predicate)(item))
-            }
+            },
             _ => Some(item),
         };
         self.index += 1;

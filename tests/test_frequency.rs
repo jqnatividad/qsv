@@ -233,12 +233,12 @@ fn ftables_from_csv_string(data: String) -> FTables {
                     ftable.add(frow.value.clone());
                 }
                 v.insert(ftable);
-            }
+            },
             Entry::Occupied(mut v) => {
                 for _ in 0..frow.count {
                     v.get_mut().add(frow.value.clone());
                 }
-            }
+            },
         }
     }
     ftables

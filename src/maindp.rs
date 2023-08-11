@@ -167,41 +167,41 @@ Please choose one of the following commands:",
             _ = util::qsv_check_for_update(true, false);
             util::log_end(qsv_args, now);
             QsvExitCode::Good
-        }
+        },
         Some(cmd) => match cmd.run() {
             Ok(()) => {
                 util::log_end(qsv_args, now);
                 QsvExitCode::Good
-            }
+            },
             Err(CliError::Flag(err)) => {
                 werr!("{err}");
                 util::log_end(qsv_args, now);
                 QsvExitCode::IncorrectUsage
-            }
+            },
             Err(CliError::Csv(err)) => {
                 werr!("{err}");
                 util::log_end(qsv_args, now);
                 QsvExitCode::Bad
-            }
+            },
             Err(CliError::Io(ref err)) if err.kind() == io::ErrorKind::BrokenPipe => {
                 werr!("Broken pipe: {err}");
                 util::log_end(qsv_args, now);
                 QsvExitCode::Abort
-            }
+            },
             Err(CliError::Io(err)) => {
                 werr!("{err}");
                 util::log_end(qsv_args, now);
                 QsvExitCode::Bad
-            }
+            },
             Err(CliError::NoMatch()) => {
                 util::log_end(qsv_args, now);
                 QsvExitCode::Bad
-            }
+            },
             Err(CliError::Other(msg)) => {
                 werr!("{msg}");
                 util::log_end(qsv_args, now);
                 QsvExitCode::Bad
-            }
+            },
         },
     }
 }
@@ -269,7 +269,7 @@ impl Command {
                 wout!("{USAGE}");
                 util::qsv_check_for_update(true, false)?;
                 Ok(())
-            }
+            },
             Command::Index => cmd::index::run(argv),
             Command::Input => cmd::input::run(argv),
             #[cfg(feature = "luau")]

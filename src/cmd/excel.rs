@@ -183,7 +183,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 "\"{format}\" not supported. The excel command only supports the following file \
                  formats - xls, xlsx, xlsm, xlsb and ods."
             );
-        }
+        },
     };
 
     let requested_range = args.flag_range.to_lowercase();
@@ -199,7 +199,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 return fail_clierror!("{path} may be a password-protected workbook: {e}.");
             }
             return fail_clierror!("Cannot open workbook: {e}.");
-        }
+        },
     };
 
     let sheet_names = workbook.sheet_names();
@@ -226,7 +226,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         'n' | 'N' => MetadataMode::None,
         _ => {
             return fail_clierror!("Invalid mode: {}", args.flag_metadata);
-        }
+        },
     };
 
     if metadata_mode != MetadataMode::None {
@@ -245,7 +245,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     Ok(result) => result,
                     Err(e) => {
                         return fail_clierror!("Cannot retrieve range from {sheet_name}: {e}.");
-                    }
+                    },
                 }
             } else {
                 Range::empty()
@@ -350,20 +350,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     wtr.write_record(&metadata_record)?;
                 }
                 wtr.flush()?;
-            }
+            },
             MetadataMode::Json => {
                 let Ok(json_result) = serde_json::to_string(&excelmetadata_struct) else {
                     return fail!("Cannot create JSON");
                 };
                 println!("{json_result}");
-            }
+            },
             MetadataMode::PrettyJSON => {
                 let Ok(json_result) = serde_json::to_string_pretty(&excelmetadata_struct) else {
                     return fail!("Cannot create pretty JSON");
                 };
                 println!("{json_result}");
-            }
-            MetadataMode::None => {}
+            },
+            MetadataMode::None => {},
         }
         info!(r#"exported metadata for "{path}" workbook sheets: {sheet_vec:?}"#);
         // after we export metadata, we're done.
@@ -525,17 +525,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     DataType::Int(ref i) => {
                         let mut buffer = itoa::Buffer::new();
                         record.push_field(buffer.format(*i));
-                    }
+                    },
                     DataType::Float(ref f) => {
                         float_val = *f;
                         float_flag = true;
                         cell_date_flag = false;
-                    }
+                    },
                     DataType::DateTime(ref f) => {
                         float_val = *f;
                         float_flag = true;
                         cell_date_flag = true;
-                    }
+                    },
                     DataType::Error(ref e) => record.push_field(&format!("{e:?}")),
                     DataType::Bool(ref b) => record.push_field(&b.to_string()),
                     DataType::DateTimeIso(ref dt) => record.push_field(&dt.to_string()),

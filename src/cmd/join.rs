@@ -115,31 +115,31 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         (true, false, false, false, false, false) => {
             state.write_headers()?;
             state.outer_join(false)
-        }
+        },
         (false, true, false, false, false, false) => {
             state.write_headers1()?;
             state.left_join(true)
-        }
+        },
         (false, false, true, false, false, false) => {
             state.write_headers1()?;
             state.left_join(false)
-        }
+        },
         (false, false, false, true, false, false) => {
             state.write_headers()?;
             state.outer_join(true)
-        }
+        },
         (false, false, false, false, true, false) => {
             state.write_headers()?;
             state.full_outer_join()
-        }
+        },
         (false, false, false, false, false, true) => {
             state.write_headers()?;
             state.cross_join()
-        }
+        },
         (false, false, false, false, false, false) => {
             state.write_headers()?;
             state.inner_join()
-        }
+        },
         _ => fail!("Please pick exactly one join operation."),
     }
 }
@@ -413,10 +413,10 @@ impl<R: io::Read + io::Seek> ValueIndex<R> {
                         let mut rows = Vec::with_capacity(4);
                         rows.push(rowi);
                         v.insert(rows);
-                    }
+                    },
                     Entry::Occupied(mut v) => {
                         v.get_mut().push(rowi);
-                    }
+                    },
                 }
             }
             rowi += 1;
