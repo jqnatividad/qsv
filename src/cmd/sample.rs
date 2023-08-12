@@ -65,7 +65,6 @@ use url::Url;
 
 use crate::{
     config::{Config, Delimiter},
-    index::Indexed,
     util, CliResult,
 };
 
@@ -124,19 +123,44 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut wtr = Config::new(&args.flag_output)
         .delimiter(args.flag_delimiter)
         .writer()?;
-    let sampled = if let Some(mut idx) = rconfig.indexed()? {
+
+    if let Some(mut idx) = rconfig.indexed()? {
+        // the index is present, so we can use random indexing
         #[allow(clippy::cast_precision_loss)]
         if sample_size < 1.0 {
             sample_size *= idx.count() as f64;
         }
         rconfig.write_headers(&mut *idx, &mut wtr)?;
-        sample_random_access(
-            &mut idx,
-            sample_size as u64,
-            args.flag_seed,
-            args.flag_faster,
-        )?
+
+        let mut all_indices = (0..idx.count()).collect::<Vec<_>>();
+
+        if args.flag_faster {
+            log::info!(
+                "doing --faster sample_random_access. Seed: {:?}",
+                args.flag_seed
+            );
+            if let Some(seed) = args.flag_seed {
+                fastrand::seed(seed as u64); //DevSkim: ignore DS148264
+            }
+            all_indices = fastrand::choose_multiple(all_indices.into_iter(), sample_size as usize); //DevSkim: ignore DS148264
+        } else {
+            log::info!(
+                "doing standard sample_random_access. Seed: {:?}",
+                args.flag_seed
+            );
+            let mut rng: StdRng = match args.flag_seed {
+                None => StdRng::from_rng(rand::thread_rng()).unwrap(),
+                Some(seed) => StdRng::seed_from_u64(seed as u64), //DevSkim: ignore DS148264
+            };
+            SliceRandom::shuffle(&mut *all_indices, &mut rng); //DevSkim: ignore DS148264
+        }
+
+        for i in all_indices.into_iter().take(sample_size as usize) {
+            idx.seek(i)?;
+            wtr.write_byte_record(&idx.byte_records().next().unwrap()?)?;
+        }
     } else {
+        // the index is not present, so we have to do reservoir sampling
         #[allow(clippy::cast_precision_loss)]
         if sample_size < 1.0 {
             let Ok(row_count) = util::count_rows(&rconfig) else {
@@ -146,53 +170,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
         let mut rdr = rconfig.reader()?;
         rconfig.write_headers(&mut rdr, &mut wtr)?;
-        sample_reservoir(
+        let sampled = sample_reservoir(
             &mut rdr,
             sample_size as u64,
             args.flag_seed,
             args.flag_faster,
-        )?
+        )?;
+        for row in sampled {
+            wtr.write_byte_record(&row)?;
+        }
     };
 
-    for row in sampled {
-        wtr.write_byte_record(&row)?;
-    }
     Ok(wtr.flush()?)
-}
-
-fn sample_random_access<R, I>(
-    idx: &mut Indexed<R, I>,
-    sample_size: u64,
-    seed: Option<usize>,
-    faster: bool,
-) -> CliResult<Vec<csv::ByteRecord>>
-where
-    R: io::Read + io::Seek,
-    I: io::Read + io::Seek,
-{
-    let mut all_indices = (0..idx.count()).collect::<Vec<_>>();
-
-    if faster {
-        log::info!("doing --faster sample_random_access. Seed: {seed:?}");
-        if let Some(seed) = seed {
-            fastrand::seed(seed as u64); //DevSkim: ignore DS148264
-        }
-        all_indices = fastrand::choose_multiple(all_indices.into_iter(), sample_size as usize); //DevSkim: ignore DS148264
-    } else {
-        log::info!("doing standard sample_random_access. Seed: {seed:?}");
-        let mut rng: StdRng = match seed {
-            None => StdRng::from_rng(rand::thread_rng()).unwrap(),
-            Some(seed) => StdRng::seed_from_u64(seed as u64), //DevSkim: ignore DS148264
-        };
-        SliceRandom::shuffle(&mut *all_indices, &mut rng); //DevSkim: ignore DS148264
-    }
-
-    let mut sampled = Vec::with_capacity(sample_size as usize);
-    for i in all_indices.into_iter().take(sample_size as usize) {
-        idx.seek(i)?;
-        sampled.push(idx.byte_records().next().unwrap()?);
-    }
-    Ok(sampled)
 }
 
 fn sample_reservoir<R: io::Read>(
