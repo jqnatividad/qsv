@@ -188,6 +188,7 @@ use crate::{
     util, CliResult,
 };
 
+#[allow(clippy::unsafe_derive_deserialize)]
 #[derive(Clone, Deserialize, Debug)]
 pub struct Args {
     pub arg_input:            Option<String>,
