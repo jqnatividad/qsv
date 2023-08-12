@@ -189,7 +189,7 @@ use crate::{
 };
 
 #[allow(clippy::unsafe_derive_deserialize)]
-#[derive(Clone, Deserialize, Debug)]
+#[derive(Clone, Deserialize)]
 pub struct Args {
     pub arg_input:            Option<String>,
     pub flag_select:          SelectColumns,
@@ -932,7 +932,7 @@ impl Commute for WhichStats {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Clone, Serialize, Deserialize, PartialEq)]
 pub struct Stats {
     typ:       FieldType,
     sum:       Option<TypedSum>,
@@ -1574,7 +1574,7 @@ impl fmt::Debug for FieldType {
 
 /// `TypedSum` keeps a rolling sum of the data seen.
 /// It sums integers until it sees a float, at which point it sums floats.
-#[derive(Clone, Default, Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Clone, Default, Serialize, Deserialize, PartialEq)]
 struct TypedSum {
     integer: i64,
     float:   Option<f64>,
@@ -1651,7 +1651,7 @@ impl Commute for TypedSum {
 
 /// `TypedMinMax` keeps track of minimum/maximum/range values for each possible type
 /// where min/max/range makes sense.
-#[derive(Clone, Default, Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Clone, Default, Serialize, Deserialize, PartialEq)]
 struct TypedMinMax {
     strings:  MinMax<Vec<u8>>,
     str_len:  MinMax<usize>,
