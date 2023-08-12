@@ -349,8 +349,8 @@ impl Config {
         };
         let mut wtr = io::BufWriter::with_capacity(DEFAULT_WTR_BUFFER_CAPACITY, idxfile);
         match csv_index::RandomAccessSimple::create(&mut rdr, &mut wtr) {
-            Ok(_) => {
-                let Ok(_) = io::Write::flush(&mut wtr) else {
+            Ok(()) => {
+                let Ok(()) = io::Write::flush(&mut wtr) else {
                     return;
                 };
                 debug!("autoindex of {path_buf:?} successful.");

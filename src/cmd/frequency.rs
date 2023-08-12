@@ -194,7 +194,7 @@ impl Args {
         #[allow(unused_assignments)]
         // amortize allocation
         let mut field_work: Vec<u8> = Vec::with_capacity(100);
-        let mut row_work: csv::ByteRecord = Default::default();
+        let mut row_work: csv::ByteRecord = csv::ByteRecord::default();
         let flag_no_nulls = self.flag_no_nulls;
         for row in it {
             row_work.clone_from(&row?);
