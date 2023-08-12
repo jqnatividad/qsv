@@ -292,7 +292,7 @@ impl OutputMode {
         };
 
         match execute_inner() {
-            Ok(_) => Ok(df.shape()),
+            Ok(()) => Ok(df.shape()),
             Err(e) => {
                 fail_clierror!("Failed to execute query: {query}: {e}")
             },
