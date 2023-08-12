@@ -31,7 +31,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | <a name="applydp_deeplink"></a>[applydp](/src/cmd/applydp.rs#L2)<br>🚀 ![CKAN](docs/images/ckan.png)| applydp is a slimmed-down version of `apply` with only [Datapusher+](https://github.com/dathere/datapusher-plus) relevant subcommands/operations (`qsvdp` binary variant only). |
 | [behead](/src/cmd/behead.rs#L2) | Drop headers from a CSV.  |
 | [cat](/src/cmd/cat.rs#L2) | Concatenate CSV files by row or by column. |
-| [count](/src/cmd/count.rs#L2)<br>📇 | Count the rows in a CSV file. (15.82 seconds for 15gb, 27m row NYC 311 dataset without an index. Instantaneous with an index.) |
+| [count](/src/cmd/count.rs#L2)<br>📇🏎️ | Count the rows in a CSV file. (15.82 seconds for 15gb, 27m row NYC 311 dataset without an index. Instantaneous with an index.) |
 | [dedup](/src/cmd/dedup.rs#L2)<br>🤯🚀 | Remove duplicate rows (See also `extdedup`, `extsort`, `sort` & `sortcheck` commands). |
 | [describegpt](/src/cmd/describegpt.rs#L2)<br>🌐🤖 | Infer extended metadata about a CSV using a GPT model from [OpenAI's API](https://platform.openai.com/docs/introduction). |
 | [diff](/src/cmd/diff.rs#L2)<br>🚀 | Find the difference between two CSVs with ludicrous speed!<br/>e.g. *compare two CSVs with 1M rows x 9 columns in under 600ms!* |
@@ -69,7 +69,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [search](/src/cmd/search.rs#L2) | Run a regex over a CSV. Applies the regex to each field individually & shows only matching rows.  |
 | [searchset](/src/cmd/searchset.rs#L2) | *Run multiple regexes over a CSV in a single pass.* Applies the regexes to each field individually & shows only matching rows.  |
 | [select](/src/cmd/select.rs#L2) | Select, re-order, duplicate or drop columns.  |
-| [slice](/src/cmd/slice.rs#L2)<br>📇 | Slice rows from any part of a CSV. When an index is present, this only has to parse the rows in the slice (instead of all rows leading up to the start of the slice).  |
+| [slice](/src/cmd/slice.rs#L2)<br>📇🏎️ | Slice rows from any part of a CSV. When an index is present, this only has to parse the rows in the slice (instead of all rows leading up to the start of the slice).  |
 | <a name="snappy_deeplink"></a>[snappy](/src/cmd/snappy.rs#L2)<br>🚀🌐 | Does streaming compression/decompression of the input using Google's [Snappy](https://github.com/google/snappy/blob/main/docs/README.md) framing format ([more info](#snappy-compressiondecompression)). |
 | [sniff](/src/cmd/sniff.rs#L2)<br>🌐 ![CKAN](docs/images/ckan.png) | Quickly sniff & infer CSV metadata (delimiter, header row, preamble rows, quote character, flexible, is_utf8, average record length, number of records, content length & estimated number of records if sniffing a CSV on a URL, number of fields, field names & data types). It is also a general mime type detector. |
 | [sort](/src/cmd/sort.rs#L2)<br>🚀🤯 | Sorts CSV data in alphabetical (with case-insensitive option), numerical, reverse, unique or random (with optional seed) order (See also `extsort` & `sortcheck` commands).  |
@@ -92,7 +92,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 🧠: expensive operations are memoized (cached) with available inter-session Redis caching for fetch commands.    
 🐻‍❄️: command powered by [Pola.rs](https://pola.rs) engine.   
 🤖: command uses Natural Language Processing & General AI techniques.  
-🏎️: multithreaded when an index (📇) is available.   
+🏎️: multithreaded and/or faster when an index (📇) is available.   
 🚀: multithreaded even without an index.   
 ![CKAN](docs/images/ckan.png) : has [CKAN](https://ckan.org)-aware integration options.    
 🌐: has web-aware options.
