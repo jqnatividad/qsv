@@ -371,14 +371,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     let optimize_all = polars::lazy::frame::OptState {
-        projection_pushdown:        true,
-        predicate_pushdown:         true,
-        type_coercion:              true,
-        simplify_expr:              true,
-        file_caching:               !args.flag_low_memory,
-        slice_pushdown:             true,
-        common_subplan_elimination: true,
-        streaming:                  args.flag_low_memory,
+        projection_pushdown: true,
+        predicate_pushdown:  true,
+        type_coercion:       true,
+        simplify_expr:       true,
+        file_caching:        !args.flag_low_memory,
+        slice_pushdown:      true,
+        comm_subplan_elim:   true,
+        comm_subexpr_elim:   true,
+        streaming:           args.flag_low_memory,
     };
 
     let mut ctx = SQLContext::new();
