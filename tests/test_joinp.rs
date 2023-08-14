@@ -133,11 +133,11 @@ joinp_test!(
 joinp_test!(
     joinp_outer_left_validate_onetomany,
     |wrk: Workdir, mut cmd: process::Command| {
-        cmd.arg("--left").args(["--validate", "onetomany"]);
+        cmd.arg("--left").args(["--validate", "manytoone"]);
         let got: String = wrk.output_stderr(&mut cmd);
         assert_eq!(
             got,
-            "Polars error: ComputeError(ErrString(\"the join keys did not fulfil 1:m \
+            "Polars error: ComputeError(ErrString(\"the join keys did not fulfil m:1 \
              validation\"))\n"
         );
         wrk.assert_err(&mut cmd);
