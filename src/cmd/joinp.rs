@@ -167,10 +167,12 @@ use std::{
 };
 
 use polars::{
-    chunked_array::object::{AsOfOptions, AsofStrategy},
     datatypes::AnyValue,
     frame::hash_join::{JoinType, JoinValidation},
-    prelude::{CsvWriter, LazyCsvReader, LazyFileListReader, LazyFrame, SerWriter, SortOptions},
+    prelude::{
+        AsOfOptions, AsofStrategy, CsvWriter, LazyCsvReader, LazyFileListReader, LazyFrame,
+        SerWriter, SortOptions,
+    },
 };
 use serde::Deserialize;
 use smartstring;
@@ -358,14 +360,15 @@ impl JoinStruct {
         }
 
         let optimize_all = polars::lazy::frame::OptState {
-            projection_pushdown:        true,
-            predicate_pushdown:         true,
-            type_coercion:              true,
-            simplify_expr:              true,
-            file_caching:               true,
-            slice_pushdown:             true,
-            common_subplan_elimination: true,
-            streaming:                  self.streaming,
+            projection_pushdown: true,
+            predicate_pushdown:  true,
+            type_coercion:       true,
+            simplify_expr:       true,
+            file_caching:        true,
+            slice_pushdown:      true,
+            comm_subplan_elim:   true,
+            comm_subexpr_elim:   true,
+            streaming:           self.streaming,
         };
 
         let mut join_results = if jointype == JoinType::Cross {
