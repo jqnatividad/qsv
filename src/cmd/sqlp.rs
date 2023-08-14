@@ -37,6 +37,10 @@ Example queries:
   qsv sqlp people.csv "WITH millenials AS (SELECT * FROM people WHERE age >= 25 and age <= 40) \
     SELECT * FROM millenials WHERE STARTS_WITH(name,'C')"
 
+  # CASE statement
+  qsv sqlp data.csv "select CASE WHEN col1 > 10 THEN 'foo' WHEN col1 > 5 THEN 'bar' ELSE 'baz' END from data"
+  qsv sqlp data.csv "select CASE col*5 WHEN 10 THEN 'foo' WHEN 5 THEN 'bar' ELSE 'baz' END from _t_1"
+
   # spaceship operator: "<=>" (three-way comparison operator)
   #  returns -1 if left < right, 0 if left == right, 1 if left > right
   # https://en.wikipedia.org/wiki/Three-way_comparison#Spaceship_operator
