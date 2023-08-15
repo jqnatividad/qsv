@@ -364,9 +364,11 @@ impl JoinStruct {
         }
 
         let optimization_state = if self.no_optimizations {
-            let mut default_optimizations = polars::lazy::frame::OptState::default();
-            default_optimizations.streaming = self.streaming;
-            default_optimizations
+            // use default optimization state
+            polars::lazy::frame::OptState {
+                streaming: self.streaming,
+                ..Default::default()
+            }
         } else {
             polars::lazy::frame::OptState {
                 projection_pushdown: true,
@@ -380,6 +382,7 @@ impl JoinStruct {
                 streaming:           self.streaming,
             }
         };
+        log::debug!("Optimization state: {optimization_state:?}");
 
         let mut join_results = if jointype == JoinType::Cross {
             self.left_lf

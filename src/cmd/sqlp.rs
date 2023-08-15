@@ -378,12 +378,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     let optimization_state = if args.flag_no_optimizations {
-        let mut default_optimizations = polars::lazy::frame::OptState::default();
-        if args.flag_low_memory {
-            default_optimizations.file_caching = false;
-            default_optimizations.streaming = true;
+        // use default optimization state
+        polars::lazy::frame::OptState {
+            file_caching: !args.flag_low_memory,
+            streaming: args.flag_low_memory,
+            ..Default::default()
         }
-        default_optimizations
     } else {
         polars::lazy::frame::OptState {
             projection_pushdown: true,
