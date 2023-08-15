@@ -296,7 +296,7 @@ Finally, as [qsv's DSL](#luau_deeplink) (👑), `luau` will gain even more featu
 
 The `python` feature is NOT enabled by default on the prebuilt binaries as its dynamically linked to python libraries at runtime, which presents distribution issues, as various operating systems have differing Python versions.
 
-If you wish to enable the `python` feature - you'll just have to install/compile from source, making sure you have the development libraries for the desired Python version (Python 3.7 and above are supported) installed when doing so.
+If you wish to enable the `python` feature - you'll just have to install/compile from source, making sure you have the development libraries for the desired Python version (Python 3.7 and above are supported) installed when doing so (e.g. on Debian/Ubuntu - `apt-get install python-dev`; on CentOS/RedHat/Amazon Linux - `yum install python-devel`; on Windows and macOS - use the [Python installer](https://www.python.org/downloads/) for the desired version).
 
 If you plan to distribute your manually built `qsv` with the `python` feature, `qsv` will look for the specific version of Python shared libraries (libpython* on Linux/macOS, python*.dll on Windows) against which it was compiled starting with the current directory & abort with an error if not found, detailing the Python library it was looking for. 
 
