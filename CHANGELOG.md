@@ -6,6 +6,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.112.0] - 2023-08-15 🏇🏽🎠
+This is the second in a series of "[Giddy-up](https://7esl.com/giddy-up/)" 🏇🏽 releases, improving the performance of the following commands:
+
+* `stats`: by refactoring the code to detect empty cells more efficiently, and by removing
+unnecessary bounds checks in the main compute loop. (~10% performance improvement)
+* `sample`: by refactoring the code to use an index more effectively when available - not only making it faster, but also eliminating the need to load the entire dataset into memory. Also added a `--faster` option to use a faster random number generator. (~15% performance improvement)
+* `frequency`, `schema`, `search` & `validate` by amortizing/reducing allocations in hot loops
+* `excel`: by refactoring the main hot loop to convert Excel cells more efficiently
+
+The prebuilt binaries are also built with CPU optimizations enabled for x86_64 and Apple Silicon (arm64) architectures.
+
+0.112.0 is also a "Carousel" (i.e. increased usability) 🎠 release featuring new Jupyter notebooks in the `contrib/notebooks` directory to help users get started with qsv.
+
+* [intro-to-count.ipynb](https://github.com/jqnatividad/qsv/blob/master/contrib/notebooks/intro-to-count.ipynb) by @rzmk
+* [qsv-describegpt-qa.ipynb](https://github.com/jqnatividad/qsv/blob/master/contrib/notebooks/qsv-describegpt-qa.ipynb) by @a5dur
+
+---
+
+### Added
+* `sqlp`: added `CASE` expression support with Polars 0.32 https://github.com/jqnatividad/qsv/commit/9d508e69cc4165b7adbe4b44b15c4c07001cf76b
+* `sample`: added `--faster` option to use a faster random number generator https://github.com/jqnatividad/qsv/pull/1210
+* `jsonl`: add `--delimiter` option https://github.com/jqnatividad/qsv/pull/1205
+* `excel`: add `--delimiter` option https://github.com/jqnatividad/qsv/commit/ab73067da1f498c7c64de9b87586d6998d36d042
+* `notebook/describegpt`: added describegpt QA Jupyter notebook by @a5dur in https://github.com/jqnatividad/qsv/pull/1215
+* `notebook/count`: add intro-to-count.ipynb by @rzmk in https://github.com/jqnatividad/qsv/pull/1207
+
+### Changed
+* `stats`: refactor hot compute function - https://github.com/jqnatividad/qsv/commit/35999c5dad996edcafe6094ff4b717f96d657832
+* `stats`: faster detection of empty samples https://github.com/jqnatividad/qsv/commit/b0548159ca8c8a35bab1dd196c72414f739c2fd8 and https://github.com/jqnatividad/qsv/commit/a7f0836bcebf947efb3cc7e7f6a884cc649196b5
+* `sample`: major refactor making it faster, but also eliminating need to load the entire dataset into memory when an index is available. https://github.com/jqnatividad/qsv/pull/1210
+* `frequency`: refactor primary ftables function https://github.com/jqnatividad/qsv/commit/57d660d6cf48be4b8845b5c09a46b16582f612c0
+* `fmt`: match_block_trailing_comma https://github.com/jqnatividad/qsv/pull/1206
+* bump MSRV to 1.71.1 https://github.com/jqnatividad/qsv/commit/1c993644992d1cf4d0985d100045821cb027c17d
+* apply clippy suggestions https://github.com/jqnatividad/qsv/pull/1209
+* build(deps): bump tokio from 1.29.1 to 1.30.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1204
+* build(deps): bump log from 0.4.19 to 0.4.20 by @dependabot in https://github.com/jqnatividad/qsv/pull/1211
+* build(deps): bump redis from 0.23.1 to 0.23.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1213
+* build(deps): bump tokio from 1.30.0 to 1.31.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1212
+* build(deps): bump sysinfo from 0.29.7 to 0.29.8 by @dependabot in https://github.com/jqnatividad/qsv/pull/1214
+* upgrade to Polars 0.32.0 https://github.com/jqnatividad/qsv/pull/1217
+* build(deps): bump flate2 from 1.0.26 to 1.0.27 by @dependabot in https://github.com/jqnatividad/qsv/pull/1218
+* build(deps): bump polars from 0.32.0 to 0.32.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1219
+* cargo update bump several indirect dependencies
+* pin Rust nightly to 2023-08-13
+
+### Removed
+* `stats`: removed Debug derives from structs - https://github.com/jqnatividad/qsv/commit/2def136230ed2e9af727168d3a6329d660b65d4d
+
+### Fixed
+* `notebook/count`: fix Google Colab link by @rzmk in https://github.com/jqnatividad/qsv/pull/1208
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.111.0...0.112.0
+
 ## [0.111.0] - 2023-08-07
 This is the first in a series of "[Giddy-up](https://7esl.com/giddy-up/)" 🏇🏽 releases. 
 
