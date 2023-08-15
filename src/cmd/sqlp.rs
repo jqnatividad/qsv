@@ -113,6 +113,8 @@ sqlp options:
     --low-memory              Use low memory mode when parsing CSVs. This will use less memory
                               but will be slower. It will also process LazyFrames in streaming mode.
                               Only use this when you get out of memory errors.
+    --no-optimizations        Disable non-default query optimizations. This will make queries slower.
+                              Only use this when you get query errors.
     --ignore-errors           Ignore errors when parsing CSVs. If set, rows with errors
                               will be skipped. If not set, the query will fail.
                               Only use this when debugging queries, as polars does batched
@@ -185,24 +187,25 @@ static DEFAULT_ZSTD_COMPRESSION_LEVEL: i32 = 3;
 
 #[derive(Deserialize, Clone)]
 struct Args {
-    arg_input:            Vec<PathBuf>,
-    arg_sql:              String,
-    flag_format:          String,
-    flag_try_parsedates:  bool,
-    flag_infer_len:       usize,
-    flag_low_memory:      bool,
-    flag_ignore_errors:   bool,
-    flag_datetime_format: Option<String>,
-    flag_date_format:     Option<String>,
-    flag_time_format:     Option<String>,
-    flag_float_precision: Option<usize>,
-    flag_null_value:      String,
-    flag_compression:     String,
-    flag_compress_level:  Option<i32>,
-    flag_statistics:      bool,
-    flag_output:          Option<String>,
-    flag_delimiter:       Option<Delimiter>,
-    flag_quiet:           bool,
+    arg_input:             Vec<PathBuf>,
+    arg_sql:               String,
+    flag_format:           String,
+    flag_try_parsedates:   bool,
+    flag_infer_len:        usize,
+    flag_low_memory:       bool,
+    flag_no_optimizations: bool,
+    flag_ignore_errors:    bool,
+    flag_datetime_format:  Option<String>,
+    flag_date_format:      Option<String>,
+    flag_time_format:      Option<String>,
+    flag_float_precision:  Option<usize>,
+    flag_null_value:       String,
+    flag_compression:      String,
+    flag_compress_level:   Option<i32>,
+    flag_statistics:       bool,
+    flag_output:           Option<String>,
+    flag_delimiter:        Option<Delimiter>,
+    flag_quiet:            bool,
 }
 
 #[derive(Default, Clone)]
@@ -374,17 +377,27 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         Some(args.flag_infer_len)
     };
 
-    let optimize_all = polars::lazy::frame::OptState {
-        projection_pushdown: true,
-        predicate_pushdown:  true,
-        type_coercion:       true,
-        simplify_expr:       true,
-        file_caching:        !args.flag_low_memory,
-        slice_pushdown:      true,
-        comm_subplan_elim:   true,
-        comm_subexpr_elim:   true,
-        streaming:           args.flag_low_memory,
+    let optimization_state = if args.flag_no_optimizations {
+        let mut default_optimizations = polars::lazy::frame::OptState::default();
+        if args.flag_low_memory {
+            default_optimizations.file_caching = false;
+            default_optimizations.streaming = true;
+        }
+        default_optimizations
+    } else {
+        polars::lazy::frame::OptState {
+            projection_pushdown: true,
+            predicate_pushdown:  true,
+            type_coercion:       true,
+            simplify_expr:       true,
+            file_caching:        !args.flag_low_memory,
+            slice_pushdown:      true,
+            comm_subplan_elim:   true,
+            comm_subexpr_elim:   true,
+            streaming:           args.flag_low_memory,
+        }
     };
+    log::debug!("Optimization state: {optimization_state:?}");
 
     let mut ctx = SQLContext::new();
     let mut table_aliases = HashMap::with_capacity(args.arg_input.len());
@@ -423,7 +436,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .with_ignore_errors(args.flag_ignore_errors)
             .low_memory(args.flag_low_memory)
             .finish()?;
-        ctx.register(table_name, lf.with_optimizations(optimize_all));
+        ctx.register(table_name, lf.with_optimizations(optimization_state));
     }
 
     if log::log_enabled!(log::Level::Debug) {
