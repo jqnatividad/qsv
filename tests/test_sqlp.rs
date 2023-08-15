@@ -868,32 +868,33 @@ fn sqlp_boston311_case() {
     cmd.arg(&test_file).arg(
         r#"SELECT case_enquiry_id, 
            CASE 
-              WHEN case_title ~* 'graffiti' THEN 'Yes' 
-              WHEN case_title !~* 'graffiti' THEN 'No' 
-              ELSE 'N/A'
-           END as grafitti_related
+              WHEN case_title ~* 'graffiti' THEN 'Graffitti' 
+              WHEN case_title ~* 'vehicle' THEN 'Vehicle'
+              WHEN case_title ~* 'sidewalk' THEN 'Sidewalk'
+              ELSE 'Something else'
+           END as topic
            from _t_1
            where case_status = 'Open'"#,
     );
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
-        svec!["case_enquiry_id", "grafitti_related"],
-        svec!["101004143000", "No"],
-        svec!["101004155594", "No"],
-        svec!["101004154423", "No"],
-        svec!["101004141848", "No"],
-        svec!["101004113313", "No"],
-        svec!["101004113751", "Yes"],
-        svec!["101004113902", "Yes"],
-        svec!["101004113473", "No"],
-        svec!["101004113604", "No"],
-        svec!["101004114154", "Yes"],
-        svec!["101004114383", "No"],
-        svec!["101004114795", "Yes"],
-        svec!["101004118346", "Yes"],
-        svec!["101004115302", "No"],
-        svec!["101004115066", "No"],
+        svec!["case_enquiry_id", "topic"],
+        svec!["101004143000", "Something else"],
+        svec!["101004155594", "Something else"],
+        svec!["101004154423", "Sidewalk"],
+        svec!["101004141848", "Something else"],
+        svec!["101004113313", "Something else"],
+        svec!["101004113751", "Graffitti"],
+        svec!["101004113902", "Graffitti"],
+        svec!["101004113473", "Sidewalk"],
+        svec!["101004113604", "Something else"],
+        svec!["101004114154", "Graffitti"],
+        svec!["101004114383", "Something else"],
+        svec!["101004114795", "Graffitti"],
+        svec!["101004118346", "Graffitti"],
+        svec!["101004115302", "Vehicle"],
+        svec!["101004115066", "Sidewalk"],
     ];
 
     assert_eq!(got, expected);
