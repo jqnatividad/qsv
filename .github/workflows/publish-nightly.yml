@@ -54,15 +54,15 @@ jobs:
             addl-qsvlite-features:
             addl-qsvdp-features: luau
             addl-rustflags: -C target-feature=+fxsr,+sse,+sse2,+sse3,+sse4.1,+sse4.2
-          - os: windows-latest
-            os-name: windows
-            target: x86_64-pc-windows-gnu
-            architecture: x86_64
-            addl-build-args: --features=apply,generate,luau,fetch,nightly,self_update,polars
-            default-features: --no-default-features 
-            addl-qsvlite-features:
-            addl-qsvdp-features: luau
-            addl-rustflags: -C target-feature=+fxsr,+sse,+sse2,+sse3,+sse4.1,+sse4.2
+          # - os: windows-latest
+          #   os-name: windows
+          #   target: x86_64-pc-windows-gnu
+          #   architecture: x86_64
+          #   addl-build-args: --features=apply,generate,luau,fetch,nightly,self_update,polars
+          #   default-features: --no-default-features 
+          #   addl-qsvlite-features:
+          #   addl-qsvdp-features: luau
+          #   addl-rustflags: -C target-feature=+fxsr,+sse,+sse2,+sse3,+sse4.1,+sse4.2
           - os: macos-latest
             os-name: macos
             target: x86_64-apple-darwin
