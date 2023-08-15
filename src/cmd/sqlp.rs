@@ -219,7 +219,7 @@ enum OutputMode {
 }
 
 // shamelessly copied from
-// https://github.com/pola-rs/polars/blob/main/polars-cli/src/main.rs
+// https://github.com/pola-rs/polars-cli/blob/main/src/main.rs
 impl OutputMode {
     fn execute_query(
         &self,
