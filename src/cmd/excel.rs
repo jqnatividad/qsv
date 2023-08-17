@@ -454,6 +454,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let (row_count, col_count) = range.get_size();
 
     if row_count > 0 {
+        // there are row to export
         let mut rows_iter = range.rows();
 
         // use with_capacity to minimize reallocations
@@ -462,6 +463,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         let mut col_name: String;
 
+        // get the first row as header
         info!("exporting sheet ({sheet})... processing first row as header...");
         let first_row = match rows_iter.next() {
             Some(first_row) => first_row,
@@ -504,7 +506,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let mut cell_date_flag: bool = false;
         let mut float_val = 0_f64;
         let mut float_flag: bool = false;
-
         let date_format = if let Some(df) = args.flag_date_format {
             df
         } else {
@@ -622,7 +623,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             } else {
                 wtr.write_record(&record)?;
             }
-        }
+        } // end of main processing loop
+    } else {
+        return fail_clierror!("\"{sheet}\" sheet is empty");
     }
 
     wtr.flush()?;
