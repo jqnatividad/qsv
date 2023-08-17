@@ -84,6 +84,8 @@ joinp options:
     --low-memory           Use low memory mode when parsing CSVs. This will use less memory
                            but will be slower. It will also process the join in streaming mode.
                            Only use this when you get out of memory errors.
+    --no-optimizations     Disable non-default join optimizations. This will make joins slower.
+                           Only use this when you get join errors.                           
     --ignore-errors        Ignore errors when parsing CSVs. If set, rows with errors
                            will be skipped. If not set, the query will fail.
                            Only use this when debugging queries, as polars does batched
@@ -167,10 +169,12 @@ use std::{
 };
 
 use polars::{
-    chunked_array::object::{AsOfOptions, AsofStrategy},
     datatypes::AnyValue,
     frame::hash_join::{JoinType, JoinValidation},
-    prelude::{CsvWriter, LazyCsvReader, LazyFileListReader, LazyFrame, SerWriter, SortOptions},
+    prelude::{
+        AsOfOptions, AsofStrategy, CsvWriter, LazyCsvReader, LazyFileListReader, LazyFrame,
+        SerWriter, SortOptions,
+    },
 };
 use serde::Deserialize;
 use smartstring;
@@ -179,37 +183,38 @@ use crate::{config::Delimiter, util, CliError, CliResult};
 
 #[derive(Deserialize)]
 struct Args {
-    arg_columns1:         String,
-    arg_input1:           String,
-    arg_columns2:         String,
-    arg_input2:           String,
-    flag_left:            bool,
-    flag_left_anti:       bool,
-    flag_left_semi:       bool,
-    flag_full:            bool,
-    flag_cross:           bool,
-    flag_filter_left:     Option<String>,
-    flag_filter_right:    Option<String>,
-    flag_validate:        Option<String>,
-    flag_nulls:           bool,
-    flag_streaming:       bool,
-    flag_try_parsedates:  bool,
-    flag_infer_len:       usize,
-    flag_low_memory:      bool,
-    flag_ignore_errors:   bool,
-    flag_asof:            bool,
-    flag_left_by:         Option<String>,
-    flag_right_by:        Option<String>,
-    flag_strategy:        Option<String>,
-    flag_tolerance:       Option<String>,
-    flag_datetime_format: Option<String>,
-    flag_date_format:     Option<String>,
-    flag_time_format:     Option<String>,
-    flag_float_precision: Option<usize>,
-    flag_null_value:      String,
-    flag_output:          Option<String>,
-    flag_delimiter:       Option<Delimiter>,
-    flag_quiet:           bool,
+    arg_columns1:          String,
+    arg_input1:            String,
+    arg_columns2:          String,
+    arg_input2:            String,
+    flag_left:             bool,
+    flag_left_anti:        bool,
+    flag_left_semi:        bool,
+    flag_full:             bool,
+    flag_cross:            bool,
+    flag_filter_left:      Option<String>,
+    flag_filter_right:     Option<String>,
+    flag_validate:         Option<String>,
+    flag_nulls:            bool,
+    flag_streaming:        bool,
+    flag_try_parsedates:   bool,
+    flag_infer_len:        usize,
+    flag_low_memory:       bool,
+    flag_no_optimizations: bool,
+    flag_ignore_errors:    bool,
+    flag_asof:             bool,
+    flag_left_by:          Option<String>,
+    flag_right_by:         Option<String>,
+    flag_strategy:         Option<String>,
+    flag_tolerance:        Option<String>,
+    flag_datetime_format:  Option<String>,
+    flag_date_format:      Option<String>,
+    flag_time_format:      Option<String>,
+    flag_float_precision:  Option<usize>,
+    flag_null_value:       String,
+    flag_output:           Option<String>,
+    flag_delimiter:        Option<Delimiter>,
+    flag_quiet:            bool,
 }
 
 impl From<polars::error::PolarsError> for CliError {
@@ -315,18 +320,19 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 }
 
 struct JoinStruct {
-    left_lf:         LazyFrame,
-    left_sel:        String,
-    right_lf:        LazyFrame,
-    right_sel:       String,
-    output:          Option<String>,
-    delim:           u8,
-    streaming:       bool,
-    datetime_format: Option<String>,
-    date_format:     Option<String>,
-    time_format:     Option<String>,
-    float_precision: Option<usize>,
-    null_value:      String,
+    left_lf:          LazyFrame,
+    left_sel:         String,
+    right_lf:         LazyFrame,
+    right_sel:        String,
+    output:           Option<String>,
+    delim:            u8,
+    streaming:        bool,
+    no_optimizations: bool,
+    datetime_format:  Option<String>,
+    date_format:      Option<String>,
+    time_format:      Option<String>,
+    float_precision:  Option<usize>,
+    null_value:       String,
 }
 
 impl JoinStruct {
@@ -357,22 +363,32 @@ impl JoinStruct {
             );
         }
 
-        let optimize_all = polars::lazy::frame::OptState {
-            projection_pushdown:        true,
-            predicate_pushdown:         true,
-            type_coercion:              true,
-            simplify_expr:              true,
-            file_caching:               true,
-            slice_pushdown:             true,
-            common_subplan_elimination: true,
-            streaming:                  self.streaming,
+        let optimization_state = if self.no_optimizations {
+            // use default optimization state
+            polars::lazy::frame::OptState {
+                streaming: self.streaming,
+                ..Default::default()
+            }
+        } else {
+            polars::lazy::frame::OptState {
+                projection_pushdown: true,
+                predicate_pushdown:  true,
+                type_coercion:       true,
+                simplify_expr:       true,
+                file_caching:        true,
+                slice_pushdown:      true,
+                comm_subplan_elim:   true,
+                comm_subexpr_elim:   true,
+                streaming:           self.streaming,
+            }
         };
+        log::debug!("Optimization state: {optimization_state:?}");
 
         let mut join_results = if jointype == JoinType::Cross {
             self.left_lf
-                .with_optimizations(optimize_all)
+                .with_optimizations(optimization_state)
                 .join_builder()
-                .with(self.right_lf.with_optimizations(optimize_all))
+                .with(self.right_lf.with_optimizations(optimization_state))
                 .how(JoinType::Cross)
                 .validate(validation)
                 .force_parallel(true)
@@ -386,9 +402,9 @@ impl JoinStruct {
             }
 
             self.left_lf
-                .with_optimizations(optimize_all)
+                .with_optimizations(optimization_state)
                 .join_builder()
-                .with(self.right_lf.with_optimizations(optimize_all))
+                .with(self.right_lf.with_optimizations(optimization_state))
                 .left_on(left_selcols)
                 .right_on(right_selcols)
                 .how(jointype)
@@ -482,6 +498,7 @@ impl Args {
             output: self.flag_output.clone(),
             delim,
             streaming: self.flag_streaming,
+            no_optimizations: self.flag_no_optimizations,
             datetime_format: self.flag_datetime_format.clone(),
             date_format: self.flag_date_format.clone(),
             time_format: self.flag_time_format.clone(),

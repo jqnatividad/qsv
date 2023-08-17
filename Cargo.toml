@@ -1,6 +1,6 @@
 [package]
 name = "qsv"
-version = "0.111.0" #:version
+version = "0.112.0" #:version
 authors = ["Joel Natividad <joel@datHere.com>"]
 description = "A high performance CSV data-wrangling toolkit."
 documentation = "https://github.com/jqnatividad/qsv#qsv-ultra-fast-csv-data-wrangling-toolkit"
@@ -126,7 +126,7 @@ mlua = { version = "0.9.0-rc.3", features = [
 ], optional = true }
 num_cpus = "1"
 odht = "0.3"
-polars = { version = "0.31", features = [
+polars = { version = "0.32", features = [
     "lazy",
     "streaming",
     "object",
@@ -139,6 +139,7 @@ polars = { version = "0.31", features = [
     "ipc",
     "temporal",
     "performant",
+    "cse",
 ], optional = true }
 pyo3 = { version = "0.19", features = ["auto-initialize"], optional = true }
 qsv-dateparser = "0.10"

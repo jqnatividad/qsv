@@ -37,6 +37,10 @@ Example queries:
   qsv sqlp people.csv "WITH millenials AS (SELECT * FROM people WHERE age >= 25 and age <= 40) \
     SELECT * FROM millenials WHERE STARTS_WITH(name,'C')"
 
+  # CASE statement
+  qsv sqlp data.csv "select CASE WHEN col1 > 10 THEN 'foo' WHEN col1 > 5 THEN 'bar' ELSE 'baz' END from data"
+  qsv sqlp data.csv "select CASE col*5 WHEN 10 THEN 'foo' WHEN 5 THEN 'bar' ELSE 'baz' END from _t_1"
+
   # spaceship operator: "<=>" (three-way comparison operator)
   #  returns -1 if left < right, 0 if left == right, 1 if left > right
   # https://en.wikipedia.org/wiki/Three-way_comparison#Spaceship_operator
@@ -109,6 +113,8 @@ sqlp options:
     --low-memory              Use low memory mode when parsing CSVs. This will use less memory
                               but will be slower. It will also process LazyFrames in streaming mode.
                               Only use this when you get out of memory errors.
+    --no-optimizations        Disable non-default query optimizations. This will make queries slower.
+                              Only use this when you get query errors.
     --ignore-errors           Ignore errors when parsing CSVs. If set, rows with errors
                               will be skipped. If not set, the query will fail.
                               Only use this when debugging queries, as polars does batched
@@ -181,24 +187,25 @@ static DEFAULT_ZSTD_COMPRESSION_LEVEL: i32 = 3;
 
 #[derive(Deserialize, Clone)]
 struct Args {
-    arg_input:            Vec<PathBuf>,
-    arg_sql:              String,
-    flag_format:          String,
-    flag_try_parsedates:  bool,
-    flag_infer_len:       usize,
-    flag_low_memory:      bool,
-    flag_ignore_errors:   bool,
-    flag_datetime_format: Option<String>,
-    flag_date_format:     Option<String>,
-    flag_time_format:     Option<String>,
-    flag_float_precision: Option<usize>,
-    flag_null_value:      String,
-    flag_compression:     String,
-    flag_compress_level:  Option<i32>,
-    flag_statistics:      bool,
-    flag_output:          Option<String>,
-    flag_delimiter:       Option<Delimiter>,
-    flag_quiet:           bool,
+    arg_input:             Vec<PathBuf>,
+    arg_sql:               String,
+    flag_format:           String,
+    flag_try_parsedates:   bool,
+    flag_infer_len:        usize,
+    flag_low_memory:       bool,
+    flag_no_optimizations: bool,
+    flag_ignore_errors:    bool,
+    flag_datetime_format:  Option<String>,
+    flag_date_format:      Option<String>,
+    flag_time_format:      Option<String>,
+    flag_float_precision:  Option<usize>,
+    flag_null_value:       String,
+    flag_compression:      String,
+    flag_compress_level:   Option<i32>,
+    flag_statistics:       bool,
+    flag_output:           Option<String>,
+    flag_delimiter:        Option<Delimiter>,
+    flag_quiet:            bool,
 }
 
 #[derive(Default, Clone)]
@@ -212,7 +219,7 @@ enum OutputMode {
 }
 
 // shamelessly copied from
-// https://github.com/pola-rs/polars/blob/main/polars-cli/src/main.rs
+// https://github.com/pola-rs/polars-cli/blob/main/src/main.rs
 impl OutputMode {
     fn execute_query(
         &self,
@@ -370,16 +377,27 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         Some(args.flag_infer_len)
     };
 
-    let optimize_all = polars::lazy::frame::OptState {
-        projection_pushdown:        true,
-        predicate_pushdown:         true,
-        type_coercion:              true,
-        simplify_expr:              true,
-        file_caching:               !args.flag_low_memory,
-        slice_pushdown:             true,
-        common_subplan_elimination: true,
-        streaming:                  args.flag_low_memory,
+    let optimization_state = if args.flag_no_optimizations {
+        // use default optimization state
+        polars::lazy::frame::OptState {
+            file_caching: !args.flag_low_memory,
+            streaming: args.flag_low_memory,
+            ..Default::default()
+        }
+    } else {
+        polars::lazy::frame::OptState {
+            projection_pushdown: true,
+            predicate_pushdown:  true,
+            type_coercion:       true,
+            simplify_expr:       true,
+            file_caching:        !args.flag_low_memory,
+            slice_pushdown:      true,
+            comm_subplan_elim:   true,
+            comm_subexpr_elim:   true,
+            streaming:           args.flag_low_memory,
+        }
     };
+    log::debug!("Optimization state: {optimization_state:?}");
 
     let mut ctx = SQLContext::new();
     let mut table_aliases = HashMap::with_capacity(args.arg_input.len());
@@ -418,7 +436,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .with_ignore_errors(args.flag_ignore_errors)
             .low_memory(args.flag_low_memory)
             .finish()?;
-        ctx.register(table_name, lf.with_optimizations(optimize_all));
+        ctx.register(table_name, lf.with_optimizations(optimization_state));
     }
 
     if log::log_enabled!(log::Level::Debug) {

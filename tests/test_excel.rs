@@ -725,7 +725,8 @@ fn excel_empty_sheet2_message() {
     cmd.arg("--sheet").arg("Sheet1").arg(xls_file);
 
     let got = wrk.output_stderr(&mut cmd);
-    assert_eq!(got, "0 0-column rows exported from \"Sheet1\" sheet\n");
+    assert_eq!(got, "\"Sheet1\" sheet is empty\n");
+    wrk.assert_err(&mut cmd);
 }
 
 #[test]
