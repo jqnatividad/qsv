@@ -6,19 +6,19 @@ nullcount, sparsity, quartiles, interquartile range (IQR), lower/upper fences, s
 cardinality, mode/s & antimode/s, and median absolute deviation (MAD). Note that some
 statistics requires loading the entire file into memory, so they must be enabled explicitly. 
 
-By default, the following statistics are reported for *every* column in the CSV data:
+By default, the following "streaming" statistics are reported for *every* column:
 sum, min/max/range values, min/max length, mean, stddev, variance, nullcount & sparsity.
 The default set of statistics corresponds to statistics that can be computed efficiently
 on a stream of data (i.e., constant memory) and works with arbitrarily large CSV files.
 
-The following additional statistics require loading the entire file into memory:
+The following additional "non-streaming" statistics require loading the entire file into memory:
 cardinality, mode/antimode, median, MAD, quartiles and its related measures (IQR,
 lower/upper fences & skewness).
 
-Note that an Out-Of-Memory (OOM) heuristic check will be done when computing "non-streaming"
-statistics and will preemptively prevent processing if the file is larger than the available
-memory minus a headroom buffer of 20% (adjustable using the QSV_FREEMEMORY_HEADROOM_PCT
-environment variable).
+When computing “non-streaming” statistics, an Out-Of-Memory (OOM) heuristic check is done.
+If the file is larger than the available memory minus a headroom buffer of 20% (which can be
+adjusted using the QSV_FREEMEMORY_HEADROOM_PCT environment variable), processing will be
+preemptively prevented.
 
 "Antimode" is the least frequently occurring non-zero value and is the opposite of mode.
 It returns "*ALL" if all the values are unique, and only returns a preview of the first
