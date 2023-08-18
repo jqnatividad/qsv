@@ -13,7 +13,7 @@ Excel options:
                                Negative indices start from the end (-1 = last sheet). 
                                If the sheet cannot be found, qsv will read the first sheet.
                                [default: 0]
-    --metadata <c|j|J>         Outputs workbook metadata in CSV or JSON format: 
+    --metadata <c|j|J>         Outputs workbook metadata in CSV or JSON format:
                                  index, sheet_name, headers, num_columns, num_rows, safe_headers,
                                  safe_headers_count, unsafe_headers, unsafe_headers_count and
                                  duplicate_headers_count.
@@ -27,8 +27,8 @@ Excel options:
                                
                                In JSON(j) mode, the output is minified JSON.
                                In Pretty JSON(J) mode, the output is pretty-printed JSON.
-                               For both JSON modes, the filename and spreadsheet format are
-                               also included.
+                               For both JSON modes, the filename, the full file path, the workbook format
+                               and the number of sheets are also included.
                                
                                All other Excel options are ignored.
                                [default: none]
@@ -233,7 +233,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let mut excelmetadata_struct = MetadataStruct {
             filename,
             canonical_filename,
-            format,
+            format: if ods_flag {
+                "ODS".to_string()
+            } else {
+                format!("Excel: {format}")
+            },
             num_sheets,
             sheet: vec![],
         };
@@ -454,13 +458,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let (row_count, col_count) = range.get_size();
 
     if row_count > 0 {
-        // there are row to export
+        // there are rows to export
         let mut rows_iter = range.rows();
 
-        // use with_capacity to minimize reallocations
+        // amortize allocations
         let mut record = csv::StringRecord::with_capacity(500, col_count);
         let mut trimmed_record = csv::StringRecord::with_capacity(500, col_count);
-
         let mut col_name: String;
 
         // get the first row as header
@@ -495,10 +498,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     trimmed_record.push_field(field);
                 }
             });
-            wtr.write_record(&trimmed_record)?;
-        } else {
-            wtr.write_record(&record)?;
+            record.clone_from(&trimmed_record);
         }
+        info!("header: {record:?}");
+        wtr.write_record(&record)?;
 
         // process the rest of the rows
         // first, amortize allocs by declaring mutable vars we'll use
