@@ -13,7 +13,7 @@ Excel options:
                                Negative indices start from the end (-1 = last sheet). 
                                If the sheet cannot be found, qsv will read the first sheet.
                                [default: 0]
-    --metadata <c|j|J>         Outputs workbook metadata in CSV or JSON format: 
+    --metadata <c|j|J>         Outputs workbook metadata in CSV or JSON format:
                                  index, sheet_name, headers, num_columns, num_rows, safe_headers,
                                  safe_headers_count, unsafe_headers, unsafe_headers_count and
                                  duplicate_headers_count.
@@ -27,8 +27,8 @@ Excel options:
                                
                                In JSON(j) mode, the output is minified JSON.
                                In Pretty JSON(J) mode, the output is pretty-printed JSON.
-                               For both JSON modes, the filename and spreadsheet format are
-                               also included.
+                               For both JSON modes, the filename, the full file path, the workbook format
+                               and the number of sheets are also included.
                                
                                All other Excel options are ignored.
                                [default: none]
@@ -233,7 +233,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let mut excelmetadata_struct = MetadataStruct {
             filename,
             canonical_filename,
-            format,
+            format: if ods_flag {
+                "ODS".to_string()
+            } else {
+                format!("Excel: {format}")
+            },
             num_sheets,
             sheet: vec![],
         };
