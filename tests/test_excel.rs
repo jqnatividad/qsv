@@ -528,7 +528,7 @@ fn excel_metadata_pretty_json() {
     cmd.arg("--metadata").arg("J").arg(xls_file);
 
     let got: String = wrk.stdout(&mut cmd);
-    let expected: &str = r#""format": "xls",
+    let expected: &str = r#""format": "Excel: xls",
   "num_sheets": 8,
   "sheet": [
     {
@@ -677,6 +677,85 @@ fn excel_metadata_pretty_json() {
       "safe_headers": [
         "Last sheet col1",
         "Last-2"
+      ],
+      "safe_headers_count": 2,
+      "unsafe_headers": [],
+      "unsafe_headers_count": 0,
+      "duplicate_headers_count": 0
+    }
+  ]
+}"#;
+    assert!(got.ends_with(expected));
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn ods_metadata() {
+    let wrk = Workdir::new("ods_metadata");
+
+    let xls_file = wrk.load_test_file("excel-ods.ods");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--metadata").arg("c").arg(xls_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec![
+            "index",
+            "sheet_name",
+            "headers",
+            "num_columns",
+            "num_rows",
+            "safe_headers",
+            "safe_headers_count",
+            "unsafe_headers",
+            "unsafe_headers_count",
+            "duplicate_headers_count"
+        ],
+        svec![
+            "0",
+            "Sheet1",
+            "[\"URL\", \"City\"]",
+            "2",
+            "4",
+            "[\"URL\", \"City\"]",
+            "2",
+            "[]",
+            "0",
+            "0"
+        ],
+    ];
+
+    assert_eq!(got, expected);
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn ods_metadata_pretty_json() {
+    let wrk = Workdir::new("ods_metadata_pretty_json");
+
+    let xls_file = wrk.load_test_file("excel-ods.ods");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--metadata").arg("J").arg(xls_file);
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected: &str = r#"excel-ods.ods",
+  "format": "ODS",
+  "num_sheets": 1,
+  "sheet": [
+    {
+      "index": 0,
+      "name": "Sheet1",
+      "headers": [
+        "URL",
+        "City"
+      ],
+      "num_columns": 2,
+      "num_rows": 4,
+      "safe_headers": [
+        "URL",
+        "City"
       ],
       "safe_headers_count": 2,
       "unsafe_headers": [],
