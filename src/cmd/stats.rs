@@ -15,9 +15,10 @@ The following additional statistics require loading the entire file into memory:
 cardinality, mode/antimode, median, MAD, quartiles and its related measures (IQR,
 lower/upper fences & skewness).
 
-Note that an Out-Of-Memory (OOM) check heuristic will prevent processing if the file
-is larger than the available memory minus a headroom buffer of 20% (adjustable using the
-QSV_FREEMEMORY_HEADROOM_PCT environment variable).
+Note that an Out-Of-Memory (OOM) heuristic check will be done when computing "non-streaming"
+statistics and will preemptively prevent processing if the file is larger than the available
+memory minus a headroom buffer of 20% (adjustable using the QSV_FREEMEMORY_HEADROOM_PCT
+environment variable).
 
 "Antimode" is the least frequently occurring non-zero value and is the opposite of mode.
 It returns "*ALL" if all the values are unique, and only returns a preview of the first
