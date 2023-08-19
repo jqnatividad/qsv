@@ -519,6 +519,7 @@ pub fn mem_file_check(
 }
 
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
+#[inline]
 pub fn condense(val: Cow<[u8]>, n: Option<usize>) -> Cow<[u8]> {
     match n {
         None => val,
