@@ -36,14 +36,14 @@ Common options:
 
 use std::{
     borrow::Cow,
-    io::{self, Write},
+    io::{self, BufWriter, Write},
 };
 
 use serde::Deserialize;
 use tabwriter::TabWriter;
 
 use crate::{
-    config::{Config, Delimiter},
+    config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY},
     util, CliResult,
 };
 
@@ -65,7 +65,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut rdr = rconfig.reader()?;
     let headers = rdr.byte_headers()?.clone();
 
-    let mut wtr = TabWriter::new(io::stdout());
+    let stdoutlock = io::stdout().lock();
+    let mut tabwtr = TabWriter::new(stdoutlock);
+    let mut wtr = BufWriter::with_capacity(DEFAULT_WTR_BUFFER_CAPACITY, &mut tabwtr);
     let mut first = true;
     let mut record = csv::ByteRecord::new();
     let separator_flag = !args.flag_separator.is_empty();
