@@ -67,21 +67,26 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut wtr = TabWriter::new(io::stdout());
     let mut first = true;
-    for r in rdr.byte_records() {
-        if !first && !args.flag_separator.is_empty() {
-            writeln!(&mut wtr, "{}", args.flag_separator)?;
+    let mut record = csv::ByteRecord::new();
+    let separator_flag = !args.flag_separator.is_empty();
+    let separator = args.flag_separator;
+    let field_separator_flag = args.flag_field_separator.is_some();
+    let field_separator = args.flag_field_separator.unwrap_or_default().into_bytes();
+
+    while rdr.read_byte_record(&mut record)? {
+        if !first && separator_flag {
+            writeln!(&mut wtr, "{separator}")?;
         }
         first = false;
-        let r = r?;
-        for (i, (header, field)) in headers.iter().zip(&r).enumerate() {
+        for (i, (header, field)) in headers.iter().zip(&record).enumerate() {
             if rconfig.no_headers {
                 write!(&mut wtr, "{i}")?;
             } else {
                 wtr.write_all(header)?;
             }
             wtr.write_all(b"\t")?;
-            if let Some(sep) = &args.flag_field_separator {
-                wtr.write_all(sep.as_bytes())?;
+            if field_separator_flag {
+                wtr.write_all(&field_separator)?;
             }
             wtr.write_all(&util::condense(Cow::Borrowed(field), args.flag_condense))?;
             wtr.write_all(b"\n")?;
