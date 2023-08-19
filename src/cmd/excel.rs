@@ -622,10 +622,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         trimmed_record.push_field(field);
                     }
                 });
-                wtr.write_record(&trimmed_record)?;
-            } else {
-                wtr.write_record(&record)?;
+                record.clone_from(&trimmed_record);
             }
+            wtr.write_record(&record)?;
         } // end of main processing loop
     } else {
         return fail_clierror!("\"{sheet}\" sheet is empty");
