@@ -550,10 +550,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 match *cell {
                     DataType::Empty => record.push_field(""),
                     DataType::String(ref s) => record.push_field(s),
-                    DataType::Int(ref i) => {
-                        let mut buffer = itoa::Buffer::new();
-                        record.push_field(buffer.format(*i));
-                    },
+                    DataType::Int(ref i) => record.push_field(itoa_buffer.format(*i)),
                     DataType::Float(ref f) => {
                         float_val = *f;
                         float_flag = true;
@@ -574,7 +571,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 // Dates are stored as floats in Excel, so if its a float value, we need to check
                 // if its a date. If its a date, we need to convert it to a string using the
                 // specified date format. If its not a date, we need to convert it to a string
-                // using ryu.
+                // using ryu unless its an integer, in which case we use itoa.
                 #[allow(clippy::cast_precision_loss)]
                 if float_flag {
                     if cell_date_flag {
