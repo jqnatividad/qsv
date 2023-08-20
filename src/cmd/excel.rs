@@ -47,15 +47,18 @@ Common options:
     -o, --output <file>        Write output to <file> instead of stdout.
     -d, --delimiter <arg>      The delimiter to use when writing CSV data.
                                Must be a single character. [default: ,]
+    -p, --progressbar          Show progress bar.
     -Q, --quiet                Do not display export summary message.
 "#;
 
 use std::{cmp, fmt::Write, path::PathBuf};
 
 use calamine::{open_workbook_auto, DataType, Range, Reader};
+use indicatif::HumanCount;
+#[cfg(any(feature = "feature_capable", feature = "lite"))]
+use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::info;
 use serde::{Deserialize, Serialize};
-use thousands::Separable;
 
 use crate::{
     config::{Config, Delimiter},
@@ -73,6 +76,7 @@ struct Args {
     flag_delimiter:   Option<Delimiter>,
     flag_quiet:       bool,
     flag_date_format: Option<String>,
+    flag_progressbar: bool,
     flag_range:       String,
 }
 
@@ -163,7 +167,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let path = &args.arg_input;
 
     let sce = PathBuf::from(path);
-    let mut ods_flag = false;
     let filename = sce
         .file_name()
         .and_then(std::ffi::OsStr::to_str)
@@ -175,9 +178,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .and_then(std::ffi::OsStr::to_str)
         .unwrap_or_default()
         .to_lowercase();
-    match format.as_str() {
-        "xls" | "xlsx" | "xlsm" | "xlsb" => (),
-        "ods" => ods_flag = true,
+    let ods_flag = match format.as_str() {
+        "xls" | "xlsx" | "xlsm" | "xlsb" => false,
+        "ods" => true,
         _ => {
             return fail_clierror!(
                 "\"{format}\" not supported. The excel command only supports the following file \
@@ -457,6 +460,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let (row_count, col_count) = range.get_size();
 
+    // prep progress bar
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
+    let show_progress = args.flag_progressbar || util::get_envvar_flag("QSV_PROGRESSBAR");
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
+    let progress = ProgressBar::with_draw_target(None, ProgressDrawTarget::stderr_with_hz(5));
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
+    if show_progress {
+        util::prep_progress(&progress, row_count as u64);
+    } else {
+        progress.set_draw_target(ProgressDrawTarget::hidden());
+    }
+
     if row_count > 0 {
         // there are rows to export
         let mut rows_iter = range.rows();
@@ -503,6 +518,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         info!("header: {record:?}");
         wtr.write_record(&record)?;
 
+        #[cfg(any(feature = "feature_capable", feature = "lite"))]
+        if show_progress {
+            progress.inc(1);
+        }
+
         // process the rest of the rows
         // first, amortize allocs by declaring mutable vars we'll use
         // in the main processing loop here
@@ -521,6 +541,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         // main processing loop
         for row in rows_iter {
+            #[cfg(any(feature = "feature_capable", feature = "lite"))]
+            if show_progress {
+                progress.inc(1);
+            }
             record.clear();
             for cell in row {
                 match *cell {
@@ -632,13 +656,19 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     wtr.flush()?;
 
+    let end_msg = format!(
+        "{} {}-column rows exported from \"{sheet}\" sheet",
+        HumanCount(row_count.saturating_sub(1) as u64),
+        HumanCount(col_count as u64),
+    );
+
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
+    if show_progress {
+        progress.set_message(end_msg.clone());
+        util::finish_progress(&progress);
+    }
+
     if !args.flag_quiet {
-        let end_msg = format!(
-            "{} {}-column rows exported from \"{sheet}\" sheet",
-            // don't count the header in row count
-            row_count.saturating_sub(1).separate_with_commas(),
-            col_count.separate_with_commas(),
-        );
         winfo!("{end_msg}");
     }
 
