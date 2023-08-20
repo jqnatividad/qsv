@@ -66,8 +66,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let headers = rdr.byte_headers()?.clone();
 
     let stdoutlock = io::stdout().lock();
-    let mut tabwtr = TabWriter::new(stdoutlock);
-    let mut wtr = BufWriter::with_capacity(DEFAULT_WTR_BUFFER_CAPACITY, &mut tabwtr);
+    let bufwtr = BufWriter::with_capacity(DEFAULT_WTR_BUFFER_CAPACITY, stdoutlock);
+    let mut wtr = TabWriter::new(bufwtr);
+
     let mut first = true;
     let mut record = csv::ByteRecord::new();
     let separator_flag = !args.flag_separator.is_empty();
