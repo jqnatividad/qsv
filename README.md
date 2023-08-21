@@ -1,4 +1,4 @@
-## qsv: Ultra-fast CSV data-wrangling toolkit
+## qsv: Blazing-fast CSV data-wrangling toolkit
 
 [![Linux build status](https://github.com/jqnatividad/qsv/actions/workflows/rust.yml/badge.svg)](https://github.com/jqnatividad/qsv/actions/workflows/rust.yml)
 [![Windows build status](https://github.com/jqnatividad/qsv/actions/workflows/rust-windows.yml/badge.svg)](https://github.com/jqnatividad/qsv/actions/workflows/rust-windows.yml)
