@@ -129,6 +129,10 @@ fn main() -> QsvExitCode {
     #[cfg(all(feature = "generate", not(feature = "lite")))]
     enabled_commands.push_str("    generate    Generate test data by profiling a CSV\n");
 
+    #[cfg(all(feature = "geocode", not(feature = "lite")))]
+    enabled_commands
+        .push_str("    geocode     Geocodes a location against the Geonames cities database.\n");
+
     enabled_commands.push_str(
         "    headers     Show header names
     help        Show this usage message
@@ -310,6 +314,8 @@ enum Command {
     Frequency,
     #[cfg(all(feature = "generate", feature = "feature_capable"))]
     Generate,
+    #[cfg(all(feature = "geocode", feature = "feature_capable"))]
+    Geocode,
     Headers,
     Help,
     Index,
@@ -392,6 +398,8 @@ impl Command {
             Command::Frequency => cmd::frequency::run(argv),
             #[cfg(all(feature = "generate", feature = "feature_capable"))]
             Command::Generate => cmd::generate::run(argv),
+            #[cfg(all(feature = "geocode", feature = "feature_capable"))]
+            Command::Geocode => cmd::geocode::run(argv),
             Command::Headers => cmd::headers::run(argv),
             Command::Help => {
                 wout!("{USAGE}");
