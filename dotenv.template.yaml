@@ -44,7 +44,9 @@ QSV_NO_HEADERS = False
 # Also automatically updates stale indices.
 QSV_AUTOINDEX = False
 
-# The directory to use for caching downloaded lookup_table resources using
+# The directory to use for caching various qsv files.
+# Used by the `geocode` command for downloaded geocoding resources.
+# Used by the `luau`` command for downloaded lookup_table resources using
 # the `luau` qsv_register_lookup() helper function.
 # QSV_CACHE_DIR = .
 
@@ -160,3 +162,7 @@ QSV_TIMEOUT = 30
 # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
 # (default: <qsv_variant>/<version> (<target>; https://github.com/jqnatividad/qsv)).
 # QSV_USER_AGENT = qsv/0.99.1 (x86_64-apple-darwin; https://github.com/jqnatividad/qsv)
+
+# the filename of the Geonames index file
+# this will be created in the QSV_CACHE_DIR directory
+QSV_GEOCODE_INDEX_FILENAME = qsv-geocode-index.bincode

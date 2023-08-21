@@ -36,6 +36,8 @@ pub mod foreach;
 pub mod frequency;
 #[cfg(all(feature = "generate", feature = "feature_capable"))]
 pub mod generate;
+#[cfg(all(feature = "geocode", feature = "feature_capable"))]
+pub mod geocode;
 pub mod headers;
 pub mod index;
 pub mod input;
