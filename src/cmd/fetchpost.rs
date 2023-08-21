@@ -8,7 +8,7 @@ Fetchpost is integrated with `jql` to directly parse out values from an API JSON
 <url-column> needs to be a fully qualified URL path. It can be specified as a column name
 from which the URL value will be retrieved for each record, or as the URL literal itself.
 
-To use a proxy, please set env vars HTTP_PROXY and HTTPS_PROXY
+To use a proxy, please set env vars HTTP_PROXY, HTTPS_PROXY or ALL_PROXY
 (e.g. export HTTPS_PROXY=socks5://127.0.0.1:1086).
 
 Fetchpost caches responses to minimize traffic and maximize performance. By default, it uses

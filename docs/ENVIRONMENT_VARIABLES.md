@@ -42,7 +42,7 @@ Several dependencies also have environment variables that influence qsv's perfor
   * [jemalloc](https://jemalloc.net/jemalloc.3.html#environment)
     
 * Network Access ([reqwest](https://docs.rs/reqwest/latest/reqwest/))   
-  qsv uses reqwest and will honor [proxy settings](https://docs.rs/reqwest/latest/reqwest/index.html#proxies) set through the `HTTP_PROXY`, `HTTPS_PROXY` & `NO_PROXY` environment variables.
+  qsv uses reqwest and will honor [proxy settings](https://docs.rs/reqwest/latest/reqwest/index.html#proxies) set through the `HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY` & `NO_PROXY` environment variables.
   
 > ℹ️ **NOTE:** To get a list of all active qsv-relevant environment variables, run `qsv --envlist`.
 Relevant env vars are defined as anything that starts with `QSV_`, `MIMALLOC_`, `JEMALLOC_`, `MALLOC_CONF` & the proxy variables listed above.
