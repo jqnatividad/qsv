@@ -20,7 +20,7 @@
 
 </div>
 
-> ℹ️ **NOTE:** Quicksilver (qsv) is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's May 2018 release](https://github.com/BurntSushi/xsv/issues/267). On top of xsv's 20 commands, it adds numerous new features; 36 additional commands; 6 `apply` subcommands & 35 operations; 5 `to` subcommands; 3 `cat` subcommands; and 4 `snappy` subcommands.
+> ℹ️ **NOTE:** Quicksilver (qsv) is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's May 2018 release](https://github.com/BurntSushi/xsv/issues/267). On top of xsv's 20 commands, it adds numerous new features; 37 additional commands; 6 `apply` subcommands & 35 operations; 5 `to` subcommands; 3 `cat` subcommands; 3 `geocode` subcommands & 3 operations; and 4 `snappy` subcommands.
 See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for more details.
 
 ## Available commands
@@ -49,6 +49,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 | [fmt](/src/cmd/fmt.rs#L2) | Reformat a CSV with different delimiters, record terminators or quoting rules. (Supports ASCII delimited data.)  |
 | [foreach](/src/cmd/foreach.rs#L3)<br>✨ | Loop over a CSV to execute shell commands. (not available on Windows)  |
 | [frequency](/src/cmd/frequency.rs#L2)<br>📇😣🏎️ | Build [frequency tables](https://statisticsbyjim.com/basics/frequency-table/) of each column. Uses multithreading to go faster if an index is present. |
+| [geocode](/src/cmd/geocode.rs#L2)<br>✨🧠🌐 | Geocodes a location against the Geonames cities database.  |
 | [generate](/src/cmd/generate.rs#L2)<br>✨ | Generate test data by profiling a CSV using [Markov decision process](https://crates.io/crates/test-data-generation) machine learning.  |
 | [headers](/src/cmd/headers.rs#L2) | Show the headers of a CSV. Or show the intersection of all headers between many CSV files. |
 | [index](/src/cmd/index.rs#L2) | Create an index (📇) for a CSV. This is very quick (even the 15gb, 28m row NYC 311 dataset takes all of 15 seconds to index) & provides constant time indexing/random access into the CSV. With an index, `count`, `sample` & `slice` work instantaneously; random access mode is enabled in `luau`; and multithreading (🏎️) is enabled for the `frequency`, `split`, `stats`, `schema` & `tojsonl` commands. |
@@ -329,6 +330,7 @@ For details, see [Environment Variables](docs/ENVIRONMENT_VARIABLES.md) and the 
 * `apply` - enable `apply` command. This swiss-army knife of CSV transformations is very powerful, but it has a lot of dependencies that increases both compile time and binary size.
 * `fetch` - enables the `fetch` & `fetchpost` commands.
 * `foreach` - enable `foreach` command (not valid for Windows).
+* `geocode` - enable `geocode` command. This command uses an updateable copy of the Geonames Cities database which is ~2.5MB in size.
 * `generate` - enable `generate` command.
 * `luau` - enable `luau` command. Embeds a [Luau](https://luau-lang.org) interpreter into qsv. [Luau has type-checking, sandboxing, additional language operators, increased performance & other improvements](https://luau-lang.org/2022/11/04/luau-origins-and-evolution.html) over Lua.
 * `polars` - enables all [Polars](https://pola.rs)-powered commands (currently, `joinp` and `sqlp`). Note that Polars is a very powerful library, but it has a lot of dependencies that drastically increases both compile time and binary size.
