@@ -2,8 +2,8 @@ static USAGE: &str = r#"
 Geocodes a location against the Geonames cities database.
 
 It has three subcommands:
- * suggest - given a City name, return the closest location coordinate/s.
- * reverse - given a location coordiante, return the closest City/ies.
+ * suggest - given a City name, return the closest location coordinate.
+ * reverse - given a location coordinate, return the closest City.
  * index - operations to update the Geonames cities database used by the geocode command.
  
 SUGGEST
@@ -485,7 +485,7 @@ async fn load_engine(geocode_index_file: PathBuf, languages_vec: Vec<&str>) -> C
     key = "String",
     convert = r#"{ format!("{}", cell) }"#,
     option = true,
-    sync_writes = false
+    sync_writes = true
 )]
 fn search_cached(
     engine: &Engine,
@@ -495,106 +495,73 @@ fn search_cached(
 ) -> Option<String> {
     static EMPTY_STRING: String = String::new();
 
-    match mode {
-        GeocodeSubCmd::Suggest => {
-            let search_result = engine.suggest(cell, 1, None);
-            let Some(cityrecord) = search_result.into_iter().next() else {
-                return None;
-            };
+    let mut name_work = String::new();
+    let mut country_work = String::new();
+    let mut admin1_name_value_work = String::new();
 
-            let Some((_admin1_name_key, admin1_name_value)) = (match &cityrecord.admin1_names {
-                Some(admin1) => admin1.into_iter().next().map(|s| s.to_owned()),
-                None => Some((&EMPTY_STRING, &EMPTY_STRING)),
-            }) else {
-                return None;
-            };
+    if mode == GeocodeSubCmd::Suggest {
+        let search_result = engine.suggest(cell, 1, None);
+        let Some(cityrecord) = search_result.into_iter().next() else {
+            return None;
+        };
 
-            #[allow(clippy::match_same_arms)]
-            // match arms are evaluated in order,
-            // so we're optimizing for the most common cases first
-            let result = match formatstr {
-                "%+" | "city-state" => format!(
-                    "{name}, {admin1}",
-                    name = cityrecord.name,
-                    admin1 = admin1_name_value,
-                ),
-                "city-country" => format!(
-                    "{name}, {cc}",
-                    name = cityrecord.name,
-                    cc = cityrecord.country.clone().unwrap().name,
-                ),
-                "city" => format!("{name}", name = cityrecord.name),
-                "state" => format!("{admin1_name_value}"),
-                "country" => format!("{cc}", cc = cityrecord.country.clone().unwrap().name),
-                _ => format!(
-                    "{name}, {admin1}, {cc}",
-                    name = cityrecord.name,
-                    admin1 = admin1_name_value,
-                    cc = cityrecord.country.clone().unwrap().name,
-                ),
-            };
-            return Some(result);
-            // })
-        },
-        GeocodeSubCmd::Reverse => {
-            // regex for Location field. Accepts (lat, long) & lat, long
-            let locregex: &'static Regex = regex_oncelock!(
-                r"(?-u)([+-]?[0-9]+\.?[0-9]*|\.[0-9]+),\s*([+-]?[0-9]+\.?[0-9]*|\.[0-9]+)"
-            );
+        let Some((_admin1_name_key, admin1_name_value)) = (match &cityrecord.admin1_names {
+            Some(admin1) => admin1.iter().next().map(|s| s.to_owned()),
+            None => Some((&EMPTY_STRING, &EMPTY_STRING)),
+        }) else {
+            return None;
+        };
 
-            let loccaps = locregex.captures(cell);
-            loccaps.and_then(|loccaps| {
-                let lat = fast_float::parse(&loccaps[1]).unwrap_or_default();
-                let long = fast_float::parse(&loccaps[2]).unwrap_or_default();
-                let result = if (-90.0..=90.0).contains(&lat) && (-180.0..=180.0).contains(&long) {
-                    let search_result = engine.reverse((lat, long), 1, None);
-                    let Some(cityrecord) = (match search_result {
-                        Some(search_result) => search_result.into_iter().next().map(|ri| ri.city),
-                        None => return None,
-                    }) else {
-                        return None;
-                    };
+        name_work = cityrecord.name.to_owned();
+        country_work = cityrecord.country.clone().unwrap().name;
+        admin1_name_value_work = admin1_name_value.to_owned();
+    } else if mode == GeocodeSubCmd::Reverse {
+        // regex for Location field. Accepts (lat, long) & lat, long
+        let locregex: &'static Regex = regex_oncelock!(
+            r"(?-u)([+-]?[0-9]+\.?[0-9]*|\.[0-9]+),\s*([+-]?[0-9]+\.?[0-9]*|\.[0-9]+)"
+        );
 
-                    let Some((_admin1_name_key, admin1_name_value)) =
-                        (match &cityrecord.admin1_names {
-                            Some(admin1) => admin1.into_iter().next().map(|s| s.to_owned()),
-                            None => Some((&EMPTY_STRING, &EMPTY_STRING)),
-                        })
-                    else {
-                        return None;
-                    };
-
-                    #[allow(clippy::match_same_arms)]
-                    // match arms are evaluated in order,
-                    // so we're optimizing for the most common cases first
-                    let result = match formatstr {
-                        "%+" | "city-state" => format!(
-                            "{name}, {admin1}",
-                            name = cityrecord.name,
-                            admin1 = admin1_name_value,
-                        ),
-                        "city-country" => format!(
-                            "{name}, {cc}",
-                            name = cityrecord.name,
-                            cc = cityrecord.country.clone().unwrap().name,
-                        ),
-                        "city" => format!("{name}", name = cityrecord.name),
-                        "state" => format!("{admin1_name_value}"),
-                        "country" => format!("{cc}", cc = cityrecord.country.clone().unwrap().name),
-                        _ => format!(
-                            "{name}, {admin1}, {cc}",
-                            name = cityrecord.name,
-                            admin1 = admin1_name_value,
-                            cc = cityrecord.country.clone().unwrap().name,
-                        ),
-                    };
-                    return Some(result);
-                } else {
-                    None
+        let loccaps = locregex.captures(cell);
+        if let Some(loccaps) = loccaps {
+            let lat = fast_float::parse(&loccaps[1]).unwrap_or_default();
+            let long = fast_float::parse(&loccaps[2]).unwrap_or_default();
+            if (-90.0..=90.0).contains(&lat) && (-180.0..=180.0).contains(&long) {
+                let search_result = engine.reverse((lat, long), 1, None);
+                let Some(cityrecord) = (match search_result {
+                    Some(search_result) => search_result.into_iter().next().map(|ri| ri.city),
+                    None => return None,
+                }) else {
+                    return None;
                 };
-                result
-            })
-        },
-        _ => None,
+
+                let Some((_admin1_name_key, admin1_name_value)) = (match &cityrecord.admin1_names {
+                    Some(admin1) => admin1.iter().next().map(|s| s.to_owned()),
+                    None => Some((&EMPTY_STRING, &EMPTY_STRING)),
+                }) else {
+                    return None;
+                };
+
+                name_work = cityrecord.name.to_owned();
+                country_work = cityrecord.country.clone().unwrap().name;
+                admin1_name_value_work = admin1_name_value.to_owned();
+            }
+        } else {
+            return None;
+        }
+    } else {
+        return None;
     }
+
+    #[allow(clippy::match_same_arms)]
+    // match arms are evaluated in order,
+    // so we're optimizing for the most common cases first
+    let result = match formatstr {
+        "%+" | "city-state" => format!("{name_work}, {admin1_name_value_work}"),
+        "city-country" => format!("{name_work}, {country_work}"),
+        "city" => name_work,
+        "state" => admin1_name_value_work,
+        "country" => country_work,
+        _ => format!("{name_work}, {admin1_name_value_work}, {country_work}"),
+    };
+    return Some(result);
 }
