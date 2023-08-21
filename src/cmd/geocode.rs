@@ -483,7 +483,7 @@ async fn load_engine(geocode_index_file: PathBuf, languages_vec: Vec<&str>) -> C
 
 #[cached(
     key = "String",
-    convert = r#"{ format!("{}", cell) }"#,
+    convert = r#"{ format!("{cell}") }"#,
     option = true,
     sync_writes = true
 )]
@@ -495,9 +495,15 @@ fn search_cached(
 ) -> Option<String> {
     static EMPTY_STRING: String = String::new();
 
-    let mut name_work = String::new();
-    let mut country_work = String::new();
-    let mut admin1_name_value_work = String::new();
+    let mut id = 0_usize;
+    let mut city_name = String::new();
+    let mut country = String::new();
+    let mut admin1_name_value = String::new();
+    let mut latitude = 0_f32;
+    let mut longitude = 0_f32;
+    let mut population = 0_usize;
+    let mut timezone = String::new();
+    let mut cityrecord_dbg = String::new();
 
     if mode == GeocodeSubCmd::Suggest {
         let search_result = engine.suggest(cell, 1, None);
@@ -505,16 +511,26 @@ fn search_cached(
             return None;
         };
 
-        let Some((_admin1_name_key, admin1_name_value)) = (match &cityrecord.admin1_names {
+        let Some((_admin1_name_key, admin1_name_value_work)) = (match &cityrecord.admin1_names {
             Some(admin1) => admin1.iter().next().map(|s| s.to_owned()),
             None => Some((&EMPTY_STRING, &EMPTY_STRING)),
         }) else {
             return None;
         };
 
-        name_work = cityrecord.name.to_owned();
-        country_work = cityrecord.country.clone().unwrap().name;
-        admin1_name_value_work = admin1_name_value.to_owned();
+        id = cityrecord.id;
+        city_name = cityrecord.name.to_owned();
+        latitude = cityrecord.latitude;
+        longitude = cityrecord.longitude;
+        country = cityrecord.country.clone().unwrap().name;
+        admin1_name_value = admin1_name_value_work.to_owned();
+        population = cityrecord.population;
+        timezone = cityrecord.timezone.to_owned();
+        cityrecord_dbg = if formatstr == "cityrecord" {
+            format!("{:?}", cityrecord)
+        } else {
+            EMPTY_STRING.to_owned()
+        };
     } else if mode == GeocodeSubCmd::Reverse {
         // regex for Location field. Accepts (lat, long) & lat, long
         let locregex: &'static Regex = regex_oncelock!(
@@ -534,16 +550,28 @@ fn search_cached(
                     return None;
                 };
 
-                let Some((_admin1_name_key, admin1_name_value)) = (match &cityrecord.admin1_names {
-                    Some(admin1) => admin1.iter().next().map(|s| s.to_owned()),
-                    None => Some((&EMPTY_STRING, &EMPTY_STRING)),
-                }) else {
+                let Some((_admin1_name_key, admin1_name_value_work)) =
+                    (match &cityrecord.admin1_names {
+                        Some(admin1) => admin1.iter().next().map(|s| s.to_owned()),
+                        None => Some((&EMPTY_STRING, &EMPTY_STRING)),
+                    })
+                else {
                     return None;
                 };
 
-                name_work = cityrecord.name.to_owned();
-                country_work = cityrecord.country.clone().unwrap().name;
-                admin1_name_value_work = admin1_name_value.to_owned();
+                id = cityrecord.id;
+                city_name = cityrecord.name.to_owned();
+                latitude = cityrecord.latitude;
+                longitude = cityrecord.longitude;
+                country = cityrecord.country.clone().unwrap().name;
+                admin1_name_value = admin1_name_value_work.to_owned();
+                population = cityrecord.population;
+                timezone = cityrecord.timezone.to_owned();
+                cityrecord_dbg = if formatstr == "cityrecord" {
+                    format!("{:?}", cityrecord)
+                } else {
+                    EMPTY_STRING.to_owned()
+                };
             }
         } else {
             return None;
@@ -556,12 +584,18 @@ fn search_cached(
     // match arms are evaluated in order,
     // so we're optimizing for the most common cases first
     let result = match formatstr {
-        "%+" | "city-state" => format!("{name_work}, {admin1_name_value_work}"),
-        "city-country" => format!("{name_work}, {country_work}"),
-        "city" => name_work,
-        "state" => admin1_name_value_work,
-        "country" => country_work,
-        _ => format!("{name_work}, {admin1_name_value_work}, {country_work}"),
+        "%+" | "city-state" => format!("{city_name}, {admin1_name_value}"),
+        "lat-long" => format!("{latitude}, {longitude}"),
+        "location" => format!("({latitude}, {longitude})"),
+        "city-country" => format!("{city_name}, {country}"),
+        "city" => city_name,
+        "state" => admin1_name_value,
+        "country" => country,
+        "id" => format!("{id}"),
+        "population" => format!("{population}"),
+        "timezone" => timezone,
+        "cityrecord" => cityrecord_dbg,
+        _ => format!("{city_name}, {admin1_name_value}, {country}"),
     };
     return Some(result);
 }
