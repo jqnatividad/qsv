@@ -245,7 +245,7 @@ pub fn version() -> String {
     }
 }
 
-const OTHER_ENV_VARS: &[&str] = &["no_proxy", "http_proxy", "https_proxy"];
+const OTHER_ENV_VARS: &[&str] = &["all_proxy", "no_proxy", "http_proxy", "https_proxy"];
 
 pub fn show_env_vars() {
     let mut env_var_set = false;

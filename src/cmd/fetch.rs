@@ -7,7 +7,7 @@ Fetch is integrated with `jql` to directly parse out values from an API JSON res
 <url-column> needs to be a fully qualified URL path. Alternatively, you can dynamically
 construct URLs for each CSV record with the --url-template option (see Examples below).
 
-To use a proxy, please set env vars HTTP_PROXY and HTTPS_PROXY
+To use a proxy, please set env vars HTTP_PROXY, HTTPS_PROXY or ALL_PROXY
 (e.g. export HTTPS_PROXY=socks5://127.0.0.1:1086).
 
 Fetch caches responses to minimize traffic and maximize performance. By default, it uses
