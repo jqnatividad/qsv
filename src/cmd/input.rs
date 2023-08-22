@@ -58,7 +58,7 @@ Common options:
 
 use std::str::FromStr;
 
-use log::{debug, warn};
+use log::{debug, info, warn};
 use serde::Deserialize;
 use strum_macros::EnumString;
 
@@ -190,6 +190,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut idx = 1_u64;
     let mut not_utf8 = false;
+    #[allow(unused_assignments)]
+    let mut lossy_field = String::new();
+
     'main: loop {
         match rdr.read_byte_record(&mut row) {
             Ok(moredata) => {
@@ -207,19 +210,21 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             if let Ok(utf8_field) = simdutf8::basic::from_utf8(field) {
                 str_row.push_field(utf8_field);
             } else {
+                lossy_field = String::from_utf8_lossy(field).to_string();
                 match encode_handler {
                     EncodingHandling::Replace => {
-                        str_row.push_field(&String::from_utf8_lossy(field));
+                        str_row.push_field(&lossy_field);
+                        debug!("REPLACE: Invalid UTF-8 row {idx} for {lossy_field}.");
                         not_utf8 = true;
                     },
                     EncodingHandling::Skip => {
                         str_row.push_field("<SKIPPED>");
+                        debug!("SKIP: Invalid UTF-8 row {idx} for {lossy_field}.");
                         not_utf8 = true;
                     },
                     EncodingHandling::Strict => {
-                        let lossy_field = String::from_utf8_lossy(field);
                         return fail_clierror!(
-                            "Invalid UTF-8 sequence in row {idx} for {lossy_field}."
+                            "STRICT. Invalid UTF-8 row {idx} for {lossy_field}."
                         );
                     },
                 }
@@ -247,6 +252,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     }
 
-    debug!("Wrote {} rows...", idx - 1);
+    info!("Wrote {} rows...", idx - 1);
     Ok(wtr.flush()?)
 }
