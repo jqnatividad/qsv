@@ -42,6 +42,12 @@ input options:
     --trim-fields            Trim leading & trailing whitespace from field values.
     --comment <char>         The comment character to use. When set, lines
                              starting with this character will be skipped.
+    --encoding-errors <arg>  How to handle UTF-8 encoding errors.
+                             Possible values: replace, skip, strict.
+                               replace: Replace invalid UTF-8 sequences with �.
+                                  skip: Fields with encoding errors are "<SKIPPED>".
+                                strict: Fail on any encoding errors.
+                             [default: replace]
 
 Common options:
     -h, --help               Display this message
@@ -50,28 +56,41 @@ Common options:
                              Must be a single character. (default: ,)
 "#;
 
-use log::debug;
+use std::str::FromStr;
+
+use log::{debug, warn};
 use serde::Deserialize;
+use strum_macros::EnumString;
 
 use crate::{
     config::{Config, Delimiter},
     util, CliResult,
 };
 
+#[derive(EnumString, Clone, Copy)]
+#[strum(ascii_case_insensitive)]
+#[allow(non_camel_case_types)]
+enum EncodingHandling {
+    Replace,
+    Skip,
+    Strict,
+}
+
 #[derive(Deserialize)]
 struct Args {
-    arg_input:           Option<String>,
-    flag_output:         Option<String>,
-    flag_delimiter:      Option<Delimiter>,
-    flag_quote:          Delimiter,
-    flag_escape:         Option<Delimiter>,
-    flag_no_quoting:     bool,
-    flag_skip_lines:     Option<u64>,
-    flag_skip_lastlines: Option<u64>,
-    flag_auto_skip:      bool,
-    flag_trim_headers:   bool,
-    flag_trim_fields:    bool,
-    flag_comment:        Option<char>,
+    arg_input:            Option<String>,
+    flag_output:          Option<String>,
+    flag_delimiter:       Option<Delimiter>,
+    flag_quote:           Delimiter,
+    flag_escape:          Option<Delimiter>,
+    flag_no_quoting:      bool,
+    flag_skip_lines:      Option<u64>,
+    flag_skip_lastlines:  Option<u64>,
+    flag_auto_skip:       bool,
+    flag_trim_headers:    bool,
+    flag_trim_fields:     bool,
+    flag_comment:         Option<char>,
+    flag_encoding_errors: String,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -82,6 +101,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         (true, true) => csv::Trim::All,
         (true, false) => csv::Trim::Headers,
         (false, true) => csv::Trim::Fields,
+    };
+
+    let Ok(encode_handler) = EncodingHandling::from_str(&args.flag_encoding_errors) else {
+        return fail_clierror!(
+            "Invalid encoding error handling: {}",
+            args.flag_encoding_errors
+        );
     };
 
     if args.flag_auto_skip {
@@ -163,6 +189,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     let mut idx = 1_u64;
+    let mut not_utf8 = false;
     'main: loop {
         match rdr.read_byte_record(&mut row) {
             Ok(moredata) => {
@@ -180,7 +207,19 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             if let Ok(utf8_field) = simdutf8::basic::from_utf8(field) {
                 str_row.push_field(utf8_field);
             } else {
-                str_row.push_field(&String::from_utf8_lossy(field));
+                match encode_handler {
+                    EncodingHandling::Replace => {
+                        str_row.push_field(&String::from_utf8_lossy(field));
+                        not_utf8 = true;
+                    },
+                    EncodingHandling::Skip => {
+                        str_row.push_field("<SKIPPED>");
+                        not_utf8 = true;
+                    },
+                    EncodingHandling::Strict => {
+                        return fail_clierror!("Invalid UTF-8 in row {idx}.");
+                    },
+                }
             };
         }
         wtr.write_record(&str_row)?;
@@ -190,6 +229,22 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             break 'main;
         }
     }
+
+    if not_utf8 {
+        match encode_handler {
+            EncodingHandling::Replace => warn!(
+                "Some rows were not valid UTF-8. They were replaced with the U+FFFD (�) \
+                 replacement character."
+            ),
+            EncodingHandling::Skip => warn!(
+                "Some fields were not valid UTF-8. They were replaced with the string \
+                 \"<SKIPPED>\"."
+            ),
+            // STRICT is unreachable because we return early if we encounter invalid UTF-8
+            EncodingHandling::Strict => unreachable!(),
+        }
+    }
+
     debug!("Wrote {} rows...", idx - 1);
     Ok(wtr.flush()?)
 }
