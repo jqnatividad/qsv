@@ -217,7 +217,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         not_utf8 = true;
                     },
                     EncodingHandling::Strict => {
-                        return fail_clierror!("Invalid UTF-8 in row {idx}.");
+                        let lossy_field = String::from_utf8_lossy(field);
+                        return fail_clierror!(
+                            "Invalid UTF-8 sequence in row {idx} for {lossy_field}."
+                        );
                     },
                 }
             };
@@ -233,12 +236,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if not_utf8 {
         match encode_handler {
             EncodingHandling::Replace => warn!(
-                "Some rows were not valid UTF-8. They were replaced with the U+FFFD (�) \
-                 replacement character."
+                "Some rows contained invalid UTF-8 sequences. These sequences were replaced with \
+                 the U+FFFD (�) replacement character."
             ),
             EncodingHandling::Skip => warn!(
-                "Some fields were not valid UTF-8. They were replaced with the string \
-                 \"<SKIPPED>\"."
+                "Some fields contained invalid UTF-8 sequences. These fields set to \"<SKIPPED>\"."
             ),
             // STRICT is unreachable because we return early if we encounter invalid UTF-8
             EncodingHandling::Strict => unreachable!(),
