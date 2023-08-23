@@ -99,7 +99,7 @@ pub fn timeout_secs(timeout: u16) -> Result<u64, String> {
     };
 
     if timeout > 3600 {
-        return fail!("Timeout cannot be more than 3,600 seconds (1 hour)");
+        return fail_format!("Timeout cannot be more than 3,600 seconds (1 hour): {timeout}");
     } else if timeout == 0 {
         return fail!("Timeout cannot be zero.");
     }
@@ -752,12 +752,10 @@ pub fn qsv_check_for_update(check_only: bool, no_confirm: bool) -> Result<bool, 
 
     let mut updated = false;
     let Ok(latest_release_sv) = semver::Version::parse(latest_release) else {
-        return fail!(format!(
-            "Can't parse latest release version: {latest_release}"
-        ));
+        return fail_format!("Can't parse latest release version: {latest_release}");
     };
     let Ok(curr_version_sv) = semver::Version::parse(curr_version) else {
-        return fail!(format!("Can't parse current version: {curr_version}"));
+        return fail_format!("Can't parse current version: {curr_version}");
     };
 
     if latest_release_sv > curr_version_sv {
