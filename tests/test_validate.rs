@@ -109,7 +109,7 @@ fn validate_bad_csv() {
     let expected = r#"Validation error: CSV error: record 2 (line: 3, byte: 36): found record with 2 fields, but the previous record has 3 fields.
 Last valid record: 1
 Use `qsv fixlengths` to fix record length issues.
-Use `qsv input` to fix formatting and to transcode to utf8 if required.
+Use `qsv input` to fix formatting and to handle non-utf8 sequences if required.
 "#;
     assert_eq!(got, expected);
 
