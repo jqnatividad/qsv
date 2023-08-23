@@ -143,9 +143,9 @@ impl fmt::Display for CliError {
             CliError::Io(ref e) => e.fmt(f),
             CliError::NoMatch() => f.write_str("no_match"),
             CliError::Network(ref s) => f.write_str(s),
-            CliError::OutOfMemory(ref s) => f.write_str(s),
-            CliError::Encoding(ref s) => f.write_str(s),
-            CliError::Other(ref s) => f.write_str(s),
+            CliError::OutOfMemory(ref s) | CliError::Encoding(ref s) | CliError::Other(ref s) => {
+                f.write_str(s)
+            },
         }
     }
 }
