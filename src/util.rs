@@ -495,7 +495,7 @@ pub fn mem_file_check(
             fs::metadata(path).map_err(|e| format!("Failed to get file size: {e}"))?;
         let fsize = file_metadata.len();
         if fsize > max_avail_mem {
-            return fail_clierror!(
+            return fail_OOM_clierror!(
                 "Not enough memory to process the file. qsv running in non-streaming {mode} mode. \
                  Total memory: {total_mem} Available memory: {avail_mem}. Free swap: {free_swap} \
                  Max Available memory/Max input file size: {max_avail_mem}. \
