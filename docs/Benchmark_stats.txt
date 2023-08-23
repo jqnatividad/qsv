@@ -1,0 +1,600 @@
+Command './qsv apply operations lower Agency  NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         10
+  mean:      5.336 s
+  stddev:    0.047 s
+  median:    5.337 s
+  min:       5.222 s
+  max:       5.387 s
+
+  percentiles:
+     P_05 .. P_95:    5.267 s .. 5.385 s
+     P_25 .. P_75:    5.322 s .. 5.367 s  (IQR = 0.045 s)
+
+Command './qsv apply operations lower,simdln Agency --comparand brooklyn --new-column Agency_sim-brooklyn_score  NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         10
+  mean:      5.429 s
+  stddev:    0.228 s
+  median:    5.395 s
+  min:       5.161 s
+  max:       5.797 s
+
+  percentiles:
+     P_05 .. P_95:    5.189 s .. 5.794 s
+     P_25 .. P_75:    5.244 s .. 5.525 s  (IQR = 0.280 s)
+
+Command './qsv apply operations lower,eudex Agency --comparand Queens --new-column Agency_queens_soundex  NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         10
+  mean:      5.214 s
+  stddev:    0.226 s
+  median:    5.140 s
+  min:       5.099 s
+  max:       5.847 s
+
+  percentiles:
+     P_05 .. P_95:    5.100 s .. 5.560 s
+     P_25 .. P_75:    5.118 s .. 5.192 s  (IQR = 0.074 s)
+
+Command './qsv apply datefmt "Created Date"  NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         10
+  mean:      6.263 s
+  stddev:    0.061 s
+  median:    6.265 s
+  min:       6.143 s
+  max:       6.343 s
+
+  percentiles:
+     P_05 .. P_95:    6.166 s .. 6.340 s
+     P_25 .. P_75:    6.247 s .. 6.299 s  (IQR = 0.052 s)
+
+Command './qsv apply emptyreplace "Bridge Highway Name" --replacement Unspecified NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         10
+  mean:      5.216 s
+  stddev:    0.068 s
+  median:    5.179 s
+  min:       5.151 s
+  max:       5.360 s
+
+  percentiles:
+     P_05 .. P_95:    5.159 s .. 5.336 s
+     P_25 .. P_75:    5.174 s .. 5.234 s  (IQR = 0.060 s)
+
+Command './qsv apply geocode Location --new-column geocoded_location NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         10
+  mean:      8.852 s
+  stddev:    0.086 s
+  median:    8.839 s
+  min:       8.743 s
+  max:       9.040 s
+
+  percentiles:
+     P_05 .. P_95:    8.755 s .. 8.984 s
+     P_25 .. P_75:    8.793 s .. 8.883 s  (IQR = 0.090 s)
+
+Command './qsv count NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         10
+  mean:      1.232 s
+  stddev:    0.010 s
+  median:    1.228 s
+  min:       1.225 s
+  max:       1.259 s
+
+  percentiles:
+     P_05 .. P_95:    1.225 s .. 1.249 s
+     P_25 .. P_75:    1.227 s .. 1.233 s  (IQR = 0.005 s)
+
+Command './qsv dedup NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         10
+  mean:      5.812 s
+  stddev:    0.026 s
+  median:    5.813 s
+  min:       5.762 s
+  max:       5.859 s
+
+  percentiles:
+     P_05 .. P_95:    5.776 s .. 5.849 s
+     P_25 .. P_75:    5.803 s .. 5.819 s  (IQR = 0.015 s)
+
+Command './qsv enum NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         10
+  mean:      2.481 s
+  stddev:    0.004 s
+  median:    2.483 s
+  min:       2.472 s
+  max:       2.484 s
+
+  percentiles:
+     P_05 .. P_95:    2.475 s .. 2.484 s
+     P_25 .. P_75:    2.480 s .. 2.484 s  (IQR = 0.004 s)
+
+Command './qsv exclude 'Incident Zip' NYC_311_SR_2010-2020-sample-1M.csv 'Incident Zip' data_to_exclude.csv'
+  runs:         48
+  mean:      0.053 s
+  stddev:    0.001 s
+  median:    0.053 s
+  min:       0.052 s
+  max:       0.056 s
+
+  percentiles:
+     P_05 .. P_95:    0.052 s .. 0.054 s
+     P_25 .. P_75:    0.052 s .. 0.053 s  (IQR = 0.001 s)
+
+Command './qsv explode City - NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         10
+  mean:      5.590 s
+  stddev:    0.025 s
+  median:    5.584 s
+  min:       5.565 s
+  max:       5.639 s
+
+  percentiles:
+     P_05 .. P_95:    5.567 s .. 5.635 s
+     P_25 .. P_75:    5.574 s .. 5.587 s  (IQR = 0.013 s)
+
+Command './qsv fill -v Unspecified 'Address Type' NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         10
+  mean:      6.711 s
+  stddev:    0.041 s
+  median:    6.715 s
+  min:       6.644 s
+  max:       6.775 s
+
+  percentiles:
+     P_05 .. P_95:    6.650 s .. 6.762 s
+     P_25 .. P_75:    6.685 s .. 6.739 s  (IQR = 0.054 s)
+
+Command './qsv fixlengths NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         10
+  mean:      4.054 s
+  stddev:    0.015 s
+  median:    4.052 s
+  min:       4.036 s
+  max:       4.085 s
+
+  percentiles:
+     P_05 .. P_95:    4.038 s .. 4.078 s
+     P_25 .. P_75:    4.043 s .. 4.060 s  (IQR = 0.017 s)
+
+Command './qsv flatten NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         10
+  mean:     80.627 s
+  stddev:    0.700 s
+  median:   80.635 s
+  min:      79.643 s
+  max:      81.905 s
+
+  percentiles:
+     P_05 .. P_95:    79.783 s .. 81.709 s
+     P_25 .. P_75:    80.065 s .. 80.923 s  (IQR = 0.858 s)
+
+Command './qsv flatten NYC_311_SR_2010-2020-sample-1M.csv --condense 50'
+  runs:         10
+  mean:     83.402 s
+  stddev:    2.199 s
+  median:   83.086 s
+  min:      81.096 s
+  max:      87.806 s
+
+  percentiles:
+     P_05 .. P_95:    81.186 s .. 86.928 s
+     P_25 .. P_75:    81.560 s .. 84.393 s  (IQR = 2.833 s)
+
+Command './qsv fmt --crlf NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         10
+  mean:      2.337 s
+  stddev:    0.017 s
+  median:    2.333 s
+  min:       2.322 s
+  max:       2.381 s
+
+  percentiles:
+     P_05 .. P_95:    2.324 s .. 2.365 s
+     P_25 .. P_75:    2.328 s .. 2.337 s  (IQR = 0.008 s)
+
+Command './qsv frequency NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         10
+  mean:     12.009 s
+  stddev:    0.070 s
+  median:   11.997 s
+  min:      11.935 s
+  max:      12.134 s
+
+  percentiles:
+     P_05 .. P_95:    11.936 s .. 12.114 s
+     P_25 .. P_75:    11.950 s .. 12.059 s  (IQR = 0.109 s)
+
+Command './qsv frequency -s /^R/ NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         10
+  mean:      3.488 s
+  stddev:    0.066 s
+  median:    3.458 s
+  min:       3.417 s
+  max:       3.624 s
+
+  percentiles:
+     P_05 .. P_95:    3.423 s .. 3.586 s
+     P_25 .. P_75:    3.444 s .. 3.531 s  (IQR = 0.088 s)
+
+Command './qsv frequency -j 1 NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         10
+  mean:     12.136 s
+  stddev:    0.314 s
+  median:   12.206 s
+  min:      11.763 s
+  max:      12.738 s
+
+  percentiles:
+     P_05 .. P_95:    11.778 s .. 12.567 s
+     P_25 .. P_75:    11.827 s .. 12.292 s  (IQR = 0.464 s)
+
+Command './qsv index NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         10
+  mean:      1.229 s
+  stddev:    0.009 s
+  median:    1.226 s
+  min:       1.222 s
+  max:       1.249 s
+
+  percentiles:
+     P_05 .. P_95:    1.223 s .. 1.245 s
+     P_25 .. P_75:    1.223 s .. 1.231 s  (IQR = 0.007 s)
+
+Command './qsv join 'Community Board' NYC_311_SR_2010-2020-sample-1M.csv community_board communityboards.csv'
+  runs:         49
+  mean:      0.053 s
+  stddev:    0.002 s
+  median:    0.053 s
+  min:       0.052 s
+  max:       0.066 s
+
+  percentiles:
+     P_05 .. P_95:    0.052 s .. 0.055 s
+     P_25 .. P_75:    0.052 s .. 0.053 s  (IQR = 0.001 s)
+
+Command './qsv luau map location_empty tonumber\(Location\)==nil NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         10
+  mean:     47.732 s
+  stddev:    1.227 s
+  median:   47.536 s
+  min:      46.278 s
+  max:      49.833 s
+
+  percentiles:
+     P_05 .. P_95:    46.417 s .. 49.547 s
+     P_25 .. P_75:    46.735 s .. 48.673 s  (IQR = 1.938 s)
+
+Command './qsv partition 'Community Board' /tmp/partitioned NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         10
+  mean:      2.065 s
+  stddev:    0.079 s
+  median:    2.043 s
+  min:       1.951 s
+  max:       2.204 s
+
+  percentiles:
+     P_05 .. P_95:    1.977 s .. 2.183 s
+     P_25 .. P_75:    2.015 s .. 2.126 s  (IQR = 0.111 s)
+
+Command './qsv pseudo 'Unique Key' NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         10
+  mean:      4.426 s
+  stddev:    0.202 s
+  median:    4.372 s
+  min:       4.180 s
+  max:       4.677 s
+
+  percentiles:
+     P_05 .. P_95:    4.197 s .. 4.673 s
+     P_25 .. P_75:    4.244 s .. 4.641 s  (IQR = 0.397 s)
+
+Command './qsv rename 'unique_key,created_date,closed_date,agency,agency_name,complaint_type,descriptor,loctype,zip,addr1,street,xstreet1,xstreet2,inter1,inter2,addrtype,city,landmark,facility_type,status,due_date,res_desc,res_act_date,comm_board,bbl,boro,xcoord,ycoord,opendata_type,parkname,parkboro,vehtype,taxi_boro,taxi_loc,bridge_hwy_name,bridge_hwy_dir,ramp,bridge_hwy_seg,lat,long,loc' NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         10
+  mean:      1.924 s
+  stddev:    0.100 s
+  median:    1.982 s
+  min:       1.763 s
+  max:       2.029 s
+
+  percentiles:
+     P_05 .. P_95:    1.775 s .. 2.020 s
+     P_25 .. P_75:    1.833 s .. 1.985 s  (IQR = 0.152 s)
+
+Command './qsv reverse NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         10
+  mean:      2.830 s
+  stddev:    0.057 s
+  median:    2.845 s
+  min:       2.698 s
+  max:       2.883 s
+
+  percentiles:
+     P_05 .. P_95:    2.733 s .. 2.883 s
+     P_25 .. P_75:    2.811 s .. 2.865 s  (IQR = 0.055 s)
+
+Command './qsv sample 10 NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         44
+  mean:      0.055 s
+  stddev:    0.004 s
+  median:    0.054 s
+  min:       0.050 s
+  max:       0.064 s
+
+  percentiles:
+     P_05 .. P_95:    0.051 s .. 0.063 s
+     P_25 .. P_75:    0.052 s .. 0.057 s  (IQR = 0.004 s)
+
+Command './qsv sample 1000 NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         25
+  mean:      0.068 s
+  stddev:    0.011 s
+  median:    0.065 s
+  min:       0.060 s
+  max:       0.109 s
+
+  percentiles:
+     P_05 .. P_95:    0.060 s .. 0.084 s
+     P_25 .. P_75:    0.060 s .. 0.071 s  (IQR = 0.011 s)
+
+Command './qsv sample 100000 NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         10
+  mean:      1.170 s
+  stddev:    0.023 s
+  median:    1.170 s
+  min:       1.135 s
+  max:       1.211 s
+
+  percentiles:
+     P_05 .. P_95:    1.139 s .. 1.204 s
+     P_25 .. P_75:    1.157 s .. 1.184 s  (IQR = 0.027 s)
+
+Command './qsv sample 100000 --seed 42 NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         10
+  mean:      1.113 s
+  stddev:    0.062 s
+  median:    1.125 s
+  min:       1.004 s
+  max:       1.177 s
+
+  percentiles:
+     P_05 .. P_95:    1.018 s .. 1.176 s
+     P_25 .. P_75:    1.074 s .. 1.168 s  (IQR = 0.094 s)
+
+Command './qsv search -s 'Agency Name' '(?i)us' NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         10
+  mean:      1.086 s
+  stddev:    0.031 s
+  median:    1.089 s
+  min:       1.045 s
+  max:       1.144 s
+
+  percentiles:
+     P_05 .. P_95:    1.048 s .. 1.133 s
+     P_25 .. P_75:    1.061 s .. 1.098 s  (IQR = 0.036 s)
+
+Command './qsv search --unicode -s 'Agency Name' '(?i)us' NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         10
+  mean:      1.184 s
+  stddev:    0.002 s
+  median:    1.183 s
+  min:       1.182 s
+  max:       1.187 s
+
+  percentiles:
+     P_05 .. P_95:    1.182 s .. 1.187 s
+     P_25 .. P_75:    1.183 s .. 1.184 s  (IQR = 0.002 s)
+
+Command './qsv searchset searchset_patterns.txt NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         67
+  mean:      0.036 s
+  stddev:    0.001 s
+  median:    0.036 s
+  min:       0.036 s
+  max:       0.039 s
+
+  percentiles:
+     P_05 .. P_95:    0.036 s .. 0.038 s
+     P_25 .. P_75:    0.036 s .. 0.037 s  (IQR = 0.001 s)
+
+Command './qsv searchset searchset_patterns.txt --unicode NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         68
+  mean:      0.035 s
+  stddev:    0.002 s
+  median:    0.034 s
+  min:       0.031 s
+  max:       0.043 s
+
+  percentiles:
+     P_05 .. P_95:    0.032 s .. 0.039 s
+     P_25 .. P_75:    0.033 s .. 0.036 s  (IQR = 0.002 s)
+
+Command './qsv select 'Agency,Community Board' NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         10
+  mean:      0.934 s
+  stddev:    0.038 s
+  median:    0.941 s
+  min:       0.847 s
+  max:       0.987 s
+
+  percentiles:
+     P_05 .. P_95:    0.869 s .. 0.976 s
+     P_25 .. P_75:    0.940 s .. 0.943 s  (IQR = 0.003 s)
+
+Command './qsv select /^L/ NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         10
+  mean:      0.999 s
+  stddev:    0.042 s
+  median:    1.019 s
+  min:       0.907 s
+  max:       1.023 s
+
+  percentiles:
+     P_05 .. P_95:    0.920 s .. 1.022 s
+     P_25 .. P_75:    1.010 s .. 1.020 s  (IQR = 0.010 s)
+
+Command './qsv slice -i 500000 NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         72
+  mean:      0.034 s
+  stddev:    0.002 s
+  median:    0.034 s
+  min:       0.031 s
+  max:       0.039 s
+
+  percentiles:
+     P_05 .. P_95:    0.032 s .. 0.037 s
+     P_25 .. P_75:    0.033 s .. 0.035 s  (IQR = 0.002 s)
+
+Command './qsv sort -s 'Incident Zip' NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         10
+  mean:      4.475 s
+  stddev:    0.087 s
+  median:    4.496 s
+  min:       4.299 s
+  max:       4.565 s
+
+  percentiles:
+     P_05 .. P_95:    4.322 s .. 4.564 s
+     P_25 .. P_75:    4.463 s .. 4.520 s  (IQR = 0.058 s)
+
+Command './qsv sort --random --seed 42 NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         10
+  mean:      4.351 s
+  stddev:    0.035 s
+  median:    4.353 s
+  min:       4.303 s
+  max:       4.411 s
+
+  percentiles:
+     P_05 .. P_95:    4.306 s .. 4.402 s
+     P_25 .. P_75:    4.325 s .. 4.374 s  (IQR = 0.049 s)
+
+Command './qsv split --size 50000 split_tempdir NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         10
+  mean:      0.417 s
+  stddev:    0.038 s
+  median:    0.420 s
+  min:       0.377 s
+  max:       0.501 s
+
+  percentiles:
+     P_05 .. P_95:    0.378 s .. 0.474 s
+     P_25 .. P_75:    0.385 s .. 0.428 s  (IQR = 0.043 s)
+
+Command './qsv stats NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         68
+  mean:      0.039 s
+  stddev:    0.004 s
+  median:    0.038 s
+  min:       0.033 s
+  max:       0.050 s
+
+  percentiles:
+     P_05 .. P_95:    0.035 s .. 0.047 s
+     P_25 .. P_75:    0.036 s .. 0.041 s  (IQR = 0.005 s)
+
+Command './qsv stats NYC_311_SR_2010-2020-sample-1M.csv --everything'
+  runs:         54
+  mean:      0.038 s
+  stddev:    0.002 s
+  median:    0.037 s
+  min:       0.036 s
+  max:       0.047 s
+
+  percentiles:
+     P_05 .. P_95:    0.037 s .. 0.045 s
+     P_25 .. P_75:    0.037 s .. 0.038 s  (IQR = 0.001 s)
+
+Command './qsv stats NYC_311_SR_2010-2020-sample-1M.csv --everything -j 1'
+  runs:         66
+  mean:      0.037 s
+  stddev:    0.000 s
+  median:    0.037 s
+  min:       0.036 s
+  max:       0.038 s
+
+  percentiles:
+     P_05 .. P_95:    0.036 s .. 0.038 s
+     P_25 .. P_75:    0.037 s .. 0.037 s  (IQR = 0.001 s)
+
+Command './qsv table NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         10
+  mean:     17.382 s
+  stddev:    0.327 s
+  median:   17.492 s
+  min:      16.668 s
+  max:      17.650 s
+
+  percentiles:
+     P_05 .. P_95:    16.789 s .. 17.641 s
+     P_25 .. P_75:    17.350 s .. 17.602 s  (IQR = 0.251 s)
+
+Command './qsv transpose NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         10
+  mean:      7.146 s
+  stddev:    0.079 s
+  median:    7.154 s
+  min:       6.992 s
+  max:       7.261 s
+
+  percentiles:
+     P_05 .. P_95:    7.036 s .. 7.257 s
+     P_25 .. P_75:    7.102 s .. 7.179 s  (IQR = 0.077 s)
+
+Command './qsv extsort NYC_311_SR_2010-2020-sample-1M.csv test.csv'
+  runs:         10
+  mean:      3.240 s
+  stddev:    0.093 s
+  median:    3.268 s
+  min:       3.046 s
+  max:       3.342 s
+
+  percentiles:
+     P_05 .. P_95:    3.094 s .. 3.337 s
+     P_25 .. P_75:    3.186 s .. 3.297 s  (IQR = 0.111 s)
+
+Command './qsv schema NYC_311_SR_2010-2020-sample-1M.csv'
+  runs:         10
+  mean:     39.112 s
+  stddev:    0.481 s
+  median:   39.034 s
+  min:      38.498 s
+  max:      40.117 s
+
+  percentiles:
+     P_05 .. P_95:    38.561 s .. 39.843 s
+     P_25 .. P_75:    38.807 s .. 39.377 s  (IQR = 0.569 s)
+
+Command './qsv validate NYC_311_SR_2010-2020-sample-1M.csv '
+  runs:         10
+  mean:      1.264 s
+  stddev:    0.006 s
+  median:    1.260 s
+  min:       1.257 s
+  max:       1.275 s
+
+  percentiles:
+     P_05 .. P_95:    1.258 s .. 1.274 s
+     P_25 .. P_75:    1.260 s .. 1.268 s  (IQR = 0.008 s)
+
+Command './qsv sample 10 NYC_311_SR_2010-2020-sample-1M.csv -o city.csv'
+  runs:         43
+  mean:      0.060 s
+  stddev:    0.009 s
+  median:    0.058 s
+  min:       0.053 s
+  max:       0.099 s
+
+  percentiles:
+     P_05 .. P_95:    0.054 s .. 0.070 s
+     P_25 .. P_75:    0.055 s .. 0.063 s  (IQR = 0.009 s)
+
+Command './qsv sqlp NYC_311_SR_2010-2020-sample-1M.csv city.csv 'select * from _t_1 join _t_2 on _t_1.City = _t_2.City''
+  runs:         10
+  mean:      9.008 s
+  stddev:    0.877 s
+  median:    9.282 s
+  min:       7.208 s
+  max:       9.807 s
+
+  percentiles:
+     P_05 .. P_95:    7.465 s .. 9.777 s
+     P_25 .. P_75:    8.772 s .. 9.620 s  (IQR = 0.849 s)
+
