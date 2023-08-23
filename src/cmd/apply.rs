@@ -607,7 +607,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } else if args.cmd_calcconv {
         ApplySubCmd::CalcConv
     } else {
-        return fail!("Unknown apply subcommand.");
+        return fail_incorrectusage_clierror!("Unknown apply subcommand.");
     };
 
     // prep progress bar

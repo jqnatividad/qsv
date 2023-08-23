@@ -362,7 +362,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         true
     } else {
         if args.flag_pretty {
-            return fail!("The --pretty option requires the --new-column option.");
+            return fail_incorrectusage_clierror!(
+                "The --pretty option requires the --new-column option."
+            );
         }
         false
     };
@@ -400,7 +402,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let rate_limit = match args.flag_rate_limit {
         0 => NonZeroU32::new(u32::MAX).unwrap(),
         1..=1000 => NonZeroU32::new(args.flag_rate_limit).unwrap(),
-        _ => return fail!("Rate Limit should be between 0 to 1000 queries per second."),
+        _ => {
+            return fail_incorrectusage_clierror!(
+                "Rate Limit should be between 0 to 1000 queries per second."
+            )
+        },
     };
     info!("RATE LIMIT: {rate_limit}");
 

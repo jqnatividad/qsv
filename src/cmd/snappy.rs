@@ -193,7 +193,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     } else if args.cmd_validate {
         if args.arg_input.is_none() {
-            return fail_clierror!("stdin is not supported by the snappy validate subcommand.");
+            return fail_incorrectusage_clierror!(
+                "stdin is not supported by the snappy validate subcommand."
+            );
         }
         let Ok(decompressed_bytes) = validate(input_reader) else {
             return fail_clierror!("Not a valid snappy file.");

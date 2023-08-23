@@ -309,7 +309,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
             join.run(JoinType::AsOf(asof_options), validation, true)
         },
-        _ => fail!("Please pick exactly one join operation."),
+        _ => fail_incorrectusage_clierror!("Please pick exactly one join operation."),
     }?;
 
     if !args.flag_quiet {

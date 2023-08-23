@@ -369,7 +369,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         true
     } else {
         if args.flag_pretty {
-            return fail!("The --pretty option requires the --new-column option.");
+            return fail_incorrectusage_clierror!(
+                "The --pretty option requires the --new-column option."
+            );
         }
         false
     };
@@ -387,7 +389,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut dynfmt_url_template = String::new();
     if let Some(ref url_template) = args.flag_url_template {
         if args.flag_no_headers {
-            return fail!("--url-template option requires column headers.");
+            return fail_incorrectusage_clierror!("--url-template option requires column headers.");
         }
         let str_headers = rdr.headers()?.clone();
         let mut dynfmt_fields = Vec::with_capacity(10); // 10 is a reasonable default to save allocs
@@ -416,7 +418,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let rate_limit = match args.flag_rate_limit {
         0 => NonZeroU32::new(u32::MAX).unwrap(),
         1..=1000 => NonZeroU32::new(args.flag_rate_limit).unwrap(),
-        _ => return fail!("Rate Limit should be between 0 to 1000 queries per second."),
+        _ => {
+            return fail_incorrectusage_clierror!(
+                "Rate Limit should be between 0 to 1000 queries per second."
+            )
+        },
     };
     info!("RATE LIMIT: {rate_limit}");
 

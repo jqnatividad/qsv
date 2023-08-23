@@ -288,7 +288,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
     // its an index operation, apply the requested operation to the geonames index
     if geocode_cmd == GeocodeSubCmd::Index {
         let Ok(op) = Operation::from_str(&args.arg_operation) else {
-            return fail_clierror!("Invalid operation: {}", args.arg_operation);
+            return fail_incorrectusage_clierror!("Invalid operation: {}", args.arg_operation);
         };
         let updater = IndexUpdater::new(IndexUpdaterSettings {
             http_timeout_ms:  util::timeout_secs(args.flag_timeout)? * 1000,
@@ -340,7 +340,9 @@ async fn geocode_main(args: Args) -> CliResult<()> {
     if let Some(new_name) = args.flag_rename {
         let new_col_names = util::ColumnNameParser::new(&new_name).parse()?;
         if new_col_names.len() != sel.len() {
-            return fail!("Number of new columns does not match input column selection.");
+            return fail_incorrectusage_clierror!(
+                "Number of new columns does not match input column selection."
+            );
         }
         for (i, col_index) in sel.iter().enumerate() {
             headers = replace_column_value(&headers, *col_index, &new_col_names[i]);

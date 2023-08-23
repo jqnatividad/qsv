@@ -104,8 +104,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     let Ok(encode_handler) = EncodingHandling::from_str(&args.flag_encoding_errors) else {
-        return fail_clierror!(
-            "Invalid encoding error handling: {}",
+        return fail_incorrectusage_clierror!(
+            "Invalid --encoding-errors option: {}",
             args.flag_encoding_errors
         );
     };

@@ -85,7 +85,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut args: Args = util::get_args(USAGE, argv)?;
 
     if args.arg_sample_size.is_sign_negative() {
-        return fail!("Sample size cannot be negative.");
+        return fail_incorrectusage_clierror!("Sample size cannot be negative.");
     }
 
     let temp_download = NamedTempFile::new()?;

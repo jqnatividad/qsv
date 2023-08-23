@@ -558,7 +558,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // Check if user gives arg_input
     if args.arg_input.is_none() {
-        return fail!("Error: No input file specified.");
+        return fail_incorrectusage_clierror!("Error: No input file specified.");
     }
 
     // Process input file
@@ -583,21 +583,26 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // If no inference flags specified, print error message.
     if !args.flag_all && !args.flag_dictionary && !args.flag_description && !args.flag_tags {
-        return fail!("Error: No inference options specified.");
+        return fail_incorrectusage_clierror!("Error: No inference options specified.");
     // If --all flag is specified, but other inference flags are also set, print error message.
     } else if args.flag_all && (args.flag_dictionary || args.flag_description || args.flag_tags) {
-        return fail!("Error: --all option cannot be specified with other inference flags.");
+        return fail_incorrectusage_clierror!(
+            "Error: --all option cannot be specified with other inference flags."
+        );
     }
     // If --prompt-file flag is specified but the prompt file does not exist, print error message.
     if let Some(prompt_file) = args.flag_prompt_file.clone() {
         if !PathBuf::from(prompt_file.clone()).exists() {
-            let error_msg = format!("Error: Prompt file '{prompt_file}' does not exist.");
-            return fail!(error_msg);
+            return fail_incorrectusage_clierror!(
+                "Error: Prompt file '{prompt_file}' does not exist."
+            );
         }
     }
     // If --json and --jsonl flags are specified, print error message.
     if is_json_output(&args)? && is_jsonl_output(&args)? {
-        return fail!("Error: --json and --jsonl options cannot be specified together.");
+        return fail_incorrectusage_clierror!(
+            "Error: --json and --jsonl options cannot be specified together."
+        );
     }
 
     // Get qsv executable's path

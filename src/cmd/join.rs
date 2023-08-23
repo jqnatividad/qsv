@@ -140,7 +140,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             state.write_headers()?;
             state.inner_join()
         },
-        _ => fail!("Please pick exactly one join operation."),
+        _ => fail_incorrectusage_clierror!("Please pick exactly one join operation."),
     }
 }
 

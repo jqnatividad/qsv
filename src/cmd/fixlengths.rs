@@ -51,12 +51,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .flexible(true);
     let length = if let Some(length) = args.flag_length {
         if length == 0 {
-            return fail!("Length must be greater than 0.");
+            return fail_incorrectusage_clierror!("Length must be greater than 0.");
         }
         length
     } else {
         if config.is_stdin() {
-            return fail!("<stdin> cannot be used in this command. Please specify a file path.");
+            return fail_incorrectusage_clierror!(
+                "<stdin> cannot be used in this command. Please specify a file path."
+            );
         }
         let mut maxlen = 0_usize;
         let mut rdr = config.reader()?;
