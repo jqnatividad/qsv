@@ -205,7 +205,7 @@ enum GeocodeSubCmd {
 
 impl From<anyhow::Error> for CliError {
     fn from(err: anyhow::Error) -> CliError {
-        CliError::Other(format!("Error: {}", err))
+        CliError::Other(format!("Error: {err}"))
     }
 }
 
@@ -303,7 +303,10 @@ async fn geocode_main(args: Args) -> CliResult<()> {
         .split(',')
         .map(|s| s.trim().to_string())
         .collect::<Vec<String>>();
-    let languages_vec: Vec<&str> = languages_vec.iter().map(|s| s.as_str()).collect();
+    let languages_vec: Vec<&str> = languages_vec
+        .iter()
+        .map(std::string::String::as_str)
+        .collect();
 
     // load geocode engine
     let engine = load_engine(geocode_index_file.clone().into(), languages_vec.clone()).await?;
@@ -519,17 +522,17 @@ fn search_cached(
         };
 
         id = cityrecord.id;
-        city_name = cityrecord.name.to_owned();
+        city_name = cityrecord.name.clone();
         latitude = cityrecord.latitude;
         longitude = cityrecord.longitude;
         country = cityrecord.country.clone().unwrap().name;
-        admin1_name_value = admin1_name_value_work.to_owned();
+        admin1_name_value = admin1_name_value_work.clone();
         population = cityrecord.population;
-        timezone = cityrecord.timezone.to_owned();
+        timezone = cityrecord.timezone.clone();
         cityrecord_dbg = if formatstr == "cityrecord" {
-            format!("{:?}", cityrecord)
+            format!("{cityrecord:?}")
         } else {
-            EMPTY_STRING.to_owned()
+            EMPTY_STRING.clone()
         };
     } else if mode == GeocodeSubCmd::Reverse {
         // regex for Location field. Accepts (lat, long) & lat, long
@@ -560,17 +563,17 @@ fn search_cached(
                 };
 
                 id = cityrecord.id;
-                city_name = cityrecord.name.to_owned();
+                city_name = cityrecord.name.clone();
                 latitude = cityrecord.latitude;
                 longitude = cityrecord.longitude;
                 country = cityrecord.country.clone().unwrap().name;
-                admin1_name_value = admin1_name_value_work.to_owned();
+                admin1_name_value = admin1_name_value_work.clone();
                 population = cityrecord.population;
-                timezone = cityrecord.timezone.to_owned();
+                timezone = cityrecord.timezone.clone();
                 cityrecord_dbg = if formatstr == "cityrecord" {
-                    format!("{:?}", cityrecord)
+                    format!("{cityrecord:?}")
                 } else {
-                    EMPTY_STRING.to_owned()
+                    EMPTY_STRING.clone()
                 };
             }
         } else {
