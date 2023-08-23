@@ -182,7 +182,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         "xls" | "xlsx" | "xlsm" | "xlsb" => false,
         "ods" => true,
         _ => {
-            return fail_clierror!(
+            return fail_incorrectusage_clierror!(
                 "\"{format}\" not supported. The excel command only supports the following file \
                  formats - xls, xlsx, xlsm, xlsb and ods."
             );
@@ -228,7 +228,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         'J' => MetadataMode::PrettyJSON,
         'n' | 'N' => MetadataMode::None,
         _ => {
-            return fail_clierror!("Invalid mode: {}", args.flag_metadata);
+            return fail_incorrectusage_clierror!("Invalid mode: {}", args.flag_metadata);
         },
     };
 
@@ -391,7 +391,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 if let Some(sheet_name) = sheet_names.get(sheet_index as usize) {
                     sheet_name.to_string()
                 } else {
-                    return fail_clierror!(
+                    return fail_incorrectusage_clierror!(
                         "sheet index {sheet_index} is greater than number of sheets {}",
                         sheet_names.len()
                     );

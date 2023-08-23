@@ -320,7 +320,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let redis_client = match redis::Client::open(conn_str.to_string()) {
             Ok(rc) => rc,
             Err(e) => {
-                return fail_clierror!(r#"Invalid Redis connection string "{conn_str}": {e:?}"#)
+                return fail_incorrectusage_clierror!(
+                    r#"Invalid Redis connection string "{conn_str}": {e:?}"#
+                )
             },
         };
 
@@ -424,7 +426,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let vals: Vec<&str> = header.split(':').collect();
 
             if vals.len() != 2 {
-                return fail_clierror!(
+                return fail_incorrectusage_clierror!(
                     "{vals:?} is not a valid key-value pair. Expecting a key and a value \
                      separated by a colon."
                 );
@@ -435,14 +437,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let header_name: HeaderName =
                 match HeaderName::from_lowercase(k.to_lowercase().as_bytes()) {
                     Ok(h) => h,
-                    Err(e) => return fail_clierror!("Invalid header name: {e}"),
+                    Err(e) => return fail_incorrectusage_clierror!("Invalid header name: {e}"),
                 };
 
             // allocate new String for header value to put into map
             let v: String = String::from(vals[1].trim());
             let header_val: HeaderValue = match HeaderValue::from_str(v.as_str()) {
                 Ok(v) => v,
-                Err(e) => return fail_clierror!("Invalid header value: {e}"),
+                Err(e) => return fail_incorrectusage_clierror!("Invalid header value: {e}"),
             };
 
             map.append(header_name, header_val);

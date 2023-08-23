@@ -246,7 +246,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         Some("onetomany") => JoinValidation::OneToMany,
         Some("manytoone") => JoinValidation::ManyToOne,
         Some("onetoone") => JoinValidation::OneToOne,
-        Some(s) => return fail_clierror!("Invalid join validation: {s}"),
+        Some(s) => return fail_incorrectusage_clierror!("Invalid join validation: {s}"),
     };
 
     let join_shape: (usize, usize) = match (
@@ -357,7 +357,7 @@ impl JoinStruct {
         let right_selcols_len = right_selcols.len();
 
         if left_selcols_len != right_selcols_len {
-            return fail_clierror!(
+            return fail_incorrectusage_clierror!(
                 "Both columns1 ({left_selcols:?}) and columns2 ({right_selcols:?}) must specify \
                  the same number of columns ({left_selcols_len } != {right_selcols_len})."
             );

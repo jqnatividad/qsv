@@ -320,7 +320,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if let Some(new_name) = args.flag_rename {
         let new_col_names = util::ColumnNameParser::new(&new_name).parse()?;
         if new_col_names.len() != sel.len() {
-            return fail!("Number of new columns does not match input column selection.");
+            return fail_incorrectusage_clierror!(
+                "Number of new columns does not match input column selection."
+            );
         }
         for (i, col_index) in sel.iter().enumerate() {
             headers = replace_column_value(&headers, *col_index, &new_col_names[i]);
@@ -550,23 +552,27 @@ fn validate_operations(
 
     for op in operations {
         let Ok(operation) = Operations::from_str(op) else {
-            return fail_clierror!("Unknown '{op}' operation");
+            return fail_incorrectusage_clierror!("Unknown '{op}' operation");
         };
         match operation {
             Operations::Copy => {
                 if flag_new_column.is_none() {
-                    return fail!("--new_column (-c) is required for copy operation.");
+                    return fail_incorrectusage_clierror!(
+                        "--new_column (-c) is required for copy operation."
+                    );
                 }
                 copy_invokes = copy_invokes.saturating_add(1);
             },
             Operations::Mtrim | Operations::Mltrim | Operations::Mrtrim => {
                 if flag_comparand.is_empty() {
-                    return fail!("--comparand (-C) is required for match trim operations.");
+                    return fail_incorrectusage_clierror!(
+                        "--comparand (-C) is required for match trim operations."
+                    );
                 }
             },
             Operations::Regex_Replace => {
                 if flag_comparand.is_empty() || flag_replacement.is_empty() {
-                    return fail!(
+                    return fail_incorrectusage_clierror!(
                         "--comparand (-C) and --replacement (-R) are required for regex_replace \
                          operation."
                     );
@@ -584,7 +590,7 @@ fn validate_operations(
             },
             Operations::Replace => {
                 if flag_comparand.is_empty() || flag_replacement.is_empty() {
-                    return fail!(
+                    return fail_incorrectusage_clierror!(
                         "--comparand (-C) and --replacement (-R) are required for replace \
                          operation."
                     );
@@ -593,7 +599,9 @@ fn validate_operations(
             },
             Operations::Strip_Prefix | Operations::Strip_Suffix => {
                 if flag_comparand.is_empty() {
-                    return fail!("--comparand (-C) is required for strip operations.");
+                    return fail_incorrectusage_clierror!(
+                        "--comparand (-C) is required for strip operations."
+                    );
                 }
                 strip_invokes = strip_invokes.saturating_add(1);
             },
@@ -614,7 +622,7 @@ fn validate_operations(
         ops_vec.push(operation);
     }
     if copy_invokes > 1 || regex_replace_invokes > 1 || replace_invokes > 1 || strip_invokes > 1 {
-        return fail_clierror!(
+        return fail_incorrectusage_clierror!(
             "you can only use copy({copy_invokes}), regex_replace({regex_replace_invokes}), \
              replace({replace_invokes}), and strip({strip_invokes}) ONCE per operation series."
         );

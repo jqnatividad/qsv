@@ -259,7 +259,7 @@ fn get_prompt(
         "description_prompt" => prompt_file.description_prompt,
         "tags_prompt" => prompt_file.tags_prompt,
         _ => {
-            return fail_clierror!("Error: Invalid prompt type: {prompt_type}");
+            return fail_incorrectusage_clierror!("Error: Invalid prompt type: {prompt_type}");
         },
     };
     // Replace variable data in prompt
