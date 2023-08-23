@@ -214,16 +214,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 match encode_handler {
                     EncodingHandling::Replace => {
                         str_row.push_field(&lossy_field);
-                        debug!("REPLACE: Invalid UTF-8 row {idx} for {lossy_field}.");
+                        if log::log_enabled!(log::Level::Debug) {
+                            debug!("REPLACE: Invalid UTF-8 row {idx} for {lossy_field}.");
+                        }
                         not_utf8 = true;
                     },
                     EncodingHandling::Skip => {
                         str_row.push_field("<SKIPPED>");
-                        debug!("SKIP: Invalid UTF-8 row {idx} for {lossy_field}.");
+                        if log::log_enabled!(log::Level::Debug) {
+                            debug!("REPLACE: Invalid UTF-8 row {idx} for {lossy_field}.");
+                        }
                         not_utf8 = true;
                     },
                     EncodingHandling::Strict => {
-                        return fail_clierror!(
+                        return fail_encoding_clierror!(
                             "STRICT. Invalid UTF-8 row {idx} for {lossy_field}."
                         );
                     },

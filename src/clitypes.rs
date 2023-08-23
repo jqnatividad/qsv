@@ -73,6 +73,26 @@ macro_rules! fail_clierror {
     }};
 }
 
+macro_rules! fail_encoding_clierror {
+    ($($t:tt)*) => {{
+        use log::error;
+        use crate::CliError;
+        let err = format!($($t)*);
+        error!("{err}");
+        Err(CliError::Encoding(err))
+    }};
+}
+
+macro_rules! fail_OOM_clierror {
+    ($($t:tt)*) => {{
+        use log::error;
+        use crate::CliError;
+        let err = format!($($t)*);
+        error!("{err}");
+        Err(CliError::OutOfMemory(err))
+    }};
+}
+
 macro_rules! fail_format {
     ($($t:tt)*) => {{
         use log::error;
@@ -89,6 +109,9 @@ pub enum QsvExitCode {
     Good           = 0,
     Bad            = 1,
     IncorrectUsage = 2,
+    NetworkError   = 3,
+    OutOfMemory    = 4,
+    EncodingError  = 5,
     Abort          = 255,
 }
 
@@ -106,6 +129,9 @@ pub enum CliError {
     Csv(csv::Error),
     Io(io::Error),
     NoMatch(),
+    Network(String),
+    OutOfMemory(String),
+    Encoding(String),
     Other(String),
 }
 
@@ -116,7 +142,10 @@ impl fmt::Display for CliError {
             CliError::Csv(ref e) => e.fmt(f),
             CliError::Io(ref e) => e.fmt(f),
             CliError::NoMatch() => f.write_str("no_match"),
-            CliError::Other(ref s) => f.write_str(s),
+            CliError::Network(ref s) => f.write_str(s),
+            CliError::OutOfMemory(ref s) | CliError::Encoding(ref s) | CliError::Other(ref s) => {
+                f.write_str(s)
+            },
         }
     }
 }
@@ -171,6 +200,6 @@ impl From<serde_json::Error> for CliError {
 
 impl From<reqwest::Error> for CliError {
     fn from(err: reqwest::Error) -> CliError {
-        CliError::Other(err.to_string())
+        CliError::Network(err.to_string())
     }
 }

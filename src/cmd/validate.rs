@@ -221,12 +221,30 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
                     return fail!(json_error);
                 }
-                return fail_clierror!(
-                    r#"Validation error: {e}.
-Last valid record: {record_idx}
-Use `qsv fixlengths` to fix record length issues.
-Use `qsv input` to fix formatting and to handle non-utf8 sequences if required."#
-                );
+                match e.kind() {
+                    csv::ErrorKind::UnequalLengths {
+                        expected_len: _,
+                        len: _,
+                        pos: _,
+                    } => {
+                        return fail_clierror!(
+                            "Validation error: {e}.\nUse `qsv fixlengths` to fix record length \
+                             issues."
+                        );
+                    },
+                    csv::ErrorKind::Utf8 { pos, err } => {
+                        return fail_encoding_clierror!(
+                            "non-utf8 sequence at record {record_idx} position \
+                             {pos:?}.\n{err}\nUse `qsv input` to fix formatting and to handle \
+                             non-utf8 sequences."
+                        );
+                    },
+                    _ => {
+                        return fail_clierror!(
+                            "Validation error: {e}.\nLast valid record: {record_idx}"
+                        );
+                    },
+                }
             }
             record_idx += 1;
         }

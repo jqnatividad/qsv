@@ -257,7 +257,7 @@ sponsored by datHere - Data Infrastructure Engineering
                 QsvExitCode::IncorrectUsage
             },
             Err(CliError::Csv(err)) => {
-                werr!("{err}");
+                werr!("csv: {err}");
                 util::log_end(qsv_args, now);
                 QsvExitCode::Bad
             },
@@ -267,7 +267,7 @@ sponsored by datHere - Data Infrastructure Engineering
                 QsvExitCode::Abort
             },
             Err(CliError::Io(err)) => {
-                werr!("{err}");
+                werr!("io: {err}");
                 util::log_end(qsv_args, now);
                 QsvExitCode::Bad
             },
@@ -279,6 +279,21 @@ sponsored by datHere - Data Infrastructure Engineering
                 werr!("{msg}");
                 util::log_end(qsv_args, now);
                 QsvExitCode::Bad
+            },
+            Err(CliError::Network(msg)) => {
+                werr!("network: {msg}");
+                util::log_end(qsv_args, now);
+                QsvExitCode::NetworkError
+            },
+            Err(CliError::OutOfMemory(msg)) => {
+                werr!("memory: {msg}");
+                util::log_end(qsv_args, now);
+                QsvExitCode::OutOfMemory
+            },
+            Err(CliError::Encoding(msg)) => {
+                werr!("encoding: {msg}");
+                util::log_end(qsv_args, now);
+                QsvExitCode::EncodingError
             },
         },
     }
