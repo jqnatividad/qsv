@@ -221,7 +221,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
                     return fail!(json_error);
                 }
-                return fail_clierror!(
+                return fail_encoding_clierror!(
                     r#"Validation error: {e}.
 Last valid record: {record_idx}
 Use `qsv fixlengths` to fix record length issues.
