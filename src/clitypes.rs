@@ -73,6 +73,16 @@ macro_rules! fail_clierror {
     }};
 }
 
+macro_rules! fail_incorrectusage_clierror {
+    ($($t:tt)*) => {{
+        use log::error;
+        use crate::CliError;
+        let err = format!($($t)*);
+        error!("{err}");
+        Err(CliError::IncorrectUsage(err))
+    }};
+}
+
 macro_rules! fail_encoding_clierror {
     ($($t:tt)*) => {{
         use log::error;
@@ -129,6 +139,7 @@ pub enum CliError {
     Csv(csv::Error),
     Io(io::Error),
     NoMatch(),
+    IncorrectUsage(String),
     Network(String),
     OutOfMemory(String),
     Encoding(String),
@@ -142,10 +153,11 @@ impl fmt::Display for CliError {
             CliError::Csv(ref e) => e.fmt(f),
             CliError::Io(ref e) => e.fmt(f),
             CliError::NoMatch() => f.write_str("no_match"),
-            CliError::Network(ref s) => f.write_str(s),
-            CliError::OutOfMemory(ref s) | CliError::Encoding(ref s) | CliError::Other(ref s) => {
-                f.write_str(s)
-            },
+            CliError::Other(ref s)
+            | CliError::IncorrectUsage(ref s)
+            | CliError::Encoding(ref s)
+            | CliError::OutOfMemory(ref s)
+            | CliError::Network(ref s) => f.write_str(s),
         }
     }
 }
