@@ -264,7 +264,7 @@ fetch = [
 ]
 foreach = []
 generate = ["test-data-generation"]
-geocode = ["anyhow", "geosuggest-core", "geosuggest-utils"]
+geocode = ["anyhow", "cached", "geosuggest-core", "geosuggest-utils"]
 luau = ["mlua", "sanitise-file-name"]
 python = ["pyo3"]
 to = ["csvs_convert"]
