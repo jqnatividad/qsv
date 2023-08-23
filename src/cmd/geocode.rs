@@ -124,7 +124,6 @@ use std::{
     fs,
     path::{Path, PathBuf},
     str::FromStr,
-    sync::OnceLock,
 };
 
 use cached::proc_macro::cached;
@@ -237,32 +236,6 @@ async fn geocode_main(args: Args) -> CliResult<()> {
         .no_headers(args.flag_no_headers)
         .select(args.arg_column);
 
-    let mut rdr = rconfig.reader()?;
-    let mut wtr = Config::new(&args.flag_output).writer()?;
-
-    let headers = rdr.byte_headers()?.clone();
-    let sel = rconfig.selection(&headers)?;
-    let column_index = *sel.iter().next().unwrap();
-
-    let mut headers = rdr.headers()?.clone();
-
-    if let Some(new_name) = args.flag_rename {
-        let new_col_names = util::ColumnNameParser::new(&new_name).parse()?;
-        if new_col_names.len() != sel.len() {
-            return fail!("Number of new columns does not match input column selection.");
-        }
-        for (i, col_index) in sel.iter().enumerate() {
-            headers = replace_column_value(&headers, *col_index, &new_col_names[i]);
-        }
-    }
-
-    if !rconfig.no_headers {
-        if let Some(new_column) = &args.flag_new_column {
-            headers.push_field(new_column);
-        }
-        wtr.write_record(&headers)?;
-    }
-
     let geocode_cmd = if args.cmd_index {
         GeocodeSubCmd::Index
     } else if args.cmd_suggest {
@@ -310,6 +283,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
 
     // load geocode engine
     let engine = load_engine(geocode_index_file.clone().into(), languages_vec.clone()).await?;
+    debug!("Geocode engine loaded.");
 
     // its an index operation, apply the requested operation to the geonames index
     if geocode_cmd == GeocodeSubCmd::Index {
@@ -319,15 +293,15 @@ async fn geocode_main(args: Args) -> CliResult<()> {
         let updater = IndexUpdater::new(IndexUpdaterSettings {
             http_timeout_ms:  util::timeout_secs(args.flag_timeout)? * 1000,
             cities:           SourceItem {
-                url:      DEFAULT_CITIES_DB_URL, //"http://download.geonames.org/export/dump/cities5000.zip",
-                filename: DEFAULT_CITIES_DB_FILENAME, //"cities5000.txt",
+                url:      DEFAULT_CITIES_DB_URL,
+                filename: DEFAULT_CITIES_DB_FILENAME,
             },
             names:            Some(SourceItem {
-                url:      DEFAULT_CITIES_NAMES_URL, //"http://download.geonames.org/export/dump/alternateNamesV2.zip",
-                filename: DEFAULT_CITIES_NAMES_FILENAME, //"alternateNamesV2.txt",
+                url:      DEFAULT_CITIES_NAMES_URL,
+                filename: DEFAULT_CITIES_NAMES_FILENAME,
             }),
-            countries_url:    Some(DEFAULT_COUNTRY_INFO_URL), /* Some("http://download.geonames.org/export/dump/countryInfo.txt"), */
-            admin1_codes_url: Some(DEFAULT_ADMIN1_CODES_URL), /* Some("http://download.geonames.org/export/dump/admin1CodesASCII.txt"), */
+            countries_url:    Some(DEFAULT_COUNTRY_INFO_URL),
+            admin1_codes_url: Some(DEFAULT_ADMIN1_CODES_URL),
             filter_languages: languages_vec,
         })?;
 
@@ -352,6 +326,32 @@ async fn geocode_main(args: Args) -> CliResult<()> {
             Operation::None => return fail_clierror!("No operation specified."),
         }
         return Ok(());
+    }
+
+    let mut rdr = rconfig.reader()?;
+    let mut wtr = Config::new(&args.flag_output).writer()?;
+
+    let headers = rdr.byte_headers()?.clone();
+    let sel = rconfig.selection(&headers)?;
+    let column_index = *sel.iter().next().unwrap();
+
+    let mut headers = rdr.headers()?.clone();
+
+    if let Some(new_name) = args.flag_rename {
+        let new_col_names = util::ColumnNameParser::new(&new_name).parse()?;
+        if new_col_names.len() != sel.len() {
+            return fail!("Number of new columns does not match input column selection.");
+        }
+        for (i, col_index) in sel.iter().enumerate() {
+            headers = replace_column_value(&headers, *col_index, &new_col_names[i]);
+        }
+    }
+
+    if !rconfig.no_headers {
+        if let Some(new_column) = &args.flag_new_column {
+            headers.push_field(new_column);
+        }
+        wtr.write_record(&headers)?;
     }
 
     // prep progress bar
