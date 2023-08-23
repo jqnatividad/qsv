@@ -78,7 +78,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .no_headers(args.flag_no_headers_right);
 
     if rconfig_left.is_stdin() || rconfig_right.is_stdin() {
-        return fail_clierror!(
+        return fail_incorrectusage_clierror!(
             "diff does not support stdin. A file path is required for both arguments."
         );
     }

@@ -270,7 +270,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } else if args.cmd_parquet {
         debug!("converting to parquet");
         if arg_input.is_empty() {
-            return fail_clierror!(
+            return fail_incorrectusage_clierror!(
                 "Need to add the directory of the parquet files as first argument then the input \
                  CSVs"
             );

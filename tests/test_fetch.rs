@@ -335,7 +335,7 @@ fn fetch_jql_jqlfile_error() {
         .arg("data.csv");
 
     let got: String = wrk.output_stderr(&mut cmd);
-    assert!(got.starts_with("Invalid arguments."));
+    assert!(got.starts_with("usage: Invalid arguments."));
 
     wrk.assert_err(&mut cmd);
 }
@@ -455,7 +455,7 @@ fn fetch_custom_invalid_header_error() {
         .arg("data.csv");
 
     let got: String = wrk.output_stderr(&mut cmd);
-    assert!(got.starts_with("Invalid header name"));
+    assert!(got.starts_with("usage: Invalid header name"));
 
     wrk.assert_err(&mut cmd);
 }
@@ -475,7 +475,7 @@ fn fetch_custom_invalid_user_agent_error() {
         .arg("data.csv");
 
     let got: String = wrk.output_stderr(&mut cmd);
-    assert!(got.starts_with("Invalid user-agent"));
+    assert!(got.starts_with("usage: Invalid user-agent"));
 
     wrk.assert_err(&mut cmd);
 }
@@ -534,7 +534,7 @@ fn fetch_custom_invalid_value_error() {
         .arg("data.csv");
 
     let got: String = wrk.output_stderr(&mut cmd);
-    assert!(got.starts_with("Invalid header value"));
+    assert!(got.starts_with("usage: Invalid header value"));
 
     wrk.assert_err(&mut cmd);
 }
@@ -559,7 +559,7 @@ fn fetchpost_custom_invalid_header_error() {
         .arg("data.csv");
 
     let got: String = wrk.output_stderr(&mut cmd);
-    assert!(got.starts_with("Invalid header name"));
+    assert!(got.starts_with("usage: Invalid header name"));
 
     wrk.assert_err(&mut cmd);
 }
@@ -584,7 +584,7 @@ fn fetchpost_custom_invalid_value_error() {
         .arg("data.csv");
 
     let got: String = wrk.output_stderr(&mut cmd);
-    assert!(got.starts_with("Invalid header value"));
+    assert!(got.starts_with("usage: Invalid header value"));
 
     wrk.assert_err(&mut cmd);
 }
@@ -610,7 +610,7 @@ fn fetchpost_custom_invalid_user_agent_error() {
         .arg("data.csv");
 
     let got: String = wrk.output_stderr(&mut cmd);
-    assert!(got.starts_with("Invalid user-agent"));
+    assert!(got.starts_with("usage: Invalid user-agent"));
 
     wrk.assert_err(&mut cmd);
 }

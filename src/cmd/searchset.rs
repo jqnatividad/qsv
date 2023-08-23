@@ -131,10 +131,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
     if args.flag_flag.is_none() && args.flag_flag_matches_only {
-        return fail_clierror!("Cannot use --flag-matches-only without --flag",);
+        return fail_incorrectusage_clierror!("Cannot use --flag-matches-only without --flag",);
     }
     if !args.flag_flag_matches_only && args.flag_unmatched_output.is_some() {
-        return fail_clierror!("Cannot use --unmatched-output without --flag-matches-only",);
+        return fail_incorrectusage_clierror!(
+            "Cannot use --unmatched-output without --flag-matches-only",
+        );
     }
 
     let regexset = read_regexset(&args.arg_regexset_file)?;

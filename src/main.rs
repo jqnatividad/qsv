@@ -252,7 +252,12 @@ sponsored by datHere - Data Infrastructure Engineering
                 QsvExitCode::Good
             },
             Err(CliError::Flag(err)) => {
-                werr!("{err}");
+                werr!("usage: {err}");
+                util::log_end(qsv_args, now);
+                QsvExitCode::IncorrectUsage
+            },
+            Err(CliError::IncorrectUsage(err)) => {
+                werr!("usage: {err}");
                 util::log_end(qsv_args, now);
                 QsvExitCode::IncorrectUsage
             },
@@ -262,7 +267,7 @@ sponsored by datHere - Data Infrastructure Engineering
                 QsvExitCode::Bad
             },
             Err(CliError::Io(ref err)) if err.kind() == io::ErrorKind::BrokenPipe => {
-                werr!("Broken pipe: {err}");
+                werr!("broken pipe: {err}");
                 util::log_end(qsv_args, now);
                 QsvExitCode::Abort
             },

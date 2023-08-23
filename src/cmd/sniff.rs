@@ -724,7 +724,7 @@ async fn sniff_main(mut args: Args) -> CliResult<()> {
             });
             return fail_clierror!("{json_result}");
         }
-        return fail_clierror!("Sample size must be greater than or equal to zero.");
+        return fail_incorrectusage_clierror!("Sample size must be greater than or equal to zero.");
     }
 
     let sniffed_ts = chrono::Utc::now().to_rfc3339();

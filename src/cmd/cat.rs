@@ -112,7 +112,7 @@ impl Args {
         // this algorithm is largely inspired by https://github.com/vi/csvcatrow by @vi
         // https://github.com/jqnatividad/qsv/issues/527
         if self.flag_no_headers {
-            return fail_clierror!(
+            return fail_incorrectusage_clierror!(
                 "cat rowskey does not support --no-headers, as we use column headers as keys."
             );
         }

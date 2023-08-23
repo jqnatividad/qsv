@@ -308,22 +308,22 @@ async fn geocode_main(args: Args) -> CliResult<()> {
         match op {
             Operation::Check => {
                 if updater.has_updates(&engine).await? {
-                    println!("Updates available.");
+                    woutinfo!("Updates available.");
                 } else {
-                    println!("No updates available.");
+                    woutinfo!("No updates available.");
                 }
             },
             Operation::Update => {
                 let engine = updater.build().await?;
                 engine.dump_to(geocode_index_file.clone(), EngineDumpFormat::Bincode)?;
-                println!("Updates applied: {geocode_index_file}");
+                woutinfo!("Updates applied: {geocode_index_file}");
             },
             Operation::Load => {},
             Operation::Save => {
                 engine.dump_to(geocode_index_file.clone(), EngineDumpFormat::Bincode)?;
-                println!("Index saved: {geocode_index_file}");
+                woutinfo!("Index saved: {geocode_index_file}");
             },
-            Operation::None => return fail_clierror!("No operation specified."),
+            Operation::None => return fail_incorrectusage_clierror!("No operation specified."),
         }
         return Ok(());
     }

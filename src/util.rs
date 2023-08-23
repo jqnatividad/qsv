@@ -132,7 +132,7 @@ pub fn set_user_agent(user_agent: Option<String>) -> CliResult<String> {
 
     match HeaderValue::from_str(ua.as_str()) {
         Ok(_) => (),
-        Err(e) => return fail_clierror!("Invalid user-agent value: {e}"),
+        Err(e) => return fail_incorrectusage_clierror!("Invalid user-agent value: {e}"),
     };
 
     log::info!("set user agent: {ua}");

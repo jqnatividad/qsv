@@ -536,7 +536,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if let Some(new_name) = args.flag_rename {
         let new_col_names = util::ColumnNameParser::new(&new_name).parse()?;
         if new_col_names.len() != sel.len() {
-            return fail!("Number of new columns does not match input column selection.");
+            return fail_incorrectusage_clierror!(
+                "Number of new columns does not match input column selection."
+            );
         }
         for (i, col_index) in sel.iter().enumerate() {
             headers = replace_column_value(&headers, *col_index, &new_col_names[i]);
@@ -846,12 +848,14 @@ fn validate_operations(
 
     for op in operations {
         let Ok(operation) = Operations::from_str(op) else {
-            return fail_clierror!("Unknown '{op}' operation");
+            return fail_incorrectusage_clierror!("Unknown '{op}' operation");
         };
         match operation {
             Operations::Censor | Operations::Censor_Check | Operations::Censor_Count => {
                 if flag_new_column.is_none() {
-                    return fail!("--new_column (-c) is required for censor operations.");
+                    return fail_incorrectusage_clierror!(
+                        "--new_column (-c) is required for censor operations."
+                    );
                 }
                 if censor_invokes == 0
                     && CENSOR
@@ -870,13 +874,17 @@ fn validate_operations(
             },
             Operations::Copy => {
                 if flag_new_column.is_none() {
-                    return fail!("--new_column (-c) is required for copy operation.");
+                    return fail_incorrectusage_clierror!(
+                        "--new_column (-c) is required for copy operation."
+                    );
                 }
                 copy_invokes = copy_invokes.saturating_add(1);
             },
             Operations::Eudex => {
                 if flag_comparand.is_empty() || flag_new_column.is_none() {
-                    return fail!("--comparand (-C) and --new_column (-c) is required for eudex.");
+                    return fail_incorrectusage_clierror!(
+                        "--comparand (-C) and --new_column (-c) is required for eudex."
+                    );
                 }
                 if eudex_invokes == 0
                     && EUDEX_COMPARAND_HASH
@@ -889,12 +897,14 @@ fn validate_operations(
             },
             Operations::Mtrim | Operations::Mltrim | Operations::Mrtrim => {
                 if flag_comparand.is_empty() {
-                    return fail!("--comparand (-C) is required for match trim operations.");
+                    return fail_incorrectusage_clierror!(
+                        "--comparand (-C) is required for match trim operations."
+                    );
                 }
             },
             Operations::Regex_Replace => {
                 if flag_comparand.is_empty() || flag_replacement.is_empty() {
-                    return fail!(
+                    return fail_incorrectusage_clierror!(
                         "--comparand (-C) and --replacement (-R) are required for regex_replace \
                          operation."
                     );
@@ -913,7 +923,7 @@ fn validate_operations(
             },
             Operations::Replace => {
                 if flag_comparand.is_empty() || flag_replacement.is_empty() {
-                    return fail!(
+                    return fail_incorrectusage_clierror!(
                         "--comparand (-C) and --replacement (-R) are required for replace \
                          operation."
                     );
@@ -922,7 +932,9 @@ fn validate_operations(
             },
             Operations::Sentiment => {
                 if flag_new_column.is_none() {
-                    return fail!("--new_column (-c) is required for sentiment operation.");
+                    return fail_incorrectusage_clierror!(
+                        "--new_column (-c) is required for sentiment operation."
+                    );
                 }
                 sentiment_invokes = sentiment_invokes.saturating_add(1);
             },
@@ -933,7 +945,7 @@ fn validate_operations(
             | Operations::Simhm
             | Operations::Simod => {
                 if flag_comparand.is_empty() || flag_new_column.is_none() {
-                    return fail!(
+                    return fail_incorrectusage_clierror!(
                         "--comparand (-C) and --new_column (-c) is required for similarity \
                          operations."
                     );
@@ -973,7 +985,9 @@ fn validate_operations(
             },
             Operations::Whatlang => {
                 if flag_new_column.is_none() {
-                    return fail!("--new_column (-c) is required for whatlang language detection.");
+                    return fail_incorrectusage_clierror!(
+                        "--new_column (-c) is required for whatlang language detection."
+                    );
                 }
 
                 if whatlang_invokes == 0
@@ -1026,7 +1040,7 @@ fn validate_operations(
         || strip_invokes > 1
         || whatlang_invokes > 1
     {
-        return fail_clierror!(
+        return fail_incorrectusage_clierror!(
             "you can only use censor({censor_invokes}), copy({copy_invokes}), \
              eudex({eudex_invokes}), regex_replace({regex_replace_invokes}), \
              replace({replace_invokes}), sentiment({sentiment_invokes}), \
