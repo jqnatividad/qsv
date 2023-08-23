@@ -154,6 +154,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // if no JSON Schema supplied, only let csv reader RFC4180-validate csv file
     if args.arg_json_schema.is_none() {
         // just read csv file and let csv reader report problems
+        // since we're using csv::StringRecord, this will also detect non-utf8 sequences
 
         let mut header_msg = String::new();
         let mut header_len = 0;
@@ -224,7 +225,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     r#"Validation error: {e}.
 Last valid record: {record_idx}
 Use `qsv fixlengths` to fix record length issues.
-Use `qsv input` to fix formatting and to transcode to utf8 if required."#
+Use `qsv input` to fix formatting and to handle non-utf8 sequences if required."#
                 );
             }
             record_idx += 1;
