@@ -14,7 +14,7 @@ fn apply_ops_unknown_operation() {
         .arg("data.csv");
 
     let got: String = wrk.output_stderr(&mut cmd);
-    assert_eq!(&*got, "Unknown 'obfuscate' operation\n")
+    assert_eq!(&*got, "usage: Unknown 'obfuscate' operation\n")
 }
 
 #[test]
@@ -133,7 +133,7 @@ fn apply_ops_upper_rename_invalid() {
     let got: String = wrk.output_stderr(&mut cmd);
     assert_eq!(
         got,
-        "Number of new columns does not match input column selection.\n"
+        "usage: Number of new columns does not match input column selection.\n"
     );
 }
 
@@ -909,7 +909,7 @@ fn apply_ops_replace_validation_error() {
     let got = wrk.output_stderr(&mut cmd);
     assert_eq!(
         got,
-        "--comparand (-C) and --replacement (-R) are required for replace operation.\n"
+        "usage: --comparand (-C) and --replacement (-R) are required for replace operation.\n"
     );
     wrk.assert_err(&mut cmd);
 }
@@ -972,7 +972,8 @@ fn apply_ops_regex_replace_validation_error() {
     let got = wrk.output_stderr(&mut cmd);
     assert_eq!(
         got,
-        "--comparand (-C) and --replacement (-R) are required for regex_replace operation.\n"
+        "usage: --comparand (-C) and --replacement (-R) are required for regex_replace \
+         operation.\n"
     );
     wrk.assert_err(&mut cmd);
 }
@@ -1091,7 +1092,7 @@ fn apply_ops_chain_validation_error() {
     let got = wrk.output_stderr(&mut cmd);
     assert_eq!(
         got,
-        "you can only use censor(0), copy(0), eudex(0), regex_replace(0), replace(0), \
+        "usage: you can only use censor(0), copy(0), eudex(0), regex_replace(0), replace(0), \
          sentiment(0), similarity(2), strip(0), and whatlang(0) ONCE per operation series.\n"
     );
     wrk.assert_err(&mut cmd);
@@ -1099,7 +1100,7 @@ fn apply_ops_chain_validation_error() {
 
 #[test]
 fn apply_ops_chain_validation_error_missing_comparand() {
-    let wrk = Workdir::new("apply");
+    let wrk = Workdir::new("apply_ops_chain_validation_error_missing_comparand");
     wrk.create(
         "data.csv",
         vec![svec!["name"], svec!["   John       Paul   "], svec!["Mary"]],
@@ -1115,7 +1116,7 @@ fn apply_ops_chain_validation_error_missing_comparand() {
     let got = wrk.output_stderr(&mut cmd);
     assert_eq!(
         got,
-        "--comparand (-C) and --new_column (-c) is required for similarity operations.\n"
+        "usage: --comparand (-C) and --new_column (-c) is required for similarity operations.\n"
     );
     wrk.assert_err(&mut cmd);
 }

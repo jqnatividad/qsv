@@ -14,7 +14,7 @@ fn applydp_ops_unknown_operation() {
         .arg("data.csv");
 
     let got: String = wrk.output_stderr(&mut cmd);
-    assert_eq!(&*got, "Unknown 'obfuscate' operation\n")
+    assert_eq!(&*got, "usage: Unknown 'obfuscate' operation\n")
 }
 
 #[test]
@@ -133,7 +133,7 @@ fn applydp_ops_upper_rename_invalid() {
     let got: String = wrk.output_stderr(&mut cmd);
     assert_eq!(
         got,
-        "Number of new columns does not match input column selection.\n"
+        "usage: Number of new columns does not match input column selection.\n"
     );
 }
 
@@ -324,7 +324,7 @@ fn applydp_ops_replace_validation_error() {
     let got = wrk.output_stderr(&mut cmd);
     assert_eq!(
         got,
-        "--comparand (-C) and --replacement (-R) are required for replace operation.\n"
+        "usage: --comparand (-C) and --replacement (-R) are required for replace operation.\n"
     );
     wrk.assert_err(&mut cmd);
 }
@@ -387,7 +387,8 @@ fn applydp_ops_regex_replace_validation_error() {
     let got = wrk.output_stderr(&mut cmd);
     assert_eq!(
         got,
-        "--comparand (-C) and --replacement (-R) are required for regex_replace operation.\n"
+        "usage: --comparand (-C) and --replacement (-R) are required for regex_replace \
+         operation.\n"
     );
     wrk.assert_err(&mut cmd);
 }
@@ -585,8 +586,8 @@ fn applydp_ops_chain_validation_error() {
     let got = wrk.output_stderr(&mut cmd);
     assert_eq!(
         got,
-        "you can only use copy(0), regex_replace(0), replace(0), and strip(2) ONCE per operation \
-         series.\n"
+        "usage: you can only use copy(0), regex_replace(0), replace(0), and strip(2) ONCE per \
+         operation series.\n"
     );
     wrk.assert_err(&mut cmd);
 }
@@ -607,7 +608,10 @@ fn applydp_ops_chain_validation_error_missing_comparand() {
         .arg("data.csv");
 
     let got = wrk.output_stderr(&mut cmd);
-    assert_eq!(got, "--comparand (-C) is required for strip operations.\n");
+    assert_eq!(
+        got,
+        "usage: --comparand (-C) is required for strip operations.\n"
+    );
     wrk.assert_err(&mut cmd);
 }
 

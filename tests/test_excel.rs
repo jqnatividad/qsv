@@ -323,7 +323,7 @@ fn excel_invalid_sheet_index() {
     cmd.arg("--sheet").arg("100").arg(xls_file);
 
     let got = wrk.output_stderr(&mut cmd);
-    let expected = "sheet index 100 is greater than number of sheets 8\n".to_string();
+    let expected = "usage: sheet index 100 is greater than number of sheets 8\n".to_string();
     assert_eq!(got, expected);
     wrk.assert_err(&mut cmd);
 }
