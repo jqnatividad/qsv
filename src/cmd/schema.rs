@@ -9,8 +9,8 @@ Running `validate` command on original input CSV with generated schema
 should not flag any invalid records.
 
 The intended workflow is to use `schema` command to generate a schema file from
-representative CSV data, adjust the schema file as needed, and then use `validate`
-command to validate other CSV data using the generated schema.
+representative CSV data, fine-tune the schema file as needed, and then use `validate`
+command to validate other CSV data with the same structure using the generated schema.
 
 Generated schema file has `.schema.json` postfix appended. For example, 
 for input `mydata.csv`, schema file would be `mydata.csv.schema.json`.
