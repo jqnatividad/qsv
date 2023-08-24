@@ -11,9 +11,9 @@ options. Similarly, --skip-lastlines allows epilogue lines to be skipped.
 
 Finally, non UTF-8 encoded files are "lossy" saved to UTF-8 by default, replacing all
 invalid UTF-8 sequences with �. Note though that this is not true transcoding.
-If you need to properly transcode non UTF-8 CSVs, you'll need to use a tool like
-`iconv` before processing it with qsv - e.g.
-`iconv -f ISO-8859-1 -t UTF-8 input.csv > utf8_output.csv`.
+If you need to properly transcode non UTF-8 files, you'll need to use a tool like `iconv`
+before processing it with qsv - e.g. to convert an ISO-8859-1 encoded file to UTF-8:
+    `iconv -f ISO-8859-1 -t UTF-8 input.csv -o utf8_output.csv`.
 
 You can change this behavior with the --encoding-errors option.
 
@@ -197,6 +197,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut not_utf8 = false;
     #[allow(unused_assignments)]
     let mut lossy_field = String::new();
+    let debug_log = log::log_enabled!(log::Level::Debug);
 
     'main: loop {
         match rdr.read_byte_record(&mut row) {
@@ -219,21 +220,21 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 match encode_handler {
                     EncodingHandling::Replace => {
                         str_row.push_field(&lossy_field);
-                        if log::log_enabled!(log::Level::Debug) {
-                            debug!("REPLACE: Invalid UTF-8 row {idx} for {lossy_field}.");
+                        if debug_log {
+                            debug!("REPLACE: Invalid UTF-8 row {idx} in \"{lossy_field}\".");
                         }
                         not_utf8 = true;
                     },
                     EncodingHandling::Skip => {
                         str_row.push_field("<SKIPPED>");
-                        if log::log_enabled!(log::Level::Debug) {
-                            debug!("REPLACE: Invalid UTF-8 row {idx} for {lossy_field}.");
+                        if debug_log {
+                            debug!("REPLACE: Invalid UTF-8 row {idx} in \"{lossy_field}\".");
                         }
                         not_utf8 = true;
                     },
                     EncodingHandling::Strict => {
                         return fail_encoding_clierror!(
-                            "STRICT. Invalid UTF-8 row {idx} for {lossy_field}."
+                            "STRICT. Invalid UTF-8 row {idx} in \"{lossy_field}\"."
                         );
                     },
                 }
