@@ -260,7 +260,7 @@ Alternatively, if you want to truly transcode to UTF-8, there are several utilit
 
 ### Windows Usage Note
 
-Unlike other modern operating systems, Microsoft Windows' [default encoding is UTF16-LE](https://stackoverflow.com/questions/66072117/why-does-windows-use-utf-16le). This will cause problems when redirecting qsv's output to a CSV file & trying to open it with Excel (which ignores the comma delimiter, with everything in the first column):
+Unlike other modern operating systems, Microsoft Windows' [default encoding is UTF16-LE](https://stackoverflow.com/questions/66072117/why-does-windows-use-utf-16le). This will cause problems when redirecting qsv's output to a CSV file & trying to open it with Excel (which ignores the comma delimiter, with everything in the first column if the file is UTF16-LE encoded):
 
 ```
 # the following command will produce a UTF16-LE encoded CSV file on Windows
