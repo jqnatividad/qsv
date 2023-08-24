@@ -1,6 +1,6 @@
 static USAGE: &str = r#"
-Read CSV data with special quoting, trimming, line-skipping & UTF-8 transcoding rules
-and transforms it to a "normalized" CSV.
+Read CSV data with special quoting, trimming, line-skipping & non UTF-8 encoding rules
+and transforms it to a "normalized", UTF-8 encoded CSV.
 
 Generally, all qsv commands support basic options like specifying the delimiter
 used in CSV data. However, this does not cover all possible types of CSV data. For
@@ -9,10 +9,15 @@ example, some CSV files don't use '"' for quotes or use different escaping style
 Also, CSVs with preamble lines can have them skipped with the --skip-lines & --auto-skip
 options. Similarly, --skip-lastlines allows epilogue lines to be skipped.
 
-Finally, non-UTF8 encoded files are "lossy" saved to UTF-8 with this command, replacing
-all invalid UTF-8 sequences with �. Note though that this is not true transcoding. If you
-need to properly transcode CSVs, you'll need to use a different tool like `iconv` - e.g.
+Finally, non UTF-8 encoded files are "lossy" saved to UTF-8 by default, replacing all
+invalid UTF-8 sequences with �. Note though that this is not true transcoding.
+If you need to properly transcode non UTF-8 CSVs, you'll need to use a tool like
+`iconv` before processing it with qsv - e.g.
 `iconv -f ISO-8859-1 -t UTF-8 input.csv > utf8_output.csv`.
+
+You can change this behavior with the --encoding-errors option.
+
+See https://github.com/jqnatividad/qsv#utf-8-encoding fpr more details.
 
 This command is typically used at the beginning of a data pipeline (thus the name `input`)
 to normalize & prepare CSVs for further processing with other qsv commands.
