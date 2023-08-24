@@ -1,0 +1,20 @@
+# Clearing caches regularly takes care of Rust caches growing to problematic size over time
+# copied from Polars repo:
+
+name: Clear caches
+
+on:
+  schedule:
+    - cron: '0 4 * * SUN'
+  workflow_dispatch:
+
+jobs:
+  clear-caches:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Clear all caches
+        run: gh cache delete --all
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
