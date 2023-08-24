@@ -203,24 +203,52 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
             if let Err(e) = result {
                 if args.flag_json || args.flag_pretty_json {
-                    let validation_error = json!({
-                        "errors": [{
-                            "title" : "Validation error",
-                            "detail" : format!("{e}"),
-                            "meta": {
-                                "last_valid_record": format!("{record_idx}"),
-                            }
-                        }]
-                    });
+                    // we're returning a JSON error, so we have more machine-friendly details
+                    // using the JSON API error format
+                    if let csv::ErrorKind::Utf8 { pos, err } = e.kind() {
+                        // it's a UTF-8 error, so we report utf8 error metadata
+                        let validation_error = json!({
+                            "errors": [{
+                                "title" : "UTF-8 validation error",
+                                "detail" : format!("{e}"),
+                                "meta": {
+                                    "last_valid_record": format!("{record_idx}"),
+                                    "record_position": format!("{pos:?}"),
+                                    "record_error": format!("{err}"),
+                                }
+                            }]
+                        });
 
-                    let json_error = if args.flag_pretty_json {
-                        serde_json::to_string_pretty(&validation_error).unwrap()
+                        let json_error = if args.flag_pretty_json {
+                            serde_json::to_string_pretty(&validation_error).unwrap()
+                        } else {
+                            validation_error.to_string()
+                        };
+                        return fail_encoding_clierror!("{json_error}");
                     } else {
-                        validation_error.to_string()
-                    };
+                        // it's not a UTF-8 error, so we report generic validation error
+                        let validation_error = json!({
+                            "errors": [{
+                                "title" : "Validation error",
+                                "detail" : format!("{e}"),
+                                "meta": {
+                                    "last_valid_record": format!("{record_idx}"),
+                                }
+                            }]
+                        });
 
-                    return fail!(json_error);
+                        let json_error = if args.flag_pretty_json {
+                            serde_json::to_string_pretty(&validation_error).unwrap()
+                        } else {
+                            validation_error.to_string()
+                        };
+
+                        return fail!(json_error);
+                    }
                 }
+
+                // we're not returning a JSON error, so we can use the more human-friendly
+                // error message
                 match e.kind() {
                     csv::ErrorKind::UnequalLengths {
                         expected_len: _,
