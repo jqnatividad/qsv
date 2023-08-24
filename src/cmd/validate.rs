@@ -1,9 +1,17 @@
 static USAGE: &str = r#"
-Validate CSV data with JSON Schema Validation, putting invalid records into a separate file.
-Uses https://json-schema.org/draft/2020-12/json-schema-validation.html.
-When run without JSON Schema, only a simple CSV check (RFC 4180) is performed.
+Validates CSV data using two modes:
 
-You can create a JSON Schema from a CSV file using the `qsv schema` command.
+JSON SCHEMA VALIDATION MODE:
+This mode is invoked if a JSON Schema file is provided. The CSV data is validated against the
+Schema, and invalid records are put into an "invalid" file, with the rest of the records put into
+a "valid"" file.
+
+It uses the JSON Schema Validation draft 2020-12 specification. See
+https://json-schema.org/draft/2020-12/json-schema-validation.html
+
+You can create a JSON Schema file from a reference CSV file using the `qsv schema` command.
+Once the schema is created, you can fine-tune it to your needs and use it to validate other CSV
+files that have the same structure.
 
 Example output files from `mydata.csv`. If piped from stdin, then filename is `stdin.csv`.
 
@@ -13,7 +21,13 @@ Example output files from `mydata.csv`. If piped from stdin, then filename is `s
 
 The JSON Schema can be a local file or a URL.
 
-Returns exitcode 0 when the CSV file is valid, exitcode > 0 otherwise.
+RFC 4180 VALIDATION MODE:
+If run without a JSON Schema file, the CSV is validated if it complies with the RFC 4180 CSV 
+standard (per our interpretation - see https://github.com/jqnatividad/qsv#rfc-4180-csv-standard).
+
+It also confirms if the CSV is UTF-8 encoded.
+
+For both modes, returns exitcode 0 when the CSV file is valid, exitcode > 0 otherwise.
 If all records are valid, no output files are produced.
 
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_validate.rs.
