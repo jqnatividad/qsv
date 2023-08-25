@@ -55,6 +55,126 @@ fn fixlengths_all_maxlen_trims() {
 }
 
 #[test]
+fn fixlengths_insert_negative() {
+    let rows = vec![
+        svec!["clothes", "colours", "size"],
+        svec!["shirt", "blue", "green", "grey", "small"],
+        svec!["shirt", "yellow", "black", "small"],
+        svec!["shorts", "blue", "medium"],
+        svec!["shorts", "black", "large"],
+    ];
+
+    let wrk = Workdir::new("fixlengths_insert_negative").flexible(true);
+    wrk.create("in.csv", rows);
+
+    let mut cmd = wrk.command("fixlengths");
+    cmd.arg("in.csv").args(["-i", "-2"]);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    assert_eq!(
+        got,
+        vec![
+            svec!["clothes", "colours", "", "", "size"],
+            svec!["shirt", "blue", "green", "grey", "small"],
+            svec!["shirt", "yellow", "", "black", "small"],
+            svec!["shorts", "blue", "", "", "medium"],
+            svec!["shorts", "black", "", "", "large"]
+        ]
+    );
+}
+
+#[test]
+fn fixlengths_insert_positive() {
+    let rows = vec![
+        svec!["clothes", "colours", "size"],
+        svec!["shirt", "blue", "green", "grey", "small"],
+        svec!["shirt", "yellow", "black", "small"],
+        svec!["shorts", "blue", "medium"],
+        svec!["shorts", "black", "large"],
+    ];
+
+    let wrk = Workdir::new("fixlengths_insert_positive").flexible(true);
+    wrk.create("in.csv", rows);
+
+    let mut cmd = wrk.command("fixlengths");
+    cmd.arg("in.csv").args(["-i", "2"]);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    assert_eq!(
+        got,
+        vec![
+            svec!["clothes", "", "", "colours", "size"],
+            svec!["shirt", "blue", "green", "grey", "small"],
+            svec!["shirt", "", "yellow", "black", "small"],
+            svec!["shorts", "", "", "blue", "medium"],
+            svec!["shorts", "", "", "black", "large"]
+        ]
+    );
+}
+
+#[test]
+fn fixlengths_insert_positive_length_7() {
+    let rows = vec![
+        svec!["clothes", "colours", "size"],
+        svec!["shirt", "blue", "green", "grey", "small"],
+        svec!["shirt", "yellow", "black", "small"],
+        svec!["shorts", "blue", "medium"],
+        svec!["shorts", "black", "large"],
+    ];
+
+    let wrk = Workdir::new("fixlengths_insert_positive_length_7").flexible(true);
+    wrk.create("in.csv", rows);
+
+    let mut cmd = wrk.command("fixlengths");
+    cmd.arg("in.csv")
+        .args(["--insert", "2"])
+        .args(["--length", "7"]);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    assert_eq!(
+        got,
+        vec![
+            svec!["clothes", "", "", "", "", "colours", "size"],
+            svec!["shirt", "", "", "blue", "green", "grey", "small"],
+            svec!["shirt", "", "", "", "yellow", "black", "small"],
+            svec!["shorts", "", "", "", "", "blue", "medium"],
+            svec!["shorts", "", "", "", "", "black", "large"]
+        ]
+    );
+}
+
+#[test]
+fn fixlengths_insert_negative_length_7() {
+    let rows = vec![
+        svec!["clothes", "colours", "size"],
+        svec!["shirt", "blue", "green", "grey", "small"],
+        svec!["shirt", "yellow", "black", "small"],
+        svec!["shorts", "blue", "medium"],
+        svec!["shorts", "black", "large"],
+    ];
+
+    let wrk = Workdir::new("fixlengths_insert_negative_length_7").flexible(true);
+    wrk.create("in.csv", rows);
+
+    let mut cmd = wrk.command("fixlengths");
+    cmd.arg("in.csv")
+        .args(["--insert", "-2"])
+        .args(["--length", "7"]);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    assert_eq!(
+        got,
+        vec![
+            svec!["clothes", "colours", "size", "", "", "", ""],
+            svec!["shirt", "blue", "green", "grey", "", "", "small"],
+            svec!["shirt", "yellow", "black", "small", "", "", ""],
+            svec!["shorts", "blue", "medium", "", "", "", ""],
+            svec!["shorts", "black", "large", "", "", "", "",]
+        ]
+    );
+}
+
+#[test]
 fn fixlengths_all_maxlen_trims_at_least_1() {
     let rows = vec![svec![""], svec!["", ""], svec!["", "", ""]];
 
