@@ -2,11 +2,15 @@ static USAGE: &str = r#"
 Validates CSV data using two modes:
 
 JSON SCHEMA VALIDATION MODE:
-This mode is invoked if a JSON Schema file is provided. The CSV data is validated against the
-Schema, and invalid records are put into an "invalid" file, with the rest of the records put into
-a "valid"" file.
+This mode is invoked if a JSON Schema file is provided.
 
-When errors are found, a "validation-errors.tsv" file is created with the following columns:
+The CSV data is validated against the JSON Schema. If the CSV data is valid, no output
+files are created and the command returns an exit code of 0.
+
+If invalid records are found, they are put into an "invalid" file, with the rest of the
+records put into a "valid"" file.
+
+A "validation-errors.tsv" report is also created with the following columns:
 
   * row_number: the row number of the invalid record
   * field: the field name of the invalid field
@@ -35,10 +39,10 @@ And want to validate "mydata.csv" which we know has validation errors, the outpu
   * mydata.csv.invalid
   * mydata.csv.validation-errors.tsv
 
-With an exitcode of 1 to indicate a validation error.
+With an exit code of 1 to indicate a validation error.
 
 If we validate another CSV file, "mydata2.csv", which we know is valid, there are no output files,
-and the exitcode is 0.
+and the exit code is 0.
 
 If piped from stdin, the filenames will use `stdin.csv` as the base filename. For example:
 `cat mydata.csv | qsv validate reference.schema.json`
@@ -53,7 +57,7 @@ the RFC 4180 CSV standard (see https://github.com/jqnatividad/qsv#rfc-4180-csv-s
 
 It also confirms if the CSV is UTF-8 encoded.
 
-For both modes, returns exitcode 0 when the CSV file is valid, exitcode > 0 otherwise.
+For both modes, returns exit code 0 when the CSV file is valid, exitcode > 0 otherwise.
 If all records are valid, no output files are produced.
 
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_validate.rs.
