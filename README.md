@@ -212,7 +212,7 @@ When using the `--output` option, qsv will UTF-8 encode the file & automatically
 
 The `fetch` & `fetchpost` commands also produces JSONL files when its invoked without the `--new-column` option & TSV files with the `--report` option.
 
-The `excel`, `safenames`, `sniff`, `sortcheck` & `validate` commands produce JSON files with their JSON options following the [JSON API 1.1 specification](https://jsonapi.org/format/).
+The `excel`, `safenames`, `sniff`, `sortcheck` & `validate` commands produce JSON files with their JSON options following the [JSON API 1.1 specification](https://jsonapi.org/format/), so it can return detailed machine-friendly metadata that can be used by other systems.
 
 The `schema` command produces a [JSON Schema Validation (Draft 7)](https://json-schema.org/draft/2020-12/json-schema-validation.html) file with the ".schema.json" file extension, which can be used with the `validate` command to validate other CSV files with a similar schema.
 
@@ -220,7 +220,7 @@ The `excel` command recognizes Excel & Open Document Spreadsheet(ODS) files (`.x
 
 The `to` command converts CSVs to `.xlsx`, [Parquet](https://parquet.apache.org) & [Data Package](https://datahub.io/docs/data-packages/tabular) files, and populates [PostgreSQL](https://www.postgresql.org) and [SQLite](https://www.sqlite.org/index.html) databases.
 
-The `sqlp` command produces query results in CSV, JSON, Parquet & [Arrow IPC](https://arrow.apache.org/docs/format/Columnar.html#ipc-file-format) formats. Polars SQL also supports reading external files directly with its `read_ndjson`, `read_csv`, `read_parquet` & `read_ipc` [table functions](https://github.com/pola-rs/polars/blob/c7fa66a1340418789ec66bdedad6654281afa0ab/polars/polars-sql/src/table_functions.rs#L9-L36).
+The `sqlp` command returns query results in CSV, JSON, Parquet & [Arrow IPC](https://arrow.apache.org/docs/format/Columnar.html#ipc-file-format) formats. Polars SQL also supports reading external files directly in various formats with its `read_ndjson`, `read_csv`, `read_parquet` & `read_ipc` [table functions](https://github.com/pola-rs/polars/blob/c7fa66a1340418789ec66bdedad6654281afa0ab/polars/polars-sql/src/table_functions.rs#L9-L36).
 
 ### Snappy Compression/Decompression
 
