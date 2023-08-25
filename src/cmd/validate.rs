@@ -8,13 +8,13 @@ a "valid"" file.
 
 When errors are found, a "validation-errors.tsv" file is created with the following columns:
 
-* row_number: the row number of the invalid record
-* field: the field name of the invalid field
-* error: the error message
+  * row_number: the row number of the invalid record
+  * field: the field name of the invalid field
+  * error: a validation error message detailing why the field is invalid
 
-It uses the JSON Schema Validation draft 2020-12 specification to validate the file. It validates
-not only the structure of the file, but the data types and domain/range of the fields as well.
-See https://json-schema.org/draft/2020-12/json-schema-validation.html
+It uses the JSON Schema Validation Specification (draft 2020-12) to validate the CSV.
+It validates not only the structure of the file, but the data types and domain/range of the
+fields as well. See https://json-schema.org/draft/2020-12/json-schema-validation.html
 
 You can create a JSON Schema file from a reference CSV file using the `qsv schema` command.
 Once the schema is created, you can fine-tune it to your needs and use it to validate other CSV
@@ -27,17 +27,29 @@ reference CSV file should be appropriate for the data you want to validate.
 Typically, after creating a schema, you should edit it to fine-tune each field's inferred
 validation rules.
 
-Example output files from `mydata.csv`. If piped from stdin, then filename is `stdin.csv`.
+For example, if we created a JSON schema file called "reference.schema.json" using the `schema` command.
+And want to validate "mydata.csv" which we know has validation errors, the output files from running
+`qsv validate mydata.csv reference.schema.json` are: 
 
-* mydata.csv.valid
-* mydata.csv.invalid
-* mydata.csv.validation-errors.tsv
+  * mydata.csv.valid
+  * mydata.csv.invalid
+  * mydata.csv.validation-errors.tsv
 
-The JSON Schema file can be a local file or a URL.
+With an exitcode of 1 to indicate a validation error.
+
+If we validate another CSV file, "mydata2.csv", which we know is valid, there are no output files,
+and the exitcode is 0.
+
+If piped from stdin, the filenames will use `stdin.csv` as the base filename. For example:
+`cat mydata.csv | qsv validate reference.schema.json`
+
+   * stdin.csv.valid
+   * stdin.csv.invalid
+   * stdin.csv.validation-errors.tsv
 
 RFC 4180 VALIDATION MODE:
-If run without a JSON Schema file, the CSV is validated if it complies with the RFC 4180 CSV 
-standard (per our interpretation - see https://github.com/jqnatividad/qsv#rfc-4180-csv-standard).
+If run without a JSON Schema file, the CSV is validated if it complies with qsv's interpretation of
+the RFC 4180 CSV standard (see https://github.com/jqnatividad/qsv#rfc-4180-csv-standard).
 
 It also confirms if the CSV is UTF-8 encoded.
 
@@ -49,6 +61,12 @@ For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_vali
 Usage:
     qsv validate [options] [<input>] [<json-schema>]
     qsv validate --help
+
+Validate arguments:
+    <input>                    Input CSV file to validate. If not provided, will read from stdin.
+    <json-schema>              JSON Schema file to validate against. If not provided, `validate`
+                               will run in RFC 4180 validation mode.
+                               The file can be a local file or a URL.
 
 Validate options:
     --fail-fast                Stops on first error.
