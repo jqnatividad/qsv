@@ -177,7 +177,7 @@ self_update = { version = "0.37", features = [
     "rustls",
 ], default-features = false, optional = true }
 semver = "1"
-serde = { version = "1.0.187", features = ["derive"] }
+serde = { version = "1.0.188", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 serde_stacker = { version = "0.1", optional = true }
 serde_urlencoded = { version = "0.7", optional = true }
