@@ -40,23 +40,18 @@ INDEX
 Updates the Geonames cities database used by the geocode command.
 
 It has three operations:
- * check - checks if the Geonames cities database is up-to-date.
- * update - updates the Geonames cities database with the latest changes.
- * load - load a Geonames cities database from a file.
- * save - save the Geonames cities database to a file.
+ * check - checks if the Geonames index is up-to-date.
+ * update - updates the Geonames index with the latest changes from the Geonames website.
+ * load - load a Geonames cities index from a file.
 
- Examples:
+Examples:
 Update the Geonames cities database with the latest changes.
 
 $ qsv geocode index update
 
 Load a Geonames cities database from a file.
 
-$ qsv geocode index load geonames_cities.dmp
-
-Save the Geonames cities database to a file.
-
-$ qsv geocode index save geonames_cities.dmp
+$ qsv geocode index load my_geonames_index.bincode
 
 For more extensive examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_geocode.rs.
 
@@ -71,6 +66,7 @@ The <column> argument can be a list of columns for the operations, emptyreplace 
 datefmt subcommands. See 'qsv select --help' for the format details.
         
     <input>                     The input file to read from. If not specified, reads from stdin.
+    <column>                    The column to geocode. Must be a column containing a location
 
                                 INDEX ARGUMENTS ONLY:
     <operation>                 The operation to perform. The available operations are:
@@ -99,9 +95,8 @@ geocode options:
                                 When not set, the number of jobs is set to the number of CPUs detected.
     -b, --batch <size>          The number of rows per batch to load into memory, before running in parallel.
                                 [default: 50000]
-    --timeout <seconds>         Timeout for downloading lookup_tables using
-                                the qsv_register_lookup() helper function.
-                                [default: 30]                                
+    --timeout <seconds>         Timeout for downloading Geonames cities database.
+                                [default: 60]
     --languages <lang>          The languages to use for the Geonames cities database.
                                 The languages are specified as a comma-separated list of ISO 639-1 codes.
                                 [default: en]
@@ -154,7 +149,6 @@ enum Operation {
     Check,
     Update,
     Load,
-    Save,
     None,
 }
 
@@ -181,8 +175,6 @@ struct Args {
     flag_progressbar: bool,
 }
 
-// static LOCS: OnceLock<Locations> = OnceLock::new();
-// static GEOCODER: OnceLock<ReverseGeocoder> = OnceLock::new();
 static DEFAULT_GEOCODE_INDEX_FILENAME: &str = "qsv-geocode-index.bincode";
 
 static DEFAULT_CITIES_DB_URL: &str = "https://download.geonames.org/export/dump/cities15000.zip";
@@ -231,6 +223,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 }
 
 async fn geocode_main(args: Args) -> CliResult<()> {
+    if args.arg_column.is_empty() {
+        return fail_incorrectusage_clierror!("No column specified.");
+    }
+
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers)
@@ -281,52 +277,61 @@ async fn geocode_main(args: Args) -> CliResult<()> {
         .map(std::string::String::as_str)
         .collect();
 
-    // load geocode engine
-    let engine = load_engine(geocode_index_file.clone().into(), languages_vec.clone()).await?;
-    debug!("Geocode engine loaded.");
+    debug!("geocode_index_file: {geocode_index_file} Languages: {languages_vec:?}");
 
-    // its an index operation, apply the requested operation to the geonames index
-    if geocode_cmd == GeocodeSubCmd::Index {
+    let updater = IndexUpdater::new(IndexUpdaterSettings {
+        http_timeout_ms:  util::timeout_secs(args.flag_timeout)? * 1000,
+        cities:           SourceItem {
+            url:      DEFAULT_CITIES_DB_URL,
+            filename: DEFAULT_CITIES_DB_FILENAME,
+        },
+        names:            Some(SourceItem {
+            url:      DEFAULT_CITIES_NAMES_URL,
+            filename: DEFAULT_CITIES_NAMES_FILENAME,
+        }),
+        countries_url:    Some(DEFAULT_COUNTRY_INFO_URL),
+        admin1_codes_url: Some(DEFAULT_ADMIN1_CODES_URL),
+        filter_languages: languages_vec.clone(),
+    })?;
+    // let updater = IndexUpdater::new(IndexUpdaterSettings {
+    //     filter_languages: vec!["en"],
+    //     ..Default::default()
+    // })?;
+
+    let engine = if geocode_cmd == GeocodeSubCmd::Index {
         let Ok(op) = Operation::from_str(&args.arg_operation) else {
             return fail_incorrectusage_clierror!("Invalid operation: {}", args.arg_operation);
         };
-        let updater = IndexUpdater::new(IndexUpdaterSettings {
-            http_timeout_ms:  util::timeout_secs(args.flag_timeout)? * 1000,
-            cities:           SourceItem {
-                url:      DEFAULT_CITIES_DB_URL,
-                filename: DEFAULT_CITIES_DB_FILENAME,
-            },
-            names:            Some(SourceItem {
-                url:      DEFAULT_CITIES_NAMES_URL,
-                filename: DEFAULT_CITIES_NAMES_FILENAME,
-            }),
-            countries_url:    Some(DEFAULT_COUNTRY_INFO_URL),
-            admin1_codes_url: Some(DEFAULT_ADMIN1_CODES_URL),
-            filter_languages: languages_vec,
-        })?;
 
         match op {
             Operation::Check => {
+                // load geocode engine
+                let engine =
+                    load_engine(geocode_index_file.clone().into(), args.flag_progressbar).await?;
+
                 if updater.has_updates(&engine).await? {
                     woutinfo!("Updates available.");
                 } else {
                     woutinfo!("No updates available.");
                 }
+                return Ok(());
             },
             Operation::Update => {
                 let engine = updater.build().await?;
+                // engine_loaded   = true;
                 engine.dump_to(geocode_index_file.clone(), EngineDumpFormat::Bincode)?;
                 woutinfo!("Updates applied: {geocode_index_file}");
+                return Ok(());
             },
-            Operation::Load => {},
-            Operation::Save => {
-                engine.dump_to(geocode_index_file.clone(), EngineDumpFormat::Bincode)?;
-                woutinfo!("Index saved: {geocode_index_file}");
+            Operation::Load => {
+                // load geocode engine
+                load_engine(geocode_index_file.clone().into(), args.flag_progressbar).await?
             },
             Operation::None => return fail_incorrectusage_clierror!("No operation specified."),
         }
-        return Ok(());
-    }
+    } else {
+        load_engine(geocode_index_file.clone().into(), args.flag_progressbar).await?
+    };
 
     let mut rdr = rconfig.reader()?;
     let mut wtr = Config::new(&args.flag_output).writer()?;
@@ -448,42 +453,38 @@ async fn geocode_main(args: Args) -> CliResult<()> {
     Ok(wtr.flush()?)
 }
 
-async fn load_engine(geocode_index_file: PathBuf, languages_vec: Vec<&str>) -> CliResult<Engine> {
+async fn load_engine(geocode_index_file: PathBuf, show_progress: bool) -> CliResult<Engine> {
     let index_file = std::path::Path::new(&geocode_index_file);
 
-    if languages_vec.is_empty() {
-        return fail!("No languages specified.");
-    }
-
-    let updater = IndexUpdater::new(IndexUpdaterSettings {
-        filter_languages: languages_vec,
-        ..Default::default()
-    })?;
-
-    Ok(if index_file.exists() {
-        // load existing index
-        let engine = Engine::load_from(index_file, EngineDumpFormat::Bincode)
-            .map_err(|e| format!("On load index file: {e}"))?;
-
-        if updater.has_updates(&engine).await? {
-            // rewrite index file
-            let engine = updater
-                .build()
-                .await
-                .map_err(|e| format!("Geonames index update failed: {e}"))?;
-            engine.dump_to(index_file, EngineDumpFormat::Bincode)?;
-            engine
-        } else {
-            engine
+    if index_file.exists() {
+        // load existing local index
+        if show_progress {
+            woutinfo!(
+                "Loading existing geocode index from {}",
+                index_file.display()
+            );
         }
     } else {
-        // initial load
-        let engine = updater.build().await?;
-        engine
-            .dump_to(index_file, EngineDumpFormat::Bincode)
-            .map_err(|e| format!("Geonames initial load failed: {e}"))?;
-        engine
-    })
+        // initial load, download index file from qsv releases
+        if show_progress {
+            woutinfo!("No local index found. Downloading geocode index from qsv releases...");
+        }
+        util::download_file(
+            &format!(
+                "https://github.com/jqnatividad/qsv/releases/tag/{}/qsv-geocode-index.bincode",
+                env!("CARGO_PKG_VERSION")
+            ),
+            &geocode_index_file.to_string_lossy().to_string(),
+            show_progress,
+            None,
+            None,
+            None,
+        )
+        .await?;
+    }
+    let engine = Engine::load_from(index_file, EngineDumpFormat::Bincode)
+        .map_err(|e| format!("On load index file: {e}"))?;
+    Ok(engine)
 }
 
 #[cached(
