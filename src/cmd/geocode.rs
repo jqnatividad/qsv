@@ -1,5 +1,5 @@
 static USAGE: &str = r#"
-Geocodes a location against the Geonames cities database.
+Geocodes a location against an updatable local copy of the Geonames cities database.
 
 It has three subcommands:
  * suggest - given a City name, return the closest location coordinate.
