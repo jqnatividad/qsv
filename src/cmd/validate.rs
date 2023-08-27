@@ -688,10 +688,10 @@ fn to_json_instance(
     headers_len: usize,
     record: &ByteRecord,
     schema: &Value,
-) -> Result<Value, String> {
+) -> CliResult<Value> {
     // make sure schema has expected structure
     let Some(schema_properties) = schema.get("properties") else {
-        return fail!("JSON Schema missing 'properties' object");
+        return fail_clierror!("JSON Schema missing 'properties' object");
     };
 
     // map holds individual CSV fields converted as serde_json::Value
@@ -714,18 +714,20 @@ fn to_json_instance(
             s.to_owned()
         } else {
             let s = String::from_utf8_lossy(header);
-            return fail!(format!("CSV header is not valid UTF-8: {s}"));
+            return fail_encoding_clierror!("CSV header is not valid UTF-8: {s}");
         };
 
         // convert csv value to string; no trimming reqd as it's done on the record level beforehand
         let Some(value) = record.get(i) else {
-            return fail!("CSV record is missing value for header '{key_string}' at index {i}");
+            return fail_clierror!(
+                "CSV record is missing value for header '{key_string}' at index {i}"
+            );
         };
         value_string = if let Ok(s) = from_utf8(value) {
             s.to_owned()
         } else {
             let s = String::from_utf8_lossy(value);
-            return fail!(format!("CSV value is not valid UTF-8: {s}"));
+            return fail_encoding_clierror!("CSV value is not valid UTF-8: {s}");
         };
 
         // if value_string is empty, then just put an empty JSON String
@@ -755,7 +757,7 @@ fn to_json_instance(
                     return_val = if let Some(s) = val.as_str() {
                         s.as_bytes()[0]
                     } else {
-                        return fail!("type info should be a JSON string");
+                        return fail_clierror!("type info should be a JSON string");
                     };
                 }
 
@@ -784,7 +786,7 @@ fn to_json_instance(
                         Value::Number(Number::from_f64(float).unwrap()),
                     );
                 } else {
-                    return fail_format!(
+                    return fail_clierror!(
                         "Can't cast into Float. key: {key_string}, value: {value_string}, json \
                          type: number"
                     );
@@ -795,7 +797,7 @@ fn to_json_instance(
                 if let Ok(int) = value_string.parse::<i64>() {
                     json_object_map.insert(key_string, Value::Number(Number::from(int)));
                 } else {
-                    return fail_format!(
+                    return fail_clierror!(
                         "Can't cast into Integer. key: {key_string}, value: {value_string}, json \
                          type: integer"
                     );
@@ -806,7 +808,7 @@ fn to_json_instance(
                 if let Ok(boolean) = value_string.parse::<bool>() {
                     json_object_map.insert(key_string, Value::Bool(boolean));
                 } else {
-                    return fail_format!(
+                    return fail_clierror!(
                         "Can't cast into Boolean. key: {key_string}, value: {value_string}, json \
                          type: boolean"
                     );
@@ -927,7 +929,7 @@ mod tests_for_csv_to_json_conversion {
             &schema_json(),
         );
         assert!(&result.is_err());
-        let error = result.err().unwrap();
+        let error = result.err().unwrap().to_string();
         assert_eq!(
             "Can't cast into Integer. key: C, value: 3.0e8, json type: integer",
             error
