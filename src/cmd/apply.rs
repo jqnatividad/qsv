@@ -1,5 +1,5 @@
 static USAGE: &str = r#"
-Apply a series of transformation functions to a given CSV column. This can be used to
+Apply a series of transformation functions to given CSV column/s. This can be used to
 perform typical data-wrangling tasks and/or to harmonize some values, etc.
 
 It has six subcommands:
@@ -10,7 +10,7 @@ It has six subcommands:
  * geocode - geocodes a WGS84 location against a static copy of the Geonames cities database.
  * calcconv - parse and evaluate math expressions, with support for units and conversions.
 
-OPERATIONS
+OPERATIONS (multi-column capable)
 Multiple operations can be applied, with the comma-delimited operation series
 applied in order:
 
@@ -22,6 +22,8 @@ applied in order:
 Operations support multi-column transformations. Just make sure the
 number of transformed columns with the --rename option is the same. e.g.:
 
+# trim and fold to uppercase the col1,col2 and col3 columns and rename them
+# to newcol1,newcol2 and newcol3
 $ qsv apply operations trim,upper col1,col2,col3 -r newcol1,newcol2,newcol3 file.csv
 
 It has 36 supported operations:
@@ -136,7 +138,7 @@ You can also use this subcommand command to make a copy of a column:
 
   $ qsv apply operations copy col_to_copy -c col_copy file.csv
 
-EMPTYREPLACE
+EMPTYREPLACE (multi-column capable)
 Replace empty cells with <--replacement> string.
 Non-empty cells are not modified. See the `fill` command for more complex empty field operations.
 
@@ -149,7 +151,11 @@ Replace empty cells in file.csv Measurement column with 'Unknown Measurement'.
 
 $ qsv apply emptyreplace --replacement 'Unknown Measurement' file.csv
 
-DATEFMT
+Replace all empty cells in file.csv for columns that start with 'Measurement' with 'None'.
+
+$ qsv apply emptyreplace --replacement None '/^Measurement/' file.csv
+
+DATEFMT (multi-column capable)
 Formats a recognized date column to a specified format using <--formatstr>.
 See https://github.com/jqnatividad/belt/tree/main/dateparser#accepted-date-formats for
 recognized date formats.
@@ -167,6 +173,10 @@ Format dates in Open Date column to ISO 8601/RFC 3339 format:
 Format multiple date columns in file.csv to ISO 8601/RFC 3339 format:
 
   $ qsv apply datefmt 'Open Date,Modified Date,Closed Date' file.csv
+
+Format all columns that end with "_date" in file.csv to ISO 8601/RFC 3339 format:
+
+  $ qsv apply datefmt \_date$\ file.csv
 
 Format dates in OpenDate column using '%Y-%m-%d' format:
 
@@ -271,8 +281,10 @@ qsv apply calcconv --formatstr=<string> [options] --new-column=<name> [<input>]
 qsv apply --help
 
 apply arguments:
-The <column> argument can be a list of columns for the operations, emptyreplace &
-datefmt subcommands. See 'qsv select --help' for the format details.
+    <column>                        The column/s to apply the transformation to.
+                                    Note that the <column> argument supports multiple columns
+                                    for the operations, emptyreplace & datefmt subcommands.
+                                    See 'qsv select --help' for the format details.
 
     OPERATIONS subcommand:
         <operations>                The operation/s to apply.

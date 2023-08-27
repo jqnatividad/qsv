@@ -27,7 +27,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 
 | Command | Description |
 | --- | --- |
-| [apply](/src/cmd/apply.rs#L2)<br>✨🚀🧠🤖 | Apply series of string, date, math, currency & geocoding transformations to a CSV column. It also has some basic [NLP](https://en.wikipedia.org/wiki/Natural_language_processing) functions ([similarity](https://crates.io/crates/strsim), [sentiment analysis](https://crates.io/crates/vader_sentiment), [profanity](https://docs.rs/censor/latest/censor/), [eudex](https://github.com/ticki/eudex#eudex-a-blazingly-fast-phonetic-reductionhashing-algorithm) & [language detection](https://crates.io/crates/whatlang)).  |
+| [apply](/src/cmd/apply.rs#L2)<br>✨🚀🧠🤖 | Apply series of string, date, math, currency & geocoding transformations to given CSV column/s. It also has some basic [NLP](https://en.wikipedia.org/wiki/Natural_language_processing) functions ([similarity](https://crates.io/crates/strsim), [sentiment analysis](https://crates.io/crates/vader_sentiment), [profanity](https://docs.rs/censor/latest/censor/), [eudex](https://github.com/ticki/eudex#eudex-a-blazingly-fast-phonetic-reductionhashing-algorithm) & [language detection](https://crates.io/crates/whatlang)).  |
 | <a name="applydp_deeplink"></a>[applydp](/src/cmd/applydp.rs#L2)<br>🚀 ![CKAN](docs/images/ckan.png)| applydp is a slimmed-down version of `apply` with only [Datapusher+](https://github.com/dathere/datapusher-plus) relevant subcommands/operations (`qsvdp` binary variant only). |
 | [behead](/src/cmd/behead.rs#L2) | Drop headers from a CSV.  |
 | [cat](/src/cmd/cat.rs#L2) | Concatenate CSV files by row or by column. |
