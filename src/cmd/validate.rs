@@ -111,6 +111,7 @@ use std::{
 };
 
 use csv::ByteRecord;
+use indicatif::HumanCount;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use itertools::Itertools;
@@ -123,7 +124,6 @@ use rayon::{
 use serde::{Deserialize, Serialize};
 use serde_json::{json, value::Number, Map, Value};
 use simdutf8::basic::from_utf8;
-use thousands::Separable;
 
 use crate::{
     config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY},
@@ -159,7 +159,7 @@ struct RFC4180Struct {
     header_row:     bool,
     quote_char:     char,
     num_records:    u64,
-    num_fields:     usize,
+    num_fields:     u64,
     fields:         Vec<String>,
 }
 
@@ -208,21 +208,19 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         // first, let's validate the header row
         let mut header_msg = String::new();
-        let mut header_len = 0;
+        let mut header_len: u64 = 0;
         let mut field_vec: Vec<String> = Vec::with_capacity(20);
         if !args.flag_no_headers {
             let fields_result = rdr.headers();
             match fields_result {
                 Ok(fields) => {
-                    header_len = fields.len();
+                    header_len = fields.len() as u64;
                     for field in fields {
                         field_vec.push(field.to_string());
                     }
                     let field_list = field_vec.join(r#"", ""#);
-                    header_msg = format!(
-                        "{} columns (\"{field_list}\") and ",
-                        header_len.separate_with_commas()
-                    );
+                    header_msg =
+                        format!("{} columns (\"{field_list}\") and ", HumanCount(header_len));
                 },
                 Err(e) => {
                     // we're returning a JSON error for the header,
@@ -367,7 +365,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         if show_progress {
             progress.set_message(format!(
                 " validated {} records.",
-                progress.length().unwrap().separate_with_commas()
+                HumanCount(progress.length().unwrap())
             ));
             util::finish_progress(&progress);
         }
@@ -390,7 +388,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         } else {
             format!(
                 "Valid: {header_msg}{} records detected.",
-                record_idx.separate_with_commas()
+                HumanCount(record_idx)
             )
         };
         woutinfo!("{msg}");
@@ -429,9 +427,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     debug!("compiled schema: {:?}", &schema_compiled);
 
     // how many rows read and processed as batches
-    let mut row_number: u32 = 0;
+    let mut row_number: u64 = 0;
     // how many invalid rows found
-    let mut invalid_count: u32 = 0;
+    let mut invalid_count: u64 = 0;
 
     // amortize memory allocation by reusing record
     let mut record = csv::ByteRecord::new();
@@ -525,7 +523,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if show_progress {
         progress.set_message(format!(
             " validated {} records.",
-            progress.length().unwrap().separate_with_commas()
+            HumanCount(progress.length().unwrap())
         ));
         util::finish_progress(&progress);
     }
@@ -559,7 +557,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let fail_fast_msg = if args.flag_fail_fast {
             format!(
                 "fail-fast enabled. stopped after row {}.\n",
-                row_number.separate_with_commas()
+                HumanCount(row_number)
             )
         } else {
             String::new()
@@ -567,12 +565,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         return fail_clierror!(
             "{fail_fast_msg}{} out of {} records invalid.",
-            invalid_count.separate_with_commas(),
-            row_number.separate_with_commas()
+            HumanCount(invalid_count),
+            HumanCount(row_number)
         );
     }
 
-    winfo!("All {} records valid.", row_number.separate_with_commas());
+    winfo!("All {} records valid.", HumanCount(row_number));
     Ok(())
 }
 
