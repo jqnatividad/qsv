@@ -275,30 +275,29 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             validation_error.to_string()
                         };
                         return fail_encoding_clierror!("{json_error}");
-                    } else {
-                        // it's not a UTF-8 error, so we report generic validation error
-                        let validation_error = json!({
-                            "errors": [{
-                                "title" : "Validation error",
-                                "detail" : format!("{e}"),
-                                "meta": {
-                                    "last_valid_record": format!("{record_idx}"),
-                                }
-                            }]
-                        });
-
-                        let json_error = if args.flag_pretty_json {
-                            serde_json::to_string_pretty(&validation_error).unwrap()
-                        } else {
-                            validation_error.to_string()
-                        };
-
-                        return fail!(json_error);
                     }
+                    // it's not a UTF-8 error, so we report generic validation error
+                    let validation_error = json!({
+                        "errors": [{
+                            "title" : "Validation error",
+                            "detail" : format!("{e}"),
+                            "meta": {
+                                "last_valid_record": format!("{record_idx}"),
+                            }
+                        }]
+                    });
+
+                    let json_error = if args.flag_pretty_json {
+                        serde_json::to_string_pretty(&validation_error).unwrap()
+                    } else {
+                        validation_error.to_string()
+                    };
+
+                    return fail!(json_error);
                 }
 
-                // we're not returning a JSON error, so we can use the more human-friendly
-                // error message
+                // we're not returning a JSON error, so we can use
+                // a user-friendly error message with suggestions
                 match e.kind() {
                     csv::ErrorKind::UnequalLengths {
                         expected_len: _,
