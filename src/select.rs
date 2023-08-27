@@ -64,9 +64,10 @@ impl SelectColumns {
         Ok(Selection(map))
     }
 
-    pub fn is_empty(&self) -> bool {
-        self.selectors.is_empty()
-    }
+    // commented out because it's unused
+    // pub fn is_empty(&self) -> bool {
+    //     self.selectors.is_empty()
+    // }
 }
 
 impl fmt::Debug for SelectColumns {
