@@ -206,9 +206,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // just read csv file and let csv reader report problems
         // since we're using csv::StringRecord, this will also detect non-utf8 sequences
 
+        // first, let's validate the header row
         let mut header_msg = String::new();
         let mut header_len = 0;
-        let mut field_vec = vec![];
+        let mut field_vec: Vec<String> = Vec::with_capacity(20);
         if !args.flag_no_headers {
             let fields_result = rdr.headers();
             match fields_result {
@@ -224,11 +225,35 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     );
                 },
                 Err(e) => {
+                    // we're returning a JSON error for the header,
+                    // so we have more machine-friendly details
                     if args.flag_json || args.flag_pretty_json {
+                        // there's a UTF-8 error, so we report utf8 error metadata
+                        if let csv::ErrorKind::Utf8 { pos, err } = e.kind() {
+                            let header_error = json!({
+                                "errors": [{
+                                    "title" : "Header UTF-8 validation errorr",
+                                    "detail" : format!("{e}"),
+                                    "meta": {
+                                        "record_position": format!("{pos:?}"),
+                                        "record_error": format!("{err}"),
+                                    }
+                                }]
+                            });
+                            let json_error = if args.flag_pretty_json {
+                                serde_json::to_string_pretty(&header_error).unwrap()
+                            } else {
+                                header_error.to_string()
+                            };
+
+                            return fail_encoding_clierror!("{json_error}");
+                        }
+                        // it's not a UTF-8 error, so we report a generic
+                        // header validation error
                         let header_error = json!({
                             "errors": [{
-                                "title" : "Cannot read header",
-                                "detail" : format!("{e}")
+                                "title" : "Header Validation error",
+                                "detail" : format!("{e}"),
                             }]
                         });
                         let json_error = if args.flag_pretty_json {
@@ -236,14 +261,25 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         } else {
                             header_error.to_string()
                         };
-
-                        return fail!(json_error);
+                        return fail_encoding_clierror!("{json_error}");
                     }
-                    return fail_clierror!("Cannot read header ({e}).");
+                    // we're not returning a JSON error, so we can use
+                    // a user-friendly error message with suggestions
+                    if let csv::ErrorKind::Utf8 { pos, err } = e.kind() {
+                        return fail_encoding_clierror!(
+                            "non-utf8 sequence detected in header, position {pos:?}.\n{err}\nUse \
+                             `qsv input` to fix formatting and to handle non-utf8 sequences.\n
+                             You may also want to transcode your data to UTF-8 first using `iconv` \
+                             or `recode`."
+                        );
+                    } else {
+                        return fail_clierror!("Header Validation error: {e}.");
+                    }
                 },
             }
         }
 
+        // now, let's validate the rest of the records
         let mut record_idx: u64 = 0;
         for result in rdr.records() {
             #[cfg(any(feature = "feature_capable", feature = "lite"))]
@@ -313,7 +349,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         return fail_encoding_clierror!(
                             "non-utf8 sequence at record {record_idx} position \
                              {pos:?}.\n{err}\nUse `qsv input` to fix formatting and to handle \
-                             non-utf8 sequences."
+                             non-utf8 sequences.\nYou may also want to transcode your data to \
+                             UTF-8 first using `iconv` or `recode`."
                         );
                     },
                     _ => {
