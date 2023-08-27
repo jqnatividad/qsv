@@ -111,6 +111,7 @@ use std::{
 };
 
 use csv::ByteRecord;
+use indicatif::HumanCount;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use itertools::Itertools;
@@ -123,7 +124,6 @@ use rayon::{
 use serde::{Deserialize, Serialize};
 use serde_json::{json, value::Number, Map, Value};
 use simdutf8::basic::from_utf8;
-use thousands::Separable;
 
 use crate::{
     config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY},
@@ -159,7 +159,7 @@ struct RFC4180Struct {
     header_row:     bool,
     quote_char:     char,
     num_records:    u64,
-    num_fields:     usize,
+    num_fields:     u64,
     fields:         Vec<String>,
 }
 
@@ -206,29 +206,52 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // just read csv file and let csv reader report problems
         // since we're using csv::StringRecord, this will also detect non-utf8 sequences
 
+        // first, let's validate the header row
         let mut header_msg = String::new();
-        let mut header_len = 0;
-        let mut field_vec = vec![];
+        let mut header_len: u64 = 0;
+        let mut field_vec: Vec<String> = Vec::with_capacity(20);
         if !args.flag_no_headers {
             let fields_result = rdr.headers();
             match fields_result {
                 Ok(fields) => {
-                    header_len = fields.len();
+                    header_len = fields.len() as u64;
                     for field in fields {
                         field_vec.push(field.to_string());
                     }
                     let field_list = field_vec.join(r#"", ""#);
-                    header_msg = format!(
-                        "{} columns (\"{field_list}\") and ",
-                        header_len.separate_with_commas()
-                    );
+                    header_msg =
+                        format!("{} columns (\"{field_list}\") and ", HumanCount(header_len));
                 },
                 Err(e) => {
+                    // we're returning a JSON error for the header,
+                    // so we have more machine-friendly details
                     if args.flag_json || args.flag_pretty_json {
+                        // there's a UTF-8 error, so we report utf8 error metadata
+                        if let csv::ErrorKind::Utf8 { pos, err } = e.kind() {
+                            let header_error = json!({
+                                "errors": [{
+                                    "title" : "Header UTF-8 validation errorr",
+                                    "detail" : format!("{e}"),
+                                    "meta": {
+                                        "record_position": format!("{pos:?}"),
+                                        "record_error": format!("{err}"),
+                                    }
+                                }]
+                            });
+                            let json_error = if args.flag_pretty_json {
+                                serde_json::to_string_pretty(&header_error).unwrap()
+                            } else {
+                                header_error.to_string()
+                            };
+
+                            return fail_encoding_clierror!("{json_error}");
+                        }
+                        // it's not a UTF-8 error, so we report a generic
+                        // header validation error
                         let header_error = json!({
                             "errors": [{
-                                "title" : "Cannot read header",
-                                "detail" : format!("{e}")
+                                "title" : "Header Validation error",
+                                "detail" : format!("{e}"),
                             }]
                         });
                         let json_error = if args.flag_pretty_json {
@@ -236,14 +259,25 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         } else {
                             header_error.to_string()
                         };
-
-                        return fail!(json_error);
+                        return fail_encoding_clierror!("{json_error}");
                     }
-                    return fail_clierror!("Cannot read header ({e}).");
+                    // we're not returning a JSON error, so we can use
+                    // a user-friendly error message with suggestions
+                    if let csv::ErrorKind::Utf8 { pos, err } = e.kind() {
+                        return fail_encoding_clierror!(
+                            "non-utf8 sequence detected in header, position {pos:?}.\n{err}\nUse \
+                             `qsv input` to fix formatting and to handle non-utf8 sequences.\n
+                             You may also want to transcode your data to UTF-8 first using `iconv` \
+                             or `recode`."
+                        );
+                    } else {
+                        return fail_clierror!("Header Validation error: {e}.");
+                    }
                 },
             }
         }
 
+        // now, let's validate the rest of the records
         let mut record_idx: u64 = 0;
         for result in rdr.records() {
             #[cfg(any(feature = "feature_capable", feature = "lite"))]
@@ -275,30 +309,29 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             validation_error.to_string()
                         };
                         return fail_encoding_clierror!("{json_error}");
-                    } else {
-                        // it's not a UTF-8 error, so we report generic validation error
-                        let validation_error = json!({
-                            "errors": [{
-                                "title" : "Validation error",
-                                "detail" : format!("{e}"),
-                                "meta": {
-                                    "last_valid_record": format!("{record_idx}"),
-                                }
-                            }]
-                        });
-
-                        let json_error = if args.flag_pretty_json {
-                            serde_json::to_string_pretty(&validation_error).unwrap()
-                        } else {
-                            validation_error.to_string()
-                        };
-
-                        return fail!(json_error);
                     }
+                    // it's not a UTF-8 error, so we report generic validation error
+                    let validation_error = json!({
+                        "errors": [{
+                            "title" : "Validation error",
+                            "detail" : format!("{e}"),
+                            "meta": {
+                                "last_valid_record": format!("{record_idx}"),
+                            }
+                        }]
+                    });
+
+                    let json_error = if args.flag_pretty_json {
+                        serde_json::to_string_pretty(&validation_error).unwrap()
+                    } else {
+                        validation_error.to_string()
+                    };
+
+                    return fail!(json_error);
                 }
 
-                // we're not returning a JSON error, so we can use the more human-friendly
-                // error message
+                // we're not returning a JSON error, so we can use
+                // a user-friendly error message with suggestions
                 match e.kind() {
                     csv::ErrorKind::UnequalLengths {
                         expected_len: _,
@@ -314,7 +347,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         return fail_encoding_clierror!(
                             "non-utf8 sequence at record {record_idx} position \
                              {pos:?}.\n{err}\nUse `qsv input` to fix formatting and to handle \
-                             non-utf8 sequences."
+                             non-utf8 sequences.\nYou may also want to transcode your data to \
+                             UTF-8 first using `iconv` or `recode`."
                         );
                     },
                     _ => {
@@ -331,7 +365,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         if show_progress {
             progress.set_message(format!(
                 " validated {} records.",
-                progress.length().unwrap().separate_with_commas()
+                HumanCount(progress.length().unwrap())
             ));
             util::finish_progress(&progress);
         }
@@ -354,7 +388,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         } else {
             format!(
                 "Valid: {header_msg}{} records detected.",
-                record_idx.separate_with_commas()
+                HumanCount(record_idx)
             )
         };
         woutinfo!("{msg}");
@@ -393,9 +427,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     debug!("compiled schema: {:?}", &schema_compiled);
 
     // how many rows read and processed as batches
-    let mut row_number: u32 = 0;
+    let mut row_number: u64 = 0;
     // how many invalid rows found
-    let mut invalid_count: u32 = 0;
+    let mut invalid_count: u64 = 0;
 
     // amortize memory allocation by reusing record
     let mut record = csv::ByteRecord::new();
@@ -489,7 +523,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if show_progress {
         progress.set_message(format!(
             " validated {} records.",
-            progress.length().unwrap().separate_with_commas()
+            HumanCount(progress.length().unwrap())
         ));
         util::finish_progress(&progress);
     }
@@ -523,7 +557,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let fail_fast_msg = if args.flag_fail_fast {
             format!(
                 "fail-fast enabled. stopped after row {}.\n",
-                row_number.separate_with_commas()
+                HumanCount(row_number)
             )
         } else {
             String::new()
@@ -531,12 +565,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         return fail_clierror!(
             "{fail_fast_msg}{} out of {} records invalid.",
-            invalid_count.separate_with_commas(),
-            row_number.separate_with_commas()
+            HumanCount(invalid_count),
+            HumanCount(row_number)
         );
     }
 
-    winfo!("All {} records valid.", row_number.separate_with_commas());
+    winfo!("All {} records valid.", HumanCount(row_number));
     Ok(())
 }
 
@@ -654,10 +688,10 @@ fn to_json_instance(
     headers_len: usize,
     record: &ByteRecord,
     schema: &Value,
-) -> Result<Value, String> {
+) -> CliResult<Value> {
     // make sure schema has expected structure
     let Some(schema_properties) = schema.get("properties") else {
-        return fail!("JSON Schema missing 'properties' object");
+        return fail_clierror!("JSON Schema missing 'properties' object");
     };
 
     // map holds individual CSV fields converted as serde_json::Value
@@ -680,18 +714,20 @@ fn to_json_instance(
             s.to_owned()
         } else {
             let s = String::from_utf8_lossy(header);
-            return fail!(format!("CSV header is not valid UTF-8: {s}"));
+            return fail_encoding_clierror!("CSV header is not valid UTF-8: {s}");
         };
 
         // convert csv value to string; no trimming reqd as it's done on the record level beforehand
         let Some(value) = record.get(i) else {
-            return fail!("CSV record is missing value for header '{key_string}' at index {i}");
+            return fail_clierror!(
+                "CSV record is missing value for header '{key_string}' at index {i}"
+            );
         };
         value_string = if let Ok(s) = from_utf8(value) {
             s.to_owned()
         } else {
             let s = String::from_utf8_lossy(value);
-            return fail!(format!("CSV value is not valid UTF-8: {s}"));
+            return fail_encoding_clierror!("CSV value is not valid UTF-8: {s}");
         };
 
         // if value_string is empty, then just put an empty JSON String
@@ -721,7 +757,7 @@ fn to_json_instance(
                     return_val = if let Some(s) = val.as_str() {
                         s.as_bytes()[0]
                     } else {
-                        return fail!("type info should be a JSON string");
+                        return fail_clierror!("type info should be a JSON string");
                     };
                 }
 
@@ -750,7 +786,7 @@ fn to_json_instance(
                         Value::Number(Number::from_f64(float).unwrap()),
                     );
                 } else {
-                    return fail_format!(
+                    return fail_clierror!(
                         "Can't cast into Float. key: {key_string}, value: {value_string}, json \
                          type: number"
                     );
@@ -761,7 +797,7 @@ fn to_json_instance(
                 if let Ok(int) = value_string.parse::<i64>() {
                     json_object_map.insert(key_string, Value::Number(Number::from(int)));
                 } else {
-                    return fail_format!(
+                    return fail_clierror!(
                         "Can't cast into Integer. key: {key_string}, value: {value_string}, json \
                          type: integer"
                     );
@@ -772,7 +808,7 @@ fn to_json_instance(
                 if let Ok(boolean) = value_string.parse::<bool>() {
                     json_object_map.insert(key_string, Value::Bool(boolean));
                 } else {
-                    return fail_format!(
+                    return fail_clierror!(
                         "Can't cast into Boolean. key: {key_string}, value: {value_string}, json \
                          type: boolean"
                     );
@@ -893,7 +929,7 @@ mod tests_for_csv_to_json_conversion {
             &schema_json(),
         );
         assert!(&result.is_err());
-        let error = result.err().unwrap();
+        let error = result.err().unwrap().to_string();
         assert_eq!(
             "Can't cast into Integer. key: C, value: 3.0e8, json type: integer",
             error
