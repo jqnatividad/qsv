@@ -1,6 +1,6 @@
 static USAGE: &str = r#"
 applydp is a slimmed-down version of apply specifically created for Datapusher+.
-It "applies" a series of transformation functions to a given CSV column. This can be used to
+It "applies" a series of transformation functions to given CSV column/s. This can be used to
 perform typical data-wrangling tasks and/or to harmonize some values, etc.
 
 It has four subcommands:
@@ -9,7 +9,7 @@ It has four subcommands:
  * datefmt - Formats a recognized date column to a specified format using <--formatstr>.
  * dynfmt - Dynamically constructs a new column from other columns using the <--formatstr> template.
 
-OPERATIONS
+OPERATIONS (multi-column capable)
 Multiple operations can be applied, with the comma-delimited operation series
 applied in order:
 
@@ -60,6 +60,10 @@ save it to a new column named uppercase_clean_surname.
 
   $ qsv applydp operations trim,upper surname -c uppercase_clean_surname file.csv
 
+Trim, squeeze, then transform to uppercase in place ALL fields that end with "_name" 
+  
+    $ qsv applydp operations trim,squeeze,upper \_name$\ file.csv
+
 Trim, then transform to uppercase the firstname and surname fields and
 rename the columns ufirstname and usurname.
 
@@ -78,7 +82,7 @@ You can also use this subcommand command to make a copy of a column:
 
   $ qsv applydp operations copy col_to_copy -c col_copy file.csv
 
-EMPTYREPLACE
+EMPTYREPLACE (multi-column capable)
 Replace empty cells with <--replacement> string.
 Non-empty cells are not modified. See the `fill` command for more complex empty field operations.
 
@@ -91,7 +95,12 @@ Replace empty cells in file.csv Measurement column with 'Unknown Measurement'.
 
 $ qsv applydp emptyreplace --replacement 'Unknown Measurement' file.csv
 
-DATEFMT
+Replace all empty cells in file.csv for columns that start with 
+'observation' case insensitive with 'None'.
+
+$ qsv apply emptyreplace --replacement None '/(?i)^observation/' file.csv
+
+DATEFMT (multi-column capable)
 Formats a recognized date column to a specified format using <--formatstr>. 
 See https://github.com/jqnatividad/belt/tree/main/dateparser#accepted-date-formats for
 recognized date formats.
@@ -109,6 +118,11 @@ Format dates in Open Date column to ISO 8601/RFC 3339 format:
 Format multiple date columns in file.csv to ISO 8601/RFC 3339 format:
 
   $ qsv applydp datefmt 'Open Date,Modified Date,Closed Date' file.csv
+
+Format all columns that end with "_date" case-insensitive in file.csv to
+ISO 8601/RFC 3339 format:
+
+  $ qsv apply datefmt '\(?i)_date$\' file.csv
 
 Format dates in OpenDate column using '%Y-%m-%d' format:
 
@@ -154,28 +168,30 @@ qsv applydp dynfmt --formatstr=<string> [options] --new-column=<name> [<input>]
 qsv applydp --help
 
 apply arguments:
-The <column> argument can be a list of columns for the operations, emptyreplace &
-datefmt subcommands. See 'qsv select --help' for the format details.
+    <column>                    The column/s to apply the transformation to.
+                                Note that the <column> argument supports multiple columns
+                                for the operations, emptyreplace & datefmt subcommands.
+                                See 'qsv select --help' for the format details.
 
     OPERATIONS subcommand:
-        <operations>                The operation/s to apply.
-        <column>                    The column/s to apply the operations to.
+        <operations>            The operation/s to apply.
+        <column>                The column/s to apply the operations to.
 
     EMPTYREPLACE subcommand:
-        --replacement=<string>      The string to to use to replace empty values.
-        <column>                    The column/s to check for emptiness.
+        --replacement=<string>  The string to to use to replace empty values.
+        <column>                The column/s to check for emptiness.
 
     DATEFMT subcommand:
-        --formatstr=<string>        The date format to use for the datefmt operation.
-                                    See DATEFMT section in the --formatstr option below
-                                    for more details.
-        <column>                    The date column/s to apply the datefmt operation to.
+        --formatstr=<string>    The date format to use for the datefmt operation.
+                                See DATEFMT section in the --formatstr option below
+                                for more details.
+        <column>                The date column/s to apply the datefmt operation to.
 
     DYNFMT subcommand:
-        --formatstr=<string>        The template to use for the dynfmt operation.
-                                    See DYNFMT example above for more details.
-        --new-column=<name>         Put the generated values in a new column.
-        
+        --formatstr=<string>    The template to use for the dynfmt operation.
+                                See DYNFMT example above for more details.
+        --new-column=<name>     Put the generated values in a new column.
+
     <input>                     The input file to read from. If not specified, reads from stdin.
 
 applydp options:
