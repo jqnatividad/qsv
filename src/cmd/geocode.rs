@@ -1,51 +1,50 @@
 static USAGE: &str = r#"
 Geocodes a location against an updatable local copy of the Geonames cities index.
 
-By default, it uses the Geonames cities15000.zip file, which contains cities with
-populations > 15,000 (about ~26k cities).
+By default, it uses the Geonames Gazeteer cities15000.zip file. It contains cities with
+populations > 15,000 (about ~26k cities). 
+See https://download.geonames.org/export/dump/ for more information.
 
 It has three major subcommands:
- * suggest - given a City name, returning the closest location coordinate by default.
+ * suggest - given a City name, return the closest location coordinate by default.
  * reverse - given a location coordinate, return the closest City by default.
  * index-* - operations to update the Geonames cities index used by the geocode command.
              (index-check, index-update, index-load & index-reset)
  
 SUGGEST
-Geocodes to the nearest city center point given a location column
-[i.e. a column which contains a latitude, longitude WGS84 coordinate] against
-a local copy of the Geonames city index.
+Suggest a Geonames city based on a partial city name. It returns the closest Geonames
+city record based on the Jaro-Winkler distance between the partial city name and the
+Geonames city name.
 
-The geocoded information is formatted based on --formatstr, returning
-it in '%location' format if not specified.
+The geocoded information is formatted based on --formatstr, returning it in 
+'%location' format if not specified.
 
 Use the --new-column option if you want to keep the location column:
 
 Examples:
-Geocode file.csv city column and set the geocoded value to a
-new column named lat_long.
+Geocode file.csv city column and set the geocoded value to a new column named lat_long.
 
 $ qsv geocode suggest city --new-column lat_long file.csv
 
-Geocode file.csv city column with --formatstr=%state and
-set the geocoded value a new column named state.
+Geocode file.csv city column with --formatstr=%state and set the 
+geocoded value a new column named state.
 
 $ qsv geocode suggest city --formatstr %state --new-column state file.csv
 
 REVERSE
-Reverse geocode a WG84 coordinate to the nearest city center point.
+Reverse geocode a WG84 coordinate to the nearest Geonames city record.
 It accepts "lat, long" or "(lat, long)" format.
 
-The geocoded information is formatted based on --formatstr, returning
-it in '%city-admin1' format if not specified.
+The geocoded information is formatted based on --formatstr, returning it in
+'%city-admin1' format if not specified.
 
 Examples:
-Reverse geocode file.csv LatLong column and set the geocoded value to a
-new column named City.
+Reverse geocode file.csv LatLong column. Set the geocoded value to a new column named City.
 
-$ qsv geocode reverse LatLong --new-column City file.csv
+$ qsv geocode reverse LatLong -c City file.csv
 
-Reverse geocode file.csv LatLong column and set the geocoded value to a
-new column named CityState, output to a file named file_with_citystate.csv.
+Reverse geocode file.csv LatLong column and set the geocoded value to a new column
+named CityState, output to a file named file_with_citystate.csv.
 
 $ qsv geocode reverse LatLong -c CityState file.csv -o file_with_citystate.csv
 
