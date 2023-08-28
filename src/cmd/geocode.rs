@@ -1,15 +1,15 @@
 static USAGE: &str = r#"
-Geocodes a location against an updatable local copy of the Geonames cities database.
+Geocodes a location against an updatable local copy of the Geonames cities index.
 
 It has three subcommands:
  * suggest - given a City name, return the closest location coordinate.
  * reverse - given a location coordinate, return the closest City.
- * index - operations to update the Geonames cities database used by the geocode command.
+ * index - operations to update the Geonames cities index used by the geocode command.
  
 SUGGEST
 Geocodes to the nearest city center point given a location column
 [i.e. a column which contains a latitude, longitude WGS84 coordinate] against
-an embedded copy of the Geonames city database.
+an embedded copy of the Geonames city index.
 
 The geocoded information is formatted based on --formatstr, returning
 it in 'city-state' format if not specified.
@@ -36,45 +36,43 @@ new column named City.
 
 $ qsv geocode reverse LatLong --new-column City file.csv
 
-INDEX
-Updates the Geonames cities database used by the geocode command.
+INDEX-<operation>
+Updates the Geonames cities index used by the geocode command.
 
-It has three operations:
- * check - checks if the Geonames index is up-to-date.
- * update - updates the Geonames index with the latest changes from the Geonames website.
- * load - load a Geonames cities index from a file.
+It has four operations:
+ * check - checks if the local Geonames index is up-to-date.
+ * update - updates the local Geonames index with the latest changes from the Geonames website.
+ * reset - resets the local Geonames index to the default Geonames cities index, downloading
+           it from the qsv GitHub repo for that release.
+ * load - load a Geonames cities index from a file, making it the default index from that point
+          forward.
 
 Examples:
-Update the Geonames cities database with the latest changes.
+Update the Geonames cities index with the latest changes.
 
-$ qsv geocode index update
+$ qsv geocode index-update
 
-Load a Geonames cities database from a file.
+Load a Geonames cities index from a file.
 
-$ qsv geocode index load my_geonames_index.bincode
+$ qsv geocode index-load my_geonames_index.bincode
 
 For more extensive examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_geocode.rs.
 
 Usage:
 qsv geocode suggest [--formatstr=<string>] [options] <column> [<input>]
 qsv geocode reverse [--formatstr=<string>] [options] <column> [<input>]
-qsv geocode index <operation> [<op_input>]
+qsv geocode index-load <index-file>
+qsv geocode index-check
+qsv geocode index-update
+qsv geocode index-reset
 qsv geocode --help
 
 geocode arguments:
-The <column> argument can be a list of columns for the operations, emptyreplace &
-datefmt subcommands. See 'qsv select --help' for the format details.
         
     <input>                     The input file to read from. If not specified, reads from stdin.
-    <column>                    The column to geocode. Must be a column containing a location
-
-                                INDEX ARGUMENTS ONLY:
-    <operation>                 The operation to perform. The available operations are:
-                                    - 'update' - updates the Geonames cities database with the latest changes
-                                               from the Geonames website.
-                                    - 'load' - load a Geonames cities database from a file.
-                                    - 'save' - save the Geonames cities database to a file.
-    <op_input>                  The input file to read from. Only used by the 'load' & 'save' operations.
+    <column>                    The column to geocode.
+    <index-file>                The alternate geonames index file to use. It must be a .bincode file.
+                                Only used by the 'load' operations.
 
 geocode options:
     -c, --new-column <name>     Put the transformed values in a new column instead.
@@ -95,12 +93,12 @@ geocode options:
                                 When not set, the number of jobs is set to the number of CPUs detected.
     -b, --batch <size>          The number of rows per batch to load into memory, before running in parallel.
                                 [default: 50000]
-    --timeout <seconds>         Timeout for downloading Geonames cities database.
+    --timeout <seconds>         Timeout for downloading Geonames cities index.
                                 [default: 60]
-    --languages <lang>          The languages to use for the Geonames cities database.
+    --languages <lang>          The languages to use for the Geonames cities index.
                                 The languages are specified as a comma-separated list of ISO 639-1 codes.
                                 [default: en]
-    --cache-dir <dir>           The directory to use for caching the Geonames cities database.
+    --cache-dir <dir>           The directory to use for caching the Geonames cities index.
                                 If the directory does not exist, qsv will attempt to create it.
                                 If the QSV_CACHE_DIR envvar is set, it will be used instead.
                                 [default: qsv-cache]
@@ -108,8 +106,6 @@ geocode options:
 Common options:
     -h, --help                  Display this message
     -o, --output <file>         Write output to <file> instead of stdout.
-    -n, --no-headers            When set, the first row will not be interpreted
-                                as headers.
     -d, --delimiter <arg>       The field delimiter for reading CSV data.
                                 Must be a single character. (default: ,)
     -p, --progressbar           Show progress bars. Not valid for stdin.
@@ -118,7 +114,6 @@ Common options:
 use std::{
     fs,
     path::{Path, PathBuf},
-    str::FromStr,
 };
 
 use cached::proc_macro::cached;
@@ -132,7 +127,6 @@ use rayon::{
 };
 use regex::Regex;
 use serde::Deserialize;
-use strum_macros::EnumString;
 
 use crate::{
     clitypes::CliError,
@@ -142,25 +136,17 @@ use crate::{
     util, CliResult,
 };
 
-#[derive(EnumString)]
-#[strum(ascii_case_insensitive)]
-#[allow(non_camel_case_types)]
-enum Operation {
-    Check,
-    Update,
-    Load,
-    None,
-}
-
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 struct Args {
-    arg_column:       SelectColumns,
+    arg_column:       String,
     cmd_suggest:      bool,
-    arg_operation:    String,
     cmd_reverse:      bool,
-    cmd_index:        bool,
+    cmd_index_check:  bool,
+    cmd_index_update: bool,
+    cmd_index_load:   bool,
+    cmd_index_reset:  bool,
     arg_input:        Option<String>,
-    arg_op_input:     Option<String>,
+    arg_index_file:   Option<String>,
     flag_rename:      Option<String>,
     flag_formatstr:   String,
     flag_batch:       u32,
@@ -170,7 +156,6 @@ struct Args {
     flag_jobs:        Option<usize>,
     flag_new_column:  Option<String>,
     flag_output:      Option<String>,
-    flag_no_headers:  bool,
     flag_delimiter:   Option<Delimiter>,
     flag_progressbar: bool,
 }
@@ -191,9 +176,13 @@ static DEFAULT_ADMIN1_CODES_URL: &str =
 enum GeocodeSubCmd {
     Suggest,
     Reverse,
-    Index,
+    IndexCheck,
+    IndexUpdate,
+    IndexLoad,
+    IndexReset,
 }
 
+// we need this as geosuggest uses anyhow::Error
 impl From<anyhow::Error> for CliError {
     fn from(err: anyhow::Error) -> CliError {
         CliError::Other(format!("Error: {err}"))
@@ -216,30 +205,35 @@ fn replace_column_value(
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
+    // we need to use tokio runtime as geosuggest uses async
     let rt = tokio::runtime::Runtime::new().unwrap();
     rt.block_on(geocode_main(args))?;
 
     Ok(())
 }
 
+// main async geocode function that does the actual work
 async fn geocode_main(args: Args) -> CliResult<()> {
-    if args.arg_column.is_empty() {
-        return fail_incorrectusage_clierror!("No column specified.");
-    }
+    eprintln!("args: {args:?}");
 
-    let rconfig = Config::new(&args.arg_input)
-        .delimiter(args.flag_delimiter)
-        .no_headers(args.flag_no_headers)
-        .select(args.arg_column);
+    let mut index_cmd = true;
 
-    let geocode_cmd = if args.cmd_index {
-        GeocodeSubCmd::Index
-    } else if args.cmd_suggest {
+    let geocode_cmd = if args.cmd_suggest {
+        index_cmd = false;
         GeocodeSubCmd::Suggest
     } else if args.cmd_reverse {
+        index_cmd = false;
         GeocodeSubCmd::Reverse
+    } else if args.cmd_index_check {
+        GeocodeSubCmd::IndexCheck
+    } else if args.cmd_index_update {
+        GeocodeSubCmd::IndexUpdate
+    } else if args.cmd_index_load {
+        GeocodeSubCmd::IndexLoad
+    } else if args.cmd_index_reset {
+        GeocodeSubCmd::IndexReset
     } else {
-        return fail!("Unknown geocode subcommand.");
+        return fail_incorrectusage_clierror!("Unknown geocode subcommand.");
     };
 
     // setup cache directory
@@ -259,20 +253,20 @@ async fn geocode_main(args: Args) -> CliResult<()> {
 
     let geocode_index_filename = std::env::var("QSV_GEOCODE_INDEX_FILENAME")
         .unwrap_or_else(|_| DEFAULT_GEOCODE_INDEX_FILENAME.to_string());
-    let geocode_index_file = args.arg_op_input.unwrap_or_else(|| {
+    let geocode_index_file = args.arg_index_file.clone().unwrap_or_else(|| {
         let mut path = PathBuf::from(geocode_cache_dir);
         path.push(geocode_index_filename);
         path.to_string_lossy().to_string()
     });
 
     // setup languages
-    let languages_vec = args
+    let languages_string_vec = args
         .flag_languages
         .to_ascii_lowercase()
         .split(',')
         .map(|s| s.trim().to_string())
         .collect::<Vec<String>>();
-    let languages_vec: Vec<&str> = languages_vec
+    let languages_vec: Vec<&str> = languages_string_vec
         .iter()
         .map(std::string::String::as_str)
         .collect();
@@ -293,45 +287,90 @@ async fn geocode_main(args: Args) -> CliResult<()> {
         admin1_codes_url: Some(DEFAULT_ADMIN1_CODES_URL),
         filter_languages: languages_vec.clone(),
     })?;
-    // let updater = IndexUpdater::new(IndexUpdaterSettings {
-    //     filter_languages: vec!["en"],
-    //     ..Default::default()
-    // })?;
 
-    let engine = if geocode_cmd == GeocodeSubCmd::Index {
-        let Ok(op) = Operation::from_str(&args.arg_operation) else {
-            return fail_incorrectusage_clierror!("Invalid operation: {}", args.arg_operation);
-        };
-
-        match op {
-            Operation::Check => {
+    if index_cmd {
+        match geocode_cmd {
+            GeocodeSubCmd::IndexCheck => {
                 // load geocode engine
+                winfo!("Checking main Geonames website for updates...");
                 let engine =
                     load_engine(geocode_index_file.clone().into(), args.flag_progressbar).await?;
 
                 if updater.has_updates(&engine).await? {
-                    woutinfo!("Updates available.");
+                    winfo!("Updates available. Use `qsv geocode index-update` to apply.");
                 } else {
-                    woutinfo!("No updates available.");
+                    winfo!("Geonames index up-to-date.");
                 }
-                return Ok(());
             },
-            Operation::Update => {
+            GeocodeSubCmd::IndexUpdate => {
+                winfo!("Updating Geonames index. This will take a while...");
                 let engine = updater.build().await?;
-                // engine_loaded   = true;
                 engine.dump_to(geocode_index_file.clone(), EngineDumpFormat::Bincode)?;
-                woutinfo!("Updates applied: {geocode_index_file}");
-                return Ok(());
+                winfo!("Updates applied: {geocode_index_file}");
             },
-            Operation::Load => {
-                // load geocode engine
-                load_engine(geocode_index_file.clone().into(), args.flag_progressbar).await?
+            GeocodeSubCmd::IndexLoad => {
+                // load alternate geocode index file
+                if let Some(index_file) = args.arg_index_file {
+                    winfo!("Validating alternate Geonames index: {index_file}...");
+                    // check if index_file ends with a .bincode extension
+                    if !index_file.ends_with(".bincode") {
+                        return fail_incorrectusage_clierror!(
+                            "Alternate Geonames index file {index_file} does not have a .bincode \
+                             extension."
+                        );
+                    }
+                    // check if index_file exist
+                    if !Path::new(&index_file).exists() {
+                        return fail_incorrectusage_clierror!(
+                            "Alternate Geonames index file {index_file} does not exist."
+                        );
+                    }
+
+                    let engine = load_engine(index_file.clone().into(), true).await?;
+                    // we successfully loaded the alternate geocode index file, so its valid
+                    // copy it to the default geocode index file
+                    engine.dump_to(geocode_index_file.clone(), EngineDumpFormat::Bincode)?;
+                    winfo!(
+                        "Valid Geonames index file {index_file} copied to {geocode_index_file}. It \
+                         will be used from now on or until you reset it.",
+                    );
+                } else {
+                    return fail_incorrectusage_clierror!(
+                        "No alternate Geonames index file specified."
+                    );
+                }
             },
-            Operation::None => return fail_incorrectusage_clierror!("No operation specified."),
+            GeocodeSubCmd::IndexReset => {
+                // reset geocode index to the default geocode index by deleting the current one
+                // the load_engine() function will then download the default geocode index
+                // from the qsv GitHub repo the next time it's called
+                winfo!("Resetting Geonames index to default...");
+                if Path::new(&geocode_index_file).exists() {
+                    fs::remove_file(&geocode_index_file)?;
+                }
+            },
+            _ => unreachable!("index_cmd is true, so this is unreachable."),
         }
-    } else {
-        load_engine(geocode_index_file.clone().into(), args.flag_progressbar).await?
-    };
+        return Ok(());
+    }
+
+    // we're not doing an index subcommand, so we're doing a suggest or reverse
+    let engine = load_engine(geocode_index_file.clone().into(), args.flag_progressbar).await?;
+
+    let rconfig = Config::new(&args.arg_input)
+        .delimiter(args.flag_delimiter)
+        .select(SelectColumns::parse("").unwrap()); // select all columns
+
+    if rconfig.is_stdin() {
+        // is_stdin is being used, check if args.arg_column is a file that exists
+        // if it does, then we need to trap its as an error as docopt gets confused and
+        // will set arg_column to the input file when reading from stdin.
+        if let Ok(path) = Path::new(&args.arg_column).canonicalize() {
+            if path.exists() {
+                return fail_incorrectusage_clierror!("No/incorrect column specified.");
+            }
+        }
+    }
 
     let mut rdr = rconfig.reader()?;
     let mut wtr = Config::new(&args.flag_output).writer()?;
@@ -354,12 +393,10 @@ async fn geocode_main(args: Args) -> CliResult<()> {
         }
     }
 
-    if !rconfig.no_headers {
-        if let Some(new_column) = &args.flag_new_column {
-            headers.push_field(new_column);
-        }
-        wtr.write_record(&headers)?;
+    if let Some(new_column) = &args.flag_new_column {
+        headers.push_field(new_column);
     }
+    wtr.write_record(&headers)?;
 
     // prep progress bar
     let show_progress =
@@ -445,9 +482,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
     } // end batch loop
 
     if show_progress {
-        // if args.cmd_geocode {
-        //     util::update_cache_info!(progress, SEARCH_CACHED);
-        // }
+        util::update_cache_info!(progress, SEARCH_CACHED);
         util::finish_progress(&progress);
     }
     Ok(wtr.flush()?)
@@ -465,16 +500,19 @@ async fn load_engine(geocode_index_file: PathBuf, show_progress: bool) -> CliRes
             );
         }
     } else {
+        let qsv_version = env!("CARGO_PKG_VERSION");
+
         // initial load, download index file from qsv releases
         if show_progress {
-            woutinfo!("No local index found. Downloading geocode index from qsv releases...");
+            woutinfo!(
+                "No local index found. Downloading geocode index from qsv {qsv_version} release..."
+            );
         }
         util::download_file(
             &format!(
-                "https://github.com/jqnatividad/qsv/releases/tag/{}/qsv-geocode-index.bincode",
-                env!("CARGO_PKG_VERSION")
+                "https://github.com/jqnatividad/qsv/releases/tag/{qsv_version}/qsv-geocode-index.bincode"
             ),
-            &geocode_index_file.to_string_lossy().to_string(),
+            &geocode_index_file.to_string_lossy(),
             show_progress,
             None,
             None,
