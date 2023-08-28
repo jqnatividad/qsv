@@ -1,10 +1,11 @@
 static USAGE: &str = r#"
 Geocodes a location against an updatable local copy of the Geonames cities index.
 
-It has three subcommands:
+It has three major subcommands:
  * suggest - given a City name, return the closest location coordinate.
  * reverse - given a location coordinate, return the closest City.
- * index - operations to update the Geonames cities index used by the geocode command.
+ * index-* - operations to update the Geonames cities index used by the geocode command.
+             (index-check, index-update, index-load & index-reset)
  
 SUGGEST
 Geocodes to the nearest city center point given a location column
@@ -40,12 +41,11 @@ INDEX-<operation>
 Updates the Geonames cities index used by the geocode command.
 
 It has four operations:
- * check - checks if the local Geonames index is up-to-date.
+ * check  - checks if the local Geonames index is up-to-date.
  * update - updates the local Geonames index with the latest changes from the Geonames website.
- * reset - resets the local Geonames index to the default Geonames cities index, downloading
-           it from the qsv GitHub repo for that release.
- * load - load a Geonames cities index from a file, making it the default index from that point
-          forward.
+ * reset  - resets the local Geonames index to the default Geonames cities index, downloading
+            it from the qsv GitHub repo for that release.
+ * load   - load a Geonames cities index from a file, making it the default index going forward.
 
 Examples:
 Update the Geonames cities index with the latest changes.
@@ -160,7 +160,9 @@ struct Args {
     flag_progressbar: bool,
 }
 
-static DEFAULT_GEOCODE_INDEX_FILENAME: &str = "qsv-geocode-index.bincode";
+static QSV_VERSION: &str = env!("CARGO_PKG_VERSION");
+static DEFAULT_GEOCODE_INDEX_FILENAME: &str =
+    concat!("qsv-", env!("CARGO_PKG_VERSION"), "-geocode-index.bincode");
 
 static DEFAULT_CITIES_DB_URL: &str = "https://download.geonames.org/export/dump/cities15000.zip";
 static DEFAULT_CITIES_DB_FILENAME: &str = "cities15000.txt";
@@ -214,7 +216,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
 // main async geocode function that does the actual work
 async fn geocode_main(args: Args) -> CliResult<()> {
-    eprintln!("args: {args:?}");
+    // eprintln!("args: {args:?}");
 
     let mut index_cmd = true;
 
@@ -293,6 +295,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
             GeocodeSubCmd::IndexCheck => {
                 // load geocode engine
                 winfo!("Checking main Geonames website for updates...");
+                check_index_file(&geocode_index_file)?;
                 let engine =
                     load_engine(geocode_index_file.clone().into(), args.flag_progressbar).await?;
 
@@ -303,7 +306,11 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                 }
             },
             GeocodeSubCmd::IndexUpdate => {
-                winfo!("Updating Geonames index. This will take a while...");
+                check_index_file(&geocode_index_file)?;
+                winfo!(
+                    "Updating Geonames index. This will take a while as we need to download \
+                     ~200mb of data and rebuild the index..."
+                );
                 let engine = updater.build().await?;
                 engine.dump_to(geocode_index_file.clone(), EngineDumpFormat::Bincode)?;
                 winfo!("Updates applied: {geocode_index_file}");
@@ -312,19 +319,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                 // load alternate geocode index file
                 if let Some(index_file) = args.arg_index_file {
                     winfo!("Validating alternate Geonames index: {index_file}...");
-                    // check if index_file ends with a .bincode extension
-                    if !index_file.ends_with(".bincode") {
-                        return fail_incorrectusage_clierror!(
-                            "Alternate Geonames index file {index_file} does not have a .bincode \
-                             extension."
-                        );
-                    }
-                    // check if index_file exist
-                    if !Path::new(&index_file).exists() {
-                        return fail_incorrectusage_clierror!(
-                            "Alternate Geonames index file {index_file} does not exist."
-                        );
-                    }
+                    check_index_file(&index_file)?;
 
                     let engine = load_engine(index_file.clone().into(), true).await?;
                     // we successfully loaded the alternate geocode index file, so its valid
@@ -348,6 +343,10 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                 if Path::new(&geocode_index_file).exists() {
                     fs::remove_file(&geocode_index_file)?;
                 }
+                // loading the engine will download the default geocode index from the qsv GitHub
+                // repo
+                let _ = load_engine(geocode_index_file.clone().into(), true).await?;
+                winfo!("Default Geonames index file {geocode_index_file} reset.");
             },
             _ => unreachable!("index_cmd is true, so this is unreachable."),
         }
@@ -488,6 +487,23 @@ async fn geocode_main(args: Args) -> CliResult<()> {
     Ok(wtr.flush()?)
 }
 
+// check if index_file exists and ends with a .bincode extension
+fn check_index_file(index_file: &String) -> CliResult<()> {
+    if !index_file.ends_with(".bincode") {
+        return fail_incorrectusage_clierror!(
+            "Alternate Geonames index file {index_file} does not have a .bincode extension."
+        );
+    }
+    // check if index_file exist
+    if !Path::new(index_file).exists() {
+        return fail_incorrectusage_clierror!(
+            "Alternate Geonames index file {index_file} does not exist."
+        );
+    }
+    winfo!("Valid: {index_file}");
+    Ok(())
+}
+
 async fn load_engine(geocode_index_file: PathBuf, show_progress: bool) -> CliResult<Engine> {
     let index_file = std::path::Path::new(&geocode_index_file);
 
@@ -500,17 +516,15 @@ async fn load_engine(geocode_index_file: PathBuf, show_progress: bool) -> CliRes
             );
         }
     } else {
-        let qsv_version = env!("CARGO_PKG_VERSION");
-
         // initial load, download index file from qsv releases
         if show_progress {
             woutinfo!(
-                "No local index found. Downloading geocode index from qsv {qsv_version} release..."
+                "No local index found. Downloading geocode index from qsv {QSV_VERSION} release..."
             );
         }
         util::download_file(
             &format!(
-                "https://github.com/jqnatividad/qsv/releases/tag/{qsv_version}/qsv-geocode-index.bincode"
+                "https://github.com/jqnatividad/qsv/releases/download/{QSV_VERSION}/qsv-{QSV_VERSION}-geocode-index.bincode"
             ),
             &geocode_index_file.to_string_lossy(),
             show_progress,
