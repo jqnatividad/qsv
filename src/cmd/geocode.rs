@@ -1,35 +1,42 @@
 static USAGE: &str = r#"
 Geocodes a location against an updatable local copy of the Geonames cities index.
 
+By default, it uses the Geonames cities15000.zip file, which contains cities with
+populations > 15,000 (about ~26k cities).
+
 It has three major subcommands:
- * suggest - given a City name, return the closest location coordinate.
- * reverse - given a location coordinate, return the closest City.
+ * suggest - given a City name, returning the closest location coordinate by default.
+ * reverse - given a location coordinate, return the closest City by default.
  * index-* - operations to update the Geonames cities index used by the geocode command.
              (index-check, index-update, index-load & index-reset)
  
 SUGGEST
 Geocodes to the nearest city center point given a location column
 [i.e. a column which contains a latitude, longitude WGS84 coordinate] against
-an embedded copy of the Geonames city index.
+a local copy of the Geonames city index.
 
 The geocoded information is formatted based on --formatstr, returning
-it in 'city-state' format if not specified.
+it in '%location' format if not specified.
 
 Use the --new-column option if you want to keep the location column:
 
 Examples:
-Geocode file.csv Location column and set the geocoded value to a
-new column named City.
+Geocode file.csv city column and set the geocoded value to a
+new column named lat_long.
 
-$ qsv geocode suggest Location --new-column City file.csv
+$ qsv geocode suggest city --new-column lat_long file.csv
 
-Geocode file.csv Location column with --formatstr=city-state and
-set the geocoded value a new column named City.
+Geocode file.csv city column with --formatstr=%state and
+set the geocoded value a new column named state.
 
-$ qsv geocode suggest Location --formatstr city-state --new-column City file.csv
+$ qsv geocode suggest city --formatstr %state --new-column state file.csv
 
 REVERSE
 Reverse geocode a WG84 coordinate to the nearest city center point.
+It accepts "lat, long" or "(lat, long)" format.
+
+The geocoded information is formatted based on --formatstr, returning
+it in '%city-admin1' format if not specified.
 
 Examples:
 Reverse geocode file.csv LatLong column and set the geocoded value to a
@@ -37,12 +44,23 @@ new column named City.
 
 $ qsv geocode reverse LatLong --new-column City file.csv
 
+Reverse geocode file.csv LatLong column and set the geocoded value to a
+new column named CityState, output to a file named file_with_citystate.csv.
+
+$ qsv geocode reverse LatLong -c CityState file.csv -o file_with_citystate.csv
+
+The same as above, but get the timezone instead of the city and state.
+
+$ qsv geocode reverse LatLong --formatstr %timezone -c tz file.csv -o file_with_tz.csv
+
 INDEX-<operation>
 Updates the Geonames cities index used by the geocode command.
 
 It has four operations:
- * check  - checks if the local Geonames index is up-to-date.
+ * check  - checks if the local Geonames index is up-to-date compared to the Geonames website.
  * update - updates the local Geonames index with the latest changes from the Geonames website.
+            use this command judiciously as it downloads about ~200mb of data from Geonames
+            and rebuilds the index from scratch using the --languages option.
  * reset  - resets the local Geonames index to the default Geonames cities index, downloading
             it from the qsv GitHub repo for that release.
  * load   - load a Geonames cities index from a file, making it the default index going forward.
@@ -79,10 +97,11 @@ geocode options:
     -r, --rename <name>         New name for the transformed column.
     --min-score <score>         The minimum score to use for suggest subcommand.
                                 [default: 0.8]
-    -k, --k_weight <weight>     The weight to multiply population by. Used by reverse subcommand.
+    -k, --k_weight <weight>     Use population-weighted distance for reverse subcommand.
+                                (i.e. nearest.distance - k * city.population)
                                 Larger values will favor more populated cities.
                                 If not set (default), the population is not used and the
-                                closest city is returned.
+                                nearest city is returned.
     -f, --formatstr=<string>    This option is used by several subcommands:
 
                                 The place format to use. The available formats are:
