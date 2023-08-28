@@ -77,18 +77,21 @@ geocode arguments:
 geocode options:
     -c, --new-column <name>     Put the transformed values in a new column instead.
     -r, --rename <name>         New name for the transformed column.
+    --min-score <score>         The minimum score to use for suggest.
+                                [default: 0.8]
+    -k, --k_weight <score>      The weight to multiply population by to use for reverse.
+                                Larger values will favor more populated cities.
+                                If not set (default), the population is not used and the
+                                closest city is returned.
     -f, --formatstr=<string>    This option is used by several subcommands:
 
                                 The place format to use. The available formats are:
-                                  - 'city-state' (default) - e.g. Brooklyn, New York
-                                  - 'city-country' - Brooklyn, US
-                                  - 'city-state-country' | 'city-admin1-country' - Brooklyn, New York US
-                                  - 'city' - Brooklyn
-                                  - 'county' | 'admin2' - Kings County
-                                  - 'state' | 'admin1' - New York
-                                  - 'county-country' | 'admin2-country' - Kings County, US
-                                  - 'county-state-country' | 'admin2-admin1-country' - Kings County, New York US
-                                  - 'country' - US
+                                  - '%city-state' (default) - e.g. Brooklyn, New York
+                                  - '%city-country' - Brooklyn, US
+                                  - '%city-state-country' | '%city-admin1-country' - Brooklyn, New York US
+                                  - '%city' - Brooklyn
+                                  - '%state' | '%admin1' - New York
+                                  - '%country' - US
     -j, --jobs <arg>            The number of jobs to run in parallel.
                                 When not set, the number of jobs is set to the number of CPUs detected.
     -b, --batch <size>          The number of rows per batch to load into memory, before running in parallel.
@@ -148,6 +151,8 @@ struct Args {
     arg_input:        Option<String>,
     arg_index_file:   Option<String>,
     flag_rename:      Option<String>,
+    flag_min_score:   f32,
+    flag_k_weight:    Option<f32>,
     flag_formatstr:   String,
     flag_batch:       u32,
     flag_timeout:     u16,
@@ -452,8 +457,14 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                 let mut record = record_item.clone();
                 let mut cell = record[column_index].to_owned();
                 if !cell.is_empty() {
-                    let search_result =
-                        search_cached(&engine, geocode_cmd, &cell, &args.flag_formatstr);
+                    let search_result = search_cached(
+                        &engine,
+                        geocode_cmd,
+                        &cell,
+                        &args.flag_formatstr,
+                        args.flag_min_score,
+                        args.flag_k_weight,
+                    );
                     if let Some(geocoded_result) = search_result {
                         cell = geocoded_result;
                     }
@@ -550,6 +561,8 @@ fn search_cached(
     mode: GeocodeSubCmd,
     cell: &str,
     formatstr: &str,
+    min_score: f32,
+    k: Option<f32>,
 ) -> Option<String> {
     static EMPTY_STRING: String = String::new();
 
@@ -562,9 +575,10 @@ fn search_cached(
     let mut population = 0_usize;
     let mut timezone = String::new();
     let mut cityrecord_dbg = String::new();
+    let mut format_to_use = formatstr.to_string();
 
     if mode == GeocodeSubCmd::Suggest {
-        let search_result = engine.suggest(cell, 1, None);
+        let search_result = engine.suggest(cell, 1, Some(min_score));
         let Some(cityrecord) = search_result.into_iter().next() else {
             return None;
         };
@@ -576,19 +590,26 @@ fn search_cached(
             return None;
         };
 
-        id = cityrecord.id;
-        city_name = cityrecord.name.clone();
-        latitude = cityrecord.latitude;
-        longitude = cityrecord.longitude;
-        country = cityrecord.country.clone().unwrap().name;
-        admin1_name_value = admin1_name_value_work.clone();
-        population = cityrecord.population;
-        timezone = cityrecord.timezone.clone();
-        cityrecord_dbg = if formatstr == "cityrecord" {
-            format!("{cityrecord:?}")
+        if formatstr == "%+" {
+            // default for suggest is city-state
+            city_name = cityrecord.name.clone();
+            admin1_name_value = admin1_name_value_work.clone();
+            format_to_use = "%city-state".to_string();
         } else {
-            EMPTY_STRING.clone()
-        };
+            id = cityrecord.id;
+            city_name = cityrecord.name.clone();
+            latitude = cityrecord.latitude;
+            longitude = cityrecord.longitude;
+            country = cityrecord.country.clone().unwrap().name;
+            admin1_name_value = admin1_name_value_work.clone();
+            population = cityrecord.population;
+            timezone = cityrecord.timezone.clone();
+            cityrecord_dbg = if formatstr == "cityrecord" {
+                format!("{cityrecord:?}")
+            } else {
+                EMPTY_STRING.clone()
+            };
+        }
     } else if mode == GeocodeSubCmd::Reverse {
         // regex for Location field. Accepts (lat, long) & lat, long
         let locregex: &'static Regex = regex_oncelock!(
@@ -600,7 +621,7 @@ fn search_cached(
             let lat = fast_float::parse(&loccaps[1]).unwrap_or_default();
             let long = fast_float::parse(&loccaps[2]).unwrap_or_default();
             if (-90.0..=90.0).contains(&lat) && (-180.0..=180.0).contains(&long) {
-                let search_result = engine.reverse((lat, long), 1, None);
+                let search_result = engine.reverse((lat, long), 1, k);
                 let Some(cityrecord) = (match search_result {
                     Some(search_result) => search_result.into_iter().next().map(|ri| ri.city),
                     None => return None,
@@ -617,19 +638,26 @@ fn search_cached(
                     return None;
                 };
 
-                id = cityrecord.id;
-                city_name = cityrecord.name.clone();
-                latitude = cityrecord.latitude;
-                longitude = cityrecord.longitude;
-                country = cityrecord.country.clone().unwrap().name;
-                admin1_name_value = admin1_name_value_work.clone();
-                population = cityrecord.population;
-                timezone = cityrecord.timezone.clone();
-                cityrecord_dbg = if formatstr == "cityrecord" {
-                    format!("{cityrecord:?}")
+                if formatstr == "%+" {
+                    // default for suggest is city-state
+                    latitude = cityrecord.latitude;
+                    longitude = cityrecord.longitude;
+                    format_to_use = "%location".to_string();
                 } else {
-                    EMPTY_STRING.clone()
-                };
+                    id = cityrecord.id;
+                    city_name = cityrecord.name.clone();
+                    latitude = cityrecord.latitude;
+                    longitude = cityrecord.longitude;
+                    country = cityrecord.country.clone().unwrap().name;
+                    admin1_name_value = admin1_name_value_work.clone();
+                    population = cityrecord.population;
+                    timezone = cityrecord.timezone.clone();
+                    cityrecord_dbg = if formatstr == "cityrecord" {
+                        format!("{cityrecord:?}")
+                    } else {
+                        EMPTY_STRING.clone()
+                    };
+                }
             }
         } else {
             return None;
@@ -641,18 +669,19 @@ fn search_cached(
     #[allow(clippy::match_same_arms)]
     // match arms are evaluated in order,
     // so we're optimizing for the most common cases first
-    let result = match formatstr {
-        "%+" | "city-state" => format!("{city_name}, {admin1_name_value}"),
-        "lat-long" => format!("{latitude}, {longitude}"),
-        "location" => format!("({latitude}, {longitude})"),
-        "city-country" => format!("{city_name}, {country}"),
-        "city" => city_name,
-        "state" => admin1_name_value,
-        "country" => country,
-        "id" => format!("{id}"),
-        "population" => format!("{population}"),
-        "timezone" => timezone,
-        "cityrecord" => cityrecord_dbg,
+    let result = match format_to_use.as_str() {
+        "%+" | "%city-state" => format!("{city_name}, {admin1_name_value}"),
+        "%lat-long" => format!("{latitude}, {longitude}"),
+        "%location" => format!("({latitude}, {longitude})"),
+        "%city-country" => format!("{city_name}, {country}"),
+        "%city-state-country" => format!("{city_name}, {admin1_name_value} {country}"),
+        "%city" => city_name,
+        "%state" | "%admin1" => admin1_name_value,
+        "%country" => country,
+        "%id" => format!("{id}"),
+        "%population" => format!("{population}"),
+        "%timezone" => timezone,
+        "%cityrecord" => cityrecord_dbg,
         _ => format!("{city_name}, {admin1_name_value}, {country}"),
     };
     return Some(result);
