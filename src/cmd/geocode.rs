@@ -77,9 +77,9 @@ geocode arguments:
 geocode options:
     -c, --new-column <name>     Put the transformed values in a new column instead.
     -r, --rename <name>         New name for the transformed column.
-    --min-score <score>         The minimum score to use for suggest.
+    --min-score <score>         The minimum score to use for suggest subcommand.
                                 [default: 0.8]
-    -k, --k_weight <score>      The weight to multiply population by to use for reverse.
+    -k, --k_weight <weight>     The weight to multiply population by. Used by reverse subcommand.
                                 Larger values will favor more populated cities.
                                 If not set (default), the population is not used and the
                                 closest city is returned.
@@ -92,6 +92,16 @@ geocode options:
                                   - '%city' - Brooklyn
                                   - '%state' | '%admin1' - New York
                                   - '%country' - US
+                                  - '%cityrecord' - returns the full city record as a string
+                                  - '%lat-long' - <latitude>, <longitude>
+                                  - '%location' - (<latitude>, <longitude>)
+                                  - '%id' - the Geonames ID
+                                  - '%population' - the population
+                                  - '%timezone' - the timezone
+                                  - '%+' - returns the default format. For suggest, '%location'.
+                                           For reverse, '%city-state'.
+                                [default: %+]
+
     -j, --jobs <arg>            The number of jobs to run in parallel.
                                 When not set, the number of jobs is set to the number of CPUs detected.
     -b, --batch <size>          The number of rows per batch to load into memory, before running in parallel.
@@ -363,18 +373,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
 
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
-        .select(SelectColumns::parse("").unwrap()); // select all columns
-
-    if rconfig.is_stdin() {
-        // is_stdin is being used, check if args.arg_column is a file that exists
-        // if it does, then we need to trap its as an error as docopt gets confused and
-        // will set arg_column to the input file when reading from stdin.
-        if let Ok(path) = Path::new(&args.arg_column).canonicalize() {
-            if path.exists() {
-                return fail_incorrectusage_clierror!("No/incorrect column specified.");
-            }
-        }
-    }
+        .select(SelectColumns::parse(&args.arg_column)?);
 
     let mut rdr = rconfig.reader()?;
     let mut wtr = Config::new(&args.flag_output).writer()?;
@@ -591,10 +590,10 @@ fn search_cached(
         };
 
         if formatstr == "%+" {
-            // default for suggest is city-state
-            city_name = cityrecord.name.clone();
-            admin1_name_value = admin1_name_value_work.clone();
-            format_to_use = "%city-state".to_string();
+            // default for suggest is location - e.g. "(lat, long)"
+            latitude = cityrecord.latitude;
+            longitude = cityrecord.longitude;
+            format_to_use = "%location".to_string();
         } else {
             id = cityrecord.id;
             city_name = cityrecord.name.clone();
@@ -604,7 +603,7 @@ fn search_cached(
             admin1_name_value = admin1_name_value_work.clone();
             population = cityrecord.population;
             timezone = cityrecord.timezone.clone();
-            cityrecord_dbg = if formatstr == "cityrecord" {
+            cityrecord_dbg = if formatstr == "%cityrecord" {
                 format!("{cityrecord:?}")
             } else {
                 EMPTY_STRING.clone()
@@ -639,10 +638,10 @@ fn search_cached(
                 };
 
                 if formatstr == "%+" {
-                    // default for suggest is city-state
-                    latitude = cityrecord.latitude;
-                    longitude = cityrecord.longitude;
-                    format_to_use = "%location".to_string();
+                    // default for reverse is city-state
+                    city_name = cityrecord.name.clone();
+                    admin1_name_value = admin1_name_value_work.clone();
+                    format_to_use = "%city-state".to_string();
                 } else {
                     id = cityrecord.id;
                     city_name = cityrecord.name.clone();
@@ -652,7 +651,7 @@ fn search_cached(
                     admin1_name_value = admin1_name_value_work.clone();
                     population = cityrecord.population;
                     timezone = cityrecord.timezone.clone();
-                    cityrecord_dbg = if formatstr == "cityrecord" {
+                    cityrecord_dbg = if formatstr == "%cityrecord" {
                         format!("{cityrecord:?}")
                     } else {
                         EMPTY_STRING.clone()
