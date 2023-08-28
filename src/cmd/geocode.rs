@@ -86,7 +86,7 @@ geocode options:
     -f, --formatstr=<string>    This option is used by several subcommands:
 
                                 The place format to use. The available formats are:
-                                  - '%city-state' (default) - e.g. Brooklyn, New York
+                                  - '%city-state' - e.g. Brooklyn, New York
                                   - '%city-country' - Brooklyn, US
                                   - '%city-state-country' | '%city-admin1-country' - Brooklyn, New York US
                                   - '%city' - Brooklyn
@@ -98,8 +98,8 @@ geocode options:
                                   - '%id' - the Geonames ID
                                   - '%population' - the population
                                   - '%timezone' - the timezone
-                                  - '%+' - returns the default format. For suggest, '%location'.
-                                           For reverse, '%city-state'.
+                                  - '%+' - use the subcommand's default format. For suggest, '%location'.
+                                           For reverse, '%city-admin1'.
                                 [default: %+]
 
     -j, --jobs <arg>            The number of jobs to run in parallel.
@@ -638,10 +638,10 @@ fn search_cached(
                 };
 
                 if formatstr == "%+" {
-                    // default for reverse is city-state
+                    // default for reverse is city-admin1 - e.g. "Brooklyn, New York"
                     city_name = cityrecord.name.clone();
                     admin1_name_value = admin1_name_value_work.clone();
-                    format_to_use = "%city-state".to_string();
+                    format_to_use = "%city-admin1".to_string();
                 } else {
                     id = cityrecord.id;
                     city_name = cityrecord.name.clone();
@@ -669,7 +669,7 @@ fn search_cached(
     // match arms are evaluated in order,
     // so we're optimizing for the most common cases first
     let result = match format_to_use.as_str() {
-        "%+" | "%city-state" => format!("{city_name}, {admin1_name_value}"),
+        "%+" | "%city-admin1" | "%city-state" => format!("{city_name}, {admin1_name_value}"),
         "%lat-long" => format!("{latitude}, {longitude}"),
         "%location" => format!("({latitude}, {longitude})"),
         "%city-country" => format!("{city_name}, {country}"),
