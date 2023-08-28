@@ -573,7 +573,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut dynfmt_template = args.flag_formatstr.clone();
     if args.cmd_dynfmt || args.cmd_calcconv {
         if args.flag_no_headers {
-            return fail!("dynfmt/calcconv subcommand requires headers.");
+            return fail_incorrectusage_clierror!("dynfmt/calcconv subcommand requires headers.");
         }
         // first, get the fields used in the dynfmt template
         let (safe_headers, _) = util::safe_header_names(&headers, false, false, None, "", true);
