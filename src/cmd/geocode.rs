@@ -331,8 +331,8 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                     // copy it to the default geocode index file
                     engine.dump_to(geocode_index_file.clone(), EngineDumpFormat::Bincode)?;
                     winfo!(
-                        "Valid Geonames index file {index_file} copied to {geocode_index_file}. It \
-                         will be used from now on or until you reset it.",
+                        "Valid Geonames index file {index_file} copied to {geocode_index_file}. \
+                         It will be used from now on or until you reset it.",
                     );
                 } else {
                     return fail_incorrectusage_clierror!(
