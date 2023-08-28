@@ -150,6 +150,8 @@ pub fn version() -> String {
     enabled_features.push_str("foreach;");
     #[cfg(all(feature = "generate", not(feature = "lite")))]
     enabled_features.push_str("generate;");
+    #[cfg(all(feature = "geocode", not(feature = "lite")))]
+    enabled_features.push_str("geocode;");
 
     #[cfg(all(feature = "luau", not(feature = "lite")))]
     {
@@ -344,7 +346,7 @@ pub fn finish_progress(progress: &ProgressBar) {
     }
 }
 
-#[cfg(all(any(feature = "apply", feature = "fetch"), not(feature = "lite")))]
+#[cfg(all(any(feature = "apply", feature = "fetch", feature = "geocode"), not(feature = "lite")))]
 macro_rules! update_cache_info {
     ($progress:expr, $cache_instance:expr) => {
         use cached::Cached;
@@ -376,7 +378,7 @@ macro_rules! update_cache_info {
     };
 }
 
-#[cfg(all(any(feature = "apply", feature = "fetch"), not(feature = "lite")))]
+#[cfg(all(any(feature = "apply", feature = "fetch", feature="geocode"), not(feature = "lite")))]
 pub(crate) use update_cache_info;
 
 pub fn get_args<T>(usage: &str, argv: &[&str]) -> CliResult<T>
