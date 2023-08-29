@@ -2855,4 +2855,3 @@ fn apply_datefmt_fmtstring_notime() {
     ];
     assert_eq!(got, expected);
 }
-
