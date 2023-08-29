@@ -1954,7 +1954,7 @@ dependencies = [
  "bincode",
  "csv",
  "itertools",
- "kiddo 2.1.1",
+ "kiddo",
  "rayon",
  "serde",
  "serde_json",
@@ -2531,15 +2531,6 @@ checksum = "50d6889ea54a6add10ed8a757719ec88293201265fa7fe56e09ae66b6df038a6"
 dependencies = [
  "getopts",
  "memchr",
-]
-
-[[package]]
-name = "kiddo"
-version = "0.2.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "06ced2e69cfc5f22f86ccc9ce4ecff9f19917f3083a4bac0f402bdab034d73f1"
-dependencies = [
- "num-traits",
 ]
 
 [[package]]
@@ -4003,7 +3994,6 @@ dependencies = [
  "redis",
  "regex",
  "reqwest",
- "reverse_geocoder",
  "rusqlite",
  "rust_decimal",
  "ryu",
@@ -4384,18 +4374,6 @@ dependencies = [
  "web-sys",
  "webpki-roots",
  "winreg",
-]
-
-[[package]]
-name = "reverse_geocoder"
-version = "3.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1c7cb9a3269abd8896c527042bd635f05531e18be7d5de1eb71c501027c51423"
-dependencies = [
- "csv",
- "kiddo 0.2.5",
- "serde",
- "serde_derive",
 ]
 
 [[package]]
