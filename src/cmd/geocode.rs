@@ -182,7 +182,7 @@ use crate::{
     util, CliResult,
 };
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize)]
 struct Args {
     arg_column:          String,
     cmd_suggest:         bool,
@@ -194,7 +194,7 @@ struct Args {
     arg_input:           Option<String>,
     arg_index_file:      Option<String>,
     flag_rename:         Option<String>,
-    flag_min_score:      f32,
+    flag_min_score:      Option<f32>,
     flag_k_weight:       Option<f32>,
     flag_formatstr:      String,
     flag_invalid_result: Option<String>,
@@ -221,6 +221,8 @@ static DEFAULT_CITIES_NAMES_FILENAME: &str = "alternateNamesV2.txt";
 static DEFAULT_COUNTRY_INFO_URL: &str = "https://download.geonames.org/export/dump/countryInfo.txt";
 static DEFAULT_ADMIN1_CODES_URL: &str =
     "https://download.geonames.org/export/dump/admin1CodesASCII.txt";
+
+static EMPTY_STRING: String = String::new();
 
 // valid subcommands
 #[derive(Clone, Copy, PartialEq)]
@@ -265,10 +267,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
 // main async geocode function that does the actual work
 async fn geocode_main(args: Args) -> CliResult<()> {
-    // eprintln!("args: {args:?}");
-
     let mut index_cmd = true;
-
     let geocode_cmd = if args.cmd_suggest {
         index_cmd = false;
         GeocodeSubCmd::Suggest
@@ -284,7 +283,8 @@ async fn geocode_main(args: Args) -> CliResult<()> {
     } else if args.cmd_index_reset {
         GeocodeSubCmd::IndexReset
     } else {
-        return fail_incorrectusage_clierror!("Unknown geocode subcommand.");
+        // should not happen as docopt won't allow it
+        unreachable!("No geocode subcommand specified.");
     };
 
     // setup cache directory
@@ -513,11 +513,13 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                         args.flag_k_weight,
                     );
                     if let Some(geocoded_result) = search_result {
+                        // we have a valid geocode result, so use that
                         cell = geocoded_result;
                     } else {
-                        // --invalid-result is set, so use that instead
-                        // otherwise, we leave cell untouched, and the original value remains
+                        // we have an invalid geocode result
                         if !invalid_result.is_empty() {
+                            // --invalid-result is set, so use that instead
+                            // otherwise, we leave cell untouched, and the original value remains
                             cell = invalid_result.clone();
                         }
                     }
@@ -612,13 +614,11 @@ fn search_cached(
     mode: GeocodeSubCmd,
     cell: &str,
     formatstr: &str,
-    min_score: f32,
+    min_score: Option<f32>,
     k: Option<f32>,
 ) -> Option<String> {
-    static EMPTY_STRING: String = String::new();
-
     if mode == GeocodeSubCmd::Suggest {
-        let search_result = engine.suggest(cell, 1, Some(min_score));
+        let search_result = engine.suggest(cell, 1, min_score);
         let Some(cityrecord) = search_result.into_iter().next() else {
             return None;
         };
@@ -686,7 +686,7 @@ fn search_cached(
     None
 }
 
-// format the geocoded result based on formatstr if its not %+
+/// format the geocoded result based on formatstr if its not %+
 fn format_result(cityrecord: &CitiesRecord, formatstr: &str, admin1_name: &str) -> String {
     if formatstr.starts_with('%') {
         // if formatstr starts with %, then we're using a predefined format
@@ -721,7 +721,8 @@ fn format_result(cityrecord: &CitiesRecord, formatstr: &str, admin1_name: &str) 
         }
         .to_string()
     } else {
-        // if formatstr does not start with %, then we're using dynfmt
+        // if formatstr does not start with %, then we're using dynfmt,
+        // i.e. eight predefined fields below in curly braces are replaced with values
         // e.g. "City: {city_name}, State: {admin1_name_value}, Country: {country}"
 
         let mut cityrecord_map: HashMap<&str, String> = HashMap::with_capacity(8);
