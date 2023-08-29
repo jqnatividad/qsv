@@ -31,6 +31,10 @@ geocoded value a new column named state.
 
 $ qsv geocode suggest city --formatstr %state --new-column state file.csv
 
+Use dynamic formatting to create a custom format.
+
+$ qsv geocode suggest city --formatstr "{name}, {admin1}, {country} in {timezone}" file.csv
+
 REVERSE
 Reverse geocode a WG84 coordinate to the nearest Geonames city record.
 It accepts "lat, long" or "(lat, long)" format.
@@ -101,9 +105,7 @@ geocode options:
                                 Larger values will favor more populated cities.
                                 If not set (default), the population is not used and the
                                 nearest city is returned.
-    -f, --formatstr=<string>    This option is used by several subcommands:
-
-                                The place format to use. The available formats are:
+    -f, --formatstr=<string>    The place format to use. The predefined formats are:
                                   - '%city-state' - e.g. Brooklyn, New York
                                   - '%city-country' - Brooklyn, US
                                   - '%city-state-country' | '%city-admin1-country' - Brooklyn, New York US
@@ -118,6 +120,15 @@ geocode options:
                                   - '%timezone' - the timezone
                                   - '%+' - use the subcommand's default format. For suggest, '%location'.
                                            For reverse, '%city-admin1'.
+
+                                  Alternatively, you can use dynamic formatting to create a custom format.
+                                  To do so, set the --formatstr to a dynfmt template, enclosing field names
+                                  in curly braces.
+                                  The following eight fields are available:
+                                    id, name, latitude, longitude, country, admin1, timezone, population
+                                    
+                                  e.g. "City: {name}, State: {admin1}, Country: {country}"
+
                                 [default: %+]
 
     -j, --jobs <arg>            The number of jobs to run in parallel.
@@ -144,12 +155,14 @@ Common options:
 "#;
 
 use std::{
+    collections::HashMap,
     fs,
     path::{Path, PathBuf},
 };
 
 use cached::proc_macro::cached;
-use geosuggest_core::{Engine, EngineDumpFormat};
+use dynfmt::Format;
+use geosuggest_core::{CitiesRecord, Engine, EngineDumpFormat};
 use geosuggest_utils::{IndexUpdater, IndexUpdaterSettings, SourceItem};
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::{debug, info};
@@ -591,16 +604,9 @@ fn search_cached(
 ) -> Option<String> {
     static EMPTY_STRING: String = String::new();
 
-    let mut id = 0_usize;
-    let mut city_name = String::new();
-    let mut country = String::new();
-    let mut admin1_name_value = String::new();
-    let mut latitude = 0_f32;
-    let mut longitude = 0_f32;
-    let mut population = 0_usize;
-    let mut timezone = String::new();
-    let mut cityrecord_dbg = String::new();
-    let mut format_to_use = formatstr.to_string();
+    if cell.is_empty() {
+        return None;
+    }
 
     if mode == GeocodeSubCmd::Suggest {
         let search_result = engine.suggest(cell, 1, Some(min_score));
@@ -608,7 +614,7 @@ fn search_cached(
             return None;
         };
 
-        let Some((_admin1_name_key, admin1_name_value_work)) = (match &cityrecord.admin1_names {
+        let Some((_admin1_key, admin1_name)) = (match &cityrecord.admin1_names {
             Some(admin1) => admin1.iter().next().map(|s| s.to_owned()),
             None => Some((&EMPTY_STRING, &EMPTY_STRING)),
         }) else {
@@ -617,24 +623,14 @@ fn search_cached(
 
         if formatstr == "%+" {
             // default for suggest is location - e.g. "(lat, long)"
-            latitude = cityrecord.latitude;
-            longitude = cityrecord.longitude;
-            format_to_use = "%location".to_string();
-        } else {
-            id = cityrecord.id;
-            city_name = cityrecord.name.clone();
-            latitude = cityrecord.latitude;
-            longitude = cityrecord.longitude;
-            country = cityrecord.country.clone().unwrap().name;
-            admin1_name_value = admin1_name_value_work.clone();
-            population = cityrecord.population;
-            timezone = cityrecord.timezone.clone();
-            cityrecord_dbg = if formatstr == "%cityrecord" {
-                format!("{cityrecord:?}")
-            } else {
-                EMPTY_STRING.clone()
-            };
+            return Some(format!(
+                "({latitude}, {longitude})",
+                latitude = cityrecord.latitude,
+                longitude = cityrecord.longitude
+            ));
         }
+
+        return Some(format_result(cityrecord, formatstr, admin1_name));
     } else if mode == GeocodeSubCmd::Reverse {
         // regex for Location field. Accepts (lat, long) & lat, long
         let locregex: &'static Regex = regex_oncelock!(
@@ -654,60 +650,86 @@ fn search_cached(
                     return None;
                 };
 
-                let Some((_admin1_name_key, admin1_name_value_work)) =
-                    (match &cityrecord.admin1_names {
-                        Some(admin1) => admin1.iter().next().map(|s| s.to_owned()),
-                        None => Some((&EMPTY_STRING, &EMPTY_STRING)),
-                    })
-                else {
+                let Some((_admin1_key, admin1_name)) = (match &cityrecord.admin1_names {
+                    Some(admin1) => admin1.iter().next().map(|s| s.to_owned()),
+                    None => Some((&EMPTY_STRING, &EMPTY_STRING)),
+                }) else {
                     return None;
                 };
 
                 if formatstr == "%+" {
                     // default for reverse is city-admin1 - e.g. "Brooklyn, New York"
-                    city_name = cityrecord.name.clone();
-                    admin1_name_value = admin1_name_value_work.clone();
-                    format_to_use = "%city-admin1".to_string();
-                } else {
-                    id = cityrecord.id;
-                    city_name = cityrecord.name.clone();
-                    latitude = cityrecord.latitude;
-                    longitude = cityrecord.longitude;
-                    country = cityrecord.country.clone().unwrap().name;
-                    admin1_name_value = admin1_name_value_work.clone();
-                    population = cityrecord.population;
-                    timezone = cityrecord.timezone.clone();
-                    cityrecord_dbg = if formatstr == "%cityrecord" {
-                        format!("{cityrecord:?}")
-                    } else {
-                        EMPTY_STRING.clone()
-                    };
+                    return Some(format!(
+                        "{city_name}, {admin1_name_value}",
+                        city_name = cityrecord.name.clone(),
+                        admin1_name_value = admin1_name.clone()
+                    ));
                 }
+
+                return Some(format_result(cityrecord, formatstr, admin1_name));
             }
         } else {
+            // not a valid lat, long
             return None;
         }
-    } else {
-        return None;
     }
 
-    #[allow(clippy::match_same_arms)]
-    // match arms are evaluated in order,
-    // so we're optimizing for the most common cases first
-    let result = match format_to_use.as_str() {
-        "%+" | "%city-admin1" | "%city-state" => format!("{city_name}, {admin1_name_value}"),
-        "%lat-long" => format!("{latitude}, {longitude}"),
-        "%location" => format!("({latitude}, {longitude})"),
-        "%city-country" => format!("{city_name}, {country}"),
-        "%city-state-country" => format!("{city_name}, {admin1_name_value} {country}"),
-        "%city" => city_name,
-        "%state" | "%admin1" => admin1_name_value,
-        "%country" => country,
-        "%id" => format!("{id}"),
-        "%population" => format!("{population}"),
-        "%timezone" => timezone,
-        "%cityrecord" => cityrecord_dbg,
-        _ => format!("{city_name}, {admin1_name_value}, {country}"),
-    };
-    return Some(result);
+    None
+}
+
+// format the geocoded result based on formatstr if its not %+
+#[inline]
+fn format_result(cityrecord: &CitiesRecord, formatstr: &str, admin1_name: &str) -> String {
+    if formatstr.starts_with('%') {
+        // if formatstr starts with %, then we're using a predefined format
+        match formatstr {
+            "%city-admin1" | "%city-state" => format!("{}, {}", cityrecord.name, admin1_name),
+            "%lat-long" => format!("{}, {}", cityrecord.latitude, cityrecord.longitude),
+            "%location" => format!("({}, {})", cityrecord.latitude, cityrecord.longitude),
+            "%city-country" => format!(
+                "{}, {}",
+                cityrecord.name,
+                cityrecord.country.clone().unwrap().name
+            ),
+            "%city-state-country" => format!(
+                "{}, {}, {}",
+                cityrecord.name,
+                admin1_name,
+                cityrecord.country.clone().unwrap().name
+            ),
+            "%city" => cityrecord.name.clone(),
+            "%state" | "%admin1" => admin1_name.to_owned(),
+            "%country" => cityrecord.country.clone().unwrap().name,
+            "%id" => format!("{}", cityrecord.id),
+            "%population" => format!("{}", cityrecord.population),
+            "%timezone" => cityrecord.timezone.clone(),
+            "%cityrecord" => format!("{cityrecord:?}"),
+            _ => format!(
+                "{}, {} {}",
+                cityrecord.name,
+                admin1_name,
+                cityrecord.country.clone().unwrap().name
+            ),
+        }
+        .to_string()
+    } else {
+        // if formatstr does not start with %, then we're using dynfmt
+        // e.g. "City: {city_name}, State: {admin1_name_value}, Country: {country}"
+
+        let mut cityrecord_map: HashMap<&str, String> = HashMap::with_capacity(8);
+        cityrecord_map.insert("id", cityrecord.id.to_string());
+        cityrecord_map.insert("name", cityrecord.name.clone());
+        cityrecord_map.insert("latitude", cityrecord.latitude.to_string());
+        cityrecord_map.insert("longitude", cityrecord.longitude.to_string());
+        cityrecord_map.insert("country", cityrecord.country.clone().unwrap().name);
+        cityrecord_map.insert("admin1", admin1_name.to_owned());
+        cityrecord_map.insert("timezone", cityrecord.timezone.clone());
+        cityrecord_map.insert("population", cityrecord.population.to_string());
+
+        if let Ok(formatted) = dynfmt::SimpleCurlyFormat.format(formatstr, cityrecord_map) {
+            formatted.to_string()
+        } else {
+            String::new()
+        }
+    }
 }
