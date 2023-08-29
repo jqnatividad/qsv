@@ -130,7 +130,8 @@ geocode options:
                                   e.g. "City: {name}, State: {admin1}, Country: {country}"
 
                                 [default: %+]
-
+    --invalid-result <string>   The string to use when the geocode result is empty/invalid.
+                                If not set, the original value is used.
     -j, --jobs <arg>            The number of jobs to run in parallel.
                                 When not set, the number of jobs is set to the number of CPUs detected.
     -b, --batch <size>          The number of rows per batch to load into memory, before running in parallel.
@@ -183,28 +184,29 @@ use crate::{
 
 #[derive(Deserialize, Debug)]
 struct Args {
-    arg_column:       String,
-    cmd_suggest:      bool,
-    cmd_reverse:      bool,
-    cmd_index_check:  bool,
-    cmd_index_update: bool,
-    cmd_index_load:   bool,
-    cmd_index_reset:  bool,
-    arg_input:        Option<String>,
-    arg_index_file:   Option<String>,
-    flag_rename:      Option<String>,
-    flag_min_score:   f32,
-    flag_k_weight:    Option<f32>,
-    flag_formatstr:   String,
-    flag_batch:       u32,
-    flag_timeout:     u16,
-    flag_languages:   String,
-    flag_cache_dir:   String,
-    flag_jobs:        Option<usize>,
-    flag_new_column:  Option<String>,
-    flag_output:      Option<String>,
-    flag_delimiter:   Option<Delimiter>,
-    flag_progressbar: bool,
+    arg_column:          String,
+    cmd_suggest:         bool,
+    cmd_reverse:         bool,
+    cmd_index_check:     bool,
+    cmd_index_update:    bool,
+    cmd_index_load:      bool,
+    cmd_index_reset:     bool,
+    arg_input:           Option<String>,
+    arg_index_file:      Option<String>,
+    flag_rename:         Option<String>,
+    flag_min_score:      f32,
+    flag_k_weight:       Option<f32>,
+    flag_formatstr:      String,
+    flag_invalid_result: Option<String>,
+    flag_batch:          u32,
+    flag_timeout:        u16,
+    flag_languages:      String,
+    flag_cache_dir:      String,
+    flag_jobs:           Option<usize>,
+    flag_new_column:     Option<String>,
+    flag_output:         Option<String>,
+    flag_delimiter:      Option<Delimiter>,
+    flag_progressbar:    bool,
 }
 
 static QSV_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -340,7 +342,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
     if index_cmd {
         match geocode_cmd {
             GeocodeSubCmd::IndexCheck => {
-                // load geocode engine
+                // check if we have updates
                 winfo!("Checking main Geonames website for updates...");
                 check_index_file(&geocode_index_file)?;
                 let engine =
@@ -357,6 +359,8 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                 }
             },
             GeocodeSubCmd::IndexUpdate => {
+                // update/rebuild Geonames index from Geonames website
+                // will only update if there are changes
                 check_index_file(&geocode_index_file)?;
                 let engine =
                     load_engine(geocode_index_file.clone().into(), args.flag_progressbar).await?;
@@ -410,6 +414,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
     }
 
     // we're not doing an index subcommand, so we're doing a suggest or reverse
+    // load the current local Geonames index
     let engine = load_engine(geocode_index_file.clone().into(), args.flag_progressbar).await?;
 
     let rconfig = Config::new(&args.arg_input)
@@ -465,6 +470,8 @@ async fn geocode_main(args: Args) -> CliResult<()> {
     // set RAYON_NUM_THREADS
     util::njobs(args.flag_jobs);
 
+    let invalid_result = args.flag_invalid_result.unwrap_or_default();
+
     // main loop to read CSV and construct batches for parallel processing.
     // each batch is processed via Rayon parallel iterator.
     // loop exits when batch is empty.
@@ -507,6 +514,12 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                     );
                     if let Some(geocoded_result) = search_result {
                         cell = geocoded_result;
+                    } else {
+                        // --invalid-result is set, so use that instead
+                        // otherwise, we leave cell untouched, and the original value remains
+                        if !invalid_result.is_empty() {
+                            cell = invalid_result.clone();
+                        }
                     }
                 }
                 if args.flag_new_column.is_some() {
@@ -592,7 +605,7 @@ async fn load_engine(geocode_index_file: PathBuf, show_progress: bool) -> CliRes
     key = "String",
     convert = r#"{ format!("{cell}") }"#,
     option = true,
-    sync_writes = true
+    sync_writes = false
 )]
 fn search_cached(
     engine: &Engine,
@@ -603,10 +616,6 @@ fn search_cached(
     k: Option<f32>,
 ) -> Option<String> {
     static EMPTY_STRING: String = String::new();
-
-    if cell.is_empty() {
-        return None;
-    }
 
     if mode == GeocodeSubCmd::Suggest {
         let search_result = engine.suggest(cell, 1, Some(min_score));

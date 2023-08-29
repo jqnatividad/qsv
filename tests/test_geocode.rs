@@ -10,10 +10,10 @@ fn geocode_suggest() {
             svec!["Melrose, New York"],
             svec!["East Flatbush, New York"],
             svec!["Manhattan, New York"],
-            svec!["East Harlem, New York"],
+            svec!["Brooklyn, New York"],
             svec!["East Harlem, New York"],
             svec!["This is not a Location and it will not be geocoded"],
-            svec!["East Flatbush, New York"],
+            svec!["Jersey City, New Jersey"],
             svec!["95.213424, 190,1234565"], // invalid lat, long
             svec!["Makati, Metro Manila, Philippines"],
         ],
@@ -27,11 +27,51 @@ fn geocode_suggest() {
         svec!["(41.90059, -87.85673)"],
         svec!["(40.65371, -73.93042)"],
         svec!["(40.71427, -74.00597)"],
-        svec!["(40.79472, -73.9425)"],
+        svec!["(45.09413, -93.35634)"],
         svec!["(40.79472, -73.9425)"],
         svec!["This is not a Location and it will not be geocoded"],
+        svec!["(40.72816, -74.07764)"],
+        svec!["95.213424, 190,1234565"], // suggest expects a city name, not lat, long
+        svec!["(14.55027, 121.03269)"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn geocode_suggest_invalid() {
+    let wrk = Workdir::new("geocode_suggest_invalid");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["Location"],
+            svec!["Melrose, New York"],
+            svec!["East Flatbush, New York"],
+            svec!["Manhattan, New York"],
+            svec!["East Harlem, New York"],
+            svec!["Brooklyn, New York"],
+            svec!["This is not a Location and it will not be geocoded"],
+            svec!["Jersey City, New Jersey"],
+            svec!["95.213424, 190,1234565"], // invalid lat, long
+            svec!["Makati, Metro Manila, Philippines"],
+        ],
+    );
+    let mut cmd = wrk.command("geocode");
+    cmd.arg("suggest")
+        .arg("Location")
+        .args(["--invalid-result", "<ERROR>"])
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["Location"],
+        svec!["(41.90059, -87.85673)"],
         svec!["(40.65371, -73.93042)"],
-        svec!["95.213424, 190,1234565"], // invalid lat, long
+        svec!["(40.71427, -74.00597)"],
+        svec!["(40.79472, -73.9425)"],
+        svec!["(45.09413, -93.35634)"],
+        svec!["<ERROR>"],
+        svec!["(40.72816, -74.07764)"],
+        svec!["<ERROR>"], // suggest expects a city name, not lat, long
         svec!["(14.55027, 121.03269)"],
     ];
     assert_eq!(got, expected);
