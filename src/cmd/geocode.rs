@@ -678,7 +678,6 @@ fn search_cached(
 }
 
 // format the geocoded result based on formatstr if its not %+
-#[inline]
 fn format_result(cityrecord: &CitiesRecord, formatstr: &str, admin1_name: &str) -> String {
     if formatstr.starts_with('%') {
         // if formatstr starts with %, then we're using a predefined format
