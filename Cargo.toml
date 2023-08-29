@@ -167,7 +167,6 @@ reqwest = { version = "0.11", features = [
     "rustls-tls",
     "stream",
 ], default-features = false }
-reverse_geocoder = { version = "3", optional = true }
 rust_decimal = "1.32"
 ryu = "1"
 sanitise-file-name = { version = "1.0", optional = true }
@@ -235,7 +234,6 @@ all_features = [
     "to",
 ]
 apply = [
-    "cached",
     "censor",
     "cpc",
     "data-encoding",
@@ -243,7 +241,6 @@ apply = [
     "eudex",
     "hashbrown",
     "qsv_currency",
-    "reverse_geocoder",
     "strsim",
     "titlecase",
     "vader_sentiment",
