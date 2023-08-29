@@ -122,7 +122,7 @@ jsonxf = { version = "1", optional = true }
 jql-runner = { version = "7.0", default-features = false, optional = true }
 log = "0.4"
 mimalloc = { version = "0.1", default-features = false, optional = true }
-mlua = { version = "0.9.1", features = [
+mlua = { version = "0.9", features = [
     "luau",
     "luau-jit",
     "serialize",
@@ -264,7 +264,7 @@ fetch = [
 ]
 foreach = []
 generate = ["test-data-generation"]
-geocode = ["anyhow", "cached", "geosuggest-core", "geosuggest-utils"]
+geocode = ["anyhow", "cached", "dynfmt", "geosuggest-core", "geosuggest-utils"]
 luau = ["mlua", "sanitise-file-name"]
 python = ["pyo3"]
 to = ["csvs_convert"]
