@@ -7,7 +7,6 @@ It has six subcommands:
  * emptyreplace - replace empty cells with <--replacement> string.
  * datefmt - Formats a recognized date column to a specified format using <--formatstr>.
  * dynfmt - Dynamically constructs a new column from other columns using the <--formatstr> template.
- * geocode - geocodes a WGS84 location against a static copy of the Geonames cities database.
  * calcconv - parse and evaluate math expressions, with support for units and conversions.
 
 OPERATIONS (multi-column capable)
@@ -211,27 +210,6 @@ Create a new column 'FullName' from 'FirstName', 'MI', and 'LastName' columns:
 
   $ qsv apply dynfmt --formatstr 'Sir/Madam {FirstName} {MI}. {LastName}' -c FullName file.csv
 
-GEOCODE
-Geocodes to the nearest city center point given a location column
-[i.e. a column which contains a latitude, longitude WGS84 coordinate] against
-an embedded copy of the Geonames city database.
-
-The geocoded information is formatted based on --formatstr, returning
-it in 'city-state' format if not specified.
-
-Use the --new-column option if you want to keep the location column:
-
-Examples:
-Geocode file.csv Location column and set the geocoded value to a
-new column named City.
-
-$ qsv apply geocode Location --new-column City file.csv
-
-Geocode file.csv Location column with --formatstr=city-state and
-set the geocoded value a new column named City.
-
-$ qsv apply geocode Location --formatstr city-state --new-column City file.csv
-
 CALCCONV
 Parse and evaluate math expressions into a new column, with support for units and conversions.
 The math expression is built dynamically using the <--formatstr> template, similar to the DYNFMT
@@ -276,7 +254,6 @@ qsv apply operations <operations> [options] <column> [<input>]
 qsv apply emptyreplace --replacement=<string> [options] <column> [<input>]
 qsv apply datefmt [--formatstr=<string>] [options] <column> [<input>]
 qsv apply dynfmt --formatstr=<string> [options] --new-column=<name> [<input>]
-qsv apply geocode [--formatstr=<string>] [options] <column> [<input>]
 qsv apply calcconv --formatstr=<string> [options] --new-column=<name> [<input>]
 qsv apply --help
 
@@ -304,13 +281,6 @@ apply arguments:
         --formatstr=<string>        The template to use for the dynfmt operation.
                                     See DYNFMT example above for more details.
         --new-column=<name>         Put the generated values in a new column.
-
-    GEOCODE subcommand:
-        --formatstr=<string>        The place format to use for the geocode operation.
-                                    See GEOCODE section in the --formatstr option below
-                                    for more details.
-        <column>                    The Location column (a column which contains BOTH latitude and 
-                                    longitude WGS84 coordinates) to geocode.
 
     CALCONV subcommand:
         --formatstr=<string>        The calculation/conversion expression to use.
@@ -352,17 +322,6 @@ apply options:
 
                                 DYNFMT: the template to use to construct a new column.
 
-                                GEOCODE: the place format to use with the geocode subcommand.
-                                  The available formats are:
-                                  - 'city-state' (default) - e.g. Brooklyn, New York
-                                  - 'city-country' - Brooklyn, US
-                                  - 'city-state-country' | 'city-admin1-country' - Brooklyn, New York US
-                                  - 'city' - Brooklyn
-                                  - 'county' | 'admin2' - Kings County
-                                  - 'state' | 'admin1' - New York
-                                  - 'county-country' | 'admin2-country' - Kings County, US
-                                  - 'county-state-country' | 'admin2-admin1-country' - Kings County, New York US
-                                  - 'country' - US
     -j, --jobs <arg>            The number of jobs to run in parallel.
                                 When not set, the number of jobs is set to the number of CPUs detected.
     -b, --batch <size>          The number of rows per batch to load into memory, before running in parallel.
@@ -380,7 +339,6 @@ Common options:
 
 use std::{str::FromStr, sync::OnceLock};
 
-use cached::proc_macro::cached;
 use censor::{Censor, Sex, Zealous};
 use cpc::{eval, units::Unit};
 use data_encoding::BASE64;
@@ -395,7 +353,6 @@ use rayon::{
     prelude::IntoParallelRefIterator,
 };
 use regex::Regex;
-use reverse_geocoder::{Locations, ReverseGeocoder};
 use serde::Deserialize;
 use strsim::{
     damerau_levenshtein, hamming, jaro_winkler, normalized_damerau_levenshtein, osa_distance,
@@ -465,7 +422,6 @@ struct Args {
     cmd_datefmt:         bool,
     cmd_dynfmt:          bool,
     cmd_emptyreplace:    bool,
-    cmd_geocode:         bool,
     cmd_calcconv:        bool,
     arg_input:           Option<String>,
     flag_rename:         Option<String>,
@@ -484,8 +440,6 @@ struct Args {
 }
 
 static CENSOR: OnceLock<Censor> = OnceLock::new();
-static LOCS: OnceLock<Locations> = OnceLock::new();
-static GEOCODER: OnceLock<ReverseGeocoder> = OnceLock::new();
 static EUDEX_COMPARAND_HASH: OnceLock<eudex::Hash> = OnceLock::new();
 static REGEX_REPLACE: OnceLock<Regex> = OnceLock::new();
 static SENTIMENT_ANALYZER: OnceLock<SentimentIntensityAnalyzer> = OnceLock::new();
@@ -511,7 +465,6 @@ enum ApplySubCmd {
     Operations,
     DateFmt,
     DynFmt,
-    Geocode,
     EmptyReplace,
     CalcConv,
 }
@@ -608,8 +561,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             Err(e) => return Err(e),
         }
         ApplySubCmd::Operations
-    } else if args.cmd_geocode {
-        ApplySubCmd::Geocode
     } else if args.cmd_datefmt {
         ApplySubCmd::DateFmt
     } else if args.cmd_dynfmt {
@@ -678,20 +629,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .map(|record_item| {
                 let mut record = record_item.clone();
                 match apply_cmd {
-                    ApplySubCmd::Geocode => {
-                        let mut cell = record[column_index].to_owned();
-                        if !cell.is_empty() {
-                            let search_result = search_cached(&cell, &args.flag_formatstr);
-                            if let Some(geocoded_result) = search_result {
-                                cell = geocoded_result;
-                            }
-                        }
-                        if args.flag_new_column.is_some() {
-                            record.push_field(&cell);
-                        } else {
-                            record = replace_column_value(&record, column_index, &cell);
-                        }
-                    },
                     ApplySubCmd::Operations => {
                         let mut cell = String::new();
                         for col_index in &*sel {
@@ -829,9 +766,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } // end batch loop
 
     if show_progress {
-        if args.cmd_geocode {
-            util::update_cache_info!(progress, SEARCH_CACHED);
-        }
         util::finish_progress(&progress);
     }
     Ok(wtr.flush()?)
@@ -1290,69 +1224,4 @@ fn apply_operations(
             Operations::Copy => {}, // copy is a noop
         }
     }
-}
-
-#[cached(
-    key = "String",
-    convert = r#"{ format!("{}", cell) }"#,
-    option = true,
-    sync_writes = false
-)]
-fn search_cached(cell: &str, formatstr: &str) -> Option<String> {
-    let geocoder =
-        GEOCODER.get_or_init(|| ReverseGeocoder::new(LOCS.get_or_init(Locations::from_memory)));
-
-    // regex for Location field. Accepts (lat, long) & lat, long
-    let locregex: &'static Regex =
-        regex_oncelock!(r"(?-u)([+-]?[0-9]+\.?[0-9]*|\.[0-9]+),\s*([+-]?[0-9]+\.?[0-9]*|\.[0-9]+)");
-
-    let loccaps = locregex.captures(cell);
-    loccaps.and_then(|loccaps| {
-        let lat = fast_float::parse(&loccaps[1]).unwrap_or_default();
-        let long = fast_float::parse(&loccaps[2]).unwrap_or_default();
-        if (-90.0..=90.0).contains(&lat) && (-180.0..=180.0).contains(&long) {
-            let search_result = geocoder.search((lat, long));
-            search_result.map(|locdetails| {
-                #[allow(clippy::match_same_arms)]
-                // match arms are evaluated in order,
-                // so we're optimizing for the most common cases first
-                match formatstr {
-                    "%+" | "city-state" => format!(
-                        "{name}, {admin1}",
-                        name = locdetails.record.name,
-                        admin1 = locdetails.record.admin1,
-                    ),
-                    "city-country" => format!(
-                        "{name}, {cc}",
-                        name = locdetails.record.name,
-                        cc = locdetails.record.cc
-                    ),
-                    "city-state-country" | "city-admin1-country" => format!(
-                        "{name}, {admin1} {cc}",
-                        name = locdetails.record.name,
-                        admin1 = locdetails.record.admin1,
-                        cc = locdetails.record.cc
-                    ),
-                    "city" => locdetails.record.name.to_string(),
-                    "county" | "admin2" => locdetails.record.admin2.to_string(),
-                    "state" | "admin1" => locdetails.record.admin1.to_string(),
-                    "county-country" | "admin2-country" => format!(
-                        "{admin2}, {cc}",
-                        admin2 = locdetails.record.admin2,
-                        cc = locdetails.record.cc
-                    ),
-                    "county-state-country" | "admin2-admin1-country" => format!(
-                        "{admin2}, {admin1} {cc}",
-                        admin2 = locdetails.record.admin2,
-                        admin1 = locdetails.record.admin1,
-                        cc = locdetails.record.cc
-                    ),
-                    "country" => locdetails.record.cc.to_string(),
-                    _ => locdetails.record.name.to_string(),
-                }
-            })
-        } else {
-            None
-        }
-    })
 }
