@@ -88,9 +88,7 @@ fn geocode_suggest_dynfmt() {
             svec!["East Flatbush, New York"],
             svec!["Manhattan, New York"],
             svec!["East Harlem, New York"],
-            svec!["East Harlem, New York"],
             svec!["This is not a Location and it will not be geocoded"],
-            svec!["East Flatbush, New York"],
             svec!["95.213424, 190,1234565"], // invalid lat, long
             svec!["Makati, Metro Manila, Philippines"],
         ],
@@ -109,11 +107,46 @@ fn geocode_suggest_dynfmt() {
         svec!["40.65371:-73.93042 - East Flatbush, New York"],
         svec!["40.71427:-74.00597 - New York City, New York"],
         svec!["40.79472:-73.9425 - East Harlem, New York"],
-        svec!["40.79472:-73.9425 - East Harlem, New York"],
         svec!["This is not a Location and it will not be geocoded"],
-        svec!["40.65371:-73.93042 - East Flatbush, New York"],
         svec!["95.213424, 190,1234565"], // invalid lat, long
         svec!["14.55027:121.03269 - Makati City, National Capital Region"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn geocode_suggest_fmt() {
+    let wrk = Workdir::new("geocode_suggest_fmt");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["Location"],
+            svec!["Melrose, New York"],
+            svec!["East Flatbush, New York"],
+            svec!["Manhattan, New York"],
+            svec!["East Harlem, New York"],
+            svec!["This is not a Location and it will not be geocoded"],
+            svec!["40.71427, -74.00597"],
+            svec!["Makati, Metro Manila, Philippines"],
+        ],
+    );
+    let mut cmd = wrk.command("geocode");
+    cmd.arg("suggest")
+        .arg("Location")
+        .arg("--formatstr")
+        .arg("%city-state-country")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["Location"],
+        svec!["Melrose Park, Illinois, United States"],
+        svec!["East Flatbush, New York, United States"],
+        svec!["New York City, New York, United States"],
+        svec!["East Harlem, New York, United States"],
+        svec!["This is not a Location and it will not be geocoded"],
+        svec!["40.71427, -74.00597"], // suggest doesn't work with lat, long
+        svec!["Makati City, National Capital Region, Philippines"],
     ];
     assert_eq!(got, expected);
 }
