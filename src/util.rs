@@ -318,7 +318,7 @@ pub fn count_rows(conf: &Config) -> Result<u64, CliError> {
 pub fn prep_progress(progress: &ProgressBar, record_count: u64) {
     progress.set_style(
         ProgressStyle::default_bar()
-            .template("[{elapsed_precise}] [{bar:25} {percent}%{msg}] ({per_sec} - {eta})")
+            .template("[{elapsed_precise}] [{wide_bar} {percent}%{msg}] ({per_sec} - {eta})")
             .unwrap(),
     );
     progress.set_message(format!(" of {} records", HumanCount(record_count)));
@@ -333,7 +333,7 @@ pub fn prep_progress(progress: &ProgressBar, record_count: u64) {
 pub fn finish_progress(progress: &ProgressBar) {
     progress.set_style(
         ProgressStyle::default_bar()
-            .template("[{elapsed_precise}] [{bar:25} {percent}%{msg}] ({per_sec})")
+            .template("[{elapsed_precise}] [{wide_bar} {percent}%{msg}] ({per_sec})")
             .unwrap(),
     );
 
