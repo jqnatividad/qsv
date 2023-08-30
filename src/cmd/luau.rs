@@ -190,7 +190,7 @@ Luau options:
                              resources using the qsv_register_lookup() helper function.
                              If the directory does not exist, qsv will attempt to create it.
                              If the QSV_CACHE_DIR envvar is set, it will be used instead.
-                             [default: qsv-cache]
+                             [default: ~/.qsv-cache]
 
 Common options:
     -h, --help             Display this message
@@ -223,6 +223,7 @@ use indicatif::{ProgressBar, ProgressDrawTarget, ProgressStyle};
 use log::{debug, info, log_enabled};
 use mlua::{Lua, LuaSerdeExt, Value};
 use serde::Deserialize;
+use simple_home_dir::expand_tilde;
 use strum_macros::IntoStaticStr;
 use tempfile;
 
@@ -515,20 +516,28 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // check if qsv_registerlookup_used is set, if it is, setup the qsv_cache directory
     if qsv_register_lookup_used {
-        if let Ok(cache_path) = std::env::var("QSV_CACHE_DIR") {
+        let qsv_cache_dir = if let Ok(cache_path) = std::env::var("QSV_CACHE_DIR") {
             // if QSV_CACHE_DIR env var is set, check if it exists. If it doesn't, create it.
-            if !Path::new(&cache_path).exists() {
-                fs::create_dir_all(&cache_path)?;
+            if cache_path.starts_with('~') {
+                // expand the tilde
+                let expanded_dir = expand_tilde(&cache_path).unwrap();
+                expanded_dir.to_string_lossy().to_string()
+            } else {
+                cache_path
             }
-            info!("Using cache directory: {cache_path}");
-            globals.set("_QSV_CACHE_DIR", cache_path)?;
+        } else if args.flag_cache_dir.starts_with('~') {
+            // expand the tilde
+            let expanded_dir = expand_tilde(&args.flag_cache_dir).unwrap();
+            expanded_dir.to_string_lossy().to_string()
         } else {
-            if !Path::new(&args.flag_cache_dir).exists() {
-                fs::create_dir_all(&args.flag_cache_dir)?;
-            }
-            info!("Using cache directory: {}", args.flag_cache_dir);
-            globals.set("_QSV_CACHE_DIR", args.flag_cache_dir.clone())?;
+            args.flag_cache_dir.clone()
+        };
+        if !Path::new(&qsv_cache_dir).exists() {
+            fs::create_dir_all(&qsv_cache_dir)?;
         }
+
+        info!("Using cache directory: {qsv_cache_dir}");
+        globals.set("_QSV_CACHE_DIR", qsv_cache_dir)?;
     }
 
     debug!("Main processing");
