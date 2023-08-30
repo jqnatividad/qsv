@@ -120,16 +120,20 @@ geocode options:
                                   - '%timezone' - the timezone
                                   - '%+' - use the subcommand's default format. For suggest, '%location'.
                                            For reverse, '%city-admin1'.
+                                
+                                If an invalid format is specified, it will be treated as '%+'.
 
-                                  Alternatively, you can use dynamic formatting to create a custom format.
-                                  To do so, set the --formatstr to a dynfmt template, enclosing field names
-                                  in curly braces.
-                                  The following eight fields are available:
-                                    id, name, latitude, longitude, country, admin1, timezone, population
+                                Alternatively, you can use dynamic formatting to create a custom format.
+                                To do so, set the --formatstr to a dynfmt template, enclosing field names
+                                in curly braces.
+                                The following eight fields are available:
+                                  id, name, latitude, longitude, country, admin1, timezone, population
                                     
                                   e.g. "City: {name}, State: {admin1}, Country: {country} - {timezone}"
 
+                                If an invalid dynfmt template is specified, it will return "Invalid dynfmt template."
                                 [default: %+]
+
     --invalid-result <string>   The string to use when the geocode result is empty/invalid.
                                 If not set, the original value is used.
     -j, --jobs <arg>            The number of jobs to run in parallel.
@@ -224,6 +228,7 @@ static DEFAULT_ADMIN1_CODES_URL: &str =
     "https://download.geonames.org/export/dump/admin1CodesASCII.txt";
 
 static EMPTY_STRING: String = String::new();
+static INVALID_DYNFMT: &str = "Invalid dynfmt template.";
 
 // valid subcommands
 #[derive(Clone, Copy, PartialEq)]
@@ -651,7 +656,7 @@ fn search_cached(
             ));
         }
 
-        return Some(format_result(cityrecord, formatstr, admin1_name));
+        return Some(format_result(cityrecord, formatstr, true, admin1_name));
     } else if mode == GeocodeSubCmd::Reverse {
         // regex for Location field. Accepts (lat, long) & lat, long
         let locregex: &'static Regex = regex_oncelock!(
@@ -681,13 +686,13 @@ fn search_cached(
                 if formatstr == "%+" {
                     // default for reverse is city-admin1 - e.g. "Brooklyn, New York"
                     return Some(format!(
-                        "{city_name}, {admin1_name_value}",
-                        city_name = cityrecord.name.clone(),
-                        admin1_name_value = admin1_name.clone()
+                        "{city}, {admin1}",
+                        city = cityrecord.name.clone(),
+                        admin1 = admin1_name.clone()
                     ));
                 }
 
-                return Some(format_result(cityrecord, formatstr, admin1_name));
+                return Some(format_result(cityrecord, formatstr, false, admin1_name));
             }
         } else {
             // not a valid lat, long
@@ -700,7 +705,12 @@ fn search_cached(
 
 /// format the geocoded result based on formatstr if its not %+
 #[inline]
-fn format_result(cityrecord: &CitiesRecord, formatstr: &str, admin1_name: &str) -> String {
+fn format_result(
+    cityrecord: &CitiesRecord,
+    formatstr: &str,
+    suggest_mode: bool,
+    admin1_name: &str,
+) -> String {
     if formatstr.starts_with('%') {
         // if formatstr starts with %, then we're using a predefined format
         match formatstr {
@@ -713,18 +723,36 @@ fn format_result(cityrecord: &CitiesRecord, formatstr: &str, admin1_name: &str) 
                 cityrecord.country.clone().unwrap().name
             ),
             "%city" => cityrecord.name.clone(),
+            "%city-state-country" | "%city-admin1-country" => format!(
+                "{}, {} {}",
+                cityrecord.name,
+                admin1_name,
+                cityrecord.country.clone().unwrap().name
+            ),
             "%state" | "%admin1" => admin1_name.to_owned(),
             "%country" => cityrecord.country.clone().unwrap().name,
             "%id" => format!("{}", cityrecord.id),
             "%population" => format!("{}", cityrecord.population),
             "%timezone" => cityrecord.timezone.clone(),
             "%cityrecord" => format!("{cityrecord:?}"),
-            _ => format!(
-                "{}, {} {}",
-                cityrecord.name,
-                admin1_name,
-                cityrecord.country.clone().unwrap().name
-            ),
+            _ => {
+                // invalid formatstr, so we use the default for suggest or reverse
+                if suggest_mode {
+                    // default for suggest is location - e.g. "(lat, long)"
+                    format!(
+                        "({latitude}, {longitude})",
+                        latitude = cityrecord.latitude,
+                        longitude = cityrecord.longitude
+                    )
+                } else {
+                    // default for reverse is city-admin1 - e.g. "Brooklyn, New York"
+                    format!(
+                        "{city}, {admin1}",
+                        city = cityrecord.name.clone(),
+                        admin1 = admin1_name.to_owned()
+                    )
+                }
+            },
         }
     } else {
         // if formatstr does not start with %, then we're using dynfmt,
@@ -744,7 +772,7 @@ fn format_result(cityrecord: &CitiesRecord, formatstr: &str, admin1_name: &str) 
         if let Ok(formatted) = dynfmt::SimpleCurlyFormat.format(formatstr, cityrecord_map) {
             formatted.to_string()
         } else {
-            String::new()
+            INVALID_DYNFMT.to_string()
         }
     }
 }
