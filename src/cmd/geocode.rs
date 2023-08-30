@@ -145,7 +145,7 @@ geocode options:
     --cache-dir <dir>           The directory to use for caching the Geonames cities index.
                                 If the directory does not exist, qsv will attempt to create it.
                                 If the QSV_CACHE_DIR envvar is set, it will be used instead.
-                                [default: qsv-cache]
+                                [default: ~/.qsv-cache]
 
 Common options:
     -h, --help                  Display this message
@@ -173,6 +173,7 @@ use rayon::{
 };
 use regex::Regex;
 use serde::Deserialize;
+use simple_home_dir::expand_tilde;
 
 use crate::{
     clitypes::CliError,
@@ -288,26 +289,34 @@ async fn geocode_main(args: Args) -> CliResult<()> {
     };
 
     // setup cache directory
-    let geocode_cache_dir = if let Ok(cache_dir) = std::env::var("QSV_CACHE_DIR") {
+    let mut geocode_cache_dir = if let Ok(cache_dir) = std::env::var("QSV_CACHE_DIR") {
         // if QSV_CACHE_DIR env var is set, check if it exists. If it doesn't, create it.
-        if !Path::new(&cache_dir).exists() {
-            fs::create_dir_all(&cache_dir)?;
+        if cache_dir.starts_with('~') {
+            // QSV_CACHE_DIR starts with ~, expand it
+            expand_tilde(&cache_dir).unwrap()
+        } else {
+            PathBuf::from(cache_dir)
         }
-        cache_dir
     } else {
-        if !Path::new(&args.flag_cache_dir).exists() {
-            fs::create_dir_all(&args.flag_cache_dir)?;
+        // QSV_CACHE_DIR env var is not set, use args.flag_cache_dir
+        // first check if it starts with ~, expand it
+        if args.flag_cache_dir.starts_with('~') {
+            expand_tilde(&args.flag_cache_dir).unwrap()
+        } else {
+            PathBuf::from(&args.flag_cache_dir)
         }
-        args.flag_cache_dir.clone()
     };
-    info!("Using cache directory: {geocode_cache_dir}");
+    if !Path::new(&geocode_cache_dir).exists() {
+        fs::create_dir_all(&geocode_cache_dir)?;
+    }
+
+    info!("Using cache directory: {}", geocode_cache_dir.display());
 
     let geocode_index_filename = std::env::var("QSV_GEOCODE_INDEX_FILENAME")
         .unwrap_or_else(|_| DEFAULT_GEOCODE_INDEX_FILENAME.to_string());
     let geocode_index_file = args.arg_index_file.clone().unwrap_or_else(|| {
-        let mut path = PathBuf::from(geocode_cache_dir);
-        path.push(geocode_index_filename);
-        path.to_string_lossy().to_string()
+        geocode_cache_dir.push(geocode_index_filename);
+        geocode_cache_dir.to_string_lossy().to_string()
     });
 
     // setup languages
