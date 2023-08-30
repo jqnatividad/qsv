@@ -712,12 +712,6 @@ fn format_result(cityrecord: &CitiesRecord, formatstr: &str, admin1_name: &str) 
                 cityrecord.name,
                 cityrecord.country.clone().unwrap().name
             ),
-            "%city-state-country" => format!(
-                "{}, {}, {}",
-                cityrecord.name,
-                admin1_name,
-                cityrecord.country.clone().unwrap().name
-            ),
             "%city" => cityrecord.name.clone(),
             "%state" | "%admin1" => admin1_name.to_owned(),
             "%country" => cityrecord.country.clone().unwrap().name,
