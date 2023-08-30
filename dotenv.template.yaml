@@ -47,8 +47,9 @@ QSV_AUTOINDEX = False
 # The directory to use for caching various qsv files.
 # Used by the `geocode` command for downloaded geocoding resources.
 # Used by the `luau`` command for downloaded lookup_table resources using
-# the `luau` qsv_register_lookup() helper function.
-# QSV_CACHE_DIR = .
+# the `luau` qsv_register_lookup() helper function and the `geocode` command
+# for downloaded geocoding resources.
+# QSV_CACHE_DIR = ~/.qsv-cache
 
 # The CKAN Action API endpoint to use with the `luau` qsv_register_lookup()
 # helper function when using the "ckan://" scheme.
@@ -163,6 +164,10 @@ QSV_TIMEOUT = 30
 # (default: <qsv_variant>/<version> (<target>; https://github.com/jqnatividad/qsv)).
 # QSV_USER_AGENT = qsv/0.99.1 (x86_64-apple-darwin; https://github.com/jqnatividad/qsv)
 
-# the filename of the Geonames index file
-# this will be created in the QSV_CACHE_DIR directory
-QSV_GEOCODE_INDEX_FILENAME = qsv-geocode-index.bincode
+# the filename of the Geonames index file you wish to use for geocoding.
+# If not set, the `geocode` command will download the default index file for
+# that qsv version and save it in the QSV_CACHE_DIR directory for future use.
+# Set this only if you have prepared your own custom Geonames index file.
+# Note that you have to copy the custom index file to the QSV_CACHE_DIR directory
+# for it to be used by qsv.
+# QSV_GEOCODE_INDEX_FILENAME = my-qsv-geocode-index.bincode
