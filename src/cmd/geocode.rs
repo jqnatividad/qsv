@@ -127,7 +127,7 @@ geocode options:
                                   The following eight fields are available:
                                     id, name, latitude, longitude, country, admin1, timezone, population
                                     
-                                  e.g. "City: {name}, State: {admin1}, Country: {country}"
+                                  e.g. "City: {name}, State: {admin1}, Country: {country} - {timezone}"
 
                                 [default: %+]
     --invalid-result <string>   The string to use when the geocode result is empty/invalid.
@@ -735,7 +735,7 @@ fn format_result(cityrecord: &CitiesRecord, formatstr: &str, admin1_name: &str) 
     } else {
         // if formatstr does not start with %, then we're using dynfmt,
         // i.e. eight predefined fields below in curly braces are replaced with values
-        // e.g. "City: {city_name}, State: {admin1_name_value}, Country: {country}"
+        // e.g. "City: {name}, State: {admin1}, Country: {country} - {timezone}"
 
         let mut cityrecord_map: HashMap<&str, String> = HashMap::with_capacity(8);
         cityrecord_map.insert("id", cityrecord.id.to_string());
