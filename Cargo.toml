@@ -180,6 +180,7 @@ serde = { version = "1.0.188", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 serde_stacker = { version = "0.1", optional = true }
 serde_urlencoded = { version = "0.7", optional = true }
+simple-home-dir = { version = "0.1", features = ["expand_tilde"], optional = true }
 smartstring = { version = "1", optional = true }
 snap = "1"
 strsim = { version = "0.10", optional = true }
@@ -261,8 +262,15 @@ fetch = [
 ]
 foreach = []
 generate = ["test-data-generation"]
-geocode = ["anyhow", "cached", "dynfmt", "geosuggest-core", "geosuggest-utils"]
-luau = ["mlua", "sanitise-file-name"]
+geocode = [
+    "anyhow",
+    "cached",
+    "dynfmt",
+    "geosuggest-core",
+    "geosuggest-utils",
+    "simple-home-dir",
+]
+luau = ["mlua", "sanitise-file-name", "simple-home-dir"]
 python = ["pyo3"]
 to = ["csvs_convert"]
 lite = []
