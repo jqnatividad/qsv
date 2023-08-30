@@ -8,7 +8,7 @@ See https://download.geonames.org/export/dump/ for more information.
 It has three major subcommands:
  * suggest - given a City name, return the closest location coordinate by default.
  * reverse - given a location coordinate, return the closest City by default.
- * index-* - operations to update the Geonames cities index used by the geocode command.
+ * index-* - operations to update the local Geonames cities index.
              (index-check, index-update, index-load & index-reset)
  
 SUGGEST
@@ -17,7 +17,7 @@ city record based on the Jaro-Winkler distance between the partial city name and
 Geonames city name.
 
 The geocoded information is formatted based on --formatstr, returning it in 
-'%location' format if not specified.
+'%location' format (i.e. "(lat, long)") if not specified.
 
 Use the --new-column option if you want to keep the location column:
 
@@ -36,7 +36,7 @@ Use dynamic formatting to create a custom format.
 $ qsv geocode suggest city --formatstr "{name}, {admin1}, {country} in {timezone}" file.csv
 
 REVERSE
-Reverse geocode a WG84 coordinate to the nearest Geonames city record.
+Reverse geocode a WGS 84 coordinate to the nearest Geonames city record.
 It accepts "lat, long" or "(lat, long)" format.
 
 The geocoded information is formatted based on --formatstr, returning it in
@@ -57,7 +57,7 @@ The same as above, but get the timezone instead of the city and state.
 $ qsv geocode reverse LatLong --formatstr %timezone -c tz file.csv -o file_with_tz.csv
 
 INDEX-<operation>
-Updates the Geonames cities index used by the geocode command.
+Updates the local Geonames cities index used by the geocode command.
 
 It has four operations:
  * check  - checks if the local Geonames index is up-to-date compared to the Geonames website.
