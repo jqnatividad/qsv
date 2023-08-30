@@ -951,7 +951,7 @@ pub struct Stats {
 fn timestamp_ms_to_rfc3339(timestamp: i64, typ: FieldType) -> String {
     use chrono::{DateTime, NaiveDateTime, Utc};
 
-    let date_val = DateTime::<Utc>::from_utc(
+    let date_val = DateTime::<Utc>::from_naive_utc_and_offset(
         NaiveDateTime::from_timestamp_millis(timestamp).unwrap_or_default(),
         Utc,
     )

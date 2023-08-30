@@ -619,8 +619,10 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                             .as_secs();
                         let naive = chrono::NaiveDateTime::from_timestamp_opt(timestamp as i64, 0)
                             .unwrap_or_default();
-                        let datetime =
-                            chrono::DateTime::<chrono::Utc>::from_utc(naive, chrono::Utc);
+                        let datetime = chrono::DateTime::<chrono::Utc>::from_naive_utc_and_offset(
+                            naive,
+                            chrono::Utc,
+                        );
                         // format the datetime to RFC3339
                         format!("{datetime}", datetime = datetime.format("%+"))
                     },
