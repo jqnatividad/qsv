@@ -339,14 +339,28 @@ async fn geocode_main(args: Args) -> CliResult<()> {
         filter_languages: languages_vec.clone(),
     })?;
 
+    let rconfig = Config::new(&args.arg_input)
+        .delimiter(args.flag_delimiter)
+        .select(SelectColumns::parse(&args.arg_column)?);
+
+    // prep progress bar
+    let show_progress =
+        (args.flag_progressbar || util::get_envvar_flag("QSV_PROGRESSBAR")) && !rconfig.is_stdin();
+
+    let progress = ProgressBar::with_draw_target(None, ProgressDrawTarget::stderr_with_hz(5));
+    if show_progress {
+        util::prep_progress(&progress, util::count_rows(&rconfig)?);
+    } else {
+        progress.set_draw_target(ProgressDrawTarget::hidden());
+    }
+
     if index_cmd {
         match geocode_cmd {
             GeocodeSubCmd::IndexCheck => {
                 // check if we have updates
                 winfo!("Checking main Geonames website for updates...");
                 check_index_file(&geocode_index_file)?;
-                let engine =
-                    load_engine(geocode_index_file.clone().into(), args.flag_progressbar).await?;
+                let engine = load_engine(geocode_index_file.clone().into(), &progress).await?;
 
                 if updater.has_updates(&engine).await? {
                     winfo!(
@@ -362,8 +376,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                 // update/rebuild Geonames index from Geonames website
                 // will only update if there are changes
                 check_index_file(&geocode_index_file)?;
-                let engine =
-                    load_engine(geocode_index_file.clone().into(), args.flag_progressbar).await?;
+                let engine = load_engine(geocode_index_file.clone().into(), &progress).await?;
                 if updater.has_updates(&engine).await? {
                     winfo!(
                         "Updating/Rebuilding Geonames index. This will take a while as we need to \
@@ -382,7 +395,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                     winfo!("Validating alternate Geonames index: {index_file}...");
                     check_index_file(&index_file)?;
 
-                    let engine = load_engine(index_file.clone().into(), true).await?;
+                    let engine = load_engine(index_file.clone().into(), &progress).await?;
                     // we successfully loaded the alternate geocode index file, so its valid
                     // copy it to the default geocode index file
                     engine.dump_to(geocode_index_file.clone(), EngineDumpFormat::Bincode)?;
@@ -405,7 +418,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                 }
                 // if there's no index file, load_engine will download the default geocode index
                 // from the qsv GitHub repo
-                let _ = load_engine(geocode_index_file.clone().into(), true).await?;
+                let _ = load_engine(geocode_index_file.clone().into(), &progress).await?;
                 winfo!("Default Geonames index file reset to {QSV_VERSION} release.");
             },
             _ => unreachable!("index_cmd is true, so this is unreachable."),
@@ -415,11 +428,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
 
     // we're not doing an index subcommand, so we're doing a suggest or reverse
     // load the current local Geonames index
-    let engine = load_engine(geocode_index_file.clone().into(), args.flag_progressbar).await?;
-
-    let rconfig = Config::new(&args.arg_input)
-        .delimiter(args.flag_delimiter)
-        .select(SelectColumns::parse(&args.arg_column)?);
+    let engine = load_engine(geocode_index_file.clone().into(), &progress).await?;
 
     let mut rdr = rconfig.reader()?;
     let mut wtr = Config::new(&args.flag_output).writer()?;
@@ -446,17 +455,6 @@ async fn geocode_main(args: Args) -> CliResult<()> {
         headers.push_field(new_column);
     }
     wtr.write_record(&headers)?;
-
-    // prep progress bar
-    let show_progress =
-        (args.flag_progressbar || util::get_envvar_flag("QSV_PROGRESSBAR")) && !rconfig.is_stdin();
-
-    let progress = ProgressBar::with_draw_target(None, ProgressDrawTarget::stderr_with_hz(5));
-    if show_progress {
-        util::prep_progress(&progress, util::count_rows(&rconfig)?);
-    } else {
-        progress.set_draw_target(ProgressDrawTarget::hidden());
-    }
 
     // amortize memory allocation by reusing record
     #[allow(unused_assignments)]
@@ -497,6 +495,9 @@ async fn geocode_main(args: Args) -> CliResult<()> {
             break 'batch_loop;
         }
 
+        let min_score = args.flag_min_score;
+        let k_weight = args.flag_k_weight;
+
         // do actual apply command via Rayon parallel iterator
         batch
             .par_iter()
@@ -509,8 +510,8 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                         geocode_cmd,
                         &cell,
                         &args.flag_formatstr,
-                        args.flag_min_score,
-                        args.flag_k_weight,
+                        min_score,
+                        k_weight,
                     );
                     if let Some(geocoded_result) = search_result {
                         // we have a valid geocode result, so use that
@@ -570,28 +571,30 @@ fn check_index_file(index_file: &String) -> CliResult<()> {
     Ok(())
 }
 
-async fn load_engine(geocode_index_file: PathBuf, show_progress: bool) -> CliResult<Engine> {
+async fn load_engine(geocode_index_file: PathBuf, progressbar: &ProgressBar) -> CliResult<Engine> {
     let index_file = std::path::Path::new(&geocode_index_file);
 
     if index_file.exists() {
         // load existing local index
-        if show_progress {
-            woutinfo!(
+        if !progressbar.is_hidden() {
+            progressbar.println(format!(
                 "Loading existing Geonames index from {}",
                 index_file.display()
-            );
+            ));
         }
     } else {
         // initial load, download index file from qsv releases
-        if show_progress {
-            woutinfo!("Downloading default Geonames index for qsv {QSV_VERSION} release...");
+        if !progressbar.is_hidden() {
+            progressbar.println(format!(
+                "Downloading default Geonames index for qsv {QSV_VERSION} release..."
+            ));
         }
         util::download_file(
             &format!(
                 "https://github.com/jqnatividad/qsv/releases/download/{QSV_VERSION}/qsv-{QSV_VERSION}-geocode-index.bincode"
             ),
             &geocode_index_file.to_string_lossy(),
-            show_progress,
+            !progressbar.is_hidden(),
             None,
             None,
             None,
@@ -720,7 +723,6 @@ fn format_result(cityrecord: &CitiesRecord, formatstr: &str, admin1_name: &str) 
                 cityrecord.country.clone().unwrap().name
             ),
         }
-        .to_string()
     } else {
         // if formatstr does not start with %, then we're using dynfmt,
         // i.e. eight predefined fields below in curly braces are replaced with values
