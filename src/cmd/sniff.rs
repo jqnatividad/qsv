@@ -334,8 +334,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                         util::timeout_secs(args.flag_timeout).unwrap_or(30),
                     ))
                     .send()
-                    .await
-                    .map_err(|e| format!("Download failed: {e}"))?;
+                    .await?;
 
                 let last_modified = match res.headers().get("Last-Modified") {
                     Some(lm) => match lm.to_str() {
@@ -423,10 +422,9 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
 
                 // download chunks until we have the desired sample size
                 while let Some(item) = stream.next().await {
-                    chunk = item.map_err(|_| "Error while downloading file")?;
+                    chunk = item?;
 
-                    file.write_all(&chunk)
-                        .map_err(|_| "Error while writing to file")?;
+                    file.write_all(&chunk)?;
                     let chunk_len = chunk.len();
 
                     if downloaded == 0 && !snappy_flag && args.flag_quick {
@@ -607,8 +605,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                     },
                 }
 
-                let metadata = fs::metadata(&path)
-                    .map_err(|_| format!("Cannot get metadata for file '{path}'"))?;
+                let metadata = fs::metadata(&path)?;
 
                 let file_size = metadata.len() as usize;
                 let last_modified = match metadata.modified() {
@@ -659,9 +656,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
             return fail_clierror!("stdin input is not UTF8-encoded");
         }
 
-        let metadata = file
-            .metadata()
-            .map_err(|_| "Cannot get metadata for stdin file")?;
+        let metadata = file.metadata()?;
 
         let file_size = metadata.len() as usize;
         // set last_modified to now in RFC3339 format
