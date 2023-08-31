@@ -1293,7 +1293,7 @@ pub fn decompress_snappy_file(
 /// if sample_size is Some, it will be used as the number of bytes to download
 pub async fn download_file(
     url: &str,
-    path: &str,
+    path: PathBuf,
     show_progress: bool,
     custom_user_agent: Option<String>,
     download_timeout: Option<u16>,
@@ -1368,7 +1368,7 @@ pub async fn download_file(
     let sample_size = sample_size.unwrap_or(0);
 
     // download chunks
-    let mut file = File::create(path).map_err(|_| format!("Failed to create file '{path}'"))?;
+    let mut file = File::create(path)?;
     let mut downloaded: u64 = 0;
     let mut stream = res.bytes_stream();
 
