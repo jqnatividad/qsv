@@ -94,17 +94,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         Some(uri) => {
             if Url::parse(&uri).is_ok() && uri.starts_with("http") {
                 // its a remote file, download it first
-                let temp_download_path = temp_download.path().to_str().unwrap().to_string();
-
                 let future = util::download_file(
                     &uri,
-                    &temp_download_path,
+                    temp_download.path().to_path_buf(),
                     false,
                     args.flag_user_agent,
                     args.flag_timeout,
                     None,
                 );
                 tokio::runtime::Runtime::new()?.block_on(future)?;
+                // safety: temp_download is a NamedTempFile, so we know it can be converted to a
+                // string
+                let temp_download_path = temp_download.path().to_str().unwrap().to_string();
                 Some(temp_download_path)
             } else {
                 // its a local file
