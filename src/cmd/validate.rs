@@ -270,9 +270,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                              You may also want to transcode your data to UTF-8 first using `iconv` \
                              or `recode`."
                         );
-                    } else {
-                        return fail_clierror!("Header Validation error: {e}.");
                     }
+                    // its not a UTF-8 error, report a generic header validation error
+                    return fail_clierror!("Header Validation error: {e}.");
                 },
             }
         }
