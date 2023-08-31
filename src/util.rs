@@ -1326,11 +1326,7 @@ pub async fn download_file(
         },
     };
 
-    let res = client
-        .get(url)
-        .send()
-        .await
-        .map_err(|e| format!("Download failed: {e}"))?;
+    let res = client.get(url).send().await?;
 
     let total_size = match res.content_length() {
         Some(l) => l,
@@ -1373,9 +1369,8 @@ pub async fn download_file(
     let mut stream = res.bytes_stream();
 
     while let Some(item) = stream.next().await {
-        let chunk = item.map_err(|_| "Error while downloading file")?;
-        file.write_all(&chunk)
-            .map_err(|_| "Error while writing to file")?;
+        let chunk = item?;
+        file.write_all(&chunk)?;
         let new = min(downloaded + (chunk.len() as u64), total_size);
         downloaded = new;
 
