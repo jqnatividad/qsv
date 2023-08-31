@@ -1,8 +1,12 @@
 static USAGE: &str = r#"
 Geocodes a location against an updatable local copy of the Geonames cities index.
 
-By default, it uses the Geonames Gazeteer cities15000.zip file. It contains cities with
-populations > 15,000 (about ~26k cities). 
+When its first run, the geocode command will download a prebuilt Geonames cities index
+from the qsv GitHub repo, and will use it going forward. You can operate on the local
+index using the index-* subcommands.
+
+By default, the prebuilt index uses the Geonames Gazeteer cities15000.zip file using
+English names. It contains cities with populations > 15,000 (about ~26k cities). 
 See https://download.geonames.org/export/dump/ for more information.
 
 It has three major subcommands:
@@ -64,8 +68,8 @@ It has four operations:
  * update - updates the local Geonames index with the latest changes from the Geonames website.
             use this command judiciously as it downloads about ~200mb of data from Geonames
             and rebuilds the index from scratch using the --languages option.
- * reset  - resets the local Geonames index to the default Geonames cities index, downloading
-            it from the qsv GitHub repo for that release.
+ * reset  - resets the local Geonames index to the default prebuilt, English language Geonames
+            cities index - downloading it from the qsv GitHub repo for that release.
  * load   - load a Geonames cities index from a file, making it the default index going forward.
 
 Examples:
