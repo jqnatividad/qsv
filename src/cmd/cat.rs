@@ -105,7 +105,7 @@ impl Args {
                 wtr.write_byte_record(&row)?;
             }
         }
-        wtr.flush().map_err(From::from)
+        Ok(wtr.flush()?)
     }
 
     fn cat_rowskey(&self) -> CliResult<()> {
@@ -215,7 +215,7 @@ impl Args {
                 wtr.write_byte_record(&csv::ByteRecord::new())?;
             }
         }
-        wtr.flush().map_err(From::from)
+        Ok(wtr.flush()?)
     }
 
     fn cat_columns(&self) -> CliResult<()> {
@@ -264,6 +264,6 @@ impl Args {
             }
             wtr.write_byte_record(&record)?;
         }
-        wtr.flush().map_err(From::from)
+        Ok(wtr.flush()?)
     }
 }
