@@ -594,24 +594,21 @@ async fn load_engine(geocode_index_file: PathBuf, progressbar: &ProgressBar) -> 
 
     if index_file.exists() {
         // load existing local index
-        if !progressbar.is_hidden() {
-            progressbar.println(format!(
-                "Loading existing Geonames index from {}",
-                index_file.display()
-            ));
-        }
+        progressbar.println(format!(
+            "Loading existing Geonames index from {}",
+            index_file.display()
+        ));
     } else {
         // initial load, download index file from qsv releases
-        if !progressbar.is_hidden() {
-            progressbar.println(format!(
-                "Downloading default Geonames index for qsv {QSV_VERSION} release..."
-            ));
-        }
+        progressbar.println(format!(
+            "Downloading default Geonames index for qsv {QSV_VERSION} release..."
+        ));
+
         util::download_file(
             &format!(
                 "https://github.com/jqnatividad/qsv/releases/download/{QSV_VERSION}/qsv-{QSV_VERSION}-geocode-index.bincode"
             ),
-            &geocode_index_file.to_string_lossy(),
+            geocode_index_file.clone(),
             !progressbar.is_hidden(),
             None,
             None,
