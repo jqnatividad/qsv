@@ -58,7 +58,7 @@ $ qsv geocode reverse LatLong -c CityState file.csv -o file_with_citystate.csv
 
 The same as above, but get the timezone instead of the city and state.
 
-$ qsv geocode reverse LatLong --formatstr %timezone -c tz file.csv -o file_with_tz.csv
+$ qsv geocode reverse LatLong -f %timezone -c tz file.csv -o file_with_tz.csv
 
 INDEX-<operation>
 Updates the local Geonames cities index used by the geocode command.
@@ -131,8 +131,8 @@ geocode options:
                                 Alternatively, you can use dynamic formatting to create a custom format.
                                 To do so, set the --formatstr to a dynfmt template, enclosing field names
                                 in curly braces.
-                                The following eight fields are available:
-                                  id, name, latitude, longitude, country, admin1, timezone, population
+                                The following nine fields are available:
+                                  id, name, latitude, longitude, country, admin1, admin2, timezone, population
                                     
                                   e.g. "City: {name}, State: {admin1}, Country: {country} - {timezone}"
 
