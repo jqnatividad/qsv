@@ -214,32 +214,38 @@ fn geocode_suggest_fmt_cityrecord() {
             "CitiesRecord { id: 5116495, name: \"Elmhurst\", latitude: 40.73649, longitude: \
              -73.87791, country: Some(Country { id: 6252001, code: \"US\", name: \"United \
              States\" }), admin_division: Some(AdminDivision { id: 5128638, code: \"US.NY\", \
-             name: \"New York\" }), timezone: \"America/New_York\", names: Some({\"en\": \
-             \"Elmhurst\"}), country_names: Some({\"en\": \"United States\"}), admin1_names: \
-             Some({\"en\": \"New York\"}), population: 113364 }"
+             name: \"New York\" }), admin2_division: Some(AdminDivision { id: 5133268, code: \
+             \"US.NY.081\", name: \"Queens County\" }), timezone: \"America/New_York\", names: \
+             Some({\"en\": \"Elmhurst\"}), country_names: Some({\"en\": \"United States\"}), \
+             admin1_names: Some({\"en\": \"New York\"}), admin2_names: Some({\"en\": \"Queens \
+             County\"}), population: 113364 }"
         ],
         svec![
             "CitiesRecord { id: 5115843, name: \"East Flatbush\", latitude: 40.65371, longitude: \
              -73.93042, country: Some(Country { id: 6252001, code: \"US\", name: \"United \
              States\" }), admin_division: Some(AdminDivision { id: 5128638, code: \"US.NY\", \
-             name: \"New York\" }), timezone: \"America/New_York\", names: Some({\"en\": \"East \
-             Flatbush\"}), country_names: Some({\"en\": \"United States\"}), admin1_names: \
-             Some({\"en\": \"New York\"}), population: 178464 }"
+             name: \"New York\" }), admin2_division: Some(AdminDivision { id: 6941775, code: \
+             \"US.NY.047\", name: \"Kings County\" }), timezone: \"America/New_York\", names: \
+             Some({\"en\": \"East Flatbush\"}), country_names: Some({\"en\": \"United States\"}), \
+             admin1_names: Some({\"en\": \"New York\"}), admin2_names: Some({\"en\": \"Kings\"}), \
+             population: 178464 }"
         ],
         svec![
             "CitiesRecord { id: 5128581, name: \"New York City\", latitude: 40.71427, longitude: \
              -74.00597, country: Some(Country { id: 6252001, code: \"US\", name: \"United \
              States\" }), admin_division: Some(AdminDivision { id: 5128638, code: \"US.NY\", \
-             name: \"New York\" }), timezone: \"America/New_York\", names: Some({\"en\": \"New \
-             York\"}), country_names: Some({\"en\": \"United States\"}), admin1_names: \
-             Some({\"en\": \"New York\"}), population: 8804190 }"
+             name: \"New York\" }), admin2_division: None, timezone: \"America/New_York\", names: \
+             Some({\"en\": \"New York\"}), country_names: Some({\"en\": \"United States\"}), \
+             admin1_names: Some({\"en\": \"New York\"}), admin2_names: None, population: 8804190 }"
         ],
         svec![
             "CitiesRecord { id: 6332428, name: \"East Harlem\", latitude: 40.79472, longitude: \
              -73.9425, country: Some(Country { id: 6252001, code: \"US\", name: \"United States\" \
              }), admin_division: Some(AdminDivision { id: 5128638, code: \"US.NY\", name: \"New \
-             York\" }), timezone: \"America/New_York\", names: None, country_names: Some({\"en\": \
-             \"United States\"}), admin1_names: Some({\"en\": \"New York\"}), population: 115921 }"
+             York\" }), admin2_division: Some(AdminDivision { id: 5128594, code: \"US.NY.061\", \
+             name: \"New York County\" }), timezone: \"America/New_York\", names: None, \
+             country_names: Some({\"en\": \"United States\"}), admin1_names: Some({\"en\": \"New \
+             York\"}), admin2_names: Some({\"en\": \"New York County\"}), population: 115921 }"
         ],
         svec!["This is not a Location and it will not be geocoded"],
         svec!["40.71427, -74.00597"],
@@ -247,9 +253,11 @@ fn geocode_suggest_fmt_cityrecord() {
             "CitiesRecord { id: 1703417, name: \"Makati City\", latitude: 14.55027, longitude: \
              121.03269, country: Some(Country { id: 1694008, code: \"PH\", name: \"Philippines\" \
              }), admin_division: Some(AdminDivision { id: 7521311, code: \"PH.NCR\", name: \
-             \"Metro Manila\" }), timezone: \"Asia/Manila\", names: Some({\"en\": \"Makati \
-             City\"}), country_names: Some({\"en\": \"Philippines\"}), admin1_names: \
-             Some({\"en\": \"National Capital Region\"}), population: 510383 }"
+             \"Metro Manila\" }), admin2_division: Some(AdminDivision { id: 11395838, code: \
+             \"PH.NCR.137600000\", name: \"Southern Manila District\" }), timezone: \
+             \"Asia/Manila\", names: Some({\"en\": \"Makati City\"}), country_names: \
+             Some({\"en\": \"Philippines\"}), admin1_names: Some({\"en\": \"National Capital \
+             Region\"}), admin2_names: None, population: 510383 }"
         ],
     ];
     assert_eq!(got, expected);

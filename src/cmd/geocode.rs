@@ -88,7 +88,7 @@ qsv geocode suggest [--formatstr=<string>] [options] <column> [<input>]
 qsv geocode reverse [--formatstr=<string>] [options] <column> [<input>]
 qsv geocode index-load <index-file>
 qsv geocode index-check
-qsv geocode index-update
+qsv geocode index-update [--languages=<lang>] [--force]
 qsv geocode index-reset
 qsv geocode --help
 
@@ -97,7 +97,7 @@ geocode arguments:
     <input>                     The input file to read from. If not specified, reads from stdin.
     <column>                    The column to geocode.
     <index-file>                The alternate geonames index file to use. It must be a .bincode file.
-                                Only used by the 'load' operations.
+                                Only used by the index-load subcommand.
 
 geocode options:
     -c, --new-column <name>     Put the transformed values in a new column instead.
@@ -115,6 +115,7 @@ geocode options:
                                   - '%city-state-country' | '%city-admin1-country' - Brooklyn, New York US
                                   - '%city' - Brooklyn
                                   - '%state' | '%admin1' - New York
+                                  - "%county' | '%admin2' - Kings County
                                   - '%country' - US
                                   - '%cityrecord' - returns the full city record as a string
                                   - '%lat-long' - <latitude>, <longitude>
@@ -138,7 +139,7 @@ geocode options:
                                 If an invalid dynfmt template is specified, it will return "Invalid dynfmt template."
                                 [default: %+]
 
-    --invalid-result <string>   The string to use when the geocode result is empty/invalid.
+    --invalid-result <string>   The string to return when the geocode result is empty/invalid.
                                 If not set, the original value is used.
     -j, --jobs <arg>            The number of jobs to run in parallel.
                                 When not set, the number of jobs is set to the number of CPUs detected.
@@ -146,14 +147,17 @@ geocode options:
                                 [default: 50000]
     --timeout <seconds>         Timeout for downloading Geonames cities index.
                                 [default: 60]
-    --languages <lang>          The languages to use when building the Geonames cities index.
-                                Only used by the 'index-update' subcommand.
-                                The languages are specified as a comma-separated list of ISO 639-1 codes.
-                                [default: en]
     --cache-dir <dir>           The directory to use for caching the Geonames cities index.
                                 If the directory does not exist, qsv will attempt to create it.
                                 If the QSV_CACHE_DIR envvar is set, it will be used instead.
-                                [default: ~/.qsv-cache]
+                                [default: ~/.qsv-cache]                                
+
+                                INDEX-UPDATE only options:
+    --languages <lang>          The languages to use when building the Geonames cities index.
+                                The languages are specified as a comma-separated list of ISO 639-1 codes.
+                                [default: en]
+    --force                     Force update the Geonames cities index. If not set, qsv will check if there
+                                are updates available at Geonames.org before updating the index.
 
 Common options:
     -h, --help                  Display this message
@@ -169,7 +173,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use cached::proc_macro::cached;
+use cached::{proc_macro::cached, SizedCache};
 use dynfmt::Format;
 use geosuggest_core::{CitiesRecord, Engine, EngineDumpFormat};
 use geosuggest_utils::{IndexUpdater, IndexUpdaterSettings, SourceItem};
@@ -209,8 +213,9 @@ struct Args {
     flag_invalid_result: Option<String>,
     flag_batch:          u32,
     flag_timeout:        u16,
-    flag_languages:      String,
     flag_cache_dir:      String,
+    flag_languages:      String,
+    flag_force:          bool,
     flag_jobs:           Option<usize>,
     flag_new_column:     Option<String>,
     flag_output:         Option<String>,
@@ -230,6 +235,12 @@ static DEFAULT_CITIES_NAMES_FILENAME: &str = "alternateNamesV2.txt";
 static DEFAULT_COUNTRY_INFO_URL: &str = "https://download.geonames.org/export/dump/countryInfo.txt";
 static DEFAULT_ADMIN1_CODES_URL: &str =
     "https://download.geonames.org/export/dump/admin1CodesASCII.txt";
+static DEFAULT_ADMIN2_CODES_URL: &str = "https://download.geonames.org/export/dump/admin2Codes.txt";
+
+// max number of entries in LRU cache
+static CACHE_SIZE: usize = 2_000_000;
+// max number of entries in fallback LRU cache if we can't allocate CACHE_SIZE
+static FALLBACK_CACHE_SIZE: usize = CACHE_SIZE / 4;
 
 static EMPTY_STRING: String = String::new();
 static INVALID_DYNFMT: &str = "Invalid dynfmt template.";
@@ -354,6 +365,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
         }),
         countries_url:    Some(DEFAULT_COUNTRY_INFO_URL),
         admin1_codes_url: Some(DEFAULT_ADMIN1_CODES_URL),
+        admin2_codes_url: Some(DEFAULT_ADMIN2_CODES_URL),
         filter_languages: languages_vec.clone(),
     })?;
 
@@ -394,17 +406,27 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                 // update/rebuild Geonames index from Geonames website
                 // will only update if there are changes
                 check_index_file(&geocode_index_file)?;
-                let engine = load_engine(geocode_index_file.clone().into(), &progress).await?;
-                if updater.has_updates(&engine).await? {
-                    winfo!(
-                        "Updating/Rebuilding Geonames index. This will take a while as we need to \
-                         download ~200mb of data from Geonames and rebuild the index..."
-                    );
+                if args.flag_force {
+                    winfo!("Forcing fresh build of Geonames index: {geocode_index_file}...");
                     let engine = updater.build().await?;
                     engine.dump_to(geocode_index_file.clone(), EngineDumpFormat::Bincode)?;
-                    winfo!("Updates applied: {geocode_index_file}");
+                    winfo!("Geonames index built: {geocode_index_file}");
                 } else {
-                    winfo!("Skipping update. Geonames index is up-to-date.");
+                    winfo!("Checking main Geonames website for updates...");
+
+                    let engine = load_engine(geocode_index_file.clone().into(), &progress).await?;
+                    if updater.has_updates(&engine).await? {
+                        winfo!(
+                            "Updating/Rebuilding Geonames index. This will take a while as we \
+                             need to download ~200mb of data from Geonames and rebuild the \
+                             index..."
+                        );
+                        let engine = updater.build().await?;
+                        engine.dump_to(geocode_index_file.clone(), EngineDumpFormat::Bincode)?;
+                        winfo!("Updates applied: {geocode_index_file}");
+                    } else {
+                        winfo!("Skipping update. Geonames index is up-to-date.");
+                    }
                 }
             },
             GeocodeSubCmd::IndexLoad => {
@@ -419,7 +441,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                     engine.dump_to(geocode_index_file.clone(), EngineDumpFormat::Bincode)?;
                     winfo!(
                         "Valid Geonames index file {index_file} copied to {geocode_index_file}. \
-                         It will be used from now on or until you reset it.",
+                         It will be used from now on or until you reset/rebuild it.",
                     );
                 } else {
                     return fail_incorrectusage_clierror!(
@@ -622,6 +644,9 @@ async fn load_engine(geocode_index_file: PathBuf, progressbar: &ProgressBar) -> 
 }
 
 #[cached(
+    type = "SizedCache<String, String>",
+    create = "{ SizedCache::try_with_size(CACHE_SIZE).unwrap_or_else(|_| \
+              SizedCache::with_size(FALLBACK_CACHE_SIZE)) }",
     key = "String",
     convert = r#"{ format!("{cell}") }"#,
     option = true,
@@ -641,13 +666,6 @@ fn search_cached(
             return None;
         };
 
-        let Some((_admin1_key, admin1_name)) = (match &cityrecord.admin1_names {
-            Some(admin1) => admin1.iter().next().map(|s| s.to_owned()),
-            None => Some((&EMPTY_STRING, &EMPTY_STRING)),
-        }) else {
-            return None;
-        };
-
         if formatstr == "%+" {
             // default for suggest is location - e.g. "(lat, long)"
             return Some(format!(
@@ -657,7 +675,7 @@ fn search_cached(
             ));
         }
 
-        return Some(format_result(cityrecord, formatstr, true, admin1_name));
+        return Some(format_result(cityrecord, formatstr, true));
     } else if mode == GeocodeSubCmd::Reverse {
         // regex for Location field. Accepts (lat, long) & lat, long
         let locregex: &'static Regex = regex_oncelock!(
@@ -677,15 +695,16 @@ fn search_cached(
                     return None;
                 };
 
-                let Some((_admin1_key, admin1_name)) = (match &cityrecord.admin1_names {
-                    Some(admin1) => admin1.iter().next().map(|s| s.to_owned()),
-                    None => Some((&EMPTY_STRING, &EMPTY_STRING)),
-                }) else {
-                    return None;
-                };
-
                 if formatstr == "%+" {
                     // default for reverse is city-admin1 - e.g. "Brooklyn, New York"
+                    let (_admin1_key, admin1_name) = match &cityrecord.admin1_names {
+                        Some(admin1) => admin1
+                            .iter()
+                            .next()
+                            .unwrap_or((&EMPTY_STRING, &EMPTY_STRING)),
+                        None => (&EMPTY_STRING, &EMPTY_STRING),
+                    };
+
                     return Some(format!(
                         "{city}, {admin1}",
                         city = cityrecord.name.clone(),
@@ -693,7 +712,7 @@ fn search_cached(
                     ));
                 }
 
-                return Some(format_result(cityrecord, formatstr, false, admin1_name));
+                return Some(format_result(cityrecord, formatstr, false));
             }
         } else {
             // not a valid lat, long
@@ -706,12 +725,23 @@ fn search_cached(
 
 /// format the geocoded result based on formatstr if its not %+
 #[inline]
-fn format_result(
-    cityrecord: &CitiesRecord,
-    formatstr: &str,
-    suggest_mode: bool,
-    admin1_name: &str,
-) -> String {
+fn format_result(cityrecord: &CitiesRecord, formatstr: &str, suggest_mode: bool) -> String {
+    let (_admin1_key, admin1_name) = match &cityrecord.admin1_names {
+        Some(admin1) => admin1
+            .iter()
+            .next()
+            .unwrap_or((&EMPTY_STRING, &EMPTY_STRING)),
+        None => (&EMPTY_STRING, &EMPTY_STRING),
+    };
+
+    let (_admin2_key, admin2_name) = match &cityrecord.admin2_names {
+        Some(admin2) => admin2
+            .iter()
+            .next()
+            .unwrap_or((&EMPTY_STRING, &EMPTY_STRING)),
+        None => (&EMPTY_STRING, &EMPTY_STRING),
+    };
+
     if formatstr.starts_with('%') {
         // if formatstr starts with %, then we're using a predefined format
         match formatstr {
@@ -731,6 +761,7 @@ fn format_result(
                 cityrecord.country.clone().unwrap().name
             ),
             "%state" | "%admin1" => admin1_name.to_owned(),
+            "%county" | "%admin2" => admin2_name.to_owned(),
             "%country" => cityrecord.country.clone().unwrap().name,
             "%id" => format!("{}", cityrecord.id),
             "%population" => format!("{}", cityrecord.population),
@@ -760,13 +791,14 @@ fn format_result(
         // i.e. eight predefined fields below in curly braces are replaced with values
         // e.g. "City: {name}, State: {admin1}, Country: {country} - {timezone}"
 
-        let mut cityrecord_map: HashMap<&str, String> = HashMap::with_capacity(8);
+        let mut cityrecord_map: HashMap<&str, String> = HashMap::with_capacity(9);
         cityrecord_map.insert("id", cityrecord.id.to_string());
         cityrecord_map.insert("name", cityrecord.name.clone());
         cityrecord_map.insert("latitude", cityrecord.latitude.to_string());
         cityrecord_map.insert("longitude", cityrecord.longitude.to_string());
         cityrecord_map.insert("country", cityrecord.country.clone().unwrap().name);
         cityrecord_map.insert("admin1", admin1_name.to_owned());
+        cityrecord_map.insert("admin2", admin2_name.to_owned());
         cityrecord_map.insert("timezone", cityrecord.timezone.clone());
         cityrecord_map.insert("population", cityrecord.population.to_string());
 

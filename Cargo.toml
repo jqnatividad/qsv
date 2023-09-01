@@ -103,6 +103,8 @@ futures = "0.3"
 futures-util = "0.3"
 geosuggest-core = { version = "0.3", optional = true }
 geosuggest-utils = { version = "0.3", optional = true }
+# geosuggest-core = { path = "../geosuggest/geosuggest-core", optional = true}
+# geosuggest-utils = { path = "../geosuggest/geosuggest-utils", optional = true}
 governor = { version = "0.6", optional = true }
 grex = { version = "1.4", default-features = false }
 gzp = { version = "0.11", default-features = false, features = [
@@ -220,6 +222,10 @@ postgres = "0.19"
 quickcheck = { version = "1", default-features = false }
 rusqlite = { version = "0.29", features = ["bundled"] }
 serial_test = { version = "2.0", features = ["file_locks"] }
+
+[patch.crates-io]
+geosuggest-core  = { git = "https://github.com/estin/geosuggest", rev = "5c6b08b" }
+geosuggest-utils = { git = "https://github.com/estin/geosuggest", rev = "5c6b08b" }
 
 [features]
 default = ["mimalloc"]
