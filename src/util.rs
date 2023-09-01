@@ -357,13 +357,18 @@ macro_rules! update_cache_info {
 
         match $cache_instance.lock() {
             Ok(cache) => {
-                if cache.cache_size() > 0 {
+                let size = cache.cache_size();
+                if size > 0 {
                     let hits = cache.cache_hits().unwrap_or_default();
                     let misses = cache.cache_misses().unwrap_or(1);
                     let hit_ratio = (hits as f64 / (hits + misses) as f64) * 100.0;
+                    let capacity = cache.cache_capacity();
                     $progress.set_message(format!(
-                        " of {} records. Cache hit ratio: {hit_ratio:.2}%",
+                        " of {} records. Cache {:.2}% entries: {} capacity: {}.",
                         HumanCount($progress.length().unwrap()),
+                        hit_ratio,
+                        HumanCount(size as u64),
+                        HumanCount(capacity.unwrap() as u64),
                     ));
                 }
             },
