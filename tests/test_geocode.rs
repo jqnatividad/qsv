@@ -38,6 +38,128 @@ fn geocode_suggest() {
 }
 
 #[test]
+fn geocode_suggest_intl() {
+    let wrk = Workdir::new("geocode_suggest_intl");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["Location"],
+            svec!["Paris"],
+            svec!["Manila"],
+            svec!["London"],
+            svec!["Berlin"],
+            svec!["Moscow"],
+            svec!["This is not a Location and it will not be geocoded"],
+            svec!["Brazil"],
+            svec!["95.213424, 190,1234565"], // invalid lat, long
+            svec!["Havana"],
+        ],
+    );
+    let mut cmd = wrk.command("geocode");
+    cmd.arg("suggest")
+        .arg("Location")
+        .args(["-f", "%city-admin1-country"])
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["Location"],
+        svec!["Paris, Île-de-France Region France"],
+        svec!["Manila, National Capital Region Philippines"],
+        svec!["London, England United Kingdom"],
+        svec!["Berlin,  Germany"],
+        svec!["Moscow, Moscow Russia"],
+        svec!["This is not a Location and it will not be geocoded"],
+        svec!["Brasília, Federal District Brazil"],
+        svec!["95.213424, 190,1234565"],
+        svec!["Havana, La Habana Province Cuba"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn geocode_suggest_intl_country_filter() {
+    let wrk = Workdir::new("geocode_suggest_intl_country_filter");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["Location"],
+            svec!["Paris"],
+            svec!["Manila"],
+            svec!["London"],
+            svec!["Berlin"],
+            svec!["Moscow"],
+            svec!["This is not a Location and it will not be geocoded"],
+            svec!["Brazil"],
+            svec!["95.213424, 190,1234565"], // invalid lat, long
+            svec!["Havana"],
+        ],
+    );
+    let mut cmd = wrk.command("geocode");
+    cmd.arg("suggest")
+        .arg("Location")
+        .args(["--country", "us"])
+        .args(["-f", "%city-admin1-country"])
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["Location"],
+        svec!["Paris, Texas United States"],
+        svec!["Manteca, California United States"],
+        svec!["Sterling, Virginia United States"],
+        svec!["Burlington, North Carolina United States"],
+        svec!["Moscow, Idaho United States"],
+        svec!["This is not a Location and it will not be geocoded"],
+        svec!["Bradley, Illinois United States"],
+        svec!["95.213424, 190,1234565"],
+        svec!["Savannah, Georgia United States"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn geocode_suggest_intl_multi_country_filter() {
+    let wrk = Workdir::new("geocode_suggest_intl_multi_country_filter");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["Location"],
+            svec!["Paris"],
+            svec!["Manila"],
+            svec!["London"],
+            svec!["Berlin"],
+            svec!["Moscow"],
+            svec!["This is not a Location and it will not be geocoded"],
+            svec!["Brazil"],
+            svec!["95.213424, 190,1234565"], // invalid lat, long
+            svec!["Havana"],
+        ],
+    );
+    let mut cmd = wrk.command("geocode");
+    cmd.arg("suggest")
+        .arg("Location")
+        .args(["--country", "us,fr,ru"])
+        .args(["-f", "%city-admin1-country"])
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["Location"],
+        svec!["Paris, Île-de-France Region France"],
+        svec!["Manteca, California United States"],
+        svec!["Sterling, Virginia United States"],
+        svec!["Burlington, North Carolina United States"],
+        svec!["Moscow, Moscow Russia"],
+        svec!["This is not a Location and it will not be geocoded"],
+        svec!["Bradley, Illinois United States"],
+        svec!["95.213424, 190,1234565"],
+        svec!["Savannah, Georgia United States"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn geocode_suggest_invalid() {
     let wrk = Workdir::new("geocode_suggest_invalid");
     wrk.create(
