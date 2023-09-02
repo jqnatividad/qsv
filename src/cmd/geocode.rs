@@ -30,6 +30,10 @@ Geocode file.csv city column and set the geocoded value to a new column named la
 
 $ qsv geocode suggest city --new-column lat_long file.csv
 
+Limit suggestions to the US, Canada and Mexico.
+
+$ qsv geocode suggest city --country us,ca,mx file.csv
+
 Geocode file.csv city column with --formatstr=%state and set the 
 geocoded value a new column named state.
 
@@ -37,7 +41,7 @@ $ qsv geocode suggest city --formatstr %state --new-column state file.csv
 
 Use dynamic formatting to create a custom format.
 
-$ qsv geocode suggest city --formatstr "{name}, {admin1}, {country} in {timezone}" file.csv
+$ qsv geocode suggest city -f "{name}, {admin1}, {country} in {timezone}" file.csv
 
 REVERSE
 Reverse geocode a WGS 84 coordinate to the nearest Geonames city record.
@@ -109,6 +113,10 @@ geocode options:
                                 Larger values will favor more populated cities.
                                 If not set (default), the population is not used and the
                                 nearest city is returned.
+    --country <country_list>    The comma-delimited list of countries to filter for when calling suggest.
+                                Country is specified as a ISO 3166-1 alpha-2 (two-letter) country code.
+                                https://en.wikipedia.org/wiki/ISO_3166-2
+                                If not set, suggest will search all countries in the current loaded index.
     -f, --formatstr=<string>    The place format to use. The predefined formats are:
                                   - '%city-state' - e.g. Brooklyn, New York
                                   - '%city-country' - Brooklyn, US
@@ -155,6 +163,7 @@ geocode options:
                                 INDEX-UPDATE only options:
     --languages <lang>          The languages to use when building the Geonames cities index.
                                 The languages are specified as a comma-separated list of ISO 639-1 codes.
+                                https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
                                 [default: en]
     --force                     Force update the Geonames cities index. If not set, qsv will check if there
                                 are updates available at Geonames.org before updating the index.
@@ -209,6 +218,7 @@ struct Args {
     flag_rename:         Option<String>,
     flag_min_score:      Option<f32>,
     flag_k_weight:       Option<f32>,
+    flag_country:        Option<String>,
     flag_formatstr:      String,
     flag_invalid_result: Option<String>,
     flag_batch:          u32,
@@ -496,6 +506,22 @@ async fn geocode_main(args: Args) -> CliResult<()> {
     }
     wtr.write_record(&headers)?;
 
+    let country_filter_list = if let Some(country_list) = args.flag_country {
+        if args.cmd_reverse {
+            return fail_incorrectusage_clierror!(
+                "Country filter is not supported for reverse geocoding."
+            );
+        }
+        Some(
+            country_list
+                .split(',')
+                .map(|s| s.trim().to_string())
+                .collect::<Vec<String>>(),
+        )
+    } else {
+        None
+    };
+
     // amortize memory allocation by reusing record
     #[allow(unused_assignments)]
     let mut batch_record = csv::StringRecord::new();
@@ -552,6 +578,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                         &args.flag_formatstr,
                         min_score,
                         k_weight,
+                        &country_filter_list,
                     );
                     if let Some(geocoded_result) = search_result {
                         // we have a valid geocode result, so use that
@@ -659,9 +686,10 @@ fn search_cached(
     formatstr: &str,
     min_score: Option<f32>,
     k: Option<f32>,
+    country_filter_list: &Option<Vec<String>>,
 ) -> Option<String> {
     if mode == GeocodeSubCmd::Suggest {
-        let search_result = engine.suggest(cell, 1, min_score);
+        let search_result = engine.suggest(cell, 1, min_score, country_filter_list.as_deref());
         let Some(cityrecord) = search_result.into_iter().next() else {
             return None;
         };
@@ -687,7 +715,8 @@ fn search_cached(
             let lat = fast_float::parse(&loccaps[1]).unwrap_or_default();
             let long = fast_float::parse(&loccaps[2]).unwrap_or_default();
             if (-90.0..=90.0).contains(&lat) && (-180.0..=180.0).contains(&long) {
-                let search_result = engine.reverse((lat, long), 1, k);
+                let search_result =
+                    engine.reverse((lat, long), 1, k, country_filter_list.as_deref());
                 let Some(cityrecord) = (match search_result {
                     Some(search_result) => search_result.into_iter().next().map(|ri| ri.city),
                     None => return None,
