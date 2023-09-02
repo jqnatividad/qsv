@@ -2,7 +2,50 @@ static USAGE: &str = r#"
 Exports a specified Excel/ODS sheet to a CSV file.
 The first row of a sheet is assumed to be the header row.
 
-For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_excel.rs.
+Examples:
+
+Export the first sheet of an Excel file to a CSV file:
+    qsv excel input.xlsx > output.csv
+    qsv excel input.xlsx --output output.csv
+
+Export the first sheet of an ODS file to a CSV file:
+    qsv excel input.ods > output.csv
+    qsv excel input.ods -o output.csv
+
+Export the first sheet of an Excel file to a CSV file with different delimiters:
+    # semicolon
+    qsv excel input.xlsx -d ";" > output.csv
+    # tab
+    qsv excel input.xlsx -d "\t" > output.tsv
+
+Export a sheet by name (case-insensitive):
+    qsv excel --sheet "Sheet 3" input.xlsx
+
+Export a sheet by index:
+    # this exports the 3nd sheet (0-based index)
+    qsv excel -s 2 input.xlsx
+
+Export the last sheet (negative index)):
+    qsv excel -s -1 input.xlsx
+
+Export the second to last sheet:
+    qsv excel -s -2 input.xls
+
+Export a range of cells in the first sheet:
+    qsv excel --range C3:T25 input.xlsx
+
+Export a range of cells in the second sheet:
+    qsv excel --range C3:T25 -s 1 input.xlsx
+
+Export metadata for all sheets in CSV format:
+    qsv excel --metadata c input.xlsx
+
+Export metadata for all sheets in JSON format:
+    qsv excel --metadata j input.xlsx
+    # pretty-printed JSON
+    qsv excel --metadata J input.xlsx
+
+For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_excel.rs.
 
 Usage:
     qsv excel [options] [<input>]
@@ -53,7 +96,7 @@ Common options:
 
 use std::{cmp, fmt::Write, path::PathBuf};
 
-use calamine::{open_workbook_auto, DataType, Range, Reader};
+use calamine::{open_workbook_auto, DataType, Range, Reader, SheetType};
 use indicatif::HumanCount;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 use indicatif::{ProgressBar, ProgressDrawTarget};
@@ -92,6 +135,8 @@ enum MetadataMode {
 struct SheetMetadata {
     index:                   usize,
     name:                    String,
+    typ:                     String,
+    visible:                 String,
     headers:                 Vec<String>,
     num_columns:             usize,
     num_rows:                usize,
@@ -213,6 +258,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         return fail!("No sheets found.");
     }
     let num_sheets = sheet_names.len();
+    #[allow(clippy::redundant_clone)]
     let sheet_vec = sheet_names.to_owned();
 
     let mut wtr = Config::new(&args.flag_output)
@@ -251,7 +297,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 match result {
                     Ok(result) => result,
                     Err(e) => {
-                        return fail_clierror!("Cannot retrieve range from {sheet_name}: {e}.");
+                        let sheet_type = workbook.sheets_metadata()[i].typ;
+                        if sheet_type == SheetType::ChartSheet {
+                            // return an empty range for ChartSheet
+                            Range::empty()
+                        } else {
+                            return fail_clierror!("Cannot retrieve range from {sheet_name}: {e}.");
+                        }
                     },
                 }
             } else {
@@ -308,6 +360,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let sheetmetadata_struct = SheetMetadata {
                 index: i,
                 name: sheet_name.to_string(),
+                typ: format!("{:?}", workbook.sheets_metadata()[i].typ),
+                visible: format!("{:?}", workbook.sheets_metadata()[i].visible),
                 headers: header_vec,
                 num_columns,
                 num_rows,
@@ -326,6 +380,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 metadata_fields.extend_from_slice(&[
                     "index",
                     "sheet_name",
+                    "type",
+                    "visible",
                     "headers",
                     "num_columns",
                     "num_rows",
@@ -344,6 +400,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         sheetmetadata.index.to_string(),
                         sheetmetadata.name,
                         format!("{:?}", sheetmetadata.headers),
+                        sheetmetadata.typ,
+                        sheetmetadata.visible,
                         sheetmetadata.num_columns.to_string(),
                         sheetmetadata.num_rows.to_string(),
                         format!("{:?}", sheetmetadata.safe_headers),
@@ -432,6 +490,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } else {
         return fail_clierror!("Cannot get sheet index for {sheet}");
     };
+
+    let sheet_type = workbook.sheets_metadata()[sheet_index].typ;
+    if sheet_type != SheetType::WorkSheet {
+        return fail_incorrectusage_clierror!(
+            "Can only export Worksheets. {sheet} is a {sheet_type:?}."
+        );
+    }
 
     let mut range = if let Some(result) = workbook.worksheet_range_at(sheet_index) {
         match result {
@@ -648,7 +713,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             wtr.write_record(&record)?;
         } // end of main processing loop
     } else {
-        return fail_clierror!("\"{sheet}\" sheet is empty");
+        return fail_clierror!("\"{sheet}\" sheet is empty.");
     }
 
     wtr.flush()?;

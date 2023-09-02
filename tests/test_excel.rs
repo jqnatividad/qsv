@@ -419,6 +419,8 @@ fn excel_metadata() {
         svec![
             "index",
             "sheet_name",
+            "type",
+            "visible",
             "headers",
             "num_columns",
             "num_rows",
@@ -432,6 +434,8 @@ fn excel_metadata() {
             "0",
             "First",
             "[\"URL\", \"City\"]",
+            "WorkSheet",
+            "Visible",
             "2",
             "4",
             "[\"URL\", \"City\"]",
@@ -444,6 +448,8 @@ fn excel_metadata() {
             "1",
             "Flexibility Test",
             "[\"URL\", \"City\", \"\"]",
+            "WorkSheet",
+            "Visible",
             "3",
             "6",
             "[\"URL\", \"City\"]",
@@ -456,6 +462,8 @@ fn excel_metadata() {
             "2",
             "Middle",
             "[\"Middle sheet col1\", \"Middle-2\"]",
+            "WorkSheet",
+            "Visible",
             "2",
             "6",
             "[\"Middle sheet col1\", \"Middle-2\"]",
@@ -464,11 +472,26 @@ fn excel_metadata() {
             "0",
             "0"
         ],
-        svec!["3", "Sheet1", "[]", "0", "0", "[]", "0", "[]", "0", "0"],
+        svec![
+            "3",
+            "Sheet1",
+            "[]",
+            "WorkSheet",
+            "Visible",
+            "0",
+            "0",
+            "[]",
+            "0",
+            "[]",
+            "0",
+            "0"
+        ],
         svec![
             "4",
             "trim test",
             "[\"col1\", \"   col2\", \"col3\"]",
+            "WorkSheet",
+            "Visible",
             "3",
             "6",
             "[\"col1\", \"col3\"]",
@@ -481,6 +504,8 @@ fn excel_metadata() {
             "5",
             "date test",
             "[\"date_col\", \"num_col\", \"col_Petsa\", \"just another col\"]",
+            "WorkSheet",
+            "Visible",
             "4",
             "6",
             "[\"date_col\", \"num_col\", \"col_Petsa\", \"just another col\"]",
@@ -493,6 +518,8 @@ fn excel_metadata() {
             "6",
             "NoData",
             "[\"col1\", \"col2\", \"col3\", \"col4\"]",
+            "WorkSheet",
+            "Visible",
             "4",
             "1",
             "[\"col1\", \"col2\", \"col3\", \"col4\"]",
@@ -505,6 +532,8 @@ fn excel_metadata() {
             "7",
             "Last",
             "[\"Last sheet col1\", \"Last-2\"]",
+            "WorkSheet",
+            "Visible",
             "2",
             "6",
             "[\"Last sheet col1\", \"Last-2\"]",
@@ -534,6 +563,8 @@ fn excel_metadata_pretty_json() {
     {
       "index": 0,
       "name": "First",
+      "typ": "WorkSheet",
+      "visible": "Visible",
       "headers": [
         "URL",
         "City"
@@ -552,6 +583,8 @@ fn excel_metadata_pretty_json() {
     {
       "index": 1,
       "name": "Flexibility Test",
+      "typ": "WorkSheet",
+      "visible": "Visible",
       "headers": [
         "URL",
         "City",
@@ -573,6 +606,8 @@ fn excel_metadata_pretty_json() {
     {
       "index": 2,
       "name": "Middle",
+      "typ": "WorkSheet",
+      "visible": "Visible",
       "headers": [
         "Middle sheet col1",
         "Middle-2"
@@ -591,6 +626,8 @@ fn excel_metadata_pretty_json() {
     {
       "index": 3,
       "name": "Sheet1",
+      "typ": "WorkSheet",
+      "visible": "Visible",
       "headers": [],
       "num_columns": 0,
       "num_rows": 0,
@@ -603,6 +640,8 @@ fn excel_metadata_pretty_json() {
     {
       "index": 4,
       "name": "trim test",
+      "typ": "WorkSheet",
+      "visible": "Visible",
       "headers": [
         "col1",
         "   col2",
@@ -624,6 +663,8 @@ fn excel_metadata_pretty_json() {
     {
       "index": 5,
       "name": "date test",
+      "typ": "WorkSheet",
+      "visible": "Visible",
       "headers": [
         "date_col",
         "num_col",
@@ -646,6 +687,8 @@ fn excel_metadata_pretty_json() {
     {
       "index": 6,
       "name": "NoData",
+      "typ": "WorkSheet",
+      "visible": "Visible",
       "headers": [
         "col1",
         "col2",
@@ -668,6 +711,8 @@ fn excel_metadata_pretty_json() {
     {
       "index": 7,
       "name": "Last",
+      "typ": "WorkSheet",
+      "visible": "Visible",
       "headers": [
         "Last sheet col1",
         "Last-2"
@@ -703,6 +748,8 @@ fn ods_metadata() {
         svec![
             "index",
             "sheet_name",
+            "type",
+            "visible",
             "headers",
             "num_columns",
             "num_rows",
@@ -716,6 +763,8 @@ fn ods_metadata() {
             "0",
             "Sheet1",
             "[\"URL\", \"City\"]",
+            "WorkSheet",
+            "Visible",
             "2",
             "4",
             "[\"URL\", \"City\"]",
@@ -747,6 +796,8 @@ fn ods_metadata_pretty_json() {
     {
       "index": 0,
       "name": "Sheet1",
+      "typ": "WorkSheet",
+      "visible": "Visible",
       "headers": [
         "URL",
         "City"
@@ -765,6 +816,352 @@ fn ods_metadata_pretty_json() {
   ]
 }"#;
     assert!(got.ends_with(expected));
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn excel_metadata_sheet_types() {
+    let wrk = Workdir::new("excel_metadata_sheet_types");
+
+    let xls_file = wrk.load_test_file("any_sheets.xls");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--metadata").arg("csv").arg(xls_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec![
+            "index",
+            "sheet_name",
+            "type",
+            "visible",
+            "headers",
+            "num_columns",
+            "num_rows",
+            "safe_headers",
+            "safe_headers_count",
+            "unsafe_headers",
+            "unsafe_headers_count",
+            "duplicate_headers_count"
+        ],
+        svec![
+            "0",
+            "Visible",
+            "[\"1\", \"2\"]",
+            "WorkSheet",
+            "Visible",
+            "2",
+            "5",
+            "[]",
+            "0",
+            "[\"1\", \"2\"]",
+            "2",
+            "0"
+        ],
+        svec![
+            "1",
+            "Hidden",
+            "[\"1\", \"2\"]",
+            "WorkSheet",
+            "Hidden",
+            "2",
+            "3",
+            "[]",
+            "0",
+            "[\"1\", \"2\"]",
+            "2",
+            "0"
+        ],
+        svec![
+            "2",
+            "VeryHidden",
+            "[]",
+            "WorkSheet",
+            "VeryHidden",
+            "0",
+            "0",
+            "[]",
+            "0",
+            "[]",
+            "0",
+            "0"
+        ],
+        svec![
+            "3",
+            "Chart",
+            "[\"1\", \"2\"]",
+            "ChartSheet",
+            "Visible",
+            "2",
+            "3",
+            "[]",
+            "0",
+            "[\"1\", \"2\"]",
+            "2",
+            "0"
+        ],
+    ];
+    assert_eq!(got, expected);
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn excel_metadata_sheet_types_xlsx() {
+    let wrk = Workdir::new("excel_metadata_sheet_types_xlsx");
+
+    let xlsx_file = wrk.load_test_file("any_sheets.xlsx");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--metadata").arg("csv").arg(xlsx_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec![
+            "index",
+            "sheet_name",
+            "type",
+            "visible",
+            "headers",
+            "num_columns",
+            "num_rows",
+            "safe_headers",
+            "safe_headers_count",
+            "unsafe_headers",
+            "unsafe_headers_count",
+            "duplicate_headers_count"
+        ],
+        svec![
+            "0",
+            "Visible",
+            "[\"1\", \"2\"]",
+            "WorkSheet",
+            "Visible",
+            "2",
+            "5",
+            "[]",
+            "0",
+            "[\"1\", \"2\"]",
+            "2",
+            "0"
+        ],
+        svec![
+            "1",
+            "Hidden",
+            "[]",
+            "WorkSheet",
+            "Hidden",
+            "0",
+            "0",
+            "[]",
+            "0",
+            "[]",
+            "0",
+            "0"
+        ],
+        svec![
+            "2",
+            "VeryHidden",
+            "[]",
+            "WorkSheet",
+            "VeryHidden",
+            "0",
+            "0",
+            "[]",
+            "0",
+            "[]",
+            "0",
+            "0"
+        ],
+        // we don't get metadata for chart sheets in xlsx
+        svec![
+            "3",
+            "Chart",
+            "[]",
+            "ChartSheet",
+            "Visible",
+            "0",
+            "0",
+            "[]",
+            "0",
+            "[]",
+            "0",
+            "0"
+        ],
+    ];
+    assert_eq!(got, expected);
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn excel_metadata_sheet_types_xlsb() {
+    let wrk = Workdir::new("excel_metadata_sheet_types_xlsb");
+
+    let xlsb_file = wrk.load_test_file("any_sheets.xlsb");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--metadata").arg("csv").arg(xlsb_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec![
+            "index",
+            "sheet_name",
+            "type",
+            "visible",
+            "headers",
+            "num_columns",
+            "num_rows",
+            "safe_headers",
+            "safe_headers_count",
+            "unsafe_headers",
+            "unsafe_headers_count",
+            "duplicate_headers_count"
+        ],
+        svec![
+            "0",
+            "Visible",
+            "[\"1\", \"2\"]",
+            "WorkSheet",
+            "Visible",
+            "2",
+            "5",
+            "[]",
+            "0",
+            "[\"1\", \"2\"]",
+            "2",
+            "0"
+        ],
+        svec![
+            "1",
+            "Hidden",
+            "[]",
+            "WorkSheet",
+            "Hidden",
+            "0",
+            "0",
+            "[]",
+            "0",
+            "[]",
+            "0",
+            "0"
+        ],
+        svec![
+            "2",
+            "VeryHidden",
+            "[]",
+            "WorkSheet",
+            "VeryHidden",
+            "0",
+            "0",
+            "[]",
+            "0",
+            "[]",
+            "0",
+            "0"
+        ],
+        // we don't get metadata for chart sheets in xlsb
+        svec![
+            "3",
+            "Chart",
+            "[]",
+            "ChartSheet",
+            "Visible",
+            "0",
+            "0",
+            "[]",
+            "0",
+            "[]",
+            "0",
+            "0"
+        ],
+    ];
+    assert_eq!(got, expected);
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn excel_metadata_sheet_types_ods() {
+    let wrk = Workdir::new("excel_metadata_sheet_types_ods");
+
+    let ods_file = wrk.load_test_file("any_sheets.ods");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--metadata").arg("csv").arg(ods_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec![
+            "index",
+            "sheet_name",
+            "type",
+            "visible",
+            "headers",
+            "num_columns",
+            "num_rows",
+            "safe_headers",
+            "safe_headers_count",
+            "unsafe_headers",
+            "unsafe_headers_count",
+            "duplicate_headers_count"
+        ],
+        svec![
+            "0",
+            "Visible",
+            "[\"1\", \"2\"]",
+            "WorkSheet",
+            "Visible",
+            "2",
+            "5",
+            "[]",
+            "0",
+            "[\"1\", \"2\"]",
+            "2",
+            "0"
+        ],
+        svec![
+            "1",
+            "Hidden",
+            "[]",
+            "WorkSheet",
+            "Hidden",
+            "0",
+            "0",
+            "[]",
+            "0",
+            "[]",
+            "0",
+            "0"
+        ],
+        svec![
+            "2",
+            "VeryHidden",
+            "[]",
+            "WorkSheet",
+            "Hidden",
+            "0",
+            "0",
+            "[]",
+            "0",
+            "[]",
+            "0",
+            "0"
+        ],
+        svec![
+            "3",
+            "Chart",
+            "[]",
+            "WorkSheet",
+            "Visible",
+            "0",
+            "0",
+            "[]",
+            "0",
+            "[]",
+            "0",
+            "0"
+        ],
+    ];
+    assert_eq!(got, expected);
     wrk.assert_success(&mut cmd);
 }
 
@@ -804,7 +1201,7 @@ fn excel_empty_sheet2_message() {
     cmd.arg("--sheet").arg("Sheet1").arg(xls_file);
 
     let got = wrk.output_stderr(&mut cmd);
-    assert_eq!(got, "\"Sheet1\" sheet is empty\n");
+    assert_eq!(got, "\"Sheet1\" sheet is empty.\n");
     wrk.assert_err(&mut cmd);
 }
 

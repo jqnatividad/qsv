@@ -226,6 +226,7 @@ serial_test = { version = "2.0", features = ["file_locks"] }
 [patch.crates-io]
 geosuggest-core  = { git = "https://github.com/estin/geosuggest", rev = "5c6b08b" }
 geosuggest-utils = { git = "https://github.com/estin/geosuggest", rev = "5c6b08b" }
+calamine = { git = "https://github.com/tafia/calamine", rev = "a54bd9c" }
 
 [features]
 default = ["mimalloc"]
