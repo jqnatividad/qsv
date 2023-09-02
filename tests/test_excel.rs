@@ -1419,3 +1419,15 @@ fn excel_range_empty_sheet() {
         .is_some());
     wrk.assert_err(&mut cmd);
 }
+
+#[test]
+fn excel_formula_empty_string_value() {
+    let wrk = Workdir::new("formula_empty_string_value");
+
+    let xls_file = wrk.load_test_file("formula_empty_string_value.xls");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg(xls_file);
+
+    wrk.assert_success(&mut cmd);
+}
