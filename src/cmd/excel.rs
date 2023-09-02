@@ -259,7 +259,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
     let num_sheets = sheet_names.len();
     #[allow(clippy::redundant_clone)]
-    let sheet_vec = sheet_names.to_owned();
+    let sheet_vec = sheet_names.clone();
 
     let mut wtr = Config::new(&args.flag_output)
         .flexible(args.flag_flexible)
