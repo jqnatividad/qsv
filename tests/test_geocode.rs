@@ -98,7 +98,7 @@ fn geocode_suggest_intl_country_filter() {
     let mut cmd = wrk.command("geocode");
     cmd.arg("suggest")
         .arg("Location")
-        .args(["--country", "us"])
+        .args(["--country", "US"])
         .args(["-f", "%city-admin1-country"])
         .arg("data.csv");
 
@@ -139,7 +139,7 @@ fn geocode_suggest_intl_multi_country_filter() {
     let mut cmd = wrk.command("geocode");
     cmd.arg("suggest")
         .arg("Location")
-        .args(["--country", "us,fr,ru"])
+        .args(["--country", "us,FR,ru"])
         .args(["-f", "%city-admin1-country"])
         .arg("data.csv");
 
