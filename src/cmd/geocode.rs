@@ -352,9 +352,8 @@ async fn geocode_main(args: Args) -> CliResult<()> {
     // setup languages
     let languages_string_vec = args
         .flag_languages
-        .to_ascii_lowercase()
         .split(',')
-        .map(|s| s.trim().to_lowercase())
+        .map(|s| s.trim().to_ascii_lowercase())
         .collect::<Vec<String>>();
     let languages_vec: Vec<&str> = languages_string_vec
         .iter()
@@ -515,7 +514,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
         Some(
             country_list
                 .split(',')
-                .map(|s| s.trim().to_lowercase())
+                .map(|s| s.trim().to_ascii_lowercase())
                 .collect::<Vec<String>>(),
         )
     } else {
