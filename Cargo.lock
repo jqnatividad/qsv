@@ -1946,8 +1946,9 @@ dependencies = [
 
 [[package]]
 name = "geosuggest-core"
-version = "0.3.0"
-source = "git+https://github.com/estin/geosuggest?rev=5c6b08b#5c6b08bbc9211972b489d5cfa13ce13cde42cb43"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "349233f6bc33e706e9b450ff58bc42f571e2d1e97dffcad24d2d96a3573d9f9c"
 dependencies = [
  "bincode",
  "csv",
@@ -1961,8 +1962,9 @@ dependencies = [
 
 [[package]]
 name = "geosuggest-utils"
-version = "0.3.0"
-source = "git+https://github.com/estin/geosuggest?rev=5c6b08b#5c6b08bbc9211972b489d5cfa13ce13cde42cb43"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1b534065956ab2e4eff18dc6402b8b68db6c136a9815d1de7aeac2387b7c0662"
 dependencies = [
  "anyhow",
  "futures",
