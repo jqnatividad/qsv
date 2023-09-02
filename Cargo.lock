@@ -912,7 +912,7 @@ checksum = "3a4f925191b4367301851c6d99b09890311d74b0d43f274c0b34c86d308a3663"
 [[package]]
 name = "calamine"
 version = "0.21.2"
-source = "git+https://github.com/tafia/calamine?rev=a54bd9c#a54bd9cddc61a4a30475c4454efbbb2eecf9f975"
+source = "git+https://github.com/jqnatividad/calamine?branch=formula_empty_string_value#18b332e0a5e44c45dfe6a8d2169e20996bc9ed99"
 dependencies = [
  "byteorder",
  "chrono",
