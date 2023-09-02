@@ -258,6 +258,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         return fail!("No sheets found.");
     }
     let num_sheets = sheet_names.len();
+    #[allow(clippy::redundant_clone)]
     let sheet_vec = sheet_names.to_owned();
 
     let mut wtr = Config::new(&args.flag_output)
