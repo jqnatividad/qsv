@@ -556,7 +556,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
             );
         }
 
-        // country filterß
+        // country filter
         country_filter_list = args.flag_country.map(|country_list| {
             country_list
                 .split(',')
@@ -567,17 +567,20 @@ async fn geocode_main(args: Args) -> CliResult<()> {
         // admin1 filter: if all uppercase, search for admin1 code, else, search for admin1 name
         // see https://download.geonames.org/export/dump/admin1CodesASCII.txt for valid codes
         if let Some(admin1_list) = args.flag_admin1 {
-            let admin1_re = Regex::new(r"^[A-Z]{2}.[A-Z0-9]{1,8}$").unwrap();
+            // this regex matches admin1 codes (e.g. US.NY, JP.40, CN.23, HK.NYL, GG.6417214)
+            let admin1_code_re = Regex::new(r"^[A-Z]{2}.[A-Z0-9]{1,8}$").unwrap();
             Some(
                 admin1_list
                     .split(',')
                     .map(|s| {
                         let temp_s = s.trim();
-                        let is_code_flag = admin1_re.is_match(temp_s);
+                        let is_code_flag = admin1_code_re.is_match(temp_s);
                         Admin1Filter {
                             admin1_string: if is_code_flag {
                                 temp_s.to_string()
                             } else {
+                                // its an admin1 name, lowercase it
+                                // so we can do case-insensitive starts_with() comparisons
                                 temp_s.to_lowercase()
                             },
                             is_code:       is_code_flag,
@@ -763,14 +766,15 @@ fn search_cached(
     if mode == GeocodeSubCmd::Suggest {
         let search_result: Vec<&CitiesRecord>;
         let cityrecord = if admin1_filter_list.is_none() {
-            // no admin1 or admin2 filters, run a search for 1 result (top match)
+            // no admin1 filter, run a search for 1 result (top match)
             search_result = engine.suggest(cell, 1, min_score, country_filter_list.as_deref());
             let Some(cr) = search_result.into_iter().next() else {
+                // no results, so return early with None
                 return None;
             };
             cr
         } else {
-            // we have an admin1 filter, run a search for top SUGGEST_ADMIN!_LIMIT results
+            // we have an admin1 filter, run a search for top SUGGEST_ADMIN1_LIMIT results
             search_result = engine.suggest(
                 cell,
                 SUGGEST_ADMIN1_LIMIT,
@@ -800,7 +804,6 @@ fn search_cached(
                         for (admin1_filter, is_code) in &admin1_filter_map {
                             if *is_code {
                                 // admin1 is a code, so we search for admin1 code
-                                // if *admin1_filter == admin_division.code {
                                 if admin_division.code.starts_with(admin1_filter) {
                                     matched_record = Some(cr);
                                     break 'outer;
@@ -963,7 +966,7 @@ fn format_result(cityrecord: &CitiesRecord, formatstr: &str, suggest_mode: bool)
         }
     } else {
         // if formatstr does not start with %, then we're using dynfmt,
-        // i.e. eight predefined fields below in curly braces are replaced with values
+        // i.e. nine predefined fields below in curly braces are replaced with values
         // e.g. "City: {name}, State: {admin1}, Country: {country} - {timezone}"
 
         let mut cityrecord_map: HashMap<&str, String> = HashMap::with_capacity(9);
