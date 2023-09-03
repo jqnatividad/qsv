@@ -147,11 +147,14 @@ geocode options:
                                   - '%city-state' - e.g. Brooklyn, New York
                                   - '%city-country' - Brooklyn, US
                                   - '%city-state-country' | '%city-admin1-country' - Brooklyn, New York US
+                                  - '%city-county-state' | '%city-admin2-admin1' - Brooklyn, Kings County, New York
                                   - '%city' - Brooklyn
                                   - '%state' | '%admin1' - New York
                                   - "%county' | '%admin2' - Kings County
                                   - '%country' - US
                                   - '%cityrecord' - returns the full city record as a string
+                                  - '%admin1record' - returns the full admin1 record as a string
+                                  - '%admin2record' - returns the full admin2 record as a string
                                   - '%lat-long' - <latitude>, <longitude>
                                   - '%location' - (<latitude>, <longitude>)
                                   - '%id' - the Geonames ID
@@ -924,6 +927,12 @@ fn format_result(cityrecord: &CitiesRecord, formatstr: &str, suggest_mode: bool)
                 admin1_name,
                 cityrecord.country.clone().unwrap().name
             ),
+            "%city-county-state" | "%city-admin2-admin1" => format!(
+                "{}, {}, {}",
+                cityrecord.name,
+                admin2_name.to_owned(),
+                admin1_name.to_owned(),
+            ),
             "%state" | "%admin1" => admin1_name.to_owned(),
             "%county" | "%admin2" => admin2_name.to_owned(),
             "%country" => cityrecord.country.clone().unwrap().name,
@@ -931,6 +940,8 @@ fn format_result(cityrecord: &CitiesRecord, formatstr: &str, suggest_mode: bool)
             "%population" => format!("{}", cityrecord.population),
             "%timezone" => cityrecord.timezone.clone(),
             "%cityrecord" => format!("{cityrecord:?}"),
+            "%admin1record" => format!("{:?}", cityrecord.admin_division),
+            "%admin2record" => format!("{:?}", cityrecord.admin2_division),
             _ => {
                 // invalid formatstr, so we use the default for suggest or reverse
                 if suggest_mode {
