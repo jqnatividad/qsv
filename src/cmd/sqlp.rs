@@ -397,7 +397,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             streaming:           args.flag_low_memory,
         }
     };
-    log::debug!("Optimization state: {optimization_state:?}");
+    // gated by log::log_enabled!(log::Level::Debug) to avoid the
+    // relatively expensive overhead of generating the debug string
+    // for the optimization state struct
+    let debuglog_flag = log::log_enabled!(log::Level::Debug);
+    if debuglog_flag {
+        log::debug!("Optimization state: {optimization_state:?}");
+    }
 
     let mut ctx = SQLContext::new();
     let mut table_aliases = HashMap::with_capacity(args.arg_input.len());
@@ -416,7 +422,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             });
         table_aliases.insert(table_name.to_string(), format!("_t_{}", idx + 1));
 
-        if log::log_enabled!(log::Level::Debug) {
+        if debuglog_flag {
             log::debug!(
                 "Registering table: {table_name} as {alias} -  Delimiter: {delim} \
                  Infer_schema_len: {num_rows:?} try_parse_dates: {parse_dates} ignore_errors: \
@@ -439,7 +445,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         ctx.register(table_name, lf.with_optimizations(optimization_state));
     }
 
-    if log::log_enabled!(log::Level::Debug) {
+    if debuglog_flag {
         let tables_in_context = ctx.get_tables();
         log::debug!("Table(s) registered in SQL Context: {tables_in_context:?}");
     }
@@ -483,7 +489,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             current_query = current_query.replace(table_alias, &(format!(r#""{table_name}""#)));
         }
 
-        if log::log_enabled!(log::Level::Debug) {
+        if debuglog_flag {
             log::debug!("Executing query {idx}: {current_query}");
             now = Instant::now();
         }
@@ -494,7 +500,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             // this is not the last query, we only execute the query, but don't write the output
             no_output.execute_query(&current_query, &mut ctx, delim, args.clone())?
         };
-        if log::log_enabled!(log::Level::Debug) {
+        if debuglog_flag {
             log::debug!(
                 "Query {idx} successfully executed in {elapsed:?} seconds: {query_result_shape:?}",
                 elapsed = now.elapsed().as_secs_f32()
@@ -508,7 +514,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .extension()
             .map_or(false, |ext| ext.eq_ignore_ascii_case("sz"))
         {
-            log::debug!("Compressing output with Snappy");
+            log::info!("Compressing output with Snappy");
 
             // we need to copy the output to a tempfile first, and then
             // compress the tempfile to the original output sz file
