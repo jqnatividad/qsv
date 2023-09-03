@@ -34,6 +34,11 @@ Limit suggestions to the US, Canada and Mexico.
 
 $ qsv geocode suggest city --country us,ca,mx file.csv
 
+Limit suggestions to New York State and California, with matches in New York state
+having higher priority as its listed first.
+
+$ qsv geocode suggest city --country us --admin1 "New York, US:CA" file.csv
+
 Geocode file.csv city column with --formatstr=%state and set the 
 geocoded value a new column named state.
 
@@ -106,16 +111,37 @@ geocode arguments:
 geocode options:
     -c, --new-column <name>     Put the transformed values in a new column instead.
     -r, --rename <name>         New name for the transformed column.
-    --min-score <score>         The minimum score to use for suggest subcommand.
+
+                                SUGGEST only options:
+    --min-score <score>         The minimum Jaro-Winkler distance score.
                                 [default: 0.8]
+    --country <country_list>    The comma-delimited, case-insensitive list of countries to filter for.
+                                Country is specified as a ISO 3166-1 alpha-2 (two-letter) country code.
+                                It is the topmost priority filter, and will be applied first.
+                                https://en.wikipedia.org/wiki/ISO_3166-2
+    --admin1 <admin1_list>      The comma-delimited, case-insensitive list of admin1s to filter for. Requires
+                                the --country option to be set.
+
+                                If all uppercase, it will be treated as an admin1 code (e.g. US.NY, JP.40, CN.23).
+                                Otherwise, it will be treated as an admin1 name (e.g New York State, Tokyo, Shanghai).
+
+                                If specifying multiple admin1 filters, you can mix admin1 codes and names, and they
+                                are matched in the order specified. 
+                                
+                                Matches are made using a starts_with() comparison (i.e. "US" will match "US.NY", "US.NJ",
+                                etc. for admin1 code. "New" will match "New York", "New Jersey", "Newfoundland", etc.
+                                for admin1 name.)
+
+                                admin1 is the second priority filter, and will be applied after country filters.
+                                See https://download.geonames.org/export/dump/admin1CodesASCII.txt for admin1 codes/names.
+
+                                REVERSE option:
     -k, --k_weight <weight>     Use population-weighted distance for reverse subcommand.
                                 (i.e. nearest.distance - k * city.population)
                                 Larger values will favor more populated cities.
                                 If not set (default), the population is not used and the
                                 nearest city is returned.
-    --country <country_list>    The comma-delimited list of countries to filter for when calling suggest.
-                                Country is specified as a ISO 3166-1 alpha-2 (two-letter) country code.
-                                https://en.wikipedia.org/wiki/ISO_3166-2
+
                                 If not set, suggest will search all countries in the current loaded index.
     -f, --formatstr=<string>    The place format to use. The predefined formats are:
                                   - '%city-state' - e.g. Brooklyn, New York
@@ -161,7 +187,8 @@ geocode options:
                                 [default: ~/.qsv-cache]                                
 
                                 INDEX-UPDATE only options:
-    --languages <lang>          The languages to use when building the Geonames cities index.
+    --languages <lang>          The comma-delimited, case-insentive list of languages to use when building
+                                the Geonames cities index.
                                 The languages are specified as a comma-separated list of ISO 639-1 codes.
                                 https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
                                 [default: en]
@@ -217,8 +244,9 @@ struct Args {
     arg_index_file:      Option<String>,
     flag_rename:         Option<String>,
     flag_min_score:      Option<f32>,
-    flag_k_weight:       Option<f32>,
     flag_country:        Option<String>,
+    flag_admin1:         Option<String>,
+    flag_k_weight:       Option<f32>,
     flag_formatstr:      String,
     flag_invalid_result: Option<String>,
     flag_batch:          u32,
@@ -231,6 +259,12 @@ struct Args {
     flag_output:         Option<String>,
     flag_delimiter:      Option<Delimiter>,
     flag_progressbar:    bool,
+}
+
+#[derive(Clone)]
+struct Admin1Filter {
+    admin1_string: String,
+    is_code:       bool,
 }
 
 static QSV_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -254,6 +288,10 @@ static FALLBACK_CACHE_SIZE: usize = CACHE_SIZE / 4;
 
 static EMPTY_STRING: String = String::new();
 static INVALID_DYNFMT: &str = "Invalid dynfmt template.";
+
+// when suggesting with --admin1, how many suggestions to fetch from the engine
+// before filtering by admin1
+static SUGGEST_ADMIN1_LIMIT: usize = 10;
 
 // valid subcommands
 #[derive(Clone, Copy, PartialEq)]
@@ -505,21 +543,51 @@ async fn geocode_main(args: Args) -> CliResult<()> {
     }
     wtr.write_record(&headers)?;
 
-    let country_filter_list = if let Some(country_list) = args.flag_country {
-        if args.cmd_reverse {
+    // setup suggest filters
+    let mut country_filter_list: Option<Vec<String>> = None;
+    let admin1_filter_list = if geocode_cmd == GeocodeSubCmd::Suggest {
+        // if admin1 is set, country must be set
+        if args.flag_admin1.is_some() && args.flag_country.is_none() {
             return fail_incorrectusage_clierror!(
-                "Country filter is not supported for reverse geocoding."
+                "If --admin1 is set, --country must also be set."
             );
         }
-        Some(
+
+        // country filterß
+        country_filter_list = args.flag_country.map(|country_list| {
             country_list
                 .split(',')
                 .map(|s| s.trim().to_ascii_lowercase())
-                .collect::<Vec<String>>(),
-        )
+                .collect::<Vec<String>>()
+        });
+
+        // admin1 filter: if all uppercase, search for admin1 code, else, search for admin1 name
+        // see https://download.geonames.org/export/dump/admin1CodesASCII.txt for valid codes
+        if let Some(admin1_list) = args.flag_admin1 {
+            let admin1_re = Regex::new(r"^[A-Z]{2}.[A-Z0-9]{1,8}$").unwrap();
+            Some(
+                admin1_list
+                    .split(',')
+                    .map(|s| {
+                        let temp_s = s.trim();
+                        let is_code_flag = admin1_re.is_match(temp_s);
+                        Admin1Filter {
+                            admin1_string: if is_code_flag {
+                                temp_s.to_string()
+                            } else {
+                                temp_s.to_lowercase()
+                            },
+                            is_code:       is_code_flag,
+                        }
+                    })
+                    .collect::<Vec<Admin1Filter>>(),
+            )
+        } else {
+            None
+        }
     } else {
         None
-    };
+    }; // end setup suggest filters
 
     // amortize memory allocation by reusing record
     #[allow(unused_assignments)]
@@ -578,6 +646,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                         min_score,
                         k_weight,
                         &country_filter_list,
+                        &admin1_filter_list,
                     );
                     if let Some(geocoded_result) = search_result {
                         // we have a valid geocode result, so use that
@@ -686,11 +755,78 @@ fn search_cached(
     min_score: Option<f32>,
     k: Option<f32>,
     country_filter_list: &Option<Vec<String>>,
+    admin1_filter_list: &Option<Vec<Admin1Filter>>,
 ) -> Option<String> {
     if mode == GeocodeSubCmd::Suggest {
-        let search_result = engine.suggest(cell, 1, min_score, country_filter_list.as_deref());
-        let Some(cityrecord) = search_result.into_iter().next() else {
-            return None;
+        let search_result: Vec<&CitiesRecord>;
+        let cityrecord = if admin1_filter_list.is_none() {
+            // no admin1 or admin2 filters, run a search for 1 result (top match)
+            search_result = engine.suggest(cell, 1, min_score, country_filter_list.as_deref());
+            let Some(cr) = search_result.into_iter().next() else {
+                return None;
+            };
+            cr
+        } else {
+            // we have an admin1 filter, run a search for top SUGGEST_ADMIN!_LIMIT results
+            search_result = engine.suggest(
+                cell,
+                SUGGEST_ADMIN1_LIMIT,
+                min_score,
+                country_filter_list.as_deref(),
+            );
+
+            // first, get the first result and store that in cityrecord
+            let Some(cr) = search_result.clone().into_iter().next() else {
+                // no results, so return early with None
+                return None;
+            };
+            let first_result = cr;
+
+            // then iterate through search results and find the first one that matches admin1
+            // the search results are already sorted by score, so we just need to find the first
+            if let Some(admin1_filter_list) = admin1_filter_list {
+                // we have an admin1 filter, so we need to find the first admin1 result that matches
+                let mut admin1_filter_map: HashMap<String, bool> = HashMap::new();
+                for admin1_filter in admin1_filter_list {
+                    admin1_filter_map
+                        .insert(admin1_filter.clone().admin1_string, admin1_filter.is_code);
+                }
+                let mut matched_record: Option<&CitiesRecord> = None;
+                'outer: for cr in &search_result {
+                    if let Some(admin_division) = &cr.admin_division {
+                        for (admin1_filter, is_code) in &admin1_filter_map {
+                            if *is_code {
+                                // admin1 is a code, so we search for admin1 code
+                                // if *admin1_filter == admin_division.code {
+                                if admin_division.code.starts_with(admin1_filter) {
+                                    matched_record = Some(cr);
+                                    break 'outer;
+                                }
+                            } else {
+                                // admin1 is a name, so we search for admin1 name, case-insensitive
+                                if admin_division
+                                    .name
+                                    .to_lowercase()
+                                    .starts_with(admin1_filter)
+                                {
+                                    matched_record = Some(cr);
+                                    break 'outer;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if let Some(cr) = matched_record {
+                    cr
+                } else {
+                    // no admin1 match, so we return the first result
+                    first_result
+                }
+            } else {
+                // no admin1 filter, so we return the first result
+                first_result
+            }
         };
 
         if formatstr == "%+" {

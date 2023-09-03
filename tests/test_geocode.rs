@@ -119,6 +119,29 @@ fn geocode_suggest_intl_country_filter() {
 }
 
 #[test]
+fn geocode_suggest_intl_admin1_filter_error() {
+    let wrk = Workdir::new("geocode_suggest_intl_admin1_filter_error");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["Location"],
+            svec!["Paris"],
+            svec!["Manila"],
+            svec!["London"],
+        ],
+    );
+    let mut cmd = wrk.command("geocode");
+    cmd.arg("suggest")
+        .arg("Location")
+        .args(["--admin1", "US"])
+        .args(["-f", "%city-admin1-country"])
+        .arg("data.csv");
+
+    // admin1 requires a country filter
+    wrk.assert_err(&mut cmd);
+}
+
+#[test]
 fn geocode_suggest_intl_multi_country_filter() {
     let wrk = Workdir::new("geocode_suggest_intl_multi_country_filter");
     wrk.create(
@@ -155,6 +178,55 @@ fn geocode_suggest_intl_multi_country_filter() {
         svec!["Bradley, Illinois United States"],
         svec!["95.213424, 190,1234565"],
         svec!["Savannah, Georgia United States"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn geocode_suggest_filter_country_admin1() {
+    let wrk = Workdir::new("geocode_suggest_filter_country_admin1");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["Location"],
+            svec!["Melrose, New York"],
+            svec!["East Flatbush, New York"],
+            svec!["Manhattan, New York"],
+            svec!["Brooklyn, New York"],
+            svec!["East Harlem, New York"],
+            svec!["This is not a Location and it will not be geocoded"],
+            svec!["Jersey City, New Jersey"],
+            svec!["(41.90059, -87.85673)"],
+            svec!["Makati, Metro Manila, Philippines"],
+        ],
+    );
+    let mut cmd = wrk.command("geocode");
+    cmd.arg("suggest")
+        .arg("Location")
+        .args(["-f", "{name}, {admin1}, {admin2}, {country}"])
+        .args(["--country", "US"])
+        .args(["--admin1", "US.NY,New J,Metro Manila"])
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["Location"],
+        svec!["Melrose, New York, Bronx County, United States"],
+        svec!["East Flatbush, New York, Kings, United States"],
+        svec!["New York City, New York, , United States"],
+        svec!["Brooklyn, New York, Kings, United States"],
+        svec!["East Harlem, New York, New York County, United States"],
+        svec!["This is not a Location and it will not be geocoded"],
+        // Jersey City matched as the admin1 filter included "New J"
+        // which starts_with match "New Jersey"
+        svec!["Jersey City, New Jersey, Hudson, United States"],
+        // suggest expects a city name, not lat, long
+        svec!["(41.90059, -87.85673)"],
+        // Makati did not match, even with the Metro Manila admin1 filter
+        // as the country filter was set to US
+        // as a result, the country filter takes precedence over the admin1 filter
+        // and the closest match for Makati in the US is McAllen in Texas
+        svec!["McAllen, Texas, Hidalgo, United States"],
     ];
     assert_eq!(got, expected);
 }
