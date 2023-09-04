@@ -142,6 +142,32 @@ fn geocode_suggest_intl_admin1_filter_error() {
 }
 
 #[test]
+fn geocode_suggest_intl_admin1_filter_country_inferencing() {
+    let wrk = Workdir::new("geocode_suggest_intl_admin1_filter_country_inferencing");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["Location"],
+            svec!["Paris"],
+            svec!["Manila"],
+            svec!["London"],
+        ],
+    );
+    let mut cmd = wrk.command("geocode");
+    cmd.arg("suggest")
+        .arg("Location")
+        .args(["--admin1", "US.NJ,US.TX,US.NY"])
+        .args(["-f", "%city-admin1-country"])
+        .arg("data.csv");
+
+    // admin1 requires a country filter
+    // however, since all the admin1 filters are in the US
+    // or more specifically, the admin1 filters have a prefix of "US."
+    // the country filter is inferred to be "US"
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
 fn geocode_suggest_intl_multi_country_filter() {
     let wrk = Workdir::new("geocode_suggest_intl_multi_country_filter");
     wrk.create(

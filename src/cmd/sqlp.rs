@@ -403,6 +403,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let debuglog_flag = log::log_enabled!(log::Level::Debug);
     if debuglog_flag {
         log::debug!("Optimization state: {optimization_state:?}");
+        log::debug!(
+            "Delimiter: {delim} Infer_schema_len: {num_rows:?} try_parse_dates: {parse_dates} \
+             ignore_errors: {ignore_errors}, low_memory: {low_memory}",
+            parse_dates = args.flag_try_parsedates,
+            ignore_errors = args.flag_ignore_errors,
+            low_memory = args.flag_low_memory
+        );
     }
 
     let mut ctx = SQLContext::new();
@@ -424,13 +431,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         if debuglog_flag {
             log::debug!(
-                "Registering table: {table_name} as {alias} -  Delimiter: {delim} \
-                 Infer_schema_len: {num_rows:?} try_parse_dates: {parse_dates} ignore_errors: \
-                 {ignore_errors}, low_memory: {low_memory}",
+                "Registering table: {table_name} as {alias}",
                 alias = table_aliases.get(table_name).unwrap(),
-                parse_dates = args.flag_try_parsedates,
-                ignore_errors = args.flag_ignore_errors,
-                low_memory = args.flag_low_memory
             );
         }
         let lf = LazyCsvReader::new(table)
@@ -468,7 +470,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         vec![args.arg_sql.clone()]
     };
 
-    log::debug!("Executing query/ies: {queries:?}");
+    if debuglog_flag {
+        log::debug!("SQL query/ies: {queries:?}");
+    }
 
     let num_queries = queries.len();
     let last_query: usize = num_queries.saturating_sub(1);

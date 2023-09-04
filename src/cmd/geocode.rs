@@ -28,25 +28,29 @@ Use the --new-column option if you want to keep the location column:
 Examples:
 Geocode file.csv city column and set the geocoded value to a new column named lat_long.
 
-$ qsv geocode suggest city --new-column lat_long file.csv
+  $ qsv geocode suggest city --new-column lat_long file.csv
 
 Limit suggestions to the US, Canada and Mexico.
 
-$ qsv geocode suggest city --country us,ca,mx file.csv
+  $ qsv geocode suggest city --country us,ca,mx file.csv
 
 Limit suggestions to New York State and California, with matches in New York state
 having higher priority as its listed first.
 
-$ qsv geocode suggest city --country us --admin1 "New York, US:CA" file.csv
+  $ qsv geocode suggest city --country us --admin1 "New York,US.CA" file.csv
+
+If we use admin1 codes, we can omit --country as it will be inferred from the admin1 code prefix.
+
+  $ qsv geocode suggest city --admin1 "US.NY,US.CA" file.csv
 
 Geocode file.csv city column with --formatstr=%state and set the 
 geocoded value a new column named state.
 
-$ qsv geocode suggest city --formatstr %state --new-column state file.csv
+  $ qsv geocode suggest city --formatstr %state --new-column state file.csv
 
 Use dynamic formatting to create a custom format.
 
-$ qsv geocode suggest city -f "{name}, {admin1}, {country} in {timezone}" file.csv
+  $ qsv geocode suggest city -f "{name}, {admin1}, {country} in {timezone}" file.csv
 
 REVERSE
 Reverse geocode a WGS 84 coordinate to the nearest Geonames city record.
@@ -58,16 +62,16 @@ The geocoded information is formatted based on --formatstr, returning it in
 Examples:
 Reverse geocode file.csv LatLong column. Set the geocoded value to a new column named City.
 
-$ qsv geocode reverse LatLong -c City file.csv
+  $ qsv geocode reverse LatLong -c City file.csv
 
 Reverse geocode file.csv LatLong column and set the geocoded value to a new column
 named CityState, output to a file named file_with_citystate.csv.
 
-$ qsv geocode reverse LatLong -c CityState file.csv -o file_with_citystate.csv
+  $ qsv geocode reverse LatLong -c CityState file.csv -o file_with_citystate.csv
 
 The same as above, but get the timezone instead of the city and state.
 
-$ qsv geocode reverse LatLong -f %timezone -c tz file.csv -o file_with_tz.csv
+  $ qsv geocode reverse LatLong -f %timezone -c tz file.csv -o file_with_tz.csv
 
 INDEX-<operation>
 Updates the local Geonames cities index used by the geocode command.
@@ -84,11 +88,11 @@ It has four operations:
 Examples:
 Update the Geonames cities index with the latest changes.
 
-$ qsv geocode index-update
+  $ qsv geocode index-update
 
 Load a Geonames cities index from a file.
 
-$ qsv geocode index-load my_geonames_index.bincode
+  $ qsv geocode index-load my_geonames_index.bincode
 
 For more extensive examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_geocode.rs.
 
@@ -119,11 +123,14 @@ geocode options:
                                 Country is specified as a ISO 3166-1 alpha-2 (two-letter) country code.
                                 It is the topmost priority filter, and will be applied first.
                                 https://en.wikipedia.org/wiki/ISO_3166-2
-    --admin1 <admin1_list>      The comma-delimited, case-insensitive list of admin1s to filter for. Requires
-                                the --country option to be set.
-
+    --admin1 <admin1_list>      The comma-delimited, case-insensitive list of admin1s to filter for.
+    
                                 If all uppercase, it will be treated as an admin1 code (e.g. US.NY, JP.40, CN.23).
-                                Otherwise, it will be treated as an admin1 name (e.g New York State, Tokyo, Shanghai).
+                                Otherwise, it will be treated as an admin1 name (e.g New York, Tokyo, Shanghai).
+
+                                Requires the --country option. However, if all admin1 codes have the same
+                                prefix (e.g. US.TX, US.NJ, US.CA), the country can be inferred from the
+                                admin1 code (in this example - US), and the --country option is not required.
 
                                 If specifying multiple admin1 filters, you can mix admin1 codes and names, and they
                                 are matched in the order specified. 
@@ -264,7 +271,7 @@ struct Args {
     flag_progressbar:    bool,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct Admin1Filter {
     admin1_string: String,
     is_code:       bool,
@@ -547,29 +554,16 @@ async fn geocode_main(args: Args) -> CliResult<()> {
     wtr.write_record(&headers)?;
 
     // setup suggest filters
-    let mut country_filter_list: Option<Vec<String>> = None;
+    let mut admin1_code_prefix = String::new();
+    let mut admin1_same_prefix = true;
+    let mut flag_country = args.flag_country.clone();
     let admin1_filter_list = if geocode_cmd == GeocodeSubCmd::Suggest {
-        // if admin1 is set, country must be set
-        if args.flag_admin1.is_some() && args.flag_country.is_none() {
-            return fail_incorrectusage_clierror!(
-                "If --admin1 is set, --country must also be set."
-            );
-        }
-
-        // country filter
-        country_filter_list = args.flag_country.map(|country_list| {
-            country_list
-                .split(',')
-                .map(|s| s.trim().to_ascii_lowercase())
-                .collect::<Vec<String>>()
-        });
-
         // admin1 filter: if all uppercase, search for admin1 code, else, search for admin1 name
         // see https://download.geonames.org/export/dump/admin1CodesASCII.txt for valid codes
-        if let Some(admin1_list) = args.flag_admin1 {
+        if let Some(admin1_list) = args.flag_admin1.clone() {
             // this regex matches admin1 codes (e.g. US.NY, JP.40, CN.23, HK.NYL, GG.6417214)
             let admin1_code_re = Regex::new(r"^[A-Z]{2}.[A-Z0-9]{1,8}$").unwrap();
-            Some(
+            let admin1_list_work = Some(
                 admin1_list
                     .split(',')
                     .map(|s| {
@@ -577,6 +571,17 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                         let is_code_flag = admin1_code_re.is_match(temp_s);
                         Admin1Filter {
                             admin1_string: if is_code_flag {
+                                if admin1_same_prefix {
+                                    // check if all admin1 codes have the same prefix
+                                    if admin1_code_prefix.is_empty() {
+                                        // first admin1 code, so set the prefix
+                                        admin1_code_prefix = temp_s[0..3].to_string();
+                                    } else if admin1_code_prefix != temp_s[0..3] {
+                                        // admin1 codes have different prefixes, so we can't
+                                        // infer the country from the admin1 code
+                                        admin1_same_prefix = false;
+                                    }
+                                }
                                 temp_s.to_string()
                             } else {
                                 // its an admin1 name, lowercase it
@@ -587,13 +592,41 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                         }
                     })
                     .collect::<Vec<Admin1Filter>>(),
-            )
+            );
+
+            // if admin1 is set, country must also be set
+            // however, if all admin1 codes have the same prefix, we can infer the country from the
+            // admin1 codes. Otherwise, we can't infer the country from the admin1 code,
+            // so we error out. Note that country inferencing only works if all admin1 codes have
+            // the same prefix, so it only works for one country at a time.
+            if args.flag_admin1.is_some() && flag_country.is_none() {
+                if !admin1_code_prefix.is_empty() && admin1_same_prefix {
+                    admin1_code_prefix.pop(); // remove the dot
+                    flag_country = Some(admin1_code_prefix);
+                } else {
+                    return fail_incorrectusage_clierror!(
+                        "If --admin1 is set, --country must also be set."
+                    );
+                }
+            }
+            admin1_list_work
         } else {
             None
         }
     } else {
         None
     }; // end setup suggest filters
+
+    // country filter
+    let country_filter_list = flag_country.map(|country_list| {
+        country_list
+            .split(',')
+            .map(|s| s.trim().to_ascii_lowercase())
+            .collect::<Vec<String>>()
+    });
+
+    log::debug!("country_filter_list: {country_filter_list:?}");
+    log::debug!("admin1_filter_list: {admin1_filter_list:?}");
 
     // amortize memory allocation by reusing record
     #[allow(unused_assignments)]
