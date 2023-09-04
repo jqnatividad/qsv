@@ -115,14 +115,23 @@ geocode arguments:
 geocode options:
     -c, --new-column <name>     Put the transformed values in a new column instead.
     -r, --rename <name>         New name for the transformed column.
+    --country <country_list>    The comma-delimited, case-insensitive list of countries to filter for.
+                                Country is specified as a ISO 3166-1 alpha-2 (two-letter) country code.
+                                https://en.wikipedia.org/wiki/ISO_3166-2
+
+                                It is the topmost priority filter, and will be applied first. If multiple
+                                countries are specified, they are matched in priority order.
+                                
+                                For suggest, this will limit the search to the specified countries.
+
+                                For reverse, this ensures that the returned city is in the specified
+                                countries (especially when reverse geocoding coordinates near country borders).
+                                If the coordinate is outside the specified countries, the returned city will
+                                be the closest city as the crow flies in the specified countries.
 
                                 SUGGEST only options:
     --min-score <score>         The minimum Jaro-Winkler distance score.
                                 [default: 0.8]
-    --country <country_list>    The comma-delimited, case-insensitive list of countries to filter for.
-                                Country is specified as a ISO 3166-1 alpha-2 (two-letter) country code.
-                                It is the topmost priority filter, and will be applied first.
-                                https://en.wikipedia.org/wiki/ISO_3166-2
     --admin1 <admin1_list>      The comma-delimited, case-insensitive list of admin1s to filter for.
     
                                 If all uppercase, it will be treated as an admin1 code (e.g. US.NY, JP.40, CN.23).
@@ -133,7 +142,7 @@ geocode options:
                                 admin1 code (in this example - US), and the --country option is not required.
 
                                 If specifying multiple admin1 filters, you can mix admin1 codes and names, and they
-                                are matched in the order specified. 
+                                are matched in priority order. 
                                 
                                 Matches are made using a starts_with() comparison (i.e. "US" will match "US.NY", "US.NJ",
                                 etc. for admin1 code. "New" will match "New York", "New Jersey", "Newfoundland", etc.
@@ -142,7 +151,7 @@ geocode options:
                                 admin1 is the second priority filter, and will be applied after country filters.
                                 See https://download.geonames.org/export/dump/admin1CodesASCII.txt for admin1 codes/names.
 
-                                REVERSE option:
+                                REVERSE only option:
     -k, --k_weight <weight>     Use population-weighted distance for reverse subcommand.
                                 (i.e. nearest.distance - k * city.population)
                                 Larger values will favor more populated cities.
@@ -253,8 +262,8 @@ struct Args {
     arg_input:           Option<String>,
     arg_index_file:      Option<String>,
     flag_rename:         Option<String>,
-    flag_min_score:      Option<f32>,
     flag_country:        Option<String>,
+    flag_min_score:      Option<f32>,
     flag_admin1:         Option<String>,
     flag_k_weight:       Option<f32>,
     flag_formatstr:      String,
