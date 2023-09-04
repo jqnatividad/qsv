@@ -71,7 +71,7 @@ cached = { version = "0.44", default-features = false, features = [
     "proc_macro",
     "redis_ahash",
 ], optional = true }
-calamine = { version = "0.21", features = ["dates"] }
+calamine = { version = "0.22", features = ["dates"] }
 censor = { version = "0.3", optional = true }
 chrono = { version = "0.4", default-features = false }
 console = { version = "0.15", optional = true }
@@ -220,9 +220,6 @@ postgres = "0.19"
 quickcheck = { version = "1", default-features = false }
 rusqlite = { version = "0.29", features = ["bundled"] }
 serial_test = { version = "2.0", features = ["file_locks"] }
-
-[patch.crates-io]
-calamine = { git = "https://github.com/jqnatividad/calamine", branch = "formula_empty_string_value" }
 
 [features]
 default = ["mimalloc"]
