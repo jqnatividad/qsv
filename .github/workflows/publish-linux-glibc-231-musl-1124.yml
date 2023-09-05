@@ -12,7 +12,7 @@ jobs:
     outputs:
       previous-tag: ${{ steps.previoustag.outputs.tag }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       #▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼#
@@ -58,7 +58,7 @@ jobs:
         target: ${{ matrix.job.target }}
         override: true
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         submodules: recursive
         ref: ${{ needs.analyze-tags.outputs.previous-tag }}

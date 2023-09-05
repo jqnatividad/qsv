@@ -9,7 +9,7 @@ jobs:
     outputs:
       previous-tag: ${{ steps.previoustag.outputs.tag }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Get previous tag
@@ -21,7 +21,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
