@@ -9,11 +9,13 @@ By default, the prebuilt index uses the Geonames Gazeteer cities15000.zip file u
 English names. It contains cities with populations > 15,000 (about ~26k cities). 
 See https://download.geonames.org/export/dump/ for more information.
 
-It has three major subcommands:
- * suggest - given a City name, return the closest location coordinate by default.
- * reverse - given a location coordinate, return the closest City by default.
- * index-* - operations to update the local Geonames cities index.
-             (index-check, index-update, index-load & index-reset)
+It has five major subcommands:
+ * suggest     - given a City name, return the closest location coordinate by default.
+ * suggestnow  - same as suggest, but does not require an input file.
+ * reverse     - given a location coordinate, return the closest City by default.
+ * reversenow  - sames as reverse, but does not require an input file.
+ * index-*     - operations to update the local Geonames cities index.
+                 (index-check, index-update, index-load & index-reset)
  
 SUGGEST
 Suggest a Geonames city based on a partial city name. It returns the closest Geonames
@@ -52,6 +54,13 @@ Use dynamic formatting to create a custom format.
 
   $ qsv geocode suggest city -f "{name}, {admin1}, {country} in {timezone}" file.csv
 
+SUGGESTNOW
+Accepts the same options as suggest, but does not require an input file.
+
+  $ qsv geocode suggestnow "New York"
+  $ qsv geocode suggestnow --country US -f %cityrecord "Paris"
+  $ qsv geocode suggestnow --admin1 "US:OH" "Athens"
+
 REVERSE
 Reverse geocode a WGS 84 coordinate to the nearest Geonames city record.
 It accepts "lat, long" or "(lat, long)" format.
@@ -72,6 +81,13 @@ named CityState, output to a file named file_with_citystate.csv.
 The same as above, but get the timezone instead of the city and state.
 
   $ qsv geocode reverse LatLong -f %timezone -c tz file.csv -o file_with_tz.csv
+
+REVERSENOW
+Accepts the same options as reverse, but does not require an input file.
+
+  $ qsv geocode reversenow "40.71427, -74.00597"
+  $ qsv geocode reversenow --country US -f %cityrecord "40.71427, -74.00597"
+  $ qsv geocode reversenow --admin1 "US:OH" "39.32924, -82.10126"
 
 INDEX-<operation>
 Updates the local Geonames cities index used by the geocode command.
@@ -98,7 +114,9 @@ For more extensive examples, see https://github.com/jqnatividad/qsv/blob/master/
 
 Usage:
 qsv geocode suggest [--formatstr=<string>] [options] <column> [<input>]
+qsv geocode suggestnow [options] <location>
 qsv geocode reverse [--formatstr=<string>] [options] <column> [<input>]
+qsv geocode reversenow [options] <location>
 qsv geocode index-load <index-file>
 qsv geocode index-check
 qsv geocode index-update [--languages=<lang>] [--force]
@@ -109,6 +127,9 @@ geocode arguments:
         
     <input>                     The input file to read from. If not specified, reads from stdin.
     <column>                    The column to geocode.
+    <location>                  The location to geocode. For suggestnow, its a string pattern.
+                                For reversenow, it must be a WGS 84 coordinate "lat, long" or
+                                "(lat, long)" format.
     <index-file>                The alternate geonames index file to use. It must be a .bincode file.
                                 Only used by the index-load subcommand.
 
@@ -241,6 +262,7 @@ use rayon::{
 use regex::Regex;
 use serde::Deserialize;
 use simple_home_dir::expand_tilde;
+use uuid::Uuid;
 
 use crate::{
     clitypes::CliError,
@@ -253,8 +275,11 @@ use crate::{
 #[derive(Deserialize)]
 struct Args {
     arg_column:          String,
+    arg_location:        String,
     cmd_suggest:         bool,
+    cmd_suggestnow:      bool,
     cmd_reverse:         bool,
+    cmd_reversenow:      bool,
     cmd_index_check:     bool,
     cmd_index_update:    bool,
     cmd_index_load:      bool,
@@ -316,7 +341,9 @@ static SUGGEST_ADMIN1_LIMIT: usize = 10;
 #[derive(Clone, Copy, PartialEq)]
 enum GeocodeSubCmd {
     Suggest,
+    SuggestNow,
     Reverse,
+    ReverseNow,
     IndexCheck,
     IndexUpdate,
     IndexLoad,
@@ -356,12 +383,21 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 // main async geocode function that does the actual work
 async fn geocode_main(args: Args) -> CliResult<()> {
     let mut index_cmd = true;
+    let mut now_cmd = false;
     let geocode_cmd = if args.cmd_suggest {
         index_cmd = false;
         GeocodeSubCmd::Suggest
     } else if args.cmd_reverse {
         index_cmd = false;
         GeocodeSubCmd::Reverse
+    } else if args.cmd_suggestnow {
+        index_cmd = false;
+        now_cmd = true;
+        GeocodeSubCmd::SuggestNow
+    } else if args.cmd_reversenow {
+        index_cmd = false;
+        now_cmd = true;
+        GeocodeSubCmd::ReverseNow
     } else if args.cmd_index_check {
         GeocodeSubCmd::IndexCheck
     } else if args.cmd_index_update {
@@ -435,7 +471,29 @@ async fn geocode_main(args: Args) -> CliResult<()> {
         filter_languages: languages_vec.clone(),
     })?;
 
-    let rconfig = Config::new(&args.arg_input)
+    // create a TempDir for the one record CSV we're creating if we're doing a Now command
+    // we're doing this at this scope so the TempDir is automatically dropped after we're done
+    let tempdir = tempfile::Builder::new()
+        .prefix("qsv-geocode")
+        .tempdir()
+        .unwrap();
+
+    // we're doing a SuggestNow or ReverseNow, create a one record CSV in tempdir
+    // with one column named "location" and the passed location value and use it as the input
+    let input = if now_cmd {
+        let tempdir_path = tempdir.path().to_string_lossy().to_string();
+        let temp_csv_path = format!("{}/{}.csv", tempdir_path, Uuid::new_v4());
+        let temp_csv_path = Path::new(&temp_csv_path);
+        let mut temp_csv_wtr = csv::WriterBuilder::new().from_path(temp_csv_path)?;
+        temp_csv_wtr.write_record(["location"])?;
+        temp_csv_wtr.write_record([&args.arg_location])?;
+        temp_csv_wtr.flush()?;
+        Some(temp_csv_path.to_string_lossy().to_string())
+    } else {
+        args.arg_input
+    };
+
+    let rconfig = Config::new(&input)
         .delimiter(args.flag_delimiter)
         .select(SelectColumns::parse(&args.arg_column)?);
 
@@ -562,71 +620,75 @@ async fn geocode_main(args: Args) -> CliResult<()> {
     }
     wtr.write_record(&headers)?;
 
-    // setup suggest filters
+    // setup admin1 filter for Suggest/Now
     let mut admin1_code_prefix = String::new();
     let mut admin1_same_prefix = true;
     let mut flag_country = args.flag_country.clone();
-    let admin1_filter_list = if geocode_cmd == GeocodeSubCmd::Suggest {
-        // admin1 filter: if all uppercase, search for admin1 code, else, search for admin1 name
-        // see https://download.geonames.org/export/dump/admin1CodesASCII.txt for valid codes
-        if let Some(admin1_list) = args.flag_admin1.clone() {
-            // this regex matches admin1 codes (e.g. US.NY, JP.40, CN.23, HK.NYL, GG.6417214)
-            let admin1_code_re = Regex::new(r"^[A-Z]{2}.[A-Z0-9]{1,8}$").unwrap();
-            let admin1_list_work = Some(
-                admin1_list
-                    .split(',')
-                    .map(|s| {
-                        let temp_s = s.trim();
-                        let is_code_flag = admin1_code_re.is_match(temp_s);
-                        Admin1Filter {
-                            admin1_string: if is_code_flag {
-                                if admin1_same_prefix {
-                                    // check if all admin1 codes have the same prefix
-                                    if admin1_code_prefix.is_empty() {
-                                        // first admin1 code, so set the prefix
-                                        admin1_code_prefix = temp_s[0..3].to_string();
-                                    } else if admin1_code_prefix != temp_s[0..3] {
-                                        // admin1 codes have different prefixes, so we can't
-                                        // infer the country from the admin1 code
-                                        admin1_same_prefix = false;
+    let admin1_filter_list = match geocode_cmd {
+        GeocodeSubCmd::Suggest | GeocodeSubCmd::SuggestNow => {
+            // admin1 filter: if all uppercase, search for admin1 code, else, search for admin1 name
+            // see https://download.geonames.org/export/dump/admin1CodesASCII.txt for valid codes
+            if let Some(admin1_list) = args.flag_admin1.clone() {
+                // this regex matches admin1 codes (e.g. US.NY, JP.40, CN.23, HK.NYL, GG.6417214)
+                let admin1_code_re = Regex::new(r"^[A-Z]{2}.[A-Z0-9]{1,8}$").unwrap();
+                let admin1_list_work = Some(
+                    admin1_list
+                        .split(',')
+                        .map(|s| {
+                            let temp_s = s.trim();
+                            let is_code_flag = admin1_code_re.is_match(temp_s);
+                            Admin1Filter {
+                                admin1_string: if is_code_flag {
+                                    if admin1_same_prefix {
+                                        // check if all admin1 codes have the same prefix
+                                        if admin1_code_prefix.is_empty() {
+                                            // first admin1 code, so set the prefix
+                                            admin1_code_prefix = temp_s[0..3].to_string();
+                                        } else if admin1_code_prefix != temp_s[0..3] {
+                                            // admin1 codes have different prefixes, so we can't
+                                            // infer the country from the admin1 code
+                                            admin1_same_prefix = false;
+                                        }
                                     }
-                                }
-                                temp_s.to_string()
-                            } else {
-                                // its an admin1 name, lowercase it
-                                // so we can do case-insensitive starts_with() comparisons
-                                temp_s.to_lowercase()
-                            },
-                            is_code:       is_code_flag,
-                        }
-                    })
-                    .collect::<Vec<Admin1Filter>>(),
-            );
+                                    temp_s.to_string()
+                                } else {
+                                    // its an admin1 name, lowercase it
+                                    // so we can do case-insensitive starts_with() comparisons
+                                    temp_s.to_lowercase()
+                                },
+                                is_code:       is_code_flag,
+                            }
+                        })
+                        .collect::<Vec<Admin1Filter>>(),
+                );
 
-            // if admin1 is set, country must also be set
-            // however, if all admin1 codes have the same prefix, we can infer the country from the
-            // admin1 codes. Otherwise, we can't infer the country from the admin1 code,
-            // so we error out. Note that country inferencing only works if all admin1 codes have
-            // the same prefix, so it only works for one country at a time.
-            if args.flag_admin1.is_some() && flag_country.is_none() {
-                if !admin1_code_prefix.is_empty() && admin1_same_prefix {
-                    admin1_code_prefix.pop(); // remove the dot
-                    flag_country = Some(admin1_code_prefix);
-                } else {
-                    return fail_incorrectusage_clierror!(
-                        "If --admin1 is set, --country must also be set."
-                    );
+                // if admin1 is set, country must also be set
+                // however, if all admin1 codes have the same prefix, we can infer the country from
+                // the admin1 codes. Otherwise, we can't infer the country from the
+                // admin1 code, so we error out. Note that country inferencing only
+                // works if all admin1 codes have the same prefix, so it only works
+                // for one country at a time.
+                if args.flag_admin1.is_some() && flag_country.is_none() {
+                    if !admin1_code_prefix.is_empty() && admin1_same_prefix {
+                        admin1_code_prefix.pop(); // remove the dot
+                        flag_country = Some(admin1_code_prefix);
+                    } else {
+                        return fail_incorrectusage_clierror!(
+                            "If --admin1 is set, --country must also be set unless admin1 codes \
+                             are used with a common country prefix (e.g. US.CA,US.NY,US.OH, etc)."
+                        );
+                    }
                 }
+                admin1_list_work
+            } else {
+                None
             }
-            admin1_list_work
-        } else {
-            None
-        }
-    } else {
-        None
-    }; // end setup suggest filters
+        },
+        // reverse/now doesn't support admin1 filters
+        _ => None,
+    }; // end setup admin1 filters
 
-    // country filter
+    // setup country filter - both suggest/now and reverse/now support country filters
     let country_filter_list = flag_country.map(|country_list| {
         country_list
             .split(',')
@@ -805,7 +867,7 @@ fn search_cached(
     country_filter_list: &Option<Vec<String>>,
     admin1_filter_list: &Option<Vec<Admin1Filter>>,
 ) -> Option<String> {
-    if mode == GeocodeSubCmd::Suggest {
+    if mode == GeocodeSubCmd::Suggest || mode == GeocodeSubCmd::SuggestNow {
         let search_result: Vec<&CitiesRecord>;
         let cityrecord = if admin1_filter_list.is_none() {
             // no admin1 filter, run a search for 1 result (top match)
@@ -887,56 +949,52 @@ fn search_cached(
         }
 
         return Some(format_result(cityrecord, formatstr, true));
-    } else if mode == GeocodeSubCmd::Reverse {
-        // regex for Location field. Accepts (lat, long) & lat, long
-        let locregex: &'static Regex = regex_oncelock!(
-            r"(?-u)([+-]?[0-9]+\.?[0-9]*|\.[0-9]+),\s*([+-]?[0-9]+\.?[0-9]*|\.[0-9]+)"
-        );
+    }
 
-        let loccaps = locregex.captures(cell);
-        if let Some(loccaps) = loccaps {
-            let lat = fast_float::parse(&loccaps[1]).unwrap_or_default();
-            let long = fast_float::parse(&loccaps[2]).unwrap_or_default();
-            if (-90.0..=90.0).contains(&lat) && (-180.0..=180.0).contains(&long) {
-                let search_result =
-                    engine.reverse((lat, long), 1, k, country_filter_list.as_deref());
-                let Some(cityrecord) = (match search_result {
-                    Some(search_result) => search_result.into_iter().next().map(|ri| ri.city),
-                    None => return None,
-                }) else {
-                    return None;
+    // we're doing a Reverse/Now command and expect a WGS 84 coordinate
+    // the regex validates for "(lat, long)" or "lat, long"
+    let locregex: &'static Regex =
+        regex_oncelock!(r"(?-u)([+-]?[0-9]+\.?[0-9]*|\.[0-9]+),\s*([+-]?[0-9]+\.?[0-9]*|\.[0-9]+)");
+
+    let loccaps = locregex.captures(cell);
+    if let Some(loccaps) = loccaps {
+        let lat = fast_float::parse(&loccaps[1]).unwrap_or_default();
+        let long = fast_float::parse(&loccaps[2]).unwrap_or_default();
+        if (-90.0..=90.0).contains(&lat) && (-180.0..=180.0).contains(&long) {
+            let search_result = engine.reverse((lat, long), 1, k, country_filter_list.as_deref());
+            let Some(cityrecord) = (match search_result {
+                Some(search_result) => search_result.into_iter().next().map(|ri| ri.city),
+                None => return None,
+            }) else {
+                return None;
+            };
+
+            if formatstr == "%+" {
+                // default for reverse is city-admin1 - e.g. "Brooklyn, New York"
+                let (_admin1_key, admin1_name) = match &cityrecord.admin1_names {
+                    Some(admin1) => admin1
+                        .iter()
+                        .next()
+                        .unwrap_or((&EMPTY_STRING, &EMPTY_STRING)),
+                    None => (&EMPTY_STRING, &EMPTY_STRING),
                 };
 
-                if formatstr == "%+" {
-                    // default for reverse is city-admin1 - e.g. "Brooklyn, New York"
-                    let (_admin1_key, admin1_name) = match &cityrecord.admin1_names {
-                        Some(admin1) => admin1
-                            .iter()
-                            .next()
-                            .unwrap_or((&EMPTY_STRING, &EMPTY_STRING)),
-                        None => (&EMPTY_STRING, &EMPTY_STRING),
-                    };
-
-                    return Some(format!(
-                        "{city}, {admin1}",
-                        city = cityrecord.name.clone(),
-                        admin1 = admin1_name.clone()
-                    ));
-                }
-
-                return Some(format_result(cityrecord, formatstr, false));
+                return Some(format!(
+                    "{city}, {admin1}",
+                    city = cityrecord.name.clone(),
+                    admin1 = admin1_name.clone()
+                ));
             }
-        } else {
-            // not a valid lat, long
-            return None;
+
+            return Some(format_result(cityrecord, formatstr, false));
         }
     }
 
-    None
+    // not a valid lat, long
+    return None;
 }
 
 /// format the geocoded result based on formatstr if its not %+
-#[inline]
 fn format_result(cityrecord: &CitiesRecord, formatstr: &str, suggest_mode: bool) -> String {
     let (_admin1_key, admin1_name) = match &cityrecord.admin1_names {
         Some(admin1) => admin1
