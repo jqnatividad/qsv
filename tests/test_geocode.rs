@@ -142,6 +142,42 @@ fn geocode_suggest_intl_admin1_filter_error() {
 }
 
 #[test]
+fn geocode_suggestnow() {
+    let wrk = Workdir::new("geocode_suggestnow");
+
+    let mut cmd = wrk.command("geocode");
+    cmd.arg("suggestnow")
+        .arg("Paris")
+        .args(["--country", "US"])
+        .args(["-f", "%city-admin1-country"]);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![svec!["location"], svec!["Paris, Texas United States"]];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn geocode_reversenow() {
+    let wrk = Workdir::new("geocode_reversenow");
+
+    let mut cmd = wrk.command("geocode");
+    cmd.arg("reversenow")
+        .arg("(40.67, -73.94)")
+        .args(["--admin1", "New York"])
+        .args([
+            "-f",
+            "{name}, {admin2} County, {admin1} - {population} {timezone}",
+        ]);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["location"],
+        svec!["East Flatbush, Kings County, New York - 178464 America/New_York"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn geocode_suggest_intl_admin1_filter_country_inferencing() {
     let wrk = Workdir::new("geocode_suggest_intl_admin1_filter_country_inferencing");
     wrk.create(
