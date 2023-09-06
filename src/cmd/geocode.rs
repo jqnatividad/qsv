@@ -134,7 +134,8 @@ geocode arguments:
                                 Only used by the index-load subcommand.
 
 geocode options:
-    -c, --new-column <name>     Put the transformed values in a new column instead.
+    -c, --new-column <name>     Put the transformed values in a new column instead. Not valid when
+                                using the '%dyncols:' --formatstr option.
     -r, --rename <name>         New name for the transformed column.
     --country <country_list>    The comma-delimited, case-insensitive list of countries to filter for.
                                 Country is specified as a ISO 3166-1 alpha-2 (two-letter) country code.
@@ -195,6 +196,7 @@ geocode options:
                                   - '%lat-long' - <latitude>, <longitude>
                                   - '%location' - (<latitude>, <longitude>)
                                   - '%id' - the Geonames ID
+                                  - '%capital' - the capital
                                   - '%population' - the population
                                   - '%timezone' - the timezone
                                   - '%+' - use the subcommand's default format. For suggest, '%location'.
@@ -205,12 +207,22 @@ geocode options:
                                 Alternatively, you can use dynamic formatting to create a custom format.
                                 To do so, set the --formatstr to a dynfmt template, enclosing field names
                                 in curly braces.
-                                The following nine fields are available:
-                                  id, name, latitude, longitude, country, admin1, admin2, timezone, population
+                                The following ten fields are available:
+                                  id, name, latitude, longitude, country, admin1, admin2, capital, timezone, population
                                     
                                   e.g. "City: {name}, State: {admin1}, Country: {country} - {timezone}"
 
                                 If an invalid dynfmt template is specified, it will return "Invalid dynfmt template."
+
+                                Finally, you can use the special format "%dyncols:" to add columns to the CSV.
+                                To do so, set the --formatstr to "%dyncols:" followed by a comma-delimited list
+                                of key:value pairs enclosed in curly braces.
+                                The key is the desired column name, and the value is are the same ten fields available
+                                for dynamic formatting.
+
+                                 e.g. "%dyncols: {city_col:name}, {state_col:admin1}, {country_col:country}"
+
+                                will add three columns to the CSV named city_col, state_col and country_col.
                                 [default: %+]
 
     --invalid-result <string>   The string to return when the geocode result is empty/invalid.
@@ -337,6 +349,23 @@ static INVALID_DYNFMT: &str = "Invalid dynfmt template.";
 // before filtering by admin1
 static SUGGEST_ADMIN1_LIMIT: usize = 10;
 
+// valid column values for %dyncols
+static VALID_DYNCOLS: [&str; 10] = [
+    "id",
+    "name",
+    "latitude",
+    "longitude",
+    "country",
+    "admin1",
+    "admin2",
+    "capital",
+    "timezone",
+    "population",
+];
+
+// dyncols populated sentinel value
+static DYNCOLS_POPULATED: &str = "_POPULATED";
+
 // valid subcommands
 #[derive(Clone, Copy, PartialEq)]
 enum GeocodeSubCmd {
@@ -372,6 +401,18 @@ fn replace_column_value(
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
+
+    if args.flag_new_column.is_some() && args.flag_rename.is_some() {
+        return fail_incorrectusage_clierror!(
+            "Cannot use --new-column and --rename at the same time."
+        );
+    }
+
+    if args.flag_new_column.is_some() && args.flag_formatstr.starts_with("%dyncols:") {
+        return fail_incorrectusage_clierror!(
+            "Cannot use --new-column with the '%dyncols:' --formatstr option."
+        );
+    }
 
     // we need to use tokio runtime as geosuggest uses async
     let rt = tokio::runtime::Runtime::new().unwrap();
@@ -615,9 +656,54 @@ async fn geocode_main(args: Args) -> CliResult<()> {
         }
     }
 
+    // setup output headers
     if let Some(new_column) = &args.flag_new_column {
         headers.push_field(new_column);
     }
+
+    // if formatstr starts with "%dyncols:"", then we're using dynfmt to add columns.
+    // To add columns, we enclose in curly braces a key:value pair for each column with
+    // the key being the desired column name and the value being the CityRecord field
+    // we want to add to the CSV
+    // e.g. "%dyncols: {city_col:name}, {state_col:admin1}, {country_col:country}"
+    // will add three columns to the CSV named city_col, state_col and country_col.
+
+    // first, parse the formatstr to get the column names and values in parallel vectors
+    let mut column_names = Vec::new();
+    let mut column_values = Vec::new();
+
+    let dyncols_len = if args.flag_formatstr.starts_with("%dyncols:") {
+        for column in args.flag_formatstr[9..].split(',') {
+            let column = column.trim();
+            let column_key_value: Vec<&str> = column.split(':').collect();
+            if column_key_value.len() == 2 {
+                column_names.push(column_key_value[0].trim_matches('{'));
+                column_values.push(column_key_value[1].trim_matches('}'));
+            }
+        }
+
+        // now, validate the column values
+        // the valid column values are: id, name, latitude, longitude, country, admin1, admin2,
+        // capital, timezone, population
+        for column_value in &column_values {
+            if !VALID_DYNCOLS.contains(column_value) {
+                return fail_incorrectusage_clierror!(
+                    "Invalid column value: {column_value}. Valid values are: id, name, latitude, \
+                     longitude, country, admin1, admin2, capital, timezone, population"
+                );
+            }
+        }
+
+        // now, we add the columns to the CSV headers
+        for column in column_names {
+            headers.push_field(column);
+        }
+        column_values.len()
+    } else {
+        0
+    };
+
+    // now, write the headers to the output CSV
     wtr.write_record(&headers)?;
 
     // setup admin1 filter for Suggest/Now
@@ -747,8 +833,21 @@ async fn geocode_main(args: Args) -> CliResult<()> {
             .map(|record_item| {
                 let mut record = record_item.clone();
                 let mut cell = record[column_index].to_owned();
-                if !cell.is_empty() {
-                    let search_result = search_cached(
+                if cell.is_empty() {
+                    // cell to geocode is empty. If in dyncols mode, we need to add empty columns.
+                    // Otherwise, we leave the row untouched.
+                    if dyncols_len > 0 {
+                        // we're in dyncols mode, so add empty columns
+                        for _ in 0..dyncols_len {
+                            record.push_field("");
+                        }
+                    }
+                } else if dyncols_len > 0 {
+                    // we're in dyncols mode, so use a non-cached search_index fn
+                    // as we need to inject the column values into the output csv
+                    // and each row have different column values and the result is
+                    // actually in the mutable record variable
+                    let search_results = search_index_no_cache(
                         &engine,
                         geocode_cmd,
                         &cell,
@@ -757,7 +856,43 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                         k_weight,
                         &country_filter_list,
                         &admin1_filter_list,
+                        &column_values,
+                        &mut record,
                     );
+
+                    let dyncol_ok =
+                        search_results.is_some() && search_results.unwrap() == DYNCOLS_POPULATED;
+
+                    if !dyncol_ok {
+                        if invalid_result.is_empty() {
+                            // --invalid-result is not set, so add empty columns
+                            for _ in 0..dyncols_len {
+                                record.push_field("");
+                            }
+                        } else {
+                            // --invalid-result is set
+                            // so add columns set to --invalid-result value
+                            for _ in 0..dyncols_len {
+                                record.push_field(&invalid_result.clone());
+                            }
+                        }
+                    }
+                } else {
+                    // not in dyncols mode so call the CACHED search_index fn
+                    // as we want to take advantage of the cache
+                    let search_result = search_index(
+                        &engine,
+                        geocode_cmd,
+                        &cell,
+                        &args.flag_formatstr,
+                        min_score,
+                        k_weight,
+                        &country_filter_list,
+                        &admin1_filter_list,
+                        &column_values,
+                        &mut record,
+                    );
+
                     if let Some(geocoded_result) = search_result {
                         // we have a valid geocode result, so use that
                         cell = geocoded_result;
@@ -765,7 +900,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                         // we have an invalid geocode result
                         if !invalid_result.is_empty() {
                             // --invalid-result is set, so use that instead
-                            // otherwise, we leave cell untouched, and the original value remains
+                            // otherwise, we leave cell untouched.
                             cell = invalid_result.clone();
                         }
                     }
@@ -793,7 +928,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
     } // end batch loop
 
     if show_progress {
-        util::update_cache_info!(progress, SEARCH_CACHED);
+        util::update_cache_info!(progress, SEARCH_INDEX);
         util::finish_progress(&progress);
     }
     Ok(wtr.flush()?)
@@ -854,10 +989,9 @@ async fn load_engine(geocode_index_file: PathBuf, progressbar: &ProgressBar) -> 
               SizedCache::with_size(FALLBACK_CACHE_SIZE)) }",
     key = "String",
     convert = r#"{ format!("{cell}") }"#,
-    option = true,
-    sync_writes = false
+    option = true
 )]
-fn search_cached(
+fn search_index(
     engine: &Engine,
     mode: GeocodeSubCmd,
     cell: &str,
@@ -866,6 +1000,8 @@ fn search_cached(
     k: Option<f32>,
     country_filter_list: &Option<Vec<String>>,
     admin1_filter_list: &Option<Vec<Admin1Filter>>,
+    column_values: &[&str], //&Vec<&str>,
+    record: &mut csv::StringRecord,
 ) -> Option<String> {
     if mode == GeocodeSubCmd::Suggest || mode == GeocodeSubCmd::SuggestNow {
         let search_result: Vec<&CitiesRecord>;
@@ -948,7 +1084,19 @@ fn search_cached(
             ));
         }
 
-        return Some(format_result(cityrecord, formatstr, true));
+        let country = cityrecord.country.clone().unwrap().name;
+        let capital = engine
+            .capital(&country)
+            .map(|cr| cr.name.clone())
+            .unwrap_or_default();
+
+        if formatstr.starts_with("%dyncols:") {
+            return add_dyncols(record, cityrecord, &country, &capital, column_values);
+        }
+
+        return Some(format_result(
+            cityrecord, &country, &capital, formatstr, true,
+        ));
     }
 
     // we're doing a Reverse/Now command and expect a WGS 84 coordinate
@@ -971,13 +1119,7 @@ fn search_cached(
 
             if formatstr == "%+" {
                 // default for reverse is city-admin1 - e.g. "Brooklyn, New York"
-                let (_admin1_key, admin1_name) = match &cityrecord.admin1_names {
-                    Some(admin1) => admin1
-                        .iter()
-                        .next()
-                        .unwrap_or((&EMPTY_STRING, &EMPTY_STRING)),
-                    None => (&EMPTY_STRING, &EMPTY_STRING),
-                };
+                let (admin1_name, _admin2_name) = get_admin_names(cityrecord, 1);
 
                 return Some(format!(
                     "{city}, {admin1}",
@@ -986,7 +1128,19 @@ fn search_cached(
                 ));
             }
 
-            return Some(format_result(cityrecord, formatstr, false));
+            let country = cityrecord.country.clone().unwrap().name;
+            let capital = engine
+                .capital(&country)
+                .map(|cr| cr.name.clone())
+                .unwrap_or_default();
+
+            if formatstr.starts_with("%dyncols:") {
+                return add_dyncols(record, cityrecord, &country, &capital, column_values);
+            }
+
+            return Some(format_result(
+                cityrecord, &country, &capital, formatstr, false,
+            ));
         }
     }
 
@@ -994,23 +1148,46 @@ fn search_cached(
     return None;
 }
 
-/// format the geocoded result based on formatstr if its not %+
-fn format_result(cityrecord: &CitiesRecord, formatstr: &str, suggest_mode: bool) -> String {
-    let (_admin1_key, admin1_name) = match &cityrecord.admin1_names {
-        Some(admin1) => admin1
-            .iter()
-            .next()
-            .unwrap_or((&EMPTY_STRING, &EMPTY_STRING)),
-        None => (&EMPTY_STRING, &EMPTY_STRING),
-    };
+fn add_dyncols(
+    record: &mut csv::StringRecord,
+    cityrecord: &CitiesRecord,
+    country: &str,
+    capital: &str,
+    column_values: &[&str],
+) -> Option<String> {
+    for column in column_values {
+        match *column {
+            "id" => record.push_field(&cityrecord.id.to_string()),
+            "name" => record.push_field(&cityrecord.name),
+            "latitude" => record.push_field(&cityrecord.latitude.to_string()),
+            "longitude" => record.push_field(&cityrecord.longitude.to_string()),
+            "country" => record.push_field(country),
+            "admin1" => {
+                let (admin1_name, _) = get_admin_names(cityrecord, 1);
+                record.push_field(admin1_name);
+            },
+            "admin2" => {
+                let (_, admin2_name) = get_admin_names(cityrecord, 2);
+                record.push_field(admin2_name);
+            },
+            "capital" => record.push_field(capital),
+            "timezone" => record.push_field(&cityrecord.timezone),
+            "population" => record.push_field(&cityrecord.population.to_string()),
+            _ => {},
+        }
+    }
+    Some(DYNCOLS_POPULATED.to_string())
+}
 
-    let (_admin2_key, admin2_name) = match &cityrecord.admin2_names {
-        Some(admin2) => admin2
-            .iter()
-            .next()
-            .unwrap_or((&EMPTY_STRING, &EMPTY_STRING)),
-        None => (&EMPTY_STRING, &EMPTY_STRING),
-    };
+/// format the geocoded result based on formatstr if its not %+
+fn format_result(
+    cityrecord: &CitiesRecord,
+    country: &str,
+    capital: &str,
+    formatstr: &str,
+    suggest_mode: bool,
+) -> String {
+    let (admin1_name, admin2_name) = get_admin_names(cityrecord, 3);
 
     if formatstr.starts_with('%') {
         // if formatstr starts with %, then we're using a predefined format
@@ -1018,35 +1195,26 @@ fn format_result(cityrecord: &CitiesRecord, formatstr: &str, suggest_mode: bool)
             "%city-admin1" | "%city-state" => format!("{}, {}", cityrecord.name, admin1_name),
             "%lat-long" => format!("{}, {}", cityrecord.latitude, cityrecord.longitude),
             "%location" => format!("({}, {})", cityrecord.latitude, cityrecord.longitude),
-            "%city-country" => format!(
-                "{}, {}",
-                cityrecord.name,
-                cityrecord.country.clone().unwrap().name
-            ),
+            "%city-country" => format!("{}, {}", cityrecord.name, country),
             "%city" => cityrecord.name.clone(),
-            "%city-state-country" | "%city-admin1-country" => format!(
-                "{}, {} {}",
-                cityrecord.name,
-                admin1_name,
-                cityrecord.country.clone().unwrap().name
-            ),
-            "%city-county-state" | "%city-admin2-admin1" => format!(
-                "{}, {}, {}",
-                cityrecord.name,
-                admin2_name.to_owned(),
-                admin1_name.to_owned(),
-            ),
+            "%city-state-country" | "%city-admin1-country" => {
+                format!("{}, {} {}", cityrecord.name, admin1_name, country)
+            },
+            "%city-county-state" | "%city-admin2-admin1" => {
+                format!("{}, {}, {}", cityrecord.name, admin2_name, admin1_name,)
+            },
             "%state" | "%admin1" => admin1_name.to_owned(),
             "%county" | "%admin2" => admin2_name.to_owned(),
-            "%country" => cityrecord.country.clone().unwrap().name,
+            "%country" => country.to_owned(),
             "%id" => format!("{}", cityrecord.id),
+            "%capital" => capital.to_owned(),
             "%population" => format!("{}", cityrecord.population),
             "%timezone" => cityrecord.timezone.clone(),
             "%cityrecord" => format!("{cityrecord:?}"),
             "%admin1record" => format!("{:?}", cityrecord.admin_division),
             "%admin2record" => format!("{:?}", cityrecord.admin2_division),
             _ => {
-                // invalid formatstr, so we use the default for suggest or reverse
+                // invalid formatstr, so we use the default for suggest/now or reverse/now
                 if suggest_mode {
                     // default for suggest is location - e.g. "(lat, long)"
                     format!(
@@ -1055,7 +1223,7 @@ fn format_result(cityrecord: &CitiesRecord, formatstr: &str, suggest_mode: bool)
                         longitude = cityrecord.longitude
                     )
                 } else {
-                    // default for reverse is city-admin1 - e.g. "Brooklyn, New York"
+                    // default for reverse/now is city-admin1 - e.g. "Brooklyn, New York"
                     format!(
                         "{city}, {admin1}",
                         city = cityrecord.name.clone(),
@@ -1068,15 +1236,15 @@ fn format_result(cityrecord: &CitiesRecord, formatstr: &str, suggest_mode: bool)
         // if formatstr does not start with %, then we're using dynfmt,
         // i.e. nine predefined fields below in curly braces are replaced with values
         // e.g. "City: {name}, State: {admin1}, Country: {country} - {timezone}"
-
-        let mut cityrecord_map: HashMap<&str, String> = HashMap::with_capacity(9);
+        let mut cityrecord_map: HashMap<&str, String> = HashMap::with_capacity(10);
         cityrecord_map.insert("id", cityrecord.id.to_string());
         cityrecord_map.insert("name", cityrecord.name.clone());
         cityrecord_map.insert("latitude", cityrecord.latitude.to_string());
         cityrecord_map.insert("longitude", cityrecord.longitude.to_string());
-        cityrecord_map.insert("country", cityrecord.country.clone().unwrap().name);
+        cityrecord_map.insert("country", country.to_owned());
         cityrecord_map.insert("admin1", admin1_name.to_owned());
         cityrecord_map.insert("admin2", admin2_name.to_owned());
+        cityrecord_map.insert("capital", capital.to_owned());
         cityrecord_map.insert("timezone", cityrecord.timezone.clone());
         cityrecord_map.insert("population", cityrecord.population.to_string());
 
@@ -1086,4 +1254,34 @@ fn format_result(cityrecord: &CitiesRecord, formatstr: &str, suggest_mode: bool)
             INVALID_DYNFMT.to_string()
         }
     }
+}
+
+/// get admin1 and admin2 names based on selector
+/// selector = 0: none; selector = 1: admin1 only
+/// selector = 2: admin2 only; selector >= 3: admin1 and admin2
+fn get_admin_names(cityrecord: &CitiesRecord, selector: u8) -> (&String, &String) {
+    let (_admin1_key, admin1_name) = if selector == 1 || selector >= 3 {
+        match &cityrecord.admin1_names {
+            Some(admin1) => admin1
+                .iter()
+                .next()
+                .unwrap_or((&EMPTY_STRING, &EMPTY_STRING)),
+            None => (&EMPTY_STRING, &EMPTY_STRING),
+        }
+    } else {
+        (&EMPTY_STRING, &EMPTY_STRING)
+    };
+
+    let (_admin2_key, admin2_name) = if selector == 2 || selector >= 3 {
+        match &cityrecord.admin2_names {
+            Some(admin2) => admin2
+                .iter()
+                .next()
+                .unwrap_or((&EMPTY_STRING, &EMPTY_STRING)),
+            None => (&EMPTY_STRING, &EMPTY_STRING),
+        }
+    } else {
+        (&EMPTY_STRING, &EMPTY_STRING)
+    };
+    (admin1_name, admin2_name)
 }
