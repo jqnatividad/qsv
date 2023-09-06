@@ -704,3 +704,201 @@ fn geocode_reverse_fmtstring_intl_invalid_dynfmt() {
     ];
     assert_eq!(got, expected);
 }
+
+#[test]
+fn geocode_suggest_dyncols_fmt() {
+    let wrk = Workdir::new("geocode_suggest_dyncols_fmt");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["Location"],
+            svec!["Melrose, New York"],
+            svec!["East Flatbush, New York"],
+            svec!["Manhattan, New York"],
+            svec!["Brooklyn, New York"],
+            svec!["East Harlem, New York"],
+            svec!["This is not a Location and it will not be geocoded"],
+            svec!["Jersey City, New Jersey"],
+            svec!["95.213424, 190,1234565"], // invalid lat, long
+            svec!["Makati, Metro Manila, Philippines"],
+        ],
+    );
+    let mut cmd = wrk.command("geocode");
+    cmd.arg("suggest")
+        .arg("Location")
+        .args([
+            "-f",
+            "%dyncols: {city_col:name}, {state_col:admin1}, {county_col:admin2}, \
+             {country_col:country}",
+        ])
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec![
+            "Location",
+            "city_col",
+            "state_col",
+            "county_col",
+            "country_col"
+        ],
+        svec![
+            "Melrose, New York",
+            "Melrose Park",
+            "Illinois",
+            "Cook",
+            "United States"
+        ],
+        svec![
+            "East Flatbush, New York",
+            "East Flatbush",
+            "New York",
+            "Kings",
+            "United States"
+        ],
+        svec![
+            "Manhattan, New York",
+            "New York City",
+            "New York",
+            "",
+            "United States"
+        ],
+        svec![
+            "Brooklyn, New York",
+            "Brooklyn Park",
+            "Minnesota",
+            "Hennepin",
+            "United States"
+        ],
+        svec![
+            "East Harlem, New York",
+            "East Harlem",
+            "New York",
+            "New York County",
+            "United States"
+        ],
+        svec![
+            "This is not a Location and it will not be geocoded",
+            "",
+            "",
+            "",
+            ""
+        ],
+        svec![
+            "Jersey City, New Jersey",
+            "Jersey City",
+            "New Jersey",
+            "Hudson",
+            "United States"
+        ],
+        svec!["95.213424, 190,1234565", "", "", "", ""],
+        svec![
+            "Makati, Metro Manila, Philippines",
+            "Makati City",
+            "National Capital Region",
+            "",
+            "Philippines"
+        ],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn geocode_reverse_dyncols_fmt() {
+    let wrk = Workdir::new("geocode_reverse_dyncols_fmt");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["Location"],
+            svec!["40.812126, -73.9041813"],
+            svec!["40.66472342, -73.93867227"],
+            svec!["(40.766672, -73.9568128)"],
+            svec!["(  40.819342, -73.9532127    )"],
+            svec!["< 40.819342,-73.9532127 >"],
+            svec!["This is not a Location and it will not be geocoded"],
+            svec![
+                "The treasure is at these coordinates 40.66472342, -73.93867227. This should be \
+                 geocoded."
+            ],
+            svec!["95.213424, 190,1234565"], // invalid lat, long
+            svec![
+                "The coordinates are 40.66472342 latitude, -73.93867227 longitudue. This should \
+                 NOT be geocoded."
+            ],
+        ],
+    );
+    let mut cmd = wrk.command("geocode");
+    cmd.arg("reverse")
+        .arg("Location")
+        .args([
+            "-f",
+            "%dyncols: {city_col:name}, {tz_col:timezone}, {capital_col:capital}, \
+             {pop_col:population}",
+        ])
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["Location", "city_col", "tz_col", "capital_col", "pop_col"],
+        svec![
+            "40.812126, -73.9041813",
+            "Melrose",
+            "America/New_York",
+            "",
+            "22470"
+        ],
+        svec![
+            "40.66472342, -73.93867227",
+            "East Flatbush",
+            "America/New_York",
+            "",
+            "178464"
+        ],
+        svec![
+            "(40.766672, -73.9568128)",
+            "Manhattan",
+            "America/New_York",
+            "",
+            "1487536"
+        ],
+        svec![
+            "(  40.819342, -73.9532127    )",
+            "East Harlem",
+            "America/New_York",
+            "",
+            "115921"
+        ],
+        svec![
+            "< 40.819342,-73.9532127 >",
+            "East Harlem",
+            "America/New_York",
+            "",
+            "115921"
+        ],
+        svec![
+            "This is not a Location and it will not be geocoded",
+            "",
+            "",
+            "",
+            ""
+        ],
+        svec![
+            "The treasure is at these coordinates 40.66472342, -73.93867227. This should be \
+             geocoded.",
+            "East Flatbush",
+            "America/New_York",
+            "",
+            "178464"
+        ],
+        svec!["95.213424, 190,1234565", "", "", "", ""],
+        svec![
+            "The coordinates are 40.66472342 latitude, -73.93867227 longitudue. This should NOT \
+             be geocoded.",
+            "",
+            "",
+            "",
+            ""
+        ],
+    ];
+    assert_eq!(got, expected);
+}
