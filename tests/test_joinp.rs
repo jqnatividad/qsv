@@ -567,3 +567,44 @@ fn joinp_asof_date_diffcolnames() {
     ];
     assert_eq!(got, expected);
 }
+
+#[test]
+fn joinp_asof_date_diffcolnames_sqlfilter() {
+    let wrk = Workdir::new("join_asof_date_diffcolnames_sqlfilter");
+    wrk.create(
+        "gdp.csv",
+        vec![
+            svec!["gdp_date", "gdp"],
+            svec!["2016-01-01", "4164"],
+            svec!["2017-01-01", "4411"],
+            svec!["2018-01-01", "4566"],
+            svec!["2019-01-01", "4696"],
+        ],
+    );
+    wrk.create(
+        "population.csv",
+        vec![
+            svec!["pop_date", "population"],
+            svec!["2016-05-12", "82.19"],
+            svec!["2017-05-12", "82.66"],
+            svec!["2018-05-12", "83.12"],
+            svec!["2019-05-12", "83.52"],
+        ],
+    );
+
+    let mut cmd = wrk.command("joinp");
+    cmd.arg("--asof")
+        .args(["pop_date", "population.csv", "gdp_date", "gdp.csv"])
+        .args([
+            "--sql-filter",
+            "select pop_date, gdp from join_result where gdp > 4500",
+        ]);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["pop_date", "gdp"],
+        svec!["2018-05-12", "4566"],
+        svec!["2019-05-12", "4696"],
+    ];
+    assert_eq!(got, expected);
+}
