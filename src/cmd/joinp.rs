@@ -96,6 +96,7 @@ joinp options:
                            join, except we match on nearest key rather than
                            equal keys. Note that both CSV data sets will be SORTED
                            AUTOMATICALLY on the join columns.
+                           Particularly useful for time series data.
     --left_by <arg>        Do an 'asof_by' join - a special implementation of the asof
                            join that searches for the nearest keys within a subgroup
                            set by the asof_by columns. This specifies the column/s for
