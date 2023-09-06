@@ -1,5 +1,5 @@
 static USAGE: &str = r#"
-Geocodes a location against an updatable local copy of the Geonames cities index.
+Geocodes a location in CSV data against an updatable local copy of the Geonames cities index.
 
 When its first run, the geocode command will download a prebuilt Geonames cities index
 from the qsv GitHub repo, and will use it going forward. You can operate on the local
@@ -10,10 +10,15 @@ English names. It contains cities with populations > 15,000 (about ~26k cities).
 See https://download.geonames.org/export/dump/ for more information.
 
 It has five major subcommands:
- * suggest     - given a City name, return the closest location coordinate by default.
- * suggestnow  - same as suggest, but does not require an input file.
- * reverse     - given a location coordinate, return the closest City by default.
- * reversenow  - sames as reverse, but does not require an input file.
+ * suggest     - given a partial City name, return the closest City's location metadata
+                 per the local Geonames cities index (Jaro-Winkler distance)
+ * suggestnow  - same as suggest, but using a City name from the command line,
+                 instead of CSV data.
+ * reverse     - given a location coordinate, return the closest City's location metadata
+                 per the local Geonames cities index.
+                 (Euclidean distance - shortest distance "as the crow flies")
+ * reversenow  - sames as reverse, but using a coordinate from the command line,
+                 instead of CSV data.
  * index-*     - operations to update the local Geonames cities index.
                  (index-check, index-update, index-load & index-reset)
  
@@ -56,13 +61,15 @@ Use dynamic formatting to create a custom format.
 
 SUGGESTNOW
 Accepts the same options as suggest, but does not require an input file.
+However, its default is more verbose - "{name}, {admin1} {country}: {latitude}, {longitude}"
 
   $ qsv geocode suggestnow "New York"
   $ qsv geocode suggestnow --country US -f %cityrecord "Paris"
   $ qsv geocode suggestnow --admin1 "US:OH" "Athens"
 
 REVERSE
-Reverse geocode a WGS 84 coordinate to the nearest Geonames city record.
+Reverse geocode a WGS 84 coordinate to the nearest City. It returns the closest Geonames
+city record based on the Euclidean distance between the coordinate and the nearest city.
 It accepts "lat, long" or "(lat, long)" format.
 
 The geocoded information is formatted based on --formatstr, returning it in
@@ -520,13 +527,13 @@ async fn geocode_main(args: Args) -> CliResult<()> {
         .unwrap();
 
     // we're doing a SuggestNow or ReverseNow, create a one record CSV in tempdir
-    // with one column named "location" and the passed location value and use it as the input
+    // with one column named "Location" and the passed location value and use it as the input
     let input = if now_cmd {
         let tempdir_path = tempdir.path().to_string_lossy().to_string();
         let temp_csv_path = format!("{}/{}.csv", tempdir_path, Uuid::new_v4());
         let temp_csv_path = Path::new(&temp_csv_path);
         let mut temp_csv_wtr = csv::WriterBuilder::new().from_path(temp_csv_path)?;
-        temp_csv_wtr.write_record(["location"])?;
+        temp_csv_wtr.write_record(["Location"])?;
         temp_csv_wtr.write_record([&args.arg_location])?;
         temp_csv_wtr.flush()?;
         Some(temp_csv_path.to_string_lossy().to_string())
@@ -928,7 +935,11 @@ async fn geocode_main(args: Args) -> CliResult<()> {
     } // end batch loop
 
     if show_progress {
-        util::update_cache_info!(progress, SEARCH_INDEX);
+        // the geocode result cache is NOT used in dyncols mode,
+        // so don't update the cache info when dyncols_len > 0
+        if dyncols_len == 0 {
+            util::update_cache_info!(progress, SEARCH_INDEX);
+        }
         util::finish_progress(&progress);
     }
     Ok(wtr.flush()?)
@@ -1077,11 +1088,23 @@ fn search_index(
 
         if formatstr == "%+" {
             // default for suggest is location - e.g. "(lat, long)"
-            return Some(format!(
-                "({latitude}, {longitude})",
-                latitude = cityrecord.latitude,
-                longitude = cityrecord.longitude
-            ));
+            if mode == GeocodeSubCmd::SuggestNow {
+                // however, make SuggestNow default more verbose
+                return Some(format!(
+                    "{name}, {admin1} {country}: {latitude}, {longitude}",
+                    name = cityrecord.name.clone(),
+                    admin1 = get_admin_names(cityrecord, 1).0,
+                    country = cityrecord.country.clone().unwrap().name,
+                    latitude = cityrecord.latitude,
+                    longitude = cityrecord.longitude
+                ));
+            } else {
+                return Some(format!(
+                    "({latitude}, {longitude})",
+                    latitude = cityrecord.latitude,
+                    longitude = cityrecord.longitude
+                ));
+            }
         }
 
         let country = cityrecord.country.clone().unwrap().name;
