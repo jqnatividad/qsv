@@ -143,6 +143,11 @@ joinp options:
                              (e.g. 2022-02-29 -> 2022-02-28) instead of erroring.
 
                              OUTPUT FORMAT OPTIONS:
+   --sql-filter <SQL>        The SQL expression to apply against the join result.
+                             Ordinarily used to select columns and filter rows from 
+                             the join result. Be sure to select from the "join_result"
+                             table when formulating the SQL expression.
+                             (e.g. "select c1, c2 as colname from join_result where c2 > 20")
    --datetime-format <fmt>   The datetime format to use writing datetimes.
                              See https://docs.rs/chrono/latest/chrono/format/strftime/index.html
                              for the list of valid format specifiers.
@@ -151,7 +156,7 @@ joinp options:
    --float-precision <arg>   The number of digits of precision to use when writing floats.
                              (default: 6)
    --null-value <arg>        The string to use when writing null values.
-                             (default: <empty string>)                             
+                             (default: <empty string>)
 
 Common options:
     -h, --help             Display this message
@@ -172,9 +177,10 @@ use polars::{
     datatypes::AnyValue,
     frame::hash_join::{JoinType, JoinValidation},
     prelude::{
-        AsOfOptions, AsofStrategy, CsvWriter, LazyCsvReader, LazyFileListReader, LazyFrame,
-        SerWriter, SortOptions,
+        AsOfOptions, AsofStrategy, CsvWriter, IntoLazy, LazyCsvReader, LazyFileListReader,
+        LazyFrame, SerWriter, SortOptions,
     },
+    sql::SQLContext,
 };
 use serde::Deserialize;
 use smartstring;
@@ -207,6 +213,7 @@ struct Args {
     flag_right_by:         Option<String>,
     flag_strategy:         Option<String>,
     flag_tolerance:        Option<String>,
+    flag_sql_filter:       Option<String>,
     flag_datetime_format:  Option<String>,
     flag_date_format:      Option<String>,
     flag_time_format:      Option<String>,
@@ -328,6 +335,7 @@ struct JoinStruct {
     delim:            u8,
     streaming:        bool,
     no_optimizations: bool,
+    sql_filter:       Option<String>,
     datetime_format:  Option<String>,
     date_format:      Option<String>,
     time_format:      Option<String>,
@@ -384,7 +392,7 @@ impl JoinStruct {
         };
         log::debug!("Optimization state: {optimization_state:?}");
 
-        let mut join_results = if jointype == JoinType::Cross {
+        let join_results = if jointype == JoinType::Cross {
             self.left_lf
                 .with_optimizations(optimization_state)
                 .join_builder()
@@ -414,6 +422,15 @@ impl JoinStruct {
                 .collect()?
         };
 
+        let mut results_df = if let Some(sql_filter) = &self.sql_filter {
+            let mut ctx = SQLContext::new();
+            ctx.register("join_result", join_results.lazy());
+            ctx.execute(sql_filter)
+                .and_then(polars::prelude::LazyFrame::collect)?
+        } else {
+            join_results
+        };
+
         // no need to use buffered writer here, as CsvWriter already does that
         let mut out_writer = match self.output {
             Some(output_file) => {
@@ -424,7 +441,7 @@ impl JoinStruct {
         };
 
         // shape is the number of rows and columns
-        let join_shape = join_results.shape();
+        let join_shape = results_df.shape();
 
         CsvWriter::new(&mut out_writer)
             .has_header(true)
@@ -434,7 +451,7 @@ impl JoinStruct {
             .with_time_format(self.time_format)
             .with_float_precision(self.float_precision)
             .with_null_value(self.null_value)
-            .finish(&mut join_results)?;
+            .finish(&mut results_df)?;
 
         Ok(join_shape)
     }
@@ -499,6 +516,7 @@ impl Args {
             delim,
             streaming: self.flag_streaming,
             no_optimizations: self.flag_no_optimizations,
+            sql_filter: self.flag_sql_filter.clone(),
             datetime_format: self.flag_datetime_format.clone(),
             date_format: self.flag_date_format.clone(),
             time_format: self.flag_time_format.clone(),
