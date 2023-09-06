@@ -38,6 +38,20 @@ fn geocode_suggest() {
 }
 
 #[test]
+fn geocode_suggestnow_default() {
+    let wrk = Workdir::new("geocode_suggestnow_default");
+    let mut cmd = wrk.command("geocode");
+    cmd.arg("suggestnow").arg("Brooklyn");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["Location"],
+        svec!["Brooklyn, New York United States: 40.6501, -73.94958"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn geocode_suggest_intl() {
     let wrk = Workdir::new("geocode_suggest_intl");
     wrk.create(
@@ -152,7 +166,7 @@ fn geocode_suggestnow() {
         .args(["-f", "%city-admin1-country"]);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![svec!["location"], svec!["Paris, Texas United States"]];
+    let expected = vec![svec!["Location"], svec!["Paris, Texas United States"]];
     assert_eq!(got, expected);
 }
 
@@ -171,7 +185,7 @@ fn geocode_reversenow() {
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
-        svec!["location"],
+        svec!["Location"],
         svec!["East Flatbush, Kings County, New York - 178464 America/New_York"],
     ];
     assert_eq!(got, expected);
