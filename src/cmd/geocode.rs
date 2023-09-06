@@ -154,9 +154,9 @@ geocode options:
                                 For suggest, this will limit the search to the specified countries.
 
                                 For reverse, this ensures that the returned city is in the specified
-                                countries (especially when reverse geocoding coordinates near country borders).
-                                If the coordinate is outside the specified countries, the returned city will
-                                be the closest city as the crow flies in the specified countries.
+                                countries (especially when geocoding coordinates near country borders).
+                                If the coordinate is outside the specified countries, the returned city
+                                will be the closest city as the crow flies in the specified countries.
 
                                 SUGGEST only options:
     --min-score <score>         The minimum Jaro-Winkler distance score.
@@ -170,15 +170,16 @@ geocode options:
                                 prefix (e.g. US.TX, US.NJ, US.CA), the country can be inferred from the
                                 admin1 code (in this example - US), and the --country option is not required.
 
-                                If specifying multiple admin1 filters, you can mix admin1 codes and names, and they
-                                are matched in priority order. 
-                                
-                                Matches are made using a starts_with() comparison (i.e. "US" will match "US.NY", "US.NJ",
-                                etc. for admin1 code. "New" will match "New York", "New Jersey", "Newfoundland", etc.
-                                for admin1 name.)
+                                If specifying multiple admin1 filters, you can mix admin1 codes and names,
+                                and they are matched in priority order.
+
+                                Matches are made using a starts_with() comparison (i.e. "US" will match "US.NY",
+                                "US.NJ", etc. for admin1 code. "New" will match "New York", "New Jersey",
+                                "Newfoundland", etc. for admin1 name.)
 
                                 admin1 is the second priority filter, and will be applied after country filters.
-                                See https://download.geonames.org/export/dump/admin1CodesASCII.txt for admin1 codes/names.
+                                See https://download.geonames.org/export/dump/admin1CodesASCII.txt for
+                                recognized admin1 codes/names.
 
                                 REVERSE only option:
     -k, --k_weight <weight>     Use population-weighted distance for reverse subcommand.
@@ -187,7 +188,6 @@ geocode options:
                                 If not set (default), the population is not used and the
                                 nearest city is returned.
 
-                                If not set, suggest will search all countries in the current loaded index.
     -f, --formatstr=<string>    The place format to use. The predefined formats are:
                                   - '%city-state' - e.g. Brooklyn, New York
                                   - '%city-country' - Brooklyn, US
@@ -206,8 +206,10 @@ geocode options:
                                   - '%capital' - the capital
                                   - '%population' - the population
                                   - '%timezone' - the timezone
-                                  - '%+' - use the subcommand's default format. For suggest, '%location'.
-                                           For reverse, '%city-admin1'.
+                                  - '%+' - use the subcommand's default format. 
+                                           suggest - '%location'
+                                           suggestnow - '{name}, {admin1} {country}: {latitude}, {longitude}'
+                                           reverse & reversenow - '%city-admin1'
                                 
                                 If an invalid format is specified, it will be treated as '%+'.
 
@@ -215,17 +217,18 @@ geocode options:
                                 To do so, set the --formatstr to a dynfmt template, enclosing field names
                                 in curly braces.
                                 The following ten fields are available:
-                                  id, name, latitude, longitude, country, admin1, admin2, capital, timezone, population
+                                  id, name, latitude, longitude, country, admin1, admin2, capital,
+                                  timezone, population
                                     
                                   e.g. "City: {name}, State: {admin1}, Country: {country} - {timezone}"
 
-                                If an invalid dynfmt template is specified, it will return "Invalid dynfmt template."
+                                If an invalid template is specified, "Invalid dynfmt template" is returned.
 
                                 Finally, you can use the special format "%dyncols:" to add columns to the CSV.
                                 To do so, set the --formatstr to "%dyncols:" followed by a comma-delimited list
                                 of key:value pairs enclosed in curly braces.
-                                The key is the desired column name, and the value is are the same ten fields available
-                                for dynamic formatting.
+                                The key is the desired column name, and the value is are the same ten fields
+                                available for dynamic formatting.
 
                                  e.g. "%dyncols: {city_col:name}, {state_col:admin1}, {country_col:country}"
 
@@ -1171,6 +1174,7 @@ fn search_index(
     return None;
 }
 
+/// "%dyncols:" formatstr used. Adds dynamic columns to CSV.
 fn add_dyncols(
     record: &mut csv::StringRecord,
     cityrecord: &CitiesRecord,
