@@ -1101,13 +1101,12 @@ fn search_index(
                     latitude = cityrecord.latitude,
                     longitude = cityrecord.longitude
                 ));
-            } else {
-                return Some(format!(
-                    "({latitude}, {longitude})",
-                    latitude = cityrecord.latitude,
-                    longitude = cityrecord.longitude
-                ));
             }
+            return Some(format!(
+                "({latitude}, {longitude})",
+                latitude = cityrecord.latitude,
+                longitude = cityrecord.longitude
+            ));
         }
 
         let country = cityrecord.country.clone().unwrap().name;
