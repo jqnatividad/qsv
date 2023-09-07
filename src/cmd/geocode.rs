@@ -1,8 +1,8 @@
 static USAGE: &str = r#"
 Geocodes a location in CSV data against an updatable local copy of the Geonames cities index.
 
-When its first run, the geocode command will download a prebuilt Geonames cities index
-from the qsv GitHub repo, and will use it going forward. You can operate on the local
+When you run the command for the first time, it will download a prebuilt Geonames cities
+index from the qsv GitHub repo and use it going forward. You can operate on the local
 index using the index-* subcommands.
 
 By default, the prebuilt index uses the Geonames Gazeteer cities15000.zip file using
@@ -94,7 +94,7 @@ Accepts the same options as reverse, but does not require an input file.
 
   $ qsv geocode reversenow "40.71427, -74.00597"
   $ qsv geocode reversenow --country US -f %cityrecord "40.71427, -74.00597"
-  $ qsv geocode reversenow --admin1 "US:OH" "39.32924, -82.10126"
+  $ qsv geocode reversenow --admin1 "US:OH" "(39.32924, -82.10126)"
 
 INDEX-<operation>
 Updates the local Geonames cities index used by the geocode command.
@@ -134,7 +134,7 @@ geocode arguments:
         
     <input>                     The input file to read from. If not specified, reads from stdin.
     <column>                    The column to geocode.
-    <location>                  The location to geocode. For suggestnow, its a string pattern.
+    <location>                  The location to geocode. For suggestnow, its a City string pattern.
                                 For reversenow, it must be a WGS 84 coordinate "lat, long" or
                                 "(lat, long)" format.
     <index-file>                The alternate geonames index file to use. It must be a .bincode file.
@@ -224,15 +224,23 @@ geocode options:
 
                                 If an invalid template is specified, "Invalid dynfmt template" is returned.
 
-                                Finally, you can use the special format "%dyncols:" to add columns to the CSV.
-                                To do so, set the --formatstr to "%dyncols:" followed by a comma-delimited list
+                                Both predefined and dynamic formatting are cached. Subsequent calls
+                                with the same result will be faster as it will use the cached result instead
+                                of searching the Geonames index.
+
+                                Finally, you can use the special format "%dyncols:" to dynamically add multiple
+                                columns to the output CSV for each field in a geocode result.
+                                To do so, set --formatstr to "%dyncols:" followed by a comma-delimited list
                                 of key:value pairs enclosed in curly braces.
-                                The key is the desired column name, and the value is are the same ten fields
+                                The key is the desired column name and the value is one of the same ten fields
                                 available for dynamic formatting.
 
                                  e.g. "%dyncols: {city_col:name}, {state_col:admin1}, {country_col:country}"
 
-                                will add three columns to the CSV named city_col, state_col and country_col.
+                                will add three columns to the output CSV named city_col, state_col & country_col.
+
+                                Note that using "%dyncols:" will cause the the command to geocode EACH row without
+                                using the cache, so it will be slower than predefined or dynamic formatting.
                                 [default: %+]
 
     --invalid-result <string>   The string to return when the geocode result is empty/invalid.
@@ -459,7 +467,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
         GeocodeSubCmd::IndexReset
     } else {
         // should not happen as docopt won't allow it
-        unreachable!("No geocode subcommand specified.");
+        unreachable!();
     };
 
     // setup cache directory
@@ -636,7 +644,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                 let _ = load_engine(geocode_index_file.clone().into(), &progress).await?;
                 winfo!("Default Geonames index file reset to {QSV_VERSION} release.");
             },
-            _ => unreachable!("index_cmd is true, so this is unreachable."),
+            _ => unreachable!(), // index_cmd is true, so this is unreachable.
         }
         return Ok(());
     }
@@ -681,7 +689,6 @@ async fn geocode_main(args: Args) -> CliResult<()> {
     // first, parse the formatstr to get the column names and values in parallel vectors
     let mut column_names = Vec::new();
     let mut column_values = Vec::new();
-
     let dyncols_len = if args.flag_formatstr.starts_with("%dyncols:") {
         for column in args.flag_formatstr[9..].split(',') {
             let column = column.trim();
@@ -693,18 +700,16 @@ async fn geocode_main(args: Args) -> CliResult<()> {
         }
 
         // now, validate the column values
-        // the valid column values are: id, name, latitude, longitude, country, admin1, admin2,
-        // capital, timezone, population
+        // the valid column values are in VALID_DYNCOLS
         for column_value in &column_values {
             if !VALID_DYNCOLS.contains(column_value) {
                 return fail_incorrectusage_clierror!(
-                    "Invalid column value: {column_value}. Valid values are: id, name, latitude, \
-                     longitude, country, admin1, admin2, capital, timezone, population"
+                    "Invalid column value: {column_value}. Valid values are: {VALID_DYNCOLS:?}"
                 );
             }
         }
 
-        // now, we add the columns to the CSV headers
+        // its valid, add the columns to the CSV headers
         for column in column_names {
             headers.push_field(column);
         }
@@ -761,9 +766,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                 // if admin1 is set, country must also be set
                 // however, if all admin1 codes have the same prefix, we can infer the country from
                 // the admin1 codes. Otherwise, we can't infer the country from the
-                // admin1 code, so we error out. Note that country inferencing only
-                // works if all admin1 codes have the same prefix, so it only works
-                // for one country at a time.
+                // admin1 code, so we error out.
                 if args.flag_admin1.is_some() && flag_country.is_none() {
                     if !admin1_code_prefix.is_empty() && admin1_same_prefix {
                         admin1_code_prefix.pop(); // remove the dot
@@ -780,8 +783,15 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                 None
             }
         },
-        // reverse/now doesn't support admin1 filters
-        _ => None,
+        _ => {
+            // reverse/now subcommands don't support admin1 filter
+            if args.flag_admin1.is_some() {
+                return fail_incorrectusage_clierror!(
+                    "reverse & reversenow subcommands do not support the --admin1 filter option."
+                );
+            }
+            None
+        },
     }; // end setup admin1 filters
 
     // setup country filter - both suggest/now and reverse/now support country filters
@@ -853,10 +863,9 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                         }
                     }
                 } else if dyncols_len > 0 {
-                    // we're in dyncols mode, so use a non-cached search_index fn
-                    // as we need to inject the column values into the output csv
-                    // and each row have different column values and the result is
-                    // actually in the mutable record variable
+                    // we're in dyncols mode, so use search_index_NO_CACHE fn
+                    // as we need to inject the column values into each row of the output csv
+                    // so we can't use the cache
                     let search_results = search_index_no_cache(
                         &engine,
                         geocode_cmd,
@@ -939,7 +948,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
 
     if show_progress {
         // the geocode result cache is NOT used in dyncols mode,
-        // so don't update the cache info when dyncols_len > 0
+        // so update the cache info only when dyncols_len == 0
         if dyncols_len == 0 {
             util::update_cache_info!(progress, SEARCH_INDEX);
         }
@@ -997,6 +1006,12 @@ async fn load_engine(geocode_index_file: PathBuf, progressbar: &ProgressBar) -> 
     Ok(engine)
 }
 
+/// search_index is a cached function that returns a geocode result for a given cell value.
+/// It uses an LRU cache using the cell value as the key, storing the formatted geocoded result
+/// in the cache. As such, we CANNOT use the cache when in dyncols mode as the cached result is
+/// the formatted result, not the individual fields.
+/// search_index_no_cache() is automatically derived from search_index() by the cached macro.
+/// search_index_no_cache() is used in dyncols mode, and as the name implies, does not use a cache.
 #[cached(
     type = "SizedCache<String, String>",
     create = "{ SizedCache::try_with_size(CACHE_SIZE).unwrap_or_else(|_| \
@@ -1126,6 +1141,8 @@ fn search_index(
 
     // we're doing a Reverse/Now command and expect a WGS 84 coordinate
     // the regex validates for "(lat, long)" or "lat, long"
+    // note that it is not pinned to the start of the string, so it can be in the middle
+    // of a string, e.g. "The location of the incident is 40.7128, -74.0060"
     let locregex: &'static Regex =
         regex_oncelock!(r"(?-u)([+-]?[0-9]+\.?[0-9]*|\.[0-9]+),\s*([+-]?[0-9]+\.?[0-9]*|\.[0-9]+)");
 

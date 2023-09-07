@@ -175,6 +175,24 @@ fn geocode_reversenow() {
     let wrk = Workdir::new("geocode_reversenow");
 
     let mut cmd = wrk.command("geocode");
+    cmd.arg("reversenow").arg("(40.67, -73.94)").args([
+        "-f",
+        "{name}, {admin2} County, {admin1} - {population} {timezone}",
+    ]);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["Location"],
+        svec!["East Flatbush, Kings County, New York - 178464 America/New_York"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn geocode_reversenow_error() {
+    let wrk = Workdir::new("geocode_reversenow_error");
+
+    let mut cmd = wrk.command("geocode");
     cmd.arg("reversenow")
         .arg("(40.67, -73.94)")
         .args(["--admin1", "New York"])
@@ -183,12 +201,8 @@ fn geocode_reversenow() {
             "{name}, {admin2} County, {admin1} - {population} {timezone}",
         ]);
 
-    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![
-        svec!["Location"],
-        svec!["East Flatbush, Kings County, New York - 178464 America/New_York"],
-    ];
-    assert_eq!(got, expected);
+    // reversenow does not support admin1 filter
+    wrk.assert_err(&mut cmd);
 }
 
 #[test]
