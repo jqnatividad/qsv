@@ -284,7 +284,7 @@ use dynfmt::Format;
 use geosuggest_core::{CitiesRecord, Engine, EngineDumpFormat};
 use geosuggest_utils::{IndexUpdater, IndexUpdaterSettings, SourceItem};
 use indicatif::{ProgressBar, ProgressDrawTarget};
-use log::{debug, info};
+use log::info;
 use rayon::{
     iter::{IndexedParallelIterator, ParallelIterator},
     prelude::IntoParallelRefIterator,
@@ -512,7 +512,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
         .map(std::string::String::as_str)
         .collect();
 
-    debug!("geocode_index_file: {geocode_index_file} Languages: {languages_vec:?}");
+    info!("geocode_index_file: {geocode_index_file} Languages: {languages_vec:?}");
 
     let updater = IndexUpdater::new(IndexUpdaterSettings {
         http_timeout_ms:  util::timeout_secs(args.flag_timeout)? * 1000,
@@ -644,12 +644,13 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                 let _ = load_engine(geocode_index_file.clone().into(), &progress).await?;
                 winfo!("Default Geonames index file reset to {QSV_VERSION} release.");
             },
-            _ => unreachable!(), // index_cmd is true, so this is unreachable.
+            // index_cmd is true, so we should never get a non-index subcommand
+            _ => unreachable!(),
         }
         return Ok(());
     }
 
-    // we're not doing an index subcommand, so we're doing a suggest or reverse
+    // we're not doing an index subcommand, so we're doing a suggest/now or reverse/now
     // load the current local Geonames index
     let engine = load_engine(geocode_index_file.clone().into(), &progress).await?;
 
@@ -689,6 +690,9 @@ async fn geocode_main(args: Args) -> CliResult<()> {
     // first, parse the formatstr to get the column names and values in parallel vectors
     let mut column_names = Vec::new();
     let mut column_values = Vec::new();
+    // dyncols_len is the number of columns we're adding in dyncols mode
+    // it also doubles as a flag to indicate if we're using dyncols mode
+    // i.e. if dyncols_len > 0, we're using dyncols mode; 0 we're not
     let dyncols_len = if args.flag_formatstr.starts_with("%dyncols:") {
         for column in args.flag_formatstr[9..].split(',') {
             let column = column.trim();
@@ -713,9 +717,9 @@ async fn geocode_main(args: Args) -> CliResult<()> {
         for column in column_names {
             headers.push_field(column);
         }
-        column_values.len()
+        column_values.len() as u8
     } else {
-        0
+        0_u8
     };
 
     // now, write the headers to the output CSV
@@ -858,9 +862,9 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                     // Otherwise, we leave the row untouched.
                     if dyncols_len > 0 {
                         // we're in dyncols mode, so add empty columns
-                        for _ in 0..dyncols_len {
+                        (0..dyncols_len).for_each(|_| {
                             record.push_field("");
-                        }
+                        });
                     }
                 } else if dyncols_len > 0 {
                     // we're in dyncols mode, so use search_index_NO_CACHE fn
@@ -879,21 +883,25 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                         &mut record,
                     );
 
-                    let dyncol_ok =
-                        search_results.is_some() && search_results.unwrap() == DYNCOLS_POPULATED;
-
-                    if !dyncol_ok {
+                    // if search_results.is_some but we don't get the DYNCOLS_POPULATED
+                    // sentinel value or its None, then we have an invalid result
+                    let invalid = if let Some(res) = search_results {
+                        res != DYNCOLS_POPULATED
+                    } else {
+                        true
+                    };
+                    if invalid {
                         if invalid_result.is_empty() {
                             // --invalid-result is not set, so add empty columns
-                            for _ in 0..dyncols_len {
+                            (0..dyncols_len).for_each(|_| {
                                 record.push_field("");
-                            }
+                            });
                         } else {
                             // --invalid-result is set
                             // so add columns set to --invalid-result value
-                            for _ in 0..dyncols_len {
+                            (0..dyncols_len).for_each(|_| {
                                 record.push_field(&invalid_result.clone());
-                            }
+                            });
                         }
                     }
                 } else {
@@ -1131,7 +1139,8 @@ fn search_index(
             .unwrap_or_default();
 
         if formatstr.starts_with("%dyncols:") {
-            return add_dyncols(record, cityrecord, &country, &capital, column_values);
+            add_dyncols(record, cityrecord, &country, &capital, column_values);
+            return Some(DYNCOLS_POPULATED.to_string());
         }
 
         return Some(format_result(
@@ -1177,7 +1186,8 @@ fn search_index(
                 .unwrap_or_default();
 
             if formatstr.starts_with("%dyncols:") {
-                return add_dyncols(record, cityrecord, &country, &capital, column_values);
+                add_dyncols(record, cityrecord, &country, &capital, column_values);
+                return Some(DYNCOLS_POPULATED.to_string());
             }
 
             return Some(format_result(
@@ -1197,7 +1207,7 @@ fn add_dyncols(
     country: &str,
     capital: &str,
     column_values: &[&str],
-) -> Option<String> {
+) {
     for column in column_values {
         match *column {
             "id" => record.push_field(&cityrecord.id.to_string()),
@@ -1216,10 +1226,10 @@ fn add_dyncols(
             "capital" => record.push_field(capital),
             "timezone" => record.push_field(&cityrecord.timezone),
             "population" => record.push_field(&cityrecord.population.to_string()),
-            _ => {},
+            // this should not happen as column_values has been pre-validated for these values
+            _ => unreachable!(),
         }
     }
-    Some(DYNCOLS_POPULATED.to_string())
 }
 
 /// format the geocoded result based on formatstr if its not %+
