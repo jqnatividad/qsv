@@ -61,7 +61,7 @@ Use dynamic formatting to create a custom format.
 
 SUGGESTNOW
 Accepts the same options as suggest, but does not require an input file.
-However, its default is more verbose - "{name}, {admin1} {country}: {latitude}, {longitude}"
+Its default format is more verbose - "{name}, {admin1} {country}: {latitude}, {longitude}"
 
   $ qsv geocode suggestnow "New York"
   $ qsv geocode suggestnow --country US -f %cityrecord "Paris"
@@ -262,6 +262,14 @@ geocode options:
                                 The languages are specified as a comma-separated list of ISO 639-1 codes.
                                 https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
                                 [default: en]
+    --cities-url <url>          The URL to download the Geonames cities file from. There are several
+                                available at https://download.geonames.org/export/dump/.
+                                  cities500.zip   - cities with populations > 500; ~200k cities
+                                  cities1000.zip  - population > 1000; ~140k cities
+                                  cities5000.zip  - population > 5000; ~53k cities
+                                  cities15000.zip - population > 15000; ~26k cities
+                                Note that the more cities are included, the larger the local index file will be.
+                                [default: https://download.geonames.org/export/dump/cities15000.zip]
     --force                     Force update the Geonames cities index. If not set, qsv will check if there
                                 are updates available at Geonames.org before updating the index.
 
@@ -327,6 +335,7 @@ struct Args {
     flag_timeout:        u16,
     flag_cache_dir:      String,
     flag_languages:      String,
+    flag_cities_url:     String,
     flag_force:          bool,
     flag_jobs:           Option<usize>,
     flag_new_column:     Option<String>,
@@ -345,8 +354,6 @@ static QSV_VERSION: &str = env!("CARGO_PKG_VERSION");
 static DEFAULT_GEOCODE_INDEX_FILENAME: &str =
     concat!("qsv-", env!("CARGO_PKG_VERSION"), "-geocode-index.bincode");
 
-static DEFAULT_CITIES_DB_URL: &str = "https://download.geonames.org/export/dump/cities15000.zip";
-static DEFAULT_CITIES_DB_FILENAME: &str = "cities15000.txt";
 static DEFAULT_CITIES_NAMES_URL: &str =
     "https://download.geonames.org/export/dump/alternateNamesV2.zip";
 static DEFAULT_CITIES_NAMES_FILENAME: &str = "alternateNamesV2.txt";
@@ -501,35 +508,6 @@ async fn geocode_main(args: Args) -> CliResult<()> {
         geocode_cache_dir.to_string_lossy().to_string()
     });
 
-    // setup languages
-    let languages_string_vec = args
-        .flag_languages
-        .split(',')
-        .map(|s| s.trim().to_ascii_lowercase())
-        .collect::<Vec<String>>();
-    let languages_vec: Vec<&str> = languages_string_vec
-        .iter()
-        .map(std::string::String::as_str)
-        .collect();
-
-    info!("geocode_index_file: {geocode_index_file} Languages: {languages_vec:?}");
-
-    let updater = IndexUpdater::new(IndexUpdaterSettings {
-        http_timeout_ms:  util::timeout_secs(args.flag_timeout)? * 1000,
-        cities:           SourceItem {
-            url:      DEFAULT_CITIES_DB_URL,
-            filename: DEFAULT_CITIES_DB_FILENAME,
-        },
-        names:            Some(SourceItem {
-            url:      DEFAULT_CITIES_NAMES_URL,
-            filename: DEFAULT_CITIES_NAMES_FILENAME,
-        }),
-        countries_url:    Some(DEFAULT_COUNTRY_INFO_URL),
-        admin1_codes_url: Some(DEFAULT_ADMIN1_CODES_URL),
-        admin2_codes_url: Some(DEFAULT_ADMIN2_CODES_URL),
-        filter_languages: languages_vec.clone(),
-    })?;
-
     // create a TempDir for the one record CSV we're creating if we're doing a Now command
     // we're doing this at this scope so the TempDir is automatically dropped after we're done
     let tempdir = tempfile::Builder::new()
@@ -568,6 +546,45 @@ async fn geocode_main(args: Args) -> CliResult<()> {
     }
 
     if index_cmd {
+        // cities_filename is derived from the cities_url
+        // the filename is the last component of the URL with a .txt extension
+        // e.g. https://download.geonames.org/export/dump/cities15000.zip -> cities15000.txt
+        let cities_filename = args
+            .flag_cities_url
+            .split('/')
+            .last()
+            .unwrap()
+            .replace(".zip", ".txt");
+
+        // setup languages
+        let languages_string_vec = args
+            .flag_languages
+            .split(',')
+            .map(|s| s.trim().to_ascii_lowercase())
+            .collect::<Vec<String>>();
+        let languages_vec: Vec<&str> = languages_string_vec
+            .iter()
+            .map(std::string::String::as_str)
+            .collect();
+
+        info!("geocode_index_file: {geocode_index_file} Languages: {languages_vec:?}");
+
+        let updater = IndexUpdater::new(IndexUpdaterSettings {
+            http_timeout_ms:  util::timeout_secs(args.flag_timeout)? * 1000,
+            cities:           SourceItem {
+                url:      &args.flag_cities_url,
+                filename: &cities_filename,
+            },
+            names:            Some(SourceItem {
+                url:      DEFAULT_CITIES_NAMES_URL,
+                filename: DEFAULT_CITIES_NAMES_FILENAME,
+            }),
+            countries_url:    Some(DEFAULT_COUNTRY_INFO_URL),
+            admin1_codes_url: Some(DEFAULT_ADMIN1_CODES_URL),
+            admin2_codes_url: Some(DEFAULT_ADMIN2_CODES_URL),
+            filter_languages: languages_vec.clone(),
+        })?;
+
         match geocode_cmd {
             GeocodeSubCmd::IndexCheck => {
                 // check if we have updates
