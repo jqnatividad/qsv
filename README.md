@@ -20,7 +20,7 @@
 </div>
 <div align="center">
 
-## Try it out at [qsv.dathere.com](https:://qsv.dathere.com)!
+## Try it out at [qsv.dathere.com](https://qsv.dathere.com)!
 
 </div>
 
