@@ -16,12 +16,15 @@ This is the first "[Unicorn](https://7esl.com/unicorn/)" 🦄 release, adding MA
   * overall increase of ~5% now that `mimalloc` - the default allocator for qsv, is built without secure mode enabled.
   * `flatten` command is now ~10% faster
   * faster regex performance thanks to various under-the-hood improvements in the [`regex`](https://github.com/rust-lang/regex/blob/master/CHANGELOG.md#195-2023-09-02) crate
+  * and the benchmark scripts have been updated by @minhajuddin2510 to use [hyperfine](https://github.com/sharkdp/hyperfine#hyperfine) instead of time, and to use the same input file for all benchmarks to make them more reproducible. In upcoming releases, we'll start compiling the benchmark results into a single page as part of the release process, so we can track our progress over time.
 
 and last but not least - Quicksilver now has a website! - https://qsv.dathere.com/ :unicorn: :tada: :rocket:
 
 And its not just a static site with a few links - its a full-blown web app that lets you try out qsv commands in your browser!  You can even save your commands to a gist and share them with others!
 
-Big thanks to @rzmk for all the work on the website! And to @a5dur for all the QA work on this release!
+It's the first release of the Quicksilver website, so there's still a lot of work to do, but we're excited to share it with you and get your [feedback](https://dathere.com/qsv-feedback-form/)!
+
+Big thanks to @rzmk for all the work on the website! To @a5dur for all the QA work on this release! And to @minhajuddin2510 for revamping the benchmark script!
 
 ---
 
