@@ -617,7 +617,15 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                 // will only update if there are changes
                 check_index_file(&geocode_index_file)?;
                 if args.flag_force {
-                    winfo!("Forcing fresh build of Geonames index: {geocode_index_file}...");
+                    winfo!("Forcing fresh build of Geonames index: {geocode_index_file}");
+                    winfo!(
+                        "Using cities URL: {}  Languages: {:?}",
+                        args.flag_cities_url,
+                        languages_vec
+                    );
+                    winfo!(
+                        "This will take a while as we need to download data & rebuild the index..."
+                    );
                     let engine = updater.build().await?;
                     engine.dump_to(geocode_index_file.clone(), EngineDumpFormat::Bincode)?;
                     winfo!("Geonames index built: {geocode_index_file}");
@@ -628,8 +636,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                     if updater.has_updates(&engine).await? {
                         winfo!(
                             "Updating/Rebuilding Geonames index. This will take a while as we \
-                             need to download ~200mb of data from Geonames and rebuild the \
-                             index..."
+                             need to download data from Geonames & rebuild the index..."
                         );
                         let engine = updater.build().await?;
                         engine.dump_to(geocode_index_file.clone(), EngineDumpFormat::Bincode)?;
@@ -1305,11 +1312,11 @@ fn format_result(
                         longitude = cityrecord.longitude
                     )
                 } else {
-                    // default for reverse/now is city-admin1 - e.g. "Brooklyn, New York"
+                    // default for reverse/now is city-admin1-country - e.g. "Brooklyn, New York US"
                     format!(
-                        "{city}, {admin1}",
-                        city = cityrecord.name.clone(),
-                        admin1 = admin1_name.to_owned()
+                        "{city}, {admin1} {country}",
+                        city = cityrecord.name,
+                        admin1 = admin1_name,
                     )
                 }
             },
