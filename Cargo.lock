@@ -1698,9 +1698,9 @@ checksum = "6999dc1837253364c2ebb0704ba97994bd874e8f195d665c50b7548f6ea92764"
 
 [[package]]
 name = "file-format"
-version = "0.19.0"
+version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c2c4bd83e5092ecd961fe2cfba1fa3922347823eeb92bed5eb7e2a09ffe9d2db"
+checksum = "3cfd758182d326b9360a94cb47b10907b83cb1967235f4f20688ac3ef0e40651"
 dependencies = [
  "cfb",
  "zip",
