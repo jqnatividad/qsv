@@ -174,27 +174,27 @@ Please choose one of the following commands:",
                 QsvExitCode::Good
             },
             Err(CliError::Flag(err)) => {
-                werr!("usage: {err}");
+                werr!("usage error: {err}");
                 util::log_end(qsv_args, now);
                 QsvExitCode::IncorrectUsage
             },
             Err(CliError::IncorrectUsage(err)) => {
-                werr!("usage: {err}");
+                werr!("usage error: {err}");
                 util::log_end(qsv_args, now);
                 QsvExitCode::IncorrectUsage
             },
             Err(CliError::Csv(err)) => {
-                werr!("csv: {err}");
+                werr!("csv error: {err}");
                 util::log_end(qsv_args, now);
                 QsvExitCode::Bad
             },
             Err(CliError::Io(ref err)) if err.kind() == io::ErrorKind::BrokenPipe => {
-                werr!("broken pipe: {err}");
+                werr!("broken pipe error: {err}");
                 util::log_end(qsv_args, now);
                 QsvExitCode::Abort
             },
             Err(CliError::Io(err)) => {
-                werr!("io: {err}");
+                werr!("io error: {err}");
                 util::log_end(qsv_args, now);
                 QsvExitCode::Bad
             },
@@ -208,17 +208,17 @@ Please choose one of the following commands:",
                 QsvExitCode::Bad
             },
             Err(CliError::Network(msg)) => {
-                werr!("network: {msg}");
+                werr!("network error: {msg}");
                 util::log_end(qsv_args, now);
                 QsvExitCode::NetworkError
             },
             Err(CliError::OutOfMemory(msg)) => {
-                werr!("memory: {msg}");
+                werr!("out of memory error: {msg}");
                 util::log_end(qsv_args, now);
                 QsvExitCode::OutOfMemory
             },
             Err(CliError::Encoding(msg)) => {
-                werr!("encoding: {msg}");
+                werr!("encoding error: {msg}");
                 util::log_end(qsv_args, now);
                 QsvExitCode::EncodingError
             },
