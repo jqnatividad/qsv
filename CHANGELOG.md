@@ -6,6 +6,105 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.113.0] - 2023-09-08 🦄🏇🏽🎠
+This is the first "[Unicorn](https://7esl.com/unicorn/)" 🦄 release, adding MAJOR new features to the toolkit!
+
+* `geocode`: adds high-speed, cache-backed, multi-threaded geocoding using a local, updateable copy of the [GeoNames](https://www.geonames.org/) database.  This is a major improvement over the previous `geocode` subcommand in the `apply` command thanks to the wonderful [geosuggest](https://github.com/estin/geosuggest) crate.
+* guaranteed non-UTF8 input detection with the `validate` and `input` commands. Quicksilver _REQUIRES_ UTF-8 input. You can now use these commands to ensure you have valid UTF-8 input before using the rest of the toolkit.
+* New/expanded whirlwind tour & quick-start notebooks by @a5dur and @rzmk 🎠
+* Various performance improvements all-around: 🏇🏽
+  * overall increase of ~5% now that `mimalloc` - the default allocator for qsv, is built without secure mode enabled.
+  * `flatten` command is now ~10% faster
+  * faster regex performance thanks to various under-the-hood improvements in the [`regex`](https://github.com/rust-lang/regex/blob/master/CHANGELOG.md#195-2023-09-02) crate
+
+and last but not least - Quicksilver now has a website! - https://qsv.dathere.com/ :unicorn: :tada: :rocket:
+
+And its not just a static site with a few links - its a full-blown web app that lets you try out qsv commands in your browser!  You can even save your commands to a gist and share them with others!
+
+Big thanks to @rzmk for all the work on the website! And to @a5dur for all the QA work on this release!
+
+---
+
+### Added
+* `geocode`: new high-speed geocoding command  https://github.com/jqnatividad/qsv/pull/1231
+  * major improvements using geosuggest upstream  https://github.com/jqnatividad/qsv/pull/1269
+  * add  suggest `--country` filter  https://github.com/jqnatividad/qsv/pull/1275
+  * add `--admin1` filter  https://github.com/jqnatividad/qsv/pull/1276
+  * automatic `--country` inferencing from `--admin1` code  https://github.com/jqnatividad/qsv/pull/1277    
+  * add `--suggestnow` and `--reversenow` subcommands  https://github.com/jqnatividad/qsv/pull/1280
+  * add `"%dyncols:"` special formatter to dynamically add geocoding columns to the output CSV https://github.com/jqnatividad/qsv/pull/1286
+* `excel`: add SheetType (Worksheet, DialogSheet, MacroSheet, ChartSheet, VBA) in metadata mode; log.info! headers; wordsmith comments  https://github.com/jqnatividad/qsv/pull/1225
+* `excel`: moar metadata! moar examples!  https://github.com/jqnatividad/qsv/pull/1271
+* add support ALL_PROXY env var  https://github.com/jqnatividad/qsv/pull/1233
+* `input`: add `--encoding-errors` handling option  https://github.com/jqnatividad/qsv/pull/1235
+* `fixlengths`: add `--insert` option  https://github.com/jqnatividad/qsv/pull/1247
+* `joinp`: add `--sql-filter` option  https://github.com/jqnatividad/qsv/pull/1287
+* `luau`: we now embed [Luau 0.594](https://github.com/Roblox/luau/releases/tag/0.594) from 0.592
+* `notebooks`: add qsv-colab-quickstart by @rzmk in https://github.com/jqnatividad/qsv/pull/1253
+* `notebooks`: Added Whirlwindtour.ipynb by @a5dur in https://github.com/jqnatividad/qsv/pull/1223
+
+### Changed
+* `flatten`: refactor for performance  https://github.com/jqnatividad/qsv/pull/1227
+* `validate`: improved utf8 error mesages  https://github.com/jqnatividad/qsv/pull/1256
+* `apply` & `applydp`: improve usage text in relation to multi-column capabilites  https://github.com/jqnatividad/qsv/pull/1257
+* qsv-cache now set to ~/.qsv-cache by default  https://github.com/jqnatividad/qsv/pull/1265
+* Download file helper refactor  https://github.com/jqnatividad/qsv/pull/1267
+* Benchmark Update by @minhajuddin2510 in https://github.com/jqnatividad/qsv/pull/1237
+* Improved error handling  https://github.com/jqnatividad/qsv/pull/1238
+* Improved error handling - incorrect usage errors are now differentiated from other errors as well  https://github.com/jqnatividad/qsv/pull/1239
+* build(deps): bump whatlang from 0.16.2 to 0.16.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1221
+* build(deps): bump serde_json from 1.0.104 to 1.0.105 by @dependabot in https://github.com/jqnatividad/qsv/pull/1220
+* build(deps): bump tokio from 1.31.0 to 1.32.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1222
+* build(deps): bump mlua from 0.9.0-rc.3 to 0.9.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1224
+* build(deps): bump tempfile from 3.7.1 to 3.8.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1226
+* build(deps): bump postgres from 0.19.5 to 0.19.6 by @dependabot in https://github.com/jqnatividad/qsv/pull/1229
+* build(deps): bump file-format from 0.18.0 to 0.19.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1228
+* build(deps): bump reqwest from 0.11.18 to 0.11.19 by @dependabot in https://github.com/jqnatividad/qsv/pull/1232
+* build(deps): bump rustls-webpki from 0.101.3 to 0.101.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1236
+* build(deps): bump reqwest from 0.11.19 to 0.11.20 by @dependabot in https://github.com/jqnatividad/qsv/pull/1241
+* build(deps): bump rust_decimal from 1.31.0 to 1.32.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1242
+* build(deps): bump serde from 1.0.185 to 1.0.186 by @dependabot in https://github.com/jqnatividad/qsv/pull/1243
+* build(deps): bump jql-runner from 7.0.2 to 7.0.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1246
+* build(deps): bump grex from 1.4.2 to 1.4.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1245
+* build(deps): bump mlua from 0.9.0 to 0.9.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1244
+* build(deps): bump mimalloc from 0.1.37 to 0.1.38 by @dependabot in https://github.com/jqnatividad/qsv/pull/1249
+* build(deps): bump postgres from 0.19.6 to 0.19.7 by @dependabot in https://github.com/jqnatividad/qsv/pull/1251
+* build(deps): bump serde from 1.0.186 to 1.0.187 by @dependabot in https://github.com/jqnatividad/qsv/pull/1250
+* build(deps): bump serde from 1.0.187 to 1.0.188 by @dependabot in https://github.com/jqnatividad/qsv/pull/1252
+* build(deps): bump regex from 1.9.3 to 1.9.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1254
+* build(deps): bump url from 2.4.0 to 2.4.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1261
+* build(deps): bump tabwriter from 1.2.1 to 1.3.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1259
+* build(deps): bump sysinfo from 0.29.8 to 0.29.9 by @dependabot in https://github.com/jqnatividad/qsv/pull/1260
+* build(deps): bump actix-web from 4.3.1 to 4.4.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1262
+* build(deps): bump chrono from 0.4.26 to 0.4.27 by @dependabot in https://github.com/jqnatividad/qsv/pull/1264
+* build(deps): bump chrono from 0.4.27 to 0.4.28 by @dependabot in https://github.com/jqnatividad/qsv/pull/1266
+* build(deps): bump redis from 0.23.2 to 0.23.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1268
+* build(deps): bump regex from 1.9.4 to 1.9.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/1272
+* build(deps): bump flexi_logger from 0.25.6 to 0.26.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1273
+* build(deps): bump geosuggest-core from 0.4.0 to 0.4.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1279
+* build(deps): bump geosuggest-utils from 0.4.0 to 0.4.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1278
+* build(deps): bump cached from 0.44.0 to 0.45.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1282
+* build(deps): bump self_update from 0.37.0 to 0.38.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1281
+* build(deps): bump actions/checkout from 3 to 4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1283
+* build(deps): bump chrono from 0.4.28 to 0.4.29 by @dependabot in https://github.com/jqnatividad/qsv/pull/1284
+* build(deps): bump cached from 0.45.0 to 0.45.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1285
+* build(deps): bump sysinfo from 0.29.9 to 0.29.10 by @dependabot in https://github.com/jqnatividad/qsv/pull/1288
+* build(deps): bump chrono from 0.4.29 to 0.4.30 by @dependabot in https://github.com/jqnatividad/qsv/pull/1290
+* build(deps): bump bytes from 1.4.0 to 1.5.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1289
+* build(deps): bump file-format from 0.19.0 to 0.20.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1291
+* cargo update bump several indirect dependencies
+* apply select clippy suggestions
+* pin Rust nightly to 2023-09-06
+  
+### Removed
+* `apply`: remove geocode subcmd now that we have a dedicated `geocode` command  https://github.com/jqnatividad/qsv/pull/1263
+
+### Fixed
+* `excel`: we can now open workbooks with formulas set to an empty string value  https://github.com/jqnatividad/qsv/pull/1274
+* `notebooks`: fix qsv colab quickstart link by @rzmk in https://github.com/jqnatividad/qsv/pull/1255
+  
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.112.0...0.113.0
+
 ## [0.112.0] - 2023-08-15 🏇🏽🎠
 This is the second in a series of "[Giddy-up](https://7esl.com/giddy-up/)" 🏇🏽 releases, improving the performance of the following commands:
 
@@ -107,7 +206,7 @@ We will also add a new Technical Documentation section to the [wiki](https://git
 * build(deps): bump qsv-dateparser from 0.9.0 to 0.10.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1178
 * build(deps): bump qsv-sniffer from 0.9.4 to 0.10.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1180
 * build(deps): bump indicatif from 0.17.5 to 0.17.6 by @dependabot in https://github.com/jqnatividad/qsv/pull/1182
-* Bump to qsv stats 0.11 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1184
+* Bump to qsv stats 0.11  https://github.com/jqnatividad/qsv/pull/1184
 * build(deps): bump serde from 1.0.180 to 1.0.181 by @dependabot in https://github.com/jqnatividad/qsv/pull/1185
 * build(deps): bump qsv_docopt from 1.3.0 to 1.4.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1186
 * build(deps): bump filetime from 0.2.21 to 0.2.22 by @dependabot in https://github.com/jqnatividad/qsv/pull/1193
@@ -2704,7 +2803,7 @@ compile the proper statistics for them (otherwise, they will be treated as "Stri
 ## [0.28.0] - 2021-12-31
 ### Changed
 * Fetch: support rate limiting by @mhuang74 in https://github.com/jqnatividad/qsv/pull/133
-* Runtime minimum version check for Python 3.7 if `python` feature is enabled by @jqnatividad in https://github.com/jqnatividad/qsv/pull/138
+* Runtime minimum version check for Python 3.7 if `python` feature is enabled  https://github.com/jqnatividad/qsv/pull/138
 * Fine-tuned GitHub Actions publish workflow for pre-built binaries
    * removed upx compression, as it was creating invalid binaries on certain platforms
    * enabled `python` feature on x86_64 platforms as we have access to the Python interpreter on GitHub's Action runners
@@ -2784,8 +2883,8 @@ compile the proper statistics for them (otherwise, they will be treated as "Stri
 ### Added
 * Add logging by @mhuang74 in https://github.com/jqnatividad/qsv/pull/116
 * Environment variables for logging - `QSV_LOG_LEVEL` and `QSV_LOG_DIR` - see [Logging](https://github.com/jqnatividad/qsv/blob/master/docs/Logging.md#logging) for more details.
-* `sentiment` analysis `apply` operation by @jqnatividad in https://github.com/jqnatividad/qsv/pull/121
-* `whatlang` language detection `apply` operation by @jqnatividad in https://github.com/jqnatividad/qsv/pull/122
+* `sentiment` analysis `apply` operation  https://github.com/jqnatividad/qsv/pull/121
+* `whatlang` language detection `apply` operation  https://github.com/jqnatividad/qsv/pull/122
 * aarch64-apple-darwin prebuilt binary (Apple Silicon AKA M1)
 * `--envlist` convenience option to list all environment variables with the `QSV_` prefix
 
