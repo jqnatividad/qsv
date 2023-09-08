@@ -301,6 +301,7 @@ use rayon::{
 use regex::Regex;
 use serde::Deserialize;
 use simple_home_dir::expand_tilde;
+use url::Url;
 use uuid::Uuid;
 
 use crate::{
@@ -437,6 +438,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if args.flag_new_column.is_some() && args.flag_formatstr.starts_with("%dyncols:") {
         return fail_incorrectusage_clierror!(
             "Cannot use --new-column with the '%dyncols:' --formatstr option."
+        );
+    }
+
+    if let Err(err) = Url::parse(&args.flag_cities_url) {
+        return fail_incorrectusage_clierror!(
+            "Invalid --cities-url: {url} - {err}",
+            url = args.flag_cities_url,
+            err = err
         );
     }
 
