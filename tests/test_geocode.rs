@@ -1,3 +1,4 @@
+// NOTE: these tests are meant for the cities15000 dataset
 use crate::workdir::Workdir;
 
 #[test]
