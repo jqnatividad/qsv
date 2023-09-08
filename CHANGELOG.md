@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 This is the first "[Unicorn](https://7esl.com/unicorn/)" 🦄 release, adding MAJOR new features to the toolkit!
 
 * `geocode`: adds high-speed, cache-backed, multi-threaded geocoding using a local, updateable copy of the [GeoNames](https://www.geonames.org/) database.  This is a major improvement over the previous `geocode` subcommand in the `apply` command thanks to the wonderful [geosuggest](https://github.com/estin/geosuggest) crate.
-* guaranteed non-UTF8 input detection with the `validate` and `input` commands. Quicksilver _REQUIRES_ UTF-8 input. You can now use these commands to ensure you have valid UTF-8 input before using the rest of the toolkit.
+* guaranteed non-UTF8 input detection with the `validate` and `input` commands. Quicksilver [_REQUIRES_ UTF-8 encoded input](https://github.com/jqnatividad/qsv/tree/master#utf-8-encoding). You can now use these commands to ensure you have valid UTF-8 input before using the rest of the toolkit.
 * New/expanded whirlwind tour & quick-start notebooks by @a5dur and @rzmk 🎠
 * Various performance improvements all-around: 🏇🏽
   * overall increase of ~5% now that `mimalloc` - the default allocator for qsv, is built without secure mode unnecessarily enabled.
@@ -20,9 +20,11 @@ This is the first "[Unicorn](https://7esl.com/unicorn/)" 🦄 release, adding MA
 
 and last but not least - Quicksilver now has a website! - https://qsv.dathere.com/ :unicorn: :tada: :rocket:
 
-And its not just a static site with a few links - its a full-blown web app that lets you try out qsv commands in your browser!  You can even save your commands to a gist and share them with others!
+And its not just a static site with a few links - its a full-blown web app that lets you try out qsv commands in your browser!  It's not just a demo site - you can use it as a configurator and save your commands to a gist and share them with others!
 
 It's the first Beta release of the Quicksilver website, so there's still a lot of work to do, but we're excited to share it with you and get your [feedback](https://dathere.com/qsv-feedback-form/)!
+
+We have more exciting features planned for Quicksilver and the website, but we require your help to make it happen! For qsv, use [GitHub issues](https://github.com/jqnatividad/qsv/issues). For the website, use the [feedback form](https://dathere.com/qsv-feedback-form/).  And if you want to help out, please check out the [contributing guide](https://github.com/jqnatividad/qsv/blob/master/CONTRIBUTING.md)
 
 Big thanks to @rzmk for all the work on the website! To @a5dur for all the QA work on this release! And to @minhajuddin2510 for revamping the benchmark script!
 
@@ -35,7 +37,7 @@ Big thanks to @rzmk for all the work on the website! To @a5dur for all the QA wo
   * add `--admin1` filter  https://github.com/jqnatividad/qsv/pull/1276
   * automatic `--country` inferencing from `--admin1` code  https://github.com/jqnatividad/qsv/pull/1277    
   * add `--suggestnow` and `--reversenow` subcommands  https://github.com/jqnatividad/qsv/pull/1280
-  * add `"%dyncols:"` special formatter to dynamically add geocoding columns to the output CSV https://github.com/jqnatividad/qsv/pull/1286
+  * add `"%dyncols:"` special formatter to dynamically add geocoded columns to the output CSV https://github.com/jqnatividad/qsv/pull/1286
 * `excel`: add SheetType (Worksheet, DialogSheet, MacroSheet, ChartSheet, VBA) in metadata mode; log.info! headers; wordsmith comments  https://github.com/jqnatividad/qsv/pull/1225
 * `excel`: moar metadata! moar examples!  https://github.com/jqnatividad/qsv/pull/1271
 * add support ALL_PROXY env var  https://github.com/jqnatividad/qsv/pull/1233
