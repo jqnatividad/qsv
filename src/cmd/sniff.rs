@@ -8,6 +8,10 @@ field names & data types) using a Viterbi algorithm. (https://en.wikipedia.org/w
 last modified date. If --no-infer is enabled, it doesn't even bother to infer the CSV's schema.
 This makes it useful for accelerated CKAN harvesting and for checking stale/broken resource URLs.
 
+It detects more than 120 mime types, including CSV, MS Office/Open Document files, JSON, XML, 
+PDF, PNG, JPEG and specialized geospatial formats like GPX, GML, KML, TML, TMX, TSX, TTML.
+see https://docs.rs/file-format/latest/file_format/#reader-features
+
 NOTE: This command "sniffs" a CSV's schema by sampling the first n rows (default: 1000)
 of a file. Its inferences are sometimes wrong if the the file is too small to infer a pattern
 or if the CSV has unusual formatting - with atypical delimiters, quotes, etc.
