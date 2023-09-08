@@ -47,7 +47,7 @@ fn geocode_suggestnow_default() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["Location"],
-        svec!["Brooklyn, New York United States: 40.6501, -73.94958"],
+        svec!["Brooklyn, New York US: 40.6501, -73.94958"],
     ];
     assert_eq!(got, expected);
 }
@@ -79,15 +79,15 @@ fn geocode_suggest_intl() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["Location"],
-        svec!["Paris, Île-de-France Region France"],
-        svec!["Manila, National Capital Region Philippines"],
-        svec!["London, England United Kingdom"],
-        svec!["Berlin,  Germany"],
-        svec!["Moscow, Moscow Russia"],
+        svec!["Paris, Île-de-France Region FR"],
+        svec!["Manila, National Capital Region PH"],
+        svec!["London, England GB"],
+        svec!["Berlin,  DE"],
+        svec!["Moscow, Moscow RU"],
         svec!["This is not a Location and it will not be geocoded"],
-        svec!["Brasília, Federal District Brazil"],
+        svec!["Brasília, Federal District BR"],
         svec!["95.213424, 190,1234565"],
-        svec!["Havana, La Habana Province Cuba"],
+        svec!["Havana, La Habana Province CU"],
     ];
     assert_eq!(got, expected);
 }
@@ -120,15 +120,15 @@ fn geocode_suggest_intl_country_filter() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["Location"],
-        svec!["Paris, Texas United States"],
-        svec!["Manteca, California United States"],
-        svec!["Sterling, Virginia United States"],
-        svec!["Burlington, North Carolina United States"],
-        svec!["Moscow, Idaho United States"],
+        svec!["Paris, Texas US"],
+        svec!["Manteca, California US"],
+        svec!["Sterling, Virginia US"],
+        svec!["Burlington, North Carolina US"],
+        svec!["Moscow, Idaho US"],
         svec!["This is not a Location and it will not be geocoded"],
-        svec!["Bradley, Illinois United States"],
+        svec!["Bradley, Illinois US"],
         svec!["95.213424, 190,1234565"],
-        svec!["Savannah, Georgia United States"],
+        svec!["Savannah, Georgia US"],
     ];
     assert_eq!(got, expected);
 }
@@ -167,7 +167,7 @@ fn geocode_suggestnow() {
         .args(["-f", "%city-admin1-country"]);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![svec!["Location"], svec!["Paris, Texas United States"]];
+    let expected = vec![svec!["Location"], svec!["Paris, Texas US"]];
     assert_eq!(got, expected);
 }
 
@@ -260,15 +260,15 @@ fn geocode_suggest_intl_multi_country_filter() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["Location"],
-        svec!["Paris, Île-de-France Region France"],
-        svec!["Manteca, California United States"],
-        svec!["Sterling, Virginia United States"],
-        svec!["Burlington, North Carolina United States"],
-        svec!["Moscow, Moscow Russia"],
+        svec!["Paris, Île-de-France Region FR"],
+        svec!["Manteca, California US"],
+        svec!["Sterling, Virginia US"],
+        svec!["Burlington, North Carolina US"],
+        svec!["Moscow, Moscow RU"],
         svec!["This is not a Location and it will not be geocoded"],
-        svec!["Bradley, Illinois United States"],
+        svec!["Bradley, Illinois US"],
         svec!["95.213424, 190,1234565"],
-        svec!["Savannah, Georgia United States"],
+        svec!["Savannah, Georgia US"],
     ];
     assert_eq!(got, expected);
 }
@@ -294,7 +294,7 @@ fn geocode_suggest_filter_country_admin1() {
     let mut cmd = wrk.command("geocode");
     cmd.arg("suggest")
         .arg("Location")
-        .args(["-f", "{name}, {admin1}, {admin2}, {country}"])
+        .args(["-f", "{name}, {admin1}, {admin2} {country}"])
         .args(["--country", "US"])
         .args(["--admin1", "US.NY,New J,Metro Manila"])
         .arg("data.csv");
@@ -302,22 +302,22 @@ fn geocode_suggest_filter_country_admin1() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["Location"],
-        svec!["Melrose, New York, Bronx County, United States"],
-        svec!["East Flatbush, New York, Kings, United States"],
-        svec!["New York City, New York, , United States"],
-        svec!["Brooklyn, New York, Kings, United States"],
-        svec!["East Harlem, New York, New York County, United States"],
+        svec!["Melrose, New York, Bronx County US"],
+        svec!["East Flatbush, New York, Kings US"],
+        svec!["New York City, New York,  US"],
+        svec!["Brooklyn, New York, Kings US"],
+        svec!["East Harlem, New York, New York County US"],
         svec!["This is not a Location and it will not be geocoded"],
         // Jersey City matched as the admin1 filter included "New J"
         // which starts_with match "New Jersey"
-        svec!["Jersey City, New Jersey, Hudson, United States"],
+        svec!["Jersey City, New Jersey, Hudson US"],
         // suggest expects a city name, not lat, long
         svec!["(41.90059, -87.85673)"],
         // Makati did not match, even with the Metro Manila admin1 filter
         // as the country filter was set to US
         // as a result, the country filter takes precedence over the admin1 filter
         // and the closest match for Makati in the US is McAllen in Texas
-        svec!["McAllen, Texas, Hidalgo, United States"],
+        svec!["McAllen, Texas, Hidalgo US"],
     ];
     assert_eq!(got, expected);
 }
@@ -458,13 +458,13 @@ fn geocode_suggest_fmt() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["Location"],
-        svec!["Elmhurst, New York United States"],
-        svec!["East Flatbush, New York United States"],
-        svec!["New York City, New York United States"],
-        svec!["East Harlem, New York United States"],
+        svec!["Elmhurst, New York US"],
+        svec!["East Flatbush, New York US"],
+        svec!["New York City, New York US"],
+        svec!["East Harlem, New York US"],
         svec!["This is not a Location and it will not be geocoded"],
         svec!["40.71427, -74.00597"], // suggest doesn't work with lat, long
-        svec!["Makati City, National Capital Region Philippines"],
+        svec!["Makati City, National Capital Region PH"],
     ];
     assert_eq!(got, expected);
 }
@@ -578,13 +578,13 @@ fn geocode_reverse() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["Location"],
-        svec!["Melrose, New York"],
-        svec!["East Flatbush, New York"],
-        svec!["Manhattan, New York"],
-        svec!["East Harlem, New York"],
-        svec!["East Harlem, New York"],
+        svec!["Melrose, New York US"],
+        svec!["East Flatbush, New York US"],
+        svec!["Manhattan, New York US"],
+        svec!["East Harlem, New York US"],
+        svec!["East Harlem, New York US"],
         svec!["This is not a Location and it will not be geocoded"],
-        svec!["East Flatbush, New York"],
+        svec!["East Flatbush, New York US"],
         svec!["95.213424, 190,1234565"], // invalid lat, long
         svec![
             "The coordinates are 40.66472342 latitude, -73.93867227 longitudue. This should NOT \
@@ -619,10 +619,10 @@ fn geocode_reverse_fmtstring() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["Location"],
-        svec!["Melrose, New York United States"],
-        svec!["East Flatbush, New York United States"],
-        svec!["Manhattan, New York United States"],
-        svec!["East Harlem, New York United States"],
+        svec!["Melrose, New York US"],
+        svec!["East Flatbush, New York US"],
+        svec!["Manhattan, New York US"],
+        svec!["East Harlem, New York US"],
         svec!["This is not a Location and it will not be geocoded"],
         svec!["95.213424, 190,1234565"], // invalid lat,long
     ];
@@ -654,10 +654,10 @@ fn geocode_reverse_fmtstring_intl() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["Location"],
-        svec!["Barcelona, Catalonia Spain"],
-        svec!["Amsterdam, North Holland Netherlands"],
-        svec!["Berlin,  Germany"],
-        svec!["Makati City, National Capital Region Philippines"],
+        svec!["Barcelona, Catalonia ES"],
+        svec!["Amsterdam, North Holland NL"],
+        svec!["Berlin,  DE"],
+        svec!["Makati City, National Capital Region PH"],
         svec!["This is not a Location and it will not be geocoded"],
         svec!["95.213424, 190,1234565"], // invalid lat,long
     ];
@@ -776,35 +776,29 @@ fn geocode_suggest_dyncols_fmt() {
             "Melrose Park",
             "Illinois",
             "Cook",
-            "United States"
+            "US"
         ],
         svec![
             "East Flatbush, New York",
             "East Flatbush",
             "New York",
             "Kings",
-            "United States"
+            "US"
         ],
-        svec![
-            "Manhattan, New York",
-            "New York City",
-            "New York",
-            "",
-            "United States"
-        ],
+        svec!["Manhattan, New York", "New York City", "New York", "", "US"],
         svec![
             "Brooklyn, New York",
             "Brooklyn Park",
             "Minnesota",
             "Hennepin",
-            "United States"
+            "US"
         ],
         svec![
             "East Harlem, New York",
             "East Harlem",
             "New York",
             "New York County",
-            "United States"
+            "US"
         ],
         svec![
             "This is not a Location and it will not be geocoded",
@@ -818,7 +812,7 @@ fn geocode_suggest_dyncols_fmt() {
             "Jersey City",
             "New Jersey",
             "Hudson",
-            "United States"
+            "US"
         ],
         svec!["95.213424, 190,1234565", "", "", "", ""],
         svec![
@@ -826,7 +820,7 @@ fn geocode_suggest_dyncols_fmt() {
             "Makati City",
             "National Capital Region",
             "",
-            "Philippines"
+            "PH"
         ],
     ];
     assert_eq!(got, expected);
@@ -873,35 +867,35 @@ fn geocode_reverse_dyncols_fmt() {
             "40.812126, -73.9041813",
             "Melrose",
             "America/New_York",
-            "",
+            "Washington",
             "22470"
         ],
         svec![
             "40.66472342, -73.93867227",
             "East Flatbush",
             "America/New_York",
-            "",
+            "Washington",
             "178464"
         ],
         svec![
             "(40.766672, -73.9568128)",
             "Manhattan",
             "America/New_York",
-            "",
+            "Washington",
             "1487536"
         ],
         svec![
             "(  40.819342, -73.9532127    )",
             "East Harlem",
             "America/New_York",
-            "",
+            "Washington",
             "115921"
         ],
         svec![
             "< 40.819342,-73.9532127 >",
             "East Harlem",
             "America/New_York",
-            "",
+            "Washington",
             "115921"
         ],
         svec![
@@ -916,7 +910,7 @@ fn geocode_reverse_dyncols_fmt() {
              geocoded.",
             "East Flatbush",
             "America/New_York",
-            "",
+            "Washington",
             "178464"
         ],
         svec!["95.213424, 190,1234565", "", "", "", ""],

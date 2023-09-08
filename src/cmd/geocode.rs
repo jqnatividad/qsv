@@ -209,7 +209,7 @@ geocode options:
                                   - '%+' - use the subcommand's default format. 
                                            suggest - '%location'
                                            suggestnow - '{name}, {admin1} {country}: {latitude}, {longitude}'
-                                           reverse & reversenow - '%city-admin1'
+                                           reverse & reversenow - '%city-admin1-country'
                                 
                                 If an invalid format is specified, it will be treated as '%+'.
 
@@ -1139,6 +1139,8 @@ fn search_index(
             }
         };
 
+        let country = cityrecord.country.clone().unwrap().code;
+
         if formatstr == "%+" {
             // default for suggest is location - e.g. "(lat, long)"
             if mode == GeocodeSubCmd::SuggestNow {
@@ -1147,7 +1149,7 @@ fn search_index(
                     "{name}, {admin1} {country}: {latitude}, {longitude}",
                     name = cityrecord.name.clone(),
                     admin1 = get_admin_names(cityrecord, 1).0,
-                    country = cityrecord.country.clone().unwrap().name,
+                    country = country,
                     latitude = cityrecord.latitude,
                     longitude = cityrecord.longitude
                 ));
@@ -1159,7 +1161,6 @@ fn search_index(
             ));
         }
 
-        let country = cityrecord.country.clone().unwrap().name;
         let capital = engine
             .capital(&country)
             .map(|cr| cr.name.clone())
@@ -1195,18 +1196,19 @@ fn search_index(
                 return None;
             };
 
+            let country = cityrecord.country.clone().unwrap().code;
+
             if formatstr == "%+" {
-                // default for reverse is city-admin1 - e.g. "Brooklyn, New York"
+                // default for reverse is city, admin1 country - e.g. "Brooklyn, New York US"
                 let (admin1_name, _admin2_name) = get_admin_names(cityrecord, 1);
 
                 return Some(format!(
-                    "{city}, {admin1}",
+                    "{city}, {admin1} {country}",
                     city = cityrecord.name.clone(),
                     admin1 = admin1_name.clone()
                 ));
             }
 
-            let country = cityrecord.country.clone().unwrap().name;
             let capital = engine
                 .capital(&country)
                 .map(|cr| cr.name.clone())
@@ -1272,14 +1274,14 @@ fn format_result(
     if formatstr.starts_with('%') {
         // if formatstr starts with %, then we're using a predefined format
         match formatstr {
-            "%city-admin1" | "%city-state" => format!("{}, {}", cityrecord.name, admin1_name),
-            "%lat-long" => format!("{}, {}", cityrecord.latitude, cityrecord.longitude),
+            "%city-state" | "%city-admin1" => format!("{}, {}", cityrecord.name, admin1_name),
             "%location" => format!("({}, {})", cityrecord.latitude, cityrecord.longitude),
-            "%city-country" => format!("{}, {}", cityrecord.name, country),
-            "%city" => cityrecord.name.clone(),
             "%city-state-country" | "%city-admin1-country" => {
                 format!("{}, {} {}", cityrecord.name, admin1_name, country)
             },
+            "%lat-long" => format!("{}, {}", cityrecord.latitude, cityrecord.longitude),
+            "%city-country" => format!("{}, {}", cityrecord.name, country),
+            "%city" => cityrecord.name.clone(),
             "%city-county-state" | "%city-admin2-admin1" => {
                 format!("{}, {}, {}", cityrecord.name, admin2_name, admin1_name,)
             },
