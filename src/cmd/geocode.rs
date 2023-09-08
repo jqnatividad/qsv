@@ -126,7 +126,7 @@ qsv geocode reverse [--formatstr=<string>] [options] <column> [<input>]
 qsv geocode reversenow [options] <location>
 qsv geocode index-load <index-file>
 qsv geocode index-check
-qsv geocode index-update [--languages=<lang>] [--force]
+qsv geocode index-update [--languages=<lang>] [--cities-url=<url>] [--force]
 qsv geocode index-reset
 qsv geocode --help
 
@@ -268,7 +268,8 @@ geocode options:
                                   cities1000.zip  - population > 1000; ~140k cities
                                   cities5000.zip  - population > 5000; ~53k cities
                                   cities15000.zip - population > 15000; ~26k cities
-                                Note that the more cities are included, the larger the local index file will be.
+                                Note that the more cities are included, the larger the local index file will be,
+                                lookup times will be slower, and the search results will be different.
                                 [default: https://download.geonames.org/export/dump/cities15000.zip]
     --force                     Force update the Geonames cities index. If not set, qsv will check if there
                                 are updates available at Geonames.org before updating the index.
