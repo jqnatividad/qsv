@@ -75,7 +75,7 @@ Options:
     -v, --version        Print version info, mem allocator, features installed, 
                          max_jobs, num_cpus, build info then exit
 
-* sponsored by datHere - Data Infrastructure Engineering
+sponsored by datHere - Data Infrastructure Engineering (https://qsv.datHere.com)
 "#;
 
 #[derive(Deserialize)]
@@ -214,9 +214,10 @@ fn main() -> QsvExitCode {
     if args.flag_list {
         wout!("Installed commands ({num_commands}):");
         wout!(
-            "{enabled_commands}\n
-sponsored by datHere - Data Infrastructure Engineering
-        "
+            r#"{enabled_commands}
+
+sponsored by datHere - Data Infrastructure Engineering (https://qsv.datHere.com)
+"#
         );
         util::log_end(qsv_args, now);
         return QsvExitCode::Good;
@@ -236,11 +237,13 @@ sponsored by datHere - Data Infrastructure Engineering
     match args.arg_command {
         None => {
             werr!(
-                "qsv is a suite of CSV command line utilities.
+                r#"qsv is a suite of CSV command line utilities.
 
-Please choose one of the following {num_commands} commands:\n{enabled_commands}\n
-sponsored by datHere - Data Infrastructure Engineering
-"
+Please choose one of the following {num_commands} commands:
+{enabled_commands}
+
+sponsored by datHere - Data Infrastructure Engineering (https://qsv.datHere.com)
+"#
             );
             _ = util::qsv_check_for_update(true, false);
             util::log_end(qsv_args, now);

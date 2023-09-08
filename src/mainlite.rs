@@ -64,7 +64,7 @@ macro_rules! command_list {
     transpose   Transpose rows/columns of CSV data
     validate    Validate CSV data for RFC4180-compliance or with JSON Schema
 
-    sponsored by datHere - Data Infrastructure Engineering
+sponsored by datHere - Data Infrastructure Engineering (https://qsv.datHere.com)
 "
     };
 }
@@ -91,7 +91,7 @@ Options:
     -v, --version        Print version info, mem allocator, features installed, 
                          max_jobs, num_cpus, build info then exit
 
-* sponsored by datHere - Data Infrastructure Engineering
+sponsored by datHere - Data Infrastructure Engineering (https://qsv.datHere.com)
 "#;
 
 #[derive(Deserialize)]

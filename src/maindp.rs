@@ -85,7 +85,7 @@ macro_rules! command_list {
 
     NOTE: qsvdp ignores the --progressbar option for all commands.
 
-    sponsored by datHere - Data Infrastructure Engineering
+sponsored by datHere - Data Infrastructure Engineering (https://qsv.datHere.com)
 "
     };
 }
@@ -112,7 +112,7 @@ Options:
     -v, --version        Print version info, mem allocator, features installed, 
                          max_jobs, num_cpus, build info then exit
 
-* sponsored by datHere - Data Infrastructure Engineering
+sponsored by datHere - Data Infrastructure Engineering (https://qsv.datHere.com)
 "#;
 #[derive(Deserialize)]
 struct Args {
