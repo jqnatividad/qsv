@@ -37,7 +37,7 @@ jobs:
             target: x86_64-apple-darwin
             architecture: x86_64
             use-cross: true
-            addl-build-args: --features=apply,generate,fetch,foreach,self_update,luau,polars,to
+            addl-build-args: --features=apply,generate,fetch,foreach,self_update,luau,polars,to,geocode
             default-features: --no-default-features
             addl-qsvlite-features:
             addl-qsvdp-features: luau
