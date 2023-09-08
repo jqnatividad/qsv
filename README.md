@@ -17,11 +17,12 @@
  &nbsp;          |  Table of Contents
 :--------------------------|:-------------------------
 ![qsv logo](docs/images/qsv-logo.png)<br/>[_Hi-ho "Quicksilver" away!_](https://www.youtube.com/watch?v=p9lf76xOA5k)<br/><sub><sup>[logo details](https://github.com/jqnatividad/qsv/discussions/295)</sup></sub><br/>|qsv (pronounced "Quicksilver") is a<br>command line program for indexing, slicing,<br>analyzing, filtering, enriching, validating &<br>joining CSV files.<br>Commands are simple, fast & composable.<br><br>* [Available Commands](#available-commands)<br>* [Installation Options](#installation-options)<br> * [Whirlwind Tour](docs/whirlwind_tour.md#a-whirlwind-tour) / [Notebooks](contrib/notebooks/)<br>* [Cookbook](https://github.com/jqnatividad/qsv/wiki/Cookbook#cookbook)<br>* [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq)<br>* [Changelog](https://github.com/jqnatividad/qsv/blob/master/CHANGELOG.md#changelog)<br>* [Performance Tuning](docs/PERFORMANCE.md#performance-tuning)<br>* [Benchmarks](docs/BENCHMARKS.md)<br>* [Environment Variables](docs/ENVIRONMENT_VARIABLES.md)<br>* [Feature Flags](#feature-flags)<br>* [Testing](#testing)<br>* [NYC School of Data 2022 slides](https://docs.google.com/presentation/d/e/2PACX-1vQ12ndZL--gkz0HLQRaxqsNOwzddkv1iUKB3sq661yA77OPlAsmHJHpjaqt9s9QEf73VqMfb0cv4jHU/pub?start=false&loop=false&delayms=3000)<br>* [Sponsor](#sponsor)
+</div>
+<div align="center">
+
+## Try it out at [qsv.dathere.com](https:://qsv.dathere.com)!
 
 </div>
-
-> ℹ️ **NOTE:** Quicksilver (qsv) is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's May 2018 release](https://github.com/BurntSushi/xsv/issues/267). On top of xsv's 20 commands, it adds numerous new features; 37 additional commands; 5 `apply` subcommands & 35 operations; 5 `to` subcommands; 3 `cat` subcommands; 5 `geocode` subcommands & 4 operations; and 4 `snappy` subcommands.
-See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for more details.
 
 ## Available commands
 
@@ -396,6 +397,11 @@ cargo t stats -F all_features
 ## License
 
 Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org).
+
+## Origins
+
+Quicksilver (qsv) is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's May 2018 release](https://github.com/BurntSushi/xsv/issues/267). On top of xsv's 20 commands, it adds numerous new features; 37 additional commands; 5 `apply` subcommands & 35 operations; 5 `to` subcommands; 3 `cat` subcommands; 5 `geocode` subcommands & 4 operations; and 4 `snappy` subcommands.
+See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for more details.
 
 ## Sponsor
 
