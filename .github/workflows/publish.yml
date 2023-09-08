@@ -50,7 +50,7 @@ jobs:
             architecture: x86_64
             musl-prep: true
             use-cross: false
-            addl-build-args: --features=apply,generate,fetch,foreach,geocode,self_update
+            addl-build-args: --features=apply,generate,fetch,foreach,self_update
             default-features:
             addl-qsvlite-features:
             addl-qsvdp-features:
