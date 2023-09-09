@@ -18,8 +18,12 @@ Example queries:
 
   qsv sqlp data.csv 'select col1, col2 as friendlyname from data' --format parquet --output data.parquet
 
+  # enclose column names with spaces in double quotes
+  qsv sqlp data.csv 'select "col 1", "col 2" from data'
+
   qsv sqlp data.csv data2.csv 'select * from data join data2 on data.colname = data2.colname'
 
+  # use "_t_N" aliases to refer to input files
   qsv sqlp data.csv data2.csv 'select * from _t_1 join _t_2 on _t_1.colname = _t_2.colname'
 
   qsv sqlp data.csv 'SELECT col1, count(*) AS cnt FROM data GROUP BY col1 ORDER BY cnt DESC, col1 ASC'
