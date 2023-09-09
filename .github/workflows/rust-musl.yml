@@ -39,8 +39,13 @@ jobs:
       run: |
         sudo apt-get install redis-server
         sudo service redis-server start
-    - name: Update Rust
-      run: rustup update
+    - name: Installing Rust toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        profile: minimal
+        target: x86_64-unknown-linux-musl
+        override: true        
     - name: Setup Rust-cache
       uses: Swatinem/rust-cache@v2
       with:
@@ -48,4 +53,4 @@ jobs:
     - name: Run tests
       env:
         RUSTFLAGS: -C target-feature=+fxsr,+sse,+sse2,+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+fma
-      run: cargo test --target x86_64-unknown-linux-musl --verbose --locked --features=apply,fetch,foreach,generate,geocode,luau,python,feature_capable
+      run: cargo test --verbose --locked --features=apply,fetch,foreach,generate,geocode,luau,python,feature_capable
