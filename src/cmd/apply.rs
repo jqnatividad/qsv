@@ -161,6 +161,7 @@ recognized date formats.
 See https://docs.rs/chrono/latest/chrono/format/strftime/ for 
 accepted date formats for --formatstr.
 Defaults to ISO 8601/RFC 3339 format when --formatstr is not specified.
+( "%Y-%m-%dT%H:%M:%S%z" - e.g. 2001-07-08T00:34:60.026490+09:30 )
 
 Datefmt also supports multi-column formatting.
 
@@ -317,7 +318,8 @@ apply options:
 
                                 DATEFMT: The date format to use. For formats, see
                                   https://docs.rs/chrono/latest/chrono/format/strftime/
-                                  Default to ISO 8601 / RFC 3339 date & time format.
+                                  Default to ISO 8601 / RFC 3339 date & time format -
+                                  "%Y-%m-%dT%H:%M:%S%z" - e.g. 2001-07-08T00:34:60.026490+09:30
                                   [default: %+]
 
                                 DYNFMT: the template to use to construct a new column.
