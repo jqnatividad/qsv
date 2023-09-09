@@ -107,6 +107,13 @@ These prebuilt binaries are also built with CPU optimizations enabled for x86_64
 
 For Windows, an MSI Installer wrapping the x86_64-pc-windows-msvc build is also available for download.
 
+For macOS, ["ad-hoc" signatures](https://users.rust-lang.org/t/distributing-cli-apps-on-macos/70223) are used to sign our binaries, so you will need to [set appropriate Gatekeeper security settings](https://support.apple.com/en-us/HT202491) or run the following command to remove the quarantine attribute from qsv before you run it for the first time:
+
+```bash
+# replace qsv with qsvlite or qsvdp if you installed those binary variants
+xattr -d com.apple.quarantine qsv
+```
+
 ### Option 2: Homebrew
 
 For [macOS and Linux (64-bit)](https://formulae.brew.sh/formula/qsv), you can quickly install qsv with [Homebrew](https://brew.sh). However, only the `apply` and `luau` [features](#feature-flags) are enabled.
