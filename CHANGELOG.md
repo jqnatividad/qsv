@@ -50,8 +50,8 @@ Big thanks to @rzmk for all the work on the website! To @a5dur for all the QA wo
 
 ### Changed
 * `flatten`: refactor for performance  https://github.com/jqnatividad/qsv/pull/1227
-* `validate`: improved utf8 error mesages  https://github.com/jqnatividad/qsv/pull/1256
-* `apply` & `applydp`: improve usage text in relation to multi-column capabilites  https://github.com/jqnatividad/qsv/pull/1257
+* `validate`: improved utf8 error messages  https://github.com/jqnatividad/qsv/pull/1256
+* `apply` & `applydp`: improve usage text in relation to multi-column capabilities  https://github.com/jqnatividad/qsv/pull/1257
 * qsv-cache now set to ~/.qsv-cache by default  https://github.com/jqnatividad/qsv/pull/1265
 * Download file helper refactor  https://github.com/jqnatividad/qsv/pull/1267
 * Benchmark Update by @minhajuddin2510 in https://github.com/jqnatividad/qsv/pull/1237
@@ -611,7 +611,7 @@ When sniffing a URL with --no-infer, it only sniff's the first downloaded chunk,
 * `stats`: use extend_from_slice for readability https://github.com/jqnatividad/qsv/commit/23275e2e8ef30bdc101293084bce71e651b3222a
 * `validate`: do not panic if the input is not UTF-8 https://github.com/jqnatividad/qsv/commit/532cd012de0866250be2dc19b6e02ffa27b3c9fb
 * `sniff`: simplify getting stdin last_modified property; return detected mime type in JSON error response https://github.com/jqnatividad/qsv/commit/01975912ae99fe0a7b38cf741f3dfbcf2b9dc486
-* `luau`: upadte embedded Luau from 0.573 to 0.576
+* `luau`: update embedded Luau from 0.573 to 0.576
 * Update nightly build instructions
 * Bump qsv-sniffer from 0.9.1 to 0.9.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/972
 * Bump tokio from 1.28.0 to 1.28.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/973
@@ -1060,7 +1060,7 @@ CSV rows that start with the comment character are skipped. https://github.com/j
 
 ### Added
 * `joinp`:  new join command powered by [Pola.rs](https://pola.rs). This is just the first of more commands that will leverage the Pola.rs engine. https://github.com/jqnatividad/qsv/pull/798
-* `luau`: added random acess mode; major refactor as we prepare to use `luau` as qsv's [DSL](https://en.wikipedia.org/wiki/Domain-specific_language); added `qsv_log` helper that can be called from Luau scripts to facilitate development of [full-fledged data-wrangling scripts](https://github.com/jqnatividad/qsv/blob/9cad3396a8f56d2c2136c843078d5635324539a5/tests/test_luau.rs#L224-L247).  https://github.com/jqnatividad/qsv/pull/805 and https://github.com/jqnatividad/qsv/pull/806
+* `luau`: added random access mode; major refactor as we prepare to use `luau` as qsv's [DSL](https://en.wikipedia.org/wiki/Domain-specific_language); added `qsv_log` helper that can be called from Luau scripts to facilitate development of [full-fledged data-wrangling scripts](https://github.com/jqnatividad/qsv/blob/9cad3396a8f56d2c2136c843078d5635324539a5/tests/test_luau.rs#L224-L247).  https://github.com/jqnatividad/qsv/pull/805 and https://github.com/jqnatividad/qsv/pull/806
 * `sniff`: added URL & re-enabled stdin support; URL support features sampling only the required number of rows to sniff the metadata without downloading the entire file; expanded sniff metadata returned; added `--progressbar` option for URL sniffing https://github.com/jqnatividad/qsv/pull/812
 * `sniff`: added `--timeout` option for URL inputs; now runs async from all the binary variants  https://github.com/jqnatividad/qsv/pull/813
 
@@ -1180,7 +1180,7 @@ Note that stdin support was shortly re-enabled in https://github.com/jqnatividad
    - quoted identifiers are also considered unsafe, unless conditional mode is used
    - verbose modes now also return a list of duplicate header names
 * update MSRV to 1.67.0
-* cargo update bump depedencies
+* cargo update bump dependencies
 * disable optimization on test profile for faster CI compilation, which was taking much longer than test run time
 * optimize prebuilt nightlies to compile with target-cpu=native
 * pin Rust nightly to 2023-02-01
@@ -2941,7 +2941,7 @@ They are now only enabled when these features are enabled during install/build.
 - Auto-publish binaries for more platforms on release
 - added combo-test for sort-dedup-sort (see [discussion #80](https://github.com/jqnatividad/qsv/discussions/80#discussioncomment-1610190))
 - New environment variables galore
-  - `QSV_DEFAULT_DELIMITER` - single ascii character to use as delimiter.  Overrides `--delimeter` option. Defaults to "," (comma) for CSV files and "\t" (tab) for TSV files, when not set. Note that this will also set the delimiter for qsv's output. Adapted from [xsv PR](https://github.com/BurntSushi/xsv/pull/94) by [@camerondavison](https://github.com/camerondavison).
+  - `QSV_DEFAULT_DELIMITER` - single ascii character to use as delimiter.  Overrides `--delimiter` option. Defaults to "," (comma) for CSV files and "\t" (tab) for TSV files, when not set. Note that this will also set the delimiter for qsv's output. Adapted from [xsv PR](https://github.com/BurntSushi/xsv/pull/94) by [@camerondavison](https://github.com/camerondavison).
   - `QSV_NO_HEADERS` - when set, the first row will **NOT** be interpreted as headers. Supersedes `QSV_TOGGLE_HEADERS`.
   - `QSV_MAX_JOBS` - number of jobs to use for parallelized commands (currently `frequency`, `split` and `stats`). If not set, max_jobs is set
 to number of logical processors divided by four.  See [Parallelization](#parallelization) for more info.

@@ -831,14 +831,14 @@ fn sqlp_boston311_case_expression() {
               WHEN True THEN 'Yes' 
               WHEN False THEN 'No' 
               ELSE 'N/A'
-           END as grafitti_related
+           END as graffiti_related
            from _t_1
            where case_status = 'Open'"#,
     );
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
-        svec!["case_enquiry_id", "grafitti_related"],
+        svec!["case_enquiry_id", "graffiti_related"],
         svec!["101004143000", "No"],
         svec!["101004155594", "No"],
         svec!["101004154423", "No"],

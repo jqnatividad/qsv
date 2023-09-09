@@ -17,7 +17,7 @@ before processing it with qsv - e.g. to convert an ISO-8859-1 encoded file to UT
 
 You can change this behavior with the --encoding-errors option.
 
-See https://github.com/jqnatividad/qsv#utf-8-encoding fpr more details.
+See https://github.com/jqnatividad/qsv#utf-8-encoding for more details.
 
 This command is typically used at the beginning of a data pipeline (thus the name `input`)
 to normalize & prepare CSVs for further processing with other qsv commands.

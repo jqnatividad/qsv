@@ -173,7 +173,7 @@ Format multiple date columns in file.csv to ISO 8601/RFC 3339 format:
 
   $ qsv apply datefmt 'Open Date,Modified Date,Closed Date' file.csv
 
-Format all columns that end with "_date" case-insensitve in file.csv to ISO 8601/RFC 3339 format:
+Format all columns that end with "_date" case-insensitive in file.csv to ISO 8601/RFC 3339 format:
 
   $ qsv apply datefmt '\(?i)_date$\' file.csv
 

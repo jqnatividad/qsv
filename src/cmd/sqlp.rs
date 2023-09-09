@@ -34,8 +34,8 @@ Example queries:
   qsv sqlp data.csv data2.csv data3.csv data4.csv script.sql --format json --output data.json
 
   # use Common Table Expressions (CTEs) using WITH to simplify complex queries
-  qsv sqlp people.csv "WITH millenials AS (SELECT * FROM people WHERE age >= 25 and age <= 40) \
-    SELECT * FROM millenials WHERE STARTS_WITH(name,'C')"
+  qsv sqlp people.csv "WITH millennials AS (SELECT * FROM people WHERE age >= 25 and age <= 40) \
+    SELECT * FROM millennials WHERE STARTS_WITH(name,'C')"
 
   # CASE statement
   qsv sqlp data.csv "select CASE WHEN col1 > 10 THEN 'foo' WHEN col1 > 5 THEN 'bar' ELSE 'baz' END from data"

@@ -230,7 +230,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         if let csv::ErrorKind::Utf8 { pos, err } = e.kind() {
                             let header_error = json!({
                                 "errors": [{
-                                    "title" : "Header UTF-8 validation errorr",
+                                    "title" : "Header UTF-8 validation error",
                                     "detail" : format!("{e}"),
                                     "meta": {
                                         "record_position": format!("{pos:?}"),
