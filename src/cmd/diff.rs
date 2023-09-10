@@ -9,15 +9,15 @@ Find the difference between two CSVs:
     qsv diff left.csv right.csv
 
 Find the difference between two CSVs. The right CSV has no headers:
-    qsv diff left.csv --no-headers-right right.csv
+    qsv diff left.csv --no-headers-right right-noheaders.csv
 
 Find the difference between two CSVs. The left CSV uses a tab as the delimiter:
-    qsv diff --delimiter-left '\t' left.csv right-tab.csv
+    qsv diff --delimiter-left '\t' left.csv right-tab.tsv
     # or ';' as the delimiter
     qsv diff --delimiter-left ';' left.csv right-semicolon.csv
 
 Find the difference between two CSVs, but only for the first two columns:
-    qsv diff -k 0,1 left.csv right.csv
+    qsv diff --key 0,1 left.csv right.csv
 
 Find the difference between two CSVs, but only for the first two columns and
 sort the result by the first and second column:
