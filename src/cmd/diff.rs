@@ -1,13 +1,33 @@
 static USAGE: &str = r#"
-Find the difference between two CSVs.
+Find the difference between two CSVs with ludicrous speed.
 
 Note that diff does not support stdin. A file path is required for both arguments.
+
+Examples:
+
+Find the difference between two CSVs:
+    qsv diff left.csv right.csv
+
+Find the difference between two CSVs. The right CSV has no headers:
+    qsv diff left.csv --no-headers-right right.csv
+
+Find the difference between two CSVs. The left CSV uses a tab as the delimiter:
+    qsv diff --delimiter-left '\t' left.csv right-tab.csv
+    # or ';' as the delimiter
+    qsv diff --delimiter-left ';' left.csv right-semicolon.csv
+
+Find the difference between two CSVs, but only for the first two columns:
+    qsv diff -k 0,1 left.csv right.csv
+
+Find the difference between two CSVs, but only for the first two columns and
+sort the result by the first and second column:
+    qsv diff -k 0,1 --sort-columns 0,1 left.csv right.csv
+
+For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_diff.rs
 
 Usage:
     qsv diff [options] [<input-left>] [<input-right>]
     qsv diff --help
-
-For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_diff.rs
 
 diff options:
     --no-headers-left           When set, the first row will be considered as part of
