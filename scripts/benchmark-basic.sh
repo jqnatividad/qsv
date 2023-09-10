@@ -17,7 +17,12 @@ set -e
 pat="$1"
 bin_name=qsv
 # set sevenz_bin_name  to "7z" on Windows/Linux and "7zz" on macOS
-sevenz_bin_name=7z
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  sevenz_bin_name=7zz
+else
+  sevenz_bin_name=7z
+fi
+
 datazip=/tmp/NYC_311_SR_2010-2020-sample-1M.7z
 data=NYC_311_SR_2010-2020-sample-1M.csv
 data_idx=NYC_311_SR_2010-2020-sample-1M.csv.idx
@@ -32,10 +37,20 @@ if [ ! -r "$data" ]; then
   printf "Downloading benchmarking data...\n"
   curl -sS https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/NYC_311_SR_2010-2020-sample-1M.7z > "$datazip"
   "$sevenz_bin_name" e -y "$datazip"
+fi
+
+if [ ! -r "$commboarddata" ]; then
+  printf "Downloading community board data...\n"
+  curl -sS https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/communityboards.csv > "$commboarddata"
+fi
+
+if [ ! -r "$data_to_exclude" ]; then
+  printf "Creating benchmark support data...\n"
   "$bin_name" sample --seed 42 1000 "$data" -o "$data_to_exclude"
   printf "homeless\npark\nnoise\n" > "$searchset_patterns"
 fi
 
+printf "Benchmarking...\n"
 
 commands_without_index=()
 commands_with_index=()
