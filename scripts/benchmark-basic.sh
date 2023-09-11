@@ -25,10 +25,19 @@ else
   sevenz_bin_name=7z
 fi
 
+# check if hyperfine is installed
+if ! command -v hyperfine &> /dev/null
+then
+    echo "hyperfine could not be found"
+    echo "Please install hyperfine"
+    exit
+fi
+
 datazip=/tmp/NYC_311_SR_2010-2020-sample-1M.7z
 data=NYC_311_SR_2010-2020-sample-1M.csv
 data_idx=NYC_311_SR_2010-2020-sample-1M.csv.idx
 data_to_exclude=data_to_exclude.csv
+data_unsorted=data_unsorted.csv
 searchset_patterns=searchset_patterns.txt
 commboarddata=communityboards.csv
 urltemplate="http://localhost:4000/v1/search?text={Street Name}, {City}"
@@ -36,38 +45,28 @@ jql='"features".[0]."properties"."label"'
 
 
 if [ ! -r "$data" ]; then
-  printf "Downloading benchmarking data...\n"
+  echo "Downloading benchmarking data..."
   curl -sS https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/NYC_311_SR_2010-2020-sample-1M.7z > "$datazip"
   "$sevenz_bin_name" e -y "$datazip"
 fi
 
 if [ ! -r "$commboarddata" ]; then
-  printf "Downloading community board data...\n"
+  echo "Downloading community board data..."
   curl -sS https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/communityboards.csv > "$commboarddata"
 fi
 
 if [ ! -r "$data_to_exclude" ]; then
-  printf "Creating benchmark support data...\n"
+  echo "Creating benchmark support data..."
   "$bin_name" sample --seed 42 1000 "$data" -o "$data_to_exclude"
+  "$bin_name" sort --seed 42 --random --faster "$data" -o "$data_unsorted"
   printf "homeless\npark\nnoise\n" > "$searchset_patterns"
 fi
 
 commands_without_index=()
-commands_name=()
+commands_without_index_name=()
 commands_with_index=()
+commands_with_index_name=()
 
-function add_command {
-  local dest_array="$1"
-  local custom_name="$2"
-  shift 2
-  local cmd=": '$custom_name' && $@"
-  
-  if [[ "$dest_array" == "without_index" ]]; then
-    commands_without_index+=("$cmd")
-  else
-    commands_with_index+=("$cmd")
-  fi
-}
 function add_command {
   local dest_array="$1"
   shift
@@ -83,7 +82,6 @@ function add_command {
 function run {
   local index=
   while true; do
-    commands_name+=("$1")
     case "$1" in
       --index)
         index="yes"
@@ -99,22 +97,18 @@ function run {
   shift
 
   if [ -z "$index" ]; then
+    commands_without_index_name+=("$name")
     add_command "without_index" "$@"
   else
-    rm -f "$data_idx"
-    "$bin_name" index "$data"
+    commands_with_index_name+=("$name")
     add_command "with_index" "$@"
-    rm -f "$data_idx"
   fi
 }
 
-# get current version of qsv
-version=$("$bin_name" --version | cut -d' ' -f2 | cut -d'-' -f1)
+# ---------------------------------------
+# Queue commands for benchmarking
+# commands with an --index prefix will be benchmarked with an index
 
-# get current time to the nearest hour
-now=$(date +"%Y-%m-%d-%H")
-
-# Add commands for benchmarking
 echo "Queueing commands for benchmarking..."
 run apply_op_string "$bin_name apply operations lower Agency  $data"
 run apply_op_similarity "$bin_name apply operations lower,simdln Agency --comparand brooklyn --new-column Agency_sim-brooklyn_score  $data"
@@ -141,7 +135,7 @@ run geocode_suggest "$bin_name" geocode suggest City --new-column geocoded_city 
 run geocode_reverse "$bin_name" geocode reverse Location --new-column geocoded_location "$data"
 run index "$bin_name" index "$data"
 run join "$bin_name" join \'Community Board\' "$data" community_board "$commboarddata"
-run lua "$bin_name" luau map location_empty "tonumber\(Location\)==nil" "$data"
+run luau "$bin_name" luau map location_empty "tonumber\(Location\)==nil" "$data"
 run partition "$bin_name" partition \'Community Board\' /tmp/partitioned "$data"
 run pseudo "$bin_name" pseudo \'Unique Key\' "$data"
 run rename "$bin_name" rename \'unique_key,created_date,closed_date,agency,agency_name,complaint_type,descriptor,loctype,zip,addr1,street,xstreet1,xstreet2,inter1,inter2,addrtype,city,landmark,facility_type,status,due_date,res_desc,res_act_date,comm_board,bbl,boro,xcoord,ycoord,opendata_type,parkname,parkboro,vehtype,taxi_boro,taxi_loc,bridge_hwy_name,bridge_hwy_dir,ramp,bridge_hwy_seg,lat,long,loc\' "$data"
@@ -153,7 +147,9 @@ run --index sample_1000_index "$bin_name" sample 1000 "$data"
 run sample_100000 "$bin_name" sample 100000 "$data"
 run --index sample_100000_index "$bin_name" sample 100000 "$data"
 run sample_100000_seeded "$bin_name" sample 100000 --seed 42 "$data"
+run sample_100000_seeded_faster "$bin_name" sample 100000 --faster --seed 42 "$data"
 run --index sample_100000_seeded_index "$bin_name" sample --seed 42 100000 "$data"
+run --index sample_100000_seeded_index_faster "$bin_name" sample --faster --seed 42 100000 "$data"
 run --index sample_25pct_index "$bin_name" sample 0.25 "$data"
 run --index sample_25pct_seeded_index "$bin_name" sample 0.25 --seed 42 "$data"
 run search "$bin_name" search -s \'Agency Name\' "'(?i)us'" "$data"
@@ -166,6 +162,9 @@ run slice_one_middle "$bin_name" slice -i 500000 "$data"
 run --index slice_one_middle_index "$bin_name" slice -i 500000 "$data"
 run sort "$bin_name" sort -s \'Incident Zip\' "$data"
 run sort_random_seeded "$bin_name" sort --random --seed 42 "$data"
+run sortcheck_sorted "$bin_name" sortcheck "$data"
+run sortcheck_unsorted "$bin_name" sortcheck "$data_unsorted"
+run sortcheck_unsorted_all "$bin_name" sortcheck --all "$data_unsorted"
 run split "$bin_name" split --size 50000 split_tempdir "$data"
 run --index split_index "$bin_name" split --size 50000 split_tempdir "$data"
 run --index split_index_j1 "$bin_name" split --size 50000 -j 1 split_tempdir "$data"
@@ -173,41 +172,95 @@ run stats "$bin_name" stats --force "$data"
 run --index stats_index "$bin_name" stats --force "$data"
 run --index stats_index_j1 "$bin_name" stats -j 1 --force "$data"
 run stats_everything "$bin_name" stats "$data" --force --everything
+run stats_everything_infer_dates "$bin_name" stats "$data" --force --everything --infer-dates
 run stats_everything_j1 "$bin_name" stats "$data" --force --everything -j 1
 run --index stats_everything_index "$bin_name" stats "$data" --force --everything
+run --index stats_everything_infer_dates_index "$bin_name" stats "$data" --force --everything --infer-dates
 run --index stats_everything_index_j1 "$bin_name" stats "$data" --force --everything -j 1
 run table "$bin_name" table "$data"
 run transpose "$bin_name" transpose "$data"
-run extsort "$bin_name" extsort "$data" test.csv
+run extsort "$bin_name" extsort "$data_unsorted" test.csv
 run schema "$bin_name" schema "$data"
 run validate "$bin_name" validate "$data" "$schema"
 run sample_10 "$bin_name" sample 10 "$data" -o city.csv
 run sql "$bin_name" sqlp  "$data" city.csv "'select * from _t_1 join _t_2 on _t_1.City = _t_2.City'"
+
+# ---------------------------------------
+# Prepare benchmark results directory
 
 # Check if a results directory exists, if it doesn't create it
 if [ ! -d "results" ]; then
   mkdir results
 fi
 
-echo "Benchmarking..."
+# check if the file benchmark_results.csv exists, if it doesn't create it
+if [ ! -f "results/benchmark_results.csv" ]; then
+  touch results/benchmark_results.csv
+  echo "version,tstamp,name,mean,stddev,median,user,system,min,max" > results/benchmark_results.csv
+fi
 
+# get current version of qsv
+version=$("$bin_name" --version | cut -d' ' -f2 | cut -d'-' -f1)
+
+# get current time to the nearest hour
+now=$(date +"%Y-%m-%d-%H")
+
+# ---------------------------------------
+# Run hyperfine to compile benchmark results. Append each individual result to the benchmark_results.csv
+# by dogfooding qsv select and cat commands.
+
+# first, run benchmarking without an index
+echo "Benchmarking WITHOUT INDEX..."
 idx=0
 for command_no_index in "${commands_without_index[@]}"; do
-  echo "$command_no_index"
-  file_name=results/"$now"-"$version"-wo_idx-$(echo "${commands_name[$idx]}" | sed 's/ /_/g')
-  hyperfine --warmup 2 -i --export-json "$file_name".json \
-    --export-csv "$file_name".csv --time-unit millisecond "$command_no_index"
+  rm -f "$data_idx"
+  hyperfine --warmup 2 -i -r 3 --export-csv results/hf_result.csv \
+     --time-unit millisecond "$command_no_index"
+  echo "version,tstamp,name" > results/result_work.csv
+  echo "$version,$now,${commands_without_index_name[$idx]}" >> results/result_work.csv
+  "$bin_name" select '!command' results/hf_result.csv -o results/hf_result_nocmd.csv
+  "$bin_name" cat columns results/result_work.csv results/hf_result_nocmd.csv \
+    -o results/entry.csv
+  "$bin_name" cat rowskey results/benchmark_results.csv results/entry.csv \
+    -o results/latest_results.csv
+  mv results/latest_results.csv results/benchmark_results.csv
   ((idx++))
 done
 
+# ---------------------------------------
+# then, run benchmarks with an index
+echo "Benchmarking WITH INDEX..."
+rm -f "$data_idx"
+"$bin_name" index "$data"
+
 idx=0
-# Now, run hyperfine with commands_with_index and export to with_index_results.json
 for command_with_index in "${commands_with_index[@]}"; do
-  echo "$command_with_index"
-  file_name=results/"$now"-"$version"-idx-$(echo "${commands_name[$idx]}" | sed 's/ /_/g')
-  hyperfine --warmup 2 -i --export-json "$file_name".json \
-    --export-csv "$file_name".csv --time-unit millisecond "$command_with_index"
+  hyperfine --warmup 2 -i -r 3 --export-csv results/hf_result.csv \
+     --time-unit millisecond "$command_with_index"
+  echo "version,tstamp,name" > results/result_work.csv
+  echo "$version,$now,${commands_with_index_name[$idx]}" >> results/result_work.csv
+  "$bin_name" select '!command' results/hf_result.csv -o results/hf_result_nocmd.csv
+  "$bin_name" cat columns results/result_work.csv results/hf_result_nocmd.csv \
+    -o results/entry.csv
+  "$bin_name" cat rowskey results/benchmark_results.csv results/entry.csv \
+    -o results/latest_results.csv
+  mv results/latest_results.csv results/benchmark_results.csv
   ((idx++))
 done
+
+# sort the benchmark results by version, timestamp, and name
+"$bin_name" sort --select version,tstamp,name results/benchmark_results.csv \
+   -o results/benchmark_results.csv
+
+# compute records per second for each benchmark using qsv, rounding to 3 decimal places
+"$bin_name" luau map recs_per_sec "math.floor((1000000.0 / mean) * 1000) / 1000" \
+   results/benchmark_results.csv -o results/temp_results.csv
+mv results/temp_results.csv results/benchmark_results.csv
+
+# clean up
+rm -f results/hf_result.csv
+rm -f results/hf_result_nocmd.csv
+rm -f results/result_work.csv
+rm -f results/entry.csv
 
 echo "Benchmark results completed"
