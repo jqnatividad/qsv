@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# This script benchmarks with Quicksilver (qsv) using a 520mb, 41 column, 1M row sample of
+# This script benchmarks Quicksilver (qsv) using a 520mb, 41 column, 1M row sample of
 # NYC's 311 data. If it doesn't exist on your system, it will be downloaded for you.
 #
 # Make sure you're using a release-optimized `qsv`. 
-# If you can't use the prebuilt binaries at https://github.com/jqnatividad/qsv/releases/latest.
-# Build it to have at least the apply, geocode, luau and polars features:
-# e.g. `cargo build --release --locked -F feature_capable,apply,geocode,luau,polars` or
+# If you can't use the prebuilt binaries at https://github.com/jqnatividad/qsv/releases/latest,
+# build it to have at least the apply, geocode, luau and polars features enabled:
+# i.e. `cargo build --release --locked -F feature_capable,apply,geocode,luau,polars` or
 # `cargo install --locked qsv -F feature_capable,apply,geocode,luau,polars`
 #
 # This shell script has been tested on Linux, macOS and Cygwin for Windows.
