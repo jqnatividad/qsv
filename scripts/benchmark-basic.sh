@@ -169,13 +169,13 @@ run sort_random_seeded "$bin_name" sort --random --seed 42 "$data"
 run split "$bin_name" split --size 50000 split_tempdir "$data"
 run --index split_index "$bin_name" split --size 50000 split_tempdir "$data"
 run --index split_index_j1 "$bin_name" split --size 50000 -j 1 split_tempdir "$data"
-run stats "$bin_name" stats "$data"
-run --index stats_index "$bin_name" stats "$data"
-run --index stats_index_j1 "$bin_name" stats -j 1 "$data"
-run stats_everything "$bin_name" stats "$data" --everything
-run stats_everything_j1 "$bin_name" stats "$data" --everything -j 1
-run --index stats_everything_index "$bin_name" stats "$data" --everything
-run --index stats_everything_index_j1 "$bin_name" stats "$data" --everything -j 1
+run stats "$bin_name" stats --force "$data"
+run --index stats_index "$bin_name" stats --force "$data"
+run --index stats_index_j1 "$bin_name" stats -j 1 --force "$data"
+run stats_everything "$bin_name" stats "$data" --force --everything
+run stats_everything_j1 "$bin_name" stats "$data" --force --everything -j 1
+run --index stats_everything_index "$bin_name" stats "$data" --force --everything
+run --index stats_everything_index_j1 "$bin_name" stats "$data" --force --everything -j 1
 run table "$bin_name" table "$data"
 run transpose "$bin_name" transpose "$data"
 run extsort "$bin_name" extsort "$data" test.csv
