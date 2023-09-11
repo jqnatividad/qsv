@@ -40,6 +40,7 @@ data=NYC_311_SR_2010-2020-sample-1M.csv
 data_idx=NYC_311_SR_2010-2020-sample-1M.csv.idx
 data_to_exclude=data_to_exclude.csv
 data_unsorted=data_unsorted.csv
+data_sorted=data_sorted.csv
 searchset_patterns=searchset_patterns.txt
 commboarddata=communityboards.csv
 urltemplate="http://localhost:4000/v1/search?text={Street Name}, {City}"
@@ -61,6 +62,7 @@ if [ ! -r "$data_to_exclude" ]; then
   echo "Creating benchmark support data..."
   "$bin_name" sample --seed 42 1000 "$data" -o "$data_to_exclude"
   "$bin_name" sort --seed 42 --random --faster "$data" -o "$data_unsorted"
+  "$bin_name" sort "$data" -o "$data_sorted"
   printf "homeless\npark\nnoise\n" > "$searchset_patterns"
 fi
 
@@ -164,7 +166,7 @@ run slice_one_middle "$bin_name" slice -i 500000 "$data"
 run --index slice_one_middle_index "$bin_name" slice -i 500000 "$data"
 run sort "$bin_name" sort -s \'Incident Zip\' "$data"
 run sort_random_seeded "$bin_name" sort --random --seed 42 "$data"
-run sortcheck_sorted "$bin_name" sortcheck "$data"
+run sortcheck_sorted "$bin_name" sortcheck "$data_sorted"
 run sortcheck_unsorted "$bin_name" sortcheck "$data_unsorted"
 run sortcheck_unsorted_all "$bin_name" sortcheck --all "$data_unsorted"
 run split "$bin_name" split --size 50000 split_tempdir "$data"
@@ -184,7 +186,6 @@ run transpose "$bin_name" transpose "$data"
 run extsort "$bin_name" extsort "$data_unsorted" test.csv
 run schema "$bin_name" schema "$data"
 run validate "$bin_name" validate "$data" "$schema"
-run sample_10 "$bin_name" sample 10 "$data" -o city.csv
 run sql "$bin_name" sqlp  "$data" city.csv "'select * from _t_1 join _t_2 on _t_1.City = _t_2.City'"
 
 # ---------------------------------------
@@ -216,6 +217,7 @@ echo "Benchmarking WITHOUT INDEX..."
 idx=0
 for command_no_index in "${commands_without_index[@]}"; do
   rm -f "$data_idx"
+  echo "${commands_without_index_name[$idx]}"
   hyperfine --warmup 2 -i -r 3 --export-csv results/hf_result.csv \
      --time-unit millisecond "$command_no_index"
   echo "version,tstamp,name" > results/result_work.csv
@@ -237,6 +239,7 @@ rm -f "$data_idx"
 
 idx=0
 for command_with_index in "${commands_with_index[@]}"; do
+  echo "${commands_with_index_name[$idx]}"
   hyperfine --warmup 2 -i -r 3 --export-csv results/hf_result.csv \
      --time-unit millisecond "$command_with_index"
   echo "version,tstamp,name" > results/result_work.csv
