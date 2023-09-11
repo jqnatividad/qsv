@@ -196,10 +196,10 @@ if [ ! -d "results" ]; then
   mkdir results
 fi
 
-# check if the file benchmark_results.csv exists, if it doesn't create it
-if [ ! -f "results/benchmark_results.csv" ]; then
-  touch results/benchmark_results.csv
-  echo "version,tstamp,name,mean,stddev,median,user,system,min,max" > results/benchmark_results.csv
+# check if the file latest_results.csv exists, if it doesn't create it
+if [ ! -f "results/latest_results.csv" ]; then
+  touch results/latest_results.csv
+  echo "version,tstamp,name,mean,stddev,median,user,system,min,max" > results/latest_results.csv
 fi
 
 # get current version of qsv
@@ -209,7 +209,7 @@ version=$("$bin_name" --version | cut -d' ' -f2 | cut -d'-' -f1)
 now=$(date +"%Y-%m-%d-%H")
 
 # ---------------------------------------
-# Run hyperfine to compile benchmark results. Append each individual result to the benchmark_results.csv
+# Run hyperfine to compile benchmark results. Append each individual result to the latest_results.csv
 # by dogfooding qsv select and cat commands.
 
 # first, run benchmarking without an index
@@ -220,14 +220,14 @@ for command_no_index in "${commands_without_index[@]}"; do
   echo "${commands_without_index_name[$idx]}"
   hyperfine --warmup 2 -i -r 3 --export-csv results/hf_result.csv \
      --time-unit millisecond "$command_no_index"
-  echo "version,tstamp,name" > results/result_work.csv
-  echo "$version,$now,${commands_without_index_name[$idx]}" >> results/result_work.csv
+  echo "version,tstamp,name" > results/results_work.csv
+  echo "$version,$now,${commands_without_index_name[$idx]}" >> results/results_work.csv
   "$bin_name" select '!command' results/hf_result.csv -o results/hf_result_nocmd.csv
-  "$bin_name" cat columns results/result_work.csv results/hf_result_nocmd.csv \
+  "$bin_name" cat columns results/results_work.csv results/hf_result_nocmd.csv \
     -o results/entry.csv
-  "$bin_name" cat rowskey results/benchmark_results.csv results/entry.csv \
-    -o results/latest_results.csv
-  mv results/latest_results.csv results/benchmark_results.csv
+  "$bin_name" cat rowskey results/latest_results.csv results/entry.csv \
+    -o results/results_work.csv
+  mv results/results_work.csv results/latest_results.csv
   ((idx++))
 done
 
@@ -242,30 +242,41 @@ for command_with_index in "${commands_with_index[@]}"; do
   echo "${commands_with_index_name[$idx]}"
   hyperfine --warmup 2 -i -r 3 --export-csv results/hf_result.csv \
      --time-unit millisecond "$command_with_index"
-  echo "version,tstamp,name" > results/result_work.csv
-  echo "$version,$now,${commands_with_index_name[$idx]}" >> results/result_work.csv
+  echo "version,tstamp,name" > results/results_work.csv
+  echo "$version,$now,${commands_with_index_name[$idx]}" >> results/results_work.csv
   "$bin_name" select '!command' results/hf_result.csv -o results/hf_result_nocmd.csv
-  "$bin_name" cat columns results/result_work.csv results/hf_result_nocmd.csv \
+  "$bin_name" cat columns results/results_work.csv results/hf_result_nocmd.csv \
     -o results/entry.csv
-  "$bin_name" cat rowskey results/benchmark_results.csv results/entry.csv \
-    -o results/latest_results.csv
-  mv results/latest_results.csv results/benchmark_results.csv
+  "$bin_name" cat rowskey results/latest_results.csv results/entry.csv \
+    -o results/results_work.csv
+  mv results/results_work.csv results/latest_results.csv
   ((idx++))
 done
 
-# sort the benchmark results by version, timestamp, and name
-"$bin_name" sort --select version,tstamp,name results/benchmark_results.csv \
-   -o results/benchmark_results.csv
+# ---------------------------------------
+# Finalize benchmark results. Sort the latest results by version, tstamp & name.
+# compute and add records per second for each benchmark using qsv luau map,
+# rounding to 3 decimal places; then append the latest results to benchmark_results.csv -
+# which is a historical archive. Finally, clean up temporary files
+
+# sort the benchmark results by version, tstamp & name
+"$bin_name" sort --select version,tstamp,name results/latest_results.csv \
+   -o results/results_work.csv
 
 # compute records per second for each benchmark using qsv, rounding to 3 decimal places
 "$bin_name" luau map recs_per_sec "math.floor((1000000.0 / mean) * 1000) / 1000" \
-   results/benchmark_results.csv -o results/temp_results.csv
-mv results/temp_results.csv results/benchmark_results.csv
+   results/results_work.csv -o results/latest_results.csv
+
+# cat the final results to results/bechmark_results.csv
+"$bin_name" cat rowskey results/latest_results.csv results/benchmark_results.csv \
+  -o results/results_work.csv
+mv results/results_work.csv results/benchmark_results.csv
 
 # clean up
 rm -f results/hf_result.csv
 rm -f results/hf_result_nocmd.csv
-rm -f results/result_work.csv
+rm -f results/results_work.csv
 rm -f results/entry.csv
+rm -f results/latest_results.csv
 
 echo "Benchmark results completed"
