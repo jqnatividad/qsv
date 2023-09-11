@@ -50,8 +50,6 @@ if [ ! -r "$data_to_exclude" ]; then
   printf "homeless\npark\nnoise\n" > "$searchset_patterns"
 fi
 
-printf "Benchmarking...\n"
-
 commands_without_index=()
 commands_with_index=()
 
@@ -176,13 +174,19 @@ run sample_10 "$bin_name" sample 10 "$data" -o city.csv
 run sql "$bin_name" sqlp  "$data" city.csv "'select * from _t_1 join _t_2 on _t_1.City = _t_2.City'"
 
 
-if [ ${#commands_without_index[@]} -gt 0 ]; then
-  hyperfine --warmup 2 -i --export-json without_index_results.json "${commands_without_index[@]}"
-fi
+echo "Benchmarking..."
 
-# Now, run hyperfine with commands_with_index and export to with_index_results.csv
-if [ ${#commands_with_index[@]} -gt 0 ]; then
-  hyperfine --warmup 2 -i --export-json with_index_results.json "${commands_with_index[@]}"
-fi
+for command_no_index in "${commands_without_index[@]}"; do
+  echo "$command_no_index"
+  hyperfine --warmup 2 -i --export-json without_index_results.json \
+    --export-csv without_index_results.csv --time-unit millisecond "$command_no_index"
+done
+
+# Now, run hyperfine with commands_with_index and export to with_index_results.json
+for command_with_index in "${commands_with_index[@]}"; do
+  echo "$command_with_index"
+  hyperfine --warmup 2 -i --export-json with_index_results.json \
+    --export-csv with_index_results.csv --time-unit millisecond "$command_with_index"
+done
 
 echo "Benchmark results completed"
