@@ -203,8 +203,8 @@ done
 idx=0
 # Now, run hyperfine with commands_with_index and export to with_index_results.json
 for command_with_index in "${commands_with_index[@]}"; do
-  echo results/"$now"-"$version"-idx-"$command_with_index"
-  file_name=$(echo "${commands_name[$idx]}" | sed 's/ /_/g')
+  echo "$command_with_index"
+  file_name=results/"$now"-"$version"-idx-$(echo "${commands_name[$idx]}" | sed 's/ /_/g')
   hyperfine --warmup 2 -i --export-json "$file_name".json \
     --export-csv "$file_name".csv --time-unit millisecond "$command_with_index"
   ((idx++))
