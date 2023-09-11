@@ -15,6 +15,8 @@
 set -e
 
 pat="$1"
+echo "Setting up benchmarking environment..."
+
 bin_name=qsv
 # set sevenz_bin_name  to "7z" on Windows/Linux and "7zz" on macOS
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -51,6 +53,7 @@ if [ ! -r "$data_to_exclude" ]; then
 fi
 
 commands_without_index=()
+commands_name=()
 commands_with_index=()
 
 function add_command {
@@ -80,6 +83,7 @@ function add_command {
 function run {
   local index=
   while true; do
+    commands_name+=("$1")
     case "$1" in
       --index)
         index="yes"
@@ -104,7 +108,14 @@ function run {
   fi
 }
 
+# get current version of qsv
+version=$("$bin_name" --version | cut -d' ' -f2 | cut -d'-' -f1)
+
+# get current time to the nearest hour
+now=$(date +"%Y-%m-%d-%H")
+
 # Add commands for benchmarking
+echo "Queueing commands for benchmarking..."
 run apply_op_string "$bin_name apply operations lower Agency  $data"
 run apply_op_similarity "$bin_name apply operations lower,simdln Agency --comparand brooklyn --new-column Agency_sim-brooklyn_score  $data"
 run apply_op_eudex "$bin_name apply operations lower,eudex Agency --comparand Queens --new-column Agency_queens_soundex  $data" 
@@ -173,20 +184,30 @@ run validate "$bin_name" validate "$data" "$schema"
 run sample_10 "$bin_name" sample 10 "$data" -o city.csv
 run sql "$bin_name" sqlp  "$data" city.csv "'select * from _t_1 join _t_2 on _t_1.City = _t_2.City'"
 
+# Check if a results directory exists, if it doesn't create it
+if [ ! -d "results" ]; then
+  mkdir results
+fi
 
 echo "Benchmarking..."
 
+idx=0
 for command_no_index in "${commands_without_index[@]}"; do
   echo "$command_no_index"
-  hyperfine --warmup 2 -i --export-json without_index_results.json \
-    --export-csv without_index_results.csv --time-unit millisecond "$command_no_index"
+  file_name=results/"$now"-"$version"-wo_idx-$(echo "${commands_name[$idx]}" | sed 's/ /_/g')
+  hyperfine --warmup 2 -i --export-json "$file_name".json \
+    --export-csv "$file_name".csv --time-unit millisecond "$command_no_index"
+  ((idx++))
 done
 
+idx=0
 # Now, run hyperfine with commands_with_index and export to with_index_results.json
 for command_with_index in "${commands_with_index[@]}"; do
-  echo "$command_with_index"
-  hyperfine --warmup 2 -i --export-json with_index_results.json \
-    --export-csv with_index_results.csv --time-unit millisecond "$command_with_index"
+  echo results/"$now"-"$version"-idx-"$command_with_index"
+  file_name=$(echo "${commands_name[$idx]}" | sed 's/ /_/g')
+  hyperfine --warmup 2 -i --export-json "$file_name".json \
+    --export-csv "$file_name".csv --time-unit millisecond "$command_with_index"
+  ((idx++))
 done
 
 echo "Benchmark results completed"
