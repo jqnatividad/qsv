@@ -9,11 +9,13 @@
 # i.e. `cargo build --release --locked -F feature_capable,apply,geocode,luau,polars` or
 # `cargo install --locked qsv -F feature_capable,apply,geocode,luau,polars`
 #
-# This shell script has been tested on Linux, macOS and Cygwin for Windows.
+# This shell script has been tested on Linux, macOS and Cygwin for Windows (https://www.cygwin.com/).
+# It should work on other Unix-like systems, but will NOT run on native Windows.
 # It requires hyperfine (https://github.com/sharkdp/hyperfine#hyperfine) to run the benchmarks.
 # It also requires 7-Zip (https://www.7-zip.org/download.html) as we need the high compression
 # ratio so we don't have to deal with git-lfs to host the large compressed file on GitHub.
-# It also dogfoods `qsv` to parse and format the benchmark results. :)
+# And of course, it dogfoods `qsv` as well to prepare the benchmark data, and to parse and format
+# the benchmark results. :)
 
 set -e
 
@@ -22,11 +24,28 @@ echo "Setting up benchmarking environment..."
 
 SECONDS=0
 qsv_bin=qsv
+
+# check if qsv is installed
+if ! command -v "$qsv_bin" &> /dev/null
+then
+    echo "qsv could not be found"
+    echo "Please install Quicksilver (qsv) from https://qsv.dathere.com"
+    exit
+fi
+
 # set sevenz_bin  to "7z" on Windows/Linux and "7zz" on macOS
 if [[ "$OSTYPE" == "darwin"* ]]; then
   sevenz_bin=7zz
 else
   sevenz_bin=7z
+fi
+
+# check if 7z is installed
+if ! command -v "$sevenz_bin" &> /dev/null
+then
+    echo "7z could not be found"
+    echo "Please install 7-Zip v23.01 and above"
+    exit
 fi
 
 # check if hyperfine is installed
@@ -63,7 +82,7 @@ fi
 if [ ! -r "$data_to_exclude" ]; then
   echo "Creating benchmark support data..."
   "$qsv_bin" sample --seed 42 1000 "$data" -o "$data_to_exclude"
-  "$qsv_bin" sort --seed 42 --random --faster "$data" -o "$data_unsorted"
+  "$qsv_bin" sort --seed 42 --random  --faster "$data" -o "$data_unsorted"
   "$qsv_bin" sort "$data" -o "$data_sorted"
   printf "homeless\npark\nnoise\n" > "$searchset_patterns"
 fi
