@@ -3,6 +3,10 @@
 # This script benchmarks Quicksilver (qsv) using a 520mb, 41 column, 1M row sample of
 # NYC's 311 data. If it doesn't exist on your system, it will be downloaded for you.
 #
+# Though this script was primarily created to maintain the Benchmark page on the qsv site,
+# it was also designed to be a useful tool for users to benchmark qsv on their own systems,
+# so it be can run on hardware and workloads that reflect your requirements/environment.
+#
 # Make sure you're using a release-optimized `qsv`. 
 # If you can't use the prebuilt binaries at https://github.com/jqnatividad/qsv/releases/latest,
 # build it to have at least the apply, geocode, luau and polars features enabled:
@@ -14,8 +18,8 @@
 # It requires hyperfine (https://github.com/sharkdp/hyperfine#hyperfine) to run the benchmarks.
 # It also requires 7-Zip (https://www.7-zip.org/download.html) as we need the high compression
 # ratio so we don't have to deal with git-lfs to host the large compressed file on GitHub.
-# And of course, it dogfoods `qsv` as well to prepare the benchmark data, and to parse and format
-# the benchmark results. :)
+# And of course, it dogfoods `qsv` as well to prepare the benchmark data, fetch the rowcount,
+# and to parse and format the benchmark results. :)
 
 set -e
 
@@ -33,7 +37,7 @@ then
     exit
 fi
 
-# set sevenz_bin  to "7z" on Windows/Linux and "7zz" on macOS
+# set sevenz_bin to "7z" on Linux/Cygwin and "7zz" on macOS
 if [[ "$OSTYPE" == "darwin"* ]]; then
   sevenz_bin=7zz
 else
@@ -82,7 +86,7 @@ fi
 if [ ! -r "$data_to_exclude" ]; then
   echo "Creating benchmark support data..."
   "$qsv_bin" sample --seed 42 1000 "$data" -o "$data_to_exclude"
-  "$qsv_bin" sort --seed 42 --random  --faster "$data" -o "$data_unsorted"
+  "$qsv_bin" sort --seed 42 --random --faster "$data" -o "$data_unsorted"
   "$qsv_bin" sort "$data" -o "$data_sorted"
   printf "homeless\npark\nnoise\n" > "$searchset_patterns"
 fi
@@ -238,12 +242,13 @@ now=$(date +"%Y-%m-%d-%H")
 # by dogfooding qsv's cat, luau, select & sort commands.
 
 # first, run benchmarking without an index
+# each command is run five times. Two warm-up runs & three benchmarked runs.
 echo "Benchmarking WITHOUT INDEX..."
 idx=0
 for command_no_index in "${commands_without_index[@]}"; do
   rm -f "$data_idx"
   echo "${commands_without_index_name[$idx]}"
-  hyperfine --warmup 2 -i -r 3 --export-csv results/hf_result.csv "$command_no_index"
+  hyperfine --warmup 2 -i --runs 3 --export-csv results/hf_result.csv "$command_no_index"
   echo "version,tstamp,name" > results/results_work.csv
   echo "$version,$now,${commands_without_index_name[$idx]}" >> results/results_work.csv
   "$qsv_bin" select '!command' results/hf_result.csv -o results/hf_result_nocmd.csv
@@ -257,6 +262,7 @@ done
 
 # ---------------------------------------
 # then, run benchmarks with an index
+# an index enables random access and unlocks multi-threading in several commands
 echo "Benchmarking WITH INDEX..."
 rm -f "$data_idx"
 "$qsv_bin" index "$data"
@@ -264,7 +270,7 @@ rm -f "$data_idx"
 idx=0
 for command_with_index in "${commands_with_index[@]}"; do
   echo "${commands_with_index_name[$idx]}"
-  hyperfine --warmup 2 -i -r 3 --export-csv results/hf_result.csv "$command_with_index"
+  hyperfine --warmup 2 -i --runs 3 --export-csv results/hf_result.csv "$command_with_index"
   echo "version,tstamp,name" > results/results_work.csv
   echo "$version,$now,${commands_with_index_name[$idx]}" >> results/results_work.csv
   "$qsv_bin" select '!command' results/hf_result.csv -o results/hf_result_nocmd.csv
@@ -278,25 +284,30 @@ done
 
 # ---------------------------------------
 # Finalize benchmark results. Sort the latest results by version, tstamp & name.
-# compute and add records per second for each benchmark using qsv luau map,
-# rounding to 3 decimal places; then append the latest results to benchmark_results.csv -
-# which is a historical archive. Finally, clean up temporary files
+# compute and add records per second for each benchmark using qsv's luau command.
+# We compute recs_per_sec by dividing 1M (the number of rows in NYC 311 sample data)
+# by the mean run time of the three runs, rounding to 3 decimal places.
+# We then append/concatenate the latest results to benchmark_results.csv - which is
+# a historical archive, so we can track performance over multiple releases.
 
 # sort the benchmark results by version, tstamp & name
 "$qsv_bin" sort --select version,tstamp,name results/latest_results.csv \
    -o results/results_work.csv
 
 # compute records per second for each benchmark using qsv, rounding to 3 decimal places
+# we get the rowcount, just in case the benchmark data was modified by the user to tailor
+# the benchmark to their system/workload.
+rowcount=$("$qsv_bin" count "$data")
 "$qsv_bin" luau map recs_per_sec \
-   'recs_per_sec=(1000000.0 / mean); return tonumber(string.format("%.3f",recs_per_sec))' \
+   "'recs_per_sec=("$rowcount" / mean); return tonumber(string.format(\"%.3f\",recs_per_sec))'" \
    results/results_work.csv -o results/latest_results.csv
 
-# cat the final results to results/bechmark_results.csv
+# Concatenate the final results of this run to results/bechmark_results.csv
 "$qsv_bin" cat rowskey results/latest_results.csv results/benchmark_results.csv \
   -o results/results_work.csv
 mv results/results_work.csv results/benchmark_results.csv
 
-# clean up
+# Finally, clean up temporary files
 rm -f results/hf_result.csv
 rm -f results/hf_result_nocmd.csv
 rm -f results/results_work.csv
