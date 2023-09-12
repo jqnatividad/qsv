@@ -21,12 +21,12 @@ pat="$1"
 echo "Setting up benchmarking environment..."
 
 SECONDS=0
-bin_name=qsv
-# set sevenz_bin_name  to "7z" on Windows/Linux and "7zz" on macOS
+qsv_bin=qsv
+# set sevenz_bin  to "7z" on Windows/Linux and "7zz" on macOS
 if [[ "$OSTYPE" == "darwin"* ]]; then
-  sevenz_bin_name=7zz
+  sevenz_bin=7zz
 else
-  sevenz_bin_name=7z
+  sevenz_bin=7z
 fi
 
 # check if hyperfine is installed
@@ -52,7 +52,7 @@ jql='"features".[0]."properties"."label"'
 if [ ! -r "$data" ]; then
   echo "Downloading benchmarking data..."
   curl -sS https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/NYC_311_SR_2010-2020-sample-1M.7z > "$datazip"
-  "$sevenz_bin_name" e -y "$datazip"
+  "$sevenz_bin" e -y "$datazip"
 fi
 
 if [ ! -r "$commboarddata" ]; then
@@ -62,9 +62,9 @@ fi
 
 if [ ! -r "$data_to_exclude" ]; then
   echo "Creating benchmark support data..."
-  "$bin_name" sample --seed 42 1000 "$data" -o "$data_to_exclude"
-  "$bin_name" sort --seed 42 --random --faster "$data" -o "$data_unsorted"
-  "$bin_name" sort "$data" -o "$data_sorted"
+  "$qsv_bin" sample --seed 42 1000 "$data" -o "$data_to_exclude"
+  "$qsv_bin" sort --seed 42 --random --faster "$data" -o "$data_unsorted"
+  "$qsv_bin" sort "$data" -o "$data_sorted"
   printf "homeless\npark\nnoise\n" > "$searchset_patterns"
 fi
 
@@ -116,79 +116,79 @@ function run {
 # commands with an --index prefix will be benchmarked with an index
 
 echo "Queueing commands for benchmarking..."
-run apply_op_string "$bin_name apply operations lower Agency  $data"
-run apply_op_similarity "$bin_name apply operations lower,simdln Agency --comparand brooklyn --new-column Agency_sim-brooklyn_score  $data"
-run apply_op_eudex "$bin_name apply operations lower,eudex Agency --comparand Queens --new-column Agency_queens_soundex  $data" 
-run apply_datefmt "$bin_name apply datefmt \"Created Date\"  $data"
-run apply_emptyreplace "$bin_name" apply emptyreplace \"Bridge Highway Name\" --replacement Unspecified "$data"
-run count "$bin_name" count "$data"
-run --index count_index "$bin_name" count "$data"
-run dedup "$bin_name" dedup "$data"
-run enum "$bin_name" enum "$data"
-run exclude "$bin_name" exclude \'Incident Zip\' "$data" \'Incident Zip\' "$data_to_exclude"
-run --index exclude_index "$bin_name" exclude \'Incident Zip\' "$data" \'Incident Zip\' "$data_to_exclude"
-run explode "$bin_name" explode City "-" "$data"
-run fill "$bin_name" fill -v Unspecified \'Address Type\' "$data"
-run fixlengths "$bin_name" fixlengths "$data"
-run flatten "$bin_name" flatten "$data"
-run flatten_condensed "$bin_name" flatten "$data" --condense 50
-run fmt "$bin_name" fmt --crlf "$data"
-run frequency "$bin_name" frequency "$data"
-run --index frequency_index "$bin_name" frequency "$data"
-run frequency_selregex "$bin_name" frequency -s /^R/ "$data"
-run frequency_j1 "$bin_name" frequency -j 1 "$data"
-run geocode_suggest "$bin_name" geocode suggest City --new-column geocoded_city "$data"
-run geocode_reverse "$bin_name" geocode reverse Location --new-column geocoded_location "$data"
-run index "$bin_name" index "$data"
-run join "$bin_name" join \'Community Board\' "$data" community_board "$commboarddata"
-run luau "$bin_name" luau map location_empty "tonumber\(Location\)==nil" "$data"
-run partition "$bin_name" partition \'Community Board\' /tmp/partitioned "$data"
-run pseudo "$bin_name" pseudo \'Unique Key\' "$data"
-run rename "$bin_name" rename \'unique_key,created_date,closed_date,agency,agency_name,complaint_type,descriptor,loctype,zip,addr1,street,xstreet1,xstreet2,inter1,inter2,addrtype,city,landmark,facility_type,status,due_date,res_desc,res_act_date,comm_board,bbl,boro,xcoord,ycoord,opendata_type,parkname,parkboro,vehtype,taxi_boro,taxi_loc,bridge_hwy_name,bridge_hwy_dir,ramp,bridge_hwy_seg,lat,long,loc\' "$data"
-run reverse "$bin_name" reverse "$data"
-run sample_10 "$bin_name" sample 10 "$data"
-run --index sample_10_index "$bin_name" sample 10 "$data"
-run sample_1000 "$bin_name" sample 1000 "$data"
-run --index sample_1000_index "$bin_name" sample 1000 "$data"
-run sample_100000 "$bin_name" sample 100000 "$data"
-run --index sample_100000_index "$bin_name" sample 100000 "$data"
-run sample_100000_seeded "$bin_name" sample 100000 --seed 42 "$data"
-run sample_100000_seeded_faster "$bin_name" sample 100000 --faster --seed 42 "$data"
-run --index sample_100000_seeded_index "$bin_name" sample --seed 42 100000 "$data"
-run --index sample_100000_seeded_index_faster "$bin_name" sample --faster --seed 42 100000 "$data"
-run --index sample_25pct_index "$bin_name" sample 0.25 "$data"
-run --index sample_25pct_seeded_index "$bin_name" sample 0.25 --seed 42 "$data"
-run search "$bin_name" search -s \'Agency Name\' "'(?i)us'" "$data"
-run search_unicode "$bin_name" search --unicode -s \'Agency Name\' "'(?i)us'" "$data"
-run searchset "$bin_name" searchset "$searchset_patterns" "$data"
-run searchset_unicode "$bin_name" searchset "$searchset_patterns" --unicode "$data"
-run select "$bin_name" select \'Agency,Community Board\' "$data"
-run select_regex "$bin_name" select /^L/ "$data"
-run slice_one_middle "$bin_name" slice -i 500000 "$data"
-run --index slice_one_middle_index "$bin_name" slice -i 500000 "$data"
-run sort "$bin_name" sort -s \'Incident Zip\' "$data"
-run sort_random_seeded "$bin_name" sort --random --seed 42 "$data"
-run sortcheck_sorted "$bin_name" sortcheck "$data_sorted"
-run sortcheck_unsorted "$bin_name" sortcheck "$data_unsorted"
-run sortcheck_unsorted_all "$bin_name" sortcheck --all "$data_unsorted"
-run split "$bin_name" split --size 50000 split_tempdir "$data"
-run --index split_index "$bin_name" split --size 50000 split_tempdir "$data"
-run --index split_index_j1 "$bin_name" split --size 50000 -j 1 split_tempdir "$data"
-run stats "$bin_name" stats --force "$data"
-run --index stats_index "$bin_name" stats --force "$data"
-run --index stats_index_j1 "$bin_name" stats -j 1 --force "$data"
-run stats_everything "$bin_name" stats "$data" --force --everything
-run stats_everything_infer_dates "$bin_name" stats "$data" --force --everything --infer-dates
-run stats_everything_j1 "$bin_name" stats "$data" --force --everything -j 1
-run --index stats_everything_index "$bin_name" stats "$data" --force --everything
-run --index stats_everything_infer_dates_index "$bin_name" stats "$data" --force --everything --infer-dates
-run --index stats_everything_index_j1 "$bin_name" stats "$data" --force --everything -j 1
-run table "$bin_name" table "$data"
-run transpose "$bin_name" transpose "$data"
-run extsort "$bin_name" extsort "$data_unsorted" test.csv
-run schema "$bin_name" schema "$data"
-run validate "$bin_name" validate "$data" "$schema"
-run sql "$bin_name" sqlp  "$data" city.csv "'select * from _t_1 join _t_2 on _t_1.City = _t_2.City'"
+run apply_op_string "$qsv_bin apply operations lower Agency  $data"
+run apply_op_similarity "$qsv_bin apply operations lower,simdln Agency --comparand brooklyn --new-column Agency_sim-brooklyn_score  $data"
+run apply_op_eudex "$qsv_bin apply operations lower,eudex Agency --comparand Queens --new-column Agency_queens_soundex  $data" 
+run apply_datefmt "$qsv_bin apply datefmt \"Created Date\"  $data"
+run apply_emptyreplace "$qsv_bin" apply emptyreplace \"Bridge Highway Name\" --replacement Unspecified "$data"
+run count "$qsv_bin" count "$data"
+run --index count_index "$qsv_bin" count "$data"
+run dedup "$qsv_bin" dedup "$data"
+run enum "$qsv_bin" enum "$data"
+run exclude "$qsv_bin" exclude \'Incident Zip\' "$data" \'Incident Zip\' "$data_to_exclude"
+run --index exclude_index "$qsv_bin" exclude \'Incident Zip\' "$data" \'Incident Zip\' "$data_to_exclude"
+run explode "$qsv_bin" explode City "-" "$data"
+run fill "$qsv_bin" fill -v Unspecified \'Address Type\' "$data"
+run fixlengths "$qsv_bin" fixlengths "$data"
+run flatten "$qsv_bin" flatten "$data"
+run flatten_condensed "$qsv_bin" flatten "$data" --condense 50
+run fmt "$qsv_bin" fmt --crlf "$data"
+run frequency "$qsv_bin" frequency "$data"
+run --index frequency_index "$qsv_bin" frequency "$data"
+run frequency_selregex "$qsv_bin" frequency -s /^R/ "$data"
+run frequency_j1 "$qsv_bin" frequency -j 1 "$data"
+run geocode_suggest "$qsv_bin" geocode suggest City --new-column geocoded_city "$data"
+run geocode_reverse "$qsv_bin" geocode reverse Location --new-column geocoded_location "$data"
+run index "$qsv_bin" index "$data"
+run join "$qsv_bin" join \'Community Board\' "$data" community_board "$commboarddata"
+run luau "$qsv_bin" luau map location_empty "tonumber\(Location\)==nil" "$data"
+run partition "$qsv_bin" partition \'Community Board\' /tmp/partitioned "$data"
+run pseudo "$qsv_bin" pseudo \'Unique Key\' "$data"
+run rename "$qsv_bin" rename \'unique_key,created_date,closed_date,agency,agency_name,complaint_type,descriptor,loctype,zip,addr1,street,xstreet1,xstreet2,inter1,inter2,addrtype,city,landmark,facility_type,status,due_date,res_desc,res_act_date,comm_board,bbl,boro,xcoord,ycoord,opendata_type,parkname,parkboro,vehtype,taxi_boro,taxi_loc,bridge_hwy_name,bridge_hwy_dir,ramp,bridge_hwy_seg,lat,long,loc\' "$data"
+run reverse "$qsv_bin" reverse "$data"
+run sample_10 "$qsv_bin" sample 10 "$data"
+run --index sample_10_index "$qsv_bin" sample 10 "$data"
+run sample_1000 "$qsv_bin" sample 1000 "$data"
+run --index sample_1000_index "$qsv_bin" sample 1000 "$data"
+run sample_100000 "$qsv_bin" sample 100000 "$data"
+run --index sample_100000_index "$qsv_bin" sample 100000 "$data"
+run sample_100000_seeded "$qsv_bin" sample 100000 --seed 42 "$data"
+run sample_100000_seeded_faster "$qsv_bin" sample 100000 --faster --seed 42 "$data"
+run --index sample_100000_seeded_index "$qsv_bin" sample --seed 42 100000 "$data"
+run --index sample_100000_seeded_index_faster "$qsv_bin" sample --faster --seed 42 100000 "$data"
+run --index sample_25pct_index "$qsv_bin" sample 0.25 "$data"
+run --index sample_25pct_seeded_index "$qsv_bin" sample 0.25 --seed 42 "$data"
+run search "$qsv_bin" search -s \'Agency Name\' "'(?i)us'" "$data"
+run search_unicode "$qsv_bin" search --unicode -s \'Agency Name\' "'(?i)us'" "$data"
+run searchset "$qsv_bin" searchset "$searchset_patterns" "$data"
+run searchset_unicode "$qsv_bin" searchset "$searchset_patterns" --unicode "$data"
+run select "$qsv_bin" select \'Agency,Community Board\' "$data"
+run select_regex "$qsv_bin" select /^L/ "$data"
+run slice_one_middle "$qsv_bin" slice -i 500000 "$data"
+run --index slice_one_middle_index "$qsv_bin" slice -i 500000 "$data"
+run sort "$qsv_bin" sort -s \'Incident Zip\' "$data"
+run sort_random_seeded "$qsv_bin" sort --random --seed 42 "$data"
+run sortcheck_sorted "$qsv_bin" sortcheck "$data_sorted"
+run sortcheck_unsorted "$qsv_bin" sortcheck "$data_unsorted"
+run sortcheck_unsorted_all "$qsv_bin" sortcheck --all "$data_unsorted"
+run split "$qsv_bin" split --size 50000 split_tempdir "$data"
+run --index split_index "$qsv_bin" split --size 50000 split_tempdir "$data"
+run --index split_index_j1 "$qsv_bin" split --size 50000 -j 1 split_tempdir "$data"
+run stats "$qsv_bin" stats --force "$data"
+run --index stats_index "$qsv_bin" stats --force "$data"
+run --index stats_index_j1 "$qsv_bin" stats -j 1 --force "$data"
+run stats_everything "$qsv_bin" stats "$data" --force --everything
+run stats_everything_infer_dates "$qsv_bin" stats "$data" --force --everything --infer-dates
+run stats_everything_j1 "$qsv_bin" stats "$data" --force --everything -j 1
+run --index stats_everything_index "$qsv_bin" stats "$data" --force --everything
+run --index stats_everything_infer_dates_index "$qsv_bin" stats "$data" --force --everything --infer-dates
+run --index stats_everything_index_j1 "$qsv_bin" stats "$data" --force --everything -j 1
+run table "$qsv_bin" table "$data"
+run transpose "$qsv_bin" transpose "$data"
+run extsort "$qsv_bin" extsort "$data_unsorted" test.csv
+run schema "$qsv_bin" schema "$data"
+run validate "$qsv_bin" validate "$data" "$schema"
+run sql "$qsv_bin" sqlp  "$data" city.csv "'select * from _t_1 join _t_2 on _t_1.City = _t_2.City'"
 
 # ---------------------------------------
 # Prepare benchmark results directory
@@ -198,16 +198,18 @@ if [ ! -d "results" ]; then
   mkdir results
 fi
 
+# Init latest_results.csv. It stores the benchmark results for this run
+rm -f results/latest_results.csv
+echo "version,tstamp,name,mean,stddev,median,user,system,min,max" > results/latest_results.csv
+
 # check if the file benchmark_results.csv exists, if it doesn't create it
-# along with latest_results.csv
+# by copying the empty latest_results.csv
 if [ ! -f "results/benchmark_results.csv" ]; then
-  touch results/benchmark_results.csv
-  echo "version,tstamp,name,mean,stddev,median,user,system,min,max" > results/benchmark_results.csv
-  cp results/benchmark_results.csv results/latest_results.csv
+  cp results/latest_results.csv results/benchmark_results.csv
 fi
 
 # get current version of qsv
-version=$("$bin_name" --version | cut -d' ' -f2 | cut -d'-' -f1)
+version=$("$qsv_bin" --version | cut -d' ' -f2 | cut -d'-' -f1)
 
 # get current time to the nearest hour
 now=$(date +"%Y-%m-%d-%H")
@@ -225,10 +227,10 @@ for command_no_index in "${commands_without_index[@]}"; do
   hyperfine --warmup 2 -i -r 3 --export-csv results/hf_result.csv "$command_no_index"
   echo "version,tstamp,name" > results/results_work.csv
   echo "$version,$now,${commands_without_index_name[$idx]}" >> results/results_work.csv
-  "$bin_name" select '!command' results/hf_result.csv -o results/hf_result_nocmd.csv
-  "$bin_name" cat columns results/results_work.csv results/hf_result_nocmd.csv \
+  "$qsv_bin" select '!command' results/hf_result.csv -o results/hf_result_nocmd.csv
+  "$qsv_bin" cat columns results/results_work.csv results/hf_result_nocmd.csv \
     -o results/entry.csv
-  "$bin_name" cat rowskey results/latest_results.csv results/entry.csv \
+  "$qsv_bin" cat rowskey results/latest_results.csv results/entry.csv \
     -o results/results_work.csv
   mv results/results_work.csv results/latest_results.csv
   ((idx++))
@@ -238,7 +240,7 @@ done
 # then, run benchmarks with an index
 echo "Benchmarking WITH INDEX..."
 rm -f "$data_idx"
-"$bin_name" index "$data"
+"$qsv_bin" index "$data"
 
 idx=0
 for command_with_index in "${commands_with_index[@]}"; do
@@ -246,10 +248,10 @@ for command_with_index in "${commands_with_index[@]}"; do
   hyperfine --warmup 2 -i -r 3 --export-csv results/hf_result.csv "$command_with_index"
   echo "version,tstamp,name" > results/results_work.csv
   echo "$version,$now,${commands_with_index_name[$idx]}" >> results/results_work.csv
-  "$bin_name" select '!command' results/hf_result.csv -o results/hf_result_nocmd.csv
-  "$bin_name" cat columns results/results_work.csv results/hf_result_nocmd.csv \
+  "$qsv_bin" select '!command' results/hf_result.csv -o results/hf_result_nocmd.csv
+  "$qsv_bin" cat columns results/results_work.csv results/hf_result_nocmd.csv \
     -o results/entry.csv
-  "$bin_name" cat rowskey results/latest_results.csv results/entry.csv \
+  "$qsv_bin" cat rowskey results/latest_results.csv results/entry.csv \
     -o results/results_work.csv
   mv results/results_work.csv results/latest_results.csv
   ((idx++))
@@ -262,16 +264,16 @@ done
 # which is a historical archive. Finally, clean up temporary files
 
 # sort the benchmark results by version, tstamp & name
-"$bin_name" sort --select version,tstamp,name results/latest_results.csv \
+"$qsv_bin" sort --select version,tstamp,name results/latest_results.csv \
    -o results/results_work.csv
 
 # compute records per second for each benchmark using qsv, rounding to 3 decimal places
-"$bin_name" luau map recs_per_sec \
+"$qsv_bin" luau map recs_per_sec \
    'recs_per_sec=(1000000.0 / mean); return tonumber(string.format("%.3f",recs_per_sec))' \
    results/results_work.csv -o results/latest_results.csv
 
 # cat the final results to results/bechmark_results.csv
-"$bin_name" cat rowskey results/latest_results.csv results/benchmark_results.csv \
+"$qsv_bin" cat rowskey results/latest_results.csv results/benchmark_results.csv \
   -o results/results_work.csv
 mv results/results_work.csv results/benchmark_results.csv
 
