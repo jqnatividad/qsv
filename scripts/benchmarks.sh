@@ -62,15 +62,6 @@ fi
 
 datazip=/tmp/NYC_311_SR_2010-2020-sample-1M.7z
 data=NYC_311_SR_2010-2020-sample-1M.csv
-data_idx=NYC_311_SR_2010-2020-sample-1M.csv.idx
-data_to_exclude=data_to_exclude.csv
-data_unsorted=data_unsorted.csv
-data_sorted=data_sorted.csv
-searchset_patterns=searchset_patterns.txt
-commboarddata=communityboards.csv
-urltemplate="http://localhost:4000/v1/search?text={Street Name}, {City}"
-jql='"features".[0]."properties"."label"'
-
 
 if [ ! -r "$data" ]; then
   echo "Downloading benchmarking data..."
@@ -78,17 +69,17 @@ if [ ! -r "$data" ]; then
   "$sevenz_bin" e -y "$datazip"
 fi
 
-if [ ! -r "$commboarddata" ]; then
+if [ ! -r communityboards.csv ]; then
   echo "Downloading community board data..."
-  curl -sS https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/communityboards.csv > "$commboarddata"
+  curl -sS https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/communityboards.csv > communityboards.csv
 fi
 
-if [ ! -r "$data_to_exclude" ]; then
+if [ ! -r data_to_exclude.csv ]; then
   echo "Creating benchmark support data..."
-  "$qsv_bin" sample --seed 42 1000 "$data" -o "$data_to_exclude"
-  "$qsv_bin" sort --seed 42 --random --faster "$data" -o "$data_unsorted"
-  "$qsv_bin" sort "$data" -o "$data_sorted"
-  printf "homeless\npark\nnoise\n" > "$searchset_patterns"
+  "$qsv_bin" sample --seed 42 1000 "$data" -o data_to_exclude.csv
+  "$qsv_bin" sort --seed 42 --random --faster "$data" -o data_unsorted.csv
+  "$qsv_bin" sort "$data" -o data_sorted.csv
+  printf "homeless\npark\nnoise\n" > searchset_patterns.txt
 fi
 
 commands_without_index=()
@@ -148,8 +139,8 @@ run count "$qsv_bin" count "$data"
 run --index count_index "$qsv_bin" count "$data"
 run dedup "$qsv_bin" dedup "$data"
 run enum "$qsv_bin" enum "$data"
-run exclude "$qsv_bin" exclude \'Incident Zip\' "$data" \'Incident Zip\' "$data_to_exclude"
-run --index exclude_index "$qsv_bin" exclude \'Incident Zip\' "$data" \'Incident Zip\' "$data_to_exclude"
+run exclude "$qsv_bin" exclude \'Incident Zip\' "$data" \'Incident Zip\' data_to_exclude.csv
+run --index exclude_index "$qsv_bin" exclude \'Incident Zip\' "$data" \'Incident Zip\' data_to_exclude.csv
 run explode "$qsv_bin" explode City "-" "$data"
 run fill "$qsv_bin" fill -v Unspecified \'Address Type\' "$data"
 run fixlengths "$qsv_bin" fixlengths "$data"
@@ -163,7 +154,7 @@ run frequency_j1 "$qsv_bin" frequency -j 1 "$data"
 run geocode_suggest "$qsv_bin" geocode suggest City --new-column geocoded_city "$data"
 run geocode_reverse "$qsv_bin" geocode reverse Location --new-column geocoded_location "$data"
 run index "$qsv_bin" index "$data"
-run join "$qsv_bin" join \'Community Board\' "$data" community_board "$commboarddata"
+run join "$qsv_bin" join \'Community Board\' "$data" community_board communityboards.csv
 run luau "$qsv_bin" luau map location_empty "tonumber\(Location\)==nil" "$data"
 run partition "$qsv_bin" partition \'Community Board\' /tmp/partitioned "$data"
 run pseudo "$qsv_bin" pseudo \'Unique Key\' "$data"
@@ -183,17 +174,17 @@ run --index sample_25pct_index "$qsv_bin" sample 0.25 "$data"
 run --index sample_25pct_seeded_index "$qsv_bin" sample 0.25 --seed 42 "$data"
 run search "$qsv_bin" search -s \'Agency Name\' "'(?i)us'" "$data"
 run search_unicode "$qsv_bin" search --unicode -s \'Agency Name\' "'(?i)us'" "$data"
-run searchset "$qsv_bin" searchset "$searchset_patterns" "$data"
-run searchset_unicode "$qsv_bin" searchset "$searchset_patterns" --unicode "$data"
+run searchset "$qsv_bin" searchset searchset_patterns.txt "$data"
+run searchset_unicode "$qsv_bin" searchset searchset_patterns.txt --unicode "$data"
 run select "$qsv_bin" select \'Agency,Community Board\' "$data"
 run select_regex "$qsv_bin" select /^L/ "$data"
 run slice_one_middle "$qsv_bin" slice -i 500000 "$data"
 run --index slice_one_middle_index "$qsv_bin" slice -i 500000 "$data"
 run sort "$qsv_bin" sort -s \'Incident Zip\' "$data"
 run sort_random_seeded "$qsv_bin" sort --random --seed 42 "$data"
-run sortcheck_sorted "$qsv_bin" sortcheck "$data_sorted"
-run sortcheck_unsorted "$qsv_bin" sortcheck "$data_unsorted"
-run sortcheck_unsorted_all "$qsv_bin" sortcheck --all "$data_unsorted"
+run sortcheck_sorted "$qsv_bin" sortcheck data_sorted.csv
+run sortcheck_unsorted "$qsv_bin" sortcheck data_unsorted.csv
+run sortcheck_unsorted_all "$qsv_bin" sortcheck --all data_unsorted.csv
 run split "$qsv_bin" split --size 50000 split_tempdir "$data"
 run --index split_index "$qsv_bin" split --size 50000 split_tempdir "$data"
 run --index split_index_j1 "$qsv_bin" split --size 50000 -j 1 split_tempdir "$data"
@@ -208,7 +199,7 @@ run --index stats_everything_infer_dates_index "$qsv_bin" stats "$data" --force 
 run --index stats_everything_index_j1 "$qsv_bin" stats "$data" --force --everything -j 1
 run table "$qsv_bin" table "$data"
 run transpose "$qsv_bin" transpose "$data"
-run extsort "$qsv_bin" extsort "$data_unsorted" test.csv
+run extsort "$qsv_bin" extsort data_unsorted.csv test.csv
 run schema "$qsv_bin" schema "$data"
 run validate "$qsv_bin" validate "$data" "$schema"
 run sql "$qsv_bin" sqlp  "$data" city.csv "'select * from _t_1 join _t_2 on _t_1.City = _t_2.City'"
@@ -246,7 +237,7 @@ now=$(date +"%Y-%m-%d-%H")
 echo "Benchmarking WITHOUT INDEX..."
 idx=0
 for command_no_index in "${commands_without_index[@]}"; do
-  rm -f "$data_idx"
+  rm -f "$data".idx
   echo "${commands_without_index_name[$idx]}"
   hyperfine --warmup 2 -i --runs 3 --export-csv results/hf_result.csv "$command_no_index"
   echo "version,tstamp,name" > results/results_work.csv
@@ -264,7 +255,7 @@ done
 # then, run benchmarks with an index
 # an index enables random access and unlocks multi-threading in several commands
 echo "Benchmarking WITH INDEX..."
-rm -f "$data_idx"
+rm -f "$data".idx
 "$qsv_bin" index "$data"
 
 idx=0
