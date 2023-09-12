@@ -138,10 +138,13 @@ run apply_emptyreplace "$qsv_bin" apply emptyreplace \"Bridge Highway Name\" --r
 run count "$qsv_bin" count "$data"
 run --index count_index "$qsv_bin" count "$data"
 run dedup "$qsv_bin" dedup "$data"
+run diff "$qsv_bin" diff "$data" data_unsorted.csv
 run enum "$qsv_bin" enum "$data"
 run exclude "$qsv_bin" exclude \'Incident Zip\' "$data" \'Incident Zip\' data_to_exclude.csv
 run --index exclude_index "$qsv_bin" exclude \'Incident Zip\' "$data" \'Incident Zip\' data_to_exclude.csv
 run explode "$qsv_bin" explode City "-" "$data"
+run extdedup "$qsv_bin" extdedup "$data"
+run extsort "$qsv_bin" extsort data_unsorted.csv test.csv
 run fill "$qsv_bin" fill -v Unspecified \'Address Type\' "$data"
 run fixlengths "$qsv_bin" fixlengths "$data"
 run flatten "$qsv_bin" flatten "$data"
@@ -154,11 +157,14 @@ run frequency_j1 "$qsv_bin" frequency -j 1 "$data"
 run geocode_suggest "$qsv_bin" geocode suggest City --new-column geocoded_city "$data"
 run geocode_reverse "$qsv_bin" geocode reverse Location --new-column geocoded_location "$data"
 run index "$qsv_bin" index "$data"
+run input "$qsv_bin" input "$data"
 run join "$qsv_bin" join \'Community Board\' "$data" community_board communityboards.csv
+run joinp "$qsv_bin" joinp \'Community Board\' "$data" community_board communityboards.csv
 run luau "$qsv_bin" luau map location_empty "tonumber\(Location\)==nil" "$data"
 run partition "$qsv_bin" partition \'Community Board\' /tmp/partitioned "$data"
 run pseudo "$qsv_bin" pseudo \'Unique Key\' "$data"
 run rename "$qsv_bin" rename \'unique_key,created_date,closed_date,agency,agency_name,complaint_type,descriptor,loctype,zip,addr1,street,xstreet1,xstreet2,inter1,inter2,addrtype,city,landmark,facility_type,status,due_date,res_desc,res_act_date,comm_board,bbl,boro,xcoord,ycoord,opendata_type,parkname,parkboro,vehtype,taxi_boro,taxi_loc,bridge_hwy_name,bridge_hwy_dir,ramp,bridge_hwy_seg,lat,long,loc\' "$data"
+run replace "$qsv_bin" replace \'zip\' \'postal\' "$data"
 run reverse "$qsv_bin" reverse "$data"
 run sample_10 "$qsv_bin" sample 10 "$data"
 run --index sample_10_index "$qsv_bin" sample 10 "$data"
@@ -172,9 +178,11 @@ run --index sample_100000_seeded_index "$qsv_bin" sample --seed 42 100000 "$data
 run --index sample_100000_seeded_index_faster "$qsv_bin" sample --faster --seed 42 100000 "$data"
 run --index sample_25pct_index "$qsv_bin" sample 0.25 "$data"
 run --index sample_25pct_seeded_index "$qsv_bin" sample 0.25 --seed 42 "$data"
+run schema "$qsv_bin" schema "$data"
 run search "$qsv_bin" search -s \'Agency Name\' "'(?i)us'" "$data"
 run search_unicode "$qsv_bin" search --unicode -s \'Agency Name\' "'(?i)us'" "$data"
 run searchset "$qsv_bin" searchset searchset_patterns.txt "$data"
+run searchset_ignorecase "$qsv_bin" searchset --ignore-case searchset_patterns.txt "$data"
 run searchset_unicode "$qsv_bin" searchset searchset_patterns.txt --unicode "$data"
 run select "$qsv_bin" select \'Agency,Community Board\' "$data"
 run select_regex "$qsv_bin" select /^L/ "$data"
@@ -188,6 +196,7 @@ run sortcheck_unsorted_all "$qsv_bin" sortcheck --all data_unsorted.csv
 run split "$qsv_bin" split --size 50000 split_tempdir "$data"
 run --index split_index "$qsv_bin" split --size 50000 split_tempdir "$data"
 run --index split_index_j1 "$qsv_bin" split --size 50000 -j 1 split_tempdir "$data"
+run sqlp "$qsv_bin" sqlp  "$data" "'select * from _t_1 where \"Complaint Type\"=\'Noise\' and Borough=\'BROOKLYN\' limit 10'"
 run stats "$qsv_bin" stats --force "$data"
 run --index stats_index "$qsv_bin" stats --force "$data"
 run --index stats_index_j1 "$qsv_bin" stats -j 1 --force "$data"
@@ -199,10 +208,7 @@ run --index stats_everything_infer_dates_index "$qsv_bin" stats "$data" --force 
 run --index stats_everything_index_j1 "$qsv_bin" stats "$data" --force --everything -j 1
 run table "$qsv_bin" table "$data"
 run transpose "$qsv_bin" transpose "$data"
-run extsort "$qsv_bin" extsort data_unsorted.csv test.csv
-run schema "$qsv_bin" schema "$data"
 run validate "$qsv_bin" validate "$data" "$schema"
-run sql "$qsv_bin" sqlp  "$data" city.csv "'select * from _t_1 join _t_2 on _t_1.City = _t_2.City'"
 
 # ---------------------------------------
 # Prepare benchmark results directory
