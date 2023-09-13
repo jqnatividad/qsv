@@ -18,8 +18,10 @@
 # It requires hyperfine (https://github.com/sharkdp/hyperfine#hyperfine) to run the benchmarks.
 # It also requires 7-Zip (https://www.7-zip.org/download.html) as we need the high compression
 # ratio so we don't have to deal with git-lfs to host the large compressed file on GitHub.
+#
 # And of course, it dogfoods `qsv` as well to prepare the benchmark data, fetch the rowcount,
-# and to parse and format the benchmark results. :)
+# and to parse and format the benchmark results. :)  It's actually a great example of how qsv
+# can be used to automate data preparation and analysis tasks.
 
 set -e
 
@@ -246,11 +248,19 @@ for command_no_index in "${commands_without_index[@]}"; do
   rm -f "$data".idx
   echo "${commands_without_index_name[$idx]}"
   hyperfine --warmup 2 -i --runs 3 --export-csv results/hf_result.csv "$command_no_index"
+  
+  # prepend version, tstamp & benchmark name to the hyperfine results
   echo "version,tstamp,name" > results/results_work.csv
   echo "$version,$now,${commands_without_index_name[$idx]}" >> results/results_work.csv
+  
+  # remove the command column from the hyperfine results, we just need the name
   "$qsv_bin" select '!command' results/hf_result.csv -o results/hf_result_nocmd.csv
+
+  # the entry.csv file is the expanded benchmark result for this command
   "$qsv_bin" cat columns results/results_work.csv results/hf_result_nocmd.csv \
     -o results/entry.csv
+
+  # append the entry.csv to latest_results.csv
   "$qsv_bin" cat rowskey results/latest_results.csv results/entry.csv \
     -o results/results_work.csv
   mv results/results_work.csv results/latest_results.csv
@@ -309,7 +319,6 @@ rm -f results/hf_result.csv
 rm -f results/hf_result_nocmd.csv
 rm -f results/results_work.csv
 rm -f results/entry.csv
-rm -f results/latest_results.csv
 rm -r -f split_tempdir
 
 echo "Benchmark results completed. Elapsed time: $SECONDS seconds."
