@@ -86,13 +86,13 @@ fn index_outdated_index_autoindex() {
 
     // slice should NOT fail if the index is stale and
     // QSV_AUTOINDEX is set
-    std::env::set_var("QSV_AUTOINDEX", "1");
+    std::env::set_var("QSV_AUTOINDEX_SIZE", "1");
     let mut cmd = wrk.command("slice");
-    cmd.env("QSV_AUTOINDEX", "1")
+    cmd.env("QSV_AUTOINDEX_SIZE", "1")
         .arg("-i")
         .arg("2")
         .arg("in.csv");
-    std::env::remove_var("QSV_AUTOINDEX");
+    std::env::remove_var("QSV_AUTOINDEX_SIZE");
 
     wrk.assert_success(&mut cmd);
 }
