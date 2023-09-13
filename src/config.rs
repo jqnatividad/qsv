@@ -83,7 +83,7 @@ pub struct Config {
     quoting:           bool,
     pub preamble_rows: u64,
     trim:              csv::Trim,
-    autoindex:         bool,
+    autoindex_size:    u64,
     prefer_dmy:        bool,
     comment:           Option<u8>,
     snappy:            bool, // flag to enable snappy compression/decompression
@@ -171,7 +171,10 @@ impl Config {
             quoting: true,
             preamble_rows: preamble,
             trim: csv::Trim::None,
-            autoindex: util::get_envvar_flag("QSV_AUTOINDEX"),
+            autoindex_size: std::env::var("QSV_AUTOINDEX_SIZE")
+                .unwrap_or_else(|_| "0".to_owned())
+                .parse()
+                .unwrap_or(0),
             prefer_dmy: util::get_envvar_flag("QSV_PREFER_DMY"),
             comment: None,
             snappy,
@@ -360,6 +363,8 @@ impl Config {
     }
 
     pub fn index_files(&self) -> io::Result<Option<(csv::Reader<fs::File>, fs::File)>> {
+        let mut data_modified = 0_u64;
+        let data_fsize;
         let (csv_file, idx_file) = match (&self.path, &self.idx_path) {
             (&None, &None) => return Ok(None),
             (&None, &Some(_)) => {
@@ -370,32 +375,31 @@ impl Config {
             },
             (Some(p), &None) => {
                 // We generally don't want to report an error here, since we're
-                // passively trying to find an index, so we just log the warning...
+                // passively trying to find an index. If we don't find one, we
+                // just return Ok(None)
+                (data_modified, data_fsize) = util::file_metadata(&p.metadata()?);
+
                 let idx_file = match fs::File::open(util::idx_path(p)) {
-                    Err(e) => {
-                        if self.autoindex && !self.snappy {
-                            // however, if QSV_AUTOINDEX is set, we create the index automatically
+                    Err(_) => {
+                        if self.autoindex_size >= data_fsize && !self.snappy {
+                            // however, if QSV_AUTOINDEX_SIZE >= file size,
+                            // create an index automatically
                             self.autoindex_file();
                             fs::File::open(util::idx_path(p))?
+                        } else if data_fsize >= NO_INDEX_WARNING_FILESIZE
+                            && log::log_enabled!(log::Level::Warn)
+                        {
+                            use thousands::Separable;
+
+                            warn!(
+                                "The {} MB CSV file is larger than the {} MB \
+                                 NO_INDEX_WARNING_FILESIZE threshold. Consider creating an index \
+                                 file as it will make qsv commands much faster.",
+                                (data_fsize * 100).separate_with_commas(),
+                                (NO_INDEX_WARNING_FILESIZE * 100).separate_with_commas()
+                            );
+                            return Ok(None);
                         } else {
-                            warn!("No index file found - {p:?}: {e}");
-
-                            let (_, data_fsize) = util::file_metadata(&p.metadata()?);
-
-                            // If the CSV file is larger than NO_INDEX_WARNING_FILESIZE,
-                            // log a warning that the user should consider creating an index file
-                            // for faster access.
-                            if data_fsize > NO_INDEX_WARNING_FILESIZE {
-                                use thousands::Separable;
-
-                                warn!(
-                                    "The {} MB CSV file is larger than the {} MB \
-                                     NO_INDEX_WARNING_FILESIZE threshold. Consider creating an \
-                                     index file for faster access.",
-                                    (data_fsize * 100).separate_with_commas(),
-                                    (NO_INDEX_WARNING_FILESIZE * 100).separate_with_commas()
-                                );
-                            }
                             return Ok(None);
                         }
                     },
@@ -406,21 +410,11 @@ impl Config {
             (Some(p), Some(ip)) => (fs::File::open(p)?, fs::File::open(ip)?),
         };
         // If the CSV data was last modified after the index file was last
-        // modified, then return an error and demand the user regenerate the index.
-        // Unless QSV_AUTOINDEX is set, in which case, we'll recreate the
-        // stale index automatically
-        let (data_modified, _) = util::file_metadata(&csv_file.metadata()?);
+        // modified, recreate the stale index automatically
         let (idx_modified, _) = util::file_metadata(&idx_file.metadata()?);
         if data_modified > idx_modified {
-            if self.autoindex && !self.snappy {
-                info!("index stale... autoindexing...");
-                self.autoindex_file();
-            } else {
-                return Err(io::Error::new(
-                    io::ErrorKind::Other,
-                    "The CSV file was modified after the index file. Please re-create the index.",
-                ));
-            }
+            info!("index stale... autoindexing...");
+            self.autoindex_file();
         }
         let csv_rdr = self.from_reader(csv_file);
         Ok(Some((csv_rdr, idx_file)))
