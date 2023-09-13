@@ -40,9 +40,11 @@ QSV_NO_HEADERS = False
 # mean headers will not be ignored.
 # QSV_TOGGLE_HEADERS = 1
 
-# if true, automatically create an index when none is detected.
-# Also automatically updates stale indices.
-QSV_AUTOINDEX = False
+# if set, specifies the minimum filesize (in bytes) at which qsv will automatically
+# create an index file for the input file. If not set, qsv will NOT automatically
+# create indices. Note that stale indices are automatically updated regardless of
+# this setting.
+# QSV_AUTOINDEX_SIZE = 1000000
 
 # The directory to use for caching various qsv files.
 # Used by the `geocode` command for downloaded geocoding resources.
