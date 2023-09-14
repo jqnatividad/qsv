@@ -64,7 +64,7 @@ fn index_outdated_stats() {
 }
 
 #[test]
-fn index_outdated_index_autoindex() {
+fn index_outdated_index() {
     let wrk = Workdir::new("index_outdated_index");
 
     wrk.create_indexed(
@@ -85,17 +85,68 @@ fn index_outdated_index_autoindex() {
     )
     .unwrap();
 
-    // slice should NOT fail if the index is stale and
-    // QSV_AUTOINDEX is set
-    std::env::set_var("QSV_AUTOINDEX_SIZE", "1");
+    // slice should NOT fail if the index is stale
+    // as stale indexes are automatically updated
+    let mut cmd = wrk.command("slice");
+    cmd.arg("-i").arg("2").arg("in.csv");
+
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn index_autoindex_threshold_reached() {
+    let wrk = Workdir::new("index_autoindex_threshold_reached");
+
+    wrk.create(
+        "in.csv",
+        vec![
+            svec!["letter", "number"],
+            svec!["a", "1"],
+            svec!["b", "2"],
+            svec!["c", "3"],
+            svec!["d", "4"],
+        ],
+    );
+
+    // slice should automatically create an index
+    // as the file size is greater than the QSV_AUTOINDEX_SIZE threshold
     let mut cmd = wrk.command("slice");
     cmd.env("QSV_AUTOINDEX_SIZE", "1")
         .arg("-i")
         .arg("2")
         .arg("in.csv");
-    std::env::remove_var("QSV_AUTOINDEX_SIZE");
-
     wrk.assert_success(&mut cmd);
+
+    // index should be created
+    assert!(wrk.path("in.csv.idx").exists());
+}
+
+#[test]
+fn index_autoindex_threshold_not_reached() {
+    let wrk = Workdir::new("index_autoindex_threshold_not_reached");
+
+    wrk.create(
+        "in.csv",
+        vec![
+            svec!["letter", "number"],
+            svec!["a", "1"],
+            svec!["b", "2"],
+            svec!["c", "3"],
+            svec!["d", "4"],
+        ],
+    );
+
+    // slice will NOT automatically create an index
+    // as the file size is less than the QSV_AUTOINDEX_SIZE threshold
+    let mut cmd = wrk.command("slice");
+    cmd.env("QSV_AUTOINDEX_SIZE", "10000000")
+        .arg("-i")
+        .arg("2")
+        .arg("in.csv");
+    wrk.assert_success(&mut cmd);
+
+    // index should NOT be created
+    assert!(!wrk.path("in.csv.idx").exists());
 }
 
 fn future_time(ft: FileTime) -> FileTime {
