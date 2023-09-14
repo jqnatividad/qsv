@@ -1,4 +1,4 @@
-use std::fs;
+use std::{fs, io::Write};
 
 use filetime::{set_file_times, FileTime};
 
@@ -55,15 +55,37 @@ fn index_outdated_stats() {
     )
     .unwrap();
 
-    // stats should fail if the index is stale
+    // even if the index is stale, stats should succeed
+    // as the index is automatically updated
     let mut cmd = wrk.command("stats");
-    cmd.env_clear().arg("in.csv");
+    cmd.arg("in.csv");
 
-    wrk.assert_err(&mut cmd);
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec![
+            "field",
+            "type",
+            "sum",
+            "min",
+            "max",
+            "range",
+            "min_length",
+            "max_length",
+            "mean",
+            "stddev",
+            "variance",
+            "nullcount",
+            "sparsity"
+        ],
+        svec!["letter", "String", "", "a", "c", "", "1", "1", "", "", "", "0", "0"],
+        svec!["number", "Integer", "6", "1", "3", "2", "1", "1", "2", "0.8165", "0.6667", "0", "0"],
+    ];
+
+    assert_eq!(got, expected);
 }
 
 #[test]
-fn index_outdated_index_autoindex() {
+fn index_outdated_index() {
     let wrk = Workdir::new("index_outdated_index");
 
     wrk.create_indexed(
@@ -84,17 +106,68 @@ fn index_outdated_index_autoindex() {
     )
     .unwrap();
 
-    // slice should NOT fail if the index is stale and
-    // QSV_AUTOINDEX is set
-    std::env::set_var("QSV_AUTOINDEX", "1");
+    // slice should NOT fail if the index is stale
+    // as stale indexes are automatically updated
     let mut cmd = wrk.command("slice");
-    cmd.env("QSV_AUTOINDEX", "1")
+    cmd.arg("-i").arg("2").arg("in.csv");
+
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn index_autoindex_threshold_reached() {
+    let wrk = Workdir::new("index_autoindex_threshold_reached");
+
+    wrk.create(
+        "in.csv",
+        vec![
+            svec!["letter", "number"],
+            svec!["a", "1"],
+            svec!["b", "2"],
+            svec!["c", "3"],
+            svec!["d", "4"],
+        ],
+    );
+
+    // slice should automatically create an index
+    // as the file size is greater than the QSV_AUTOINDEX_SIZE threshold
+    let mut cmd = wrk.command("slice");
+    cmd.env("QSV_AUTOINDEX_SIZE", "1")
         .arg("-i")
         .arg("2")
         .arg("in.csv");
-    std::env::remove_var("QSV_AUTOINDEX");
-
     wrk.assert_success(&mut cmd);
+
+    // index should be created
+    assert!(wrk.path("in.csv.idx").exists());
+}
+
+#[test]
+fn index_autoindex_threshold_not_reached() {
+    let wrk = Workdir::new("index_autoindex_threshold_not_reached");
+
+    wrk.create(
+        "in.csv",
+        vec![
+            svec!["letter", "number"],
+            svec!["a", "1"],
+            svec!["b", "2"],
+            svec!["c", "3"],
+            svec!["d", "4"],
+        ],
+    );
+
+    // slice will NOT automatically create an index
+    // as the file size is less than the QSV_AUTOINDEX_SIZE threshold
+    let mut cmd = wrk.command("slice");
+    cmd.env("QSV_AUTOINDEX_SIZE", "10000000")
+        .arg("-i")
+        .arg("2")
+        .arg("in.csv");
+    wrk.assert_success(&mut cmd);
+
+    // index should NOT be created
+    assert!(!wrk.path("in.csv.idx").exists());
 }
 
 fn future_time(ft: FileTime) -> FileTime {
