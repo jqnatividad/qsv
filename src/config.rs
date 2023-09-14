@@ -391,7 +391,7 @@ impl Config {
                         if self.snappy {
                             // cannot index snappy compressed files
                             return Ok(None);
-                        } else if data_fsize >= self.autoindex_size {
+                        } else if self.autoindex_size > 0 && data_fsize >= self.autoindex_size {
                             // if CSV file size >= QSV_AUTOINDEX_SIZE, and
                             // its not a snappy file, create an index automatically
                             self.autoindex_file();
