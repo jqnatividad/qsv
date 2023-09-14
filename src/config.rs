@@ -365,7 +365,7 @@ impl Config {
     pub fn index_files(&self) -> io::Result<Option<(csv::Reader<fs::File>, fs::File)>> {
         let mut data_modified = 0_u64;
         let data_fsize;
-        let (csv_file, idx_file) = match (&self.path, &self.idx_path) {
+        let (csv_file, mut idx_file) = match (&self.path, &self.idx_path) {
             (&None, &None) => return Ok(None),
             (&None, &Some(_)) => {
                 return Err(io::Error::new(
@@ -415,7 +415,9 @@ impl Config {
         if data_modified > idx_modified {
             info!("index stale... autoindexing...");
             self.autoindex_file();
+            idx_file = fs::File::open(util::idx_path(self.path.as_ref().unwrap()))?;
         }
+
         let csv_rdr = self.from_reader(csv_file);
         Ok(Some((csv_rdr, idx_file)))
     }
