@@ -40,10 +40,9 @@ QSV_NO_HEADERS = False
 # mean headers will not be ignored.
 # QSV_TOGGLE_HEADERS = 1
 
-# if set, specifies the minimum filesize (in bytes) at which qsv will automatically
-# create an index file for the input file. If not set, qsv will NOT automatically
-# create indices. Note that stale indices are automatically updated regardless of
-# this setting.
+# if set, specifies the minimum file size (in bytes) of a CSV file before an 
+# index is automatically created. Note that stale indices are automatically 
+# updated regardless of this setting.
 # QSV_AUTOINDEX_SIZE = 1000000
 
 # The directory to use for caching various qsv files.
