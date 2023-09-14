@@ -1,4 +1,4 @@
-use std::fs;
+use std::{fs, io::Write};
 
 use filetime::{set_file_times, FileTime};
 
@@ -36,6 +36,11 @@ fn index_outdated_count() {
 #[test]
 fn index_outdated_stats() {
     let wrk = Workdir::new("index_outdated_stats");
+
+    // this test is flaky on Linux/Windows as stderr sometimes
+    // has some leftover data from the previous tests
+    // so we flush it to make sure it's empty
+    std::io::stderr().flush().unwrap();
 
     wrk.create_indexed(
         "in.csv",
