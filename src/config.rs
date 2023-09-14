@@ -362,9 +362,14 @@ impl Config {
         }
     }
 
+    /// Check if the index file exists and is newer than the CSV file.
+    /// If so, return the CSV file handle and the index file handle. If not, return None.
+    /// Unless the CSV's file size >= QSV_AUTOINDEX_SIZE, then we'll create an index automatically.
+    /// This will also automatically update stale indices (i.e. the CSV is newer than the index )
     pub fn index_files(&self) -> io::Result<Option<(csv::Reader<fs::File>, fs::File)>> {
         let mut data_modified = 0_u64;
         let data_fsize;
+        let mut idx_path_work = PathBuf::new();
         let (csv_file, mut idx_file) = match (&self.path, &self.idx_path) {
             (&None, &None) => return Ok(None),
             (&None, &Some(_)) => {
@@ -373,22 +378,26 @@ impl Config {
                     "Cannot use <stdin> with indexes",
                 ));
             },
+            (Some(p), Some(ip)) => (fs::File::open(p)?, fs::File::open(ip)?),
             (Some(p), &None) => {
                 // We generally don't want to report an error here, since we're
-                // passively trying to find an index. If we don't find one, we
-                // just return Ok(None)
-                (data_modified, data_fsize) = util::file_metadata(&p.metadata()?);
+                // passively trying to find an index.
 
-                let idx_file = match fs::File::open(util::idx_path(p)) {
+                (data_modified, data_fsize) = util::file_metadata(&p.metadata()?);
+                idx_path_work = util::idx_path(p);
+                let idx_file = match fs::File::open(&idx_path_work) {
                     Err(_) => {
-                        if self.autoindex_size >= data_fsize && !self.snappy {
-                            // however, if QSV_AUTOINDEX_SIZE >= file size,
-                            // create an index automatically
+                        // the index file doesn't exist
+                        if self.snappy {
+                            // cannot index snappy compressed files
+                            return Ok(None);
+                        } else if data_fsize >= self.autoindex_size {
+                            // if CSV file size >= QSV_AUTOINDEX_SIZE, and
+                            // its not a snappy file, create an index automatically
                             self.autoindex_file();
-                            fs::File::open(util::idx_path(p))?
-                        } else if data_fsize >= NO_INDEX_WARNING_FILESIZE
-                            && log::log_enabled!(log::Level::Warn)
-                        {
+                            fs::File::open(&idx_path_work)?
+                        } else if data_fsize >= NO_INDEX_WARNING_FILESIZE {
+                            // warn user that the CSV file is large and not indexed
                             use thousands::Separable;
 
                             warn!(
@@ -400,6 +409,8 @@ impl Config {
                             );
                             return Ok(None);
                         } else {
+                            // CSV not greater than QSV_AUTOINDEX_SIZE, and not greater than
+                            // NO_INDEX_WARNING_FILESIZE, so we don't create an index
                             return Ok(None);
                         }
                     },
@@ -407,7 +418,6 @@ impl Config {
                 };
                 (fs::File::open(p)?, idx_file)
             },
-            (Some(p), Some(ip)) => (fs::File::open(p)?, fs::File::open(ip)?),
         };
         // If the CSV data was last modified after the index file was last
         // modified, recreate the stale index automatically
@@ -415,7 +425,7 @@ impl Config {
         if data_modified > idx_modified {
             info!("index stale... autoindexing...");
             self.autoindex_file();
-            idx_file = fs::File::open(util::idx_path(self.path.as_ref().unwrap()))?;
+            idx_file = fs::File::open(&idx_path_work)?;
         }
 
         let csv_rdr = self.from_reader(csv_file);
