@@ -37,11 +37,6 @@ fn index_outdated_count() {
 fn index_outdated_stats() {
     let wrk = Workdir::new("index_outdated_stats");
 
-    // this test is flaky on Linux/Windows as stderr sometimes
-    // has some leftover data from the previous tests
-    // so we flush it to make sure it's empty
-    std::io::stderr().flush().unwrap();
-
     wrk.create_indexed(
         "in.csv",
         vec![
@@ -63,9 +58,30 @@ fn index_outdated_stats() {
     // even if the index is stale, stats should succeed
     // as the index is automatically updated
     let mut cmd = wrk.command("stats");
-    cmd.env_clear().arg("in.csv");
+    cmd.arg("in.csv");
 
-    wrk.assert_success(&mut cmd);
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec![
+            "field",
+            "type",
+            "sum",
+            "min",
+            "max",
+            "range",
+            "min_length",
+            "max_length",
+            "mean",
+            "stddev",
+            "variance",
+            "nullcount",
+            "sparsity"
+        ],
+        svec!["letter", "String", "", "a", "c", "", "1", "1", "", "", "", "0", "0"],
+        svec!["number", "Integer", "6", "1", "3", "2", "1", "1", "2", "0.8165", "0.6667", "0", "0"],
+    ];
+
+    assert_eq!(got, expected);
 }
 
 #[test]
