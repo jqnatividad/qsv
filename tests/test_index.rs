@@ -1,4 +1,4 @@
-use std::{fs, io::Write};
+use std::fs;
 
 use filetime::{set_file_times, FileTime};
 
