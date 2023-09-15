@@ -310,6 +310,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         record_count:         0,
         date_generated:       String::new(),
         compute_duration_ms:  0,
+        // save the qsv version in the stats.csv.json file
+        // so cached stats are automatically invalidated
+        // when the qsv version changes
         qsv_version:          env!("CARGO_PKG_VERSION").to_string(),
     };
 
@@ -368,7 +371,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // check if <FILESTEM>.stats.csv file already exists.
         // If it does, check if it was compiled using the same args.
         // However, if the --force flag is set,
-        // regenerate the stats even if the args are the same.
+        // recompute the stats even if the args are the same.
         if stats_file.exists() && !args.flag_force {
             let stats_args_json_file = stats_file.with_extension("csv.json");
             let existing_stats_args_json_str =
@@ -376,8 +379,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     Ok(s) => s,
                     Err(e) => {
                         log::warn!(
-                            "Could not read {path_file_stem}.stats.csv.json: {e:?}, \
-                             regenerating..."
+                            "Could not read {path_file_stem}.stats.csv.json: {e:?}, recomputing..."
                         );
                         fs::remove_file(&stats_file)?;
                         fs::remove_file(&stats_args_json_file)?;
@@ -385,6 +387,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     },
                 };
 
+            let time_saved: u64;
             // deserialize the existing stats args json
             let existing_stats_args_json: StatsArgs =
                 match serde_json::from_str::<StatsArgs>(&existing_stats_args_json_str) {
@@ -395,13 +398,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         stat_args.canonical_stats_path = String::new();
                         stat_args.record_count = 0;
                         stat_args.date_generated = String::new();
+                        time_saved = stat_args.compute_duration_ms;
                         stat_args.compute_duration_ms = 0;
                         stat_args
                     },
                     Err(e) => {
+                        time_saved = 0;
                         log::warn!(
                             "Could not serialize {path_file_stem}.stats.csv.json: {e:?}, \
-                             regenerating..."
+                             recomputing..."
                         );
                         fs::remove_file(&stats_file)?;
                         fs::remove_file(&stats_args_json_file)?;
@@ -433,12 +438,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         && existing_stats_args_json.flag_nulls == current_stats_args.flag_nulls
                         && existing_stats_args_json.qsv_version == current_stats_args.qsv_version)
             {
-                log::info!("{path_file_stem}.stats.csv already exists and is current, skipping...",);
+                log::info!(
+                    "{path_file_stem}.stats.csv already exists and is current. Skipping compute \
+                     and using cached stats instead - {time_saved} secs saved...",
+                );
                 compute_stats = false;
             } else {
                 log::info!(
                     "{path_file_stem}.stats.csv already exists, but is older than the input file \
-                     or the args have changed, regenerating...",
+                     or the args have changed, recomputing...",
                 );
                 fs::remove_file(&stats_file)?;
             }
@@ -459,8 +467,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
             // we need to count the number of records in the file to calculate sparsity
             let record_count = RECORD_COUNT.get_or_init(|| util::count_rows(&fconfig).unwrap());
-
             log::info!("scanning {record_count} records...");
+
             let (headers, stats) = match fconfig.indexed()? {
                 None => args.sequential_stats(&args.flag_dates_whitelist),
                 Some(idx) => {
@@ -511,7 +519,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     if let Some(pb) = stdin_tempfile_path {
         // remove the temp file we created to store stdin
-        log::info!("deleting stdin temp file");
         std::fs::remove_file(pb)?;
     }
 
@@ -568,7 +575,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let mut stats_pathbuf = path.clone();
             stats_pathbuf.set_extension("stats.csv.bin");
             // we do the binary encoding inside a block so that the encoded_file
-            // gets dropped/flushed before we copy it to the output file
+            // automatically gets dropped/flushed before we copy it to the output file
             {
                 let encoded_file = BufWriter::with_capacity(
                     DEFAULT_WTR_BUFFER_CAPACITY * 2,
