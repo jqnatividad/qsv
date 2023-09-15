@@ -375,7 +375,13 @@ impl Config {
         let mut data_modified = 0_u64;
         let data_fsize;
         let mut idx_path_work = PathBuf::new();
+
+        // the auto_indexed flag is set when an index is created automatically with
+        // autoindex_file(). We use this flag to avoid checking if the index exists every
+        // time this function is called. If the index was already auto-indexed, we can just
+        // use it & return immediately.
         let auto_indexed = AUTO_INDEXED.load(Ordering::Relaxed);
+
         let (csv_file, mut idx_file) = if auto_indexed {
             (
                 fs::File::open(self.path.clone().unwrap())?,
