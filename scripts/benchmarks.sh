@@ -1,9 +1,15 @@
 #!/bin/bash
 #
-# Usage: ./benchmarks.sh <pattern>
-#  where <pattern> is a substring of the command name to be benchmarked.
+# Usage: ./benchmarks.sh <argument>
+#  where <argument> is a substring pattern of the benchmark name.
 #  e.g. ./benchmarks.sh sort - will run benchmarks with "sort" in the benchmark name
-#  if <pattern> is omitted, all commands will be benchmarked.
+#  if <argument> is omitted, all benchmarks are executed.
+#
+#  if <argument> is "reset", the benchmark data will be downloaded and prepared again.
+#   though the results/benchmark_results.csv historical archive will be preserved.
+#  if <argument> is "help", help text is displayed.
+#
+# ==============================================================================================
 #
 # This script benchmarks Quicksilver (qsv) using a 520mb, 41 column, 1M row sample of
 # NYC's 311 data. If it doesn't exist on your system, it will be downloaded for you.
@@ -32,8 +38,6 @@
 set -e
 
 pat="$1"
-echo "Setting up benchmarking environment..."
-SECONDS=0
 
 # configurable variables - change as needed to reflect your environment/workloads
 qsv_bin=qsv
@@ -44,6 +48,52 @@ datazip=/tmp/NYC_311_SR_2010-2020-sample-1M.7z
 data=NYC_311_SR_2010-2020-sample-1M.csv
 warmup_runs=2
 benchmark_runs=3
+
+# get current version of qsv
+raw_version=$("$qsv_bin" --version)
+version=$("$qsv_bin" --version | cut -d' ' -f2 | cut -d'-' -f1)
+# the version of this script
+bm_version=2.0.0
+
+# if pat is equal to "help", show usage
+if [[ "$pat" == "help" ]]; then
+  echo "Quicksilver (qsv) Benchmark Script v$bm_version"
+  echo ""
+  echo "Usage: ./benchmarks.sh <argument>"
+  echo ""
+  echo " where <argument> is a substring pattern of the benchmark name."
+  echo "       e.g. ./benchmarks.sh sort - will run benchmarks with \"sort\" in the benchmark name"
+  echo "       if <argument> is omitted, all benchmarks will be executed."
+  echo ""
+  echo "       if <argument> is \"reset\", the benchmark data will be downloaded and prepared again."
+  echo "          though the results/benchmark_results.csv historical archive will be preserved."
+  echo "       if <argument> is \"help\", help text is displayed."
+  echo ""
+  echo "$raw_version"
+  exit
+fi
+
+# if pat is equal to "reset", download and prepare the benchmark data again
+# the results/benchmark_results.csv historical archive will be preserved
+if [[ "$pat" == "reset" ]]; then
+  rm -f "$datazip"
+  data_filename=$(basename -- "$data")
+  filestem="${data_filename%.*}"
+  rm -f "$filestem".*
+  rm -f communityboards.csv
+  rm -f data_to_exclude.csv
+  rm -f data_unsorted.csv
+  rm -f data_sorted.csv
+  rm -f benchmark_data.xlsx
+  rm -f benchmark_data.jsonl
+  rm -f searchset_patterns.txt
+  echo "> Benchmark data reset..."
+  echo "  Historical benchmarks archive preserved in results/benchmark_results.csv"
+  exit
+fi
+
+echo "> Setting up Benchmark environment..."
+SECONDS=0
 
 # check if qsv is installed
 if ! command -v "$qsv_bin" &> /dev/null
@@ -63,7 +113,7 @@ fi
 # check if 7z is installed
 if ! command -v "$sevenz_bin" &> /dev/null
 then
-    echo "7z could not be found"
+    echo "ERROR: $sevenz_bin could not be found"
     echo "Please install 7-Zip v23.01 and above"
     exit
 fi
@@ -71,35 +121,45 @@ fi
 # check if hyperfine is installed
 if ! command -v hyperfine &> /dev/null
 then
-    echo "hyperfine could not be found"
+    echo "ERROR: hyperfine could not be found"
     echo "Please install hyperfine v1.17.0 and above"
     exit
 fi
 
 if [ ! -r "$data" ]; then
-  echo "Downloading benchmarking data..."
+  echo "> Downloading Benchmark data..."
   curl -sS "$benchmark_data_url" > "$datazip"
   "$sevenz_bin" e -y "$datazip"
+  echo ""
 fi
 
 # we get the rowcount, just in case the benchmark data was modified by the user to tailor
 # the benchmark to their system/workload. We use the rowcount to compute records per second
 rowcount=$("$qsv_bin" count "$data")
 printf "Benchmark data rowcount: %'.0f\n" $rowcount
+echo ""
 
 if [ ! -r communityboards.csv ]; then
-  echo "Downloading community board data..."
+  echo "> Downloading community board data..."
   curl -sS https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/communityboards.csv > communityboards.csv
+  echo ""
 fi
 
 if [ ! -r data_to_exclude.csv ]; then
-  echo "Creating benchmark support data..."
+  echo "> Preparing benchmark support data..."
+  echo "   data_to_exclude.csv..."
   "$qsv_bin" sample --seed 42 1000 "$data" -o data_to_exclude.csv
+  echo "   data_unsorted.csv..."
   "$qsv_bin" sort --seed 42 --random --faster "$data" -o data_unsorted.csv
+  echo "   data_sorted.csv..."
   "$qsv_bin" sort "$data" -o data_sorted.csv
+  echo "   benchmark_data.xlsx..."
   "$qsv_bin" to xlsx benchmark_data.xlsx "$data"
+  echo "   benchmark_data.jsonl..."
   "$qsv_bin" tojsonl "$data" --output benchmark_data.jsonl
+  echo "   searchset_patterns.txt..."
   printf "homeless\npark\nnoise\n" > searchset_patterns.txt
+  echo ""
 fi
 
 commands_without_index=()
@@ -175,7 +235,7 @@ run exclude "$qsv_bin" exclude \'Incident Zip\' "$data" \'Incident Zip\' data_to
 run --index exclude_index "$qsv_bin" exclude \'Incident Zip\' "$data" \'Incident Zip\' data_to_exclude.csv
 run explode "$qsv_bin" explode City "-" "$data"
 run extdedup "$qsv_bin" extdedup "$data"
-run extsort "$qsv_bin" extsort data_unsorted.csv test.csv
+run extsort "$qsv_bin" extsort data_unsorted.csv extsort_sorted.csv
 run fill "$qsv_bin" fill -v Unspecified \'Address Type\' "$data"
 run fixlengths "$qsv_bin" fixlengths "$data"
 run flatten "$qsv_bin" flatten "$data"
@@ -269,7 +329,7 @@ run --index validate_no_schema_index "$qsv_bin" validate "$data"
 with_index_count=${#commands_with_index[@]}
 wo_index_count=${#commands_without_index[@]}
 total_count=$((with_index_count + wo_index_count))
-printf "Commands to benchmark: $total_count, w/o index: $wo_index_count, with index: $with_index_count\n\n"
+printf "> Commands to benchmark: $total_count, w/o index: $wo_index_count, with index: $with_index_count\n\n"
 
 # ---------------------------------------
 # Prepare benchmark results directory
@@ -289,11 +349,11 @@ if [ ! -f "results/benchmark_results.csv" ]; then
   cp results/latest_results.csv results/benchmark_results.csv
 fi
 
-# get current version of qsv
-version=$("$qsv_bin" --version | cut -d' ' -f2 | cut -d'-' -f1)
-
 # get current time to the nearest hour
 now=$(date +"%Y-%m-%d-%H")
+
+# get current time to the nearest second
+now_sec=$(date +"%Y-%m-%d-%H-%M-%S")
 
 # ---------------------------------------
 # Run hyperfine to compile benchmark results. Append each individual result to the latest_results.csv
@@ -301,7 +361,7 @@ now=$(date +"%Y-%m-%d-%H")
 
 # first, run benchmarking without an index
 # each command is run five times. Two warm-up runs & three benchmarked runs.
-echo "Benchmarking WITHOUT INDEX..."
+echo "> Benchmarking WITHOUT INDEX..."
 idx=0
 name_idx=1
 for command_no_index in "${commands_without_index[@]}"; do
@@ -332,7 +392,7 @@ done
 # ---------------------------------------
 # then, run benchmarks with an index
 # an index enables random access and unlocks multi-threading in several commands
-echo "Benchmarking WITH INDEX..."
+echo "> Benchmarking WITH INDEX..."
 rm -f "$data".idx
 "$qsv_bin" index "$data"
 
@@ -361,6 +421,7 @@ done
 # We then append/concatenate the latest results to benchmark_results.csv - which is
 # a historical archive, so we can track performance over multiple releases.
 
+echo ""
 # sort the benchmark results by version, tstamp & name
 "$qsv_bin" sort --select version,tstamp,name results/latest_results.csv \
    -o results/results_work.csv
@@ -376,13 +437,38 @@ luau_cmd="recs_per_sec=( $rowcount / mean); return numWithCommas(recs_per_sec)"
   -o results/results_work.csv
 mv results/results_work.csv results/benchmark_results.csv
 
-# Finally, clean up temporary files
+# Clean up temporary files
 rm -f results/hf_result.csv
 rm -f results/hf_result_nocmd.csv
 rm -f results/results_work.csv
+rm -f results/run_info_work.tsv
 rm -f results/entry.csv
 rm -r -f split_tempdir
 rm -f benchmark_work.*
 rm -r -f benchmark_work
+rm -f extsort_sorted.csv
 
-echo "$total_count benchmarks executed. Elapsed time: $SECONDS seconds."
+# ---------------------------------------
+# Finalize benchmark run info. Append the run info to results/run_info_history.csv
+
+elapsed=$SECONDS
+
+# Init latest_run_info.csv. It stores the benchmark run info for this run
+rm -f results/latest_run_info.tsv
+echo -e "version\ttstamp\tlogtime\targument\ttotal_count\two_index_count\twith_index_count\twarmup_runs\tbenchmark_runs\telapsed_secs\tversion_info" > results/latest_run_info.tsv
+
+# check if the file run_info_history.csv exists, if it doesn't create it
+# by copying the empty latest_run_info.csv
+if [ ! -f "results/run_info_history.tsv" ]; then
+  cp results/latest_run_info.tsv results/run_info_history.tsv
+fi
+
+# append the run info to latest_run_info.csv
+echo -e "$version\t$now\t$now_sec\t$pat\t$total_count\t$wo_index_count\t$with_index_count\t$warmup_runs\t$benchmark_runs\t$elapsed\t$raw_version" >> results/latest_run_info.tsv
+
+# now update the run_info_history.tsv
+"$qsv_bin" cat rowskey results/latest_run_info.tsv results/run_info_history.tsv \
+  -o results/run_info_work.tsv
+mv results/run_info_work.tsv results/run_info_history.tsv
+
+echo "> DONE! $total_count benchmarks executed. Elapsed time: $elapsed seconds."
