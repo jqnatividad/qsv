@@ -36,3 +36,4 @@ tmp/*
 *.rswip
 .env
 *.db
+*.snappy
