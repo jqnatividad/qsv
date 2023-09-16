@@ -27,7 +27,7 @@ Usage:
     qsv schema --help
 
 Schema options:
-    --enum-threshold NUM       Cardinality threshold for adding enum constraints.
+    --enum-threshold <num>     Cardinality threshold for adding enum constraints.
                                Enum constraints are compiled for String & Integer types.
                                [default: 50]
     --strict-dates             Enforce Internet Datetime format (RFC-3339) for
@@ -49,6 +49,8 @@ Schema options:
                                [default: date,time,due,open,close,created]
     --prefer-dmy               Prefer to parse dates in dmy format.
                                Otherwise, use mdy format.
+    --force                    Force recomputing cardinality and unique values
+                               even if stats cache file exists and is current.
     --stdout                   Send generated JSON schema file to stdout instead.
     -j, --jobs <arg>           The number of jobs to run in parallel.
                                When not set, the number of jobs is set to the
@@ -96,6 +98,7 @@ pub struct Args {
     pub flag_pattern_columns: SelectColumns,
     pub flag_dates_whitelist: String,
     pub flag_prefer_dmy:      bool,
+    pub flag_force:           bool,
     pub flag_stdout:          bool,
     pub flag_jobs:            Option<usize>,
     pub flag_no_headers:      bool,
@@ -430,7 +433,7 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
         flag_infer_dates:     true,
         flag_dates_whitelist: args.flag_dates_whitelist.to_string(),
         flag_prefer_dmy:      args.flag_prefer_dmy,
-        flag_force:           false,
+        flag_force:           args.flag_force,
         flag_jobs:            Some(util::njobs(args.flag_jobs)),
         flag_output:          None,
         flag_no_headers:      args.flag_no_headers,
@@ -594,13 +597,13 @@ fn build_low_cardinality_column_selector_arg(
         };
         // debug!("column_{i}: cardinality={col_cardinality}");
 
-        if col_cardinality <= enum_cardinality_threshold {
+        if col_cardinality > 0 && col_cardinality <= enum_cardinality_threshold {
             // column selector uses 1-based index
             low_cardinality_column_indices.push(i + 1);
         };
     }
 
-    // debug!("low cardinality columns: {low_cardinality_column_indices:?}");
+    debug!("low cardinality columns: {low_cardinality_column_indices:?}");
 
     let column_select_arg: String = low_cardinality_column_indices
         .iter()
@@ -776,7 +779,7 @@ fn generate_string_patterns(
         pattern_map.insert(header.clone(), regexp);
     }
 
-    debug!("pattern map: {pattern_map:?}");
+    // debug!("pattern map: {pattern_map:?}");
 
     Ok(pattern_map)
 }

@@ -106,6 +106,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // json doesn't have a date type, so don't infer dates
         flag_dates_whitelist: "none".to_string(),
         flag_prefer_dmy:      false,
+        flag_force:           false,
         flag_stdout:          false,
         flag_jobs:            Some(util::njobs(args.flag_jobs)),
         flag_no_headers:      false,
