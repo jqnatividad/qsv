@@ -33,8 +33,8 @@
 #
 # And of course, it dogfoods `qsv` as well to prepare the benchmark data, fetch the rowcount,
 # and to parse and format the benchmark results. :)
-# It uses the following commands: cat, count, luau, sample, select, sort, tojsonl and to xlsx.
-# It's a good example of how qsv can be used to automate data preparation & analysis tasks.
+# It uses the following commands: cat, count, luau, sample, schema, select, snappy, sort, tojsonl and
+# to xlsx. It's a good example of how qsv can be used to automate data preparation & analysis tasks.
 
 set -e
 
