@@ -7,6 +7,7 @@
 #
 #  if <argument> is "reset", the benchmark data will be downloaded and prepared again.
 #   though the results/benchmark_results.csv historical archive will be preserved.
+#  if <argument> is "clean", temporary files will be deleted.
 #  if <argument> is "help", help text is displayed.
 #
 # ==============================================================================================
@@ -48,12 +49,29 @@ datazip=/tmp/NYC_311_SR_2010-2020-sample-1M.7z
 data=NYC_311_SR_2010-2020-sample-1M.csv
 warmup_runs=2
 benchmark_runs=3
+data_filename=$(basename -- "$data")
+filestem="${data_filename%.*}"
 
 # get current version of qsv
 raw_version=$("$qsv_bin" --version)
 version=$("$qsv_bin" --version | cut -d' ' -f2 | cut -d'-' -f1)
 # the version of this script
 bm_version=2.0.0
+
+function cleanup_files {
+  # Clean up temporary files
+  rm -f "$filestem".csv.*
+  rm -f "$filestem".stats.*
+  rm -f results/hf_result.csv
+  rm -f results/hf_result_nocmd.csv
+  rm -f results/results_work.csv
+  rm -f results/run_info_work.tsv
+  rm -f results/entry.csv
+  rm -r -f split_tempdir
+  rm -f benchmark_work.*
+  rm -r -f benchmark_work
+  rm -f extsort_sorted.csv
+}
 
 # if pat is equal to "help", show usage
 if [[ "$pat" == "help" ]]; then
@@ -67,6 +85,7 @@ if [[ "$pat" == "help" ]]; then
   echo ""
   echo "       if <argument> is \"reset\", the benchmark data will be downloaded and prepared again."
   echo "          though the results/benchmark_results.csv historical archive will be preserved."
+  echo "       if <argument> is \"clean\", temporary files will be deleted."
   echo "       if <argument> is \"help\", help text is displayed."
   echo ""
   echo "$raw_version"
@@ -77,8 +96,6 @@ fi
 # the results/benchmark_results.csv historical archive will be preserved
 if [[ "$pat" == "reset" ]]; then
   rm -f "$datazip"
-  data_filename=$(basename -- "$data")
-  filestem="${data_filename%.*}"
   rm -f "$filestem".*
   rm -f communityboards.csv
   rm -f data_to_exclude.csv
@@ -86,14 +103,24 @@ if [[ "$pat" == "reset" ]]; then
   rm -f data_sorted.csv
   rm -f benchmark_data.xlsx
   rm -f benchmark_data.jsonl
+  rm -f benchmark_data.schema.json
   rm -f searchset_patterns.txt
   echo "> Benchmark data reset..."
   echo "  Historical benchmarks archive preserved in results/benchmark_results.csv"
   exit
 fi
 
+# if pat is equal to "clean", clean up temporary files
+if [[ "$pat" == "clean" ]]; then
+  cleanup_files
+  echo "> Temporary files cleaned up..."
+  exit
+fi
+
 echo "> Setting up Benchmark environment..."
 SECONDS=0
+
+cleanup_files
 
 # check if qsv is installed
 if ! command -v "$qsv_bin" &> /dev/null
@@ -147,6 +174,8 @@ fi
 
 if [ ! -r data_to_exclude.csv ]; then
   echo "> Preparing benchmark support data..."
+  # create an index so benchmark data preparation commands can run faster
+  "$qsv_bin" index "$data"
   echo "   data_to_exclude.csv..."
   "$qsv_bin" sample --seed 42 1000 "$data" -o data_to_exclude.csv
   echo "   data_unsorted.csv..."
@@ -157,10 +186,16 @@ if [ ! -r data_to_exclude.csv ]; then
   "$qsv_bin" to xlsx benchmark_data.xlsx "$data"
   echo "   benchmark_data.jsonl..."
   "$qsv_bin" tojsonl "$data" --output benchmark_data.jsonl
+  echo "   benchmark_data.schema.json..."
+  "$qsv_bin" schema "$data" --stdout > benchmark_data.csv.schema.json
+  echo "   benchmark_data.snappy..."
+  "$qsv_bin" snappy compress "$data" --output benchmark_data.snappy
   echo "   searchset_patterns.txt..."
   printf "homeless\npark\nnoise\n" > searchset_patterns.txt
   echo ""
 fi
+
+schema=benchmark_data.csv.schema.json
 
 commands_without_index=()
 commands_without_index_name=()
@@ -282,9 +317,9 @@ run select "$qsv_bin" select \'Agency,Community Board\' "$data"
 run select_regex "$qsv_bin" select /^L/ "$data"
 run slice_one_middle "$qsv_bin" slice -i 500000 "$data"
 run --index slice_one_middle_index "$qsv_bin" slice -i 500000 "$data"
-run snappy_compress "$qsv_bin" snappy compress "$data" --output benchmark_work.snappy
-run snappy_decompress "$qsv_bin" snappy decompress benchmark_work.snappy
-run snappy_validate "$qsv_bin" snappy validate benchmark_work.snappy
+run snappy_compress "$qsv_bin" snappy compress "$data" --output benchmark_data.snappy
+run snappy_decompress "$qsv_bin" snappy decompress benchmark_data.snappy
+run snappy_validate "$qsv_bin" snappy validate benchmark_data.snappy
 run sort "$qsv_bin" sort -s \'Incident Zip\' "$data"
 run sort_random_seeded "$qsv_bin" sort --random --seed 42 "$data"
 run sortcheck_sorted "$qsv_bin" sortcheck data_sorted.csv
@@ -365,7 +400,11 @@ echo "> Benchmarking WITHOUT INDEX..."
 idx=0
 name_idx=1
 for command_no_index in "${commands_without_index[@]}"; do
+
+  # remove the index file and the stats cache files
   rm -f "$data".idx
+  rm -f "$filestem".stats.*
+
   echo "$name_idx. ${commands_without_index_name[$idx]}"
   hyperfine --warmup "$warmup_runs" -i --runs "$benchmark_runs" --export-csv results/hf_result.csv \
     "$command_no_index"
@@ -393,8 +432,10 @@ done
 # then, run benchmarks with an index
 # an index enables random access and unlocks multi-threading in several commands
 echo "> Benchmarking WITH INDEX..."
+echo "  Preparing index and stats cache..."
 rm -f "$data".idx
 "$qsv_bin" index "$data"
+"$qsv_bin" stats "$data" --everything --infer-dates --force
 
 idx=0
 for command_with_index in "${commands_with_index[@]}"; do
@@ -438,15 +479,7 @@ luau_cmd="recs_per_sec=( $rowcount / mean); return numWithCommas(recs_per_sec)"
 mv results/results_work.csv results/benchmark_results.csv
 
 # Clean up temporary files
-rm -f results/hf_result.csv
-rm -f results/hf_result_nocmd.csv
-rm -f results/results_work.csv
-rm -f results/run_info_work.tsv
-rm -f results/entry.csv
-rm -r -f split_tempdir
-rm -f benchmark_work.*
-rm -r -f benchmark_work
-rm -f extsort_sorted.csv
+cleanup_files
 
 # ---------------------------------------
 # Finalize benchmark run info. Append the run info to results/run_info_history.csv
