@@ -94,6 +94,8 @@ if [ ! -r data_to_exclude.csv ]; then
   "$qsv_bin" sample --seed 42 1000 "$data" -o data_to_exclude.csv
   "$qsv_bin" sort --seed 42 --random --faster "$data" -o data_unsorted.csv
   "$qsv_bin" sort "$data" -o data_sorted.csv
+  "$qsv_bin" to xlsx benchmark_data.xlsx "$data"
+  "$qsv_bin" tojsonl "$data" --output benchmark_data.jsonl
   printf "homeless\npark\nnoise\n" > searchset_patterns.txt
 fi
 
@@ -150,7 +152,7 @@ function run {
 run apply_calcconv "$qsv_bin apply calcconv --formatstr \"{Unique Key} meters in miles\" --new-column new_col $data"
 run apply_datefmt "$qsv_bin apply datefmt \"Created Date\" $data"
 run apply_datefmt_multi "$qsv_bin apply datefmt \"Created Date,Closed Date,Due Date\" $data"
-run apply_dynfmt "$qsv_bin apply dynfmt \"{Created Date} {Complaint Type} - {BBL} {City}\" $data"
+run apply_dynfmt "$qsv_bin apply dynfmt --formatstr \"{Created Date} {Complaint Type} - {BBL} {City}\" --new-column new_col $data"
 run apply_emptyreplace "$qsv_bin" apply emptyreplace \"Bridge Highway Name\" --replacement Unspecified "$data"
 run apply_op_eudex "$qsv_bin apply operations lower,eudex Agency --comparand Queens --new-column Agency_queens_soundex $data" 
 run apply_op_string "$qsv_bin apply operations lower Agency $data"
@@ -165,6 +167,7 @@ run dedup "$qsv_bin" dedup "$data"
 run dedup_sorted "$qsv_bin" dedup data_sorted.csv
 run diff "$qsv_bin" diff "$data" data_unsorted.csv
 run enum "$qsv_bin" enum "$data"
+run excel "$qsv_bin" excel benchmark_data.xlsx
 run exclude "$qsv_bin" exclude \'Incident Zip\' "$data" \'Incident Zip\' data_to_exclude.csv
 run --index exclude_index "$qsv_bin" exclude \'Incident Zip\' "$data" \'Incident Zip\' data_to_exclude.csv
 run explode "$qsv_bin" explode City "-" "$data"
@@ -185,6 +188,7 @@ run index "$qsv_bin" index "$data"
 run input "$qsv_bin" input "$data"
 run join "$qsv_bin" join \'Community Board\' "$data" community_board communityboards.csv
 run joinp "$qsv_bin" joinp \'Community Board\' "$data" community_board communityboards.csv
+run jsonl "$qsv_bin" jsonl benchmark_data.jsonl
 run luau "$qsv_bin" luau map location_empty "tonumber\(Location\)==nil" "$data"
 run partition "$qsv_bin" partition \'Community Board\' /tmp/partitioned "$data"
 run pseudo "$qsv_bin" pseudo \'Unique Key\' "$data"
@@ -234,6 +238,7 @@ run sqlp_format_parquet_statistics "$qsv_bin" sqlp --format parquet --statistics
 run sqlp_lowmemory "$qsv_bin" sqlp  "$data" -Q --low-memory '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
 run sqlp_nooptimizations "$qsv_bin" sqlp  "$data" -Q --no-optimizations '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
 run sqlp_tryparsedates "$qsv_bin" sqlp  "$data" -Q --try-parsedates '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
+run sqlp_tryparsedates_inferlen "$qsv_bin" sqlp  "$data" -Q --infer-len 10000 --try-parsedates '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
 run stats "$qsv_bin" stats --force "$data"
 run --index stats_index "$qsv_bin" stats --force "$data"
 run --index stats_index_j1 "$qsv_bin" stats -j 1 --force "$data"
@@ -244,13 +249,12 @@ run --index stats_everything_index "$qsv_bin" stats "$data" --force --everything
 run --index stats_everything_infer_dates_index "$qsv_bin" stats "$data" --force --everything --infer-dates
 run --index stats_everything_index_j1 "$qsv_bin" stats "$data" --force --everything -j 1
 run table "$qsv_bin" table "$data"
-run to_xlsx "$qsv_bin" to xlsx benchmark_data.xlsx "$data"
+run to_xlsx "$qsv_bin" to xlsx benchmark_work.xlsx "$data"
 run to_sqlite "$qsv_bin" to sqlite benchmark_work.db "$data"
 run to_parquet "$qsv_bin" to parquet benchmark_work "$data"
 run to_datapackage "$qsv_bin" to datapackage benchmark_work.json "$data"
-run excel "$qsv_bin" excel benchmark_data.xlsx
-run to_jsonl "$qsv_bin" to jsonl "$data"
-run --index to_jsonl_index "$qsv_bin" to jsonl "$data"
+run tojsonl "$qsv_bin" tojsonl "$data"
+run --index tojsonl_index "$qsv_bin" tojsonl "$data"
 run transpose "$qsv_bin" transpose "$data"
 run transpose_multipass "$qsv_bin" transpose --multipass "$data"
 run validate "$qsv_bin" validate "$data" "$schema"
@@ -361,7 +365,7 @@ done
 # compute records per second for each benchmark using qsv, rounding to 3 decimal places
 # we get the rowcount, just in case the benchmark data was modified by the user to tailor
 # the benchmark to their system/workload.
-luau_cmd="recs_per_sec=( $rowcount / mean); return tonumber(string.format(\"%.3f\",recs_per_sec))"
+luau_cmd="recs_per_sec=( $rowcount / mean); return tonumber(string.format(\"%.0f\",recs_per_sec))"
 "$qsv_bin" luau map recs_per_sec "$luau_cmd" \
    results/results_work.csv -o results/latest_results.csv
 
