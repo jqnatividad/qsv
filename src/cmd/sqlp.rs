@@ -195,7 +195,7 @@ struct Args {
     arg_sql:               String,
     flag_format:           String,
     flag_try_parsedates:   bool,
-    flag_infer_len:        usize,
+    flag_infer_len:        Option<usize>,
     flag_low_memory:       bool,
     flag_no_optimizations: bool,
     flag_ignore_errors:    bool,
@@ -375,12 +375,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         b','
     };
 
-    let num_rows = if args.flag_infer_len == 0 {
-        None
-    } else {
-        Some(args.flag_infer_len)
-    };
-
     let optimization_state = if args.flag_no_optimizations {
         // use default optimization state
         polars::lazy::frame::OptState {
@@ -396,7 +390,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             simplify_expr:       true,
             file_caching:        !args.flag_low_memory,
             slice_pushdown:      true,
-            comm_subplan_elim:   true,
+            comm_subplan_elim:   !args.flag_low_memory,
             comm_subexpr_elim:   true,
             streaming:           args.flag_low_memory,
         }
@@ -408,8 +402,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if debuglog_flag {
         log::debug!("Optimization state: {optimization_state:?}");
         log::debug!(
-            "Delimiter: {delim} Infer_schema_len: {num_rows:?} try_parse_dates: {parse_dates} \
+            "Delimiter: {delim} Infer_schema_len: {infer_len:?} try_parse_dates: {parse_dates} \
              ignore_errors: {ignore_errors}, low_memory: {low_memory}",
+            infer_len = args.flag_infer_len,
             parse_dates = args.flag_try_parsedates,
             ignore_errors = args.flag_ignore_errors,
             low_memory = args.flag_low_memory
@@ -443,7 +438,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .has_header(true)
             .with_missing_is_null(true)
             .with_delimiter(delim)
-            .with_infer_schema_length(num_rows)
+            .with_infer_schema_length(args.flag_infer_len)
             .with_try_parse_dates(args.flag_try_parsedates)
             .with_ignore_errors(args.flag_ignore_errors)
             .low_memory(args.flag_low_memory)
