@@ -14,9 +14,9 @@
 #
 # Make sure you're using a release-optimized `qsv`. 
 # If you can't use the prebuilt binaries at https://github.com/jqnatividad/qsv/releases/latest,
-# build it to have at least the apply, geocode, luau and polars features enabled:
-# i.e. `cargo build --release --locked -F feature_capable,apply,geocode,luau,polars` or
-# `cargo install --locked qsv -F feature_capable,apply,geocode,luau,polars`
+# build it to have at least the apply, geocode, luau, to and polars features enabled:
+# i.e. `cargo build --release --locked -F feature_capable,apply,geocode,luau,to,polars` or
+# `cargo install --locked qsv -F feature_capable,apply,geocode,luau,to,polars`
 #
 # This shell script has been tested on Linux, macOS and Cygwin for Windows (https://www.cygwin.com/).
 # It should work on other Unix-like systems, but will NOT run on native Windows.
@@ -25,8 +25,9 @@
 # ratio so we don't have to deal with git-lfs to host the large compressed file on GitHub.
 #
 # And of course, it dogfoods `qsv` as well to prepare the benchmark data, fetch the rowcount,
-# and to parse and format the benchmark results. :)  It's actually a great example of how qsv
-# can be used to automate data preparation and analysis tasks.
+# and to parse and format the benchmark results. :)
+# It uses the following commands: cat, count, luau, sample, select, sort, tojsonl and to xlsx.
+# It's a good example of how qsv can be used to automate data preparation & analysis tasks.
 
 set -e
 
@@ -356,7 +357,7 @@ done
 # Finalize benchmark results. Sort the latest results by version, tstamp & name.
 # compute and add records per second for each benchmark using qsv's luau command.
 # We compute recs_per_sec by dividing 1M (the number of rows in NYC 311 sample data)
-# by the mean run time of the three runs, rounding to 3 decimal places.
+# by the mean run time of the three runs.
 # We then append/concatenate the latest results to benchmark_results.csv - which is
 # a historical archive, so we can track performance over multiple releases.
 
@@ -364,7 +365,8 @@ done
 "$qsv_bin" sort --select version,tstamp,name results/latest_results.csv \
    -o results/results_work.csv
 
-# compute records per second for each benchmark using qsv, rounding to a whole number
+# compute records per second for each benchmark using luau by dividing rowcount by mean
+# we then round the result to a whole number and format with commas for readability
 luau_cmd="recs_per_sec=( $rowcount / mean); return numWithCommas(recs_per_sec)"
 "$qsv_bin" luau --begin file:benchmark_helper.luau map recs_per_sec "$luau_cmd" \
    results/results_work.csv -o results/latest_results.csv
