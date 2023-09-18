@@ -208,9 +208,9 @@ simdutf8 = "0.1"
 [target.'cfg(target_arch = "aarch64")'.dependencies]
 simdutf8 = { version = "0.1", features = ["aarch64_neon"] }
 
-[patch.crates-io]
-geosuggest-core  = { git = "https://github.com/jqnatividad/geosuggest", branch = "8-reqwest-openssl" }
-geosuggest-utils = { git = "https://github.com/jqnatividad/geosuggest", branch = "8-reqwest-openssl" }
+# [patch.crates-io]
+# geosuggest-core  = { git = "https://github.com/jqnatividad/geosuggest", branch = "8-reqwest-openssl" }
+# geosuggest-utils = { git = "https://github.com/jqnatividad/geosuggest", branch = "8-reqwest-openssl" }
 
 [dev-dependencies]
 actix-governor = "0.4"
