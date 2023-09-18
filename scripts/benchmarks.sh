@@ -46,8 +46,7 @@ bm_version=2.1.2
 # change as needed to reflect your environment/workloads
 
 # the path to the qsv binary, change this if you're not using the prebuilt binaries
-# e.g. you compiled a tuned version of qsv with different features enabled and/or
-# CPU optimizations enabled
+# e.g. you compiled a tuned version of qsv with different features and/or CPU optimizations enabled
 qsv_bin=qsv
 benchmark_data_url=https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/NYC_311_SR_2010-2020-sample-1M.7z
 # where to download the benchmark data compressed file - this could be a zip or 7z file
