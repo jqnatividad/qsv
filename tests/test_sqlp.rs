@@ -582,10 +582,13 @@ fn sqlp_boston311_try_parsedates() {
     let test_file = wrk.load_test_file("boston311-100.csv");
 
     let mut cmd = wrk.command("sqlp");
-    cmd.arg(&test_file).arg("--try-parsedates").arg(
-        "select ward, cast(avg(closed_dt - open_dt) as float) as avg_tat from _t_1 where \
-         case_status = 'Closed' group by ward order by avg_tat desc, ward asc",
-    );
+    cmd.arg(&test_file)
+        .arg("--try-parsedates")
+        .arg(
+            "select ward, cast(avg(closed_dt - open_dt) as float) as avg_tat from _t_1 where \
+             case_status = 'Closed' group by ward order by avg_tat desc, ward asc",
+        )
+        .arg("--ignore-errors");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
@@ -644,7 +647,8 @@ fn sqlp_boston311_try_parsedates_precision() {
         .arg(
             "select ward, cast(avg(closed_dt - open_dt) as float) as avg_tat from _t_1 where \
              case_status = 'Closed' group by ward order by avg_tat desc, ward asc limit 5",
-        );
+        )
+        .arg("--ignore-errors");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
@@ -667,7 +671,8 @@ fn sqlp_boston311_try_parsedates_format() {
     cmd.arg(&test_file)
         .arg("--try-parsedates")
         .args(["--datetime-format", "%a %Y-%m-%d %H:%M:%S"])
-        .arg("select closed_dt, open_dt from _t_1 where case_status = 'Closed' limit 5");
+        .arg("select closed_dt, open_dt from _t_1 where case_status = 'Closed' limit 5")
+        .arg("--ignore-errors");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
