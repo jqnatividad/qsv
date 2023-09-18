@@ -40,17 +40,28 @@
 pat="$1"
 
 # the version of this script
-bm_version=2.1.1
+bm_version=2.1.2
 
-# configurable variables - change as needed to reflect your environment/workloads
+# configurable variables ---------------------------------------
+# change as needed to reflect your environment/workloads
+
+# the path to the qsv binary, change this if you're not using the prebuilt binaries
+# e.g. you compiled a tuned version of qsv with different features enabled and/or
+# CPU optimizations enabled
 qsv_bin=qsv
 benchmark_data_url=https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/NYC_311_SR_2010-2020-sample-1M.7z
 # where to download the benchmark data compressed file - this could be a zip or 7z file
 datazip=NYC_311_SR_2010-2020-sample-1M.7z
 # where to store the benchmark data
 data=NYC_311_SR_2010-2020-sample-1M.csv
+
+# Hyoerfine options - run `hyperfine --help`` for more info
+# number of warmup runs for each benchmark.  A minimum of 2 is recommended
 warmup_runs=2
+# number of benchmark runs for each benchmark. A minimum of 3 is recommended
 benchmark_runs=3
+# ----------------------------  end of configurable variables
+
 data_filename=$(basename -- "$data")
 filestem="${data_filename%.*}"
 
