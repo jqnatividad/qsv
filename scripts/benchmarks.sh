@@ -55,10 +55,29 @@ filestem="${data_filename%.*}"
 # get current version of qsv
 raw_version=$("$qsv_bin" --version)
 version=$(echo $raw_version | cut -d' ' -f2 | cut -d'-' -f1)
-# get platform
-platform=$(echo $raw_version | cut -d'(' -f2 | cut -d' ' -f1)
+# get target platform from version
+platform=$(echo $raw_version | sed 's/.*(\([a-z0-9_-]*\) compiled with Rust.*/\1/')
 # get qsv kind
-kind=$(echo $raw_version | cut -d')' -f2 | xargs)
+kind=$(echo $raw_version | sed 's/.* \([a-zA-Z]*\)$/\1/')
+
+# get num cores & memory size
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS
+    num_cores=$(sysctl -n hw.ncpu)
+    mem_size=$(sysctl -n hw.memsize)
+elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    # Linux
+    num_cores=$(nproc)
+    mem_size=$(free -b | awk '/Mem/ {print $7}')
+elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
+    # Windows
+    num_cores=$(wmic cpu get NumberOfCores | grep -Eo '^[0-9]+')
+    mem_size=$(wmic OS get FreePhysicalMemory | grep -Eo '[0-9]+')
+    mem_size=$((mem_size * 1024))
+else
+    echo "Unsupported operating system: $OSTYPE"
+    exit 1
+fi
 
 # the version of this script
 bm_version=2.1.0
@@ -437,10 +456,14 @@ done
 # then, run benchmarks with an index
 # an index enables random access and unlocks multi-threading in several commands
 echo "> Benchmarking WITH INDEX..."
-echo "  Preparing index and stats cache..."
-rm -f "$data".idx
-"$qsv_bin" index "$data"
-"$qsv_bin" stats "$data" --everything --infer-dates --force --output benchmark_work.stats.csv
+
+if [ "$with_index_count" -gt 0 ]; then
+  echo "  Preparing index and stats cache..."
+  rm -f "$data".idx
+  "$qsv_bin" index "$data"
+  "$qsv_bin" stats "$data" --everything --infer-dates --force \
+    --output benchmark_work.stats.csv  
+fi
 
 idx=0
 for command_with_index in "${commands_with_index[@]}"; do
@@ -493,7 +516,7 @@ elapsed=$SECONDS
 
 # Init latest_run_info.csv. It stores the benchmark run info for this run
 rm -f results/latest_run_info.tsv
-echo -e "version\ttstamp\tlogtime\tbm_version\tplatform\tkind\targument\ttotal_count\two_index_count\twith_index_count\twarmup_runs\tbenchmark_runs\telapsed_secs\tversion_info" > results/latest_run_info.tsv
+echo -e "version\ttstamp\tlogtime\tbm_version\tplatform\tcores\tmem\tkind\targument\ttotal_count\two_index_count\twith_index_count\twarmup_runs\tbenchmark_runs\telapsed_secs\tversion_info" > results/latest_run_info.tsv
 
 # check if the file run_info_history.csv exists, if it doesn't create it
 # by copying the empty latest_run_info.csv
@@ -502,7 +525,7 @@ if [ ! -f "results/run_info_history.tsv" ]; then
 fi
 
 # append the run info to latest_run_info.csv
-echo -e "$version\t$now\t$now_sec\t$bm_version\t$platform\t$kind\t$pat\t$total_count\t$wo_index_count\t$with_index_count\t$warmup_runs\t$benchmark_runs\t$elapsed\t$raw_version" >> results/latest_run_info.tsv
+echo -e "$version\t$now\t$now_sec\t$bm_version\t$platform\t$num_cores\t$mem_size\t$kind\t$pat\t$total_count\t$wo_index_count\t$with_index_count\t$warmup_runs\t$benchmark_runs\t$elapsed\t$raw_version" >> results/latest_run_info.tsv
 
 # now update the run_info_history.tsv
 "$qsv_bin" cat rowskey results/latest_run_info.tsv results/run_info_history.tsv \
