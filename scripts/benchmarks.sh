@@ -6,7 +6,8 @@
 #  if <argument> is omitted, all benchmarks are executed.
 #
 #  if <argument> is "reset", the benchmark data will be downloaded and prepared again.
-#   though the results/benchmark_results.csv historical archive will be preserved.
+#   though the results/benchmark_results.csv and resutls/run_info_history.tsv historical
+#   archives will be preserved.
 #  if <argument> is "clean", temporary files will be deleted.
 #  if <argument> is "help", help text is displayed.
 #
@@ -36,8 +37,6 @@
 # It uses the following commands: cat, count, luau, sample, schema, select, snappy, sort, tojsonl and
 # to xlsx. It's a good example of how qsv can be used to automate data preparation & analysis tasks.
 
-set -e
-
 pat="$1"
 
 # configurable variables - change as needed to reflect your environment/workloads
@@ -52,11 +51,17 @@ benchmark_runs=3
 data_filename=$(basename -- "$data")
 filestem="${data_filename%.*}"
 
+# qsv version metadata ----------------
 # get current version of qsv
 raw_version=$("$qsv_bin" --version)
-version=$("$qsv_bin" --version | cut -d' ' -f2 | cut -d'-' -f1)
+version=$(echo $raw_version | cut -d' ' -f2 | cut -d'-' -f1)
+# get platform
+platform=$(echo $raw_version | cut -d'(' -f2 | cut -d' ' -f1)
+# get qsv kind
+kind=$(echo $raw_version | cut -d')' -f2 | xargs)
+
 # the version of this script
-bm_version=2.0.0
+bm_version=2.1.0
 
 function cleanup_files {
   # Clean up temporary files
@@ -435,7 +440,7 @@ echo "> Benchmarking WITH INDEX..."
 echo "  Preparing index and stats cache..."
 rm -f "$data".idx
 "$qsv_bin" index "$data"
-"$qsv_bin" stats "$data" --everything --infer-dates --force
+"$qsv_bin" stats "$data" --everything --infer-dates --force --output benchmark_work.stats.csv
 
 idx=0
 for command_with_index in "${commands_with_index[@]}"; do
@@ -488,7 +493,7 @@ elapsed=$SECONDS
 
 # Init latest_run_info.csv. It stores the benchmark run info for this run
 rm -f results/latest_run_info.tsv
-echo -e "version\ttstamp\tlogtime\targument\ttotal_count\two_index_count\twith_index_count\twarmup_runs\tbenchmark_runs\telapsed_secs\tversion_info" > results/latest_run_info.tsv
+echo -e "version\ttstamp\tlogtime\tbm_version\tplatform\tkind\targument\ttotal_count\two_index_count\twith_index_count\twarmup_runs\tbenchmark_runs\telapsed_secs\tversion_info" > results/latest_run_info.tsv
 
 # check if the file run_info_history.csv exists, if it doesn't create it
 # by copying the empty latest_run_info.csv
@@ -497,7 +502,7 @@ if [ ! -f "results/run_info_history.tsv" ]; then
 fi
 
 # append the run info to latest_run_info.csv
-echo -e "$version\t$now\t$now_sec\t$pat\t$total_count\t$wo_index_count\t$with_index_count\t$warmup_runs\t$benchmark_runs\t$elapsed\t$raw_version" >> results/latest_run_info.tsv
+echo -e "$version\t$now\t$now_sec\t$bm_version\t$platform\t$kind\t$pat\t$total_count\t$wo_index_count\t$with_index_count\t$warmup_runs\t$benchmark_runs\t$elapsed\t$raw_version" >> results/latest_run_info.tsv
 
 # now update the run_info_history.tsv
 "$qsv_bin" cat rowskey results/latest_run_info.tsv results/run_info_history.tsv \
