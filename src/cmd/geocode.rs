@@ -19,6 +19,8 @@ It has five major subcommands:
                  (Euclidean distance - shortest distance "as the crow flies")
  * reversenow  - sames as reverse, but using a coordinate from the command line,
                  instead of CSV data.
+ * countryinfo - returns the country information for the specified country code.
+                 (e.g. US, CA, MX, etc.)
  * index-*     - operations to update the local Geonames cities index.
                  (index-check, index-update, index-load & index-reset)
  
@@ -96,6 +98,12 @@ Accepts the same options as reverse, but does not require an input file.
   $ qsv geocode reversenow --country US -f %cityrecord "40.71427, -74.00597"
   $ qsv geocode reversenow --admin1 "US:OH" "(39.32924, -82.10126)"
 
+COUNTRYINFO
+Returns the country information for the specified country code.
+(e.g. US, CA, MX, etc.)
+
+  $ qsv geocode countryinfo US
+
 INDEX-<operation>
 Updates the local Geonames cities index used by the geocode command.
 
@@ -124,6 +132,7 @@ qsv geocode suggest [--formatstr=<string>] [options] <column> [<input>]
 qsv geocode suggestnow [options] <location>
 qsv geocode reverse [--formatstr=<string>] [options] <column> [<input>]
 qsv geocode reversenow [options] <location>
+qsv geocode countryinfo <country> [options]
 qsv geocode index-load <index-file>
 qsv geocode index-check
 qsv geocode index-update [--languages=<lang>] [--cities-url=<url>] [--force]
@@ -320,6 +329,7 @@ struct Args {
     cmd_suggestnow:      bool,
     cmd_reverse:         bool,
     cmd_reversenow:      bool,
+    cmd_countryinfo:     bool,
     cmd_index_check:     bool,
     cmd_index_update:    bool,
     cmd_index_load:      bool,
@@ -371,6 +381,7 @@ static FALLBACK_CACHE_SIZE: usize = CACHE_SIZE / 4;
 
 static EMPTY_STRING: String = String::new();
 static INVALID_DYNFMT: &str = "Invalid dynfmt template.";
+static INVALID_COUNTRY_CODE: &str = "Invalid country code.";
 
 // when suggesting with --admin1, how many suggestions to fetch from the engine
 // before filtering by admin1
@@ -400,6 +411,7 @@ enum GeocodeSubCmd {
     SuggestNow,
     Reverse,
     ReverseNow,
+    CountryInfo,
     IndexCheck,
     IndexUpdate,
     IndexLoad,
@@ -474,6 +486,9 @@ async fn geocode_main(args: Args) -> CliResult<()> {
         index_cmd = false;
         now_cmd = true;
         GeocodeSubCmd::ReverseNow
+    } else if args.cmd_countryinfo {
+        index_cmd = false;
+        GeocodeSubCmd::CountryInfo
     } else if args.cmd_index_check {
         GeocodeSubCmd::IndexCheck
     } else if args.cmd_index_update {
@@ -822,10 +837,11 @@ async fn geocode_main(args: Args) -> CliResult<()> {
             }
         },
         _ => {
-            // reverse/now subcommands don't support admin1 filter
+            // reverse/now and countryinfo subcommands don't support admin1 filter
             if args.flag_admin1.is_some() {
                 return fail_incorrectusage_clierror!(
-                    "reverse & reversenow subcommands do not support the --admin1 filter option."
+                    "reverse/reversenow & countryinfo subcommands do not support the --admin1 \
+                     filter option."
                 );
             }
             None
@@ -900,6 +916,12 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                             record.push_field("");
                         });
                     }
+                } else if geocode_cmd == GeocodeSubCmd::CountryInfo {
+                    // we're doing a countryinfo subcommand
+
+                    cell =
+                        get_countryinfo(&engine, &cell.to_ascii_uppercase(), &args.flag_formatstr)
+                            .unwrap_or(cell);
                 } else if dyncols_len > 0 {
                     // we're in dyncols mode, so use search_index_NO_CACHE fn
                     // as we need to inject the column values into each row of the output csv
@@ -966,6 +988,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                         }
                     }
                 }
+                // }
                 if args.flag_new_column.is_some() {
                     record.push_field(&cell);
                 } else {
@@ -1179,7 +1202,7 @@ fn search_index(
         }
 
         return Some(format_result(
-            cityrecord, &country, &capital, formatstr, true,
+            engine, cityrecord, &country, &capital, formatstr, true,
         ));
     }
 
@@ -1227,7 +1250,7 @@ fn search_index(
             }
 
             return Some(format_result(
-                cityrecord, &country, &capital, formatstr, false,
+                engine, cityrecord, &country, &capital, formatstr, false,
             ));
         }
     }
@@ -1270,6 +1293,7 @@ fn add_dyncols(
 
 /// format the geocoded result based on formatstr if its not %+
 fn format_result(
+    engine: &Engine,
     cityrecord: &CitiesRecord,
     country: &str,
     capital: &str,
@@ -1277,6 +1301,10 @@ fn format_result(
     suggest_mode: bool,
 ) -> String {
     let (admin1_name, admin2_name) = get_admin_names(cityrecord, 3);
+
+    let Some(countryrecord) = engine.country_info(country) else {
+        return INVALID_COUNTRY_CODE.to_string();
+    };
 
     if formatstr.starts_with('%') {
         // if formatstr starts with %, then we're using a predefined format
@@ -1302,6 +1330,25 @@ fn format_result(
             "%cityrecord" => format!("{cityrecord:?}"),
             "%admin1record" => format!("{:?}", cityrecord.admin_division),
             "%admin2record" => format!("{:?}", cityrecord.admin2_division),
+
+            // countryrecord fields
+            "%continent" => countryrecord.info.continent.clone(),
+
+            // "%json" => format!(
+            //     "{{\"id\":{},\"name\":\"{}\",\"latitude\":{},\"longitude\":{},\"country\":\"{}\",
+            // \\      "admin1\":\"{}\",\"admin2\":\"{}\",\"capital\":\"{}\",\"timezone\
+            // ":\"{}\",\"\      population\":{}}}",
+            //     cityrecord.id,
+            //     cityrecord.name,
+            //     cityrecord.latitude,
+            //     cityrecord.longitude,
+            //     country,
+            //     admin1_name,
+            //     admin2_name,
+            //     capital,
+            //     cityrecord.timezone,
+            //     cityrecord.population,
+            // ),
             _ => {
                 // invalid formatstr, so we use the default for suggest/now or reverse/now
                 if suggest_mode {
@@ -1323,9 +1370,9 @@ fn format_result(
         }
     } else {
         // if formatstr does not start with %, then we're using dynfmt,
-        // i.e. nine predefined fields below in curly braces are replaced with values
+        // i.e. twenty-five predefined fields below in curly braces are replaced with values
         // e.g. "City: {name}, State: {admin1}, Country: {country} - {timezone}"
-        let mut cityrecord_map: HashMap<&str, String> = HashMap::with_capacity(10);
+        let mut cityrecord_map: HashMap<&str, String> = HashMap::with_capacity(25);
         cityrecord_map.insert("id", cityrecord.id.to_string());
         cityrecord_map.insert("name", cityrecord.name.clone());
         cityrecord_map.insert("latitude", cityrecord.latitude.to_string());
@@ -1336,6 +1383,35 @@ fn format_result(
         cityrecord_map.insert("capital", capital.to_owned());
         cityrecord_map.insert("timezone", cityrecord.timezone.clone());
         cityrecord_map.insert("population", cityrecord.population.to_string());
+
+        // countryrecord fields
+        cityrecord_map.insert("iso3", countryrecord.info.iso3.clone());
+        cityrecord_map.insert("fips", countryrecord.info.fips.clone());
+        cityrecord_map.insert("area", countryrecord.info.area.to_string());
+        cityrecord_map.insert(
+            "country_population",
+            countryrecord.info.population.to_string(),
+        );
+        cityrecord_map.insert("continent", countryrecord.info.continent.clone());
+        cityrecord_map.insert("tld", countryrecord.info.tld.clone());
+        cityrecord_map.insert("currency_code", countryrecord.info.currency_code.clone());
+        cityrecord_map.insert("currency_name", countryrecord.info.currency_name.clone());
+        cityrecord_map.insert("phone", countryrecord.info.phone.clone());
+        cityrecord_map.insert(
+            "postal_code_format",
+            countryrecord.info.postal_code_format.clone(),
+        );
+        cityrecord_map.insert(
+            "postal_code_regex",
+            countryrecord.info.postal_code_regex.clone(),
+        );
+        cityrecord_map.insert("languages", countryrecord.info.languages.clone());
+        cityrecord_map.insert("country_geonameid", countryrecord.info.geonameid.to_string());
+        cityrecord_map.insert("neighbours", countryrecord.info.neighbours.clone());
+        cityrecord_map.insert(
+            "equivalent_fips_code",
+            countryrecord.info.equivalent_fips_code.clone(),
+        );
 
         if let Ok(formatted) = dynfmt::SimpleCurlyFormat.format(formatstr, cityrecord_map) {
             formatted.to_string()
@@ -1373,4 +1449,68 @@ fn get_admin_names(cityrecord: &CitiesRecord, selector: u8) -> (&String, &String
         (&EMPTY_STRING, &EMPTY_STRING)
     };
     (admin1_name, admin2_name)
+}
+
+#[cached(
+    key = "String",
+    convert = r#"{ format!("{cell}-{formatstr}") }"#,
+    option = true
+)]
+fn get_countryinfo(engine: &Engine, cell: &str, formatstr: &str) -> Option<String> {
+    let Some(countryrecord) = engine.country_info(cell) else {
+        // no results, so return early with None
+        return None;
+    };
+
+    if formatstr.starts_with('%') {
+        // if formatstr starts with %, then we're using a predefined format
+        let formatted = match formatstr {
+            "%capital" => countryrecord.info.capital.clone(),
+            "%continent" => countryrecord.info.continent.clone(),
+            _ => format!("{:?}", countryrecord.names), /* default is to return all names
+                                                        * "%+" => format!("{:?}",
+                                                        * countryrecord.names), */
+        };
+        Some(formatted)
+    } else {
+        // if formatstr does not start with %, then we're using dynfmt,
+        // i.e. sixteen predefined fields below in curly braces are replaced with values
+        // e.g. "Country name/s: {name}, Continent: {continent} Currency: {currency_name}
+        // ({currency_code})})"
+        let mut countryrecord_map: HashMap<&str, String> = HashMap::with_capacity(16);
+        countryrecord_map.insert("iso3", countryrecord.info.iso3.clone());
+        countryrecord_map.insert("fips", countryrecord.info.fips.clone());
+        countryrecord_map.insert("capital", countryrecord.info.capital.clone());
+        countryrecord_map.insert("area", countryrecord.info.area.to_string());
+        countryrecord_map.insert(
+            "country_population",
+            countryrecord.info.population.to_string(),
+        );
+        countryrecord_map.insert("continent", countryrecord.info.continent.clone());
+        countryrecord_map.insert("tld", countryrecord.info.tld.clone());
+        countryrecord_map.insert("currency_code", countryrecord.info.currency_code.clone());
+        countryrecord_map.insert("currency_name", countryrecord.info.currency_name.clone());
+        countryrecord_map.insert("phone", countryrecord.info.phone.clone());
+        countryrecord_map.insert(
+            "postal_code_format",
+            countryrecord.info.postal_code_format.clone(),
+        );
+        countryrecord_map.insert(
+            "postal_code_regex",
+            countryrecord.info.postal_code_regex.clone(),
+        );
+        countryrecord_map.insert("languages", countryrecord.info.languages.clone());
+        countryrecord_map.insert("geonameid", countryrecord.info.geonameid.to_string());
+        countryrecord_map.insert("neighbours", countryrecord.info.neighbours.clone());
+        countryrecord_map.insert(
+            "equivalent_fips_code",
+            countryrecord.info.equivalent_fips_code.clone(),
+        );
+
+        if let Ok(formatted) = dynfmt::SimpleCurlyFormat.format(formatstr, countryrecord_map) {
+            Some(formatted.to_string())
+        } else {
+            Some(INVALID_DYNFMT.to_string())
+        }
+    }
 }
