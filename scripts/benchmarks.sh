@@ -39,11 +39,14 @@
 
 pat="$1"
 
+# the version of this script
+bm_version=2.1.1
+
 # configurable variables - change as needed to reflect your environment/workloads
 qsv_bin=qsv
 benchmark_data_url=https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/NYC_311_SR_2010-2020-sample-1M.7z
 # where to download the benchmark data compressed file - this could be a zip or 7z file
-datazip=/tmp/NYC_311_SR_2010-2020-sample-1M.7z
+datazip=NYC_311_SR_2010-2020-sample-1M.7z
 # where to store the benchmark data
 data=NYC_311_SR_2010-2020-sample-1M.csv
 warmup_runs=2
@@ -107,9 +110,6 @@ else
   echo "Unsupported operating system: $OSTYPE"
   exit 1
 fi
-
-# the version of this script
-bm_version=2.1.1
 
 function cleanup_files {
   # Clean up temporary files
