@@ -1,2 +1,3 @@
-version	tstamp	logtime	argument	total_count	wo_index_count	with_index_count	warmup_runs	benchmark_runs	elapsed_secs	version_info
-0.113.0	2023-09-16-14	2023-09-16-14-11-52		112	90	22	2	3	3335	qsv 0.113.0-mimalloc-apply;fetch;foreach;generate;geocode;Luau 0.594;to;polars-0.32.1;self_update-12-12;25.60 GiB-1.64 GiB-22.75 GiB-32.00 GiB (aarch64-apple-darwin compiled with Rust 1.72.0) prebuilt
+version	tstamp	logtime	bm_version	platform	cores	mem	kind	argument	total_count	wo_index_count	with_index_count	warmup_runs	benchmark_runs	elapsed_secs	version_info
+0.113.0	2023-09-17-22	2023-09-17-22-35-27	2.1.0	aarch64-apple-darwin	12	34359738368	prebuilt		112	90	22	2	3	8636	qsv 0.113.0-mimalloc-apply;fetch;foreach;generate;geocode;Luau 0.594;to;polars-0.32.1;self_update-12-12;25.60 GiB-0 B-19.79 GiB-32.00 GiB (aarch64-apple-darwin compiled with Rust 1.72.0) prebuilt
+0.113.0	2023-09-16-14	2023-09-16-14-11-52							112	90	22	2	3	3335	qsv 0.113.0-mimalloc-apply;fetch;foreach;generate;geocode;Luau 0.594;to;polars-0.32.1;self_update-12-12;25.60 GiB-1.64 GiB-22.75 GiB-32.00 GiB (aarch64-apple-darwin compiled with Rust 1.72.0) prebuilt
