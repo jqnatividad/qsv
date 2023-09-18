@@ -51,6 +51,38 @@ benchmark_runs=3
 data_filename=$(basename -- "$data")
 filestem="${data_filename%.*}"
 
+# check if binaries are installed ---------
+# check if qsv is installed
+if ! command -v "$qsv_bin" &> /dev/null
+then
+    echo "qsv could not be found"
+    echo "Please install Quicksilver (qsv) from https://qsv.dathere.com"
+    exit
+fi
+
+# set sevenz_bin to "7z" on Linux/Cygwin and "7zz" on macOS
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  sevenz_bin=7zz
+else
+  sevenz_bin=7z
+fi
+
+# check if 7z is installed
+if ! command -v "$sevenz_bin" &> /dev/null
+then
+    echo "ERROR: $sevenz_bin could not be found"
+    echo "Please install 7-Zip v23.01 and above"
+    exit
+fi
+
+# check if hyperfine is installed
+if ! command -v hyperfine &> /dev/null
+then
+    echo "ERROR: hyperfine could not be found"
+    echo "Please install hyperfine v1.17.0 and above"
+    exit
+fi
+
 # qsv version metadata ----------------
 # get current version of qsv
 raw_version=$("$qsv_bin" --version)
@@ -80,7 +112,7 @@ else
 fi
 
 # the version of this script
-bm_version=2.1.0
+bm_version=2.1.1
 
 function cleanup_files {
   # Clean up temporary files
@@ -145,37 +177,6 @@ echo "> Setting up Benchmark environment..."
 SECONDS=0
 
 cleanup_files
-
-# check if qsv is installed
-if ! command -v "$qsv_bin" &> /dev/null
-then
-    echo "qsv could not be found"
-    echo "Please install Quicksilver (qsv) from https://qsv.dathere.com"
-    exit
-fi
-
-# set sevenz_bin to "7z" on Linux/Cygwin and "7zz" on macOS
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  sevenz_bin=7zz
-else
-  sevenz_bin=7z
-fi
-
-# check if 7z is installed
-if ! command -v "$sevenz_bin" &> /dev/null
-then
-    echo "ERROR: $sevenz_bin could not be found"
-    echo "Please install 7-Zip v23.01 and above"
-    exit
-fi
-
-# check if hyperfine is installed
-if ! command -v hyperfine &> /dev/null
-then
-    echo "ERROR: hyperfine could not be found"
-    echo "Please install hyperfine v1.17.0 and above"
-    exit
-fi
 
 if [ ! -r "$data" ]; then
   echo "> Downloading Benchmark data..."
