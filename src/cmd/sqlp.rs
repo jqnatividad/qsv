@@ -111,6 +111,9 @@ sqlp options:
                               POLARS CSV PARSING OPTIONS:
     --try-parsedates          Automatically try to parse dates/datetimes and time.
                               If parsing fails, columns remain as strings.
+                              Note that if dates are not well-formatted in your CSV,
+                              that you may want to try to set `--ignore-errors` to relax
+                              the CSV parsing of dates.
     --infer-len <arg>         The number of rows to scan when inferring the schema of the CSV.
                               Set to 0 to do a full table scan (warning: very slow).
                               (default: 250)
