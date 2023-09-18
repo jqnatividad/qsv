@@ -20,7 +20,7 @@
 # it was also designed to be a useful tool for users to benchmark qsv on their own systems,
 # so it be can run on hardware and workloads that reflect your requirements/environment.
 #
-# Make sure you're using a release-optimized `qsv`. 
+# Make sure you're using a release-optimized `qsv`.
 # If you can't use the prebuilt binaries at https://github.com/jqnatividad/qsv/releases/latest,
 # build it to have at least the apply, geocode, luau, to and polars features enabled:
 # i.e. `cargo build --release --locked -F feature_capable,apply,geocode,luau,to,polars` or
@@ -53,11 +53,10 @@ filestem="${data_filename%.*}"
 
 # check if binaries are installed ---------
 # check if qsv is installed
-if ! command -v "$qsv_bin" &> /dev/null
-then
-    echo "qsv could not be found"
-    echo "Please install Quicksilver (qsv) from https://qsv.dathere.com"
-    exit
+if ! command -v "$qsv_bin" &>/dev/null; then
+  echo "qsv could not be found"
+  echo "Please install Quicksilver (qsv) from https://qsv.dathere.com"
+  exit
 fi
 
 # set sevenz_bin to "7z" on Linux/Cygwin and "7zz" on macOS
@@ -68,19 +67,17 @@ else
 fi
 
 # check if 7z is installed
-if ! command -v "$sevenz_bin" &> /dev/null
-then
-    echo "ERROR: $sevenz_bin could not be found"
-    echo "Please install 7-Zip v23.01 and above"
-    exit
+if ! command -v "$sevenz_bin" &>/dev/null; then
+  echo "ERROR: $sevenz_bin could not be found"
+  echo "Please install 7-Zip v23.01 and above"
+  exit
 fi
 
 # check if hyperfine is installed
-if ! command -v hyperfine &> /dev/null
-then
-    echo "ERROR: hyperfine could not be found"
-    echo "Please install hyperfine v1.17.0 and above"
-    exit
+if ! command -v hyperfine &>/dev/null; then
+  echo "ERROR: hyperfine could not be found"
+  echo "Please install hyperfine v1.17.0 and above"
+  exit
 fi
 
 # qsv version metadata ----------------
@@ -94,21 +91,21 @@ kind=$(echo "$raw_version" | sed 's/.* \([a-zA-Z]*\)$/\1/')
 
 # get num cores & memory size
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    # macOS
-    num_cores=$(sysctl -n hw.ncpu)
-    mem_size=$(sysctl -n hw.memsize)
+  # macOS
+  num_cores=$(sysctl -n hw.ncpu)
+  mem_size=$(sysctl -n hw.memsize)
 elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    # Linux
-    num_cores=$(nproc)
-    mem_size=$(free -b | awk '/Mem/ {print $7}')
+  # Linux
+  num_cores=$(nproc)
+  mem_size=$(free -b | awk '/Mem/ {print $7}')
 elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
-    # Windows
-    num_cores=$(wmic cpu get NumberOfCores | grep -Eo '^[0-9]+')
-    mem_size=$(wmic OS get FreePhysicalMemory | grep -Eo '[0-9]+')
-    mem_size=$((mem_size * 1024))
+  # Windows
+  num_cores=$(wmic cpu get NumberOfCores | grep -Eo '^[0-9]+')
+  mem_size=$(wmic OS get FreePhysicalMemory | grep -Eo '[0-9]+')
+  mem_size=$((mem_size * 1024))
 else
-    echo "Unsupported operating system: $OSTYPE"
-    exit 1
+  echo "Unsupported operating system: $OSTYPE"
+  exit 1
 fi
 
 # the version of this script
@@ -180,7 +177,7 @@ cleanup_files
 
 if [ ! -r "$data" ]; then
   echo "> Downloading Benchmark data..."
-  curl -sS "$benchmark_data_url" > "$datazip"
+  curl -sS "$benchmark_data_url" >"$datazip"
   "$sevenz_bin" e -y "$datazip"
   echo ""
 fi
@@ -193,7 +190,7 @@ echo ""
 
 if [ ! -r communityboards.csv ]; then
   echo "> Downloading community board data..."
-  curl -sS https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/communityboards.csv > communityboards.csv
+  curl -sS https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/communityboards.csv >communityboards.csv
   echo ""
 fi
 
@@ -212,11 +209,11 @@ if [ ! -r data_to_exclude.csv ]; then
   echo "   benchmark_data.jsonl..."
   "$qsv_bin" tojsonl "$data" --output benchmark_data.jsonl
   echo "   benchmark_data.schema.json..."
-  "$qsv_bin" schema "$data" --stdout > benchmark_data.csv.schema.json
+  "$qsv_bin" schema "$data" --stdout >benchmark_data.csv.schema.json
   echo "   benchmark_data.snappy..."
   "$qsv_bin" snappy compress "$data" --output benchmark_data.snappy
   echo "   searchset_patterns.txt..."
-  printf "homeless\npark\nnoise\n" > searchset_patterns.txt
+  printf "homeless\npark\nnoise\n" >searchset_patterns.txt
   echo ""
 fi
 
@@ -230,8 +227,8 @@ commands_with_index_name=()
 function add_command {
   local dest_array="$1"
   shift
-  local cmd="$*" 
-  
+  local cmd="$*"
+
   if [[ "$dest_array" == "without_index" ]]; then
     commands_without_index+=("$cmd")
   else
@@ -243,13 +240,13 @@ function run {
   local index=
   while true; do
     case "$1" in
-      --index)
-        index="yes"
-        shift
-        ;;
-      *)
-        break
-        ;;
+    --index)
+      index="yes"
+      shift
+      ;;
+    *)
+      break
+      ;;
     esac
   done
 
@@ -277,7 +274,7 @@ run apply_datefmt "$qsv_bin apply datefmt \"Created Date\" $data"
 run apply_datefmt_multi "$qsv_bin apply datefmt \"Created Date,Closed Date,Due Date\" $data"
 run apply_dynfmt "$qsv_bin apply dynfmt --formatstr \"{Created Date} {Complaint Type} - {BBL} {City}\" --new-column new_col $data"
 run apply_emptyreplace "$qsv_bin" apply emptyreplace \"Bridge Highway Name\" --replacement Unspecified "$data"
-run apply_op_eudex "$qsv_bin apply operations lower,eudex Agency --comparand Queens --new-column Agency_queens_soundex $data" 
+run apply_op_eudex "$qsv_bin apply operations lower,eudex Agency --comparand Queens --new-column Agency_queens_soundex $data"
 run apply_op_string "$qsv_bin apply operations lower Agency $data"
 run apply_op_similarity "$qsv_bin apply operations lower,simdln Agency --comparand brooklyn --new-column Agency_sim-brooklyn_score $data"
 run behead "$qsv_bin" behead "$data"
@@ -353,15 +350,15 @@ run sortcheck_unsorted_all "$qsv_bin" sortcheck --all data_unsorted.csv
 run split "$qsv_bin" split --size 50000 split_tempdir "$data"
 run --index split_index "$qsv_bin" split --size 50000 split_tempdir "$data"
 run --index split_index_j1 "$qsv_bin" split --size 50000 -j 1 split_tempdir "$data"
-run sqlp "$qsv_bin" sqlp  "$data" -Q '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
+run sqlp "$qsv_bin" sqlp "$data" -Q '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
 run sqlp_format_arrow "$qsv_bin" sqlp --format arrow "$data" -Q '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
 run sqlp_format_json "$qsv_bin" sqlp --format json "$data" -Q '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
 run sqlp_format_parquet "$qsv_bin" sqlp --format parquet "$data" -Q '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
 run sqlp_format_parquet_statistics "$qsv_bin" sqlp --format parquet --statistics "$data" -Q '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
-run sqlp_lowmemory "$qsv_bin" sqlp  "$data" -Q --low-memory '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
-run sqlp_nooptimizations "$qsv_bin" sqlp  "$data" -Q --no-optimizations '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
-run sqlp_tryparsedates "$qsv_bin" sqlp  "$data" -Q --try-parsedates '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
-run sqlp_tryparsedates_inferlen "$qsv_bin" sqlp  "$data" -Q --infer-len 10000 --try-parsedates '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
+run sqlp_lowmemory "$qsv_bin" sqlp "$data" -Q --low-memory '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
+run sqlp_nooptimizations "$qsv_bin" sqlp "$data" -Q --no-optimizations '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
+run sqlp_tryparsedates "$qsv_bin" sqlp "$data" -Q --try-parsedates '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
+run sqlp_tryparsedates_inferlen "$qsv_bin" sqlp "$data" -Q --infer-len 10000 --try-parsedates '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
 run stats "$qsv_bin" stats --force "$data"
 run --index stats_index "$qsv_bin" stats --force "$data"
 run --index stats_index_j1 "$qsv_bin" stats -j 1 --force "$data"
@@ -400,7 +397,7 @@ fi
 
 # Init latest_results.csv. It stores the benchmark results for this run
 rm -f results/latest_results.csv
-echo "version,tstamp,name,mean,stddev,median,user,system,min,max" > results/latest_results.csv
+echo "version,tstamp,name,mean,stddev,median,user,system,min,max" >results/latest_results.csv
 
 # check if the file benchmark_results.csv exists, if it doesn't create it
 # by copying the empty latest_results.csv
@@ -432,11 +429,11 @@ for command_no_index in "${commands_without_index[@]}"; do
   echo "$name_idx. ${commands_without_index_name[$idx]}"
   hyperfine --warmup "$warmup_runs" -i --runs "$benchmark_runs" --export-csv results/hf_result.csv \
     "$command_no_index"
-  
+
   # prepend version, tstamp & benchmark name to the hyperfine results
-  echo "version,tstamp,name" > results/results_work.csv
-  echo "$version,$now,${commands_without_index_name[$idx]}" >> results/results_work.csv
-  
+  echo "version,tstamp,name" >results/results_work.csv
+  echo "$version,$now,${commands_without_index_name[$idx]}" >>results/results_work.csv
+
   # remove the command column from the hyperfine results, we just need the name
   "$qsv_bin" select '!command' results/hf_result.csv -o results/hf_result_nocmd.csv
 
@@ -462,7 +459,7 @@ if [ "$with_index_count" -gt 0 ]; then
   rm -f "$data".idx
   "$qsv_bin" index "$data"
   "$qsv_bin" stats "$data" --everything --infer-dates --force \
-    --output benchmark_work.stats.csv  
+    --output benchmark_work.stats.csv
 fi
 
 idx=0
@@ -470,8 +467,8 @@ for command_with_index in "${commands_with_index[@]}"; do
   echo "$name_idx. ${commands_with_index_name[$idx]}"
   hyperfine --warmup "$warmup_runs" -i --runs "$benchmark_runs" --export-csv results/hf_result.csv \
     "$command_with_index"
-  echo "version,tstamp,name" > results/results_work.csv
-  echo "$version,$now,${commands_with_index_name[$idx]}" >> results/results_work.csv
+  echo "version,tstamp,name" >results/results_work.csv
+  echo "$version,$now,${commands_with_index_name[$idx]}" >>results/results_work.csv
   "$qsv_bin" select '!command' results/hf_result.csv -o results/hf_result_nocmd.csv
   "$qsv_bin" cat columns results/results_work.csv results/hf_result_nocmd.csv \
     -o results/entry.csv
@@ -493,13 +490,13 @@ done
 echo ""
 # sort the benchmark results by version, tstamp & name
 "$qsv_bin" sort --select version,tstamp,name results/latest_results.csv \
-   -o results/results_work.csv
+  -o results/results_work.csv
 
 # compute records per second for each benchmark using luau by dividing rowcount by mean
 # we then round the result to a whole number and format with commas for readability
 luau_cmd="recs_per_sec=( $rowcount / mean); return numWithCommas(recs_per_sec)"
 "$qsv_bin" luau --begin file:benchmark_helper.luau map recs_per_sec "$luau_cmd" \
-   results/results_work.csv -o results/latest_results.csv
+  results/results_work.csv -o results/latest_results.csv
 
 # Concatenate the final results of this run to results/bechmark_results.csv
 "$qsv_bin" cat rowskey results/latest_results.csv results/benchmark_results.csv \
@@ -516,7 +513,7 @@ elapsed=$SECONDS
 
 # Init latest_run_info.csv. It stores the benchmark run info for this run
 rm -f results/latest_run_info.tsv
-echo -e "version\ttstamp\tlogtime\tbm_version\tplatform\tcores\tmem\tkind\targument\ttotal_count\two_index_count\twith_index_count\twarmup_runs\tbenchmark_runs\telapsed_secs\tversion_info" > results/latest_run_info.tsv
+echo -e "version\ttstamp\tlogtime\tbm_version\tplatform\tcores\tmem\tkind\targument\ttotal_count\two_index_count\twith_index_count\twarmup_runs\tbenchmark_runs\telapsed_secs\tversion_info" >results/latest_run_info.tsv
 
 # check if the file run_info_history.csv exists, if it doesn't create it
 # by copying the empty latest_run_info.csv
@@ -525,7 +522,7 @@ if [ ! -f "results/run_info_history.tsv" ]; then
 fi
 
 # append the run info to latest_run_info.csv
-echo -e "$version\t$now\t$now_sec\t$bm_version\t$platform\t$num_cores\t$mem_size\t$kind\t$pat\t$total_count\t$wo_index_count\t$with_index_count\t$warmup_runs\t$benchmark_runs\t$elapsed\t$raw_version" >> results/latest_run_info.tsv
+echo -e "$version\t$now\t$now_sec\t$bm_version\t$platform\t$num_cores\t$mem_size\t$kind\t$pat\t$total_count\t$wo_index_count\t$with_index_count\t$warmup_runs\t$benchmark_runs\t$elapsed\t$raw_version" >>results/latest_run_info.tsv
 
 # now update the run_info_history.tsv
 "$qsv_bin" cat rowskey results/latest_run_info.tsv results/run_info_history.tsv \
