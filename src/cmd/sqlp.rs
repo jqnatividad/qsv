@@ -393,6 +393,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             comm_subplan_elim:   !args.flag_low_memory,
             comm_subexpr_elim:   true,
             streaming:           args.flag_low_memory,
+            fast_projection:     true,
+            eager:               false,
         }
     };
     // gated by log::log_enabled!(log::Level::Debug) to avoid the

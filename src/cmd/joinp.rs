@@ -389,6 +389,8 @@ impl JoinStruct {
                 comm_subplan_elim:   true,
                 comm_subexpr_elim:   true,
                 streaming:           self.streaming,
+                fast_projection:     true,
+                eager:               false,
             }
         };
         log::debug!("Optimization state: {optimization_state:?}");
