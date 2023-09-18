@@ -86,11 +86,11 @@ fi
 # qsv version metadata ----------------
 # get current version of qsv
 raw_version=$("$qsv_bin" --version)
-version=$(echo $raw_version | cut -d' ' -f2 | cut -d'-' -f1)
+version=$(echo "$raw_version" | cut -d' ' -f2 | cut -d'-' -f1)
 # get target platform from version
-platform=$(echo $raw_version | sed 's/.*(\([a-z0-9_-]*\) compiled with Rust.*/\1/')
+platform=$(echo "$raw_version" | sed 's/.*(\([a-z0-9_-]*\) compiled with Rust.*/\1/')
 # get qsv kind
-kind=$(echo $raw_version | sed 's/.* \([a-zA-Z]*\)$/\1/')
+kind=$(echo "$raw_version" | sed 's/.* \([a-zA-Z]*\)$/\1/')
 
 # get num cores & memory size
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -188,7 +188,7 @@ fi
 # we get the rowcount, just in case the benchmark data was modified by the user to tailor
 # the benchmark to their system/workload. We use the rowcount to compute records per second
 rowcount=$("$qsv_bin" count "$data")
-printf "Benchmark data rowcount: %'.0f\n" $rowcount
+printf "Benchmark data rowcount: %'.0f\n" "$rowcount"
 echo ""
 
 if [ ! -r communityboards.csv ]; then
@@ -230,7 +230,7 @@ commands_with_index_name=()
 function add_command {
   local dest_array="$1"
   shift
-  local cmd="$@"
+  local cmd="$*" 
   
   if [[ "$dest_array" == "without_index" ]]; then
     commands_without_index+=("$cmd")
@@ -389,8 +389,7 @@ run --index validate_no_schema_index "$qsv_bin" validate "$data"
 with_index_count=${#commands_with_index[@]}
 wo_index_count=${#commands_without_index[@]}
 total_count=$((with_index_count + wo_index_count))
-printf "> Commands to benchmark: $total_count, w/o index: $wo_index_count, with index: $with_index_count\n\n"
-
+printf "> Commands to benchmark: %s, w/o index: %s, with index: %s\n\n" "$total_count" "$wo_index_count" "$with_index_count"
 # ---------------------------------------
 # Prepare benchmark results directory
 
