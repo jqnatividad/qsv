@@ -215,6 +215,8 @@ geocode options:
                                   - '%capital' - the capital
                                   - '%population' - the population
                                   - '%timezone' - the timezone
+                                  - '%json' - the full city record as JSON
+                                  - '%pretty-json' - the full city record as pretty JSON
                                   - '%+' - use the subcommand's default format. 
                                            suggest - '%location'
                                            suggestnow - '{name}, {admin1} {country}: {latitude}, {longitude}'
@@ -225,11 +227,16 @@ geocode options:
                                 Alternatively, you can use dynamic formatting to create a custom format.
                                 To do so, set the --formatstr to a dynfmt template, enclosing field names
                                 in curly braces.
-                                The following ten fields are available:
+                                The following ten cityrecord fields are available:
                                   id, name, latitude, longitude, country, admin1, admin2, capital,
                                   timezone, population
+
+                                Fifteen additional countryinfo field are also available:
+                                  iso3, fips, area, country_population, continent, tld, currency_code,
+                                  currency_name, phone, postal_code_format, postal_code_regex, languages,
+                                  country_geonameid, neighbours, equivalent_fips_code
                                     
-                                  e.g. "City: {name}, State: {admin1}, Country: {country} - {timezone}"
+                                  e.g. "City: {name}, State: {admin1}, Country: {country} {continent} - {languages}"
 
                                 If an invalid template is specified, "Invalid dynfmt template" is returned.
 
@@ -244,7 +251,7 @@ geocode options:
                                 The key is the desired column name and the value is one of the same ten fields
                                 available for dynamic formatting.
 
-                                 e.g. "%dyncols: {city_col:name}, {state_col:admin1}, {country_col:country}"
+                                 e.g. "%dyncols: {city_col:name}, {state_col:admin1}, {country_col:country}, {continent:continent}}"
 
                                 will add three columns to the output CSV named city_col, state_col & country_col.
 
@@ -299,7 +306,7 @@ use std::{
 
 use cached::{proc_macro::cached, SizedCache};
 use dynfmt::Format;
-use geosuggest_core::{CitiesRecord, Engine, EngineDumpFormat};
+use geosuggest_core::{CitiesRecord, CountryRecord, Engine, EngineDumpFormat};
 use geosuggest_utils::{IndexUpdater, IndexUpdaterSettings, SourceItem};
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::info;
@@ -309,6 +316,7 @@ use rayon::{
 };
 use regex::Regex;
 use serde::Deserialize;
+use serde_json;
 use simple_home_dir::expand_tilde;
 use url::Url;
 use uuid::Uuid;
@@ -364,7 +372,7 @@ struct Admin1Filter {
 
 static QSV_VERSION: &str = env!("CARGO_PKG_VERSION");
 static DEFAULT_GEOCODE_INDEX_FILENAME: &str =
-    concat!("qsv-", env!("CARGO_PKG_VERSION"), "-geocode-index.bincode");
+    concat!("qsv-", env!("CARGO_PKG_VERSION"), "-geocode-index.bincode.new");
 
 static DEFAULT_CITIES_NAMES_URL: &str =
     "https://download.geonames.org/export/dump/alternateNamesV2.zip";
@@ -388,7 +396,7 @@ static INVALID_COUNTRY_CODE: &str = "Invalid country code.";
 static SUGGEST_ADMIN1_LIMIT: usize = 10;
 
 // valid column values for %dyncols
-static VALID_DYNCOLS: [&str; 10] = [
+static VALID_DYNCOLS: [&str; 25] = [
     "id",
     "name",
     "latitude",
@@ -399,6 +407,21 @@ static VALID_DYNCOLS: [&str; 10] = [
     "capital",
     "timezone",
     "population",
+    "iso3",
+    "fips",
+    "area",
+    "country_population",
+    "continent",
+    "tld",
+    "currency_code",
+    "currency_name",
+    "phone",
+    "postal_code_format",
+    "postal_code_regex",
+    "languages",
+    "country_geonameid",
+    "neighbours",
+    "equivalent_fips_code",
 ];
 
 // dyncols populated sentinel value
@@ -1197,7 +1220,17 @@ fn search_index(
             .unwrap_or_default();
 
         if formatstr.starts_with("%dyncols:") {
-            add_dyncols(record, cityrecord, &country, &capital, column_values);
+            let Some(countryrecord) = engine.country_info(&country) else {
+                return None;
+            };
+            add_dyncols(
+                record,
+                cityrecord,
+                countryrecord,
+                &country,
+                &capital,
+                column_values,
+            );
             return Some(DYNCOLS_POPULATED.to_string());
         }
 
@@ -1245,7 +1278,17 @@ fn search_index(
                 .unwrap_or_default();
 
             if formatstr.starts_with("%dyncols:") {
-                add_dyncols(record, cityrecord, &country, &capital, column_values);
+                let Some(countryrecord) = engine.country_info(&country) else {
+                    return None;
+                };
+                add_dyncols(
+                    record,
+                    cityrecord,
+                    countryrecord,
+                    &country,
+                    &capital,
+                    column_values,
+                );
                 return Some(DYNCOLS_POPULATED.to_string());
             }
 
@@ -1263,12 +1306,14 @@ fn search_index(
 fn add_dyncols(
     record: &mut csv::StringRecord,
     cityrecord: &CitiesRecord,
+    countryrecord: &CountryRecord,
     country: &str,
     capital: &str,
     column_values: &[&str],
 ) {
     for column in column_values {
         match *column {
+            // CityRecord fields
             "id" => record.push_field(&cityrecord.id.to_string()),
             "name" => record.push_field(&cityrecord.name),
             "latitude" => record.push_field(&cityrecord.latitude.to_string()),
@@ -1285,6 +1330,24 @@ fn add_dyncols(
             "capital" => record.push_field(capital),
             "timezone" => record.push_field(&cityrecord.timezone),
             "population" => record.push_field(&cityrecord.population.to_string()),
+
+            // CountryRecord fields
+            "iso3" => record.push_field(&countryrecord.info.iso3),
+            "fips" => record.push_field(&countryrecord.info.fips),
+            "area" => record.push_field(&countryrecord.info.area.to_string()),
+            "country_population" => record.push_field(&countryrecord.info.population.to_string()),
+            "continent" => record.push_field(&countryrecord.info.continent),
+            "tld" => record.push_field(&countryrecord.info.tld),
+            "currency_code" => record.push_field(&countryrecord.info.currency_code),
+            "currency_name" => record.push_field(&countryrecord.info.currency_name),
+            "phone" => record.push_field(&countryrecord.info.phone),
+            "postal_code_format" => record.push_field(&countryrecord.info.postal_code_format),
+            "postal_code_regex" => record.push_field(&countryrecord.info.postal_code_regex),
+            "languages" => record.push_field(&countryrecord.info.languages),
+            "country_geonameid" => record.push_field(&countryrecord.info.geonameid.to_string()),
+            "neighbours" => record.push_field(&countryrecord.info.neighbours),
+            "equivalent_fips_code" => record.push_field(&countryrecord.info.equivalent_fips_code),
+
             // this should not happen as column_values has been pre-validated for these values
             _ => unreachable!(),
         }
@@ -1301,10 +1364,6 @@ fn format_result(
     suggest_mode: bool,
 ) -> String {
     let (admin1_name, admin2_name) = get_admin_names(cityrecord, 3);
-
-    let Some(countryrecord) = engine.country_info(country) else {
-        return INVALID_COUNTRY_CODE.to_string();
-    };
 
     if formatstr.starts_with('%') {
         // if formatstr starts with %, then we're using a predefined format
@@ -1330,25 +1389,10 @@ fn format_result(
             "%cityrecord" => format!("{cityrecord:?}"),
             "%admin1record" => format!("{:?}", cityrecord.admin_division),
             "%admin2record" => format!("{:?}", cityrecord.admin2_division),
-
-            // countryrecord fields
-            "%continent" => countryrecord.info.continent.clone(),
-
-            // "%json" => format!(
-            //     "{{\"id\":{},\"name\":\"{}\",\"latitude\":{},\"longitude\":{},\"country\":\"{}\",
-            // \\      "admin1\":\"{}\",\"admin2\":\"{}\",\"capital\":\"{}\",\"timezone\
-            // ":\"{}\",\"\      population\":{}}}",
-            //     cityrecord.id,
-            //     cityrecord.name,
-            //     cityrecord.latitude,
-            //     cityrecord.longitude,
-            //     country,
-            //     admin1_name,
-            //     admin2_name,
-            //     capital,
-            //     cityrecord.timezone,
-            //     cityrecord.population,
-            // ),
+            "%json" => serde_json::to_string(cityrecord).unwrap_or_else(|_| "null".to_string()),
+            "%pretty-json" => {
+                serde_json::to_string_pretty(cityrecord).unwrap_or_else(|_| "null".to_string())
+            },
             _ => {
                 // invalid formatstr, so we use the default for suggest/now or reverse/now
                 if suggest_mode {
@@ -1371,8 +1415,16 @@ fn format_result(
     } else {
         // if formatstr does not start with %, then we're using dynfmt,
         // i.e. twenty-five predefined fields below in curly braces are replaced with values
-        // e.g. "City: {name}, State: {admin1}, Country: {country} - {timezone}"
+        // e.g. "City: {name}, State: {admin1}, Country: {country} - {continent}"
+        // unlike the predefined formats, we don't have a default format for dynfmt
+        // so we return INVALID_DYNFMT if dynfmt fails to format the string
+        // also, we have access to the country info fields as well
+        let Some(countryrecord) = engine.country_info(country) else {
+            return INVALID_COUNTRY_CODE.to_string();
+        };
         let mut cityrecord_map: HashMap<&str, String> = HashMap::with_capacity(25);
+
+        // cityrecord fields
         cityrecord_map.insert("id", cityrecord.id.to_string());
         cityrecord_map.insert("name", cityrecord.name.clone());
         cityrecord_map.insert("latitude", cityrecord.latitude.to_string());
@@ -1384,7 +1436,6 @@ fn format_result(
         cityrecord_map.insert("timezone", cityrecord.timezone.clone());
         cityrecord_map.insert("population", cityrecord.population.to_string());
 
-        // countryrecord fields
         cityrecord_map.insert("iso3", countryrecord.info.iso3.clone());
         cityrecord_map.insert("fips", countryrecord.info.fips.clone());
         cityrecord_map.insert("area", countryrecord.info.area.to_string());
@@ -1406,7 +1457,10 @@ fn format_result(
             countryrecord.info.postal_code_regex.clone(),
         );
         cityrecord_map.insert("languages", countryrecord.info.languages.clone());
-        cityrecord_map.insert("country_geonameid", countryrecord.info.geonameid.to_string());
+        cityrecord_map.insert(
+            "country_geonameid",
+            countryrecord.info.geonameid.to_string(),
+        );
         cityrecord_map.insert("neighbours", countryrecord.info.neighbours.clone());
         cityrecord_map.insert(
             "equivalent_fips_code",
@@ -1467,9 +1521,11 @@ fn get_countryinfo(engine: &Engine, cell: &str, formatstr: &str) -> Option<Strin
         let formatted = match formatstr {
             "%capital" => countryrecord.info.capital.clone(),
             "%continent" => countryrecord.info.continent.clone(),
-            _ => format!("{:?}", countryrecord.names), /* default is to return all names
-                                                        * "%+" => format!("{:?}",
-                                                        * countryrecord.names), */
+            "%json" => serde_json::to_string(countryrecord).unwrap_or_else(|_| "null".to_string()),
+            "%pretty-json" => {
+                serde_json::to_string_pretty(countryrecord).unwrap_or_else(|_| "null".to_string())
+            },
+            _ => format!("{:?}", countryrecord.names),
         };
         Some(formatted)
     } else {
