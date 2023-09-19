@@ -382,19 +382,22 @@ fn geocode_suggest_dynfmt() {
     cmd.arg("suggest")
         .arg("Location")
         .arg("--formatstr")
-        .arg("{latitude}:{longitude} - {name}, {admin1}")
+        .arg(
+            "{latitude}:{longitude} - {name}, {admin1} {country} {continent} {currency_code} \
+             {neighbours}",
+        )
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["Location"],
-        svec!["41.90059:-87.85673 - Melrose Park, Illinois"],
-        svec!["40.65371:-73.93042 - East Flatbush, New York"],
-        svec!["40.71427:-74.00597 - New York City, New York"],
-        svec!["40.79472:-73.9425 - East Harlem, New York"],
+        svec!["41.90059:-87.85673 - Melrose Park, Illinois US NA USD CA,MX,CU"],
+        svec!["40.65371:-73.93042 - East Flatbush, New York US NA USD CA,MX,CU"],
+        svec!["40.71427:-74.00597 - New York City, New York US NA USD CA,MX,CU"],
+        svec!["40.79472:-73.9425 - East Harlem, New York US NA USD CA,MX,CU"],
         svec!["This is not a Location and it will not be geocoded"],
         svec!["95.213424, 190,1234565"], // invalid lat, long
-        svec!["14.55027:121.03269 - Makati City, National Capital Region"],
+        svec!["14.55027:121.03269 - Makati City, National Capital Region PH AS PHP "],
     ];
     assert_eq!(got, expected);
 }
@@ -465,6 +468,53 @@ fn geocode_suggest_fmt() {
         svec!["This is not a Location and it will not be geocoded"],
         svec!["40.71427, -74.00597"], // suggest doesn't work with lat, long
         svec!["Makati City, National Capital Region PH"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn geocode_suggest_fmt_json() {
+    let wrk = Workdir::new("geocode_suggest_fmt");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["Location"],
+            svec!["Elmhurst, New York"],
+            svec!["East Flatbush, New York"],
+            svec!["Manhattan, New York"],
+            svec!["East Harlem, New York"],
+            svec!["This is not a Location and it will not be geocoded"],
+            svec!["40.71427, -74.00597"],
+            svec!["Makati, Metro Manila, Philippines"],
+        ],
+    );
+    let mut cmd = wrk.command("geocode");
+    cmd.arg("suggest")
+        .arg("Location")
+        .arg("--formatstr")
+        .arg("%json")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["Location"],
+        svec![
+            r#"{"id":5116495,"name":"Elmhurst","latitude":40.73649,"longitude":-73.87791,"country":{"id":6252001,"code":"US","name":"United States"},"admin_division":{"id":5128638,"code":"US.NY","name":"New York"},"admin2_division":{"id":5133268,"code":"US.NY.081","name":"Queens County"},"timezone":"America/New_York","names":{"en":"Elmhurst"},"country_names":{"en":"United States"},"admin1_names":{"en":"New York"},"admin2_names":{"en":"Queens County"},"population":113364}"#
+        ],
+        svec![
+            r#"{"id":5115843,"name":"East Flatbush","latitude":40.65371,"longitude":-73.93042,"country":{"id":6252001,"code":"US","name":"United States"},"admin_division":{"id":5128638,"code":"US.NY","name":"New York"},"admin2_division":{"id":6941775,"code":"US.NY.047","name":"Kings County"},"timezone":"America/New_York","names":{"en":"East Flatbush"},"country_names":{"en":"United States"},"admin1_names":{"en":"New York"},"admin2_names":{"en":"Kings"},"population":178464}"#
+        ],
+        svec![
+            r#"{"id":5128581,"name":"New York City","latitude":40.71427,"longitude":-74.00597,"country":{"id":6252001,"code":"US","name":"United States"},"admin_division":{"id":5128638,"code":"US.NY","name":"New York"},"admin2_division":null,"timezone":"America/New_York","names":{"en":"New York"},"country_names":{"en":"United States"},"admin1_names":{"en":"New York"},"admin2_names":null,"population":8804190}"#
+        ],
+        svec![
+            r#"{"id":6332428,"name":"East Harlem","latitude":40.79472,"longitude":-73.9425,"country":{"id":6252001,"code":"US","name":"United States"},"admin_division":{"id":5128638,"code":"US.NY","name":"New York"},"admin2_division":{"id":5128594,"code":"US.NY.061","name":"New York County"},"timezone":"America/New_York","names":null,"country_names":{"en":"United States"},"admin1_names":{"en":"New York"},"admin2_names":{"en":"New York County"},"population":115921}"#
+        ],
+        svec!["This is not a Location and it will not be geocoded"],
+        svec!["40.71427, -74.00597"],
+        svec![
+            r#"{"id":1703417,"name":"Makati City","latitude":14.55027,"longitude":121.03269,"country":{"id":1694008,"code":"PH","name":"Philippines"},"admin_division":{"id":7521311,"code":"PH.NCR","name":"Metro Manila"},"admin2_division":{"id":11395838,"code":"PH.NCR.137600000","name":"Southern Manila District"},"timezone":"Asia/Manila","names":{"en":"Makati City"},"country_names":{"en":"Philippines"},"admin1_names":{"en":"National Capital Region"},"admin2_names":null,"population":510383}"#
+        ],
     ];
     assert_eq!(got, expected);
 }
@@ -758,7 +808,7 @@ fn geocode_suggest_dyncols_fmt() {
         .args([
             "-f",
             "%dyncols: {city_col:name}, {state_col:admin1}, {county_col:admin2}, \
-             {country_col:country}",
+             {country_col:country}, {continent_col:continent}, {currency_col:currency_code}",
         ])
         .arg("data.csv");
 
@@ -769,39 +819,59 @@ fn geocode_suggest_dyncols_fmt() {
             "city_col",
             "state_col",
             "county_col",
-            "country_col"
+            "country_col",
+            "continent_col",
+            "currency_col"
         ],
         svec![
             "Melrose, New York",
             "Melrose Park",
             "Illinois",
             "Cook",
-            "US"
+            "US",
+            "NA",
+            "USD"
         ],
         svec![
             "East Flatbush, New York",
             "East Flatbush",
             "New York",
             "Kings",
-            "US"
+            "US",
+            "NA",
+            "USD"
         ],
-        svec!["Manhattan, New York", "New York City", "New York", "", "US"],
+        svec![
+            "Manhattan, New York",
+            "New York City",
+            "New York",
+            "",
+            "US",
+            "NA",
+            "USD"
+        ],
         svec![
             "Brooklyn, New York",
             "Brooklyn Park",
             "Minnesota",
             "Hennepin",
-            "US"
+            "US",
+            "NA",
+            "USD"
         ],
         svec![
             "East Harlem, New York",
             "East Harlem",
             "New York",
             "New York County",
-            "US"
+            "US",
+            "NA",
+            "USD"
         ],
         svec![
             "This is not a Location and it will not be geocoded",
+            "",
+            "",
             "",
             "",
             "",
@@ -812,15 +882,19 @@ fn geocode_suggest_dyncols_fmt() {
             "Jersey City",
             "New Jersey",
             "Hudson",
-            "US"
+            "US",
+            "NA",
+            "USD"
         ],
-        svec!["95.213424, 190,1234565", "", "", "", ""],
+        svec!["95.213424, 190,1234565", "", "", "", "", "", ""],
         svec![
             "Makati, Metro Manila, Philippines",
             "Makati City",
             "National Capital Region",
             "",
-            "PH"
+            "PH",
+            "AS",
+            "PHP"
         ],
     ];
     assert_eq!(got, expected);
