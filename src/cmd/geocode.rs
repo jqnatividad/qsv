@@ -19,6 +19,8 @@ It has five major subcommands:
                  (Euclidean distance - shortest distance "as the crow flies")
  * reversenow  - sames as reverse, but using a coordinate from the command line,
                  instead of CSV data.
+ * countryinfo - returns the country information for the specified country code.
+                 (e.g. US, CA, MX, etc.)
  * index-*     - operations to update the local Geonames cities index.
                  (index-check, index-update, index-load & index-reset)
  
@@ -96,6 +98,12 @@ Accepts the same options as reverse, but does not require an input file.
   $ qsv geocode reversenow --country US -f %cityrecord "40.71427, -74.00597"
   $ qsv geocode reversenow --admin1 "US:OH" "(39.32924, -82.10126)"
 
+COUNTRYINFO
+Returns the country information for the specified country code.
+(e.g. US, CA, MX, etc.)
+
+  $ qsv geocode countryinfo US
+
 INDEX-<operation>
 Updates the local Geonames cities index used by the geocode command.
 
@@ -124,6 +132,7 @@ qsv geocode suggest [--formatstr=<string>] [options] <column> [<input>]
 qsv geocode suggestnow [options] <location>
 qsv geocode reverse [--formatstr=<string>] [options] <column> [<input>]
 qsv geocode reversenow [options] <location>
+qsv geocode countryinfo <country> [options]
 qsv geocode index-load <index-file>
 qsv geocode index-check
 qsv geocode index-update [--languages=<lang>] [--cities-url=<url>] [--force]
@@ -206,6 +215,8 @@ geocode options:
                                   - '%capital' - the capital
                                   - '%population' - the population
                                   - '%timezone' - the timezone
+                                  - '%json' - the full city record as JSON
+                                  - '%pretty-json' - the full city record as pretty JSON
                                   - '%+' - use the subcommand's default format. 
                                            suggest - '%location'
                                            suggestnow - '{name}, {admin1} {country}: {latitude}, {longitude}'
@@ -216,11 +227,16 @@ geocode options:
                                 Alternatively, you can use dynamic formatting to create a custom format.
                                 To do so, set the --formatstr to a dynfmt template, enclosing field names
                                 in curly braces.
-                                The following ten fields are available:
+                                The following ten cityrecord fields are available:
                                   id, name, latitude, longitude, country, admin1, admin2, capital,
                                   timezone, population
+
+                                Fifteen additional countryinfo field are also available:
+                                  iso3, fips, area, country_population, continent, tld, currency_code,
+                                  currency_name, phone, postal_code_format, postal_code_regex, languages,
+                                  country_geonameid, neighbours, equivalent_fips_code
                                     
-                                  e.g. "City: {name}, State: {admin1}, Country: {country} - {timezone}"
+                                  e.g. "City: {name}, State: {admin1}, Country: {country} {continent} - {languages}"
 
                                 If an invalid template is specified, "Invalid dynfmt template" is returned.
 
@@ -235,7 +251,7 @@ geocode options:
                                 The key is the desired column name and the value is one of the same ten fields
                                 available for dynamic formatting.
 
-                                 e.g. "%dyncols: {city_col:name}, {state_col:admin1}, {country_col:country}"
+                                 e.g. "%dyncols: {city_col:name}, {state_col:admin1}, {country_col:country}, {continent:continent}}"
 
                                 will add three columns to the output CSV named city_col, state_col & country_col.
 
@@ -290,7 +306,7 @@ use std::{
 
 use cached::{proc_macro::cached, SizedCache};
 use dynfmt::Format;
-use geosuggest_core::{CitiesRecord, Engine, EngineDumpFormat};
+use geosuggest_core::{CitiesRecord, CountryRecord, Engine, EngineDumpFormat};
 use geosuggest_utils::{IndexUpdater, IndexUpdaterSettings, SourceItem};
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::info;
@@ -300,6 +316,7 @@ use rayon::{
 };
 use regex::Regex;
 use serde::Deserialize;
+use serde_json;
 use simple_home_dir::expand_tilde;
 use url::Url;
 use uuid::Uuid;
@@ -320,6 +337,7 @@ struct Args {
     cmd_suggestnow:      bool,
     cmd_reverse:         bool,
     cmd_reversenow:      bool,
+    cmd_countryinfo:     bool,
     cmd_index_check:     bool,
     cmd_index_update:    bool,
     cmd_index_load:      bool,
@@ -353,8 +371,11 @@ struct Admin1Filter {
 }
 
 static QSV_VERSION: &str = env!("CARGO_PKG_VERSION");
-static DEFAULT_GEOCODE_INDEX_FILENAME: &str =
-    concat!("qsv-", env!("CARGO_PKG_VERSION"), "-geocode-index.bincode");
+static DEFAULT_GEOCODE_INDEX_FILENAME: &str = concat!(
+    "qsv-",
+    env!("CARGO_PKG_VERSION"),
+    "-geocode-index.bincode.new"
+);
 
 static DEFAULT_CITIES_NAMES_URL: &str =
     "https://download.geonames.org/export/dump/alternateNamesV2.zip";
@@ -371,13 +392,14 @@ static FALLBACK_CACHE_SIZE: usize = CACHE_SIZE / 4;
 
 static EMPTY_STRING: String = String::new();
 static INVALID_DYNFMT: &str = "Invalid dynfmt template.";
+static INVALID_COUNTRY_CODE: &str = "Invalid country code.";
 
 // when suggesting with --admin1, how many suggestions to fetch from the engine
 // before filtering by admin1
 static SUGGEST_ADMIN1_LIMIT: usize = 10;
 
 // valid column values for %dyncols
-static VALID_DYNCOLS: [&str; 10] = [
+static VALID_DYNCOLS: [&str; 25] = [
     "id",
     "name",
     "latitude",
@@ -388,6 +410,21 @@ static VALID_DYNCOLS: [&str; 10] = [
     "capital",
     "timezone",
     "population",
+    "iso3",
+    "fips",
+    "area",
+    "country_population",
+    "continent",
+    "tld",
+    "currency_code",
+    "currency_name",
+    "phone",
+    "postal_code_format",
+    "postal_code_regex",
+    "languages",
+    "country_geonameid",
+    "neighbours",
+    "equivalent_fips_code",
 ];
 
 // dyncols populated sentinel value
@@ -400,6 +437,7 @@ enum GeocodeSubCmd {
     SuggestNow,
     Reverse,
     ReverseNow,
+    CountryInfo,
     IndexCheck,
     IndexUpdate,
     IndexLoad,
@@ -474,6 +512,9 @@ async fn geocode_main(args: Args) -> CliResult<()> {
         index_cmd = false;
         now_cmd = true;
         GeocodeSubCmd::ReverseNow
+    } else if args.cmd_countryinfo {
+        index_cmd = false;
+        GeocodeSubCmd::CountryInfo
     } else if args.cmd_index_check {
         GeocodeSubCmd::IndexCheck
     } else if args.cmd_index_update {
@@ -822,10 +863,11 @@ async fn geocode_main(args: Args) -> CliResult<()> {
             }
         },
         _ => {
-            // reverse/now subcommands don't support admin1 filter
+            // reverse/now and countryinfo subcommands don't support admin1 filter
             if args.flag_admin1.is_some() {
                 return fail_incorrectusage_clierror!(
-                    "reverse & reversenow subcommands do not support the --admin1 filter option."
+                    "reverse/reversenow & countryinfo subcommands do not support the --admin1 \
+                     filter option."
                 );
             }
             None
@@ -900,6 +942,12 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                             record.push_field("");
                         });
                     }
+                } else if geocode_cmd == GeocodeSubCmd::CountryInfo {
+                    // we're doing a countryinfo subcommand
+
+                    cell =
+                        get_countryinfo(&engine, &cell.to_ascii_uppercase(), &args.flag_formatstr)
+                            .unwrap_or(cell);
                 } else if dyncols_len > 0 {
                     // we're in dyncols mode, so use search_index_NO_CACHE fn
                     // as we need to inject the column values into each row of the output csv
@@ -966,6 +1014,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                         }
                     }
                 }
+                // }
                 if args.flag_new_column.is_some() {
                     record.push_field(&cell);
                 } else {
@@ -1174,12 +1223,22 @@ fn search_index(
             .unwrap_or_default();
 
         if formatstr.starts_with("%dyncols:") {
-            add_dyncols(record, cityrecord, &country, &capital, column_values);
+            let Some(countryrecord) = engine.country_info(&country) else {
+                return None;
+            };
+            add_dyncols(
+                record,
+                cityrecord,
+                countryrecord,
+                &country,
+                &capital,
+                column_values,
+            );
             return Some(DYNCOLS_POPULATED.to_string());
         }
 
         return Some(format_result(
-            cityrecord, &country, &capital, formatstr, true,
+            engine, cityrecord, &country, &capital, formatstr, true,
         ));
     }
 
@@ -1222,12 +1281,22 @@ fn search_index(
                 .unwrap_or_default();
 
             if formatstr.starts_with("%dyncols:") {
-                add_dyncols(record, cityrecord, &country, &capital, column_values);
+                let Some(countryrecord) = engine.country_info(&country) else {
+                    return None;
+                };
+                add_dyncols(
+                    record,
+                    cityrecord,
+                    countryrecord,
+                    &country,
+                    &capital,
+                    column_values,
+                );
                 return Some(DYNCOLS_POPULATED.to_string());
             }
 
             return Some(format_result(
-                cityrecord, &country, &capital, formatstr, false,
+                engine, cityrecord, &country, &capital, formatstr, false,
             ));
         }
     }
@@ -1240,12 +1309,14 @@ fn search_index(
 fn add_dyncols(
     record: &mut csv::StringRecord,
     cityrecord: &CitiesRecord,
+    countryrecord: &CountryRecord,
     country: &str,
     capital: &str,
     column_values: &[&str],
 ) {
     for column in column_values {
         match *column {
+            // CityRecord fields
             "id" => record.push_field(&cityrecord.id.to_string()),
             "name" => record.push_field(&cityrecord.name),
             "latitude" => record.push_field(&cityrecord.latitude.to_string()),
@@ -1262,6 +1333,24 @@ fn add_dyncols(
             "capital" => record.push_field(capital),
             "timezone" => record.push_field(&cityrecord.timezone),
             "population" => record.push_field(&cityrecord.population.to_string()),
+
+            // CountryRecord fields
+            "iso3" => record.push_field(&countryrecord.info.iso3),
+            "fips" => record.push_field(&countryrecord.info.fips),
+            "area" => record.push_field(&countryrecord.info.area.to_string()),
+            "country_population" => record.push_field(&countryrecord.info.population.to_string()),
+            "continent" => record.push_field(&countryrecord.info.continent),
+            "tld" => record.push_field(&countryrecord.info.tld),
+            "currency_code" => record.push_field(&countryrecord.info.currency_code),
+            "currency_name" => record.push_field(&countryrecord.info.currency_name),
+            "phone" => record.push_field(&countryrecord.info.phone),
+            "postal_code_format" => record.push_field(&countryrecord.info.postal_code_format),
+            "postal_code_regex" => record.push_field(&countryrecord.info.postal_code_regex),
+            "languages" => record.push_field(&countryrecord.info.languages),
+            "country_geonameid" => record.push_field(&countryrecord.info.geonameid.to_string()),
+            "neighbours" => record.push_field(&countryrecord.info.neighbours),
+            "equivalent_fips_code" => record.push_field(&countryrecord.info.equivalent_fips_code),
+
             // this should not happen as column_values has been pre-validated for these values
             _ => unreachable!(),
         }
@@ -1270,6 +1359,7 @@ fn add_dyncols(
 
 /// format the geocoded result based on formatstr if its not %+
 fn format_result(
+    engine: &Engine,
     cityrecord: &CitiesRecord,
     country: &str,
     capital: &str,
@@ -1302,6 +1392,10 @@ fn format_result(
             "%cityrecord" => format!("{cityrecord:?}"),
             "%admin1record" => format!("{:?}", cityrecord.admin_division),
             "%admin2record" => format!("{:?}", cityrecord.admin2_division),
+            "%json" => serde_json::to_string(cityrecord).unwrap_or_else(|_| "null".to_string()),
+            "%pretty-json" => {
+                serde_json::to_string_pretty(cityrecord).unwrap_or_else(|_| "null".to_string())
+            },
             _ => {
                 // invalid formatstr, so we use the default for suggest/now or reverse/now
                 if suggest_mode {
@@ -1323,9 +1417,17 @@ fn format_result(
         }
     } else {
         // if formatstr does not start with %, then we're using dynfmt,
-        // i.e. nine predefined fields below in curly braces are replaced with values
-        // e.g. "City: {name}, State: {admin1}, Country: {country} - {timezone}"
-        let mut cityrecord_map: HashMap<&str, String> = HashMap::with_capacity(10);
+        // i.e. twenty-five predefined fields below in curly braces are replaced with values
+        // e.g. "City: {name}, State: {admin1}, Country: {country} - {continent}"
+        // unlike the predefined formats, we don't have a default format for dynfmt
+        // so we return INVALID_DYNFMT if dynfmt fails to format the string
+        // also, we have access to the country info fields as well
+        let Some(countryrecord) = engine.country_info(country) else {
+            return INVALID_COUNTRY_CODE.to_string();
+        };
+        let mut cityrecord_map: HashMap<&str, String> = HashMap::with_capacity(25);
+
+        // cityrecord fields
         cityrecord_map.insert("id", cityrecord.id.to_string());
         cityrecord_map.insert("name", cityrecord.name.clone());
         cityrecord_map.insert("latitude", cityrecord.latitude.to_string());
@@ -1336,6 +1438,37 @@ fn format_result(
         cityrecord_map.insert("capital", capital.to_owned());
         cityrecord_map.insert("timezone", cityrecord.timezone.clone());
         cityrecord_map.insert("population", cityrecord.population.to_string());
+
+        cityrecord_map.insert("iso3", countryrecord.info.iso3.clone());
+        cityrecord_map.insert("fips", countryrecord.info.fips.clone());
+        cityrecord_map.insert("area", countryrecord.info.area.to_string());
+        cityrecord_map.insert(
+            "country_population",
+            countryrecord.info.population.to_string(),
+        );
+        cityrecord_map.insert("continent", countryrecord.info.continent.clone());
+        cityrecord_map.insert("tld", countryrecord.info.tld.clone());
+        cityrecord_map.insert("currency_code", countryrecord.info.currency_code.clone());
+        cityrecord_map.insert("currency_name", countryrecord.info.currency_name.clone());
+        cityrecord_map.insert("phone", countryrecord.info.phone.clone());
+        cityrecord_map.insert(
+            "postal_code_format",
+            countryrecord.info.postal_code_format.clone(),
+        );
+        cityrecord_map.insert(
+            "postal_code_regex",
+            countryrecord.info.postal_code_regex.clone(),
+        );
+        cityrecord_map.insert("languages", countryrecord.info.languages.clone());
+        cityrecord_map.insert(
+            "country_geonameid",
+            countryrecord.info.geonameid.to_string(),
+        );
+        cityrecord_map.insert("neighbours", countryrecord.info.neighbours.clone());
+        cityrecord_map.insert(
+            "equivalent_fips_code",
+            countryrecord.info.equivalent_fips_code.clone(),
+        );
 
         if let Ok(formatted) = dynfmt::SimpleCurlyFormat.format(formatstr, cityrecord_map) {
             formatted.to_string()
@@ -1373,4 +1506,70 @@ fn get_admin_names(cityrecord: &CitiesRecord, selector: u8) -> (&String, &String
         (&EMPTY_STRING, &EMPTY_STRING)
     };
     (admin1_name, admin2_name)
+}
+
+#[cached(
+    key = "String",
+    convert = r#"{ format!("{cell}-{formatstr}") }"#,
+    option = true
+)]
+fn get_countryinfo(engine: &Engine, cell: &str, formatstr: &str) -> Option<String> {
+    let Some(countryrecord) = engine.country_info(cell) else {
+        // no results, so return early with None
+        return None;
+    };
+
+    if formatstr.starts_with('%') {
+        // if formatstr starts with %, then we're using a predefined format
+        let formatted = match formatstr {
+            "%capital" => countryrecord.info.capital.clone(),
+            "%continent" => countryrecord.info.continent.clone(),
+            "%json" => serde_json::to_string(countryrecord).unwrap_or_else(|_| "null".to_string()),
+            "%pretty-json" => {
+                serde_json::to_string_pretty(countryrecord).unwrap_or_else(|_| "null".to_string())
+            },
+            _ => format!("{:?}", countryrecord.names),
+        };
+        Some(formatted)
+    } else {
+        // if formatstr does not start with %, then we're using dynfmt,
+        // i.e. sixteen predefined fields below in curly braces are replaced with values
+        // e.g. "Country name/s: {name}, Continent: {continent} Currency: {currency_name}
+        // ({currency_code})})"
+        let mut countryrecord_map: HashMap<&str, String> = HashMap::with_capacity(16);
+        countryrecord_map.insert("iso3", countryrecord.info.iso3.clone());
+        countryrecord_map.insert("fips", countryrecord.info.fips.clone());
+        countryrecord_map.insert("capital", countryrecord.info.capital.clone());
+        countryrecord_map.insert("area", countryrecord.info.area.to_string());
+        countryrecord_map.insert(
+            "country_population",
+            countryrecord.info.population.to_string(),
+        );
+        countryrecord_map.insert("continent", countryrecord.info.continent.clone());
+        countryrecord_map.insert("tld", countryrecord.info.tld.clone());
+        countryrecord_map.insert("currency_code", countryrecord.info.currency_code.clone());
+        countryrecord_map.insert("currency_name", countryrecord.info.currency_name.clone());
+        countryrecord_map.insert("phone", countryrecord.info.phone.clone());
+        countryrecord_map.insert(
+            "postal_code_format",
+            countryrecord.info.postal_code_format.clone(),
+        );
+        countryrecord_map.insert(
+            "postal_code_regex",
+            countryrecord.info.postal_code_regex.clone(),
+        );
+        countryrecord_map.insert("languages", countryrecord.info.languages.clone());
+        countryrecord_map.insert("geonameid", countryrecord.info.geonameid.to_string());
+        countryrecord_map.insert("neighbours", countryrecord.info.neighbours.clone());
+        countryrecord_map.insert(
+            "equivalent_fips_code",
+            countryrecord.info.equivalent_fips_code.clone(),
+        );
+
+        if let Ok(formatted) = dynfmt::SimpleCurlyFormat.format(formatstr, countryrecord_map) {
+            Some(formatted.to_string())
+        } else {
+            Some(INVALID_DYNFMT.to_string())
+        }
+    }
 }

@@ -219,9 +219,9 @@ dependencies = [
 
 [[package]]
 name = "aho-corasick"
-version = "1.0.5"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0c378d78423fdad8089616f827526ee33c19f2fddbd5de1629152c9593ba4783"
+checksum = "0f2135563fb5c609d2b2b87c1e8ce7bc41b0b45430fa9661f457981503dd5bf0"
 dependencies = [
  "memchr",
 ]
@@ -1935,8 +1935,9 @@ dependencies = [
 
 [[package]]
 name = "geosuggest-core"
-version = "0.4.2"
-source = "git+https://github.com/jqnatividad/geosuggest?branch=8-reqwest-openssl#1b6b6ac444b05470c0db94a043aaa056b2ef4d15"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "24159bee4c268a39f9128cd698e5bece848f0161fedc6bd56a42d340b4587ebf"
 dependencies = [
  "bincode",
  "csv",
@@ -1950,8 +1951,9 @@ dependencies = [
 
 [[package]]
 name = "geosuggest-utils"
-version = "0.4.2"
-source = "git+https://github.com/jqnatividad/geosuggest?branch=8-reqwest-openssl#1b6b6ac444b05470c0db94a043aaa056b2ef4d15"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e0d17973dee669e2de634cb4a77c1d9de31ed8bf445ea8db51bff81d47593269"
 dependencies = [
  "anyhow",
  "futures",
