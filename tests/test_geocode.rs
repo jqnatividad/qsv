@@ -999,3 +999,40 @@ fn geocode_reverse_dyncols_fmt() {
     ];
     assert_eq!(got, expected);
 }
+
+#[test]
+fn geocode_country_info() {
+    let wrk = Workdir::new("geocode_country_info");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["Country"],
+            svec!["US"],
+            svec!["CA"],
+            svec!["MX"],
+            svec!["us"],
+            svec!["Cn"],
+            svec!["This is not a country and it will not be geocoded"],
+            svec!["PH"],
+            svec!["95.213424, 190,1234565"],
+            svec!["Germany"],
+        ],
+    );
+    let mut cmd = wrk.command("geocode");
+    cmd.arg("countryinfo").arg("Country").arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["Country"],
+        svec!["United States"],
+        svec!["Canada"],
+        svec!["Mexico"],
+        svec!["United States"],
+        svec!["China"],
+        svec!["This is not a country and it will not be geocoded"],
+        svec!["Philippines"],
+        svec!["95.213424, 190,1234565"],
+        svec!["Germany"], // passed thru as its not a valid country code
+    ];
+    assert_eq!(got, expected);
+}
