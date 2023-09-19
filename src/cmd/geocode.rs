@@ -132,7 +132,7 @@ qsv geocode suggest [--formatstr=<string>] [options] <column> [<input>]
 qsv geocode suggestnow [options] <location>
 qsv geocode reverse [--formatstr=<string>] [options] <column> [<input>]
 qsv geocode reversenow [options] <location>
-qsv geocode countryinfo <country> [options]
+qsv geocode countryinfo [options] <column> [<input>]
 qsv geocode index-load <index-file>
 qsv geocode index-check
 qsv geocode index-update [--languages=<lang>] [--cities-url=<url>] [--force]
@@ -258,6 +258,12 @@ geocode options:
                                 Note that using "%dyncols:" will cause the the command to geocode EACH row without
                                 using the cache, so it will be slower than predefined or dynamic formatting.
                                 [default: %+]
+    --language <lang>           The language to use when geocoding. The language is specified as a
+                                ISO 639-1 code. https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
+                                Note that the Geonames index must have been built with the specified language
+                                using the --languages option. Currently, only the countryinfo subcommand
+                                supports this option.
+                                [default: en]
 
     --invalid-result <string>   The string to return when the geocode result is empty/invalid.
                                 If not set, the original value is used.
@@ -350,6 +356,7 @@ struct Args {
     flag_admin1:         Option<String>,
     flag_k_weight:       Option<f32>,
     flag_formatstr:      String,
+    flag_language:       String,
     flag_invalid_result: Option<String>,
     flag_batch:          u32,
     flag_timeout:        u16,
@@ -374,7 +381,7 @@ static QSV_VERSION: &str = env!("CARGO_PKG_VERSION");
 static DEFAULT_GEOCODE_INDEX_FILENAME: &str = concat!(
     "qsv-",
     env!("CARGO_PKG_VERSION"),
-    "-geocode-index.bincode.new"
+    "-geocode-index-new.bincode"
 );
 
 static DEFAULT_CITIES_NAMES_URL: &str =
@@ -946,7 +953,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                     // we're doing a countryinfo subcommand
 
                     cell =
-                        get_countryinfo(&engine, &cell.to_ascii_uppercase(), &args.flag_formatstr)
+                        get_countryinfo(&engine, &cell, &args.flag_language, &args.flag_formatstr)
                             .unwrap_or(cell);
                 } else if dyncols_len > 0 {
                     // we're in dyncols mode, so use search_index_NO_CACHE fn
@@ -1513,7 +1520,12 @@ fn get_admin_names(cityrecord: &CitiesRecord, selector: u8) -> (&String, &String
     convert = r#"{ format!("{cell}-{formatstr}") }"#,
     option = true
 )]
-fn get_countryinfo(engine: &Engine, cell: &str, formatstr: &str) -> Option<String> {
+fn get_countryinfo(
+    engine: &Engine,
+    cell: &str,
+    lang_lookup: &str,
+    formatstr: &str,
+) -> Option<String> {
     let Some(countryrecord) = engine.country_info(cell) else {
         // no results, so return early with None
         return None;
@@ -1528,7 +1540,15 @@ fn get_countryinfo(engine: &Engine, cell: &str, formatstr: &str) -> Option<Strin
             "%pretty-json" => {
                 serde_json::to_string_pretty(countryrecord).unwrap_or_else(|_| "null".to_string())
             },
-            _ => format!("{:?}", countryrecord.names),
+            _ => {
+                for (lang, name) in countryrecord.names.clone().unwrap_or_default() {
+                    if lang == lang_lookup {
+                        return Some(name);
+                    }
+                }
+
+                format!("{:#?}", countryrecord.names.clone().unwrap_or_default())
+            },
         };
         Some(formatted)
     } else {
@@ -1537,6 +1557,16 @@ fn get_countryinfo(engine: &Engine, cell: &str, formatstr: &str) -> Option<Strin
         // e.g. "Country name/s: {name}, Continent: {continent} Currency: {currency_name}
         // ({currency_code})})"
         let mut countryrecord_map: HashMap<&str, String> = HashMap::with_capacity(16);
+        countryrecord_map.insert("country_name", {
+            let mut name_in_lang = String::new();
+            for (lang, name) in countryrecord.names.clone().unwrap_or_default() {
+                if lang == lang_lookup {
+                    name_in_lang = name;
+                    break;
+                }
+            }
+            name_in_lang
+        });
         countryrecord_map.insert("iso3", countryrecord.info.iso3.clone());
         countryrecord_map.insert("fips", countryrecord.info.fips.clone());
         countryrecord_map.insert("capital", countryrecord.info.capital.clone());
