@@ -403,6 +403,213 @@ fn geocode_suggest_dynfmt() {
 }
 
 #[test]
+fn geocode_suggest_pretty_json() {
+    let wrk = Workdir::new("geocode_suggest_pretty_json");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["Location"],
+            svec!["Melrose, New York"],
+            svec!["East Flatbush, New York"],
+            svec!["Manhattan, New York"],
+            svec!["East Harlem, New York"],
+            svec!["This is not a Location and it will not be geocoded"],
+            svec!["95.213424, 190,1234565"], // invalid lat, long
+            svec!["Makati, Metro Manila, Philippines"],
+        ],
+    );
+    let mut cmd = wrk.command("geocode");
+    cmd.arg("suggest")
+        .arg("Location")
+        .arg("--formatstr")
+        .arg("%pretty-json")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["Location"],
+        svec![
+            r#"{
+  "id": 4901868,
+  "name": "Melrose Park",
+  "latitude": 41.90059,
+  "longitude": -87.85673,
+  "country": {
+    "id": 6252001,
+    "code": "US",
+    "name": "United States"
+  },
+  "admin_division": {
+    "id": 4896861,
+    "code": "US.IL",
+    "name": "Illinois"
+  },
+  "admin2_division": {
+    "id": 4888671,
+    "code": "US.IL.031",
+    "name": "Cook County"
+  },
+  "timezone": "America/Chicago",
+  "names": {
+    "en": "Melrose Park"
+  },
+  "country_names": {
+    "en": "United States"
+  },
+  "admin1_names": {
+    "en": "Illinois"
+  },
+  "admin2_names": {
+    "en": "Cook"
+  },
+  "population": 25379
+}"#
+        ],
+        svec![
+            r#"{
+  "id": 5115843,
+  "name": "East Flatbush",
+  "latitude": 40.65371,
+  "longitude": -73.93042,
+  "country": {
+    "id": 6252001,
+    "code": "US",
+    "name": "United States"
+  },
+  "admin_division": {
+    "id": 5128638,
+    "code": "US.NY",
+    "name": "New York"
+  },
+  "admin2_division": {
+    "id": 6941775,
+    "code": "US.NY.047",
+    "name": "Kings County"
+  },
+  "timezone": "America/New_York",
+  "names": {
+    "en": "East Flatbush"
+  },
+  "country_names": {
+    "en": "United States"
+  },
+  "admin1_names": {
+    "en": "New York"
+  },
+  "admin2_names": {
+    "en": "Kings"
+  },
+  "population": 178464
+}"#
+        ],
+        svec![
+            r#"{
+  "id": 5128581,
+  "name": "New York City",
+  "latitude": 40.71427,
+  "longitude": -74.00597,
+  "country": {
+    "id": 6252001,
+    "code": "US",
+    "name": "United States"
+  },
+  "admin_division": {
+    "id": 5128638,
+    "code": "US.NY",
+    "name": "New York"
+  },
+  "admin2_division": null,
+  "timezone": "America/New_York",
+  "names": {
+    "en": "New York"
+  },
+  "country_names": {
+    "en": "United States"
+  },
+  "admin1_names": {
+    "en": "New York"
+  },
+  "admin2_names": null,
+  "population": 8804190
+}"#
+        ],
+        svec![
+            r#"{
+  "id": 6332428,
+  "name": "East Harlem",
+  "latitude": 40.79472,
+  "longitude": -73.9425,
+  "country": {
+    "id": 6252001,
+    "code": "US",
+    "name": "United States"
+  },
+  "admin_division": {
+    "id": 5128638,
+    "code": "US.NY",
+    "name": "New York"
+  },
+  "admin2_division": {
+    "id": 5128594,
+    "code": "US.NY.061",
+    "name": "New York County"
+  },
+  "timezone": "America/New_York",
+  "names": null,
+  "country_names": {
+    "en": "United States"
+  },
+  "admin1_names": {
+    "en": "New York"
+  },
+  "admin2_names": {
+    "en": "New York County"
+  },
+  "population": 115921
+}"#
+        ],
+        svec!["This is not a Location and it will not be geocoded"],
+        svec!["95.213424, 190,1234565"],
+        svec![
+            r#"{
+  "id": 1703417,
+  "name": "Makati City",
+  "latitude": 14.55027,
+  "longitude": 121.03269,
+  "country": {
+    "id": 1694008,
+    "code": "PH",
+    "name": "Philippines"
+  },
+  "admin_division": {
+    "id": 7521311,
+    "code": "PH.NCR",
+    "name": "Metro Manila"
+  },
+  "admin2_division": {
+    "id": 11395838,
+    "code": "PH.NCR.137600000",
+    "name": "Southern Manila District"
+  },
+  "timezone": "Asia/Manila",
+  "names": {
+    "en": "Makati City"
+  },
+  "country_names": {
+    "en": "Philippines"
+  },
+  "admin1_names": {
+    "en": "National Capital Region"
+  },
+  "admin2_names": null,
+  "population": 510383
+}"#
+        ],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn geocode_suggest_invalid_dynfmt() {
     let wrk = Workdir::new("geocode_suggest_invalid_dynfmt");
     wrk.create(
@@ -463,7 +670,7 @@ fn geocode_suggest_fmt() {
         svec!["Location"],
         svec!["Elmhurst, New York US"],
         svec!["East Flatbush, New York US"],
-        svec!["New York City, New York US"],
+        svec!["New York, New York US"],
         svec!["East Harlem, New York US"],
         svec!["This is not a Location and it will not be geocoded"],
         svec!["40.71427, -74.00597"], // suggest doesn't work with lat, long
@@ -843,7 +1050,7 @@ fn geocode_suggest_dyncols_fmt() {
         ],
         svec![
             "Manhattan, New York",
-            "New York City",
+            "New York",
             "New York",
             "",
             "US",
@@ -1033,6 +1240,270 @@ fn geocode_country_info() {
         svec!["Philippines"],
         svec!["95.213424, 190,1234565"],
         svec!["Germany"], // passed thru as its not a valid country code
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn geocode_country_info_formatstr() {
+    let wrk = Workdir::new("geocode_country_info_formatstr");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["Country"],
+            svec!["US"],
+            svec!["CA"],
+            svec!["MX"],
+            svec!["us"],
+            svec!["Cn"],
+            svec!["This is not a country and it will not be geocoded"],
+            svec!["PH"],
+            svec!["95.213424, 190,1234565"],
+            svec!["Germany"],
+        ],
+    );
+    let mut cmd = wrk.command("geocode");
+    cmd.arg("countryinfo")
+        .arg("Country")
+        .args([
+            "--formatstr",
+            "{country_name} Pop: {country_population} in {continent} using {currency_name} all in \
+             {area} square kms.",
+        ])
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["Country"],
+        svec!["United States Pop: 327167434 in NA using Dollar all in 9629091 square kms."],
+        svec!["Canada Pop: 37058856 in NA using Dollar all in 9984670 square kms."],
+        svec!["Mexico Pop: 126190788 in NA using Peso all in 1972550 square kms."],
+        svec!["United States Pop: 327167434 in NA using Dollar all in 9629091 square kms."],
+        svec!["China Pop: 1411778724 in AS using Yuan Renminbi all in 9596960 square kms."],
+        svec!["This is not a country and it will not be geocoded"],
+        svec!["Philippines Pop: 106651922 in AS using Peso all in 300000 square kms."],
+        svec!["95.213424, 190,1234565"],
+        svec!["Germany"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn geocode_country_info_formatstr_pretty_json() {
+    let wrk = Workdir::new("geocode_country_info_formatstr_pretty_json");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["Country"],
+            svec!["US"],
+            svec!["CA"],
+            svec!["MX"],
+            svec!["us"],
+            svec!["Cn"],
+            svec!["This is not a country and it will not be geocoded"],
+            svec!["PH"],
+            svec!["95.213424, 190,1234565"],
+            svec!["Germany"],
+        ],
+    );
+    let mut cmd = wrk.command("geocode");
+    cmd.arg("countryinfo")
+        .arg("Country")
+        .args(["--formatstr", "%pretty-json"])
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["Country"],
+        svec![
+            r######"{
+  "info": {
+    "iso": "US",
+    "iso3": "USA",
+    "iso_numeric": "840",
+    "fips": "US",
+    "name": "United States",
+    "capital": "Washington",
+    "area": "9629091",
+    "population": 327167434,
+    "continent": "NA",
+    "tld": ".us",
+    "currency_code": "USD",
+    "currency_name": "Dollar",
+    "phone": "1",
+    "postal_code_format": "#####-####",
+    "postal_code_regex": "^\\d{5}(-\\d{4})?$",
+    "languages": "en-US,es-US,haw,fr",
+    "geonameid": 6252001,
+    "neighbours": "CA,MX,CU",
+    "equivalent_fips_code": ""
+  },
+  "names": {
+    "en": "United States"
+  },
+  "capital_names": {
+    "en": "Washington D.C."
+  }
+}"######
+        ],
+        svec![
+            r#"{
+  "info": {
+    "iso": "CA",
+    "iso3": "CAN",
+    "iso_numeric": "124",
+    "fips": "CA",
+    "name": "Canada",
+    "capital": "Ottawa",
+    "area": "9984670",
+    "population": 37058856,
+    "continent": "NA",
+    "tld": ".ca",
+    "currency_code": "CAD",
+    "currency_name": "Dollar",
+    "phone": "1",
+    "postal_code_format": "@#@ #@#",
+    "postal_code_regex": "^([ABCEGHJKLMNPRSTVXY]\\d[ABCEGHJKLMNPRSTVWXYZ]) ?(\\d[ABCEGHJKLMNPRSTVWXYZ]\\d)$ ",
+    "languages": "en-CA,fr-CA,iu",
+    "geonameid": 6251999,
+    "neighbours": "US",
+    "equivalent_fips_code": ""
+  },
+  "names": {
+    "en": "Canada"
+  },
+  "capital_names": {
+    "en": "Ottawa"
+  }
+}"#
+        ],
+        svec![
+            r######"{
+  "info": {
+    "iso": "MX",
+    "iso3": "MEX",
+    "iso_numeric": "484",
+    "fips": "MX",
+    "name": "Mexico",
+    "capital": "Mexico City",
+    "area": "1972550",
+    "population": 126190788,
+    "continent": "NA",
+    "tld": ".mx",
+    "currency_code": "MXN",
+    "currency_name": "Peso",
+    "phone": "52",
+    "postal_code_format": "#####",
+    "postal_code_regex": "^(\\d{5})$",
+    "languages": "es-MX",
+    "geonameid": 3996063,
+    "neighbours": "GT,US,BZ",
+    "equivalent_fips_code": ""
+  },
+  "names": {
+    "en": "Mexico"
+  },
+  "capital_names": {
+    "en": "Mexico City"
+  }
+}"######
+        ],
+        svec![
+            r######"{
+  "info": {
+    "iso": "US",
+    "iso3": "USA",
+    "iso_numeric": "840",
+    "fips": "US",
+    "name": "United States",
+    "capital": "Washington",
+    "area": "9629091",
+    "population": 327167434,
+    "continent": "NA",
+    "tld": ".us",
+    "currency_code": "USD",
+    "currency_name": "Dollar",
+    "phone": "1",
+    "postal_code_format": "#####-####",
+    "postal_code_regex": "^\\d{5}(-\\d{4})?$",
+    "languages": "en-US,es-US,haw,fr",
+    "geonameid": 6252001,
+    "neighbours": "CA,MX,CU",
+    "equivalent_fips_code": ""
+  },
+  "names": {
+    "en": "United States"
+  },
+  "capital_names": {
+    "en": "Washington D.C."
+  }
+}"######
+        ],
+        svec![
+            r#######"{
+  "info": {
+    "iso": "CN",
+    "iso3": "CHN",
+    "iso_numeric": "156",
+    "fips": "CH",
+    "name": "China",
+    "capital": "Beijing",
+    "area": "9596960",
+    "population": 1411778724,
+    "continent": "AS",
+    "tld": ".cn",
+    "currency_code": "CNY",
+    "currency_name": "Yuan Renminbi",
+    "phone": "86",
+    "postal_code_format": "######",
+    "postal_code_regex": "^(\\d{6})$",
+    "languages": "zh-CN,yue,wuu,dta,ug,za",
+    "geonameid": 1814991,
+    "neighbours": "LA,BT,TJ,KZ,MN,AF,NP,MM,KG,PK,KP,RU,VN,IN",
+    "equivalent_fips_code": ""
+  },
+  "names": {
+    "en": "China"
+  },
+  "capital_names": {
+    "en": "Beijing"
+  }
+}"#######
+        ],
+        svec!["This is not a country and it will not be geocoded"],
+        svec![
+            r#####"{
+  "info": {
+    "iso": "PH",
+    "iso3": "PHL",
+    "iso_numeric": "608",
+    "fips": "RP",
+    "name": "Philippines",
+    "capital": "Manila",
+    "area": "300000",
+    "population": 106651922,
+    "continent": "AS",
+    "tld": ".ph",
+    "currency_code": "PHP",
+    "currency_name": "Peso",
+    "phone": "63",
+    "postal_code_format": "####",
+    "postal_code_regex": "^(\\d{4})$",
+    "languages": "tl,en-PH,fil,ceb,ilo,hil,war,pam,bik,bcl,pag,mrw,tsg,mdh,cbk,krj,sgd,msb,akl,ibg,yka,mta,abx",
+    "geonameid": 1694008,
+    "neighbours": "",
+    "equivalent_fips_code": ""
+  },
+  "names": {
+    "en": "Philippines"
+  },
+  "capital_names": {
+    "en": "Manila"
+  }
+}"#####
+        ],
+        svec!["95.213424, 190,1234565"],
+        svec!["Germany"],
     ];
     assert_eq!(got, expected);
 }
