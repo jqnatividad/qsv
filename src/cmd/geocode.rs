@@ -206,6 +206,7 @@ geocode options:
                                   - '%state' | '%admin1' - New York
                                   - "%county' | '%admin2' - Kings County
                                   - '%country' - US
+                                  - '%country_name' - United States
                                   - '%cityrecord' - returns the full city record as a string
                                   - '%admin1record' - returns the full admin1 record as a string
                                   - '%admin2record' - returns the full admin2 record as a string
@@ -261,8 +262,7 @@ geocode options:
     --language <lang>           The language to use when geocoding. The language is specified as a
                                 ISO 639-1 code. https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
                                 Note that the Geonames index must have been built with the specified language
-                                using the --languages option. Currently, only the countryinfo subcommand
-                                supports this option.
+                                using the `index-update` subcommand with the --languages option.
                                 [default: en]
 
     --invalid-result <string>   The string to return when the geocode result is empty/invalid.
@@ -377,6 +377,14 @@ struct Admin1Filter {
     is_code:       bool,
 }
 
+#[derive(Clone, Debug)]
+struct NamesLang {
+    cityname:    String,
+    admin1name:  String,
+    admin2name:  String,
+    countryname: String,
+}
+
 static QSV_VERSION: &str = env!("CARGO_PKG_VERSION");
 static DEFAULT_GEOCODE_INDEX_FILENAME: &str = concat!(
     "qsv-",
@@ -397,7 +405,6 @@ static CACHE_SIZE: usize = 2_000_000;
 // max number of entries in fallback LRU cache if we can't allocate CACHE_SIZE
 static FALLBACK_CACHE_SIZE: usize = CACHE_SIZE / 4;
 
-static EMPTY_STRING: String = String::new();
 static INVALID_DYNFMT: &str = "Invalid dynfmt template.";
 static INVALID_COUNTRY_CODE: &str = "Invalid country code.";
 
@@ -964,6 +971,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                         geocode_cmd,
                         &cell,
                         &args.flag_formatstr,
+                        &args.flag_language,
                         min_score,
                         k_weight,
                         &country_filter_list,
@@ -1001,6 +1009,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                         geocode_cmd,
                         &cell,
                         &args.flag_formatstr,
+                        &args.flag_language,
                         min_score,
                         k_weight,
                         &country_filter_list,
@@ -1115,7 +1124,7 @@ async fn load_engine(geocode_index_file: PathBuf, progressbar: &ProgressBar) -> 
     create = "{ SizedCache::try_with_size(CACHE_SIZE).unwrap_or_else(|_| \
               SizedCache::with_size(FALLBACK_CACHE_SIZE)) }",
     key = "String",
-    convert = r#"{ format!("{cell}") }"#,
+    convert = r#"{ format!("{cell}-{lang_lookup}") }"#,
     option = true
 )]
 fn search_index(
@@ -1123,6 +1132,7 @@ fn search_index(
     mode: GeocodeSubCmd,
     cell: &str,
     formatstr: &str,
+    lang_lookup: &str,
     min_score: Option<f32>,
     k: Option<f32>,
     country_filter_list: &Option<Vec<String>>,
@@ -1204,15 +1214,16 @@ fn search_index(
 
         let country = cityrecord.country.clone().unwrap().code;
 
+        let nameslang = get_cityrecord_name_in_lang(cityrecord, lang_lookup);
+
         if formatstr == "%+" {
             // default for suggest is location - e.g. "(lat, long)"
             if mode == GeocodeSubCmd::SuggestNow {
                 // however, make SuggestNow default more verbose
                 return Some(format!(
-                    "{name}, {admin1} {country}: {latitude}, {longitude}",
-                    name = cityrecord.name.clone(),
-                    admin1 = get_admin_names(cityrecord, 1).0,
-                    country = country,
+                    "{name}, {admin1name} {country}: {latitude}, {longitude}",
+                    name = nameslang.cityname,
+                    admin1name = nameslang.admin1name,
                     latitude = cityrecord.latitude,
                     longitude = cityrecord.longitude
                 ));
@@ -1237,6 +1248,7 @@ fn search_index(
                 record,
                 cityrecord,
                 countryrecord,
+                &nameslang,
                 &country,
                 &capital,
                 column_values,
@@ -1245,7 +1257,7 @@ fn search_index(
         }
 
         return Some(format_result(
-            engine, cityrecord, &country, &capital, formatstr, true,
+            engine, cityrecord, &nameslang, &country, &capital, formatstr, true,
         ));
     }
 
@@ -1269,16 +1281,17 @@ fn search_index(
                 return None;
             };
 
+            let nameslang = get_cityrecord_name_in_lang(cityrecord, lang_lookup);
+
             let country = cityrecord.country.clone().unwrap().code;
 
             if formatstr == "%+" {
                 // default for reverse is city, admin1 country - e.g. "Brooklyn, New York US"
-                let (admin1_name, _admin2_name) = get_admin_names(cityrecord, 1);
-
                 return Some(format!(
-                    "{city}, {admin1} {country}",
-                    city = cityrecord.name.clone(),
-                    admin1 = admin1_name.clone()
+                    "{cityname}, {admin1name} {country}",
+                    cityname = nameslang.cityname,
+                    admin1name = nameslang.admin1name,
+                    country = country,
                 ));
             }
 
@@ -1295,6 +1308,7 @@ fn search_index(
                     record,
                     cityrecord,
                     countryrecord,
+                    &nameslang,
                     &country,
                     &capital,
                     column_values,
@@ -1303,7 +1317,7 @@ fn search_index(
             }
 
             return Some(format_result(
-                engine, cityrecord, &country, &capital, formatstr, false,
+                engine, cityrecord, &nameslang, &country, &capital, formatstr, false,
             ));
         }
     }
@@ -1317,6 +1331,7 @@ fn add_dyncols(
     record: &mut csv::StringRecord,
     cityrecord: &CitiesRecord,
     countryrecord: &CountryRecord,
+    nameslang: &NamesLang,
     country: &str,
     capital: &str,
     column_values: &[&str],
@@ -1325,23 +1340,18 @@ fn add_dyncols(
         match *column {
             // CityRecord fields
             "id" => record.push_field(&cityrecord.id.to_string()),
-            "name" => record.push_field(&cityrecord.name),
+            "name" => record.push_field(&nameslang.cityname),
             "latitude" => record.push_field(&cityrecord.latitude.to_string()),
             "longitude" => record.push_field(&cityrecord.longitude.to_string()),
             "country" => record.push_field(country),
-            "admin1" => {
-                let (admin1_name, _) = get_admin_names(cityrecord, 1);
-                record.push_field(admin1_name);
-            },
-            "admin2" => {
-                let (_, admin2_name) = get_admin_names(cityrecord, 2);
-                record.push_field(admin2_name);
-            },
+            "admin1" => record.push_field(&nameslang.admin1name),
+            "admin2" => record.push_field(&nameslang.admin2name),
             "capital" => record.push_field(capital),
             "timezone" => record.push_field(&cityrecord.timezone),
             "population" => record.push_field(&cityrecord.population.to_string()),
 
             // CountryRecord fields
+            "country_name" => record.push_field(&nameslang.countryname),
             "iso3" => record.push_field(&countryrecord.info.iso3),
             "fips" => record.push_field(&countryrecord.info.fips),
             "area" => record.push_field(&countryrecord.info.area.to_string()),
@@ -1365,33 +1375,47 @@ fn add_dyncols(
 }
 
 /// format the geocoded result based on formatstr if its not %+
+#[cached(
+    key = "String",
+    convert = r#"{ format!("{}-{}-{}", cityrecord.id, formatstr, suggest_mode) }"#
+)]
 fn format_result(
     engine: &Engine,
     cityrecord: &CitiesRecord,
+    nameslang: &NamesLang,
     country: &str,
     capital: &str,
     formatstr: &str,
     suggest_mode: bool,
 ) -> String {
-    let (admin1_name, admin2_name) = get_admin_names(cityrecord, 3);
+    // let (admin1_name, admin2_name) = get_admin_names(cityrecord, 3);
 
     if formatstr.starts_with('%') {
         // if formatstr starts with %, then we're using a predefined format
         match formatstr {
-            "%city-state" | "%city-admin1" => format!("{}, {}", cityrecord.name, admin1_name),
+            "%city-state" | "%city-admin1" => {
+                format!("{}, {}", nameslang.cityname, nameslang.admin1name)
+            },
             "%location" => format!("({}, {})", cityrecord.latitude, cityrecord.longitude),
             "%city-state-country" | "%city-admin1-country" => {
-                format!("{}, {} {}", cityrecord.name, admin1_name, country)
+                format!(
+                    "{}, {} {}",
+                    nameslang.cityname, nameslang.admin1name, country
+                )
             },
             "%lat-long" => format!("{}, {}", cityrecord.latitude, cityrecord.longitude),
-            "%city-country" => format!("{}, {}", cityrecord.name, country),
-            "%city" => cityrecord.name.clone(),
+            "%city-country" => format!("{}, {}", nameslang.cityname, country),
+            "%city" => nameslang.cityname.clone(),
             "%city-county-state" | "%city-admin2-admin1" => {
-                format!("{}, {}, {}", cityrecord.name, admin2_name, admin1_name,)
+                format!(
+                    "{}, {}, {}",
+                    nameslang.cityname, nameslang.admin2name, nameslang.admin1name,
+                )
             },
-            "%state" | "%admin1" => admin1_name.to_owned(),
-            "%county" | "%admin2" => admin2_name.to_owned(),
+            "%state" | "%admin1" => nameslang.admin1name.clone(),
+            "%county" | "%admin2" => nameslang.admin2name.clone(),
             "%country" => country.to_owned(),
+            "%country_name" => nameslang.countryname.clone(),
             "%id" => format!("{}", cityrecord.id),
             "%capital" => capital.to_owned(),
             "%population" => format!("{}", cityrecord.population),
@@ -1416,15 +1440,15 @@ fn format_result(
                     // default for reverse/now is city-admin1-country - e.g. "Brooklyn, New York US"
                     format!(
                         "{city}, {admin1} {country}",
-                        city = cityrecord.name,
-                        admin1 = admin1_name,
+                        city = nameslang.cityname,
+                        admin1 = nameslang.admin1name,
                     )
                 }
             },
         }
     } else {
         // if formatstr does not start with %, then we're using dynfmt,
-        // i.e. twenty-five predefined fields below in curly braces are replaced with values
+        // i.e. twenty-six predefined fields below in curly braces are replaced with values
         // e.g. "City: {name}, State: {admin1}, Country: {country} - {continent}"
         // unlike the predefined formats, we don't have a default format for dynfmt
         // so we return INVALID_DYNFMT if dynfmt fails to format the string
@@ -1432,7 +1456,7 @@ fn format_result(
         let Some(countryrecord) = engine.country_info(country) else {
             return INVALID_COUNTRY_CODE.to_string();
         };
-        let mut cityrecord_map: HashMap<&str, String> = HashMap::with_capacity(25);
+        let mut cityrecord_map: HashMap<&str, String> = HashMap::with_capacity(26);
 
         // cityrecord fields
         cityrecord_map.insert("id", cityrecord.id.to_string());
@@ -1440,12 +1464,14 @@ fn format_result(
         cityrecord_map.insert("latitude", cityrecord.latitude.to_string());
         cityrecord_map.insert("longitude", cityrecord.longitude.to_string());
         cityrecord_map.insert("country", country.to_owned());
-        cityrecord_map.insert("admin1", admin1_name.to_owned());
-        cityrecord_map.insert("admin2", admin2_name.to_owned());
+        cityrecord_map.insert("country_name", nameslang.countryname.clone());
+        cityrecord_map.insert("admin1", nameslang.admin1name.clone());
+        cityrecord_map.insert("admin2", nameslang.admin2name.clone());
         cityrecord_map.insert("capital", capital.to_owned());
         cityrecord_map.insert("timezone", cityrecord.timezone.clone());
         cityrecord_map.insert("population", cityrecord.population.to_string());
 
+        // countryrecord fields
         cityrecord_map.insert("iso3", countryrecord.info.iso3.clone());
         cityrecord_map.insert("fips", countryrecord.info.fips.clone());
         cityrecord_map.insert("area", countryrecord.info.area.to_string());
@@ -1485,39 +1511,9 @@ fn format_result(
     }
 }
 
-/// get admin1 and admin2 names based on selector
-/// selector = 0: none; selector = 1: admin1 only
-/// selector = 2: admin2 only; selector >= 3: admin1 and admin2
-fn get_admin_names(cityrecord: &CitiesRecord, selector: u8) -> (&String, &String) {
-    let (_admin1_key, admin1_name) = if selector == 1 || selector >= 3 {
-        match &cityrecord.admin1_names {
-            Some(admin1) => admin1
-                .iter()
-                .next()
-                .unwrap_or((&EMPTY_STRING, &EMPTY_STRING)),
-            None => (&EMPTY_STRING, &EMPTY_STRING),
-        }
-    } else {
-        (&EMPTY_STRING, &EMPTY_STRING)
-    };
-
-    let (_admin2_key, admin2_name) = if selector == 2 || selector >= 3 {
-        match &cityrecord.admin2_names {
-            Some(admin2) => admin2
-                .iter()
-                .next()
-                .unwrap_or((&EMPTY_STRING, &EMPTY_STRING)),
-            None => (&EMPTY_STRING, &EMPTY_STRING),
-        }
-    } else {
-        (&EMPTY_STRING, &EMPTY_STRING)
-    };
-    (admin1_name, admin2_name)
-}
-
 #[cached(
     key = "String",
-    convert = r#"{ format!("{cell}-{formatstr}") }"#,
+    convert = r#"{ format!("{cell}-{lang_lookup}-{formatstr}") }"#,
     option = true
 )]
 fn get_countryinfo(
@@ -1540,15 +1536,13 @@ fn get_countryinfo(
             "%pretty-json" => {
                 serde_json::to_string_pretty(countryrecord).unwrap_or_else(|_| "null".to_string())
             },
-            _ => {
-                for (lang, name) in countryrecord.names.clone().unwrap_or_default() {
-                    if lang == lang_lookup {
-                        return Some(name);
-                    }
-                }
-
-                format!("{:#?}", countryrecord.names.clone().unwrap_or_default())
-            },
+            _ => countryrecord
+                .names
+                .clone()
+                .unwrap_or_default()
+                .get(lang_lookup)
+                .cloned()
+                .unwrap_or_default(),
         };
         Some(formatted)
     } else {
@@ -1556,16 +1550,15 @@ fn get_countryinfo(
         // i.e. sixteen predefined fields below in curly braces are replaced with values
         // e.g. "Country name/s: {name}, Continent: {continent} Currency: {currency_name}
         // ({currency_code})})"
-        let mut countryrecord_map: HashMap<&str, String> = HashMap::with_capacity(16);
+        let mut countryrecord_map: HashMap<&str, String> = HashMap::with_capacity(17);
         countryrecord_map.insert("country_name", {
-            let mut name_in_lang = String::new();
-            for (lang, name) in countryrecord.names.clone().unwrap_or_default() {
-                if lang == lang_lookup {
-                    name_in_lang = name;
-                    break;
-                }
-            }
-            name_in_lang
+            countryrecord
+                .names
+                .clone()
+                .unwrap_or_default()
+                .get(lang_lookup)
+                .cloned()
+                .unwrap_or_default()
         });
         countryrecord_map.insert("iso3", countryrecord.info.iso3.clone());
         countryrecord_map.insert("fips", countryrecord.info.fips.clone());
@@ -1601,5 +1594,47 @@ fn get_countryinfo(
         } else {
             Some(INVALID_DYNFMT.to_string())
         }
+    }
+}
+
+#[cached(
+    key = "String",
+    convert = r#"{ format!("{}-{}", cityrecord.id, lang_lookup) }"#
+)]
+fn get_cityrecord_name_in_lang(cityrecord: &CitiesRecord, lang_lookup: &str) -> NamesLang {
+    let cityname = cityrecord
+        .names
+        .clone()
+        .unwrap_or_default()
+        .get(lang_lookup)
+        .cloned()
+        .unwrap_or_else(|| cityrecord.name.clone());
+    let admin1name = cityrecord
+        .admin1_names
+        .clone()
+        .unwrap_or_default()
+        .get(lang_lookup)
+        .cloned()
+        .unwrap_or_default();
+    let admin2name = cityrecord
+        .admin2_names
+        .clone()
+        .unwrap_or_default()
+        .get(lang_lookup)
+        .cloned()
+        .unwrap_or_default();
+    let countryname = cityrecord
+        .country_names
+        .clone()
+        .unwrap_or_default()
+        .get(lang_lookup)
+        .cloned()
+        .unwrap_or_default();
+
+    NamesLang {
+        cityname,
+        admin1name,
+        admin2name,
+        countryname,
     }
 }
