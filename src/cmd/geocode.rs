@@ -9,20 +9,22 @@ By default, the prebuilt index uses the Geonames Gazeteer cities15000.zip file u
 English names. It contains cities with populations > 15,000 (about ~26k cities). 
 See https://download.geonames.org/export/dump/ for more information.
 
-It has six major subcommands:
- * suggest     - given a partial City name, return the closest City's location metadata
-                 per the local Geonames cities index (Jaro-Winkler distance)
- * suggestnow  - same as suggest, but using a City name from the command line,
-                 instead of CSV data.
- * reverse     - given a location coordinate, return the closest City's location metadata
-                 per the local Geonames cities index.
-                 (Euclidean distance - shortest distance "as the crow flies")
- * reversenow  - sames as reverse, but using a coordinate from the command line,
-                 instead of CSV data.
- * countryinfo - returns the country information for the ISO-3166 2-letter country code
-                 (e.g. US, CA, MX, etc.)
- * index-*     - operations to update the local Geonames cities index.
-                 (index-check, index-update, index-load & index-reset)
+It has seven major subcommands:
+ * suggest        - given a partial City name, return the closest City's location metadata
+                    per the local Geonames cities index (Jaro-Winkler distance)
+ * suggestnow     - same as suggest, but using a City name from the command line,
+                    instead of CSV data.
+ * reverse        - given a location coordinate, return the closest City's location metadata
+                    per the local Geonames cities index.
+                    (Euclidean distance - shortest distance "as the crow flies")
+ * reversenow     - sames as reverse, but using a coordinate from the command line,
+                    instead of CSV data.
+ * countryinfo    - returns the country information for the ISO-3166 2-letter country code
+                    (e.g. US, CA, MX, etc.)
+ * countryinfonow - same as countryinfo, but using a country code from the command line,
+                    instead of CSV data.
+ * index-*        - operations to update the local Geonames cities index.
+                    (index-check, index-update, index-load & index-reset)
  
 SUGGEST
 Suggest a Geonames city based on a partial city name. It returns the closest Geonames
@@ -101,10 +103,18 @@ Accepts the same options as reverse, but does not require an input file.
 COUNTRYINFO
 Returns the country information for the specified ISO-3166 2-letter country code.
 
-  $ qsv geocode countryinfo US
-  $ qsv geocode countryinfo --formatstr "%json" US
-  $ qsv geocode countryinfo -f "%continent" US
-  $ qsv geocode countryinfo -f "{country_name} ({fips}) in {continent}" US
+  $ qsv geocode countryinfo country_col data.csv
+  $ qsv geocode countryinfo --formatstr "%json" country_col data.csv
+  $ qsv geocode countryinfo -f "%continent" country_col data.csv
+  $ qsv geocode countryinfo -f "{country_name} ({fips}) in {continent}" country_col data.csv
+
+COUNTRYINFONOW
+Accepts the same options as countryinfo, but does not require an input file.
+
+  $ qsv geocode countryinfonow US
+  $ qsv geocode countryinfonow --formatstr "%pretty-json" US
+  $ qsv geocode countryinfonow -f "%continent" US
+  $ qsv geocode countryinfonow -f "{country_name} ({fips}) in {continent}" US
 
 INDEX-<operation>
 Updates the local Geonames cities index used by the geocode command.
@@ -135,6 +145,7 @@ qsv geocode suggestnow [options] <location>
 qsv geocode reverse [--formatstr=<string>] [options] <column> [<input>]
 qsv geocode reversenow [options] <location>
 qsv geocode countryinfo [options] <column> [<input>]
+qsv geocode countryinfonow [options] <location>
 qsv geocode index-load <index-file>
 qsv geocode index-check
 qsv geocode index-update [--languages=<lang>] [--cities-url=<url>] [--force]
@@ -151,9 +162,10 @@ geocode arguments:
                                 "lat, long" or "(lat, long)" format.
                                 For countryinfo, it must be a Country column (ISO 3166-1 alpha-2 code).
 
-    <location>                  The location to geocode for suggestnow & reversenow subcommands.
+    <location>                  The location to geocode for suggestnow, reversenow & countryinfonow subcommands.
                                 For suggestnow, its a City string pattern.
                                 For reversenow, it must be a WGS 84 coordinate.
+                                For countryinfonow, it must be a Country code (ISO 3166-1 alpha-2 code).
                                 
     <index-file>                The alternate geonames index file to use. It must be a .bincode file.
                                 Only used by the index-load subcommand.
@@ -263,12 +275,13 @@ geocode options:
                                 The key is the desired column name and the value is one of the same ten fields
                                 available for dynamic formatting.
 
-                                 e.g. "%dyncols: {city_col:name}, {state_col:admin1}, {country_col:country}, {continent:continent}}"
+                                 e.g. "%dyncols: {city_col:name}, {state_col:admin1}, {county_col:admin2}"
 
-                                will add three columns to the output CSV named city_col, state_col & country_col.
+                                will add three columns to the output CSV named city_col, state_col & county_col.
 
                                 Note that using "%dyncols:" will cause the the command to geocode EACH row without
                                 using the cache, so it will be slower than predefined or dynamic formatting.
+                                Also, countryinfo and countryinfonow subcommands currently do not support "%dyncols:".
                                 [default: %+]
     --language <lang>           The language to use when geocoding. The language is specified as a
                                 ISO 639-1 code. https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
@@ -355,6 +368,7 @@ struct Args {
     cmd_reverse:         bool,
     cmd_reversenow:      bool,
     cmd_countryinfo:     bool,
+    cmd_countryinfonow:  bool,
     cmd_index_check:     bool,
     cmd_index_update:    bool,
     cmd_index_load:      bool,
@@ -424,7 +438,7 @@ static INVALID_COUNTRY_CODE: &str = "Invalid country code.";
 static SUGGEST_ADMIN1_LIMIT: usize = 10;
 
 // valid column values for %dyncols
-static VALID_DYNCOLS: [&str; 25] = [
+static VALID_DYNCOLS: [&str; 26] = [
     "id",
     "name",
     "latitude",
@@ -435,6 +449,7 @@ static VALID_DYNCOLS: [&str; 25] = [
     "capital",
     "timezone",
     "population",
+    "country_name",
     "iso3",
     "fips",
     "area",
@@ -463,6 +478,7 @@ enum GeocodeSubCmd {
     Reverse,
     ReverseNow,
     CountryInfo,
+    CountryInfoNow,
     IndexCheck,
     IndexUpdate,
     IndexLoad,
@@ -529,6 +545,9 @@ async fn geocode_main(args: Args) -> CliResult<()> {
     } else if args.cmd_reverse {
         index_cmd = false;
         GeocodeSubCmd::Reverse
+    } else if args.cmd_countryinfo {
+        index_cmd = false;
+        GeocodeSubCmd::CountryInfo
     } else if args.cmd_suggestnow {
         index_cmd = false;
         now_cmd = true;
@@ -537,9 +556,10 @@ async fn geocode_main(args: Args) -> CliResult<()> {
         index_cmd = false;
         now_cmd = true;
         GeocodeSubCmd::ReverseNow
-    } else if args.cmd_countryinfo {
+    } else if args.cmd_countryinfonow {
         index_cmd = false;
-        GeocodeSubCmd::CountryInfo
+        now_cmd = true;
+        GeocodeSubCmd::CountryInfoNow
     } else if args.cmd_index_check {
         GeocodeSubCmd::IndexCheck
     } else if args.cmd_index_update {
@@ -591,7 +611,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
         .tempdir()
         .unwrap();
 
-    // we're doing a SuggestNow or ReverseNow, create a one record CSV in tempdir
+    // we're doing a SuggestNow, ReverseNow or CountryInfoNow - create a one record CSV in tempdir
     // with one column named "Location" and the passed location value and use it as the input
     let input = if now_cmd {
         let tempdir_path = tempdir.path().to_string_lossy().to_string();
@@ -822,8 +842,10 @@ async fn geocode_main(args: Args) -> CliResult<()> {
         0_u8
     };
 
-    // now, write the headers to the output CSV
-    wtr.write_record(&headers)?;
+    // now, write the headers to the output CSV, unless its a now subcommand with JSON output
+    if !(now_cmd && (args.flag_formatstr == "%json" || args.flag_formatstr == "%pretty-json")) {
+        wtr.write_record(&headers)?;
+    }
 
     // setup admin1 filter for Suggest/Now
     let mut admin1_code_prefix = String::new();
@@ -967,9 +989,10 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                             record.push_field("");
                         });
                     }
-                } else if geocode_cmd == GeocodeSubCmd::CountryInfo {
-                    // we're doing a countryinfo subcommand
-
+                } else if geocode_cmd == GeocodeSubCmd::CountryInfo
+                    || geocode_cmd == GeocodeSubCmd::CountryInfoNow
+                {
+                    // we're doing a countryinfo or countryinfonow subcommand
                     cell =
                         get_countryinfo(&engine, &cell, &args.flag_language, &args.flag_formatstr)
                             .unwrap_or(cell);
