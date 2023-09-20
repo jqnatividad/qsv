@@ -34,13 +34,13 @@
 #
 # And of course, it dogfoods `qsv` as well to prepare the benchmark data, fetch the rowcount,
 # and to parse and format the benchmark results. :)
-# It uses the following commands: cat, count, luau, sample, schema, select, snappy, sort, tojsonl and
-# to xlsx. It's a good example of how qsv can be used to automate data preparation & analysis tasks.
+# It uses the following commands: apply, cat, count, luau, sample, schema, select, snappy, sort, tojsonl
+# and to xlsx. It's a good example of how qsv can be used to automate data preparation & analysis tasks.
 
 pat="$1"
 
 # the version of this script
-bm_version=2.1.2
+bm_version=2.2.0
 
 # configurable variables ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -504,9 +504,8 @@ echo ""
 
 # compute records per second for each benchmark using luau by dividing rowcount by mean
 # we then round the result to a whole number and format with commas for readability
-luau_cmd="recs_per_sec=( $rowcount / mean); return numWithCommas(recs_per_sec)"
-"$qsv_bin" luau --begin file:benchmark_helper.luau map recs_per_sec "$luau_cmd" \
-  results/results_work.csv -o results/latest_results.csv
+luau_cmd="recs_per_sec=( $rowcount / mean); return tonumber(string.format(\"%.0f\",recs_per_sec))"
+"$qsv_bin" luau map recs_per_sec "$luau_cmd" results/results_work.csv -o results/latest_results.csv
 
 # Concatenate the final results of this run to results/bechmark_results.csv
 "$qsv_bin" cat rowskey results/latest_results.csv results/benchmark_results.csv \
@@ -538,5 +537,21 @@ echo -e "$version\t$now\t$now_sec\t$bm_version\t$platform\t$num_cores\t$mem_size
 "$qsv_bin" cat rowskey results/latest_run_info.tsv results/run_info_history.tsv \
   -o results/run_info_work.tsv
 mv results/run_info_work.tsv results/run_info_history.tsv
+
+# make "display" versions of the results
+# i.e. number of decimal places is reduced to 3, and column order is changed so it's easier to read
+# with recs_per_sec moved from the back after mean followed by the rest of the stats columns
+"$qsv_bin" select version,tstamp,mean,name,recs_per_sec,stddev,median,user,system,min,max \
+  results/benchmark_results.csv -o results/benchmark_results_display.csv
+"$qsv_bin" select version,tstamp,name,mean,recs_per_sec,stddev,median,user,system,min,max \
+  results/latest_results.csv -o results/latest_results_display.csv
+
+"$qsv_bin" apply operations round mean,stddev,median,user,system,min,max \
+  results/benchmark_results_display.csv -o results/results_work.csv
+mv results/results_work.csv results/benchmark_results_display.csv
+
+"$qsv_bin" apply operations round mean,stddev,median,user,system,min,max \
+  results/latest_results_display.csv -o results/results_work.csv
+mv results/results_work.csv results/latest_results_display.csv
 
 echo "> DONE! $total_count benchmarks executed. Elapsed time: $elapsed seconds."
