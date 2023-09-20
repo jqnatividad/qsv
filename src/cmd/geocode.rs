@@ -218,7 +218,13 @@ geocode options:
                                 If not set (default), the population is not used and the
                                 nearest city is returned.
 
-    -f, --formatstr=<string>    The place format to use. The predefined formats are:
+    -f, --formatstr=<string>    The place format to use. It has three options:
+                                1. Use one of the predefined formats.
+                                2. Use dynamic formatting to create a custom format.
+                                3. Use the special format "%dyncols:" to dynamically add multiple
+                                   columns to the output CSV using fields from a geocode result.
+    
+                                PREDEFINED FORMATS:
                                   - '%city-state' - e.g. Brooklyn, New York
                                   - '%city-country' - Brooklyn, US
                                   - '%city-state-country' | '%city-admin1-country' - Brooklyn, New York US
@@ -248,6 +254,10 @@ geocode options:
                                 
                                 If an invalid format is specified, it will be treated as '%+'.
 
+                                Note that when using the JSON predefined formats with the now subcommands,
+                                the output will be valid JSON, as the "Location" header will be omitted.
+
+                                DYNAMIC FORMATTING:
                                 Alternatively, you can use dynamic formatting to create a custom format.
                                 To do so, set the --formatstr to a dynfmt template, enclosing field names
                                 in curly braces.
@@ -268,8 +278,9 @@ geocode options:
                                 with the same result will be faster as it will use the cached result instead
                                 of searching the Geonames index.
 
+                                DYNAMIC COLUMNS ("%dyncols:") FORMATTING:
                                 Finally, you can use the special format "%dyncols:" to dynamically add multiple
-                                columns to the output CSV for each field in a geocode result.
+                                columns to the output CSV using fields from a geocode result.
                                 To do so, set --formatstr to "%dyncols:" followed by a comma-delimited list
                                 of key:value pairs enclosed in curly braces.
                                 The key is the desired column name and the value is one of the same ten fields
@@ -770,8 +781,8 @@ async fn geocode_main(args: Args) -> CliResult<()> {
         return Ok(());
     }
 
-    // we're not doing an index subcommand, so we're doing a suggest/now or reverse/now
-    // load the current local Geonames index
+    // we're not doing an index subcommand, so we're doing a suggest/now, reverse/now
+    // or countryinfo/now subcommand. Load the current local Geonames index
     let engine = load_engine(geocode_index_file.clone().into(), &progress).await?;
 
     let mut rdr = rconfig.reader()?;
@@ -910,7 +921,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
             }
         },
         _ => {
-            // reverse/now and countryinfo subcommands don't support admin1 filter
+            // reverse/now and countryinfo/now subcommands don't support admin1 filter
             if args.flag_admin1.is_some() {
                 return fail_incorrectusage_clierror!(
                     "reverse/reversenow & countryinfo subcommands do not support the --admin1 \
@@ -922,6 +933,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
     }; // end setup admin1 filters
 
     // setup country filter - both suggest/now and reverse/now support country filters
+    // countryinfo/now subcommands ignores the country filter
     let country_filter_list = flag_country.map(|country_list| {
         country_list
             .split(',')
@@ -1148,9 +1160,10 @@ async fn load_engine(geocode_index_file: PathBuf, progressbar: &ProgressBar) -> 
 }
 
 /// search_index is a cached function that returns a geocode result for a given cell value.
-/// It uses an LRU cache using the cell value as the key, storing the formatted geocoded result
-/// in the cache. As such, we CANNOT use the cache when in dyncols mode as the cached result is
-/// the formatted result, not the individual fields.
+/// It is used by the suggest/suggestnow and reverse/reversenow subcommands.
+/// It uses an LRU cache using the cell value/language as the key, storing the formatted geocoded
+/// result in the cache. As such, we CANNOT use the cache when in dyncols mode as the cached result
+/// is the formatted result, not the individual fields.
 /// search_index_no_cache() is automatically derived from search_index() by the cached macro.
 /// search_index_no_cache() is used in dyncols mode, and as the name implies, does not use a cache.
 #[cached(
@@ -1543,6 +1556,8 @@ fn format_result(
     }
 }
 
+/// get_countryinfo is a cached function that returns a countryinfo result for a given cell value.
+/// It is used by the countryinfo/countryinfonow subcommands.
 #[cached(
     key = "String",
     convert = r#"{ format!("{cell}-{lang_lookup}-{formatstr}") }"#,
@@ -1629,6 +1644,11 @@ fn get_countryinfo(
     }
 }
 
+/// get_cityrecord_name_in_lang is a cached function that returns a NamesLang struct
+/// containing the city, admin1, admin2, and country names in the specified language.
+/// Note that the index file needs to be built with the desired languages for this to work.
+/// Use the "index-update" subcommand with the --languages option to rebuild the index
+/// with the desired languages. Otherwise, all names will be in English (en)
 #[cached(
     key = "String",
     convert = r#"{ format!("{}-{}", cityrecord.id, lang_lookup) }"#
@@ -1640,6 +1660,7 @@ fn get_cityrecord_name_in_lang(cityrecord: &CitiesRecord, lang_lookup: &str) -> 
         .unwrap_or_default()
         .get(lang_lookup)
         .cloned()
+        // Note that the city name is the default name if the language is not found.
         .unwrap_or_else(|| cityrecord.name.clone());
     let admin1name = cityrecord
         .admin1_names
