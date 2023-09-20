@@ -6,6 +6,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.114.0] - 2023-09-20
+
+## What's Changed
+* Add test for different delimiters by @janriemer in https://github.com/jqnatividad/qsv/pull/1297
+* Benchmarks revamp by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1298
+* build(deps): bump serde_json from 1.0.106 to 1.0.107 by @dependabot in https://github.com/jqnatividad/qsv/pull/1302
+* build(deps): bump mimalloc from 0.1.38 to 0.1.39 by @dependabot in https://github.com/jqnatividad/qsv/pull/1303
+* Replace `QSV_AUTOINDEX` env var with `QSV_AUTOINDEX_SIZE` by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1301
+* build(deps): bump simple-home-dir from 0.1.4 to 0.2.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1304
+* build(deps): bump chrono from 0.4.30 to 0.4.31 by @dependabot in https://github.com/jqnatividad/qsv/pull/1305
+* bump Polars from 0.32.1 to Polars 0.33.2 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1308
+* Added qsv benchmark notebook. by @a5dur in https://github.com/jqnatividad/qsv/pull/1309
+* Quicksilver Benchmarks 2.1.1 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1310
+* `geocode`: update to use CountryRecord made available in geo suggest 0.4.3 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1311
+* build(deps): bump cpc from 1.9.2 to 1.9.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1313
+
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.113.0...0.114.0
+
 ## [0.113.0] - 2023-09-08 🦄🏇🏽🎠
 This is the first "[Unicorn](https://7esl.com/unicorn/)" 🦄 release, adding MAJOR new features to the toolkit!
 
