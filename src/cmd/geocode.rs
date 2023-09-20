@@ -9,7 +9,7 @@ By default, the prebuilt index uses the Geonames Gazeteer cities15000.zip file u
 English names. It contains cities with populations > 15,000 (about ~26k cities). 
 See https://download.geonames.org/export/dump/ for more information.
 
-It has five major subcommands:
+It has six major subcommands:
  * suggest     - given a partial City name, return the closest City's location metadata
                  per the local Geonames cities index (Jaro-Winkler distance)
  * suggestnow  - same as suggest, but using a City name from the command line,
@@ -19,7 +19,7 @@ It has five major subcommands:
                  (Euclidean distance - shortest distance "as the crow flies")
  * reversenow  - sames as reverse, but using a coordinate from the command line,
                  instead of CSV data.
- * countryinfo - returns the country information for the specified country code.
+ * countryinfo - returns the country information for the ISO-3166 2-letter country code
                  (e.g. US, CA, MX, etc.)
  * index-*     - operations to update the local Geonames cities index.
                  (index-check, index-update, index-load & index-reset)
@@ -99,10 +99,12 @@ Accepts the same options as reverse, but does not require an input file.
   $ qsv geocode reversenow --admin1 "US:OH" "(39.32924, -82.10126)"
 
 COUNTRYINFO
-Returns the country information for the specified country code.
-(e.g. US, CA, MX, etc.)
+Returns the country information for the specified ISO-3166 2-letter country code.
 
   $ qsv geocode countryinfo US
+  $ qsv geocode countryinfo --formatstr "%json" US
+  $ qsv geocode countryinfo -f "%continent" US
+  $ qsv geocode countryinfo -f "{country_name} ({fips}) in {continent}" US
 
 INDEX-<operation>
 Updates the local Geonames cities index used by the geocode command.
@@ -142,10 +144,17 @@ qsv geocode --help
 geocode arguments:
         
     <input>                     The input file to read from. If not specified, reads from stdin.
-    <column>                    The column to geocode.
-    <location>                  The location to geocode. For suggestnow, its a City string pattern.
-                                For reversenow, it must be a WGS 84 coordinate "lat, long" or
-                                "(lat, long)" format.
+
+    <column>                    The column to geocode. Used by suggest, reverse & countryinfo subcommands.
+                                For suggest, it must be a City column with a City string pattern.
+                                For reverse, it must be a LatLong column using WGS 84 coordinates in
+                                "lat, long" or "(lat, long)" format.
+                                For countryinfo, it must be a Country column (ISO 3166-1 alpha-2 code).
+
+    <location>                  The location to geocode for suggestnow & reversenow subcommands.
+                                For suggestnow, its a City string pattern.
+                                For reversenow, it must be a WGS 84 coordinate.
+                                
     <index-file>                The alternate geonames index file to use. It must be a .bincode file.
                                 Only used by the index-load subcommand.
 
@@ -214,6 +223,7 @@ geocode options:
                                   - '%location' - (<latitude>, <longitude>)
                                   - '%id' - the Geonames ID
                                   - '%capital' - the capital
+                                  - '%continent' - the continent (only valid for countryinfo subcommand)
                                   - '%population' - the population
                                   - '%timezone' - the timezone
                                   - '%json' - the full city record as JSON
@@ -222,6 +232,7 @@ geocode options:
                                            suggest - '%location'
                                            suggestnow - '{name}, {admin1} {country}: {latitude}, {longitude}'
                                            reverse & reversenow - '%city-admin1-country'
+                                           countryinfo - '%country_name'
                                 
                                 If an invalid format is specified, it will be treated as '%+'.
 
@@ -377,7 +388,7 @@ struct Admin1Filter {
     is_code:       bool,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 struct NamesLang {
     cityname:    String,
     admin1name:  String,
@@ -1098,7 +1109,7 @@ async fn load_engine(geocode_index_file: PathBuf, progressbar: &ProgressBar) -> 
 
         util::download_file(
             &format!(
-                "https://github.com/jqnatividad/qsv/releases/download/{QSV_VERSION}/qsv-{QSV_VERSION}-geocode-index.bincode"
+                "https://github.com/jqnatividad/qsv/releases/download/{QSV_VERSION}/{DEFAULT_GEOCODE_INDEX_FILENAME}"
             ),
             geocode_index_file.clone(),
             !progressbar.is_hidden(),
@@ -1388,8 +1399,6 @@ fn format_result(
     formatstr: &str,
     suggest_mode: bool,
 ) -> String {
-    // let (admin1_name, admin2_name) = get_admin_names(cityrecord, 3);
-
     if formatstr.starts_with('%') {
         // if formatstr starts with %, then we're using a predefined format
         match formatstr {
@@ -1548,7 +1557,7 @@ fn get_countryinfo(
     } else {
         // if formatstr does not start with %, then we're using dynfmt,
         // i.e. sixteen predefined fields below in curly braces are replaced with values
-        // e.g. "Country name/s: {name}, Continent: {continent} Currency: {currency_name}
+        // e.g. "Country: {country_name}, Continent: {continent} Currency: {currency_name}
         // ({currency_code})})"
         let mut countryrecord_map: HashMap<&str, String> = HashMap::with_capacity(17);
         countryrecord_map.insert("country_name", {
