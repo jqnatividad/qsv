@@ -65,14 +65,20 @@ fn to_xlsx_dir() {
         svec!["Orlando", "Disney World"],
     ];
 
-    wrk.create("cities.csv", cities.clone());
-    wrk.create("places.csv", places.clone());
+    // create a directory to put the csv files in
+    let csv_dir = wrk.path("csvdir");
+    std::fs::create_dir(&csv_dir).unwrap();
+
+    wrk.create("csvdir/cities.csv", cities.clone());
+    wrk.create("csvdir/places.csv", places.clone());
 
     let xlsx_file = wrk.path("testxlsx.xlsx").to_string_lossy().to_string();
     log::info!("xlsx_file: {}", xlsx_file);
 
     let mut cmd = wrk.command("to");
-    cmd.arg("xlsx").arg(xlsx_file.clone()).arg(wrk.path(""));
+    cmd.arg("xlsx")
+        .arg(xlsx_file.clone())
+        .arg(wrk.path("csvdir"));
 
     wrk.assert_success(&mut cmd);
 
@@ -163,8 +169,12 @@ fn to_datapackage_dir() {
         svec!["Orlando", "Disney World"],
     ];
 
-    wrk.create("cities.csv", cities.clone());
-    wrk.create("places.csv", places.clone());
+    // create a directory to put the csv files in
+    let csv_dir = wrk.path("csvdir");
+    std::fs::create_dir(&csv_dir).unwrap();
+
+    wrk.create("csvdir/cities.csv", cities.clone());
+    wrk.create("csvdir/places.csv", places.clone());
 
     let dp_file = wrk.path("dpdir.json");
     let dp_file_filename = dp_file.to_string_lossy().to_string();
@@ -172,7 +182,7 @@ fn to_datapackage_dir() {
     let mut cmd = wrk.command("to");
     cmd.arg("datapackage")
         .arg(dp_file_filename.clone())
-        .arg(wrk.path(""));
+        .arg(wrk.path("csvdir"));
 
     let got: String = wrk.stdout(&mut cmd);
     let expected: String = r#"Table 'places' (4 rows)
@@ -228,8 +238,12 @@ fn to_sqlite_dir() {
         svec!["Orlando", "Disney World"],
     ];
 
-    wrk.create("cities.csv", cities.clone());
-    wrk.create("places.csv", places.clone());
+    // create a directory to put the csv files in
+    let csv_dir = wrk.path("csvdir");
+    std::fs::create_dir(&csv_dir).unwrap();
+
+    wrk.create("csvdir/cities.csv", cities.clone());
+    wrk.create("csvdir/places.csv", places.clone());
 
     let sqlite_file = wrk.path("test_to_sqlite.db");
     let sqlite_file_filename = sqlite_file.to_string_lossy().to_string();
@@ -237,7 +251,7 @@ fn to_sqlite_dir() {
     let mut cmd = wrk.command("to");
     cmd.arg("sqlite")
         .arg(sqlite_file_filename.clone())
-        .arg(wrk.path("."));
+        .arg(wrk.path("csvdir"));
 
     let got: String = wrk.stdout(&mut cmd);
     let expected: String = r#"Table 'places' (4 rows)
