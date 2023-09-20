@@ -40,7 +40,7 @@
 pat="$1"
 
 # the version of this script
-bm_version=2.2.0
+bm_version=2.2.1
 
 # configurable variables ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -512,11 +512,34 @@ luau_cmd="recs_per_sec=( $rowcount / mean); return tonumber(string.format(\"%.0f
   -o results/results_work.csv
 mv results/results_work.csv results/benchmark_results.csv
 
+# make "display" versions of the results
+# i.e. number of decimal places is reduced to 3, and column order is changed so it's easier to read
+# with recs_per_sec moved from the back after mean followed by the rest of the stats columns
+
+# first - for benchmark_results_display.csv, move the recs_per_sec column after the
+# mean column using the `qsv select` command
+"$qsv_bin" select version,tstamp,name,mean,recs_per_sec,stddev,median,user,system,min,max \
+  results/benchmark_results.csv -o results/benchmark_results_display.csv
+
+# then, round the stats columns to 3 decimal places using the `qsv apply operations round` command
+# it defaults to 3 decimal places if the --formatstr option is not specified
+"$qsv_bin" apply operations round mean,stddev,median,user,system,min,max \
+  results/benchmark_results_display.csv -o results/results_work.csv
+mv results/results_work.csv results/benchmark_results_display.csv
+
+# do the same for latest_results_display.csv
+"$qsv_bin" select version,tstamp,name,mean,recs_per_sec,stddev,median,user,system,min,max \
+  results/latest_results.csv -o results/latest_results_display.csv
+"$qsv_bin" apply operations round mean,stddev,median,user,system,min,max \
+  results/latest_results_display.csv -o results/results_work.csv
+mv results/results_work.csv results/latest_results_display.csv
+
 # Clean up temporary files
 cleanup_files
 
 # ---------------------------------------
 # Finalize benchmark run info. Append the run info to results/run_info_history.csv
+# we use the TSV format as some of the data has commas/quotes/whitespace/semicolon, etc.
 
 elapsed=$SECONDS
 
@@ -537,21 +560,5 @@ echo -e "$version\t$now\t$now_sec\t$bm_version\t$platform\t$num_cores\t$mem_size
 "$qsv_bin" cat rowskey results/latest_run_info.tsv results/run_info_history.tsv \
   -o results/run_info_work.tsv
 mv results/run_info_work.tsv results/run_info_history.tsv
-
-# make "display" versions of the results
-# i.e. number of decimal places is reduced to 3, and column order is changed so it's easier to read
-# with recs_per_sec moved from the back after mean followed by the rest of the stats columns
-"$qsv_bin" select version,tstamp,mean,name,recs_per_sec,stddev,median,user,system,min,max \
-  results/benchmark_results.csv -o results/benchmark_results_display.csv
-"$qsv_bin" select version,tstamp,name,mean,recs_per_sec,stddev,median,user,system,min,max \
-  results/latest_results.csv -o results/latest_results_display.csv
-
-"$qsv_bin" apply operations round mean,stddev,median,user,system,min,max \
-  results/benchmark_results_display.csv -o results/results_work.csv
-mv results/results_work.csv results/benchmark_results_display.csv
-
-"$qsv_bin" apply operations round mean,stddev,median,user,system,min,max \
-  results/latest_results_display.csv -o results/results_work.csv
-mv results/results_work.csv results/latest_results_display.csv
 
 echo "> DONE! $total_count benchmarks executed. Elapsed time: $elapsed seconds."
