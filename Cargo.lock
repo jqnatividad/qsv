@@ -1157,9 +1157,9 @@ dependencies = [
 
 [[package]]
 name = "cpc"
-version = "1.9.2"
+version = "1.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "25bdeddd0824ad146d46ce854f63fe65d894d72549185344a3fa3652ff260567"
+checksum = "623b2754bc61b8c833868ff971286e90f83576df3fc64c52cd3c45805d86a18b"
 dependencies = [
  "decimal",
  "unicode-segmentation",
