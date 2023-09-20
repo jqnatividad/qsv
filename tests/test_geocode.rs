@@ -53,6 +53,24 @@ fn geocode_suggestnow_default() {
 }
 
 #[test]
+fn geocode_suggestnow_formatstr_dyncols() {
+    let wrk = Workdir::new("geocode_suggestnow_formatstr_dyncols");
+
+    let mut cmd = wrk.command("geocode");
+    cmd.arg("suggestnow").arg("Secaucus").args([
+        "--formatstr",
+        "%dyncols: {population:population}, {state:admin1}, {county:admin2}",
+    ]);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["Location", "population", "state", "county",],
+        svec!["Secaucus", "19104", "New Jersey", "Hudson"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn geocode_suggest_intl() {
     let wrk = Workdir::new("geocode_suggest_intl");
     wrk.create(
@@ -1208,8 +1226,8 @@ fn geocode_reverse_dyncols_fmt() {
 }
 
 #[test]
-fn geocode_country_info() {
-    let wrk = Workdir::new("geocode_country_info");
+fn geocode_countryinfo() {
+    let wrk = Workdir::new("geocode_countryinfo");
     wrk.create(
         "data.csv",
         vec![
@@ -1245,8 +1263,8 @@ fn geocode_country_info() {
 }
 
 #[test]
-fn geocode_country_info_formatstr() {
-    let wrk = Workdir::new("geocode_country_info_formatstr");
+fn geocode_countryinfo_formatstr() {
+    let wrk = Workdir::new("geocode_countryinfo_formatstr");
     wrk.create(
         "data.csv",
         vec![
@@ -1289,8 +1307,8 @@ fn geocode_country_info_formatstr() {
 }
 
 #[test]
-fn geocode_country_info_formatstr_pretty_json() {
-    let wrk = Workdir::new("geocode_country_info_formatstr_pretty_json");
+fn geocode_countryinfo_formatstr_pretty_json() {
+    let wrk = Workdir::new("geocode_countryinfo_formatstr_pretty_json");
     wrk.create(
         "data.csv",
         vec![
@@ -1505,5 +1523,78 @@ fn geocode_country_info_formatstr_pretty_json() {
         svec!["95.213424, 190,1234565"],
         svec!["Germany"],
     ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn geocode_countryinfonow() {
+    let wrk = Workdir::new("geocode_countryinfonow");
+    let mut cmd = wrk.command("geocode");
+    cmd.arg("countryinfonow").arg("US");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![svec!["Location"], svec!["United States"]];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn geocode_countryinfonow_formatstr() {
+    let wrk = Workdir::new("geocode_countryinfonow_formatstr");
+
+    let mut cmd = wrk.command("geocode");
+    cmd.arg("countryinfonow").arg("cA").args([
+        "--formatstr",
+        "{country_name} Pop: {country_population} in {continent} using {currency_name} all in \
+         {area} square kms.",
+    ]);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["Location"],
+        svec!["Canada Pop: 37058856 in NA using Dollar all in 9984670 square kms."],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn geocode_countryinfonow_formatstr_pretty_json() {
+    let wrk = Workdir::new("geocode_countryinfonow_formatstr_pretty_json");
+    let mut cmd = wrk.command("geocode");
+    cmd.arg("countryinfonow")
+        .arg("mx")
+        .args(["--formatstr", "%pretty-json"]);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![svec![
+        r######"{
+  "info": {
+    "iso": "MX",
+    "iso3": "MEX",
+    "iso_numeric": "484",
+    "fips": "MX",
+    "name": "Mexico",
+    "capital": "Mexico City",
+    "area": "1972550",
+    "population": 126190788,
+    "continent": "NA",
+    "tld": ".mx",
+    "currency_code": "MXN",
+    "currency_name": "Peso",
+    "phone": "52",
+    "postal_code_format": "#####",
+    "postal_code_regex": "^(\\d{5})$",
+    "languages": "es-MX",
+    "geonameid": 3996063,
+    "neighbours": "GT,US,BZ",
+    "equivalent_fips_code": ""
+  },
+  "names": {
+    "en": "Mexico"
+  },
+  "capital_names": {
+    "en": "Mexico City"
+  }
+}"######
+    ]];
     assert_eq!(got, expected);
 }
