@@ -117,7 +117,7 @@ Accepts the same options as countryinfo, but does not require an input file.
   $ qsv geocode countryinfonow -f "{country_name} ({fips}) in {continent}" US
 
 INDEX-<operation>
-Updates the local Geonames cities index used by the geocode command.
+Manage the local Geonames cities index used by the geocode command.
 
 It has four operations:
  * check  - checks if the local Geonames index is up-to-date compared to the Geonames website.
@@ -132,8 +132,10 @@ Examples:
 Update the Geonames cities index with the latest changes.
 
   $ qsv geocode index-update
+  # or rebuild the index with English, French, German & Spanish place names
+  $ qsv geocode index-update --languages en,fr,de,es
 
-Load a Geonames cities index from a file.
+Load an alternative Geonames cities index from a file, making it the default index going forward.
 
   $ qsv geocode index-load my_geonames_index.bincode
 
@@ -157,15 +159,15 @@ geocode arguments:
     <input>                     The input file to read from. If not specified, reads from stdin.
 
     <column>                    The column to geocode. Used by suggest, reverse & countryinfo subcommands.
-                                For suggest, it must be a City column with a City string pattern.
-                                For reverse, it must be a LatLong column using WGS 84 coordinates in
+                                For suggest, it must be a column with a City string pattern.
+                                For reverse, it must be a column using WGS 84 coordinates in
                                 "lat, long" or "(lat, long)" format.
-                                For countryinfo, it must be a Country column (ISO 3166-1 alpha-2 code).
+                                For countryinfo, it must be a column with a ISO 3166-1 alpha-2 country code.
 
     <location>                  The location to geocode for suggestnow, reversenow & countryinfonow subcommands.
                                 For suggestnow, its a City string pattern.
                                 For reversenow, it must be a WGS 84 coordinate.
-                                For countryinfonow, it must be a Country code (ISO 3166-1 alpha-2 code).
+                                For countryinfonow, it must be a ISO 3166-1 alpha-2 code.
                                 
     <index-file>                The alternate geonames index file to use. It must be a .bincode file.
                                 Only used by the index-load subcommand.
@@ -294,8 +296,7 @@ geocode options:
                                 using the cache, so it will be slower than predefined or dynamic formatting.
                                 Also, countryinfo and countryinfonow subcommands currently do not support "%dyncols:".
                                 [default: %+]
-    --language <lang>           The language to use when geocoding. The language is specified as a
-                                ISO 639-1 code. https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
+    --language <lang>           The language to use when geocoding. The language is specified as a ISO 639-1 code.
                                 Note that the Geonames index must have been built with the specified language
                                 using the `index-update` subcommand with the --languages option.
                                 [default: en]
@@ -314,10 +315,9 @@ geocode options:
                                 [default: ~/.qsv-cache]                                
 
                                 INDEX-UPDATE only options:
-    --languages <lang>          The comma-delimited, case-insentive list of languages to use when building
+    --languages <lang-list>     The comma-delimited, case-insentive list of languages to use when building
                                 the Geonames cities index.
                                 The languages are specified as a comma-separated list of ISO 639-1 codes.
-                                https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
                                 [default: en]
     --cities-url <url>          The URL to download the Geonames cities file from. There are several
                                 available at https://download.geonames.org/export/dump/.
@@ -336,7 +336,8 @@ Common options:
     -o, --output <file>         Write output to <file> instead of stdout.
     -d, --delimiter <arg>       The field delimiter for reading CSV data.
                                 Must be a single character. (default: ,)
-    -p, --progressbar           Show progress bars. Not valid for stdin.
+    -p, --progressbar           Show progress bars. Will also show the cache hit rate upon completion.
+                                Not valid for stdin.
 "#;
 
 use std::{
