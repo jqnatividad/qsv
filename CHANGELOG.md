@@ -9,12 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.114.0] - 2023-09-21 🏇🏽🎠
 The long-overdue Benchmarks revamp is finally here! 🎉
 
-The benchmarks have been completely rewritten to be more reproducible, and to use [hyperfine](https://github.com/sharkdp/hyperfine#hyperfine) instead of time.  The new benchmarks are now run as part of the release process, and the results are compiled into a single page that is published to the new [Quicksilver website](https://qsv.dathere.com/benchmarks/).
+The benchmarks have been completely rewritten to be more reproducible, and now use [hyperfine](https://github.com/sharkdp/hyperfine#hyperfine) instead of `time`.  The new benchmarks are now run as part of the release process, and the results are compiled into a single page that is published on the new [Quicksilver website](https://qsv.dathere.com/benchmarks/).
 
-The new benchmarks are also more comprehensive, and is designed to be run on a variety of hardware and operating systems so users can adapt the benchmarks to their own workloads and environments.
+The new benchmarks are also more comprehensive, and designed to be run on a variety of hardware and operating systems. This allows users to adapt the benchmarks to their own workloads and environments.
 
 Other release highlights include:
-* `geocode` is now fully-featured and ready for production use! 🎉 Though it only currently features Geonames city-level lookup support, it now has a solid foundation on top of which we'll add more geocoding providers in the future (next up - [OpenCage support](https://github.com/jqnatividad/qsv/issues/1295) with street-level geocoding).
+* [`geocode`](https://github.com/jqnatividad/qsv/blob/master/src/cmd/geocode.rs#L2) is now fully-featured and ready for production use! 🎉 Though it only currently features Geonames city-level lookup support, it provides a solid foundation on top of which we'll add more geocoding providers in the future (next up - [OpenCage support](https://github.com/jqnatividad/qsv/issues/1295) with street-level geocoding).
 * [Polars](https://www.pola.rs) has been bumped from 0.32.1 to [0.33.2](https://github.com/pola-rs/polars/releases/tag/rs-0.33.0), which includes a number of performance improvements for the `sqlp` and `joinp` commands.
 * major performance increase on several `regex`/`aho-corasick` powered commands on Apple Silicon thanks to various under-the-hood improvements in the [`aho-corasick`](https://www.reddit.com/r/rust/comments/16lvyyg/ahocorasick_and_thus_the_regex_crate_too_now_uses/) crate.
 
@@ -38,7 +38,7 @@ Other release highlights include:
 * build(deps): bump cpc from 1.9.2 to 1.9.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1313
 * build(deps): bump rayon from 1.7.0 to 1.8.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1315
 * (deps): update several indirect dependencies
-* pin Rust nightly to 2023-09-19
+* pin Rust nightly to 2023-09-21
 
 **Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.113.0...0.114.0
 
