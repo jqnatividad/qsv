@@ -169,7 +169,8 @@ Common options:
                                appear as the header row in the output.
     -d, --delimiter <arg>      The field delimiter for reading CSV data.
                                Must be a single character. (default: ,)
-    -p, --progressbar          Show progress bars. Not valid for stdin.
+    -p, --progressbar          Show progress bars. Will also show the cache hit rate upon completion.
+                               Not valid for stdin.
 "#;
 
 use std::{fs, io::Write, num::NonZeroU32, sync::OnceLock, thread, time};
