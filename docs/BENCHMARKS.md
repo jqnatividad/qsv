@@ -1,7 +1,6 @@
-> :exclamation: **WARNING** :exclamation: These benchmarks are stale and very old. I plan to integrate
-the generation of these benchmarks with the publishing process, so they're
-automatically updated with every release. That will require a lot of work, but
-I plan to set aside time to do so 1H 2023.
+> :exclamation: **WARNING** :exclamation: These benchmarks are stale and are only
+being kept around for posterity.<br>
+> The latest benchmarks can be found at https://qsv.dathere.com/benchmarks.
 
 These are some very basic and unscientific benchmarks of various commands
 provided by the latest release of `qsv`. Please see below for more information.
