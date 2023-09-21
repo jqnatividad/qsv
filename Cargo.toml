@@ -153,7 +153,7 @@ qsv-sniffer = { version = "0.10", default-features = false, features = [
     "runtime-dispatch-simd",
 ] }
 rand = "0.8"
-rayon = "1.7"
+rayon = "1.8"
 redis = { version = "0.23", features = [
     "ahash",
 ], default-features = false, optional = true }
