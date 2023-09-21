@@ -6,22 +6,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.114.0] - 2023-09-20
+## [0.114.0] - 2023-09-21 🏇🏽🎠
+The long-overdue Benchmarks revamp is finally here! 🎉
 
-## What's Changed
-* Add test for different delimiters by @janriemer in https://github.com/jqnatividad/qsv/pull/1297
-* Benchmarks revamp by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1298
+The benchmarks have been completely rewritten to be more reproducible, and to use [hyperfine](https://github.com/sharkdp/hyperfine#hyperfine) instead of time.  The new benchmarks are now run as part of the release process, and the results are compiled into a single page that is published to the new [Quicksilver website](https://qsv.dathere.com/benchmarks/).
+
+The new benchmarks are also more comprehensive, and is designed to be run on a variety of hardware and operating systems so users can adapt the benchmarks to their own workloads and environments.
+
+Other release highlights include:
+* `geocode` is now fully-featured and ready for production use! 🎉 Though it only currently features Geonames city-level lookup support, it now has a solid foundation on top of which we'll add more geocoding providers in the future (next up - [OpenCage support](https://github.com/jqnatividad/qsv/issues/1295) with street-level geocoding).
+* [Polars](https://www.pola.rs) has been bumped from 0.32.1 to [0.33.2](https://github.com/pola-rs/polars/releases/tag/rs-0.33.0), which includes a number of performance improvements for the `sqlp` and `joinp` commands.
+* major performance increase on several `regex`/`aho-corasick` powered commands on Apple Silicon thanks to various under-the-hood improvements in the [`aho-corasick`](https://www.reddit.com/r/rust/comments/16lvyyg/ahocorasick_and_thus_the_regex_crate_too_now_uses/) crate.
+
+---
+
+### Added
+* Added autoindex size threshold, replacing `QSV_AUTOINDEX` env var with `QSV_AUTOINDEX_SIZE`. Resolves #1300. in https://github.com/jqnatividad/qsv/pull/1301 https://github.com/jqnatividad/qsv/commit/69e25aceb25d3bb20d8fdeeadf5504d8fe75fe37
+* `diff`: Added test for different delimiters by @janriemer in https://github.com/jqnatividad/qsv/pull/1297
+* `benchmarks`: Added qsv benchmark notebook. by @a5dur in https://github.com/jqnatividad/qsv/pull/1309
+* `geocode`: Added `countryinfo/now` subcommand made available in geosuggest 0.4.3 https://github.com/jqnatividad/qsv/pull/1311
+* `geocode`: Added `--language` option so users can specify the language of the geocoding results. This requires running the `index-update` subcommand with the `--languages` option to rebuild the index with the desired languages.
+* `sqlp`: add example of using columns with embedded spaces in SQL queries https://github.com/jqnatividad/qsv/commit/f7bf4f65edc2068f42712808aec7096ef7122dfe
+
+### Changed
+* `benchmarks`: Benchmarks revamped https://github.com/jqnatividad/qsv/pull/1298, https://github.com/jqnatividad/qsv/pull/1310 https://github.com/jqnatividad/qsv/commit/d8eeb949b8c846793941eb9c343e8598784b6207
 * build(deps): bump serde_json from 1.0.106 to 1.0.107 by @dependabot in https://github.com/jqnatividad/qsv/pull/1302
 * build(deps): bump mimalloc from 0.1.38 to 0.1.39 by @dependabot in https://github.com/jqnatividad/qsv/pull/1303
-* Replace `QSV_AUTOINDEX` env var with `QSV_AUTOINDEX_SIZE` by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1301
 * build(deps): bump simple-home-dir from 0.1.4 to 0.2.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1304
 * build(deps): bump chrono from 0.4.30 to 0.4.31 by @dependabot in https://github.com/jqnatividad/qsv/pull/1305
-* bump Polars from 0.32.1 to Polars 0.33.2 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1308
-* Added qsv benchmark notebook. by @a5dur in https://github.com/jqnatividad/qsv/pull/1309
-* Quicksilver Benchmarks 2.1.1 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1310
-* `geocode`: update to use CountryRecord made available in geo suggest 0.4.3 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1311
+* (deps): bump Polars from 0.32.1 to Polars 0.33.2 https://github.com/jqnatividad/qsv/pull/1308
 * build(deps): bump cpc from 1.9.2 to 1.9.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1313
-
+* build(deps): bump rayon from 1.7.0 to 1.8.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1315
+* (deps): update several indirect dependencies
+* pin Rust nightly to 2023-09-19
 
 **Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.113.0...0.114.0
 
