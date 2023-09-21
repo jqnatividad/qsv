@@ -423,11 +423,8 @@ struct NamesLang {
 }
 
 static QSV_VERSION: &str = env!("CARGO_PKG_VERSION");
-static DEFAULT_GEOCODE_INDEX_FILENAME: &str = concat!(
-    "qsv-",
-    env!("CARGO_PKG_VERSION"),
-    "-geocode-index-new.bincode"
-);
+static DEFAULT_GEOCODE_INDEX_FILENAME: &str =
+    concat!("qsv-", env!("CARGO_PKG_VERSION"), "-geocode-index.bincode");
 
 static DEFAULT_CITIES_NAMES_URL: &str =
     "https://download.geonames.org/export/dump/alternateNamesV2.zip";
