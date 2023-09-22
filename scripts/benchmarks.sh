@@ -40,7 +40,7 @@
 pat="$1"
 
 # the version of this script
-bm_version=2.2.1
+bm_version=2.3.0
 
 # configurable variables ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -100,7 +100,7 @@ version=$(echo "$raw_version" | cut -d' ' -f2 | cut -d'-' -f1)
 # get target platform from version
 platform=$(echo "$raw_version" | sed 's/.*(\([a-z0-9_-]*\) compiled with Rust.*/\1/')
 # get qsv kind
-kind=$(echo "$raw_version" | sed 's/.* \([a-zA-Z]*\)$/\1/')
+kind=$(echo "$raw_version" | sed 's/.* \([a-zA-Z-]*\)$/\1/')
 
 # get num cores & memory size
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -541,11 +541,14 @@ cleanup_files
 # Finalize benchmark run info. Append the run info to results/run_info_history.csv
 # we use the TSV format as some of the data has commas/quotes/whitespace/semicolon, etc.
 
+# get the environment variables used by qsv
+qsv_envvars=$("$qsv_bin" --envlist)
+
 elapsed=$SECONDS
 
 # Init latest_run_info.csv. It stores the benchmark run info for this run
 rm -f results/latest_run_info.tsv
-echo -e "version\ttstamp\tlogtime\tbm_version\tplatform\tcores\tmem\tkind\targument\ttotal_count\two_index_count\twith_index_count\twarmup_runs\tbenchmark_runs\telapsed_secs\tversion_info" >results/latest_run_info.tsv
+echo -e "version\ttstamp\tlogtime\tbm_version\tplatform\tcores\tmem\tbinary\tkind\targument\ttotal_count\two_index_count\twith_index_count\twarmup_runs\tbenchmark_runs\telapsed_secs\tqsv_env\tversion_info" >results/latest_run_info.tsv
 
 # check if the file run_info_history.csv exists, if it doesn't create it
 # by copying the empty latest_run_info.csv
@@ -554,7 +557,7 @@ if [ ! -f "results/run_info_history.tsv" ]; then
 fi
 
 # append the run info to latest_run_info.csv
-echo -e "$version\t$now\t$now_sec\t$bm_version\t$platform\t$num_cores\t$mem_size\t$kind\t$pat\t$total_count\t$wo_index_count\t$with_index_count\t$warmup_runs\t$benchmark_runs\t$elapsed\t$raw_version" >>results/latest_run_info.tsv
+echo -e "$version\t$now\t$now_sec\t$bm_version\t$platform\t$num_cores\t$mem_size\t$qsv_bin\t$kind\t$pat\t$total_count\t$wo_index_count\t$with_index_count\t$warmup_runs\t$benchmark_runs\t$elapsed\t$qsv_envvars\t$raw_version" >>results/latest_run_info.tsv
 
 # now update the run_info_history.tsv
 "$qsv_bin" cat rowskey results/latest_run_info.tsv results/run_info_history.tsv \
