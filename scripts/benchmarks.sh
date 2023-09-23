@@ -37,10 +37,10 @@
 # It uses the following commands: apply, cat, count, luau, sample, schema, select, snappy, sort, tojsonl
 # and to xlsx. It's a good example of how qsv can be used to automate data preparation & analysis tasks.
 
-pat="$1"
+arg_pat="$1"
 
 # the version of this script
-bm_version=2.3.0
+bm_version=2.3.1
 
 # configurable variables ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -136,8 +136,8 @@ function cleanup_files {
   rm -f extsort_sorted.csv
 }
 
-# if pat is equal to "help", show usage
-if [[ "$pat" == "help" ]]; then
+# if arg_pat is equal to "help", show usage
+if [[ "$arg_pat" == "help" ]]; then
   echo "Quicksilver (qsv) Benchmark Script v$bm_version"
   echo ""
   echo "Usage: ./benchmarks.sh <argument>"
@@ -155,9 +155,9 @@ if [[ "$pat" == "help" ]]; then
   exit
 fi
 
-# if pat is equal to "reset", download and prepare the benchmark data again
+# if arg_pat is equal to "reset", download and prepare the benchmark data again
 # the results/benchmark_results.csv historical archive will be preserved
-if [[ "$pat" == "reset" ]]; then
+if [[ "$arg_pat" == "reset" ]]; then
   rm -f "$datazip"
   rm -f "$filestem".*
   rm -f communityboards.csv
@@ -173,8 +173,8 @@ if [[ "$pat" == "reset" ]]; then
   exit
 fi
 
-# if pat is equal to "clean", clean up temporary files
-if [[ "$pat" == "clean" ]]; then
+# if arg_pat is equal to "clean", clean up temporary files
+if [[ "$arg_pat" == "clean" ]]; then
   cleanup_files
   echo "> Temporary files cleaned up..."
   exit
@@ -204,7 +204,7 @@ if [ ! -r communityboards.csv ]; then
   echo ""
 fi
 
-if [ ! -r data_to_exclude.csv ]; then
+if [ ! -r seachset_patterns.txt ]; then
   echo "> Preparing benchmark support data..."
   # create an index so benchmark data preparation commands can run faster
   "$qsv_bin" index "$data"
@@ -263,7 +263,7 @@ function run {
   local name="$1"
   shift
 
-  if [[ "$name" == *"$pat"* ]]; then
+  if [[ "$name" == *"$arg_pat"* ]]; then
     if [ -z "$index" ]; then
       commands_without_index_name+=("$name")
       add_command "without_index" "$@"
@@ -276,7 +276,7 @@ function run {
 
 # ---------------------------------------
 # Queue commands for benchmarking
-# commands with an --index prefix will be benchmarked with an index
+# commands with an --index prefix will be benchmarked with an index and a stats cache
 # template: run <benchmark name> <qsv command> <qsv command args>
 
 run apply_calcconv "$qsv_bin apply calcconv --formatstr \"{Unique Key} meters in miles\" --new-column new_col $data"
@@ -460,9 +460,11 @@ for command_no_index in "${commands_without_index[@]}"; do
 done
 
 # ---------------------------------------
-# then, run benchmarks with an index
+# then, run benchmarks with an index and stats cache
 # an index enables random access and unlocks multi-threading in several commands
-echo "> Benchmarking WITH INDEX..."
+# the stats cache enables faster stats computation as it will use the cached stats
+# when its valid and available, instead of computing the stats from scratch
+echo "> Benchmarking WITH INDEX and STATS CACHE..."
 
 if [ "$with_index_count" -gt 0 ]; then
   echo "  Preparing index and stats cache..."
@@ -492,7 +494,7 @@ done
 # ---------------------------------------
 # Finalize benchmark results. Sort the latest results by version, tstamp & name.
 # compute and add records per second for each benchmark using qsv's luau command.
-# We compute recs_per_sec by dividing 1M (the number of rows in NYC 311 sample data)
+# We compute recs_per_sec by dividing the number of rows in the benchmark data
 # by the mean run time of the three runs.
 # We then append/concatenate the latest results to benchmark_results.csv - which is
 # a historical archive, so we can track performance over multiple releases.
@@ -503,7 +505,7 @@ echo ""
   -o results/results_work.csv
 
 # compute records per second for each benchmark using luau by dividing rowcount by mean
-# we then round the result to a whole number and format with commas for readability
+# we then round the result to a whole number
 luau_cmd="recs_per_sec=( $rowcount / mean); return tonumber(string.format(\"%.0f\",recs_per_sec))"
 "$qsv_bin" luau map recs_per_sec "$luau_cmd" results/results_work.csv -o results/latest_results.csv
 
@@ -557,7 +559,7 @@ if [ ! -f "results/run_info_history.tsv" ]; then
 fi
 
 # append the run info to latest_run_info.csv
-echo -e "$version\t$now\t$now_sec\t$bm_version\t$platform\t$num_cores\t$mem_size\t$qsv_bin\t$kind\t$pat\t$total_count\t$wo_index_count\t$with_index_count\t$warmup_runs\t$benchmark_runs\t$elapsed\t$qsv_envvars\t$raw_version" >>results/latest_run_info.tsv
+echo -e "$version\t$now\t$now_sec\t$bm_version\t$platform\t$num_cores\t$mem_size\t$qsv_bin\t$kind\t$arg_pat\t$total_count\t$wo_index_count\t$with_index_count\t$warmup_runs\t$benchmark_runs\t$elapsed\t$qsv_envvars\t$raw_version" >>results/latest_run_info.tsv
 
 # now update the run_info_history.tsv
 "$qsv_bin" cat rowskey results/latest_run_info.tsv results/run_info_history.tsv \
