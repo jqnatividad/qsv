@@ -40,9 +40,9 @@
 arg_pat="$1"
 
 # the version of this script
-bm_version=2.3.1
+bm_version=3.0.0
 
-# configurable variables ---------------------------------------
+# CONFIGURABLE VARIABLES ---------------------------------------
 # change as needed to reflect your environment/workloads
 
 # the path to the qsv binary, change this if you're not using the prebuilt binaries
@@ -59,7 +59,7 @@ data=NYC_311_SR_2010-2020-sample-1M.csv
 warmup_runs=2
 # number of benchmark runs for each benchmark. A minimum of 3 is recommended
 benchmark_runs=3
-# ----------------------------  end of configurable variables
+# ----------------------------  end of CONFIGURABLE VARIABLES
 
 data_filename=$(basename -- "$data")
 filestem="${data_filename%.*}"
@@ -204,7 +204,7 @@ if [ ! -r communityboards.csv ]; then
   echo ""
 fi
 
-if [ ! -r seachset_patterns.txt ]; then
+if [ ! -r searchset_patterns.txt ]; then
   echo "> Preparing benchmark support data..."
   # create an index so benchmark data preparation commands can run faster
   "$qsv_bin" index "$data"
@@ -278,6 +278,10 @@ function run {
 # Queue commands for benchmarking
 # commands with an --index prefix will be benchmarked with an index and a stats cache
 # template: run <benchmark name> <qsv command> <qsv command args>
+# Note that several benchmarks assume the the benchmark_data is using the NYC 311 dataset, so
+# the column names are hardcoded.
+# If you're using a different dataset, you will need to modify the commands below to use the
+# appropriate column names.
 
 run apply_calcconv "$qsv_bin apply calcconv --formatstr \"{Unique Key} meters in miles\" --new-column new_col $data"
 run apply_datefmt "$qsv_bin apply datefmt \"Created Date\" $data"
@@ -319,7 +323,9 @@ run input "$qsv_bin" input "$data"
 run join "$qsv_bin" join \'Community Board\' "$data" community_board communityboards.csv
 run joinp "$qsv_bin" joinp \'Community Board\' "$data" community_board communityboards.csv
 run jsonl "$qsv_bin" jsonl benchmark_data.jsonl
-run luau "$qsv_bin" luau map location_empty "tonumber\(Location\)==nil" "$data"
+run luau_filter "$qsv_bin" luau filter \"Location == \'\'\" "$data"
+run luau_multi "$qsv_bin" luau map dow,hourday,weekno "file:dt_format.luau" "$data"
+run luau_script "$qsv_bin" luau map turnaround_time "file:turnaround_time.luau" "$data"
 run partition "$qsv_bin" partition \'Community Board\' /tmp/partitioned "$data"
 run pseudo "$qsv_bin" pseudo \'Unique Key\' "$data"
 run rename "$qsv_bin" rename \'unique_key,created_date,closed_date,agency,agency_name,complaint_type,descriptor,loctype,zip,addr1,street,xstreet1,xstreet2,inter1,inter2,addrtype,city,landmark,facility_type,status,due_date,res_desc,res_act_date,comm_board,bbl,boro,xcoord,ycoord,opendata_type,parkname,parkboro,vehtype,taxi_boro,taxi_loc,bridge_hwy_name,bridge_hwy_dir,ramp,bridge_hwy_seg,lat,long,loc\' "$data"
@@ -369,15 +375,22 @@ run sqlp_lowmemory "$qsv_bin" sqlp "$data" -Q --low-memory '"select * from _t_1 
 run sqlp_nooptimizations "$qsv_bin" sqlp "$data" -Q --no-optimizations '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
 run sqlp_tryparsedates "$qsv_bin" sqlp "$data" -Q --try-parsedates '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
 run sqlp_tryparsedates_inferlen "$qsv_bin" sqlp "$data" -Q --infer-len 10000 --try-parsedates '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
-run stats "$qsv_bin" stats --force "$data"
-run --index stats_index "$qsv_bin" stats --force "$data"
-run --index stats_index_j1 "$qsv_bin" stats -j 1 --force "$data"
-run stats_everything "$qsv_bin" stats "$data" --force --everything
-run stats_everything_infer_dates "$qsv_bin" stats "$data" --force --everything --infer-dates
-run stats_everything_j1 "$qsv_bin" stats "$data" --force --everything -j 1
-run --index stats_everything_index "$qsv_bin" stats "$data" --force --everything
-run --index stats_everything_infer_dates_index "$qsv_bin" stats "$data" --force --everything --infer-dates
-run --index stats_everything_index_j1 "$qsv_bin" stats "$data" --force --everything -j 1
+run stats "$qsv_bin" stats --force --stats-binout NONE "$data"
+run stats_create_cache "$qsv_bin" stats --force "$data"
+run --index stats_index "$qsv_bin" stats --force --stats-binout NONE "$data"
+run --index stats_index_with_cache "$qsv_bin" stats "$data"
+run --index stats_index_j1 "$qsv_bin" stats -j 1 --force --stats-binout NONE  "$data"
+run --index stats_index_j1_with_cache "$qsv_bin" stats -j 1 "$data"
+run stats_everything "$qsv_bin" stats "$data" --force --stats-binout NONE --everything
+run stats_everything_create_cache "$qsv_bin" stats "$data" --force --everything
+run stats_everything_infer_dates "$qsv_bin" stats "$data" --force --stats-binout NONE --everything --infer-dates
+run stats_everything_j1 "$qsv_bin" stats "$data" --force --stats-binout NONE --everything -j 1
+run --index stats_everything_index "$qsv_bin" stats "$data" --force --stats-binout NONE --everything
+run --index stats_everything_index_with_cache "$qsv_bin" stats "$data" --everything
+run --index stats_everything_infer_dates_index "$qsv_bin" stats "$data" --force --stats-binout NONE --everything --infer-dates
+run --index stats_everything_infer_dates_index_with_cache "$qsv_bin" stats "$data" --everything --infer-dates
+run --index stats_everything_index_j1 "$qsv_bin" stats "$data" --force --stats-binout NONE --everything -j 1
+run --index stats_everything_index_j1_with_cache "$qsv_bin" stats "$data" --everything -j 1
 run table "$qsv_bin" table "$data"
 run to_xlsx "$qsv_bin" to xlsx benchmark_work.xlsx "$data"
 run to_sqlite "$qsv_bin" to sqlite benchmark_work.db "$data"
@@ -436,7 +449,9 @@ for command_no_index in "${commands_without_index[@]}"; do
   rm -f "$data".idx
   rm -f "$filestem".stats.*
 
-  echo "$name_idx. ${commands_without_index_name[$idx]}"
+  pct_complete=$(((name_idx-1) * 100 / total_count))
+
+  echo "$name_idx. ${commands_without_index_name[$idx]} ($pct_complete%)"
   hyperfine --warmup "$warmup_runs" -i --runs "$benchmark_runs" --export-csv results/hf_result.csv \
     "$command_no_index"
 
@@ -464,9 +479,8 @@ done
 # an index enables random access and unlocks multi-threading in several commands
 # the stats cache enables faster stats computation as it will use the cached stats
 # when its valid and available, instead of computing the stats from scratch
-echo "> Benchmarking WITH INDEX and STATS CACHE..."
-
 if [ "$with_index_count" -gt 0 ]; then
+  echo "> Benchmarking WITH INDEX and STATS CACHE..."
   echo "  Preparing index and stats cache..."
   rm -f "$data".idx
   "$qsv_bin" index "$data"
@@ -476,7 +490,9 @@ fi
 
 idx=0
 for command_with_index in "${commands_with_index[@]}"; do
-  echo "$name_idx. ${commands_with_index_name[$idx]}"
+  pct_complete=$(((name_idx-1) * 100 / total_count))
+
+  echo "$name_idx. ${commands_with_index_name[$idx]} ($pct_complete%)"
   hyperfine --warmup "$warmup_runs" -i --runs "$benchmark_runs" --export-csv results/hf_result.csv \
     "$command_with_index"
   echo "version,tstamp,name" >results/results_work.csv
@@ -505,9 +521,19 @@ echo ""
   -o results/results_work.csv
 
 # compute records per second for each benchmark using luau by dividing rowcount by mean
-# we then round the result to a whole number
-luau_cmd="recs_per_sec=( $rowcount / mean); return tonumber(string.format(\"%.0f\",recs_per_sec))"
-"$qsv_bin" luau map recs_per_sec "$luau_cmd" results/results_work.csv -o results/latest_results.csv
+# we then round the result to a whole number. We also compute the total mean
+
+# we set the QSVBM_ROWCOUNT environment variable to the rowcount so it can be used
+# by the luau script by using the qsv.get_env() function
+export QSVBM_ROWCOUNT=$rowcount
+# we run the benchmark_aggregations.luau script using qsv's luau command
+# total_mean is the total mean of all the benchmarks
+# it is computed in the END block of the script and is sent to stderr
+# which we redirect to a file named total_mean.txt
+"$qsv_bin" luau map recs_per_sec "file:benchmark_aggregations.luau" \
+  results/results_work.csv -o results/latest_results.csv 2>total_mean.txt
+# we read the total_mean from the total_mean.txt file
+total_mean=$(< total_mean.txt)
 
 # Concatenate the final results of this run to results/bechmark_results.csv
 "$qsv_bin" cat rowskey results/latest_results.csv results/benchmark_results.csv \
@@ -550,7 +576,7 @@ elapsed=$SECONDS
 
 # Init latest_run_info.csv. It stores the benchmark run info for this run
 rm -f results/latest_run_info.tsv
-echo -e "version\ttstamp\tlogtime\tbm_version\tplatform\tcores\tmem\tbinary\tkind\targument\ttotal_count\two_index_count\twith_index_count\twarmup_runs\tbenchmark_runs\telapsed_secs\tqsv_env\tversion_info" >results/latest_run_info.tsv
+echo -e "version\ttstamp\tlogtime\tbm_version\tplatform\tcores\tmem\tbinary\tkind\targument\ttotal_count\two_index_count\twith_index_count\twarmup_runs\tbenchmark_runs\telapsed_secs\ttotal_mean\tqsv_env\tversion_info" >results/latest_run_info.tsv
 
 # check if the file run_info_history.csv exists, if it doesn't create it
 # by copying the empty latest_run_info.csv
@@ -559,11 +585,11 @@ if [ ! -f "results/run_info_history.tsv" ]; then
 fi
 
 # append the run info to latest_run_info.csv
-echo -e "$version\t$now\t$now_sec\t$bm_version\t$platform\t$num_cores\t$mem_size\t$qsv_bin\t$kind\t$arg_pat\t$total_count\t$wo_index_count\t$with_index_count\t$warmup_runs\t$benchmark_runs\t$elapsed\t$qsv_envvars\t$raw_version" >>results/latest_run_info.tsv
+echo -e "$version\t$now\t$now_sec\t$bm_version\t$platform\t$num_cores\t$mem_size\t$qsv_bin\t$kind\t$arg_pat\t$total_count\t$wo_index_count\t$with_index_count\t$warmup_runs\t$benchmark_runs\t$elapsed\t$total_mean\t$qsv_envvars\t$raw_version" >>results/latest_run_info.tsv
 
 # now update the run_info_history.tsv
 "$qsv_bin" cat rowskey results/latest_run_info.tsv results/run_info_history.tsv \
   -o results/run_info_work.tsv
 mv results/run_info_work.tsv results/run_info_history.tsv
 
-echo "> DONE! $total_count benchmarks executed. Elapsed time: $elapsed seconds."
+echo "> 100% DONE! $total_count benchmarks executed. Elapsed time: $elapsed seconds. Total mean: $total_mean"
