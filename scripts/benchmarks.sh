@@ -66,7 +66,27 @@ benchmark_runs=3
 data_filename=$(basename -- "$data")
 filestem="${data_filename%.*}"
 
-# check if binaries are installed ---------
+# if arg_pat is equal to "help", show usage
+if [[ "$arg_pat" == "help" ]]; then
+  echo "Quicksilver (qsv) Benchmark Script v$bm_version"
+  echo ""
+  echo "Usage: ./benchmarks.sh <argument>"
+  echo ""
+  echo " where <argument> is a substring pattern of the benchmark name."
+  echo "       e.g. ./benchmarks.sh sort - will run benchmarks with \"sort\" in the benchmark name"
+  echo "       if <argument> is omitted, all benchmarks will be executed."
+  echo ""
+  echo "       if <argument> is \"reset\", the benchmark data will be downloaded and prepared again."
+  echo "          though the results/benchmark_results.csv historical archive will be preserved."
+  echo "       if <argument> is \"clean\", temporary files will be deleted."
+  echo "       if <argument> is \"setup\", setup and install all the required tools."
+  echo "       if <argument> is \"help\", help text is displayed."
+  echo ""
+  echo "$raw_version"
+  exit
+fi
+
+# check if required tools/dependencies are installed ---------
 # check if qsv is installed
 if ! command -v "$qsv_bin" &>/dev/null; then
   echo "qsv could not be found"
@@ -115,7 +135,8 @@ if [[ "$arg_pat" == "setup" ]]; then
     exit
   fi
 
-  # check if homebrew is install
+  # check if homebrew is installed, if not, install it
+  # as we need it to install the required tools
   if ! command -v brew &>/dev/null; then
     echo "INFO: Homebrew could not be found. Installing brew first. Please enter requested info when prompted."
     curl -fsSL "https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
@@ -219,26 +240,6 @@ function cleanup_files {
   rm -r -f benchmark_work
   rm -f extsort_sorted.csv
 }
-
-# if arg_pat is equal to "help", show usage
-if [[ "$arg_pat" == "help" ]]; then
-  echo "Quicksilver (qsv) Benchmark Script v$bm_version"
-  echo ""
-  echo "Usage: ./benchmarks.sh <argument>"
-  echo ""
-  echo " where <argument> is a substring pattern of the benchmark name."
-  echo "       e.g. ./benchmarks.sh sort - will run benchmarks with \"sort\" in the benchmark name"
-  echo "       if <argument> is omitted, all benchmarks will be executed."
-  echo ""
-  echo "       if <argument> is \"reset\", the benchmark data will be downloaded and prepared again."
-  echo "          though the results/benchmark_results.csv historical archive will be preserved."
-  echo "       if <argument> is \"clean\", temporary files will be deleted."
-  echo "       if <argument> is \"setup\", setup and install all the required tools."
-  echo "       if <argument> is \"help\", help text is displayed."
-  echo ""
-  echo "$raw_version"
-  exit
-fi
 
 # if arg_pat is equal to "reset", download and prepare the benchmark data again
 # the results/benchmark_results.csv historical archive will be preserved
