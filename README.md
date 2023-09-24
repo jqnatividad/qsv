@@ -359,23 +359,6 @@ It will NOT offer the choice to update itself to the prebuilt binaries published
 
 qsv's MSRV policy is to require the latest [Rust version](https://github.com/rust-lang/rust/blob/master/RELEASES.md) that is [supported by Homebrew](https://formulae.brew.sh/formula/rust#default), currently [![HomeBrew](https://img.shields.io/homebrew/v/rust?logo=homebrew)](https://formulae.brew.sh/formula/rust).
 
-## Tab Completion
-
-qsv's command-line options are quite extensive. Thankfully, since it uses [docopt](http://docopt.org/) for CLI processing,
-we can take advantage of [docopt.rs' tab completion support](https://github.com/docopt/docopt.rs#tab-completion-support) to make it
-easier to use qsv at the command-line (currently, only bash shell is supported):
-
-```bash
-# install docopt-wordlist
-cargo install docopt
-
-# IMPORTANT: run these commands from the root directory of your qsv git repository
-# to setup bash qsv tab completion
-echo "DOCOPT_WORDLIST_BIN=\"$(which docopt-wordlist)"\" >> $HOME/.bash_completion
-echo "source \"$(pwd)/scripts/docopt-wordlist.bash\"" >> $HOME/.bash_completion
-echo "complete -F _docopt_wordlist_commands qsv" >> $HOME/.bash_completion
-```
-
 ## Testing
 qsv has ~1,200 tests in the [tests](https://github.com/jqnatividad/qsv/tree/master/tests) directory.
 Each command has its own test suite in a separate file with the convention `test_<COMMAND>.rs`.
