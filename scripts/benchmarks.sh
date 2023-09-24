@@ -9,6 +9,7 @@
 #   though the results/benchmark_results.csv and resutls/run_info_history.tsv historical
 #   archives will be preserved.
 #  if <argument> is "clean", temporary files will be deleted.
+#  if <argument> is "setup", setup and install all the required tools.
 #  if <argument> is "help", help text is displayed.
 #
 # ==============================================================================================
@@ -26,8 +27,9 @@
 # i.e. `cargo build --release --locked -F feature_capable,apply,geocode,luau,to,polars` or
 # `cargo install --locked qsv -F feature_capable,apply,geocode,luau,to,polars`
 #
-# This shell script has been tested on Linux, macOS and Cygwin for Windows (https://www.cygwin.com/).
-# It should work on other Unix-like systems, but will NOT run on native Windows.
+# This shell script has been tested on Linux and macOS. It should work on other Unix-like systems,
+# but will NOT run on native Windows. If you're on Windows, you can run it using Cygwin or WSL
+# (see https://www.cygwin.com/ and https://docs.microsoft.com/en-us/windows/wsl/install-win10).
 # It requires hyperfine (https://github.com/sharkdp/hyperfine#hyperfine) to run the benchmarks.
 # It also requires 7-Zip (https://www.7-zip.org/download.html) as we need the high compression
 # ratio so we don't have to deal with git-lfs to host the large compressed file on GitHub.
@@ -79,17 +81,99 @@ else
   sevenz_bin=7z
 fi
 
+# if arg_pat is equal to "setup", setup and install all the required tools
+if [[ "$arg_pat" == "setup" ]]; then
+
+  need_sevenz=0
+  need_hyperfine=0
+  need_awk=0
+  need_sed=0
+
+  # check if 7z is installed
+  if ! command -v "$sevenz_bin" &>/dev/null; then
+    need_sevenz=1
+  fi
+
+  # check if hyperfine is installed
+  if ! command -v hyperfine &>/dev/null; then
+    need_hyperfine=1
+  fi
+
+  # check if awk is installed
+  if ! command -v awk &>/dev/null; then
+    need_awk=1
+  fi
+
+  # check if sed is installed
+  if ! command -v sed &>/dev/null; then
+    need_sed=1
+  fi
+
+  # if all required tools are installed, exit
+  if [[ "$need_sevenz" -eq 0 && "$need_hyperfine" -eq 0 && "$need_awk" -eq 0 && "$need_sed" -eq 0 ]]; then
+    echo "> All required tools are installed..."
+    exit
+  fi
+
+  # check if homebrew is install
+  if ! command -v brew &>/dev/null; then
+    echo "INFO: Homebrew could not be found. Installing brew first. Please enter requested info when prompted."
+    curl -fsSL "https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
+  fi
+
+  # if 7z is not installed, install it
+  if [[ "$need_sevenz" -eq 1 ]]; then
+    echo "INFO: 7-Zip could not be found. Installing..."
+    brew install 7zip
+  fi
+
+  # if hyperfine is not installed, install it
+  if [[ "$need_hyperfine" -eq 1 ]]; then
+    echo "INFO: hyperfine could not be found. Installing..."
+    brew install hyperfine
+  fi
+
+  # if awk is not installed, install it
+  if [[ "$need_awk" -eq 1 ]]; then
+    echo "INFO: awk could not be found. Installing..."
+    brew install gawk
+  fi
+
+  # if sed is not installed, install it
+  if [[ "$need_sed" -eq 1 ]]; then
+    echo "INFO: sed could not be found. Installing..."
+    brew install gnu-sed
+  fi
+
+  echo "> All required tools installed! You can run ./benchmarks.sh now."
+  exit
+fi
+
 # check if 7z is installed
 if ! command -v "$sevenz_bin" &>/dev/null; then
-  echo "ERROR: $sevenz_bin could not be found"
-  echo "Please install 7-Zip v23.01 and above"
+  echo "ERROR: $sevenz_bin could not be found."
+  echo "Please install 7-Zip v23.01 and above or run \"./benchmarks.sh setup\" to install it."
   exit
 fi
 
 # check if hyperfine is installed
 if ! command -v hyperfine &>/dev/null; then
   echo "ERROR: hyperfine could not be found"
-  echo "Please install hyperfine v1.17.0 and above"
+  echo "Please install hyperfine v1.17.0 and above or run \"./benchmarks.sh setup\" to install it."
+  exit
+fi
+
+# check if awk is installed
+if ! command -v awk &>/dev/null; then
+  echo "ERROR: awk could not be found"
+  echo "Please install awk or run \"./benchmarks.sh setup\" to install it."
+  exit
+fi
+
+# check if sed is installed
+if ! command -v sed &>/dev/null; then
+  echo "ERROR: sed could not be found"
+  echo "Please install sed or run \"./benchmarks.sh setup\" to install it."
   exit
 fi
 
@@ -149,6 +233,7 @@ if [[ "$arg_pat" == "help" ]]; then
   echo "       if <argument> is \"reset\", the benchmark data will be downloaded and prepared again."
   echo "          though the results/benchmark_results.csv historical archive will be preserved."
   echo "       if <argument> is \"clean\", temporary files will be deleted."
+  echo "       if <argument> is \"setup\", setup and install all the required tools."
   echo "       if <argument> is \"help\", help text is displayed."
   echo ""
   echo "$raw_version"
@@ -379,7 +464,7 @@ run stats "$qsv_bin" stats --force --stats-binout NONE "$data"
 run stats_create_cache "$qsv_bin" stats --force "$data"
 run --index stats_index "$qsv_bin" stats --force --stats-binout NONE "$data"
 run --index stats_index_with_cache "$qsv_bin" stats "$data"
-run --index stats_index_j1 "$qsv_bin" stats -j 1 --force --stats-binout NONE  "$data"
+run --index stats_index_j1 "$qsv_bin" stats -j 1 --force --stats-binout NONE "$data"
 run --index stats_index_j1_with_cache "$qsv_bin" stats -j 1 "$data"
 run stats_everything "$qsv_bin" stats "$data" --force --stats-binout NONE --everything
 run stats_everything_create_cache "$qsv_bin" stats "$data" --force --everything
@@ -449,7 +534,7 @@ for command_no_index in "${commands_without_index[@]}"; do
   rm -f "$data".idx
   rm -f "$filestem".stats.*
 
-  pct_complete=$(((name_idx-1) * 100 / total_count))
+  pct_complete=$(((name_idx - 1) * 100 / total_count))
 
   echo "$name_idx. ${commands_without_index_name[$idx]} ($pct_complete%)"
   hyperfine --warmup "$warmup_runs" -i --runs "$benchmark_runs" --export-csv results/hf_result.csv \
@@ -490,7 +575,7 @@ fi
 
 idx=0
 for command_with_index in "${commands_with_index[@]}"; do
-  pct_complete=$(((name_idx-1) * 100 / total_count))
+  pct_complete=$(((name_idx - 1) * 100 / total_count))
 
   echo "$name_idx. ${commands_with_index_name[$idx]} ($pct_complete%)"
   hyperfine --warmup "$warmup_runs" -i --runs "$benchmark_runs" --export-csv results/hf_result.csv \
@@ -533,7 +618,7 @@ export QSVBM_ROWCOUNT=$rowcount
 "$qsv_bin" luau map recs_per_sec "file:benchmark_aggregations.luau" \
   results/results_work.csv -o results/latest_results.csv 2>total_mean.txt
 # we read the total_mean from the total_mean.txt file
-total_mean=$(< total_mean.txt)
+total_mean=$(<total_mean.txt)
 
 # Concatenate the final results of this run to results/bechmark_results.csv
 "$qsv_bin" cat rowskey results/latest_results.csv results/benchmark_results.csv \
