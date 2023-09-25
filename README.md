@@ -295,7 +295,7 @@ It has [sandboxing](https://luau-lang.org/sandbox), [type-checking](https://luau
 
 It also allows mapping of multiple new computed columns, supports random access with indexed CSV files, and has [several helper functions](https://github.com/jqnatividad/qsv/blob/c0c2d5ab3e4ea9cc0e861c6ad41652677ffc4f20/src/cmd/luau.rs#L1250-L1931) to help ease the development of [full-fledged data-wrangling scripts](https://github.com/jqnatividad/qsv/blob/4e521b177ea3a6a06c83222458bb1349a67606f4/tests/test_luau.rs#L524-L571).
 
-As date manipulation is often needed, we're also preloading the [LuaDate](https://tieske.github.io/date/) module.
+As date manipulation is often needed, the [LuaDate](https://tieske.github.io/date/) module is also bundled.
 
 Finally, as [qsv's DSL](#luau_deeplink) (👑), `luau` will gain even more features over time compared to the `python` feature.
 
