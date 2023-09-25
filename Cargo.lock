@@ -874,13 +874,13 @@ dependencies = [
 
 [[package]]
 name = "cached"
-version = "0.45.1"
+version = "0.46.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "90eb5776f28a149524d1d8623035760b4454ec881e8cf3838fa8d7e1b11254b3"
+checksum = "8cead8ece0da6b744b2ad8ef9c58a4cdc7ef2921e60a6ddfb9eaaa86839b5fc5"
 dependencies = [
  "cached_proc_macro",
  "cached_proc_macro_types",
- "hashbrown 0.13.2",
+ "hashbrown 0.14.0",
  "instant",
  "once_cell",
  "r2d2",
