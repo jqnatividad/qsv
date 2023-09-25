@@ -2734,9 +2734,9 @@ checksum = "b5e6163cb8c49088c2c36f57875e58ccd8c87c7427f7fbd50ea6710b2f3f2e8f"
 
 [[package]]
 name = "luau0-src"
-version = "0.7.4+luau594"
+version = "0.7.5+luau596"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fd3a63bc31a97efdd1f4d0246c33bed3086f63a67cdf7d0451f68cb215aad20c"
+checksum = "cda221ef787513a320f1de3ca8987d110fa7096c460a8f6feaeeba46d1551507"
 dependencies = [
  "cc",
 ]
@@ -4197,9 +4197,9 @@ checksum = "dbb5fb1acd8a1a18b3dd5be62d25485eb770e05afb408a9627d14d451bae12da"
 
 [[package]]
 name = "rend"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "581008d2099240d37fb08d77ad713bcaec2c4d89d50b5b21a8bb1996bbab68ab"
+checksum = "a2571463863a6bd50c32f94402933f03457a3fbaf697a707c5be741e459f08fd"
 dependencies = [
  "bytecheck",
 ]
