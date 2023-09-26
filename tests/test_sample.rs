@@ -128,8 +128,8 @@ fn sample_seed_url() {
 }
 
 #[test]
-fn sample_percentage_seed_no_index_error() {
-    let wrk = Workdir::new("sample_percentage");
+fn sample_percentage_seed_no_index_percentage() {
+    let wrk = Workdir::new("sample_percentage_seed_no_index_percentage");
     wrk.create(
         "in.csv",
         vec![
