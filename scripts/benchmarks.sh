@@ -42,7 +42,7 @@
 arg_pat="$1"
 
 # the version of this script
-bm_version=3.0.0
+bm_version=3.0.1
 
 # CONFIGURABLE VARIABLES ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -66,6 +66,16 @@ benchmark_runs=3
 data_filename=$(basename -- "$data")
 filestem="${data_filename%.*}"
 
+# check if qsv is installed
+if ! command -v "$qsv_bin" &>/dev/null; then
+  echo "qsv could not be found"
+  echo "Please install Quicksilver (qsv) from https://qsv.dathere.com"
+  exit
+fi
+
+# get current version of qsv
+raw_version=$("$qsv_bin" --version)
+
 # if arg_pat is equal to "help", show usage
 if [[ "$arg_pat" == "help" ]]; then
   echo "Quicksilver (qsv) Benchmark Script v$bm_version"
@@ -82,17 +92,11 @@ if [[ "$arg_pat" == "help" ]]; then
   echo "       if <argument> is \"setup\", setup and install all the required tools."
   echo "       if <argument> is \"help\", help text is displayed."
   echo ""
-  echo "$raw_version"
+  echo "using: $raw_version"
   exit
 fi
 
 # check if required tools/dependencies are installed ---------
-# check if qsv is installed
-if ! command -v "$qsv_bin" &>/dev/null; then
-  echo "qsv could not be found"
-  echo "Please install Quicksilver (qsv) from https://qsv.dathere.com"
-  exit
-fi
 
 # set sevenz_bin to "7z" on Linux/Cygwin and "7zz" on macOS
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -199,8 +203,6 @@ if ! command -v sed &>/dev/null; then
 fi
 
 # qsv version metadata ----------------
-# get current version of qsv
-raw_version=$("$qsv_bin" --version)
 version=$(echo "$raw_version" | cut -d' ' -f2 | cut -d'-' -f1)
 # get target platform from version
 platform=$(echo "$raw_version" | sed 's/.*(\([a-z0-9_-]*\) compiled with Rust.*/\1/')
