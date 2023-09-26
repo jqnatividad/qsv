@@ -35,6 +35,7 @@ We also added a `release-samply` profile so we can make it easier to squeeze mor
 
 ### Changed
 * `readme`: move tab completion instructions/script to scripts/misc
+* `geocode`: updated bundled Geonames index to 2021-09-25
 * bump embedded luau from 0.594 to 0.596
 * build(deps): bump flexi_logger from 0.26.1 to 0.27.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1317
 * build(deps): bump indicatif from 0.17.6 to 0.17.7 by @dependabot in https://github.com/jqnatividad/qsv/pull/1318
