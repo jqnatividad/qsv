@@ -6,6 +6,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.115.0] - 2023-09-26 -🏇🏽🎠
+We continue to refine the benchmark suite, and have added a new `setup` argument to setup and install the required tools for the benchmark suite.  We've also added more comprehensive checks to ensure that the required tools are installed before running the benchmarks. 🎠
+
+For `geocode`, we've added a JSON file describing the Geonames index file configuration. This should help users maintain several Geonames index files with different configurations. 🎠
+
+`geocode` should also be a tad faster now, thanks to `cached` crate making ahash its default hashing algorithm and upgrading `hashbrown` - microbenchmarks show a 33% performance improvement. 🏇🏽
+
+We also added a `release-samply` profile so we can make it easier to squeeze more performance out of the toolkit with [`samply`](https://github.com/mstange/samply/#samply). 🏇🏽
+
+---
+
+### Added
+* `geocode`: added a JSON file describing the Geonames index file configuration in https://github.com/jqnatividad/qsv/pull/1324
+* `benchmarks`: v3.0.0 release
+  * added `setup` argument to setup and install required tools for the benchmark suite
+  * added more comprehensive required tools check
+  * added more realistic luau benchmarks, using helper luau scripts
+    (dt_format.luau and turnaround_time.luau)
+  * added stats with_cache and create_cache benchmarks
+  * added benchmark_aggregations.luau script for benchmark analysis
+  * captured `binary`, `total_mean` and `qsv_env` columns to benchmark results
+    `binary` is the qsv binary variant used
+    `total_mean` is the sum of all the mean run times of the benchmarks
+    `qsv_env` are the qsv-relevant environment variables active while running the benchmarks
+  * expanded README.md and benchmark suite usage instructions
+* added `release-samply` profile to Cargo.toml to facilitate continued performance optimization with [`samply`](https://github.com/mstange/samply/#samply)
+
+### Changed
+* `readme`: move tab completion instructions/script to scripts/misc
+* bump embedded luau from 0.594 to 0.596
+* build(deps): bump flexi_logger from 0.26.1 to 0.27.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1317
+* build(deps): bump indicatif from 0.17.6 to 0.17.7 by @dependabot in https://github.com/jqnatividad/qsv/pull/1318
+* build(deps): bump semver from 1.0.18 to 1.0.19 by @dependabot in https://github.com/jqnatividad/qsv/pull/1320
+* build(deps): bump cached from 0.45.1 to 0.46.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1322
+* build(deps): bump geosuggest-core from 0.4.3 to 0.4.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/1323
+* build(deps): bump geosuggest-utils from 0.4.3 to 0.4.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/1321
+* build(deps): bump fastrand from 2.0.0 to 2.0.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1325
+* bump MSRV from Rust 1.72.0 to 1.72.1
+* cargo update bump several indirect dependencies
+* pin Rust nightly to 2023-09-25
+
+### Fixed
+* `benchmarks`: fixed invalid luau benchmark that had invalid luau command
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.114.0...0.115.0
+
 ## [0.114.0] - 2023-09-21 🏇🏽🎠
 The long-overdue Benchmarks revamp is finally here! 🎉
 
