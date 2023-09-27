@@ -1950,6 +1950,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "geosuggest-core"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "44603bb05f28ffe5e4eb04fa7cf3edb85e166c6c543b84cc4460b99f081334e2"
+dependencies = [
+ "bincode",
+ "csv",
+ "itertools",
+ "kiddo",
+ "rayon",
+ "serde",
+ "serde_json",
+ "strsim",
+]
+
+[[package]]
 name = "geosuggest-utils"
 version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1957,7 +1973,7 @@ checksum = "dbf898de3f1d64f61535555d7e77d11faa79f049ec2439c20d7334312e449a1a"
 dependencies = [
  "anyhow",
  "futures",
- "geosuggest-core",
+ "geosuggest-core 0.4.5",
  "reqwest",
  "serde",
  "tokio",
@@ -3845,7 +3861,7 @@ dependencies = [
  "flexi_logger",
  "futures",
  "futures-util",
- "geosuggest-core",
+ "geosuggest-core 0.5.0",
  "geosuggest-utils",
  "governor 0.6.0",
  "grex",
