@@ -42,7 +42,7 @@
 arg_pat="$1"
 
 # the version of this script
-bm_version=3.0.1
+bm_version=3.1.0
 
 # CONFIGURABLE VARIABLES ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -50,6 +50,10 @@ bm_version=3.0.1
 # the path to the qsv binary, change this if you're not using the prebuilt binaries
 # e.g. you compiled a tuned version of qsv with different features and/or CPU optimizations enabled
 qsv_bin=qsv
+# the path to the qsv binary that we dogfood to run the benchmarks
+# we use several optional features when dogfooding qsv (apply, luau & to)
+# and the user may be benchmarking a qsv binary variant that doesn't have these features enabled
+qsv_benchmarker_bin=qsv
 benchmark_data_url=https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/NYC_311_SR_2010-2020-sample-1M.7z
 # where to download the benchmark data compressed file - this could be a zip or 7z file
 datazip=NYC_311_SR_2010-2020-sample-1M.7z
@@ -75,6 +79,10 @@ fi
 
 # get current version of qsv
 raw_version=$("$qsv_bin" --version)
+# get the version of qsv used to run this script
+# we use this to determine if the user is using a different qsv binary
+# than the one used to run this script
+benchmarker_version=$("$qsv_benchmarker_bin" --version)
 
 # if arg_pat is equal to "help", show usage
 if [[ "$arg_pat" == "help" ]]; then
@@ -92,11 +100,37 @@ if [[ "$arg_pat" == "help" ]]; then
   echo "       if <argument> is \"setup\", setup and install all the required tools."
   echo "       if <argument> is \"help\", help text is displayed."
   echo ""
-  echo "using: $raw_version"
+  echo "benchmarking: $raw_version"
+  echo "dogfooding: $benchmarker_version"
   exit
 fi
 
 # check if required tools/dependencies are installed ---------
+
+# check if benchmarker_bin has the apply feature enabled
+if ! "$benchmarker_version" | grep -q "apply;"; then
+  echo "ERROR: $qsv_benchmarker_bin does not have the apply feature enabled."
+  echo "The qsv apply command is needed to format the benchmarks results."
+  exit
+fi
+
+# check if the benchmarker_bin has the luau feature enabled
+if ! "$benchmarker_version" | grep -q "Luau"; then
+  echo "ERROR: $qsv_benchmarker_bin does not have the luau feature enabled."
+  echo "The qsv luau command is needed to aggregate the benchmarks results."
+  exit
+fi
+
+# check if the benchmarker_bin has the to feature enabled
+if ! "$benchmarker_version" | grep -q "to;"; then
+  # check if benchmark_data.xlsx exists
+  if [ ! -r benchmark_data.xlsx ]; then
+    echo "ERROR: $qsv_benchmarker_bin does not have the to feature enabled."
+    echo "The qsv to xlsx command is needed to create an Excel spreadsheet"
+    echo "as benchmark_data.xlsx does not exist."
+    exit
+  fi
+fi
 
 # set sevenz_bin to "7z" on Linux/Cygwin and "7zz" on macOS
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -303,7 +337,7 @@ if [ ! -r searchset_patterns.txt ]; then
   echo "   data_sorted.csv..."
   "$qsv_bin" sort "$data" -o data_sorted.csv
   echo "   benchmark_data.xlsx..."
-  "$qsv_bin" to xlsx benchmark_data.xlsx "$data"
+  "$qsv_benchmarker_bin" to xlsx benchmark_data.xlsx "$data"
   echo "   benchmark_data.jsonl..."
   "$qsv_bin" tojsonl "$data" --output benchmark_data.jsonl
   echo "   benchmark_data.schema.json..."
@@ -618,7 +652,7 @@ export QSVBM_ROWCOUNT=$rowcount
 # total_mean is the total mean of all the benchmarks
 # it is computed in the END block of the script and is sent to stderr
 # which we redirect to a file named total_mean.txt
-"$qsv_bin" luau map recs_per_sec "file:benchmark_aggregations.luau" \
+"$qsv_benchmarker_bin" luau map recs_per_sec "file:benchmark_aggregations.luau" \
   results/results_work.csv -o results/latest_results.csv 2>total_mean.txt
 # we read the total_mean from the total_mean.txt file
 total_mean=$(<total_mean.txt)
@@ -639,14 +673,14 @@ mv results/results_work.csv results/benchmark_results.csv
 
 # then, round the stats columns to 3 decimal places using the `qsv apply operations round` command
 # it defaults to 3 decimal places if the --formatstr option is not specified
-"$qsv_bin" apply operations round mean,stddev,median,user,system,min,max \
+"$qsv_benchmarker_bin" apply operations round mean,stddev,median,user,system,min,max \
   results/benchmark_results_display.csv -o results/results_work.csv
 mv results/results_work.csv results/benchmark_results_display.csv
 
 # do the same for latest_results_display.csv
 "$qsv_bin" select version,tstamp,name,mean,recs_per_sec,stddev,median,user,system,min,max \
   results/latest_results.csv -o results/latest_results_display.csv
-"$qsv_bin" apply operations round mean,stddev,median,user,system,min,max \
+"$qsv_benchmarker_bin" apply operations round mean,stddev,median,user,system,min,max \
   results/latest_results_display.csv -o results/results_work.csv
 mv results/results_work.csv results/latest_results_display.csv
 
