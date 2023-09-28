@@ -16,10 +16,10 @@ use crate::{
     util, CliResult,
 };
 
-// rdr default is 8k in csv crate, we're doubling it
-pub const DEFAULT_RDR_BUFFER_CAPACITY: usize = 16 * (1 << 10);
-// previous wtr default in xsv is 32k, we're doubling it
-pub const DEFAULT_WTR_BUFFER_CAPACITY: usize = 64 * (1 << 10);
+// rdr default is 8k in csv crate, we're making it 128k
+pub const DEFAULT_RDR_BUFFER_CAPACITY: usize = 128 * (1 << 10);
+// previous wtr default in xsv is 32k, we're making it 256k
+pub const DEFAULT_WTR_BUFFER_CAPACITY: usize = 256 * (1 << 10);
 
 // number of rows for qsv_sniffer to sample
 const DEFAULT_SNIFFER_SAMPLE: usize = 100;
