@@ -2326,9 +2326,9 @@ dependencies = [
 
 [[package]]
 name = "indexmap"
-version = "2.0.0"
+version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d5477fe2230a79769d8dc68e0eabf5437907c0457a5614a9e8dddb67f65eb65d"
+checksum = "ad227c3af19d4914570ad36d30409928b75967c298feb9ea1969db3a610bb14e"
 dependencies = [
  "equivalent",
  "hashbrown 0.14.0",
@@ -3274,7 +3274,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e1d3afd2628e69da2be385eb6f2fd57c8ac7977ceeff6dc166ff1657b0e386a9"
 dependencies = [
  "fixedbitset",
- "indexmap 2.0.0",
+ "indexmap 2.0.1",
 ]
 
 [[package]]
@@ -3386,7 +3386,7 @@ dependencies = [
  "comfy-table 7.0.1",
  "either",
  "hashbrown 0.14.0",
- "indexmap 2.0.0",
+ "indexmap 2.0.1",
  "num-traits",
  "once_cell",
  "polars-arrow",
@@ -3456,7 +3456,7 @@ dependencies = [
  "arrow2",
  "fallible-streaming-iterator",
  "hashbrown 0.14.0",
- "indexmap 2.0.0",
+ "indexmap 2.0.1",
  "num-traits",
  "polars-arrow",
  "polars-error",
@@ -3497,7 +3497,7 @@ dependencies = [
  "argminmax",
  "arrow2",
  "either",
- "indexmap 2.0.0",
+ "indexmap 2.0.1",
  "memchr",
  "polars-arrow",
  "polars-core",
@@ -3851,7 +3851,7 @@ dependencies = [
  "grex",
  "gzp",
  "hashbrown 0.14.0",
- "indexmap 2.0.0",
+ "indexmap 2.0.1",
  "indicatif",
  "itertools",
  "itoa",
@@ -4545,7 +4545,7 @@ version = "1.0.107"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6b420ce6e3d8bd882e9b243c6eed35dbc9a6110c9769e74b584e0d68d1f20c65"
 dependencies = [
- "indexmap 2.0.0",
+ "indexmap 2.0.1",
  "itoa",
  "ryu",
  "serde",
