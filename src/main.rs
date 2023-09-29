@@ -5,6 +5,7 @@
         clippy::cast_possible_wrap,
         clippy::cast_sign_loss,
         // things are often more readable this way
+        clippy::needless_raw_string_hashes,
         clippy::cast_lossless,
         clippy::module_name_repetitions,
         clippy::type_complexity,
