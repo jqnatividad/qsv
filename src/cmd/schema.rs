@@ -449,7 +449,7 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
     let stats_bin_current = if stats_binary_encoded_path.exists() {
         let stats_bin_metadata = std::fs::metadata(&stats_binary_encoded_path)?;
 
-        let input_metadata = std::fs::metadata(&args.arg_input.clone().unwrap())?;
+        let input_metadata = std::fs::metadata(args.arg_input.clone().unwrap())?;
 
         if stats_bin_metadata.modified()? > input_metadata.modified()? {
             info!("Valid stats.csv.bin file found!");

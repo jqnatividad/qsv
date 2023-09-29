@@ -2092,7 +2092,7 @@ fn setup_helpers(
 
             let lookup_on_url = lookup_table_uri.to_lowercase().starts_with("http");
 
-            let cache_file_path = Path::new(&qsv_cache_dir).join(&format!("{lookup_name}.csv"));
+            let cache_file_path = Path::new(&qsv_cache_dir).join(format!("{lookup_name}.csv"));
 
             if lookup_on_url {
                 use reqwest::{blocking::Client, Url};
