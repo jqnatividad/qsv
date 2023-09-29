@@ -1200,21 +1200,6 @@ async fn load_engine(geocode_index_file: PathBuf, progressbar: &ProgressBar) -> 
             None,
         )
         .await?;
-
-        // download index file JSON from qsv releases
-        let index_file_json = geocode_index_file.with_extension("json");
-
-        util::download_file(
-            &format!(
-                "https://github.com/jqnatividad/qsv/releases/download/{QSV_VERSION}/{DEFAULT_GEOCODE_INDEX_JSON_FILENAME}"
-            ),
-            index_file_json,
-            !progressbar.is_hidden(),
-            None,
-            None,
-            None,
-        )
-        .await?;
     }
     let storage = storage::bincode::Storage::new();
 
