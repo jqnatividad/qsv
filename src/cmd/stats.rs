@@ -915,7 +915,7 @@ fn init_date_inference(
 
     INFER_DATE_FLAGS
         .set(infer_date_flags)
-        .map_err(|e| format!("Cannot init date inference flags: {:?}", e))?;
+        .map_err(|e| format!("Cannot init date inference flags: {e:?}"))?;
     Ok(())
 }
 
