@@ -12,10 +12,10 @@ See https://download.geonames.org/export/dump/ for more information.
 It has seven major subcommands:
  * suggest        - given a partial City name, return the closest City's location metadata
                     per the local Geonames cities index (Jaro-Winkler distance)
- * suggestnow     - same as suggest, but using a City name from the command line,
+ * suggestnow     - same as suggest, but using a partial City name from the command line,
                     instead of CSV data.
- * reverse        - given a location coordinate, return the closest City's location metadata
-                    per the local Geonames cities index.
+ * reverse        - given a WGS-84 location coordinate, return the closest City's location
+                    metadata per the local Geonames cities index.
                     (Euclidean distance - shortest distance "as the crow flies")
  * reversenow     - sames as reverse, but using a coordinate from the command line,
                     instead of CSV data.
@@ -62,6 +62,8 @@ geocoded value a new column named state.
 Use dynamic formatting to create a custom format.
 
   $ qsv geocode suggest city -f "{name}, {admin1}, {country} in {timezone}" file.csv
+  # using French place names. You'll need to rebuild the index with the --languages option first
+  $ qsv geocode suggest city -f "{name}, {admin1}, {country} in {timezone}" -l fr file.csv
 
 SUGGESTNOW
 Accepts the same options as suggest, but does not require an input file.
@@ -121,6 +123,7 @@ Manage the local Geonames cities index used by the geocode command.
 
 It has four operations:
  * check  - checks if the local Geonames index is up-to-date compared to the Geonames website.
+            returns the index file's metadata JSON to stdout.
  * update - updates the local Geonames index with the latest changes from the Geonames website.
             use this command judiciously as it downloads about ~200mb of data from Geonames
             and rebuilds the index from scratch using the --languages option.
@@ -132,7 +135,8 @@ Examples:
 Update the Geonames cities index with the latest changes.
 
   $ qsv geocode index-update
-  # or rebuild the index with English, French, German & Spanish place names
+  # or rebuild the index using the latest Geonames data
+  # with English, French, German & Spanish place names
   $ qsv geocode index-update --languages en,fr,de,es
 
 Load an alternative Geonames cities index from a file, making it the default index going forward.
@@ -296,9 +300,10 @@ geocode options:
                                 using the cache, so it will be slower than predefined or dynamic formatting.
                                 Also, countryinfo and countryinfonow subcommands currently do not support "%dyncols:".
                                 [default: %+]
-    --language <lang>           The language to use when geocoding. The language is specified as a ISO 639-1 code.
+    -l, --language <lang>       The language to use when geocoding. The language is specified as a ISO 639-1 code.
                                 Note that the Geonames index must have been built with the specified language
                                 using the `index-update` subcommand with the --languages option.
+                                If the language is not available, the first language in the index is used.
                                 [default: en]
 
     --invalid-result <string>   The string to return when the geocode result is empty/invalid.
@@ -348,7 +353,10 @@ use std::{
 
 use cached::{proc_macro::cached, SizedCache};
 use dynfmt::Format;
-use geosuggest_core::{CitiesRecord, CountryRecord, Engine, EngineDumpFormat};
+use geosuggest_core::{
+    storage::{self, IndexStorage},
+    CitiesRecord, CountryRecord, Engine,
+};
 use geosuggest_utils::{IndexUpdater, IndexUpdaterSettings, SourceItem};
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::info;
@@ -358,7 +366,7 @@ use rayon::{
 };
 use regex::Regex;
 use serde::Deserialize;
-use serde_json;
+use serde_json::json;
 use simple_home_dir::expand_tilde;
 use url::Url;
 use uuid::Uuid;
@@ -424,9 +432,7 @@ struct NamesLang {
 
 static QSV_VERSION: &str = env!("CARGO_PKG_VERSION");
 static DEFAULT_GEOCODE_INDEX_FILENAME: &str =
-    concat!("qsv-", env!("CARGO_PKG_VERSION"), "-geocode-index.bincode");
-static DEFAULT_GEOCODE_INDEX_JSON_FILENAME: &str =
-    concat!("qsv-", env!("CARGO_PKG_VERSION"), "-geocode-index.json");
+    concat!("qsv-", env!("CARGO_PKG_VERSION"), "-geocode-index-dev.bincode");
 
 static DEFAULT_CITIES_NAMES_URL: &str =
     "https://download.geonames.org/export/dump/alternateNamesV2.zip";
@@ -548,36 +554,34 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
 // main async geocode function that does the actual work
 async fn geocode_main(args: Args) -> CliResult<()> {
-    let mut index_cmd = true;
+    let mut index_cmd = false;
     let mut now_cmd = false;
     let geocode_cmd = if args.cmd_suggest {
-        index_cmd = false;
         GeocodeSubCmd::Suggest
     } else if args.cmd_reverse {
-        index_cmd = false;
         GeocodeSubCmd::Reverse
     } else if args.cmd_countryinfo {
-        index_cmd = false;
         GeocodeSubCmd::CountryInfo
     } else if args.cmd_suggestnow {
-        index_cmd = false;
         now_cmd = true;
         GeocodeSubCmd::SuggestNow
     } else if args.cmd_reversenow {
-        index_cmd = false;
         now_cmd = true;
         GeocodeSubCmd::ReverseNow
     } else if args.cmd_countryinfonow {
-        index_cmd = false;
         now_cmd = true;
         GeocodeSubCmd::CountryInfoNow
     } else if args.cmd_index_check {
+        index_cmd = true;
         GeocodeSubCmd::IndexCheck
     } else if args.cmd_index_update {
+        index_cmd = true;
         GeocodeSubCmd::IndexUpdate
     } else if args.cmd_index_load {
+        index_cmd = true;
         GeocodeSubCmd::IndexLoad
     } else if args.cmd_index_reset {
+        index_cmd = true;
         GeocodeSubCmd::IndexReset
     } else {
         // should not happen as docopt won't allow it
@@ -694,27 +698,56 @@ async fn geocode_main(args: Args) -> CliResult<()> {
 
         let updater = IndexUpdater::new(indexupdater_settings.clone())?;
 
-        match geocode_cmd {
-            GeocodeSubCmd::IndexCheck => {
-                // check if we have updates
-                winfo!("Checking main Geonames website for updates...");
-                let _ = check_index_file(&geocode_index_file)?;
-                let engine = load_engine(geocode_index_file.clone().into(), &progress).await?;
+        let storage = storage::bincode::Storage::new();
 
-                if updater.has_updates(&engine).await? {
-                    winfo!(
-                        "Updates available at Geonames.org. Use `qsv geocode index-update` to \
-                         update/rebuild the index.\nPlease use this judiciously as Geonames is a \
-                         free service."
-                    );
-                } else {
-                    winfo!("Geonames index up-to-date.");
+        match geocode_cmd {
+                // check if Geoname index needs to be updated from the Geonames website
+                // also returns the index file metadata as JSON
+                GeocodeSubCmd::IndexCheck => {
+                winfo!("Checking main Geonames website for updates...");
+                check_index_file(&geocode_index_file)?;
+
+                let metadata = storage
+                    .read_metadata(geocode_index_file)
+                    .map_err(|e| format!("index-check error: {e}"))?;
+
+                let index_metadata_json = match serde_json::to_string_pretty(&metadata) {
+                    Ok(json) => json,
+                    Err(e) => {
+                        let json_error = json!({
+                            "errors": [{
+                                "title": "Cannot serialize index metadata to JSON",
+                                "detail": e.to_string()
+                            }]
+                        });
+                        format!("{json_error}")
+                    },
+                };
+
+                match metadata {
+                    Some(m) if updater.has_updates(&m).await? => {
+                        winfo!(
+                            "Updates available at Geonames.org. Use `qsv geocode index-update` to \
+                             update/rebuild the index.\nPlease use this judiciously as Geonames \
+                             is a free service."
+                        );
+                    },
+                    Some(_) => {
+                        winfo!("Geonames index up-to-date.");
+                    },
+                    None => return fail_incorrectusage_clierror!("Invalid Geonames index file."),
                 }
+                println!("{index_metadata_json}");
             },
             GeocodeSubCmd::IndexUpdate => {
                 // update/rebuild Geonames index from Geonames website
-                // will only update if there are changes
-                let indexfile_json = check_index_file(&geocode_index_file)?;
+                // will only update if there are changes unless --force is specified
+                check_index_file(&geocode_index_file)?;
+
+                let metadata = storage
+                    .read_metadata(geocode_index_file.clone())
+                    .map_err(|e| format!("index-update error: {e}"))?;
+
                 if args.flag_force {
                     winfo!("Forcing fresh build of Geonames index: {geocode_index_file}");
                     winfo!(
@@ -727,30 +760,20 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                     );
 
                     let engine = updater.build().await?;
-                    engine.dump_to(geocode_index_file.clone(), EngineDumpFormat::Bincode)?;
-                    // write indexupdater settings to json file
-                    save_indexfile_json(
-                        &indexupdater_settings,
-                        &geocode_cache_dir,
-                        &indexfile_json,
-                    )?;
+                    storage
+                        .dump_to(geocode_index_file.clone(), &engine)
+                        .map_err(|e| format!("{e}"))?;
                     winfo!("Geonames index built: {geocode_index_file}");
                 } else {
                     winfo!("Checking main Geonames website for updates...");
 
-                    let engine = load_engine(geocode_index_file.clone().into(), &progress).await?;
-                    if updater.has_updates(&engine).await? {
+                    if updater.has_updates(&metadata.unwrap()).await? {
                         winfo!(
                             "Updating/Rebuilding Geonames index. This will take a while as we \
                              need to download data from Geonames & rebuild the index..."
                         );
                         let engine = updater.build().await?;
-                        engine.dump_to(geocode_index_file.clone(), EngineDumpFormat::Bincode)?;
-                        save_indexfile_json(
-                            &indexupdater_settings,
-                            &geocode_cache_dir,
-                            &indexfile_json,
-                        )?;
+                        let _ = storage.dump_to(geocode_index_file.clone(), &engine);
                         winfo!("Updates applied: {geocode_index_file}");
                     } else {
                         winfo!("Skipping update. Geonames index is up-to-date.");
@@ -761,19 +784,24 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                 // load alternate geocode index file
                 if let Some(index_file) = args.arg_index_file {
                     winfo!("Validating alternate Geonames index: {index_file}...");
-                    let indexfile_json = check_index_file(&index_file)?;
+                    check_index_file(&index_file)?;
 
                     let engine = load_engine(index_file.clone().into(), &progress).await?;
                     // we successfully loaded the alternate geocode index file, so its valid
                     // copy it to the default geocode index file
-                    engine.dump_to(geocode_index_file.clone(), EngineDumpFormat::Bincode)?;
-                    let indexfile_json_path =
-                        format!("{}/{}", geocode_cache_dir.to_string_lossy(), indexfile_json);
-                    fs::copy(indexfile_json_path, geocode_index_file.clone())?;
-                    winfo!(
-                        "Valid Geonames index file {index_file} copied to {geocode_index_file}. \
-                         It will be used from now on or until you reset/rebuild it.",
-                    );
+
+                    if engine.metadata.is_some() {
+                        let _ = storage.dump_to(geocode_index_file.clone(), &engine);
+                        winfo!(
+                            "Valid Geonames index file {index_file} copied to \
+                             {geocode_index_file}. It will be used from now on or until you \
+                             reset/rebuild it.",
+                        );
+                    } else {
+                        return fail_incorrectusage_clierror!(
+                            "Alternate Geonames index file {index_file} is invalid.",
+                        );
+                    }
                 } else {
                     return fail_incorrectusage_clierror!(
                         "No alternate Geonames index file specified."
@@ -784,11 +812,6 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                 // reset geocode index by deleting the current local copy
                 // and downloading the default geocode index for the current qsv version
                 winfo!("Resetting Geonames index to default: {geocode_index_file}...");
-                if Path::new(&geocode_index_file).exists() {
-                    fs::remove_file(&geocode_index_file)?;
-                }
-                // if there's no index file, load_engine will download the default geocode index
-                // from the qsv GitHub repo
                 let _ = load_engine(geocode_index_file.clone().into(), &progress).await?;
                 winfo!("Default Geonames index file reset to {QSV_VERSION} release.");
             },
@@ -1127,28 +1150,8 @@ async fn geocode_main(args: Args) -> CliResult<()> {
     Ok(wtr.flush()?)
 }
 
-/// save_indexfile_json saves the indexupdater settings to a json file
-/// in the geocode cache directory
-fn save_indexfile_json(
-    indexupdater_settings: &IndexUpdaterSettings<'_>,
-    geocode_cache_dir: &Path,
-    indexfile_json: &str,
-) -> Result<(), CliError> {
-    let mut indexupdater_settings_json =
-        serde_json::to_string_pretty(&indexupdater_settings.clone())?;
-    indexupdater_settings_json.truncate(indexupdater_settings_json.len() - 1);
-    indexupdater_settings_json = format!(
-        "{},  \"build_date\": \"{}\"\n}}\n",
-        indexupdater_settings_json,
-        chrono::Utc::now()
-    );
-    let json_path = format!("{}/{}", geocode_cache_dir.to_string_lossy(), indexfile_json);
-    fs::write(json_path, indexupdater_settings_json)?;
-    Ok(())
-}
-
 /// check if index_file exists and ends with a .bincode extension
-fn check_index_file(index_file: &String) -> CliResult<String> {
+fn check_index_file(index_file: &String) -> CliResult<()> {
     if !index_file.ends_with(".bincode") {
         return fail_incorrectusage_clierror!(
             "Alternate Geonames index file {index_file} does not have a .bincode extension."
@@ -1160,18 +1163,9 @@ fn check_index_file(index_file: &String) -> CliResult<String> {
             "Alternate Geonames index file {index_file} does not exist."
         );
     }
-    // check if the index file has a corresponding json file
-    let index_file_json_pb = PathBuf::from(index_file).with_extension("json");
-    let index_file_json = index_file_json_pb.to_string_lossy().to_string();
-    if !Path::new(&index_file_json).exists() {
-        return fail_incorrectusage_clierror!(
-            "Alternate Geonames index file {index_file} does not have a JSON file \
-             {index_file_json}."
-        );
-    }
 
     winfo!("Valid: {index_file}");
-    Ok(index_file_json)
+    Ok(())
 }
 
 /// load_engine loads the Geonames index file into memory
@@ -1219,8 +1213,12 @@ async fn load_engine(geocode_index_file: PathBuf, progressbar: &ProgressBar) -> 
         )
         .await?;
     }
-    let engine = Engine::load_from(index_file, EngineDumpFormat::Bincode)
+    let storage = storage::bincode::Storage::new();
+
+    let engine = storage
+        .load_from(geocode_index_file)
         .map_err(|e| format!("On load index file: {e}"))?;
+
     Ok(engine)
 }
 
