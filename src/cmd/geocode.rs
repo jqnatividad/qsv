@@ -431,8 +431,11 @@ struct NamesLang {
 }
 
 static QSV_VERSION: &str = env!("CARGO_PKG_VERSION");
-static DEFAULT_GEOCODE_INDEX_FILENAME: &str =
-    concat!("qsv-", env!("CARGO_PKG_VERSION"), "-geocode-index-dev.bincode");
+static DEFAULT_GEOCODE_INDEX_FILENAME: &str = concat!(
+    "qsv-",
+    env!("CARGO_PKG_VERSION"),
+    "-geocode-index-dev.bincode"
+);
 
 static DEFAULT_CITIES_NAMES_URL: &str =
     "https://download.geonames.org/export/dump/alternateNamesV2.zip";
@@ -701,9 +704,9 @@ async fn geocode_main(args: Args) -> CliResult<()> {
         let storage = storage::bincode::Storage::new();
 
         match geocode_cmd {
-                // check if Geoname index needs to be updated from the Geonames website
-                // also returns the index file metadata as JSON
-                GeocodeSubCmd::IndexCheck => {
+            // check if Geoname index needs to be updated from the Geonames website
+            // also returns the index file metadata as JSON
+            GeocodeSubCmd::IndexCheck => {
                 winfo!("Checking main Geonames website for updates...");
                 check_index_file(&geocode_index_file)?;
 
