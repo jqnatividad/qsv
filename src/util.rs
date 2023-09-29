@@ -1392,7 +1392,7 @@ pub async fn download_file(
     #[cfg(any(feature = "feature_capable", feature = "lite"))]
     if show_progress {
         pb.finish_with_message(format!("Downloaded {url}"));
-        eprintln!(""); // newline after progress bar
+        eprintln!(); // newline after progress bar
     }
 
     Ok(())
