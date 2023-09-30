@@ -217,7 +217,7 @@ simdutf8 = "0.1"
 simdutf8 = { version = "0.1", features = ["aarch64_neon"] }
 
 [dev-dependencies]
-actix-governor = "0.4"
+actix-governor = "0.5"
 actix-web = { version = "4.4", default-features = false, features = [
     "compress-brotli",
     "compress-gzip",
@@ -228,6 +228,9 @@ postgres = "0.19"
 quickcheck = { version = "1", default-features = false }
 rusqlite = { version = "0.29", features = ["bundled"] }
 serial_test = { version = "2.0", features = ["file_locks"] }
+
+[patch.crates-io]
+actix-governor = { git = "https://github.com/AaronErhardt/actix-governor", rev = "a49b9be"}
 
 [features]
 default = ["mimalloc"]
