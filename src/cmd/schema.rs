@@ -12,7 +12,7 @@ The intended workflow is to use `schema` command to generate a schema file from
 representative CSV data, fine-tune the schema file as needed, and then use `validate`
 command to validate other CSV data with the same structure using the generated schema.
 
-Generated schema file has `.schema.json` postfix appended. For example, 
+Generated schema file has `.schema.json` suffix appended. For example, 
 for input `mydata.csv`, schema file would be `mydata.csv.schema.json`.
 
 If piped from stdin, then schema file would be `stdin.csv.schema.json` and
@@ -442,9 +442,8 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
         flag_stats_binout:    None,
     };
 
-    let stats_binary_encoded_path = Path::new(&args.arg_input.clone().unwrap())
-        .canonicalize()?
-        .with_extension("stats.csv.bin");
+    let canonical_input_path = Path::new(&args.arg_input.clone().unwrap()).canonicalize()?;
+    let stats_binary_encoded_path = canonical_input_path.with_extension("stats.csv.bin");
 
     let stats_bin_current = if stats_binary_encoded_path.exists() {
         let stats_bin_metadata = std::fs::metadata(&stats_binary_encoded_path)?;
@@ -468,7 +467,7 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
     // if stats.bin file exists and is current, use it
     let mut csv_stats: Vec<Stats> = Vec::new();
 
-    if stats_bin_current {
+    if stats_bin_current && !args.flag_force {
         let mut bin_file = BufReader::with_capacity(
             DEFAULT_RDR_BUFFER_CAPACITY * 4,
             File::open(stats_binary_encoded_path)?,
@@ -561,7 +560,18 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
     let csv_fields = rdr.byte_headers()?.clone();
     drop(rdr);
 
-    let stats_columns = stats_args.stat_headers();
+    let stats_columns = if stats_bin_loaded {
+        // if stats.bin file is loaded, we need to get the headers from the stats.csv file
+        let stats_bin_csv_path = canonical_input_path.with_extension("stats.csv");
+        let mut stats_csv_reader = csv::Reader::from_path(stats_bin_csv_path)?;
+        let stats_csv_headers = stats_csv_reader.headers()?.clone();
+        drop(stats_csv_reader);
+        stats_csv_headers
+    } else {
+        // otherwise, we generate the headers from the stats_args struct
+        // as we used the stats_args struct to generate the stats.csv file
+        stats_args.stat_headers()
+    };
 
     let mut stats_col_index_map = AHashMap::new();
 
