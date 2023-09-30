@@ -42,7 +42,7 @@
 arg_pat="$1"
 
 # the version of this script
-bm_version=3.1.0
+bm_version=3.2.0
 
 # CONFIGURABLE VARIABLES ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -108,21 +108,21 @@ fi
 # check if required tools/dependencies are installed ---------
 
 # check if benchmarker_bin has the apply feature enabled
-if ! "$benchmarker_version" | grep -q "apply;"; then
+if [[ "$benchmarker_version" != *"apply;"* ]]; then
   echo "ERROR: $qsv_benchmarker_bin does not have the apply feature enabled."
   echo "The qsv apply command is needed to format the benchmarks results."
   exit
 fi
 
 # check if the benchmarker_bin has the luau feature enabled
-if ! "$benchmarker_version" | grep -q "Luau"; then
+if [[ "$benchmarker_version" != *"Luau"* ]]; then
   echo "ERROR: $qsv_benchmarker_bin does not have the luau feature enabled."
   echo "The qsv luau command is needed to aggregate the benchmarks results."
   exit
 fi
 
 # check if the benchmarker_bin has the to feature enabled
-if ! "$benchmarker_version" | grep -q "to;"; then
+if [[ "$benchmarker_version" != *"to;"* ]]; then
   # check if benchmark_data.xlsx exists
   if [ ! -r benchmark_data.xlsx ]; then
     echo "ERROR: $qsv_benchmarker_bin does not have the to feature enabled."
@@ -326,7 +326,7 @@ if [ ! -r communityboards.csv ]; then
   echo ""
 fi
 
-if [ ! -r searchset_patterns.txt ]; then
+if [ ! -r searchset_patterns_unicode.txt ]; then
   echo "> Preparing benchmark support data..."
   # create an index so benchmark data preparation commands can run faster
   "$qsv_bin" index "$data"
@@ -345,7 +345,9 @@ if [ ! -r searchset_patterns.txt ]; then
   echo "   benchmark_data.snappy..."
   "$qsv_bin" snappy compress "$data" --output benchmark_data.snappy
   echo "   searchset_patterns.txt..."
-  printf "homeless\npark\nnoise\n" >searchset_patterns.txt
+  printf "homeless\npark\nNoise\n" >searchset_patterns.txt
+  echo "   searchset_patterns_unicode.txt..."
+  printf "homeless\n💩\nNoise\n" >searchset_patterns_unicode.txt
   echo ""
 fi
 
@@ -466,13 +468,13 @@ run --index sample_100000_seeded_index "$qsv_bin" sample --seed 42 100000 "$data
 run --index sample_100000_seeded_index_faster "$qsv_bin" sample --faster --seed 42 100000 "$data"
 run --index sample_25pct_index "$qsv_bin" sample 0.25 "$data"
 run --index sample_25pct_seeded_index "$qsv_bin" sample 0.25 --seed 42 "$data"
-run schema "$qsv_bin" schema "$data"
+run schema "$qsv_bin" schema --force "$data"
 run --index schema_index "$qsv_bin" schema "$data"
 run search "$qsv_bin" search -s \'Agency Name\' "'(?i)us'" "$data"
 run search_unicode "$qsv_bin" search --unicode -s \'Agency Name\' "'(?i)us'" "$data"
 run searchset "$qsv_bin" searchset searchset_patterns.txt "$data"
 run searchset_ignorecase "$qsv_bin" searchset --ignore-case searchset_patterns.txt "$data"
-run searchset_unicode "$qsv_bin" searchset searchset_patterns.txt --unicode "$data"
+run searchset_unicode "$qsv_bin" searchset searchset_patterns_unicode.txt --unicode "$data"
 run select "$qsv_bin" select \'Agency,Community Board\' "$data"
 run select_regex "$qsv_bin" select /^L/ "$data"
 run slice_one_middle "$qsv_bin" slice -i 500000 "$data"
@@ -519,7 +521,9 @@ run to_sqlite "$qsv_bin" to sqlite benchmark_work.db "$data"
 run to_parquet "$qsv_bin" to parquet benchmark_work "$data"
 run to_datapackage "$qsv_bin" to datapackage benchmark_work.json "$data"
 run tojsonl "$qsv_bin" tojsonl "$data"
+run tojsonl_j1 "$qsv_bin" tojsonl -j 1 "$data"
 run --index tojsonl_index "$qsv_bin" tojsonl "$data"
+run --index tojsonl_index_j1 "$qsv_bin" tojsonl --jobs 1 "$data"
 run transpose "$qsv_bin" transpose "$data"
 run transpose_multipass "$qsv_bin" transpose --multipass "$data"
 run validate "$qsv_bin" validate "$data" "$schema"
