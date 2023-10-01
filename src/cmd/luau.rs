@@ -688,6 +688,8 @@ fn sequential_mode(
     LUAU_STAGE.store(Stage::Main as i8, Ordering::Relaxed);
     info!("Executing MAIN script.");
 
+    let mut computed_value;
+
     // main loop
     // without an index, we stream the CSV in sequential order
     'main: while rdr.read_record(&mut record)? {
@@ -721,7 +723,7 @@ fn sequential_mode(
             }
         }
 
-        let computed_value: Value = match luau
+        computed_value = match luau
             .load(&main_bytecode)
             .set_mode(mlua::ChunkMode::Binary)
             .eval()
@@ -749,7 +751,12 @@ fn sequential_mode(
         }
 
         if args.cmd_map {
-            map_computedvalue(computed_value, &mut record, args, new_column_count)?;
+            map_computedvalue(
+                computed_value,
+                &mut record,
+                args.flag_remap,
+                new_column_count,
+            )?;
 
             // check if the script is trying to insert a record with
             // qsv_insertrecord(). We do this by checking if the global
@@ -1027,6 +1034,8 @@ fn random_access_mode(
         row_count - 1
     );
 
+    let mut computed_value;
+
     // main loop - here we use an indexed file reader to implement random access mode,
     // seeking to the next record to read by looking at _INDEX special var
     'main: while idx_file.read_record(&mut record)? {
@@ -1058,7 +1067,7 @@ fn random_access_mode(
             }
         }
 
-        let computed_value: Value = match luau
+        computed_value = match luau
             .load(&main_bytecode)
             .set_mode(mlua::ChunkMode::Binary)
             .eval()
@@ -1086,7 +1095,12 @@ fn random_access_mode(
         }
 
         if args.cmd_map {
-            map_computedvalue(computed_value, &mut record, args, new_column_count)?;
+            map_computedvalue(
+                computed_value,
+                &mut record,
+                args.flag_remap,
+                new_column_count,
+            )?;
 
             // check if the MAIN script is trying to insert a record
             insertrecord_table = luau
@@ -1213,7 +1227,7 @@ fn random_access_mode(
 fn map_computedvalue(
     computed_value: Value,
     record: &mut csv::StringRecord,
-    args: &Args,
+    flag_remap: bool,
     new_column_count: u8,
 ) -> Result<(), CliError> {
     match computed_value {
@@ -1235,7 +1249,7 @@ fn map_computedvalue(
             record.push_field("");
         },
         Value::Table(table) => {
-            if args.flag_remap {
+            if flag_remap {
                 // we're in remap mode, so we clear the record
                 // and only write the new columns to output
                 record.clear();
