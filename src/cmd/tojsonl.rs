@@ -19,6 +19,8 @@ Tojsonl options:
     -j, --jobs <arg>       The number of jobs to run in parallel.
                            When not set, the number of jobs is set to the
                            number of CPUs detected.
+    -b, --batch <size>     The number of rows per batch to load into memory,
+                           before running in parallel. [default: 50000]                           
 
 Common options:
     -h, --help             Display this message
@@ -31,6 +33,10 @@ Common options:
 
 use std::{fmt::Write, path::PathBuf, str::FromStr};
 
+use rayon::{
+    iter::{IndexedParallelIterator, ParallelIterator},
+    prelude::IntoParallelRefIterator,
+};
 use serde::Deserialize;
 use serde_json::{Map, Value};
 use strum_macros::EnumString;
@@ -45,6 +51,7 @@ use crate::{
 struct Args {
     arg_input:      Option<String>,
     flag_jobs:      Option<usize>,
+    flag_batch:     u32,
     flag_delimiter: Option<Delimiter>,
     flag_output:    Option<String>,
     flag_memcheck:  bool,
@@ -217,65 +224,105 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         );
     }
 
-    // amortize allocs
-    let mut record = csv::StringRecord::new();
+    // amortize memory allocation by reusing record
+    #[allow(unused_assignments)]
+    let mut batch_record = csv::StringRecord::new();
 
-    let mut temp_string = String::with_capacity(100);
-    let mut temp_string2 = String::with_capacity(50);
+    // reuse batch buffers
+    let batchsize: usize = args.flag_batch as usize;
+    let mut batch = Vec::with_capacity(batchsize);
+    let mut batch_results = Vec::with_capacity(batchsize);
 
-    let mut header_key = Value::String(String::with_capacity(50));
-    let mut temp_val = Value::String(String::with_capacity(50));
+    // set RAYON_NUM_THREADS
+    util::njobs(args.flag_jobs);
 
-    // TODO: see if its worth it to do rayon here after benchmarking
-    // with large files. We have --jobs option, but we only pass it
-    // thru to stats/frequency to infer data types & enum constraints.
-
-    // now that we have type mappings, iterate thru input csv
-    // and write jsonl file
-    while rdr.read_record(&mut record)? {
-        temp_string.clear();
-        record.trim();
-        write!(temp_string, "{{")?;
-        for (idx, field) in record.iter().enumerate() {
-            let field_val = if let Some(field_type) = field_type_vec.get(idx) {
-                match field_type {
-                    JsonlType::String => {
-                        if field.is_empty() {
-                            "null"
-                        } else {
-                            // we round-trip thru serde_json to escape the str
-                            // per json spec (https://www.json.org/json-en.html)
-                            temp_val = field.into();
-                            temp_string2 = temp_val.to_string();
-                            &temp_string2
-                        }
-                    },
-                    JsonlType::Null => "null",
-                    JsonlType::Integer | JsonlType::Number => field,
-                    JsonlType::Boolean => {
-                        if let 't' | 'y' | '1' = boolcheck_first_lower_char(field) {
-                            "true"
-                        } else {
-                            "false"
-                        }
-                    },
-                }
-            } else {
-                "null"
-            };
-            header_key = headers[idx].into();
-            if field_val.is_empty() {
-                write!(temp_string, r#"{header_key}:null,"#)?;
-            } else {
-                write!(temp_string, r#"{header_key}:{field_val},"#)?;
+    // main loop to read CSV and construct batches for parallel processing.
+    // each batch is processed via Rayon parallel iterator.
+    // loop exits when batch is empty.
+    'batch_loop: loop {
+        for _ in 0..batchsize {
+            match rdr.read_record(&mut batch_record) {
+                Ok(has_data) => {
+                    if has_data {
+                        batch.push(batch_record.clone());
+                    } else {
+                        // nothing else to add to batch
+                        break;
+                    }
+                },
+                Err(e) => {
+                    return fail_clierror!("Error reading file: {e}");
+                },
             }
         }
-        temp_string.pop(); // remove last comma
-        temp_string.push('}');
-        record.clear();
-        record.push_field(&temp_string);
-        wtr.write_record(&record)?;
-    }
+
+        if batch.is_empty() {
+            // break out of infinite loop when at EOF
+            break 'batch_loop;
+        }
+
+        // process batch in parallel
+        batch
+            .par_iter()
+            .map(|record_item| {
+                let mut record = record_item.clone();
+                let mut temp_string = String::new();
+                let mut temp_string2: String;
+
+                let mut header_key = Value::String(String::new());
+                let mut temp_val = Value::String(String::new());
+
+                record.trim();
+                write!(temp_string, "{{").unwrap();
+                for (idx, field) in record.iter().enumerate() {
+                    let field_val = if let Some(field_type) = field_type_vec.get(idx) {
+                        match field_type {
+                            JsonlType::String => {
+                                if field.is_empty() {
+                                    "null"
+                                } else {
+                                    // we round-trip thru serde_json to escape the str
+                                    // per json spec (https://www.json.org/json-en.html)
+                                    temp_val = field.into();
+                                    temp_string2 = temp_val.to_string();
+                                    &temp_string2
+                                }
+                            },
+                            JsonlType::Null => "null",
+                            JsonlType::Integer | JsonlType::Number => field,
+                            JsonlType::Boolean => {
+                                if let 't' | 'y' | '1' = boolcheck_first_lower_char(field) {
+                                    "true"
+                                } else {
+                                    "false"
+                                }
+                            },
+                        }
+                    } else {
+                        "null"
+                    };
+                    header_key = headers[idx].into();
+                    if field_val.is_empty() {
+                        write!(temp_string, r#"{header_key}:null,"#).unwrap();
+                    } else {
+                        write!(temp_string, r#"{header_key}:{field_val},"#).unwrap();
+                    }
+                }
+                temp_string.pop(); // remove last comma
+                temp_string.push('}');
+                record.clear();
+                record.push_field(&temp_string);
+                record
+            })
+            .collect_into_vec(&mut batch_results);
+
+        // rayon collect() guarantees original order, so we can just append results each batch
+        for result_record in &batch_results {
+            wtr.write_record(result_record)?;
+        }
+
+        batch.clear();
+    } // end of batch loop
 
     Ok(wtr.flush()?)
 }
