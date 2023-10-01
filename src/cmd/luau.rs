@@ -537,7 +537,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         info!("Using cache directory: {qsv_cache_dir}");
-        globals.set("_QSV_CACHE_DIR", qsv_cache_dir)?;
+        globals.raw_set("_QSV_CACHE_DIR", qsv_cache_dir)?;
     }
 
     debug!("Main processing");
@@ -591,7 +591,7 @@ fn sequential_mode(
     end_script: &str,
     max_errors: usize,
 ) -> Result<(), CliError> {
-    globals.set("cols", "{}")?;
+    globals.raw_set("cols", "{}")?;
 
     let mut rdr = rconfig.reader()?;
     let mut wtr = Config::new(&args.flag_output).writer()?;
@@ -625,8 +625,8 @@ fn sequential_mode(
     }
 
     // we initialize the special vars _IDX and _ROWCOUNT
-    globals.set("_IDX", 0)?;
-    globals.set("_ROWCOUNT", 0)?;
+    globals.raw_set("_IDX", 0)?;
+    globals.raw_set("_ROWCOUNT", 0)?;
     if !begin_script.is_empty() {
         info!("Compiling and executing BEGIN script. _IDX: 0 _ROWCOUNT: 0");
         LUAU_STAGE.store(Stage::Begin as i8, Ordering::Relaxed);
@@ -656,14 +656,15 @@ fn sequential_mode(
         &mut wtr,
     )?;
     if QSV_BREAK.load(Ordering::Relaxed) {
-        let qsv_break_msg: String = globals.get("_QSV_BREAK_MSG")?;
+        let qsv_break_msg: String = globals.raw_get("_QSV_BREAK_MSG")?;
         winfo!("{qsv_break_msg}");
         return Ok(());
     }
 
     // we clear the table so we don't falsely detect a call to qsv_insertrecord()
     // in the MAIN/END scripts
-    luau.globals().set("_QSV_INSERTRECORD_TBL", Value::Nil)?;
+    luau.globals()
+        .raw_set("_QSV_INSERTRECORD_TBL", Value::Nil)?;
 
     #[cfg(feature = "datapusher_plus")]
     let show_progress = false;
@@ -689,6 +690,8 @@ fn sequential_mode(
     info!("Executing MAIN script.");
 
     let mut computed_value;
+    let mut must_keep_row;
+    let col = luau.create_table_with_capacity(record.len(), 1)?;
 
     // main loop
     // without an index, we stream the CSV in sequential order
@@ -699,27 +702,24 @@ fn sequential_mode(
         }
 
         idx += 1;
-        globals.set("_IDX", idx)?;
+        globals.raw_set("_IDX", idx)?;
 
         // Updating col
-        {
-            let col = luau.create_table_with_capacity(record.len(), 1)?;
-
-            for (i, v) in record.iter().enumerate() {
-                col.set(i + 1, v)?;
-            }
-            if !rconfig.no_headers {
-                for (h, v) in headers.iter().zip(record.iter()) {
-                    col.set(h, v)?;
-                }
-            }
-            globals.set("col", col)?;
+        let _ = col.clear();
+        for (i, v) in record.iter().enumerate() {
+            col.raw_set(i + 1, v)?;
         }
+        if !rconfig.no_headers {
+            for (h, v) in headers.iter().zip(record.iter()) {
+                col.raw_set(h, v)?;
+            }
+        }
+        globals.raw_set("col", col.clone())?;
 
         // Updating global
         if !args.flag_no_globals && !rconfig.no_headers {
             for (h, v) in headers.iter().zip(record.iter()) {
-                globals.set(h, v)?;
+                globals.raw_set(h, v)?;
             }
         }
 
@@ -740,7 +740,7 @@ fn sequential_mode(
         };
 
         if QSV_BREAK.load(Ordering::Relaxed) {
-            let qsv_break_msg: String = globals.get("_QSV_BREAK_MSG")?;
+            let qsv_break_msg: String = globals.raw_get("_QSV_BREAK_MSG")?;
             winfo!("{qsv_break_msg}");
             break 'main;
         }
@@ -763,7 +763,7 @@ fn sequential_mode(
             // _QSV_INSERTRECORD_TBL exists and is not empty
             insertrecord_table = luau
                 .globals()
-                .get("_QSV_INSERTRECORD_TBL")
+                .raw_get("_QSV_INSERTRECORD_TBL")
                 .unwrap_or_else(|_| empty_table.clone());
 
             let insertrecord_table_len = insertrecord_table.len().unwrap_or_default();
@@ -788,14 +788,15 @@ fn sequential_mode(
             } else {
                 wtr.write_record(&record)?;
             }
-        } else if args.cmd_filter {
-            let must_keep_row = if error_count > 0 {
+        } else {
+            // filter subcommand
+            must_keep_row = if error_count > 0 {
                 true
             } else {
                 match computed_value {
-                    Value::String(strval) => !strval.to_string_lossy().is_empty(),
                     Value::Boolean(boolean) => boolean,
                     Value::Nil => false,
+                    Value::String(strval) => !strval.to_string_lossy().is_empty(),
                     Value::Integer(intval) => intval != 0,
                     // we compare to f64::EPSILON as float comparison to zero
                     // unlike int, where we can say intval != 0, we cannot do fltval !=0
@@ -818,7 +819,7 @@ fn sequential_mode(
         // Also, _ROWCOUNT is zero during the main script, and only set
         // to _IDX during the END script.
         LUAU_STAGE.store(Stage::End as i8, Ordering::Relaxed);
-        globals.set("_ROWCOUNT", idx)?;
+        globals.raw_set("_ROWCOUNT", idx)?;
 
         info!("Compiling and executing END script. _ROWCOUNT: {idx}");
         let end_bytecode = luau_compiler.compile(end_script);
@@ -902,7 +903,7 @@ fn random_access_mode(
         );
     };
 
-    globals.set("cols", "{}")?;
+    globals.raw_set("cols", "{}")?;
 
     // with an index, we can fetch the row_count in advance
     let mut row_count = util::count_rows(rconfig).unwrap_or_default();
@@ -941,10 +942,10 @@ fn random_access_mode(
     }
 
     // unlike sequential_mode, we actually know the row_count at the BEGINning
-    globals.set("_IDX", 0)?;
-    globals.set("_INDEX", 0)?;
-    globals.set("_ROWCOUNT", row_count)?;
-    globals.set("_LASTROW", row_count - 1)?;
+    globals.raw_set("_IDX", 0)?;
+    globals.raw_set("_INDEX", 0)?;
+    globals.raw_set("_ROWCOUNT", row_count)?;
+    globals.raw_set("_LASTROW", row_count - 1)?;
 
     if !begin_script.is_empty() {
         info!(
@@ -978,14 +979,15 @@ fn random_access_mode(
         &mut wtr,
     )?;
     if QSV_BREAK.load(Ordering::Relaxed) {
-        let qsv_break_msg: String = globals.get("_QSV_BREAK_MSG")?;
+        let qsv_break_msg: String = globals.raw_get("_QSV_BREAK_MSG")?;
         winfo!("{qsv_break_msg}");
         return Ok(());
     }
 
     // we clear the table so we don't falsely detect a call to qsv_insertrecord()
     // in the MAIN/END scripts
-    luau.globals().set("_QSV_INSERTRECORD_TBL", Value::Nil)?;
+    luau.globals()
+        .raw_set("_QSV_INSERTRECORD_TBL", Value::Nil)?;
 
     // in random access mode, setting "_INDEX" allows us to change the current record
     // for the NEXT read
@@ -1035,11 +1037,13 @@ fn random_access_mode(
     );
 
     let mut computed_value;
+    let mut must_keep_row;
+    let col = luau.create_table_with_capacity(record.len(), 1)?;
 
     // main loop - here we use an indexed file reader to implement random access mode,
     // seeking to the next record to read by looking at _INDEX special var
     'main: while idx_file.read_record(&mut record)? {
-        globals.set("_IDX", curr_record)?;
+        globals.raw_set("_IDX", curr_record)?;
 
         #[cfg(any(feature = "feature_capable", feature = "lite"))]
         if show_progress {
@@ -1047,23 +1051,23 @@ fn random_access_mode(
         }
 
         processed_count += 1;
-        {
-            let col = luau.create_table_with_capacity(record.len(), 1)?;
 
-            for (i, v) in record.iter().enumerate() {
-                col.set(i + 1, v)?;
-            }
-            if !rconfig.no_headers {
-                for (h, v) in headers.iter().zip(record.iter()) {
-                    col.set(h, v)?;
-                }
-            }
-            globals.set("col", col)?;
+        // Updating col
+        let _ = col.clear();
+        for (i, v) in record.iter().enumerate() {
+            col.raw_set(i + 1, v)?;
         }
+        if !rconfig.no_headers {
+            for (h, v) in headers.iter().zip(record.iter()) {
+                col.raw_set(h, v)?;
+            }
+        }
+        globals.raw_set("col", col.clone())?;
 
+        // Updating global
         if !args.flag_no_globals && !rconfig.no_headers {
             for (h, v) in headers.iter().zip(record.iter()) {
-                globals.set(h, v)?;
+                globals.raw_set(h, v)?;
             }
         }
 
@@ -1084,7 +1088,7 @@ fn random_access_mode(
         };
 
         if QSV_BREAK.load(Ordering::Relaxed) {
-            let qsv_break_msg: String = globals.get("_QSV_BREAK_MSG")?;
+            let qsv_break_msg: String = globals.raw_get("_QSV_BREAK_MSG")?;
             winfo!("{qsv_break_msg}");
             break 'main;
         }
@@ -1105,7 +1109,7 @@ fn random_access_mode(
             // check if the MAIN script is trying to insert a record
             insertrecord_table = luau
                 .globals()
-                .get("_QSV_INSERTRECORD_TBL")
+                .raw_get("_QSV_INSERTRECORD_TBL")
                 .unwrap_or_else(|_| empty_table.clone());
 
             let insertrecord_table_len = insertrecord_table.len().unwrap_or_default();
@@ -1130,14 +1134,15 @@ fn random_access_mode(
             } else {
                 wtr.write_record(&record)?;
             }
-        } else if args.cmd_filter {
-            let must_keep_row = if error_count > 0 {
+        } else {
+            // filter subcommand
+            must_keep_row = if error_count > 0 {
                 true
             } else {
                 match computed_value {
-                    Value::String(strval) => !strval.to_string_lossy().is_empty(),
                     Value::Boolean(boolean) => boolean,
                     Value::Nil => false,
+                    Value::String(strval) => !strval.to_string_lossy().is_empty(),
                     Value::Integer(intval) => intval != 0,
                     Value::Number(fltval) => (fltval).abs() > f64::EPSILON,
                     _ => true,
@@ -1346,7 +1351,7 @@ fn beginend_insertrecord(
 ) -> Result<(), CliError> {
     let insertrecord_table = luau
         .globals()
-        .get("_QSV_INSERTRECORD_TBL")
+        .raw_get("_QSV_INSERTRECORD_TBL")
         .unwrap_or_else(|_| empty_table.clone());
     let insertrecord_table_len = insertrecord_table.len().unwrap_or_default();
     if insertrecord_table_len > 0 {
@@ -1509,7 +1514,8 @@ fn setup_helpers(
             }
             idx += 1;
         }
-        luau.globals().set("_QSV_BREAK_MSG", break_msg.clone())?;
+        luau.globals()
+            .raw_set("_QSV_BREAK_MSG", break_msg.clone())?;
         QSV_BREAK.store(true, Ordering::Relaxed);
 
         Ok(break_msg)
@@ -1819,7 +1825,7 @@ fn setup_helpers(
             let val = luau.from_value::<serde_json::Value>(val)?;
             let val_str = val.as_str().unwrap_or_default();
 
-            insertrecord_table.set(idx, val_str).unwrap();
+            insertrecord_table.raw_set(idx, val_str).unwrap();
             idx += 1;
 
             if idx == u16::MAX {
@@ -1827,7 +1833,7 @@ fn setup_helpers(
             }
         }
         luau.globals()
-            .set("_QSV_INSERTRECORD_TBL", insertrecord_table.clone())?;
+            .raw_set("_QSV_INSERTRECORD_TBL", insertrecord_table.clone())?;
 
         if log::log_enabled!(log::Level::Debug) {
             log::debug!("qsv_insertrecord() - inserting record: {insertrecord_table:?}");
@@ -2044,7 +2050,7 @@ fn setup_helpers(
         let mut cached_csv_age_secs = 0_i64;
         let mut cached_csv_size = 0;
         let mut cache_csv_last_modified: Option<std::time::SystemTime> = None;
-        let qsv_cache_dir: String = luau.globals().get("_QSV_CACHE_DIR")?;
+        let qsv_cache_dir: String = luau.globals().raw_get("_QSV_CACHE_DIR")?;
         let cached_csv_path = Path::new(&qsv_cache_dir).join(format!("{lookup_name}.csv"));
 
         // check if lookup_table_uri is a file in the local filesystem
