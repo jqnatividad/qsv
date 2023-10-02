@@ -59,8 +59,8 @@ strip         = true
 
 [profile.release-samply]
 inherits = "release"
-debug         = true
-strip         = false
+debug    = true
+strip    = false
 
 [profile.release-nightly]
 inherits = "release"
@@ -85,7 +85,9 @@ crossbeam-channel = "0.5"
 csv = "1.2"
 csv-diff = "0.1.0-beta.4"
 csv-index = "0.1"
-csvs_convert = { version = "0.8", optional = true }
+csvs_convert = { version = "0.8", default-features = false, features = [
+    "converters",
+], optional = true }
 data-encoding = { version = "2.4", optional = true }
 dotenvy = "0.15"
 dynfmt = { version = "0.1", default-features = false, features = [
@@ -227,7 +229,8 @@ rusqlite = { version = "0.29", features = ["bundled"] }
 serial_test = { version = "2.0", features = ["file_locks"] }
 
 [patch.crates-io]
-actix-governor = { git = "https://github.com/AaronErhardt/actix-governor", rev = "a49b9be"}
+actix-governor = { git = "https://github.com/AaronErhardt/actix-governor", rev = "a49b9be" }
+calamine       = { git = "https://github.com/tafia/calamine", rev = "60a5614" }
 
 [features]
 default = ["mimalloc"]
@@ -243,6 +246,7 @@ all_features = [
     "python",
     "self_update",
     "to",
+    "to_parquet",
 ]
 apply = [
     "censor",
@@ -283,6 +287,7 @@ geocode = [
 luau = ["mlua", "sanitise-file-name", "simple-home-dir"]
 python = ["pyo3"]
 to = ["csvs_convert"]
+to_parquet = ["csvs_convert/parquet"]
 lite = []
 datapusher_plus = ["dynfmt", "self_update"]
 polars = ["dep:polars", "smartstring"]
