@@ -237,10 +237,10 @@ fn envlist() {
     let wrk = Workdir::new("envlist");
     let mut cmd = wrk.command("");
     cmd.env("QSV_ENVVAR", "#");
-    cmd.env("MIMALLOC_ENVVAR", "1");
+    cmd.env("HTTPS_PROXY", "https://proxy.example.com");
     cmd.arg("--envlist");
 
-    let expected = "MIMALLOC_ENVVAR: \"1\"\nQSV_ENVVAR: \"#\"";
+    let expected = "HTTPS_PROXY: \"https://proxy.example.com\"\nQSV_ENVVAR: \"#\"";
     let got: String = wrk.stdout(&mut cmd);
     // compare only the first few bytes, as there may be other env vars active
     // e.g. debugging, logging, etc.
@@ -250,5 +250,5 @@ fn envlist() {
     // unset it so we don't have side effects outside tests
     // as these env vars persists
     cmd.env("QSV_ENVVAR", "");
-    cmd.env("MIMALLOC_ENVVAR", "");
+    cmd.env("HTTPS_PROXY", "");
 }
