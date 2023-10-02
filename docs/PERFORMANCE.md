@@ -48,25 +48,25 @@ If you don't want to use mimalloc, use the `--no-default-features` flag when ins
 ### To use jemalloc
 
 ```bash
-cargo install qsv --path . --no-default-features --features all_full,jemallocator
+cargo install qsv --path . --no-default-features --features all_features,jemallocator
 ```
 
 or
 
 ```bash
-cargo build --release --no-default-features --features all_full,jemallocator
+cargo build --release --no-default-features --features all_features,jemallocator
 ```
 
 ### To use the standard allocator
 
 ```bash
-cargo install qsv --path . --no-default-features --features all_full
+cargo install qsv --path . --no-default-features --features all_features
 ```
 
 or
 
 ```bash
-cargo build --release --no-default-features --features all_full
+cargo build --release --no-default-features --features all_features
 ```
 
 To find out what memory allocator qsv is using, run `qsv --version`. After the qsv version number, the allocator used is displayed ("`standard`", "`mimalloc`" or "`jemalloc`"). Note that mimalloc is not supported on the `x86_64-pc-windows-gnu` and `arm` targets, and you'll need to use the "standard" allocator on those platforms.
