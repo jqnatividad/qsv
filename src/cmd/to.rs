@@ -88,10 +88,13 @@ Load `file1.csv` and `file2.csv' into xlsx file
 
   $ qsv to xlsx output.xlsx file1.csv file2.csv
 
-PARQUET
+PARQUET (only available if compiled with `to_parquet` feature)
 Convert to directory of parquet files.  Need to select a directory, it will be created if it does not exists.
+If the `to_parquet` feature is not enabled, a simpler parquet conversion is available using the `sqlp`
+subcommand with the `--format parquet` option.
 
-To stream the data use the `pipe` option.  To pipe from stdin use `-` for the filename or use named pipe. Type guessing is more limited with this option.
+To stream the data use the `pipe` option.  To pipe from stdin use `-` for the filename or use named pipe.
+Type guessing is more limited with this option.
 
 Examples:
 
@@ -157,9 +160,11 @@ Common options:
 
 use std::{io::Write, path::PathBuf};
 
+#[cfg(all(feature = "to_parquet", feature = "feature_capable"))]
+use csvs_convert::csvs_to_parquet_with_options;
 use csvs_convert::{
-    csvs_to_parquet_with_options, csvs_to_postgres_with_options, csvs_to_sqlite_with_options,
-    csvs_to_xlsx_with_options, make_datapackage, DescribeOptions, Options,
+    csvs_to_postgres_with_options, csvs_to_sqlite_with_options, csvs_to_xlsx_with_options,
+    make_datapackage, DescribeOptions, Options,
 };
 use log::debug;
 use serde::Deserialize;
@@ -268,19 +273,28 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
         debug!("conversion to sqlite complete");
     } else if args.cmd_parquet {
-        debug!("converting to parquet");
-        if arg_input.is_empty() {
-            return fail_incorrectusage_clierror!(
-                "Need to add the directory of the parquet files as first argument then the input \
-                 CSVs"
+        #[cfg(all(feature = "to_parquet", feature = "feature_capable"))]
+        {
+            debug!("converting to parquet");
+            arg_input = process_input(
+                arg_input,
+                &tmpdir,
+                "No data on stdin. Need to add the name of a parquet directory as first argument \
+                 then the input CSVs",
+            )?;
+            output = csvs_to_parquet_with_options(
+                args.arg_parquet.expect("checked above"),
+                arg_input,
+                options,
+            )?;
+            debug!("conversion to parquet complete");
+        }
+        #[cfg(not(all(feature = "to_parquet", feature = "feature_capable")))]
+        {
+            return fail_clierror!(
+                "`to_parquet` feature disabled. `to parquet` subcommand not available."
             );
         }
-        output = csvs_to_parquet_with_options(
-            args.arg_parquet.expect("checked above"),
-            arg_input,
-            options,
-        )?;
-        debug!("conversion to parquet complete");
     } else if args.cmd_xlsx {
         debug!("converting to xlsx");
         arg_input = process_input(
