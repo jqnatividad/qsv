@@ -402,6 +402,7 @@ state       string      string"#
     );
 }
 
+#[cfg(all(feature = "to_parquet", feature = "feature_capable"))]
 #[test]
 fn to_parquet_dir() {
     let wrk = Workdir::new("to_parquet_dir");
