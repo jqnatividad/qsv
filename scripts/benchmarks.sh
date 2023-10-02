@@ -42,7 +42,7 @@
 arg_pat="$1"
 
 # the version of this script
-bm_version=3.3.0
+bm_version=3.3.1
 
 # CONFIGURABLE VARIABLES ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -317,10 +317,12 @@ fi
 # we get the rowcount, just in case the benchmark data was modified by the user to tailor
 # the benchmark to their system/workload. We use the rowcount to compute records per second
 rowcount=$("$qsv_bin" count "$data")
-printf "Benchmark data rowcount: %'.0f\n" "$rowcount"
+printf "  Benchmark data rowcount: %'.0f\n" "$rowcount"
 qsv_absolute_path=$(which "$qsv_bin")
-printf "Benchmarking qsv binary: %s\n" "$qsv_absolute_path"
-printf "%s\n" "$raw_version"
+benchmarker_absolute_path=$(which "$qsv_benchmarker_bin")
+printf "  Benchmarking qsv binary: %s\n" "$qsv_absolute_path"
+printf "  %s\n" "$raw_version"
+printf "  Dogfooding qsv binary: %s\n" "$benchmarker_absolute_path"
 echo ""
 
 if [ ! -r communityboards.csv ]; then
