@@ -42,7 +42,7 @@
 arg_pat="$1"
 
 # the version of this script
-bm_version=3.2.0
+bm_version=3.3.0
 
 # CONFIGURABLE VARIABLES ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -318,6 +318,9 @@ fi
 # the benchmark to their system/workload. We use the rowcount to compute records per second
 rowcount=$("$qsv_bin" count "$data")
 printf "Benchmark data rowcount: %'.0f\n" "$rowcount"
+qsv_absolute_path=$(which "$qsv_bin")
+printf "Benchmarking qsv binary: %s\n" "$qsv_absolute_path"
+printf "%s\n" "$raw_version"
 echo ""
 
 if [ ! -r communityboards.csv ]; then
@@ -421,6 +424,8 @@ run cat_rows "$qsv_bin" cat rows "$data" data_unsorted.csv
 run cat_rowskey "$qsv_bin" cat rowskey "$data" data_unsorted.csv
 run count "$qsv_bin" count "$data"
 run --index count_index "$qsv_bin" count "$data"
+run count_width "$qsv_bin" count --width "$data"
+run --index count_width_index "$qsv_bin" count --width "$data"
 run dedup "$qsv_bin" dedup "$data"
 run dedup_sorted "$qsv_bin" dedup data_sorted.csv
 run diff "$qsv_bin" diff "$data" data_unsorted.csv
@@ -448,7 +453,9 @@ run join "$qsv_bin" join \'Community Board\' "$data" community_board communitybo
 run joinp "$qsv_bin" joinp \'Community Board\' "$data" community_board communityboards.csv
 run jsonl "$qsv_bin" jsonl benchmark_data.jsonl
 run luau_filter "$qsv_bin" luau filter \"Location == \'\'\" "$data"
+run luau_filter_no_globals "$qsv_bin" luau filter --no-globals \"Location == \'\'\" "$data"
 run luau_multi "$qsv_bin" luau map dow,hourday,weekno "file:dt_format.luau" "$data"
+run luau_multi_no_globals "$qsv_bin" luau map dow,hourday,weekno --no-globals "file:dt_format.luau" "$data"
 run luau_script "$qsv_bin" luau map turnaround_time "file:turnaround_time.luau" "$data"
 run partition "$qsv_bin" partition \'Community Board\' /tmp/partitioned "$data"
 run pseudo "$qsv_bin" pseudo \'Unique Key\' "$data"
