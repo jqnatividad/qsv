@@ -360,7 +360,7 @@ It will NOT offer the choice to update itself to the prebuilt binaries published
 qsv's MSRV policy is to require the latest [Rust version](https://github.com/rust-lang/rust/blob/master/RELEASES.md) that is [supported by Homebrew](https://formulae.brew.sh/formula/rust#default), currently [![HomeBrew](https://img.shields.io/homebrew/v/rust?logo=homebrew)](https://formulae.brew.sh/formula/rust).
 
 ## Testing
-qsv has ~1,200 tests in the [tests](https://github.com/jqnatividad/qsv/tree/master/tests) directory.
+qsv has ~1,220 tests in the [tests](https://github.com/jqnatividad/qsv/tree/master/tests) directory.
 Each command has its own test suite in a separate file with the convention `test_<COMMAND>.rs`.
 Apart from preventing regressions, the tests also serve as good illustrative examples, and are often linked from the usage text of each corresponding command.
 
@@ -372,6 +372,8 @@ cargo test --features all_features
 
 # to test qsvlite
 cargo test --features lite
+# to test all tests with "stats" in the name with qsvlite
+cargo test stats --features lite
 
 # to test qsvdp
 cargo test --features datapusher_plus,luau
@@ -380,6 +382,17 @@ cargo test --features datapusher_plus,luau
 # here we test only stats and use the
 # t alias for test and the -F shortcut for --features
 cargo t stats -F all_features
+
+# to test a specific command with a specific feature
+# here we test only luau comand with the luau feature
+cargo t luau -F feature_capable,luau
+
+# to test a specific command with multiple features
+cargo t -F feature_capable,luau,polars
+
+# to test using an alternate allocator
+# other than the default mimalloc allocator
+cargo t --no-default-features -F all_features,jemallocator
 ```
 
 ## License
