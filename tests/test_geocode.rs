@@ -1564,9 +1564,8 @@ fn geocode_countryinfonow_formatstr_pretty_json() {
         .arg("mx")
         .args(["--formatstr", "%pretty-json"]);
 
-    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![svec![
-        r######"{
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = r######"{
   "info": {
     "iso": "MX",
     "iso3": "MEX",
@@ -1594,7 +1593,6 @@ fn geocode_countryinfonow_formatstr_pretty_json() {
   "capital_names": {
     "en": "Mexico City"
   }
-}"######
-    ]];
+}"######;
     assert_eq!(got, expected);
 }

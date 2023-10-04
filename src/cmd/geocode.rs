@@ -829,7 +829,18 @@ async fn geocode_main(args: Args) -> CliResult<()> {
     let engine = load_engine(geocode_index_file.clone().into(), &progress).await?;
 
     let mut rdr = rconfig.reader()?;
-    let mut wtr = Config::new(&args.flag_output).writer()?;
+    let mut wtr = Config::new(&args.flag_output)
+        .quote_style(
+            // if we're doing a now subcommand with JSON output, we don't want the CSV writer
+            // to close quote the output as it will produce invalid JSON
+            if now_cmd && (args.flag_formatstr == "%json" || args.flag_formatstr == "%pretty-json")
+            {
+                csv::QuoteStyle::Never
+            } else {
+                csv::QuoteStyle::Necessary
+            },
+        )
+        .writer()?;
 
     let headers = rdr.byte_headers()?.clone();
     let sel = rconfig.selection(&headers)?;
