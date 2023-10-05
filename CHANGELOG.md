@@ -6,6 +6,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.116.0] - 2023-10-05
+
+## Highlights: :tada: :rocket:
+* Benchmarks refinements galore with more benchmarks and more comprehensive benchmarking instructions. 🎠
+* `geocode`: The Geonames index's configuration metadata is now available with the `geocode index-check` command.  No need to maintain a separate metadata JSON file.  This should make it even easier to maintain multiple Geonames index files with different configurations without having to worry you're looking at the right metadata JSON file. 🎠
+* `tojsonl`: parallelized with rayon, making it much faster. 🏇🏽
+* smaller qsv binary size and faster compile times with the `to_parquet` feature.  If you're good enough with `sqlp`'s ability to create a parquet file from a SQL query, qsv's binary size and compile time will be markedly smaller/faster. 🏇🏽
+* minor perf tweaks to `cat`, `count` and `luau` commands 🏇🏽
+
+---
+
+### Added
+* `geocode`: added Geonames index file metadata to `index-check` command
+* `tojsonl`: parallelized with rayon https://github.com/jqnatividad/qsv/pull/1338
+* `to`: added `to_parquet` feature. https://github.com/jqnatividad/qsv/pull/1341
+* `benchmarks`: upgraded from 3.0.0 to 3.3.1
+  * you can now specify a separate benchmarking binary as we dogfood qsv for the benchmarks and some features are required that may not be in the qsv binary variant being benchmarked
+  * added additional `count` benchmarks with `--width` option
+  * added additional `luau` benchmarks with single/multi filter options
+  * added additional `search` benchmark with `--unicode` option
+  * show absolute path of qsv binaries used (both the one we're dogfooding and the one being benchmarked) and their version info before running the benchmarks proper
+  * ensured `schema` benchmark was not using the stats cache with the `--force` option
+
+### Changed
+* `cat`: use an empty byte_record var instead of repeatedly allocating a new one https://github.com/jqnatividad/qsv/commit/eddafd11acb8e8d9d8587f952ba8cd02d450b08e
+* `count`: minor optimization https://github.com/jqnatividad/qsv/commit/bb113c0f348d4903ebfdc893c09517e5a4b145ad
+* `luau`: minor perf tweaks https://github.com/jqnatividad/qsv/commit/c71cd16a22f729a074a2a8d59020eba4cc8d7281 and https://github.com/jqnatividad/qsv/commit/f9c1e3c755fdb847be8f7f54d21622fb0c8c747f
+* (deps): bump Geosuggest from 0.4.5 to 5.1 https://github.com/jqnatividad/qsv/pull/1333
+* (deps): use patched version of calamine which has unreleased fixes since 0.22.0
+* build(deps): bump flexi_logger from 0.27.0 to 0.27.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1328
+* build(deps): bump indexmap from 2.0.0 to 2.0.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1329
+* build(deps): bump hashbrown from 0.14.0 to 0.14.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1334
+* build(deps): bump file-format from 0.20.0 to 0.21.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1335
+* build(deps): bump indexmap from 2.0.1 to 2.0.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1336
+* build(deps): bump regex from 1.9.5 to 1.9.6 by @dependabot in https://github.com/jqnatividad/qsv/pull/1337
+* build(deps): bump jql-runner from 7.0.3 to 7.0.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1340
+* build(deps): bump csvs_convert from 0.8.7 to 0.8.8 by @dependabot in https://github.com/jqnatividad/qsv/pull/1339
+* build(deps): bump actions/setup-python from 4.7.0 to 4.7.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1342
+* build(deps): bump reqwest from 0.11.21 to 0.11.22 by @dependabot in https://github.com/jqnatividad/qsv/pull/1343
+* build(deps): bump csv from 1.2.2 to 1.3.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1344
+* build(deps): bump actix-governor from 0.4.1 to 0.5.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1346
+* applied select clippy suggestions
+* update several indirect dependencies
+* pin Rust nightly to 2023-10-04
+
+### Removed
+* `geocode`: removed separate metadata JSON file for Geonames index files. The metadata is now embedded in the index file itself and can be viewed with the `index-check` command. 🎠
+* removed redundant setting from profile.release-samply in Cargo.toml https://github.com/jqnatividad/qsv/commit/2a35be5bbae2fc6994c103acac37ea3559854a0a
+
+### Fixed
+* `geocode`: when producing JSON output with the now subcommands, we now produced valid JSON. We previously generated JSON with extra quotes. https://github.com/jqnatividad/qsv/pull/1345
+* `schema`: fixed `--force` flag not being honored
+
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.115.0...0.116.0
+
 ## [0.115.0] - 2023-09-26 -🏇🏽🎠
 We continue to refine the benchmark suite, and have added a new `setup` argument to setup and install the required tools for the benchmark suite.  We've also added more comprehensive checks to ensure that the required tools are installed before running the benchmarks. 🎠
 
