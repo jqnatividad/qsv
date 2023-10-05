@@ -1,4 +1,4 @@
--- version 1.1.1
+-- version 1.1.2
 -- this luau script is used by benchmarks.sh to compute records per second (recs_per_sec)
 -- for each benchmark. It does this by retrieving the rowcount from the environment var 
 -- QSVBM_ROWCOUNT (which is set by benchmarks.sh by running "qsv count") and dividing it 
@@ -38,6 +38,8 @@ rounded_mean = round(mean, 3);
 --    rounded_mean = round(col.mean , 3); 
 -- or
 --    rounded_mean = round(col['mean'] , 3);
+-- or using a 1-based index, where the first column is 1:
+--    rounded_mean = round(col[4] , 3);
 -- this is especially useful if the column has embedded spaces or special characters
 -- or if the column name is a luau keyword (like "end" or "function")
 
