@@ -149,7 +149,8 @@ impl Args {
         for c in &columns_global {
             wtr.write_field(c)?;
         }
-        wtr.write_byte_record(&csv::ByteRecord::new())?;
+        let empty_byte_record = csv::ByteRecord::new();
+        wtr.write_byte_record(&empty_byte_record)?;
 
         // amortize allocations
         #[allow(unused_assignments)]
@@ -159,7 +160,6 @@ impl Args {
         let mut h: &csv::ByteRecord;
         let mut columns_of_this_file = IndexMap::with_capacity(num_columns_global);
         let mut row: csv::ByteRecord;
-        let empty_byte_record = csv::ByteRecord::new();
 
         for conf in self.configs()? {
             if conf.is_stdin() {
