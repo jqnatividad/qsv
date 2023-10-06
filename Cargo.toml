@@ -70,7 +70,7 @@ panic    = "abort"
 ahash = "0.8"
 anyhow = { version = "1.0", optional = true }
 bincode = "1.3"
-byteorder = "1.4"
+byteorder = "1.5"
 bytes = "1"
 cached = { version = "0.46", default-features = false, features = [
     "proc_macro",
