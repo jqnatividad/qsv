@@ -82,9 +82,11 @@ Print dump to stdout.
 XLSX
 Convert to new xlsx file.
 
-Examples:
+Example:
 
-Load `file1.csv` and `file2.csv' into xlsx file
+Load `file1.csv` and `file2.csv' into xlsx file.
+Will create `output.xlsx`, creating new sheets for each file, with the sheet name being the
+filename without the extension. Note the `output.xlsx` will be overwritten if it exists.
 
   $ qsv to xlsx output.xlsx file1.csv file2.csv
 
