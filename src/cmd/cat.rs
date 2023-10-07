@@ -136,8 +136,8 @@ impl Args {
                 std::io::copy(&mut std::io::stdin(), &mut tmp_file)?;
             }
             let mut rdr = conf.reader()?;
-            let h = rdr.byte_headers()?;
-            for field in h {
+            let header = rdr.byte_headers()?;
+            for field in header {
                 let fi = field.to_vec().into_boxed_slice();
                 columns_global.insert(fi);
             }
@@ -153,11 +153,10 @@ impl Args {
         wtr.write_byte_record(&empty_byte_record)?;
 
         // amortize allocations
-        #[allow(unused_assignments)]
-        let mut grouping_value = String::with_capacity(64);
+        let mut grouping_value;
         let mut conf_path;
         let mut rdr;
-        let mut h: &csv::ByteRecord;
+        let mut header: &csv::ByteRecord;
         let mut columns_of_this_file = IndexMap::with_capacity(num_columns_global);
         let mut row: csv::ByteRecord;
 
@@ -170,11 +169,11 @@ impl Args {
                 rdr = conf.reader()?;
                 conf_path = conf.path.clone();
             }
-            h = rdr.byte_headers()?;
+            header = rdr.byte_headers()?;
 
             columns_of_this_file.clear();
 
-            for (n, field) in h.iter().enumerate() {
+            for (n, field) in header.iter().enumerate() {
                 let fi = field.to_vec().into_boxed_slice();
                 if columns_of_this_file.contains_key(&fi) {
                     wwarn!(
