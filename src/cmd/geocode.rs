@@ -455,33 +455,35 @@ static INVALID_COUNTRY_CODE: &str = "Invalid country code.";
 static SUGGEST_ADMIN1_LIMIT: usize = 10;
 
 // valid column values for %dyncols
-static VALID_DYNCOLS: [&str; 26] = [
-    "id",
-    "name",
-    "latitude",
-    "longitude",
-    "country",
+// when adding new columns, make sure to maintain the sort order
+// otherwise, the dyncols check will fail as it uses binary search
+static SORTED_VALID_DYNCOLS: [&str; 26] = [
     "admin1",
     "admin2",
-    "capital",
-    "timezone",
-    "population",
-    "country_name",
-    "iso3",
-    "fips",
     "area",
-    "country_population",
+    "capital",
     "continent",
-    "tld",
+    "country",
+    "country_geonameid",
+    "country_name",
+    "country_population",
     "currency_code",
     "currency_name",
+    "equivalent_fips_code",
+    "fips",
+    "id",
+    "iso3",
+    "languages",
+    "latitude",
+    "longitude",
+    "name",
+    "neighbours",
     "phone",
+    "population",
     "postal_code_format",
     "postal_code_regex",
-    "languages",
-    "country_geonameid",
-    "neighbours",
-    "equivalent_fips_code",
+    "timezone",
+    "tld",
 ];
 
 // dyncols populated sentinel value
@@ -886,11 +888,12 @@ async fn geocode_main(args: Args) -> CliResult<()> {
         }
 
         // now, validate the column values
-        // the valid column values are in VALID_DYNCOLS
+        // the valid column values are in SORTED_VALID_DYNCOLS
         for column_value in &column_values {
-            if !VALID_DYNCOLS.contains(column_value) {
+            if SORTED_VALID_DYNCOLS.binary_search(column_value).is_err() {
                 return fail_incorrectusage_clierror!(
-                    "Invalid column value: {column_value}. Valid values are: {VALID_DYNCOLS:?}"
+                    "Invalid column value: {column_value}. Valid values are: \
+                     {SORTED_VALID_DYNCOLS:?}"
                 );
             }
         }
