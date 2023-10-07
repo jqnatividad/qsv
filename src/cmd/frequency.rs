@@ -190,11 +190,14 @@ impl Args {
     {
         let null = &b""[..].to_vec();
         let nsel = sel.normal();
-        let mut tabs: Vec<_> = (0..nsel.len()).map(|_| Frequencies::new()).collect();
+        let nsel_len = nsel.len();
+        let mut tabs: Vec<_> = (0..nsel_len).map(|_| Frequencies::new()).collect();
+
         #[allow(unused_assignments)]
-        // amortize allocation
-        let mut field_work: Vec<u8> = Vec::with_capacity(100);
-        let mut row_work: csv::ByteRecord = csv::ByteRecord::default();
+        // amortize allocations
+        let mut field_work: Vec<u8> = Vec::with_capacity(nsel_len);
+        let mut row_work: csv::ByteRecord = csv::ByteRecord::with_capacity(200, nsel_len);
+
         let flag_no_nulls = self.flag_no_nulls;
         for row in it {
             row_work.clone_from(&row?);
