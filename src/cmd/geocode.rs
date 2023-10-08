@@ -275,6 +275,9 @@ geocode options:
                                   iso3, fips, area, country_population, continent, tld, currency_code,
                                   currency_name, phone, postal_code_format, postal_code_regex, languages,
                                   country_geonameid, neighbours, equivalent_fips_code
+
+                                For US places, two additional fields are available:
+                                  us_county_fips_code and us_state_fips_code
                                     
                                   e.g. "City: {name}, State: {admin1}, Country: {country} {continent} - {languages}"
 
@@ -289,7 +292,7 @@ geocode options:
                                 columns to the output CSV using fields from a geocode result.
                                 To do so, set --formatstr to "%dyncols:" followed by a comma-delimited list
                                 of key:value pairs enclosed in curly braces.
-                                The key is the desired column name and the value is one of the same ten fields
+                                The key is the desired column name and the value is one of the same fields
                                 available for dynamic formatting.
 
                                  e.g. "%dyncols: {city_col:name}, {state_col:admin1}, {county_col:admin2}"
@@ -442,6 +445,69 @@ static DEFAULT_ADMIN1_CODES_URL: &str =
     "https://download.geonames.org/export/dump/admin1CodesASCII.txt";
 static DEFAULT_ADMIN2_CODES_URL: &str = "https://download.geonames.org/export/dump/admin2Codes.txt";
 
+static US_STATES_FIPS_CODES_LOOKUP: &[(&str, &str)] = &[
+    ("AL", "01"),
+    ("AK", "02"),
+    ("AZ", "04"),
+    ("AR", "05"),
+    ("CA", "06"),
+    ("CO", "08"),
+    ("CT", "09"),
+    ("DE", "10"),
+    ("DC", "11"),
+    ("FL", "12"),
+    ("GA", "13"),
+    ("HI", "15"),
+    ("ID", "16"),
+    ("IL", "17"),
+    ("IN", "18"),
+    ("IA", "19"),
+    ("KS", "20"),
+    ("KY", "21"),
+    ("LA", "22"),
+    ("ME", "23"),
+    ("MD", "24"),
+    ("MA", "25"),
+    ("MI", "26"),
+    ("MN", "27"),
+    ("MS", "28"),
+    ("MO", "29"),
+    ("MT", "30"),
+    ("NE", "31"),
+    ("NV", "32"),
+    ("NH", "33"),
+    ("NJ", "34"),
+    ("NM", "35"),
+    ("NY", "36"),
+    ("NC", "37"),
+    ("ND", "38"),
+    ("OH", "39"),
+    ("OK", "40"),
+    ("OR", "41"),
+    ("PA", "42"),
+    ("RI", "44"),
+    ("SC", "45"),
+    ("SD", "46"),
+    ("TN", "47"),
+    ("TX", "48"),
+    ("UT", "49"),
+    ("VT", "50"),
+    ("VA", "51"),
+    ("WA", "53"),
+    ("WV", "54"),
+    ("WI", "55"),
+    ("WY", "56"),
+    // the following are territories
+    // and are not included in the default index
+    // leaving them here for reference
+    // ("AS", "60"),
+    // ("GU", "66"),
+    // ("MP", "69"),
+    // ("PR", "72"),
+    // ("UM", "74"),
+    // ("VI", "78"),
+];
+
 // max number of entries in LRU cache
 static CACHE_SIZE: usize = 2_000_000;
 // max number of entries in fallback LRU cache if we can't allocate CACHE_SIZE
@@ -457,7 +523,7 @@ static SUGGEST_ADMIN1_LIMIT: usize = 10;
 // valid column values for %dyncols
 // when adding new columns, make sure to maintain the sort order
 // otherwise, the dyncols check will fail as it uses binary search
-static SORTED_VALID_DYNCOLS: [&str; 26] = [
+static SORTED_VALID_DYNCOLS: [&str; 28] = [
     "admin1",
     "admin2",
     "area",
@@ -484,6 +550,8 @@ static SORTED_VALID_DYNCOLS: [&str; 26] = [
     "postal_code_regex",
     "timezone",
     "tld",
+    "us_county_fips_code",
+    "us_state_fips_code",
 ];
 
 // dyncols populated sentinel value
@@ -1459,6 +1527,59 @@ fn add_dyncols(
             "timezone" => record.push_field(&cityrecord.timezone),
             "population" => record.push_field(&cityrecord.population.to_string()),
 
+            // US FIPS fields
+            "us_state_fips_code" => {
+                let admin1_code = cityrecord.admin_division.as_ref().map(|ad| ad.code.clone());
+                let us_state_code = match admin1_code {
+                    Some(admin1_code) => {
+                        if admin1_code.starts_with("US.") {
+                            // admin1 code is a US state code, the two-letter state code
+                            // is the last two characters of the admin1 code
+                            admin1_code[3..].to_string()
+                        } else {
+                            // admin1 code is not a US state code
+                            // set to empty string
+                            "".to_string()
+                        }
+                    },
+                    None => {
+                        // no admin1 code
+                        // set to empty string
+                        "".to_string()
+                    },
+                };
+                // lookup US state FIPS code
+                let us_state_fips_code = lookup_fips_code(&us_state_code).unwrap_or_default();
+                record.push_field(&us_state_fips_code)
+            },
+            "us_county_fips_code" => {
+                let admin2_code = cityrecord
+                    .admin2_division
+                    .as_ref()
+                    .map(|ad| ad.code.clone());
+                let us_county_fips_code = match admin2_code {
+                    Some(admin2_code) => {
+                        if admin2_code.starts_with("US.") && admin2_code.len() == 9 {
+                            // admin2 code is a US county code, the three-digit county code
+                            // is the last three characters of the admin2 code
+                            // start at index 7 to skip the US. prefix
+                            // e.g. US.NY.061 -> 061
+                            admin2_code[7..].to_string()
+                        } else {
+                            // admin2 code is not a US county code
+                            // set to empty string
+                            "".to_string()
+                        }
+                    },
+                    None => {
+                        // no admin2 code
+                        // set to empty string
+                        "".to_string()
+                    },
+                };
+                record.push_field(&us_county_fips_code)
+            },
+
             // CountryRecord fields
             "country_name" => record.push_field(&nameslang.countryname),
             "iso3" => record.push_field(&countryrecord.info.iso3),
@@ -1555,7 +1676,7 @@ fn format_result(
         }
     } else {
         // if formatstr does not start with %, then we're using dynfmt,
-        // i.e. twenty-six predefined fields below in curly braces are replaced with values
+        // i.e. twenty-eight predefined fields below in curly braces are replaced with values
         // e.g. "City: {name}, State: {admin1}, Country: {country} - {continent}"
         // unlike the predefined formats, we don't have a default format for dynfmt
         // so we return INVALID_DYNFMT if dynfmt fails to format the string
@@ -1577,6 +1698,42 @@ fn format_result(
         cityrecord_map.insert("capital", capital.to_owned());
         cityrecord_map.insert("timezone", cityrecord.timezone.clone());
         cityrecord_map.insert("population", cityrecord.population.to_string());
+
+        // US FIPS fields
+        let admin1_code = cityrecord
+            .admin_division
+            .as_ref()
+            .map(|ad| ad.code.clone())
+            .unwrap_or_default();
+        let us_state_fips_code = lookup_fips_code(&admin1_code).unwrap_or_default();
+        cityrecord_map.insert("us_state_fips_code", us_state_fips_code.to_string());
+        cityrecord_map.insert("us_county_fips_code", {
+            let admin2_code = cityrecord
+                .admin2_division
+                .as_ref()
+                .map(|ad| ad.code.clone());
+            let us_county_fips_code = match admin2_code {
+                Some(admin2_code) => {
+                    if admin2_code.starts_with("US.") && admin2_code.len() == 9 {
+                        // admin2 code is a US county code, the three-digit county code
+                        // is the last three characters of the admin2 code
+                        // start at index 7 to skip the US. prefix
+                        // e.g. US.NY.061 -> 061
+                        admin2_code[7..].to_string()
+                    } else {
+                        // admin2 code is not a US county code
+                        // set to empty string
+                        "".to_string()
+                    }
+                },
+                None => {
+                    // no admin2 code
+                    // set to empty string
+                    "".to_string()
+                },
+            };
+            us_county_fips_code
+        });
 
         // countryrecord fields
         cityrecord_map.insert("iso3", countryrecord.info.iso3.clone());
@@ -1752,4 +1909,11 @@ fn get_cityrecord_name_in_lang(cityrecord: &CitiesRecord, lang_lookup: &str) -> 
         admin2name,
         countryname,
     }
+}
+
+fn lookup_fips_code(state: &str) -> Option<&str> {
+    US_STATES_FIPS_CODES_LOOKUP
+        .iter()
+        .find(|&&(abbrev, _)| abbrev == state)
+        .map(|&(_, fips)| fips)
 }
