@@ -60,13 +60,30 @@ fn geocode_suggestnow_formatstr_dyncols() {
     let mut cmd = wrk.command("geocode");
     cmd.arg("suggestnow").arg("Secaucus").args([
         "--formatstr",
-        "%dyncols: {population:population}, {state:admin1}, {county:admin2}",
+        "%dyncols: {population:population}, {state:admin1}, {county:admin2}, \
+         {state_fips:us_state_fips_code}, {county_fips:us_county_fips_code}, {timezone:timezone}",
     ]);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
-        svec!["Location", "population", "state", "county",],
-        svec!["Secaucus", "19104", "New Jersey", "Hudson"],
+        svec![
+            "Location",
+            "population",
+            "state",
+            "county",
+            "state_fips",
+            "county_fips",
+            "timezone",
+        ],
+        svec![
+            "Secaucus",
+            "19104",
+            "New Jersey",
+            "Hudson",
+            "34",
+            "017",
+            "America/New_York"
+        ],
     ];
     assert_eq!(got, expected);
 }
@@ -403,22 +420,22 @@ fn geocode_suggest_dynfmt() {
         .arg("Location")
         .arg("--formatstr")
         .arg(
-            "{latitude}:{longitude} - {name}, {admin1} {country} {continent} {currency_code} \
-             {neighbours}",
+            "{latitude}:{longitude} - {name}, {admin1}:{us_state_fips_code}-{us_county_fips_code} \
+             {country} {continent} {currency_code} {neighbours}",
         )
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["Location"],
-        svec!["41.90059:-87.85673 - Melrose Park, Illinois US NA USD CA,MX,CU"],
+        svec!["41.90059:-87.85673 - Melrose Park, Illinois:17-031 US NA USD CA,MX,CU"],
         // svec!["40.65371:-73.93042 - East Flatbush, New York US NA USD CA,MX,CU"],
-        svec!["34.80953:-87.64947 - East Florence, Alabama US NA USD CA,MX,CU"],
-        svec!["40.71427:-74.00597 - New York City, New York US NA USD CA,MX,CU"],
-        svec!["40.79472:-73.9425 - East Harlem, New York US NA USD CA,MX,CU"],
+        svec!["34.80953:-87.64947 - East Florence, Alabama:01-077 US NA USD CA,MX,CU"],
+        svec!["40.71427:-74.00597 - New York City, New York:36- US NA USD CA,MX,CU"],
+        svec!["40.79472:-73.9425 - East Harlem, New York:36-061 US NA USD CA,MX,CU"],
         svec!["This is not a Location and it will not be geocoded"],
         svec!["95.213424, 190,1234565"], // invalid lat, long
-        svec!["14.55027:121.03269 - Makati City, National Capital Region PH AS PHP "],
+        svec!["14.55027:121.03269 - Makati City, National Capital Region:- PH AS PHP "],
     ];
     assert_eq!(got, expected);
 }
