@@ -447,7 +447,7 @@ static DEFAULT_ADMIN2_CODES_URL: &str = "https://download.geonames.org/export/du
 
 // ensure the state is sorted alphabetically
 // as we use binary_search to lookup the state FIPS code
-static US_STATES_FIPS_CODES_LOOKUP: &[(&str, &str)] = &[
+static US_STATES_FIPS_CODES: &[(&str, &str)] = &[
     ("AK", "02"),
     ("AL", "01"),
     ("AR", "05"),
@@ -1551,7 +1551,8 @@ fn add_dyncols(
                     },
                 };
                 // lookup US state FIPS code
-                let us_state_fips_code = lookup_fips_code(&us_state_code).unwrap_or_default();
+                let us_state_fips_code =
+                    lookup_us_state_fips_code(&us_state_code).unwrap_or_default();
                 record.push_field(us_state_fips_code);
             },
             "us_county_fips_code" => {
@@ -1722,7 +1723,7 @@ fn format_result(
                 String::new()
             },
         };
-        let us_state_fips_code = lookup_fips_code(&us_state_code).unwrap_or_default();
+        let us_state_fips_code = lookup_us_state_fips_code(&us_state_code).unwrap_or_default();
         cityrecord_map.insert("us_state_fips_code", us_state_fips_code.to_string());
 
         // set US county FIPS code
@@ -1930,10 +1931,10 @@ fn get_cityrecord_name_in_lang(cityrecord: &CitiesRecord, lang_lookup: &str) -> 
 }
 
 #[inline]
-fn lookup_fips_code(state: &str) -> Option<&str> {
-    let index = US_STATES_FIPS_CODES_LOOKUP.binary_search_by_key(&state, |&(abbrev, _)| abbrev);
-    match index {
-        Ok(i) => Some(US_STATES_FIPS_CODES_LOOKUP[i].1),
-        Err(_) => None,
+fn lookup_us_state_fips_code(state: &str) -> Option<&str> {
+    if let Ok(i) = US_STATES_FIPS_CODES.binary_search_by_key(&state, |&(abbrev, _)| abbrev) {
+        Some(US_STATES_FIPS_CODES[i].1)
+    } else {
+        None
     }
 }
