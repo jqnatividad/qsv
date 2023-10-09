@@ -445,42 +445,44 @@ static DEFAULT_ADMIN1_CODES_URL: &str =
     "https://download.geonames.org/export/dump/admin1CodesASCII.txt";
 static DEFAULT_ADMIN2_CODES_URL: &str = "https://download.geonames.org/export/dump/admin2Codes.txt";
 
+// ensure the state is sorted alphabetically
+// as we use binary_search to lookup the state FIPS code
 static US_STATES_FIPS_CODES_LOOKUP: &[(&str, &str)] = &[
-    ("AL", "01"),
     ("AK", "02"),
-    ("AZ", "04"),
+    ("AL", "01"),
     ("AR", "05"),
+    ("AZ", "04"),
     ("CA", "06"),
     ("CO", "08"),
     ("CT", "09"),
-    ("DE", "10"),
     ("DC", "11"),
+    ("DE", "10"),
     ("FL", "12"),
     ("GA", "13"),
     ("HI", "15"),
+    ("IA", "19"),
     ("ID", "16"),
     ("IL", "17"),
     ("IN", "18"),
-    ("IA", "19"),
     ("KS", "20"),
     ("KY", "21"),
     ("LA", "22"),
-    ("ME", "23"),
-    ("MD", "24"),
     ("MA", "25"),
+    ("MD", "24"),
+    ("ME", "23"),
     ("MI", "26"),
     ("MN", "27"),
-    ("MS", "28"),
     ("MO", "29"),
+    ("MS", "28"),
     ("MT", "30"),
+    ("NC", "37"),
+    ("ND", "38"),
     ("NE", "31"),
-    ("NV", "32"),
     ("NH", "33"),
     ("NJ", "34"),
     ("NM", "35"),
+    ("NV", "32"),
     ("NY", "36"),
-    ("NC", "37"),
-    ("ND", "38"),
     ("OH", "39"),
     ("OK", "40"),
     ("OR", "41"),
@@ -494,8 +496,8 @@ static US_STATES_FIPS_CODES_LOOKUP: &[(&str, &str)] = &[
     ("VT", "50"),
     ("VA", "51"),
     ("WA", "53"),
-    ("WV", "54"),
     ("WI", "55"),
+    ("WV", "54"),
     ("WY", "56"),
     // the following are territories
     // and are not included in the default index
@@ -1929,8 +1931,9 @@ fn get_cityrecord_name_in_lang(cityrecord: &CitiesRecord, lang_lookup: &str) -> 
 
 #[inline]
 fn lookup_fips_code(state: &str) -> Option<&str> {
-    US_STATES_FIPS_CODES_LOOKUP
-        .iter()
-        .find(|&&(abbrev, _)| abbrev == state)
-        .map(|&(_, fips)| fips)
+    let index = US_STATES_FIPS_CODES_LOOKUP.binary_search_by_key(&state, |&(abbrev, _)| abbrev);
+    match index {
+        Ok(i) => Some(US_STATES_FIPS_CODES_LOOKUP[i].1),
+        Err(_) => None,
+    }
 }
