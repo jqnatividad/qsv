@@ -1531,54 +1531,47 @@ fn add_dyncols(
 
             // US FIPS fields
             "us_state_fips_code" => {
-                let admin1_code = cityrecord.admin_division.as_ref().map(|ad| ad.code.clone());
-                let us_state_code = match admin1_code {
-                    Some(admin1_code) => {
-                        if let Some(state_fips_code) = admin1_code.strip_prefix("US.") {
-                            // admin1 code is a US state code, the two-letter state code
-                            // is the last two characters of the admin1 code
-                            state_fips_code.to_string()
-                        } else {
-                            // admin1 code is not a US state code
-                            // set to empty string
-                            String::new()
-                        }
-                    },
-                    None => {
-                        // no admin1 code
+                let us_state_code = if let Some(admin1_code) =
+                    cityrecord.admin_division.as_ref().map(|ad| ad.code.clone())
+                {
+                    if let Some(state_fips_code) = admin1_code.strip_prefix("US.") {
+                        // admin1 code is a US state code, the two-letter state code
+                        // is the last two characters of the admin1 code
+                        state_fips_code.to_string()
+                    } else {
+                        // admin1 code is not a US state code
                         // set to empty string
                         String::new()
-                    },
+                    }
+                } else {
+                    // no admin1 code
+                    // set to empty string
+                    String::new()
                 };
                 // lookup US state FIPS code
-                let us_state_fips_code =
-                    lookup_us_state_fips_code(&us_state_code).unwrap_or_default();
-                record.push_field(us_state_fips_code);
+                record.push_field(lookup_us_state_fips_code(&us_state_code).unwrap_or_default());
             },
             "us_county_fips_code" => {
-                let admin2_code = cityrecord
+                let us_county_fips_code = if let Some(admin2_code) = cityrecord
                     .admin2_division
                     .as_ref()
-                    .map(|ad| ad.code.clone());
-                let us_county_fips_code = match admin2_code {
-                    Some(admin2_code) => {
-                        if admin2_code.starts_with("US.") && admin2_code.len() == 9 {
-                            // admin2 code is a US county code, the three-digit county code
-                            // is the last three characters of the admin2 code
-                            // start at index 7 to skip the US. prefix
-                            // e.g. US.NY.061 -> 061
-                            format!("{:0>3}", admin2_code[7..].to_string())
-                        } else {
-                            // admin2 code is not a US county code
-                            // set to empty string
-                            String::new()
-                        }
-                    },
-                    None => {
-                        // no admin2 code
+                    .map(|ad| ad.code.clone())
+                {
+                    if admin2_code.starts_with("US.") && admin2_code.len() == 9 {
+                        // admin2 code is a US county code, the three-digit county code
+                        // is the last three characters of the admin2 code
+                        // start at index 7 to skip the US. prefix
+                        // e.g. US.NY.061 -> 061
+                        format!("{:0>3}", admin2_code[7..].to_string())
+                    } else {
+                        // admin2 code is not a US county code
                         // set to empty string
                         String::new()
-                    },
+                    }
+                } else {
+                    // no admin2 code
+                    // set to empty string
+                    String::new()
                 };
                 record.push_field(&us_county_fips_code);
             },
@@ -1704,35 +1697,37 @@ fn format_result(
 
         // US FIPS fields
         // set US state FIPS code
-        let admin1_code = cityrecord.admin_division.as_ref().map(|ad| ad.code.clone());
-        let us_state_code = match admin1_code {
-            Some(admin1_code) => {
-                if let Some(state_fips_code) = admin1_code.strip_prefix("US.") {
-                    // admin1 code is a US state code, the two-letter state code
-                    // is the last two characters of the admin1 code
-                    state_fips_code.to_string()
-                } else {
-                    // admin1 code is not a US state code
-                    // set to empty string
-                    String::new()
-                }
-            },
-            None => {
-                // no admin1 code
+        let us_state_code = if let Some(admin1_code) =
+            cityrecord.admin_division.as_ref().map(|ad| ad.code.clone())
+        {
+            if let Some(state_fips_code) = admin1_code.strip_prefix("US.") {
+                // admin1 code is a US state code, the two-letter state code
+                // is the last two characters of the admin1 code
+                state_fips_code.to_string()
+            } else {
+                // admin1 code is not a US state code
                 // set to empty string
                 String::new()
-            },
+            }
+        } else {
+            // no admin1 code
+            // set to empty string
+            String::new()
         };
-        let us_state_fips_code = lookup_us_state_fips_code(&us_state_code).unwrap_or_default();
-        cityrecord_map.insert("us_state_fips_code", us_state_fips_code.to_string());
+        cityrecord_map.insert(
+            "us_state_fips_code",
+            lookup_us_state_fips_code(&us_state_code)
+                .unwrap_or_default()
+                .to_string(),
+        );
 
         // set US county FIPS code
         cityrecord_map.insert("us_county_fips_code", {
-            let admin2_code = cityrecord
+            match cityrecord
                 .admin2_division
                 .as_ref()
-                .map(|ad| ad.code.clone());
-            match admin2_code {
+                .map(|ad| ad.code.clone())
+            {
                 Some(admin2_code) => {
                     if admin2_code.starts_with("US.") && admin2_code.len() == 9 {
                         // admin2 code is a US county code, the three-digit county code
