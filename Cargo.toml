@@ -228,9 +228,6 @@ quickcheck = { version = "1", default-features = false }
 rusqlite = { version = "0.29", features = ["bundled"] }
 serial_test = { version = "2.0", features = ["file_locks"] }
 
-[patch.crates-io]
-calamine       = { git = "https://github.com/tafia/calamine", rev = "60a5614" }
-
 [features]
 default = ["mimalloc"]
 all_features = [
