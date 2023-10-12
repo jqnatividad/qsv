@@ -1512,9 +1512,9 @@ checksum = "1aaf95b3e5c8f23aa320147307562d361db0ae0d51242340f558153b4eb2439b"
 
 [[package]]
 name = "duckdb"
-version = "0.9.0"
+version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d1208468f8915a274a4e80831220ad0bb685e58227a207d75a3e0a75cd6da3fb"
+checksum = "d43b61ab8e7ececc527f4c8f2a29b3df3d4718a56ff5934681e4ca05f1f7a4d3"
 dependencies = [
  "arrow",
  "cast",
@@ -2613,9 +2613,9 @@ checksum = "a08173bc88b7955d1b3145aa561539096c421ac8debde8cbc3612ec635fee29b"
 
 [[package]]
 name = "libduckdb-sys"
-version = "0.9.0"
+version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2dfd1e3a301ee4f8e93aa9d3c02003be726ee9d7b2b4b96de65b53d1693616c7"
+checksum = "541701b3b70a3256c3c3e2a1693f2504d4359e0c660f1f4ee704c6047ec52208"
 dependencies = [
  "autocfg",
  "cc",
@@ -2721,9 +2721,9 @@ checksum = "b5e6163cb8c49088c2c36f57875e58ccd8c87c7427f7fbd50ea6710b2f3f2e8f"
 
 [[package]]
 name = "luau0-src"
-version = "0.7.5+luau596"
+version = "0.7.6+luau598"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cda221ef787513a320f1de3ca8987d110fa7096c460a8f6feaeeba46d1551507"
+checksum = "533ef78032b44c95d08c826e9430b94b13efc9df06773cd58efd4f02521175dd"
 dependencies = [
  "cc",
 ]
@@ -4330,9 +4330,9 @@ dependencies = [
 
 [[package]]
 name = "rustix"
-version = "0.38.18"
+version = "0.38.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5a74ee2d7c2581cd139b42447d7d9389b889bdaad3a73f1ebb16f2a3237bb19c"
+checksum = "745ecfa778e66b2b63c88a61cb36e0eea109e803b0b86bf9879fbc77c70e86ed"
 dependencies = [
  "bitflags 2.4.0",
  "errno",
