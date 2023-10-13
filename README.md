@@ -350,7 +350,7 @@ Use the `sqlp` command with the `--format parquet` option instead if you don't n
 It will NOT offer the choice to update itself to the prebuilt binaries published on GitHub. You need not worry that your manually built qsv will be overwritten by a self-update.
 
 * `feature_capable` - enable to build `qsv` binary variant which is feature-capable.
-* `all_features` - enable to build `qsv` binary variant with all features enabled (apply,fetch,foreach,generate,luau,polars,python,to,self_update).
+* `all_features` - enable to build `qsv` binary variant with all features enabled (apply,fetch,foreach,generate,luau,polars,python,to,to_parquet,self_update).
 * `lite` - enable to build `qsvlite` binary variant with all features disabled.
 * `datapusher_plus` - enable to build `qsvdp` binary variant - the [DataPusher+](https://github.com/dathere/datapusher-plus) optimized qsv binary.
 * `nightly` - enable to turn on nightly/unstable features in the `rand`, `regex`, `hashbrown` & `pyo3` crates when building with Rust nightly/unstable.
