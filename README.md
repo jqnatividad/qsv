@@ -35,7 +35,7 @@
 | [describegpt](/src/cmd/describegpt.rs#L2)<br>🌐🤖 | Infer extended metadata about a CSV using a GPT model from [OpenAI's API](https://platform.openai.com/docs/introduction). |
 | [diff](/src/cmd/diff.rs#L2)<br>🚀 | Find the difference between two CSVs with ludicrous speed!<br/>e.g. *compare two CSVs with 1M rows x 9 columns in under 600ms!* |
 | [enum](/src/cmd/enumerate.rs#L2) | Add a new column enumerating rows by adding a column of incremental or uuid identifiers. Can also be used to copy a column or fill a new column with a constant value.  |
-| [excel](/src/cmd/excel.rs#L2) | Exports a specified Excel/ODS sheet to a CSV file. |
+| [excel](/src/cmd/excel.rs#L2)<br>🚀 | Exports a specified Excel/ODS sheet to a CSV file. |
 | [exclude](/src/cmd/exclude.rs#L2)<br>📇 | Removes a set of CSV data from another set based on the specified columns.  |
 | [explode](/src/cmd/explode.rs#L2) | Explode rows into multiple ones by splitting a column value based on the given separator.  |
 | [extdedup](/src/cmd/extdedup.rs#L2)<br> | Remove duplicate rows from an arbitrarily large CSV/text file using a memory-mapped, [on-disk hash table](https://crates.io/crates/odht). Unlike the `dedup` command, this command does not load the entire file into memory nor does it sort the deduped file. |
