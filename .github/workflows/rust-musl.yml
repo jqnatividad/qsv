@@ -31,6 +31,10 @@ jobs:
     - name: apt-get update Ubuntu
       run: |
         sudo apt-get update
+    - name: build prep for x86_64-unknown-linux-musl
+      run: |
+        sudo apt-get install musl-tools musl-dev
+        sudo ln -s /usr/bin/g++ /usr/bin/musl-g++          
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v4.7.1
       with:
@@ -53,4 +57,4 @@ jobs:
     - name: Run tests
       env:
         RUSTFLAGS: -C target-feature=+fxsr,+sse,+sse2,+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+fma
-      run: cargo test --verbose --locked --features=apply,fetch,foreach,generate,geocode,luau,python,feature_capable
+      run: cargo test --verbose --locked --features=apply,fetch,foreach,generate,geocode,luau,python,polars,feature_capable
