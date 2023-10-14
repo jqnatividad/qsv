@@ -347,16 +347,18 @@ QuickSilver's goals, in priority order, are to be:
 * **Able to process very large files** - Most qsv commands are streaming, using constant memory. For those commands that require loading the entire CSV into memory, qsv has Out-of-Memory prevention, batch processing strategies and "ext"ernal commands that use the disk to process larger than memory files. See [Memory Management](docs/PERFORMANCE.md#memory-management) for more info.
 * **A Complete Data-wrangling toolkit** - qsv is designed to be feature-rich, with a focus on common data-wrangling tasks. It's architecture allows the easy addition of commands. See [Features](docs/FEATURES.md) for more info.
 * **Composable/Interoperable** - qsv is designed to be composable, with a focus on interoperability with other common CLI tools like 'awk', 'grep', 'ripgrep', 'sed', etc.. It's commands can be combined with other commands via pipes, and it supports other common file formats like JSONL, Parquet, Arrow IPC, Excel, ODS, PostgreSQL, SQLite, etc. See [File Formats](#file-formats) for more info.
+* **As Portable as Possible** - qsv is designed to be portable, with installers on several platforms with an integrated self-update mechanism. In preference order, it supports Linux, macOS and Windows. See [Installation Options](#installation-options) for more info.
 * **As Easy to Use as Possible** - qsv is designed to be easy to use. As easy-to-use that is,
  as a command line interface can be :shrug:. Its commands have numerous options but have sensible defaults if a user does not want to use these options. The usage text is written for a data analyst audience, not developers, and there are numerous examples in the usage text, with the tests doubling as examples as well. In the future, it will also have a TUI (Terminal User Interface) mode.
-* **As Easy to Install and Update as Possible** - qsv is designed to be easy to install, with installers on several platforms and an integrated self-update mechanism. See [Installation Options](#installation-options) for more info.
+* **As Secure as Possible** - qsv is designed to be secure. It has no external runtime dependencies, and it's codebase is regularly audited for security vulnerabilities with automated DevSkim and "cargo audit" Github Actions workflows. It also has a [Security Policy](SECURITY.md)
+However, it does not use cryptographically secure random number generators as the performance penalty is too high and the qsv's use cases do not require it
+(search for the codebase for "//DevSkim: ignore DS148264" to find instances where qsv uses a non-cryptographically secure random number generator).
 * **As Easy to Contribute to as Possible** - qsv is designed to be easy to contribute to, with a focus on maintainability. The source code is heavily commented, the usage text is embedded, and there are helper functions that make it easy to create tests. See [Contributing](docs/CONTRIBUTING.md) for more info.
 
 QuickSilver's non-goals are to be:
-* **As Small as Possible** - qsv is designed to be small, but not at the expense of performance, features, usability, portability or maintainability. However, we do have a `qsvlite` variant that is ~13% of the size of `qsv` and a `qsvdp` variant that is ~12% of the size of `qsv`. Those variants, however, have reduced functionality.
-* **As Secure as Possible** - qsv is designed to be secure, but not at the expense of performance, features, usability, portability or maintainability.
-It does not use cryptographically secure random number generators, for example, as the performance penalty is too high and the qsv's use cases do not require it
-(search for the codebase for "//DevSkim: ignore DS148264" to find instances where qsv uses a non-cryptographically secure random number generator).
+* **As Small as Possible** - qsv is designed to be small, but not at the expense of performance, features, composability, portability, usability, security or maintainability. However, we do have a `qsvlite` variant that is ~13% of the size of `qsv` and a `qsvdp` variant that is ~12% of the size of `qsv`. Those variants, however, have reduced functionality.
+* **Multi-lingual** - qsv's messages are English-only. There are no plans to support other languages. However, it does support UTF-8 encoded CSVs, supports alternate delimiters, and its `apply whatlang, thousands and eudex` operations supports different languages and country conventions, so you can use it with non-English CSVs as well.
+
 
 ## Testing
 qsv has ~1,220 tests in the [tests](https://github.com/jqnatividad/qsv/tree/master/tests) directory.
