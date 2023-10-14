@@ -285,39 +285,10 @@ qsv stats wcp.csv --output wcpstats.csv
 
 ## Interpreters
 For complex data-wrangling tasks, you can use Luau and Python scripts.
-### Luau
 
-[Luau](https://luau-lang.org) is a fast, small, safe, gradually typed, statically linked, embeddable scripting language derived from [Lua](https://www.lua.org/about.html). It lies at the [heart of Roblox technology](https://luau-lang.org/2022/11/04/luau-origins-and-evolution.html) - powering all it's user generated content, with [Roblox](https://en.wikipedia.org/wiki/Roblox)'s own internal code having more than 2 millions lines of Luau. 
+Luau is recommended over Python for complex data-wrangling tasks as it is faster, more memory-efficient, has no external dependencies and has several data-wrangling helper functions as qsv's DSL.
 
-It has [sandboxing](https://luau-lang.org/sandbox), [type-checking](https://luau-lang.org/typecheck), [additional operators](https://luau-lang.org/syntax) & [increased performance](https://luau-lang.org/performance) while [maintaining compatibility with Lua](https://luau-lang.org/compatibility).
-
-[Lua is faster than Python](https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/lua-python3.html) & Luau is even faster still - more so, as qsv precompiles Luau into bytecode. In addition, [`luau`](/src/cmd/luau.rs#L2) is embedded into qsv, has debug logging, can do aggregations with its `--begin` & `--end` options & has no external dependencies unlike the `py` command.
-
-It also allows mapping of multiple new computed columns, supports random access with indexed CSV files, and has [several helper functions](https://github.com/jqnatividad/qsv/blob/c0c2d5ab3e4ea9cc0e861c6ad41652677ffc4f20/src/cmd/luau.rs#L1250-L1931) to help ease the development of [full-fledged data-wrangling scripts](https://github.com/jqnatividad/qsv/blob/4e521b177ea3a6a06c83222458bb1349a67606f4/tests/test_luau.rs#L524-L571).
-
-As date manipulation is often needed, the [LuaDate](https://tieske.github.io/date/) module is also bundled.
-
-Finally, as [qsv's DSL](#luau_deeplink) (👑), `luau` will gain even more features over time compared to the `python` feature.
-
-[Luau 0.599](https://github.com/Roblox/luau/releases/tag/0.599) is currently embedded - qsv's policy is to use the latest stable Luau version at the time of each qsv release.
-
-### Python
-
-The `python` feature is NOT enabled by default on the prebuilt binaries as its dynamically linked to python libraries at runtime, which presents distribution issues, as various operating systems have differing Python versions.
-
-If you wish to enable the `python` feature - you'll just have to install/compile from source, making sure you have the development libraries for the desired Python version (Python 3.7 and above are supported) installed when doing so (e.g. on Debian/Ubuntu - `apt-get install python-dev`; on CentOS/RedHat/Amazon Linux - `yum install python-devel`; on Windows and macOS - use the [Python installer](https://www.python.org/downloads/) for the desired version).
-
-If you plan to distribute your manually built `qsv` with the `python` feature, `qsv` will look for the specific version of Python shared libraries (libpython* on Linux/macOS, python*.dll on Windows) against which it was compiled starting with the current directory & abort with an error if not found, detailing the Python library it was looking for. 
-
-Note that this will happen on qsv startup, even if you're NOT running the `py` command.
-
-When building from source - [PyO3](https://pyo3.rs) - the underlying crate that enables the `python` feature, uses a build script to determine the Python version & set the correct linker arguments. By default it uses the python3 executable.
-You can override this by setting `PYO3_PYTHON` (e.g., `PYO3_PYTHON=python3.7`), before installing/compiling qsv. See the [PyO3 User Guide](https://pyo3.rs/v0.17.1/building_and_distribution.html) for more information.
-
-Consider using the [`luau`](/src/cmd/luau.rs#L2) command instead of the [`py`]((/src/cmd/python.rs#L2)) command if the operation you're trying to do can be done with `luau` - as `luau` is statically linked, has no external dependencies, much faster than `py`, can do aggregations, supports random access, has a bevy of qsv helper functions, and allows mapping of multiple new columns. 
-
-The `py` command cannot do aggregations because [PyO3's GIL-bound memory](https://pyo3.rs/v0.17.2/memory.html#gil-bound-memory) limitations will quickly consume a lot of memory (see [issue 449](https://github.com/jqnatividad/qsv/issues/449#issuecomment-1226095316) for details).
-To prevent this, the `py` command processes CSVs in batches (default: 30,000 records), with a GIL pool for each batch, so no globals are available across batches.
+See [Luau vs Python](docs/INTERPRETERS.md) for more info.
 
 ## Memory Management
 qsv supports three memory allocators - mimalloc (default), jemalloc and the standard allocator.<br>See [Memory Allocator](docs/PERFORMANCE.md#memory-allocator) for more info.
@@ -349,7 +320,7 @@ QuickSilver's goals, in priority order, are to be:
 * **Composable/Interoperable** - qsv is designed to be composable, with a focus on interoperability with other common CLI tools like 'awk', 'grep', 'ripgrep', 'sed', etc... It's commands can be combined with other commands via pipes, and it supports other common file formats like JSONL, Parquet, Arrow IPC, Excel, ODS, PostgreSQL, SQLite, etc. See [File Formats](#file-formats) for more info.
 * **As Portable as Possible** - qsv is designed to be portable, with installers on several platforms with an integrated self-update mechanism. In preference order, it supports Linux, macOS and Windows. See [Installation Options](#installation-options) for more info.
 * **As Easy to Use as Possible** - qsv is designed to be easy to use. As easy-to-use that is,
- as a command line interface can be :shrug:. Its commands have numerous options but have sensible defaults if a user does not want to use these options. The usage text is written for a data analyst audience, not developers; and there are numerous examples in the usage text, with the tests doubling as examples as well. In the future, it will also have a TUI (Terminal User Interface) mode.
+ as command line interfaces go :shrug:. Its commands have numerous options but have sensible defaults if a user does not want to use these options. The usage text is written for a data analyst audience, not developers; and there are numerous examples in the usage text, with the tests doubling as examples as well. In the future, it will also have a TUI (Terminal User Interface) mode.
 * **As Secure as Possible** - qsv is designed to be secure. It has no external runtime dependencies, and it's codebase is regularly audited for security vulnerabilities with automated DevSkim and "cargo audit" Github Actions workflows. It also has a [Security Policy](SECURITY.md)
 However, it does not use cryptographically secure random number generators as the performance penalty is too high and the qsv's use cases do not require it.
 (search for the codebase for "//DevSkim: ignore DS148264" to find instances where qsv uses a non-cryptographically secure random number generator)
