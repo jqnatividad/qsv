@@ -16,7 +16,7 @@
 
  &nbsp;          |  Table of Contents
 :--------------------------|:-------------------------
-![qsv logo](docs/images/qsv-logo.png)<br/>[_Hi-ho "Quicksilver" away!_](https://www.youtube.com/watch?v=p9lf76xOA5k)<br/><sub><sup>[logo details](https://github.com/jqnatividad/qsv/discussions/295)</sup></sub><br/>|qsv (pronounced "Quicksilver") is a command line program<br>for querying, indexing, slicing, analyzing, filtering, enriching,<br>transforming, sorting, validating & joining CSV files.<br>Commands are simple, fast & composable.<br><br>* [Commands](#available-commands)<br>* [Installation Options](#installation-options)<br> * [Whirlwind Tour](docs/whirlwind_tour.md#a-whirlwind-tour) / [Notebooks](contrib/notebooks/)<br>* [Cookbook](https://github.com/jqnatividad/qsv/wiki/Cookbook#cookbook)<br>* [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq)<br>* [Performance Tuning](docs/PERFORMANCE.md#performance-tuning)<br>* 👉 [Benchmarks](https://qsv.dathere.com/benchmarks) 🚀<br>* [Environment Variables](docs/ENVIRONMENT_VARIABLES.md)<br>* [Feature Flags](#feature-flags)<br>* [Testing](#testing)<br>* [NYC School of Data 2022 slides](https://docs.google.com/presentation/d/e/2PACX-1vQ12ndZL--gkz0HLQRaxqsNOwzddkv1iUKB3sq661yA77OPlAsmHJHpjaqt9s9QEf73VqMfb0cv4jHU/pub?start=false&loop=false&delayms=3000)<br>* [Sponsor](#sponsor)
+![qsv logo](docs/images/qsv-logo.png)<br/>[_Hi-ho "Quicksilver" away!_](https://www.youtube.com/watch?v=p9lf76xOA5k)<br/><sub><sup>[logo details](https://github.com/jqnatividad/qsv/discussions/295)</sup></sub><br/>|qsv (pronounced "Quicksilver") is a command line program<br>for querying, indexing, slicing, analyzing, filtering, enriching,<br>transforming, sorting, validating & joining CSV files.<br>Commands are simple, fast & composable.<br><br>* [Commands](#available-commands)<br>* [Installation Options](#installation-options)<br> * [Whirlwind Tour](docs/whirlwind_tour.md#a-whirlwind-tour) / [Notebooks](contrib/notebooks/)<br>* [Cookbook](https://github.com/jqnatividad/qsv/wiki/Cookbook#cookbook)<br>* [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq)<br>* [Performance Tuning](docs/PERFORMANCE.md#performance-tuning)<br>* 👉 [Benchmarks](https://qsv.dathere.com/benchmarks) 🚀<br>* [Environment Variables](docs/ENVIRONMENT_VARIABLES.md)<br>* [Feature Flags](#feature-flags)<br>* [Goals/Non-goals](#goals--non-goals)<br>* [Testing](#testing)<br>* [NYC School of Data 2022 slides](https://docs.google.com/presentation/d/e/2PACX-1vQ12ndZL--gkz0HLQRaxqsNOwzddkv1iUKB3sq661yA77OPlAsmHJHpjaqt9s9QEf73VqMfb0cv4jHU/pub?start=false&loop=false&delayms=3000)<br>* [Sponsor](#sponsor)
 </div>
 <div align="center">
 
@@ -331,35 +331,32 @@ qsv supports an extensive list of environment variables and supports `.env` file
 For details, see [Environment Variables](docs/ENVIRONMENT_VARIABLES.md) and the [`dotenv.template.yaml`](dotenv.template.yaml) file.
 ## Feature Flags
 
-`qsv` has several features:
+qsv has several [feature flags](https://doc.rust-lang.org/cargo/reference/features.html) that can be used to enable/disable optional features.
 
-* `mimalloc` (default) - use the mimalloc allocator (see [Memory Allocator](docs/PERFORMANCE.md#memory-allocator) for more info).
-* `jemallocator` - use the jemalloc allocator (see [Memory Allocator](docs/PERFORMANCE.md#memory-allocator) for more info).
-* `apply` - enable `apply` command. This swiss-army knife of CSV transformations is very powerful, but it has a lot of dependencies that increases both compile time and binary size.
-* `fetch` - enables the `fetch` & `fetchpost` commands.
-* `foreach` - enable `foreach` command (not valid for Windows).
-* `geocode` - enable `geocode` command.
-* `generate` - enable `generate` command.
-* `luau` - enable `luau` command. Embeds a [Luau](https://luau-lang.org) interpreter into qsv. [Luau has type-checking, sandboxing, additional language operators, increased performance & other improvements](https://luau-lang.org/2022/11/04/luau-origins-and-evolution.html) over Lua.
-* `polars` - enables all [Polars](https://pola.rs)-powered commands (currently, `joinp` and `sqlp`). Note that Polars is a very powerful library, but it has a lot of dependencies that drastically increases both compile time and binary size.
-* `python` - enable `py` command. Note that qsv will look for the shared library for the Python version (Python 3.7 & above supported) it was compiled against & will abort on startup if the library is not found, even if you're NOT using the `py` command. Check [Python](#python) section for more info.
-* `to` - enables the `to` command except the parquet option.
-* `to_parquet` - enables the `parquet` option of the `to` command. This is a separate feature as it brings in the `duckdb` dependency, which markedly increases binary size and compile time.
-Use the `sqlp` command with the `--format parquet` option instead if you don't need the `to` command's other options and you don't need to convert to parquet a directory of CSVs.
-* `self_update` - enable self-update engine, checking GitHub for the latest release. Note that if you manually built qsv, `self-update` will only check for new releases.
-It will NOT offer the choice to update itself to the prebuilt binaries published on GitHub. You need not worry that your manually built qsv will be overwritten by a self-update.
-
-* `feature_capable` - enable to build `qsv` binary variant which is feature-capable.
-* `all_features` - enable to build `qsv` binary variant with all features enabled (apply,fetch,foreach,generate,luau,polars,python,to,to_parquet,self_update).
-* `lite` - enable to build `qsvlite` binary variant with all features disabled.
-* `datapusher_plus` - enable to build `qsvdp` binary variant - the [DataPusher+](https://github.com/dathere/datapusher-plus) optimized qsv binary.
-* `nightly` - enable to turn on nightly/unstable features in the `rand`, `regex`, `hashbrown` & `pyo3` crates when building with Rust nightly/unstable.
-
-> ℹ️ **NOTE:** `qsvlite`, as the name implies, always has **non-default features disabled**. `qsv` can be built with any combination of the above features using the cargo `--features` & `--no-default-features` flags. The prebuilt `qsv` binaries has **all applicable features valid for the target platform**[^2].
+See [Features](docs/FEATURES.md) for more info.
 
 ## Minimum Supported Rust Version
 
-qsv's MSRV policy is to require the latest [Rust version](https://github.com/rust-lang/rust/blob/master/RELEASES.md) that is [supported by Homebrew](https://formulae.brew.sh/formula/rust#default), currently [![HomeBrew](https://img.shields.io/homebrew/v/rust?logo=homebrew)](https://formulae.brew.sh/formula/rust).
+qsv's MSRV policy is to require the latest [Rust version](https://github.com/rust-lang/rust/blob/master/RELEASES.md) that is [supported by Homebrew](https://formulae.brew.sh/formula/rust#default), currently [![HomeBrew](https://img.shields.io/homebrew/v/rust?logo=homebrew)](https://formulae.brew.sh/formula/rust). 
+However, if the latest Rust stable has been released for more than a week and Homebrew has not yet updated its Rust formula, qsv will go ahead and require the latest Rust stable version.
+
+## Goals / Non-Goals
+
+QuickSilver's goals, in priority order, are to be:
+* **As Fast as Possible** - To do so, it has frequent releases, an aggressive MSRV policy, takes advantage of CPU features, employs various caching strategies, uses [HTTP/2](https://www.cloudflare.com/learning/performance/http2-vs-http1.1/#:~:text=Multiplexing%3A%20HTTP%2F1.1%20loads%20resources,resource%20blocks%20any%20other%20resource.), and is multi-threaded when possible and it makes sense. See [Performance](docs/PERFORMANCE.md) for more info.
+* **Able to process very large files** - Most qsv commands are streaming, using constant memory. For those commands that require loading the entire CSV into memory, qsv has Out-of-Memory prevention, batch processing strategies and "ext"ernal commands that use the disk to process larger than memory files. See [Memory Management](docs/PERFORMANCE.md#memory-management) for more info.
+* **A Complete Data-wrangling toolkit** - qsv is designed to be feature-rich, with a focus on common data-wrangling tasks. It's architecture allows the easy addition of commands. See [Features](docs/FEATURES.md) for more info.
+* **Composable/Interoperable** - qsv is designed to be composable, with a focus on interoperability with other common CLI tools like 'awk', 'grep', 'ripgrep', 'sed', etc.. It's commands can be combined with other commands via pipes, and it supports other common file formats like JSONL, Parquet, Arrow IPC, Excel, ODS, PostgreSQL, SQLite, etc. See [File Formats](#file-formats) for more info.
+* **As Easy to Use as Possible** - qsv is designed to be easy to use. As easy-to-use that is,
+ as a command line interface can be :shrug:. Its commands have numerous options but have sensible defaults if a user does not want to use these options. The usage text is written for a data analyst audience, not developers, and there are numerous examples in the usage text, with the tests doubling as examples as well. In the future, it will also have a TUI (Terminal User Interface) mode.
+* **As Easy to Install and Update as Possible** - qsv is designed to be easy to install, with installers on several platforms and an integrated self-update mechanism. See [Installation Options](#installation-options) for more info.
+* **As Easy to Contribute to as Possible** - qsv is designed to be easy to contribute to, with a focus on maintainability. The source code is heavily commented, the usage text is embedded, and there are helper functions that make it easy to create tests. See [Contributing](docs/CONTRIBUTING.md) for more info.
+
+QuickSilver's non-goals are to be:
+* **As Small as Possible** - qsv is designed to be small, but not at the expense of performance, features, usability, portability or maintainability. However, we do have a `qsvlite` variant that is ~13% of the size of `qsv` and a `qsvdp` variant that is ~12% of the size of `qsv`. Those variants, however, have reduced functionality.
+* **As Secure as Possible** - qsv is designed to be secure, but not at the expense of performance, features, usability, portability or maintainability.
+It does not use cryptographically secure random number generators, for example, as the performance penalty is too high and the qsv's use cases do not require it
+(search for the codebase for "//DevSkim: ignore DS148264" to find instances where qsv uses a non-cryptographically secure random number generator).
 
 ## Testing
 qsv has ~1,220 tests in the [tests](https://github.com/jqnatividad/qsv/tree/master/tests) directory.
