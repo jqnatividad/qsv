@@ -1,6 +1,6 @@
 static USAGE: &str = r#"
 Create multiple new computed columns, filter rows or compute aggregations by 
-executing a Luau script for every row (SEQUENTIAL MODE) or for
+executing a Luau 0.599 script for every row (SEQUENTIAL MODE) or for
 specified rows (RANDOM ACCESS MODE) of a CSV file.
 
 Luau is not just another qsv command. It is qsv's Domain-Specific Language (DSL)
@@ -52,9 +52,9 @@ Some usage examples:
   "file:" prefix or the ".lua/.luau" file extension to read non-trivial scripts 
   from the filesystem.
 
-  In the following example, both the BEGIN and END scripts have the lua/luau file extension
-  so they are read from the filesystem.  With the debitcredit.script file, we use the
-  "file:" prefix to read it from the filesystem.
+  In the following example, both the BEGIN and END scripts have the lua/luau file
+  extension so they are read from the filesystem.  With the debitcredit.script file,
+  we use the "file:" prefix to read it from the filesystem.
 
     $ qsv luau map Type -B init.lua file:debitcredit.script -E end.luau
 
@@ -62,59 +62,66 @@ With "luau map", if the MAIN script is invalid for a row, "<ERROR>" followed by 
 detailed error message is returned for that row.
 With "luau filter", if the MAIN script is invalid for a row, that row is not filtered.
 
-If any row has an invalid result, an exitcode of 1 is returned and an error count is logged.
+If any row has an invalid result, an exitcode of 1 is returned and an error count
+is logged.
 
 SPECIAL VARIABLES:
   "_IDX" - a READ-only variable that is zero during the BEGIN script and
        set to the current row number during the MAIN & END scripts.
 
-       It is primarily used in SEQUENTIAL MODE when the CSV has no index or you wish
-       to process the CSV sequentially.
+       It is primarily used in SEQUENTIAL MODE when the CSV has no index or you
+       wish to process the CSV sequentially.
  
-  "_INDEX" - a READ/WRITE variable that enables RANDOM ACCESS MODE when used in a script.
-       Using "_INDEX" in a script switches qsv to RANDOM ACCESS MODE where setting it
-       to a row number will change the current row to the specified row number.
-       It will only work, however, if the CSV has an index.
+  "_INDEX" - a READ/WRITE variable that enables RANDOM ACCESS MODE when used in
+       a script. Using "_INDEX" in a script switches qsv to RANDOM ACCESS MODE 
+       where setting it to a row number will change the current row to the
+       specified row number. It will only work, however, if the CSV has an index.
 
-       When using _INDEX, the MAIN script will keep looping and evaluate the row specified by
-       _INDEX until _INDEX is set to an invalid row number (e.g. <= zero or to a value
-       greater than _ROWCOUNT).
+       When using _INDEX, the MAIN script will keep looping and evaluate the row
+       specified by _INDEX until _INDEX is set to an invalid row number
+       (e.g. <= zero or to a value greater than _ROWCOUNT).
 
-       If the CSV has no index, qsv will abort with an error unless "qsv_autoindex()" is
-       called in the BEGIN script to create an index.
+       If the CSV has no index, qsv will abort with an error unless "qsv_autoindex()"
+       is called in the BEGIN script to create an index.
        
   "_ROWCOUNT" - a READ-only variable which is zero during the BEGIN & MAIN scripts, 
-       and set to the rowcount during the END script when the CSV has no index (SEQUENTIAL MODE).
+       and set to the rowcount during the END script when the CSV has no index
+       (SEQUENTIAL MODE).
 
-       When using _INDEX and the CSV has an index, _ROWCOUNT will be set to the rowcount
-       of the CSV file, even from the BEGINning (RANDOM ACCESS MODE).
+       When using _INDEX and the CSV has an index, _ROWCOUNT will be set to the
+       rowcount of the CSV file, even from the BEGINning
+       (RANDOM ACCESS MODE).
 
-  "_LASTROW" - a READ-only variable that is set to the last row number of the CSV file.
+  "_LASTROW" - a READ-only variable that is set to the last row number of the CSV.
        Like _INDEX, it will also trigger RANDOM ACCESS MODE if used in a script.
 
        Similarly, if the CSV has no index, qsv will also abort with an error unless
        "qsv_autoindex()" is called in the BEGIN script to create an index.
 
-For security and safety reasons as a purpose-built embeddable interpreter, Luau's standard library
-is relatively minimal (https://luau-lang.org/library).
-That's why qsv preloads the LuaDate library as date manipulation is a common data-wrangling task.
-See https://tieske.github.io/date/#date-id96473 for info on how to use the LuaDate library.
+For security and safety reasons as a purpose-built embeddable interpreter,
+Luau's standard library is relatively minimal (https://luau-lang.org/library).
+That's why qsv preloads the LuaDate library as date manipulation is a common task.
+See https://tieske.github.io/date/#date-id96473 on how to use the LuaDate library.
 
 Additional libraries can be loaded from the LUAU_PATH using luau's "require" function.
 See https://github.com/LewisJEllis/awesome-lua for a list of other libraries.
 
-With the judicious use of "require", the BEGIN script & special variables, one can create variables,
-tables, arrays & functions that can be used for complex aggregation operations in the END script.
+With the judicious use of "require", the BEGIN script & special variables, one can
+create variables, tables, arrays & functions that can be used for complex aggregation
+operations in the END script.
 
-TIP: When developing Luau scripts, be sure to take advantage of the "qsv_log" function to debug your script.
-It will log messages to the logfile at the specified log level as specified by the QSV_LOG_LEVEL
-environment variable.
+TIP: When developing Luau scripts, be sure to take advantage of the "qsv_log" function
+to debug your script. It will log messages to the logfile at the specified log level
+as specified by the QSV_LOG_LEVEL environment variable.
 
-There are more Luau helper functions in addition to "qsv_log": "qsv_break", "qsv_skip", "qsv_insertrecord",
-"qsv_autoindex", "qsv_coalesce", "qsv_sleep", "qsv_writefile", "qsv_cmd", "qsv_shellcmd", "qsv_setenv", 
-"qsv_getenv" and last but not least - the powerful "qsv_register_lookup" which allows you to "lookup" values
-against other CSVs on the filesystem, a URL, datHere's lookup repo or CKAN instances.
-Detailed descriptions of these helpers can be found in the "setup_helpers" section at the bottom of this file.
+There are more Luau helper functions in addition to "qsv_log": "qsv_break", "qsv_skip",
+"qsv_insertrecord", "qsv_autoindex", "qsv_coalesce", "qsv_sleep", "qsv_writefile",
+"qsv_cmd", "qsv_shellcmd", "qsv_setenv", "qsv_getenv" and last but not least -
+the powerful "qsv_register_lookup" which allows you to "lookup" values against other
+CSVs on the filesystem, a URL, datHere's lookup repo or CKAN instances.
+
+Detailed descriptions of these helpers can be found in the "setup_helpers" section at
+the bottom of this file.
 
 For more detailed examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_luau.rs.
 
@@ -128,69 +135,73 @@ Usage:
 
 Luau arguments:
 
-    All <script> arguments/options can either be the Luau code, or if it starts with "file:" or
-    ends with ".luau/.lua" - the filepath from which to load the script.
+    All <script> arguments/options can either be the Luau code, or if it starts with
+    "file:" or ends with ".luau/.lua" - the filepath from which to load the script.
 
-    Instead of using the --begin and --end options, you can also embed BEGIN and END scripts in the
-    MAIN script by using the "BEGIN { ... }!" and "END { ... }!" syntax.
+    Instead of using the --begin and --end options, you can also embed BEGIN and END
+    scripts in the MAIN script by using the "BEGIN { ... }!" and "END { ... }!" syntax.
 
-    The BEGIN script is embedded in the MAIN script by adding a BEGIN block at the top of the script.
-    The BEGIN block must start at the beginning of the line. It can contain multiple statements.
+    The BEGIN script is embedded in the MAIN script by adding a BEGIN block at the
+    top of the script. The BEGIN block must start at the beginning of the line.
+    It can contain multiple statements.
 
-    The MAIN script is the main Luau script to execute. It can contain multiple statements and should
-    end with a "return" statement. In map mode, the return value is/are the new value/s of the mapped
-    column/s. In filter mode, the return value is a boolean indicating whether the row should be
-    filtered or not.
+    The MAIN script is the main Luau script to execute. It is executed for EACH ROW of
+    the input CSV. It can contain multiple statements and should end with a "return" stmt.
+    In map mode, the return value is/are the new value/s of the mapped column/s.
+    In filter mode, the return value is a boolean indicating if the row should be filtered.
 
-    The END script is embedded in the MAIN script by adding an END block at the bottom of the script.
-    The END block must start at the beginning of the line. It can contain multiple statements.
+    The END script is embedded in the MAIN script by adding an END block at the bottom
+    of the script. The END block must start at the beginning of the line.
+    It can contain multiple statements.
 
-    <new-columns> is a comma-separated list of new computed columns to add to the CSV when using
-    "luau map". Note that the new columns are added to the CSV after the existing columns.
+    <new-columns> is a comma-separated list of new computed columns to add to the CSV
+    when using "luau map". Note that the new columns are added to the CSV after the
+    existing columns.
 
 Luau options:
-    -g, --no-globals         Don't create Luau global variables for each column, only col.
-                             Useful when some column names mask standard Luau globals.
-                             Note: access to Luau globals thru _G remains even without -g.
-    -r, --remap              Only the listed new columns are written to the output CSV.
-                             Only applies to "map" subcommand.
-    -B, --begin <script>     Luau script/file to execute in the BEGINning, before processing
-                             the CSV with the main-script.
-                             Typically used to initialize global variables.
-                             Takes precedence over an embedded BEGIN script.
-                             If <script> begins with "file:" or ends with ".luau/.lua", it is
-                             interpreted as a filepath from which to load the script.
-    -E, --end <script>       Luau script/file to execute at the END, after processing the
-                             CSV with the main-script.
-                             Typically used for aggregations.
-                             The output of the END script is sent to stderr.
-                             Takes precedence over an embedded END script.
-                             If <script> begins with "file:" or ends with ".luau/.lua", it is
-                             interpreted as a filepath from which to load the script.
-    --luau-path <pattern>    The LUAU_PATH pattern to use from which the scripts 
-                             can "require" lua/luau library files from.
-                             See https://www.lua.org/pil/8.1.html
-                             [default: ?;?.luau;?.lua]
-    --no-jit                 Don't use luau's JIT compiler.
-    --max-errors <count>     The maximum number of errors to tolerate before aborting.
-                             Set to zero to disable error limit.
-                             [default: 100]
-    --timeout <seconds>      Timeout for downloading lookup_tables using
-                             the qsv_register_lookup() helper function.
-                             [default: 30]
-    --ckan-api <url>         The URL of the CKAN API to use for downloading lookup_table
-                             resources using the qsv_register_lookup() helper function
-                             with the "ckan://" scheme.
-                             If the QSV_CKAN_API envvar is set, it will be used instead.
-                             [default: https://catalog.dathere.com/api/3/action]
-    --ckan-token <token>     The CKAN API token to use. Only required if downloading
-                             private resources.
-                             If the QSV_CKAN_TOKEN envvar is set, it will be used instead.
-    --cache-dir <dir>        The directory to use for caching downloaded lookup_table
-                             resources using the qsv_register_lookup() helper function.
-                             If the directory does not exist, qsv will attempt to create it.
-                             If the QSV_CACHE_DIR envvar is set, it will be used instead.
-                             [default: ~/.qsv-cache]
+  -g, --no-globals        Don't create Luau global variables for each column,
+                          only `col`. Useful when some column names mask standard
+                          Luau globals. Note: access to Luau globals thru _G remains
+                          even without -g.
+  -r, --remap             Only the listed new columns are written to the output CSV.
+                          Only applies to "map" subcommand.
+  -B, --begin <script>    Luau script/file to execute in the BEGINning, before
+                          processing the CSV with the main-script.
+                          Typically used to initialize global variables.
+                          Takes precedence over an embedded BEGIN script.
+                          If <script> begins with "file:" or ends with ".luau/.lua",
+                          it's interpreted as a filepath from which to load the script.
+  -E, --end <script>      Luau script/file to execute at the END, after processing the
+                          CSV with the main-script.
+                          Typically used for aggregations.
+                          The output of the END script is sent to stderr.
+                          Takes precedence over an embedded END script.
+                          If <script> begins with "file:" or ends with ".luau/.lua",
+                          it's interpreted as a filepath from which to load the script.
+  --luau-path <pattern>   The LUAU_PATH pattern to use from which the scripts 
+                          can "require" lua/luau library files from.
+                          See https://www.lua.org/pil/8.1.html
+                          [default: ?;?.luau;?.lua]
+  --no-jit                Don't use Luau's JIT compiler.
+  --max-errors <count>    The maximum number of errors to tolerate before aborting.
+                          Set to zero to disable error limit.
+                          [default: 100]
+  --timeout <seconds>     Timeout for downloading lookup_tables using
+                          the qsv_register_lookup() helper function.
+                          [default: 30]
+  --ckan-api <url>        The URL of the CKAN API to use for downloading lookup_table
+                          resources using the qsv_register_lookup() helper function
+                          with the "ckan://" scheme.
+                          If the QSV_CKAN_API envvar is set, it will be used instead.
+                          [default: https://data.dathere.com/api/3/action]
+  --ckan-token <token>    The CKAN API token to use. Only required if downloading
+                          private resources.
+                          If the QSV_CKAN_TOKEN envvar is set, it will be used instead.
+  --cache-dir <dir>       The directory to use for caching downloaded lookup_table
+                          resources using the qsv_register_lookup() helper function.
+                          If the directory does not exist, qsv will attempt to create it.
+                          If the QSV_CACHE_DIR envvar is set, it will be used instead.
+                          [default: ~/.qsv-cache]
 
 Common options:
     -h, --help             Display this message
