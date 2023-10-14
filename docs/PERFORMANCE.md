@@ -35,7 +35,8 @@ rustc --print cfg -C target-cpu=native | grep -i target_feature
 rustc --print target-features
 ```
 
-## Memory Allocator
+## Memory Management
+### Memory Allocator
 
 qsv supports three memory allocators: mimalloc, jemalloc and the standard allocator.
 
@@ -45,7 +46,7 @@ You can also use another alternative - the [jemalloc](https://jemalloc.net) allo
 
 If you don't want to use mimalloc, use the `--no-default-features` flag when installing/compiling qsv, e.g.:
 
-### To use jemalloc
+#### To use jemalloc
 
 ```bash
 cargo install qsv --path . --no-default-features --features all_features,jemallocator
@@ -57,7 +58,7 @@ or
 cargo build --release --no-default-features --features all_features,jemallocator
 ```
 
-### To use the standard allocator
+#### To use the standard allocator
 
 ```bash
 cargo install qsv --path . --no-default-features --features all_features
@@ -71,7 +72,7 @@ cargo build --release --no-default-features --features all_features
 
 To find out what memory allocator qsv is using, run `qsv --version`. After the qsv version number, the allocator used is displayed ("`standard`", "`mimalloc`" or "`jemalloc`"). Note that mimalloc is not supported on the `x86_64-pc-windows-gnu` and `arm` targets, and you'll need to use the "standard" allocator on those platforms.
 
-## Out-of-Memory (OOM) Prevention
+### Out-of-Memory (OOM) Prevention
 Most qsv commands use a "streaming" approach to processing CSVs - "streaming" in the input record-by-record while processing it. This allows it to process arbitrarily large CSVs with constant memory.
 
 There are a number of commands/modes however (denoted by the "exploding head" emoji - 🤯), that require qsv to load the entire CSV into memory - `dedup` (when not using the --sorted option), `reverse`, `sort`, `stats` (when calculating the "non-streaming" extended stats), `table` and `transpose` (when not running in --multipass mode).
@@ -83,11 +84,11 @@ In addition, `frequency`, `schema` and `tojsonl` - though they do not load the e
 For very large files, this can be a problem, as qsv will run out of memory and panic.
 To prevent this, qsv has two memory check heuristics when running "non-streaming" commands:
 
-### NORMAL mode
+#### NORMAL mode
 1. at startup, get the TOTAL memory of the system
 2. if the size of the CSV file is greater than TOTAL memory - HEADROOM (default: 20%), qsv will abort with an error
 
-### CONSERVATIVE mode
+#### CONSERVATIVE mode
 1. at startup, compute total available memory by adding the current available memory and free swap space 
 2. subtract a percentage headroom from the total available memory (default: 20%)
 3. if this adjusted total available memory is less than the size of the CSV file, qsv will abort with an error
@@ -104,15 +105,15 @@ Otherwise, the default memory check heuristic (NORMAL mode) will only check if t
 
 > NOTE: These memory checks are not invoked when using stdin as input, as the size of the input file is not known. Though `schema` and `tojsonl` will still abort if stdin is too large per this memory check as it creates a temporary file from stdin before inferring the schema.
 
-## Buffer size
+### Buffer size
 
 Depending on your filesystem's configuration (e.g. block size, file system type, writing to remote file systems (e.g. sshfs, efs, nfs),
 SSD or rotating magnetic disks, etc.), you can also fine-tune qsv's read/write buffers.
 
-By default, the read buffer size is set to [16k](https://github.com/jqnatividad/qsv/blob/master/src/config.rs#L16), you can change it by setting the environment
+By default, the read buffer size is set to [128k](https://github.com/jqnatividad/qsv/blob/master/src/config.rs#L16), you can change it by setting the environment
 variable `QSV_RDR_BUFFER_CAPACITY` in bytes.
 
-The same is true with the write buffer (default: 64k) with the `QSV_WTR_BUFFER_CAPACITY` environment variable.
+The same is true with the write buffer (default: 256k) with the `QSV_WTR_BUFFER_CAPACITY` environment variable.
 
 ## Multithreading
 
