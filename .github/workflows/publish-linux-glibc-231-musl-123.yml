@@ -38,7 +38,7 @@ jobs:
             addl-qsvlite-features:
             addl-qsvdp-features: luau
             name-suffix: glibc-2.31
-          - os: ubuntu-22.04
+          - os: ubuntu-20.04
             os-name: linux
             target: x86_64-unknown-linux-musl
             architecture: x86_64
