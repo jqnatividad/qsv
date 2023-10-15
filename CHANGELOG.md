@@ -6,6 +6,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.117.0] - 2023-10-15
+
+## Highlights:
+* `geocode`: added Federal Information Processing Standards (FIPS) codes to results for US places, so we can derive [GEOIDs](https://www.census.gov/programs-surveys/geography/guidance/geo-identifiers.html#:~:text=FIPS%20codes%20are%20assigned%20alphabetically,Native%20Hawaiian%20(AIANNH)%20areas.).  This paves the way to doing data enrichment lookups (starting with the US Census) in an upcoming release.
+* Added [Goal/Non-goals](https://github.com/jqnatividad/qsv#goals--non-goals), explicitly codifying what qsv is and isn't, and what we're trying to achieve with the toolkit.
+* `excel`: CSV output processing is now multi-threaded, making it a bit faster. The bottleneck is still the Excel/ODS library we're using ([calamine](https://github.com/tafia/calamine)), which is single-threaded. But there are [active](https://github.com/tafia/calamine/issues/346) [discussions](https://github.com/tafia/calamine/issues/362) underway to make it much faster in the future.
+* Upgrading the MSRV to 1.73.0 has allowed us to use LLVM 17, which has resulted in an overall performance boost.
+
+---
+
+### Added:
+* `geocode`: added Federal Information Processing Standards (FIPS) codes to results for US places.
+* Added Goals/Non-goals to README.md
+
+### Changed
+* `cat` : minor optimization https://github.com/jqnatividad/qsv/commit/343bb668ae84fcf862883245382e7d8015da88c2
+* `excel`: CSV output processing is now multi-threaded https://github.com/jqnatividad/qsv/pull/1360
+* `geocode`: more efficient dynfmt ptocessing https://github.com/jqnatividad/qsv/pull/1367
+* `frequency`: optimize allocations before hot loop https://github.com/jqnatividad/qsv/commit/655bebcdec6d89f0ffa33d794069ee5eee0df3e5
+* `luau`: upgraded embedded Luau from 0.596 to 0.599
+* `deps`: bump calamine from 0.22.0 to 0.22.1 https://github.com/jqnatividad/qsv/commit/4c4ed7e25614bbfe4d7b16fe7619a5a874ef7591
+* `docs`: reorganized README, moving FEATURES and INTERPRETERS to their own markdown files.
+* build(deps): bump byteorder from 1.4.3 to 1.5.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1347
+* build(deps): bump tokio from 1.32.0 to 1.33.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1354
+* build(deps): bump regex from 1.9.6 to 1.10.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1356
+* build(deps): bump semver from 1.0.19 to 1.0.20 by @dependabot in https://github.com/jqnatividad/qsv/pull/1358
+* build(deps): bump pyo3 from 0.19.2 to 0.20.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1359
+* build(deps): bump serde from 1.0.188 to 1.0.189 by @dependabot in https://github.com/jqnatividad/qsv/pull/1361
+* build(deps): bump flate2 from 1.0.27 to 1.0.28 by @dependabot in https://github.com/jqnatividad/qsv/pull/1363
+* build(deps): bump regex from 1.10.0 to 1.10.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1366
+* `deps`: update several indirect dependencies
+* pin Rust nightly to 2023-10-14
+* bump MSRV to 1.73.0
+
+### Removed
+* `excel`: removed `--progressbar` option as Excel/ODS maximum sheet size is just too small (1,048,576 rows) to make it useful. 
+
+### Fixed
+* Fixed Jupyter Notebook Viewer Link  by @a5dur in https://github.com/jqnatividad/qsv/pull/1349
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.116.0...0.117.0
+
 ## [0.116.0] - 2023-10-05
 
 ## Highlights: :tada: :rocket:
