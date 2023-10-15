@@ -30,7 +30,7 @@ jobs:
     runs-on: self-hosted
     strategy:
       matrix:
-        rust: [nightly-2023-10-12]
+        rust: [nightly-2023-10-14]
         job:
           - os: macos
             os-name: macos
