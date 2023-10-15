@@ -340,7 +340,7 @@ fn geocode_suggest_filter_country_admin1() {
         svec!["Location"],
         svec!["Melrose, New York, Bronx County US"],
         svec!["East Patchogue, New York, Suffolk US"],
-        svec!["New York City, New York,  US"],
+        svec!["New York, New York,  US"],
         svec!["Brooklyn, New York, Kings US"],
         svec!["East Harlem, New York, New York County US"],
         svec!["This is not a Location and it will not be geocoded"],
@@ -431,7 +431,7 @@ fn geocode_suggest_dynfmt() {
         svec!["41.90059:-87.85673 - Melrose Park, Illinois:17-031 US NA USD CA,MX,CU"],
         // svec!["40.65371:-73.93042 - East Flatbush, New York US NA USD CA,MX,CU"],
         svec!["34.80953:-87.64947 - East Florence, Alabama:01-077 US NA USD CA,MX,CU"],
-        svec!["40.71427:-74.00597 - New York City, New York:36- US NA USD CA,MX,CU"],
+        svec!["40.71427:-74.00597 - New York, New York:36- US NA USD CA,MX,CU"],
         svec!["40.79472:-73.9425 - East Harlem, New York:36-061 US NA USD CA,MX,CU"],
         svec!["This is not a Location and it will not be geocoded"],
         svec!["95.213424, 190,1234565"], // invalid lat, long

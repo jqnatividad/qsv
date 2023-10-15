@@ -354,6 +354,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use ahash::RandomState;
 use cached::{proc_macro::cached, SizedCache};
 use dynfmt::Format;
 use geosuggest_core::{
@@ -1349,7 +1350,7 @@ fn search_index(
             // the search results are already sorted by score, so we just need to find the first
             if let Some(admin1_filter_list) = admin1_filter_list {
                 // we have an admin1 filter, so we need to find the first admin1 result that matches
-                let mut admin1_filter_map: HashMap<String, bool> = HashMap::new();
+                let mut admin1_filter_map: HashMap<String, bool, RandomState> = HashMap::default();
                 for admin1_filter in admin1_filter_list {
                     admin1_filter_map
                         .insert(admin1_filter.clone().admin1_string, admin1_filter.is_code);
@@ -1677,109 +1678,142 @@ fn format_result(
         // unlike the predefined formats, we don't have a default format for dynfmt
         // so we return INVALID_DYNFMT if dynfmt fails to format the string
         // also, we have access to the country info fields as well
+
+        // check if we have a valid country record
         let Some(countryrecord) = engine.country_info(country) else {
             return INVALID_COUNTRY_CODE.to_string();
         };
-        let mut cityrecord_map: HashMap<&str, String> = HashMap::with_capacity(26);
 
-        // cityrecord fields
-        cityrecord_map.insert("id", cityrecord.id.to_string());
-        cityrecord_map.insert("name", cityrecord.name.clone());
-        cityrecord_map.insert("latitude", cityrecord.latitude.to_string());
-        cityrecord_map.insert("longitude", cityrecord.longitude.to_string());
-        cityrecord_map.insert("country", country.to_owned());
-        cityrecord_map.insert("country_name", nameslang.countryname.clone());
-        cityrecord_map.insert("admin1", nameslang.admin1name.clone());
-        cityrecord_map.insert("admin2", nameslang.admin2name.clone());
-        cityrecord_map.insert("capital", capital.to_owned());
-        cityrecord_map.insert("timezone", cityrecord.timezone.clone());
-        cityrecord_map.insert("population", cityrecord.population.to_string());
+        // Now, parse the formatstr to get the fields to initialize in
+        // the hashmap lookup. We do this so we only populate the hashmap with fields
+        // that are actually used in the formatstr.
+        let mut dynfmt_fields = Vec::with_capacity(10); // 10 is a reasonable default to save allocs
+        let formatstr_re: &'static Regex = crate::regex_oncelock!(r"\{(?P<key>\w+)?\}");
+        for format_fields in formatstr_re.captures_iter(formatstr) {
+            dynfmt_fields.push(format_fields.name("key").unwrap().as_str());
+        }
 
-        // US FIPS fields
-        // set US state FIPS code
-        let us_state_code = if let Some(admin1_code) =
-            cityrecord.admin_division.as_ref().map(|ad| ad.code.clone())
-        {
-            if let Some(state_fips_code) = admin1_code.strip_prefix("US.") {
-                // admin1 code is a US state code, the two-letter state code
-                // is the last two characters of the admin1 code
-                state_fips_code.to_string()
-            } else {
-                // admin1 code is not a US state code
-                // set to empty string
-                String::new()
-            }
-        } else {
-            // no admin1 code
-            // set to empty string
-            String::new()
-        };
-        cityrecord_map.insert(
-            "us_state_fips_code",
-            lookup_us_state_fips_code(&us_state_code)
-                .unwrap_or_default()
-                .to_string(),
-        );
+        let mut cityrecord_map: HashMap<&str, String> = HashMap::with_capacity(dynfmt_fields.len());
 
-        // set US county FIPS code
-        cityrecord_map.insert("us_county_fips_code", {
-            match cityrecord
-                .admin2_division
-                .as_ref()
-                .map(|ad| ad.code.clone())
-            {
-                Some(admin2_code) => {
-                    if admin2_code.starts_with("US.") && admin2_code.len() == 9 {
-                        // admin2 code is a US county code, the three-digit county code
-                        // is the last three characters of the admin2 code
-                        // start at index 7 to skip the US. prefix
-                        // e.g. US.NY.061 -> 061
-                        format!("{:0>3}", admin2_code[7..].to_string())
+        for field in &dynfmt_fields {
+            match *field {
+                // cityrecord fields
+                "id" => cityrecord_map.insert("id", cityrecord.id.to_string()),
+                "name" => cityrecord_map.insert("name", nameslang.cityname.clone()),
+                "latitude" => cityrecord_map.insert("latitude", cityrecord.latitude.to_string()),
+                "longitude" => cityrecord_map.insert("longitude", cityrecord.longitude.to_string()),
+                "country" => cityrecord_map.insert("country", country.to_owned()),
+                "country_name" => {
+                    cityrecord_map.insert("country_name", nameslang.countryname.clone())
+                },
+                "admin1" => cityrecord_map.insert("admin1", nameslang.admin1name.clone()),
+                "admin2" => cityrecord_map.insert("admin2", nameslang.admin2name.clone()),
+                "capital" => cityrecord_map.insert("capital", capital.to_owned()),
+                "timezone" => cityrecord_map.insert("timezone", cityrecord.timezone.clone()),
+                "population" => {
+                    cityrecord_map.insert("population", cityrecord.population.to_string())
+                },
+
+                // US FIPS fields
+                // set US state FIPS code
+                "us_state_fips_code" => {
+                    let us_state_code = if let Some(admin1_code) =
+                        cityrecord.admin_division.as_ref().map(|ad| ad.code.clone())
+                    {
+                        if let Some(state_fips_code) = admin1_code.strip_prefix("US.") {
+                            // admin1 code is a US state code, the two-letter state code
+                            // is the last two characters of the admin1 code
+                            state_fips_code.to_string()
+                        } else {
+                            // admin1 code is not a US state code
+                            // set to empty string
+                            String::new()
+                        }
                     } else {
-                        // admin2 code is not a US county code
+                        // no admin1 code
                         // set to empty string
                         String::new()
-                    }
+                    };
+                    cityrecord_map.insert(
+                        "us_state_fips_code",
+                        lookup_us_state_fips_code(&us_state_code)
+                            .unwrap_or_default()
+                            .to_string(),
+                    )
                 },
-                None => {
-                    // no admin2 code
-                    // set to empty string
-                    String::new()
-                },
-            }
-        });
 
-        // countryrecord fields
-        cityrecord_map.insert("iso3", countryrecord.info.iso3.clone());
-        cityrecord_map.insert("fips", countryrecord.info.fips.clone());
-        cityrecord_map.insert("area", countryrecord.info.area.to_string());
-        cityrecord_map.insert(
-            "country_population",
-            countryrecord.info.population.to_string(),
-        );
-        cityrecord_map.insert("continent", countryrecord.info.continent.clone());
-        cityrecord_map.insert("tld", countryrecord.info.tld.clone());
-        cityrecord_map.insert("currency_code", countryrecord.info.currency_code.clone());
-        cityrecord_map.insert("currency_name", countryrecord.info.currency_name.clone());
-        cityrecord_map.insert("phone", countryrecord.info.phone.clone());
-        cityrecord_map.insert(
-            "postal_code_format",
-            countryrecord.info.postal_code_format.clone(),
-        );
-        cityrecord_map.insert(
-            "postal_code_regex",
-            countryrecord.info.postal_code_regex.clone(),
-        );
-        cityrecord_map.insert("languages", countryrecord.info.languages.clone());
-        cityrecord_map.insert(
-            "country_geonameid",
-            countryrecord.info.geonameid.to_string(),
-        );
-        cityrecord_map.insert("neighbours", countryrecord.info.neighbours.clone());
-        cityrecord_map.insert(
-            "equivalent_fips_code",
-            countryrecord.info.equivalent_fips_code.clone(),
-        );
+                // set US county FIPS code
+                "us_county_fips_code" => cityrecord_map.insert("us_county_fips_code", {
+                    match cityrecord
+                        .admin2_division
+                        .as_ref()
+                        .map(|ad| ad.code.clone())
+                    {
+                        Some(admin2_code) => {
+                            if admin2_code.starts_with("US.") && admin2_code.len() == 9 {
+                                // admin2 code is a US county code, the three-digit county code
+                                // is the last three characters of the admin2 code
+                                // start at index 7 to skip the US. prefix
+                                // e.g. US.NY.061 -> 061
+                                format!("{:0>3}", admin2_code[7..].to_string())
+                            } else {
+                                // admin2 code is not a US county code
+                                // set to empty string
+                                String::new()
+                            }
+                        },
+                        None => {
+                            // no admin2 code
+                            // set to empty string
+                            String::new()
+                        },
+                    }
+                }),
+
+                // countryrecord fields
+                "iso3" => cityrecord_map.insert("iso3", countryrecord.info.iso3.clone()),
+                "fips" => cityrecord_map.insert("fips", countryrecord.info.fips.clone()),
+                "area" => cityrecord_map.insert("area", countryrecord.info.area.to_string()),
+                "country_population" => cityrecord_map.insert(
+                    "country_population",
+                    countryrecord.info.population.to_string(),
+                ),
+                "continent" => {
+                    cityrecord_map.insert("continent", countryrecord.info.continent.clone())
+                },
+                "tld" => cityrecord_map.insert("tld", countryrecord.info.tld.clone()),
+                "currency_code" => {
+                    cityrecord_map.insert("currency_code", countryrecord.info.currency_code.clone())
+                },
+                "currency_name" => {
+                    cityrecord_map.insert("currency_name", countryrecord.info.currency_name.clone())
+                },
+                "phone" => cityrecord_map.insert("phone", countryrecord.info.phone.clone()),
+                "postal_code_format" => cityrecord_map.insert(
+                    "postal_code_format",
+                    countryrecord.info.postal_code_format.clone(),
+                ),
+                "postal_code_regex" => cityrecord_map.insert(
+                    "postal_code_regex",
+                    countryrecord.info.postal_code_regex.clone(),
+                ),
+                "languages" => {
+                    cityrecord_map.insert("languages", countryrecord.info.languages.clone())
+                },
+                "country_geonameid" => cityrecord_map.insert(
+                    "country_geonameid",
+                    countryrecord.info.geonameid.to_string(),
+                ),
+                "neighbours" => {
+                    cityrecord_map.insert("neighbours", countryrecord.info.neighbours.clone())
+                },
+                "equivalent_fips_code" => cityrecord_map.insert(
+                    "equivalent_fips_code",
+                    countryrecord.info.equivalent_fips_code.clone(),
+                ),
+                _ => return INVALID_DYNFMT.to_string(),
+            };
+        }
 
         if let Ok(formatted) = dynfmt::SimpleCurlyFormat.format(formatstr, cityrecord_map) {
             formatted.to_string()
@@ -1830,44 +1864,73 @@ fn get_countryinfo(
         // i.e. sixteen predefined fields below in curly braces are replaced with values
         // e.g. "Country: {country_name}, Continent: {continent} Currency: {currency_name}
         // ({currency_code})})"
-        let mut countryrecord_map: HashMap<&str, String> = HashMap::with_capacity(17);
-        countryrecord_map.insert("country_name", {
-            countryrecord
-                .names
-                .clone()
-                .unwrap_or_default()
-                .get(lang_lookup)
-                .cloned()
-                .unwrap_or_default()
-        });
-        countryrecord_map.insert("iso3", countryrecord.info.iso3.clone());
-        countryrecord_map.insert("fips", countryrecord.info.fips.clone());
-        countryrecord_map.insert("capital", countryrecord.info.capital.clone());
-        countryrecord_map.insert("area", countryrecord.info.area.to_string());
-        countryrecord_map.insert(
-            "country_population",
-            countryrecord.info.population.to_string(),
-        );
-        countryrecord_map.insert("continent", countryrecord.info.continent.clone());
-        countryrecord_map.insert("tld", countryrecord.info.tld.clone());
-        countryrecord_map.insert("currency_code", countryrecord.info.currency_code.clone());
-        countryrecord_map.insert("currency_name", countryrecord.info.currency_name.clone());
-        countryrecord_map.insert("phone", countryrecord.info.phone.clone());
-        countryrecord_map.insert(
-            "postal_code_format",
-            countryrecord.info.postal_code_format.clone(),
-        );
-        countryrecord_map.insert(
-            "postal_code_regex",
-            countryrecord.info.postal_code_regex.clone(),
-        );
-        countryrecord_map.insert("languages", countryrecord.info.languages.clone());
-        countryrecord_map.insert("geonameid", countryrecord.info.geonameid.to_string());
-        countryrecord_map.insert("neighbours", countryrecord.info.neighbours.clone());
-        countryrecord_map.insert(
-            "equivalent_fips_code",
-            countryrecord.info.equivalent_fips_code.clone(),
-        );
+
+        // first, parse the formatstr to get the fields to initialixe in the hashmap lookup
+        // we do this so we only populate the hashmap with fields that are actually used
+        // in the formatstr.
+        let mut dynfmt_fields = Vec::with_capacity(10); // 10 is a reasonable default to save allocs
+        let formatstr_re: &'static Regex = crate::regex_oncelock!(r"\{(?P<key>\w+)?\}");
+        for format_fields in formatstr_re.captures_iter(formatstr) {
+            dynfmt_fields.push(format_fields.name("key").unwrap().as_str());
+        }
+
+        let mut countryrecord_map: HashMap<&str, String> =
+            HashMap::with_capacity(dynfmt_fields.len());
+
+        for field in &dynfmt_fields {
+            match *field {
+                "country_name" => countryrecord_map.insert("country_name", {
+                    countryrecord
+                        .names
+                        .clone()
+                        .unwrap_or_default()
+                        .get(lang_lookup)
+                        .cloned()
+                        .unwrap_or_default()
+                }),
+                "iso3" => countryrecord_map.insert("iso3", countryrecord.info.iso3.clone()),
+                "fips" => countryrecord_map.insert("fips", countryrecord.info.fips.clone()),
+                "capital" => {
+                    countryrecord_map.insert("capital", countryrecord.info.capital.clone())
+                },
+                "area" => countryrecord_map.insert("area", countryrecord.info.area.to_string()),
+                "country_population" => countryrecord_map.insert(
+                    "country_population",
+                    countryrecord.info.population.to_string(),
+                ),
+                "continent" => {
+                    countryrecord_map.insert("continent", countryrecord.info.continent.clone())
+                },
+                "tld" => countryrecord_map.insert("tld", countryrecord.info.tld.clone()),
+                "currency_code" => countryrecord_map
+                    .insert("currency_code", countryrecord.info.currency_code.clone()),
+                "currency_name" => countryrecord_map
+                    .insert("currency_name", countryrecord.info.currency_name.clone()),
+                "phone" => countryrecord_map.insert("phone", countryrecord.info.phone.clone()),
+                "postal_code_format" => countryrecord_map.insert(
+                    "postal_code_format",
+                    countryrecord.info.postal_code_format.clone(),
+                ),
+                "postal_code_regex" => countryrecord_map.insert(
+                    "postal_code_regex",
+                    countryrecord.info.postal_code_regex.clone(),
+                ),
+                "languages" => {
+                    countryrecord_map.insert("languages", countryrecord.info.languages.clone())
+                },
+                "geonameid" => {
+                    countryrecord_map.insert("geonameid", countryrecord.info.geonameid.to_string())
+                },
+                "neighbours" => {
+                    countryrecord_map.insert("neighbours", countryrecord.info.neighbours.clone())
+                },
+                "equivalent_fips_code" => countryrecord_map.insert(
+                    "equivalent_fips_code",
+                    countryrecord.info.equivalent_fips_code.clone(),
+                ),
+                _ => return Some(INVALID_DYNFMT.to_string()),
+            };
+        }
 
         if let Ok(formatted) = dynfmt::SimpleCurlyFormat.format(formatstr, countryrecord_map) {
             Some(formatted.to_string())
