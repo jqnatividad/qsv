@@ -316,7 +316,7 @@ However, if the latest Rust stable has been released for more than a week and Ho
 QuickSilver's goals, in priority order, are to be:
 * **As Fast as Possible** - To do so, it has frequent releases, an aggressive MSRV policy, takes advantage of CPU features, employs various caching strategies, uses [HTTP/2](https://www.cloudflare.com/learning/performance/http2-vs-http1.1/#:~:text=Multiplexing%3A%20HTTP%2F1.1%20loads%20resources,resource%20blocks%20any%20other%20resource.), and is multi-threaded when possible and it makes sense. See [Performance](docs/PERFORMANCE.md) for more info.
 * **Able to process very large files** - Most qsv commands are streaming, using constant memory, and can process arbitrarily large CSV files. For those commands that require loading the entire CSV into memory, qsv has Out-of-Memory prevention, batch processing strategies and "ext"ernal commands that use the disk to process larger than memory files. See [Memory Management](docs/PERFORMANCE.md#memory-management) for more info.
-* **A Complete Data-wrangling toolkit** - qsv is designed to be feature-rich, with a focus on common data-wrangling tasks. It's architecture allows the easy addition of self-contained commands, which will continue to grow over time. See [Features](docs/FEATURES.md) for more info.
+* **A Complete Data-wrangling toolkit** - qsv is designed to be feature-rich, with a focus on common data-wrangling tasks. It's architecture allows the easy addition of self-contained commands, and the library will only continue to grow over time. See [Features](docs/FEATURES.md) for more info.
 * **Composable/Interoperable** - qsv is designed to be composable, with a focus on interoperability with other common CLI tools like 'awk', 'grep', 'ripgrep', 'sed', etc... It's commands can be combined with other commands via pipes, and it supports other common file formats like JSONL, Parquet, Arrow IPC, Excel, ODS, PostgreSQL, SQLite, etc. See [File Formats](#file-formats) for more info.
 * **As Portable as Possible** - qsv is designed to be portable, with installers on several platforms with an integrated self-update mechanism. In preference order, it supports Linux, macOS and Windows. See [Installation Options](#installation-options) for more info.
 * **As Easy to Use as Possible** - qsv is designed to be easy to use. As easy-to-use that is,
@@ -328,6 +328,7 @@ However, it does not use cryptographically secure random number generators as th
 
 QuickSilver's non-goals are to be:
 * **As Small as Possible** - qsv is designed to be small, but not at the expense of performance, features, composability, portability, usability, security or maintainability. However, we do have a `qsvlite` variant that is ~13% of the size of `qsv` and a `qsvdp` variant that is ~12% of the size of `qsv`. Those variants, however, have reduced functionality.
+Further, several commands are gated behind feature flags, so you can compile qsv with only the features you need.
 * **Multi-lingual** - qsv's messages are English-only. There are no plans to support other languages. However, it does support UTF-8 encoded CSVs, supports alternate delimiters, and its `apply whatlang, thousands and eudex` operations supports different languages and country conventions, so you can use it with non-English CSVs.
 
 
