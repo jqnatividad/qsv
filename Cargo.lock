@@ -3529,7 +3529,7 @@ dependencies = [
  "rayon",
  "regex",
  "smartstring",
- "strum_macros 0.25.2",
+ "strum_macros 0.25.3",
  "version_check",
 ]
 
@@ -3884,7 +3884,7 @@ dependencies = [
  "snap",
  "strsim",
  "strum 0.25.0",
- "strum_macros 0.25.2",
+ "strum_macros 0.25.3",
  "sysinfo",
  "tabwriter",
  "tempfile",
@@ -4868,7 +4868,7 @@ version = "0.25.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "290d54ea6f91c969195bdbcd7442c8c2a2ba87da8bf60a7ee86a235d4bc1e125"
 dependencies = [
- "strum_macros 0.25.2",
+ "strum_macros 0.25.3",
 ]
 
 [[package]]
@@ -4886,9 +4886,9 @@ dependencies = [
 
 [[package]]
 name = "strum_macros"
-version = "0.25.2"
+version = "0.25.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ad8d03b598d3d0fff69bf533ee3ef19b8eeb342729596df84bcc7e1f96ec4059"
+checksum = "23dc1fa9ac9c169a78ba62f0b841814b7abae11bdd047b9c58f893439e309ea0"
 dependencies = [
  "heck",
  "proc-macro2",
