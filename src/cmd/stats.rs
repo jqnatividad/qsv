@@ -44,7 +44,9 @@ The date formats recognized and its sub-variants along with examples can be foun
 https://github.com/jqnatividad/belt/tree/main/dateparser#accepted-date-formats.
 
 Computing statistics on a large file can be made MUCH faster if you create an index for it
-first with 'qsv index' to enable multithreading.
+first with 'qsv index' to enable multithreading. With an index, the file is split into equal
+chunks and each chunk is processed in parallel. The number of chunks is determined by the
+number of logical CPUs detected. You can override this by setting the --jobs option.
 
 This command caches the results in <FILESTEM>.stats.csv and <FILESTEM>.stats.csv.bin
 (e.g., qsv stats nyc311.csv will create nyc311.stats.csv and nyc311.stats.csv.bin).
