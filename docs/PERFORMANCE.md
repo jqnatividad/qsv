@@ -117,7 +117,7 @@ The same is true with the write buffer (default: 256k) with the `QSV_WTR_BUFFER_
 
 ## Multithreading
 
-Several commands support multithreading - `stats`, `frequency`, `schema`, `split` and `tojsonl` (when an index is available); `apply`, `applydp`, `dedup`, `diff`, `extsort`, `joinp`, `snappy`, `sort`, `sqlp`, `to` and `validate` (no index required).
+Several commands support multithreading - `stats`, `frequency`, `schema`, `split` and `tojsonl` (when an index is available); `apply`, `applydp`, `dedup`, `diff`, `excel`, `extsort`, `joinp`, `snappy`, `sort`, `sqlp`, `to` and `validate` (no index required).
 
 qsv will automatically spawn parallel jobs equal to the detected number of logical processors. Should you want to manually override this, use the `--jobs` command-line option or the `QSV_MAX_JOBS` environment variable.
 
@@ -155,13 +155,13 @@ The qsv binary was built to target the aarch64-apple-darwin platform (Apple Sili
 ## Caching
 qsv employs several caching strategies to improve performance:
 
-* qsv has large read and write buffers to minimize disk I/O. The default read buffer size is 16k and the default write buffer size is 64k. These can be fine-tuned with the `QSV_RDR_BUFFER_CAPACITY` and `QSV_WTR_BUFFER_CAPACITY` environment variables.
+* qsv has large read and write buffers to minimize disk I/O. The default read buffer size is 128k and the default write buffer size is 256k. These can be fine-tuned with the `QSV_RDR_BUFFER_CAPACITY` and `QSV_WTR_BUFFER_CAPACITY` environment variables.
 * The `stats` command caches its results in both CSV and binary formats. It does this to avoid re-computing the same statistics when the same input file/parameters are used, but also, as statistics are used in several other commands (currently - `schema` and `tojsonl`, with [more commands using cached statistics in the future](https://github.com/jqnatividad/qsv/issues/898)).
-* The `apply geocode` command [memoizes](https://en.wikipedia.org/wiki/Memoization) otherwise expensive geocoding operations and will report its cache hit rate. `apply geocode` memoization, however, is not persistent across sessions.
-* The `fetch` and `fetchpost` commands also memoizes expensive REST API calls with its optional Redis support. It effectively has a persistent cache as the default time-to-live (TTL) before a Redis cache entry is expired is 28 days and Redis entries are persisted across restarts. Redis cache settings can be fine-tuned with the `QSV_REDIS_CONNSTR`, `QSV_REDIS_TTL_SECONDS`, `QSV_REDIS_TTL_REFRESH` and `QSV_FP_REDIS_CONNSTR` environment variables.
+* The `geocode` command [memoizes](https://en.wikipedia.org/wiki/Memoization) otherwise expensive geocoding operations and will report its cache hit rate. `geocode` memoization, however, is not persistent across sessions.
+* The `fetch` and `fetchpost` commands also memoizes expensive REST API calls. When the `--redis` option is enabled, it effectively has a persistent cache as the default time-to-live (TTL) before a Redis cache entry is expired is 28 days and Redis entries are persisted across restarts. Redis cache settings can be fine-tuned with the `QSV_REDIS_CONNSTR`, `QSV_REDIS_TTL_SECONDS`, `QSV_REDIS_TTL_REFRESH` and `QSV_FP_REDIS_CONNSTR` environment variables.
 * The `luau` command caches lookup tables on disk using the QSV_CACHE_DIR environment variable and the `--cache-dir` command-line option. The default cache directory is `~/.qsv-cache`. The QSV_CACHE_DIR environment variable overrides the `--cache-dir` command-line option.
 
-## UTF-8 Encoding for Performance
+## SIMD-accelerated UTF-8 Validation for Performance
 [Rust strings are utf-8 encoded](https://doc.rust-lang.org/std/string/struct.String.html). As a result, qsv **REQUIRES** UTF-8 encoded files.
 
 Still, users will attempt to use non UTF-8 encoded files, and for the most part, they will still work! This is because most qsv commands use [ByteRecords](https://docs.rs/csv/latest/csv/struct.ByteRecord.html), where qsv manipulates raw bytes and doesn't care about the encoding.
@@ -173,7 +173,7 @@ As UTF-8 is the de facto encoding standard, this shouldn't be a problem most of 
 ## Nightly Release Builds
 Pre-built binaries compiled using Rust Nightly/Unstable are also [available for download](https://github.com/jqnatividad/qsv/releases/latest). These binaries are optimized for size and speed:
 
-* compiled with the last known Rust nightly/unstable that passes all 1,000+ tests.
+* compiled with the last known Rust nightly/unstable that passes all 1,200+ tests.
 * stdlib is compiled from source, instead of using the pre-built stdlib. This ensures stdlib is compiled with all of qsv's release settings
   (link time optimization, opt-level, codegen-units, panic=abort, etc.), presenting more opportunities for Rust/LLVM to optimize the generated code.
   This is why we only have nightly release builds for select platforms (the platform of GitHub's action runners), as we need access to the "native hardware"
