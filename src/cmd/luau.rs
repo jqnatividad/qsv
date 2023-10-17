@@ -1770,7 +1770,7 @@ fn setup_helpers(
 
         const NEWFILE_FLAG: &str = "_NEWFILE!";
 
-        let sanitized_filename = sanitize(&filename);
+        let sanitized_filename = sanitize(filename);
 
         let newfile_flag = data == NEWFILE_FLAG;
 
