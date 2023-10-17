@@ -17,18 +17,25 @@ env:
 jobs:
   build:
 
-    runs-on: macos-12
+    runs-on: macos-latest
 
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v4.7.1
       with:
         python-version: '3.11'
-    - name: Update Rust
-      run: rustup update
+    - name: Installing Rust toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        profile: minimal
+        target: x86_64-apple-darwin
+        override: true
     - name: Setup Rust-cache
       uses: Swatinem/rust-cache@v2
       with:
-        key: qsv-macoscache
+        key: qsv-macoslatestcache
+        # To only cache runs from `master`:
+        save-if: ${{ github.ref == 'refs/heads/master' }}
     - name: Run tests
       run: cargo test --verbose --locked --features=apply,fetch,foreach,generate,geocode,luau,python,polars,to,feature_capable
