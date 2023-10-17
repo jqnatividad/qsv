@@ -158,7 +158,7 @@ impl Args {
         let mut rdr;
         let mut header: &csv::ByteRecord;
         let mut columns_of_this_file = IndexMap::with_capacity(num_columns_global);
-        let mut row: csv::ByteRecord;
+        let mut row: csv::ByteRecord = csv::ByteRecord::new();
 
         for conf in self.configs()? {
             if conf.is_stdin() {
@@ -195,8 +195,7 @@ impl Args {
                 .to_string_lossy()
                 .to_string();
 
-            for current_row in rdr.byte_records() {
-                row = current_row?;
+            while rdr.read_byte_record(&mut row)? {
                 for (col_idx, c) in columns_global.iter().enumerate() {
                     if let Some(idx) = columns_of_this_file.get(c) {
                         if let Some(d) = row.get(*idx) {
