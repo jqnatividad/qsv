@@ -176,7 +176,7 @@ reqwest = { version = "0.11", features = [
 ], default-features = false }
 rust_decimal = "1.32"
 ryu = "1"
-sanitise-file-name = { version = "1.0", optional = true }
+sanitize-filename = { version = "0.5", optional = true }
 self_update = { version = "0.38", features = [
     "archive-zip",
     "compression-zip-deflate",
@@ -280,7 +280,7 @@ geocode = [
     "geosuggest-utils",
     "simple-home-dir",
 ]
-luau = ["mlua", "sanitise-file-name", "simple-home-dir"]
+luau = ["mlua", "sanitize-filename", "simple-home-dir"]
 python = ["pyo3"]
 to = ["csvs_convert"]
 to_parquet = ["csvs_convert/parquet"]

@@ -1766,17 +1766,17 @@ fn setup_helpers(
     let qsv_writefile = luau.create_function(move |_, (filename, data): (String, String)| {
         use std::fs::OpenOptions;
 
-        use sanitise_file_name::sanitise;
+        use sanitize_filename::sanitize;
 
         const NEWFILE_FLAG: &str = "_NEWFILE!";
 
-        let sanitised_filename = sanitise(&filename);
+        let sanitized_filename = sanitize(&filename);
 
         let newfile_flag = data == NEWFILE_FLAG;
 
         let mut file = if newfile_flag {
             // create a new file. If the file already exists, overwrite it.
-            std::fs::File::create(sanitised_filename.clone()).map_err(|e| {
+            std::fs::File::create(sanitized_filename.clone()).map_err(|e| {
                 mlua::Error::RuntimeError(format!(
                     "qsv_writefile() - Error creating a new file: {e}"
                 ))
@@ -1787,7 +1787,7 @@ fn setup_helpers(
                 .write(true)
                 .create(true)
                 .append(true)
-                .open(sanitised_filename.clone())
+                .open(sanitized_filename.clone())
                 .map_err(|e| {
                     mlua::Error::RuntimeError(format!(
                         "qsv_writefile() - Error opening existing file: {e}"
@@ -1795,7 +1795,7 @@ fn setup_helpers(
                 })?
         };
         if newfile_flag {
-            log::info!("qsv_writefile() - created file: {sanitised_filename}");
+            log::info!("qsv_writefile() - created file: {sanitized_filename}");
         } else {
             let data_as_bytes = data.as_bytes();
             file.write_all(data_as_bytes).map_err(|e| {
@@ -1804,14 +1804,14 @@ fn setup_helpers(
                 ))
             })?;
             log::info!(
-                "qsv_writefile() - appending {} bytes to file: {sanitised_filename}",
+                "qsv_writefile() - appending {} bytes to file: {sanitized_filename}",
                 data_as_bytes.len()
             );
         }
 
         file.flush()?;
 
-        Ok(sanitised_filename)
+        Ok(sanitized_filename)
     })?;
     luau.globals().set("qsv_writefile", qsv_writefile)?;
 
