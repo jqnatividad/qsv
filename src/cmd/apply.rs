@@ -3,11 +3,14 @@ Apply a series of transformation functions to given CSV column/s. This can be us
 perform typical data-wrangling tasks and/or to harmonize some values, etc.
 
 It has five subcommands:
- * operations - 36 string, format, currency, regex & NLP operators.
+ * operations   - 36 string, format, currency, regex & NLP operators.
  * emptyreplace - replace empty cells with <--replacement> string.
- * datefmt - Formats a recognized date column to a specified format using <--formatstr>.
- * dynfmt - Dynamically constructs a new column from other columns using the <--formatstr> template.
- * calcconv - parse and evaluate math expressions, with support for units and conversions.
+ * datefmt      - Formats a recognized date column (19 formats supported) to
+                  a specified format using <--formatstr>.
+ * dynfmt       - Dynamically constructs a new column from other columns using
+                  the <--formatstr> template.
+ * calcconv     - parse and evaluate math expressions, with support for units
+                  and conversions.
 
 OPERATIONS (multi-column capable)
 Multiple operations can be applied, with the comma-delimited operation series
