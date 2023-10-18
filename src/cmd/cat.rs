@@ -158,7 +158,7 @@ impl Args {
         let mut rdr;
         let mut header: &csv::ByteRecord;
         let mut columns_of_this_file = IndexMap::with_capacity(num_columns_global);
-        let mut row: csv::ByteRecord = csv::ByteRecord::new();
+        let mut row: csv::ByteRecord = csv::ByteRecord::with_capacity(500, num_columns_global);
 
         for conf in self.configs()? {
             if conf.is_stdin() {
