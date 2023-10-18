@@ -193,7 +193,7 @@ simple-home-dir = { version = "0.2", features = [
 smartstring = { version = "1", optional = true }
 snap = "1"
 strsim = { version = "0.10", optional = true }
-strum = "0.25"
+strum = { version = "0.25", features = ["phf"] }
 strum_macros = "0.25"
 sysinfo = "0.29"
 tabwriter = "1.3"
