@@ -84,6 +84,10 @@ sniff options:
                              (Unsigned, Signed => Integer, Text => String, everything else the same)
     --no-infer               Do not infer the schema. Only return the file's mime type, size and
                              last modified date. Use this to use sniff as a general mime type detector.
+                             Note that CSV and TSV files will only be detected as mime type plain/text
+                             in this mode.
+    --just-mime              Only return the file's mime type. Use this to use sniff as a general
+                             mime type detector. Synonym for --no-infer.
     --quick                  When sniffing a non-CSV remote file, only download the first chunk of the file
                              before attempting to detect the mime type. This is faster but less accurate as
                              some mime types cannot be detected with just the first downloaded chunk.
@@ -139,6 +143,7 @@ struct Args {
     flag_user_agent:     Option<String>,
     flag_stats_types:    bool,
     flag_no_infer:       bool,
+    flag_just_mime:      bool,
     flag_quick:          bool,
     flag_harvest_mode:   bool,
 }
@@ -712,6 +717,10 @@ async fn sniff_main(mut args: Args) -> CliResult<()> {
         args.flag_json = true;
         args.flag_user_agent =
             Some("CKAN-harvest/$QSV_VERSION ($QSV_TARGET; $QSV_BIN_NAME)".to_string());
+    }
+
+    if args.flag_just_mime {
+        args.flag_no_infer = true;
     }
 
     let mut sample_size = args.flag_sample;
