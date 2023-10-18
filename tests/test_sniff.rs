@@ -101,6 +101,35 @@ fn sniff_notcsv() {
 }
 
 #[test]
+fn sniff_justmime() {
+    let wrk = Workdir::new("sniff_justmime");
+
+    let test_file = wrk.load_test_file("excel-xls.xls");
+
+    let mut cmd = wrk.command("sniff");
+    cmd.arg("--just-mime").arg(test_file);
+
+    let got: String = wrk.stdout(&mut cmd);
+
+    let expected = "Detected mime type: application/vnd.ms-excel";
+    assert!(got.starts_with(expected));
+}
+
+#[test]
+fn sniff_justmime_remote() {
+    let wrk = Workdir::new("sniff_justmime_remote");
+
+    let mut cmd = wrk.command("sniff");
+    cmd.arg("--just-mime")
+        .arg("https://github.com/jqnatividad/qsv/raw/master/resources/test/excel-xls.xls");
+
+    let got: String = wrk.stdout(&mut cmd);
+
+    let expected = "Detected mime type: application/vnd.ms-excel";
+    assert!(got.starts_with(expected));
+}
+
+#[test]
 fn sniff_url_snappy() {
     let wrk = Workdir::new("sniff_url_snappy");
 
