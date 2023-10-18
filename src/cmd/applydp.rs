@@ -253,7 +253,8 @@ use crate::{
     util, CliResult,
 };
 
-#[derive(EnumString)]
+#[derive(Clone, EnumString)]
+#[strum(use_phf)]
 #[strum(ascii_case_insensitive)]
 #[allow(non_camel_case_types)]
 enum Operations {
