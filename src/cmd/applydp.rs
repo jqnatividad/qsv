@@ -92,24 +92,24 @@ Non-empty cells are not modified. See the `fill` command for more complex empty 
 Examples:
 Replace empty cells in file.csv Measurement column with 'None'.
 
-$ qsv apply emptyreplace Measurement --replacement None file.csv
+$ qsv applydp emptyreplace Measurement --replacement None file.csv
 
 Replace empty cells in file.csv Measurement column with 'Unknown Measurement'.
 
-$ qsv apply emptyreplace Measurement --replacement 'Unknown Measurement' file.csv
+$ qsv applydp emptyreplace Measurement --replacement 'Unknown Measurement' file.csv
 
 Replace empty cells in file.csv M1,M2 and M3 columns with 'None'.
 
-$ qsv apply emptyreplace M1,M2,M3 --replacement None file.csv
+$ qsv applydp emptyreplace M1,M2,M3 --replacement None file.csv
 
 Replace all empty cells in file.csv for columns that start with 'Measurement' with 'None'.
 
-$ qsv apply emptyreplace '/^Measurement/' --replacement None file.csv
+$ qsv applydp emptyreplace '/^Measurement/' --replacement None file.csv
 
 Replace all empty cells in file.csv for columns that start with 'observation'
 case insensitive with 'None'.
 
-$ qsv apply emptyreplace --replacement None '/(?i)^observation/' file.csv
+$ qsv applydp emptyreplace --replacement None '/(?i)^observation/' file.csv
 
 DATEFMT (multi-column capable)
 Formats a recognized date column to a specified format using <--formatstr>. 
@@ -132,7 +132,7 @@ Format multiple date columns in file.csv to ISO 8601/RFC 3339 format:
 Format all columns that end with "_date" case-insensitive in file.csv to
 ISO 8601/RFC 3339 format:
 
-  $ qsv apply datefmt '\(?i)_date$\' file.csv
+  $ qsv applydp datefmt '\(?i)_date$\' file.csv
 
 Format dates in OpenDate column using '%Y-%m-%d' format:
 
@@ -562,7 +562,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     Ok(wtr.flush()?)
 }
 
-// validate apply operations for required options
+// validate applydp operations for required options
 // and prepare operations enum vec
 fn validate_operations(
     operations: &Vec<&str>,
