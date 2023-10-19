@@ -4,10 +4,13 @@ It "applies" a series of transformation functions to given CSV column/s. This ca
 perform typical data-wrangling tasks and/or to harmonize some values, etc.
 
 It has four subcommands:
- * operations - 18 string, format & regex operators.
- * emptyreplace - replace empty cells with <--replacement> string.
- * datefmt - Formats a recognized date column to a specified format using <--formatstr>.
- * dynfmt - Dynamically constructs a new column from other columns using the <--formatstr> template.
+ 1. operations*   - 18 string, format & regex operators.
+ 2. emptyreplace* - replace empty cells with <--replacement> string.
+ 3. datefmt*      - Formats recognized date/s (19 formats recognized) to
+                    a specified date format using <--formatstr>.
+ 4. dynfmt        - Dynamically constructs a new column from other columns using
+                    the <--formatstr> template.
+    * subcommand is multi-column capable.
 
 OPERATIONS (multi-column capable)
 Multiple operations can be applied, with the comma-delimited operation series
@@ -89,14 +92,22 @@ Non-empty cells are not modified. See the `fill` command for more complex empty 
 Examples:
 Replace empty cells in file.csv Measurement column with 'None'.
 
-$ qsv applydp emptyreplace Measurement --replacement None file.csv
+$ qsv apply emptyreplace Measurement --replacement None file.csv
 
 Replace empty cells in file.csv Measurement column with 'Unknown Measurement'.
 
-$ qsv applydp emptyreplace --replacement 'Unknown Measurement' file.csv
+$ qsv apply emptyreplace Measurement --replacement 'Unknown Measurement' file.csv
 
-Replace all empty cells in file.csv for columns that start with 
-'observation' case insensitive with 'None'.
+Replace empty cells in file.csv M1,M2 and M3 columns with 'None'.
+
+$ qsv apply emptyreplace M1,M2,M3 --replacement None file.csv
+
+Replace all empty cells in file.csv for columns that start with 'Measurement' with 'None'.
+
+$ qsv apply emptyreplace '/^Measurement/' --replacement None file.csv
+
+Replace all empty cells in file.csv for columns that start with 'observation'
+case insensitive with 'None'.
 
 $ qsv apply emptyreplace --replacement None '/(?i)^observation/' file.csv
 
@@ -108,8 +119,6 @@ See https://docs.rs/chrono/latest/chrono/format/strftime/ for
 accepted date formats for --formatstr.
 Defaults to ISO 8601/RFC 3339 format when --formatstr is not specified.
 ( "%Y-%m-%dT%H:%M:%S%z" - e.g. 2001-07-08T00:34:60.026490+09:30 )
-
-Datefmt also supports multi-column formatting.
 
 Examples:
 Format dates in Open Date column to ISO 8601/RFC 3339 format:
