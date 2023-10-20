@@ -335,6 +335,8 @@ geocode options:
                                   cities15000.zip - population > 15000; ~26k cities
                                 Note that the more cities are included, the larger the local index file will be,
                                 lookup times will be slower, and the search results will be different.
+                                For convenience, if this is set to 500, 1000, 5000 or 15000, it will be 
+                                converted to a geonames cities URL.
                                 [default: https://download.geonames.org/export/dump/cities15000.zip]
     --force                     Force update the Geonames cities index. If not set, qsv will check if there
                                 are updates available at Geonames.org before updating the index.
@@ -596,7 +598,7 @@ fn replace_column_value(
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
-    let args: Args = util::get_args(USAGE, argv)?;
+    let mut args: Args = util::get_args(USAGE, argv)?;
 
     if args.flag_new_column.is_some() && args.flag_rename.is_some() {
         return fail_incorrectusage_clierror!(
@@ -608,6 +610,21 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         return fail_incorrectusage_clierror!(
             "Cannot use --new-column with the '%dyncols:' --formatstr option."
         );
+    }
+
+    // if args.flag_cities_url is a number, assume its a geonames cities file ID
+    // and convert it to a URL
+    if args.flag_cities_url.parse::<u32>().is_ok() {
+        let cities_id = args.flag_cities_url;
+        // ensure its a valid cities_id - 500, 1000, 5000 or 15000
+        if cities_id != "500" && cities_id != "1000" && cities_id != "5000" && cities_id != "15000"
+        {
+            return fail_incorrectusage_clierror!(
+                "Invalid --cities-url: {cities_id} - must be one of 500, 1000, 5000 or 15000"
+            );
+        }
+        args.flag_cities_url =
+            format!("https://download.geonames.org/export/dump/cities{cities_id}.zip");
     }
 
     if let Err(err) = Url::parse(&args.flag_cities_url) {
