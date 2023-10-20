@@ -372,6 +372,7 @@ use geosuggest_core::{
 use geosuggest_utils::{IndexUpdater, IndexUpdaterSettings, SourceItem};
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::info;
+use phf::phf_map;
 use rayon::{
     iter::{IndexedParallelIterator, ParallelIterator},
     prelude::IntoParallelRefIterator,
@@ -454,70 +455,69 @@ static DEFAULT_ADMIN1_CODES_URL: &str =
     "https://download.geonames.org/export/dump/admin1CodesASCII.txt";
 static DEFAULT_ADMIN2_CODES_URL: &str = "https://download.geonames.org/export/dump/admin2Codes.txt";
 
-// ensure the state is sorted alphabetically
-// as we use binary_search to lookup the state FIPS code
-static US_STATES_FIPS_CODES: &[(&str, &str)] = &[
-    ("AK", "02"),
-    ("AL", "01"),
-    ("AR", "05"),
-    ("AZ", "04"),
-    ("CA", "06"),
-    ("CO", "08"),
-    ("CT", "09"),
-    ("DC", "11"),
-    ("DE", "10"),
-    ("FL", "12"),
-    ("GA", "13"),
-    ("HI", "15"),
-    ("IA", "19"),
-    ("ID", "16"),
-    ("IL", "17"),
-    ("IN", "18"),
-    ("KS", "20"),
-    ("KY", "21"),
-    ("LA", "22"),
-    ("MA", "25"),
-    ("MD", "24"),
-    ("ME", "23"),
-    ("MI", "26"),
-    ("MN", "27"),
-    ("MO", "29"),
-    ("MS", "28"),
-    ("MT", "30"),
-    ("NC", "37"),
-    ("ND", "38"),
-    ("NE", "31"),
-    ("NH", "33"),
-    ("NJ", "34"),
-    ("NM", "35"),
-    ("NV", "32"),
-    ("NY", "36"),
-    ("OH", "39"),
-    ("OK", "40"),
-    ("OR", "41"),
-    ("PA", "42"),
-    ("RI", "44"),
-    ("SC", "45"),
-    ("SD", "46"),
-    ("TN", "47"),
-    ("TX", "48"),
-    ("UT", "49"),
-    ("VT", "50"),
-    ("VA", "51"),
-    ("WA", "53"),
-    ("WI", "55"),
-    ("WV", "54"),
-    ("WY", "56"),
+// we use a compile time static perfect hash map for US state FIPS codes
+static US_STATES_FIPS_CODES: phf::Map<&'static str, &'static str> = phf_map! {
+    "AK" => "02",
+    "AL" => "01",
+    "AR" => "05",
+    "AZ" => "04",
+    "CA" => "06",
+    "CO" => "08",
+    "CT" => "09",
+    "DC" => "11",
+    "DE" => "10",
+    "FL" => "12",
+    "GA" => "13",
+    "HI" => "15",
+    "IA" => "19",
+    "ID" => "16",
+    "IL" => "17",
+    "IN" => "18",
+    "KS" => "20",
+    "KY" => "21",
+    "LA" => "22",
+    "MA" => "25",
+    "MD" => "24",
+    "ME" => "23",
+    "MI" => "26",
+    "MN" => "27",
+    "MO" => "29",
+    "MS" => "28",
+    "MT" => "30",
+    "NC" => "37",
+    "ND" => "38",
+    "NE" => "31",
+    "NH" => "33",
+    "NJ" => "34",
+    "NM" => "35",
+    "NV" => "32",
+    "NY" => "36",
+    "OH" => "39",
+    "OK" => "40",
+    "OR" => "41",
+    "PA" => "42",
+    "RI" => "44",
+    "SC" => "45",
+    "SD" => "46",
+    "TN" => "47",
+    "TX" => "48",
+    "UT" => "49",
+    "VT" => "50",
+    "VA" => "51",
+    "WA" => "53",
+    "WI" => "55",
+    "WV" => "54",
+    "WY" => "56",
     // the following are territories
     // and are not included in the default index
     // leaving them here for reference
-    // ("AS", "60"),
-    // ("GU", "66"),
-    // ("MP", "69"),
-    // ("PR", "72"),
-    // ("UM", "74"),
-    // ("VI", "78"),
-];
+    // "AS" => "60",
+    // "GU" => "66",
+    // "MP" => "69",
+    // "PR" => "72",
+    // "UM" => "74",
+    // "VI" => "78",
+};
 
 // max number of entries in LRU cache
 static CACHE_SIZE: usize = 2_000_000;
@@ -1262,6 +1262,14 @@ async fn geocode_main(args: Args) -> CliResult<()> {
 
 /// check if index_file exists and ends with a .bincode extension
 fn check_index_file(index_file: &String) -> CliResult<()> {
+    // check if index_file is a u16 with the values 500, 1000, 5000 or 15000
+    // if it is, return OK
+    if let Ok(i) = index_file.parse::<u16>() {
+        if i == 500 || i == 1000 || i == 5000 || i == 15000 {
+            return Ok(());
+        }
+    }
+
     if !index_file.ends_with(".bincode") {
         return fail_incorrectusage_clierror!(
             "Alternate Geonames index file {index_file} does not have a .bincode extension."
@@ -2056,10 +2064,6 @@ fn get_cityrecord_name_in_lang(cityrecord: &CitiesRecord, lang_lookup: &str) -> 
 }
 
 #[inline]
-fn lookup_us_state_fips_code(state: &str) -> Option<&str> {
-    if let Ok(i) = US_STATES_FIPS_CODES.binary_search_by_key(&state, |&(abbrev, _)| abbrev) {
-        Some(US_STATES_FIPS_CODES[i].1)
-    } else {
-        None
-    }
+fn lookup_us_state_fips_code(state: &str) -> Option<&'static str> {
+    US_STATES_FIPS_CODES.get(state).copied()
 }
