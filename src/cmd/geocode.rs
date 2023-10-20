@@ -154,7 +154,7 @@ qsv geocode countryinfo [options] <column> [<input>]
 qsv geocode countryinfonow [options] <location>
 qsv geocode index-load <index-file>
 qsv geocode index-check
-qsv geocode index-update [--languages=<lang>] [--cities-url=<url>] [--force]
+qsv geocode index-update [--languages=<lang>] [--cities-url=<url>] [--force] [--timeout=<seconds>]
 qsv geocode index-reset
 qsv geocode --help
 
@@ -316,7 +316,7 @@ geocode options:
     -b, --batch <size>          The number of rows per batch to load into memory, before running in parallel.
                                 [default: 50000]
     --timeout <seconds>         Timeout for downloading Geonames cities index.
-                                [default: 60]
+                                [default: 120]
     --cache-dir <dir>           The directory to use for caching the Geonames cities index.
                                 If the directory does not exist, qsv will attempt to create it.
                                 If the QSV_CACHE_DIR envvar is set, it will be used instead.
@@ -836,7 +836,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                     storage
                         .dump_to(geocode_index_file.clone(), &engine)
                         .map_err(|e| format!("{e}"))?;
-                    winfo!("Geonames index built: {geocode_index_file}");
+                    winfo!("Geonames index successfully rebuilt: {geocode_index_file}");
                 } else {
                     winfo!("Checking main Geonames website for updates...");
 
@@ -847,7 +847,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                         );
                         let engine = updater.build().await?;
                         let _ = storage.dump_to(geocode_index_file.clone(), &engine);
-                        winfo!("Updates applied: {geocode_index_file}");
+                        winfo!("Updates successfully applied: {geocode_index_file}");
                     } else {
                         winfo!("Skipping update. Geonames index is up-to-date.");
                     }
@@ -866,7 +866,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                     if engine.metadata.is_some() {
                         let _ = storage.dump_to(geocode_index_file.clone(), &engine);
                         winfo!(
-                            "Valid Geonames index file {index_file} copied to \
+                            "Valid Geonames index file {index_file} successfully copied to \
                              {geocode_index_file}. It will be used from now on or until you \
                              reset/rebuild it.",
                         );
@@ -885,8 +885,9 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                 // reset geocode index by deleting the current local copy
                 // and downloading the default geocode index for the current qsv version
                 winfo!("Resetting Geonames index to default: {geocode_index_file}...");
-                let _ = load_engine(geocode_index_file.clone().into(), &progress).await?;
-                winfo!("Default Geonames index file reset to {QSV_VERSION} release.");
+                fs::remove_file(&geocode_index_file)?;
+                load_engine(geocode_index_file.clone().into(), &progress).await?;
+                winfo!("Default Geonames index file successfully reset to {QSV_VERSION} release.");
             },
             // index_cmd is true, so we should never get a non-index subcommand
             _ => unreachable!(),
@@ -1266,7 +1267,7 @@ async fn load_engine(geocode_index_file: PathBuf, progressbar: &ProgressBar) -> 
             index_file.display()
         ));
     } else {
-        // initial load, download index file from qsv releases
+        // initial load or index-reset, download index file from qsv releases
         progressbar.println(format!(
             "Downloading default Geonames index for qsv {QSV_VERSION} release..."
         ));
