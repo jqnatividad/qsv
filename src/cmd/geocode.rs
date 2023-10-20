@@ -127,9 +127,13 @@ It has four operations:
  * update - updates the local Geonames index with the latest changes from the Geonames website.
             use this command judiciously as it downloads about ~200mb of data from Geonames
             and rebuilds the index from scratch using the --languages option.
- * reset  - resets the local Geonames index to the default prebuilt, English language Geonames
-            cities index - downloading it from the qsv GitHub repo for that release.
+            If you don't need a language other than English, use the index-load subcommand instead
+            as it's faster and will not download any data from Geonames.
+ * reset  - resets the local Geonames index to the default prebuilt, English-only Geonames cities
+            index (cities15000) - downloading it from the qsv GitHub repo for the current qsv version.
  * load   - load a Geonames cities index from a file, making it the default index going forward.
+            If set to 500, 1000, 5000 or 15000, it will download the corresponding English-only
+            Geonames index bincode file from the qsv GitHub repo for the current qsv version.
 
 Examples:
 Update the Geonames cities index with the latest changes.
@@ -174,7 +178,9 @@ geocode arguments:
                                 For countryinfonow, it must be a ISO 3166-1 alpha-2 code.
                                 
     <index-file>                The alternate geonames index file to use. It must be a .bincode file.
-                                Only used by the index-load subcommand.
+                                For convenience, if this is set to 500, 1000, 5000 or 15000, it will download
+                                the corresponding English-only Geonames index bincode file from the qsv GitHub repo
+                                for the current qsv version and use it. Only used by the index-load subcommand.
 
 geocode options:
     -c, --new-column <name>     Put the transformed values in a new column instead. Not valid when
@@ -612,9 +618,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         );
     }
 
-    // if args.flag_cities_url is a number, assume its a geonames cities file ID
-    // and convert it to a URL
-    if args.flag_cities_url.parse::<u32>().is_ok() {
+    // if args.flag_cities_url is a number and is 500, 1000, 5000 or 15000,
+    // its a geonames cities file ID and convert it to a URL
+    // we do this as a convenience shortcut for users
+    if args.flag_cities_url.parse::<u16>().is_ok() {
         let cities_id = args.flag_cities_url;
         // ensure its a valid cities_id - 500, 1000, 5000 or 15000
         if cities_id != "500" && cities_id != "1000" && cities_id != "5000" && cities_id != "15000"
@@ -1273,11 +1280,55 @@ fn check_index_file(index_file: &String) -> CliResult<()> {
 
 /// load_engine loads the Geonames index file into memory
 /// if the index file does not exist, it will download the default index file
-/// from the qsv GitHub repo
+/// from the qsv GitHub repo. For covenience, if geocode_index_file is 500, 1000, 5000 or 15000,
+/// it will download the desired index file from the qsv GitHub repo.
 async fn load_engine(geocode_index_file: PathBuf, progressbar: &ProgressBar) -> CliResult<Engine> {
+    // default cities index file
+    static DEFAULT_GEONAMES_CITIES_INDEX: u16 = 15000;
+
     let index_file = std::path::Path::new(&geocode_index_file);
 
-    if index_file.exists() {
+    // check if geocode_index_file is a 500, 1000, 5000 or 15000 record index file
+    // by looking at the filestem, and checking if its a number
+    // if it is, for convenience, we download the desired index file from the qsv GitHub repo
+    let geocode_index_file_stem = geocode_index_file
+        .file_stem()
+        .unwrap()
+        .to_string_lossy()
+        .to_string();
+
+    let download_url = format!(
+        "https://github.com/jqnatividad/qsv/releases/download/{QSV_VERSION}/{DEFAULT_GEOCODE_INDEX_FILENAME}.cities"
+    );
+
+    if geocode_index_file_stem.parse::<u16>().is_ok() {
+        // its a number, check if its a 500, 1000, 5000 or 15000 record index file
+        if geocode_index_file_stem != "500"
+            && geocode_index_file_stem != "1000"
+            && geocode_index_file_stem != "5000"
+            && geocode_index_file_stem != "15000"
+        {
+            // we only do the convenience download for 500, 1000, 5000 or 15000 record index files
+            return fail_incorrectusage_clierror!(
+                "Only 500, 1000, 5000 or 15000 record index files are supported."
+            );
+        }
+
+        progressbar.println(format!(
+            "Alternate Geonames index file is a 500, 1000, 5000 or 15000 record index file. \
+             Downloading {geocode_index_file_stem} Geonames index for qsv {QSV_VERSION} release..."
+        ));
+
+        util::download_file(
+            &format!("{download_url}{geocode_index_file_stem}"),
+            geocode_index_file.clone(),
+            !progressbar.is_hidden(),
+            None,
+            None,
+            None,
+        )
+        .await?;
+    } else if index_file.exists() {
         // load existing local index
         progressbar.println(format!(
             "Loading existing Geonames index from {}",
@@ -1290,9 +1341,7 @@ async fn load_engine(geocode_index_file: PathBuf, progressbar: &ProgressBar) -> 
         ));
 
         util::download_file(
-            &format!(
-                "https://github.com/jqnatividad/qsv/releases/download/{QSV_VERSION}/{DEFAULT_GEOCODE_INDEX_FILENAME}"
-            ),
+            &format!("{download_url}{DEFAULT_GEONAMES_CITIES_INDEX}"),
             geocode_index_file.clone(),
             !progressbar.is_hidden(),
             None,
