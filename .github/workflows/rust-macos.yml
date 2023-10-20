@@ -31,11 +31,11 @@ jobs:
         profile: minimal
         target: x86_64-apple-darwin
         override: true
-    - name: Setup Rust-cache
-      uses: Swatinem/rust-cache@v2
-      with:
-        key: qsv-macoslatestcache
-        # To only cache runs from `master`:
-        save-if: ${{ github.ref == 'refs/heads/master' }}
+    # - name: Setup Rust-cache
+    #   uses: Swatinem/rust-cache@v2
+    #   with:
+    #     key: qsv-macoslatestcache
+    #     # To only cache runs from `master`:
+    #     save-if: ${{ github.ref == 'refs/heads/master' }}
     - name: Run tests
       run: cargo test --verbose --locked --features=apply,fetch,foreach,generate,geocode,luau,python,polars,to,feature_capable
