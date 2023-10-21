@@ -157,7 +157,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             jobs -= 1; // save one thread for other tasks
         }
 
-        compress(input_reader, output_writer, jobs)?;
+        compress(input_reader, output_writer, jobs, gzp::BUFSIZE * 2)?;
         let compressed_bytes = if let Some(path) = &args.flag_output {
             fs::metadata(path)?.len()
         } else {
@@ -238,10 +238,16 @@ pub fn compress<R: Read, W: Write + Send + 'static>(
     mut src: R,
     dst: W,
     jobs: usize,
+    buf_size: usize,
 ) -> CliResult<()> {
     let mut writer = ParCompressBuilder::<Snap>::new()
         .num_threads(jobs)?
-        .buffer_size(gzp::BUFSIZE)?
+        // the buffer size must be at least gzp::DICT_SIZE
+        .buffer_size(if buf_size < gzp::DICT_SIZE {
+            gzp::DICT_SIZE
+        } else {
+            buf_size
+        })?
         .pin_threads(Some(0))
         .from_writer(dst);
     io::copy(&mut src, &mut writer)?;
