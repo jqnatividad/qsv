@@ -165,7 +165,7 @@ use std::{
     env,
     fs::File,
     io,
-    io::{BufWriter, Read, Write},
+    io::{Read, Write},
     path::{Path, PathBuf},
     str::FromStr,
     time::Instant,
@@ -534,11 +534,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             // https://github.com/Stebalien/tempfile/issues/192
             let input_fname = tempfile.path().to_str().unwrap();
             let input = File::open(input_fname)?;
-            let output_sz_writer = BufWriter::with_capacity(
+            let output_sz_writer = std::fs::File::create(output)?;
+            compress(
+                input,
+                output_sz_writer,
+                util::max_jobs(),
                 DEFAULT_WTR_BUFFER_CAPACITY,
-                std::fs::File::create(output)?,
-            );
-            compress(input, output_sz_writer, util::max_jobs())?;
+            )?;
         }
     }
 
