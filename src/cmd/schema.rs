@@ -20,6 +20,12 @@ a `stdin.csv` file will created with stdin's contents as well.
 
 Note that `stdin.csv` will be overwritten if it already exists.
 
+Schema generation can be a compute-intensive process, especially for large CSV files.
+To speed up generation, the `schema` command will reuse a `stats.csv.bin.sz` file if it
+exists and is current (i.e. stats generated with --cardinality and --infer-dates options).
+Otherwise, it will run the `stats` command to generate the `stats.csv.bin.sz` file first,
+and then use that to generate the schema file.
+
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_schema.rs.
 
 Usage:
@@ -439,11 +445,11 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
         flag_no_headers:      args.flag_no_headers,
         flag_delimiter:       args.flag_delimiter,
         flag_memcheck:        args.flag_memcheck,
-        flag_stats_binout:    None,
+        flag_stats_binout:    true,
     };
 
     let canonical_input_path = Path::new(&args.arg_input.clone().unwrap()).canonicalize()?;
-    let stats_binary_encoded_path = canonical_input_path.with_extension("stats.csv.bin");
+    let stats_binary_encoded_path = canonical_input_path.with_extension("stats.csv.bin.sz");
 
     let stats_bin_current = if stats_binary_encoded_path.exists() {
         let stats_bin_metadata = std::fs::metadata(&stats_binary_encoded_path)?;
@@ -451,14 +457,14 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
         let input_metadata = std::fs::metadata(args.arg_input.clone().unwrap())?;
 
         if stats_bin_metadata.modified()? > input_metadata.modified()? {
-            info!("Valid stats.csv.bin file found!");
+            info!("Valid stats.csv.bin.sz file found!");
             true
         } else {
-            info!("stats.csv.bin file is older than input file. Regenerating stats.bin file.");
+            info!("stats.csv.bin.sz file is older than input file. Regenerating stats.bin file.");
             false
         }
     } else {
-        info!("stats.csv.bin file does not exist: {stats_binary_encoded_path:?}");
+        info!("stats.csv.bin.sz file does not exist: {stats_binary_encoded_path:?}");
         false
     };
 
@@ -468,38 +474,37 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
     let mut csv_stats: Vec<Stats> = Vec::new();
 
     if stats_bin_current && !args.flag_force {
-        let mut bin_file = BufReader::with_capacity(
+        let bin_file = BufReader::with_capacity(
             DEFAULT_RDR_BUFFER_CAPACITY * 4,
             File::open(stats_binary_encoded_path)?,
         );
-        match bincode::deserialize_from(&mut bin_file) {
+        let mut buf_binsz_decoder = snap::read::FrameDecoder::new(bin_file);
+        match bincode::deserialize_from(&mut buf_binsz_decoder) {
             Ok(stats) => {
                 csv_stats = stats;
                 stats_bin_loaded = true;
             },
             Err(e) => {
-                wwarn!("Error reading stats.csv.bin file: {e:?}. Regenerating stats.bin file.");
+                wwarn!(
+                    "Error reading stats.csv.bin.sz file: {e:?}. Regenerating stats.bin.sz file."
+                );
             },
         }
     }
 
     if !stats_bin_loaded {
-        // otherwise, run stats command to generate stats.csv.bin file
+        // otherwise, run stats command to generate stats.csv.bin.sz file
         let tempfile = tempfile::Builder::new()
             .suffix(".stats.csv")
             .tempfile()
             .unwrap();
         let tempfile_path = tempfile.path().to_str().unwrap().to_string();
 
-        let tempfile_statsbin = tempfile::Builder::new()
-            .suffix(".stats.csv.bin")
-            .tempfile()
-            .unwrap();
-        let tempfile_statsbin_path = tempfile_statsbin.path().to_str().unwrap().to_string();
+        let statsbin_path = canonical_input_path.with_extension("stats.csv.bin.sz");
 
         let mut stats_args_str = format!(
             "stats {input} --infer-dates --dates-whitelist {dates_whitelist} --round 4 \
-             --cardinality --output {output} --stats-binout {binout} --force",
+             --cardinality --output {output} --stats-binout --force",
             input = {
                 if let Some(arg_input) = stats_args.arg_input.clone() {
                     arg_input
@@ -509,7 +514,6 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
             },
             dates_whitelist = stats_args.flag_dates_whitelist,
             output = tempfile_path,
-            binout = tempfile_statsbin_path,
         );
         if args.flag_prefer_dmy {
             stats_args_str = format!("{stats_args_str} --prefer-dmy");
@@ -538,18 +542,17 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
         stats_cmd.args(stats_args_vec);
         let _stats_output = stats_cmd.output()?;
 
-        let mut bin_file = BufReader::with_capacity(
-            DEFAULT_RDR_BUFFER_CAPACITY,
-            File::open(tempfile_statsbin_path).unwrap(),
-        );
+        let bin_file =
+            BufReader::with_capacity(DEFAULT_RDR_BUFFER_CAPACITY * 2, File::open(statsbin_path)?);
+        let mut buf_binsz_decoder = snap::read::FrameDecoder::new(bin_file);
 
-        match bincode::deserialize_from(&mut bin_file) {
+        match bincode::deserialize_from(&mut buf_binsz_decoder) {
             Ok(stats) => {
                 csv_stats = stats;
             },
             Err(e) => {
                 return fail_clierror!(
-                    "Error reading stats.csv.bin file: {e:?}. Schema generation aborted."
+                    "Error reading stats.csv.bin.sz file: {e:?}. Schema generation aborted."
                 );
             },
         }
