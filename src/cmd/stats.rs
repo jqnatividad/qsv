@@ -48,16 +48,22 @@ first with 'qsv index' to enable multithreading. With an index, the file is spli
 chunks and each chunk is processed in parallel. The number of chunks is determined by the
 number of logical CPUs detected. You can override this by setting the --jobs option.
 
-This command caches the results in <FILESTEM>.stats.csv and <FILESTEM>.stats.csv.bin
-(e.g., qsv stats nyc311.csv will create nyc311.stats.csv and nyc311.stats.csv.bin).
-The .bin file is the binary format of the computed stats. The arguments used to generate the
-cached stats are saved in <FILESTEM>.stats.csv.json.
+As stats is a central command in qsv, and can be expensive to compute, `stats` caches results
+in <FILESTEM>.stats.csv & if the --stats-binout option is used, <FILESTEM>.stats.csv.bin.sz 
+(e.g., qsv stats nyc311.csv will create nyc311.stats.csv & nyc311.stats.csv.bin.sz).
+The .bin.sz file is the snappy-compressed binary format of the computed stats.
+The arguments used to generate the cached stats are saved in <FILESTEM>.stats.csv.json.
 
 If stats have already been computed for the input file with similar arguments and the file
 hasn't changed, the stats will be loaded from the cache instead of recomputing it.
 
-For examples, see the "boston311" test files in https://github.com/jqnatividad/qsv/tree/master/resources/test
-and https://github.com/jqnatividad/qsv/blob/4529d51273218347fef6aca15ac24e22b85b2ec4/tests/test_stats.rs#L608.
+These cached stats are also used by other qsv commands (currently `schema` & `tojsonl`) to
+load the stats into memory faster. If the cached stats are not current (i.e., the input file
+is newer than the cached stats), the cached stats will be ignored and recomputed.
+
+For examples, see the "boston311" test files in 
+https://github.com/jqnatividad/qsv/tree/master/resources/test and
+https://github.com/jqnatividad/qsv/blob/4529d51273218347fef6aca15ac24e22b85b2ec4/tests/test_stats.rs#L608.
 
 Usage:
     qsv stats [options] [<input>]
@@ -124,11 +130,14 @@ stats options:
                               Note that a file handle is opened for each job.
                               When not set, the number of jobs is set to the
                               number of CPUs detected.
-    --stats-binout <file>     Write the stats to <file> in binary format.
-                              This is used internally by other qsv commands (currently `schema`
-                              and `tojsonl`) to load cached stats into memory without having to
-                              process/parse the CSV again.
-                              If <file> is "NONE", the stats cache will not be written.
+    --stats-binout            Write the stats in binary format. This is used internally
+                              by other qsv commands (currently `schema` & `tojsonl`) to
+                              load cached stats into memory faster. If set, the binary
+                              encoded stats will be written to <FILESTEM>.stats.csv.bin.sz.
+                              You can preemtively create the binary encoded stats file
+                              by using this option before running the `schema` and `tojsonl`
+                              commands and they will automatically load the binary encoded
+                              stats file if it exists.
 
 Common options:
     -h, --help             Display this message
@@ -166,7 +175,7 @@ use std::{
     borrow::ToOwned,
     default::Default,
     fmt, fs, io,
-    io::{BufWriter, Write},
+    io::Write,
     iter::repeat,
     path::{Path, PathBuf},
     str,
@@ -176,6 +185,7 @@ use std::{
     },
 };
 
+use gzp::{par::compress::ParCompressBuilder, snap::Snap};
 use itertools::Itertools;
 use qsv_dateparser::parse_with_preference;
 use serde::{Deserialize, Serialize};
@@ -211,11 +221,11 @@ pub struct Args {
     pub flag_prefer_dmy:      bool,
     pub flag_force:           bool,
     pub flag_jobs:            Option<usize>,
+    pub flag_stats_binout:    bool,
     pub flag_output:          Option<String>,
     pub flag_no_headers:      bool,
     pub flag_delimiter:       Option<Delimiter>,
     pub flag_memcheck:        bool,
-    pub flag_stats_binout:    Option<String>,
 }
 
 // this struct is used to serialize/deserialize the stats to
@@ -359,13 +369,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut compute_stats = true;
 
-    let mut stats_binout = String::new();
-    let write_stats_cache = if let Some(s) = args.flag_stats_binout.clone() {
-        stats_binout = s;
-        stats_binout.to_lowercase() != "none"
-    } else {
-        true
-    };
+    let write_stats_binout = args.flag_stats_binout;
 
     if let Some(path) = fconfig.path.clone() {
         let path_file_stem = path.file_stem().unwrap().to_str().unwrap();
@@ -488,7 +492,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }?;
 
             // clone a copy of stats so we can binary encode it to disk later
-            if write_stats_cache {
+            if write_stats_binout {
                 stats_for_encoding = stats.clone();
             }
 
@@ -507,7 +511,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
 
             // update the stats args json file
-            if write_stats_cache {
+            if write_stats_binout {
                 current_stats_args.canonical_input_path =
                     path.canonicalize()?.to_str().unwrap().to_string();
                 current_stats_args.record_count = *record_count;
@@ -555,51 +559,43 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             fs::copy(currstats_filename.clone(), stats_pathbuf.clone())?;
         }
 
-        // only create the stats args json and binary encoded files if we computed the stats
-        if compute_stats && write_stats_cache {
-            // save the stats args to "<FILESTEM>.stats.csv.json"
-            stats_pathbuf.set_extension("csv.json");
-            // write empty file first so we can canonicalize it
-            std::fs::File::create(stats_pathbuf.clone())?;
-            current_stats_args.canonical_stats_path = stats_pathbuf
-                .clone()
-                .canonicalize()?
-                .to_str()
-                .unwrap()
-                .to_string();
-            std::fs::write(
-                stats_pathbuf.clone(),
-                // safety: we know that current_stats_args is JSON serializable
-                serde_json::to_string_pretty(&current_stats_args).unwrap(),
-            )?;
+        // save the stats args to "<FILESTEM>.stats.csv.json"
+        stats_pathbuf.set_extension("csv.json");
+        // write empty file first so we can canonicalize it
+        std::fs::File::create(stats_pathbuf.clone())?;
+        current_stats_args.canonical_stats_path = stats_pathbuf
+            .clone()
+            .canonicalize()?
+            .to_str()
+            .unwrap()
+            .to_string();
+        std::fs::write(
+            stats_pathbuf.clone(),
+            // safety: we know that current_stats_args is JSON serializable
+            serde_json::to_string_pretty(&current_stats_args).unwrap(),
+        )?;
 
-            // binary encode the stats to "<FILESTEM>.stats.csv.bin"
-            let mut stats_pathbuf = path.clone();
-            stats_pathbuf.set_extension("stats.csv.bin");
+        // only create the binary encoded files if we computed the stats
+        // and the user specified --stats-binout
+        if compute_stats && write_stats_binout {
+            // binary encode the stats to "<FILESTEM>.stats.csv.bin.sz"
+            let mut stats_pathbuf = path;
+            stats_pathbuf.set_extension("stats.csv.bin.sz");
             // we do the binary encoding inside a block so that the encoded_file
             // automatically gets dropped/flushed before we copy it to the output file
             {
-                let encoded_file = BufWriter::with_capacity(
-                    DEFAULT_WTR_BUFFER_CAPACITY * 2,
-                    fs::File::create(stats_pathbuf.clone())?,
-                );
+                let encoded_file = ParCompressBuilder::<Snap>::new()
+                    .num_threads(util::max_jobs())?
+                    .buffer_size(DEFAULT_WTR_BUFFER_CAPACITY * 2)?
+                    .pin_threads(Some(0))
+                    .from_writer(fs::File::create(stats_pathbuf.clone())?);
+
                 if let Err(e) = bincode::serialize_into(encoded_file, &stats_for_encoding) {
                     return fail_clierror!(
                         "Failed to write binary encoded stats {}: {e:?}",
                         stats_pathbuf.display()
                     );
                 }
-            }
-        }
-
-        // if the user specified --stats-binout, copy the binary stats to that file as well
-        if write_stats_cache && !stats_binout.is_empty() {
-            let mut stats_pathbuf = path;
-            stats_pathbuf.set_extension("stats.csv.bin");
-            if let Err(e) = fs::copy(stats_pathbuf, stats_binout.clone()) {
-                return fail_clierror!(
-                    "Failed to copy binary encoded stats to {stats_binout}: {e:?}"
-                );
             }
         }
     }

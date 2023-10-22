@@ -2,12 +2,16 @@
 static USAGE: &str = r#"
 Smartly converts CSV to a newline-delimited JSON (JSONL/NDJSON).
 
-By scanning the CSV first, it "smartly" infers the appropriate JSON data type
+By computing stats on the CSV first, it "smartly" infers the appropriate JSON data type
 for each column (string, number, boolean, null).
 
-It will infer a column as boolean if it only has a domain of two values,
-and the first character of the values are one of the following case-insensitive
-combinations: t/f; t/null; 1/0; 1/null; y/n & y/null are treated as true/false.
+It will infer a column as boolean if its cardinality is 2, and the first character of
+the values are one of the following case-insensitive combinations:
+  t/f; t/null; 1/0; 1/null; y/n & y/null are treated as true/false.
+
+The `tojsonl` command will reuse a `stats.csv.bin.sz` file if it exists and is current
+(i.e. stats generated with --cardinality and --infer-dates options) and will skip
+recomputing stats.
 
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_tojsonl.rs.
 
