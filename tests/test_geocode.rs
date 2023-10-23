@@ -466,192 +466,13 @@ fn geocode_suggest_pretty_json() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["Location"],
-//         svec![
-//             r#"{
-//   "id": 4901868,
-//   "name": "Melrose Park",
-//   "latitude": 41.90059,
-//   "longitude": -87.85673,
-//   "country": {
-//     "id": 6252001,
-//     "code": "US",
-//     "name": "United States"
-//   },
-//   "admin_division": {
-//     "id": 4896861,
-//     "code": "US.IL",
-//     "name": "Illinois"
-//   },
-//   "admin2_division": {
-//     "id": 4888671,
-//     "code": "US.IL.031",
-//     "name": "Cook County"
-//   },
-//   "timezone": "America/Chicago",
-//   "names": {
-//     "en": "Melrose Park"
-//   },
-//   "country_names": {
-//     "en": "United States"
-//   },
-//   "admin1_names": {
-//     "en": "Illinois"
-//   },
-//   "admin2_names": {
-//     "en": "Cook"
-//   },
-//   "population": 25379
-// }"#
-//         ],
-//         svec![
-//             r#"{
-//   "id": 5115843,
-//   "name": "East Flatbush",
-//   "latitude": 40.65371,
-//   "longitude": -73.93042,
-//   "country": {
-//     "id": 6252001,
-//     "code": "US",
-//     "name": "United States"
-//   },
-//   "admin_division": {
-//     "id": 5128638,
-//     "code": "US.NY",
-//     "name": "New York"
-//   },
-//   "admin2_division": {
-//     "id": 6941775,
-//     "code": "US.NY.047",
-//     "name": "Kings County"
-//   },
-//   "timezone": "America/New_York",
-//   "names": {
-//     "en": "East Flatbush"
-//   },
-//   "country_names": {
-//     "en": "United States"
-//   },
-//   "admin1_names": {
-//     "en": "New York"
-//   },
-//   "admin2_names": {
-//     "en": "Kings"
-//   },
-//   "population": 178464
-// }"#
-//         ],
-//         svec![
-//             r#"{
-//   "id": 5128581,
-//   "name": "New York City",
-//   "latitude": 40.71427,
-//   "longitude": -74.00597,
-//   "country": {
-//     "id": 6252001,
-//     "code": "US",
-//     "name": "United States"
-//   },
-//   "admin_division": {
-//     "id": 5128638,
-//     "code": "US.NY",
-//     "name": "New York"
-//   },
-//   "admin2_division": null,
-//   "timezone": "America/New_York",
-//   "names": {
-//     "en": "New York"
-//   },
-//   "country_names": {
-//     "en": "United States"
-//   },
-//   "admin1_names": {
-//     "en": "New York"
-//   },
-//   "admin2_names": null,
-//   "population": 8804190
-// }"#
-//         ],
-//         svec![
-//             r#"{
-//   "id": 6332428,
-//   "name": "East Harlem",
-//   "latitude": 40.79472,
-//   "longitude": -73.9425,
-//   "country": {
-//     "id": 6252001,
-//     "code": "US",
-//     "name": "United States"
-//   },
-//   "admin_division": {
-//     "id": 5128638,
-//     "code": "US.NY",
-//     "name": "New York"
-//   },
-//   "admin2_division": {
-//     "id": 5128594,
-//     "code": "US.NY.061",
-//     "name": "New York County"
-//   },
-//   "timezone": "America/New_York",
-//   "names": null,
-//   "country_names": {
-//     "en": "United States"
-//   },
-//   "admin1_names": {
-//     "en": "New York"
-//   },
-//   "admin2_names": {
-//     "en": "New York County"
-//   },
-//   "population": 115921
-// }"#
-//         ],
-//         svec!["This is not a Location and it will not be geocoded"],
-//         svec!["95.213424, 190,1234565"],
-//         svec![
-//             r#"{
-//   "id": 1703417,
-//   "name": "Makati City",
-//   "latitude": 14.55027,
-//   "longitude": 121.03269,
-//   "country": {
-//     "id": 1694008,
-//     "code": "PH",
-//     "name": "Philippines"
-//   },
-//   "admin_division": {
-//     "id": 7521311,
-//     "code": "PH.NCR",
-//     "name": "Metro Manila"
-//   },
-//   "admin2_division": {
-//     "id": 11395838,
-//     "code": "PH.NCR.137600000",
-//     "name": "Southern Manila District"
-//   },
-//   "timezone": "Asia/Manila",
-//   "names": {
-//     "en": "Makati City"
-//   },
-//   "country_names": {
-//     "en": "Philippines"
-//   },
-//   "admin1_names": {
-//     "en": "National Capital Region"
-//   },
-//   "admin2_names": null,
-//   "population": 510383
-// }"#
-//         ],
-svec!["{\n  \"id\": 4901868,\n  \"name\": \"Melrose Park\",\n  \"latitude\": 41.90059,\n  \"longitude\": -87.85673,\n  \"country\": {\n    \"id\": 6252001,\n    \"code\": \"US\",\n    \"name\": \"United States\"\n  },\n  \"admin_division\": {\n    \"id\": 4896861,\n    \"code\": \"US.IL\",\n    \"name\": \"Illinois\"\n  },\n  \"admin2_division\": {\n    \"id\": 4888671,\n    \"code\": \"US.IL.031\",\n    \"name\": \"Cook County\"\n  },\n  \"timezone\": \"America/Chicago\",\n  \"names\": {\n    \"en\": \"Melrose Park\"\n  },\n  \"country_names\": {\n    \"en\": \"United States\"\n  },\n  \"admin1_names\": {\n    \"en\": \"Illinois\"\n  },\n  \"admin2_names\": {\n    \"en\": \"Cook\"\n  },\n  \"population\": 25379\n}"], 
-svec!["{\n  \"id\": 4059870,\n  \"name\": \"East Florence\",\n  \"latitude\": 34.80953,\n  \"longitude\": -87.64947,\n  \"country\": {\n    \"id\": 6252001,\n    \"code\": \"US\",\n    \"name\": \"United States\"\n  },\n  \"admin_division\": {\n    \"id\": 4829764,\n    \"code\": \"US.AL\",\n    \"name\": \"Alabama\"\n  },\n  \"admin2_division\": {\n    \"id\": 4071898,\n    \"code\": \"US.AL.077\",\n    \"name\": \"Lauderdale County\"\n  },\n  \"timezone\": \"America/Chicago\",\n  \"names\": {\n    \"en\": \"East Florence\"\n  },\n  \"country_names\": {\n    \"en\": \"United States\"\n  },\n  \"admin1_names\": {\n    \"en\": \"Alabama\"\n  },\n  \"admin2_names\": {\n    \"en\": \"Lauderdale\"\n  },\n  \"population\": 35733\n}"], 
-svec!["{\n  \"id\": 5128581,\n  \"name\": \"New York City\",\n  \"latitude\": 40.71427,\n  \"longitude\": -74.00597,\n  \"country\": {\n    \"id\": 6252001,\n    \"code\": \"US\",\n    \"name\": \"United States\"\n  },\n  \"admin_division\": {\n    \"id\": 5128638,\n    \"code\": \"US.NY\",\n    \"name\": \"New York\"\n  },\n  \"admin2_division\": null,\n  \"timezone\": \"America/New_York\",\n  \"names\": {\n    \"en\": \"New York\"\n  },\n  \"country_names\": {\n    \"en\": \"United States\"\n  },\n  \"admin1_names\": {\n    \"en\": \"New York\"\n  },\n  \"admin2_names\": null,\n  \"population\": 8804190\n}"], 
-svec!["{\n  \"id\": 6332428,\n  \"name\": \"East Harlem\",\n  \"latitude\": 40.79472,\n  \"longitude\": -73.9425,\n  \"country\": {\n    \"id\": 6252001,\n    \"code\": \"US\",\n    \"name\": \"United States\"\n  },\n  \"admin_division\": {\n    \"id\": 5128638,\n    \"code\": \"US.NY\",\n    \"name\": \"New York\"\n  },\n  \"admin2_division\": {\n    \"id\": 5128594,\n    \"code\": \"US.NY.061\",\n    \"name\": \"New York County\"\n  },\n  \"timezone\": \"America/New_York\",\n  \"names\": null,\n  \"country_names\": {\n    \"en\": \"United States\"\n  },\n  \"admin1_names\": {\n    \"en\": \"New York\"\n  },\n  \"admin2_names\": {\n    \"en\": \"New York County\"\n  },\n  \"population\": 115921\n}"], 
-svec!["This is not a Location and it will not be geocoded"], 
-svec!["95.213424, 190,1234565"], 
-svec!["{\n  \"id\": 1703417,\n  \"name\": \"Makati City\",\n  \"latitude\": 14.55027,\n  \"longitude\": 121.03269,\n  \"country\": {\n    \"id\": 1694008,\n    \"code\": \"PH\",\n    \"name\": \"Philippines\"\n  },\n  \"admin_division\": {\n    \"id\": 7521311,\n    \"code\": \"PH.NCR\",\n    \"name\": \"Metro Manila\"\n  },\n  \"admin2_division\": {\n    \"id\": 11395838,\n    \"code\": \"PH.NCR.137600000\",\n    \"name\": \"Southern Manila District\"\n  },\n  \"timezone\": \"Asia/Manila\",\n  \"names\": {\n    \"en\": \"Makati City\"\n  },\n  \"country_names\": {\n    \"en\": \"Philippines\"\n  },\n  \"admin1_names\": {\n    \"en\": \"National Capital Region\"\n  },\n  \"admin2_names\": null,\n  \"population\": 510383\n}"],
-
-
+        svec!["{\n  \"cityrecord\":{\n  \"id\": 4901868,\n  \"name\": \"Melrose Park\",\n  \"latitude\": 41.90059,\n  \"longitude\": -87.85673,\n  \"country\": {\n    \"id\": 6252001,\n    \"code\": \"US\",\n    \"name\": \"United States\"\n  },\n  \"admin_division\": {\n    \"id\": 4896861,\n    \"code\": \"US.IL\",\n    \"name\": \"Illinois\"\n  },\n  \"admin2_division\": {\n    \"id\": 4888671,\n    \"code\": \"US.IL.031\",\n    \"name\": \"Cook County\"\n  },\n  \"timezone\": \"America/Chicago\",\n  \"names\": {\n    \"en\": \"Melrose Park\"\n  },\n  \"country_names\": {\n    \"en\": \"United States\"\n  },\n  \"admin1_names\": {\n    \"en\": \"Illinois\"\n  },\n  \"admin2_names\": {\n    \"en\": \"Cook\"\n  },\n  \"population\": 25379\n},\n  \"countryrecord\":{\n  \"info\": {\n    \"iso\": \"US\",\n    \"iso3\": \"USA\",\n    \"iso_numeric\": \"840\",\n    \"fips\": \"US\",\n    \"name\": \"United States\",\n    \"capital\": \"Washington\",\n    \"area\": \"9629091\",\n    \"population\": 327167434,\n    \"continent\": \"NA\",\n    \"tld\": \".us\",\n    \"currency_code\": \"USD\",\n    \"currency_name\": \"Dollar\",\n    \"phone\": \"1\",\n    \"postal_code_format\": \"#####-####\",\n    \"postal_code_regex\": \"^\\\\d{5}(-\\\\d{4})?$\",\n    \"languages\": \"en-US,es-US,haw,fr\",\n    \"geonameid\": 6252001,\n    \"neighbours\": \"CA,MX,CU\",\n    \"equivalent_fips_code\": \"\"\n  },\n  \"names\": {\n    \"en\": \"United States\"\n  },\n  \"capital_names\": {\n    \"en\": \"Washington D.C.\"\n  }\n}\n \"us_fips_codes\":{\n  \"us_state_code\": \"IL\",\n  \"us_state_name\": \"Illinois\",\n  \"us_state_fips_code\": \"17\",\n  \"us_county\": \"Cook\",\n  \"us_county_fips_code\": \"031\"\n}\n}"], 
+        svec!["{\n  \"cityrecord\":{\n  \"id\": 4059870,\n  \"name\": \"East Florence\",\n  \"latitude\": 34.80953,\n  \"longitude\": -87.64947,\n  \"country\": {\n    \"id\": 6252001,\n    \"code\": \"US\",\n    \"name\": \"United States\"\n  },\n  \"admin_division\": {\n    \"id\": 4829764,\n    \"code\": \"US.AL\",\n    \"name\": \"Alabama\"\n  },\n  \"admin2_division\": {\n    \"id\": 4071898,\n    \"code\": \"US.AL.077\",\n    \"name\": \"Lauderdale County\"\n  },\n  \"timezone\": \"America/Chicago\",\n  \"names\": {\n    \"en\": \"East Florence\"\n  },\n  \"country_names\": {\n    \"en\": \"United States\"\n  },\n  \"admin1_names\": {\n    \"en\": \"Alabama\"\n  },\n  \"admin2_names\": {\n    \"en\": \"Lauderdale\"\n  },\n  \"population\": 35733\n},\n  \"countryrecord\":{\n  \"info\": {\n    \"iso\": \"US\",\n    \"iso3\": \"USA\",\n    \"iso_numeric\": \"840\",\n    \"fips\": \"US\",\n    \"name\": \"United States\",\n    \"capital\": \"Washington\",\n    \"area\": \"9629091\",\n    \"population\": 327167434,\n    \"continent\": \"NA\",\n    \"tld\": \".us\",\n    \"currency_code\": \"USD\",\n    \"currency_name\": \"Dollar\",\n    \"phone\": \"1\",\n    \"postal_code_format\": \"#####-####\",\n    \"postal_code_regex\": \"^\\\\d{5}(-\\\\d{4})?$\",\n    \"languages\": \"en-US,es-US,haw,fr\",\n    \"geonameid\": 6252001,\n    \"neighbours\": \"CA,MX,CU\",\n    \"equivalent_fips_code\": \"\"\n  },\n  \"names\": {\n    \"en\": \"United States\"\n  },\n  \"capital_names\": {\n    \"en\": \"Washington D.C.\"\n  }\n}\n \"us_fips_codes\":{\n  \"us_state_code\": \"AL\",\n  \"us_state_name\": \"Alabama\",\n  \"us_state_fips_code\": \"01\",\n  \"us_county\": \"Lauderdale\",\n  \"us_county_fips_code\": \"077\"\n}\n}"], 
+        svec!["{\n  \"cityrecord\":{\n  \"id\": 5128581,\n  \"name\": \"New York City\",\n  \"latitude\": 40.71427,\n  \"longitude\": -74.00597,\n  \"country\": {\n    \"id\": 6252001,\n    \"code\": \"US\",\n    \"name\": \"United States\"\n  },\n  \"admin_division\": {\n    \"id\": 5128638,\n    \"code\": \"US.NY\",\n    \"name\": \"New York\"\n  },\n  \"admin2_division\": null,\n  \"timezone\": \"America/New_York\",\n  \"names\": {\n    \"en\": \"New York\"\n  },\n  \"country_names\": {\n    \"en\": \"United States\"\n  },\n  \"admin1_names\": {\n    \"en\": \"New York\"\n  },\n  \"admin2_names\": null,\n  \"population\": 8804190\n},\n  \"countryrecord\":{\n  \"info\": {\n    \"iso\": \"US\",\n    \"iso3\": \"USA\",\n    \"iso_numeric\": \"840\",\n    \"fips\": \"US\",\n    \"name\": \"United States\",\n    \"capital\": \"Washington\",\n    \"area\": \"9629091\",\n    \"population\": 327167434,\n    \"continent\": \"NA\",\n    \"tld\": \".us\",\n    \"currency_code\": \"USD\",\n    \"currency_name\": \"Dollar\",\n    \"phone\": \"1\",\n    \"postal_code_format\": \"#####-####\",\n    \"postal_code_regex\": \"^\\\\d{5}(-\\\\d{4})?$\",\n    \"languages\": \"en-US,es-US,haw,fr\",\n    \"geonameid\": 6252001,\n    \"neighbours\": \"CA,MX,CU\",\n    \"equivalent_fips_code\": \"\"\n  },\n  \"names\": {\n    \"en\": \"United States\"\n  },\n  \"capital_names\": {\n    \"en\": \"Washington D.C.\"\n  }\n}\n \"us_fips_codes\":{\n  \"us_state_code\": \"NY\",\n  \"us_state_name\": \"New York\",\n  \"us_state_fips_code\": \"36\",\n  \"us_county\": \"\",\n  \"us_county_fips_code\": \"\"\n}\n}"], 
+        svec!["{\n  \"cityrecord\":{\n  \"id\": 6332428,\n  \"name\": \"East Harlem\",\n  \"latitude\": 40.79472,\n  \"longitude\": -73.9425,\n  \"country\": {\n    \"id\": 6252001,\n    \"code\": \"US\",\n    \"name\": \"United States\"\n  },\n  \"admin_division\": {\n    \"id\": 5128638,\n    \"code\": \"US.NY\",\n    \"name\": \"New York\"\n  },\n  \"admin2_division\": {\n    \"id\": 5128594,\n    \"code\": \"US.NY.061\",\n    \"name\": \"New York County\"\n  },\n  \"timezone\": \"America/New_York\",\n  \"names\": null,\n  \"country_names\": {\n    \"en\": \"United States\"\n  },\n  \"admin1_names\": {\n    \"en\": \"New York\"\n  },\n  \"admin2_names\": {\n    \"en\": \"New York County\"\n  },\n  \"population\": 115921\n},\n  \"countryrecord\":{\n  \"info\": {\n    \"iso\": \"US\",\n    \"iso3\": \"USA\",\n    \"iso_numeric\": \"840\",\n    \"fips\": \"US\",\n    \"name\": \"United States\",\n    \"capital\": \"Washington\",\n    \"area\": \"9629091\",\n    \"population\": 327167434,\n    \"continent\": \"NA\",\n    \"tld\": \".us\",\n    \"currency_code\": \"USD\",\n    \"currency_name\": \"Dollar\",\n    \"phone\": \"1\",\n    \"postal_code_format\": \"#####-####\",\n    \"postal_code_regex\": \"^\\\\d{5}(-\\\\d{4})?$\",\n    \"languages\": \"en-US,es-US,haw,fr\",\n    \"geonameid\": 6252001,\n    \"neighbours\": \"CA,MX,CU\",\n    \"equivalent_fips_code\": \"\"\n  },\n  \"names\": {\n    \"en\": \"United States\"\n  },\n  \"capital_names\": {\n    \"en\": \"Washington D.C.\"\n  }\n}\n \"us_fips_codes\":{\n  \"us_state_code\": \"NY\",\n  \"us_state_name\": \"New York\",\n  \"us_state_fips_code\": \"36\",\n  \"us_county\": \"New York County\",\n  \"us_county_fips_code\": \"061\"\n}\n}"], 
+        svec!["This is not a Location and it will not be geocoded"], 
+        svec!["95.213424, 190,1234565"], 
+        svec!["{\n  \"cityrecord\":{\n  \"id\": 1703417,\n  \"name\": \"Makati City\",\n  \"latitude\": 14.55027,\n  \"longitude\": 121.03269,\n  \"country\": {\n    \"id\": 1694008,\n    \"code\": \"PH\",\n    \"name\": \"Philippines\"\n  },\n  \"admin_division\": {\n    \"id\": 7521311,\n    \"code\": \"PH.NCR\",\n    \"name\": \"Metro Manila\"\n  },\n  \"admin2_division\": {\n    \"id\": 11395838,\n    \"code\": \"PH.NCR.137600000\",\n    \"name\": \"Southern Manila District\"\n  },\n  \"timezone\": \"Asia/Manila\",\n  \"names\": {\n    \"en\": \"Makati City\"\n  },\n  \"country_names\": {\n    \"en\": \"Philippines\"\n  },\n  \"admin1_names\": {\n    \"en\": \"National Capital Region\"\n  },\n  \"admin2_names\": null,\n  \"population\": 510383\n},\n  \"countryrecord\":{\n  \"info\": {\n    \"iso\": \"PH\",\n    \"iso3\": \"PHL\",\n    \"iso_numeric\": \"608\",\n    \"fips\": \"RP\",\n    \"name\": \"Philippines\",\n    \"capital\": \"Manila\",\n    \"area\": \"300000\",\n    \"population\": 106651922,\n    \"continent\": \"AS\",\n    \"tld\": \".ph\",\n    \"currency_code\": \"PHP\",\n    \"currency_name\": \"Peso\",\n    \"phone\": \"63\",\n    \"postal_code_format\": \"####\",\n    \"postal_code_regex\": \"^(\\\\d{4})$\",\n    \"languages\": \"tl,en-PH,fil,ceb,ilo,hil,war,pam,bik,bcl,pag,mrw,tsg,mdh,cbk,krj,sgd,msb,akl,ibg,yka,mta,abx\",\n    \"geonameid\": 1694008,\n    \"neighbours\": \"\",\n    \"equivalent_fips_code\": \"\"\n  },\n  \"names\": {\n    \"en\": \"Philippines\"\n  },\n  \"capital_names\": {\n    \"en\": \"Manila\"\n  }\n}\n \"us_fips_codes\":{\n  \"us_state_code\": \"\",\n  \"us_state_name\": \"National Capital Region\",\n  \"us_state_fips_code\": \"null\",\n  \"us_county\": \"\",\n  \"us_county_fips_code\": \"\"\n}\n}"],
     ];
     assert_eq!(got, expected);
 }
@@ -751,14 +572,47 @@ fn geocode_suggest_fmt_json() {
         .arg("data.csv");
 
     let got: String = wrk.stdout(&mut cmd);
-    let expected = r#"Location
-"{""id"":5116495,""name"":""Elmhurst"",""latitude"":40.73649,""longitude"":-73.87791,""country"":{""id"":6252001,""code"":""US"",""name"":""United States""},""admin_division"":{""id"":5128638,""code"":""US.NY"",""name"":""New York""},""admin2_division"":{""id"":5133268,""code"":""US.NY.081"",""name"":""Queens County""},""timezone"":""America/New_York"",""names"":{""en"":""Elmhurst""},""country_names"":{""en"":""United States""},""admin1_names"":{""en"":""New York""},""admin2_names"":{""en"":""Queens County""},""population"":113364}"
-"{""id"":4059870,""name"":""East Florence"",""latitude"":34.80953,""longitude"":-87.64947,""country"":{""id"":6252001,""code"":""US"",""name"":""United States""},""admin_division"":{""id"":4829764,""code"":""US.AL"",""name"":""Alabama""},""admin2_division"":{""id"":4071898,""code"":""US.AL.077"",""name"":""Lauderdale County""},""timezone"":""America/Chicago"",""names"":{""en"":""East Florence""},""country_names"":{""en"":""United States""},""admin1_names"":{""en"":""Alabama""},""admin2_names"":{""en"":""Lauderdale""},""population"":35733}"
-"{""id"":5128581,""name"":""New York City"",""latitude"":40.71427,""longitude"":-74.00597,""country"":{""id"":6252001,""code"":""US"",""name"":""United States""},""admin_division"":{""id"":5128638,""code"":""US.NY"",""name"":""New York""},""admin2_division"":null,""timezone"":""America/New_York"",""names"":{""en"":""New York""},""country_names"":{""en"":""United States""},""admin1_names"":{""en"":""New York""},""admin2_names"":null,""population"":8804190}"
-"{""id"":6332428,""name"":""East Harlem"",""latitude"":40.79472,""longitude"":-73.9425,""country"":{""id"":6252001,""code"":""US"",""name"":""United States""},""admin_division"":{""id"":5128638,""code"":""US.NY"",""name"":""New York""},""admin2_division"":{""id"":5128594,""code"":""US.NY.061"",""name"":""New York County""},""timezone"":""America/New_York"",""names"":null,""country_names"":{""en"":""United States""},""admin1_names"":{""en"":""New York""},""admin2_names"":{""en"":""New York County""},""population"":115921}"
+    let expected = r######"Location
+"{""cityrecord"":{""id"":5116495,""name"":""Elmhurst"",""latitude"":40.73649,""longitude"":-73.87791,""country"":{""id"":6252001,""code"":""US"",""name"":""United States""},""admin_division"":{""id"":5128638,""code"":""US.NY"",""name"":""New York""},""admin2_division"":{""id"":5133268,""code"":""US.NY.081"",""name"":""Queens County""},""timezone"":""America/New_York"",""names"":{""en"":""Elmhurst""},""country_names"":{""en"":""United States""},""admin1_names"":{""en"":""New York""},""admin2_names"":{""en"":""Queens County""},""population"":113364}, ""countryrecord"":{""info"":{""iso"":""US"",""iso3"":""USA"",""iso_numeric"":""840"",""fips"":""US"",""name"":""United States"",""capital"":""Washington"",""area"":""9629091"",""population"":327167434,""continent"":""NA"",""tld"":"".us"",""currency_code"":""USD"",""currency_name"":""Dollar"",""phone"":""1"",""postal_code_format"":""#####-####"",""postal_code_regex"":""^\\d{5}(-\\d{4})?$"",""languages"":""en-US,es-US,haw,fr"",""geonameid"":6252001,""neighbours"":""CA,MX,CU"",""equivalent_fips_code"":""""},""names"":{""en"":""United States""},""capital_names"":{""en"":""Washington D.C.""}} ""us_fips_codes"":{""us_state_code"":""NY"",""us_state_name"":""New York"",""us_state_fips_code"":""36"",""us_county"":""Queens County"",""us_county_fips_code"":""081""}}"
+"{""cityrecord"":{""id"":4059870,""name"":""East Florence"",""latitude"":34.80953,""longitude"":-87.64947,""country"":{""id"":6252001,""code"":""US"",""name"":""United States""},""admin_division"":{""id"":4829764,""code"":""US.AL"",""name"":""Alabama""},""admin2_division"":{""id"":4071898,""code"":""US.AL.077"",""name"":""Lauderdale County""},""timezone"":""America/Chicago"",""names"":{""en"":""East Florence""},""country_names"":{""en"":""United States""},""admin1_names"":{""en"":""Alabama""},""admin2_names"":{""en"":""Lauderdale""},""population"":35733}, ""countryrecord"":{""info"":{""iso"":""US"",""iso3"":""USA"",""iso_numeric"":""840"",""fips"":""US"",""name"":""United States"",""capital"":""Washington"",""area"":""9629091"",""population"":327167434,""continent"":""NA"",""tld"":"".us"",""currency_code"":""USD"",""currency_name"":""Dollar"",""phone"":""1"",""postal_code_format"":""#####-####"",""postal_code_regex"":""^\\d{5}(-\\d{4})?$"",""languages"":""en-US,es-US,haw,fr"",""geonameid"":6252001,""neighbours"":""CA,MX,CU"",""equivalent_fips_code"":""""},""names"":{""en"":""United States""},""capital_names"":{""en"":""Washington D.C.""}} ""us_fips_codes"":{""us_state_code"":""AL"",""us_state_name"":""Alabama"",""us_state_fips_code"":""01"",""us_county"":""Lauderdale"",""us_county_fips_code"":""077""}}"
+"{""cityrecord"":{""id"":5128581,""name"":""New York City"",""latitude"":40.71427,""longitude"":-74.00597,""country"":{""id"":6252001,""code"":""US"",""name"":""United States""},""admin_division"":{""id"":5128638,""code"":""US.NY"",""name"":""New York""},""admin2_division"":null,""timezone"":""America/New_York"",""names"":{""en"":""New York""},""country_names"":{""en"":""United States""},""admin1_names"":{""en"":""New York""},""admin2_names"":null,""population"":8804190}, ""countryrecord"":{""info"":{""iso"":""US"",""iso3"":""USA"",""iso_numeric"":""840"",""fips"":""US"",""name"":""United States"",""capital"":""Washington"",""area"":""9629091"",""population"":327167434,""continent"":""NA"",""tld"":"".us"",""currency_code"":""USD"",""currency_name"":""Dollar"",""phone"":""1"",""postal_code_format"":""#####-####"",""postal_code_regex"":""^\\d{5}(-\\d{4})?$"",""languages"":""en-US,es-US,haw,fr"",""geonameid"":6252001,""neighbours"":""CA,MX,CU"",""equivalent_fips_code"":""""},""names"":{""en"":""United States""},""capital_names"":{""en"":""Washington D.C.""}} ""us_fips_codes"":{""us_state_code"":""NY"",""us_state_name"":""New York"",""us_state_fips_code"":""36"",""us_county"":"""",""us_county_fips_code"":""""}}"
+"{""cityrecord"":{""id"":6332428,""name"":""East Harlem"",""latitude"":40.79472,""longitude"":-73.9425,""country"":{""id"":6252001,""code"":""US"",""name"":""United States""},""admin_division"":{""id"":5128638,""code"":""US.NY"",""name"":""New York""},""admin2_division"":{""id"":5128594,""code"":""US.NY.061"",""name"":""New York County""},""timezone"":""America/New_York"",""names"":null,""country_names"":{""en"":""United States""},""admin1_names"":{""en"":""New York""},""admin2_names"":{""en"":""New York County""},""population"":115921}, ""countryrecord"":{""info"":{""iso"":""US"",""iso3"":""USA"",""iso_numeric"":""840"",""fips"":""US"",""name"":""United States"",""capital"":""Washington"",""area"":""9629091"",""population"":327167434,""continent"":""NA"",""tld"":"".us"",""currency_code"":""USD"",""currency_name"":""Dollar"",""phone"":""1"",""postal_code_format"":""#####-####"",""postal_code_regex"":""^\\d{5}(-\\d{4})?$"",""languages"":""en-US,es-US,haw,fr"",""geonameid"":6252001,""neighbours"":""CA,MX,CU"",""equivalent_fips_code"":""""},""names"":{""en"":""United States""},""capital_names"":{""en"":""Washington D.C.""}} ""us_fips_codes"":{""us_state_code"":""NY"",""us_state_name"":""New York"",""us_state_fips_code"":""36"",""us_county"":""New York County"",""us_county_fips_code"":""061""}}"
 This is not a Location and it will not be geocoded
 "40.71427, -74.00597"
-"{""id"":1703417,""name"":""Makati City"",""latitude"":14.55027,""longitude"":121.03269,""country"":{""id"":1694008,""code"":""PH"",""name"":""Philippines""},""admin_division"":{""id"":7521311,""code"":""PH.NCR"",""name"":""Metro Manila""},""admin2_division"":{""id"":11395838,""code"":""PH.NCR.137600000"",""name"":""Southern Manila District""},""timezone"":""Asia/Manila"",""names"":{""en"":""Makati City""},""country_names"":{""en"":""Philippines""},""admin1_names"":{""en"":""National Capital Region""},""admin2_names"":null,""population"":510383}""#;
+"{""cityrecord"":{""id"":1703417,""name"":""Makati City"",""latitude"":14.55027,""longitude"":121.03269,""country"":{""id"":1694008,""code"":""PH"",""name"":""Philippines""},""admin_division"":{""id"":7521311,""code"":""PH.NCR"",""name"":""Metro Manila""},""admin2_division"":{""id"":11395838,""code"":""PH.NCR.137600000"",""name"":""Southern Manila District""},""timezone"":""Asia/Manila"",""names"":{""en"":""Makati City""},""country_names"":{""en"":""Philippines""},""admin1_names"":{""en"":""National Capital Region""},""admin2_names"":null,""population"":510383}, ""countryrecord"":{""info"":{""iso"":""PH"",""iso3"":""PHL"",""iso_numeric"":""608"",""fips"":""RP"",""name"":""Philippines"",""capital"":""Manila"",""area"":""300000"",""population"":106651922,""continent"":""AS"",""tld"":"".ph"",""currency_code"":""PHP"",""currency_name"":""Peso"",""phone"":""63"",""postal_code_format"":""####"",""postal_code_regex"":""^(\\d{4})$"",""languages"":""tl,en-PH,fil,ceb,ilo,hil,war,pam,bik,bcl,pag,mrw,tsg,mdh,cbk,krj,sgd,msb,akl,ibg,yka,mta,abx"",""geonameid"":1694008,""neighbours"":"""",""equivalent_fips_code"":""""},""names"":{""en"":""Philippines""},""capital_names"":{""en"":""Manila""}} ""us_fips_codes"":{""us_state_code"":"""",""us_state_name"":""National Capital Region"",""us_state_fips_code"":""null"",""us_county"":"""",""us_county_fips_code"":""""}}""######;
+
+    //     let expected = r#"Location
+    // "{""id"":5116495,""name"":""Elmhurst"",""latitude"":40.73649,""longitude"":-73.87791,""
+    // country"":{""id"":6252001,""code"":""US"",""name"":""United
+    // States""},""admin_division"":{""id"":5128638,""code"":""US.NY"",""name"":""New
+    // York""},""admin2_division"":{""id"":5133268,""code"":""US.NY.081"",""name"":""Queens
+    // County""},""timezone"":""America/New_York"",""names"":{""en"":""Elmhurst""},""country_names""
+    // :{""en"":""United States""},""admin1_names"":{""en"":""New
+    // York""},""admin2_names"":{""en"":""Queens County""},""population"":113364}"
+    // "{""id"":4059870,""name"":""East
+    // Florence"",""latitude"":34.80953,""longitude"":-87.64947,""country"":{""id"":6252001,""code""
+    // :""US"",""name"":""United
+    // States""},""admin_division"":{""id"":4829764,""code"":""US.AL"",""name"":""Alabama""},""
+    // admin2_division"":{""id"":4071898,""code"":""US.AL.077"",""name"":""Lauderdale
+    // County""},""timezone"":""America/Chicago"",""names"":{""en"":""East
+    // Florence""},""country_names"":{""en"":""United
+    // States""},""admin1_names"":{""en"":""Alabama""},""admin2_names"":{""en"":""Lauderdale""},""
+    // population"":35733}" "{""id"":5128581,""name"":""New York
+    // City"",""latitude"":40.71427,""longitude"":-74.00597,""country"":{""id"":6252001,""code"":""
+    // US"",""name"":""United
+    // States""},""admin_division"":{""id"":5128638,""code"":""US.NY"",""name"":""New
+    // York""},""admin2_division"":null,""timezone"":""America/New_York"",""names"":{""en"":""New
+    // York""},""country_names"":{""en"":""United States""},""admin1_names"":{""en"":""New
+    // York""},""admin2_names"":null,""population"":8804190}" "{""id"":6332428,""name"":""East
+    // Harlem"",""latitude"":40.79472,""longitude"":-73.9425,""country"":{""id"":6252001,""code"":""
+    // US"",""name"":""United
+    // States""},""admin_division"":{""id"":5128638,""code"":""US.NY"",""name"":""New
+    // York""},""admin2_division"":{""id"":5128594,""code"":""US.NY.061"",""name"":""New York
+    // County""},""timezone"":""America/New_York"",""names"":null,""country_names"":{""en"":""United
+    // States""},""admin1_names"":{""en"":""New York""},""admin2_names"":{""en"":""New York
+    // County""},""population"":115921}" This is not a Location and it will not be geocoded
+    // "40.71427, -74.00597"
+    // "{""id"":1703417,""name"":""Makati City"",""latitude"":14.55027,""longitude"":121.03269,""country"":{""id"":1694008,""code"":""PH"",""name"":""Philippines""},""admin_division"":{""id"":7521311,""code"":""PH.NCR"",""name"":""Metro Manila""},""admin2_division"":{""id"":11395838,""code"":""PH.NCR.137600000"",""name"":""Southern Manila District""},""timezone"":""Asia/Manila"",""names"":{""en"":""Makati City""},""country_names"":{""en"":""Philippines""},""admin1_names"":{""en"":""National Capital Region""},""admin2_names"":null,""population"":510383}""#;
 
     assert_eq!(got, expected);
 }
@@ -789,56 +643,6 @@ fn geocode_suggest_fmt_cityrecord() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["Location"],
-        // svec![
-        //     "CitiesRecord { id: 5116495, name: \"Elmhurst\", latitude: 40.73649, longitude: \
-        //      -73.87791, country: Some(Country { id: 6252001, code: \"US\", name: \"United \
-        //      States\" }), admin_division: Some(AdminDivision { id: 5128638, code: \"US.NY\", \
-        //      name: \"New York\" }), admin2_division: Some(AdminDivision { id: 5133268, code: \
-        //      \"US.NY.081\", name: \"Queens County\" }), timezone: \"America/New_York\", names: \
-        //      Some({\"en\": \"Elmhurst\"}), country_names: Some({\"en\": \"United States\"}), \
-        //      admin1_names: Some({\"en\": \"New York\"}), admin2_names: Some({\"en\": \"Queens \
-        //      County\"}), population: 113364 }"
-        // ],
-        // svec![
-        //     "CitiesRecord { id: 5115843, name: \"East Flatbush\", latitude: 40.65371, longitude:
-        // \      -73.93042, country: Some(Country { id: 6252001, code: \"US\", name:
-        // \"United \      States\" }), admin_division: Some(AdminDivision { id: 5128638,
-        // code: \"US.NY\", \      name: \"New York\" }), admin2_division:
-        // Some(AdminDivision { id: 6941775, code: \      \"US.NY.047\", name: \"Kings
-        // County\" }), timezone: \"America/New_York\", names: \      Some({\"en\": \"East
-        // Flatbush\"}), country_names: Some({\"en\": \"United States\"}), \
-        //      admin1_names: Some({\"en\": \"New York\"}), admin2_names: Some({\"en\":
-        // \"Kings\"}), \      population: 178464 }"
-        // ],
-        // svec![
-        //     "CitiesRecord { id: 5128581, name: \"New York City\", latitude: 40.71427, longitude:
-        // \      -74.00597, country: Some(Country { id: 6252001, code: \"US\", name:
-        // \"United \      States\" }), admin_division: Some(AdminDivision { id: 5128638,
-        // code: \"US.NY\", \      name: \"New York\" }), admin2_division: None, timezone:
-        // \"America/New_York\", names: \      Some({\"en\": \"New York\"}), country_names:
-        // Some({\"en\": \"United States\"}), \      admin1_names: Some({\"en\": \"New
-        // York\"}), admin2_names: None, population: 8804190 }" ],
-        // svec![
-        //     "CitiesRecord { id: 6332428, name: \"East Harlem\", latitude: 40.79472, longitude: \
-        //      -73.9425, country: Some(Country { id: 6252001, code: \"US\", name: \"United
-        // States\" \      }), admin_division: Some(AdminDivision { id: 5128638, code:
-        // \"US.NY\", name: \"New \      York\" }), admin2_division: Some(AdminDivision {
-        // id: 5128594, code: \"US.NY.061\", \      name: \"New York County\" }), timezone:
-        // \"America/New_York\", names: None, \      country_names: Some({\"en\": \"United
-        // States\"}), admin1_names: Some({\"en\": \"New \      York\"}), admin2_names:
-        // Some({\"en\": \"New York County\"}), population: 115921 }" ],
-        // svec!["This is not a Location and it will not be geocoded"],
-        // svec!["40.71427, -74.00597"],
-        // svec![
-        //     "CitiesRecord { id: 1703417, name: \"Makati City\", latitude: 14.55027, longitude: \
-        //      121.03269, country: Some(Country { id: 1694008, code: \"PH\", name: \"Philippines\"
-        // \      }), admin_division: Some(AdminDivision { id: 7521311, code: \"PH.NCR\",
-        // name: \      \"Metro Manila\" }), admin2_division: Some(AdminDivision { id:
-        // 11395838, code: \      \"PH.NCR.137600000\", name: \"Southern Manila District\"
-        // }), timezone: \      \"Asia/Manila\", names: Some({\"en\": \"Makati City\"}),
-        // country_names: \      Some({\"en\": \"Philippines\"}), admin1_names:
-        // Some({\"en\": \"National Capital \      Region\"}), admin2_names: None,
-        // population: 510383 }" ],
         svec![
             "CitiesRecord { id: 5116495, name: \"Elmhurst\", latitude: 40.73649, longitude: \
              -73.87791, country: Some(Country { id: 6252001, code: \"US\", name: \"United \
@@ -922,18 +726,6 @@ fn geocode_reverse() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["Location"],
-        // svec!["Melrose, New York US"],
-        // svec!["East Flatbush, New York US"],
-        // svec!["Manhattan, New York US"],
-        // svec!["East Harlem, New York US"],
-        // svec!["East Harlem, New York US"],
-        // svec!["This is not a Location and it will not be geocoded"],
-        // svec!["East Flatbush, New York US"],
-        // svec!["95.213424, 190,1234565"], // invalid lat, long
-        // svec![
-        //     "The coordinates are 40.66472342 latitude, -73.93867227 longitudue. This should NOT
-        // \      be geocoded."
-        // ],
         svec!["Melrose, New York US"],
         svec!["Brooklyn, New York US"],
         svec!["Manhattan, New York US"],
@@ -1252,65 +1044,6 @@ fn geocode_reverse_dyncols_fmt() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["Location", "city_col", "tz_col", "capital_col", "pop_col"],
-        // svec![
-        //     "40.812126, -73.9041813",
-        //     "Melrose",
-        //     "America/New_York",
-        //     "Washington",
-        //     "22470"
-        // ],
-        // svec![
-        //     "40.66472342, -73.93867227",
-        //     "East Flatbush",
-        //     "America/New_York",
-        //     "Washington",
-        //     "178464"
-        // ],
-        // svec![
-        //     "(40.766672, -73.9568128)",
-        //     "Manhattan",
-        //     "America/New_York",
-        //     "Washington",
-        //     "1487536"
-        // ],
-        // svec![
-        //     "(  40.819342, -73.9532127    )",
-        //     "East Harlem",
-        //     "America/New_York",
-        //     "Washington",
-        //     "115921"
-        // ],
-        // svec![
-        //     "< 40.819342,-73.9532127 >",
-        //     "East Harlem",
-        //     "America/New_York",
-        //     "Washington",
-        //     "115921"
-        // ],
-        // svec![
-        //     "This is not a Location and it will not be geocoded",
-        //     "",
-        //     "",
-        //     "",
-        //     ""
-        // ],
-        // svec![
-        //     "The treasure is at these coordinates 40.66472342, -73.93867227. This should be \
-        //      geocoded.",
-        //     "East Flatbush",
-        //     "America/New_York",
-        //     "Washington",
-        //     "178464"
-        // ],
-        // svec!["95.213424, 190,1234565", "", "", "", ""],
-        // svec![
-        //     "The coordinates are 40.66472342 latitude, -73.93867227 longitudue. This should NOT
-        // \      be geocoded.",
-        //     "",
-        //     "",
-        //     "",
-        //     ""
-        // ],
         svec![
             "40.812126, -73.9041813",
             "Melrose",

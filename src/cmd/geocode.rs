@@ -1725,9 +1725,32 @@ fn format_result(
             "%cityrecord" => format!("{cityrecord:?}"),
             "%admin1record" => format!("{:?}", cityrecord.admin_division),
             "%admin2record" => format!("{:?}", cityrecord.admin2_division),
-            "%json" => serde_json::to_string(cityrecord).unwrap_or_else(|_| "null".to_string()),
+            "%json" => {
+                let countryrecord = engine.country_info(country).unwrap();
+                let cr_json =
+                    serde_json::to_string(cityrecord).unwrap_or_else(|_| "null".to_string());
+                let country_json =
+                    serde_json::to_string(countryrecord).unwrap_or_else(|_| "null".to_string());
+                let us_fips_codes_json = get_us_fips_codes(cityrecord, nameslang).to_string();
+
+                format!(
+                    "{{\"cityrecord\":{}, \"countryrecord\":{} \"us_fips_codes\":{}}}",
+                    cr_json, country_json, us_fips_codes_json
+                )
+            },
             "%pretty-json" => {
-                serde_json::to_string_pretty(cityrecord).unwrap_or_else(|_| "null".to_string())
+                let countryrecord = engine.country_info(country).unwrap();
+                let cr_json =
+                    serde_json::to_string_pretty(cityrecord).unwrap_or_else(|_| "null".to_string());
+                let country_json = serde_json::to_string_pretty(countryrecord)
+                    .unwrap_or_else(|_| "null".to_string());
+                let us_fips_codes = get_us_fips_codes(cityrecord, nameslang);
+                let us_fips_codes_json = serde_json::to_string_pretty(&us_fips_codes)
+                    .unwrap_or_else(|_| "null".to_string());
+                format!(
+                    "{{\n  \"cityrecord\":{},\n  \"countryrecord\":{}\n \"us_fips_codes\":{}\n}}",
+                    cr_json, country_json, us_fips_codes_json
+                )
             },
             _ => {
                 // invalid formatstr, so we use the default for suggest/now or reverse/now
@@ -2068,4 +2091,57 @@ fn get_cityrecord_name_in_lang(cityrecord: &CitiesRecord, lang_lookup: &str) -> 
 #[inline]
 fn lookup_us_state_fips_code(state: &str) -> Option<&'static str> {
     US_STATES_FIPS_CODES.get(state).copied()
+}
+
+fn get_us_fips_codes(cityrecord: &CitiesRecord, nameslang: &NamesLang) -> serde_json::Value {
+    let us_state_code =
+        if let Some(admin1_code) = cityrecord.admin_division.as_ref().map(|ad| ad.code.clone()) {
+            if let Some(state_fips_code) = admin1_code.strip_prefix("US.") {
+                // admin1 code is a US state code, the two-letter state code
+                // is the last two characters of the admin1 code
+                state_fips_code.to_string()
+            } else {
+                // admin1 code is not a US state code
+                // set to empty string
+                String::new()
+            }
+        } else {
+            // no admin1 code
+            // set to empty string
+            String::new()
+        };
+    let us_state_fips_code = lookup_us_state_fips_code(&us_state_code).unwrap_or_else(|| "null");
+
+    let us_county_code = match cityrecord
+        .admin2_division
+        .as_ref()
+        .map(|ad| ad.code.clone())
+    {
+        Some(admin2_code) => {
+            if admin2_code.starts_with("US.") && admin2_code.len() == 9 {
+                // admin2 code is a US county code, the three-digit county code
+                // is the last three characters of the admin2 code
+                // start at index 7 to skip the US. prefix
+                // e.g. US.NY.061 -> 061
+                format!("{:0>3}", admin2_code[7..].to_string())
+            } else {
+                // admin2 code is not a US county code
+                // set to empty string
+                String::new()
+            }
+        },
+        None => {
+            // no admin2 code
+            // set to empty string
+            String::new()
+        },
+    };
+    json!(
+    {
+        "us_state_code": us_state_code,
+        "us_state_name": nameslang.admin1name,
+        "us_state_fips_code": us_state_fips_code,
+        "us_county": nameslang.admin2name,
+        "us_county_fips_code": us_county_code,
+    })
 }
