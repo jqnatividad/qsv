@@ -643,7 +643,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     // we need to use tokio runtime as geosuggest uses async
-    let rt = tokio::runtime::Runtime::new().unwrap();
+    let rt = tokio::runtime::Runtime::new()?;
     rt.block_on(geocode_main(args))?;
 
     Ok(())
@@ -690,6 +690,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
         // if QSV_CACHE_DIR env var is set, check if it exists. If it doesn't, create it.
         if cache_dir.starts_with('~') {
             // QSV_CACHE_DIR starts with ~, expand it
+            // safety: we know it starts with ~, so it should be safe to unwrap
             expand_tilde(&cache_dir).unwrap()
         } else {
             PathBuf::from(cache_dir)
@@ -698,6 +699,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
         // QSV_CACHE_DIR env var is not set, use args.flag_cache_dir
         // first check if it starts with ~, expand it
         if args.flag_cache_dir.starts_with('~') {
+            // safety: we know it starts with ~, so it should be safe to unwrap
             expand_tilde(&args.flag_cache_dir).unwrap()
         } else {
             PathBuf::from(&args.flag_cache_dir)
@@ -720,10 +722,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
 
     // create a TempDir for the one record CSV we're creating if we're doing a Now command
     // we're doing this at this scope so the TempDir is automatically dropped after we're done
-    let tempdir = tempfile::Builder::new()
-        .prefix("qsv-geocode")
-        .tempdir()
-        .unwrap();
+    let tempdir = tempfile::Builder::new().prefix("qsv-geocode").tempdir()?;
 
     // we're doing a SuggestNow, ReverseNow or CountryInfoNow - create a one record CSV in tempdir
     // with one column named "Location" and the passed location value and use it as the input
@@ -1540,6 +1539,7 @@ fn search_index(
 
             let nameslang = get_cityrecord_name_in_lang(cityrecord, lang_lookup);
 
+            // safety: we know country is Some because we got a cityrecord
             let country = cityrecord.country.clone().unwrap().code;
 
             if formatstr == "%+" {
@@ -1726,6 +1726,9 @@ fn format_result(
             "%admin1record" => format!("{:?}", cityrecord.admin_division),
             "%admin2record" => format!("{:?}", cityrecord.admin2_division),
             "%json" => {
+                // safety: it is safe to unwrap as we will always have a country record at this
+                // stage as the calling search_index function returns early if we
+                // don't have a country record
                 let countryrecord = engine.country_info(country).unwrap();
                 let cr_json =
                     serde_json::to_string(cityrecord).unwrap_or_else(|_| "null".to_string());
@@ -1739,6 +1742,7 @@ fn format_result(
                 )
             },
             "%pretty-json" => {
+                // safety: see safety note above for "%json"
                 let countryrecord = engine.country_info(country).unwrap();
                 let cr_json =
                     serde_json::to_string_pretty(cityrecord).unwrap_or_else(|_| "null".to_string());
@@ -1790,6 +1794,7 @@ fn format_result(
         let mut dynfmt_fields = Vec::with_capacity(10); // 10 is a reasonable default to save allocs
         let formatstr_re: &'static Regex = crate::regex_oncelock!(r"\{(?P<key>\w+)?\}");
         for format_fields in formatstr_re.captures_iter(formatstr) {
+            // safety: we know that the regex will always have a "key" group per the regex above
             dynfmt_fields.push(format_fields.name("key").unwrap().as_str());
         }
 
@@ -1971,6 +1976,7 @@ fn get_countryinfo(
         let mut dynfmt_fields = Vec::with_capacity(10); // 10 is a reasonable default to save allocs
         let formatstr_re: &'static Regex = crate::regex_oncelock!(r"\{(?P<key>\w+)?\}");
         for format_fields in formatstr_re.captures_iter(formatstr) {
+            // safety: the regex will always have a "key" group per the regex above
             dynfmt_fields.push(format_fields.name("key").unwrap().as_str());
         }
 
