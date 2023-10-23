@@ -335,10 +335,10 @@ geocode options:
                                 [default: en]
     --cities-url <url>          The URL to download the Geonames cities file from. There are several
                                 available at https://download.geonames.org/export/dump/.
-                                  cities500.zip   - cities with populations > 500; ~200k cities
-                                  cities1000.zip  - population > 1000; ~140k cities
-                                  cities5000.zip  - population > 5000; ~53k cities
-                                  cities15000.zip - population > 15000; ~26k cities
+                                  cities500.zip   - cities with populations > 500; ~200k cities, 56mb
+                                  cities1000.zip  - population > 1000; ~140k cities, 44mb
+                                  cities5000.zip  - population > 5000; ~53k cities, 21mb
+                                  cities15000.zip - population > 15000; ~26k cities, 13mb
                                 Note that the more cities are included, the larger the local index file will be,
                                 lookup times will be slower, and the search results will be different.
                                 For convenience, if this is set to 500, 1000, 5000 or 15000, it will be 
@@ -711,10 +711,12 @@ async fn geocode_main(args: Args) -> CliResult<()> {
 
     let geocode_index_filename = std::env::var("QSV_GEOCODE_INDEX_FILENAME")
         .unwrap_or_else(|_| DEFAULT_GEOCODE_INDEX_FILENAME.to_string());
+    let active_geocode_index_file =
+        format!("{}/{}", geocode_cache_dir.display(), geocode_index_filename);
     let geocode_index_file = args
         .arg_index_file
         .clone()
-        .unwrap_or_else(|| format!("{}/{}", geocode_cache_dir.display(), geocode_index_filename));
+        .unwrap_or_else(|| active_geocode_index_file.clone());
 
     // create a TempDir for the one record CSV we're creating if we're doing a Now command
     // we're doing this at this scope so the TempDir is automatically dropped after we're done
@@ -888,11 +890,11 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                     // copy it to the default geocode index file
 
                     if engine.metadata.is_some() {
-                        let _ = storage.dump_to(geocode_index_file.clone(), &engine);
+                        let _ = storage.dump_to(active_geocode_index_file.clone(), &engine);
                         winfo!(
                             "Valid Geonames index file {index_file} successfully copied to \
-                             {geocode_index_file}. It will be used from now on or until you \
-                             reset/rebuild it.",
+                             {active_geocode_index_file}. It will be used from now on or until \
+                             you reset/rebuild it.",
                         );
                     } else {
                         return fail_incorrectusage_clierror!(
