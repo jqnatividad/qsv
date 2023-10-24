@@ -37,3 +37,4 @@ tmp/*
 .env
 *.db
 *.snappy
+*.key
