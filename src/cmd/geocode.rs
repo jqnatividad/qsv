@@ -1735,10 +1735,9 @@ fn format_result(
                 let country_json =
                     serde_json::to_string(countryrecord).unwrap_or_else(|_| "null".to_string());
                 let us_fips_codes_json = get_us_fips_codes(cityrecord, nameslang).to_string();
-
                 format!(
-                    "{{\"cityrecord\":{}, \"countryrecord\":{} \"us_fips_codes\":{}}}",
-                    cr_json, country_json, us_fips_codes_json
+                    "{{\"cityrecord\":{cr_json}, \"countryrecord\":{country_json} \
+                     \"us_fips_codes\":{us_fips_codes_json}}}",
                 )
             },
             "%pretty-json" => {
@@ -1752,8 +1751,8 @@ fn format_result(
                 let us_fips_codes_json = serde_json::to_string_pretty(&us_fips_codes)
                     .unwrap_or_else(|_| "null".to_string());
                 format!(
-                    "{{\n  \"cityrecord\":{},\n  \"countryrecord\":{}\n \"us_fips_codes\":{}\n}}",
-                    cr_json, country_json, us_fips_codes_json
+                    "{{\n  \"cityrecord\":{cr_json},\n  \"countryrecord\":{country_json}\n \
+                     \"us_fips_codes\":{us_fips_codes_json}\n}}",
                 )
             },
             _ => {
@@ -2116,7 +2115,7 @@ fn get_us_fips_codes(cityrecord: &CitiesRecord, nameslang: &NamesLang) -> serde_
             // set to empty string
             String::new()
         };
-    let us_state_fips_code = lookup_us_state_fips_code(&us_state_code).unwrap_or_else(|| "null");
+    let us_state_fips_code = lookup_us_state_fips_code(&us_state_code).unwrap_or("null");
 
     let us_county_code = match cityrecord
         .admin2_division
