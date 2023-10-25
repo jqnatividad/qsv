@@ -13,6 +13,7 @@ fn setup(name: &str) -> (Workdir, process::Command) {
         svec!["a", "y"],
         svec!["a", "y"],
         svec!["b", "z"],
+        svec!["a", "Y"],
         svec!["", "z"],
         svec!["(NULL)", "x"],
     ];
@@ -39,9 +40,44 @@ fn frequency_no_headers() {
     let expected = vec![
         svec!["1", "(NULL)", "1"],
         svec!["1", "(NULL)", "1"],
-        svec!["1", "a", "3"],
+        svec!["1", "a", "4"],
         svec!["1", "b", "1"],
         svec!["1", "h1", "1"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn frequency_casesensitive() {
+    let (wrk, mut cmd) = setup("frequency_casesensitive");
+    cmd.args(["--limit", "0"]).args(["--select", "h2"]);
+
+    let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    got.sort();
+    let expected = vec![
+        svec!["field", "value", "count"],
+        svec!["h2", "Y", "1"],
+        svec!["h2", "x", "1"],
+        svec!["h2", "y", "2"],
+        svec!["h2", "z", "3"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn frequency_ignorecase() {
+    let (wrk, mut cmd) = setup("frequency_ignorecase");
+    cmd.arg("--ignore-case")
+        .args(["--limit", "0"])
+        .args(["--select", "h2"]);
+
+    let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    got.sort();
+    let expected = vec![
+        svec!["field", "value", "count"],
+        svec!["h2", "x", "1"],
+        svec!["h2", "y", "3"],
+        svec!["h2", "z", "3"],
     ];
     assert_eq!(got, expected);
 }
@@ -58,7 +94,7 @@ fn frequency_no_nulls() {
     let expected = vec![
         svec!["field", "value", "count"],
         svec!["h1", "(NULL)", "1"],
-        svec!["h1", "a", "3"],
+        svec!["h1", "a", "4"],
         svec!["h1", "b", "1"],
     ];
     assert_eq!(got, expected);
@@ -75,7 +111,7 @@ fn frequency_nulls() {
         svec!["field", "value", "count"],
         svec!["h1", "(NULL)", "1"],
         svec!["h1", "(NULL)", "1"],
-        svec!["h1", "a", "3"],
+        svec!["h1", "a", "4"],
         svec!["h1", "b", "1"],
     ];
     assert_eq!(got, expected);
@@ -90,7 +126,7 @@ fn frequency_limit() {
     got.sort();
     let expected = vec![
         svec!["field", "value", "count"],
-        svec!["h1", "a", "3"],
+        svec!["h1", "a", "4"],
         svec!["h2", "z", "3"],
     ];
     assert_eq!(got, expected);
@@ -99,13 +135,37 @@ fn frequency_limit() {
 #[test]
 fn frequency_asc() {
     let (wrk, mut cmd) = setup("frequency_asc");
-    cmd.args(["--limit", "1"])
+    cmd
         .args(["--select", "h2"])
         .arg("--asc");
 
     let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     got.sort();
-    let expected = vec![svec!["field", "value", "count"], svec!["h2", "x", "1"]];
+    let expected = vec![
+        svec!["field", "value", "count"],
+        svec!["h2", "Y", "1"],
+        svec!["h2", "x", "1"],
+        svec!["h2", "y", "2"],
+        svec!["h2", "z", "3"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn frequency_asc_ignorecase() {
+    let (wrk, mut cmd) = setup("frequency_asc_ignorecase");
+    cmd.arg("--ignore-case")
+        .args(["--select", "h2"])
+        .arg("--asc");
+
+    let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    got.sort();
+    let expected = vec![
+        svec!["field", "value", "count"],
+        svec!["h2", "x", "1"],
+        svec!["h2", "y", "3"],
+        svec!["h2", "z", "3"],
+    ];
     assert_eq!(got, expected);
 }
 
@@ -118,6 +178,7 @@ fn frequency_select() {
     got.sort();
     let expected = vec![
         svec!["field", "value", "count"],
+        svec!["h2", "Y", "1"],
         svec!["h2", "x", "1"],
         svec!["h2", "y", "2"],
         svec!["h2", "z", "3"],

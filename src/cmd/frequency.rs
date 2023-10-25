@@ -30,8 +30,9 @@ frequency options:
     -a, --asc              Sort the frequency tables in ascending order by
                            count. The default is descending order.
     --no-nulls             Don't include NULLs in the frequency table.
+    -i, --ignore-case      Ignore case when computing frequencies.
     -j, --jobs <arg>       The number of jobs to run in parallel.
-                           This works better when the given CSV data has
+                           This works much faster when the given CSV data has
                            an index already created. Note that a file handle
                            is opened for each job.
                            When not set, the number of jobs is set to the
@@ -67,16 +68,17 @@ use crate::{
 
 #[derive(Clone, Deserialize)]
 pub struct Args {
-    pub arg_input:       Option<String>,
-    pub flag_select:     SelectColumns,
-    pub flag_limit:      usize,
-    pub flag_asc:        bool,
-    pub flag_no_nulls:   bool,
-    pub flag_jobs:       Option<usize>,
-    pub flag_output:     Option<String>,
-    pub flag_no_headers: bool,
-    pub flag_delimiter:  Option<Delimiter>,
-    pub flag_memcheck:   bool,
+    pub arg_input:        Option<String>,
+    pub flag_select:      SelectColumns,
+    pub flag_limit:       usize,
+    pub flag_asc:         bool,
+    pub flag_no_nulls:    bool,
+    pub flag_ignore_case: bool,
+    pub flag_jobs:        Option<usize>,
+    pub flag_output:      Option<String>,
+    pub flag_no_headers:  bool,
+    pub flag_delimiter:   Option<Delimiter>,
+    pub flag_memcheck:    bool,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -199,20 +201,42 @@ impl Args {
         let mut row_work: csv::ByteRecord = csv::ByteRecord::with_capacity(200, nsel_len);
 
         let flag_no_nulls = self.flag_no_nulls;
-        for row in it {
-            row_work.clone_from(&row?);
-            for (i, field) in nsel.select(row_work.into_iter()).enumerate() {
-                field_work = {
-                    if let Ok(s) = simdutf8::basic::from_utf8(field) {
-                        s.trim().as_bytes().to_vec()
-                    } else {
-                        field.to_vec()
+        if self.flag_ignore_case {
+            let mut buf = String::new();
+            for row in it {
+                row_work.clone_from(&row?);
+                for (i, field) in nsel.select(row_work.into_iter()).enumerate() {
+                    field_work = {
+                        if let Ok(s) = simdutf8::basic::from_utf8(field) {
+                            to_lowercase_into(s.trim(), &mut buf);
+                            buf.as_bytes().to_vec()
+                        } else {
+                            field.to_vec()
+                        }
+                    };
+                    if !field_work.is_empty() {
+                        tabs[i].add(field_work);
+                    } else if !flag_no_nulls {
+                        tabs[i].add(null.clone());
                     }
-                };
-                if !field_work.is_empty() {
-                    tabs[i].add(field_work);
-                } else if !flag_no_nulls {
-                    tabs[i].add(null.clone());
+                }
+            }
+        } else {
+            for row in it {
+                row_work.clone_from(&row?);
+                for (i, field) in nsel.select(row_work.into_iter()).enumerate() {
+                    field_work = {
+                        if let Ok(s) = simdutf8::basic::from_utf8(field) {
+                            s.trim().as_bytes().to_vec()
+                        } else {
+                            field.to_vec()
+                        }
+                    };
+                    if !field_work.is_empty() {
+                        tabs[i].add(field_work);
+                    } else if !flag_no_nulls {
+                        tabs[i].add(null.clone());
+                    }
                 }
             }
         }
@@ -226,5 +250,15 @@ impl Args {
         let headers = rdr.byte_headers()?;
         let sel = self.rconfig().selection(headers)?;
         Ok((sel.select(headers).map(<[u8]>::to_vec).collect(), sel))
+    }
+}
+
+#[inline]
+fn to_lowercase_into(s: &str, buf: &mut String) {
+    buf.clear();
+    for c in s.chars() {
+        for lc in c.to_lowercase() {
+            buf.push(lc);
+        }
     }
 }
