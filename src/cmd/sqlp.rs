@@ -2,12 +2,12 @@ static USAGE: &str = r#"
 Run blazing-fast Polars SQL queries against several CSVs - replete with joins, aggregations,
 grouping, sorting, and more - working on larger than memory CSV files.
 
-Polars SQL is a SQL dialect, converting SQL queries to fast Polars LazyFrame expressions
-(see https://pola-rs.github.io/polars-book/user-guide/sql/intro/).
+Polars SQL is a SQL dialect, converting SQL queries to fast Polars LazyFrame expressions.
+(see https://pola-rs.github.io/polars-book/user-guide/sql/intro/)
 
 For a list of SQL functions and keywords supported by Polars SQL, see
-https://github.com/pola-rs/polars/blob/rs-0.33.0/crates/polars-sql/src/functions.rs
-https://github.com/pola-rs/polars/blob/rs-0.33.0/crates/polars-sql/src/keywords.rs and
+https://github.com/pola-rs/polars/blob/rs-0.34.0/crates/polars-sql/src/functions.rs
+https://github.com/pola-rs/polars/blob/rs-0.34.0/crates/polars-sql/src/keywords.rs and
 https://github.com/pola-rs/polars/issues/7227
 
 Returns the shape of the query result (number of rows, number of columns) to stderr.
@@ -29,6 +29,8 @@ Example queries:
   qsv sqlp data.csv 'SELECT col1, count(*) AS cnt FROM data GROUP BY col1 ORDER BY cnt DESC, col1 ASC'
 
   qsv sqlp data.csv "select lower(col1), substr(col2, 2, 4) from data WHERE starts_with(col1, 'foo')"
+
+  qsv sqlp data.csv "select COALESCE(NULLIF(col2, ''), 'foo') from data"
 
   # Use a SQL script to run a long, complex SQL query or to run SEVERAL SQL queries.
   # When running several queries, each query needs to be separated by a semicolon,
@@ -135,7 +137,10 @@ sqlp options:
     --time-format <fmt>       The time format to use writing times.
     --float-precision <arg>   The number of digits of precision to use when writing floats.
                               (default: 6)
-    --null-value <arg>        The string to use when writing null values.
+    --rnull-values <arg>      The comma-delimited list of strings to consider as null values
+                              when READING CSV files.
+                              (default: <empty string>)
+    --wnull-value <arg>       The string to use when WRITING null values.
                               (default: <empty string>)
 
                               PARQUET OUTPUT FORMAT ONLY:
@@ -174,7 +179,7 @@ use std::{
 use polars::{
     prelude::{
         CsvWriter, DataFrame, GzipLevel, IpcWriter, JsonWriter, LazyCsvReader, LazyFileListReader,
-        ParquetCompression, ParquetWriter, SerWriter, ZstdLevel,
+        NullValues, ParquetCompression, ParquetWriter, SerWriter, ZstdLevel,
     },
     sql::SQLContext,
 };
@@ -206,7 +211,8 @@ struct Args {
     flag_date_format:      Option<String>,
     flag_time_format:      Option<String>,
     flag_float_precision:  Option<usize>,
-    flag_null_value:       String,
+    flag_rnull_values:     String,
+    flag_wnull_value:      String,
     flag_compression:      String,
     flag_compress_level:   Option<i32>,
     flag_statistics:       bool,
@@ -257,12 +263,12 @@ impl OutputMode {
 
             let out_result = match self {
                 OutputMode::Csv => CsvWriter::new(&mut w)
-                    .with_delimiter(delim)
+                    .with_separator(delim)
                     .with_datetime_format(args.flag_datetime_format)
                     .with_date_format(args.flag_date_format)
                     .with_time_format(args.flag_time_format)
                     .with_float_precision(args.flag_float_precision)
-                    .with_null_value(args.flag_null_value)
+                    .with_null_value(args.flag_wnull_value)
                     .finish(&mut df),
                 OutputMode::Json => JsonWriter::new(&mut w).finish(&mut df),
                 OutputMode::Parquet => {
@@ -363,8 +369,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         "No data on stdin. Please provide at least one input file or pipe data to stdin.",
     )?;
 
-    if args.flag_null_value == "<empty string>" {
-        args.flag_null_value.clear();
+    let rnull_values = if args.flag_rnull_values == "<empty string>" {
+        vec![String::new()]
+    } else {
+        args.flag_rnull_values
+            .split(',')
+            .map(String::from)
+            .collect()
+    };
+
+    if args.flag_wnull_value == "<empty string>" {
+        args.flag_wnull_value.clear();
     };
 
     let output_mode: OutputMode = args.flag_format.parse().unwrap_or(OutputMode::Csv);
@@ -442,7 +457,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let lf = LazyCsvReader::new(table)
             .has_header(true)
             .with_missing_is_null(true)
-            .with_delimiter(delim)
+            .with_null_values(Some(NullValues::AllColumns(rnull_values.clone())))
+            .with_separator(delim)
             .with_infer_schema_length(args.flag_infer_len)
             .with_try_parse_dates(args.flag_try_parsedates)
             .with_ignore_errors(args.flag_ignore_errors)
