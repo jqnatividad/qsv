@@ -176,10 +176,9 @@ use std::{
 
 use polars::{
     datatypes::AnyValue,
-    frame::hash_join::{JoinType, JoinValidation},
     prelude::{
-        AsOfOptions, AsofStrategy, CsvWriter, IntoLazy, LazyCsvReader, LazyFileListReader,
-        LazyFrame, SerWriter, SortOptions,
+        AsOfOptions, AsofStrategy, CsvWriter, IntoLazy, JoinType, JoinValidation, LazyCsvReader,
+        LazyFileListReader, LazyFrame, SerWriter, SortOptions,
     },
     sql::SQLContext,
 };
@@ -250,7 +249,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // safety: flag_validate is always is_some() as it has a default value
     args.flag_validate = Some(args.flag_validate.unwrap().to_lowercase());
     let validation = match args.flag_validate.as_deref() {
-        Some("none") | None => JoinValidation::ManyToMany,
+        Some("manytomany" | "none") | None => JoinValidation::ManyToMany,
         Some("onetomany") => JoinValidation::OneToMany,
         Some("manytoone") => JoinValidation::ManyToOne,
         Some("onetoone") => JoinValidation::OneToOne,
@@ -401,8 +400,8 @@ impl JoinStruct {
                 .join_builder()
                 .with(self.right_lf.with_optimizations(optimization_state))
                 .how(JoinType::Cross)
+                .allow_parallel(true)
                 .validate(validation)
-                .force_parallel(true)
                 .finish()
                 .collect()?
         } else {
@@ -419,8 +418,8 @@ impl JoinStruct {
                 .left_on(left_selcols)
                 .right_on(right_selcols)
                 .how(jointype)
+                .allow_parallel(true)
                 .validate(validation)
-                .force_parallel(true)
                 .finish()
                 .collect()?
         };
@@ -448,7 +447,7 @@ impl JoinStruct {
 
         CsvWriter::new(&mut out_writer)
             .has_header(true)
-            .with_delimiter(self.delim)
+            .with_separator(self.delim)
             .with_datetime_format(self.datetime_format)
             .with_date_format(self.date_format)
             .with_time_format(self.time_format)
@@ -483,7 +482,7 @@ impl Args {
         let mut left_lf = LazyCsvReader::new(&self.arg_input1)
             .has_header(true)
             .with_missing_is_null(self.flag_nulls)
-            .with_delimiter(delim)
+            .with_separator(delim)
             .with_infer_schema_length(num_rows)
             .with_try_parse_dates(try_parsedates)
             .low_memory(low_memory)
@@ -498,7 +497,7 @@ impl Args {
         let mut right_lf = LazyCsvReader::new(&self.arg_input2)
             .has_header(true)
             .with_missing_is_null(self.flag_nulls)
-            .with_delimiter(delim)
+            .with_separator(delim)
             .with_infer_schema_length(num_rows)
             .with_try_parse_dates(try_parsedates)
             .low_memory(low_memory)
