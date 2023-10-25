@@ -253,6 +253,10 @@ impl Args {
     }
 }
 
+/// this is a non-allocating to_lowercase that uses an existing buffer
+/// and should be faster than the stdlib version
+/// TODO: if this proves to be faster per the benchmarks, we should use
+/// this project-wide over the allocating stdlib version, and move it to utils.rs
 #[inline]
 fn to_lowercase_into(s: &str, buf: &mut String) {
     buf.clear();
