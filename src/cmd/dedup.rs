@@ -1,14 +1,19 @@
 static USAGE: &str = r#"
 Deduplicates CSV rows. 
 
-Note that this requires reading all of the CSV data into memory because because the 
-rows need to be sorted first. 
+This requires reading all of the CSV data into memory because because the rows need
+to be sorted first.
 
-That is, unless the --sorted option is used to indicate the CSV is already sorted
-(typically, with the extsort command). This will make dedup run in streaming mode 
-with constant memory.
+That is, unless the --sorted option is used to indicate the CSV is already sorted -
+typically, with the sort cmd for more sorting options or the extsort cmd for larger
+than memory CSV files. This will make dedup run in streaming mode with constant memory.
 
 Either way, the output will not only be deduplicated, it will also be sorted.
+
+Note that dedup's sorting will only be done alphabetically, not numerically. That is,
+10 will come before 2. If you need to sort numerically, use the sort command first with
+the --numeric option and pipe it to dedup with the --sorted option.
+(i.e. qsv sort --numeric in.csv | qsv dedup --sorted)
 
 A duplicate count will also be sent to <stderr>.
 
@@ -147,11 +152,19 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         util::njobs(args.flag_jobs);
 
         let mut all = rdr.byte_records().collect::<Result<Vec<_>, _>>()?;
-        all.par_sort_by(|r1, r2| {
-            let a = sel.select(r1);
-            let b = sel.select(r2);
-            iter_cmp(a, b)
-        });
+        if ignore_case {
+            all.par_sort_by(|r1, r2| {
+                let a = sel.select(r1);
+                let b = sel.select(r2);
+                iter_cmp_ignore_case(a, b)
+            });
+        } else {
+            all.par_sort_by(|r1, r2| {
+                let a = sel.select(r1);
+                let b = sel.select(r2);
+                iter_cmp(a, b)
+            });
+        }
 
         for (current, current_record) in all.iter().enumerate() {
             let a = sel.select(current_record);
