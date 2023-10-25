@@ -269,14 +269,14 @@ fn sqlp_boston311_groupby_orderby_with_table_alias() {
 }
 
 #[test]
-fn sqlp_boston311_null_value() {
-    let wrk = Workdir::new("sqlp_boston311_null_value");
+fn sqlp_boston311_wnull_value() {
+    let wrk = Workdir::new("sqlp_boston311_wnull_value");
     let test_file = wrk.load_test_file("boston311-100.csv");
 
     let mut cmd = wrk.command("sqlp");
 
     cmd.arg(&test_file)
-        .args(["--null-value", "Not Specified"])
+        .args(["--wnull-value", "Not Specified"])
         .arg(
             "select location_street_name, location_zipcode from _t_1 where location_zipcode is \
              null order by location_street_name limit 5",
@@ -314,14 +314,16 @@ fn sqlp_null_aware_equality_checks() {
 
     let mut cmd = wrk.command("sqlp");
 
-    cmd.arg("test_null.csv").args(["--null-value", "NULL"]).arg(
-        r#"SELECT (a = b) as "1_eq_unaware",
+    cmd.arg("test_null.csv")
+        .args(["--wnull-value", "NULL"])
+        .arg(
+            r#"SELECT (a = b) as "1_eq_unaware",
            (a != b) as "2_neq_unaware", 
            (a <=> b) as "3_eq_aware", 
            (a IS NOT DISTINCT FROM b) as "4_eq_aware", 
            (a IS DISTINCT FROM b) as "5_neq_aware" 
          FROM test_null"#,
-    );
+        );
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
@@ -337,6 +339,41 @@ fn sqlp_null_aware_equality_checks() {
         svec!["true", "false", "true", "true", "false"],
         svec!["false", "true", "false", "false", "true"],
         svec!["NULL", "NULL", "false", "false", "true"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn sqlp_rnull_values() {
+    let wrk = Workdir::new("sqlp_rnull_values");
+    wrk.create(
+        "test_null.csv",
+        vec![
+            svec!["a", "b"],
+            svec!["1", "NULL"],
+            svec!["2", "NA"],
+            svec!["3", "Dunno"],
+            svec!["4", "4"],
+            svec!["5", ""],
+            svec!("6", "6"),
+        ],
+    );
+
+    let mut cmd = wrk.command("sqlp");
+
+    cmd.arg("test_null.csv")
+        .args(["--rnull-values", "NULL,NA,Dunno"])
+        .arg("SELECT * FROM test_null");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["a", "b"],
+        svec!["1", ""],
+        svec!["2", ""],
+        svec!["3", ""],
+        svec!["4", "4"],
+        svec!["5", ""],
+        svec!["6", "6"],
     ];
     assert_eq!(got, expected);
 }
@@ -443,7 +480,7 @@ fn sqlp_string_functions() {
             svec!["abc"],
             svec!["    abc"],
             svec!["a"],
-            svec![""],
+            svec!["b"],
         ],
     );
 
@@ -491,7 +528,7 @@ fn sqlp_string_functions() {
         svec!["abc"],
         svec!["abc"],
         svec!["a"],
-        svec![""],
+        svec!["b"],
     ];
     assert_eq!(got, expected);
 
@@ -523,7 +560,7 @@ fn sqlp_string_functions() {
         svec!["ABC"],
         svec!["ABC"],
         svec!["A"],
-        svec![""],
+        svec!["B"],
     ];
     assert_eq!(got, expected);
 
@@ -539,7 +576,7 @@ fn sqlp_string_functions() {
         svec!["abc"],
         svec!["abc"],
         svec!["a"],
-        svec![""],
+        svec!["b"],
     ];
     assert_eq!(got, expected);
 
@@ -555,7 +592,7 @@ fn sqlp_string_functions() {
         svec!["3"],
         svec!["3"],
         svec!["1"],
-        svec!["0"],
+        svec!["1"],
     ];
     assert_eq!(got, expected);
 
@@ -571,7 +608,7 @@ fn sqlp_string_functions() {
         svec!["3"],
         svec!["3"],
         svec!["1"],
-        svec!["0"],
+        svec!["1"],
     ];
     assert_eq!(got, expected);
 }
@@ -593,38 +630,38 @@ fn sqlp_boston311_try_parsedates() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["ward", "avg_tat"],
-        svec!["Ward 11", "4.84776e12"],
-        svec!["01", "4.81827e12"],
-        svec!["Ward 13", "1.5183657e12"],
-        svec!["Ward 15", "1.278926e12"],
-        svec!["Ward 21", "8.78446e11"],
-        svec!["Ward 14", "6.18933e11"],
-        svec!["Ward 3", "4.3769145e11"],
-        svec!["Ward 5", "4.119095e11"],
-        svec!["Ward 20", "3.67233e11"],
-        svec!["9", "3.53495e11"],
-        svec!["Ward 18", "2.49882e11"],
-        svec!["19", "2.12566e11"],
-        svec!["Ward 4", "1.128726e11"],
-        svec!["Ward 1", "1.0785067e11"],
-        svec!["Ward 10", "1.0411e11"],
-        svec!["16", "9.3557e10"],
-        svec!["Ward 19", "8.4164e10"],
-        svec!["10", "7.9101e10"],
-        svec!["21", "7.7717e10"],
-        svec!["7", "7.4611e10"],
-        svec!["17", "7.01175e10"],
-        svec!["3", "6.88366e10"],
-        svec!["Ward 9", "6.4097e10"],
-        svec!["Ward 12", "6.293e10"],
-        svec!["Ward 6", "5.4770168e10"],
-        svec!["Ward 7", "3.8346334e10"],
-        svec!["Ward 8", "3.27675e10"],
-        svec!["03", "2.98105e10"],
-        svec!["07", "2.5328001e10"],
-        svec!["22", "2.3919e10"],
-        svec!["14", "2.07865e10"],
-        svec!["Ward 22", "1.3524e10"],
+        svec!["Ward 11", "4847760000000.0"],
+        svec!["01", "4818270000000.0"],
+        svec!["Ward 13", "1518365700000.0"],
+        svec!["Ward 15", "1278926000000.0"],
+        svec!["Ward 21", "878446000000.0"],
+        svec!["Ward 14", "618933000000.0"],
+        svec!["Ward 3", "437691450000.0"],
+        svec!["Ward 5", "411909500000.0"],
+        svec!["Ward 20", "367233000000.0"],
+        svec!["9", "353495000000.0"],
+        svec!["Ward 18", "249882000000.0"],
+        svec!["19", "212566000000.0"],
+        svec!["Ward 4", "112872600000.0"],
+        svec!["Ward 1", "107850670000.0"],
+        svec!["Ward 10", "104110000000.0"],
+        svec!["16", "93557000000.0"],
+        svec!["Ward 19", "84164000000.0"],
+        svec!["10", "79101000000.0"],
+        svec!["21", "77717000000.0"],
+        svec!["7", "74611000000.0"],
+        svec!["17", "70117500000.0"],
+        svec!["3", "68836600000.0"],
+        svec!["Ward 9", "64097000000.0"],
+        svec!["Ward 12", "62930000000.0"],
+        svec!["Ward 6", "54770168000.0"],
+        svec!["Ward 7", "38346334000.0"],
+        svec!["Ward 8", "32767500000.0"],
+        svec!["03", "29810500000.0"],
+        svec!["07", "25328000000.0"],
+        svec!["22", "23919000000.0"],
+        svec!["14", "20786500000.0"],
+        svec!["Ward 22", "13524000000.0"],
         svec!["1", "9469000000.0"],
         svec!["06", "5290000000.0"],
         svec!["Ward 16", "4533667000.0"],
@@ -706,7 +743,8 @@ fn sqlp_boston311_explain() {
     assert!(got.starts_with(expected_begin));
 
     let expected_end = r#"boston311-100.csv
-        PROJECT 4/29 COLUMNS"#;
+        PROJECT 4/29 COLUMNS
+"        SELECTION: [(col(""case_status"")) == (Utf8(Closed))]""#;
     assert!(got.ends_with(expected_end));
 }
 
