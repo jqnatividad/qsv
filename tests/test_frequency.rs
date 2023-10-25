@@ -135,9 +135,7 @@ fn frequency_limit() {
 #[test]
 fn frequency_asc() {
     let (wrk, mut cmd) = setup("frequency_asc");
-    cmd
-        .args(["--select", "h2"])
-        .arg("--asc");
+    cmd.args(["--select", "h2"]).arg("--asc");
 
     let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     got.sort();
