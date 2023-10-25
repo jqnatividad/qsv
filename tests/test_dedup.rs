@@ -45,7 +45,32 @@ fn dedup_no_case() {
     cmd.arg("-i").arg("in.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![svec!["N", "S"], svec!["10", "a"], svec!["2", "b"]];
+    let expected = vec![svec!["N", "S"], svec!["10", "a"], svec!["2", "B"]];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn dedup_issue_1381() {
+    let wrk = Workdir::new("dedup_issue_1381");
+    wrk.create(
+        "in.csv",
+        vec![
+            svec!["office"],
+            svec!["Member of legislative assembly"],
+            svec!["Member of Legislative Assembly"],
+            svec!["Member of Tamil Nadu Legislative Assembly"],
+        ],
+    );
+
+    let mut cmd = wrk.command("dedup");
+    cmd.arg("-i").arg("in.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["office"],
+        svec!["Member of Legislative Assembly"],
+        svec!["Member of Tamil Nadu Legislative Assembly"],
+    ];
     assert_eq!(got, expected);
 }
 
@@ -183,7 +208,7 @@ fn dedup_alreadysorted_nocase() {
         svec!["N", "S"],
         svec!["10", "a"],
         svec!["100", "a"],
-        svec!["20", "b"],
+        svec!["20", "B"],
         svec!["3", "c"],
         svec!["4", "d"],
     ];
