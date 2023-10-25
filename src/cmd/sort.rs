@@ -38,7 +38,7 @@ sort options:
                             stable sort.
                             
                             For --random sorts, this means using an alternative
-                            random number generator (RNG) that uses the much faster
+                            random number generator (RNG) that uses the faster
                             Wyrand algorithm instead of the ChaCha algorithm used
                             by the standard RNG.
 
@@ -145,7 +145,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             fastrand::shuffle(&mut all); //DevSkim: ignore DS148264
         },
 
-        // default stable sort
+        // default stable parallel sort
         (false, false, false, false) => all.par_sort_by(|r1, r2| {
             let a = sel.select(r1);
             let b = sel.select(r2);
@@ -155,7 +155,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 iter_cmp(a, b)
             }
         }),
-        // default --faster unstable sort
+        // default --faster unstable, non-allocating parallel sort
         (false, false, false, true) => all.par_sort_unstable_by(|r1, r2| {
             let a = sel.select(r1);
             let b = sel.select(r2);
@@ -166,20 +166,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         }),
 
-        // --numeric stable sort
+        // --numeric stable parallel numeric sort
         (true, false, false, false) => all.par_sort_by(|r1, r2| {
             let a = sel.select(r1);
             let b = sel.select(r2);
             iter_cmp_num(a, b)
         }),
-        // --numeric --faster unstable sort
+        // --numeric --faster unstable, non-allocating, parallel numeric sort
         (true, false, false, true) => all.par_sort_unstable_by(|r1, r2| {
             let a = sel.select(r1);
             let b = sel.select(r2);
             iter_cmp_num(a, b)
         }),
 
-        // --reverse stable sort
+        // --reverse stable parallel sort
         (false, true, false, false) => all.par_sort_by(|r1, r2| {
             let a = sel.select(r1);
             let b = sel.select(r2);
@@ -189,7 +189,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 iter_cmp(b, a)
             }
         }),
-        // --reverse --faster unstable sort
+        // --reverse --faster unstable parallel sort
         (false, true, false, true) => all.par_sort_unstable_by(|r1, r2| {
             let a = sel.select(r1);
             let b = sel.select(r2);
