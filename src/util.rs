@@ -785,6 +785,7 @@ pub fn qsv_check_for_update(check_only: bool, no_confirm: bool) -> Result<bool, 
                 .show_output(false)
                 .no_confirm(no_confirm)
                 .current_version(curr_version)
+                .verifying_keys([*include_bytes!("qsv-zipsign-public.key")])
                 .build()
             {
                 Ok(update_job) => match update_job.update() {
