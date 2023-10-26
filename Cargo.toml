@@ -181,6 +181,7 @@ self_update = { version = "0.39", features = [
     "archive-zip",
     "compression-zip-deflate",
     "rustls",
+    "signatures",
 ], default-features = false, optional = true }
 semver = "1"
 serde = { version = "1", features = ["derive"] }
