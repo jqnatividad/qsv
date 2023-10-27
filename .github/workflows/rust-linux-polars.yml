@@ -35,10 +35,6 @@ jobs:
     - uses: actions/checkout@v4        
     - name: Update Rust
       run: rustup update
-    - name: Setup Rust-cache
-      uses: Swatinem/rust-cache@v2
-      with:
-        key: qsv-polars-cache
     - name: Run tests
       env:
         RUSTFLAGS: -C target-feature=+fxsr,+sse,+sse2,+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+fma
