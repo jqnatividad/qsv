@@ -112,6 +112,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // is just two values. if its more than 2, that's all we need know
         // for boolean inferencing
         flag_enum_threshold:  3,
+        // ignore case for enum constraints
+        // so we can properly infer booleans. e.g. if a field has a domain of
+        // True, False, true, false, TRUE, FALSE that it is still a boolean
+        // with a case-insensitive cardinality of 2
+        flag_ignore_case:     true,
         flag_strict_dates:    false,
         flag_pattern_columns: crate::select::SelectColumns::parse("")?,
         // json doesn't have a date type, so don't infer dates

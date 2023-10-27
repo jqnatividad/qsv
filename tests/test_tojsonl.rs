@@ -164,12 +164,13 @@ fn tojsonl_not_boolean_case_sensitive() {
     let mut cmd = wrk.command("tojsonl");
     cmd.arg("in.csv");
 
-    // not treated as boolean since col1's domain has three values
+    // properly treated as boolean since col1's domain has two values
+    // case-insensitive, even though the enum for col1 is
     // True, False and false
     let got: String = wrk.stdout(&mut cmd);
-    let expected = r#"{"col1":"True","col2":"Mark"}
-{"col1":"False","col2":"John"}
-{"col1":"false","col2":"Bob"}"#;
+    let expected = r#"{"col1":true,"col2":"Mark"}
+{"col1":false,"col2":"John"}
+{"col1":false,"col2":"Bob"}"#;
     assert_eq!(got, expected);
 }
 
