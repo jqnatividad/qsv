@@ -1,12 +1,12 @@
 use std::{
     cmp::Ordering,
-    collections::HashSet,
     fmt,
     iter::{self, repeat},
     ops, slice,
     str::FromStr,
 };
 
+use ahash::AHashSet;
 use regex::bytes::Regex;
 use serde::de::{Deserialize, Deserializer, Error};
 
@@ -52,7 +52,7 @@ impl SelectColumns {
             map.extend(idxs?);
         }
         if self.invert {
-            let set: HashSet<_> = map.into_iter().collect();
+            let set: AHashSet<_> = map.into_iter().collect();
             let mut map = vec![];
             for i in 0..first_record.len() {
                 if !set.contains(&i) {
