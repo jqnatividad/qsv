@@ -114,6 +114,20 @@ For macOS, ["ad-hoc" signatures](https://users.rust-lang.org/t/distributing-cli-
 xattr -d com.apple.quarantine qsv
 ```
 
+#### Verifying the Integrity of the Prebuilt Binaries Zip Archives
+All prebuilt binaries zip archives are signed with [zipsign](https://github.com/Kijewski/zipsign#zipsign) with the following public key [qsv-zipsign-public.key](https://github.com/jqnatividad/qsv/raw/master/src/qsv-zipsign-public.key). To verify the integrity of the downloaded zip archives:
+
+```bash
+# if you don't have zipsign installed yet
+cargo install zipsign
+
+# verify the integrity of the downloaded prebuilt binary zip archive
+# after downloading the zip archive and the qsv-zipsign-public.key file.
+# replace <PREBUILT-BINARY-ARCHIVE.zip> with the name of the downloaded zip archive
+# e.g. zipsign verify zip qsv-0.118.0-aarch64-apple-darwin.zip qsv-zipsign-public.key
+zipsign verify zip <PREBUILT-BINARY-ARCHIVE.zip> qsv-zipsign-public.key
+```
+
 ### Option 2: Homebrew
 
 For [macOS and Linux (64-bit)](https://formulae.brew.sh/formula/qsv), you can quickly install qsv with [Homebrew](https://brew.sh). However, only the `apply` and `luau` [features](#feature-flags) are enabled.
@@ -330,6 +344,7 @@ Luau will also serve as the backbone of a whole library of **qsv recipes** - reu
 * **As Secure as Possible** - qsv is designed to be secure. It has no external runtime dependencies, is [written](https://aws.amazon.com/blogs/opensource/why-aws-loves-rust-and-how-wed-like-to-help/) [in](https://msrc.microsoft.com/blog/2019/07/why-rust-for-safe-systems-programming/) [Rust](https://opensource.googleblog.com/2023/06/rust-fact-vs-fiction-5-insights-from-googles-rust-journey-2022.html), and it's codebase is automatically audited for security vulnerabilities with automated [DevSkim](https://github.com/microsoft/DevSkim#devskim) and ["cargo audit"](https://rustsec.org) Github Actions workflows.  
 It uses the latest stable Rust version, with an aggressive MSRV policy and the latest version of all its dependencies.
 It has an extensive test suite with more than 1,200 tests, including several [property tests](https://medium.com/criteo-engineering/introduction-to-property-based-testing-f5236229d237) which [randomly generate](https://github.com/BurntSushi/quickcheck#quickcheck) parameters for oft-used commands. It also has a [Security Policy](SECURITY.md).  
+Its prebuilt binary archives are [zipsigned](https://github.com/Kijewski/zipsign#zipsign), so you can manually verify their integrity. Its self-update mechanism also verifies the integrity of the downloaded binaries archive before applying an update.
 However, it does not use cryptographically secure random number generators as the performance penalty is too high and qsv's `sort` & `sample` use cases do not require it.
 (search for the codebase for *"[//DevSkim: ignore DS148264](https://github.com/search?q=repo%3Ajqnatividad%2Fqsv+%2F%2Fdevskim&type=code)"* to find instances where qsv uses a non-cryptographically secure random number generator)
 * **As Easy to Contribute to as Possible** - qsv is designed to be easy to contribute to, with a focus on maintainability. It's architecture allows the easy addition of self-contained commands gated by feature flags, the source code is heavily commented, the usage text is embedded, and there are helper functions that make it easy to create tests. See [Features](docs/FEATURES.md) and [Contributing](CONTRIBUTING.md) for more info.
