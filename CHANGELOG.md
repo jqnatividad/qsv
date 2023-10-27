@@ -6,28 +6,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.118.0] - 2023-10-26
+## [0.118.0] - 2023-10-27
 
 ## Highlights:
 * With the Polars upgrade to [0.34.2](https://github.com/pola-rs/polars/releases/tag/rs-0.34.0), the `sqlp` and `joinp` enjoy [expanded](https://github.com/pola-rs/polars/blob/rs-0.34.0/crates/polars-sql/src/functions.rs
-) [capabilities](https://github.com/pola-rs/polars/blob/rs-0.34.0/crates/polars-sql/src/keywords.rs) and a noticeable performance boost.
+) [capabilities](https://github.com/pola-rs/polars/blob/rs-0.34.0/crates/polars-sql/src/keywords.rs) and a noticeable performance boost. 🦄🏇
 * We now publish the 500, 1000, 5000 and 15000 Geonames cities indices for the `geocode` command, with users able to easily switch indices with the `index-load` subcommand. As the name implies, the 500 index contains cities with populations of 500 or more, the 1000 index contains cities with populations of 1000 or more, and so on.   
-The 15000 index (default) is the smallest (13mb) and fastest with ~26k cities. The 500 index is the largest(56mb) and slowest, with ~200k cities.  The 5000 index is 21mb with ~53k cities. The 1000 index is 44mb with ~140k cities.
-* The `geocode` command now returns US Census FIPS codes for US places with the `%json` and `%pretty-json` formats, returning both US State and US County FIPS codes, with upcoming support for Cities and other US Census geographies (School Districts, Voting Districts, Congressional Districts, etc.)
+The 15000 index (default) is the smallest (13mb) and fastest with ~26k cities. The 500 index is the largest(56mb) and slowest, with ~200k cities.  The 5000 index is 21mb with ~53k cities. The 1000 index is 44mb with ~140k cities. 🎠
+* The `geocode` command now returns US Census FIPS codes for US places with the `%json` and `%pretty-json` formats, returning both US State and US County FIPS codes, with upcoming support for Cities and other US Census geographies (School Districts, Voting Districts, Congressional Districts, etc.) 🎠
 * Improved performance for `stats`, `schema` and `tojsonl` commands with the stats cache bincode refactor. This is especially noticeable for large CSV files as `stats`  previously created large bincode cache files by default.   
-The bincode cache allows other commands (currently, only `schema` and `tojsonl`) to skip recomputing statistics and deserialize the saved stats data structures directly into memory. Now, it will only create a bincode file if the `--stats-binout` option is specified (typically, before using the `schema` an `tojsonl` commands). `stats` will still continue to create a stats CSV cache file by default, but it will be much smaller than the bincode file, and is universally applicable, unlike the bincode cache.
+The bincode cache allows other commands (currently, only `schema` and `tojsonl`) to skip recomputing statistics and deserialize the saved stats data structures directly into memory. Now, it will only create a bincode file if the `--stats-binout` option is specified (typically, before using the `schema` an `tojsonl` commands). `stats` will still continue to create a stats CSV cache file by default, but it will be much smaller than the bincode file, and is universally applicable, unlike the bincode cache. 🏇
 * self-update will now verify updates. This is done by verifying the [zipsign](https://crates.io/crates/zipsign) signature of the release zip archive before applying it. This should make it harder for malicious actors to compromise the self-update process. Version 0.118.0 has the verification code, and future releases will use this new verification process.
 Regardless, we will zipsign all zip archives starting with this release.
-Users can manually verify the signatures by downloading the zipsign public key and running the `zipsign` command line tool. See [Verifying Releases](https://todo-add-link.com) for more info.
-* The `frequency` command now supports the `--ignore-case` option for case-insensitive frequency counts.
-* Improved performance for `apply` and `applydp` commands with faster compile-time perfect hash functions for operations lookups.
-* Several minor performance improvements and bug fixes with `snappy`, `sniff` & `cat` commands.
+Users can manually verify the signatures by downloading the zipsign public key and running the `zipsign` command line tool. See [Verifying Releases](README.md#verifying-the-integrity-of-the-prebuilt-binaries-zip-archives) for more info. 🦄
+* The `frequency` command now supports the `--ignore-case` option for case-insensitive frequency counts. 🦄🎠
+* The `schema` command can now compile case-insensitive enum constraints. 🦄
+* Improved performance for `apply` and `applydp` commands with faster compile-time perfect hash functions for operations lookups. 🏇
+* Several minor performance improvements and bug fixes with `snappy`, `sniff` & `cat` commands. 🏇
 
 ---
 
 ### Added
 * `frequency`: added `--ignore-case` option https://github.com/jqnatividad/qsv/pull/1386
 * `geocode`: added 500, 1000, 5000, 15000 Geonames cities convenience shortcuts to `index` subcommands https://github.com/jqnatividad/qsv/commit/bd9f4c34b0a88cc6a446872ed4cda41e8a1ca102
+* `schema`: added `--ignore-case` option when compiling enum constraints; replaced Hashset with faster AHashset https://github.com/jqnatividad/qsv/commit/a16a1ca25f93699a5ee27327f4257e8e559bc5e8
+
 * `snappy`: added `buf_size` parm to compress helper fn https://github.com/jqnatividad/qsv/commit/e0c0d1f7eb22917d43f638121babe23e366c9dd8
 * `sniff` added `--just-mime` option https://github.com/jqnatividad/qsv/pull/1372
 * added zipsign signature verification to self-update https://github.com/jqnatividad/qsv/pull/1389
@@ -38,6 +41,7 @@ Users can manually verify the signatures by downloading the zipsign public key a
 * `luau`: replaced sanitise-file-name with more popular sanitize-filename crate https://github.com/jqnatividad/qsv/commit/8927cb70bc92e9e1360547e96d1ac10e6037e9e3
 * `cat`: minor optimization by preallocating with capacity https://github.com/jqnatividad/qsv/commit/c13c34120c47bb7ab603a97a0a7cae7f0de7b146
 * `sqlp` & `joinp`: expanded speed/functionality with upgrade to Polars 0.34.2 https://github.com/jqnatividad/qsv/pull/1385
+* `tojsonl`: improved boolean inferencing. Now correctly infers boolens, even if the enum domain range is more than 2, but has cardinality 2 case-insensitive https://github.com/jqnatividad/qsv/commit/6345f2dc01f6451075ba7f23c35d8ba8cced9293
 * build(deps): bump strum_macros from 0.25.2 to 0.25.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1368
 * build(deps): bump regex from 1.10.1 to 1.10.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1369
 * build(deps): bump uuid from 1.4.1 to 1.5.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1373
@@ -47,9 +51,10 @@ Users can manually verify the signatures by downloading the zipsign public key a
 * build(deps): bump serde from 1.0.189 to 1.0.190 by @dependabot in https://github.com/jqnatividad/qsv/pull/1388
 * build(deps): bump futures from 0.3.28 to 0.3.29 by @dependabot in https://github.com/jqnatividad/qsv/pull/1390
 * build(deps): bump futures-util from 0.3.28 to 0.3.29 by @dependabot in https://github.com/jqnatividad/qsv/pull/1391
+* build(deps): bump tempfile from 3.8.0 to 3.8.1 by @dependabot in https://github.com/jqnatividad/qsv/commit/4f6200cb57fdeb612aeb74d796b4b0c1fde7c243
 * apply select clippy suggestions
 * update several indirect dependencies
-* pin Rust nightly to 2023-10-24
+* pin Rust nightly to 2023-10-26
 
 ### Fixed
 * `dedup`: fixed --ignore-case not being honored during internal sort option https://github.com/jqnatividad/qsv/pull/1387
