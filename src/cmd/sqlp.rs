@@ -23,6 +23,10 @@ Example queries:
 
   qsv sqlp data.csv data2.csv 'select * from data join data2 on data.colname = data2.colname'
 
+  qsv sqlp tbl_a.csv tbl_b.csv tbl_c.csv "SELECT * FROM tbl_a \
+    RIGHT ANTI JOIN tbl_b USING (b) \
+    LEFT SEMI JOIN tbl_c USING (c)"
+
   # use "_t_N" aliases to refer to input files
   qsv sqlp data.csv data2.csv 'select * from _t_1 join _t_2 on _t_1.colname = _t_2.colname'
 
@@ -31,6 +35,8 @@ Example queries:
   qsv sqlp data.csv "select lower(col1), substr(col2, 2, 4) from data WHERE starts_with(col1, 'foo')"
 
   qsv sqlp data.csv "select COALESCE(NULLIF(col2, ''), 'foo') from data"
+
+  qsv sqlp tbl1.csv "SELECT x FROM tbl1 WHERE x IN (SELECT y FROM tbl1)"
 
   # Use a SQL script to run a long, complex SQL query or to run SEVERAL SQL queries.
   # When running several queries, each query needs to be separated by a semicolon,
