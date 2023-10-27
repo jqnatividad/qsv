@@ -18,7 +18,7 @@ The 15000 index (default) is the smallest (13mb) and fastest with ~26k cities. T
 The bincode cache allows other commands (currently, only `schema` and `tojsonl`) to skip recomputing statistics and deserialize the saved stats data structures directly into memory. Now, it will only create a bincode file if the `--stats-binout` option is specified (typically, before using the `schema` an `tojsonl` commands). `stats` will still continue to create a stats CSV cache file by default, but it will be much smaller than the bincode file, and is universally applicable, unlike the bincode cache. 🏇
 * self-update will now verify updates. This is done by verifying the [zipsign](https://crates.io/crates/zipsign) signature of the release zip archive before applying it. This should make it harder for malicious actors to compromise the self-update process. Version 0.118.0 has the verification code, and future releases will use this new verification process.
 Regardless, we will zipsign all zip archives starting with this release.
-Users can manually verify the signatures by downloading the zipsign public key and running the `zipsign` command line tool. See [Verifying Releases](README.md#verifying-the-integrity-of-the-prebuilt-binaries-zip-archives) for more info. 🦄
+Users can manually verify the signatures by downloading the zipsign public key and running the `zipsign` command line tool. See [Verifying the Integrity of the Prebuilt Binaries Zip Archive](README.md#verifying-the-integrity-of-the-prebuilt-binaries-zip-archives) for more info. 🦄
 * The `frequency` command now supports the `--ignore-case` option for case-insensitive frequency counts. 🦄🎠
 * The `schema` command can now compile case-insensitive enum constraints. 🦄
 * Improved performance for `apply` and `applydp` commands with faster compile-time perfect hash functions for operations lookups. 🏇
@@ -30,7 +30,6 @@ Users can manually verify the signatures by downloading the zipsign public key a
 * `frequency`: added `--ignore-case` option https://github.com/jqnatividad/qsv/pull/1386
 * `geocode`: added 500, 1000, 5000, 15000 Geonames cities convenience shortcuts to `index` subcommands https://github.com/jqnatividad/qsv/commit/bd9f4c34b0a88cc6a446872ed4cda41e8a1ca102
 * `schema`: added `--ignore-case` option when compiling enum constraints; replaced Hashset with faster AHashset https://github.com/jqnatividad/qsv/commit/a16a1ca25f93699a5ee27327f4257e8e559bc5e8
-
 * `snappy`: added `buf_size` parm to compress helper fn https://github.com/jqnatividad/qsv/commit/e0c0d1f7eb22917d43f638121babe23e366c9dd8
 * `sniff` added `--just-mime` option https://github.com/jqnatividad/qsv/pull/1372
 * added zipsign signature verification to self-update https://github.com/jqnatividad/qsv/pull/1389
