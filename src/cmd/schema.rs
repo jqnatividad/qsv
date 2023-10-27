@@ -36,6 +36,9 @@ Schema options:
     --enum-threshold <num>     Cardinality threshold for adding enum constraints.
                                Enum constraints are compiled for String & Integer types.
                                [default: 50]
+    -i, --ignore-case          Ignore case when compiling unique values for enum constraints.
+                               Do note however that the `validate` command is case-sensitive
+                               when validating against enum constraints.
     --strict-dates             Enforce Internet Datetime format (RFC-3339) for
                                detected date/datetime columns. Otherwise, even if
                                columns are inferred as date/datetime, they are set
@@ -75,13 +78,12 @@ Common options:
 "#;
 
 use std::{
-    collections::HashSet,
     fs::File,
     io::{BufReader, Write},
     path::Path,
 };
 
-use ahash::AHashMap;
+use ahash::{AHashMap, AHashSet};
 use csv::ByteRecord;
 use grex::RegExpBuilder;
 use itertools::Itertools;
@@ -100,6 +102,7 @@ use crate::{
 #[derive(Deserialize, Clone)]
 pub struct Args {
     pub flag_enum_threshold:  usize,
+    pub flag_ignore_case:     bool,
     pub flag_strict_dates:    bool,
     pub flag_pattern_columns: SelectColumns,
     pub flag_dates_whitelist: String,
@@ -639,7 +642,7 @@ fn get_unique_values(
         flag_limit:       args.flag_enum_threshold,
         flag_asc:         false,
         flag_no_nulls:    true,
-        flag_ignore_case: false,
+        flag_ignore_case: args.flag_ignore_case,
         flag_jobs:        Some(util::njobs(args.flag_jobs)),
         flag_output:      None,
         flag_no_headers:  args.flag_no_headers,
@@ -747,7 +750,7 @@ fn generate_string_patterns(
     }
 
     // Map each Header to its unique Set of values
-    let mut unique_values_map: AHashMap<String, HashSet<String>> = AHashMap::new();
+    let mut unique_values_map: AHashMap<String, AHashSet<String>> = AHashMap::new();
 
     #[allow(unused_assignments)]
     let mut record = csv::ByteRecord::new();
