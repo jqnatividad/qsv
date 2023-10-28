@@ -42,7 +42,7 @@
 arg_pat="$1"
 
 # the version of this script
-bm_version=3.3.2
+bm_version=3.3.3
 
 # CONFIGURABLE VARIABLES ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -509,21 +509,21 @@ run sqlp_lowmemory "$qsv_bin" sqlp "$data" -Q --low-memory '"select * from _t_1 
 run sqlp_nooptimizations "$qsv_bin" sqlp "$data" -Q --no-optimizations '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
 run sqlp_tryparsedates "$qsv_bin" sqlp "$data" -Q --try-parsedates '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
 run sqlp_tryparsedates_inferlen "$qsv_bin" sqlp "$data" -Q --infer-len 10000 --try-parsedates '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
-run stats "$qsv_bin" stats --force --stats-binout "$data"
+run stats "$qsv_bin" stats --force "$data"
 run stats_create_cache "$qsv_bin" stats --force "$data"
-run --index stats_index "$qsv_bin" stats --force --stats-binout "$data"
+run --index stats_index "$qsv_bin" stats --force "$data"
 run --index stats_index_with_cache "$qsv_bin" stats "$data"
-run --index stats_index_j1 "$qsv_bin" stats -j 1 --force --stats-binout "$data"
+run --index stats_index_j1 "$qsv_bin" stats -j 1 --force "$data"
 run --index stats_index_j1_with_cache "$qsv_bin" stats -j 1 "$data"
-run stats_everything "$qsv_bin" stats "$data" --force --stats-binout --everything
+run stats_everything "$qsv_bin" stats "$data" --force --everything
 run stats_everything_create_cache "$qsv_bin" stats "$data" --force --everything
-run stats_everything_infer_dates "$qsv_bin" stats "$data" --force --stats-binout --everything --infer-dates
-run stats_everything_j1 "$qsv_bin" stats "$data" --force --stats-binout --everything -j 1
-run --index stats_everything_index "$qsv_bin" stats "$data" --force --stats-binout --everything
+run stats_everything_infer_dates "$qsv_bin" stats "$data" --force --everything --infer-dates
+run stats_everything_j1 "$qsv_bin" stats "$data" --force --everything -j 1
+run --index stats_everything_index "$qsv_bin" stats "$data" --force --everything
 run --index stats_everything_index_with_cache "$qsv_bin" stats "$data" --everything
-run --index stats_everything_infer_dates_index "$qsv_bin" stats "$data" --force --stats-binout --everything --infer-dates
+run --index stats_everything_infer_dates_index "$qsv_bin" stats "$data" --force --everything --infer-dates
 run --index stats_everything_infer_dates_index_with_cache "$qsv_bin" stats "$data" --everything --infer-dates
-run --index stats_everything_index_j1 "$qsv_bin" stats "$data" --force --stats-binout --everything -j 1
+run --index stats_everything_index_j1 "$qsv_bin" stats "$data" --force --everything -j 1
 run --index stats_everything_index_j1_with_cache "$qsv_bin" stats "$data" --everything -j 1
 run table "$qsv_bin" table "$data"
 run to_xlsx "$qsv_bin" to xlsx benchmark_work.xlsx "$data"
@@ -620,7 +620,7 @@ if [ "$with_index_count" -gt 0 ]; then
   echo "  Preparing index and stats cache..."
   rm -f "$data".idx
   "$qsv_bin" index "$data"
-  "$qsv_bin" stats "$data" --everything --infer-dates --force \
+  "$qsv_bin" stats "$data" --everything --infer-dates --stats-binout --force \
     --output benchmark_work.stats.csv
 fi
 
