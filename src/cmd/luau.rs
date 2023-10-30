@@ -161,8 +161,11 @@ Luau arguments:
 Luau options:
   -g, --no-globals        Don't create Luau global variables for each column,
                           only `col`. Useful when some column names mask standard
-                          Luau globals. Note: access to Luau globals thru _G remains
-                          even without -g.
+                          Luau globals and a bit more performance.
+                          Note: access to Luau globals thru _G remains even with -g.
+  --no-colindex           Don't create col 1-based index for each column.
+                          Useful for squeezing out a bit more performance if you
+                          don't need to access columns by index.
   -r, --remap             Only the listed new columns are written to the output CSV.
                           Only applies to "map" subcommand.
   -B, --begin <script>    Luau script/file to execute in the BEGINning, before
@@ -251,6 +254,7 @@ struct Args {
     arg_main_script:  String,
     arg_input:        Option<String>,
     flag_no_globals:  bool,
+    flag_no_colindex: bool,
     flag_remap:       bool,
     flag_begin:       Option<String>,
     flag_end:         Option<String>,
@@ -645,7 +649,7 @@ fn sequential_mode(
         let begin_bytecode = luau_compiler.compile(begin_script);
         if let Err(e) = luau
             .load(&begin_bytecode)
-            .set_mode(mlua::ChunkMode::Binary)
+            // .set_mode(mlua::ChunkMode::Binary)
             .exec()
         {
             return fail_clierror!("BEGIN error: Failed to execute \"{begin_script}\".\n{e}");
@@ -704,6 +708,13 @@ fn sequential_mode(
     let mut must_keep_row;
     let col = luau.create_table_with_capacity(record.len(), 1)?;
 
+    let flag_no_globals = args.flag_no_globals;
+    let flag_no_colindex = args.flag_no_colindex;
+    let flag_remap = args.flag_remap;
+    let no_headers = rconfig.no_headers;
+    let cmd_map = args.cmd_map;
+    let mut err_msg: String;
+
     // main loop
     // without an index, we stream the CSV in sequential order
     'main: while rdr.read_record(&mut record)? {
@@ -717,10 +728,12 @@ fn sequential_mode(
 
         // Updating col
         let _ = col.clear();
-        for (i, v) in record.iter().enumerate() {
-            col.raw_set(i + 1, v)?;
+        if !flag_no_colindex {
+            for (i, v) in record.iter().enumerate() {
+                col.raw_set(i + 1, v)?;
+            }
         }
-        if !rconfig.no_headers {
+        if !no_headers {
             for (h, v) in headers.iter().zip(record.iter()) {
                 col.raw_set(h, v)?;
             }
@@ -728,21 +741,17 @@ fn sequential_mode(
         globals.raw_set("col", col.clone())?;
 
         // Updating global
-        if !args.flag_no_globals && !rconfig.no_headers {
+        if !flag_no_globals && !no_headers {
             for (h, v) in headers.iter().zip(record.iter()) {
                 globals.raw_set(h, v)?;
             }
         }
 
-        computed_value = match luau
-            .load(&main_bytecode)
-            .set_mode(mlua::ChunkMode::Binary)
-            .eval()
-        {
+        computed_value = match luau.load(&main_bytecode).eval() {
             Ok(computed) => computed,
             Err(e) => {
                 error_count += 1;
-                let err_msg = format!("<ERROR> _IDX: {idx} error({error_count}): {e:?}");
+                err_msg = format!("<ERROR> _IDX: {idx} error({error_count}): {e:?}");
                 log::error!("{err_msg}");
 
                 mlua::IntoLua::into_lua(err_msg, luau)
@@ -761,11 +770,11 @@ fn sequential_mode(
             break 'main;
         }
 
-        if args.cmd_map {
+        if cmd_map {
             map_computedvalue(
-                computed_value,
+                computed_value.as_ref(),
                 &mut record,
-                args.flag_remap,
+                flag_remap,
                 new_column_count,
             )?;
 
@@ -834,11 +843,7 @@ fn sequential_mode(
 
         info!("Compiling and executing END script. _ROWCOUNT: {idx}");
         let end_bytecode = luau_compiler.compile(end_script);
-        let end_value: Value = match luau
-            .load(&end_bytecode)
-            .set_mode(mlua::ChunkMode::Binary)
-            .eval()
-        {
+        let end_value: Value = match luau.load(&end_bytecode).eval() {
             Ok(computed) => computed,
             Err(e) => {
                 let err_msg = format!("<ERROR> END error: Cannot evaluate \"{end_script}\".\n{e}");
@@ -966,11 +971,7 @@ fn random_access_mode(
         LUAU_STAGE.store(Stage::Begin as i8, Ordering::Relaxed);
 
         let begin_bytecode = luau_compiler.compile(begin_script);
-        if let Err(e) = luau
-            .load(&begin_bytecode)
-            .set_mode(mlua::ChunkMode::Binary)
-            .exec()
-        {
+        if let Err(e) = luau.load(&begin_bytecode).exec() {
             return fail_clierror!("BEGIN error: Failed to execute \"{begin_script}\".\n{e}");
         }
         info!("BEGIN executed.");
@@ -1051,6 +1052,13 @@ fn random_access_mode(
     let mut must_keep_row;
     let col = luau.create_table_with_capacity(record.len(), 1)?;
 
+    let flag_no_globals = args.flag_no_globals;
+    let flag_no_colindex = args.flag_no_colindex;
+    let flag_remap = args.flag_remap;
+    let no_headers = rconfig.no_headers;
+    let cmd_map = args.cmd_map;
+    let mut err_msg: String;
+
     // main loop - here we use an indexed file reader to implement random access mode,
     // seeking to the next record to read by looking at _INDEX special var
     'main: while idx_file.read_record(&mut record)? {
@@ -1065,10 +1073,12 @@ fn random_access_mode(
 
         // Updating col
         let _ = col.clear();
-        for (i, v) in record.iter().enumerate() {
-            col.raw_set(i + 1, v)?;
+        if !flag_no_colindex {
+            for (i, v) in record.iter().enumerate() {
+                col.raw_set(i + 1, v)?;
+            }
         }
-        if !rconfig.no_headers {
+        if !no_headers {
             for (h, v) in headers.iter().zip(record.iter()) {
                 col.raw_set(h, v)?;
             }
@@ -1076,21 +1086,17 @@ fn random_access_mode(
         globals.raw_set("col", col.clone())?;
 
         // Updating global
-        if !args.flag_no_globals && !rconfig.no_headers {
+        if !flag_no_globals && !no_headers {
             for (h, v) in headers.iter().zip(record.iter()) {
                 globals.raw_set(h, v)?;
             }
         }
 
-        computed_value = match luau
-            .load(&main_bytecode)
-            .set_mode(mlua::ChunkMode::Binary)
-            .eval()
-        {
+        computed_value = match luau.load(&main_bytecode).eval() {
             Ok(computed) => computed,
             Err(e) => {
                 error_count += 1;
-                let err_msg = format!("<ERROR> _IDX: {curr_record} error({error_count}): {e:?}");
+                err_msg = format!("<ERROR> _IDX: {curr_record} error({error_count}): {e:?}");
                 log::error!("{err_msg}");
 
                 mlua::IntoLua::into_lua(err_msg, luau)
@@ -1109,11 +1115,11 @@ fn random_access_mode(
             break 'main;
         }
 
-        if args.cmd_map {
+        if cmd_map {
             map_computedvalue(
-                computed_value,
+                computed_value.as_ref(),
                 &mut record,
-                args.flag_remap,
+                flag_remap,
                 new_column_count,
             )?;
 
@@ -1185,11 +1191,7 @@ fn random_access_mode(
         LUAU_STAGE.store(Stage::End as i8, Ordering::Relaxed);
 
         let end_bytecode = luau_compiler.compile(end_script);
-        let end_value: Value = match luau
-            .load(&end_bytecode)
-            .set_mode(mlua::ChunkMode::Binary)
-            .eval()
-        {
+        let end_value: Value = match luau.load(&end_bytecode).eval() {
             Ok(computed) => computed,
             Err(e) => {
                 let err_msg = format!("<ERROR> END error: Cannot evaluate \"{end_script}\".\n{e}");
@@ -1241,7 +1243,7 @@ fn random_access_mode(
 
 #[inline]
 fn map_computedvalue(
-    computed_value: Value,
+    computed_value: &Value,
     record: &mut csv::StringRecord,
     flag_remap: bool,
     new_column_count: u8,
@@ -1252,14 +1254,14 @@ fn map_computedvalue(
         },
         Value::Number(number) => {
             let mut buffer = ryu::Buffer::new();
-            record.push_field(buffer.format(number));
+            record.push_field(buffer.format(*number));
         },
         Value::Integer(number) => {
             let mut buffer = itoa::Buffer::new();
-            record.push_field(buffer.format(number));
+            record.push_field(buffer.format(*number));
         },
         Value::Boolean(boolean) => {
-            record.push_field(if boolean { "true" } else { "false" });
+            record.push_field(if *boolean { "true" } else { "false" });
         },
         Value::Nil => {
             record.push_field("");
@@ -1271,7 +1273,7 @@ fn map_computedvalue(
                 record.clear();
             }
             let mut columns_inserted = 0_u8;
-            for pair in table.pairs::<mlua::Value, mlua::Value>() {
+            for pair in table.clone().pairs::<mlua::Value, mlua::Value>() {
                 // we don't care about the key, just the value
                 let (_k, v) = pair?;
                 match v {
