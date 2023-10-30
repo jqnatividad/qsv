@@ -42,7 +42,7 @@
 arg_pat="$1"
 
 # the version of this script
-bm_version=3.3.3
+bm_version=3.4.0
 
 # CONFIGURABLE VARIABLES ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -458,8 +458,12 @@ run jsonl "$qsv_bin" jsonl benchmark_data.jsonl
 run luau_filter "$qsv_bin" luau filter \"Location == \'\'\" "$data"
 run luau_filter_no_globals "$qsv_bin" luau filter --no-globals \"Location == \'\'\" "$data"
 run luau_multi "$qsv_bin" luau map dow,hourday,weekno "file:dt_format.luau" "$data"
+run luau_filter_no_globals_no_colidx "$qsv_bin" luau filter --no-globals --no-colindex \"Location == \'\'\" "$data"
 run luau_multi_no_globals "$qsv_bin" luau map dow,hourday,weekno --no-globals "file:dt_format.luau" "$data"
+run luau_multi_no_globals_no_colidx "$qsv_bin" luau map dow,hourday,weekno --no-globals --no-colindex "file:dt_format.luau" "$data"
 run luau_script "$qsv_bin" luau map turnaround_time "file:turnaround_time.luau" "$data"
+run luau_script_no_globals "$qsv_bin" luau map turnaround_time --no-globals "file:turnaround_time.luau" "$data"
+run luau_script_no_globals_nocolidx "$qsv_bin" luau map turnaround_time --no-globals --no-colindex "file:turnaround_time.luau" "$data"
 run partition "$qsv_bin" partition \'Community Board\' /tmp/partitioned "$data"
 run pseudo "$qsv_bin" pseudo \'Unique Key\' "$data"
 run rename "$qsv_bin" rename \'unique_key,created_date,closed_date,agency,agency_name,complaint_type,descriptor,loctype,zip,addr1,street,xstreet1,xstreet2,inter1,inter2,addrtype,city,landmark,facility_type,status,due_date,res_desc,res_act_date,comm_board,bbl,boro,xcoord,ycoord,opendata_type,parkname,parkboro,vehtype,taxi_boro,taxi_loc,bridge_hwy_name,bridge_hwy_dir,ramp,bridge_hwy_seg,lat,long,loc\' "$data"
