@@ -23,11 +23,15 @@ Example queries:
 
   qsv sqlp data.csv data2.csv 'select * from data join data2 on data.colname = data2.colname'
 
+  qsv sqlp data1.csv data2.csv 'SELECT * FROM data1 UNION ALL BY NAME SELECT * FROM data2'
+
   qsv sqlp tbl_a.csv tbl_b.csv tbl_c.csv "SELECT * FROM tbl_a \
     RIGHT ANTI JOIN tbl_b USING (b) \
     LEFT SEMI JOIN tbl_c USING (c)"
 
-  # use "_t_N" aliases to refer to input files
+  # use "_t_N" aliases to refer to input files, where N is the 1-based index
+  # of the input file/s. For example, _t_1 refers to the first input file, _t_2
+  # refers to the second input file, and so on.
   qsv sqlp data.csv data2.csv 'select * from _t_1 join _t_2 on _t_1.colname = _t_2.colname'
 
   qsv sqlp data.csv 'SELECT col1, count(*) AS cnt FROM data GROUP BY col1 ORDER BY cnt DESC, col1 ASC'
