@@ -90,7 +90,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     Ok(())
 }
 
-pub(crate) fn rename_headers_all_generic(num_of_cols: usize) -> String {
+pub fn rename_headers_all_generic(num_of_cols: usize) -> String {
     let mut generic_headers = String::new();
     for i in 1..=num_of_cols {
         generic_headers.push_str(&format!("_col_{i},"));
