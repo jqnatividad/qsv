@@ -794,7 +794,7 @@ fn sequential_mode(
                         wtr.write_record(&record)?;
                     }
                     wtr.write_record(&insertrecord)?;
-                    luau.globals().raw_set("_QSV_INSERTRECORD_TBL", "")?; // empty the table
+                    insertrecord_table.clear()?;
                 },
                 Ok(_) | Err(_) => {
                     if QSV_SKIP.load(Ordering::Relaxed) {
@@ -1135,7 +1135,7 @@ fn random_access_mode(
                         wtr.write_record(&record)?;
                     }
                     wtr.write_record(&insertrecord)?;
-                    luau.globals().raw_set("_QSV_INSERTRECORD_TBL", "")?; // empty the table
+                    insertrecord_table.clear()?;
                 },
                 Ok(_) | Err(_) => {
                     if QSV_SKIP.load(Ordering::Relaxed) {
@@ -1363,7 +1363,7 @@ fn beginend_insertrecord(
             create_insertrecord(&insertrecord_table, insertrecord, headers_count)?;
 
             wtr.write_record(&*insertrecord)?;
-            luau.globals().raw_set("_QSV_INSERTRECORD_TBL", "")?; // empty the table
+            insertrecord_table.clear()?;
         },
         Ok(_) | Err(_) => {},
     }
