@@ -23,6 +23,13 @@ Find the difference between two CSVs, but only for the first two columns and
 sort the result by the first and second column:
     qsv diff -k 0,1 --sort-columns 0,1 left.csv right.csv
 
+Find the difference between two CSVs, but do not output headers in the result:
+    qsv diff --no-headers-result left.csv right.csv
+
+Find the difference between two CSVs. Both CSVs have no headers, but the result should have
+headers, so generic headers will be used in the form of: _col_1, _col_2, etc.:
+    qsv diff --no-headers-left --no-headers-right left.csv right.csv
+
 For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_diff.rs
 
 Usage:
@@ -38,6 +45,9 @@ diff options:
                                 the right CSV to diff. (When not set, the
                                 first row is the header row and will be skipped during
                                 the diff. It will always appear in the output.)
+    --no-headers-result         When set, the diff result won't have a header row in
+                                it's output. If not set and both CSVs have no headers,
+                                headers in the result will be: _col_1,_col_2, etc.
     --delimiter-left <arg>      The field delimiter for reading CSV data on the left.
                                 Must be a single character. (default: ,)
     --delimiter-right <arg>     The field delimiter for reading CSV data on the right.
@@ -61,11 +71,15 @@ Common options:
     -o, --output <file>         Write output to <file> instead of stdout.
 "#;
 
-use std::io::{self, Read, Write};
+use std::io::{self, Write};
 
-use csv_diff::{csv_diff::CsvByteDiffBuilder, diff_row::DiffByteRecord};
+use csv_diff::{
+    csv_diff::CsvByteDiffBuilder, csv_headers::Headers, diff_result::DiffByteRecords,
+    diff_row::DiffByteRecord,
+};
 use serde::Deserialize;
 
+use super::rename::rename_headers_all_generic;
 use crate::{
     clitypes::CliError,
     config::{Config, Delimiter},
@@ -74,16 +88,17 @@ use crate::{
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input_left:        Option<String>,
-    arg_input_right:       Option<String>,
-    flag_output:           Option<String>,
-    flag_jobs:             Option<usize>,
-    flag_no_headers_left:  bool,
-    flag_no_headers_right: bool,
-    flag_delimiter_left:   Option<Delimiter>,
-    flag_delimiter_right:  Option<Delimiter>,
-    flag_key:              Option<String>,
-    flag_sort_columns:     Option<String>,
+    arg_input_left:         Option<String>,
+    arg_input_right:        Option<String>,
+    flag_output:            Option<String>,
+    flag_jobs:              Option<usize>,
+    flag_no_headers_left:   bool,
+    flag_no_headers_right:  bool,
+    flag_delimiter_left:    Option<Delimiter>,
+    flag_delimiter_right:   Option<Delimiter>,
+    flag_no_headers_result: bool,
+    flag_key:               Option<String>,
+    flag_sort_columns:      Option<String>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -123,14 +138,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .transpose()?;
 
     let wtr = Config::new(&args.flag_output).writer()?;
-    let mut csv_rdr_left = rconfig_left.reader()?;
-    let mut csv_rdr_right = rconfig_right.reader()?;
+    let csv_rdr_left = rconfig_left.reader()?;
+    let csv_rdr_right = rconfig_right.reader()?;
 
     // set RAYON_NUM_THREADS
     util::njobs(args.flag_jobs);
-
-    let mut csv_diff_writer = CsvDiffWriter::new(wtr);
-    csv_diff_writer.write_headers(&mut csv_rdr_left, &mut csv_rdr_right)?;
 
     let Ok(csv_diff) = CsvByteDiffBuilder::new()
         .primary_key_columns(primary_key_cols)
@@ -154,56 +166,53 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         },
     }
 
+    let mut csv_diff_writer = CsvDiffWriter::new(wtr, args.flag_no_headers_result);
     Ok(csv_diff_writer.write_diff_byte_records(diff_byte_records)?)
 }
 
 struct CsvDiffWriter<W: Write> {
     csv_writer: csv::Writer<W>,
+    no_headers: bool,
 }
 
 impl<W: Write> CsvDiffWriter<W> {
-    fn new(csv_writer: csv::Writer<W>) -> Self {
-        Self { csv_writer }
+    fn new(csv_writer: csv::Writer<W>, no_headers: bool) -> Self {
+        Self {
+            csv_writer,
+            no_headers,
+        }
     }
 
-    fn write_headers<R: Read>(
-        &mut self,
-        rdr_left: &mut csv::Reader<R>,
-        rdr_right: &mut csv::Reader<R>,
-    ) -> csv::Result<()> {
-        match (rdr_left.has_headers(), rdr_right.has_headers()) {
-            (true, true) => {
-                let rdr_bh = rdr_left.byte_headers()?;
-
-                rdr_bh.write_diffresult_header(&mut self.csv_writer)?;
-                // we also read the headers from the right CSV, so that both readers end up
-                // before the actual records. Otherwise, it would lead to errors when we
-                // diff the CSVs, because the header of one CSV would have been read and the other
-                // not.
-                #[allow(clippy::let_underscore_untyped)]
-                let _ = rdr_right.byte_headers()?;
+    fn write_headers(&mut self, headers: &Headers, num_columns: Option<usize>) -> csv::Result<()> {
+        match (headers.headers_left(), headers.headers_right()) {
+            (Some(lbh), Some(_rbh)) => {
+                // currently, `diff` can only handle two CSVs that have the same
+                // headers ordering, so in this case we can either choose the left
+                // or right headers, because both are the same
+                if !self.no_headers {
+                    lbh.write_diffresult_header(&mut self.csv_writer)?;
+                }
             },
-            (true, false) => {
-                let rdr_bh = rdr_left.byte_headers()?;
-
-                rdr_bh.write_diffresult_header(&mut self.csv_writer)?;
+            (Some(bh), None) | (None, Some(bh)) => {
+                if !self.no_headers {
+                    bh.write_diffresult_header(&mut self.csv_writer)?;
+                }
             },
-            (false, true) => {
-                let rdr_bh = rdr_right.byte_headers()?;
-
-                rdr_bh.write_diffresult_header(&mut self.csv_writer)?;
+            (None, None) => {
+                if let (Some(num_cols), false) = (num_columns.filter(|&c| c > 0), self.no_headers) {
+                    let headers_generic = rename_headers_all_generic(num_cols);
+                    let mut new_rdr = csv::Reader::from_reader(headers_generic.as_bytes());
+                    let new_headers = new_rdr.byte_headers()?;
+                    new_headers.write_diffresult_header(&mut self.csv_writer)?;
+                }
             },
-            // nothing to do, because there are no headers
-            (false, false) => {},
         }
 
         Ok(())
     }
 
-    fn write_diff_byte_records(
-        &mut self,
-        diff_byte_records: impl IntoIterator<Item = DiffByteRecord>,
-    ) -> io::Result<()> {
+    fn write_diff_byte_records(&mut self, diff_byte_records: DiffByteRecords) -> io::Result<()> {
+        self.write_headers(diff_byte_records.headers(), diff_byte_records.num_columns())?;
         for dbr in diff_byte_records {
             self.write_diff_byte_record(&dbr)?;
         }

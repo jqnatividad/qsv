@@ -66,13 +66,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let headers = rdr.byte_headers()?;
 
     if args.arg_headers.to_lowercase() == "_all_generic" {
-        let mut generic_headers = String::new();
-        for (i, _) in headers.iter().enumerate() {
-            generic_headers.push_str(&format!("_col_{},", i + 1));
-        }
-        // remove the trailing comma
-        generic_headers.pop();
-        args.arg_headers = generic_headers;
+        args.arg_headers = rename_headers_all_generic(headers.len());
     }
 
     let mut new_rdr = csv::Reader::from_reader(args.arg_headers.as_bytes());
@@ -94,4 +88,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
     wtr.flush()?;
     Ok(())
+}
+
+pub(crate) fn rename_headers_all_generic(num_of_cols: usize) -> String {
+    let mut generic_headers = String::new();
+    for i in 1..=num_of_cols {
+        generic_headers.push_str(&format!("_col_{},", i));
+    }
+    // remove the trailing comma
+    generic_headers.pop();
+    generic_headers
 }
