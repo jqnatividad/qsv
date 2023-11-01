@@ -657,19 +657,10 @@ fn sequential_mode(
         info!("BEGIN executed.");
     }
 
-    #[allow(unused_assignments)]
-    let mut insertrecord_table = luau.create_table()?; // amortize alloc
-    let empty_table = luau.create_table()?;
     let mut insertrecord = csv::StringRecord::new();
 
     // check if qsv_insertrecord() was called in the BEGIN script
-    beginend_insertrecord(
-        luau,
-        &empty_table,
-        insertrecord.clone(),
-        headers_count,
-        &mut wtr,
-    )?;
+    beginend_insertrecord(luau, &mut insertrecord, headers_count, &mut wtr)?;
     if QSV_BREAK.load(Ordering::Relaxed) {
         let qsv_break_msg: String = globals.raw_get("_QSV_BREAK_MSG")?;
         winfo!("{qsv_break_msg}");
@@ -695,6 +686,9 @@ fn sequential_mode(
     } else {
         progress.set_draw_target(ProgressDrawTarget::hidden());
     }
+
+    // check if _IDX was used in the MAIN script
+    let idx_used = main_script.contains("_IDX");
 
     let main_bytecode = luau_compiler.compile(main_script);
     let mut record = csv::StringRecord::new();
@@ -724,7 +718,10 @@ fn sequential_mode(
         }
 
         idx += 1;
-        globals.raw_set("_IDX", idx)?;
+        if idx_used {
+            // for perf reasons, only update _IDX if it was used in the MAIN script
+            globals.raw_set("_IDX", idx)?;
+        }
 
         // Updating col
         let _ = col.clear();
@@ -781,32 +778,31 @@ fn sequential_mode(
             // check if the script is trying to insert a record with
             // qsv_insertrecord(). We do this by checking if the global
             // _QSV_INSERTRECORD_TBL exists and is not empty
-            insertrecord_table = luau
-                .globals()
-                .raw_get("_QSV_INSERTRECORD_TBL")
-                .unwrap_or_else(|_| empty_table.clone());
+            match luau.globals().raw_get("_QSV_INSERTRECORD_TBL") {
+                Ok(Value::Table(insertrecord_table)) => {
+                    // _QSV_INSERTRECORD_TBL is populated, we have a record to insert
+                    insertrecord.clear();
 
-            let insertrecord_table_len = insertrecord_table.len().unwrap_or_default();
-            if insertrecord_table_len > 0 {
-                // _QSV_INSERTRECORD_TBL is populated, we have a record to insert
-                insertrecord.clear();
+                    create_insertrecord(&insertrecord_table, &mut insertrecord, headers_count)?;
 
-                create_insertrecord(&insertrecord_table, &mut insertrecord, headers_count)?;
-
-                if QSV_SKIP.load(Ordering::Relaxed) {
-                    if log_enabled!(log::Level::Debug) {
-                        debug!("Skipping record {idx} because _QSV_SKIP is set to true");
+                    if QSV_SKIP.load(Ordering::Relaxed) {
+                        if log_enabled!(log::Level::Debug) {
+                            debug!("Skipping record {idx} because _QSV_SKIP is set to true");
+                        }
+                        QSV_SKIP.store(false, Ordering::Relaxed);
+                    } else {
+                        wtr.write_record(&record)?;
                     }
-                    QSV_SKIP.store(false, Ordering::Relaxed);
-                } else {
-                    wtr.write_record(&record)?;
-                }
-                wtr.write_record(&insertrecord)?;
-                luau.globals().raw_set("_QSV_INSERTRECORD_TBL", "")?; // empty the table
-            } else if QSV_SKIP.load(Ordering::Relaxed) {
-                QSV_SKIP.store(false, Ordering::Relaxed);
-            } else {
-                wtr.write_record(&record)?;
+                    wtr.write_record(&insertrecord)?;
+                    luau.globals().raw_set("_QSV_INSERTRECORD_TBL", "")?; // empty the table
+                },
+                Ok(_) | Err(_) => {
+                    if QSV_SKIP.load(Ordering::Relaxed) {
+                        QSV_SKIP.store(false, Ordering::Relaxed);
+                    } else {
+                        wtr.write_record(&record)?;
+                    }
+                },
             }
         } else {
             // filter subcommand
@@ -840,6 +836,12 @@ fn sequential_mode(
         // to _IDX during the END script.
         LUAU_STAGE.store(Stage::End as i8, Ordering::Relaxed);
         globals.raw_set("_ROWCOUNT", idx)?;
+        if !idx_used {
+            // for perf reasons, we only updated _IDX in the main
+            // hot loop if it was used in the main script
+            // so we set it here in the END script, if it was not used in the main script
+            globals.raw_set("_IDX", idx)?;
+        }
 
         info!("Compiling and executing END script. _ROWCOUNT: {idx}");
         let end_bytecode = luau_compiler.compile(end_script);
@@ -856,7 +858,7 @@ fn sequential_mode(
         };
 
         // check if qsv_insertrecord() was called in the END script
-        beginend_insertrecord(luau, &empty_table, insertrecord, headers_count, &mut wtr)?;
+        beginend_insertrecord(luau, &mut insertrecord, headers_count, &mut wtr)?;
 
         let end_string = match end_value {
             Value::String(string) => string.to_string_lossy().to_string(),
@@ -977,19 +979,10 @@ fn random_access_mode(
         info!("BEGIN executed.");
     }
 
-    #[allow(unused_assignments)]
-    let mut insertrecord_table = luau.create_table()?; // amortize alloc
-    let empty_table = luau.create_table()?;
     let mut insertrecord = csv::StringRecord::new();
 
     // check if qsv_insertrecord() was called in the BEGIN script
-    beginend_insertrecord(
-        luau,
-        &empty_table,
-        insertrecord.clone(),
-        headers_count,
-        &mut wtr,
-    )?;
+    beginend_insertrecord(luau, &mut insertrecord, headers_count, &mut wtr)?;
     if QSV_BREAK.load(Ordering::Relaxed) {
         let qsv_break_msg: String = globals.raw_get("_QSV_BREAK_MSG")?;
         winfo!("{qsv_break_msg}");
@@ -1124,32 +1117,33 @@ fn random_access_mode(
             )?;
 
             // check if the MAIN script is trying to insert a record
-            insertrecord_table = luau
-                .globals()
-                .raw_get("_QSV_INSERTRECORD_TBL")
-                .unwrap_or_else(|_| empty_table.clone());
+            match luau.globals().raw_get("_QSV_INSERTRECORD_TBL") {
+                Ok(Value::Table(insertrecord_table)) => {
+                    // _QSV_INSERTRECORD_TBL is populated, we have a record to insert
+                    insertrecord.clear();
 
-            let insertrecord_table_len = insertrecord_table.len().unwrap_or_default();
-            if insertrecord_table_len > 0 {
-                // _QSV_INSERTRECORD_TBL is populated, we have a record to insert
-                insertrecord.clear();
+                    create_insertrecord(&insertrecord_table, &mut insertrecord, headers_count)?;
 
-                create_insertrecord(&insertrecord_table, &mut insertrecord, headers_count)?;
-
-                if QSV_SKIP.load(Ordering::Relaxed) {
-                    if log_enabled!(log::Level::Debug) {
-                        debug!("Skipping record {curr_record} because _QSV_SKIP is set to true");
+                    if QSV_SKIP.load(Ordering::Relaxed) {
+                        if log_enabled!(log::Level::Debug) {
+                            debug!(
+                                "Skipping record {curr_record} because _QSV_SKIP is set to true"
+                            );
+                        }
+                        QSV_SKIP.store(false, Ordering::Relaxed);
+                    } else {
+                        wtr.write_record(&record)?;
                     }
-                    QSV_SKIP.store(false, Ordering::Relaxed);
-                } else {
-                    wtr.write_record(&record)?;
-                }
-                wtr.write_record(&insertrecord)?;
-                luau.globals().raw_set("_QSV_INSERTRECORD_TBL", "")?; // empty the table
-            } else if QSV_SKIP.load(Ordering::Relaxed) {
-                QSV_SKIP.store(false, Ordering::Relaxed);
-            } else {
-                wtr.write_record(&record)?;
+                    wtr.write_record(&insertrecord)?;
+                    luau.globals().raw_set("_QSV_INSERTRECORD_TBL", "")?; // empty the table
+                },
+                Ok(_) | Err(_) => {
+                    if QSV_SKIP.load(Ordering::Relaxed) {
+                        QSV_SKIP.store(false, Ordering::Relaxed);
+                    } else {
+                        wtr.write_record(&record)?;
+                    }
+                },
             }
         } else {
             // filter subcommand
@@ -1204,7 +1198,7 @@ fn random_access_mode(
         };
 
         // check if qsv_insertrecord() was called in the END script
-        beginend_insertrecord(luau, &empty_table, insertrecord, headers_count, &mut wtr)?;
+        beginend_insertrecord(luau, &mut insertrecord, headers_count, &mut wtr)?;
 
         let end_string = match end_value {
             Value::String(string) => string.to_string_lossy().to_string(),
@@ -1357,24 +1351,22 @@ fn create_insertrecord(
 // check if qsv_insertrecord() was called in that script
 fn beginend_insertrecord(
     luau: &Lua,
-    empty_table: &mlua::Table,
-    mut insertrecord: csv::StringRecord,
+    insertrecord: &mut csv::StringRecord,
     headers_count: usize,
     wtr: &mut csv::Writer<Box<dyn Write>>,
 ) -> Result<(), CliError> {
-    let insertrecord_table = luau
-        .globals()
-        .raw_get("_QSV_INSERTRECORD_TBL")
-        .unwrap_or_else(|_| empty_table.clone());
-    let insertrecord_table_len = insertrecord_table.len().unwrap_or_default();
-    if insertrecord_table_len > 0 {
-        // _QSV_INSERTRECORD_TBL is populated, we have a record to insert
-        insertrecord.clear();
+    match luau.globals().raw_get("_QSV_INSERTRECORD_TBL") {
+        Ok(Value::Table(insertrecord_table)) => {
+            // _QSV_INSERTRECORD_TBL is populated, we have a record to insert
+            insertrecord.clear();
 
-        create_insertrecord(&insertrecord_table, &mut insertrecord, headers_count)?;
+            create_insertrecord(&insertrecord_table, insertrecord, headers_count)?;
 
-        wtr.write_record(&insertrecord)?;
-    };
+            wtr.write_record(&*insertrecord)?;
+            luau.globals().raw_set("_QSV_INSERTRECORD_TBL", "")?; // empty the table
+        },
+        Ok(_) | Err(_) => {},
+    }
     Ok(())
 }
 
