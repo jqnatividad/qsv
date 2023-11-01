@@ -354,7 +354,7 @@ QuickSilver's non-goals are to be:
 Further, several commands are gated behind feature flags, so you can compile qsv with only the features you need.
 * **Multi-lingual** - qsv's *usage text* and *messages* are English-only. There are no plans to support other languages. This does not mean it can only process English CSVs.  
 It can process well-formed CSVs in *any* language so long as its UTF-8 encoded. Further, it supports alternate delimiters; the `apply whatlang` operation detects 69 languages; and its `apply thousands, currency and eudex` operations supports different languages and country conventions for number, currency and date parsing/formatting.  
-Finally, though the default Geonames index of the `geocode` command is English-only, the index can be rebuilt with the `geocode index-update` subcommand to return place names in multiple languages (with support for 253 languages).
+Finally, though the default Geonames index of the `geocode` command is English-only, the index can be rebuilt with the `geocode index-update` subcommand with the `--languages` option to return place names in multiple languages (with support for 253 languages).
 
 
 ## Testing
