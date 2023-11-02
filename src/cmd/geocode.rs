@@ -332,8 +332,8 @@ geocode options:
     --languages <lang-list>     The comma-delimited, case-insentive list of languages to use when building
                                 the Geonames cities index.
                                 The languages are specified as a comma-separated list of ISO 639-2 codes.
-                                See http://download.geonames.org/export/dump/iso-languagecodes.txt to look up codes
-                                and http://download.geonames.org/export/dump/alternatenames/ for the supported
+                                See https://download.geonames.org/export/dump/iso-languagecodes.txt to look up codes
+                                and https://download.geonames.org/export/dump/alternatenames/ for the supported
                                 language files. 253 languages are currently supported.
                                 [default: en]
     --cities-url <url>          The URL to download the Geonames cities file from. There are several
