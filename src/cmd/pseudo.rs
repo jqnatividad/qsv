@@ -60,8 +60,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut wtr = Config::new(&args.flag_output).writer()?;
 
     let headers = rdr.byte_headers()?.clone();
-    let sel = rconfig.selection(&headers)?;
-    let column_index = *sel.iter().next().unwrap();
+    let column_index = match rconfig.selection(&headers) {
+        Ok(sel) => {
+            let sel_len = sel.len();
+            if sel_len > 1 {
+                return fail_incorrectusage_clierror!(
+                    "{sel_len} columns selected. Only one column can be selected for \
+                     pseudonymisation."
+                );
+            }
+            // safety: we checked that sel.len() == 1
+            *sel.iter().next().unwrap()
+        },
+        Err(e) => return fail_clierror!("{e}"),
+    };
 
     if !rconfig.no_headers {
         wtr.write_record(&headers)?;
