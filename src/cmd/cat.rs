@@ -108,15 +108,20 @@ impl Args {
         Ok(wtr.flush()?)
     }
 
+    // this algorithm is largely inspired by https://github.com/vi/csvcatrow by @vi
+    // https://github.com/jqnatividad/qsv/issues/527
     fn cat_rowskey(&self) -> CliResult<()> {
-        // this algorithm is largely inspired by https://github.com/vi/csvcatrow by @vi
-        // https://github.com/jqnatividad/qsv/issues/527
+        // ahash is a faster hasher than the default one used by IndexSet and IndexMap
+        type AhashIndexSet<T> = IndexSet<T, ahash::RandomState>;
+        type AhashIndexMap<T, T2> = IndexMap<T, T2, ahash::RandomState>;
+
         if self.flag_no_headers {
             return fail_incorrectusage_clierror!(
                 "cat rowskey does not support --no-headers, as we use column headers as keys."
             );
         }
-        let mut columns_global: IndexSet<Box<[u8]>> = IndexSet::with_capacity(32);
+
+        let mut columns_global: AhashIndexSet<Box<[u8]>> = AhashIndexSet::default();
 
         if self.flag_group {
             columns_global.insert(self.flag_group_name.as_bytes().to_vec().into_boxed_slice());
@@ -157,7 +162,8 @@ impl Args {
         let mut conf_path;
         let mut rdr;
         let mut header: &csv::ByteRecord;
-        let mut columns_of_this_file = IndexMap::with_capacity(num_columns_global);
+        let mut columns_of_this_file: AhashIndexMap<Box<[u8]>, usize> = AhashIndexMap::default();
+        columns_of_this_file.reserve(num_columns_global);
         let mut row: csv::ByteRecord = csv::ByteRecord::with_capacity(500, num_columns_global);
 
         for conf in self.configs()? {
