@@ -24,7 +24,7 @@ sort the result by the first and second column:
     qsv diff -k 0,1 --sort-columns 0,1 left.csv right.csv
 
 Find the difference between two CSVs, but do not output headers in the result:
-    qsv diff --no-headers-result left.csv right.csv
+    qsv diff --no-headers-output left.csv right.csv
 
 Find the difference between two CSVs. Both CSVs have no headers, but the result should have
 headers, so generic headers will be used in the form of: _col_1, _col_2, etc.:
@@ -45,7 +45,7 @@ diff options:
                                 the right CSV to diff. (When not set, the
                                 first row is the header row and will be skipped during
                                 the diff. It will always appear in the output.)
-    --no-headers-result         When set, the diff result won't have a header row in
+    --no-headers-output         When set, the diff result won't have a header row in
                                 it's output. If not set and both CSVs have no headers,
                                 headers in the result will be: _col_1,_col_2, etc.
     --delimiter-left <arg>      The field delimiter for reading CSV data on the left.
@@ -96,7 +96,7 @@ struct Args {
     flag_no_headers_right:  bool,
     flag_delimiter_left:    Option<Delimiter>,
     flag_delimiter_right:   Option<Delimiter>,
-    flag_no_headers_result: bool,
+    flag_no_headers_output: bool,
     flag_key:               Option<String>,
     flag_sort_columns:      Option<String>,
 }
@@ -166,7 +166,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         },
     }
 
-    let mut csv_diff_writer = CsvDiffWriter::new(wtr, args.flag_no_headers_result);
+    let mut csv_diff_writer = CsvDiffWriter::new(wtr, args.flag_no_headers_output);
     Ok(csv_diff_writer.write_diff_byte_records(diff_byte_records)?)
 }
 

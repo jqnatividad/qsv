@@ -227,7 +227,7 @@ fn diff_with_no_headers_in_result() {
     wrk.create("right.csv", right);
 
     let mut cmd = wrk.command("diff");
-    cmd.args(["left.csv", "right.csv", "--no-headers-result"]);
+    cmd.args(["left.csv", "right.csv", "--no-headers-output"]);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
@@ -249,7 +249,7 @@ fn diff_no_diff_with_no_headers_in_result() {
     wrk.create("right.csv", right);
 
     let mut cmd = wrk.command("diff");
-    cmd.args(["left.csv", "right.csv", "--no-headers-result"]);
+    cmd.args(["left.csv", "right.csv", "--no-headers-output"]);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected: Vec<Vec<String>> = vec![];
@@ -347,7 +347,7 @@ fn diff_with_no_left_no_right_and_no_headers_in_result() {
         "right.csv",
         "--no-headers-left",
         "--no-headers-right",
-        "--no-headers-result",
+        "--no-headers-output",
     ]);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
