@@ -16,6 +16,12 @@ Find the difference between two CSVs. The left CSV uses a tab as the delimiter:
     # or ';' as the delimiter
     qsv diff --delimiter-left ';' left.csv right-semicolon.csv
 
+Find the difference between two CSVs. The output CSV uses a tab as the delimiter
+and is written to a file:
+    qsv diff -o diff-tab.tsv --delimiter-output '\t' left.csv right.csv
+    # or ';' as the delimiter
+    qsv diff -o diff-semicolon.csv --delimiter-output ';' left.csv right.csv
+
 Find the difference between two CSVs, but only for the first two columns:
     qsv diff --key 0,1 left.csv right.csv
 
@@ -51,6 +57,8 @@ diff options:
     --delimiter-left <arg>      The field delimiter for reading CSV data on the left.
                                 Must be a single character. (default: ,)
     --delimiter-right <arg>     The field delimiter for reading CSV data on the right.
+                                Must be a single character. (default: ,)
+    --delimiter-output <arg>    The field delimiter for writing the CSV diff result.
                                 Must be a single character. (default: ,)
     -k, --key <arg...>          The column indices that uniquely identify a record
                                 as a comma separated list of indices, e.g. 0,1,2.
@@ -94,9 +102,10 @@ struct Args {
     flag_jobs:              Option<usize>,
     flag_no_headers_left:   bool,
     flag_no_headers_right:  bool,
+    flag_no_headers_output: bool,
     flag_delimiter_left:    Option<Delimiter>,
     flag_delimiter_right:   Option<Delimiter>,
-    flag_no_headers_output: bool,
+    flag_delimiter_output:  Option<Delimiter>,
     flag_key:               Option<String>,
     flag_sort_columns:      Option<String>,
 }
@@ -137,7 +146,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         })
         .transpose()?;
 
-    let wtr = Config::new(&args.flag_output).writer()?;
+    let wtr = Config::new(&args.flag_output)
+        .delimiter(args.flag_delimiter_output)
+        .writer()?;
     let csv_rdr_left = rconfig_left.reader()?;
     let csv_rdr_right = rconfig_right.reader()?;
 
