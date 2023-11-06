@@ -227,7 +227,7 @@ fn diff_with_no_headers_in_result() {
     wrk.create("right.csv", right);
 
     let mut cmd = wrk.command("diff");
-    cmd.args(["left.csv", "right.csv", "--no-headers-result"]);
+    cmd.args(["left.csv", "right.csv", "--no-headers-output"]);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
@@ -249,7 +249,7 @@ fn diff_no_diff_with_no_headers_in_result() {
     wrk.create("right.csv", right);
 
     let mut cmd = wrk.command("diff");
-    cmd.args(["left.csv", "right.csv", "--no-headers-result"]);
+    cmd.args(["left.csv", "right.csv", "--no-headers-output"]);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected: Vec<Vec<String>> = vec![];
@@ -347,7 +347,7 @@ fn diff_with_no_left_no_right_and_no_headers_in_result() {
         "right.csv",
         "--no-headers-left",
         "--no-headers-right",
-        "--no-headers-result",
+        "--no-headers-output",
     ]);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
@@ -423,6 +423,48 @@ fn diff_left_has_one_column_right_has_none_headers_in_result() {
     let expected = vec![svec!["diffresult", "h1"]];
 
     assert_eq!(got, expected);
+}
+
+#[test]
+fn diff_with_default_delimiter_in_result() {
+    let wrk = Workdir::new("diff_with_default_delimiter_in_result");
+
+    let left = vec![svec!["h1", "h2", "h3"], svec!["1", "foo", "bar"]];
+    wrk.create("left.csv", left);
+
+    let right = vec![svec!["h1", "h2", "h3"], svec!["1", "foo_changed", "bar"]];
+    wrk.create("right.csv", right);
+
+    let mut cmd = wrk.command("diff");
+    cmd.args(["left.csv", "right.csv"]);
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = "\
+diffresult,h1,h2,h3
+-,1,foo,bar
++,1,foo_changed,bar";
+    assert_eq!(got.as_str(), expected);
+}
+
+#[test]
+fn diff_with_different_delimiter_in_result() {
+    let wrk = Workdir::new("diff_with_different_delimiter_in_result");
+
+    let left = vec![svec!["h1", "h2", "h3"], svec!["1", "foo", "bar"]];
+    wrk.create("left.csv", left);
+
+    let right = vec![svec!["h1", "h2", "h3"], svec!["1", "foo_changed", "bar"]];
+    wrk.create("right.csv", right);
+
+    let mut cmd = wrk.command("diff");
+    cmd.args(["left.csv", "right.csv", "--delimiter-output", ";"]);
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = "\
+diffresult;h1;h2;h3
+-;1;foo;bar
++;1;foo_changed;bar";
+    assert_eq!(got.as_str(), expected);
 }
 
 fn create_file_with_delim(wrk: &Workdir, file_path_new: &str, file_path: &str, delimiter: u8) {
