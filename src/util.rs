@@ -405,6 +405,7 @@ where
         .map_err(From::from)
 }
 
+#[inline]
 pub fn many_configs(
     inps: &[String],
     delim: Option<Delimiter>,
