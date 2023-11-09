@@ -97,8 +97,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 impl Args {
     #[inline]
     fn configs(&self) -> CliResult<Vec<Config>> {
-        util::many_configs(&self.arg_input, self.flag_delimiter, self.flag_no_headers)
-            .map_err(From::from)
+        util::many_configs(
+            &self.arg_input,
+            self.flag_delimiter,
+            self.flag_no_headers,
+            self.flag_flexible,
+        )
+        .map_err(From::from)
     }
 
     fn cat_rows(&self) -> CliResult<()> {

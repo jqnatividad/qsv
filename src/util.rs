@@ -410,6 +410,7 @@ pub fn many_configs(
     inps: &[String],
     delim: Option<Delimiter>,
     no_headers: bool,
+    flexible: bool,
 ) -> Result<Vec<Config>, String> {
     let mut inps = inps.to_vec();
     if inps.is_empty() {
@@ -421,6 +422,7 @@ pub fn many_configs(
             Config::new(&Some(p))
                 .delimiter(delim)
                 .no_headers(no_headers)
+                .flexible(flexible)
         })
         .collect::<Vec<_>>();
     errif_greater_one_stdin(&confs)?;
