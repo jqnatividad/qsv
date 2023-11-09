@@ -88,6 +88,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 }
 
 impl Args {
+    #[inline]
     fn configs(&self) -> CliResult<Vec<Config>> {
         util::many_configs(&self.arg_input, self.flag_delimiter, self.flag_no_headers)
             .map_err(From::from)
@@ -96,15 +97,30 @@ impl Args {
     fn cat_rows(&self) -> CliResult<()> {
         let mut row = csv::ByteRecord::new();
         let mut wtr = Config::new(&self.flag_output).writer()?;
-        for (i, conf) in self.configs()?.into_iter().enumerate() {
-            let mut rdr = conf.reader()?;
-            if i == 0 {
-                conf.write_headers(&mut rdr, &mut wtr)?;
-            }
+        let mut rdr;
+
+        let mut configs = self.configs()?.into_iter();
+
+        // the first file is special, as it has the headers
+        // if --no-headers is set, we just write the first file
+        if let Some(conf) = configs.next() {
+            rdr = conf.reader()?;
+            conf.write_headers(&mut rdr, &mut wtr)?;
             while rdr.read_byte_record(&mut row)? {
                 wtr.write_byte_record(&row)?;
             }
         }
+
+        // the rest of the files are just written
+        // as fast as possible, as we don't need to
+        // worry about headers
+        for conf in configs {
+            rdr = conf.reader()?;
+            while rdr.read_byte_record(&mut row)? {
+                wtr.write_byte_record(&row)?;
+            }
+        }
+
         Ok(wtr.flush()?)
     }
 
