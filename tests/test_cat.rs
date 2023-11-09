@@ -120,6 +120,58 @@ fn cat_rowskey() {
 }
 
 #[test]
+fn cat_rows_flexible() {
+    let wrk = Workdir::new("cat_rows_flexible");
+    wrk.create(
+        "in1.csv",
+        vec![
+            svec!["a", "b", "c"],
+            svec!["1", "2", "3"],
+            svec!["2", "3", "4"],
+        ],
+    );
+
+    wrk.create(
+        "in2.csv",
+        vec![
+            svec!["a", "b", "c"],
+            svec!["3", "1", "2"],
+            svec!["4", "2", "3"],
+        ],
+    );
+
+    wrk.create(
+        "in3.csv",
+        vec![
+            svec!["a", "b", "c", "d"],
+            svec!["1", "2", "4", "3"],
+            svec!["2", "3", "5", "4"],
+            svec!["z", "y", "w", "x"],
+        ],
+    );
+
+    let mut cmd = wrk.command("cat");
+    cmd.arg("rows")
+        .arg("--flexible")
+        .arg("in1.csv")
+        .arg("in2.csv")
+        .arg("in3.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["a", "b", "c"],
+        svec!["1", "2", "3"],
+        svec!["2", "3", "4"],
+        svec!["3", "1", "2"],
+        svec!["4", "2", "3"],
+        svec!["1", "2", "4", "3"],
+        svec!["2", "3", "5", "4"],
+        svec!["z", "y", "w", "x"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn cat_rowskey_grouping() {
     let wrk = Workdir::new("cat_rowskey_grouping");
     wrk.create(
