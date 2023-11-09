@@ -9,7 +9,8 @@ reversed with the '--pad' flag.)
 Concatenating by rows can be done in two ways:
 
 'rows' subcommand: 
-   All CSV data must have the same number of columns and in the same order. 
+   All CSV data must have the same number of columns (unless --flexible is enabled)
+   and in the same order. 
    If you need to rearrange the columns or fix the lengths of records, use the
    'select' or 'fixlengths' commands. Also, only the headers of the *first* CSV
    data given are used. Headers in subsequent inputs are ignored. (This behavior
@@ -33,6 +34,11 @@ cat options:
     -p, --pad                When concatenating columns, this flag will cause
                              all records to appear. It will pad each row if
                              other CSV data isn't long enough.
+
+                             ROWS OPTION:
+    --flexible               When concatenating rows, this flag turns off validation
+                             that the output CSV have the same number of columns. This is
+                             faster, but may result in invalid CSV data.
 
                              ROWSKEY OPTIONS:
     -g, --group              When concatenating with rowskey, use the file stem of each
@@ -69,6 +75,7 @@ struct Args {
     flag_group_name: String,
     arg_input:       Vec<String>,
     flag_pad:        bool,
+    flag_flexible:   bool,
     flag_output:     Option<String>,
     flag_no_headers: bool,
     flag_delimiter:  Option<Delimiter>,
@@ -96,7 +103,9 @@ impl Args {
 
     fn cat_rows(&self) -> CliResult<()> {
         let mut row = csv::ByteRecord::new();
-        let mut wtr = Config::new(&self.flag_output).writer()?;
+        let mut wtr = Config::new(&self.flag_output)
+            .flexible(self.flag_flexible)
+            .writer()?;
         let mut rdr;
 
         let mut configs = self.configs()?.into_iter();
