@@ -92,17 +92,27 @@ fn count_input(
     let mut rdr = conf.reader()?;
     let mut count = 0_u64;
     let mut max_width = 0_usize;
-    let mut record_numfields = 0_usize;
+    let mut record_numdelimiters = 0_usize;
     let mut record = csv::ByteRecord::new();
 
     if compute_width {
         let mut curr_width;
+
+        // read the first record to get the number of delimiters
+        // and the width of the first record
+        rdr.read_byte_record(&mut record)?;
+        max_width = record.as_slice().len();
+        count = 1;
+
+        // number of delimiters is number of fields minus 1
+        // we subtract 1 because the last field doesn't have a delimiter
+        record_numdelimiters = record.len().saturating_sub(1);
+
         while rdr.read_byte_record(&mut record)? {
             count += 1;
 
             curr_width = record.as_slice().len();
             if curr_width > max_width {
-                record_numfields = record.len();
                 max_width = curr_width;
             }
         }
@@ -111,7 +121,7 @@ fn count_input(
             count += 1;
         }
     }
-    // record_numfields is a count of the delimiters
+    // record_numdelimiters is a count of the delimiters
     // which we also want to count when returning width
-    Ok((count, max_width + record_numfields))
+    Ok((count, max_width + record_numdelimiters))
 }

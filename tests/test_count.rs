@@ -26,16 +26,18 @@ fn count_width() {
     wrk.create_indexed(
         "in.csv",
         vec![
-            svec!["letter", "number"],
-            svec!["alpha", "13"],
-            svec!["beta", "24"],
+            svec!["letter", "number", "flag"],
+            svec!["alphabetic", "13", "true"],
+            svec!["beta", "24", "false"],
+            svec!["gamma", "37.1", "true"],
+            svec!("delta", "42.5", "false"),
         ],
     );
     let mut cmd = wrk.command("count");
     cmd.arg("--width").arg("in.csv");
 
     let got: String = wrk.stdout(&mut cmd);
-    let expected = "2;9";
+    let expected = "4;18";
     assert_eq!(got, expected.to_string());
 }
 
