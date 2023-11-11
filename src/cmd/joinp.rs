@@ -168,6 +168,7 @@ Common options:
 "#;
 
 use std::{
+    env,
     fs::File,
     io::{self, Write},
     path::Path,
@@ -473,6 +474,12 @@ impl Args {
             b','
         };
 
+        let comment_char: Option<u8> = if let Ok(comment_char) = env::var("QSV_COMMENT_CHAR") {
+            Some(comment_char.as_bytes().first().unwrap().to_owned())
+        } else {
+            None
+        };
+
         let num_rows = if infer_len == 0 {
             None
         } else {
@@ -482,6 +489,7 @@ impl Args {
         let mut left_lf = LazyCsvReader::new(&self.arg_input1)
             .has_header(true)
             .with_missing_is_null(self.flag_nulls)
+            .with_comment_char(comment_char)
             .with_separator(delim)
             .with_infer_schema_length(num_rows)
             .with_try_parse_dates(try_parsedates)
@@ -497,6 +505,7 @@ impl Args {
         let mut right_lf = LazyCsvReader::new(&self.arg_input2)
             .has_header(true)
             .with_missing_is_null(self.flag_nulls)
+            .with_comment_char(comment_char)
             .with_separator(delim)
             .with_infer_schema_length(num_rows)
             .with_try_parse_dates(try_parsedates)
