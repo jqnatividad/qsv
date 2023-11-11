@@ -403,6 +403,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         b','
     };
 
+    let comment_char: Option<u8> = if let Ok(comment_char) = env::var("QSV_COMMENT_CHAR") {
+        Some(comment_char.as_bytes().first().unwrap().to_owned())
+    } else {
+        None
+    };
+
     let optimization_state = if args.flag_no_optimizations {
         // use default optimization state
         polars::lazy::frame::OptState {
@@ -467,6 +473,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let lf = LazyCsvReader::new(table)
             .has_header(true)
             .with_missing_is_null(true)
+            .with_comment_char(comment_char)
             .with_null_values(Some(NullValues::AllColumns(rnull_values.clone())))
             .with_separator(delim)
             .with_infer_schema_length(args.flag_infer_len)

@@ -724,6 +724,42 @@ fn sqlp_boston311_try_parsedates_format() {
 }
 
 #[test]
+fn sqlp_comments() {
+    let wrk = Workdir::new("sqlp_comments");
+    // let test_file = wrk.load_test_file("inputcommenttest.csv");
+    wrk.create(
+        "comments.csv",
+        vec![
+            svec!["# test file to see how comments work", ""],
+            svec!["# this is another comment before the header", ""],
+            svec!["# DATA DICTIONARY", ""],
+            svec!["# column1 - alphabetic; id of the column", ""],
+            svec!["# column2 - numeric; just a number", ""],
+            svec!["column1", "column2"],
+            svec!["a", "1"],
+            svec!["#b", "2"],
+            svec!["c", "3"],
+            svec!["#d - this row is corrupted skip", "extra col2"],
+            svec!["e", "5"],
+        ],
+    );
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.env("QSV_COMMENT_CHAR", "#");
+    cmd.arg("comments.csv")
+        .arg("select column1, column2 from comments order by column2 desc");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["column1", "column2"],
+        svec!["e", "5"],
+        svec!["c", "3"],
+        svec!["a", "1"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn sqlp_boston311_explain() {
     let wrk = Workdir::new("sqlp_boston311_explain");
     let test_file = wrk.load_test_file("boston311-100.csv");
