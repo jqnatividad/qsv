@@ -33,6 +33,7 @@ macro_rules! joinp_test_comments {
             fn headers() {
                 let wrk = setup(stringify!($name2));
                 let mut cmd = wrk.command("joinp");
+                cmd.env("QSV_COMMENT_CHAR", "#");
                 cmd.args(&["city", "cities_comments.csv", "city", "places.csv"]);
                 $fun(wrk, cmd);
             }
