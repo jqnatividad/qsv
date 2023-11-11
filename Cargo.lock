@@ -1769,9 +1769,9 @@ dependencies = [
 
 [[package]]
 name = "flexi_logger"
-version = "0.27.2"
+version = "0.27.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "64d1984eeb4ccb9a6f3fa5f2a1850d34afed6fd4ffcd1513b691eef9dda0f057"
+checksum = "2ac35b454b60e1836602173e2eb7ef531173388c0212e02ec7f9fac086159ee5"
 dependencies = [
  "chrono",
  "crossbeam-channel",
