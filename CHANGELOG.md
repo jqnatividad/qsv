@@ -40,7 +40,7 @@ Users can manually verify the signatures by downloading the zipsign public key a
 * `luau`: replaced sanitise-file-name with more popular sanitize-filename crate https://github.com/jqnatividad/qsv/commit/8927cb70bc92e9e1360547e96d1ac10e6037e9e3
 * `cat`: minor optimization by preallocating with capacity https://github.com/jqnatividad/qsv/commit/c13c34120c47bb7ab603a97a0a7cae7f0de7b146
 * `sqlp` & `joinp`: expanded speed/functionality with upgrade to Polars 0.34.2 https://github.com/jqnatividad/qsv/pull/1385
-* `tojsonl`: improved boolean inferencing. Now correctly infers boolens, even if the enum domain range is more than 2, but has cardinality 2 case-insensitive https://github.com/jqnatividad/qsv/commit/6345f2dc01f6451075ba7f23c35d8ba8cced9293
+* `tojsonl`: improved boolean inferencing. Now correctly infers booleans, even if the enum domain range is more than 2, but has cardinality 2 case-insensitive https://github.com/jqnatividad/qsv/commit/6345f2dc01f6451075ba7f23c35d8ba8cced9293
 * build(deps): bump strum_macros from 0.25.2 to 0.25.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1368
 * build(deps): bump regex from 1.10.1 to 1.10.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1369
 * build(deps): bump uuid from 1.4.1 to 1.5.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1373

@@ -41,7 +41,7 @@ macro_rules! joinp_test_comments {
     };
 }
 
-macro_rules! joinp_test_compresssed {
+macro_rules! joinp_test_compressed {
     ($name3:ident, $fun:expr) => {
         mod $name3 {
             use std::process;
@@ -149,7 +149,7 @@ joinp_test_comments!(
     }
 );
 
-joinp_test_compresssed!(
+joinp_test_compressed!(
     joinp_inner_compressed,
     |wrk: Workdir, mut cmd: process::Command| {
         let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
@@ -335,7 +335,7 @@ joinp_test!(joinp_full, |wrk: Workdir, mut cmd: process::Command| {
     assert!(got == expected1 || got == expected2);
 });
 
-joinp_test_compresssed!(
+joinp_test_compressed!(
     joinp_full_compressed,
     |wrk: Workdir, mut cmd: process::Command| {
         cmd.arg("--full");

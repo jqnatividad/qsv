@@ -329,7 +329,7 @@ geocode options:
                                 [default: ~/.qsv-cache]                                
 
                                 INDEX-UPDATE only options:
-    --languages <lang-list>     The comma-delimited, case-insentive list of languages to use when building
+    --languages <lang-list>     The comma-delimited, case-insensitive list of languages to use when building
                                 the Geonames cities index.
                                 The languages are specified as a comma-separated list of ISO 639-2 codes.
                                 See https://download.geonames.org/export/dump/iso-languagecodes.txt to look up codes

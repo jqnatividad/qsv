@@ -382,7 +382,7 @@ cargo test --features datapusher_plus,luau
 cargo t stats -F all_features
 
 # to test a specific command with a specific feature
-# here we test only luau comand with the luau feature
+# here we test only luau command with the luau feature
 cargo t luau -F feature_capable,luau
 
 # to test the count command with multiple features
