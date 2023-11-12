@@ -726,7 +726,6 @@ fn sqlp_boston311_try_parsedates_format() {
 #[test]
 fn sqlp_comments() {
     let wrk = Workdir::new("sqlp_comments");
-    // let test_file = wrk.load_test_file("inputcommenttest.csv");
     wrk.create(
         "comments.csv",
         vec![
@@ -756,6 +755,42 @@ fn sqlp_comments() {
         svec!["c", "3"],
         svec!["a", "1"],
     ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn sqlp_compress() {
+    let wrk = Workdir::new("sqlp_compress");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["column1", "column2"],
+            svec!["a", "1"],
+            svec!["c", "3"],
+            svec!["e", "5"],
+        ],
+    );
+
+    let out_file = wrk.path("out.csv.sz").to_string_lossy().to_string();
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("data.csv")
+        .arg("select column1, column2 from data order by column2 desc")
+        .args(["-o", &out_file]);
+
+    wrk.assert_success(&mut cmd);
+
+    let mut cmd2 = wrk.command("snappy");
+    cmd2.arg("decompress").arg(out_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd2);
+    let expected = vec![
+        svec!["column1", "column2"],
+        svec!["e", "5"],
+        svec!["c", "3"],
+        svec!["a", "1"],
+    ];
+
     assert_eq!(got, expected);
 }
 
