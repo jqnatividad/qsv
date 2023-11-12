@@ -85,16 +85,16 @@
 
 <div style="text-align: right"><sub><sup>Performance metrics compiled on an M2 Pro 12-core Mac Mini with 32gb RAM</sup></sub></div>
 
-✨: enabled by a [feature flag](#feature-flags).   
-📇: uses an index when available.   
-🤯: loads entire CSV into memory, though `dedup`, `stats` & `transpose` have "streaming" modes as well.   
-😣: uses additional memory proportional to the cardinality of the columns in the CSV.   
-🧠: expensive operations are memoized (cached) with available inter-session Redis caching for fetch commands.    
-🐻‍❄️: command powered by [Pola.rs](https://pola.rs) engine.   
+✨: enabled by a [feature flag](#feature-flags).  
+📇: uses an index when available.  
+🤯: loads entire CSV into memory, though `dedup`, `stats` & `transpose` have "streaming" modes as well.  
+😣: uses additional memory proportional to the cardinality of the columns in the CSV.  
+🧠: expensive operations are memoized (cached) with available inter-session Redis caching for fetch commands.  
+🐻‍❄️: command powered by [Pola.rs](https://pola.rs) engine.  
 🤖: command uses Natural Language Processing & General AI techniques.  
-🏎️: multithreaded and/or faster when an index (📇) is available.   
-🚀: multithreaded even without an index.   
-![CKAN](docs/images/ckan.png) : has [CKAN](https://ckan.org)-aware integration options.    
+🏎️: multithreaded and/or faster when an index (📇) is available.  
+🚀: multithreaded even without an index.  
+![CKAN](docs/images/ckan.png) : has [CKAN](https://ckan.org)-aware integration options.  
 🌐: has web-aware options.
 
 ## Installation Options
@@ -204,6 +204,7 @@ NOTE: To build with Rust nightly, see [Nightly Release Builds](docs/PERFORMANCE.
 ### Variants
 
 There are three binary variants of qsv:
+
 * `qsv` - [feature](#feature-flags)-capable(✨), with the [prebuilt binaries](https://github.com/jqnatividad/qsv/releases/latest) enabling all applicable features except Python [^2]
 * `qsvlite` - all features disabled (~13% of the size of `qsv`)
 * `qsvdp` - optimized for use with [DataPusher+](https://github.com/dathere/datapusher-plus) with only DataPusher+ relevant commands; an embedded [`luau`](#luau_deeplink) interpreter; [`applydp`](#applydp_deeplink), a slimmed-down version of the `apply` feature; the `--progressbar` option disabled; and the self-update only checking for new releases, requiring an explicit `--update` (~12% of the the size of `qsv`).
