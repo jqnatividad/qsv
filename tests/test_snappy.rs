@@ -35,13 +35,13 @@ fn snappy_roundtrip() {
 
     wrk.assert_success(&mut cmd);
 
-    let mut cmd2 = wrk.command("snappy");
-    cmd2.arg("decompress").arg(out_file);
+    let mut cmd2 = wrk.command("snappy"); // DevSkim: ignore DS126858
+    cmd2.arg("decompress").arg(out_file); // DevSkim: ignore DS126858
 
-    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd2);
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd2); // DevSkim: ignore DS126858
     assert_eq!(got, thedata);
 
-    wrk.assert_success(&mut cmd2);
+    wrk.assert_success(&mut cmd2); // DevSkim: ignore DS126858
 }
 
 #[test]
@@ -186,14 +186,14 @@ fn snappy_automatic_compression() {
 
     let got_path = wrk.path("out.csv.sz");
 
-    let mut cmd2 = wrk.command("count");
-    cmd2.arg(got_path);
+    let mut cmd2 = wrk.command("count"); // DevSkim: ignore DS126858
+    cmd2.arg(got_path); // DevSkim: ignore DS126858
 
-    wrk.assert_success(&mut cmd2);
+    wrk.assert_success(&mut cmd2); // DevSkim: ignore DS126858
 
-    let got: String = wrk.stdout(&mut cmd2);
+    let got: String = wrk.stdout(&mut cmd2); // DevSkim: ignore DS126858
     let expected = "50";
     assert_eq!(got, expected);
 
-    wrk.assert_success(&mut cmd2);
+    wrk.assert_success(&mut cmd2); // DevSkim: ignore DS126858
 }

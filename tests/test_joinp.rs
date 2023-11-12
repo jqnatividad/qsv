@@ -490,10 +490,10 @@ fn joinp_cross_compress() {
 
     wrk.assert_success(&mut cmd);
 
-    let mut cmd2 = wrk.command("snappy");
-    cmd2.arg("decompress").arg(&out_file);
+    let mut cmd2 = wrk.command("snappy"); // DevSkim: ignore DS126858
+    cmd2.arg("decompress").arg(&out_file); // DevSkim: ignore DS126858
 
-    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd2);
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd2); // DevSkim: ignore DS126858
     let expected = vec![
         svec!["h1", "h2", "h3", "h4"],
         svec!["a", "b", "1", "2"],
@@ -576,10 +576,10 @@ fn joinp_asof_date_compress() {
 
     wrk.assert_success(&mut cmd);
 
-    let mut cmd2 = wrk.command("snappy");
-    cmd2.arg("decompress").arg(&out_file);
+    let mut cmd2 = wrk.command("snappy"); // DevSkim: ignore DS126858
+    cmd2.arg("decompress").arg(&out_file); // DevSkim: ignore DS126858
 
-    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd2);
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd2); // DevSkim: ignore DS126858
     let expected = vec![
         svec!["date", "population", "gdp"],
         svec!["2016-05-12", "82.19", "4164"],
