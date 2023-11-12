@@ -61,7 +61,7 @@ Common options:
                              Must be a single character. (default: ,)
 "#;
 
-use std::str::FromStr;
+use std::{env, str::FromStr};
 
 use log::{debug, info, warn};
 use serde::Deserialize;
@@ -110,7 +110,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let Ok(encode_handler) = EncodingHandling::from_str(&args.flag_encoding_errors) else {
         return fail_incorrectusage_clierror!(
-            "Invalid --encoding-errors option: {}",
+            "Invalid --encoding-errors option: {}. Valid values: replace, skip, strict.",
             args.flag_encoding_errors
         );
     };
@@ -119,7 +119,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         std::env::set_var("QSV_SNIFF_PREAMBLE", "1");
     }
 
-    let comment_char: Option<u8> = args.flag_comment.map(|char| char as u8);
+    let comment_char: Option<u8> = if let Ok(cmt_char) = env::var("QSV_COMMENT_CHAR") {
+        Some(cmt_char.as_bytes().first().unwrap().to_owned())
+    } else {
+        args.flag_comment.map(|char| char as u8)
+    };
 
     let mut rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
@@ -165,6 +169,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         debug!("auto-skip on...");
         rconfig.preamble_rows
     } else if args.flag_skip_lines.is_some() {
+        // safety: we already checked that skip_lines is some
         args.flag_skip_lines.unwrap()
     } else {
         0
@@ -195,8 +200,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut idx = 1_u64;
     let mut not_utf8 = false;
-    #[allow(unused_assignments)]
-    let mut lossy_field = String::new();
+    let mut lossy_field;
     let debug_log = log::log_enabled!(log::Level::Debug);
 
     'main: loop {
@@ -216,25 +220,27 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             if let Ok(utf8_field) = simdutf8::basic::from_utf8(field) {
                 str_row.push_field(utf8_field);
             } else {
-                lossy_field = String::from_utf8_lossy(field).to_string();
                 match encode_handler {
                     EncodingHandling::Replace => {
+                        lossy_field = String::from_utf8_lossy(field);
                         str_row.push_field(&lossy_field);
                         if debug_log {
-                            debug!("REPLACE: Invalid UTF-8 row {idx} in \"{lossy_field}\".");
+                            debug!("REPLACE: Invalid UTF8 - row {idx} in \"{lossy_field}\".");
                         }
                         not_utf8 = true;
                     },
                     EncodingHandling::Skip => {
                         str_row.push_field("<SKIPPED>");
                         if debug_log {
-                            debug!("REPLACE: Invalid UTF-8 row {idx} in \"{lossy_field}\".");
+                            lossy_field = String::from_utf8_lossy(field);
+                            debug!("SKIPPED: Invalid UTF8 - row {idx} in \"{lossy_field}\".");
                         }
                         not_utf8 = true;
                     },
                     EncodingHandling::Strict => {
+                        lossy_field = String::from_utf8_lossy(field);
                         return fail_encoding_clierror!(
-                            "STRICT. Invalid UTF-8 row {idx} in \"{lossy_field}\"."
+                            "STRICT. Invalid UTF8 - row {idx} in \"{lossy_field}\"."
                         );
                     },
                 }
