@@ -426,7 +426,7 @@ fn joinp_asof_date() {
 }
 
 #[test]
-fn joinp_asof_dat_comments() {
+fn joinp_asof_date_comments() {
     let wrk = Workdir::new("join_asof_date_comments");
     wrk.create(
         "gdp.csv",
@@ -452,6 +452,7 @@ fn joinp_asof_dat_comments() {
     );
 
     let mut cmd = wrk.command("joinp");
+    cmd.env("QSV_COMMENT_CHAR", "#");
     cmd.arg("--asof")
         .args(["date", "population.csv", "date", "gdp.csv"]);
 
