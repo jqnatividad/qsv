@@ -41,6 +41,26 @@ macro_rules! joinp_test_comments {
     };
 }
 
+macro_rules! joinp_test_compresssed {
+    ($name3:ident, $fun:expr) => {
+        mod $name3 {
+            use std::process;
+
+            #[allow(unused_imports)]
+            use super::{make_rows, setup};
+            use crate::workdir::Workdir;
+
+            #[test]
+            fn headers() {
+                let wrk = setup(stringify!($name3));
+                let mut cmd = wrk.command("joinp");
+                cmd.args(&["city", "cities.csv.sz", "city", "places.csv.sz"]);
+                $fun(wrk, cmd);
+            }
+        }
+    };
+}
+
 fn setup(name: &str) -> Workdir {
     let cities = vec![
         svec!["city", "state"],
@@ -70,6 +90,22 @@ fn setup(name: &str) -> Workdir {
     wrk.create("cities.csv", cities);
     wrk.create("cities_comments.csv", cities_comments);
     wrk.create("places.csv", places);
+
+    // create snappy compressed versions
+    let out_file = wrk.path("cities.csv.sz").to_string_lossy().to_string();
+    let mut cmd = wrk.command("snappy");
+    cmd.arg("compress")
+        .arg("cities.csv")
+        .args(["--output", &out_file]);
+    wrk.assert_success(&mut cmd);
+
+    let out_file = wrk.path("places.csv.sz").to_string_lossy().to_string();
+    let mut cmd = wrk.command("snappy");
+    cmd.arg("compress")
+        .arg("places.csv")
+        .args(["--output", &out_file]);
+    wrk.assert_success(&mut cmd);
+
     wrk
 }
 
@@ -99,6 +135,22 @@ joinp_test!(joinp_inner, |wrk: Workdir, mut cmd: process::Command| {
 
 joinp_test_comments!(
     joinp_inner_comments,
+    |wrk: Workdir, mut cmd: process::Command| {
+        let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+        let expected = make_rows(
+            false,
+            vec![
+                svec!["Boston", "MA", "Logan Airport"],
+                svec!["Boston", "MA", "Boston Garden"],
+                svec!["Buffalo", "NY", "Ralph Wilson Stadium"],
+            ],
+        );
+        assert_eq!(got, expected);
+    }
+);
+
+joinp_test_compresssed!(
+    joinp_inner_compressed,
     |wrk: Workdir, mut cmd: process::Command| {
         let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
         let expected = make_rows(
@@ -283,6 +335,37 @@ joinp_test!(joinp_full, |wrk: Workdir, mut cmd: process::Command| {
     assert!(got == expected1 || got == expected2);
 });
 
+joinp_test_compresssed!(
+    joinp_full_compressed,
+    |wrk: Workdir, mut cmd: process::Command| {
+        cmd.arg("--full");
+        let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+        let expected1 = make_rows(
+            false,
+            vec![
+                svec!["Boston", "MA", "Logan Airport"],
+                svec!["Boston", "MA", "Boston Garden"],
+                svec!["Buffalo", "NY", "Ralph Wilson Stadium"],
+                svec!["Orlando", "", "Disney World"],
+                svec!["San Francisco", "CA", ""],
+                svec!["New York", "NY", ""],
+            ],
+        );
+        let expected2 = make_rows(
+            false,
+            vec![
+                svec!["Boston", "MA", "Logan Airport"],
+                svec!["Boston", "MA", "Boston Garden"],
+                svec!["Buffalo", "NY", "Ralph Wilson Stadium"],
+                svec!["Orlando", "", "Disney World"],
+                svec!["New York", "NY", ""],
+                svec!["San Francisco", "CA", ""],
+            ],
+        );
+        assert!(got == expected1 || got == expected2);
+    }
+);
+
 joinp_test_comments!(
     joinp_full_comments,
     |wrk: Workdir, mut cmd: process::Command| {
@@ -387,6 +470,41 @@ fn joinp_cross() {
 }
 
 #[test]
+fn joinp_cross_compress() {
+    let wrk = Workdir::new("join_cross_compress");
+    wrk.create(
+        "letters.csv",
+        vec![svec!["h1", "h2"], svec!["a", "b"], svec!["c", "d"]],
+    );
+    wrk.create(
+        "numbers.csv",
+        vec![svec!["h3", "h4"], svec!["1", "2"], svec!["3", "4"]],
+    );
+
+    let out_file = wrk.path("out.csv.sz").to_string_lossy().to_string();
+
+    let mut cmd = wrk.command("joinp");
+    cmd.arg("--cross")
+        .args(["letters.csv", "numbers.csv"])
+        .args(["--output", &out_file]);
+
+    wrk.assert_success(&mut cmd);
+
+    let mut cmd2 = wrk.command("snappy");
+    cmd2.arg("decompress").arg(&out_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd2);
+    let expected = vec![
+        svec!["h1", "h2", "h3", "h4"],
+        svec!["a", "b", "1", "2"],
+        svec!["a", "b", "3", "4"],
+        svec!["c", "d", "1", "2"],
+        svec!["c", "d", "3", "4"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn joinp_asof_date() {
     let wrk = Workdir::new("join_asof_date");
     wrk.create(
@@ -415,6 +533,53 @@ fn joinp_asof_date() {
         .args(["date", "population.csv", "date", "gdp.csv"]);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["date", "population", "gdp"],
+        svec!["2016-05-12", "82.19", "4164"],
+        svec!["2017-05-12", "82.66", "4411"],
+        svec!["2018-05-12", "83.12", "4566"],
+        svec!["2019-05-12", "83.52", "4696"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn joinp_asof_date_compress() {
+    let wrk = Workdir::new("join_asof_date_compress");
+    wrk.create(
+        "gdp.csv",
+        vec![
+            svec!["date", "gdp"],
+            svec!["2016-01-01", "4164"],
+            svec!["2017-01-01", "4411"],
+            svec!["2018-01-01", "4566"],
+            svec!["2019-01-01", "4696"],
+        ],
+    );
+    wrk.create(
+        "population.csv",
+        vec![
+            svec!["date", "population"],
+            svec!["2016-05-12", "82.19"],
+            svec!["2017-05-12", "82.66"],
+            svec!["2018-05-12", "83.12"],
+            svec!["2019-05-12", "83.52"],
+        ],
+    );
+
+    let out_file = wrk.path("out.csv.sz").to_string_lossy().to_string();
+
+    let mut cmd = wrk.command("joinp");
+    cmd.arg("--asof")
+        .args(["date", "population.csv", "date", "gdp.csv"])
+        .args(["--output", &out_file]);
+
+    wrk.assert_success(&mut cmd);
+
+    let mut cmd2 = wrk.command("snappy");
+    cmd2.arg("decompress").arg(&out_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd2);
     let expected = vec![
         svec!["date", "population", "gdp"],
         svec!["2016-05-12", "82.19", "4164"],
