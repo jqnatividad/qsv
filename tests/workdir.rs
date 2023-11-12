@@ -116,12 +116,12 @@ impl Workdir {
         Csv::from_vecs(records)
     }
 
-    pub fn command(&self, sub_command: &str) -> process::Command {
+    pub fn command(&self, command_str: &str) -> process::Command {
         let mut cmd = process::Command::new(self.qsv_bin());
-        if sub_command.is_empty() {
+        if command_str.is_empty() {
             cmd.current_dir(&self.dir);
         } else {
-            cmd.current_dir(&self.dir).arg(sub_command);
+            cmd.current_dir(&self.dir).arg(command_str);
         }
         cmd
     }
