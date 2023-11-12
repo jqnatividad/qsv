@@ -197,7 +197,6 @@ use serde::Deserialize;
 use tempfile;
 
 use crate::{
-    cmd::snappy::compress,
     config::{Delimiter, DEFAULT_WTR_BUFFER_CAPACITY},
     util,
     util::process_input,
@@ -549,8 +548,23 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     }
 
-    if let Some(output) = args.flag_output {
-        // if the output ends with ".sz", we snappy compress the output
+    compress_output_if_needed(args.flag_output)?;
+
+    if !args.flag_quiet {
+        eprintln!("{query_result_shape:?}");
+    }
+
+    Ok(())
+}
+
+/// if the output ends with ".sz", we snappy compress the output
+/// and replace the original output with the compressed output
+pub fn compress_output_if_needed(
+    output_file: Option<String>,
+) -> Result<(), crate::clitypes::CliError> {
+    use crate::cmd::snappy::compress;
+
+    if let Some(output) = output_file {
         if std::path::Path::new(&output)
             .extension()
             .map_or(false, |ext| ext.eq_ignore_ascii_case("sz"))
@@ -575,11 +589,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 DEFAULT_WTR_BUFFER_CAPACITY,
             )?;
         }
-    }
-
-    if !args.flag_quiet {
-        eprintln!("{query_result_shape:?}");
-    }
-
+    };
     Ok(())
 }
