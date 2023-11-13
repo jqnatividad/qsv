@@ -1529,8 +1529,8 @@ fn search_index(
 
     let loccaps = locregex.captures(cell);
     if let Some(loccaps) = loccaps {
-        let lat = fast_float::parse(&loccaps[1]).unwrap_or_default();
-        let long = fast_float::parse(&loccaps[2]).unwrap_or_default();
+        let lat = loccaps[1].to_string().parse::<f32>().unwrap_or_default();
+        let long = loccaps[2].to_string().parse::<f32>().unwrap_or_default();
         if (-90.0..=90.0).contains(&lat) && (-180.0..=180.0).contains(&long) {
             let search_result = engine.reverse((lat, long), 1, k, country_filter_list.as_deref());
             let Some(cityrecord) = (match search_result {
