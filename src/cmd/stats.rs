@@ -1236,7 +1236,7 @@ impl Stats {
         // sum
         if let Some(sum) = self.sum.as_ref().and_then(|sum| sum.show(typ)) {
             if typ == FieldType::TFloat {
-                if let Ok(f64_val) = fast_float::parse::<f64, _>(&sum) {
+                if let Ok(f64_val) = sum.parse::<f64>() {
                     pieces.push(util::round_num(f64_val, round_places));
                 } else {
                     pieces.push(format!("ERROR: Cannot convert {sum} to a float."));
@@ -1502,7 +1502,7 @@ impl FieldType {
                 return (TInteger, None);
             }
 
-            if fast_float::parse::<f64, _>(string).is_ok() {
+            if string.parse::<f64>().is_ok() {
                 return (TFloat, None);
             }
         }
@@ -1679,7 +1679,7 @@ impl TypedMinMax {
         match typ {
             TString | TNull => {},
             TFloat => {
-                let n = fast_float::parse::<f64, _>(from_utf8(sample).unwrap()).unwrap();
+                let n = from_utf8(sample).unwrap().parse::<f64>().unwrap();
 
                 self.floats.add(n);
                 self.integers.add(n as i64);

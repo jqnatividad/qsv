@@ -313,7 +313,7 @@ where
         .and_then(|s| {
             if let Ok(i) = s.parse::<i64>() {
                 Some(Number::Int(i))
-            } else if let Ok(f) = fast_float::parse(s) {
+            } else if let Ok(f) = s.parse::<f64>() {
                 Some(Number::Float(f))
             } else {
                 None
