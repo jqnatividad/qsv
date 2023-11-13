@@ -1496,7 +1496,7 @@ impl FieldType {
         {
             if let Ok(int_val) = string.parse::<i64>() {
                 // leading zero, its a string (e.g. zip codes)
-                if string.starts_with('0') && int_val != 0 {
+                if string.as_bytes()[0] == b'0' && int_val != 0 {
                     return (TString, None);
                 }
                 return (TInteger, None);
