@@ -3943,6 +3943,7 @@ dependencies = [
  "ahash 0.8.6",
  "anyhow",
  "assert-json-diff",
+ "atoi",
  "bincode",
  "byteorder",
  "bytes",
