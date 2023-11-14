@@ -1046,6 +1046,8 @@ impl Stats {
                     };
                 }
             },
+            // do nothing for String type
+            TString => {},
             TFloat | TInteger => {
                 if sample_type == TNull {
                     if self.which.include_nulls {
@@ -1069,8 +1071,6 @@ impl Stats {
                     }
                 }
             },
-            // do nothing for String type
-            TString => {},
             TDateTime | TDate => {
                 if sample_type == TNull {
                     if self.which.include_nulls {
@@ -1612,7 +1612,7 @@ impl TypedSum {
                     // so we don't panic on overflow/underflow, use saturating_add
                     self.integer = self
                         .integer
-                        .saturating_add(from_bytes::<i64>(sample).unwrap());
+                        .saturating_add(atoi::atoi::<i64>(sample).unwrap());
                 }
             },
             _ => {},
@@ -1685,13 +1685,13 @@ impl TypedMinMax {
                 self.integers.add(n as i64);
             },
             TInteger => {
-                let n = from_utf8(sample).unwrap().parse::<i64>().unwrap();
+                let n = atoi::atoi::<i64>(sample).unwrap();
                 self.integers.add(n);
                 #[allow(clippy::cast_precision_loss)]
                 self.floats.add(n as f64);
             },
             TDate | TDateTime => {
-                let n = from_utf8(sample).unwrap().parse::<i64>().unwrap();
+                let n = atoi::atoi::<i64>(sample).unwrap();
                 self.dates.add(n);
             },
         }
