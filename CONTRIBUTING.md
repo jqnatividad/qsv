@@ -8,11 +8,13 @@ For code contributions, we follow several conventions:
 
 * Please run `cargo +nightly fmt` before submitting a pull request. We use [rustfmt settings](https://github.com/jqnatividad/qsv/blob/master/rustfmt.toml) that require nightly.
 * Please run `cargo +nightly clippy -F all_features -- -W clippy::perf` before submitting a pull request. The project has its clippy preferences set [here](https://github.com/jqnatividad/qsv/blob/bb4f4c7d683719a30f5e9552d16fba96a6872ce9/src/main.rs#L1-L36), and we generally apply clippy's suggestions with those preferences unless there is a good reason not to.   
-In that case, our practice is to suppress lints for each specific instance with an optional comment so it does not show up again in future clippy runs, e.g:   
-```rust 
+In that case, our practice is to suppress lints for each specific instance with an optional comment so it does not show up again in future clippy runs, e.g:  
+
+```rust
 #[allow(clippy::unused_assignments)]
 let mut var_a = String::with_capacity(10); // amortize allocation
 ```
+
 * Ensure you have the latest version of Rust nightly installed (`rustup toolchain update nightly`), as we use it for clippy and rustfmt. Running `cargo +nightly fmt` and `cargo +nightly clippy` may return different results if you are not using the latest nightly version of Rust.
 * We use docopt for command line argument parsing as we fully take advantage of its ability to parse command line arguments from the contiguous, verbose usage text that is at the beginning of each command's source code that more popular libraries like clap or structopt do not offer.   
 However, since [docopt.rs is unmaintained](https://github.com/docopt/docopt.rs#this-crate-is-unmaintained), we have a [fork](https://github.com/jqnatividad/docopt.rs) that will be maintained along with this project. See this [discussion thread](https://github.com/jqnatividad/qsv/discussions/463) for more details.
