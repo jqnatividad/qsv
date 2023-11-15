@@ -1949,7 +1949,7 @@ checksum = "08a6e851de50fea35efef365e3d80c885feb678a45064d8880db9d4c1867a542"
 dependencies = [
  "bincode",
  "csv",
- "itertools",
+ "itertools 0.11.0",
  "kiddo",
  "rayon",
  "serde",
@@ -2030,7 +2030,7 @@ version = "1.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "453e64d7e9ad21886eb7efc60ddff0961e4da66fe15896575a5bf4f1540ea63f"
 dependencies = [
- "itertools",
+ "itertools 0.11.0",
  "lazy_static",
  "ndarray",
  "petgraph",
@@ -2375,6 +2375,15 @@ name = "itertools"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b1c173a5686ce8bfa551b3563d0c2170bf24ca44da99c7ca4bfdab5418c3fe57"
+dependencies = [
+ "either",
+]
+
+[[package]]
+name = "itertools"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "25db6b064527c5d482d0423354fcd07a89a2dfe07b67892e62411946db7f07b0"
 dependencies = [
  "either",
 ]
@@ -3976,7 +3985,7 @@ dependencies = [
  "hashbrown 0.14.2",
  "indexmap 2.1.0",
  "indicatif",
- "itertools",
+ "itertools 0.12.0",
  "itoa",
  "jemallocator",
  "jql-runner",
