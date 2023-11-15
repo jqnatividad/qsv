@@ -17,6 +17,7 @@ on:
     branches: [ master ]
   schedule:
     - cron: '42 11 * * 0'
+  workflow_dispatch:
 
 jobs:
   rust-clippy-analyze:
@@ -43,7 +44,7 @@ jobs:
       - name: Run rust-clippy
         run:
           cargo clippy
-          --all-features
+          -F all_features
           --message-format=json | clippy-sarif | tee rust-clippy-results.sarif | sarif-fmt
         continue-on-error: true
 
