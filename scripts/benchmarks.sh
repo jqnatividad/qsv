@@ -42,7 +42,7 @@
 arg_pat="$1"
 
 # the version of this script
-bm_version=3.5.1
+bm_version=3.6.0
 
 # CONFIGURABLE VARIABLES ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -422,11 +422,13 @@ run apply_op_eudex "$qsv_bin apply operations lower,eudex Agency --comparand Que
 run apply_op_string "$qsv_bin apply operations lower Agency $data"
 run apply_op_similarity "$qsv_bin apply operations lower,simdln Agency --comparand brooklyn --new-column Agency_sim-brooklyn_score $data"
 run behead "$qsv_bin" behead "$data"
+run behead_flexible "$qsv_bin" behead --flexible "$data"
 run cat_columns "$qsv_bin" cat columns "$data" data_unsorted.csv
 run cat_rows "$qsv_bin" cat rows "$data" data_unsorted.csv
 run cat_rows_flexible "$qsv_bin" cat rows --flexible "$data" data_unsorted.csv
 run cat_rowskey "$qsv_bin" cat rowskey "$data" data_unsorted.csv
 run count "$qsv_bin" count "$data"
+run count_flexible "$qsv_bin" count --flexible "$data"
 run --index count_index "$qsv_bin" count "$data"
 run count_width "$qsv_bin" count --width "$data"
 run --index count_width_index "$qsv_bin" count --width "$data"
