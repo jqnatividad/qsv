@@ -37,8 +37,8 @@ cat options:
 
                              ROWS OPTION:
     --flexible               When concatenating rows, this flag turns off validation
-                             that the output CSV have the same number of columns. This is
-                             faster, but may result in invalid CSV data.
+                             that the input and output CSVs have the same number of columns.
+                             This is faster, but may result in invalid CSV data.
 
                              ROWSKEY OPTIONS:
     -g, --group              When concatenating with rowskey, use the file stem of each
@@ -101,7 +101,10 @@ impl Args {
             &self.arg_input,
             self.flag_delimiter,
             self.flag_no_headers,
-            self.flag_flexible,
+            // we can set flexible to true if we are using rowskey
+            // as we don't need to validate that the number of columns
+            // are the same across all files, increasing performance
+            self.flag_flexible || self.cmd_rowskey,
         )
         .map_err(From::from)
     }
@@ -180,7 +183,10 @@ impl Args {
         let num_columns_global = columns_global.len();
 
         // Second pass, write all columns to a new file
-        let mut wtr = Config::new(&self.flag_output).writer()?;
+        // set flexible to true for faster writes
+        // as we know that all columns are already in columns_global and we don't need to
+        // validate that the number of columns are the same every time we write a row
+        let mut wtr = Config::new(&self.flag_output).flexible(true).writer()?;
         for c in &columns_global {
             wtr.write_field(c)?;
         }
