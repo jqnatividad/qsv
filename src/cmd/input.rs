@@ -1,6 +1,6 @@
 static USAGE: &str = r#"
-Read CSV data with special quoting, trimming, line-skipping & non UTF-8 encoding rules
-and transforms it to a "normalized", UTF-8 encoded CSV.
+Read CSV data with special commenting, quoting, trimming, line-skipping &
+non UTF-8 encoding rules and transforms it to a "normalized", UTF-8 encoded CSV.
 
 Generally, all qsv commands support basic options like specifying the delimiter
 used in CSV data. However, this does not cover all possible types of CSV data. For
@@ -11,6 +11,7 @@ options. Similarly, --skip-lastlines allows epilogue lines to be skipped.
 
 Finally, non UTF-8 encoded files are "lossy" saved to UTF-8 by default, replacing all
 invalid UTF-8 sequences with �. Note though that this is not true transcoding.
+
 If you need to properly transcode non UTF-8 files, you'll need to use a tool like `iconv`
 before processing it with qsv - e.g. to convert an ISO-8859-1 encoded file to UTF-8:
     `iconv -f ISO-8859-1 -t UTF-8 input.csv -o utf8_output.csv`.
@@ -156,7 +157,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 "--skip-lastlines: {skip_llines} is greater than row_count: {row_count}."
             );
         }
-        debug!("Set to skip last {skip_llines} lines...");
+        info!("Set to skip last {skip_llines} lines...");
         total_lines = row_count - skip_llines;
     }
 
@@ -166,7 +167,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut str_row = csv::StringRecord::new();
 
     let preamble_rows: u64 = if args.flag_auto_skip {
-        debug!("auto-skip on...");
+        info!("auto-skip on...");
         rconfig.preamble_rows
     } else if args.flag_skip_lines.is_some() {
         // safety: we already checked that skip_lines is some
@@ -176,7 +177,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     if preamble_rows > 0 {
-        debug!("skipping {preamble_rows} preamble rows...");
+        info!("skipping {preamble_rows} preamble rows...");
         for _i in 1..=preamble_rows {
             rdr.read_byte_record(&mut row)?;
         }
@@ -187,7 +188,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // the first rdr record is the header, since we have no_headers = true.
     // If trim_setting is equal to Headers or All, we "manually" trim the first record
     if trim_setting == csv::Trim::Headers || trim_setting == csv::Trim::All {
-        debug!("trimming headers...");
+        info!("trimming headers...");
         rdr.read_byte_record(&mut row)?;
         row.trim();
 
