@@ -14,7 +14,7 @@ As date manipulation is often needed, the [LuaDate](https://tieske.github.io/dat
 
 Finally, as [qsv's DSL](../README.md#luau_deeplink) (👑), `luau` will gain even more features over time compared to the `python` feature.
 
-[Luau 0.601](https://github.com/Roblox/luau/releases/tag/0.601) is currently embedded - qsv's policy is to use the latest stable Luau version at the time of each qsv release.
+[Luau 0.603](https://github.com/Roblox/luau/releases/tag/0.603) is currently embedded - qsv's policy is to use the latest stable Luau version at the time of each qsv release.
 
 ## Python
 
