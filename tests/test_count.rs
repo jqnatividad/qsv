@@ -42,6 +42,26 @@ fn count_width() {
 }
 
 #[test]
+fn count_flexible() {
+    let wrk = Workdir::new("count_flexible");
+    wrk.create_from_string(
+        "in.csv",
+        r#"letter,number,flag
+alphabetic,13,true,extra column
+beta,24,false
+gamma,37.1
+delta,42.5,false
+"#,
+    );
+    let mut cmd = wrk.command("count");
+    cmd.arg("--flexible").arg("in.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = "4";
+    assert_eq!(got, expected.to_string());
+}
+
+#[test]
 fn count_comments() {
     let wrk = Workdir::new("count_comments");
 

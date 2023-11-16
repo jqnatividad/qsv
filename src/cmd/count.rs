@@ -17,6 +17,9 @@ count options:
 
 Common options:
     -h, --help             Display this message
+    -f, --flexible         Do not validate if the CSV has different number of
+                           fields per record, increasing performance when counting
+                           without an index. Automatically enabled when --width is set.
     -n, --no-headers       When set, the first row will be included in
                            the count.
 "#;
@@ -31,6 +34,7 @@ struct Args {
     arg_input:           Option<String>,
     flag_human_readable: bool,
     flag_width:          bool,
+    flag_flexible:       bool,
     flag_no_headers:     bool,
 }
 
@@ -41,7 +45,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // we also want to count the quotes when computing width
         .quoting(!args.flag_width)
         // and ignore differing column counts as well
-        .flexible(args.flag_width);
+        .flexible(args.flag_width || args.flag_flexible);
 
     // this comment left here for Logging.md example
     // log::debug!(
