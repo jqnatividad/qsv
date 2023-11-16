@@ -42,7 +42,7 @@
 arg_pat="$1"
 
 # the version of this script
-bm_version=3.5.0
+bm_version=3.5.1
 
 # CONFIGURABLE VARIABLES ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -424,6 +424,7 @@ run apply_op_similarity "$qsv_bin apply operations lower,simdln Agency --compara
 run behead "$qsv_bin" behead "$data"
 run cat_columns "$qsv_bin" cat columns "$data" data_unsorted.csv
 run cat_rows "$qsv_bin" cat rows "$data" data_unsorted.csv
+run cat_rows_flexible "$qsv_bin" cat rows --flexible "$data" data_unsorted.csv
 run cat_rowskey "$qsv_bin" cat rowskey "$data" data_unsorted.csv
 run count "$qsv_bin" count "$data"
 run --index count_index "$qsv_bin" count "$data"
