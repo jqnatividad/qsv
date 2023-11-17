@@ -6,8 +6,8 @@ Polars SQL is a SQL dialect, converting SQL queries to fast Polars LazyFrame exp
 (see https://pola-rs.github.io/polars-book/user-guide/sql/intro/)
 
 For a list of SQL functions and keywords supported by Polars SQL, see
-https://github.com/pola-rs/polars/blob/rs-0.34.0/crates/polars-sql/src/functions.rs
-https://github.com/pola-rs/polars/blob/rs-0.34.0/crates/polars-sql/src/keywords.rs and
+https://github.com/pola-rs/polars/blob/rs-0.35.0/crates/polars-sql/src/functions.rs
+https://github.com/pola-rs/polars/blob/rs-0.35.0/crates/polars-sql/src/keywords.rs and
 https://github.com/pola-rs/polars/issues/7227
 
 Returns the shape of the query result (number of rows, number of columns) to stderr.
@@ -22,6 +22,8 @@ Example queries:
   qsv sqlp data.csv 'select "col 1", "col 2" from data'
 
   qsv sqlp data.csv data2.csv 'select * from data join data2 on data.colname = data2.colname'
+
+  qsv sqlp data.csv data2.csv 'SELECT col1 FROM data WHERE col1 IN (SELECT col2 FROM data2)'
 
   qsv sqlp data1.csv data2.csv 'SELECT * FROM data1 UNION ALL BY NAME SELECT * FROM data2'
 

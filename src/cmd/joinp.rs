@@ -451,7 +451,7 @@ impl JoinStruct {
         let join_shape = results_df.shape();
 
         CsvWriter::new(&mut out_writer)
-            .has_header(true)
+            .include_header(true)
             .with_separator(self.delim)
             .with_datetime_format(self.datetime_format)
             .with_date_format(self.date_format)
