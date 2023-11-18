@@ -1407,6 +1407,18 @@ pub async fn download_file(
     Ok(())
 }
 
+/// this is a non-allocating to_lowercase that uses an existing buffer
+/// and should be faster than the allocating std::to_lowercase
+#[inline]
+pub fn to_lowercase_into(s: &str, buf: &mut String) {
+    buf.clear();
+    for c in s.chars() {
+        for lc in c.to_lowercase() {
+            buf.push(lc);
+        }
+    }
+}
+
 /// load the first BUFFER*4 (128k) bytes of the file and check if it is utf8
 pub fn isutf8_file(path: &Path) -> Result<bool, CliError> {
     let metadata = std::fs::metadata(path)?;

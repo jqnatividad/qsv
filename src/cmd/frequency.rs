@@ -208,7 +208,7 @@ impl Args {
                 for (i, field) in nsel.select(row_work.into_iter()).enumerate() {
                     field_work = {
                         if let Ok(s) = simdutf8::basic::from_utf8(field) {
-                            to_lowercase_into(s.trim(), &mut buf);
+                            util::to_lowercase_into(s.trim(), &mut buf);
                             buf.as_bytes().to_vec()
                         } else {
                             field.to_vec()
@@ -250,19 +250,5 @@ impl Args {
         let headers = rdr.byte_headers()?;
         let sel = self.rconfig().selection(headers)?;
         Ok((sel.select(headers).map(<[u8]>::to_vec).collect(), sel))
-    }
-}
-
-/// this is a non-allocating to_lowercase that uses an existing buffer
-/// and should be faster than the stdlib version
-/// TODO: if this proves to be faster per the benchmarks, we should use
-/// this project-wide over the allocating stdlib version, and move it to utils.rs
-#[inline]
-fn to_lowercase_into(s: &str, buf: &mut String) {
-    buf.clear();
-    for c in s.chars() {
-        for lc in c.to_lowercase() {
-            buf.push(lc);
-        }
     }
 }
