@@ -424,6 +424,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                 let mut file = NamedTempFile::new()?;
                 let mut downloaded = 0_usize;
                 let mut stream = res.bytes_stream();
+                #[cfg(any(feature = "feature_capable", feature = "lite"))]
                 let mut downloaded_lines = 0_usize;
                 #[allow(unused_assignments)]
                 let mut chunk = Bytes::new(); // amortize the allocation
@@ -454,6 +455,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                     }
 
                     // check if we're downloading the entire file
+                    #[cfg(any(feature = "feature_capable", feature = "lite"))]
                     if lines_sample_size != usize::MAX {
                         // we're not downloading the entire file, so we need to
                         // scan chunk for newlines
