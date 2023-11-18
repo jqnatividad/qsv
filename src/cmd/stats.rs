@@ -1494,7 +1494,7 @@ impl FieldType {
             || current_type == FieldType::TInteger
             || current_type == FieldType::TNull
         {
-            if let Ok(int_val) = string.parse::<i64>() {
+            if let Ok(int_val) = atoi_simd::parse::<i64>(sample) {
                 // leading zero, its a string (e.g. zip codes)
                 if string.as_bytes()[0] == b'0' && int_val != 0 {
                     return (TString, None);
@@ -1612,7 +1612,7 @@ impl TypedSum {
                     // so we don't panic on overflow/underflow, use saturating_add
                     self.integer = self
                         .integer
-                        .saturating_add(atoi::atoi::<i64>(sample).unwrap());
+                        .saturating_add(atoi_simd::parse::<i64>(sample).unwrap());
                 }
             },
             _ => {},
@@ -1685,13 +1685,13 @@ impl TypedMinMax {
                 self.integers.add(n as i64);
             },
             TInteger => {
-                let n = atoi::atoi::<i64>(sample).unwrap();
+                let n = atoi_simd::parse::<i64>(sample).unwrap();
                 self.integers.add(n);
                 #[allow(clippy::cast_precision_loss)]
                 self.floats.add(n as f64);
             },
             TDate | TDateTime => {
-                let n = atoi::atoi::<i64>(sample).unwrap();
+                let n = atoi_simd::parse::<i64>(sample).unwrap();
                 self.dates.add(n);
             },
         }
