@@ -285,7 +285,7 @@ Should you need to re-encode CSV/TSV files, you can use the `input` command to "
 
 Alternatively, if you want to truly transcode to UTF-8, there are several utilities like [`iconv`](https://en.wikipedia.org/wiki/Iconv) that you can use to do so on [Linux/macOS](https://stackoverflow.com/questions/805418/how-can-i-find-encoding-of-a-file-via-a-script-on-linux) & [Windows](https://superuser.com/questions/1163753/converting-text-file-to-utf-8-on-windows-command-prompt).
 
-### Windows Usage Note
+### Windows Excel Usage Note
 
 Unlike other modern operating systems, Microsoft Windows' [default encoding is UTF16-LE](https://stackoverflow.com/questions/66072117/why-does-windows-use-utf-16le). This will cause problems when redirecting qsv's output to a CSV file & trying to open it with Excel (which ignores the comma delimiter, with everything in the first column if the file is UTF16-LE encoded):
 
@@ -303,6 +303,12 @@ qsv stats wcp.csv > wcpstats.csv
 # do this instead
 qsv stats wcp.csv --output wcpstats.csv
 ```
+
+Alternatively, qsv can add a [Byte Order Mark](https://en.wikipedia.org/wiki/Byte_order_mark) (BOM) to the beginning of a CSV to indicate it's UTF-8 encoded. You can do this by setting the `QSV_OUTPUT_BOM` environment variable to `1`.
+
+This will allow Excel on Windows to properly recognize the CSV file as UTF-8 encoded.
+
+Note that this problem does not occur on Excel on macOS, as macOS uses UTF-8 as its default encoding.
 
 ## Interpreters
 For complex data-wrangling tasks, you can use Luau and Python scripts.
