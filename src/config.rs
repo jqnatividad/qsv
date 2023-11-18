@@ -528,10 +528,14 @@ impl Config {
     }
 
     #[allow(clippy::wrong_self_convention)]
-    pub fn from_writer<W: io::Write>(&self, wtr: W) -> csv::Writer<W> {
+    pub fn from_writer<W: io::Write>(&self, mut wtr: W) -> csv::Writer<W> {
         let wtr_capacitys = env::var("QSV_WTR_BUFFER_CAPACITY")
             .unwrap_or_else(|_| DEFAULT_WTR_BUFFER_CAPACITY.to_string());
         let wtr_buffer: usize = wtr_capacitys.parse().unwrap_or(DEFAULT_WTR_BUFFER_CAPACITY);
+
+        if util::get_envvar_flag("QSV_OUTPUT_BOM") {
+            wtr.write_all("\u{FEFF}".as_bytes()).unwrap();
+        }
 
         csv::WriterBuilder::new()
             .flexible(self.flexible)

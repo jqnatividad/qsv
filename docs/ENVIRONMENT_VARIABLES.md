@@ -10,10 +10,12 @@
 | `QSV_CACHE_DIR` | The directory to use for caching downloaded lookup_table resources using the `luau` qsv_register_lookup() helper function. |
 | `QSV_CKAN_API` | The CKAN Action API endpoint to use with the `luau` qsv_register_lookup() helper function when using the "ckan://" scheme. |
 | `QSV_CKAN_TOKEN`| The CKAN token to use with the `luau` qsv_register_lookup() helper function when using the "ckan://" scheme. Only required to access private resources. |
-| `QSV_OPENAI_KEY` | The OpenAI API key to use with the `describegpt` command. |
 | `QSV_COMMENT_CHAR` | set to an ascii character. If set, any lines(including the header) that start with this character are ignored. |
 | `QSV_MAX_JOBS` | number of jobs to use for multithreaded commands (currently `apply`, `applydp`, `dedup`, `diff`, `extsort`, `frequency`, `joinp`, `schema`, `snappy`, `sort`, `split`, `stats`, `to`, `tojsonl` & `validate`). If not set, max_jobs is set to the detected number of logical processors.  See [Multithreading](docs/PERFORMANCE.md#multithreading) for more info. |
 | `QSV_NO_UPDATE` | if set, prohibit self-update version check for the latest qsv release published on GitHub. |
+| `QSV_OPENAI_KEY` | The OpenAI API key to use with the `describegpt` command. |
+| `QSV_OUTPUT_BOM` | if set, the output will have a Byte Order Mark (BOM) at the beginning. This is 
+used to generate Excel-friendly CSVs on Windows. |
 | `QSV_PREFER_DMY` | if set, date parsing will use DMY format. Otherwise, use MDY format (used with `apply datefmt`, `schema`, `sniff` & `stats` commands). |
 | `QSV_REGEX_UNICODE` | if set, makes `search`, `searchset` & `replace` commands unicode-aware. For increased performance, these commands are not unicode-aware by default & will ignore unicode values when matching & will abort when unicode characters are used in the regex. Note that the `apply operations regex_replace` operation is always unicode-aware. |
 | `QSV_RDR_BUFFER_CAPACITY` | reader buffer size (default (bytes): 16384) |

@@ -45,6 +45,11 @@ QSV_NO_HEADERS = False
 # updated regardless of this setting.
 # QSV_AUTOINDEX_SIZE = 1000000
 
+# if set, add a BOM (Byte Order Mark) to the beginning of the output.
+# Note that this will also set the BOM for qsv's output to stdout.
+# This is useful when generating CSV files for Excel on Windows.
+# QSV_OUTPUT_BOM = 1
+
 # The directory to use for caching various qsv files.
 # Used by the `geocode` command for downloaded geocoding resources.
 # Used by the `luau`` command for downloaded lookup_table resources using
