@@ -267,11 +267,12 @@ impl Command {
         let argv: Vec<_> = argv.iter().map(|s| &**s).collect();
         let argv = &*argv;
 
+        assert!(argv.len() > 1);
         if !argv[1].chars().all(char::is_lowercase) {
-            return Err(CliError::Other(format!(
-                "qsvdp expects commands in lowercase. Did you mean '{}'?",
+            return fail_incorrectusage_clierror!(
+                "qsv expects commands in lowercase. Did you mean '{}'?",
                 argv[1].to_lowercase()
-            )));
+            );
         }
         CURRENT_COMMAND.get_or_init(|| argv[1].to_lowercase());
         match self {
