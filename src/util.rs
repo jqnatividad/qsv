@@ -967,24 +967,29 @@ pub fn safe_header_names(
     let safename_regex = regex_oncelock!(r"[^A-Za-z0-9]");
     let mut changed_count = 0_u16;
     let mut name_vec: Vec<String> = Vec::with_capacity(headers.len());
+    let mut safe_name: String;
+    let mut safename_always: String;
+    let mut safename_candidate: String;
+    let mut final_candidate: String;
+    let mut buf_wrk = String::new();
 
     for header_name in headers {
         let reserved_found = if let Some(reserved_names_vec) = reserved_names.clone() {
-            let header_name = if keep_case {
-                header_name.to_string()
+            if keep_case {
+                buf_wrk = header_name.to_owned();
             } else {
-                header_name.to_lowercase()
+                to_lowercase_into(header_name, &mut buf_wrk);
             };
             reserved_names_vec
                 .iter()
-                .any(|reserved_name| reserved_name == header_name.as_str())
+                .any(|reserved_name| reserved_name == &buf_wrk)
         } else {
             false
         };
-        let safe_name = if conditional && is_safe_name(header_name) && !reserved_found {
+        safe_name = if conditional && is_safe_name(header_name) && !reserved_found {
             header_name.to_string()
         } else {
-            let mut safename_always = if header_name.is_empty() {
+            safename_always = if header_name.is_empty() {
                 prefix.to_string()
             } else {
                 safename_regex
@@ -995,14 +1000,14 @@ pub fn safe_header_names(
                 safename_always = format!("{prefix}{safename_always}");
             }
 
-            let safename_candidate = if reserved_found {
+            safename_candidate = if reserved_found {
                 log::warn!("\"{safename_always}\" is a reserved name: {reserved_names:?}");
                 format!("reserved_{safename_always}")
             } else {
                 safename_always
             };
 
-            let mut final_candidate = safename_candidate[..safename_candidate
+            final_candidate = safename_candidate[..safename_candidate
                 .chars()
                 .map(char::len_utf8)
                 .take(60)
