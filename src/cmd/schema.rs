@@ -332,19 +332,19 @@ pub fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<M
                 type_list.push(Value::String("integer".to_string()));
 
                 if let Some(min_str) = stats_record.get(stats_col_index_map["min"]) {
-                    let min = min_str.parse::<i64>().unwrap();
+                    let min = atoi_simd::parse::<i64>(min_str.as_bytes()).unwrap();
                     field_map.insert("minimum".to_string(), Value::Number(Number::from(min)));
                 };
 
                 if let Some(max_str) = stats_record.get(stats_col_index_map["max"]) {
-                    let max = max_str.parse::<i64>().unwrap();
+                    let max = atoi_simd::parse::<i64>(max_str.as_bytes()).unwrap();
                     field_map.insert("maximum".to_string(), Value::Number(Number::from(max)));
                 };
 
                 // enum constraint
                 if let Some(values) = unique_values_map.get(&header_string) {
                     for value in values {
-                        let int_value = value.parse::<i64>().unwrap();
+                        let int_value = atoi_simd::parse::<i64>(value.as_bytes()).unwrap();
                         enum_list.push(Value::Number(Number::from(int_value)));
                     }
                 }

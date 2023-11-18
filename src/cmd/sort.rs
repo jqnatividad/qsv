@@ -308,15 +308,19 @@ fn next_num<'a, X>(xs: &mut X) -> Option<Number>
 where
     X: Iterator<Item = &'a [u8]>,
 {
-    xs.next()
-        .map(|bytes| from_utf8(bytes).unwrap())
-        .and_then(|s| {
-            if let Ok(i) = s.parse::<i64>() {
+    match xs.next() {
+        Some(bytes) => {
+            if let Ok(i) = atoi_simd::parse::<i64>(bytes) {
                 Some(Number::Int(i))
-            } else if let Ok(f) = s.parse::<f64>() {
-                Some(Number::Float(f))
             } else {
-                None
+                // If parsing as i64 failed, try parsing as f64
+                if let Ok(f) = from_utf8(bytes).unwrap().parse::<f64>() {
+                    Some(Number::Float(f))
+                } else {
+                    None
+                }
             }
-        })
+        },
+        None => None,
+    }
 }

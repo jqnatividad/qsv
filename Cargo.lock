@@ -3478,9 +3478,9 @@ dependencies = [
 
 [[package]]
 name = "polars-error"
-version = "0.35.2"
+version = "0.35.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d1e73784f0357111c71a6f0f765ec91a5f1487bc5cdd9d41e54f81fd53e06e73"
+checksum = "bd5581898a3cc5d0930f40f76034a4cf9e18dc4d38e13ef769fb6f427cf63215"
 dependencies = [
  "arrow-format",
  "regex",
@@ -3717,9 +3717,9 @@ dependencies = [
 
 [[package]]
 name = "polars-utils"
-version = "0.35.2"
+version = "0.35.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3075dda9bfecbdcd3d721c6ed4f15f00edf58acba3d5e7711e6f1a9cedf46444"
+checksum = "c18e77b1bddfe72ff522bfedf5b1bf1e9d9651b1e6a22f86c50022d1aab2b651"
 dependencies = [
  "ahash 0.8.6",
  "bytemuck",
@@ -3967,7 +3967,7 @@ dependencies = [
  "ahash 0.8.6",
  "anyhow",
  "assert-json-diff",
- "atoi",
+ "atoi_simd",
  "bincode",
  "byteorder",
  "bytes",

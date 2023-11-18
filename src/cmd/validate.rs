@@ -794,7 +794,7 @@ fn to_json_instance(
             },
             b'i' => {
                 // integer
-                if let Ok(int) = value_string.parse::<i64>() {
+                if let Ok(int) = atoi_simd::parse::<i64>(value_string.as_bytes()) {
                     json_object_map.insert(key_string, Value::Number(Number::from(int)));
                 } else {
                     return fail_clierror!(
