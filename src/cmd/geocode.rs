@@ -1934,7 +1934,7 @@ fn format_result(
 /// It is used by the countryinfo/countryinfonow subcommands.
 #[cached(
     key = "String",
-    convert = r#"{ format!("{cell}-{lang_lookup}-{formatstr}") }"#,
+    convert = r#"{ format!("{cell}-{formatstr}") }"#,
     option = true
 )]
 fn get_countryinfo(
