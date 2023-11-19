@@ -2731,9 +2731,9 @@ checksum = "b5e6163cb8c49088c2c36f57875e58ccd8c87c7427f7fbd50ea6710b2f3f2e8f"
 
 [[package]]
 name = "luau0-src"
-version = "0.7.9+luau603"
+version = "0.7.10+luau604"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c4d253e83e2e41239e0d1501d1fc0038e4d97de62d4769bd16b4b33124d5e874"
+checksum = "343303fce0249db3b13e8aab8e887b868c35fd6aed91b233f633fee4c43ec8b7"
 dependencies = [
  "cc",
 ]
@@ -4529,9 +4529,9 @@ dependencies = [
 
 [[package]]
 name = "rustix"
-version = "0.38.24"
+version = "0.38.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9ad981d6c340a49cdc40a1028d9c6084ec7e9fa33fcb839cab656a267071e234"
+checksum = "dc99bc2d4f1fed22595588a013687477aedf3cdcfb26558c559edb67b4d9b22e"
 dependencies = [
  "bitflags 2.4.1",
  "errno",
