@@ -6,6 +6,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.119.0] - 2023-11-19
+
+### Added
+* `diff`: add option/flag for headers in output by @janriemer in https://github.com/jqnatividad/qsv/pull/1395
+* `diff`: add option/flag `--delimiter-output` by @janriemer in https://github.com/jqnatividad/qsv/pull/1402
+* `cat`: make `cat rows` faster still by adding `--flexible` option https://github.com/jqnatividad/qsv/pull/1408
+* `sqlp` & `joinp`: both commands now recognize QSV_COMMENT_CHAR env var https://github.com/jqnatividad/qsv/pull/1412
+* `joinp`: add snappy compression/decompression support https://github.com/jqnatividad/qsv/pull/1413
+* Add Byte Order Mark (BOM) output support https://github.com/jqnatividad/qsv/pull/1424
+* `stats`: use atoi to skip utf8 validation to directly convert &[u8] to integer validation https://github.com/jqnatividad/qsv/pull/1416
+* Added Codacy code quality badge to README.md https://github.com/jqnatividad/qsv/commit/99591297d59b3c45363592516d5ecb7d4d98d5c8
+
+### Changed
+* `cat`: faster `cat rows` https://github.com/jqnatividad/qsv/pull/1407
+* `count`: optimize `--width` option https://github.com/jqnatividad/qsv/pull/1411
+* `luau`: upgrade embedded Luau from 0.603 to 0.604 https://github.com/jqnatividad/qsv/pull/1426
+* use `ato_simd` for fast &[u8] to int conversion https://github.com/jqnatividad/qsv/pull/1423
+* `luau`: performance refactor https://github.com/jqnatividad/qsv/commit/4cebd7c9a4b3f9f754fd2746484c24fa61ee1286
+* build(deps): bump csv-diff from 0.1.0-beta.4 to 0.1.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1394
+* build(deps): bump serde_json from 1.0.107 to 1.0.108 by @dependabot in https://github.com/jqnatividad/qsv/pull/1393
+* build(deps): bump indexmap from 2.0.2 to 2.1.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1397
+* build(deps): bump jql-runner from 7.0.4 to 7.0.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/1399
+* build(deps): bump jql-runner from 7.0.5 to 7.0.6 by @dependabot in https://github.com/jqnatividad/qsv/pull/1400
+* build(deps): bump file-format from 0.21.0 to 0.22.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1401
+* build(deps): bump cached from 0.46.0 to 0.46.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1403
+* build(deps): bump serde from 1.0.190 to 1.0.192 by @dependabot in https://github.com/jqnatividad/qsv/pull/1404
+* build(deps): bump tokio from 1.33.0 to 1.34.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1409
+* build(deps): bump flexi_logger from 0.27.2 to 0.27.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1410
+* build(deps): bump qsv-stats from 0.11.0 to 0.12.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1415
+* build(deps): bump itertools from 0.11.0 to 0.12.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1418
+* build(deps): bump rust_decimal from 1.33.0 to 1.33.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1420
+* build(deps): bump polars from 0.35.2 to 0.35.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1425
+* bump MSRV to 1.74.0
+* apply select clippy suggestions
+* update several indirect dependencies
+* pin Rust nightly to 2023-11-18
+
+### Fixed
+* `pseudo`: detect when more than one column is selected for pseudonymization https://github.com/jqnatividad/qsv/commit/0b093726bb964c2a4a6eec15c0e30ed3660fdf97
+* dotenv (.env) tweaks/fixes https://github.com/jqnatividad/qsv/pull/1427
+* fix several typos https://github.com/jqnatividad/qsv/commit/723443eed4ac0f692cdd6ac4a1af4d82e22fda8b
+* fix several markdown lints
+
+### Removed
+* remove fast-float as std float parse is now also using Eisel-Lemire algorithm https://github.com/jqnatividad/qsv/pull/1414
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.118.0...0.119.0
+
 ## [0.118.0] - 2023-10-27
 
 ## Highlights:
