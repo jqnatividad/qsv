@@ -9,14 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.119.0] - 2023-11-19
 
 ## Highlights:
-As we prepare for version 1.0, we're focusing on performance, stability and reliability. We're also working on qsv pro = a cloud-backed UI version of qsv powered by [Tauri](https://tauri.app), which is set to be released in 2024. Stay tuned!
+As we prepare for version 1.0, we're focusing on performance, stability and reliability as we set the stage for qsv pro - a cloud-backed UI version of qsv powered by [Tauri](https://tauri.app), set to be released in 2024. Stay tuned!
 
 * `diff` is now out of beta and blazingly fast! Give _"the fastest CSV-diff in the world"_ a try :wink:!
-* `cat` is now even faster with the `--flexible` option. If you know your CSV files are valid, you can use this option to skip CSV validation and make `cat` run twice as fast!
-* qsv can now add a [Byte Order Mark](https://en.wikipedia.org/wiki/Byte_order_mark) (BOM) header sequence for Excel-friendly CSVs on Windows with the `QSV_OUTPUT_BOM` environment variable.
 * `joinp` now supports snappy automatic compression/decompression!
 * `sqlp` & `joinp` now recognize the `QSV_COMMENT_CHAR` environment variable, allowing you to skip comment lines in your input CSV files. They're also faster with the upgrade to Polars 0.35.4.
 * `sqlp`now supports subqueries, table aliases, and more!
+* `luau`: upgraded embedded Luau from 0.599 to 0.604; refactored code to reduce unneeded allocations and increase performance as we prepare for extended recipe support.
+* `cat` is now even faster with the `--flexible` option. If you know your CSV files are valid, you can use this option to skip CSV validation and make `cat` run twice as fast!
+* qsv can now add a [Byte Order Mark](https://en.wikipedia.org/wiki/Byte_order_mark) (BOM) header sequence for Excel-friendly CSVs on Windows with the `QSV_OUTPUT_BOM` environment variable.
 * `stats`, `sort`, `schema` & `validate` are now faster with the use of `atoi_simd` to directly convert &[u8] to integer, skipping unnecessary utf8 validation, while also using SIMD CPU instructions for noticeably faster performance.
 
 ### Added
