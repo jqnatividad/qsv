@@ -280,6 +280,17 @@ impl From<mlua::Error> for CliError {
 static QSV_BREAK: AtomicBool = AtomicBool::new(false);
 static QSV_SKIP: AtomicBool = AtomicBool::new(false);
 
+// internal variables
+static QSV_BREAK_MSG: &str = "_QSV_BRKMSG";
+static QSV_INSERTRECORD_TBL: &str = "_QSV_IR_TBL";
+static QSV_CACHE_DIR: &str = "_QSV_CACHE_DIR";
+
+// special variables that can be used in scripts
+static QSV_V_IDX: &str = "_IDX";
+static QSV_V_ROWCOUNT: &str = "_ROWCOUNT";
+static QSV_V_LASTROW: &str = "_LASTROW";
+static QSV_V_INDEX: &str = "_INDEX";
+
 // there are 3 stages: 1-BEGIN, 2-MAIN, 3-END
 #[repr(i8)]
 #[derive(IntoStaticStr)]
@@ -345,7 +356,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let comment_remover_re = regex::Regex::new(r"(?m)(^\s*?--.*?$)").unwrap();
     luau_script = comment_remover_re.replace_all(&luau_script, "").to_string();
 
-    let mut index_file_used = luau_script.contains("_INDEX") || luau_script.contains("_LASTROW");
+    let mut index_file_used =
+        luau_script.contains(QSV_V_INDEX) || luau_script.contains(QSV_V_LASTROW);
 
     // check if the main script has BEGIN and END blocks
     // and if so, extract them and remove them from the main script
@@ -408,8 +420,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     // check if the BEGIN script uses _INDEX
-    index_file_used =
-        index_file_used || begin_script.contains("_INDEX") || begin_script.contains("_LASTROW");
+    index_file_used = index_file_used
+        || begin_script.contains(QSV_V_INDEX)
+        || begin_script.contains(QSV_V_LASTROW);
 
     let qsv_register_lookup_used = begin_script.contains("qsv_register_lookup(");
     debug!("BEGIN script: {begin_script:?}");
@@ -443,7 +456,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
     // check if the END script uses _INDEX
     index_file_used =
-        index_file_used || end_script.contains("_INDEX") || end_script.contains("_LASTROW");
+        index_file_used || end_script.contains(QSV_V_INDEX) || end_script.contains(QSV_V_LASTROW);
     debug!("END script: {end_script:?}");
 
     // check if "require" was used in the scripts. If so, we need to setup LUAU_PATH;
@@ -552,7 +565,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         info!("Using cache directory: {qsv_cache_dir}");
-        globals.raw_set("_QSV_CACHE_DIR", qsv_cache_dir)?;
+        globals.raw_set(QSV_CACHE_DIR, qsv_cache_dir)?;
     }
 
     debug!("Main processing");
@@ -640,18 +653,14 @@ fn sequential_mode(
     }
 
     // we initialize the special vars _IDX and _ROWCOUNT
-    globals.raw_set("_IDX", 0)?;
-    globals.raw_set("_ROWCOUNT", 0)?;
+    globals.raw_set(QSV_V_IDX, 0)?;
+    globals.raw_set(QSV_V_ROWCOUNT, 0)?;
     if !begin_script.is_empty() {
         info!("Compiling and executing BEGIN script. _IDX: 0 _ROWCOUNT: 0");
         LUAU_STAGE.store(Stage::Begin as i8, Ordering::Relaxed);
 
         let begin_bytecode = luau_compiler.compile(begin_script);
-        if let Err(e) = luau
-            .load(&begin_bytecode)
-            // .set_mode(mlua::ChunkMode::Binary)
-            .exec()
-        {
+        if let Err(e) = luau.load(&begin_bytecode).exec() {
             return fail_clierror!("BEGIN error: Failed to execute \"{begin_script}\".\n{e}");
         }
         info!("BEGIN executed.");
@@ -662,15 +671,14 @@ fn sequential_mode(
     // check if qsv_insertrecord() was called in the BEGIN script
     beginend_insertrecord(luau, &mut insertrecord, headers_count, &mut wtr)?;
     if QSV_BREAK.load(Ordering::Relaxed) {
-        let qsv_break_msg: String = globals.raw_get("_QSV_BREAK_MSG")?;
+        let qsv_break_msg: String = globals.raw_get(QSV_BREAK_MSG)?;
         winfo!("{qsv_break_msg}");
         return Ok(());
     }
 
     // we clear the table so we don't falsely detect a call to qsv_insertrecord()
     // in the MAIN/END scripts
-    luau.globals()
-        .raw_set("_QSV_INSERTRECORD_TBL", Value::Nil)?;
+    luau.globals().raw_set(QSV_INSERTRECORD_TBL, Value::Nil)?;
 
     #[cfg(feature = "datapusher_plus")]
     let show_progress = false;
@@ -688,7 +696,7 @@ fn sequential_mode(
     }
 
     // check if _IDX was used in the MAIN script
-    let idx_used = main_script.contains("_IDX");
+    let idx_used = main_script.contains(QSV_V_IDX);
 
     let main_bytecode = luau_compiler.compile(main_script);
     let mut record = csv::StringRecord::new();
@@ -720,7 +728,7 @@ fn sequential_mode(
         idx += 1;
         if idx_used {
             // for perf reasons, only update _IDX if it was used in the MAIN script
-            globals.raw_set("_IDX", idx)?;
+            globals.raw_set(QSV_V_IDX, idx)?;
         }
 
         // Updating col
@@ -757,7 +765,7 @@ fn sequential_mode(
         };
 
         if QSV_BREAK.load(Ordering::Relaxed) {
-            let qsv_break_msg: String = globals.raw_get("_QSV_BREAK_MSG")?;
+            let qsv_break_msg: String = globals.raw_get(QSV_BREAK_MSG)?;
             winfo!("{qsv_break_msg}");
             break 'main;
         }
@@ -778,7 +786,7 @@ fn sequential_mode(
             // check if the script is trying to insert a record with
             // qsv_insertrecord(). We do this by checking if the global
             // _QSV_INSERTRECORD_TBL exists and is not empty
-            match luau.globals().raw_get("_QSV_INSERTRECORD_TBL") {
+            match luau.globals().raw_get(QSV_INSERTRECORD_TBL) {
                 Ok(Value::Table(insertrecord_table)) => {
                     // _QSV_INSERTRECORD_TBL is populated, we have a record to insert
                     insertrecord.clear();
@@ -835,12 +843,12 @@ fn sequential_mode(
         // Also, _ROWCOUNT is zero during the main script, and only set
         // to _IDX during the END script.
         LUAU_STAGE.store(Stage::End as i8, Ordering::Relaxed);
-        globals.raw_set("_ROWCOUNT", idx)?;
+        globals.raw_set(QSV_V_ROWCOUNT, idx)?;
         if !idx_used {
             // for perf reasons, we only updated _IDX in the main
             // hot loop if it was used in the main script
             // so we set it here in the END script, if it was not used in the main script
-            globals.raw_set("_IDX", idx)?;
+            globals.raw_set(QSV_V_IDX, idx)?;
         }
 
         info!("Compiling and executing END script. _ROWCOUNT: {idx}");
@@ -960,10 +968,10 @@ fn random_access_mode(
     }
 
     // unlike sequential_mode, we actually know the row_count at the BEGINning
-    globals.raw_set("_IDX", 0)?;
-    globals.raw_set("_INDEX", 0)?;
-    globals.raw_set("_ROWCOUNT", row_count)?;
-    globals.raw_set("_LASTROW", row_count - 1)?;
+    globals.raw_set(QSV_V_IDX, 0)?;
+    globals.raw_set(QSV_V_INDEX, 0)?;
+    globals.raw_set(QSV_V_ROWCOUNT, row_count)?;
+    globals.raw_set(QSV_V_LASTROW, row_count - 1)?;
 
     if !begin_script.is_empty() {
         info!(
@@ -984,19 +992,18 @@ fn random_access_mode(
     // check if qsv_insertrecord() was called in the BEGIN script
     beginend_insertrecord(luau, &mut insertrecord, headers_count, &mut wtr)?;
     if QSV_BREAK.load(Ordering::Relaxed) {
-        let qsv_break_msg: String = globals.raw_get("_QSV_BREAK_MSG")?;
+        let qsv_break_msg: String = globals.raw_get(QSV_BREAK_MSG)?;
         winfo!("{qsv_break_msg}");
         return Ok(());
     }
 
     // we clear the table so we don't falsely detect a call to qsv_insertrecord()
     // in the MAIN/END scripts
-    luau.globals()
-        .raw_set("_QSV_INSERTRECORD_TBL", Value::Nil)?;
+    luau.globals().raw_set(QSV_INSERTRECORD_TBL, Value::Nil)?;
 
     // in random access mode, setting "_INDEX" allows us to change the current record
     // for the NEXT read
-    let mut pos = globals.get::<_, isize>("_INDEX").unwrap_or_default();
+    let mut pos = globals.get::<_, isize>(QSV_V_INDEX).unwrap_or_default();
     let mut curr_record = if pos > 0 && pos <= row_count as isize {
         pos as u64
     } else {
@@ -1055,7 +1062,7 @@ fn random_access_mode(
     // main loop - here we use an indexed file reader to implement random access mode,
     // seeking to the next record to read by looking at _INDEX special var
     'main: while idx_file.read_record(&mut record)? {
-        globals.raw_set("_IDX", curr_record)?;
+        globals.raw_set(QSV_V_IDX, curr_record)?;
 
         #[cfg(any(feature = "feature_capable", feature = "lite"))]
         if show_progress {
@@ -1098,7 +1105,7 @@ fn random_access_mode(
         };
 
         if QSV_BREAK.load(Ordering::Relaxed) {
-            let qsv_break_msg: String = globals.raw_get("_QSV_BREAK_MSG")?;
+            let qsv_break_msg: String = globals.raw_get(QSV_BREAK_MSG)?;
             winfo!("{qsv_break_msg}");
             break 'main;
         }
@@ -1117,9 +1124,9 @@ fn random_access_mode(
             )?;
 
             // check if the MAIN script is trying to insert a record
-            match luau.globals().raw_get("_QSV_INSERTRECORD_TBL") {
+            match luau.globals().raw_get(QSV_INSERTRECORD_TBL) {
                 Ok(Value::Table(insertrecord_table)) => {
-                    // _QSV_INSERTRECORD_TBL is populated, we have a record to insert
+                    // QSV_INSERTRECORD_TBL is populated, we have a record to insert
                     insertrecord.clear();
 
                     create_insertrecord(&insertrecord_table, &mut insertrecord, headers_count)?;
@@ -1165,7 +1172,7 @@ fn random_access_mode(
             }
         }
 
-        pos = globals.get::<_, isize>("_INDEX").unwrap_or_default();
+        pos = globals.get::<_, isize>(QSV_V_INDEX).unwrap_or_default();
         if pos < 0 || pos as u64 > row_count {
             break 'main;
         }
@@ -1355,9 +1362,9 @@ fn beginend_insertrecord(
     headers_count: usize,
     wtr: &mut csv::Writer<Box<dyn Write>>,
 ) -> Result<(), CliError> {
-    match luau.globals().raw_get("_QSV_INSERTRECORD_TBL") {
+    match luau.globals().raw_get(QSV_INSERTRECORD_TBL) {
         Ok(Value::Table(insertrecord_table)) => {
-            // _QSV_INSERTRECORD_TBL is populated, we have a record to insert
+            // QSV_INSERTRECORD_TBL is populated, we have a record to insert
             insertrecord.clear();
 
             create_insertrecord(&insertrecord_table, insertrecord, headers_count)?;
@@ -1490,7 +1497,7 @@ fn setup_helpers(
 
     // this is a helper function that can be called from the BEGIN and MAIN script
     // to stop processing. All the parameters are concatenated and returned as a string.
-    // The string is also stored in the global variable _QSV_BREAK_MSG.
+    // The string is also stored in the global variable QSV_BREAK_MSG.
     // qsv_break should only be called from scripts that are processing CSVs in sequential mode.
     // When in random access mode, set _INDEX to -1 or a value greater than _LASTROW instead
     //
@@ -1519,8 +1526,7 @@ fn setup_helpers(
             }
             idx += 1;
         }
-        luau.globals()
-            .raw_set("_QSV_BREAK_MSG", break_msg.clone())?;
+        luau.globals().raw_set(QSV_BREAK_MSG, break_msg.clone())?;
         QSV_BREAK.store(true, Ordering::Relaxed);
 
         Ok(break_msg)
@@ -1838,7 +1844,7 @@ fn setup_helpers(
             }
         }
         luau.globals()
-            .raw_set("_QSV_INSERTRECORD_TBL", insertrecord_table.clone())?;
+            .raw_set(QSV_INSERTRECORD_TBL, insertrecord_table.clone())?;
 
         if log::log_enabled!(log::Level::Debug) {
             log::debug!("qsv_insertrecord() - inserting record: {insertrecord_table:?}");
@@ -2055,7 +2061,7 @@ fn setup_helpers(
         let mut cached_csv_age_secs = 0_i64;
         let mut cached_csv_size = 0;
         let mut cache_csv_last_modified: Option<std::time::SystemTime> = None;
-        let qsv_cache_dir: String = luau.globals().raw_get("_QSV_CACHE_DIR")?;
+        let qsv_cache_dir: String = luau.globals().raw_get(QSV_CACHE_DIR)?;
         let cached_csv_path = Path::new(&qsv_cache_dir).join(format!("{lookup_name}.csv"));
 
         // check if lookup_table_uri is a file in the local filesystem
