@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.119.0] - 2023-11-19
 
+## Highlights:
+As we prepare for version 1.0, we're focusing on performance, stability and reliability. We're also working on a cloud-backed, [Tauri](https://tauri.app)-powered UI version of qsv - qsv pro, which will be released in 2024. Stay tuned!
+
+* `diff` is now out of beta, but for CSV files and blazingly fast! Give "the fastest CSV-diff in the world" a try :wink:!
+* `cat` is now even faster with the `--flexible` option. If you know your CSV files are valid, you can use this option to skip CSV validation and speed up `cat`.
+* qsv can now output [Byte Order Mark](https://en.wikipedia.org/wiki/Byte_order_mark) (BOM) for Excel-friendly CSVs on Windows with the `QSV_OUTPUT_BOM` environment variable.
+* `joinp` now supports snappy automatic compression/decompression!
+* `sqlp` & `joinp` now recognize the `QSV_COMMENT_CHAR` environment variable, allowing you to skip comment lines in your CSV files. They're also faster with the upgrade to Polars 0.35.4.
+* `stats`, `sort`, `schema` & `validate` are now faster with the use of `atoi_simd` to directly convert &[u8] to integer skipping unnecessary utf8 validation, while also using SIMD instructions for noticeably faster performance.
+
 ### Added
 * `diff`: add option/flag for headers in output by @janriemer in https://github.com/jqnatividad/qsv/pull/1395
 * `diff`: add option/flag `--delimiter-output` by @janriemer in https://github.com/jqnatividad/qsv/pull/1402
@@ -15,10 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `sqlp` & `joinp`: both commands now recognize QSV_COMMENT_CHAR env var https://github.com/jqnatividad/qsv/pull/1412
 * `joinp`: add snappy compression/decompression support https://github.com/jqnatividad/qsv/pull/1413
 * Add Byte Order Mark (BOM) output support https://github.com/jqnatividad/qsv/pull/1424
-* `stats`: use atoi to skip utf8 validation to directly convert &[u8] to integer validation https://github.com/jqnatividad/qsv/pull/1416
 * Added Codacy code quality badge to README.md https://github.com/jqnatividad/qsv/commit/99591297d59b3c45363592516d5ecb7d4d98d5c8
 
 ### Changed
+* `stats`, `sort`, `schema` & `validate`: use atoi_simd to directly convert &[u8] to integer skipping unnecessary utf8 validation, while also using SIMD instructions for noticeably faster performance
 * `cat`: faster `cat rows` https://github.com/jqnatividad/qsv/pull/1407
 * `count`: optimize `--width` option https://github.com/jqnatividad/qsv/pull/1411
 * `luau`: upgrade embedded Luau from 0.603 to 0.604 https://github.com/jqnatividad/qsv/pull/1426
