@@ -1383,7 +1383,7 @@ async fn load_engine(geocode_index_file: PathBuf, progressbar: &ProgressBar) -> 
     create = "{ SizedCache::try_with_size(CACHE_SIZE).unwrap_or_else(|_| \
               SizedCache::with_size(FALLBACK_CACHE_SIZE)) }",
     key = "String",
-    convert = r#"{ format!("{cell}-{lang_lookup}") }"#,
+    convert = r#"{ cell.to_owned() }"#,
     option = true
 )]
 fn search_index(
@@ -2053,10 +2053,7 @@ fn get_countryinfo(
 /// Note that the index file needs to be built with the desired languages for this to work.
 /// Use the "index-update" subcommand with the --languages option to rebuild the index
 /// with the desired languages. Otherwise, all names will be in English (en)
-#[cached(
-    key = "String",
-    convert = r#"{ format!("{}-{}", cityrecord.id, lang_lookup) }"#
-)]
+#[cached(key = "String", convert = r#"{ format!("{}", cityrecord.id) }"#)]
 fn get_cityrecord_name_in_lang(cityrecord: &CitiesRecord, lang_lookup: &str) -> NamesLang {
     let cityname = cityrecord
         .names
