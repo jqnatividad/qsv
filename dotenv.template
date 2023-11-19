@@ -38,7 +38,7 @@ QSV_NO_HEADERS = False
 # if set to `1`, toggles header setting - i.e. inverts qsv header behavior,
 # with no headers being the default, & setting `--no-headers` will actually
 # mean headers will not be ignored.
-# QSV_TOGGLE_HEADERS = 1
+# QSV_TOGGLE_HEADERS = False
 
 # if set, specifies the minimum file size (in bytes) of a CSV file before an 
 # index is automatically created. Note that stale indices are automatically 
@@ -48,7 +48,7 @@ QSV_NO_HEADERS = False
 # if set, add a BOM (Byte Order Mark) to the beginning of the output.
 # Note that this will also set the BOM for qsv's output to stdout.
 # This is useful when generating CSV files for Excel on Windows.
-# QSV_OUTPUT_BOM = 1
+# QSV_OUTPUT_BOM = False
 
 # The directory to use for caching various qsv files.
 # Used by the `geocode` command for downloaded geocoding resources.
@@ -72,7 +72,7 @@ QSV_NO_HEADERS = False
 # with this character are ignored. Note that when you want to use the pound sign
 # as a comment char, you need to enclose it in single quotes as its a reserved
 # character for dotenv files, e.g.
-QSV_COMMENT_CHAR = '#'
+QSV_COMMENT_CHAR: '#'
 
 # Otherwise, you can just use the character without enclosing it in single quotes
 # QSV_COMMENT_CHAR = !
@@ -100,11 +100,11 @@ QSV_PREFER_DMY = False
 # operation is always unicode-aware.
 QSV_REGEX_UNICODE = False
 
-# reader buffer size (default (bytes): 16384)
-QSV_RDR_BUFFER_CAPACITY = 16384
+# reader buffer size (default (bytes): 131,072 - 128k)
+QSV_RDR_BUFFER_CAPACITY = 131072
 
-# writer buffer size (default (bytes): 65536)
-QSV_WTR_BUFFER_CAPACITY = 65536
+# writer buffer size (default (bytes): 524,288 - 512k)
+QSV_WTR_BUFFER_CAPACITY = 524288
 
 # the percentage of free available memory required when running qsv in
 # "non-streaming" mode (i.e. the entire file needs to be loaded into memory).
