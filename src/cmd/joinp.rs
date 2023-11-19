@@ -458,6 +458,7 @@ impl JoinStruct {
             .with_time_format(self.time_format)
             .with_float_precision(self.float_precision)
             .with_null_value(self.null_value)
+            .include_bom(util::get_envvar_flag("QSV_OUTPUT_BOM"))
             .finish(&mut results_df)?;
 
         compress_output_if_needed(self.output)?;

@@ -280,6 +280,7 @@ impl OutputMode {
                     .with_time_format(args.flag_time_format)
                     .with_float_precision(args.flag_float_precision)
                     .with_null_value(args.flag_wnull_value)
+                    .include_bom(util::get_envvar_flag("QSV_OUTPUT_BOM"))
                     .finish(&mut df),
                 OutputMode::Json => JsonWriter::new(&mut w).finish(&mut df),
                 OutputMode::Parquet => {
