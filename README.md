@@ -326,7 +326,7 @@ It also has Out-of-Memory prevention, with two modes - NORMAL (default) & CONSER
 
 qsv supports an extensive list of environment variables and supports `.env` files to set them.
 
-For details, see [Environment Variables](docs/ENVIRONMENT_VARIABLES.md) and the [`dotenv.template.yaml`](dotenv.template.yaml) file.
+For details, see [Environment Variables](docs/ENVIRONMENT_VARIABLES.md) and the [`dotenv.template.yaml`](dotenv.template) file.
 ## Feature Flags
 
 qsv has several [feature flags](https://doc.rust-lang.org/cargo/reference/features.html) that can be used to enable/disable optional features.
