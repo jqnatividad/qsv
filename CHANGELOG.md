@@ -15,19 +15,20 @@ As we prepare for version 1.0, we're focusing on performance, stability and reli
 * `joinp` now supports snappy automatic compression/decompression!
 * `sqlp` & `joinp` now recognize the `QSV_COMMENT_CHAR` environment variable, allowing you to skip comment lines in your input CSV files. They're also faster with the upgrade to Polars 0.35.4.
 * `sqlp`now supports subqueries, table aliases, and more!
-* `luau`: upgraded embedded Luau from 0.599 to 0.604; refactored code to reduce unneeded allocations and increase performance as we prepare for extended recipe support.
+* `luau`: upgraded embedded Luau from 0.599 to 0.604; refactored code to reduce unneeded allocations and increase performance as we prepare for [extended recipe support](https://github.com/jqnatividad/qsv/issues/1419).
 * `cat` is now even faster with the `--flexible` option. If you know your CSV files are valid, you can use this option to skip CSV validation and make `cat` run twice as fast!
 * qsv can now add a [Byte Order Mark](https://en.wikipedia.org/wiki/Byte_order_mark) (BOM) header sequence for Excel-friendly CSVs on Windows with the `QSV_OUTPUT_BOM` environment variable.
 * `stats`, `sort`, `schema` & `validate` are now faster with the use of `atoi_simd` to directly convert &[u8] to integer, skipping unnecessary utf8 validation, while also using SIMD CPU instructions for noticeably faster performance.
 
 ### Added
-* `diff`: add option/flag for headers in output by @janriemer in https://github.com/jqnatividad/qsv/pull/1395
-* `diff`: add option/flag `--delimiter-output` by @janriemer in https://github.com/jqnatividad/qsv/pull/1402
-* `cat`: make `cat rows` faster still by adding `--flexible` option https://github.com/jqnatividad/qsv/pull/1408
+* `diff`: added option/flag for headers in output by @janriemer in https://github.com/jqnatividad/qsv/pull/1395
+* `diff`: added option/flag `--delimiter-output` by @janriemer in https://github.com/jqnatividad/qsv/pull/1402
+* `cat`: added `--flexible` option to make `cat rows` faster still https://github.com/jqnatividad/qsv/pull/1408
 * `sqlp` & `joinp`: both commands now recognize QSV_COMMENT_CHAR env var https://github.com/jqnatividad/qsv/pull/1412
-* `joinp`: add snappy compression/decompression support https://github.com/jqnatividad/qsv/pull/1413
+* `joinp`: added snappy compression/decompression support https://github.com/jqnatividad/qsv/pull/1413
+* `geocode`: now automatically decompresses snappy-compressed index files https://github.com/jqnatividad/qsv/pull/1429
 * Add Byte Order Mark (BOM) output support https://github.com/jqnatividad/qsv/pull/1424
-* Added Codacy code quality badge to README.md https://github.com/jqnatividad/qsv/commit/99591297d59b3c45363592516d5ecb7d4d98d5c8
+* Added Codacy code quality badge https://github.com/jqnatividad/qsv/commit/99591297d59b3c45363592516d5ecb7d4d98d5c8
 
 ### Changed
 * `stats`, `sort`, `schema` & `validate`: use atoi_simd to directly convert &[u8] to integer skipping unnecessary utf8 validation, while also using SIMD instructions for noticeably faster performance
