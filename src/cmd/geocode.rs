@@ -384,6 +384,7 @@ use regex::Regex;
 use serde::Deserialize;
 use serde_json::json;
 use simple_home_dir::expand_tilde;
+use tempfile::tempdir;
 use url::Url;
 use uuid::Uuid;
 
@@ -1336,7 +1337,7 @@ async fn load_engine(geocode_index_file: PathBuf, progressbar: &ProgressBar) -> 
             geocode_index_file.clone(),
             !progressbar.is_hidden(),
             None,
-            None,
+            Some(60),
             None,
         )
         .await?;
@@ -1357,11 +1358,29 @@ async fn load_engine(geocode_index_file: PathBuf, progressbar: &ProgressBar) -> 
             geocode_index_file.clone(),
             !progressbar.is_hidden(),
             None,
-            None,
+            Some(60),
             None,
         )
         .await?;
     }
+
+    // check if the geocode_index_file is snappy compressed
+    // if it is, decompress it
+    let geocode_index_file = if geocode_index_file.extension().unwrap() == "sz" {
+        let decompresssed_geocode_index_file = geocode_index_file.with_extension("bincode");
+        progressbar.println(format!(
+            "Decompressing {} to {}",
+            geocode_index_file.display(),
+            decompresssed_geocode_index_file.display()
+        ));
+        let tmpdir = tempdir()?;
+        let decompressed_tmpfile = util::decompress_snappy_file(&geocode_index_file, &tmpdir)?;
+        fs::copy(decompressed_tmpfile, &decompresssed_geocode_index_file)?;
+        decompresssed_geocode_index_file
+    } else {
+        geocode_index_file
+    };
+
     let storage = storage::bincode::Storage::new();
 
     let engine = storage
