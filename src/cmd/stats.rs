@@ -890,6 +890,8 @@ fn init_date_inference(
         log::info!("inferring dates for ALL fields with DMY preference: {dmy_preferred}");
         vec![true; headers.len()]
     } else {
+        let mut header_str = String::new();
+        let mut date_found = false;
         let whitelist = whitelist_lower
             .split(',')
             .map(str::trim)
@@ -897,8 +899,8 @@ fn init_date_inference(
         headers
             .iter()
             .map(|header| {
-                let header_str = from_bytes::<String>(header).unwrap().to_lowercase();
-                let date_found = whitelist
+                util::to_lowercase_into(&from_bytes::<String>(header).unwrap(), &mut header_str);
+                date_found = whitelist
                     .iter()
                     .any(|whitelist_item| header_str.contains(whitelist_item));
                 if date_found {
