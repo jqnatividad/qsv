@@ -351,7 +351,7 @@ Luau will also serve as the backbone of a whole library of **qsv recipes** - reu
  as command line interfaces go :shrug:. Its commands have numerous options but have sensible defaults if a user does not want to use options. The usage text is written for a data analyst audience, not developers; and there are numerous examples in the usage text, with the tests doubling as examples as well. In the future, it will also have a TUI (Terminal User Interface) mode.
 * **As Secure as Possible** - qsv is designed to be secure. It has no external runtime dependencies, is [written](https://aws.amazon.com/blogs/opensource/why-aws-loves-rust-and-how-wed-like-to-help/) [in](https://msrc.microsoft.com/blog/2019/07/why-rust-for-safe-systems-programming/) [Rust](https://opensource.googleblog.com/2023/06/rust-fact-vs-fiction-5-insights-from-googles-rust-journey-2022.html), and it's codebase is automatically audited for security vulnerabilities with automated [DevSkim](https://github.com/microsoft/DevSkim#devskim), ["cargo audit"](https://rustsec.org) and [Codacy](https://app.codacy.com/gh/jqnatividad/qsv/dashboard) Github Actions workflows.  
 It uses the latest stable Rust version, with an aggressive MSRV policy and the latest version of all its dependencies.
-It has an extensive test suite with more than 1,200 tests, including several [property tests](https://medium.com/criteo-engineering/introduction-to-property-based-testing-f5236229d237) which [randomly generate](https://github.com/BurntSushi/quickcheck#quickcheck) parameters for oft-used commands. It also has a [Security Policy](SECURITY.md).  
+It has an extensive test suite with more than 1,250 tests, including several [property tests](https://medium.com/criteo-engineering/introduction-to-property-based-testing-f5236229d237) which [randomly generate](https://github.com/BurntSushi/quickcheck#quickcheck) parameters for oft-used commands. It also has a [Security Policy](SECURITY.md).  
 Its prebuilt binary archives are [zipsigned](https://github.com/Kijewski/zipsign#zipsign), so you can [verify their integrity](#verifying-the-integrity-of-the-prebuilt-binaries-zip-archives). Its self-update mechanism automatically verifies the integrity of the downloaded binaries archive before applying an update.
 However, it does not use cryptographically secure random number generators as the performance penalty is too high and qsv's `sort` & `sample` use cases do not require it.
 (search for the codebase for _"[//DevSkim: ignore DS148264](https://github.com/search?q=repo%3Ajqnatividad%2Fqsv+%2F%2Fdevskim&type=code)"_ to find instances where qsv uses a non-cryptographically secure random number generator)
@@ -365,7 +365,7 @@ It can process well-formed CSVs in _any_ language so long as its UTF-8 encoded. 
 Finally, though the default Geonames index of the `geocode` command is English-only, the index can be rebuilt with the `geocode index-update` subcommand with the `--languages` option to return place names in multiple languages ([with support for 253 languages](http://download.geonames.org/export/dump/alternatenames/)).
 
 ## Testing
-qsv has ~1,220 tests in the [tests](https://github.com/jqnatividad/qsv/tree/master/tests) directory.
+qsv has ~1,250 tests in the [tests](https://github.com/jqnatividad/qsv/tree/master/tests) directory.
 Each command has its own test suite in a separate file with the convention `test_<COMMAND>.rs`.
 Apart from preventing regressions, the tests also serve as good illustrative examples, and are often linked from the usage text of each corresponding command.
 
