@@ -50,6 +50,7 @@ As we prepare for version 1.0, we're focusing on performance, stability and reli
 * build(deps): bump itertools from 0.11.0 to 0.12.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1418
 * build(deps): bump rust_decimal from 1.33.0 to 1.33.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1420
 * build(deps): bump polars from 0.35.2 to 0.35.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1425
+* build(deps): bump uuid from 1.5.0 to 1.6.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1428
 * bump MSRV to 1.74.0
 * apply select clippy suggestions
 * update several indirect dependencies
