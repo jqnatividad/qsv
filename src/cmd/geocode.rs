@@ -1333,7 +1333,7 @@ async fn load_engine(geocode_index_file: PathBuf, progressbar: &ProgressBar) -> 
         ));
 
         util::download_file(
-            &format!("{download_url}{geocode_index_file_stem}"),
+            &format!("{download_url}{geocode_index_file_stem}.sz"),
             geocode_index_file.clone(),
             !progressbar.is_hidden(),
             None,
