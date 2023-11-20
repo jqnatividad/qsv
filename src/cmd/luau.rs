@@ -785,10 +785,10 @@ fn sequential_mode(
 
             // check if the script is trying to insert a record with
             // qsv_insertrecord(). We do this by checking if the global
-            // _QSV_INSERTRECORD_TBL exists and is not empty
+            // _QSV_IR_TBL exists and is not empty
             match luau.globals().raw_get(QSV_INSERTRECORD_TBL) {
                 Ok(Value::Table(insertrecord_table)) => {
-                    // _QSV_INSERTRECORD_TBL is populated, we have a record to insert
+                    // _QSV_IR_TBL is populated, we have a record to insert
                     insertrecord.clear();
 
                     create_insertrecord(&insertrecord_table, &mut insertrecord, headers_count)?;
@@ -1497,7 +1497,7 @@ fn setup_helpers(
 
     // this is a helper function that can be called from the BEGIN and MAIN script
     // to stop processing. All the parameters are concatenated and returned as a string.
-    // The string is also stored in the global variable QSV_BREAK_MSG.
+    // The string is also stored in the global variable _QSV_BRKMSG.
     // qsv_break should only be called from scripts that are processing CSVs in sequential mode.
     // When in random access mode, set _INDEX to -1 or a value greater than _LASTROW instead
     //
