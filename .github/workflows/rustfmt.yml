@@ -19,9 +19,7 @@ jobs:
     - uses: actions-rs/toolchain@v1
       with:
         toolchain: nightly
-    - name: Make doubly sure to install the nightly rustfmt
-      run: |
-        rustup component add rustfmt --toolchain nightly-x86_64-unknown-linux-gnu
+        components: rustfmt, clippy
     - name: Check formatting
       uses: actions-rs/cargo@v1
       with:
