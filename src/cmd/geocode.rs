@@ -1089,12 +1089,13 @@ async fn geocode_main(args: Args) -> CliResult<()> {
 
     // setup country filter - both suggest/now and reverse/now support country filters
     // countryinfo/now subcommands ignores the country filter
-    let country_filter_list = flag_country.map(|country_list| {
-        country_list
-            .split(',')
-            .map(|s| s.trim().to_ascii_lowercase())
-            .collect::<Vec<String>>()
-    });
+    let country_filter_list =
+        flag_country.map(|country_list| {
+            country_list
+                .split(',')
+                .map(|s| s.trim().to_ascii_lowercase())
+                .collect::<Vec<String>>()
+        });
 
     log::debug!("country_filter_list: {country_filter_list:?}");
     log::debug!("admin1_filter_list: {admin1_filter_list:?}");
@@ -1420,75 +1421,79 @@ fn search_index(
 ) -> Option<String> {
     if mode == GeocodeSubCmd::Suggest || mode == GeocodeSubCmd::SuggestNow {
         let search_result: Vec<&CitiesRecord>;
-        let cityrecord = if admin1_filter_list.is_none() {
-            // no admin1 filter, run a search for 1 result (top match)
-            search_result = engine.suggest(cell, 1, min_score, country_filter_list.as_deref());
-            let Some(cr) = search_result.into_iter().next() else {
-                // no results, so return early with None
-                return None;
-            };
-            cr
-        } else {
-            // we have an admin1 filter, run a search for top SUGGEST_ADMIN1_LIMIT results
-            search_result = engine.suggest(
-                cell,
-                SUGGEST_ADMIN1_LIMIT,
-                min_score,
-                country_filter_list.as_deref(),
-            );
+        let cityrecord =
+            if admin1_filter_list.is_none() {
+                // no admin1 filter, run a search for 1 result (top match)
+                search_result = engine.suggest(cell, 1, min_score, country_filter_list.as_deref());
+                let Some(cr) = search_result.into_iter().next() else {
+                    // no results, so return early with None
+                    return None;
+                };
+                cr
+            } else {
+                // we have an admin1 filter, run a search for top SUGGEST_ADMIN1_LIMIT results
+                search_result = engine.suggest(
+                    cell,
+                    SUGGEST_ADMIN1_LIMIT,
+                    min_score,
+                    country_filter_list.as_deref(),
+                );
 
-            // first, get the first result and store that in cityrecord
-            let Some(cr) = search_result.clone().into_iter().next() else {
-                // no results, so return early with None
-                return None;
-            };
-            let first_result = cr;
+                // first, get the first result and store that in cityrecord
+                let Some(cr) = search_result.clone().into_iter().next() else {
+                    // no results, so return early with None
+                    return None;
+                };
+                let first_result = cr;
 
-            // then iterate through search results and find the first one that matches admin1
-            // the search results are already sorted by score, so we just need to find the first
-            if let Some(admin1_filter_list) = admin1_filter_list {
-                // we have an admin1 filter, so we need to find the first admin1 result that matches
-                let mut admin1_filter_map: HashMap<String, bool, RandomState> = HashMap::default();
-                for admin1_filter in admin1_filter_list {
-                    admin1_filter_map
-                        .insert(admin1_filter.clone().admin1_string, admin1_filter.is_code);
-                }
-                let mut matched_record: Option<&CitiesRecord> = None;
-                'outer: for cr in &search_result {
-                    if let Some(admin_division) = &cr.admin_division {
-                        for (admin1_filter, is_code) in &admin1_filter_map {
-                            if *is_code {
-                                // admin1 is a code, so we search for admin1 code
-                                if admin_division.code.starts_with(admin1_filter) {
-                                    matched_record = Some(cr);
-                                    break 'outer;
-                                }
-                            } else {
-                                // admin1 is a name, so we search for admin1 name, case-insensitive
-                                if admin_division
-                                    .name
-                                    .to_lowercase()
-                                    .starts_with(admin1_filter)
-                                {
-                                    matched_record = Some(cr);
-                                    break 'outer;
+                // then iterate through search results and find the first one that matches admin1
+                // the search results are already sorted by score, so we just need to find the first
+                if let Some(admin1_filter_list) = admin1_filter_list {
+                    // we have an admin1 filter, so we need to find the first admin1 result that
+                    // matches
+                    let mut admin1_filter_map: HashMap<String, bool, RandomState> =
+                        HashMap::default();
+                    for admin1_filter in admin1_filter_list {
+                        admin1_filter_map
+                            .insert(admin1_filter.clone().admin1_string, admin1_filter.is_code);
+                    }
+                    let mut matched_record: Option<&CitiesRecord> = None;
+                    'outer: for cr in &search_result {
+                        if let Some(admin_division) = &cr.admin_division {
+                            for (admin1_filter, is_code) in &admin1_filter_map {
+                                if *is_code {
+                                    // admin1 is a code, so we search for admin1 code
+                                    if admin_division.code.starts_with(admin1_filter) {
+                                        matched_record = Some(cr);
+                                        break 'outer;
+                                    }
+                                } else {
+                                    // admin1 is a name, so we search for admin1 name,
+                                    // case-insensitive
+                                    if admin_division
+                                        .name
+                                        .to_lowercase()
+                                        .starts_with(admin1_filter)
+                                    {
+                                        matched_record = Some(cr);
+                                        break 'outer;
+                                    }
                                 }
                             }
                         }
                     }
-                }
 
-                if let Some(cr) = matched_record {
-                    cr
+                    if let Some(cr) = matched_record {
+                        cr
+                    } else {
+                        // no admin1 match, so we return the first result
+                        first_result
+                    }
                 } else {
-                    // no admin1 match, so we return the first result
+                    // no admin1 filter, so we return the first result
                     first_result
                 }
-            } else {
-                // no admin1 filter, so we return the first result
-                first_result
-            }
-        };
+            };
 
         let country = cityrecord.country.clone().unwrap().code;
 
@@ -1652,27 +1657,28 @@ fn add_dyncols(
                 record.push_field(lookup_us_state_fips_code(&us_state_code).unwrap_or_default());
             },
             "us_county_fips_code" => {
-                let us_county_fips_code = if let Some(admin2_code) = cityrecord
-                    .admin2_division
-                    .as_ref()
-                    .map(|ad| ad.code.clone())
-                {
-                    if admin2_code.starts_with("US.") && admin2_code.len() == 9 {
-                        // admin2 code is a US county code, the three-digit county code
-                        // is the last three characters of the admin2 code
-                        // start at index 7 to skip the US. prefix
-                        // e.g. US.NY.061 -> 061
-                        format!("{:0>3}", admin2_code[7..].to_string())
+                let us_county_fips_code =
+                    if let Some(admin2_code) = cityrecord
+                        .admin2_division
+                        .as_ref()
+                        .map(|ad| ad.code.clone())
+                    {
+                        if admin2_code.starts_with("US.") && admin2_code.len() == 9 {
+                            // admin2 code is a US county code, the three-digit county code
+                            // is the last three characters of the admin2 code
+                            // start at index 7 to skip the US. prefix
+                            // e.g. US.NY.061 -> 061
+                            format!("{:0>3}", admin2_code[7..].to_string())
+                        } else {
+                            // admin2 code is not a US county code
+                            // set to empty string
+                            String::new()
+                        }
                     } else {
-                        // admin2 code is not a US county code
+                        // no admin2 code
                         // set to empty string
                         String::new()
-                    }
-                } else {
-                    // no admin2 code
-                    // set to empty string
-                    String::new()
-                };
+                    };
                 record.push_field(&us_county_fips_code);
             },
 
@@ -1869,32 +1875,34 @@ fn format_result(
                 },
 
                 // set US county FIPS code
-                "us_county_fips_code" => cityrecord_map.insert("us_county_fips_code", {
-                    match cityrecord
-                        .admin2_division
-                        .as_ref()
-                        .map(|ad| ad.code.clone())
-                    {
-                        Some(admin2_code) => {
-                            if admin2_code.starts_with("US.") && admin2_code.len() == 9 {
-                                // admin2 code is a US county code, the three-digit county code
-                                // is the last three characters of the admin2 code
-                                // start at index 7 to skip the US. prefix
-                                // e.g. US.NY.061 -> 061
-                                format!("{:0>3}", admin2_code[7..].to_string())
-                            } else {
-                                // admin2 code is not a US county code
+                "us_county_fips_code" => {
+                    cityrecord_map.insert("us_county_fips_code", {
+                        match cityrecord
+                            .admin2_division
+                            .as_ref()
+                            .map(|ad| ad.code.clone())
+                        {
+                            Some(admin2_code) => {
+                                if admin2_code.starts_with("US.") && admin2_code.len() == 9 {
+                                    // admin2 code is a US county code, the three-digit county code
+                                    // is the last three characters of the admin2 code
+                                    // start at index 7 to skip the US. prefix
+                                    // e.g. US.NY.061 -> 061
+                                    format!("{:0>3}", admin2_code[7..].to_string())
+                                } else {
+                                    // admin2 code is not a US county code
+                                    // set to empty string
+                                    String::new()
+                                }
+                            },
+                            None => {
+                                // no admin2 code
                                 // set to empty string
                                 String::new()
-                            }
-                        },
-                        None => {
-                            // no admin2 code
-                            // set to empty string
-                            String::new()
-                        },
-                    }
-                }),
+                            },
+                        }
+                    })
+                },
 
                 // countryrecord fields
                 "iso3" => cityrecord_map.insert("iso3", countryrecord.info.iso3.clone()),
@@ -2118,48 +2126,50 @@ fn lookup_us_state_fips_code(state: &str) -> Option<&'static str> {
 }
 
 fn get_us_fips_codes(cityrecord: &CitiesRecord, nameslang: &NamesLang) -> serde_json::Value {
-    let us_state_code =
-        if let Some(admin1_code) = cityrecord.admin_division.as_ref().map(|ad| ad.code.clone()) {
-            if let Some(state_fips_code) = admin1_code.strip_prefix("US.") {
-                // admin1 code is a US state code, the two-letter state code
-                // is the last two characters of the admin1 code
-                state_fips_code.to_string()
-            } else {
-                // admin1 code is not a US state code
-                // set to empty string
-                String::new()
-            }
+    let us_state_code = if let Some(admin1_code) =
+        cityrecord.admin_division.as_ref().map(|ad| ad.code.clone())
+    {
+        if let Some(state_fips_code) = admin1_code.strip_prefix("US.") {
+            // admin1 code is a US state code, the two-letter state code
+            // is the last two characters of the admin1 code
+            state_fips_code.to_string()
         } else {
-            // no admin1 code
+            // admin1 code is not a US state code
             // set to empty string
             String::new()
-        };
+        }
+    } else {
+        // no admin1 code
+        // set to empty string
+        String::new()
+    };
     let us_state_fips_code = lookup_us_state_fips_code(&us_state_code).unwrap_or("null");
 
-    let us_county_code = match cityrecord
-        .admin2_division
-        .as_ref()
-        .map(|ad| ad.code.clone())
-    {
-        Some(admin2_code) => {
-            if admin2_code.starts_with("US.") && admin2_code.len() == 9 {
-                // admin2 code is a US county code, the three-digit county code
-                // is the last three characters of the admin2 code
-                // start at index 7 to skip the US. prefix
-                // e.g. US.NY.061 -> 061
-                format!("{:0>3}", admin2_code[7..].to_string())
-            } else {
-                // admin2 code is not a US county code
+    let us_county_code =
+        match cityrecord
+            .admin2_division
+            .as_ref()
+            .map(|ad| ad.code.clone())
+        {
+            Some(admin2_code) => {
+                if admin2_code.starts_with("US.") && admin2_code.len() == 9 {
+                    // admin2 code is a US county code, the three-digit county code
+                    // is the last three characters of the admin2 code
+                    // start at index 7 to skip the US. prefix
+                    // e.g. US.NY.061 -> 061
+                    format!("{:0>3}", admin2_code[7..].to_string())
+                } else {
+                    // admin2 code is not a US county code
+                    // set to empty string
+                    String::new()
+                }
+            },
+            None => {
+                // no admin2 code
                 // set to empty string
                 String::new()
-            }
-        },
-        None => {
-            // no admin2 code
-            // set to empty string
-            String::new()
-        },
-    };
+            },
+        };
     json!(
     {
         "us_state_code": us_state_code,

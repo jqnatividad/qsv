@@ -150,20 +150,21 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut headers_emitted: bool = false;
 
     for (rowidx, line) in rdr.lines().enumerate() {
-        let value: Value = match serde_json::from_str(&line?) {
-            Ok(v) => v,
-            Err(e) => {
-                if args.flag_ignore_errors {
-                    continue;
-                }
-                let human_idx = rowidx + 1; // not zero based, for readability
-                return fail_clierror!(
-                    r#"Could not parse line {human_idx} as JSON!: {e}
+        let value: Value =
+            match serde_json::from_str(&line?) {
+                Ok(v) => v,
+                Err(e) => {
+                    if args.flag_ignore_errors {
+                        continue;
+                    }
+                    let human_idx = rowidx + 1; // not zero based, for readability
+                    return fail_clierror!(
+                        r#"Could not parse line {human_idx} as JSON!: {e}
 Use `--ignore-errors` option to skip malformed input lines.
 Use `tojsonl` command to convert _to_ jsonl instead of _from_ jsonl."#,
-                );
-            },
-        };
+                    );
+                },
+            };
 
         if !headers_emitted {
             headers = infer_headers(&value);

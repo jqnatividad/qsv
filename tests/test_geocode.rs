@@ -1042,68 +1042,69 @@ fn geocode_reverse_dyncols_fmt() {
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![
-        svec!["Location", "city_col", "tz_col", "capital_col", "pop_col"],
-        svec![
-            "40.812126, -73.9041813",
-            "Melrose",
-            "America/New_York",
-            "Washington",
-            "22470"
-        ],
-        svec![
-            "40.66472342, -73.93867227",
-            "Brooklyn",
-            "America/New_York",
-            "Washington",
-            "2736074"
-        ],
-        svec![
-            "(40.766672, -73.9568128)",
-            "Manhattan",
-            "America/New_York",
-            "Washington",
-            "1487536"
-        ],
-        svec![
-            "(  40.819342, -73.9532127    )",
-            "East Harlem",
-            "America/New_York",
-            "Washington",
-            "115921"
-        ],
-        svec![
-            "< 40.819342,-73.9532127 >",
-            "East Harlem",
-            "America/New_York",
-            "Washington",
-            "115921"
-        ],
-        svec![
-            "This is not a Location and it will not be geocoded",
-            "",
-            "",
-            "",
-            ""
-        ],
-        svec![
-            "The treasure is at these coordinates 40.66472342, -73.93867227. This should be \
-             geocoded.",
-            "Brooklyn",
-            "America/New_York",
-            "Washington",
-            "2736074"
-        ],
-        svec!["95.213424, 190,1234565", "", "", "", ""],
-        svec![
-            "The coordinates are 40.66472342 latitude, -73.93867227 longitudue. This should NOT \
-             be geocoded.",
-            "",
-            "",
-            "",
-            ""
-        ],
-    ];
+    let expected =
+        vec![
+            svec!["Location", "city_col", "tz_col", "capital_col", "pop_col"],
+            svec![
+                "40.812126, -73.9041813",
+                "Melrose",
+                "America/New_York",
+                "Washington",
+                "22470"
+            ],
+            svec![
+                "40.66472342, -73.93867227",
+                "Brooklyn",
+                "America/New_York",
+                "Washington",
+                "2736074"
+            ],
+            svec![
+                "(40.766672, -73.9568128)",
+                "Manhattan",
+                "America/New_York",
+                "Washington",
+                "1487536"
+            ],
+            svec![
+                "(  40.819342, -73.9532127    )",
+                "East Harlem",
+                "America/New_York",
+                "Washington",
+                "115921"
+            ],
+            svec![
+                "< 40.819342,-73.9532127 >",
+                "East Harlem",
+                "America/New_York",
+                "Washington",
+                "115921"
+            ],
+            svec![
+                "This is not a Location and it will not be geocoded",
+                "",
+                "",
+                "",
+                ""
+            ],
+            svec![
+                "The treasure is at these coordinates 40.66472342, -73.93867227. This should be \
+                 geocoded.",
+                "Brooklyn",
+                "America/New_York",
+                "Washington",
+                "2736074"
+            ],
+            svec!["95.213424, 190,1234565", "", "", "", ""],
+            svec![
+                "The coordinates are 40.66472342 latitude, -73.93867227 longitudue. This should \
+                 NOT be geocoded.",
+                "",
+                "",
+                "",
+                ""
+            ],
+        ];
     assert_eq!(got, expected);
 }
 

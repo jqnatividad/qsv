@@ -30,12 +30,13 @@ where
 fn prop_cat_rows() {
     fn p(rows: CsvData) -> bool {
         let expected = rows.clone();
-        let (rows1, rows2) = if rows.is_empty() {
-            (vec![], vec![])
-        } else {
-            let (rows1, rows2) = rows.split_at(rows.len() / 2);
-            (rows1.to_vec(), rows2.to_vec())
-        };
+        let (rows1, rows2) =
+            if rows.is_empty() {
+                (vec![], vec![])
+            } else {
+                let (rows1, rows2) = rows.split_at(rows.len() / 2);
+                (rows1.to_vec(), rows2.to_vec())
+            };
         let got: CsvData = run_cat("cat_rows", "rows", rows1, rows2, no_headers);
         rassert_eq!(got, expected)
     }

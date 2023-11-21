@@ -62,13 +62,14 @@ macro_rules! joinp_test_compressed {
 }
 
 fn setup(name: &str) -> Workdir {
-    let cities = vec![
-        svec!["city", "state"],
-        svec!["Boston", "MA"],
-        svec!["New York", "NY"],
-        svec!["San Francisco", "CA"],
-        svec!["Buffalo", "NY"],
-    ];
+    let cities =
+        vec![
+            svec!["city", "state"],
+            svec!["Boston", "MA"],
+            svec!["New York", "NY"],
+            svec!["San Francisco", "CA"],
+            svec!["Buffalo", "NY"],
+        ];
     let cities_comments = vec![
         svec!["#this is a comment", ""],
         svec!["city", "state"],
@@ -669,62 +670,63 @@ fn joinp_asofby_1() {
         .args(["--datetime-format", "%Y-%m-%d %H:%M"]);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![
-        svec![
-            "time",
-            "ticker",
-            "groups_numeric",
-            "bid",
-            "ticker_right",
-            "groups_numeric_right",
-            "bid_right"
-        ],
-        svec![
-            "2016-01-01 12:23",
-            "MSFT",
-            "1",
-            "51.95",
-            "MSFT",
-            "1",
-            "51.95"
-        ],
-        svec![
-            "2016-01-01 12:38",
-            "MSFT",
-            "1",
-            "51.95",
-            "MSFT",
-            "1",
-            "51.97"
-        ],
-        svec![
-            "2016-01-01 12:48",
-            "GOOG",
-            "2",
-            "720.77",
-            "GOOG",
-            "2",
-            "720.5"
-        ],
-        svec![
-            "2016-01-01 12:48",
-            "GOOG",
-            "2",
-            "720.92",
-            "GOOG",
-            "2",
-            "720.5"
-        ],
-        svec![
-            "2016-01-01 12:48",
-            "AAPL",
-            "3",
-            "98.0",
-            "GOOG",
-            "2",
-            "720.5"
-        ],
-    ];
+    let expected =
+        vec![
+            svec![
+                "time",
+                "ticker",
+                "groups_numeric",
+                "bid",
+                "ticker_right",
+                "groups_numeric_right",
+                "bid_right"
+            ],
+            svec![
+                "2016-01-01 12:23",
+                "MSFT",
+                "1",
+                "51.95",
+                "MSFT",
+                "1",
+                "51.95"
+            ],
+            svec![
+                "2016-01-01 12:38",
+                "MSFT",
+                "1",
+                "51.95",
+                "MSFT",
+                "1",
+                "51.97"
+            ],
+            svec![
+                "2016-01-01 12:48",
+                "GOOG",
+                "2",
+                "720.77",
+                "GOOG",
+                "2",
+                "720.5"
+            ],
+            svec![
+                "2016-01-01 12:48",
+                "GOOG",
+                "2",
+                "720.92",
+                "GOOG",
+                "2",
+                "720.5"
+            ],
+            svec![
+                "2016-01-01 12:48",
+                "AAPL",
+                "3",
+                "98.0",
+                "GOOG",
+                "2",
+                "720.5"
+            ],
+        ];
     assert_eq!(got, expected);
 }
 
@@ -883,12 +885,9 @@ fn joinp_asof_nearest_date() {
     );
 
     let mut cmd = wrk.command("joinp");
-    cmd.arg("--asof").args(["--strategy", "nearest"]).args([
-        "date",
-        "population.csv",
-        "date",
-        "gdp.csv",
-    ]);
+    cmd.arg("--asof")
+        .args(["--strategy", "nearest"])
+        .args(["date", "population.csv", "date", "gdp.csv"]);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
@@ -973,10 +972,11 @@ fn joinp_asof_date_diffcolnames_sqlfilter() {
         ]);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![
-        svec!["pop_date", "gdp"],
-        svec!["2018-05-12", "4566"],
-        svec!["2019-05-12", "4696"],
-    ];
+    let expected =
+        vec![
+            svec!["pop_date", "gdp"],
+            svec!["2018-05-12", "4566"],
+            svec!["2019-05-12", "4696"],
+        ];
     assert_eq!(got, expected);
 }

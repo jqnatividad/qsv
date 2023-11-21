@@ -20,12 +20,13 @@ impl SelectColumns {
     pub fn parse(mut s: &str) -> Result<SelectColumns, String> {
         let is_empty = s.is_empty();
         let bytes = s.as_bytes();
-        let invert = if !is_empty && bytes[0] == b'!' {
-            s = &s[1..];
-            true
-        } else {
-            false
-        };
+        let invert =
+            if !is_empty && bytes[0] == b'!' {
+                s = &s[1..];
+                true
+            } else {
+                false
+            };
         Ok(SelectColumns {
             selectors: SelectorParser::new(s).parse()?,
             invert,
@@ -313,11 +314,13 @@ impl OneSelector {
     fn index(&self, first_record: &csv::ByteRecord, use_names: bool) -> Result<usize, String> {
         match *self {
             OneSelector::Start => Ok(0),
-            OneSelector::End => Ok(if first_record.is_empty() {
-                0
-            } else {
-                first_record.len() - 1
-            }),
+            OneSelector::End => {
+                Ok(if first_record.is_empty() {
+                    0
+                } else {
+                    first_record.len() - 1
+                })
+            },
             OneSelector::Index(i) => {
                 if first_record.is_empty() {
                     return fail!("Input is empty.");

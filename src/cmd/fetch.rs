@@ -500,10 +500,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 .template("{bar:37.red/white} {percent}%{msg} ({per_sec:7})")
                 .unwrap(),
         );
-        error_progress.set_message(format!(
-            " of {} max errors",
-            HumanCount(args.flag_max_errors)
-        ));
+        error_progress.set_message(format!(" of {} max errors", HumanCount(args.flag_max_errors)));
     } else {
         error_progress.set_draw_target(ProgressDrawTarget::hidden());
     }
@@ -544,11 +541,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .unwrap_or_else(|| "stdin.csv".to_string());
 
         report_wtr = Config::new(&Some(report_path.clone() + FETCH_REPORT_SUFFIX)).writer()?;
-        let mut report_headers = if report == ReportKind::Detailed {
-            headers.clone()
-        } else {
-            csv::ByteRecord::new()
-        };
+        let mut report_headers =
+            if report == ReportKind::Detailed {
+                headers.clone()
+            } else {
+                csv::ByteRecord::new()
+            };
         let rptcol_prefix = if report == ReportKind::Detailed {
             FETCH_REPORT_PREFIX
         } else {
@@ -594,16 +592,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         },
     };
     let mut final_value = String::with_capacity(150);
-    let mut final_response = FetchResponse {
-        response:    String::new(),
-        status_code: 0_u16,
-        retries:     0_u8,
-    };
-    let empty_response = FetchResponse {
-        response:    String::new(),
-        status_code: 0_u16,
-        retries:     0_u8,
-    };
+    let mut final_response =
+        FetchResponse {
+            response:    String::new(),
+            status_code: 0_u16,
+            retries:     0_u8,
+        };
+    let empty_response =
+        FetchResponse {
+            response:    String::new(),
+            status_code: 0_u16,
+            retries:     0_u8,
+        };
     let mut running_error_count = 0_u64;
     let mut running_success_count = 0_u64;
     let mut was_cached;

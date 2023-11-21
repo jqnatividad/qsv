@@ -128,24 +128,27 @@ impl Args {
                 _ => column,
             };
             let mut entry = writers.entry(key.to_vec());
-            let wtr =
-                match entry {
-                    Entry::Occupied(ref mut occupied) => occupied.get_mut(),
-                    Entry::Vacant(vacant) => {
-                        // We have a new key, so make a new writer.
-                        let mut wtr = gen.writer(&*self.arg_outdir, key)?;
-                        if !rconfig.no_headers {
-                            if self.flag_drop {
-                                wtr.write_record(headers.iter().enumerate().filter_map(
-                                    |(i, e)| if i == key_col { None } else { Some(e) },
-                                ))?;
-                            } else {
-                                wtr.write_record(&headers)?;
-                            }
+            let wtr = match entry {
+                Entry::Occupied(ref mut occupied) => occupied.get_mut(),
+                Entry::Vacant(vacant) => {
+                    // We have a new key, so make a new writer.
+                    let mut wtr = gen.writer(&*self.arg_outdir, key)?;
+                    if !rconfig.no_headers {
+                        if self.flag_drop {
+                            wtr.write_record(headers.iter().enumerate().filter_map(|(i, e)| {
+                                if i == key_col {
+                                    None
+                                } else {
+                                    Some(e)
+                                }
+                            }))?;
+                        } else {
+                            wtr.write_record(&headers)?;
                         }
-                        vacant.insert(wtr)
-                    },
-                };
+                    }
+                    vacant.insert(wtr)
+                },
+            };
             if self.flag_drop {
                 wtr.write_record(row.iter().enumerate().filter_map(|(i, e)| {
                     if i == key_col {

@@ -253,60 +253,62 @@ sponsored by datHere - Data Infrastructure Engineering (https://qsv.datHere.com)
             util::log_end(qsv_args, now);
             QsvExitCode::Good
         },
-        Some(cmd) => match cmd.run() {
-            Ok(()) => {
-                util::log_end(qsv_args, now);
-                QsvExitCode::Good
-            },
-            Err(CliError::Flag(err)) => {
-                werr!("usage error: {err}");
-                util::log_end(qsv_args, now);
-                QsvExitCode::IncorrectUsage
-            },
-            Err(CliError::IncorrectUsage(err)) => {
-                werr!("usage error: {err}");
-                util::log_end(qsv_args, now);
-                QsvExitCode::IncorrectUsage
-            },
-            Err(CliError::Csv(err)) => {
-                werr!("csv error: {err}");
-                util::log_end(qsv_args, now);
-                QsvExitCode::Bad
-            },
-            Err(CliError::Io(ref err)) if err.kind() == io::ErrorKind::BrokenPipe => {
-                werr!("broken pipe error: {err}");
-                util::log_end(qsv_args, now);
-                QsvExitCode::Abort
-            },
-            Err(CliError::Io(err)) => {
-                werr!("io error: {err}");
-                util::log_end(qsv_args, now);
-                QsvExitCode::Bad
-            },
-            Err(CliError::NoMatch()) => {
-                util::log_end(qsv_args, now);
-                QsvExitCode::Bad
-            },
-            Err(CliError::Other(msg)) => {
-                werr!("{msg}");
-                util::log_end(qsv_args, now);
-                QsvExitCode::Bad
-            },
-            Err(CliError::Network(msg)) => {
-                werr!("network error: {msg}");
-                util::log_end(qsv_args, now);
-                QsvExitCode::NetworkError
-            },
-            Err(CliError::OutOfMemory(msg)) => {
-                werr!("out of memory error: {msg}");
-                util::log_end(qsv_args, now);
-                QsvExitCode::OutOfMemory
-            },
-            Err(CliError::Encoding(msg)) => {
-                werr!("encoding error: {msg}");
-                util::log_end(qsv_args, now);
-                QsvExitCode::EncodingError
-            },
+        Some(cmd) => {
+            match cmd.run() {
+                Ok(()) => {
+                    util::log_end(qsv_args, now);
+                    QsvExitCode::Good
+                },
+                Err(CliError::Flag(err)) => {
+                    werr!("usage error: {err}");
+                    util::log_end(qsv_args, now);
+                    QsvExitCode::IncorrectUsage
+                },
+                Err(CliError::IncorrectUsage(err)) => {
+                    werr!("usage error: {err}");
+                    util::log_end(qsv_args, now);
+                    QsvExitCode::IncorrectUsage
+                },
+                Err(CliError::Csv(err)) => {
+                    werr!("csv error: {err}");
+                    util::log_end(qsv_args, now);
+                    QsvExitCode::Bad
+                },
+                Err(CliError::Io(ref err)) if err.kind() == io::ErrorKind::BrokenPipe => {
+                    werr!("broken pipe error: {err}");
+                    util::log_end(qsv_args, now);
+                    QsvExitCode::Abort
+                },
+                Err(CliError::Io(err)) => {
+                    werr!("io error: {err}");
+                    util::log_end(qsv_args, now);
+                    QsvExitCode::Bad
+                },
+                Err(CliError::NoMatch()) => {
+                    util::log_end(qsv_args, now);
+                    QsvExitCode::Bad
+                },
+                Err(CliError::Other(msg)) => {
+                    werr!("{msg}");
+                    util::log_end(qsv_args, now);
+                    QsvExitCode::Bad
+                },
+                Err(CliError::Network(msg)) => {
+                    werr!("network error: {msg}");
+                    util::log_end(qsv_args, now);
+                    QsvExitCode::NetworkError
+                },
+                Err(CliError::OutOfMemory(msg)) => {
+                    werr!("out of memory error: {msg}");
+                    util::log_end(qsv_args, now);
+                    QsvExitCode::OutOfMemory
+                },
+                Err(CliError::Encoding(msg)) => {
+                    werr!("encoding error: {msg}");
+                    util::log_end(qsv_args, now);
+                    QsvExitCode::EncodingError
+                },
+            }
         },
     }
 }

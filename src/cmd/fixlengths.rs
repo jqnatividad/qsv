@@ -52,35 +52,37 @@ struct Args {
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
-    let config = Config::new(&args.arg_input)
-        .delimiter(args.flag_delimiter)
-        .no_headers(true)
-        .flexible(true);
-    let length = if let Some(length) = args.flag_length {
-        if length == 0 {
-            return fail_incorrectusage_clierror!("Length must be greater than 0.");
-        }
-        length
-    } else {
-        if config.is_stdin() {
-            return fail_incorrectusage_clierror!(
-                "<stdin> cannot be used in this command. Please specify a file path."
-            );
-        }
-        let mut maxlen = 0_usize;
-        let mut rdr = config.reader()?;
-        let mut record = csv::ByteRecord::new();
-        while rdr.read_byte_record(&mut record)? {
-            let mut nonempty_count = 0;
-            for (index, field) in record.iter().enumerate() {
-                if index == 0 || !field.is_empty() {
-                    nonempty_count = index + 1;
-                }
+    let config =
+        Config::new(&args.arg_input)
+            .delimiter(args.flag_delimiter)
+            .no_headers(true)
+            .flexible(true);
+    let length =
+        if let Some(length) = args.flag_length {
+            if length == 0 {
+                return fail_incorrectusage_clierror!("Length must be greater than 0.");
             }
-            maxlen = cmp::max(maxlen, nonempty_count);
-        }
-        maxlen
-    };
+            length
+        } else {
+            if config.is_stdin() {
+                return fail_incorrectusage_clierror!(
+                    "<stdin> cannot be used in this command. Please specify a file path."
+                );
+            }
+            let mut maxlen = 0_usize;
+            let mut rdr = config.reader()?;
+            let mut record = csv::ByteRecord::new();
+            while rdr.read_byte_record(&mut record)? {
+                let mut nonempty_count = 0;
+                for (index, field) in record.iter().enumerate() {
+                    if index == 0 || !field.is_empty() {
+                        nonempty_count = index + 1;
+                    }
+                }
+                maxlen = cmp::max(maxlen, nonempty_count);
+            }
+            maxlen
+        };
 
     let mut rdr = config.reader()?;
     let mut wtr = Config::new(&args.flag_output).writer()?;

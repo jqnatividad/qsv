@@ -429,14 +429,15 @@ impl JoinStruct {
                 .collect()?
         };
 
-        let mut results_df = if let Some(sql_filter) = &self.sql_filter {
-            let mut ctx = SQLContext::new();
-            ctx.register("join_result", join_results.lazy());
-            ctx.execute(sql_filter)
-                .and_then(polars::prelude::LazyFrame::collect)?
-        } else {
-            join_results
-        };
+        let mut results_df =
+            if let Some(sql_filter) = &self.sql_filter {
+                let mut ctx = SQLContext::new();
+                ctx.register("join_result", join_results.lazy());
+                ctx.execute(sql_filter)
+                    .and_then(polars::prelude::LazyFrame::collect)?
+            } else {
+                join_results
+            };
 
         // no need to use buffered writer here, as CsvWriter already does that
         let mut out_writer = match self.output {
@@ -476,11 +477,12 @@ impl Args {
         ignore_errors: bool,
         tmpdir: &tempfile::TempDir,
     ) -> CliResult<JoinStruct> {
-        let delim = if let Some(delimiter) = self.flag_delimiter {
-            delimiter.as_byte()
-        } else {
-            b','
-        };
+        let delim =
+            if let Some(delimiter) = self.flag_delimiter {
+                delimiter.as_byte()
+            } else {
+                b','
+            };
 
         let comment_char: Option<u8> = if let Ok(comment_char) = env::var("QSV_COMMENT_CHAR") {
             Some(comment_char.as_bytes().first().unwrap().to_owned())

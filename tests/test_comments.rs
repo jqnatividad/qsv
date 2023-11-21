@@ -24,12 +24,13 @@ fn comments() {
     cmd.arg("comments.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![
-        svec!["column1", "column2"],
-        svec!["a", "1"],
-        svec!["c", "3"],
-        svec!["e", "5"],
-    ];
+    let expected =
+        vec![
+            svec!["column1", "column2"],
+            svec!["a", "1"],
+            svec!["c", "3"],
+            svec!["e", "5"],
+        ];
     assert_eq!(got, expected);
 }
 
@@ -58,12 +59,13 @@ fn comments_dotenv_pound() {
     cmd.arg("comments.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![
-        svec!["column1", "column2"],
-        svec!["a", "1"],
-        svec!["c", "3"],
-        svec!["e", "5"],
-    ];
+    let expected =
+        vec![
+            svec!["column1", "column2"],
+            svec!["a", "1"],
+            svec!["c", "3"],
+            svec!["e", "5"],
+        ];
     assert_eq!(got, expected);
 }
 
@@ -92,12 +94,13 @@ fn comments_dotenv() {
     cmd.arg("comments.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![
-        svec!["column1", "column2"],
-        svec!["a", "1"],
-        svec!["c", "3"],
-        svec!["e", "5"],
-    ];
+    let expected =
+        vec![
+            svec!["column1", "column2"],
+            svec!["a", "1"],
+            svec!["c", "3"],
+            svec!["e", "5"],
+        ];
     assert_eq!(got, expected);
 }
 
@@ -125,12 +128,13 @@ fn comments_long() {
     cmd.arg("comments.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![
-        svec!["column1", "column2"],
-        svec!["a", "1"],
-        svec!["c", "3"],
-        svec!["e", "5"],
-    ];
+    let expected =
+        vec![
+            svec!["column1", "column2"],
+            svec!["a", "1"],
+            svec!["c", "3"],
+            svec!["e", "5"],
+        ];
     assert_eq!(got, expected);
 }
 

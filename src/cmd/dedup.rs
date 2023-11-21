@@ -119,11 +119,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             };
             let a = sel.select(&record);
             let b = sel.select(&next_record);
-            let comparison = if ignore_case {
-                iter_cmp_ignore_case(a, b)
-            } else {
-                iter_cmp(a, b)
-            };
+            let comparison =
+                if ignore_case {
+                    iter_cmp_ignore_case(a, b)
+                } else {
+                    iter_cmp(a, b)
+                };
             match comparison {
                 cmp::Ordering::Equal => {
                     dupe_count += 1;

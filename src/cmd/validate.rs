@@ -370,27 +370,28 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             util::finish_progress(&progress);
         }
 
-        let msg = if args.flag_json || args.flag_pretty_json {
-            let rfc4180 = RFC4180Struct {
-                delimiter_char: rconfig.get_delimiter() as char,
-                header_row:     !rconfig.no_headers,
-                quote_char:     rconfig.quote as char,
-                num_records:    record_idx,
-                num_fields:     header_len,
-                fields:         field_vec,
-            };
+        let msg =
+            if args.flag_json || args.flag_pretty_json {
+                let rfc4180 = RFC4180Struct {
+                    delimiter_char: rconfig.get_delimiter() as char,
+                    header_row:     !rconfig.no_headers,
+                    quote_char:     rconfig.quote as char,
+                    num_records:    record_idx,
+                    num_fields:     header_len,
+                    fields:         field_vec,
+                };
 
-            if args.flag_pretty_json {
-                serde_json::to_string_pretty(&rfc4180).unwrap()
+                if args.flag_pretty_json {
+                    serde_json::to_string_pretty(&rfc4180).unwrap()
+                } else {
+                    serde_json::to_string(&rfc4180).unwrap()
+                }
             } else {
-                serde_json::to_string(&rfc4180).unwrap()
-            }
-        } else {
-            format!(
-                "Valid: {header_msg}{} records detected.",
-                HumanCount(record_idx)
-            )
-        };
+                format!(
+                    "Valid: {header_msg}{} records detected.",
+                    HumanCount(record_idx)
+                )
+            };
         woutinfo!("{msg}");
 
         return Ok(());
@@ -669,13 +670,14 @@ fn do_json_validation(
     )
     .map(|validation_errors| {
         // squash multiple errors into one long String with linebreaks
-        let combined_errors: String = validation_errors
-            .iter()
-            .map(|tuple| {
-                // validation error file format: row_number, field, error
-                format!("{row_number_string}\t{}\t{}", tuple.0, tuple.1)
-            })
-            .join("\n");
+        let combined_errors: String =
+            validation_errors
+                .iter()
+                .map(|tuple| {
+                    // validation error file format: row_number, field, error
+                    format!("{row_number_string}\t{}\t{}", tuple.0, tuple.1)
+                })
+                .join("\n");
 
         combined_errors
     })

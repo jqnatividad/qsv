@@ -247,15 +247,16 @@ impl fmt::Display for SniffStruct {
         let mut tabwtr = TabWriter::new(vec![]);
 
         for (i, ty) in self.types.iter().enumerate() {
-            let data_type = if self.stats_types {
-                match ty.as_str() {
-                    "Unsigned" | "Signed" => "Integer",
-                    "Text" => "String",
-                    _ => ty,
-                }
-            } else {
-                ty
-            };
+            let data_type =
+                if self.stats_types {
+                    match ty.as_str() {
+                        "Unsigned" | "Signed" => "Integer",
+                        "Text" => "String",
+                        _ => ty,
+                    }
+                } else {
+                    ty
+                };
 
             writeln!(
                 &mut tabwtr,
@@ -292,15 +293,16 @@ const fn rowcount(
     count: usize,
 ) -> (usize, bool) {
     let mut estimated = false;
-    let rowcount = if count == usize::MAX {
-        // if the count == usize::MAX, it's a sentinel value for "Unknown" as the server
-        // didn't provide a Content-Length header, so we estimate the rowcount by
-        // dividing the file_size by avg_rec_len
-        estimated = true;
-        sniff_file_info.file_size / metadata.avg_record_len
-    } else {
-        count
-    };
+    let rowcount =
+        if count == usize::MAX {
+            // if the count == usize::MAX, it's a sentinel value for "Unknown" as the server
+            // didn't provide a Content-Length header, so we estimate the rowcount by
+            // dividing the file_size by avg_rec_len
+            estimated = true;
+            sniff_file_info.file_size / metadata.avg_record_len
+        } else {
+            count
+        };
 
     let has_header_row = metadata.dialect.header.has_header_row;
     let num_preamble_rows = metadata.dialect.header.num_preamble_rows;
@@ -337,13 +339,14 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                     },
                 };
 
-                let res = client
-                    .get(url.clone())
-                    .timeout(Duration::from_secs(
-                        util::timeout_secs(args.flag_timeout).unwrap_or(30),
-                    ))
-                    .send()
-                    .await?;
+                let res =
+                    client
+                        .get(url.clone())
+                        .timeout(Duration::from_secs(
+                            util::timeout_secs(args.flag_timeout).unwrap_or(30),
+                        ))
+                        .send()
+                        .await?;
 
                 let last_modified = match res.headers().get("Last-Modified") {
                     Some(lm) => match lm.to_str() {

@@ -383,11 +383,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // or as a column selector
     let url_column_str = format!("{:?}", args.arg_url_column);
     let re = Regex::new(r"^IndexedName\((.*)\[0\]\)$").unwrap();
-    let literal_url = if let Some(caps) = re.captures(&url_column_str) {
-        caps[1].to_lowercase()
-    } else {
-        String::new()
-    };
+    let literal_url =
+        if let Some(caps) = re.captures(&url_column_str) {
+            caps[1].to_lowercase()
+        } else {
+            String::new()
+        };
     let literal_url_used = literal_url.starts_with("http");
 
     let mut column_index = 0;
@@ -494,10 +495,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 .template("{bar:37.red/white} {percent}%{msg} ({per_sec:7})")
                 .unwrap(),
         );
-        error_progress.set_message(format!(
-            " of {} max errors",
-            HumanCount(args.flag_max_errors)
-        ));
+        error_progress.set_message(format!(" of {} max errors", HumanCount(args.flag_max_errors)));
     } else {
         error_progress.set_draw_target(ProgressDrawTarget::hidden());
     }
@@ -538,16 +536,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .unwrap_or_else(|| "stdin.csv".to_string());
 
         report_wtr = Config::new(&Some(report_path.clone() + FETCHPOST_REPORT_SUFFIX)).writer()?;
-        let mut report_headers = if report == ReportKind::Detailed {
-            headers.clone()
-        } else {
-            csv::ByteRecord::new()
-        };
-        let rptcol_prefix = if report == ReportKind::Detailed {
-            FETCHPOST_REPORT_PREFIX
-        } else {
-            ""
-        };
+        let mut report_headers =
+            if report == ReportKind::Detailed {
+                headers.clone()
+            } else {
+                csv::ByteRecord::new()
+            };
+        let rptcol_prefix =
+            if report == ReportKind::Detailed {
+                FETCHPOST_REPORT_PREFIX
+            } else {
+                ""
+            };
         // the fetchpost report has the following columns:
         // url - URL used, form - form data sent, status - HTTP status code,
         // cache_hit - cache hit flag, retries - retry attempts,
@@ -588,16 +588,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         },
     };
     let mut final_value = String::with_capacity(150);
-    let mut final_response = FetchResponse {
-        response:    String::new(),
-        status_code: 0_u16,
-        retries:     0_u8,
-    };
-    let empty_response = FetchResponse {
-        response:    String::new(),
-        status_code: 0_u16,
-        retries:     0_u8,
-    };
+    let mut final_response =
+        FetchResponse {
+            response:    String::new(),
+            status_code: 0_u16,
+            retries:     0_u8,
+        };
+    let empty_response =
+        FetchResponse {
+            response:    String::new(),
+            status_code: 0_u16,
+            retries:     0_u8,
+        };
     let mut running_error_count = 0_u64;
     let mut running_success_count = 0_u64;
     let mut was_cached;
@@ -979,10 +981,11 @@ fn get_response(
         }
 
         // send the actual request
-        let form_body_raw = serde_urlencoded::to_string(form_body_jsonmap)
-            .unwrap()
-            .as_bytes()
-            .to_owned();
+        let form_body_raw =
+            serde_urlencoded::to_string(form_body_jsonmap)
+                .unwrap()
+                .as_bytes()
+                .to_owned();
         let resp_result = if flag_compress {
             // gzip the request body
             let mut gz_enc = GzEncoder::new(Vec::new(), Compression::default());

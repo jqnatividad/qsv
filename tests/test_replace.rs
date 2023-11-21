@@ -17,13 +17,14 @@ fn replace() {
     cmd.arg("\\.0$").arg("").arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![
-        svec!["identifier", "color"],
-        svec!["164", "yellow"],
-        svec!["165", "yellow"],
-        svec!["166", "yellow"],
-        svec!["167", "yellow"],
-    ];
+    let expected =
+        vec![
+            svec!["identifier", "color"],
+            svec!["164", "yellow"],
+            svec!["165", "yellow"],
+            svec!["166", "yellow"],
+            svec!["167", "yellow"],
+        ];
     assert_eq!(got, expected);
     wrk.assert_success(&mut cmd);
 }
@@ -87,13 +88,14 @@ fn replace_null() {
     assert_eq!(got_err, expected_err);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![
-        svec!["identifier", "color"],
-        svec!["164", "yellow"],
-        svec!["165", "yellow"],
-        svec!["166", "yellow"],
-        svec!["167", "yellow"],
-    ];
+    let expected =
+        vec![
+            svec!["identifier", "color"],
+            svec!["164", "yellow"],
+            svec!["165", "yellow"],
+            svec!["166", "yellow"],
+            svec!["167", "yellow"],
+        ];
     assert_eq!(got, expected);
 
     wrk.assert_success(&mut cmd);
@@ -255,12 +257,13 @@ fn replace_groups() {
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![
-        svec!["identifier", "color"],
-        svec!["4", "yellow"],
-        svec!["5", "yellow"],
-        svec!["6", "yellow"],
-        svec!["7", "yellow.0"],
-    ];
+    let expected =
+        vec![
+            svec!["identifier", "color"],
+            svec!["4", "yellow"],
+            svec!["5", "yellow"],
+            svec!["6", "yellow"],
+            svec!["7", "yellow.0"],
+        ];
     assert_eq!(got, expected);
 }

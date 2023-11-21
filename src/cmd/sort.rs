@@ -272,9 +272,11 @@ where
             (None, None) => return cmp::Ordering::Equal,
             (None, _) => return cmp::Ordering::Less,
             (_, None) => return cmp::Ordering::Greater,
-            (Some(x), Some(y)) => match compare_num(x, y) {
-                cmp::Ordering::Equal => (),
-                non_eq => return non_eq,
+            (Some(x), Some(y)) => {
+                match compare_num(x, y) {
+                    cmp::Ordering::Equal => (),
+                    non_eq => return non_eq,
+                }
             },
         }
     }

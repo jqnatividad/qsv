@@ -145,10 +145,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             config::DEFAULT_WTR_BUFFER_CAPACITY,
             fs::File::create(output_path)?,
         )),
-        None => Box::new(io::BufWriter::with_capacity(
-            config::DEFAULT_WTR_BUFFER_CAPACITY,
-            io::stdout(),
-        )),
+        None => {
+            Box::new(io::BufWriter::with_capacity(
+                config::DEFAULT_WTR_BUFFER_CAPACITY,
+                io::stdout(),
+            ))
+        },
     };
 
     if args.cmd_compress {
@@ -158,11 +160,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         compress(input_reader, output_writer, jobs, gzp::BUFSIZE * 2)?;
-        let compressed_bytes = if let Some(path) = &args.flag_output {
-            fs::metadata(path)?.len()
-        } else {
-            0
-        };
+        let compressed_bytes =
+            if let Some(path) = &args.flag_output {
+                fs::metadata(path)?.len()
+            } else {
+                0
+            };
         if !args.flag_quiet && compressed_bytes > 0 {
             let compression_ratio = input_bytes as f64 / compressed_bytes as f64;
             winfo!(

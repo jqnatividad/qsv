@@ -20,13 +20,14 @@ macro_rules! sqlp_test {
 }
 
 fn setup(name: &str) -> Workdir {
-    let cities = vec![
-        svec!["city", "state"],
-        svec!["Boston", "MA"],
-        svec!["New York", "NY"],
-        svec!["San Francisco", "CA"],
-        svec!["Buffalo", "NY"],
-    ];
+    let cities =
+        vec![
+            svec!["city", "state"],
+            svec!["Boston", "MA"],
+            svec!["New York", "NY"],
+            svec!["San Francisco", "CA"],
+            svec!["Buffalo", "NY"],
+        ];
     let places = vec![
         svec!["city", "place"],
         svec!["Boston", "Logan Airport"],
@@ -749,12 +750,13 @@ fn sqlp_comments() {
         .arg("select column1, column2 from comments order by column2 desc");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![
-        svec!["column1", "column2"],
-        svec!["e", "5"],
-        svec!["c", "3"],
-        svec!["a", "1"],
-    ];
+    let expected =
+        vec![
+            svec!["column1", "column2"],
+            svec!["e", "5"],
+            svec!["c", "3"],
+            svec!["a", "1"],
+        ];
     assert_eq!(got, expected);
 }
 
@@ -784,12 +786,13 @@ fn sqlp_compress() {
     cmd2.arg("decompress").arg(out_file); // DevSkim: ignore DS126858
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd2); // DevSkim: ignore DS126858
-    let expected = vec![
-        svec!["column1", "column2"],
-        svec!["e", "5"],
-        svec!["c", "3"],
-        svec!["a", "1"],
-    ];
+    let expected =
+        vec![
+            svec!["column1", "column2"],
+            svec!["e", "5"],
+            svec!["c", "3"],
+            svec!["a", "1"],
+        ];
 
     assert_eq!(got, expected);
 }

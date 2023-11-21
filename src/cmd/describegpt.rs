@@ -185,61 +185,63 @@ fn is_valid_model(client: &Client, api_key: Option<&str>, args: &Args) -> CliRes
 
 fn get_prompt_file(args: &Args) -> CliResult<PromptFile> {
     // Get prompt file if --prompt-file is used
-    let prompt_file = if let Some(prompt_file) = args.flag_prompt_file.clone() {
-        // Read prompt file
-        let prompt_file = fs::read_to_string(prompt_file)?;
-        // Try to parse prompt file as JSON, if error then show it in JSON format
-        let prompt_file: PromptFile = match serde_json::from_str(&prompt_file) {
-            Ok(val) => val,
-            Err(e) => {
-                let error_json = json!({"error": e.to_string()});
-                return fail_clierror!("{error_json}");
-            },
+    let prompt_file =
+        if let Some(prompt_file) = args.flag_prompt_file.clone() {
+            // Read prompt file
+            let prompt_file = fs::read_to_string(prompt_file)?;
+            // Try to parse prompt file as JSON, if error then show it in JSON format
+            let prompt_file: PromptFile = match serde_json::from_str(&prompt_file) {
+                Ok(val) => val,
+                Err(e) => {
+                    let error_json = json!({"error": e.to_string()});
+                    return fail_clierror!("{error_json}");
+                },
+            };
+            prompt_file
+        }
+        // Otherwise, get default prompt file
+        else {
+            #[allow(clippy::let_and_return)]
+            let default_prompt_file = PromptFile {
+                name:               "My Prompt File".to_string(),
+                description:        "My prompt file for qsv's describegpt command.".to_string(),
+                author:             "My Name".to_string(),
+                version:            "1.0.0".to_string(),
+                tokens:             50,
+                dictionary_prompt:  "Here are the columns for each field in a data \
+                                     dictionary:\n\n- Type: the data type of this column\n- \
+                                     Label: a human-friendly label for this column\n- \
+                                     Description: a full description for this column (can be \
+                                     multiple sentences)\n\nGenerate a data dictionary as \
+                                     aforementioned (in JSON output) where each field has Name, \
+                                     Type, Label, and Description (so four columns in total) \
+                                     based on the following summary statistics and frequency data \
+                                     from a CSV file.\n\nSummary \
+                                     Statistics:\n\n{stats}\n\nFrequency:\n\n{frequency}"
+                    .to_string(),
+                description_prompt: "Generate only a description that is within 8 sentences about \
+                                     the entire dataset{json_add} based on the following summary \
+                                     statistics and frequency data derived from the CSV file it \
+                                     came from.\n\nSummary \
+                                     Statistics:\n\n{stats}\n\nFrequency:\n\n{frequency}\n\nDo \
+                                     not output the summary statistics for each field. Do not \
+                                     output the frequency for each field. Do not output data \
+                                     about each field individually, but instead output about the \
+                                     dataset as a whole in one 1-8 sentence description."
+                    .to_string(),
+                tags_prompt:        "A tag is a keyword or label that categorizes datasets with \
+                                     other, similar datasets. Using the right tags makes it \
+                                     easier for others to find and use datasets.\n\nGenerate \
+                                     single-word tags{json_add} about the dataset (lowercase only \
+                                     and remove all whitespace) based on the following summary \
+                                     statistics and frequency data from a CSV file.\n\nSummary \
+                                     Statistics:\n\n{stats}\n\nFrequency:\n\n{frequency}"
+                    .to_string(),
+                json:               true,
+                jsonl:              false,
+            };
+            default_prompt_file
         };
-        prompt_file
-    }
-    // Otherwise, get default prompt file
-    else {
-        #[allow(clippy::let_and_return)]
-        let default_prompt_file = PromptFile {
-            name:               "My Prompt File".to_string(),
-            description:        "My prompt file for qsv's describegpt command.".to_string(),
-            author:             "My Name".to_string(),
-            version:            "1.0.0".to_string(),
-            tokens:             50,
-            dictionary_prompt:  "Here are the columns for each field in a data dictionary:\n\n- \
-                                 Type: the data type of this column\n- Label: a human-friendly \
-                                 label for this column\n- Description: a full description for \
-                                 this column (can be multiple sentences)\n\nGenerate a data \
-                                 dictionary as aforementioned (in JSON output) where each field \
-                                 has Name, Type, Label, and Description (so four columns in \
-                                 total) based on the following summary statistics and frequency \
-                                 data from a CSV file.\n\nSummary \
-                                 Statistics:\n\n{stats}\n\nFrequency:\n\n{frequency}"
-                .to_string(),
-            description_prompt: "Generate only a description that is within 8 sentences about the \
-                                 entire dataset{json_add} based on the following summary \
-                                 statistics and frequency data derived from the CSV file it came \
-                                 from.\n\nSummary \
-                                 Statistics:\n\n{stats}\n\nFrequency:\n\n{frequency}\n\nDo not \
-                                 output the summary statistics for each field. Do not output the \
-                                 frequency for each field. Do not output data about each field \
-                                 individually, but instead output about the dataset as a whole in \
-                                 one 1-8 sentence description."
-                .to_string(),
-            tags_prompt:        "A tag is a keyword or label that categorizes datasets with \
-                                 other, similar datasets. Using the right tags makes it easier \
-                                 for others to find and use datasets.\n\nGenerate single-word \
-                                 tags{json_add} about the dataset (lowercase only and remove all \
-                                 whitespace) based on the following summary statistics and \
-                                 frequency data from a CSV file.\n\nSummary \
-                                 Statistics:\n\n{stats}\n\nFrequency:\n\n{frequency}"
-                .to_string(),
-            json:               true,
-            jsonl:              false,
-        };
-        default_prompt_file
-    };
     Ok(prompt_file)
 }
 
@@ -297,18 +299,19 @@ fn get_completion(
     }
 
     // If --max-tokens is specified, use it
-    let max_tokens = if arg_is_some("--max-tokens") {
-        args.flag_max_tokens
-    }
-    // If --prompt-file is used, use the tokens field from the prompt file
-    else if args.flag_prompt_file.clone().is_some() {
-        let prompt_file = get_prompt_file(args)?;
-        prompt_file.tokens
-    }
-    // Else use the default max tokens value in USAGE
-    else {
-        args.flag_max_tokens
-    };
+    let max_tokens =
+        if arg_is_some("--max-tokens") {
+            args.flag_max_tokens
+        }
+        // If --prompt-file is used, use the tokens field from the prompt file
+        else if args.flag_prompt_file.clone().is_some() {
+            let prompt_file = get_prompt_file(args)?;
+            prompt_file.tokens
+        }
+        // Else use the default max tokens value in USAGE
+        else {
+            args.flag_max_tokens
+        };
 
     // Create request data
     let request_data = json!({

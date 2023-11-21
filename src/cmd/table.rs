@@ -74,10 +74,11 @@ impl From<Align> for Alignment {
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
-    let rconfig = Config::new(&args.arg_input)
-        .delimiter(args.flag_delimiter)
-        .no_headers(true)
-        .flexible(true);
+    let rconfig =
+        Config::new(&args.arg_input)
+            .delimiter(args.flag_delimiter)
+            .no_headers(true)
+            .flexible(true);
 
     // we're loading the entire file into memory, we need to check avail mem
     if let Some(path) = rconfig.path.clone() {

@@ -104,11 +104,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     wtr.write_record(vec!["field", "value", "count"])?;
     let head_ftables = headers.iter().zip(tables);
     for (i, (header, ftab)) in head_ftables.enumerate() {
-        header_vec = if rconfig.no_headers {
-            (i + 1).to_string().into_bytes()
-        } else {
-            header.to_vec()
-        };
+        header_vec =
+            if rconfig.no_headers {
+                (i + 1).to_string().into_bytes()
+            } else {
+                header.to_vec()
+            };
         for (value, count) in args.counts(&ftab) {
             row = vec![&*header_vec, &*value, buffer.format(count).as_bytes()];
             wtr.write_record(row)?;
@@ -130,11 +131,12 @@ impl Args {
     }
 
     fn counts(&self, ftab: &FTable) -> Vec<(ByteString, u64)> {
-        let mut counts = if self.flag_asc {
-            ftab.least_frequent()
-        } else {
-            ftab.most_frequent()
-        };
+        let mut counts =
+            if self.flag_asc {
+                ftab.least_frequent()
+            } else {
+                ftab.most_frequent()
+            };
         if self.flag_limit > 0 {
             counts = counts.into_iter().take(self.flag_limit).collect();
         }

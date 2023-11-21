@@ -53,8 +53,9 @@ fn sniff_stats_types() {
 
     let got: String = wrk.stdout(&mut cmd);
 
-    let expected_end = dos2unix(
-        r#"Retrieved Size (bytes): 27
+    let expected_end =
+        dos2unix(
+            r#"Retrieved Size (bytes): 27
 File Size (bytes): 27
 Sampled Records: 2
 Estimated: false
@@ -66,7 +67,7 @@ Fields:
     0:  String   h1
     1:  Integer  h2
     2:  String   h3"#,
-    );
+        );
 
     assert!(dos2unix(&got).trim_end().ends_with(expected_end.trim_end()));
 }

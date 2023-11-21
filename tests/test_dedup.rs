@@ -18,12 +18,13 @@ fn dedup_normal() {
     cmd.arg("in.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![
-        svec!["N", "S"],
-        svec!["10", "a"],
-        svec!["2", "B"],
-        svec!["2", "b"],
-    ];
+    let expected =
+        vec![
+            svec!["N", "S"],
+            svec!["10", "a"],
+            svec!["2", "B"],
+            svec!["2", "b"],
+        ];
     assert_eq!(got, expected);
 }
 
@@ -131,15 +132,16 @@ fn dedup_sorted() {
     cmd.arg("--sorted").arg("in.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![
-        svec!["N", "S"],
-        svec!["10", "a"],
-        svec!["10", "b"],
-        svec!["20", "B"],
-        svec!["20", "b"],
-        svec!["3", "c"],
-        svec!["4", "d"],
-    ];
+    let expected =
+        vec![
+            svec!["N", "S"],
+            svec!["10", "a"],
+            svec!["10", "b"],
+            svec!["20", "B"],
+            svec!["20", "b"],
+            svec!["3", "c"],
+            svec!["4", "d"],
+        ];
     assert_eq!(got, expected);
 }
 
@@ -168,14 +170,15 @@ fn dedup_sorted_nocase() {
     cmd.arg("--sorted").arg("--ignore-case").arg("in.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![
-        svec!["N", "S"],
-        svec!["10", "a"],
-        svec!["11", "c"],
-        svec!["20", "b"],
-        svec!["3", "c"],
-        svec!["4", "d"],
-    ];
+    let expected =
+        vec![
+            svec!["N", "S"],
+            svec!["10", "a"],
+            svec!["11", "c"],
+            svec!["20", "b"],
+            svec!["3", "c"],
+            svec!["4", "d"],
+        ];
     assert_eq!(got, expected);
 }
 
@@ -204,14 +207,15 @@ fn dedup_alreadysorted_nocase() {
     cmd.arg("--ignore-case").arg("in.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![
-        svec!["N", "S"],
-        svec!["10", "a"],
-        svec!["100", "a"],
-        svec!["20", "B"],
-        svec!["3", "c"],
-        svec!["4", "d"],
-    ];
+    let expected =
+        vec![
+            svec!["N", "S"],
+            svec!["10", "a"],
+            svec!["100", "a"],
+            svec!["20", "B"],
+            svec!["3", "c"],
+            svec!["4", "d"],
+        ];
     assert_eq!(got, expected);
 }
 

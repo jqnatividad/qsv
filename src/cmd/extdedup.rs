@@ -63,13 +63,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // if we can detect the total memory, use 10% of it by default
     // and up to --memory-limit (capped at 50%),
     // otherwise, if we cannot detect the free memory use a default of 100 MB
-    let mem_limited_buffer = if System::IS_SUPPORTED {
-        let mut sys = System::new();
-        sys.refresh_memory();
-        (sys.total_memory() * 1000) / u8::min(args.flag_memory_limit.unwrap_or(10), 50) as u64
-    } else {
-        MEMORY_LIMITED_BUFFER
-    };
+    let mem_limited_buffer =
+        if System::IS_SUPPORTED {
+            let mut sys = System::new();
+            sys.refresh_memory();
+            (sys.total_memory() * 1000) / u8::min(args.flag_memory_limit.unwrap_or(10), 50) as u64
+        } else {
+            MEMORY_LIMITED_BUFFER
+        };
     log::info!("{mem_limited_buffer} bytes used for memory buffer for on-disk hash table...");
 
     let input_reader: Box<dyn BufRead> = match &args.arg_input {
@@ -93,10 +94,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             config::DEFAULT_WTR_BUFFER_CAPACITY,
             fs::File::create(output_path)?,
         )),
-        None => Box::new(io::BufWriter::with_capacity(
-            config::DEFAULT_WTR_BUFFER_CAPACITY,
-            stdout().lock(),
-        )),
+        None => {
+            Box::new(io::BufWriter::with_capacity(
+                config::DEFAULT_WTR_BUFFER_CAPACITY,
+                stdout().lock(),
+            ))
+        },
     };
 
     let mut write_dupes = false;
