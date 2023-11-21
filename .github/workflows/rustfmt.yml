@@ -21,6 +21,8 @@ jobs:
       with:
         toolchain: nightly
         components: rustfmt, clippy
+    - name: rustup update
+      run: rustup update
     - name: Check formatting
       uses: actions-rs/cargo@v1
       with:
