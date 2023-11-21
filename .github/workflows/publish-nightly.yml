@@ -139,6 +139,16 @@ jobs:
         fi
         rustup show > qsv_nightly_rust_version_info.txt
         cd ..
+    - name: install zipsign
+      run: |
+        cargo install zipsign
+    - name: Fetch zipsign private key
+      uses: mobiledevops/secret-to-file-action@v1
+      with:
+        base64-encoded-secret: ${{ secrets.QSV_ZIPSIGN_PRIV_KEY }}
+        filename: "qsvpriv.key"
+        is-executable: false
+        working-directory: "."
     - name: Download latest release zip
       uses: robinraju/release-downloader@v1.8
       with:
@@ -146,8 +156,14 @@ jobs:
         latest: true
         token: ${{ secrets.GITHUB_TOKEN }}
         fileName: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip
+    - name: remove zipsign signature from zip archive
+      run: |
+        zipsign unsign zip qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip
     - name: add/update nightly files to zip
       run: 7z u -tzip qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/qsv* -mx=9 -mmt=on
+    - name: re-zipsign zip archive
+      run: |
+        zipsign sign zip qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip qsvpriv.key
     - name: Upload zipped binaries to release
       uses: svenstaro/upload-release-action@v2
       with:
