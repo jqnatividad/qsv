@@ -16,14 +16,13 @@ fn explode() {
     cmd.arg("colors").arg("|").arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected =
-        vec![
-            svec!["name", "colors"],
-            svec!["Mary", "yellow"],
-            svec!["John", "blue"],
-            svec!["John", "orange"],
-            svec!["Jack", ""],
-        ];
+    let expected = vec![
+        svec!["name", "colors"],
+        svec!["Mary", "yellow"],
+        svec!["John", "blue"],
+        svec!["John", "orange"],
+        svec!["Jack", ""],
+    ];
     assert_eq!(got, expected);
 }
 

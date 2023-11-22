@@ -17,13 +17,12 @@ fn rename() {
     cmd.arg("cola,colb").arg("in.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected =
-        vec![
-            svec!["cola", "colb"],
-            svec!["1", "b"],
-            svec!["2", "a"],
-            svec!["3", "d"],
-        ];
+    let expected = vec![
+        svec!["cola", "colb"],
+        svec!["1", "b"],
+        svec!["2", "a"],
+        svec!["3", "d"],
+    ];
     assert_eq!(got, expected);
 }
 
@@ -44,13 +43,12 @@ fn rename_generic() {
     cmd.arg("_all_generic").arg("in.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected =
-        vec![
-            svec!["_col_1", "_col_2"],
-            svec!["1", "b"],
-            svec!["2", "a"],
-            svec!["3", "d"],
-        ];
+    let expected = vec![
+        svec!["_col_1", "_col_2"],
+        svec!["1", "b"],
+        svec!["2", "a"],
+        svec!["3", "d"],
+    ];
     assert_eq!(got, expected);
 }
 
@@ -66,13 +64,12 @@ fn rename_noheaders() {
     cmd.arg("cola,colb").arg("--no-headers").arg("in.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected =
-        vec![
-            svec!["cola", "colb"],
-            svec!["1", "b"],
-            svec!["2", "a"],
-            svec!["3", "d"],
-        ];
+    let expected = vec![
+        svec!["cola", "colb"],
+        svec!["1", "b"],
+        svec!["2", "a"],
+        svec!["3", "d"],
+    ];
     assert_eq!(got, expected);
 }
 
@@ -88,12 +85,11 @@ fn rename_noheaders_generic() {
     cmd.arg("_ALL_Generic").arg("--no-headers").arg("in.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected =
-        vec![
-            svec!["_col_1", "_col_2"],
-            svec!["1", "b"],
-            svec!["2", "a"],
-            svec!["3", "d"],
-        ];
+    let expected = vec![
+        svec!["_col_1", "_col_2"],
+        svec!["1", "b"],
+        svec!["2", "a"],
+        svec!["3", "d"],
+    ];
     assert_eq!(got, expected);
 }

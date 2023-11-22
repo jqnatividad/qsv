@@ -226,34 +226,32 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .and_then(std::ffi::OsStr::to_str)
         .unwrap_or_default()
         .to_lowercase();
-    let ods_flag =
-        match format.as_str() {
-            "xls" | "xlsx" | "xlsm" | "xlsb" => false,
-            "ods" => true,
-            _ => {
-                return fail_incorrectusage_clierror!(
-                    "\"{format}\" not supported. The excel command only supports the following \
-                     file formats - xls, xlsx, xlsm, xlsb and ods."
-                );
-            },
-        };
+    let ods_flag = match format.as_str() {
+        "xls" | "xlsx" | "xlsm" | "xlsb" => false,
+        "ods" => true,
+        _ => {
+            return fail_incorrectusage_clierror!(
+                "\"{format}\" not supported. The excel command only supports the following file \
+                 formats - xls, xlsx, xlsm, xlsb and ods."
+            );
+        },
+    };
 
     let requested_range = args.flag_range.to_lowercase();
 
-    let mut workbook =
-        match open_workbook_auto(path) {
-            Ok(workbook) => workbook,
-            Err(e) => {
-                let es = e.to_string();
-                // password protected errors come in different flavors for Excel
-                if es.starts_with("Xls error: Cfb error")
-                    || es.starts_with("Xlsx error: Zip error: invalid Zip archive")
-                {
-                    return fail_clierror!("{path} may be a password-protected workbook: {e}.");
-                }
-                return fail_clierror!("Cannot open workbook: {e}.");
-            },
-        };
+    let mut workbook = match open_workbook_auto(path) {
+        Ok(workbook) => workbook,
+        Err(e) => {
+            let es = e.to_string();
+            // password protected errors come in different flavors for Excel
+            if es.starts_with("Xls error: Cfb error")
+                || es.starts_with("Xlsx error: Zip error: invalid Zip archive")
+            {
+                return fail_clierror!("{path} may be a password-protected workbook: {e}.");
+            }
+            return fail_clierror!("Cannot open workbook: {e}.");
+        },
+    };
 
     let sheet_names = workbook.sheet_names();
     if sheet_names.is_empty() {
@@ -266,11 +264,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     #[allow(clippy::redundant_clone)]
     let sheet_vec = sheet_names.clone();
 
-    let mut wtr =
-        Config::new(&args.flag_output)
-            .flexible(args.flag_flexible)
-            .delimiter(args.flag_delimiter)
-            .writer()?;
+    let mut wtr = Config::new(&args.flag_output)
+        .flexible(args.flag_flexible)
+        .delimiter(args.flag_delimiter)
+        .writer()?;
 
     // set Metadata Mode
     let first_letter = args.flag_metadata.chars().next().unwrap_or_default();

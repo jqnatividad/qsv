@@ -180,11 +180,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut headers = rdr.byte_headers()?.clone();
     let sel = rconfig.selection(&headers)?;
 
-    let do_match_list =
-        args.flag_flag.map_or(false, |column_name| {
-            headers.push_field(column_name.as_bytes());
-            true
-        });
+    let do_match_list = args.flag_flag.map_or(false, |column_name| {
+        headers.push_field(column_name.as_bytes());
+        true
+    });
 
     if !rconfig.no_headers && !args.flag_quick {
         wtr.write_record(&headers)?;

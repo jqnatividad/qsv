@@ -321,14 +321,13 @@ where
         let Some(item) = self.iterator.next() else {
             return None;
         };
-        let result =
-            match self.selection_index {
-                ref mut sidx if (self.selection.get(*sidx) == Some(&self.index)) => {
-                    *sidx += 1;
-                    Some((self.predicate)(item))
-                },
-                _ => Some(item),
-            };
+        let result = match self.selection_index {
+            ref mut sidx if (self.selection.get(*sidx) == Some(&self.index)) => {
+                *sidx += 1;
+                Some((self.predicate)(item))
+            },
+            _ => Some(item),
+        };
         self.index += 1;
         result
     }

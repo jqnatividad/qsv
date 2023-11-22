@@ -111,17 +111,16 @@ join_test!(
     |wrk: Workdir, mut cmd: process::Command, headers: bool| {
         cmd.arg("--right");
         let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-        let expected =
-            make_rows(
-                headers,
-                false,
-                vec![
-                    svec!["Boston", "MA", "Boston", "Logan Airport"],
-                    svec!["Boston", "MA", "Boston", "Boston Garden"],
-                    svec!["Buffalo", "NY", "Buffalo", "Ralph Wilson Stadium"],
-                    svec!["", "", "Orlando", "Disney World"],
-                ],
-            );
+        let expected = make_rows(
+            headers,
+            false,
+            vec![
+                svec!["Boston", "MA", "Boston", "Logan Airport"],
+                svec!["Boston", "MA", "Boston", "Boston Garden"],
+                svec!["Buffalo", "NY", "Buffalo", "Ralph Wilson Stadium"],
+                svec!["", "", "Orlando", "Disney World"],
+            ],
+        );
         assert_eq!(got, expected);
     }
 );
@@ -186,12 +185,11 @@ fn join_inner_issue11() {
     cmd.args(["1,2", "a.csv", "2,1", "b.csv"]);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected =
-        vec![
-            svec!["1", "2", "2", "1"],
-            svec!["3", "4", "4", "3"],
-            svec!["5", "6", "6", "5"],
-        ];
+    let expected = vec![
+        svec!["1", "2", "2", "1"],
+        svec!["3", "4", "4", "3"],
+        svec!["5", "6", "6", "5"],
+    ];
     assert_eq!(got, expected);
 }
 

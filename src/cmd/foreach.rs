@@ -132,16 +132,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let mut command_pieces = splitter_pattern.find_iter(&templated_command);
         let prog = OsStr::from_bytes(command_pieces.next().unwrap().as_bytes());
 
-        let cmd_args: Vec<String> =
-            command_pieces
-                .map(|piece| {
-                    let clean_piece = cleaner_pattern.replace_all(piece.as_bytes(), NoExpand(b""));
+        let cmd_args: Vec<String> = command_pieces
+            .map(|piece| {
+                let clean_piece = cleaner_pattern.replace_all(piece.as_bytes(), NoExpand(b""));
 
-                    simdutf8::basic::from_utf8(&clean_piece)
-                        .unwrap_or_default()
-                        .to_string()
-                })
-                .collect();
+                simdutf8::basic::from_utf8(&clean_piece)
+                    .unwrap_or_default()
+                    .to_string()
+            })
+            .collect();
 
         if args.flag_unify {
             let mut cmd = Command::new(prog)

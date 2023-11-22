@@ -188,13 +188,12 @@ fn sample_percentage_seed_indexed() {
     cmd.args(["--seed", "42"]).arg("0.4").arg("in.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected =
-        vec![
-            svec!["R", "S"],
-            svec!["6", "e"],
-            svec!["3", "d"],
-            svec!["7", "i"],
-        ];
+    let expected = vec![
+        svec!["R", "S"],
+        svec!["6", "e"],
+        svec!["3", "d"],
+        svec!["7", "i"],
+    ];
     assert_eq!(got, expected);
 }
 
@@ -224,13 +223,12 @@ fn sample_percentage_seed_indexed_faster() {
         .arg("in.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected =
-        vec![
-            svec!["R", "S"],
-            svec!["1", "b"],
-            svec!["2", "a"],
-            svec!["8", "h"],
-        ];
+    let expected = vec![
+        svec!["R", "S"],
+        svec!["1", "b"],
+        svec!["2", "a"],
+        svec!["8", "h"],
+    ];
     assert_eq!(got, expected);
 }
 

@@ -315,7 +315,10 @@ impl Config {
 
     pub fn reader_file(&self) -> io::Result<csv::Reader<fs::File>> {
         match self.path {
-            None => Err(io::Error::new(io::ErrorKind::InvalidInput, "Cannot use <stdin> here")),
+            None => Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "Cannot use <stdin> here",
+            )),
             Some(ref p) => fs::File::open(p).map(|f| self.from_reader(f)),
         }
     }
@@ -487,12 +490,11 @@ impl Config {
             .unwrap_or_else(|_| DEFAULT_RDR_BUFFER_CAPACITY.to_string());
         let rdr_buffer: usize = rdr_capacitys.parse().unwrap_or(DEFAULT_RDR_BUFFER_CAPACITY);
 
-        let rdr_comment: Option<u8> =
-            if let Ok(comment_char) = env::var("QSV_COMMENT_CHAR") {
-                Some(comment_char.as_bytes().first().unwrap().to_owned())
-            } else {
-                self.comment
-            };
+        let rdr_comment: Option<u8> = if let Ok(comment_char) = env::var("QSV_COMMENT_CHAR") {
+            Some(comment_char.as_bytes().first().unwrap().to_owned())
+        } else {
+            self.comment
+        };
 
         csv::ReaderBuilder::new()
             .flexible(self.flexible)

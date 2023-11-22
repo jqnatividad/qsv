@@ -37,14 +37,13 @@ fn applydp_ops_upper() {
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected =
-        vec![
-            svec!["name", "surname"],
-            svec!["JOHN", "CENA"],
-            svec!["MARY", "JANE"],
-            svec!["SUE", "BIRD"],
-            svec!["HOPKINS", "JADE"],
-        ];
+    let expected = vec![
+        svec!["name", "surname"],
+        svec!["JOHN", "CENA"],
+        svec!["MARY", "JANE"],
+        svec!["SUE", "BIRD"],
+        svec!["HOPKINS", "JADE"],
+    ];
     assert_eq!(got, expected);
 }
 
@@ -100,14 +99,13 @@ fn applydp_ops_upper_rename() {
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected =
-        vec![
-            svec!["uname", "usurname"],
-            svec!["JOHN", "CENA"],
-            svec!["MARY", "JANE"],
-            svec!["SUE", "BIRD"],
-            svec!["HOPKINS", "JADE"],
-        ];
+    let expected = vec![
+        svec!["uname", "usurname"],
+        svec!["JOHN", "CENA"],
+        svec!["MARY", "JANE"],
+        svec!["SUE", "BIRD"],
+        svec!["HOPKINS", "JADE"],
+    ];
     assert_eq!(got, expected);
 }
 
@@ -161,14 +159,13 @@ fn applydp_ops_upper_index_params() {
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected =
-        vec![
-            svec!["uname", "usurname"],
-            svec!["JOHN", "CENA"],
-            svec!["MARY", "JANE"],
-            svec!["SUE", "BIRD"],
-            svec!["HOPKINS", "JADE"],
-        ];
+    let expected = vec![
+        svec!["uname", "usurname"],
+        svec!["JOHN", "CENA"],
+        svec!["MARY", "JANE"],
+        svec!["SUE", "BIRD"],
+        svec!["HOPKINS", "JADE"],
+    ];
     assert_eq!(got, expected);
 }
 
@@ -259,14 +256,13 @@ fn applydp_ops_empty_shortcircuit() {
     cmd.arg("operations").arg("len").arg("name").arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected =
-        vec![
-            svec!["name"],
-            svec!["4"],
-            svec!["0"],
-            svec!["0"],
-            svec!["7"],
-        ];
+    let expected = vec![
+        svec!["name"],
+        svec!["4"],
+        svec!["0"],
+        svec!["0"],
+        svec!["7"],
+    ];
     assert_eq!(got, expected);
 }
 
@@ -820,14 +816,13 @@ fn applydp_new_column() {
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected =
-        vec![
-            svec!["name", "upper_name"],
-            svec!["John", "JOHN"],
-            svec!["Mary", "MARY"],
-            svec!["Sue", "SUE"],
-            svec!["Hopkins", "HOPKINS"],
-        ];
+    let expected = vec![
+        svec!["name", "upper_name"],
+        svec!["John", "JOHN"],
+        svec!["Mary", "MARY"],
+        svec!["Sue", "SUE"],
+        svec!["Hopkins", "HOPKINS"],
+    ];
     assert_eq!(got, expected);
 }
 
@@ -852,14 +847,13 @@ fn applydp_emptyreplace() {
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected =
-        vec![
-            svec!["name"],
-            svec!["John"],
-            svec!["NA"],
-            svec!["Sue"],
-            svec!["Hopkins"],
-        ];
+    let expected = vec![
+        svec!["name"],
+        svec!["John"],
+        svec!["NA"],
+        svec!["Sue"],
+        svec!["Hopkins"],
+    ];
     assert_eq!(got, expected);
 }
 
@@ -1121,19 +1115,18 @@ fn applydp_datefmt_multiple_cols_rename() {
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected =
-        vec![
-            svec!["Created Weekday", "End Weekday"],
-            svec!["1", "2"],
-            svec!["3", "3"],
-            svec!["2", "3"],
-            svec!["1", "2"],
-            svec!["6", "7"],
-            svec![
-                "This is not a date and it will not be reformatted",
-                "This is not a date and it will not be reformatted"
-            ],
-        ];
+    let expected = vec![
+        svec!["Created Weekday", "End Weekday"],
+        svec!["1", "2"],
+        svec!["3", "3"],
+        svec!["2", "3"],
+        svec!["1", "2"],
+        svec!["6", "7"],
+        svec![
+            "This is not a date and it will not be reformatted",
+            "This is not a date and it will not be reformatted"
+        ],
+    ];
     assert_eq!(got, expected);
 }
 

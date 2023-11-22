@@ -331,12 +331,11 @@ fn search_invert_match() {
     cmd.arg("--invert-match");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected =
-        vec![
-            svec!["foobar", "barfoo"],
-            svec!["a", "b"],
-            svec!["Ḟooƀar", "ḃarḟoo"],
-        ];
+    let expected = vec![
+        svec!["foobar", "barfoo"],
+        svec!["a", "b"],
+        svec!["Ḟooƀar", "ḃarḟoo"],
+    ];
     assert_eq!(got, expected);
 
     wrk.assert_success(&mut cmd);
@@ -351,12 +350,11 @@ fn search_invert_match_count() {
     cmd.arg("--invert-match");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected =
-        vec![
-            svec!["foobar", "barfoo"],
-            svec!["a", "b"],
-            svec!["Ḟooƀar", "ḃarḟoo"],
-        ];
+    let expected = vec![
+        svec!["foobar", "barfoo"],
+        svec!["a", "b"],
+        svec!["Ḟooƀar", "ḃarḟoo"],
+    ];
     assert_eq!(got, expected);
 
     let got = wrk.output_stderr(&mut cmd);

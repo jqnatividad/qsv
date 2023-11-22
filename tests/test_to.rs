@@ -50,14 +50,13 @@ fn to_xlsx_roundtrip() {
 fn to_xlsx_dir() {
     let wrk = Workdir::new("to_xlsx_dir");
 
-    let cities =
-        vec![
-            svec!["city", "state"],
-            svec!["Boston", "MA"],
-            svec!["New York", "NY"],
-            svec!["San Francisco", "CA"],
-            svec!["Buffalo", "NY"],
-        ];
+    let cities = vec![
+        svec!["city", "state"],
+        svec!["Boston", "MA"],
+        svec!["New York", "NY"],
+        svec!["San Francisco", "CA"],
+        svec!["Buffalo", "NY"],
+    ];
     let places = vec![
         svec!["city", "place"],
         svec!["Boston", "Logan Airport"],
@@ -155,14 +154,13 @@ Description  string      string"#
 fn to_datapackage_dir() {
     let wrk = Workdir::new("to_datapackage_dir");
 
-    let cities =
-        vec![
-            svec!["city", "state"],
-            svec!["Boston", "MA"],
-            svec!["New York", "NY"],
-            svec!["San Francisco", "CA"],
-            svec!["Buffalo", "NY"],
-        ];
+    let cities = vec![
+        svec!["city", "state"],
+        svec!["Boston", "MA"],
+        svec!["New York", "NY"],
+        svec!["San Francisco", "CA"],
+        svec!["Buffalo", "NY"],
+    ];
     let places = vec![
         svec!["city", "place"],
         svec!["Boston", "Logan Airport"],
@@ -225,14 +223,13 @@ place       string      string"#
 fn to_sqlite_dir() {
     let wrk = Workdir::new("to_sqlite_dir");
 
-    let cities =
-        vec![
-            svec!["city", "state"],
-            svec!["Boston", "MA"],
-            svec!["New York", "NY"],
-            svec!["San Francisco", "CA"],
-            svec!["Buffalo", "NY"],
-        ];
+    let cities = vec![
+        svec!["city", "state"],
+        svec!["Boston", "MA"],
+        svec!["New York", "NY"],
+        svec!["San Francisco", "CA"],
+        svec!["Buffalo", "NY"],
+    ];
     let places = vec![
         svec!["city", "place"],
         svec!["Boston", "Logan Airport"],
@@ -326,14 +323,13 @@ place       string      string"#
 fn to_sqlite() {
     let wrk = Workdir::new("to_sqlite");
 
-    let cities =
-        vec![
-            svec!["city", "state"],
-            svec!["Boston", "MA"],
-            svec!["New York", "NY"],
-            svec!["San Francisco", "CA"],
-            svec!["Buffalo", "NY"],
-        ];
+    let cities = vec![
+        svec!["city", "state"],
+        svec!["Boston", "MA"],
+        svec!["New York", "NY"],
+        svec!["San Francisco", "CA"],
+        svec!["Buffalo", "NY"],
+    ];
     let places = vec![
         svec!["city", "place"],
         svec!["Boston", "Logan Airport"],
@@ -411,14 +407,13 @@ state       string      string"#
 fn to_parquet_dir() {
     let wrk = Workdir::new("to_parquet_dir");
 
-    let cities =
-        vec![
-            svec!["city", "state"],
-            svec!["Boston", "MA"],
-            svec!["New York", "NY"],
-            svec!["San Francisco", "CA"],
-            svec!["Buffalo", "NY"],
-        ];
+    let cities = vec![
+        svec!["city", "state"],
+        svec!["Boston", "MA"],
+        svec!["New York", "NY"],
+        svec!["San Francisco", "CA"],
+        svec!["Buffalo", "NY"],
+    ];
     let places = vec![
         svec!["city", "place"],
         svec!["Boston", "Logan Airport"],
@@ -471,14 +466,13 @@ state       string      string"#
 fn to_postgres() {
     let wrk = Workdir::new("to_postgres");
 
-    let cities =
-        vec![
-            svec!["city", "state"],
-            svec!["Boston", "MA"],
-            svec!["New York", "NY"],
-            svec!["San Francisco", "CA"],
-            svec!["Buffalo", "NY"],
-        ];
+    let cities = vec![
+        svec!["city", "state"],
+        svec!["Boston", "MA"],
+        svec!["New York", "NY"],
+        svec!["San Francisco", "CA"],
+        svec!["Buffalo", "NY"],
+    ];
     let places = vec![
         svec!["city", "place"],
         svec!["Boston", "Logan Airport"],

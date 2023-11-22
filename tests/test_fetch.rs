@@ -661,10 +661,9 @@ async fn index() -> impl Responder {
 async fn get_fullname(req: HttpRequest, name: web::Path<String>) -> Result<impl Responder> {
     println!("{req:?}");
 
-    let obj =
-        MyObj {
-            fullname: format!("{name} Smurf"),
-        };
+    let obj = MyObj {
+        fullname: format!("{name} Smurf"),
+    };
 
     Ok(web::Json(obj))
 }
@@ -688,12 +687,11 @@ async fn run_webserver(tx: mpsc::Sender<ServerHandle>) -> std::io::Result<()> {
 
     // Allow bursts with up to five requests per IP address
     // and replenishes one element every 250 ms (4 qps)
-    let governor_conf =
-        GovernorConfigBuilder::default()
-            .per_millisecond(250)
-            .burst_size(7)
-            .finish()
-            .unwrap();
+    let governor_conf = GovernorConfigBuilder::default()
+        .per_millisecond(250)
+        .burst_size(7)
+        .finish()
+        .unwrap();
 
     // server is server controller type, `dev::ServerHandle`
     let server = HttpServer::new(move || {
@@ -852,7 +850,11 @@ fn fetch_complex_url_template() {
     );
     let mut cmd = wrk.command("fetch");
     cmd.arg("--url-template")
-        .arg(concat!("http://", test_server!(), "/user/{first_name}%20{color}"))
+        .arg(concat!(
+            "http://",
+            test_server!(),
+            "/user/{first_name}%20{color}"
+        ))
         .arg("--new-column")
         .arg("Fullname")
         .arg("--jql")

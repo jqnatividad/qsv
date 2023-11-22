@@ -95,15 +95,14 @@ fn sort_numeric() {
     cmd.arg("-N").arg("in.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected =
-        vec![
-            svec!["N", "S"],
-            //Non-numerics should be put first
-            svec!["LETTER", "b"],
-            svec!["1", "d"],
-            svec!["2", "c"],
-            svec!["10", "a"],
-        ];
+    let expected = vec![
+        svec!["N", "S"],
+        //Non-numerics should be put first
+        svec!["LETTER", "b"],
+        svec!["1", "d"],
+        svec!["2", "c"],
+        svec!["10", "a"],
+    ];
     assert_eq!(got, expected);
 }
 
@@ -125,15 +124,14 @@ fn sort_numeric_faster() {
     cmd.arg("-N").arg("--faster").arg("in.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected =
-        vec![
-            svec!["N", "S"],
-            //Non-numerics should be put first
-            svec!["LETTER", "b"],
-            svec!["1", "d"],
-            svec!["2", "c"],
-            svec!["10", "a"],
-        ];
+    let expected = vec![
+        svec!["N", "S"],
+        //Non-numerics should be put first
+        svec!["LETTER", "b"],
+        svec!["1", "d"],
+        svec!["2", "c"],
+        svec!["10", "a"],
+    ];
     assert_eq!(got, expected);
 }
 
@@ -374,13 +372,12 @@ fn sort_uniq() {
     cmd.arg("-u").args(["-s", "number"]).arg("-N").arg("in.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected =
-        vec![
-            svec!["number", "letter"],
-            svec!["1", "a"],
-            svec!["2", "c"],
-            svec!["3", "f"],
-        ];
+    let expected = vec![
+        svec!["number", "letter"],
+        svec!["1", "a"],
+        svec!["2", "c"],
+        svec!["3", "f"],
+    ];
     assert_eq!(got, expected);
 }
 
@@ -408,13 +405,12 @@ fn sort_uniq_faster() {
         .arg("in.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected =
-        vec![
-            svec!["number", "letter"],
-            svec!["1", "a"],
-            svec!["2", "c"],
-            svec!["3", "f"],
-        ];
+    let expected = vec![
+        svec!["number", "letter"],
+        svec!["1", "a"],
+        svec!["2", "c"],
+        svec!["3", "f"],
+    ];
     assert_eq!(got, expected);
 }
 
@@ -438,16 +434,15 @@ fn sort_random() {
     cmd.arg("--random").args(["--seed", "42"]).arg("in.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected =
-        vec![
-            svec!["R", "S"],
-            svec!["1", "b"],
-            svec!["5", "f"],
-            svec!["6", "e"],
-            svec!["3", "d"],
-            svec!["2", "a"],
-            svec!["4", "c"],
-        ];
+    let expected = vec![
+        svec!["R", "S"],
+        svec!["1", "b"],
+        svec!["5", "f"],
+        svec!["6", "e"],
+        svec!["3", "d"],
+        svec!["2", "a"],
+        svec!["4", "c"],
+    ];
     assert_eq!(got, expected);
 }
 
@@ -474,16 +469,15 @@ fn sort_random_faster() {
         .arg("in.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected =
-        vec![
-            svec!["R", "S"],
-            svec!["1", "b"],
-            svec!["2", "a"],
-            svec!["6", "e"],
-            svec!["4", "c"],
-            svec!["5", "f"],
-            svec!["3", "d"],
-        ];
+    let expected = vec![
+        svec!["R", "S"],
+        svec!["1", "b"],
+        svec!["2", "a"],
+        svec!["6", "e"],
+        svec!["4", "c"],
+        svec!["5", "f"],
+        svec!["3", "d"],
+    ];
     assert_eq!(got, expected);
 }
 

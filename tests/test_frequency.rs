@@ -37,14 +37,13 @@ fn frequency_no_headers() {
     let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     got = got.into_iter().skip(1).collect();
     got.sort();
-    let expected =
-        vec![
-            svec!["1", "(NULL)", "1"],
-            svec!["1", "(NULL)", "1"],
-            svec!["1", "a", "4"],
-            svec!["1", "b", "1"],
-            svec!["1", "h1", "1"],
-        ];
+    let expected = vec![
+        svec!["1", "(NULL)", "1"],
+        svec!["1", "(NULL)", "1"],
+        svec!["1", "a", "4"],
+        svec!["1", "b", "1"],
+        svec!["1", "h1", "1"],
+    ];
     assert_eq!(got, expected);
 }
 
@@ -55,14 +54,13 @@ fn frequency_casesensitive() {
 
     let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     got.sort();
-    let expected =
-        vec![
-            svec!["field", "value", "count"],
-            svec!["h2", "Y", "1"],
-            svec!["h2", "x", "1"],
-            svec!["h2", "y", "2"],
-            svec!["h2", "z", "3"],
-        ];
+    let expected = vec![
+        svec!["field", "value", "count"],
+        svec!["h2", "Y", "1"],
+        svec!["h2", "x", "1"],
+        svec!["h2", "y", "2"],
+        svec!["h2", "z", "3"],
+    ];
     assert_eq!(got, expected);
 }
 
@@ -126,12 +124,11 @@ fn frequency_limit() {
 
     let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     got.sort();
-    let expected =
-        vec![
-            svec!["field", "value", "count"],
-            svec!["h1", "a", "4"],
-            svec!["h2", "z", "3"],
-        ];
+    let expected = vec![
+        svec!["field", "value", "count"],
+        svec!["h1", "a", "4"],
+        svec!["h2", "z", "3"],
+    ];
     assert_eq!(got, expected);
 }
 
@@ -142,14 +139,13 @@ fn frequency_asc() {
 
     let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     got.sort();
-    let expected =
-        vec![
-            svec!["field", "value", "count"],
-            svec!["h2", "Y", "1"],
-            svec!["h2", "x", "1"],
-            svec!["h2", "y", "2"],
-            svec!["h2", "z", "3"],
-        ];
+    let expected = vec![
+        svec!["field", "value", "count"],
+        svec!["h2", "Y", "1"],
+        svec!["h2", "x", "1"],
+        svec!["h2", "y", "2"],
+        svec!["h2", "z", "3"],
+    ];
     assert_eq!(got, expected);
 }
 
@@ -178,14 +174,13 @@ fn frequency_select() {
 
     let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     got.sort();
-    let expected =
-        vec![
-            svec!["field", "value", "count"],
-            svec!["h2", "Y", "1"],
-            svec!["h2", "x", "1"],
-            svec!["h2", "y", "2"],
-            svec!["h2", "z", "3"],
-        ];
+    let expected = vec![
+        svec!["field", "value", "count"],
+        svec!["h2", "Y", "1"],
+        svec!["h2", "x", "1"],
+        svec!["h2", "y", "2"],
+        svec!["h2", "z", "3"],
+    ];
     assert_eq!(got, expected);
 }
 
@@ -203,6 +198,13 @@ fn prop_frequency() {
 
 // This tests that running the frequency command on a CSV file with these two
 // rows does not burst in flames:
+//
+//     \u{FEFF}
+//     ""
+//
+// In this case, the `param_prop_frequency` just ignores this particular test.
+// Namely, \u{FEFF} is the UTF-8 BOM, which is ignored by the underlying CSV
+// reader.
 #[test]
 fn frequency_bom() {
     let rows = CsvData {

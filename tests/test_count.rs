@@ -85,6 +85,9 @@ fn count_comments() {
 }
 
 /// This tests whether `qsv count` gets the right answer.
+///
+/// It does some simple case analysis to handle whether we want to test counts
+/// in the presence of headers and/or indexes.
 fn prop_count_len(
     name: &str,
     rows: CsvData,

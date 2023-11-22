@@ -37,14 +37,13 @@ fn apply_ops_upper() {
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected =
-        vec![
-            svec!["name", "surname"],
-            svec!["JOHN", "CENA"],
-            svec!["MARY", "JANE"],
-            svec!["SUE", "BIRD"],
-            svec!["HOPKINS", "JADE"],
-        ];
+    let expected = vec![
+        svec!["name", "surname"],
+        svec!["JOHN", "CENA"],
+        svec!["MARY", "JANE"],
+        svec!["SUE", "BIRD"],
+        svec!["HOPKINS", "JADE"],
+    ];
     assert_eq!(got, expected);
 }
 
@@ -100,14 +99,13 @@ fn apply_ops_upper_rename() {
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected =
-        vec![
-            svec!["uname", "usurname"],
-            svec!["JOHN", "CENA"],
-            svec!["MARY", "JANE"],
-            svec!["SUE", "BIRD"],
-            svec!["HOPKINS", "JADE"],
-        ];
+    let expected = vec![
+        svec!["uname", "usurname"],
+        svec!["JOHN", "CENA"],
+        svec!["MARY", "JANE"],
+        svec!["SUE", "BIRD"],
+        svec!["HOPKINS", "JADE"],
+    ];
     assert_eq!(got, expected);
 }
 
@@ -161,14 +159,13 @@ fn apply_ops_upper_index_params() {
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected =
-        vec![
-            svec!["uname", "usurname"],
-            svec!["JOHN", "CENA"],
-            svec!["MARY", "JANE"],
-            svec!["SUE", "BIRD"],
-            svec!["HOPKINS", "JADE"],
-        ];
+    let expected = vec![
+        svec!["uname", "usurname"],
+        svec!["JOHN", "CENA"],
+        svec!["MARY", "JANE"],
+        svec!["SUE", "BIRD"],
+        svec!["HOPKINS", "JADE"],
+    ];
     assert_eq!(got, expected);
 }
 
@@ -554,14 +551,13 @@ fn apply_ops_empty_shortcircuit() {
     cmd.arg("operations").arg("len").arg("name").arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected =
-        vec![
-            svec!["name"],
-            svec!["4"],
-            svec!["0"],
-            svec!["0"],
-            svec!["7"],
-        ];
+    let expected = vec![
+        svec!["name"],
+        svec!["4"],
+        svec!["0"],
+        svec!["0"],
+        svec!["7"],
+    ];
     assert_eq!(got, expected);
 }
 
@@ -1328,14 +1324,13 @@ fn apply_new_column() {
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected =
-        vec![
-            svec!["name", "upper_name"],
-            svec!["John", "JOHN"],
-            svec!["Mary", "MARY"],
-            svec!["Sue", "SUE"],
-            svec!["Hopkins", "HOPKINS"],
-        ];
+    let expected = vec![
+        svec!["name", "upper_name"],
+        svec!["John", "JOHN"],
+        svec!["Mary", "MARY"],
+        svec!["Sue", "SUE"],
+        svec!["Hopkins", "HOPKINS"],
+    ];
     assert_eq!(got, expected);
 }
 
@@ -1941,14 +1936,13 @@ fn apply_ops_similarity() {
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected =
-        vec![
-            svec!["name", "name_sim_score"],
-            svec!["John", "0.5"],
-            svec!["Jonathan", "0.25"],
-            svec!["Edna", "0"],
-            svec!["Larry", "0"],
-        ];
+    let expected = vec![
+        svec!["name", "name_sim_score"],
+        svec!["John", "0.5"],
+        svec!["Jonathan", "0.25"],
+        svec!["Edna", "0"],
+        svec!["Larry", "0"],
+    ];
     assert_eq!(got, expected);
 }
 
@@ -2118,46 +2112,44 @@ fn apply_ops_whatlang() {
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected =
-        vec![
-            svec!["description", "language"],
-            svec![
-                "Y así mismo, aunque no son tan ágiles en el suelo como el vampiro común, son muy \
-                 competentes al escalar por las ramas.",
-                "Spa"
-            ],
-            svec!["See notes.", "Cat(0.031)?"],
-            svec![
-                "Aquest és l’honor més gran que he rebut a la meva vida. La pau ha estat sempre \
-                 la meva més gran preocupació.",
-                "Cat"
-            ],
-            svec!["", ""],
-            svec![
-                "Showing that even in the modern warfare of the 1930s and 1940s, the dilapidated \
-                 fortifications still had defensive usefulness.",
-                "Eng"
-            ],
-            svec![
-                "民國卅八年（ 1949年 ）， 從南京經 廣州 、 香港返回 香日德。 1950年6月 \
-                 ，受十世班禪派遣， 前往西安代表班禪向彭德懷投誠 。",
-                "Cmn"
-            ],
-            svec![
-                "Rust（ラスト）は並列かつマルチパラダイムのプログラミング言語である",
-                "Jpn"
-            ],
-            svec![
-                "Мой дядя самых честных правил, Когда не в шутку занемог, Он уважать себя \
-                 заставил И лучше выдумать не мог.",
-                "Rus"
-            ],
-            svec![
-                "Kamusta na, pare!?! Matagal na tayong di nagkita! Ilang taon na since high \
-                 school?!",
-                "Tgl"
-            ],
-        ];
+    let expected = vec![
+        svec!["description", "language"],
+        svec![
+            "Y así mismo, aunque no son tan ágiles en el suelo como el vampiro común, son muy \
+             competentes al escalar por las ramas.",
+            "Spa"
+        ],
+        svec!["See notes.", "Cat(0.031)?"],
+        svec![
+            "Aquest és l’honor més gran que he rebut a la meva vida. La pau ha estat sempre la \
+             meva més gran preocupació.",
+            "Cat"
+        ],
+        svec!["", ""],
+        svec![
+            "Showing that even in the modern warfare of the 1930s and 1940s, the dilapidated \
+             fortifications still had defensive usefulness.",
+            "Eng"
+        ],
+        svec![
+            "民國卅八年（ 1949年 ）， 從南京經 廣州 、 香港返回 香日德。 1950年6月 \
+             ，受十世班禪派遣， 前往西安代表班禪向彭德懷投誠 。",
+            "Cmn"
+        ],
+        svec![
+            "Rust（ラスト）は並列かつマルチパラダイムのプログラミング言語である",
+            "Jpn"
+        ],
+        svec![
+            "Мой дядя самых честных правил, Когда не в шутку занемог, Он уважать себя заставил И \
+             лучше выдумать не мог.",
+            "Rus"
+        ],
+        svec![
+            "Kamusta na, pare!?! Matagal na tayong di nagkita! Ilang taon na since high school?!",
+            "Tgl"
+        ],
+    ];
     assert_eq!(got, expected);
 }
 
@@ -2358,14 +2350,13 @@ fn apply_emptyreplace() {
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected =
-        vec![
-            svec!["name"],
-            svec!["John"],
-            svec!["NA"],
-            svec!["Sue"],
-            svec!["Hopkins"],
-        ];
+    let expected = vec![
+        svec!["name"],
+        svec!["John"],
+        svec!["NA"],
+        svec!["Sue"],
+        svec!["Hopkins"],
+    ];
     assert_eq!(got, expected);
 }
 
@@ -2678,19 +2669,18 @@ fn apply_datefmt_multiple_cols_rename() {
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected =
-        vec![
-            svec!["Created Weekday", "End Weekday"],
-            svec!["1", "2"],
-            svec!["3", "3"],
-            svec!["2", "3"],
-            svec!["1", "2"],
-            svec!["6", "7"],
-            svec![
-                "This is not a date and it will not be reformatted",
-                "This is not a date and it will not be reformatted"
-            ],
-        ];
+    let expected = vec![
+        svec!["Created Weekday", "End Weekday"],
+        svec!["1", "2"],
+        svec!["3", "3"],
+        svec!["2", "3"],
+        svec!["1", "2"],
+        svec!["6", "7"],
+        svec![
+            "This is not a date and it will not be reformatted",
+            "This is not a date and it will not be reformatted"
+        ],
+    ];
     assert_eq!(got, expected);
 }
 

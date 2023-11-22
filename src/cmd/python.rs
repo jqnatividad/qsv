@@ -342,9 +342,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         // we do this since we cannot use the ? operator here
                         // since this closure returns a PyResult
                         // this is converted to a CliError::Other anyway
-                        return Err(pyo3::PyErr::new::<pyo3::exceptions::PyIOError, _>(
-                            format!("cannot write record ({e})")
-                        ));
+                        return Err(pyo3::PyErr::new::<pyo3::exceptions::PyIOError, _>(format!(
+                            "cannot write record ({e})"
+                        )));
                     }
                 } else if args.cmd_filter {
                     let result = helpers

@@ -238,12 +238,11 @@ impl Arbitrary for CsvData {
         let mut rng = thread_rng();
 
         let num_records: usize = rng.gen_range(0..100);
-        let mut d =
-            CsvData {
-                data: (0..num_records)
-                    .map(|_| CsvRecord((0..record_len).map(|_| Arbitrary::arbitrary(g)).collect()))
-                    .collect(),
-            };
+        let mut d = CsvData {
+            data: (0..num_records)
+                .map(|_| CsvRecord((0..record_len).map(|_| Arbitrary::arbitrary(g)).collect()))
+                .collect(),
+        };
         // If the CSV data starts with a BOM, strip it, because it wreaks havoc
         // with tests that weren't designed to handle it.
         if !d.data.is_empty() && !d.data[0].is_empty() {

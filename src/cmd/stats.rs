@@ -838,20 +838,18 @@ fn stats_path(stats_csv_path: &Path, stdin_flag: bool) -> PathBuf {
         .into_string()
         .unwrap();
 
-    let fname =
-        stats_csv_path
-            .file_name()
-            .unwrap()
-            .to_os_string()
-            .into_string()
-            .unwrap();
-    let fstem =
-        stats_csv_path
-            .file_stem()
-            .unwrap()
-            .to_os_string()
-            .into_string()
-            .unwrap();
+    let fname = stats_csv_path
+        .file_name()
+        .unwrap()
+        .to_os_string()
+        .into_string()
+        .unwrap();
+    let fstem = stats_csv_path
+        .file_stem()
+        .unwrap()
+        .to_os_string()
+        .into_string()
+        .unwrap();
 
     if let Some(nofn) = p.strip_suffix(&fname) {
         p = nofn.to_string();
@@ -1157,9 +1155,11 @@ impl Stats {
                     if mode_occurrences == 0 {
                         // all the values are unique
                         // so instead of returning everything, just say *ALL
-                        mc_pieces.extend_from_slice(
-                            &["*ALL".to_string(), "0".to_string(), "1".to_string()]
-                        );
+                        mc_pieces.extend_from_slice(&[
+                            "*ALL".to_string(),
+                            "0".to_string(),
+                            "1".to_string(),
+                        ]);
                     } else {
                         let (antimodes_result, antimodes_count, antimode_occurrences) =
                             v.antimodes();
@@ -1326,15 +1326,13 @@ impl Stats {
         }
 
         // median absolute deviation (MAD)
-        if let Some(v) =
-            self.mad.as_mut().and_then(|v| {
-                if let TNull | TString = typ {
-                    None
-                } else {
-                    v.mad(existing_median)
-                }
-            })
-        {
+        if let Some(v) = self.mad.as_mut().and_then(|v| {
+            if let TNull | TString = typ {
+                None
+            } else {
+                v.mad(existing_median)
+            }
+        }) {
             if typ == TDateTime || typ == TDate {
                 // like stddev, return MAD in days
                 pieces.push(util::round_num(

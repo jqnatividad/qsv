@@ -246,12 +246,11 @@ fn searchset_no_headers() {
     cmd.arg("--no-headers");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected =
-        vec![
-            svec!["foobar", "barfoo"],
-            svec!["barfoo", "foobar"],
-            svec!["is waldo here", "spot"],
-        ];
+    let expected = vec![
+        svec!["foobar", "barfoo"],
+        svec!["barfoo", "foobar"],
+        svec!["is waldo here", "spot"],
+    ];
     assert_eq!(got, expected);
     wrk.assert_success(&mut cmd);
 }

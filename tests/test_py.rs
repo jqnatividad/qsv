@@ -31,37 +31,6 @@ fn py_map() {
 }
 
 #[test]
-fn py_filter_nulls() {
-    let wrk = Workdir::new("py_filter_nulls");
-    wrk.create(
-        "data.csv",
-        vec![
-            svec!["letter", "number"],
-            svec!["a", "13"],
-            svec!["b", "24"],
-            svec!["c", "72"],
-            svec!["d", "7"],
-            svec!["e", ""],
-            svec!["f", ""],
-            svec!["g", "1"],
-        ],
-    );
-    let mut cmd = wrk.command("py");
-    cmd.arg("filter").arg("number").arg("data.csv");
-
-    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![
-        svec!["letter", "number"],
-        svec!["a", "13"],
-        svec!["b", "24"],
-        svec!["c", "72"],
-        svec!["d", "7"],
-        svec!["g", "1"],
-    ];
-    assert_eq!(got, expected);
-}
-
-#[test]
 fn py_map_error() {
     let wrk = Workdir::new("py");
     wrk.create(

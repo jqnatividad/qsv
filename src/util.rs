@@ -93,11 +93,10 @@ pub fn njobs(flag_jobs: Option<usize>) -> usize {
 }
 
 pub fn timeout_secs(timeout: u16) -> Result<u64, String> {
-    let timeout =
-        match env::var("QSV_TIMEOUT") {
-            Ok(val) => val.parse::<u16>().unwrap_or(30_u16),
-            Err(_) => timeout,
-        };
+    let timeout = match env::var("QSV_TIMEOUT") {
+        Ok(val) => val.parse::<u16>().unwrap_or(30_u16),
+        Err(_) => timeout,
+    };
 
     if timeout > 3600 {
         return fail_format!("Timeout cannot be more than 3,600 seconds (1 hour): {timeout}");
@@ -679,7 +678,9 @@ impl<'de> Deserialize<'de> for FilenameTemplate {
                 suffix: chunks[1].to_owned(),
             })
         } else {
-            Err(D::Error::custom("The --filename argument must contain one '{}'."))
+            Err(D::Error::custom(
+                "The --filename argument must contain one '{}'.",
+            ))
         }
     }
 }
@@ -1077,11 +1078,10 @@ pub fn utf8_truncate(input: &mut String, maxsize: usize) {
         {
             let mut char_iter = input.char_indices();
             while utf8_maxsize >= maxsize {
-                utf8_maxsize =
-                    match char_iter.next_back() {
-                        Some((index, _)) => index,
-                        _ => 0,
-                    };
+                utf8_maxsize = match char_iter.next_back() {
+                    Some((index, _)) => index,
+                    _ => 0,
+                };
             }
         } // Extra {} wrap to limit the immutable borrow of char_indices()
         input.truncate(utf8_maxsize);
@@ -1342,14 +1342,13 @@ pub async fn download_file(
 
     let res = client.get(url).send().await?;
 
-    let total_size =
-        match res.content_length() {
-            Some(l) => l,
-            None => {
-                // if we can't get the content length, set it to sentinel value
-                u64::MAX
-            },
-        };
+    let total_size = match res.content_length() {
+        Some(l) => l,
+        None => {
+            // if we can't get the content length, set it to sentinel value
+            u64::MAX
+        },
+    };
 
     // progressbar setup
     #[cfg(any(feature = "feature_capable", feature = "lite"))]
@@ -1469,15 +1468,14 @@ pub fn process_input(
         arg_input.remove(0);
     }
 
-    let work_input =
-        if arg_input.len() == 1 && arg_input[0].is_dir() {
-            // if the input is a directory, add all the files in the directory to the input
-            std::fs::read_dir(&arg_input[0])?
-                .map(|entry| entry.map(|e| e.path()))
-                .collect::<Result<Vec<_>, _>>()?
-        } else {
-            arg_input
-        };
+    let work_input = if arg_input.len() == 1 && arg_input[0].is_dir() {
+        // if the input is a directory, add all the files in the directory to the input
+        std::fs::read_dir(&arg_input[0])?
+            .map(|entry| entry.map(|e| e.path()))
+            .collect::<Result<Vec<_>, _>>()?
+    } else {
+        arg_input
+    };
 
     // check the input files
     for path in work_input {
