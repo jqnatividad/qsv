@@ -89,7 +89,7 @@ csv-index = "0.1"
 csvs_convert = { version = "0.8", default-features = false, features = [
     "converters",
 ], optional = true }
-data-encoding = { version = "2.4", optional = true }
+data-encoding = { version = "2.5", optional = true }
 dotenvy = "0.15"
 dynfmt = { version = "0.1", default-features = false, features = [
     "curly",
