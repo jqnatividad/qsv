@@ -1278,16 +1278,13 @@ fn map_computedvalue(
             let mut nbuffer = ryu::Buffer::new();
             table.for_each::<String, Value>(|_k, v| {
                 match v {
-                    Value::Integer(intval) => 
-                        record.push_field(ibuffer.format(intval)),
-                    Value::String(strval) => 
-                        record.push_field(&strval.to_string_lossy()),
-                    Value::Number(number) => 
-                        record.push_field(nbuffer.format(number)),
-                    Value::Boolean(boolean) => 
-                        record.push_field(if boolean { "true" } else { "false" }),
-                    Value::Nil => 
-                        record.push_field(""),
+                    Value::Integer(intval) => record.push_field(ibuffer.format(intval)),
+                    Value::String(strval) => record.push_field(&strval.to_string_lossy()),
+                    Value::Number(number) => record.push_field(nbuffer.format(number)),
+                    Value::Boolean(boolean) => {
+                        record.push_field(if boolean { "true" } else { "false" })
+                    },
+                    Value::Nil => record.push_field(""),
                     _ => unreachable!("unsupported value type"),
                 }
                 columns_inserted += 1;
