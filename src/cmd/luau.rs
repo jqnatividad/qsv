@@ -470,22 +470,21 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // if require_used, create a temporary directory and copy date.lua there.
     // we do this outside the "require_used" setup below as the tempdir
     // needs to persist until the end of the program.
-    let temp_dir =
-        if require_used {
-            match tempfile::tempdir() {
-                Ok(temp_dir) => {
-                    let temp_dir_path = temp_dir.into_path();
-                    Some(temp_dir_path)
-                },
-                Err(e) => {
-                    return fail_clierror!(
-                        "Cannot create temporary directory to copy luadate library to: {e}"
-                    )
-                },
-            }
-        } else {
-            None
-        };
+    let temp_dir = if require_used {
+        match tempfile::tempdir() {
+            Ok(temp_dir) => {
+                let temp_dir_path = temp_dir.into_path();
+                Some(temp_dir_path)
+            },
+            Err(e) => {
+                return fail_clierror!(
+                    "Cannot create temporary directory to copy luadate library to: {e}"
+                )
+            },
+        }
+    } else {
+        None
+    };
 
     // "require " was used in the scripts, so we need to prepare luadate library and setup LUAU_PATH
     if require_used {
@@ -528,12 +527,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let globals = luau.globals();
 
     // check the QSV_CKAN_API environment variable
-    let ckan_api =
-        if let Ok(api) = std::env::var("QSV_CKAN_API") {
-            api
-        } else {
-            args.flag_ckan_api.clone()
-        };
+    let ckan_api = if let Ok(api) = std::env::var("QSV_CKAN_API") {
+        api
+    } else {
+        args.flag_ckan_api.clone()
+    };
 
     // check the QSV_CKAN_TOKEN environment variable
     let ckan_token = if let Ok(token) = std::env::var("QSV_CKAN_TOKEN") {
@@ -1480,17 +1478,21 @@ fn setup_helpers(
 
     // this is a helper function that can be called from Luau scripts
     // to coalesce - return the first non-null value in a list
-    let qsv_coalesce =
-        luau.create_function(|luau, mut args: mlua::MultiValue| {
-            while let Some(val) = args.pop_front() {
-                let val = luau.from_value::<serde_json::Value>(val)?;
-                let val_str = val.as_str().unwrap_or_default();
-                if !val_str.is_empty() {
-                    return Ok(val_str.to_string());
-                }
+    //
+    //   qsv_coalesce(arg1, .., argN)
+    //      returns: first non-null value of the arguments
+    //               or an empty string if all arguments are null
+    //
+    let qsv_coalesce = luau.create_function(|luau, mut args: mlua::MultiValue| {
+        while let Some(val) = args.pop_front() {
+            let val = luau.from_value::<serde_json::Value>(val)?;
+            let val_str = val.as_str().unwrap_or_default();
+            if !val_str.is_empty() {
+                return Ok(val_str.to_string());
             }
-            Ok(String::new())
-        })?;
+        }
+        Ok(String::new())
+    })?;
     luau.globals().set("qsv_coalesce", qsv_coalesce)?;
 
     // this is a helper function that can be called from the BEGIN and MAIN script
@@ -1537,20 +1539,24 @@ fn setup_helpers(
     //   qsv_sleep(milliseconds: number)
     //      returns: None
     //
-    let qsv_sleep =
-        luau.create_function(|_, args: mlua::Number| {
-            let sleep_time = args as u64;
-            if sleep_time > 0 {
-                log::info!("sleeping for {} milliseconds", sleep_time);
-                std::thread::sleep(std::time::Duration::from_millis(sleep_time));
-            }
+    let qsv_sleep = luau.create_function(|_, args: mlua::Number| {
+        let sleep_time = args as u64;
+        if sleep_time > 0 {
+            log::info!("sleeping for {} milliseconds", sleep_time);
+            std::thread::sleep(std::time::Duration::from_millis(sleep_time));
+        }
 
-            Ok(())
-        })?;
+        Ok(())
+    })?;
     luau.globals().set("qsv_sleep", qsv_sleep)?;
 
     // this is a helper function that can be called from the MAIN script
     // to skip writing the current row's output when processing CSVs.
+    //
+    //   qsv_skip()
+    //      returns: None
+    //               or Luau runtime error if called from BEGIN or END scripts
+    //
     let qsv_skip = luau.create_function(|_, ()| {
         if LUAU_STAGE.load(Ordering::Relaxed) != Stage::Main as i8 {
             return helper_err!(
@@ -1578,17 +1584,16 @@ fn setup_helpers(
     //               as soon as the BEGIN script is actually executed.
     //               A Luau runtime error is also returned if called from MAIN or END.
     //
-    let qsv_autoindex =
-        luau.create_function(|_, ()| {
-            if LUAU_STAGE.load(Ordering::Relaxed) != Stage::Begin as i8 {
-                return helper_err!(
-                    "qsv_autoindex",
-                    "qsv_autoindex() can only be called from the BEGIN script."
-                );
-            }
+    let qsv_autoindex = luau.create_function(|_, ()| {
+        if LUAU_STAGE.load(Ordering::Relaxed) != Stage::Begin as i8 {
+            return helper_err!(
+                "qsv_autoindex",
+                "qsv_autoindex() can only be called from the BEGIN script."
+            );
+        }
 
-            Ok(())
-        })?;
+        Ok(())
+    })?;
     luau.globals().set("qsv_autoindex", qsv_autoindex)?;
 
     // this is a helper function to set an environment variable.
@@ -1602,24 +1607,30 @@ fn setup_helpers(
     //         returns: None
     //                  A Luau runtime error if the envvar is empty.
     //
-    let qsv_setenv =
-        luau.create_function(|_, (envvar, value): (String, String)| {
-            if envvar.is_empty() {
-                return helper_err!("qsv_setenv", "envvar cannot be empty.");
-            }
+    let qsv_setenv = luau.create_function(|_, (envvar, value): (String, String)| {
+        if envvar.is_empty() {
+            return helper_err!("qsv_setenv", "envvar cannot be empty.");
+        }
 
-            if value.is_empty() {
-                std::env::remove_var(envvar);
-            } else {
-                std::env::set_var(envvar, value);
-            }
+        if value.is_empty() {
+            std::env::remove_var(envvar);
+        } else {
+            std::env::set_var(envvar, value);
+        }
 
-            Ok(())
-        })?;
+        Ok(())
+    })?;
     luau.globals().set("qsv_setenv", qsv_setenv)?;
 
     // this is a helper function to get the value of an environment variable.
     // Note that the environment variable is read from the parent AND current processes.
+    //
+    //   qsv_getenv(envar: string)
+    //          envvar: the name of the environment variable to get
+    //         returns: The value of the environment variable or an empty string if the
+    //                  environment variable is not set.
+    //                  A Luau runtime error if the envvar argument is empty.
+    //
     let qsv_getenv = luau.create_function(|_, envvar: String| {
         if envvar.is_empty() {
             return helper_err!("qsv_getenv", "envvar cannot be empty.");
@@ -1639,15 +1650,14 @@ fn setup_helpers(
     //         returns: true if the file exists, false otherwise.
     //                  A Luau runtime error if the filepath argument is empty.
     //
-    let qsv_fileexists =
-        luau.create_function(|_, filepath: String| {
-            if filepath.is_empty() {
-                return helper_err!("qsv_fileexists", "filepath cannot be empty.");
-            }
+    let qsv_fileexists = luau.create_function(|_, filepath: String| {
+        if filepath.is_empty() {
+            return helper_err!("qsv_fileexists", "filepath cannot be empty.");
+        }
 
-            let path = Path::new(&filepath);
-            Ok(path.exists())
-        })?;
+        let path = Path::new(&filepath);
+        Ok(path.exists())
+    })?;
     luau.globals().set("qsv_fileexists", qsv_fileexists)?;
 
     // this is a helper function to load a CSV into a Luau table.
@@ -1767,9 +1777,9 @@ fn setup_helpers(
         let mut file = if newfile_flag {
             // create a new file. If the file already exists, overwrite it.
             std::fs::File::create(sanitized_filename.clone()).map_err(|e| {
-                mlua::Error::RuntimeError(
-                    format!("qsv_writefile() - Error creating a new file: {e}")
-                )
+                mlua::Error::RuntimeError(format!(
+                    "qsv_writefile() - Error creating a new file: {e}"
+                ))
             })?
         } else {
             // append to an existing file. If the file does not exist, create it.
@@ -1779,9 +1789,9 @@ fn setup_helpers(
                 .append(true)
                 .open(sanitized_filename.clone())
                 .map_err(|e| {
-                    mlua::Error::RuntimeError(
-                        format!("qsv_writefile() - Error opening existing file: {e}")
-                    )
+                    mlua::Error::RuntimeError(format!(
+                        "qsv_writefile() - Error opening existing file: {e}"
+                    ))
                 })?
         };
         if newfile_flag {
@@ -1789,9 +1799,9 @@ fn setup_helpers(
         } else {
             let data_as_bytes = data.as_bytes();
             file.write_all(data_as_bytes).map_err(|e| {
-                mlua::Error::RuntimeError(
-                    format!("qsv_writefile() - Error appending to existing file: {e}")
-                )
+                mlua::Error::RuntimeError(format!(
+                    "qsv_writefile() - Error appending to existing file: {e}"
+                ))
             })?;
             log::info!(
                 "qsv_writefile() - appending {} bytes to file: {sanitized_filename}",
@@ -2287,7 +2297,6 @@ fn setup_helpers(
                     let download_elapsed = download_start.elapsed().as_millis();
                     writeln!(cache_file, "# Download-duration-ms: {download_elapsed}")?;
                     cache_file.write_all(lookup_csv_contents.as_bytes())?;
-                    cache_file.flush()?;
                 }
 
                 lookup_table_uri = cache_file_path.to_string_lossy().to_string();
