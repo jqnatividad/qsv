@@ -2297,6 +2297,7 @@ fn setup_helpers(
                     let download_elapsed = download_start.elapsed().as_millis();
                     writeln!(cache_file, "# Download-duration-ms: {download_elapsed}")?;
                     cache_file.write_all(lookup_csv_contents.as_bytes())?;
+                    cache_file.flush()?;
                 }
 
                 lookup_table_uri = cache_file_path.to_string_lossy().to_string();
