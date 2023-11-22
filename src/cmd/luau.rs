@@ -1274,39 +1274,30 @@ fn map_computedvalue(
                 record.clear();
             }
             let mut columns_inserted = 0_u8;
-            for pair in table.clone().pairs::<mlua::Value, mlua::Value>() {
-                // we don't care about the key, just the value
-                let (_k, v) = pair?;
+            let mut ibuffer = itoa::Buffer::new();
+            let mut nbuffer = ryu::Buffer::new();
+            table.for_each::<String, Value>(|_k, v| {
                 match v {
-                    Value::Integer(intval) => {
-                        let mut buffer = itoa::Buffer::new();
-                        record.push_field(buffer.format(intval));
-                    },
-                    Value::String(strval) => {
-                        record.push_field(&strval.to_string_lossy());
-                    },
-                    Value::Number(number) => {
-                        let mut buffer = ryu::Buffer::new();
-                        record.push_field(buffer.format(number));
-                    },
-                    Value::Boolean(boolean) => {
-                        record.push_field(if boolean { "true" } else { "false" });
-                    },
-                    Value::Nil => {
-                        record.push_field("");
-                    },
-                    _ => {
-                        return fail_clierror!(
-                            "Unexpected value type returned by provided Luau expression. {v:?}"
-                        );
-                    },
+                    Value::Integer(intval) => 
+                        record.push_field(ibuffer.format(intval)),
+                    Value::String(strval) => 
+                        record.push_field(&strval.to_string_lossy()),
+                    Value::Number(number) => 
+                        record.push_field(nbuffer.format(number)),
+                    Value::Boolean(boolean) => 
+                        record.push_field(if boolean { "true" } else { "false" }),
+                    Value::Nil => 
+                        record.push_field(""),
+                    _ => unreachable!("unsupported value type"),
                 }
                 columns_inserted += 1;
                 if new_column_count > 0 && columns_inserted >= new_column_count {
                     // we ignore table values more than the number of new columns defined
-                    break;
+                    return Ok(());
                 }
-            }
+                Ok(())
+            })?;
+
             // on the other hand, if there are less table values than expected
             // we fill it up with empty fields
             while new_column_count > 0 && columns_inserted < new_column_count {
