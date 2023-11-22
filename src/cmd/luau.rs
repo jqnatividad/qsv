@@ -315,7 +315,7 @@ impl TryFrom<i8> for Stage {
 
 static LUAU_STAGE: AtomicI8 = AtomicI8::new(0);
 
-static TIMEOUT_SECS: AtomicU16 = AtomicU16::new(15);
+static TIMEOUT_SECS: AtomicU16 = AtomicU16::new(30);
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
@@ -2297,7 +2297,10 @@ fn setup_helpers(
                     let download_elapsed = download_start.elapsed().as_millis();
                     writeln!(cache_file, "# Download-duration-ms: {download_elapsed}")?;
                     cache_file.write_all(lookup_csv_contents.as_bytes())?;
+
+                    // explicitly flush and close the file
                     cache_file.flush()?;
+                    drop(cache_file);
                 }
 
                 lookup_table_uri = cache_file_path.to_string_lossy().to_string();
@@ -2305,8 +2308,7 @@ fn setup_helpers(
         }
 
         let lookup_table = luau.create_table()?;
-        #[allow(unused_assignments)]
-        let mut record = csv::StringRecord::new();
+        let mut record: csv::StringRecord;
 
         let conf = Config::new(&Some(lookup_table_uri.clone()))
             .delimiter(delimiter)
