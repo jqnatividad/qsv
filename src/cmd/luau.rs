@@ -1285,11 +1285,16 @@ fn map_computedvalue(
                         record.push_field(if boolean { "true" } else { "false" })
                     },
                     Value::Nil => record.push_field(""),
-                    _ => unreachable!("unsupported value type"),
+                    _ => {
+                        return Err(mlua::Error::RuntimeError(format!(
+                            "Unexpected value type returned by provided Luau expression: {v:?}"
+                        )))
+                    },
                 }
                 columns_inserted += 1;
                 if new_column_count > 0 && columns_inserted >= new_column_count {
-                    // we ignore table values more than the number of new columns defined
+                    // we ignore table values more than the number of
+                    // new columns defined, so we return early
                     return Ok(());
                 }
                 Ok(())
