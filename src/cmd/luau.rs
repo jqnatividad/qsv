@@ -1251,7 +1251,11 @@ fn map_computedvalue(
 ) -> Result<(), CliError> {
     match computed_value {
         Value::String(string) => {
-            record.push_field(&string.to_string_lossy());
+            if let Ok(utf8) = simdutf8::basic::from_utf8(string.as_bytes()) {
+                record.push_field(utf8);
+            } else {
+                record.push_field(&string.to_string_lossy());
+            }
         },
         Value::Number(number) => {
             let mut buffer = ryu::Buffer::new();
@@ -1282,7 +1286,7 @@ fn map_computedvalue(
                     Value::String(strval) => record.push_field(&strval.to_string_lossy()),
                     Value::Number(number) => record.push_field(nbuffer.format(number)),
                     Value::Boolean(boolean) => {
-                        record.push_field(if boolean { "true" } else { "false" })
+                        record.push_field(if boolean { "true" } else { "false" });
                     },
                     Value::Nil => record.push_field(""),
                     _ => {
