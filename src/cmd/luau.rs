@@ -627,6 +627,7 @@ fn sequential_mode(
     let mut remap_headers = csv::StringRecord::new();
     let mut new_column_count = 0_u8;
     let mut headers_count = headers.len();
+    let debug_enabled = log_enabled!(log::Level::Debug);
 
     if !rconfig.no_headers {
         if !args.cmd_filter {
@@ -659,8 +660,7 @@ fn sequential_mode(
         info!("Compiling and executing BEGIN script. _IDX: 0 _ROWCOUNT: 0");
         LUAU_STAGE.store(Stage::Begin as i8, Ordering::Relaxed);
 
-        let begin_bytecode = luau_compiler.compile(begin_script);
-        if let Err(e) = luau.load(&begin_bytecode).exec() {
+        if let Err(e) = luau.load(begin_script).exec() {
             return fail_clierror!("BEGIN error: Failed to execute \"{begin_script}\".\n{e}");
         }
         info!("BEGIN executed.");
@@ -698,7 +698,13 @@ fn sequential_mode(
     // check if _IDX was used in the MAIN script
     let idx_used = main_script.contains(QSV_V_IDX);
 
-    let main_bytecode = luau_compiler.compile(main_script);
+    // only precompile main script to bytecode if debug is disabled
+    let main_bytecode = if debug_enabled {
+        Vec::new()
+    } else {
+        luau_compiler.compile(main_script)
+    };
+
     let mut record = csv::StringRecord::new();
     let mut idx = 0_u64;
     let mut error_count = 0_usize;
@@ -716,6 +722,7 @@ fn sequential_mode(
     let no_headers = rconfig.no_headers;
     let cmd_map = args.cmd_map;
     let mut err_msg: String;
+    let mut computed_result;
 
     // main loop
     // without an index, we stream the CSV in sequential order
@@ -752,7 +759,15 @@ fn sequential_mode(
             }
         }
 
-        computed_value = match luau.load(&main_bytecode).eval() {
+        // if debug is enabled, we eval the script as string instead of precompiled bytecode
+        // so we can get more detailed error messages with line numbers
+        computed_result = if debug_enabled {
+            luau.load(main_script).eval()
+        } else {
+            luau.load(&main_bytecode).eval()
+        };
+
+        computed_value = match computed_result {
             Ok(computed) => computed,
             Err(e) => {
                 error_count += 1;
@@ -852,8 +867,7 @@ fn sequential_mode(
         }
 
         info!("Compiling and executing END script. _ROWCOUNT: {idx}");
-        let end_bytecode = luau_compiler.compile(end_script);
-        let end_value: Value = match luau.load(&end_bytecode).eval() {
+        let end_value: Value = match luau.load(end_script).eval() {
             Ok(computed) => computed,
             Err(e) => {
                 let err_msg = format!("<ERROR> END error: Cannot evaluate \"{end_script}\".\n{e}");
@@ -942,6 +956,7 @@ fn random_access_mode(
     let mut remap_headers = csv::StringRecord::new();
     let mut new_column_count = 0_u8;
     let mut headers_count = headers.len();
+    let debug_enabled = log_enabled!(log::Level::Debug);
 
     if !rconfig.no_headers {
         if !args.cmd_filter {
@@ -980,8 +995,7 @@ fn random_access_mode(
         );
         LUAU_STAGE.store(Stage::Begin as i8, Ordering::Relaxed);
 
-        let begin_bytecode = luau_compiler.compile(begin_script);
-        if let Err(e) = luau.load(&begin_bytecode).exec() {
+        if let Err(e) = luau.load(begin_script).exec() {
             return fail_clierror!("BEGIN error: Failed to execute \"{begin_script}\".\n{e}");
         }
         info!("BEGIN executed.");
@@ -1012,7 +1026,11 @@ fn random_access_mode(
     debug!("BEGIN current record: {curr_record}");
     idx_file.seek(curr_record)?;
 
-    let main_bytecode = luau_compiler.compile(main_script);
+    let main_bytecode = if debug_enabled {
+        Vec::new()
+    } else {
+        luau_compiler.compile(main_script)
+    };
     let mut record = csv::StringRecord::new();
     let mut error_count = 0_usize;
     let mut processed_count = 0_usize;
@@ -1058,6 +1076,7 @@ fn random_access_mode(
     let no_headers = rconfig.no_headers;
     let cmd_map = args.cmd_map;
     let mut err_msg: String;
+    let mut computed_result;
 
     // main loop - here we use an indexed file reader to implement random access mode,
     // seeking to the next record to read by looking at _INDEX special var
@@ -1092,7 +1111,13 @@ fn random_access_mode(
             }
         }
 
-        computed_value = match luau.load(&main_bytecode).eval() {
+        computed_result = if debug_enabled {
+            luau.load(main_script).eval()
+        } else {
+            luau.load(&main_bytecode).eval()
+        };
+
+        computed_value = match computed_result {
             Ok(computed) => computed,
             Err(e) => {
                 error_count += 1;
@@ -1191,8 +1216,7 @@ fn random_access_mode(
         info!("Compiling and executing END script. _ROWCOUNT: {row_count}");
         LUAU_STAGE.store(Stage::End as i8, Ordering::Relaxed);
 
-        let end_bytecode = luau_compiler.compile(end_script);
-        let end_value: Value = match luau.load(&end_bytecode).eval() {
+        let end_value: Value = match luau.load(end_script).eval() {
             Ok(computed) => computed,
             Err(e) => {
                 let err_msg = format!("<ERROR> END error: Cannot evaluate \"{end_script}\".\n{e}");
