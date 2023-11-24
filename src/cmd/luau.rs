@@ -2066,8 +2066,10 @@ fn setup_helpers(
     //                         If negative, the cached CSV will be deleted if it exists and the
     //                         CSV will be re-downloaded.
     //
-    //                returns: Luau table of header names excluding the first header,
-    //                         or Luau runtime error if the CSV could not be loaded
+    //                returns: Luau table of header names excluding the first header.
+    //                         Luau runtime error if the CSV could not be loaded, or
+    //                         if called from the MAIN or END scripts, or 
+    //                         if the lookup table is empty.
     //
     let qsv_register_lookup = luau.create_function(move |luau, (lookup_name, mut lookup_table_uri, cache_age_secs): (String, String, i64)| {
         const MSG_PREFIX: &str = "qsv_register_lookup() - ";
@@ -2344,15 +2346,14 @@ fn setup_helpers(
                 return helper_err!("qsv_register_lookup", "Cannot read headers of lookup table: {e}");
             }
         };
+        let mut key;
         for result in rdr.records() {
             record = result.unwrap_or_default();
-            let key = record.get(0).unwrap_or_default().trim();
+            key = record.get(0).unwrap_or_default().trim();
             let inside_table = luau.create_table()?;
-            for (i, header) in headers.iter().enumerate() {
-                if i > 0 {
-                    let val = record.get(i).unwrap_or_default().trim();
-                    inside_table.raw_set(header, val)?;
-                }
+            // we skip the first column, as its the lookup key
+            for (i, header) in headers.iter().skip(1).enumerate() {
+                inside_table.raw_set(header, record.get(i + 1).unwrap_or_default().trim())?;
             }
             lookup_table.raw_set(key, inside_table)?;
         }
@@ -2363,11 +2364,14 @@ fn setup_helpers(
         // now that we've successfully loaded the lookup table, we return the headers
         // as a table so the user can use them to access the values
         let headers_table = luau.create_table()?;
-        for (i, header) in headers.iter().enumerate() {
-            // we do not include the first column, which is the key
-            if i > 0 {
-                headers_table.raw_set(i, header)?;
-            }
+
+        // we skip the first column, which is the key
+        for (i, header) in headers.iter().skip(1).enumerate() {
+            headers_table.raw_set(i + 1, header)?;
+        }
+
+        if headers_table.raw_len() == 0 {
+            return helper_err!("qsv_register_lookup", "Lookup table is empty.");
         }
 
         info!("{call_parameters} successfully registered.");
