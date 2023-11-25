@@ -2015,6 +2015,36 @@ fn luau_map_exec() {
 }
 
 #[test]
+fn luau_map_exec_long_column_names() {
+    let wrk = Workdir::new("luau_map_exec_long_column_names");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["the letter column", "the number column"],
+            svec!["a", "13"],
+            svec!["b", "24"],
+            svec!["c", "72"],
+            svec!["d", "7"],
+        ],
+    );
+    let mut cmd = wrk.command("luau");
+    cmd.arg("map")
+        .arg("running_total")
+        .arg("tot = (tot or 0) + col['the number column']; return tot")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["the letter column", "the number column", "running_total"],
+        svec!["a", "13", "13"],
+        svec!["b", "24", "37"],
+        svec!["c", "72", "109"],
+        svec!["d", "7", "116"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn luau_map_no_globals() {
     let wrk = Workdir::new("luau");
     wrk.create(
@@ -2031,6 +2061,7 @@ fn luau_map_no_globals() {
     cmd.arg("map")
         .arg("z")
         .arg("-g")
+        .arg("--colindex")
         .arg("(x or col[1]) + 1")
         .arg("data.csv");
 
