@@ -10,6 +10,7 @@ The executed Luau has 3 ways to reference row columns (as strings):
   1. Directly by using column name (e.g. Amount), can be disabled with -g
   2. Indexing col variable by column name: col.Amount or col["Total Balance"]
   3. Indexing col variable by column 1-based index: col[1], col[2], etc.
+     This is only available with the --colindex and --no-headers options.
 
 Of course, if your input has no headers, then 3. will be the only available
 option.
@@ -171,9 +172,8 @@ Luau options:
                           only `col`. Useful when some column names mask standard
                           Luau globals and a bit more performance.
                           Note: access to Luau globals thru _G remains even with -g.
-  --no-colindex           Don't create col 1-based index for each column.
-                          Useful for squeezing out a bit more performance if you
-                          don't need to access columns by index.
+  --colindex              Create a 1-based column index. Useful when some column names
+                          mask standard Luau globals. Automatically enabled with--no-headers.
   -r, --remap             Only the listed new columns are written to the output CSV.
                           Only applies to "map" subcommand.
   -B, --begin <script>    Luau script/file to execute in the BEGINning, before
@@ -217,7 +217,7 @@ Common options:
     -h, --help             Display this message
     -o, --output <file>    Write output to <file> instead of stdout.
     -n, --no-headers       When set, the first row will not be interpreted
-                           as headers.
+                           as headers. Automatically enables --colindex option.
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
     -p, --progressbar      Show progress bars. Not valid for stdin.
@@ -261,7 +261,7 @@ struct Args {
     arg_main_script:  String,
     arg_input:        Option<String>,
     flag_no_globals:  bool,
-    flag_no_colindex: bool,
+    flag_colindex:    bool,
     flag_remap:       bool,
     flag_begin:       Option<String>,
     flag_end:         Option<String>,
@@ -721,9 +721,9 @@ fn sequential_mode(
     let col = luau.create_table_with_capacity(record.len(), 1)?;
 
     let flag_no_globals = args.flag_no_globals;
-    let flag_no_colindex = args.flag_no_colindex;
     let flag_remap = args.flag_remap;
     let no_headers = rconfig.no_headers;
+    let flag_colindex = args.flag_colindex || no_headers;
     let cmd_map = args.cmd_map;
     let mut err_msg: String;
     let mut computed_result;
@@ -744,7 +744,7 @@ fn sequential_mode(
 
         // Updating col
         let _ = col.clear();
-        if !flag_no_colindex {
+        if flag_colindex {
             for (i, v) in record.iter().enumerate() {
                 col.raw_set(i + 1, v)?;
             }
@@ -1075,9 +1075,9 @@ fn random_access_mode(
     let col = luau.create_table_with_capacity(record.len(), 1)?;
 
     let flag_no_globals = args.flag_no_globals;
-    let flag_no_colindex = args.flag_no_colindex;
     let flag_remap = args.flag_remap;
     let no_headers = rconfig.no_headers;
+    let flag_colindex = args.flag_colindex || no_headers;
     let cmd_map = args.cmd_map;
     let mut err_msg: String;
     let mut computed_result;
@@ -1096,7 +1096,7 @@ fn random_access_mode(
 
         // Updating col
         let _ = col.clear();
-        if !flag_no_colindex {
+        if flag_colindex {
             for (i, v) in record.iter().enumerate() {
                 col.raw_set(i + 1, v)?;
             }
