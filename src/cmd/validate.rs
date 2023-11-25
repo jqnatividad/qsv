@@ -182,25 +182,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut rdr = rconfig.reader()?;
 
-    // prep progress bar
-    #[cfg(any(feature = "feature_capable", feature = "lite"))]
-    let progress = ProgressBar::with_draw_target(None, ProgressDrawTarget::stderr_with_hz(5));
-
-    #[cfg(any(feature = "feature_capable", feature = "lite"))]
-    let show_progress =
-        (args.flag_progressbar || util::get_envvar_flag("QSV_PROGRESSBAR")) && !rconfig.is_stdin();
-
-    #[cfg(any(feature = "feature_capable", feature = "lite"))]
-    if show_progress {
-        // for full row count, prevent CSV reader from aborting on inconsistent column count
-        rconfig = rconfig.flexible(true);
-        let record_count = util::count_rows(&rconfig)?;
-        rconfig = rconfig.flexible(false);
-        util::prep_progress(&progress, record_count);
-    } else {
-        progress.set_draw_target(ProgressDrawTarget::hidden());
-    }
-
     // if no JSON Schema supplied, only let csv reader RFC4180-validate csv file
     if args.arg_json_schema.is_none() {
         // just read csv file and let csv reader report problems
@@ -278,15 +259,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         // now, let's validate the rest of the records
+        let mut record = csv::StringRecord::new();
+        let mut result = rdr.read_record(&mut record);
         let mut record_idx: u64 = 0;
-        for result in rdr.records() {
-            #[cfg(any(feature = "feature_capable", feature = "lite"))]
-            if show_progress {
-                progress.inc(1);
-            }
+        let flag_json = args.flag_json;
+        let flag_pretty_json = args.flag_pretty_json;
 
+        'rfc4180_check: loop {
             if let Err(e) = result {
-                if args.flag_json || args.flag_pretty_json {
+                if flag_json || flag_pretty_json {
                     // we're returning a JSON error, so we have more machine-friendly details
                     // using the JSON API error format
                     if let csv::ErrorKind::Utf8 { pos, err } = e.kind() {
@@ -303,7 +284,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             }]
                         });
 
-                        let json_error = if args.flag_pretty_json {
+                        let json_error = if flag_pretty_json {
                             serde_json::to_string_pretty(&validation_error).unwrap()
                         } else {
                             validation_error.to_string()
@@ -321,7 +302,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         }]
                     });
 
-                    let json_error = if args.flag_pretty_json {
+                    let json_error = if flag_pretty_json {
                         serde_json::to_string_pretty(&validation_error).unwrap()
                     } else {
                         validation_error.to_string()
@@ -357,20 +338,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         );
                     },
                 }
+            } else if result.is_ok_and(|more_data| !more_data) {
+                // we've read the CSV to the end, so break out of loop
+                break 'rfc4180_check;
+            } else {
+                result = rdr.read_record(&mut record);
             }
             record_idx += 1;
         }
 
-        #[cfg(any(feature = "feature_capable", feature = "lite"))]
-        if show_progress {
-            progress.set_message(format!(
-                " validated {} records.",
-                HumanCount(progress.length().unwrap())
-            ));
-            util::finish_progress(&progress);
-        }
-
-        let msg = if args.flag_json || args.flag_pretty_json {
+        let msg = if flag_json || flag_pretty_json {
             let rfc4180 = RFC4180Struct {
                 delimiter_char: rconfig.get_delimiter() as char,
                 header_row:     !rconfig.no_headers,
@@ -380,7 +357,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 fields:         field_vec,
             };
 
-            if args.flag_pretty_json {
+            if flag_pretty_json {
                 serde_json::to_string_pretty(&rfc4180).unwrap()
             } else {
                 serde_json::to_string(&rfc4180).unwrap()
@@ -394,6 +371,25 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         woutinfo!("{msg}");
 
         return Ok(());
+    }
+
+    // prep progress bar
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
+    let progress = ProgressBar::with_draw_target(None, ProgressDrawTarget::stderr_with_hz(5));
+
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
+    let show_progress =
+        (args.flag_progressbar || util::get_envvar_flag("QSV_PROGRESSBAR")) && !rconfig.is_stdin();
+
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
+    if show_progress {
+        // for full row count, prevent CSV reader from aborting on inconsistent column count
+        rconfig = rconfig.flexible(true);
+        let record_count = util::count_rows(&rconfig)?;
+        rconfig = rconfig.flexible(false);
+        util::prep_progress(&progress, record_count);
+    } else {
+        progress.set_draw_target(ProgressDrawTarget::hidden());
     }
 
     let headers = rdr.byte_headers()?.clone();
@@ -424,7 +420,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             },
         };
 
-    debug!("compiled schema: {:?}", &schema_compiled);
+    if log::log_enabled!(log::Level::Debug) {
+        // only log if debug is enabled
+        // as it can be quite large and expensive to print
+        debug!("schema json: {:?}", &schema_json);
+    }
 
     // how many rows read and processed as batches
     let mut row_number: u64 = 0;
@@ -815,6 +815,7 @@ fn to_json_instance(
                 }
             },
             _ => {
+                // should never happen as other JSON types are handled as string
                 unreachable!("we should never get an unknown json type");
             },
         }
