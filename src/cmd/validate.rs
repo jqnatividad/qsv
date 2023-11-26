@@ -192,19 +192,22 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         // first, let's validate the header row
         let mut header_msg = String::new();
-        let mut header_len: u64 = 0;
-        let mut field_vec: Vec<String> = Vec::with_capacity(20);
+        let mut header_len = 0_usize;
+        let mut field_vec: Vec<String> = Vec::new();
         if !args.flag_no_headers {
             let fields_result = rdr.headers();
             match fields_result {
                 Ok(fields) => {
-                    header_len = fields.len() as u64;
+                    header_len = fields.len();
+                    field_vec.reserve_exact(header_len);
                     for field in fields {
                         field_vec.push(field.to_string());
                     }
                     let field_list = field_vec.join(r#"", ""#);
-                    header_msg =
-                        format!("{} columns (\"{field_list}\") and ", HumanCount(header_len));
+                    header_msg = format!(
+                        "{} columns (\"{field_list}\") and ",
+                        HumanCount(header_len as u64)
+                    );
                 },
                 Err(e) => {
                     // we're returning a JSON error for the header,
@@ -268,7 +271,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // Combined with simdutf8::basic::from_utf8(), we utf8-validate the entire record in one go
         // as a slice of bytes, this approach is much faster than csv::StringRecord's
         // per-field validation.
-        let mut record = csv::ByteRecord::with_capacity(500, header_len as usize);
+        let mut record = csv::ByteRecord::with_capacity(500, header_len);
         let mut result;
         let mut record_idx: u64 = 0;
 
@@ -356,7 +359,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 header_row:     !rconfig.no_headers,
                 quote_char:     rconfig.quote as char,
                 num_records:    record_idx,
-                num_fields:     header_len,
+                num_fields:     header_len as u64,
                 fields:         field_vec,
             };
 
