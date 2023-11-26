@@ -309,11 +309,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     return fail_clierror!(
                         "Validation error: {e}.\nUse `qsv fixlengths` to fix record length issues."
                     );
-                } else {
-                    return fail_clierror!(
-                        "Validation error: {e}.\nLast valid record: {record_idx}"
-                    );
                 }
+                return fail_clierror!("Validation error: {e}.\nLast valid record: {record_idx}");
             }
 
             // use SIMD accelerated UTF-8 validation
@@ -336,13 +333,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         validation_error.to_string()
                     };
                     return fail_encoding_clierror!("{json_error}");
-                } else {
-                    return fail_encoding_clierror!(
-                        "non-utf8 sequence at record {record_idx}.\nUse `qsv input` to fix \
-                         formatting and to handle non-utf8 sequences.\nYou may also want to \
-                         transcode your data to UTF-8 first using `iconv` or `recode`."
-                    );
                 }
+                return fail_encoding_clierror!(
+                    "non-utf8 sequence at record {record_idx}.\nUse `qsv input` to fix formatting \
+                     and to handle non-utf8 sequences.\nYou may also want to transcode your data \
+                     to UTF-8 first using `iconv` or `recode`."
+                );
             }
 
             if result.is_ok_and(|more_data| !more_data) {
