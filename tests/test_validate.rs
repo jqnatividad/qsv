@@ -40,6 +40,22 @@ fn validate_good_csv_msg() {
 }
 
 #[test]
+fn validate_empty_csv_msg() {
+    let wrk = Workdir::new("validate_empty_csv_msg").flexible(true);
+    wrk.create(
+        "data.csv",
+        vec![svec!["title", "name", "real age (earth years)"]],
+    );
+    let mut cmd = wrk.command("validate");
+    cmd.arg("data.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected =
+        r#"Valid: 3 columns ("title", "name", "real age (earth years)") and 0 records detected."#;
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn validate_good_csv_pretty_json() {
     let wrk = Workdir::new("validate_good_csv_pretty_json").flexible(true);
     wrk.create(
@@ -107,6 +123,54 @@ fn validate_bad_csv() {
 
     let got: String = wrk.output_stderr(&mut cmd);
     let expected = r#"Validation error: CSV error: record 2 (line: 3, byte: 36): found record with 2 fields, but the previous record has 3 fields.
+Use `qsv fixlengths` to fix record length issues.
+"#;
+    assert_eq!(got, expected);
+
+    wrk.assert_err(&mut cmd);
+}
+
+#[test]
+fn validate_bad_csv_first_record() {
+    let wrk = Workdir::new("validate_bad_csv_first_record").flexible(true);
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["title", "name", "age"],
+            svec!["Professor", "Xaviers",],
+            svec!["Doctor", "Magneto", "90",],
+            svec!["First Class Student", "Iceman", "14"],
+        ],
+    );
+    let mut cmd = wrk.command("validate");
+    cmd.arg("data.csv");
+
+    let got: String = wrk.output_stderr(&mut cmd);
+    let expected = r#"Validation error: CSV error: record 1 (line: 2, byte: 15): found record with 2 fields, but the previous record has 3 fields.
+Use `qsv fixlengths` to fix record length issues.
+"#;
+    assert_eq!(got, expected);
+
+    wrk.assert_err(&mut cmd);
+}
+
+#[test]
+fn validate_bad_csv_last_record() {
+    let wrk = Workdir::new("validate_bad_csv_last_record").flexible(true);
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["title", "name", "age"],
+            svec!["Professor", "Xaviers", "60"],
+            svec!["Doctor", "Magneto", "90"],
+            svec!["First Class Student", "Iceman", "14", "extra field"],
+        ],
+    );
+    let mut cmd = wrk.command("validate");
+    cmd.arg("data.csv");
+
+    let got: String = wrk.output_stderr(&mut cmd);
+    let expected = r#"Validation error: CSV error: record 3 (line: 4, byte: 54): found record with 4 fields, but the previous record has 3 fields.
 Use `qsv fixlengths` to fix record length issues.
 "#;
     assert_eq!(got, expected);
