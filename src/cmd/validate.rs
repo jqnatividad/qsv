@@ -258,40 +258,27 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         }
 
-        // now, let's validate the rest of the records
-        let mut record = csv::StringRecord::new();
-        let mut result = rdr.read_record(&mut record);
+        // now, let's validate the rest of the records the fastest way possible
+        // We do that by using csv::ByteRecord, which does not validate utf8
+        // making for higher througput and lower memory usage compared to csv::StringRecord
+        // which validates each field SEPARATELY as a utf8 string.
+        // Combined with simdutf8::basic::from_utf8() to validate the entire record as utf8 in one
+        // go as a slice of bytes, this approach is much faster than csv::StringRecord's
+        // per-field validation.
+        let mut record = csv::ByteRecord::new();
+        let mut result;
         let mut record_idx: u64 = 0;
         let flag_json = args.flag_json;
         let flag_pretty_json = args.flag_pretty_json;
 
         'rfc4180_check: loop {
+            result = rdr.read_byte_record(&mut record);
             if let Err(e) = result {
+                // read_byte_record() does not validate utf8, so we know this is not a utf8 error
                 if flag_json || flag_pretty_json {
                     // we're returning a JSON error, so we have more machine-friendly details
                     // using the JSON API error format
-                    if let csv::ErrorKind::Utf8 { pos, err } = e.kind() {
-                        // it's a UTF-8 error, so we report utf8 error metadata
-                        let validation_error = json!({
-                            "errors": [{
-                                "title" : "UTF-8 validation error",
-                                "detail" : format!("{e}"),
-                                "meta": {
-                                    "last_valid_record": format!("{record_idx}"),
-                                    "record_position": format!("{pos:?}"),
-                                    "record_error": format!("{err}"),
-                                }
-                            }]
-                        });
 
-                        let json_error = if flag_pretty_json {
-                            serde_json::to_string_pretty(&validation_error).unwrap()
-                        } else {
-                            validation_error.to_string()
-                        };
-                        return fail_encoding_clierror!("{json_error}");
-                    }
-                    // it's not a UTF-8 error, so we report generic validation error
                     let validation_error = json!({
                         "errors": [{
                             "title" : "Validation error",
@@ -313,40 +300,59 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
                 // we're not returning a JSON error, so we can use
                 // a user-friendly error message with suggestions
-                match e.kind() {
-                    csv::ErrorKind::UnequalLengths {
-                        expected_len: _,
-                        len: _,
-                        pos: _,
-                    } => {
-                        return fail_clierror!(
-                            "Validation error: {e}.\nUse `qsv fixlengths` to fix record length \
-                             issues."
-                        );
-                    },
-                    csv::ErrorKind::Utf8 { pos, err } => {
-                        return fail_encoding_clierror!(
-                            "non-utf8 sequence at record {record_idx} position \
-                             {pos:?}.\n{err}\nUse `qsv input` to fix formatting and to handle \
-                             non-utf8 sequences.\nYou may also want to transcode your data to \
-                             UTF-8 first using `iconv` or `recode`."
-                        );
-                    },
-                    _ => {
-                        return fail_clierror!(
-                            "Validation error: {e}.\nLast valid record: {record_idx}"
-                        );
-                    },
+                if let csv::ErrorKind::UnequalLengths {
+                    expected_len: _,
+                    len: _,
+                    pos: _,
+                } = e.kind()
+                {
+                    return fail_clierror!(
+                        "Validation error: {e}.\nUse `qsv fixlengths` to fix record length issues."
+                    );
+                } else {
+                    return fail_clierror!(
+                        "Validation error: {e}.\nLast valid record: {record_idx}"
+                    );
                 }
-            } else if result.is_ok_and(|more_data| !more_data) {
+            }
+
+            // use SIMD accelerated UTF-8 validation
+            if simdutf8::basic::from_utf8(&record.as_slice()).is_err() {
+                // there's a UTF-8 error, so we report utf8 error metadata
+                if flag_json || flag_pretty_json {
+                    let validation_error = json!({
+                        "errors": [{
+                            "title" : "UTF-8 validation error",
+                            "detail" : "Cannot parse CSV record as UTF-8",
+                            "meta": {
+                                "last_valid_record": format!("{record_idx}"),
+                            }
+                        }]
+                    });
+
+                    let json_error = if flag_pretty_json {
+                        serde_json::to_string_pretty(&validation_error).unwrap()
+                    } else {
+                        validation_error.to_string()
+                    };
+                    return fail_encoding_clierror!("{json_error}");
+                } else {
+                    return fail_encoding_clierror!(
+                        "non-utf8 sequence at record {record_idx}.\nUse `qsv input` to fix \
+                         formatting and to handle non-utf8 sequences.\nYou may also want to \
+                         transcode your data to UTF-8 first using `iconv` or `recode`."
+                    );
+                }
+            }
+
+            if result.is_ok_and(|more_data| !more_data) {
                 // we've read the CSV to the end, so break out of loop
                 break 'rfc4180_check;
-            } else {
-                result = rdr.read_record(&mut record);
             }
             record_idx += 1;
         }
 
+        // if we're here, we know the CSV is valid
         let msg = if flag_json || flag_pretty_json {
             let rfc4180 = RFC4180Struct {
                 delimiter_char: rconfig.get_delimiter() as char,
