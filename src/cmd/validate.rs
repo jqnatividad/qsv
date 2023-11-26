@@ -317,7 +317,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
 
             // use SIMD accelerated UTF-8 validation
-            if simdutf8::basic::from_utf8(&record.as_slice()).is_err() {
+            if simdutf8::basic::from_utf8(record.as_slice()).is_err() {
                 // there's a UTF-8 error, so we report utf8 error metadata
                 if flag_json || flag_pretty_json {
                     let validation_error = json!({
