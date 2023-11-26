@@ -187,6 +187,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // just read csv file and let csv reader report problems
         // since we're using csv::StringRecord, this will also detect non-utf8 sequences
 
+        let flag_json = args.flag_json || args.flag_pretty_json;
+        let flag_pretty_json = args.flag_pretty_json;
+
         // first, let's validate the header row
         let mut header_msg = String::new();
         let mut header_len: u64 = 0;
@@ -206,7 +209,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 Err(e) => {
                     // we're returning a JSON error for the header,
                     // so we have more machine-friendly details
-                    if args.flag_json || args.flag_pretty_json {
+                    if flag_json {
                         // there's a UTF-8 error, so we report utf8 error metadata
                         if let csv::ErrorKind::Utf8 { pos, err } = e.kind() {
                             let header_error = json!({
@@ -219,7 +222,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                                     }
                                 }]
                             });
-                            let json_error = if args.flag_pretty_json {
+                            let json_error = if flag_pretty_json {
                                 serde_json::to_string_pretty(&header_error).unwrap()
                             } else {
                                 header_error.to_string()
@@ -235,7 +238,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                                 "detail" : format!("{e}"),
                             }]
                         });
-                        let json_error = if args.flag_pretty_json {
+                        let json_error = if flag_pretty_json {
                             serde_json::to_string_pretty(&header_error).unwrap()
                         } else {
                             header_error.to_string()
@@ -258,24 +261,22 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         }
 
-        // now, let's validate the rest of the records the fastest way possible
-        // We do that by using csv::ByteRecord, which does not validate utf8
+        // Now, let's validate the rest of the records the fastest way possible.
+        // We do this by using csv::ByteRecord, which does not validate utf8
         // making for higher througput and lower memory usage compared to csv::StringRecord
         // which validates each field SEPARATELY as a utf8 string.
-        // Combined with simdutf8::basic::from_utf8() to validate the entire record as utf8 in one
-        // go as a slice of bytes, this approach is much faster than csv::StringRecord's
+        // Combined with simdutf8::basic::from_utf8(), we utf8-validate the entire record in one go
+        // as a slice of bytes, this approach is much faster than csv::StringRecord's
         // per-field validation.
-        let mut record = csv::ByteRecord::new();
+        let mut record = csv::ByteRecord::with_capacity(500, header_len as usize);
         let mut result;
         let mut record_idx: u64 = 0;
-        let flag_json = args.flag_json;
-        let flag_pretty_json = args.flag_pretty_json;
 
         'rfc4180_check: loop {
             result = rdr.read_byte_record(&mut record);
             if let Err(e) = result {
                 // read_byte_record() does not validate utf8, so we know this is not a utf8 error
-                if flag_json || flag_pretty_json {
+                if flag_json {
                     // we're returning a JSON error, so we have more machine-friendly details
                     // using the JSON API error format
 
@@ -316,7 +317,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             // use SIMD accelerated UTF-8 validation
             if simdutf8::basic::from_utf8(record.as_slice()).is_err() {
                 // there's a UTF-8 error, so we report utf8 error metadata
-                if flag_json || flag_pretty_json {
+                if flag_json {
                     let validation_error = json!({
                         "errors": [{
                             "title" : "UTF-8 validation error",
