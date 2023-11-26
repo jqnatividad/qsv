@@ -726,8 +726,9 @@ async fn sniff_main(mut args: Args) -> CliResult<()> {
     }
 
     let mut sample_size = args.flag_sample;
+    let flag_json = args.flag_json || args.flag_pretty_json;
     if sample_size < 0.0 {
-        if args.flag_json || args.flag_pretty_json {
+        if flag_json {
             let json_result = json!({
                 "errors": [{
                     "title": "sniff error",
@@ -772,7 +773,7 @@ async fn sniff_main(mut args: Args) -> CliResult<()> {
         };
         let last_modified = sfile_info.last_modified;
 
-        if args.flag_json || args.flag_pretty_json {
+        if flag_json {
             if args.flag_no_infer {
                 let json_result = json!({
                     "title": "sniff mime type",
@@ -829,7 +830,7 @@ async fn sniff_main(mut args: Args) -> CliResult<()> {
             Err(e) => {
                 cleanup_tempfile(sfile_info.tempfile_flag, tempfile_to_delete)?;
 
-                if args.flag_json || args.flag_pretty_json {
+                if flag_json {
                     let json_result = json!({
                         "errors": [{
                             "title": "count rows error",
@@ -852,7 +853,7 @@ async fn sniff_main(mut args: Args) -> CliResult<()> {
     if n_rows == 0 {
         cleanup_tempfile(sfile_info.tempfile_flag, tempfile_to_delete)?;
 
-        if args.flag_json || args.flag_pretty_json {
+        if flag_json {
             let json_result = json!({
                 "errors": [{
                     "title": "sniff error",
@@ -1003,7 +1004,7 @@ async fn sniff_main(mut args: Args) -> CliResult<()> {
     cleanup_tempfile(sfile_info.tempfile_flag, tempfile_to_delete)?;
 
     // safety: we just created all these json values above, so they are safe to unwrap
-    if args.flag_json || args.flag_pretty_json {
+    if flag_json {
         if sniff_error.is_none() {
             if args.flag_pretty_json {
                 println!(
