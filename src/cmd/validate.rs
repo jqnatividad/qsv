@@ -199,7 +199,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             match fields_result {
                 Ok(fields) => {
                     header_len = fields.len();
-                    field_vec.reserve_exact(header_len);
+                    field_vec.reserve(header_len);
                     for field in fields {
                         field_vec.push(field.to_string());
                     }
@@ -302,8 +302,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     return fail!(json_error);
                 }
 
-                // we're not returning a JSON error, so we can use
-                // a user-friendly error message with suggestions
+                // we're not returning a JSON error, so we can use a
+                // user-friendly error message with a fixlengths suggestion
                 if let csv::ErrorKind::UnequalLengths {
                     expected_len: _,
                     len: _,
@@ -317,7 +317,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 return fail_clierror!("Validation error: {e}.\nLast valid record: {record_idx}");
             }
 
-            // use SIMD accelerated UTF-8 validation
+            // use SIMD accelerated UTF-8 validation, validate the entire record in one go
             if simdutf8::basic::from_utf8(record.as_slice()).is_err() {
                 // there's a UTF-8 error, so we report utf8 error metadata
                 if flag_json {
@@ -338,6 +338,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     };
                     return fail_encoding_clierror!("{json_error}");
                 }
+                // we're not returning a JSON error, so we can use a
+                // user-friendly error message with utf8 transcoding suggestions
                 return fail_encoding_clierror!(
                     "non-utf8 sequence at record {record_idx}.\nUse `qsv input` to fix formatting \
                      and to handle non-utf8 sequences.\nYou may also want to transcode your data \
@@ -353,7 +355,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         // if we're here, we know the CSV is valid
-        let msg = if flag_json || flag_pretty_json {
+        let msg = if flag_json {
             let rfc4180 = RFC4180Struct {
                 delimiter_char: rconfig.get_delimiter() as char,
                 header_row:     !rconfig.no_headers,
@@ -376,6 +378,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         };
         woutinfo!("{msg}");
 
+        // we're done when validating without a schema
         return Ok(());
     }
 
@@ -428,7 +431,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     if log::log_enabled!(log::Level::Debug) {
         // only log if debug is enabled
-        // as it can be quite large and expensive to print
+        // as it can be quite large and expensive to deserialize the schema
         debug!("schema json: {:?}", &schema_json);
     }
 
