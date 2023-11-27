@@ -717,7 +717,8 @@ fn to_json_instance(
     let mut json_type: u8;
 
     // iterate over each CSV field and convert to JSON type
-    for (i, header) in headers.iter().enumerate() {
+    let mut record_field_iter = record.iter();
+    for header in headers {
         // convert csv header to string. It's the key in the JSON object
         key_string = if let Ok(s) = from_utf8(header) {
             s.to_owned()
@@ -726,24 +727,22 @@ fn to_json_instance(
             return fail_encoding_clierror!("CSV header is not valid UTF-8: {s}");
         };
 
-        // convert csv value to string; no trimming reqd as it's done on the record level beforehand
-        let Some(value) = record.get(i) else {
-            return fail_clierror!(
-                "CSV record is missing value for header '{key_string}' at index {i}"
-            );
+        let Some(value) = record_field_iter.next() else {
+            return fail_clierror!("CSV record is missing value for header '{key_string}'");
         };
+
+        if value.is_empty() {
+            // if value is empty, then just put an empty JSON String
+            json_object_map.insert(key_string, Value::Null);
+            continue;
+        }
+
         value_string = if let Ok(s) = from_utf8(value) {
             s.to_owned()
         } else {
             let s = String::from_utf8_lossy(value);
             return fail_encoding_clierror!("CSV value is not valid UTF-8: {s}");
         };
-
-        // if value_string is empty, then just put an empty JSON String
-        if value_string.is_empty() {
-            json_object_map.insert(key_string, Value::Null);
-            continue;
-        }
 
         // get json type from schema; defaults to STRING if not specified
         field_def = schema_properties.get(&key_string).unwrap_or(&Value::Null);
