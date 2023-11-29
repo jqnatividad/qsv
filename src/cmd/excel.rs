@@ -447,7 +447,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         args.flag_sheet
     } else {
         // otherwise, if --sheet is a number, its a zero-based index, fetch it
-        if let Ok(sheet_index) = args.flag_sheet.parse::<i32>() {
+        if let Ok(sheet_index) = atoi_simd::parse::<i32>(args.flag_sheet.as_bytes()) {
             if sheet_index >= 0 {
                 if let Some(sheet_name) = sheet_names.get(sheet_index as usize) {
                     sheet_name.to_string()

@@ -292,9 +292,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
             if strategy == AsofStrategy::Nearest {
                 if let Some(ref tolerance) = args.flag_tolerance {
-                    // If the tolerance is an integer, it is tolerance number of rows.
+                    // If the tolerance is a positive integer, it is tolerance number of rows.
                     // Otherwise, it is a tolerance date language spec.
-                    if let Ok(numeric_tolerance) = tolerance.parse::<i64>() {
+                    if let Ok(numeric_tolerance) = atoi_simd::parse_pos(tolerance.as_bytes()) {
                         asof_options.tolerance = Some(AnyValue::Int64(numeric_tolerance));
                     } else {
                         asof_options.tolerance_str = Some(tolerance.into());
