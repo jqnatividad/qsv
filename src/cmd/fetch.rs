@@ -1199,7 +1199,12 @@ impl From<jql_runner::errors::JqlRunnerError> for CliError {
     }
 }
 
-#[inline]
+#[cached(
+    size = 2_000_000,
+    key = "String",
+    convert = r#"{ format!("{}-{}", json, query) }"#,
+    result = true
+)]
 pub fn process_jql(json: &str, query: &str) -> CliResult<String> {
     let mut deserializer = serde_json::Deserializer::from_str(json);
 
