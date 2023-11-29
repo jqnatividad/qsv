@@ -294,9 +294,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 if let Some(ref tolerance) = args.flag_tolerance {
                     // If the tolerance is a positive integer, it is tolerance number of rows.
                     // Otherwise, it is a tolerance date language spec.
-                    if let Ok(numeric_tolerance) = atoi_simd::parse_pos::<i64>(tolerance.as_bytes())
+                    if let Ok(numeric_tolerance) = atoi_simd::parse_pos::<u64>(tolerance.as_bytes())
                     {
-                        asof_options.tolerance = Some(AnyValue::Int64(numeric_tolerance));
+                        asof_options.tolerance = Some(AnyValue::UInt64(numeric_tolerance));
                     } else {
                         asof_options.tolerance_str = Some(tolerance.into());
                     }
