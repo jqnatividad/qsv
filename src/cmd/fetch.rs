@@ -1084,14 +1084,14 @@ fn get_response(
                 || {
                     if let Some(ratelimit_remaining_sec) = ratelimit_remaining_sec {
                         let remaining_sec_str = ratelimit_remaining_sec.to_str().unwrap();
-                        remaining_sec_str.parse::<u64>().unwrap_or(1)
+                        atoi_simd::parse_pos::<u64>(remaining_sec_str.as_bytes()).unwrap_or(1)
                     } else {
                         9999_u64
                     }
                 },
                 |ratelimit_remaining| {
                     let remaining_str = ratelimit_remaining.to_str().unwrap();
-                    remaining_str.parse::<u64>().unwrap_or(1)
+                    atoi_simd::parse_pos::<u64>(remaining_str.as_bytes()).unwrap_or(1)
                 },
             );
 
@@ -1101,7 +1101,7 @@ fn get_response(
                 || {
                     if let Some(ratelimit_reset_sec) = ratelimit_reset_sec {
                         let reset_sec_str = ratelimit_reset_sec.to_str().unwrap();
-                        reset_sec_str.parse::<u64>().unwrap_or(1)
+                        atoi_simd::parse_pos::<u64>(reset_sec_str.as_bytes()).unwrap_or(1)
                     } else {
                         // sleep for at least 1 second if we get an API error,
                         // even if there is no ratelimit_reset header,
@@ -1111,7 +1111,7 @@ fn get_response(
                 },
                 |ratelimit_reset| {
                     let reset_str = ratelimit_reset.to_str().unwrap();
-                    reset_str.parse::<u64>().unwrap_or(1)
+                    atoi_simd::parse_pos::<u64>(reset_str.as_bytes()).unwrap_or(1)
                 },
             );
 
@@ -1124,7 +1124,8 @@ fn get_response(
                 // wait before retrying, which is a valid value
                 // however, we don't want to do date-parsing here, so we just
                 // wait timeout_secs seconds before retrying
-                reset_secs = retry_str.parse::<u64>().unwrap_or(timeout_secs);
+                reset_secs =
+                    atoi_simd::parse_pos::<u64>(retry_str.as_bytes()).unwrap_or(timeout_secs);
             }
 
             // if reset_secs > timeout, then just time out and skip the retries
