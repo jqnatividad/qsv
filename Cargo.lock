@@ -835,6 +835,7 @@ version = "0.46.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c7c8c50262271cdf5abc979a5f76515c234e764fa025d1ba4862c0f0bcda0e95"
 dependencies = [
+ "ahash 0.8.6",
  "cached_proc_macro",
  "cached_proc_macro_types",
  "hashbrown 0.14.3",
