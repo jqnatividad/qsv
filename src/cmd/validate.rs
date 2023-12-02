@@ -153,6 +153,14 @@ struct Args {
     flag_timeout:     u16,
 }
 
+enum JSONtypes {
+    String,
+    Number,
+    Integer,
+    Boolean,
+    Unsupported,
+}
+
 #[derive(Serialize, Deserialize)]
 struct RFC4180Struct {
     delimiter_char: char,
@@ -462,12 +470,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // each batch is processed via Rayon parallel iterator.
     // loop exits when batch is empty.
     'batch_loop: loop {
+        let mut buffer = itoa::Buffer::new();
         for _ in 0..batch_size {
             match rdr.read_byte_record(&mut record) {
                 Ok(has_data) => {
                     if has_data {
                         row_number += 1;
-                        let mut buffer = itoa::Buffer::new();
                         record.push_field(buffer.format(row_number).as_bytes());
 
                         // non-allocating trimming in place is much faster on the record level
@@ -652,7 +660,7 @@ fn write_error_report(input_path: &str, validation_error_messages: Vec<String>) 
 
 /// if given record is valid, return None, otherwise, error file entry string
 fn do_json_validation(
-    header_types: &[(String, u8)],
+    header_types: &[(String, JSONtypes)],
     header_len: usize,
     record: &ByteRecord,
     schema_compiled: &JSONSchema,
@@ -686,7 +694,7 @@ fn do_json_validation(
 /// convert CSV Record into JSON instance by referencing JSON types
 #[inline]
 fn to_json_instance(
-    header_types: &[(String, u8)],
+    header_types: &[(String, JSONtypes)],
     header_len: usize,
     record: &ByteRecord,
 ) -> CliResult<Value> {
@@ -704,10 +712,10 @@ fn to_json_instance(
         };
 
         match *json_type {
-            b's' => {
+            JSONtypes::String => {
                 json_object_map.insert(key.clone(), Value::String(value_str.to_owned()));
             },
-            b'n' => {
+            JSONtypes::Number => {
                 if let Ok(float) = value_str.parse::<f64>() {
                     json_object_map
                         .insert(key.clone(), Value::Number(Number::from_f64(float).unwrap()));
@@ -717,7 +725,7 @@ fn to_json_instance(
                     );
                 }
             },
-            b'i' => {
+            JSONtypes::Integer => {
                 if let Ok(int) = atoi_simd::parse::<i64>(value_str.as_bytes()) {
                     json_object_map.insert(key.clone(), Value::Number(Number::from(int)));
                 } else {
@@ -727,7 +735,7 @@ fn to_json_instance(
                     );
                 }
             },
-            b'b' => {
+            JSONtypes::Boolean => {
                 if let Ok(boolean) = value_str.parse::<bool>() {
                     json_object_map.insert(key.clone(), Value::Bool(boolean));
                 } else {
@@ -737,7 +745,7 @@ fn to_json_instance(
                     );
                 }
             },
-            _ => {
+            JSONtypes::Unsupported => {
                 unreachable!("we should never get an unknown json type");
             },
         }
@@ -747,9 +755,9 @@ fn to_json_instance(
 }
 
 /// get JSON types for each column in CSV file
-/// returns a Vector of tuples of column/header name (String) & JSON type (u8)
+/// returns a Vector of tuples of column/header name (String) & JSON type (JSONtypes enum)
 #[inline]
-fn get_json_types(headers: &ByteRecord, schema: &Value) -> CliResult<Vec<(String, u8)>> {
+fn get_json_types(headers: &ByteRecord, schema: &Value) -> CliResult<Vec<(String, JSONtypes)>> {
     // make sure schema has expected structure
     let Some(schema_properties) = schema.get("properties") else {
         return fail_clierror!("JSON Schema missing 'properties' object");
@@ -761,8 +769,8 @@ fn get_json_types(headers: &ByteRecord, schema: &Value) -> CliResult<Vec<(String
     let mut key_string: String;
     let mut field_def: &Value;
     let mut field_type_def: &Value;
-    let mut json_type: u8;
-    let mut header_types: Vec<(String, u8)> = Vec::with_capacity(headers.len());
+    let mut json_type: JSONtypes;
+    let mut header_types: Vec<(String, JSONtypes)> = Vec::with_capacity(headers.len());
 
     // iterate over each CSV field and convert to JSON type
     for header in headers {
@@ -780,22 +788,34 @@ fn get_json_types(headers: &ByteRecord, schema: &Value) -> CliResult<Vec<(String
         field_type_def = field_def.get("type").unwrap_or(&Value::Null);
 
         json_type = match field_type_def {
-            Value::String(s) => s.as_bytes()[0],
+            Value::String(s) => match s.as_str() {
+                "string" => JSONtypes::String,
+                "number" => JSONtypes::Number,
+                "integer" => JSONtypes::Integer,
+                "boolean" => JSONtypes::Boolean,
+                _ => JSONtypes::Unsupported,
+            },
             Value::Array(vec) => {
-                let mut return_val = b's';
+                let mut return_val = JSONtypes::String;
                 for val in vec {
                     if *val == *null_type {
                         continue;
                     }
                     return_val = if let Some(s) = val.as_str() {
-                        s.as_bytes()[0]
+                        match s {
+                            "string" => JSONtypes::String,
+                            "number" => JSONtypes::Number,
+                            "integer" => JSONtypes::Integer,
+                            "boolean" => JSONtypes::Boolean,
+                            _ => JSONtypes::Unsupported,
+                        }
                     } else {
-                        b's'
+                        JSONtypes::String
                     };
                 }
                 return_val
             },
-            _ => b's',
+            _ => JSONtypes::String,
         };
 
         header_types.push((key_string, json_type));
