@@ -721,7 +721,7 @@ fn to_json_instance(
                         .insert(key.clone(), Value::Number(Number::from_f64(float).unwrap()));
                 } else {
                     return fail_clierror!(
-                        "Can't cast into Float. key: {key}, value: {value_str}, json type: number"
+                        "Can't cast into Number. key: {key}, value: {value_str}"
                     );
                 }
             },
@@ -730,8 +730,7 @@ fn to_json_instance(
                     json_object_map.insert(key.clone(), Value::Number(Number::from(int)));
                 } else {
                     return fail_clierror!(
-                        "Can't cast into Integer. key: {key}, value: {value_str}, json type: \
-                         integer"
+                        "Can't cast into Integer. key: {key}, value: {value_str}"
                     );
                 }
             },
@@ -740,13 +739,12 @@ fn to_json_instance(
                     json_object_map.insert(key.clone(), Value::Bool(boolean));
                 } else {
                     return fail_clierror!(
-                        "Can't cast into Boolean. key: {key}, value: {value_str}, json type: \
-                         boolean"
+                        "Can't cast into Boolean. key: {key}, value: {value_str}"
                     );
                 }
             },
             JSONtypes::Unsupported => {
-                unreachable!("we should never get an unknown json type");
+                unreachable!("we should never get an unsupported JSON type");
             },
         }
     }
@@ -929,10 +927,7 @@ mod tests_for_csv_to_json_conversion {
         );
         assert!(&result.is_err());
         let error = result.err().unwrap().to_string();
-        assert_eq!(
-            "Can't cast into Integer. key: C, value: 3.0e8, json type: integer",
-            error
-        );
+        assert_eq!("Can't cast into Integer. key: C, value: 3.0e8", error);
     }
 }
 
