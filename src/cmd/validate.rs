@@ -435,6 +435,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         debug!("schema json: {:?}", &schema_json);
     }
 
+    // set this once, as this is used repeatedly in a hot loop
+    NULL_TYPE.set(Value::String("null".to_string())).unwrap();
+
+    // get JSON types for each column in CSV file
+    let header_types = get_json_types(&headers, headers_len, &schema_json)?;
+
     // how many rows read and processed as batches
     let mut row_number: u64 = 0;
     // how many invalid rows found
@@ -451,9 +457,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // set RAYON_NUM_THREADS
     util::njobs(args.flag_jobs);
-
-    // set this once, as this is used repeatedly in a hot loop
-    NULL_TYPE.set(Value::String("null".to_string())).unwrap();
 
     // main loop to read CSV and construct batches for parallel processing.
     // each batch is processed via Rayon parallel iterator.
@@ -491,15 +494,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // validation_results vector should have same row count and in same order as input CSV
         batch
             .par_iter()
-            .map(|record| {
-                do_json_validation(
-                    &headers,
-                    headers_len,
-                    record,
-                    &schema_json,
-                    &schema_compiled,
-                )
-            })
+            .map(|record| do_json_validation(&header_types, headers_len, record, &schema_compiled))
             .collect_into_vec(&mut validation_results);
 
         // write to validation error report, but keep Vec<bool> to gen valid/invalid files later
@@ -657,18 +652,16 @@ fn write_error_report(input_path: &str, validation_error_messages: Vec<String>) 
 
 /// if given record is valid, return None, otherwise, error file entry string
 fn do_json_validation(
-    headers: &ByteRecord,
+    header_types: &Vec<(String, u8)>,
     headers_len: usize,
     record: &ByteRecord,
-    schema_json: &Value,
     schema_compiled: &JSONSchema,
 ) -> Option<String> {
     // row number was added as last column. We use can do unwrap safely since we know its there
     let row_number_string = from_utf8(record.get(headers_len).unwrap()).unwrap();
 
-    // debug!("instance[{row_number}]: {instance:?}");
     validate_json_instance(
-        &(match to_json_instance(headers, headers_len, record, schema_json) {
+        &(match to_json_instance(header_types, headers_len, record) {
             Ok(obj) => obj,
             Err(e) => {
                 return Some(format!("{row_number_string}\t<RECORD>\t{e}"));
@@ -693,91 +686,30 @@ fn do_json_validation(
 /// convert CSV Record into JSON instance by referencing Type from Schema
 #[inline]
 fn to_json_instance(
-    headers: &ByteRecord,
+    header_types: &Vec<(String, u8)>,
     headers_len: usize,
     record: &ByteRecord,
-    schema: &Value,
 ) -> CliResult<Value> {
-    // make sure schema has expected structure
-    let Some(schema_properties) = schema.get("properties") else {
-        return fail_clierror!("JSON Schema missing 'properties' object");
-    };
-
     // map holds individual CSV fields converted as serde_json::Value
     // we use with_capacity to minimize allocs
     let mut json_object_map: Map<String, Value> = Map::with_capacity(headers_len);
 
-    // safety: we set NULL_TYPE in main() and it's never changed
-    let null_type = NULL_TYPE.get().unwrap();
-
-    let mut key_string: String;
-    let mut value_string: String;
-    let mut field_def: &Value;
-    let mut field_type_def: &Value;
-    let mut json_type: u8;
-
-    // iterate over each CSV field and convert to JSON type
-    let mut record_field_iter = record.iter();
-    for header in headers {
-        // convert csv header to string. It's the key in the JSON object
-        key_string = if let Ok(s) = from_utf8(header) {
-            s.to_owned()
-        } else {
-            let s = String::from_utf8_lossy(header);
-            return fail_encoding_clierror!("CSV header is not valid UTF-8: {s}");
-        };
-
-        let Some(value) = record_field_iter.next() else {
-            return fail_clierror!("CSV record is missing value for header '{key_string}'");
-        };
-
+    assert!(header_types.len() == headers_len);
+    for (i, value) in record.iter().take(headers_len).enumerate() {
+        let key_string = header_types[i].0.clone();
         if value.is_empty() {
             // if value is empty, then just put an empty JSON String
             json_object_map.insert(key_string, Value::Null);
             continue;
         }
-
-        value_string = if let Ok(s) = from_utf8(value) {
+        let value_string = if let Ok(s) = from_utf8(value) {
             s.to_owned()
         } else {
             let s = String::from_utf8_lossy(value);
             return fail_encoding_clierror!("CSV value is not valid UTF-8: {s}");
         };
 
-        // get json type from schema; defaults to STRING if not specified
-        field_def = schema_properties.get(&key_string).unwrap_or(&Value::Null);
-
-        field_type_def = field_def.get("type").unwrap_or(&Value::Null);
-
-        // we do json_type as a u8 so match will be a tad faster below
-        json_type = match field_type_def {
-            Value::String(s) => s.as_bytes()[0],
-            Value::Array(vec) => {
-                // if can't find usable type info, defaults to "string"
-                let mut return_val = b's';
-
-                // grab the first entry that's not a "null", since it just means value is optional
-                for val in vec {
-                    if *val == *null_type {
-                        // keep looking
-                        continue;
-                    }
-                    return_val = if let Some(s) = val.as_str() {
-                        s.as_bytes()[0]
-                    } else {
-                        return fail_clierror!("type info should be a JSON string");
-                    };
-                }
-
-                return_val
-            },
-            _ => {
-                // default to JSON String
-                b's'
-            },
-        };
-
-        // dbg!(i, &header_string, &value_string, &json_type);
+        let json_type = header_types[i].1;
 
         // matching against a u8, rather than an str should be a tad faster
         match json_type {
@@ -829,9 +761,68 @@ fn to_json_instance(
         }
     }
 
-    // dbg!(&json_object_map);
-
     Ok(Value::Object(json_object_map))
+}
+
+/// get JSON types for each column in CSV file
+/// returns a HashMap of column name to JSON type
+#[inline]
+fn get_json_types(
+    headers: &ByteRecord,
+    headers_len: usize,
+    schema: &Value,
+) -> CliResult<Vec<(String, u8)>> {
+    // make sure schema has expected structure
+    let Some(schema_properties) = schema.get("properties") else {
+        return fail_clierror!("JSON Schema missing 'properties' object");
+    };
+
+    // safety: we set NULL_TYPE in main() and it's never changed
+    let null_type = NULL_TYPE.get().unwrap();
+
+    let mut key_string: String;
+    let mut field_def: &Value;
+    let mut field_type_def: &Value;
+    let mut json_type: u8;
+    let mut header_types: Vec<(String, u8)> = Vec::with_capacity(headers_len);
+
+    // iterate over each CSV field and convert to JSON type
+    for header in headers {
+        // convert csv header to string. It's the key in the JSON object
+        key_string = if let Ok(s) = from_utf8(header) {
+            s.to_owned()
+        } else {
+            let s = String::from_utf8_lossy(header);
+            return fail_encoding_clierror!("CSV header is not valid UTF-8: {s}");
+        };
+
+        field_def = schema_properties
+            .get(key_string.clone())
+            .unwrap_or(&Value::Null);
+        field_type_def = field_def.get("type").unwrap_or(&Value::Null);
+
+        json_type = match field_type_def {
+            Value::String(s) => s.as_bytes()[0],
+            Value::Array(vec) => {
+                let mut return_val = b's';
+                for val in vec {
+                    if *val == *null_type {
+                        continue;
+                    }
+                    return_val = if let Some(s) = val.as_str() {
+                        s.as_bytes()[0]
+                    } else {
+                        b's'
+                    };
+                }
+                return_val
+            },
+            _ => b's',
+        };
+
+        header_types.push((key_string, json_type));
+    }
+    Ok(header_types)
 }
 
 #[cfg(test)]
@@ -899,11 +890,12 @@ mod tests_for_csv_to_json_conversion {
 
         let mut rdr = csv::Reader::from_reader(csv.as_bytes());
         let headers = rdr.byte_headers().unwrap().clone();
+        let header_types = get_json_types(&headers, headers.len(), &schema_json()).unwrap();
         let mut record = rdr.byte_records().next().unwrap().unwrap();
         record.trim();
 
         assert_eq!(
-            to_json_instance(&headers, headers.len(), &record, &schema_json())
+            to_json_instance(&header_types, headers.len(), &record)
                 .expect("can't convert csv to json instance"),
             json!({
                 "A": "hello",
@@ -930,12 +922,12 @@ mod tests_for_csv_to_json_conversion {
 
         let mut rdr = csv::Reader::from_reader(csv.as_bytes());
         let headers = rdr.byte_headers().unwrap().clone();
+        let header_types = get_json_types(&headers, headers.len(), &schema_json()).unwrap();
 
         let result = to_json_instance(
-            &headers,
+            &header_types,
             headers.len(),
             &rdr.byte_records().next().unwrap().unwrap(),
-            &schema_json(),
         );
         assert!(&result.is_err());
         let error = result.err().unwrap().to_string();
@@ -1029,10 +1021,11 @@ mod tests_for_schema_validation {
 
         let mut rdr = csv::Reader::from_reader(csv.as_bytes());
         let headers = rdr.byte_headers().unwrap().clone();
+        let header_types = get_json_types(&headers, headers.len(), &schema_json()).unwrap();
 
         let record = &rdr.byte_records().next().unwrap().unwrap();
 
-        let instance = to_json_instance(&headers, headers.len(), record, &schema_json()).unwrap();
+        let instance = to_json_instance(&header_types, headers.len(), record).unwrap();
 
         let result = validate_json_instance(&instance, &compiled_schema());
 
@@ -1047,10 +1040,11 @@ mod tests_for_schema_validation {
 
         let mut rdr = csv::Reader::from_reader(csv.as_bytes());
         let headers = rdr.byte_headers().unwrap().clone();
+        let header_types = get_json_types(&headers, headers.len(), &schema_json()).unwrap();
 
         let record = &rdr.byte_records().next().unwrap().unwrap();
 
-        let instance = to_json_instance(&headers, headers.len(), record, &schema_json()).unwrap();
+        let instance = to_json_instance(&header_types, headers.len(), record).unwrap();
 
         let result = validate_json_instance(&instance, &compiled_schema());
 
