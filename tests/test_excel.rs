@@ -196,6 +196,27 @@ fn excel_date_xlsx_date_format() {
 }
 
 #[test]
+fn excel_xlsx_data_types() {
+    let wrk = Workdir::new("excel_xlsx_data_types");
+
+    let xlsx_file = wrk.load_test_file("excel-xlsx.xlsx");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--sheet").arg("data types").arg(xlsx_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["int", "float", "bool", "date", "duration", "string", "emojis", "foreign"], 
+        svec!["1", "1.1", "true", "2001-09-11", "0.4305555555555556", "The", "The", "敏捷的棕色狐狸在森林里奔跑"], 
+        svec!["2", "1.32434354545454", "false", "2023-10-07", "0.989849537037037", "quick", "🍔", "Franz jagt im komplett verwahrlosten Taxi quer durch Bayern"],
+        svec!["3", "0.423546456564534", "1", "1941-12-07", "1.2815162037037038", "brown", "is", "Le rusé goupil franchit d'un bond le chien somnolent."], 
+        svec!["4", "-54545.6565756785", "0", "2001-09-11 08:30:00", "0.9791666666666666", "fox", "💩", "El rápido zorro marrón"],
+        svec!["5", "-5446563454.43546", "true", "1945-08-06 08:15:00", "0.0004629629629629629", "jumped", "🙀", "いろはにほへとちりぬるをわかよたれそつねならむうゐのおくやまけふこえてあさきゆめみしゑひもせす"]
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn excel_date_xlsx() {
     let wrk = Workdir::new("excel_date_xls");
 
