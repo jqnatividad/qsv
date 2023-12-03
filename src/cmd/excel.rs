@@ -624,9 +624,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             cell_date_flag = true;
                         },
                         DataType::Error(ref e) => record.push_field(&format!("{e:?}")),
-                        DataType::Bool(ref b) => record.push_field(&b.to_string()),
-                        DataType::DateTimeIso(ref dt) => record.push_field(&dt.to_string()),
-                        DataType::DurationIso(ref d) => record.push_field(&d.to_string()),
+                        DataType::Bool(ref b) => {
+                            record.push_field(if *b { "true" } else { "false" })
+                        },
+                        DataType::DateTimeIso(ref dt) => record.push_field(&dt),
+                        DataType::DurationIso(ref d) => record.push_field(&d),
                         DataType::Duration(ref d) => record.push_field(ryu_buffer.format(*d)),
                     };
 
@@ -634,7 +636,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     if float_flag {
                         if cell_date_flag {
                             // its a date, so convert it
-                            work_date = if float_val.fract() > 0.0 {
+                            work_date = if float_val.fract() > f64::EPSILON {
                                 // if it has a fractional part, then its a datetime
                                 if let Some(dt) = cell.as_datetime() {
                                     if date_format.is_empty() {
@@ -680,7 +682,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         // its not a date, so just push the ryu-formatted float value if its
                         // not an integer or the candidate
                         // integer is too big or too small to be an i64
-                        } else if float_val.fract().abs() > 0.0
+                        } else if float_val.fract().abs() > f64::EPSILON
                             || float_val > i64::MAX as f64
                             || float_val < i64::MIN as f64
                         {
