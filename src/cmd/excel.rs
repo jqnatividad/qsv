@@ -627,8 +627,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         DataType::Bool(ref b) => {
                             record.push_field(if *b { "true" } else { "false" })
                         },
-                        DataType::DateTimeIso(ref dt) => record.push_field(&dt),
-                        DataType::DurationIso(ref d) => record.push_field(&d),
+                        DataType::DateTimeIso(ref dt) => record.push_field(dt),
+                        DataType::DurationIso(ref d) => record.push_field(d),
                         DataType::Duration(ref d) => record.push_field(ryu_buffer.format(*d)),
                     };
 
