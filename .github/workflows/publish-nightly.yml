@@ -33,7 +33,7 @@ jobs:
             os-name: linux
             target: x86_64-unknown-linux-gnu
             architecture: x86_64
-            addl-build-args: --features=apply,generate,luau,fetch,foreach,nightly,self_update,geocode,polars
+            addl-build-args: --features=apply,generate,luau,fetch,foreach,nightly,self_update,geocode,polars,to
             default-features:
             addl-qsvlite-features:
             addl-qsvdp-features: luau
@@ -49,7 +49,7 @@ jobs:
             os-name: windows
             target: x86_64-pc-windows-msvc
             architecture: x86_64
-            addl-build-args: --features=apply,luau,fetch,nightly,self_update,polars,geocode
+            addl-build-args: --features=apply,luau,fetch,nightly,self_update,polars,geocode,to
             default-features:
             addl-qsvlite-features:
             addl-qsvdp-features: luau
