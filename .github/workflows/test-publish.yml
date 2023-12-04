@@ -14,81 +14,91 @@ jobs:
       matrix:
         rust: [stable]
         job:
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             os-name: linux
             target: x86_64-unknown-linux-gnu
             architecture: x86_64
             use-cross: false
-            addl-build-args:  --features=apply,generate,luau,fetch,foreach,self_update,to
+            addl-build-args: --features=apply,generate,luau,fetch,foreach,self_update,geocode,polars,to
             default-features:
+            addl-qsvlite-features:
             addl-qsvdp-features: luau
-          - os: ubuntu-latest
-            os-name: linux
-            target: x86_64-unknown-linux-musl
-            architecture: x86_64
-            musl-prep: true
-            use-cross: false
-            addl-build-args: --features=apply,generate,fetch,foreach,self_update
-            default-features:
-            addl-qsvdp-features:
-          - os: ubuntu-latest
-            os-name: linux
-            target: i686-unknown-linux-gnu
-            architecture: i686
-            use-cross: true
-            addl-build-args:  --features=apply,generate,fetch,foreach,self_update
-            build-nopython: false
-            default-features:
-            python_library_path:
-          - os: windows-latest
-            os-name: windows
-            target: x86_64-pc-windows-msvc
-            architecture: x86_64
-            use-cross: false
-            addl-build-args: --features=apply,generate,luau,fetch,self_update,to,polars
-            default-features:
-            addl-qsvdp-features: luau
-          - os: windows-latest
-            os-name: windows
-            target: i686-pc-windows-msvc
-            architecture: i686
-            use-cross: true
-            addl-build-args: --features=apply,generate,fetch,self_update
-            default-features:
-            addl-qsvdp-features:
-          - os: windows-latest
-            os-name: windows
-            target: x86_64-pc-windows-gnu
-            architecture: x86_64
-            use-cross: false
-            addl-build-args: --features=apply,generate,luau,fetch,self_update,polars
-            default-features: --no-default-features
-            addl-qsvdp-features: luau
-          - os: macos-latest
-            os-name: macos
-            target: x86_64-apple-darwin
-            architecture: x86_64
-            use-cross: false
-            addl-build-args: --features=apply,generate,luau,fetch,foreach,self_update,to,polars
-            default-features: --no-default-features
-            addl-qsvdp-features: luau
-          - os: macos-latest
-            os-name: macos
-            target: aarch64-apple-darwin
-            architecture: aarch64
-            use-cross: true
-            addl-build-args: --features=apply,generate,fetch,foreach,self_update
-            default-features: --no-default-features
-            addl-qsvdp-features:
-          - os: ubuntu-latest
-            os-name: linux
-            target: aarch64-unknown-linux-gnu
-            architecture: aarch64
-            use-cross: true
-            addl-build-args: --features=apply,generate,fetch,foreach,self_update
-            build-nopython: false
-            default-features:
-            python_library_path:
+            addl-rustflags: -C target-feature=+fxsr,+sse,+sse2,+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+fma
+          # - os: ubuntu-latest
+          #   os-name: linux
+          #   target: x86_64-unknown-linux-gnu
+          #   architecture: x86_64
+          #   use-cross: false
+          #   addl-build-args:  --features=apply,generate,luau,fetch,foreach,self_update,geocode,polars
+          #   default-features:
+          #   addl-qsvdp-features: luau
+          # - os: ubuntu-latest
+          #   os-name: linux
+          #   target: x86_64-unknown-linux-musl
+          #   architecture: x86_64
+          #   musl-prep: true
+          #   use-cross: false
+          #   addl-build-args: --features=apply,generate,fetch,foreach,self_update
+          #   default-features:
+          #   addl-qsvdp-features:
+          # - os: ubuntu-latest
+          #   os-name: linux
+          #   target: i686-unknown-linux-gnu
+          #   architecture: i686
+          #   use-cross: true
+          #   addl-build-args:  --features=apply,generate,fetch,foreach,self_update
+          #   build-nopython: false
+          #   default-features:
+          #   python_library_path:
+          # - os: windows-latest
+          #   os-name: windows
+          #   target: x86_64-pc-windows-msvc
+          #   architecture: x86_64
+          #   use-cross: false
+          #   addl-build-args: --features=apply,generate,luau,fetch,self_update,to,polars
+          #   default-features:
+          #   addl-qsvdp-features: luau
+          # - os: windows-latest
+          #   os-name: windows
+          #   target: i686-pc-windows-msvc
+          #   architecture: i686
+          #   use-cross: true
+          #   addl-build-args: --features=apply,generate,fetch,self_update
+          #   default-features:
+          #   addl-qsvdp-features:
+          # - os: windows-latest
+          #   os-name: windows
+          #   target: x86_64-pc-windows-gnu
+          #   architecture: x86_64
+          #   use-cross: false
+          #   addl-build-args: --features=apply,generate,luau,fetch,self_update,polars
+          #   default-features: --no-default-features
+          #   addl-qsvdp-features: luau
+          # - os: macos-latest
+          #   os-name: macos
+          #   target: x86_64-apple-darwin
+          #   architecture: x86_64
+          #   use-cross: false
+          #   addl-build-args: --features=apply,generate,luau,fetch,foreach,self_update,to,polars
+          #   default-features: --no-default-features
+          #   addl-qsvdp-features: luau
+          # - os: macos-latest
+          #   os-name: macos
+          #   target: aarch64-apple-darwin
+          #   architecture: aarch64
+          #   use-cross: true
+          #   addl-build-args: --features=apply,generate,fetch,foreach,self_update
+          #   default-features: --no-default-features
+          #   addl-qsvdp-features:
+          # - os: ubuntu-latest
+          #   os-name: linux
+          #   target: aarch64-unknown-linux-gnu
+          #   architecture: aarch64
+          #   use-cross: true
+          #   addl-build-args: --features=apply,generate,fetch,foreach,self_update
+          #   build-nopython: false
+          #   default-features:
+          #   python_library_path:
           # - os: ubuntu-latest
           #   os-name: linux
           #   target: arm-unknown-linux-gnueabihf
@@ -127,8 +137,10 @@ jobs:
         sudo apt-get install musl-tools musl-dev
         sudo ln -s /usr/bin/g++ /usr/bin/musl-g++        
     - name: Build qsv
+      # env:
+      #   RUSTFLAGS: --emit=asm
       env:
-        RUSTFLAGS: --emit=asm
+        RUSTFLAGS: ${{ matrix.job.addl-rustflags }}
       uses: actions-rs/cargo@v1
       with:
         command: build
