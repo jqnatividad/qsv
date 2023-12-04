@@ -44,6 +44,9 @@ jobs:
             addl-rustflags: -C target-feature=+fxsr,+sse,+sse2,+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+fma
 
     steps:
+    - name: install sevenzip with homebrew
+      run: |
+        brew install sevenzip
     - name: Installing Rust toolchain
       uses: actions-rs/toolchain@v1
       with:
