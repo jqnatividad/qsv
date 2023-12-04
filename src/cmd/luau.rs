@@ -111,19 +111,21 @@ With the judicious use of "require", the BEGIN script & special variables, one c
 create variables, tables, arrays & functions that can be used for complex aggregation
 operations in the END script.
 
-SCRIPT DEVELOPMENT TIP: When developing Luau scripts, be sure to take advantage of the
-"qsv_log" function to debug your script. It will log messages at the log level (INFO,
-WARN, ERROR, DEBUG, TRACE) specified by the QSV_LOG_LEVEL environment variable.
+SCRIPT DEVELOPMENT TIPS:
+When developing Luau scripts, be sure to take advantage of the "qsv_log" function to
+debug your script. It will log messages at the level (INFO, WARN, ERROR, DEBUG, TRACE)
+specified by the QSV_LOG_LEVEL environment variable (see docs/Logging.md for details).
 
 At the DEBUG level, the log messages will be more verbose to faciitate debugging.
-It will also skip compiling the MAIN script to bytecode so you can see more detailed
-error messages with line numbers.
+It will also skip precompiling the MAIN script to bytecode so you can see more
+detailed error messages with line numbers.
 
-Bear in mind that qsv strips comments from Luau scripts before executing them. When
-checking line numbers in DEBUG mode, be sure to refer to the stripped scripts in the log file,
-not the original commented scripts.
+Bear in mind that qsv strips comments from Luau scripts before executing them.
+This is done so qsv doesn't falsely trigger on special variables mentioned in comments.
+When checking line numbers in DEBUG mode, be sure to refer to the comment-stripped
+scripts in the log file, not the original commented scripts.
 
-There are more Luau helper functions in addition to "qsv_log": "qsv_break", "qsv_skip",
+There are more Luau helper functions in addition to "qsv_log" - "qsv_break", "qsv_skip",
 "qsv_insertrecord", "qsv_autoindex", "qsv_coalesce", "qsv_sleep", "qsv_writefile",
 "qsv_cmd", "qsv_shellcmd", "qsv_setenv", "qsv_getenv" and last but not least -
 the powerful "qsv_register_lookup" which allows you to "lookup" values against other
