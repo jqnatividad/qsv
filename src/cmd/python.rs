@@ -209,8 +209,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if rconfig.no_headers {
         headers = csv::StringRecord::new();
 
+        let mut buffer = itoa::Buffer::new();
         for i in 0..headers_len {
-            headers.push_field(&i.to_string());
+            headers.push_field(buffer.format(i));
         }
     } else {
         if !args.cmd_filter {
@@ -305,6 +306,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 // Initializing locals
                 let mut row_data: Vec<&str> = Vec::with_capacity(headers_len);
 
+                // assert so the record.get() below skips bounds check
+                assert!(record.len() == headers_len);
                 header_vec
                     .iter()
                     .enumerate()
@@ -329,7 +332,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         }
                         "Evaluation of given expression failed with the above error!"
                     })
-                    .unwrap_or(error_result);
+                    .unwrap_or_else(|_| error_result);
 
                 if args.cmd_map {
                     let result = helpers
