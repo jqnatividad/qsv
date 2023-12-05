@@ -240,6 +240,8 @@ The `schema` command produces a [JSON Schema Validation (Draft 7)](https://json-
 
 The `excel` command recognizes Excel & Open Document Spreadsheet(ODS) files (`.xls`, `.xlsx`, `.xlsm`, `.xlsb` & `.ods` files).
 
+Speaking of Excel, if you're having trouble opening qsv-generated CSV files in Excel, set the QSV_OUTPUT_BOM environment variable to add a [Byte Order Mark](https://en.wikipedia.org/wiki/Byte_order_mark) to the beginning of the generated CSV file. This is a workaround for [Excel's UTF-8 encoding detection bug](https://stackoverflow.com/questions/155097/microsoft-excel-mangles-diacritics-in-csv-files).
+
 The `to` command converts CSVs to `.xlsx`, [Parquet](https://parquet.apache.org) & [Data Package](https://datahub.io/docs/data-packages/tabular) files, and populates [PostgreSQL](https://www.postgresql.org) and [SQLite](https://www.sqlite.org/index.html) databases.
 
 The `sqlp` command returns query results in CSV, JSON, Parquet & [Arrow IPC](https://arrow.apache.org/docs/format/Columnar.html#ipc-file-format) formats. Polars SQL also supports reading external files directly in various formats with its `read_ndjson`, `read_csv`, `read_parquet` & `read_ipc` [table functions](https://github.com/pola-rs/polars/blob/c7fa66a1340418789ec66bdedad6654281afa0ab/polars/polars-sql/src/table_functions.rs#L9-L36).
