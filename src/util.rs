@@ -1413,10 +1413,10 @@ pub fn to_lowercase_into(s: &str, buf: &mut String) {
     }
 }
 
-/// load the first BUFFER*4 (128k) bytes of the file and check if it is utf8
+/// load the first BUFFER*8 (1024k) bytes of the file and check if it is utf8
 pub fn isutf8_file(path: &Path) -> Result<bool, CliError> {
     let metadata = std::fs::metadata(path)?;
-    let buffer_len = config::DEFAULT_RDR_BUFFER_CAPACITY * 4;
+    let buffer_len = config::DEFAULT_RDR_BUFFER_CAPACITY * 8;
     let file_size = metadata.len() as usize;
     let bytes_to_read: usize = if file_size < buffer_len {
         file_size
