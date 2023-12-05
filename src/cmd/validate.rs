@@ -73,6 +73,7 @@ Validate arguments:
                                The file can be a local file or a URL.
 
 Validate options:
+    --trim                     Trim leading and trailing whitespace from fields before validating.
     --fail-fast                Stops on first error.
     --valid <suffix>           Valid record output file suffix. [default: valid]
     --invalid <suffix>         Invalid record output file suffix. [default: invalid]
@@ -97,6 +98,7 @@ Common options:
     -d, --delimiter <arg>      The field delimiter for reading CSV data.
                                Must be a single character. [default: ,]
     -p, --progressbar          Show progress bars. Not valid for stdin.
+    -Q, --quiet                Do not display validation summary message.
 "#;
 
 use std::{
@@ -138,6 +140,7 @@ static TIMEOUT_SECS: AtomicU16 = AtomicU16::new(15);
 #[derive(Deserialize)]
 #[allow(dead_code)]
 struct Args {
+    flag_trim:        bool,
     flag_fail_fast:   bool,
     flag_valid:       Option<String>,
     flag_invalid:     Option<String>,
@@ -148,6 +151,7 @@ struct Args {
     flag_no_headers:  bool,
     flag_delimiter:   Option<Delimiter>,
     flag_progressbar: bool,
+    flag_quiet:       bool,
     arg_input:        Option<String>,
     arg_json_schema:  Option<String>,
     flag_timeout:     u16,
@@ -384,7 +388,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 HumanCount(record_idx)
             )
         };
-        woutinfo!("{msg}");
+        if !args.flag_quiet {
+            woutinfo!("{msg}");
+        }
 
         // we're done when validating without a schema
         return Ok(());
@@ -462,6 +468,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut validation_results = Vec::with_capacity(batch_size);
     let mut valid_flags: Vec<bool> = Vec::with_capacity(batch_size);
     let mut validation_error_messages: Vec<String> = Vec::with_capacity(50);
+    let flag_trim = args.flag_trim;
 
     // set RAYON_NUM_THREADS
     util::njobs(args.flag_jobs);
@@ -477,10 +484,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     if has_data {
                         row_number += 1;
                         record.push_field(buffer.format(row_number).as_bytes());
-
-                        // non-allocating trimming in place is much faster on the record level
-                        // with our csv fork than doing per field std::str::trim which is allocating
-                        record.trim();
+                        if flag_trim {
+                            record.trim();
+                        }
                         batch.push(record.clone());
                     } else {
                         // nothing else to add to batch
@@ -582,7 +588,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         );
     }
 
-    winfo!("All {} records valid.", HumanCount(row_number));
+    if !args.flag_quiet {
+        winfo!("All {} records valid.", HumanCount(row_number));
+    }
     Ok(())
 }
 
