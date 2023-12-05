@@ -97,6 +97,7 @@ Common options:
     -d, --delimiter <arg>      The field delimiter for reading CSV data.
                                Must be a single character. [default: ,]
     -p, --progressbar          Show progress bars. Not valid for stdin.
+    -Q, --quiet                Do not display validation summary message.
 "#;
 
 use std::{
@@ -148,6 +149,7 @@ struct Args {
     flag_no_headers:  bool,
     flag_delimiter:   Option<Delimiter>,
     flag_progressbar: bool,
+    flag_quiet:       bool,
     arg_input:        Option<String>,
     arg_json_schema:  Option<String>,
     flag_timeout:     u16,
@@ -384,7 +386,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 HumanCount(record_idx)
             )
         };
-        woutinfo!("{msg}");
+        if !args.flag_quiet {
+            woutinfo!("{msg}");
+        }
 
         // we're done when validating without a schema
         return Ok(());
@@ -582,7 +586,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         );
     }
 
-    winfo!("All {} records valid.", HumanCount(row_number));
+    if !args.flag_quiet {
+        winfo!("All {} records valid.", HumanCount(row_number));
+    }
     Ok(())
 }
 
