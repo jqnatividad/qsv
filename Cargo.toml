@@ -161,7 +161,7 @@ qsv-sniffer = { version = "0.10", default-features = false, features = [
 ] }
 rand = "0.8"
 rayon = "1.8"
-redis = { version = "0.23", features = [
+redis = { version = "0.24", features = [
     "ahash",
     # "tcp_nodelay", // TODO: enable when this feature is available again
 ], default-features = false, optional = true }
