@@ -259,7 +259,9 @@ use crate::{
     config::{Config, Delimiter},
     regex_oncelock,
     select::SelectColumns,
-    util, CliResult,
+    util,
+    util::replace_column_value,
+    CliResult,
 };
 
 #[derive(Clone, EnumString)]
@@ -315,19 +317,6 @@ static ROUND_PLACES: OnceLock<u32> = OnceLock::new();
 
 // default number of decimal places to round to
 const DEFAULT_ROUND_PLACES: u32 = 3;
-
-#[inline]
-fn replace_column_value(
-    record: &csv::StringRecord,
-    column_index: usize,
-    new_value: &str,
-) -> csv::StringRecord {
-    record
-        .into_iter()
-        .enumerate()
-        .map(|(i, v)| if i == column_index { new_value } else { v })
-        .collect()
-}
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;

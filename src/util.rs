@@ -1505,3 +1505,16 @@ pub fn process_input(
     log::debug!("processed input: {:?}", processed_input);
     Ok(processed_input)
 }
+
+#[inline]
+pub fn replace_column_value(
+    record: &csv::StringRecord,
+    column_index: usize,
+    new_value: &str,
+) -> csv::StringRecord {
+    record
+        .into_iter()
+        .enumerate()
+        .map(|(i, v)| if i == column_index { new_value } else { v })
+        .collect()
+}
