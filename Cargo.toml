@@ -163,7 +163,7 @@ rand = "0.8"
 rayon = "1.8"
 redis = { version = "0.24", features = [
     "ahash",
-    # "tcp_nodelay", // TODO: enable when this feature is available again
+    "tcp_nodelay",
 ], default-features = false, optional = true }
 regex = "1"
 reqwest = { version = "0.11", features = [
