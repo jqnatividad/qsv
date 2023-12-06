@@ -261,8 +261,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         return fail!("No sheets found.");
     }
     let num_sheets = sheet_names.len();
-    #[allow(clippy::redundant_clone)]
-    let sheet_vec = sheet_names.clone();
 
     let mut wtr = Config::new(&args.flag_output)
         .flexible(args.flag_flexible)
@@ -294,6 +292,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             sheet: vec![],
         };
         let mut metadata_record;
+        let sheet_vec = sheet_names;
 
         for (i, sheet_name) in sheet_vec.iter().enumerate() {
             let range = if let Some(result) = workbook.worksheet_range_at(i) {
