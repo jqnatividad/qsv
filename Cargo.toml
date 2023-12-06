@@ -201,7 +201,7 @@ sysinfo = "0.29"
 tabwriter = "1.3"
 tempfile = "3"
 test-data-generation = { version = "0.3", optional = true }
-thousands = "0.2"
+thousands = { version = "0.2", optional = true }
 threadpool = "1.8"
 titlecase = { version = "2", optional = true }
 tokio = "1"
@@ -255,6 +255,7 @@ apply = [
     "hashbrown",
     "qsv_currency",
     "strsim",
+    "thousands",
     "titlecase",
     "vader_sentiment",
     "whatlang",
