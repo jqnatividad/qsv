@@ -98,13 +98,14 @@ fn setup(name: &str) -> Workdir {
         .arg("cities.csv")
         .args(["--output", &out_file]);
     wrk.assert_success(&mut cmd);
+    drop(cmd);
 
-    let out_file = wrk.path("places.csv.sz").to_string_lossy().to_string();
-    let mut cmd = wrk.command("snappy");
-    cmd.arg("compress")
+    let out_file2 = wrk.path("places.csv.sz").to_string_lossy().to_string();
+    let mut cmd2 = wrk.command("snappy");
+    cmd2.arg("compress")
         .arg("places.csv")
-        .args(["--output", &out_file]);
-    wrk.assert_success(&mut cmd);
+        .args(["--output", &out_file2]);
+    wrk.assert_success(&mut cmd2);
 
     wrk
 }
