@@ -416,14 +416,14 @@ impl Config {
                                 fs::File::open(&idx_path_work)?
                             } else if data_fsize >= NO_INDEX_WARNING_FILESIZE {
                                 // warn user that the CSV file is large and not indexed
-                                use thousands::Separable;
+                                use indicatif::HumanCount;
 
                                 warn!(
                                     "The {} MB CSV file is larger than the {} MB \
                                      NO_INDEX_WARNING_FILESIZE threshold. Consider creating an \
                                      index file as it will make qsv commands much faster.",
-                                    (data_fsize * 100).separate_with_commas(),
-                                    (NO_INDEX_WARNING_FILESIZE * 100).separate_with_commas()
+                                    HumanCount(data_fsize * 100),
+                                    HumanCount(NO_INDEX_WARNING_FILESIZE * 100)
                                 );
                                 return Ok(None);
                             } else {

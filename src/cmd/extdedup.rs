@@ -37,9 +37,9 @@ use std::{
     io::{self, stdin, stdout, BufRead, Write},
 };
 
+use indicatif::HumanCount;
 use serde::Deserialize;
 use sysinfo::{System, SystemExt};
-use thousands::Separable;
 
 use crate::{config, odhtcache, util, CliResult};
 
@@ -159,7 +159,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     eprintln!(
         "{}",
         if args.flag_human_readable {
-            dupes_count.separate_with_commas()
+            HumanCount(dupes_count).to_string()
         } else {
             dupes_count.to_string()
         }
