@@ -73,9 +73,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         use indicatif::HumanCount;
 
         if args.flag_width {
-            woutinfo!("{};{}", HumanCount(count as u64), HumanCount(width as u64));
+            woutinfo!("{};{}", HumanCount(count), HumanCount(width as u64));
         } else {
-            woutinfo!("{}", HumanCount(count as u64));
+            woutinfo!("{}", HumanCount(count));
         }
     } else if args.flag_width {
         woutinfo!("{count};{width}");
