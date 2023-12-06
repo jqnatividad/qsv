@@ -36,7 +36,9 @@ use serde::Deserialize;
 use crate::{
     config::{Config, Delimiter},
     select::SelectColumns,
-    util, CliResult,
+    util,
+    util::replace_column_value,
+    CliResult,
 };
 #[derive(Deserialize)]
 struct Args {
@@ -47,18 +49,6 @@ struct Args {
     flag_output:     Option<String>,
     flag_no_headers: bool,
     flag_delimiter:  Option<Delimiter>,
-}
-
-pub fn replace_column_value(
-    record: &csv::StringRecord,
-    column_index: usize,
-    new_value: &str,
-) -> csv::StringRecord {
-    record
-        .into_iter()
-        .enumerate()
-        .map(|(i, v)| if i == column_index { new_value } else { v })
-        .collect()
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
