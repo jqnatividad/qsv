@@ -112,15 +112,15 @@ use bytes::Bytes;
 use file_format::FileFormat;
 use futures::executor::block_on;
 use futures_util::StreamExt;
+use indicatif::HumanCount;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
-use indicatif::{HumanBytes, HumanCount, ProgressBar, ProgressDrawTarget, ProgressStyle};
+use indicatif::{HumanBytes, ProgressBar, ProgressDrawTarget, ProgressStyle};
 use qsv_sniffer::{DatePreference, SampleSize, Sniffer};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tabwriter::TabWriter;
 use tempfile::NamedTempFile;
-use thousands::Separable;
 use url::Url;
 
 use crate::{
@@ -207,7 +207,7 @@ impl fmt::Display for SniffStruct {
         writeln!(
             f,
             "Preamble Rows: {}",
-            self.preamble_rows.separate_with_commas()
+            HumanCount(self.preamble_rows as u64)
         )?;
         writeln!(f, "Quote Char: {}", self.quote_char)?;
         writeln!(f, "Flexible: {}", self.flexible)?;
@@ -217,30 +217,26 @@ impl fmt::Display for SniffStruct {
         writeln!(
             f,
             "Retrieved Size (bytes): {}",
-            self.retrieved_size.separate_with_commas()
+            HumanCount(self.retrieved_size as u64)
         )?;
         writeln!(
             f,
             "File Size (bytes): {}",
-            self.file_size.separate_with_commas()
+            HumanCount(self.file_size as u64)
         )?;
         writeln!(
             f,
             "Sampled Records: {}",
-            self.sampled_records.separate_with_commas()
+            HumanCount(self.sampled_records as u64)
         )?;
         writeln!(f, "Estimated: {}", self.estimated)?;
-        writeln!(
-            f,
-            "Num Records: {}",
-            self.num_records.separate_with_commas()
-        )?;
+        writeln!(f, "Num Records: {}", HumanCount(self.num_records as u64))?;
         writeln!(
             f,
             "Avg Record Len (bytes): {}",
-            self.avg_record_len.separate_with_commas()
+            HumanCount(self.avg_record_len as u64)
         )?;
-        writeln!(f, "Num Fields: {}", self.num_fields.separate_with_commas())?;
+        writeln!(f, "Num Fields: {}", HumanCount(self.num_fields as u64))?;
         writeln!(f, "Stats Types: {}", self.stats_types)?;
         writeln!(f, "Fields:")?;
 

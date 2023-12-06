@@ -70,16 +70,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     if args.flag_human_readable {
-        use thousands::Separable;
+        use indicatif::HumanCount;
 
         if args.flag_width {
-            woutinfo!(
-                "{};{}",
-                count.separate_with_commas(),
-                width.separate_with_commas()
-            );
+            woutinfo!("{};{}", HumanCount(count as u64), HumanCount(width as u64));
         } else {
-            woutinfo!("{}", count.separate_with_commas());
+            woutinfo!("{}", HumanCount(count as u64));
         }
     } else if args.flag_width {
         woutinfo!("{count};{width}");

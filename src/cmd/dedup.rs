@@ -201,9 +201,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     if args.flag_human_readable {
-        use thousands::Separable;
+        use indicatif::HumanCount;
 
-        eprintln!("{}", dupe_count.separate_with_commas());
+        eprintln!("{}", HumanCount(dupe_count as u64));
     } else {
         eprintln!("{dupe_count}");
     }

@@ -121,10 +121,10 @@ fn prop_count_len(
     cmd.arg("in.csv");
 
     if human_readable {
-        use thousands::Separable;
+        use indicatif::HumanCount;
 
         let got_count: String = wrk.stdout(&mut cmd);
-        let expected_count_commas = expected_count.separate_with_commas();
+        let expected_count_commas = HumanCount(expected_count as u64).to_string();
 
         rassert_eq!(got_count, expected_count_commas)
     } else {
