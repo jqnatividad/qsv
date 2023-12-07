@@ -409,6 +409,38 @@ fn apply_dynfmt_keepcase() {
 }
 
 #[test]
+fn apply_dynfmt_issue1458() {
+    let wrk = Workdir::new("apply_dynfmt_issue1458");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["FirstName", "MI", "LastName",],
+            svec!["Adam", "B", "Case"],
+            svec!["Derek", "E", "Foster"],
+            svec!["Gordon", "H", "Irvin"],
+            svec!["Jack", "K", "Lynch"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("dynfmt")
+        .arg("--formatstr")
+        .arg("Sir/Madam {FirstName} {MI}. {LastName}")
+        .arg("-c")
+        .arg("FullName")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["FirstName", "MI", "LastName", "FullName"],
+        svec!["Adam", "B", "Case", "Sir/Madam Adam B. Case"],
+        svec!["Derek", "E", "Foster", "Sir/Madam Derek E. Foster"],
+        svec!["Gordon", "H", "Irvin", "Sir/Madam Gordon H. Irvin"],
+        svec!["Jack", "K", "Lynch", "Sir/Madam Jack K. Lynch"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn apply_calcconv() {
     let wrk = Workdir::new("apply");
     wrk.create(
