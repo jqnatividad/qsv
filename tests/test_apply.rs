@@ -567,6 +567,58 @@ fn apply_calcconv_units() {
 }
 
 #[test]
+fn enum_apply_calconv_issue1458() {
+    let wrk = Workdir::new("enum_apply_calconv_issue1458");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["FirstName", "MI", "LastName",],
+            svec!["Adam", "B", "Case"],
+            svec!["Derek", "E", "Foster"],
+            svec!["Gordon", "H", "Irvin"],
+            svec!["Jack", "K", "Lynch"],
+        ],
+    );
+
+    // qsv enum file.csv | qsv apply calcconv --formatstr '{index} * {index}' -c result
+
+    let mut cmd = wrk.command("enum");
+    cmd.arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["FirstName", "MI", "LastName", "index"],
+        svec!["Adam", "B", "Case", "0"],
+        svec!["Derek", "E", "Foster", "1"],
+        svec!["Gordon", "H", "Irvin", "2"],
+        svec!["Jack", "K", "Lynch", "3"],
+    ];
+
+    assert_eq!(got, expected);
+
+    wrk.create("enum.csv", got);
+
+    let mut cmd2 = wrk.command("apply");
+    cmd2.arg("calcconv")
+        .arg("--formatstr")
+        .arg("{index} * {index}")
+        .arg("-c")
+        .arg("result")
+        .arg("enum.csv");
+
+    let got2: Vec<Vec<String>> = wrk.read_stdout(&mut cmd2);
+    let expected2 = vec![
+        svec!["FirstName", "MI", "LastName", "index", "result"],
+        svec!["Adam", "B", "Case", "0", "0"],
+        svec!["Derek", "E", "Foster", "1", "1"],
+        svec!["Gordon", "H", "Irvin", "2", "4"],
+        svec!["Jack", "K", "Lynch", "3", "9"],
+    ];
+
+    assert_eq!(got2, expected2);
+}
+
+#[test]
 fn apply_ops_empty_shortcircuit() {
     let wrk = Workdir::new("apply");
     wrk.create(
