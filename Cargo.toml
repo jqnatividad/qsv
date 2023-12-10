@@ -230,6 +230,9 @@ quickcheck = { version = "1", default-features = false }
 rusqlite = { version = "0.29", features = ["bundled"] }
 serial_test = { version = "2.0", features = ["file_locks"] }
 
+[patch.crates-io]
+dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_ptr_as_ptr-bumpdeps"}
+
 [features]
 default = ["mimalloc"]
 all_features = [

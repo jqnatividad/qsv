@@ -513,42 +513,41 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     }
 
-    if !rconfig.no_headers {
-        if let Some(new_column) = &args.flag_new_column {
-            headers.push_field(new_column);
-        }
-        wtr.write_record(&headers)?;
-    }
-
     // for dynfmt, safe_headers are the "safe" version of colnames - alphanumeric only,
     // all other chars replaced with underscore
     // dynfmt_fields are the columns used in the dynfmt --formatstr option
     // we prep it so we only populate the lookup vec with the index of these columns
     // so SimpleCurlyFormat is performant
-    let mut dynfmt_fields = Vec::with_capacity(10); // 10 is a reasonable default to save allocs
-    let mut dynfmt_template = args.flag_formatstr.clone();
-    if args.cmd_dynfmt || args.cmd_calcconv {
+    let dynfmt_template = if args.cmd_dynfmt || args.cmd_calcconv {
         if args.flag_no_headers {
             return fail_incorrectusage_clierror!("dynfmt/calcconv subcommand requires headers.");
         }
+
+        let mut dynfmt_template_wrk = args.flag_formatstr.clone();
+        let mut dynfmt_fields = Vec::new();
+
         // first, get the fields used in the dynfmt template
-        let (safe_headers, _) = util::safe_header_names(&headers, false, false, None, "", true);
         let formatstr_re: &'static Regex = crate::regex_oncelock!(r"\{(?P<key>\w+)?\}");
         for format_fields in formatstr_re.captures_iter(&args.flag_formatstr) {
             dynfmt_fields.push(format_fields.name("key").unwrap().as_str());
         }
         // we sort the fields so we can do binary_search
         dynfmt_fields.sort_unstable();
+
         // now, get the indices of the columns for the lookup vec
+        let (safe_headers, _) = util::safe_header_names(&headers, false, false, None, "", true);
         for (i, field) in safe_headers.iter().enumerate() {
             if dynfmt_fields.binary_search(&field.as_str()).is_ok() {
                 let field_with_curly = format!("{{{field}}}");
                 let field_index = format!("{{{i}}}");
-                dynfmt_template = dynfmt_template.replace(&field_with_curly, &field_index);
+                dynfmt_template_wrk = dynfmt_template_wrk.replace(&field_with_curly, &field_index);
             }
         }
-        debug!("dynfmt_fields: {dynfmt_fields:?}  dynfmt_template: {dynfmt_template}");
-    }
+        debug!("dynfmt_fields: {dynfmt_fields:?}  dynfmt_template: {dynfmt_template_wrk}");
+        dynfmt_template_wrk
+    } else {
+        String::new()
+    };
 
     let mut ops_vec: Vec<Operations> = Vec::new();
 
@@ -575,6 +574,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } else {
         return fail_incorrectusage_clierror!("Unknown apply subcommand.");
     };
+
+    if !rconfig.no_headers {
+        if let Some(new_column) = &args.flag_new_column {
+            headers.push_field(new_column);
+        }
+        wtr.write_record(&headers)?;
+    }
 
     // prep progress bar
     let show_progress =
