@@ -301,4 +301,5 @@ nightly = [
     "pyo3/nightly",
     "hashbrown/nightly",
     "polars/nightly",
+    "polars/simd",
 ]
