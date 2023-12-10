@@ -351,7 +351,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // dynfmt_fields are the columns used in the dynfmt --formatstr option
     // we prep it so we only populate the lookup vec with the index of these columns
     // so SimpleCurlyFormat is performant
-    let dynfmt_template = if args.cmd_dynfmt || args.cmd_calcconv {
+    let dynfmt_template = if args.cmd_dynfmt {
         if args.flag_no_headers {
             return fail_incorrectusage_clierror!("dynfmt/calcconv subcommand requires headers.");
         }
