@@ -1528,10 +1528,9 @@ checksum = "545b22097d44f8a9581187cdf93de7a71e4722bf51200cfaba810865b49a495d"
 [[package]]
 name = "dynfmt"
 version = "0.1.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b1c298552016db86f0d49e5de09818dd86c536f66095013cc415f4f85744033f"
+source = "git+https://github.com/jqnatividad/dynfmt?branch=2021-clippy_ptr_as_ptr-bumpdeps#0dec5eaceba58e294283d8ebc6333b421220c186"
 dependencies = [
- "erased-serde",
+ "erased-serde 0.4.0",
  "lazy_static",
  "regex",
  "serde",
@@ -1613,6 +1612,15 @@ name = "erased-serde"
 version = "0.3.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6c138974f9d5e7fe373eb04df7cae98833802ae4b11c24ac7039a21d5af4b26c"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "erased-serde"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a3286168faae03a0e583f6fde17c02c8b8bba2dcc2061d0f7817066e5b0af706"
 dependencies = [
  "serde",
 ]
@@ -2899,7 +2907,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7c81f8ac20188feb5461a73eabb22a34dd09d6d58513535eb587e46bff6ba250"
 dependencies = [
  "bstr",
- "erased-serde",
+ "erased-serde 0.3.31",
  "libloading 0.8.1",
  "mlua-sys",
  "num-traits",
