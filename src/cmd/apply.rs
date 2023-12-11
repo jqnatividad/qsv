@@ -50,6 +50,7 @@ It has 36 supported operations:
   * replace: Replace all matches of a pattern (using --comparand)
       with a string (using --replacement) (Rust replace)
   * regex_replace: Replace all regex matches in --comparand w/ --replacement.
+      Specify <EMPTY> as --replacement to remove matches.
   * titlecase - capitalizes English text using Daring Fireball titlecase style
       https://daringfireball.net/2008/05/title_case
   * censor: profanity filter. Add additional comma-delimited profanities with --comparand.
@@ -387,7 +388,7 @@ use crate::{
     CliResult,
 };
 
-#[derive(Clone, EnumString)]
+#[derive(Clone, EnumString, PartialEq)]
 #[strum(use_phf)]
 #[strum(ascii_case_insensitive)]
 #[allow(non_camel_case_types)]
@@ -477,6 +478,7 @@ static INDIANCOMMA_POLICY: SeparatorPolicy = SeparatorPolicy {
 };
 
 // valid subcommands
+#[derive(PartialEq)]
 enum ApplySubCmd {
     Operations,
     DateFmt,
@@ -582,6 +584,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         wtr.write_record(&headers)?;
     }
 
+    // if there is a regex_replace operation and replacement is <empty> case-insensitive,
+    // we set it to empty string
+    let flag_replacement = if apply_cmd == ApplySubCmd::Operations
+        && ops_vec.contains(&Operations::Regex_Replace)
+        && args.flag_replacement.to_lowercase() == "<empty>"
+    {
+        String::new()
+    } else {
+        args.flag_replacement
+    };
+    let flag_comparand = args.flag_comparand;
+    let flag_formatstr = args.flag_formatstr;
+    let flag_new_column = args.flag_new_column;
+
     // prep progress bar
     let show_progress =
         (args.flag_progressbar || util::get_envvar_flag("QSV_PROGRESSBAR")) && !rconfig.is_stdin();
@@ -645,11 +661,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             apply_operations(
                                 &ops_vec,
                                 &mut cell,
-                                &args.flag_comparand,
-                                &args.flag_replacement,
-                                &args.flag_formatstr,
+                                &flag_comparand,
+                                &flag_replacement,
+                                &flag_formatstr,
                             );
-                            if args.flag_new_column.is_some() {
+                            if flag_new_column.is_some() {
                                 record.push_field(&cell);
                             } else {
                                 record = replace_column_value(&record, *col_index, &cell);
@@ -661,9 +677,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         for col_index in &*sel {
                             record[*col_index].clone_into(&mut cell);
                             if cell.trim().is_empty() {
-                                cell = args.flag_replacement.clone();
+                                cell = flag_replacement.clone();
                             }
-                            if args.flag_new_column.is_some() {
+                            if flag_new_column.is_some() {
                                 record.push_field(&cell);
                             } else {
                                 record = replace_column_value(&record, *col_index, &cell);
@@ -678,7 +694,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                                 let parsed_date = parse_with_preference(&cell, prefer_dmy);
                                 if let Ok(format_date) = parsed_date {
                                     let formatted_date =
-                                        format_date.format(&args.flag_formatstr).to_string();
+                                        format_date.format(&flag_formatstr).to_string();
                                     if !args.flag_keep_zero_time
                                         && formatted_date.ends_with("T00:00:00+00:00")
                                     {
@@ -688,7 +704,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                                     }
                                 }
                             }
-                            if args.flag_new_column.is_some() {
+                            if flag_new_column.is_some() {
                                 record.push_field(&cell);
                             } else {
                                 record = replace_column_value(&record, *col_index, &cell);
@@ -708,7 +724,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                                 cell = formatted.to_string();
                             }
                         }
-                        if args.flag_new_column.is_some() {
+                        if flag_new_column.is_some() {
                             record.push_field(&cell);
                         } else {
                             record = replace_column_value(&record, column_index, &cell);
@@ -750,7 +766,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             }
                         };
 
-                        if args.flag_new_column.is_some() {
+                        if flag_new_column.is_some() {
                             record.push_field(&result);
                         } else {
                             record = replace_column_value(&record, column_index, &result);
