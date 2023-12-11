@@ -101,7 +101,7 @@ ext-sort = { version = "0.1", features = [
 ], default-features = false }
 fastrand = "2"
 flate2 = { version = "1", optional = true }
-file-format = { version = "0.22", features = ["reader"] }
+file-format = { version = "0.23", features = ["reader"] }
 filetime = "0.2"
 flexi_logger = { version = "0.27", features = [
     "async",
