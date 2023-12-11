@@ -367,6 +367,38 @@ fn applydp_ops_regex_replace() {
 }
 
 #[test]
+fn applydp_regex_replace_issue1469() {
+    let wrk = Workdir::new("applydp_regex_replace_issue1469");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["col1", "col2", "col3",],
+            svec!["(Adam)", "B", "Case(hello)Name "],
+            svec!["Derek(foo)", "(bar)E", "Fos(this needs to go)ter"],
+            svec!["Gordon", "H", "(cmon)Irvin"],
+            svec!["Jack(ie)", "K", "Lynch(-Chan)"],
+        ],
+    );
+    let mut cmd = wrk.command("applydp");
+    cmd.arg("operations")
+        .arg("regex_replace")
+        .arg("col1,col2,col3")
+        .args(["--comparand", r"\([^)]+\)"])
+        .args(["--replacement", "<EMPTY>"])
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["col1", "col2", "col3"],
+        svec!["", "B", "CaseName "],
+        svec!["Derek", "E", "Foster"],
+        svec!["Gordon", "H", "Irvin"],
+        svec!["Jack", "K", "Lynch"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn applydp_ops_regex_replace_validation_error() {
     let wrk = Workdir::new("applydp");
     wrk.create(
