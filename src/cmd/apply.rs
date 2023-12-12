@@ -50,7 +50,7 @@ It has 36 supported operations:
   * replace: Replace all matches of a pattern (using --comparand)
       with a string (using --replacement) (Rust replace)
   * regex_replace: Replace all regex matches in --comparand w/ --replacement.
-      Specify <EMPTY> as --replacement to remove matches.
+      Specify <NULL> as --replacement to remove matches.
   * titlecase - capitalizes English text using Daring Fireball titlecase style
       https://daringfireball.net/2008/05/title_case
   * censor: profanity filter. Add additional comma-delimited profanities with --comparand.
@@ -470,6 +470,8 @@ const DEFAULT_THRESHOLD: f64 = 0.9;
 // default number of decimal places to round to
 const DEFAULT_ROUND_PLACES: u32 = 3;
 
+const NULL_VALUE: &str = "<null>";
+
 // for thousands operator
 static INDIANCOMMA_POLICY: SeparatorPolicy = SeparatorPolicy {
     separator: ",",
@@ -584,11 +586,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         wtr.write_record(&headers)?;
     }
 
-    // if there is a regex_replace operation and replacement is <empty> case-insensitive,
+    // if there is a regex_replace operation and replacement is <NULL> case-insensitive,
     // we set it to empty string
     let flag_replacement = if apply_cmd == ApplySubCmd::Operations
         && ops_vec.contains(&Operations::Regex_Replace)
-        && args.flag_replacement.to_lowercase() == "<empty>"
+        && args.flag_replacement.to_lowercase() == NULL_VALUE
     {
         String::new()
     } else {

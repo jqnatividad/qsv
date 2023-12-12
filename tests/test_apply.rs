@@ -458,7 +458,7 @@ fn apply_regex_replace_issue1469() {
         .arg("regex_replace")
         .arg("col1,col2,col3")
         .args(["--comparand", r"\([^)]+\)"])
-        .args(["--replacement", "<EmpTY>"])
+        .args(["--replacement", "<Null>"])
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);

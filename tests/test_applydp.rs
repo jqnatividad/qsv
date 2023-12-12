@@ -384,7 +384,7 @@ fn applydp_regex_replace_issue1469() {
         .arg("regex_replace")
         .arg("col1,col2,col3")
         .args(["--comparand", r"\([^)]+\)"])
-        .args(["--replacement", "<EMPTY>"])
+        .args(["--replacement", "<NULL>"])
         .arg("data.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
