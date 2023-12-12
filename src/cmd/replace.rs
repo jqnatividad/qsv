@@ -81,7 +81,7 @@ struct Args {
     flag_quiet:          bool,
 }
 
-const NULL_VALUE: &str = "<NULL>";
+const NULL_VALUE: &str = "<null>";
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
@@ -95,7 +95,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .size_limit(args.flag_size_limit * (1 << 20))
         .dfa_size_limit(args.flag_dfa_size_limit * (1 << 20))
         .build()?;
-    let replacement = if args.arg_replacement == NULL_VALUE {
+    let replacement = if args.arg_replacement.to_lowercase() == NULL_VALUE {
         b""
     } else {
         args.arg_replacement.as_bytes()
