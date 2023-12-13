@@ -105,7 +105,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     config::{Config, Delimiter},
-    util, CliResult,
+    util, CliError, CliResult,
 };
 
 // number of rows to process in each core/thread
@@ -148,6 +148,12 @@ struct SheetMetadata {
     unsafe_headers:          Vec<String>,
     unsafe_headers_count:    usize,
     duplicate_headers_count: usize,
+}
+
+impl From<calamine::Error> for CliError {
+    fn from(e: calamine::Error) -> Self {
+        CliError::Other(format!("{e}"))
+    }
 }
 
 #[derive(Serialize, Deserialize)]
@@ -239,19 +245,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let requested_range = args.flag_range.to_lowercase();
 
-    let mut workbook = match open_workbook_auto(path) {
-        Ok(workbook) => workbook,
-        Err(e) => {
-            let es = e.to_string();
-            // password protected errors come in different flavors for Excel
-            if es.starts_with("Xls error: Cfb error")
-                || es.starts_with("Xlsx error: Zip error: invalid Zip archive")
-            {
-                return fail_clierror!("{path} may be a password-protected workbook: {e}.");
-            }
-            return fail_clierror!("Cannot open workbook: {e}.");
-        },
-    };
+    let mut workbook = open_workbook_auto(path)?;
 
     let sheet_names = workbook.sheet_names();
     if sheet_names.is_empty() {

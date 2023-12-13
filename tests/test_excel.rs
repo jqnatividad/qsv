@@ -48,10 +48,7 @@ fn excel_open_xlsx_readpassword() {
     cmd.arg(xlsx_file);
 
     let got = wrk.output_stderr(&mut cmd);
-    assert!(got
-        .matches("Cannot open workbook: Xlsx error: Workbook is password protected.")
-        .min()
-        .is_some());
+    assert_eq!(got, "Xlsx error: Workbook is password protected\n");
     wrk.assert_err(&mut cmd);
 }
 
