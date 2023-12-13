@@ -108,9 +108,6 @@ use crate::{
     util, CliError, CliResult,
 };
 
-// number of rows to process in each core/thread
-const CHUNK_SIZE: usize = 10_000;
-
 #[derive(Deserialize)]
 struct Args {
     arg_input:        String,
@@ -293,8 +290,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 match result {
                     Ok(result) => result,
                     Err(e) => {
-                        let sheet_type = workbook.sheets_metadata()[i].typ;
-                        if sheet_type == SheetType::ChartSheet {
+                        if workbook.sheets_metadata()[i].typ == SheetType::ChartSheet {
                             // return an empty range for ChartSheet
                             Range::empty()
                         } else {
@@ -495,10 +491,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     let mut range = if let Some(result) = workbook.worksheet_range_at(sheet_index) {
-        match result {
-            Ok(result) => result,
-            Err(e) => return fail_clierror!("Cannot retrieve range from {sheet}: {e}"),
-        }
+        result?
     } else {
         Range::empty()
     };
@@ -583,10 +576,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     // set RAYON_NUM_THREADS
-    util::njobs(args.flag_jobs);
+    let ncpus = util::njobs(args.flag_jobs);
+
+    // set chunk_size to number of rows per core/thread
+    let chunk_size = row_count.div_ceil(ncpus);
 
     let processed_rows: Vec<Vec<csv::StringRecord>> = rows
-        .par_chunks(CHUNK_SIZE)
+        .par_chunks(chunk_size)
         .map(|chunk| {
             let mut record = csv::StringRecord::with_capacity(500, col_count);
             let mut trimmed_record = csv::StringRecord::with_capacity(500, col_count);
@@ -598,7 +594,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let mut itoa_buffer = itoa::Buffer::new();
             let mut formatted_date = String::new();
 
-            let mut processed_chunk: Vec<csv::StringRecord> = Vec::with_capacity(CHUNK_SIZE);
+            let mut processed_chunk: Vec<csv::StringRecord> = Vec::with_capacity(chunk_size);
 
             for row in chunk {
                 for cell in *row {
