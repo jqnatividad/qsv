@@ -1,0 +1,41 @@
+name: Linux Polars Pinned Nightly
+# polars nightly is pinned to a specific nightly version
+# set at https://github.com/pola-rs/polars/blob/main/rust-toolchain.toml
+
+on:
+  schedule:
+    - cron: "0 */24 * * *"
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5.0.0
+      with:
+        python-version: '3.11'
+    - name: Install and Run Redis
+      run: |
+        sudo apt-get install redis-server
+        sudo service redis-server start
+    - name: Installing Rust toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        # set to the pinned nightly version known to work with polars
+        toolchain: nightly-2023-11-15
+        profile: minimal
+        components: rust-src
+        target: x86_64-unknown-linux-gnu
+        override: true
+        default: true
+    - name: Run tests
+      env:
+        # RUSTFLAGS: -C target-feature=+fxsr,+sse,+sse2,+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+fma
+        RUSTFLAGS: -C target-cpu=native
+      run: cargo test --verbose --locked --features=apply,fetch,foreach,generate,geocode,luau,python,feature_capable,nightly,to,polars
