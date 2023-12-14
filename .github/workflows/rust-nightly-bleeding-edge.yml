@@ -1,4 +1,9 @@
 name: Linux Nightly Bleeding Edge
+# use the LATEST version of the Rust nightly toolchain to test qsv. 
+# This will often fail, but it's useful to see if the code is working.
+# Most failures are due to polars being pinned to a specific nightly version.
+# See rust-polars-pinned-nightly.yml for a nightly build that is known to
+# work with polars.
 
 on:
   schedule:
