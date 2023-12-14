@@ -77,19 +77,24 @@ pub fn max_jobs() -> usize {
     }
 }
 
+/// Given a desired number of cores to use
+/// returns number of cores to actually use.
+/// If desired is None, zero, or greater than available cores,
+/// returns max_jobs, which is equal to number of available cores
+/// If desired is Some and less than available cores,
+/// returns desired number of cores
 pub fn njobs(flag_jobs: Option<usize>) -> usize {
     let max_jobs = max_jobs();
-    flag_jobs.map_or(max_jobs, |jobs| {
+    let jobs_to_use = flag_jobs.map_or(max_jobs, |jobs| {
         if jobs == 0 || jobs > max_jobs {
-            env::set_var("RAYON_NUM_THREADS", max_jobs.to_string());
-            log::info!("Using {max_jobs} max processors...");
             max_jobs
         } else {
-            env::set_var("RAYON_NUM_THREADS", jobs.to_string());
-            log::info!("Throttling to {max_jobs} processors...");
             jobs
         }
-    })
+    });
+    env::set_var("RAYON_NUM_THREADS", jobs_to_use.to_string());
+    log::info!("Using {jobs_to_use} jobs...");
+    jobs_to_use
 }
 
 pub fn timeout_secs(timeout: u16) -> Result<u64, String> {
