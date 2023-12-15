@@ -11,7 +11,10 @@ Usage:
 
 External sort option:
     --memory-limit <arg>   The maximum amount of memory to buffer the on-disk hash table.
-                           This is a percentage of total memory. [default: 10]
+                           This is a percentage of total memory.
+                           [default: 10]
+    --tmp-dir <arg>        The directory to use for externally sorting file segments.
+                           [default: ./]
     -j, --jobs <arg>       The number of jobs to run in parallel.
                            When not set, the number of jobs is set to the
                            number of CPUs detected.
@@ -42,6 +45,7 @@ struct Args {
     arg_output:        Option<String>,
     flag_jobs:         Option<usize>,
     flag_memory_limit: Option<u8>,
+    flag_tmp_dir:      Option<String>,
     flag_no_headers:   bool,
 }
 
@@ -50,6 +54,17 @@ const RW_BUFFER_CAPACITY: usize = 1_000_000; // 1 MB
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
+
+    // check if tmp dir exists
+    let tmp_dir = match &args.flag_tmp_dir {
+        Some(tmp_dir) => {
+            if !path::Path::new(tmp_dir).exists() {
+                return fail_clierror!("tmp-dir '{tmp_dir}' does not exist");
+            }
+            tmp_dir.to_string()
+        },
+        None => "./".to_string(),
+    };
 
     // memory buffer to use for external merge sort,
     // if we can detect the total memory, use 10% of it by default
@@ -101,7 +116,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let sorter: ExternalSorter<String, io::Error, MemoryLimitedBufferBuilder> =
         match ExternalSorterBuilder::new()
-            .with_tmp_dir(path::Path::new("./"))
+            .with_tmp_dir(path::Path::new(&tmp_dir))
             .with_buffer(MemoryLimitedBufferBuilder::new(mem_limited_buffer))
             .with_rw_buf_size(RW_BUFFER_CAPACITY)
             .with_threads_number(util::njobs(args.flag_jobs))
