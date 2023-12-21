@@ -18,7 +18,7 @@ use reqwest::Client;
 use serde::de::DeserializeOwned;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 use serde::de::{Deserialize, Deserializer, Error};
-use sysinfo::{System, SystemExt};
+use sysinfo::System;
 
 use crate::{
     config,
@@ -850,7 +850,6 @@ fn send_hwsurvey(
     dry_run: bool,
 ) -> Result<reqwest::StatusCode, String> {
     use serde_json::json;
-    use sysinfo::CpuExt;
 
     static HW_SURVEY_URL: &str =
         "https://4dhmneehnl.execute-api.us-east-1.amazonaws.com/dev/qsv-hwsurvey";
@@ -858,12 +857,10 @@ fn send_hwsurvey(
     let mut sys = System::new();
     sys.refresh_all();
     let total_mem = sys.total_memory();
-    let kernel_version = sys
-        .kernel_version()
-        .unwrap_or_else(|| "Unknown kernel".to_string());
-    let long_os_version = sys
-        .long_os_version()
-        .unwrap_or_else(|| "Unknown OS version".to_string());
+    let kernel_version =
+        sysinfo::System::kernel_version().unwrap_or_else(|| "Unknown kernel".to_string());
+    let long_os_version =
+        sysinfo::System::long_os_version().unwrap_or_else(|| "Unknown OS version".to_string());
     let cpu_count = sys.cpus().len();
     let physical_cpu_count = sys.physical_core_count().unwrap_or_default();
     let cpu_vendor_id = sys.cpus()[0].vendor_id();
