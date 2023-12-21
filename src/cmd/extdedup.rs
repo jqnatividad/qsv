@@ -39,8 +39,9 @@ use std::{
 
 use indicatif::HumanCount;
 use serde::Deserialize;
-use sysinfo::{System, SystemExt};
+use sysinfo::System;
 
+// use sysinfo::System::sysinfo;
 use crate::{config, odhtcache, util, CliResult};
 
 #[derive(Deserialize)]
@@ -63,7 +64,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // if we can detect the total memory, use 10% of it by default
     // and up to --memory-limit (capped at 50%),
     // otherwise, if we cannot detect the free memory use a default of 100 MB
-    let mem_limited_buffer = if System::IS_SUPPORTED {
+    let mem_limited_buffer = if sysinfo::IS_SUPPORTED_SYSTEM {
         let mut sys = System::new();
         sys.refresh_memory();
         (sys.total_memory() * 1000) / u8::min(args.flag_memory_limit.unwrap_or(10), 50) as u64
