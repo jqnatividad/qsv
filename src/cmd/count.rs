@@ -57,10 +57,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let (count, width) = if args.flag_width {
         count_input(&conf, args.flag_width)?
     } else {
-        match conf.indexed().unwrap_or_else(|_| {
+        let index_status = conf.indexed().unwrap_or_else(|_| {
             info!("index is stale");
             None
-        }) {
+        });
+        match index_status {
             Some(idx) => {
                 info!("index used");
                 (idx.count(), 0)
