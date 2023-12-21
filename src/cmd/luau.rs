@@ -1811,7 +1811,6 @@ fn setup_helpers(
         } else {
             // append to an existing file. If the file does not exist, create it.
             OpenOptions::new()
-                .write(true)
                 .create(true)
                 .append(true)
                 .open(sanitized_filename.clone())
