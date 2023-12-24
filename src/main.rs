@@ -25,8 +25,6 @@
         clippy::unnecessary_wraps,
         // false positive
         clippy::needless_doctest_main,
-        // performance
-        clippy::len_zero,
         // noisy
         clippy::missing_errors_doc,
         clippy::must_use_candidate,

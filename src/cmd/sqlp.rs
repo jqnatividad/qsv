@@ -502,7 +502,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         sql_script
             .split(';')
             .map(std::string::ToString::to_string)
-            .filter(|s| s.trim().len() > 0)
+            .filter(|s| !s.trim().is_empty())
             .collect()
     } else {
         // its not a sql script, just a single query
