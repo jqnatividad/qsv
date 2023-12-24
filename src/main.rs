@@ -13,7 +13,6 @@
         // correctly used
         clippy::derive_partial_eq_without_eq,
         clippy::enum_glob_use,
-        let_underscore_drop,
         clippy::result_unit_err,
         // not practical
         clippy::similar_names,
@@ -21,13 +20,11 @@
         clippy::struct_excessive_bools,
         // preference
         clippy::doc_markdown,
-        clippy::unseparated_literal_suffix,
         clippy::unnecessary_wraps,
         // false positive
         clippy::needless_doctest_main,
         // noisy
         clippy::missing_errors_doc,
-        clippy::must_use_candidate,
         clippy::use_self,
         clippy::cognitive_complexity,
         clippy::option_if_let_else,
