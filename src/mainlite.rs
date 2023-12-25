@@ -144,7 +144,12 @@ fn main() -> QsvExitCode {
 Please choose one of the following commands:",
                 command_list!()
             ));
-            _ = util::qsv_check_for_update(true, false);
+
+            // if no command is specified, auto-check for updates 10% of the time
+            let mut rng = fastrand::Rng::new(); //DevSkim: ignore DS148264
+            if rng.usize(0..10) == 0 {
+                _ = util::qsv_check_for_update(true, false);
+            }
             util::log_end(qsv_args, now);
             QsvExitCode::Good
         },
