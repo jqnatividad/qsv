@@ -3,7 +3,6 @@ use std::{env, io, time::Instant};
 
 extern crate qsv_docopt as docopt;
 use docopt::Docopt;
-use fastrand; //DevSkim: ignore DS148264
 use serde::Deserialize;
 
 use crate::clitypes::{CliError, CliResult, QsvExitCode, CURRENT_COMMAND};
