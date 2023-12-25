@@ -39,6 +39,7 @@ use std::{env, io, time::Instant};
 
 extern crate qsv_docopt as docopt;
 use docopt::Docopt;
+use fastrand; //DevSkim: ignore DS148264
 use serde::Deserialize;
 
 use crate::clitypes::{CliError, CliResult, QsvExitCode, CURRENT_COMMAND};
@@ -244,7 +245,12 @@ Please choose one of the following {num_commands} commands:
 sponsored by datHere - Data Infrastructure Engineering (https://qsv.datHere.com)
 "#
             );
-            _ = util::qsv_check_for_update(true, false);
+
+            // if no command is specified, auto-check for updates 10% of the time
+            let mut rng = fastrand::Rng::new(); //DevSkim: ignore DS148264
+            if rng.usize(0..10) == 0 {
+                _ = util::qsv_check_for_update(true, false);
+            }
             util::log_end(qsv_args, now);
             QsvExitCode::Good
         },
