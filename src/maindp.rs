@@ -164,7 +164,7 @@ fn main() -> QsvExitCode {
 Please choose one of the following commands:",
                 command_list!()
             ));
-            _ = util::qsv_check_for_update(true, false);
+
             util::log_end(qsv_args, now);
             QsvExitCode::Good
         },
