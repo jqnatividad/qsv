@@ -406,12 +406,15 @@ where
 
 #[inline]
 pub fn many_configs(
-    inps: &[String],
+    inps: &[PathBuf],
     delim: Option<Delimiter>,
     no_headers: bool,
     flexible: bool,
 ) -> Result<Vec<Config>, String> {
-    let mut inps = inps.to_vec();
+    let mut inps = inps
+        .iter()
+        .map(|p| p.to_str().unwrap_or("-").to_owned())
+        .collect::<Vec<_>>();
     if inps.is_empty() {
         inps.push("-".to_owned()); // stdin
     }
@@ -1447,7 +1450,7 @@ pub fn isutf8_file(path: &Path) -> Result<bool, CliError> {
 pub fn process_input(
     mut arg_input: Vec<PathBuf>,
     tmpdir: &tempfile::TempDir,
-    empty_stdin_errmsg: &str,
+    custom_empty_stdin_errmsg: &str,
 ) -> Result<Vec<PathBuf>, CliError> {
     let mut processed_input = Vec::with_capacity(arg_input.len());
 
@@ -1528,7 +1531,12 @@ pub fn process_input(
     }
 
     if processed_input.is_empty() {
-        return fail_clierror!("{empty_stdin_errmsg}");
+        if custom_empty_stdin_errmsg.is_empty() {
+            return fail_clierror!(
+                "No data on stdin. Please provide at least one input file or pipe data to stdin."
+            );
+        }
+        return fail_clierror!("{custom_empty_stdin_errmsg}");
     }
     log::debug!("processed input: {:?}", processed_input);
     Ok(processed_input)
