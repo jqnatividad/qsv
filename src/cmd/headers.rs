@@ -13,6 +13,15 @@ Usage:
     qsv headers [options] [<input>...]
     qsv headers --help
 
+headers arguments:
+    <input>...             The CSV file(s) to read. Use '-' for standard input.
+                           If input is a directory, all files in the directory will
+                           be read as input.
+                           If the input is a file with a '.infile-list' extension,
+                           the file will be read as a list of input files.
+                           If the input are snappy-compressed files(s), it will be
+                           decompressed automatically.
+
 headers options:
     -j, --just-names       Only show the header names (hide column index).
                            This is automatically enabled if more than one
@@ -27,7 +36,7 @@ Common options:
                            Must be a single character. (default: ,)
 "#;
 
-use std::io;
+use std::{io, path::PathBuf};
 
 use serde::Deserialize;
 use tabwriter::TabWriter;
@@ -36,7 +45,7 @@ use crate::{config::Delimiter, util, CliResult};
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input:       Vec<String>,
+    arg_input:       Vec<PathBuf>,
     flag_just_names: bool,
     flag_intersect:  bool,
     flag_trim:       bool,
@@ -44,7 +53,9 @@ struct Args {
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
-    let args: Args = util::get_args(USAGE, argv)?;
+    let mut args: Args = util::get_args(USAGE, argv)?;
+    let tmpdir = tempfile::tempdir()?;
+    args.arg_input = util::process_input(args.arg_input, &tmpdir, "")?;
     let configs = util::many_configs(&args.arg_input, args.flag_delimiter, true, false)?;
 
     let num_inputs = configs.len();
