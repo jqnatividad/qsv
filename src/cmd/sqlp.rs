@@ -100,8 +100,9 @@ Usage:
 
 sqlp arguments:
     input                  The CSV file/s to query. Use '-' for standard input.
-                           If input is a directory, all CSV files in the directory will
-                           be used.
+                           If input is a directory, all files in the directory will be read as input.
+                           If the input is a file with a '.infile-list' extension, the
+                           file will be read as a list of files to use as input.
                            If the input are snappy compressed file(s), it will be
                            decompressed automatically.
                            Column headers are required. Use 'qsv rename _all_generic --no-headers'
