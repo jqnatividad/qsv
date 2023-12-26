@@ -121,3 +121,39 @@ fn exclude_utf8_issue778_positions_aliases() {
 
     assert_eq!(got, expected.trim_end());
 }
+
+#[test]
+fn exclude_1497_empty_fields() {
+    let wrk = Workdir::new("exclude_1497_empty_fields");
+
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["id", "start", "end"],
+            svec!["1", "2001", "2003"],
+            svec!["2", "2004", "2006"],
+            svec!["3", "2006", ""],
+            svec!["4", "2007", "2010"],
+        ],
+    );
+
+    wrk.create(
+        "skip.csv",
+        vec![
+            svec!["id", "start", "end"],
+            svec!["2", "2004", "2006"],
+            svec!["3", "2006", ""],
+        ],
+    );
+
+    let mut cmd = wrk.command("exclude");
+    cmd.arg("id,end")
+        .arg("data.csv")
+        .arg("id,end")
+        .arg("skip.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = "id,start,end\n1,2001,2003\n4,2007,2010";
+
+    assert_eq!(got, expected);
+}
