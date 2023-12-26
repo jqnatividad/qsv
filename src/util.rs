@@ -1441,7 +1441,8 @@ pub fn isutf8_file(path: &Path) -> Result<bool, CliError> {
 /// If it's not empty, check the input files if they exist, and return an error if they don't
 ///
 /// If the input is a directory, add all the files in the directory to the input
-/// If the input is a file, add the file to the input
+/// If the input is a file with the extension ".infile-list" read the file, and add each line as a
+/// file to the input If the input is a file, add the file to the input
 /// If the input are snappy compressed files, uncompress them before adding them to the input
 pub fn process_input(
     mut arg_input: Vec<PathBuf>,
@@ -1464,11 +1465,36 @@ pub fn process_input(
         arg_input.remove(0);
     }
 
-    let work_input = if arg_input.len() == 1 && arg_input[0].is_dir() {
-        // if the input is a directory, add all the files in the directory to the input
-        std::fs::read_dir(&arg_input[0])?
-            .map(|entry| entry.map(|e| e.path()))
-            .collect::<Result<Vec<_>, _>>()?
+    let work_input = if arg_input.len() == 1 {
+        let input_path = &arg_input[0];
+        if input_path.is_dir() {
+            // if the input is a directory, add all the files in the directory to the input
+            std::fs::read_dir(input_path)?
+                .map(|entry| entry.map(|e| e.path()))
+                .collect::<Result<Vec<_>, _>>()?
+        } else if input_path.is_file() {
+            // if the input is a file and has the extension "infile-list" case-insensitive,
+            // read the file. Each line is a file path
+            if input_path
+                .extension()
+                .and_then(std::ffi::OsStr::to_str)
+                .map(str::to_lowercase)
+                == Some("infile-list".to_string())
+            {
+                let mut input_file = std::fs::File::open(input_path)?;
+                let mut input_file_contents = String::new();
+                input_file.read_to_string(&mut input_file_contents)?;
+                input_file_contents
+                    .lines()
+                    .map(PathBuf::from)
+                    .collect::<Vec<_>>()
+            } else {
+                // if the input is not an ".infile-list" file, add the file to the input
+                arg_input
+            }
+        } else {
+            arg_input
+        }
     } else {
         arg_input
     };
