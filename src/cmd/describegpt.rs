@@ -572,7 +572,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             args.arg_input.clone().unwrap_or_else(|| "-".to_string()),
         )],
         &tmpdir,
-        "No data on stdin. Please provide at least one input file or pipe data to stdin.",
+        "",
     )?;
     // safety: we just checked that there is at least one input file
     let input_path = work_input[0]

@@ -376,11 +376,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut args: Args = util::get_args(USAGE, argv)?;
 
     let tmpdir = tempfile::tempdir()?;
-    args.arg_input = process_input(
-        args.arg_input,
-        &tmpdir,
-        "No data on stdin. Please provide at least one input file or pipe data to stdin.",
-    )?;
+    args.arg_input = process_input(args.arg_input, &tmpdir, "")?;
 
     let rnull_values = if args.flag_rnull_values == "<empty string>" {
         vec![String::new()]
