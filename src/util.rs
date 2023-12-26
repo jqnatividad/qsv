@@ -1437,16 +1437,17 @@ pub fn isutf8_file(path: &Path) -> Result<bool, CliError> {
     Ok(simdutf8::basic::from_utf8(&buffer).is_ok())
 }
 
-/// Process the input files and return a vector of paths to the input files
+/// Process the input files and return a vector of paths to the input files.
 ///
-/// If the input is empty, try to copy stdin to a file named stdin in the passed temp directory
-/// If the input is empty and stdin is empty, return an error
-/// If it's not empty, check the input files if they exist, and return an error if they don't
+/// If the input is empty, try to copy stdin to a file named stdin in the passed temp directory.
+/// If the input is empty and stdin is empty, return an error.
+/// If it's not empty, check the input files if they exist, and return an error if they don't.
 ///
-/// If the input is a directory, add all the files in the directory to the input
-/// If the input is a file with the extension ".infile-list" read the file, and add each line as a
-/// file to the input If the input is a file, add the file to the input
-/// If the input are snappy compressed files, uncompress them before adding them to the input
+/// If the input is a directory, add all the files in the directory to the input.
+/// If the input is a file with the extension ".infile-list", read the file & add each line as a
+/// file to the input.
+/// If the input is a file, add the file to the input.
+/// If the input are snappy compressed files, uncompress them before adding them to the input.
 pub fn process_input(
     mut arg_input: Vec<PathBuf>,
     tmpdir: &tempfile::TempDir,
