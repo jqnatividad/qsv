@@ -205,17 +205,15 @@ impl<R: io::Read + io::Seek> ValueIndex<R> {
                 .select(&row)
                 .map(|v| util::transform(v, casei))
                 .collect();
-            if !fields.iter().any(std::vec::Vec::is_empty) {
-                match val_idx.entry(fields) {
-                    Entry::Vacant(v) => {
-                        let mut rows = Vec::with_capacity(4);
-                        rows.push(rowi);
-                        v.insert(rows);
-                    },
-                    Entry::Occupied(mut v) => {
-                        v.get_mut().push(rowi);
-                    },
-                }
+            match val_idx.entry(fields) {
+                Entry::Vacant(v) => {
+                    let mut rows = Vec::with_capacity(4);
+                    rows.push(rowi);
+                    v.insert(rows);
+                },
+                Entry::Occupied(mut v) => {
+                    v.get_mut().push(rowi);
+                },
             }
             rowi += 1;
             count += 1;
