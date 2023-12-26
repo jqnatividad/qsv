@@ -406,12 +406,15 @@ where
 
 #[inline]
 pub fn many_configs(
-    inps: &[String],
+    inps: &[PathBuf],
     delim: Option<Delimiter>,
     no_headers: bool,
     flexible: bool,
 ) -> Result<Vec<Config>, String> {
-    let mut inps = inps.to_vec();
+    let mut inps = inps
+        .iter()
+        .map(|p| p.to_str().unwrap_or("-").to_owned())
+        .collect::<Vec<_>>();
     if inps.is_empty() {
         inps.push("-".to_owned()); // stdin
     }
@@ -1441,12 +1444,13 @@ pub fn isutf8_file(path: &Path) -> Result<bool, CliError> {
 /// If it's not empty, check the input files if they exist, and return an error if they don't
 ///
 /// If the input is a directory, add all the files in the directory to the input
-/// If the input is a file, add the file to the input
+/// If the input is a file with the extension ".infile-list" read the file, and add each line as a
+/// file to the input If the input is a file, add the file to the input
 /// If the input are snappy compressed files, uncompress them before adding them to the input
 pub fn process_input(
     mut arg_input: Vec<PathBuf>,
     tmpdir: &tempfile::TempDir,
-    empty_stdin_errmsg: &str,
+    custom_empty_stdin_errmsg: &str,
 ) -> Result<Vec<PathBuf>, CliError> {
     let mut processed_input = Vec::with_capacity(arg_input.len());
 
@@ -1464,11 +1468,36 @@ pub fn process_input(
         arg_input.remove(0);
     }
 
-    let work_input = if arg_input.len() == 1 && arg_input[0].is_dir() {
-        // if the input is a directory, add all the files in the directory to the input
-        std::fs::read_dir(&arg_input[0])?
-            .map(|entry| entry.map(|e| e.path()))
-            .collect::<Result<Vec<_>, _>>()?
+    let work_input = if arg_input.len() == 1 {
+        let input_path = &arg_input[0];
+        if input_path.is_dir() {
+            // if the input is a directory, add all the files in the directory to the input
+            std::fs::read_dir(input_path)?
+                .map(|entry| entry.map(|e| e.path()))
+                .collect::<Result<Vec<_>, _>>()?
+        } else if input_path.is_file() {
+            // if the input is a file and has the extension "infile-list" case-insensitive,
+            // read the file. Each line is a file path
+            if input_path
+                .extension()
+                .and_then(std::ffi::OsStr::to_str)
+                .map(str::to_lowercase)
+                == Some("infile-list".to_string())
+            {
+                let mut input_file = std::fs::File::open(input_path)?;
+                let mut input_file_contents = String::new();
+                input_file.read_to_string(&mut input_file_contents)?;
+                input_file_contents
+                    .lines()
+                    .map(PathBuf::from)
+                    .collect::<Vec<_>>()
+            } else {
+                // if the input is not an ".infile-list" file, add the file to the input
+                arg_input
+            }
+        } else {
+            arg_input
+        }
     } else {
         arg_input
     };
@@ -1502,7 +1531,12 @@ pub fn process_input(
     }
 
     if processed_input.is_empty() {
-        return fail_clierror!("{empty_stdin_errmsg}");
+        if custom_empty_stdin_errmsg.is_empty() {
+            return fail_clierror!(
+                "No data on stdin. Please provide at least one input file or pipe data to stdin."
+            );
+        }
+        return fail_clierror!("{custom_empty_stdin_errmsg}");
     }
     log::debug!("processed input: {:?}", processed_input);
     Ok(processed_input)

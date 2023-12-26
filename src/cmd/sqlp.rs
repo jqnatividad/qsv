@@ -100,8 +100,9 @@ Usage:
 
 sqlp arguments:
     input                  The CSV file/s to query. Use '-' for standard input.
-                           If input is a directory, all CSV files in the directory will
-                           be used.
+                           If input is a directory, all files in the directory will be read as input.
+                           If the input is a file with a '.infile-list' extension, the
+                           file will be read as a list of files to use as input.
                            If the input are snappy compressed file(s), it will be
                            decompressed automatically.
                            Column headers are required. Use 'qsv rename _all_generic --no-headers'
@@ -375,11 +376,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut args: Args = util::get_args(USAGE, argv)?;
 
     let tmpdir = tempfile::tempdir()?;
-    args.arg_input = process_input(
-        args.arg_input,
-        &tmpdir,
-        "No data on stdin. Please provide at least one input file or pipe data to stdin.",
-    )?;
+    args.arg_input = process_input(args.arg_input, &tmpdir, "")?;
 
     let rnull_values = if args.flag_rnull_values == "<empty string>" {
         vec![String::new()]

@@ -87,7 +87,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             args.arg_input.clone().unwrap_or_else(|| "-".to_string()),
         )],
         &tmpdir,
-        "No data on stdin. Please provide at least one input file or pipe data to stdin.",
+        "",
     )?;
 
     // safety: there's at least one valid element in work_input

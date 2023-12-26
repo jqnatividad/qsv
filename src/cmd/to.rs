@@ -26,7 +26,11 @@ Load same files into a new/existing postgres database whose connection string is
 
 Load files inside a directory to a local database 'test' with user `testuser`, password `pass`.
 
-  $ qsv to postgres 'postgres://testuser:pass@localhost/test' dir1 
+  $ qsv to postgres 'postgres://testuser:pass@localhost/test' dir1
+
+Load files listed in the 'input.infile-list' to a local database 'test' with user `testuser`, password `pass`.
+
+  $ qsv to postgres 'postgres://testuser:pass@localhost/test' input.infile-list
 
 Drop tables if they exist before loading.
 
@@ -61,6 +65,10 @@ Load all files in dir1 to sqlite database `test.db`
 
   $ qsv to sqlite test.db dir
 
+Load files listed in the 'mydata.infile-list' to sqlite database `test.db`
+
+    $ qsv to sqlite test.db mydata.infile-list
+
 Drop tables if they exist before loading.
 
   $ qsv to sqlite test.db --drop file1.csv file2.csv
@@ -90,6 +98,14 @@ filename without the extension. Note the `output.xlsx` will be overwritten if it
 
   $ qsv to xlsx output.xlsx file1.csv file2.csv
 
+Load all files in dir1 into xlsx file.
+
+    $ qsv to xlsx output.xlsx dir1
+
+Load files listed in the 'ourdata.infile-list' into xlsx file.
+
+    $ qsv to xlsx output.xlsx ourdata.infile-list
+
 PARQUET (only available if compiled with `to_parquet` feature)
 Convert to directory of parquet files.  Need to select a directory, it will be created if it does not exists.
 If the `to_parquet` feature is not enabled, a simpler parquet conversion is available using the `sqlp`
@@ -108,6 +124,14 @@ Convert from stdin.
 
   $ qsv to parquet --pipe mydir -
 
+Convert all files in dir1 into parquet files in myparquetdir.
+
+    $ qsv to parquet myparquetdir dir1
+
+Convert files listed in the 'data.infile-list' into parquet files in myparquetdir.
+    
+        $ qsv to parquet myparquetdir data.infile-list
+
 DATAPACKAGE
 Generate a datapackage, which contains stats and information about what is in the CSV files.
 
@@ -124,6 +148,10 @@ Add more stats to datapackage.
 Generate a `datapackage.json` file from all the files in dir1
 
   $ qsv to datapackage datapackage.json dir1
+
+Generate a `datapackage.json` file from all the files listed in the 'data.infile-list'
+
+    $ qsv to datapackage datapackage.json data.infile-list
 
 For all other conversions you can output the datapackage created by specifying `--print-package`.
 
@@ -218,6 +246,9 @@ impl From<csvs_convert::DescribeError> for CliError {
     }
 }
 
+static EMPTY_STDIN_ERRMSG: &str =
+    "No data on stdin. Need to add connection string as first argument then the input CSVs";
+
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
     debug!("'to' command running");
@@ -239,11 +270,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     if args.cmd_postgres {
         debug!("converting to postgres");
-        arg_input = process_input(
-            arg_input,
-            &tmpdir,
-            "No data on stdin. Need to add connection string as first argument then the input CSVs",
-        )?;
+        arg_input = process_input(arg_input, &tmpdir, EMPTY_STDIN_ERRMSG)?;
         if args.flag_dump {
             options.dump_file = args.arg_postgres.expect("checked above");
             output = csvs_to_postgres_with_options(String::new(), arg_input, options)?;
@@ -257,12 +284,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         debug!("conversion to postgres complete");
     } else if args.cmd_sqlite {
         debug!("converting to sqlite");
-        arg_input = process_input(
-            arg_input,
-            &tmpdir,
-            "No data on stdin. Need to add the name of a sqlite db as first argument then the \
-             input CSVs",
-        )?;
+        arg_input = process_input(arg_input, &tmpdir, EMPTY_STDIN_ERRMSG)?;
         if args.flag_dump {
             options.dump_file = args.arg_sqlite.expect("checked above");
             output = csvs_to_sqlite_with_options(String::new(), arg_input, options)?;
@@ -278,12 +300,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         #[cfg(all(feature = "to_parquet", feature = "feature_capable"))]
         {
             debug!("converting to parquet");
-            arg_input = process_input(
-                arg_input,
-                &tmpdir,
-                "No data on stdin. Need to add the name of a parquet directory as first argument \
-                 then the input CSVs",
-            )?;
+            arg_input = process_input(arg_input, &tmpdir, EMPTY_STDIN_ERRMSG)?;
             output = csvs_to_parquet_with_options(
                 args.arg_parquet.expect("checked above"),
                 arg_input,
@@ -299,24 +316,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     } else if args.cmd_xlsx {
         debug!("converting to xlsx");
-        arg_input = process_input(
-            arg_input,
-            &tmpdir,
-            "No data on stdin. Need to add the name of an xlsx file as first argument then the \
-             input CSVs",
-        )?;
+        arg_input = process_input(arg_input, &tmpdir, EMPTY_STDIN_ERRMSG)?;
 
         output =
             csvs_to_xlsx_with_options(args.arg_xlsx.expect("checked above"), arg_input, options)?;
         debug!("conversion to xlsx complete");
     } else if args.cmd_datapackage {
         debug!("creating datapackage");
-        arg_input = process_input(
-            arg_input,
-            &tmpdir,
-            "No data on stdin. Need to add the name of a datapackage file as first argument then \
-             the input CSVs",
-        )?;
+        arg_input = process_input(arg_input, &tmpdir, EMPTY_STDIN_ERRMSG)?;
 
         let describe_options = DescribeOptions::builder()
             .delimiter(options.delimiter)
