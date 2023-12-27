@@ -265,9 +265,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.76"
+version = "1.0.77"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "59d2a3357dde987206219e78ecfbbb6e8dad06cbb65292758d3270e6254f7355"
+checksum = "c9d19de80eff169429ac1e9f48fffb163916b448a44e8e046186232046d9e1f9"
 
 [[package]]
 name = "argminmax"
@@ -1945,13 +1945,13 @@ dependencies = [
 
 [[package]]
 name = "geosuggest-core"
-version = "0.5.2"
+version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "11983c1971df09c599175eb8058789298ba11c2edf321cdb4f4ecadb559a6157"
+checksum = "23d4613df34041f2ab8112773ce893acf60c2d7ab6a122c2c9863ede32634df3"
 dependencies = [
  "bincode",
  "csv",
- "itertools 0.12.0",
+ "itertools",
  "kiddo",
  "rayon",
  "serde",
@@ -1961,9 +1961,9 @@ dependencies = [
 
 [[package]]
 name = "geosuggest-utils"
-version = "0.5.2"
+version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a955c15b153ea0beaa82b137fa8e647e9b3bd7bd659e041506ba7bc70df8bc45"
+checksum = "61c1358f4b0ce41a99d3df238d95a1336c39334726709e32b28a32827065ebb1"
 dependencies = [
  "anyhow",
  "futures",
@@ -2029,10 +2029,9 @@ dependencies = [
 [[package]]
 name = "grex"
 version = "1.4.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "453e64d7e9ad21886eb7efc60ddff0961e4da66fe15896575a5bf4f1540ea63f"
+source = "git+https://github.com/pemistahl/grex?rev=8f6b35cee5f911311c2e0ef6e56f333e4c896112#8f6b35cee5f911311c2e0ef6e56f333e4c896112"
 dependencies = [
- "itertools 0.11.0",
+ "itertools",
  "lazy_static",
  "ndarray",
  "petgraph",
@@ -2380,15 +2379,6 @@ dependencies = [
 
 [[package]]
 name = "itertools"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b1c173a5686ce8bfa551b3563d0c2170bf24ca44da99c7ca4bfdab5418c3fe57"
-dependencies = [
- "either",
-]
-
-[[package]]
-name = "itertools"
 version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "25db6b064527c5d482d0423354fcd07a89a2dfe07b67892e62411946db7f07b0"
@@ -2509,9 +2499,9 @@ dependencies = [
 
 [[package]]
 name = "kiddo"
-version = "3.0.0"
+version = "4.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "35808272ecb78a5610c70d5bc238ede78520200a4651c2c3fc59d64ba2bea28a"
+checksum = "772929f90d2cc9bb2594c2732f956f5bb7223d7c52d30eb2a236a80594219413"
 dependencies = [
  "az",
  "divrem",
@@ -2520,7 +2510,7 @@ dependencies = [
  "fixed",
  "generator",
  "init_with",
- "itertools 0.11.0",
+ "itertools",
  "log",
  "num-traits",
  "ordered-float 4.2.0",
@@ -4039,7 +4029,7 @@ dependencies = [
  "hashbrown 0.14.3",
  "indexmap 2.1.0",
  "indicatif",
- "itertools 0.12.0",
+ "itertools",
  "itoa",
  "jemallocator",
  "jql-runner",
@@ -4904,11 +4894,11 @@ checksum = "f27f6278552951f1f2b8cf9da965d10969b2efdea95a6ec47987ab46edfe263a"
 
 [[package]]
 name = "simple-home-dir"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "509fcbd8f28460b50b91c057bbc479dc0257f470f94c4564beb38c22c19fdaae"
+checksum = "2248bffb36839d917a8d3e046b7cc043ee6ef61970de8f6e7104098113297619"
 dependencies = [
- "windows-sys 0.48.0",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -5278,18 +5268,18 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "1.0.51"
+version = "1.0.52"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f11c217e1416d6f036b870f14e0413d480dbf28edbee1f877abaf0206af43bb7"
+checksum = "83a48fd946b02c0a526b2e9481c8e2a17755e47039164a86c4070446e3a4614d"
 dependencies = [
  "thiserror-impl",
 ]
 
 [[package]]
 name = "thiserror-impl"
-version = "1.0.51"
+version = "1.0.52"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "01742297787513b79cf8e29d1056ede1313e2420b7b3b15d0a768b4921f549df"
+checksum = "e7fbe9b594d6568a6a1443250a7e67d80b74e1e96f6d1715e1e21cc1888291d3"
 dependencies = [
  "proc-macro2",
  "quote",
