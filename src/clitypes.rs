@@ -1,16 +1,10 @@
 #![macro_use]
-use std::{
-    borrow::ToOwned,
-    fmt, io,
-    process::{ExitCode, Termination},
-    sync::OnceLock,
-};
 
 /// write to stdout
 macro_rules! wout {
     ($($arg:tt)*) => ({
         use std::io::Write;
-        (writeln!(&mut ::std::io::stdout(), $($arg)*)).unwrap();
+        (println!($($arg)*)).unwrap();
     });
 }
 
@@ -21,7 +15,7 @@ macro_rules! woutinfo {
         use log::info;
         let info = format!($($arg)*);
         info!("{info}");
-        (writeln!(&mut ::std::io::stdout(), $($arg)*)).unwrap();
+        (println!($($arg)*)).unwrap();
     });
 }
 
@@ -32,7 +26,7 @@ macro_rules! werr {
         use log::error;
         let error = format!($($arg)*);
         error!("{error}");
-        (writeln!(&mut ::std::io::stderr(), $($arg)*)).unwrap();
+        (eprintln!($($arg)*)).unwrap();
     });
 }
 
@@ -44,7 +38,7 @@ macro_rules! wwarn {
         use log::warn;
         let warning = format!($($arg)*);
         warn!("{warning}");
-        (writeln!(&mut ::std::io::stderr(), $($arg)*)).unwrap();
+        (eprintln!($($arg)*)).unwrap();
     });
 }
 
@@ -55,7 +49,7 @@ macro_rules! winfo {
         use log::info;
         let info = format!($($arg)*);
         info!("{info}");
-        (writeln!(&mut ::std::io::stderr(), $($arg)*)).unwrap();
+        (eprintln!($($arg)*)).unwrap();
     });
 }
 
