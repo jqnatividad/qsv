@@ -42,7 +42,7 @@
 arg_pat="$1"
 
 # the version of this script
-bm_version=3.6.0
+bm_version=3.7.0
 
 # CONFIGURABLE VARIABLES ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -218,7 +218,7 @@ fi
 # check if hyperfine is installed
 if ! command -v hyperfine &>/dev/null; then
   echo "ERROR: hyperfine could not be found"
-  echo "Please install hyperfine v1.17.0 and above or run \"./benchmarks.sh setup\" to install it."
+  echo "Please install hyperfine v1.18.0 and above or run \"./benchmarks.sh setup\" to install it."
   exit
 fi
 
@@ -439,6 +439,12 @@ run enum "$qsv_bin" enum "$data"
 run excel "$qsv_bin" excel benchmark_data.xlsx
 run exclude "$qsv_bin" exclude \'Incident Zip\' "$data" \'Incident Zip\' data_to_exclude.csv
 run --index exclude_index "$qsv_bin" exclude \'Incident Zip\' "$data" \'Incident Zip\' data_to_exclude.csv
+run exclude_casei "$qsv_bin" exclude --ignore-case \'Incident Zip\' "$data" \'Incident Zip\' data_to_exclude.csv
+run --index exclude_casei_index "$qsv_bin" exclude --ignore-case \'Incident Zip\' "$data" \'Incident Zip\' data_to_exclude.csv
+run exclude_multi "$qsv_bin" exclude \'Incident Zip,Community Board,Agency\' "$data" \'Incident Zip,Community Board,Agency\' data_to_exclude.csv
+run --index exclude_multi_index "$qsv_bin" exclude \'Incident Zip,Community Board,Agency\' "$data" \'Incident Zip,Community Board,Agency\' data_to_exclude.csv
+run exclude_multi_casei "$qsv_bin" exclude --ignore-case \'Incident Zip,Community Board,Agency\' "$data" \'Incident Zip,Community Board,Agency\' data_to_exclude.csv
+run --index exclude_multi_casei_index "$qsv_bin" exclude --ignore-case \'Incident Zip,Community Board,Agency\' "$data" \'Incident Zip,Community Board,Agency\' data_to_exclude.csv
 run explode "$qsv_bin" explode City "-" "$data"
 run extdedup "$qsv_bin" extdedup "$data"
 run extsort "$qsv_bin" extsort data_unsorted.csv extsort_sorted.csv
@@ -599,7 +605,7 @@ for command_no_index in "${commands_without_index[@]}"; do
   pct_complete=$(((name_idx - 1) * 100 / total_count))
 
   echo "$name_idx. ${commands_without_index_name[$idx]} ($pct_complete%)"
-  hyperfine --warmup "$warmup_runs" -i --runs "$benchmark_runs" --export-csv results/hf_result.csv \
+  hyperfine -N --warmup "$warmup_runs" -i --runs "$benchmark_runs" --export-csv results/hf_result.csv \
     "$command_no_index"
 
   # prepend version, tstamp & benchmark name to the hyperfine results
@@ -640,7 +646,7 @@ for command_with_index in "${commands_with_index[@]}"; do
   pct_complete=$(((name_idx - 1) * 100 / total_count))
 
   echo "$name_idx. ${commands_with_index_name[$idx]} ($pct_complete%)"
-  hyperfine --warmup "$warmup_runs" -i --runs "$benchmark_runs" --export-csv results/hf_result.csv \
+  hyperfine -N --warmup "$warmup_runs" -i --runs "$benchmark_runs" --export-csv results/hf_result.csv \
     "$command_with_index"
   echo "version,tstamp,name" >results/results_work.csv
   echo "$version,$now,${commands_with_index_name[$idx]}" >>results/results_work.csv
