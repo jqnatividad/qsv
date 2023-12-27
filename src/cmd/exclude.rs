@@ -13,7 +13,21 @@ separating them with a comma. Specify a range of columns with `-`. Both
 columns1 and columns2 must specify exactly the same number of columns.
 (See 'qsv select --help' for the full syntax.)
 
-For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_exclude.rs.
+Examples:
+
+    qsv exclude id records.csv id previously-processed.csv
+    qsv exclude col1,col2 records.csv col1,col2 previously-processed.csv
+    qsv exclude col1-col5 records.csv col1-col5 previously-processed.csv
+    qsv exclude id records.csv id previously-processed.csv > new-records.csv
+    qsv exclude id records.csv id previously-processed.csv --output new-records.csv
+    qsv exclude -v id records.csv id previously-processed.csv -o intersection.csv
+    qsv exclude --ignore-case id records.csv id previously-processed.csv
+    qsv exclude id records.csv id previously-processed.csv |
+       qsv sort > new-sorted-records.csv
+    qsv exclude id records.csv id previously-processed.csv | qsv sort |
+       qsv --sorted dedup > new-sorted-deduped-records.csv
+
+For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_exclude.rs.
 
 Usage:
     qsv exclude [options] <columns1> <input1> <columns2> <input2>
