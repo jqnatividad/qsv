@@ -1,12 +1,10 @@
-// blatantly copied from https://github.com/race604/dedup/blob/master/src/cache.rs
 use std::collections::HashSet;
-
 use log::debug;
 use odht::{Config, FxHashFn, HashTableOwned};
 
-struct ExtDedupConfig;
-
 const CHUNK_SIZE: usize = 127;
+
+struct ExtDedupConfig;
 
 impl Config for ExtDedupConfig {
     type EncodedKey = [u8; CHUNK_SIZE + 1];
@@ -57,7 +55,6 @@ impl ExtDedupCache {
         }
     }
 
-    #[inline]
     pub fn insert(&mut self, item: &str) -> bool {
         if self.memo_size >= self.memo_limit {
             self.dump_to_disk();
@@ -66,8 +63,8 @@ impl ExtDedupCache {
         let mut res = self.memo.insert(item.to_owned());
         if res {
             self.memo_size += item.len() as u64;
-            if self.disk.is_some() {
-                res = self.insert_on_disk(item);
+            if let Some(disk) = &mut self.disk {
+                res = self.insert_on_disk(item, disk);
                 // debug!("Insert on disk: {res}");
             }
         }
@@ -75,24 +72,19 @@ impl ExtDedupCache {
         res
     }
 
-    #[inline]
     pub fn contains(&self, item: &str) -> bool {
         if self.memo.contains(item) {
             return true;
         }
 
-        return if let Some(ref disk) = self.disk {
+        if let Some(disk) = &self.disk {
             ExtDedupCache::item_to_keys(item).all(|key| disk.contains_key(&key))
         } else {
             false
-        };
+        }
     }
 
-    fn insert_on_disk(&mut self, item: &str) -> bool {
-        let disk = self.disk.get_or_insert_with(|| {
-            debug!("Create new disk cache");
-            HashTableOwned::<ExtDedupConfig>::with_capacity(1_000_000, 95)
-        });
+    fn insert_on_disk(&mut self, item: &str, disk: &mut HashTableOwned<ExtDedupConfig>) -> bool {
         let mut res = false;
         for key in ExtDedupCache::item_to_keys(item) {
             res = disk.insert(&key, &true).is_none() || res;
@@ -101,8 +93,7 @@ impl ExtDedupCache {
     }
 
     fn item_to_keys(item: &str) -> impl Iterator<Item = [u8; CHUNK_SIZE + 1]> + '_ {
-        let res = item
-            .as_bytes()
+        item.as_bytes()
             .chunks(CHUNK_SIZE)
             .enumerate()
             .map(|(i, chunk)| {
@@ -110,15 +101,15 @@ impl ExtDedupCache {
                 key[CHUNK_SIZE] = i as u8;
                 key[..chunk.len()].copy_from_slice(chunk);
                 key
-            });
-        res
+            })
     }
 
     fn dump_to_disk(&mut self) {
-        // debug!("Memory cache is full, dump to disk");
         let keys = self.memo.drain().collect::<Vec<_>>();
         for key in keys {
-            self.insert_on_disk(&key);
+            if let Some(disk) = &mut self.disk {
+                self.insert_on_disk(&key, disk);
+            }
         }
         self.memo_size = 0;
     }
