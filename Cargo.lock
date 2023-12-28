@@ -4140,9 +4140,9 @@ dependencies = [
 
 [[package]]
 name = "qsv_docopt"
-version = "1.4.0"
+version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9dc52a296003a8bc892bf7e24f26decd66696473e2f255cdf56d72dd0068a355"
+checksum = "5b17a032317fce7f5e33434d6c829d70dd75069838dc644f12df9e43e7aad9cc"
 dependencies = [
  "regex",
  "serde",
