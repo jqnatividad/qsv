@@ -231,6 +231,7 @@ rusqlite = { version = "0.29", features = ["bundled"] }
 serial_test = { version = "2.0", features = ["file_locks"] }
 
 [patch.crates-io]
+console = { git = "https://github.com/console-rs/console", rev = "0567bdcb6a523466586dc9ff0692c2e776f20a5f" }
 dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_ptr_as_ptr-bumpdeps"}
 grex = { git = "https://github.com/pemistahl/grex", rev="8f6b35cee5f911311c2e0ef6e56f333e4c896112" }
 
