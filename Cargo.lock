@@ -4073,7 +4073,7 @@ dependencies = [
  "strsim",
  "strum",
  "strum_macros",
- "sysinfo 0.30.1",
+ "sysinfo 0.30.2",
  "tabwriter",
  "tempfile",
  "test-data-generation",
@@ -5159,9 +5159,9 @@ dependencies = [
 
 [[package]]
 name = "sysinfo"
-version = "0.30.1"
+version = "0.30.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "01e979b637815805abbdeea72e4b6d9374dd0efce6524cc65c31e14911dbc671"
+checksum = "c856f6ee1d0241d2ebaee960aaad07080afb4daf6bdfa3b250ace3cf1b81355d"
 dependencies = [
  "cfg-if",
  "core-foundation-sys",
