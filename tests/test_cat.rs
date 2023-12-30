@@ -256,7 +256,7 @@ fn cat_rowskey_grouping() {
 
     let mut cmd = wrk.command("cat");
     cmd.arg("rowskey")
-        .arg("--group")
+        .args(["--group", "fstem"])
         .arg("in1.csv")
         .arg("in2.csv")
         .arg("in3.csv");
@@ -271,6 +271,145 @@ fn cat_rowskey_grouping() {
         svec!["in3", "1", "2", "3", "4"],
         svec!["in3", "2", "3", "4", "5"],
         svec!["in3", "z", "y", "x", "w"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn cat_rowskey_grouping_parentdirfname() {
+    let wrk = Workdir::new("cat_rowskey_grouping_parentdirfname");
+    wrk.create(
+        "in1.csv",
+        vec![
+            svec!["a", "b", "c"],
+            svec!["1", "2", "3"],
+            svec!["2", "3", "4"],
+        ],
+    );
+
+    wrk.create_with_delim(
+        "in2.tsv",
+        vec![
+            svec!["c", "a", "b"],
+            svec!["3", "1", "2"],
+            svec!["4", "2", "3"],
+        ],
+        b'\t',
+    );
+
+    // create a subdirectory and put in3.csv in it
+    let _ = wrk.create_subdir("testdir");
+
+    wrk.create(
+        "testdir/in3.csv",
+        vec![
+            svec!["a", "b", "d", "c"],
+            svec!["1", "2", "4", "3"],
+            svec!["2", "3", "5", "4"],
+            svec!["z", "y", "w", "x"],
+        ],
+    );
+
+    let mut cmd = wrk.command("cat");
+    cmd.arg("rowskey")
+        .args(["--group", "parentdirfname"])
+        .arg("in1.csv")
+        .arg("in2.tsv")
+        .arg("testdir/in3.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    // on Windows, the directory separator is backslash, which is an escape character in CSV
+    // strings. So we get double backslashes in the output.
+    #[cfg(windows)]
+    let expected = vec![
+        svec!["file", "a", "b", "c", "d"],
+        svec!["in1.csv", "1", "2", "3", ""],
+        svec!["in1.csv", "2", "3", "4", ""],
+        svec!["in2.tsv", "1", "2", "3", ""],
+        svec!["in2.tsv", "2", "3", "4", ""],
+        svec!["testdir\\in3.csv", "1", "2", "3", "4"],
+        svec!["testdir\\in3.csv", "2", "3", "4", "5"],
+        svec!["testdir\\in3.csv", "z", "y", "x", "w"],
+    ];
+    #[cfg(not(windows))]
+    let expected = vec![
+        svec!["file", "a", "b", "c", "d"],
+        svec!["in1.csv", "1", "2", "3", ""],
+        svec!["in1.csv", "2", "3", "4", ""],
+        svec!["in2.tsv", "1", "2", "3", ""],
+        svec!["in2.tsv", "2", "3", "4", ""],
+        svec!["testdir/in3.csv", "1", "2", "3", "4"],
+        svec!["testdir/in3.csv", "2", "3", "4", "5"],
+        svec!["testdir/in3.csv", "z", "y", "x", "w"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn cat_rowskey_grouping_parentdirfstem() {
+    let wrk = Workdir::new("cat_rowskey_grouping_parentdirfstem");
+    wrk.create(
+        "in1.csv",
+        vec![
+            svec!["a", "b", "c"],
+            svec!["1", "2", "3"],
+            svec!["2", "3", "4"],
+        ],
+    );
+
+    wrk.create(
+        "in2.csv",
+        vec![
+            svec!["c", "a", "b"],
+            svec!["3", "1", "2"],
+            svec!["4", "2", "3"],
+        ],
+    );
+
+    // create a subdirectory and put in3.csv in it
+    let _ = wrk.create_subdir("testdir");
+
+    wrk.create(
+        "testdir/in3.csv",
+        vec![
+            svec!["a", "b", "d", "c"],
+            svec!["1", "2", "4", "3"],
+            svec!["2", "3", "5", "4"],
+            svec!["z", "y", "w", "x"],
+        ],
+    );
+
+    let mut cmd = wrk.command("cat");
+    cmd.arg("rowskey")
+        .args(["--group", "parentdirfstem"])
+        .arg("in1.csv")
+        .arg("in2.csv")
+        .arg("testdir/in3.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    // on Windows, the directory separator is backslash, which is an escape character in CSV
+    // strings. So we get double backslashes in the output.
+    #[cfg(windows)]
+    let expected = vec![
+        svec!["file", "a", "b", "c", "d"],
+        svec!["in1", "1", "2", "3", ""],
+        svec!["in1", "2", "3", "4", ""],
+        svec!["in2", "1", "2", "3", ""],
+        svec!["in2", "2", "3", "4", ""],
+        svec!["testdir\\in3", "1", "2", "3", "4"],
+        svec!["testdir\\in3", "2", "3", "4", "5"],
+        svec!["testdir\\in3", "z", "y", "x", "w"],
+    ];
+    #[cfg(not(windows))]
+    let expected = vec![
+        svec!["file", "a", "b", "c", "d"],
+        svec!["in1", "1", "2", "3", ""],
+        svec!["in1", "2", "3", "4", ""],
+        svec!["in2", "1", "2", "3", ""],
+        svec!["in2", "2", "3", "4", ""],
+        svec!["testdir/in3", "1", "2", "3", "4"],
+        svec!["testdir/in3", "2", "3", "4", "5"],
+        svec!["testdir/in3", "z", "y", "x", "w"],
     ];
     assert_eq!(got, expected);
 }
@@ -310,7 +449,7 @@ fn cat_rowskey_grouping_infile() {
 
     let mut cmd = wrk.command("cat");
     cmd.arg("rowskey")
-        .arg("--group")
+        .args(["-g", "FStem"])
         .arg("testdata.infile-list");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
@@ -360,7 +499,7 @@ fn cat_rowskey_grouping_customname() {
 
     let mut cmd = wrk.command("cat");
     cmd.arg("rowskey")
-        .arg("--group")
+        .args(["--group", "fstem"])
         .args(&["--group-name", "file group label"])
         .arg("in1.csv")
         .arg("in2.csv")
