@@ -252,6 +252,13 @@ impl Workdir {
         }
         Ok(())
     }
+
+    // create a subdirectory
+    pub fn create_subdir(&self, name: &str) -> io::Result<()> {
+        let mut path = self.dir.clone();
+        path.push(name);
+        create_dir_all(path)
+    }
 }
 
 impl fmt::Debug for Workdir {
