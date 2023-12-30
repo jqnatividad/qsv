@@ -1937,7 +1937,6 @@ fn format_result(
 #[cached(
     key = "String",
     convert = r#"{ format!("{cell}-{formatstr}") }"#,
-    option = true
 )]
 fn get_countryinfo(
     engine: &Engine,
