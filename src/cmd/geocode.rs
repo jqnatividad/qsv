@@ -1376,6 +1376,15 @@ async fn load_engine(geocode_index_file: PathBuf, progressbar: &ProgressBar) -> 
         .load_from(geocode_index_file)
         .map_err(|e| format!("On load index file: {e}"))?;
 
+    engine.metadata.as_ref().map(|m| {
+        let now = std::time::SystemTime::now();
+        let age = now.duration_since(m.created_at).unwrap();
+        progressbar.println(format!(
+            "Geonames index loaded. Age: {}",
+            indicatif::HumanDuration(age)
+        ));
+    });
+
     Ok(engine)
 }
 
@@ -1934,10 +1943,7 @@ fn format_result(
 
 /// get_countryinfo is a cached function that returns a countryinfo result for a given cell value.
 /// It is used by the countryinfo/countryinfonow subcommands.
-#[cached(
-    key = "String",
-    convert = r#"{ format!("{cell}-{formatstr}") }"#,
-)]
+#[cached(key = "String", convert = r#"{ format!("{cell}-{formatstr}") }"#)]
 fn get_countryinfo(
     engine: &Engine,
     cell: &str,
