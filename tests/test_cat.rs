@@ -318,6 +318,20 @@ fn cat_rowskey_grouping_parentdirfname() {
         .arg("testdir/in3.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    // on Windows, the directory separator is backslash, which is an escape character in CSV
+    // strings. So we get double backslashes in the output.
+    #[cfg(windows)]
+    let expected = vec![
+        svec!["file", "a", "b", "c", "d"],
+        svec!["in1.csv", "1", "2", "3", ""],
+        svec!["in1.csv", "2", "3", "4", ""],
+        svec!["in2.tsv", "1", "2", "3", ""],
+        svec!["in2.tsv", "2", "3", "4", ""],
+        svec!["testdir\\in3.csv", "1", "2", "3", "4"],
+        svec!["testdir\\in3.csv", "2", "3", "4", "5"],
+        svec!["testdir\\in3.csv", "z", "y", "x", "w"],
+    ];
+    #[cfg(not(windows))]
     let expected = vec![
         svec!["file", "a", "b", "c", "d"],
         svec!["in1.csv", "1", "2", "3", ""],
@@ -373,6 +387,20 @@ fn cat_rowskey_grouping_parentdirfstem() {
         .arg("testdir/in3.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    // on Windows, the directory separator is backslash, which is an escape character in CSV
+    // strings. So we get double backslashes in the output.
+    #[cfg(windows)]
+    let expected = vec![
+        svec!["file", "a", "b", "c", "d"],
+        svec!["in1.csv", "1", "2", "3", ""],
+        svec!["in1.csv", "2", "3", "4", ""],
+        svec!["in2.csv", "1", "2", "3", ""],
+        svec!["in2.csv", "2", "3", "4", ""],
+        svec!["testdir\\in3.csv", "1", "2", "3", "4"],
+        svec!["testdir\\in3.csv", "2", "3", "4", "5"],
+        svec!["testdir\\in3.csv", "z", "y", "x", "w"],
+    ];
+    #[cfg(not(windows))]
     let expected = vec![
         svec!["file", "a", "b", "c", "d"],
         svec!["in1", "1", "2", "3", ""],
