@@ -392,13 +392,13 @@ fn cat_rowskey_grouping_parentdirfstem() {
     #[cfg(windows)]
     let expected = vec![
         svec!["file", "a", "b", "c", "d"],
-        svec!["in1.csv", "1", "2", "3", ""],
-        svec!["in1.csv", "2", "3", "4", ""],
-        svec!["in2.csv", "1", "2", "3", ""],
-        svec!["in2.csv", "2", "3", "4", ""],
-        svec!["testdir\\in3.csv", "1", "2", "3", "4"],
-        svec!["testdir\\in3.csv", "2", "3", "4", "5"],
-        svec!["testdir\\in3.csv", "z", "y", "x", "w"],
+        svec!["in1", "1", "2", "3", ""],
+        svec!["in1", "2", "3", "4", ""],
+        svec!["in2", "1", "2", "3", ""],
+        svec!["in2", "2", "3", "4", ""],
+        svec!["testdir\\in3", "1", "2", "3", "4"],
+        svec!["testdir\\in3", "2", "3", "4", "5"],
+        svec!["testdir\\in3", "z", "y", "x", "w"],
     ];
     #[cfg(not(windows))]
     let expected = vec![
