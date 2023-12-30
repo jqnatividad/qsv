@@ -50,9 +50,13 @@ cat options:
                              This is faster, but may result in invalid CSV data.
 
                              ROWSKEY OPTIONS:
-    -g, --group              When concatenating with rowskey, use the file stem of each
-                             input file as a grouping value. A new column will be added
-                             to the beginning of each row, using --group-name.
+    -g, --group <grpkind>    When concatenating with rowskey, you can specify a grouping value
+                             which will be used as the first column in the output. This is useful
+                             when you want to know which file a row came from. Valid values are
+                             'fullpath', 'parentdirfname', 'parentdirfstem', 'fname', 'fstem' and 'none'.
+                             A new column will be added to the beginning of each row using --group-name.
+                             If 'none' is specified, no grouping column will be added.
+                             [default: none]
     -N, --group-name <arg>   When concatenating with rowskey, this flag provides the name
                              for the new grouping column. [default: file]
                              
@@ -66,10 +70,14 @@ Common options:
                            Must be a single character. (default: ,)
 "#;
 
-use std::path::PathBuf;
+use std::{
+    path::{Path, PathBuf},
+    str::FromStr,
+};
 
 use indexmap::{IndexMap, IndexSet};
 use serde::Deserialize;
+use strum_macros::EnumString;
 use tempfile;
 
 use crate::{
@@ -82,7 +90,7 @@ struct Args {
     cmd_rows:        bool,
     cmd_rowskey:     bool,
     cmd_columns:     bool,
-    flag_group:      bool,
+    flag_group:      String,
     flag_group_name: String,
     arg_input:       Vec<PathBuf>,
     flag_pad:        bool,
@@ -90,6 +98,45 @@ struct Args {
     flag_output:     Option<String>,
     flag_no_headers: bool,
     flag_delimiter:  Option<Delimiter>,
+}
+
+#[derive(Debug, EnumString, PartialEq)]
+#[strum(ascii_case_insensitive)]
+enum GroupKind {
+    FullPath,
+    ParentDirFName,
+    ParentDirFStem,
+    FName,
+    FStem,
+    None,
+}
+
+fn get_parentdir_and_file<P: AsRef<Path>>(path: P, stem_only: bool) -> Option<String> {
+    let path = path.as_ref();
+
+    let file_info = if stem_only {
+        path.file_stem()
+    } else {
+        path.file_name()
+    };
+
+    let file_name = file_info.and_then(|f| f.to_str());
+
+    let parent_dir = path
+        .parent()
+        .and_then(|p| p.to_str())
+        .filter(|s| !s.is_empty());
+
+    match (parent_dir, file_name) {
+        (Some(parent_dir), Some(file_name)) => Some(
+            Path::new(parent_dir)
+                .join(file_name)
+                .to_string_lossy()
+                .into_owned(),
+        ),
+        (None, Some(file_name)) => Some(file_name.to_string()),
+        _ => None,
+    }
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -168,9 +215,17 @@ impl Args {
             );
         }
 
+        let Ok(group_kind) = GroupKind::from_str(&self.flag_group) else {
+            return fail_incorrectusage_clierror!(
+                "Invalid grouping value `{}`. Valid values are 'fullpath', 'parentdirfname', \
+                 'parentdirfstem', 'fname', 'fstem' and 'none'.",
+                self.flag_group
+            );
+        };
+
         let mut columns_global: AhashIndexSet<Box<[u8]>> = AhashIndexSet::default();
 
-        if self.flag_group {
+        if group_kind != GroupKind::None {
             columns_global.insert(self.flag_group_name.as_bytes().to_vec().into_boxed_slice());
         }
 
@@ -201,14 +256,15 @@ impl Args {
         // as we know that all columns are already in columns_global and we don't need to
         // validate that the number of columns are the same every time we write a row
         let mut wtr = Config::new(&self.flag_output).flexible(true).writer()?;
+        let mut new_row = csv::ByteRecord::with_capacity(500, num_columns_global);
+
         for c in &columns_global {
-            wtr.write_field(c)?;
+            new_row.push_field(c);
         }
-        let empty_byte_record = csv::ByteRecord::new();
-        wtr.write_byte_record(&empty_byte_record)?;
+        wtr.write_byte_record(&new_row)?;
 
         // amortize allocations
-        let mut grouping_value;
+        let mut grouping_value = String::new();
         let mut conf_path;
         let mut rdr;
         let mut header: &csv::ByteRecord;
@@ -241,35 +297,63 @@ impl Args {
                 columns_of_this_file.insert(fi, n);
             }
 
-            // use the file stem as the grouping value
-            // safety: we know that this is a file path and if the file path
-            // is not valid utf8, we convert it to lossy utf8
-            grouping_value = conf_path
-                .unwrap()
-                .file_stem()
-                .unwrap()
-                .to_string_lossy()
-                .to_string();
+            // set grouping_value
+            // safety: we know that this is a valid file path and if the file path
+            // is not utf8, we convert it to lossy utf8
+            match group_kind {
+                GroupKind::FullPath => {
+                    grouping_value.clear();
+                    grouping_value
+                        .push_str(&conf_path.unwrap().canonicalize().unwrap().to_string_lossy());
+                },
+                GroupKind::ParentDirFName => {
+                    grouping_value.clear();
+                    // grouping_value.push_str(&get_parent_and_filename(&conf_path.unwrap()).
+                    // unwrap());
+                    grouping_value
+                        .push_str(&get_parentdir_and_file(conf_path.unwrap(), false).unwrap());
+                },
+                GroupKind::ParentDirFStem => {
+                    grouping_value.clear();
+                    // grouping_value.push_str(&get_parent_and_filename(&conf_path.unwrap()).
+                    // unwrap());
+                    grouping_value
+                        .push_str(&get_parentdir_and_file(conf_path.unwrap(), true).unwrap());
+                },
+                GroupKind::FName => {
+                    grouping_value.clear();
+                    grouping_value
+                        .push_str(&conf_path.unwrap().file_name().unwrap().to_string_lossy());
+                },
+                GroupKind::FStem => {
+                    grouping_value.clear();
+                    grouping_value
+                        .push_str(&conf_path.unwrap().file_stem().unwrap().to_string_lossy());
+                },
+                GroupKind::None => {},
+            }
 
             while rdr.read_byte_record(&mut row)? {
+                new_row.clear();
                 for (col_idx, c) in columns_global.iter().enumerate() {
                     if let Some(idx) = columns_of_this_file.get(c) {
                         if let Some(d) = row.get(*idx) {
-                            wtr.write_field(d)?;
+                            new_row.push_field(d);
                         } else {
-                            wtr.write_field(b"")?;
+                            new_row.push_field(b"");
                         }
-                    } else if self.flag_group && col_idx == 0 {
+                    } else if group_kind != GroupKind::None && col_idx == 0 {
                         // we are in the first column, and --group is set
                         // so we write the grouping value
-                        wtr.write_field(&grouping_value)?;
+                        new_row.push_field(grouping_value.as_bytes());
                     } else {
-                        wtr.write_field(b"")?;
+                        new_row.push_field(b"");
                     }
                 }
-                wtr.write_byte_record(&empty_byte_record)?;
+                wtr.write_byte_record(&new_row)?;
             }
         }
+
         Ok(wtr.flush()?)
     }
 
