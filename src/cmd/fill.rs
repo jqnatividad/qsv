@@ -318,9 +318,7 @@ where
     type Item = I::Item;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let Some(item) = self.iterator.next() else {
-            return None;
-        };
+        let item = self.iterator.next()?;
         let result = match self.selection_index {
             ref mut sidx if (self.selection.get(*sidx) == Some(&self.index)) => {
                 *sidx += 1;

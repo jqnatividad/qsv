@@ -1508,9 +1508,7 @@ fn search_index(
             .unwrap_or_default();
 
         if formatstr.starts_with("%dyncols:") {
-            let Some(countryrecord) = engine.country_info(&country) else {
-                return None;
-            };
+            let countryrecord = engine.country_info(&country)?;
             add_dyncols(
                 record,
                 cityrecord,
@@ -1541,12 +1539,10 @@ fn search_index(
         let long = loccaps[2].to_string().parse::<f32>().unwrap_or_default();
         if (-90.0..=90.0).contains(&lat) && (-180.0..=180.0).contains(&long) {
             let search_result = engine.reverse((lat, long), 1, k, country_filter_list.as_deref());
-            let Some(cityrecord) = (match search_result {
+            let cityrecord = (match search_result {
                 Some(search_result) => search_result.into_iter().next().map(|ri| ri.city),
                 None => return None,
-            }) else {
-                return None;
-            };
+            })?;
 
             let nameslang = get_cityrecord_name_in_lang(cityrecord, lang_lookup);
 
@@ -1569,9 +1565,7 @@ fn search_index(
                 .unwrap_or_default();
 
             if formatstr.starts_with("%dyncols:") {
-                let Some(countryrecord) = engine.country_info(&country) else {
-                    return None;
-                };
+                let countryrecord = engine.country_info(&country)?;
                 add_dyncols(
                     record,
                     cityrecord,
