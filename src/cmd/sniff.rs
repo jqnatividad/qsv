@@ -105,7 +105,7 @@ use std::{
     fmt, fs,
     io::{copy, Seek, SeekFrom, Write},
     path::PathBuf,
-    time::{Duration, SystemTime},
+    time::Duration,
 };
 
 use bytes::Bytes;
@@ -125,7 +125,9 @@ use url::Url;
 
 use crate::{
     config::{Config, Delimiter},
-    util, CliResult,
+    util,
+    util::format_systemtime,
+    CliResult,
 };
 
 #[derive(Deserialize)]
@@ -617,18 +619,8 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                 let file_size = metadata.len() as usize;
                 let last_modified = match metadata.modified() {
                     Ok(time) => {
-                        let timestamp = time
-                            .duration_since(SystemTime::UNIX_EPOCH)
-                            .unwrap()
-                            .as_secs();
-                        let naive = chrono::NaiveDateTime::from_timestamp_opt(timestamp as i64, 0)
-                            .unwrap_or_default();
-                        let datetime = chrono::DateTime::<chrono::Utc>::from_naive_utc_and_offset(
-                            naive,
-                            chrono::Utc,
-                        );
                         // format the datetime to RFC3339
-                        format!("{datetime}", datetime = datetime.format("%+"))
+                        format_systemtime(time, "%+")
                     },
                     Err(_) => "N/A".to_string(),
                 };
