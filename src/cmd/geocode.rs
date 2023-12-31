@@ -1386,8 +1386,10 @@ async fn load_engine(geocode_index_file: PathBuf, progressbar: &ProgressBar) -> 
     if let Some(metadata) = &engine.metadata {
         let now = std::time::SystemTime::now();
         let age = now.duration_since(metadata.created_at).unwrap();
+        let created_at_formatted = util::format_systemtime(metadata.created_at, "%+");
+
         progressbar.println(format!(
-            "Geonames index loaded. Age: {}",
+            "Geonames index loaded. Created: {created_at_formatted}  Age: {}",
             indicatif::HumanDuration(age)
         ));
     }
