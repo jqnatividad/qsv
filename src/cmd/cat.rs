@@ -118,25 +118,11 @@ fn get_parentdir_and_file<P: AsRef<Path>>(path: P, stem_only: bool) -> Option<St
         path.file_stem()
     } else {
         path.file_name()
-    };
+    }?;
 
-    let file_name = file_info.and_then(|f| f.to_str());
+    let parent_dir = path.parent()?;
 
-    let parent_dir = path
-        .parent()
-        .and_then(|p| p.to_str())
-        .filter(|s| !s.is_empty());
-
-    match (parent_dir, file_name) {
-        (Some(parent_dir), Some(file_name)) => Some(
-            Path::new(parent_dir)
-                .join(file_name)
-                .to_string_lossy()
-                .into_owned(),
-        ),
-        (None, Some(file_name)) => Some(file_name.to_string()),
-        _ => None,
-    }
+    Some(parent_dir.join(file_info).to_string_lossy().into_owned())
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
