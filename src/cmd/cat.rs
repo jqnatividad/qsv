@@ -308,15 +308,11 @@ impl Args {
                 },
                 GroupKind::ParentDirFName => {
                     grouping_value.clear();
-                    // grouping_value.push_str(&get_parent_and_filename(&conf_path.unwrap()).
-                    // unwrap());
                     grouping_value
                         .push_str(&get_parentdir_and_file(conf_path.unwrap(), false).unwrap());
                 },
                 GroupKind::ParentDirFStem => {
                     grouping_value.clear();
-                    // grouping_value.push_str(&get_parent_and_filename(&conf_path.unwrap()).
-                    // unwrap());
                     grouping_value
                         .push_str(&get_parentdir_and_file(conf_path.unwrap(), true).unwrap());
                 },
