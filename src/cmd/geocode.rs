@@ -1376,14 +1376,14 @@ async fn load_engine(geocode_index_file: PathBuf, progressbar: &ProgressBar) -> 
         .load_from(geocode_index_file)
         .map_err(|e| format!("On load index file: {e}"))?;
 
-    engine.metadata.as_ref().map(|m| {
+    if let Some(metadata) = &engine.metadata {
         let now = std::time::SystemTime::now();
-        let age = now.duration_since(m.created_at).unwrap();
+        let age = now.duration_since(metadata.created_at).unwrap();
         progressbar.println(format!(
             "Geonames index loaded. Age: {}",
             indicatif::HumanDuration(age)
         ));
-    });
+    }
 
     Ok(engine)
 }
