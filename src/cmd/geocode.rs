@@ -815,19 +815,26 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                     },
                 };
 
+                let created_at =
+                    util::format_systemtime(metadata.as_ref().unwrap().created_at, "%+");
+                eprintln!("Created at: {created_at}");
+
                 match metadata {
                     Some(m) if updater.has_updates(&m).await? => {
                         winfo!(
                             "Updates available at Geonames.org. Use `qsv geocode index-update` to \
                              update/rebuild the index.\nPlease use this judiciously as Geonames \
-                             is a free service."
+                             is a free service.\n"
                         );
                     },
                     Some(_) => {
-                        winfo!("Geonames index up-to-date.");
+                        winfo!("Geonames index up-to-date.\n");
                     },
                     None => return fail_incorrectusage_clierror!("Invalid Geonames index file."),
                 }
+
+                // print to stdout the index metadata as JSON
+                // so users can redirect stdout to a JSON file if desired
                 println!("{index_metadata_json}");
             },
             GeocodeSubCmd::IndexUpdate => {
