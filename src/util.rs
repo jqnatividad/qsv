@@ -8,6 +8,7 @@ use std::{
     path::{Path, PathBuf},
     str,
     sync::OnceLock,
+    time::SystemTime,
 };
 
 use docopt::Docopt;
@@ -1554,4 +1555,14 @@ pub fn replace_column_value(
         .enumerate()
         .map(|(i, v)| if i == column_index { new_value } else { v })
         .collect()
+}
+
+pub fn format_systemtime(time: SystemTime, format_specifier: &str) -> String {
+    let timestamp = time
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+    let naive = chrono::NaiveDateTime::from_timestamp_opt(timestamp as i64, 0).unwrap_or_default();
+    let datetime = chrono::DateTime::<chrono::Utc>::from_naive_utc_and_offset(naive, chrono::Utc);
+    format!("{datetime}", datetime = datetime.format(format_specifier))
 }
