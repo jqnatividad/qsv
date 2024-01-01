@@ -718,13 +718,16 @@ impl Args {
         // safety: because we're using iterators and INFER_DATE_FLAGS has the same size,
         // we know we don't need to bounds check
         unsafe {
+            let mut i;
             for row in it {
-                for (i, field) in sel.select(&row.unwrap_unchecked()).enumerate() {
+                i = 0;
+                for field in sel.select(&row.unwrap_unchecked()) {
                     stats.get_unchecked_mut(i).add(
                         field,
                         *infer_date_flags.get_unchecked(i),
                         infer_boolean,
                     );
+                    i += 1;
                 }
             }
         }
