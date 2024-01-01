@@ -1147,10 +1147,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                     // cell to geocode is empty. If in dyncols mode, we need to add empty columns.
                     // Otherwise, we leave the row untouched.
                     if dyncols_len > 0 {
-                        // we're in dyncols mode, so add empty columns
-                        (0..dyncols_len).for_each(|_| {
-                            record.push_field("");
-                        });
+                        add_fields(&mut record, "", dyncols_len);
                     }
                 } else if geocode_cmd == GeocodeSubCmd::CountryInfo
                     || geocode_cmd == GeocodeSubCmd::CountryInfoNow
@@ -1187,15 +1184,10 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                     if invalid {
                         if invalid_result.is_empty() {
                             // --invalid-result is not set, so add empty columns
-                            (0..dyncols_len).for_each(|_| {
-                                record.push_field("");
-                            });
+                            add_fields(&mut record, "", dyncols_len);
                         } else {
                             // --invalid-result is set
-                            // so add columns set to --invalid-result value
-                            (0..dyncols_len).for_each(|_| {
-                                record.push_field(&invalid_result.clone());
-                            });
+                            add_fields(&mut record, &invalid_result, dyncols_len);
                         }
                     }
                 } else {
@@ -2165,4 +2157,11 @@ fn get_us_fips_codes(cityrecord: &CitiesRecord, nameslang: &NamesLang) -> serde_
         "us_county": nameslang.admin2name,
         "us_county_fips_code": us_county_code,
     })
+}
+
+#[inline]
+fn add_fields(record: &mut csv::StringRecord, value: &str, count: u8) {
+    (0..count).for_each(|_| {
+        record.push_field(value);
+    });
 }
