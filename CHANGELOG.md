@@ -6,6 +6,71 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.120.0] - 2024-01-01
+
+## What's Changed
+* build(deps): bump uuid from 1.6.0 to 1.6.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1430
+* build(deps): bump serde from 1.0.192 to 1.0.193 by @dependabot in https://github.com/jqnatividad/qsv/pull/1432
+* build(deps): bump data-encoding from 2.4.0 to 2.5.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1435
+* build(deps): bump mlua from 0.9.1 to 0.9.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1436
+* build(deps): bump url from 2.4.1 to 2.5.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1437
+* `luau`: remove `--jit` option by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1438
+* build(deps): bump jql-runner from 7.0.6 to 7.0.7 by @dependabot in https://github.com/jqnatividad/qsv/pull/1439
+* `validate`: Faster RFC4180 validation with byterecords and SIMD-accelerated utf8 validation by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1440
+* build(deps): bump hashbrown from 0.14.2 to 0.14.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1441
+* build(deps): bump redis from 0.23.3 to 0.23.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1442
+* build(deps): bump sysinfo from 0.29.10 to 0.29.11 by @dependabot in https://github.com/jqnatividad/qsv/pull/1443
+* build(deps): bump atoi_simd from 0.15.3 to 0.15.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1444
+* build(deps): bump atoi_simd from 0.15.4 to 0.15.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/1445
+* `excel`: minor performance tweaks by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1446
+* build(deps): bump jql-runner from 7.0.7 to 7.1.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1447
+* `validate`: add --trim and --quiet options by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1452
+* make thousands crate optional with apply feature by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1453
+* build(deps): bump actions/setup-python from 4.7.1 to 4.8.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1454
+* build(deps): bump redis from 0.23.3 to 0.24.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1455
+* use one `replace_column_value` helper fn in util.rs by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1456
+* build(deps): bump jql-runner from 7.1.0 to 7.1.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1457
+* build(deps): bump actions/setup-python from 4.8.0 to 5.0.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1459
+* build(deps): bump actions/stale from 8 to 9 by @dependabot in https://github.com/jqnatividad/qsv/pull/1463
+* build(deps): bump itoa from 1.0.9 to 1.0.10 by @dependabot in https://github.com/jqnatividad/qsv/pull/1464
+* build(deps): bump tokio from 1.34.0 to 1.35.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1465
+* build(deps): bump ryu from 1.0.15 to 1.0.16 by @dependabot in https://github.com/jqnatividad/qsv/pull/1466
+* Fix for apply `dynfmt` and `calcconv` not working in release mode by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1467
+* build(deps): bump file-format from 0.22.0 to 0.23.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1468
+* ` apply` & `applydp`: `operations regex_replace` now supports  empty `--replacement` with the "<EMPTY>" special value by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1470
+* align `apply`/`applydp` with `replace` to use <NULL> case-insensitive… by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1471
+* `excel`: bump calamine from 0.22 to 0.23 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1473
+* build(deps): bump github/codeql-action from 2 to 3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1476
+* build(deps): bump geosuggest-utils from 0.5.1 to 0.5.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1479
+* build(deps): bump geosuggest-core from 0.5.1 to 0.5.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1478
+* build(deps): bump reqwest from 0.11.22 to 0.11.23 by @dependabot in https://github.com/jqnatividad/qsv/pull/1480
+* build(deps): bump calamine from 0.23.0 to 0.23.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1481
+* build(deps): bump tokio from 1.35.0 to 1.35.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1483
+* build(deps): bump qsv-sniffer from 0.10.0 to 0.10.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1484
+* build(deps): bump anyhow from 1.0.75 to 1.0.76 by @dependabot in https://github.com/jqnatividad/qsv/pull/1485
+* build(deps): bump jql-runner from 7.1.1 to 7.1.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1486
+* Bump sysinfo 0.30 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1489
+* build(deps): bump futures from 0.3.29 to 0.3.30 by @dependabot in https://github.com/jqnatividad/qsv/pull/1492
+* build(deps): bump futures-util from 0.3.29 to 0.3.30 by @dependabot in https://github.com/jqnatividad/qsv/pull/1491
+* build(deps): bump crossbeam-channel from 0.5.9 to 0.5.10 by @dependabot in https://github.com/jqnatividad/qsv/pull/1490
+* Autocheck for updates 10% of the time by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1494
+* build(deps): bump sysinfo from 0.30.0 to 0.30.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1495
+* refactor commands that accept multiple input files to use improved process_input helper by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1496
+* `exclude`: also consider rows with empty fields by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1498
+* build(deps): bump tabwriter from 1.3.0 to 1.4.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1500
+* build(deps): bump tempfile from 3.8.1 to 3.9.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1502
+* build(deps): bump qsv_docopt from 1.4.0 to 1.5.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1503
+* build(deps): bump sysinfo from 0.30.1 to 0.30.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1504
+* `fetch` & `fetchpost`: get_response refactor by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1507
+* `cat`: add rowskey --group options; increased perf of rowskey by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1508
+* build(deps): bump ahash from 0.8.6 to 0.8.7 by @dependabot in https://github.com/jqnatividad/qsv/pull/1510
+* build(deps): bump sysinfo from 0.30.2 to 0.30.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1509
+* build(deps): bump serde_json from 1.0.108 to 1.0.109 by @dependabot in https://github.com/jqnatividad/qsv/pull/1511
+* build(deps): bump atoi_simd from 0.15.5 to 0.15.6 by @dependabot in https://github.com/jqnatividad/qsv/pull/1512
+
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.119.0...0.120.0
+
 ## [0.119.0] - 2023-11-19
 
 ## Highlights:
