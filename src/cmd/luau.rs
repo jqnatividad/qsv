@@ -643,6 +643,7 @@ fn sequential_mode(
                 .ok_or("Specify new column names")?;
 
             let new_columns_vec: Vec<&str> = new_columns.split(',').collect();
+            debug!("new_columns_vec: {new_columns_vec:?}");
             for new_column in new_columns_vec {
                 new_column_count += 1;
                 let new_column = new_column.trim();
@@ -1311,6 +1312,11 @@ fn map_computedvalue(
             let mut ibuffer = itoa::Buffer::new();
             let mut nbuffer = ryu::Buffer::new();
             table.for_each::<String, Value>(|_k, v| {
+                if new_column_count > 0 && columns_inserted >= new_column_count {
+                    // we ignore table values more than the number of
+                    // new columns defined, so we return early
+                    return Ok(());
+                }
                 match v {
                     Value::Integer(intval) => record.push_field(ibuffer.format(intval)),
                     Value::String(strval) => record.push_field(&strval.to_string_lossy()),
@@ -1326,11 +1332,6 @@ fn map_computedvalue(
                     },
                 }
                 columns_inserted += 1;
-                if new_column_count > 0 && columns_inserted >= new_column_count {
-                    // we ignore table values more than the number of
-                    // new columns defined, so we return early
-                    return Ok(());
-                }
                 Ok(())
             })?;
 
