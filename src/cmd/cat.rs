@@ -315,6 +315,9 @@ impl Args {
                 GroupKind::None => {},
             }
 
+            let group_flag = group_kind != GroupKind::None;
+            let grouping_value_bytes = grouping_value.as_bytes();
+
             while rdr.read_byte_record(&mut row)? {
                 new_row.clear();
                 for (col_idx, c) in columns_global.iter().enumerate() {
@@ -324,10 +327,10 @@ impl Args {
                         } else {
                             new_row.push_field(b"");
                         }
-                    } else if group_kind != GroupKind::None && col_idx == 0 {
+                    } else if group_flag && col_idx == 0 {
                         // we are in the first column, and --group is set
                         // so we write the grouping value
-                        new_row.push_field(grouping_value.as_bytes());
+                        new_row.push_field(grouping_value_bytes);
                     } else {
                         new_row.push_field(b"");
                     }
