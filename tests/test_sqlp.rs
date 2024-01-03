@@ -1149,3 +1149,34 @@ fn sqlp_sql_from_subquery() {
 
     assert_eq!(got, expected);
 }
+
+#[test]
+fn sqlp_sql_tsv() {
+    let wrk = Workdir::new("sqlp_sql_tsv");
+    wrk.create(
+        "test.csv",
+        vec![
+            svec!["idx", "val"],
+            svec!["0", "ABC"],
+            svec!["1", "abc"],
+            svec!["2", "000"],
+            svec!["3", "A0C"],
+            svec!["4", "a0c"],
+        ],
+    );
+
+    let output_file = wrk.path("output.tsv").to_string_lossy().to_string();
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("test.csv")
+        .arg("SELECT * FROM test")
+        .args(["--output", &output_file]);
+
+    wrk.assert_success(&mut cmd);
+
+    let got = wrk.read_to_string(&output_file);
+
+    let expected = "idx\tval\n0\tABC\n1\tabc\n2\t000\n3\tA0C\n4\ta0c\n";
+
+    assert_eq!(got, expected);
+}

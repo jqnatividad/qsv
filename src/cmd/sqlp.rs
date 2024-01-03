@@ -240,7 +240,7 @@ struct Args {
     flag_quiet:            bool,
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, PartialEq)]
 enum OutputMode {
     #[default]
     Csv,
@@ -258,7 +258,7 @@ impl OutputMode {
         &self,
         query: &str,
         ctx: &mut SQLContext,
-        delim: u8,
+        mut delim: u8,
         args: Args,
     ) -> CliResult<(usize, usize)> {
         let mut df = DataFrame::default();
@@ -275,6 +275,19 @@ impl OutputMode {
             let w = match args.flag_output {
                 Some(x) => {
                     let path = Path::new(&x);
+                    // if the output file ends with ".tsv" or ".tab", we use tab as the delimiter
+                    delim = if *self == OutputMode::Csv
+                        && path
+                            .extension()
+                            .map_or(false, |ext| ext.eq_ignore_ascii_case("tsv"))
+                        || path
+                            .extension()
+                            .map_or(false, |ext| ext.eq_ignore_ascii_case("tab"))
+                    {
+                        b'\t'
+                    } else {
+                        delim
+                    };
                     Box::new(File::create(path)?) as Box<dyn Write>
                 },
                 None => Box::new(io::stdout()) as Box<dyn Write>,
