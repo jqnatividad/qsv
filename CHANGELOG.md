@@ -6,6 +6,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.121.0] - 2024-01-03
+
+We just released 0.120.0 two days ago, and hours later, Polars 0.36 was released, Homebrew released support for Rust 1.75.0 and our [pull request for cached](https://github.com/jaemk/cached/pull/176) was merged!
+
+So we're releasing 0.121.0 out of cycle to take advantage of the latest features and performance improvements of these critical components that underpin qsv!
+
+---
+
+### Added
+* `sqlp`: with Polars 0.36, it now supports:
+  * subqueries for JOIN and FROM
+  * REGEXP and RLIKE pattern matching
+  * common variant spelling STDEV in the SQL engine (in addition to STDDEV)
+  * and more [under the hood improvements](https://github.com/pola-rs/polars/releases)!
+* `sqlp`: now supports writing to Apache Avro format https://github.com/jqnatividad/qsv/commit/32f2fbb1b06dfbee4e7823521e9991a306e7eb44
+* `sqlp`: when writing to CSV format, if a file has a TSV or TAB extension, it will automatically use the tab delimiter https://github.com/jqnatividad/qsv/commit/c97048cfc8c0fed01d7b32d3173be508135b9769
+
+### Changed
+* Bump polars from 0.35 to 0.36 https://github.com/jqnatividad/qsv/pull/1521
+* build(deps): bump serde from 1.0.193 to 1.0.194 by @dependabot in https://github.com/jqnatividad/qsv/pull/1520
+* build(deps): bump serde_json from 1.0.109 to 1.0.110 by @dependabot in https://github.com/jqnatividad/qsv/pull/1519
+* build(deps): bump semver from 1.0.20 to 1.0.21 by @dependabot in https://github.com/jqnatividad/qsv/pull/1518
+* build(deps): bump serde_stacker from 0.1.10 to 0.1.11 by @dependabot in https://github.com/jqnatividad/qsv/pull/1517
+* build(deps): bump cached from 0.46.1 to 0.47.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1522
+* bumped MSRV to 1.75.0
+
+### Fixed
+* `cat`: fixed performance regression in `rowskey` by moving unchanging variables out of hot loop - https://github.com/jqnatividad/qsv/commit/96a40e93b5ab09655aa90f8653014c96d3da652b
+* `sqlp`: Polars 0.36 fixed the SQL SUBSTR() function
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.120.0...0.121.0
+
 ## [0.120.0] - 2024-01-01
 
 Happy New Year! 🎉🎉🎉
