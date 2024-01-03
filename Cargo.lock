@@ -805,9 +805,9 @@ dependencies = [
 
 [[package]]
 name = "cached"
-version = "0.46.1"
+version = "0.47.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c7c8c50262271cdf5abc979a5f76515c234e764fa025d1ba4862c0f0bcda0e95"
+checksum = "69b0116662497bc24e4b177c90eaf8870e39e2714c3fcfa296327a93f593fc21"
 dependencies = [
  "ahash 0.8.7",
  "cached_proc_macro",
@@ -816,7 +816,7 @@ dependencies = [
  "instant",
  "once_cell",
  "r2d2",
- "redis 0.23.3",
+ "redis",
  "serde",
  "serde_json",
  "thiserror",
@@ -4059,7 +4059,7 @@ dependencies = [
  "quickcheck",
  "rand",
  "rayon",
- "redis 0.24.0",
+ "redis",
  "regex",
  "reqwest",
  "rusqlite",
@@ -4303,23 +4303,6 @@ dependencies = [
 
 [[package]]
 name = "redis"
-version = "0.23.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4f49cdc0bb3f412bf8e7d1bd90fe1d9eb10bc5c399ba90973c14662a27b3f8ba"
-dependencies = [
- "ahash 0.7.7",
- "combine",
- "itoa",
- "percent-encoding",
- "r2d2",
- "ryu",
- "sha1_smol",
- "socket2 0.4.10",
- "url",
-]
-
-[[package]]
-name = "redis"
 version = "0.24.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c580d9cbbe1d1b479e8d67cf9daf6a62c957e6846048408b80b43ac3f6af84cd"
@@ -4328,7 +4311,10 @@ dependencies = [
  "combine",
  "itoa",
  "percent-encoding",
+ "r2d2",
  "ryu",
+ "sha1_smol",
+ "socket2 0.4.10",
  "url",
 ]
 
