@@ -5,6 +5,7 @@ macro_rules! sqlp_test {
         mod $name {
             use std::process;
 
+            #[allow(unused_imports)]
             use super::{make_rows, setup};
             use crate::workdir::Workdir;
 
@@ -93,28 +94,24 @@ sqlp_test!(
     |wrk: Workdir, mut cmd: process::Command| {
         cmd.arg("select * from cities full outer join places on cities.city = places.city");
         let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-        let expected1 = make_rows(
-            false,
-            vec![
-                svec!["Boston", "MA", "Logan Airport"],
-                svec!["Boston", "MA", "Boston Garden"],
-                svec!["Buffalo", "NY", "Ralph Wilson Stadium"],
-                svec!["Orlando", "", "Disney World"],
-                svec!["San Francisco", "CA", ""],
-                svec!["New York", "NY", ""],
-            ],
-        );
-        let expected2 = make_rows(
-            false,
-            vec![
-                svec!["Boston", "MA", "Logan Airport"],
-                svec!["Boston", "MA", "Boston Garden"],
-                svec!["Buffalo", "NY", "Ralph Wilson Stadium"],
-                svec!["Orlando", "", "Disney World"],
-                svec!["New York", "NY", ""],
-                svec!["San Francisco", "CA", ""],
-            ],
-        );
+        let expected1 = vec![
+            svec!["city", "state", "city_right", "place"],
+            svec!["Boston", "MA", "Boston", "Logan Airport"],
+            svec!["Boston", "MA", "Boston", "Boston Garden"],
+            svec!["Buffalo", "NY", "Buffalo", "Ralph Wilson Stadium"],
+            svec!["", "", "Orlando", "Disney World"],
+            svec!["San Francisco", "CA", "", ""],
+            svec!["New York", "NY", "", ""],
+        ];
+        let expected2 = vec![
+            svec!["city", "state", "city_right", "place"],
+            svec!["Boston", "MA", "Boston", "Logan Airport"],
+            svec!["Boston", "MA", "Boston", "Boston Garden"],
+            svec!["Buffalo", "NY", "Buffalo", "Ralph Wilson Stadium"],
+            svec!["", "", "Orlando", "Disney World"],
+            svec!["New York", "NY", "", ""],
+            svec!["San Francisco", "CA", "", ""],
+        ];
         assert!(got == expected1 || got == expected2);
     }
 );
@@ -540,9 +537,9 @@ fn sqlp_string_functions() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["scol"],
-        svec!["cd"],
-        svec!["c"],
-        svec!["c"],
+        svec!["bc"],
+        svec!["bc"],
+        svec!["bc"],
         svec![""],
         svec![""],
     ];
@@ -815,7 +812,7 @@ fn sqlp_boston311_explain() {
 
     let expected_end = r#"boston311-100.csv
         PROJECT 4/29 COLUMNS
-"        SELECTION: [(col(""case_status"")) == (Utf8(Closed))]""#;
+"        SELECTION: [(col(""case_status"")) == (String(Closed))]""#;
     assert!(got.ends_with(expected_end));
 }
 
@@ -1009,6 +1006,145 @@ fn sqlp_boston311_case() {
         svec!["101004118346", "Graffitti"],
         svec!["101004115302", "Vehicle"],
         svec!["101004115066", "Sidewalk"],
+    ];
+
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn sqlp_literal_pattern_match() {
+    let wrk = Workdir::new("sqlp_literal_pattern_match");
+    wrk.create(
+        "test.csv",
+        vec![
+            svec!["idx", "val"],
+            svec!["0", "ABC"],
+            svec!["1", "abc"],
+            svec!["2", "000"],
+            svec!["3", "A0C"],
+            svec!["4", "a0c"],
+        ],
+    );
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("test.csv")
+        .arg(r#"SELECT * FROM test WHERE val NOT REGEXP '.*c$'"#);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["idx", "val"],
+        svec!["0", "ABC"],
+        svec!["2", "000"],
+        svec!["3", "A0C"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn sqlp_expression_pattern_match() {
+    let wrk = Workdir::new("sqlp_expression_pattern_match");
+    wrk.create(
+        "test.csv",
+        vec![
+            svec!["idx", "val", "pat"],
+            svec!["0", "ABC", "^A"],
+            svec!["1", "abc", "^A"],
+            svec!["2", "000", "^A"],
+            svec!["3", "A0C", r#"[AB]\d.*$"#,],
+            svec!["4", "a0c", ".*xxx$"],
+        ],
+    );
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("test.csv")
+        .arg("SELECT idx, val FROM test WHERE val REGEXP pat");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![svec!["idx", "val"], svec!["0", "ABC"], svec!["3", "A0C"]];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn sqlp_sql_join_on_subquery() {
+    let wrk = Workdir::new("sqlp_sql_join_on_subquery");
+    wrk.create(
+        "test.csv",
+        vec![
+            svec!["idx", "val"],
+            svec!["0", "ABC"],
+            svec!["1", "abc"],
+            svec!["2", "000"],
+            svec!["3", "A0C"],
+            svec!["4", "a0c"],
+        ],
+    );
+
+    wrk.create(
+        "test2.csv",
+        vec![
+            svec!["idx", "val"],
+            svec!["0", "ABC"],
+            svec!["1", "abc"],
+            svec!["2", "000"],
+            svec!["3", "A0C"],
+            svec!["4", "a0c"],
+        ],
+    );
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("test.csv").arg("test2.csv").arg(
+        "SELECT * FROM test t1 JOIN (SELECT idx, val FROM test2 WHERE idx > 2) t2 ON t1.idx = \
+         t2.idx",
+    );
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["idx", "val", "val_right"],
+        svec!["3", "A0C", "A0C"],
+        svec!["4", "a0c", "a0c"],
+    ];
+
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn sqlp_sql_from_subquery() {
+    let wrk = Workdir::new("sqlp_sql_from_subquery");
+    wrk.create(
+        "test.csv",
+        vec![
+            svec!["idx", "val"],
+            svec!["0", "ABC"],
+            svec!["1", "abc"],
+            svec!["2", "000"],
+            svec!["3", "A0C"],
+            svec!["4", "a0c"],
+        ],
+    );
+
+    wrk.create(
+        "test2.csv",
+        vec![
+            svec!["idx", "val"],
+            svec!["0", "ABC"],
+            svec!["1", "abc"],
+            svec!["2", "000"],
+            svec!["3", "A0C"],
+            svec!["4", "a0c"],
+        ],
+    );
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("test.csv").arg("test2.csv").arg(
+        "SELECT * FROM (SELECT idx, val FROM test WHERE idx > 2) t1 JOIN test2 t2 ON t1.idx = \
+         t2.idx",
+    );
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["idx", "val", "val_right"],
+        svec!["3", "A0C", "A0C"],
+        svec!["4", "a0c", "a0c"],
     ];
 
     assert_eq!(got, expected);
