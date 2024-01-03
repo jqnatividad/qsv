@@ -151,6 +151,7 @@ polars = { version = "0.36", features = [
     "performant",
     "cse",
     "horizontal_concat",
+    "avro",
 ], optional = true }
 pyo3 = { version = "0.20", features = ["auto-initialize"], optional = true }
 qsv-dateparser = "0.10"
