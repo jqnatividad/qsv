@@ -3,11 +3,10 @@ Run blazing-fast Polars SQL queries against several CSVs - replete with joins, a
 grouping, sorting, and more - working on larger than memory CSV files.
 
 Polars SQL is a SQL dialect, converting SQL queries to fast Polars LazyFrame expressions.
-(see https://pola-rs.github.io/polars-book/user-guide/sql/intro/)
 
 For a list of SQL functions and keywords supported by Polars SQL, see
-https://github.com/pola-rs/polars/blob/rs-0.35.0/crates/polars-sql/src/functions.rs
-https://github.com/pola-rs/polars/blob/rs-0.35.0/crates/polars-sql/src/keywords.rs and
+https://github.com/pola-rs/polars/blob/rs-0.36.2/crates/polars-sql/src/functions.rs
+https://github.com/pola-rs/polars/blob/rs-0.36.2/crates/polars-sql/src/keywords.rs and
 https://github.com/pola-rs/polars/issues/7227
 
 Returns the shape of the query result (number of rows, number of columns) to stderr.
@@ -77,6 +76,12 @@ Example queries:
   # case-insensitive regexp_like
   qsv sqlp data.csv "select * from data WHERE regexp_like(col1, '^foo', 'i') AND col2 > 10"
 
+  # regexp match using a literal pattern
+    qsv sqlp data.csv "select idx,val from data WHERE val regexp '^foo'"
+
+  # regexp match using patterns from another column
+    qsv sqlp data.csv "select idx,val from data WHERE val regexp pattern_col"
+
   # use Parquet, JSONL and Arrow files in SQL queries
   qsv sqlp data.csv "select * from data join read_parquet('data2.parquet') as t2 ON data.c1 = t2.c1"
   qsv sqlp data.csv "select * from data join read_ndjson('data2.jsonl') as t2 on data.c1 = t2.c1"
@@ -121,6 +126,7 @@ sqlp options:
                                 json     JSON
                                 parquet  Apache Parquet
                                 arrow    Apache Arrow IPC
+                                avro     Apache Avro
                               (default: csv)
 
                               POLARS CSV PARSING OPTIONS:
@@ -190,6 +196,7 @@ use std::{
 };
 
 use polars::{
+    io::avro::AvroWriter,
     prelude::{
         CsvWriter, DataFrame, GzipLevel, IpcWriter, JsonWriter, LazyCsvReader, LazyFileListReader,
         NullValues, ParquetCompression, ParquetWriter, SerWriter, ZstdLevel,
@@ -240,6 +247,7 @@ enum OutputMode {
     Json,
     Parquet,
     Arrow,
+    Avro,
     None,
 }
 
@@ -317,6 +325,7 @@ impl OutputMode {
                         .map(|_| ())
                 },
                 OutputMode::Arrow => IpcWriter::new(&mut w).finish(&mut df),
+                OutputMode::Avro => AvroWriter::new(&mut w).finish(&mut df),
                 OutputMode::None => Ok(()),
             };
 
@@ -342,6 +351,7 @@ impl FromStr for OutputMode {
             "json" => Ok(OutputMode::Json),
             "parquet" => Ok(OutputMode::Parquet),
             "arrow" => Ok(OutputMode::Arrow),
+            "avro" => Ok(OutputMode::Avro),
             _ => Err(format!("Invalid output mode: {s}")),
         }
     }
