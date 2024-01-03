@@ -137,7 +137,7 @@ mlua = { version = "0.9", features = [
 num_cpus = "1"
 odht = "0.3"
 phf = { version = "0.11", features = ["macros"], optional = true }
-polars = { version = "0.35", features = [
+polars = { version = "0.36", features = [
     "lazy",
     "streaming",
     "object",
@@ -150,6 +150,7 @@ polars = { version = "0.35", features = [
     "ipc",
     "performant",
     "cse",
+    "horizontal_concat",
 ], optional = true }
 pyo3 = { version = "0.20", features = ["auto-initialize"], optional = true }
 qsv-dateparser = "0.10"
