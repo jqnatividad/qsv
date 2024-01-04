@@ -17,7 +17,7 @@ env:
 jobs:
   build:
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     steps:
     - name: Maximize build space
@@ -50,10 +50,10 @@ jobs:
         profile: minimal
         target: x86_64-unknown-linux-musl
         override: true        
-    # - name: Setup Rust-cache
-    #   uses: Swatinem/rust-cache@v2
-    #   with:
-    #     key: qsv-x86_64-unknown-linux-musl-cache
+    - name: Setup Rust-cache
+      uses: Swatinem/rust-cache@v2
+      with:
+        key: qsv-x86_64-unknown-linux-musl-cache
     - name: Run tests
       # env:
       #   RUSTFLAGS: -C target-feature=+fxsr,+sse,+sse2,+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+fma
