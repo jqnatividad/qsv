@@ -5901,11 +5901,11 @@ checksum = "1778a42e8b3b90bff8d0f5032bf22250792889a5cdc752aa0020c84abe3aaf10"
 
 [[package]]
 name = "whatlang"
-version = "0.16.3"
+version = "0.16.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dcdcd0195a5b871e50926da8e881277f36a4621b3220d85092e7b91cc85f6bd9"
+checksum = "471d1c1645d361eb782a1650b1786a8fb58dd625e681a04c09f5ff7c8764a7b0"
 dependencies = [
- "hashbrown 0.12.3",
+ "hashbrown 0.14.3",
  "once_cell",
 ]
 
