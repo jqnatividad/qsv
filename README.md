@@ -50,7 +50,6 @@
 | [foreach](/src/cmd/foreach.rs#L3)<br>✨ | Loop over a CSV to execute shell commands. (not available on Windows)  |
 | [frequency](/src/cmd/frequency.rs#L2)<br>📇😣🏎️ | Build [frequency tables](https://statisticsbyjim.com/basics/frequency-table/) of each column. Uses multithreading to go faster if an index is present. |
 | [geocode](/src/cmd/geocode.rs#L2)<br>✨🧠🌐🚀🔣 | Geocodes a location against an updatable local copy of the [Geonames](https://www.geonames.org/) cities database. With caching and multi-threading, it geocodes up to 360,000 records/sec! |
-| [generate](/src/cmd/generate.rs#L2)<br>✨ | Generate test data by profiling a CSV using [Markov decision process](https://crates.io/crates/test-data-generation) machine learning.  |
 | [headers](/src/cmd/headers.rs#L2) | Show the headers of a CSV. Or show the intersection of all headers between many CSV files. |
 | [index](/src/cmd/index.rs#L2) | Create an index (📇) for a CSV. This is very quick (even the 15gb, 28m row NYC 311 dataset takes all of 15 seconds to index) & provides constant time indexing/random access into the CSV. With an index, `count`, `sample` & `slice` work instantaneously; random access mode is enabled in `luau`; and multithreading (🏎️) is enabled for the `frequency`, `split`, `stats`, `schema` & `tojsonl` commands. |
 | [input](/src/cmd/input.rs#L2) | Read CSV data with special commenting, quoting, trimming, line-skipping & non-UTF8 encoding handling rules. Typically used to "normalize" a CSV for further processing with other qsv commands. |
@@ -157,7 +156,7 @@ To install different [variants](#variants) and enable optional features, use car
 
 ```bash
 # to install qsv with all features enabled
-cargo install qsv --locked --bin qsv --features feature_capable,apply,generate,luau,fetch,foreach,python,to,self_update,polars
+cargo install qsv --locked --bin qsv --features feature_capable,apply,luau,fetch,foreach,python,to,self_update,polars
 # or shorthand
 cargo install qsv --locked --bin qsv -F all_features
 
@@ -187,7 +186,7 @@ To compile different [variants](#variants) and enable optional [features](#featu
 
 ```bash
 # to compile qsv with all features enabled
-cargo build --release --locked --bin qsv --features feature_capable,apply,generate,luau,fetch,foreach,python,to,self_update,polars
+cargo build --release --locked --bin qsv --features feature_capable,apply,luau,fetch,foreach,python,to,self_update,polars
 # shorthand
 cargo build --release --locked --bin qsv -F all_features
 
@@ -409,7 +408,7 @@ Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org).
 
 ## Origins
 
-Quicksilver (qsv) is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's May 2018 release](https://github.com/BurntSushi/xsv/issues/267). On top of xsv's 20 commands, it adds numerous new features; 37 additional commands; 5 `apply` subcommands & 36 operations; 5 `to` subcommands; 3 `cat` subcommands; 7 `geocode` subcommands & 4 index operations; and 4 `snappy` subcommands.
+Quicksilver (qsv) is a fork of the popular [xsv](https://github.com/BurntSushi/xsv) utility, merging several pending PRs [since xsv 0.13.0's May 2018 release](https://github.com/BurntSushi/xsv/issues/267). On top of xsv's 20 commands, it adds numerous new features; 36 additional commands; 5 `apply` subcommands & 36 operations; 5 `to` subcommands; 3 `cat` subcommands; 7 `geocode` subcommands & 4 index operations; and 4 `snappy` subcommands.
 See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for more details.
 
 ## Sponsor
