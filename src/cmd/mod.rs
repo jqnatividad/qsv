@@ -34,8 +34,6 @@ pub mod fmt;
 #[cfg(all(feature = "foreach", target_family = "unix", not(feature = "lite")))]
 pub mod foreach;
 pub mod frequency;
-#[cfg(all(feature = "generate", feature = "feature_capable"))]
-pub mod generate;
 #[cfg(all(feature = "geocode", feature = "feature_capable"))]
 pub mod geocode;
 pub mod headers;
