@@ -125,9 +125,6 @@ fn main() -> QsvExitCode {
 
     enabled_commands.push_str("    frequency   Show frequency tables\n");
 
-    #[cfg(all(feature = "generate", not(feature = "lite")))]
-    enabled_commands.push_str("    generate    Generate test data by profiling a CSV\n");
-
     #[cfg(all(feature = "geocode", not(feature = "lite")))]
     enabled_commands
         .push_str("    geocode     Geocodes a location against the Geonames cities database.\n");
@@ -339,8 +336,6 @@ enum Command {
     #[cfg(all(feature = "foreach", target_family = "unix", not(feature = "lite")))]
     ForEach,
     Frequency,
-    #[cfg(all(feature = "generate", feature = "feature_capable"))]
-    Generate,
     #[cfg(all(feature = "geocode", feature = "feature_capable"))]
     Geocode,
     Headers,
@@ -424,8 +419,6 @@ impl Command {
             Command::Flatten => cmd::flatten::run(argv),
             Command::Fmt => cmd::fmt::run(argv),
             Command::Frequency => cmd::frequency::run(argv),
-            #[cfg(all(feature = "generate", feature = "feature_capable"))]
-            Command::Generate => cmd::generate::run(argv),
             #[cfg(all(feature = "geocode", feature = "feature_capable"))]
             Command::Geocode => cmd::geocode::run(argv),
             Command::Headers => cmd::headers::run(argv),
