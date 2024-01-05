@@ -202,7 +202,6 @@ strum_macros = "0.25"
 sysinfo = "0.30"
 tabwriter = "1.4"
 tempfile = "3"
-test-data-generation = { version = "0.3", optional = true }
 thousands = { version = "0.2", optional = true }
 threadpool = "1.8"
 titlecase = { version = "2", optional = true }
@@ -244,7 +243,6 @@ all_features = [
     "apply",
     "fetch",
     "foreach",
-    "generate",
     "geocode",
     "luau",
     "polars",
@@ -281,7 +279,6 @@ fetch = [
     "serde_urlencoded",
 ]
 foreach = []
-generate = ["test-data-generation"]
 geocode = [
     "anyhow",
     "cached",
