@@ -111,18 +111,18 @@ enum GroupKind {
     None,
 }
 
-fn get_parentdir_and_file<P: AsRef<Path>>(path: P, stem_only: bool) -> Option<String> {
-    let path = path.as_ref();
-
+fn get_parentdir_and_file(path: &Path, stem_only: bool) -> String {
+    //safety: we know that this is a valid pathbuf
     let file_info = if stem_only {
         path.file_stem()
     } else {
         path.file_name()
-    }?;
+    }
+    .unwrap();
 
-    let parent_dir = path.parent()?;
+    let parent_dir = path.parent().unwrap();
 
-    Some(parent_dir.join(file_info).to_string_lossy().into_owned())
+    parent_dir.join(file_info).to_string_lossy().into_owned()
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -225,7 +225,8 @@ impl Args {
         for conf in &self.configs()? {
             if conf.is_stdin() {
                 stdin_tempfilename = temp_dir.path().join("stdin");
-                let mut tmp_file = std::fs::File::create(&stdin_tempfilename)?;
+                let tmp_file = std::fs::File::create(&stdin_tempfilename)?;
+                let mut tmp_file = std::io::BufWriter::new(tmp_file);
                 std::io::copy(&mut std::io::stdin(), &mut tmp_file)?;
             }
             let mut rdr = conf.reader()?;
@@ -283,6 +284,9 @@ impl Args {
                 columns_of_this_file.insert(fi, n);
             }
 
+            // safety: we know that this is a valid file path
+            let conf_pathbuf = conf_path.unwrap();
+
             // set grouping_value
             // safety: we know that this is a valid file path and if the file path
             // is not utf8, we convert it to lossy utf8
@@ -290,27 +294,21 @@ impl Args {
                 GroupKind::FullPath => {
                     grouping_value.clear();
                     grouping_value
-                        .push_str(&conf_path.unwrap().canonicalize().unwrap().to_string_lossy());
+                        .push_str(&conf_pathbuf.canonicalize().unwrap().to_string_lossy());
                 },
                 GroupKind::ParentDirFName => {
-                    grouping_value.clear();
-                    grouping_value
-                        .push_str(&get_parentdir_and_file(conf_path.unwrap(), false).unwrap());
+                    grouping_value = get_parentdir_and_file(&conf_pathbuf, false);
                 },
                 GroupKind::ParentDirFStem => {
-                    grouping_value.clear();
-                    grouping_value
-                        .push_str(&get_parentdir_and_file(conf_path.unwrap(), true).unwrap());
+                    grouping_value = get_parentdir_and_file(&conf_pathbuf, true);
                 },
                 GroupKind::FName => {
                     grouping_value.clear();
-                    grouping_value
-                        .push_str(&conf_path.unwrap().file_name().unwrap().to_string_lossy());
+                    grouping_value.push_str(&conf_pathbuf.file_name().unwrap().to_string_lossy());
                 },
                 GroupKind::FStem => {
                     grouping_value.clear();
-                    grouping_value
-                        .push_str(&conf_path.unwrap().file_stem().unwrap().to_string_lossy());
+                    grouping_value.push_str(&conf_pathbuf.file_stem().unwrap().to_string_lossy());
                 },
                 GroupKind::None => {},
             }
