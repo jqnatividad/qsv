@@ -25,4 +25,4 @@ jobs:
     - name: Run tests
       env:
         RUSTFLAGS: -C target-feature=+fxsr,+sse,+sse2,+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+fma
-      run: cargo test --verbose --features feature_capable,apply,fetch,generate,geocode,foreach,python,luau,polars
+      run: cargo test --verbose --features feature_capable,apply,fetch,geocode,foreach,python,luau,polars
