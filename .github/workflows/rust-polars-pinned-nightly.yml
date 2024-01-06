@@ -28,7 +28,7 @@ jobs:
       uses: actions-rs/toolchain@v1
       with:
         # set to the pinned nightly version known to work with polars
-        toolchain: nightly-2023-11-15
+        toolchain: nightly-2023-12-23
         profile: minimal
         components: rust-src
         target: x86_64-unknown-linux-gnu
