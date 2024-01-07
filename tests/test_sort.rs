@@ -465,18 +465,53 @@ fn sort_random_faster() {
     let mut cmd = wrk.command("sort");
     cmd.arg("--random")
         .args(["--seed", "42"])
-        .arg("--faster")
+        .args(["--rng", "faster"])
         .arg("in.csv");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["R", "S"],
+        svec!["5", "f"],
+        svec!["3", "d"],
+        svec!["4", "c"],
+        svec!["6", "e"],
+        svec!["2", "a"],
         svec!["1", "b"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn sort_random_secure() {
+    let wrk = Workdir::new("sort_random_secure");
+    wrk.create(
+        "in.csv",
+        vec![
+            svec!["R", "S"],
+            svec!["1", "b"],
+            svec!["2", "a"],
+            svec!["3", "d"],
+            svec!["4", "c"],
+            svec!["5", "f"],
+            svec!["6", "e"],
+        ],
+    );
+
+    let mut cmd = wrk.command("sort");
+    cmd.arg("--random")
+        .args(["--seed", "42"])
+        .args(["--rng", "cryptosecure"])
+        .arg("in.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["R", "S"],
+        svec!["3", "d"],
+        svec!["5", "f"],
         svec!["2", "a"],
         svec!["6", "e"],
         svec!["4", "c"],
-        svec!["5", "f"],
-        svec!["3", "d"],
+        svec!["1", "b"],
     ];
     assert_eq!(got, expected);
 }

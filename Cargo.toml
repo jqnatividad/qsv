@@ -99,7 +99,6 @@ eudex = { version = "0.1", optional = true }
 ext-sort = { version = "0.1", features = [
     "memory-limit",
 ], default-features = false }
-fastrand = "2"
 flate2 = { version = "1", optional = true }
 file-format = { version = "0.23", features = ["reader"] }
 filetime = "0.2"
