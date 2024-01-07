@@ -4,7 +4,8 @@ Reverses rows of CSV data.
 Useful for cases when there is no column that can be used for sorting in reverse order,
 or when keys are not unique and order of rows with the same key needs to be preserved.
 
-Note that this requires reading all of the CSV data into memory.
+Note that if the CSV is not indexed, this operation will require reading all of the
+CSV data into memory
 
 Usage:
     qsv reverse [options] [<input>]
@@ -46,19 +47,36 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .no_headers(args.flag_no_headers);
 
     let mut rdr = rconfig.reader()?;
-
-    // we're loading the entire file into memory, we need to check avail mem
-    if let Some(path) = rconfig.path.clone() {
-        util::mem_file_check(&path, false, args.flag_memcheck)?;
-    }
-
-    let mut all = rdr.byte_records().collect::<Result<Vec<_>, _>>()?;
-    all.reverse();
-
     let mut wtr = Config::new(&args.flag_output).writer()?;
+
+    let Some(mut idx_file) = rconfig.indexed()? else {
+        // we don't have an index, we need to read the entire file into memory
+        // we're loading the entire file into memory, we need to check avail mem
+        if let Some(path) = rconfig.path.clone() {
+            util::mem_file_check(&path, false, args.flag_memcheck)?;
+        }
+
+        let mut all = rdr.byte_records().collect::<Result<Vec<_>, _>>()?;
+        all.reverse();
+
+        rconfig.write_headers(&mut rdr, &mut wtr)?;
+        for r in all {
+            wtr.write_byte_record(&r)?;
+        }
+        return Ok(wtr.flush()?);
+    };
+
+    // we have an index, no need to check avail mem,
+    // we're reading the file in reverse streaming
     rconfig.write_headers(&mut rdr, &mut wtr)?;
-    for r in all {
-        wtr.write_byte_record(&r)?;
+    let mut record = csv::ByteRecord::new();
+    let mut pos = idx_file.count().saturating_sub(1);
+    idx_file.seek(pos)?;
+    while idx_file.read_byte_record(&mut record)? {
+        wtr.write_byte_record(&record)?;
+        pos -= 1;
+        idx_file.seek(pos)?; // seek to next pos
     }
+
     Ok(wtr.flush()?)
 }
