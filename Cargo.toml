@@ -230,7 +230,7 @@ newline-converter = "0.3"
 postgres = "0.19"
 quickcheck = { version = "1", default-features = false }
 rusqlite = { version = "0.29", features = ["bundled"] }
-serial_test = { version = "2.0", features = ["file_locks"] }
+serial_test = { version = "3.0", features = ["file_locks"] }
 
 [patch.crates-io]
 console = { git = "https://github.com/console-rs/console", rev = "0567bdcb6a523466586dc9ff0692c2e776f20a5f" }
