@@ -301,8 +301,8 @@ pub fn count_rows(conf: &Config) -> Result<u64, CliError> {
         let rc = ROW_COUNT.get_or_init(|| {
             if let Ok(mut rdr) = conf.reader() {
                 let mut count = 0_u64;
-                let mut record = csv::ByteRecord::new();
-                while rdr.read_byte_record(&mut record).unwrap_or_default() {
+                let mut _record = csv::ByteRecord::new();
+                while rdr.read_byte_record(&mut _record).unwrap_or_default() {
                     count += 1;
                 }
                 count
@@ -1180,6 +1180,7 @@ impl ColumnNameParser {
     }
 }
 
+#[inline]
 pub fn round_num(dec_f64: f64, places: u32) -> String {
     use rust_decimal::{Decimal, RoundingStrategy};
 
