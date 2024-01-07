@@ -86,7 +86,7 @@ fn sample_seed_faster() {
     );
 
     let mut cmd = wrk.command("sample");
-    cmd.arg("--faster")
+    cmd.args(["--rng", "faster"])
         .args(["--seed", "42"])
         .arg("5")
         .arg("in.csv");
@@ -94,11 +94,47 @@ fn sample_seed_faster() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["R", "S"],
-        svec!["1", "b"],
+        svec!["6", "e"],
         svec!["2", "a"],
+        svec!["8", "h"],
+        svec!["4", "c"],
+        svec!["5", "f"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn sample_seed_secure() {
+    let wrk = Workdir::new("sample_seed_secure");
+    wrk.create(
+        "in.csv",
+        vec![
+            svec!["R", "S"],
+            svec!["1", "b"],
+            svec!["2", "a"],
+            svec!["3", "d"],
+            svec!["4", "c"],
+            svec!["5", "f"],
+            svec!["6", "e"],
+            svec!["7", "i"],
+            svec!["8", "h"],
+        ],
+    );
+
+    let mut cmd = wrk.command("sample");
+    cmd.args(["--rng", "cryptosecure"])
+        .args(["--seed", "42"])
+        .arg("5")
+        .arg("in.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["R", "S"],
+        svec!["8", "h"],
+        svec!["7", "i"],
         svec!["3", "d"],
         svec!["4", "c"],
-        svec!["6", "e"],
+        svec!["5", "f"],
     ];
     assert_eq!(got, expected);
 }
@@ -217,7 +253,7 @@ fn sample_percentage_seed_indexed_faster() {
     );
 
     let mut cmd = wrk.command("sample");
-    cmd.arg("--faster")
+    cmd.args(["--rng", "faster"])
         .args(["--seed", "42"])
         .arg("0.4")
         .arg("in.csv");
@@ -225,8 +261,43 @@ fn sample_percentage_seed_indexed_faster() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["R", "S"],
-        svec!["1", "b"],
-        svec!["2", "a"],
+        svec!["4", "c"],
+        svec!["6", "e"],
+        svec!["7", "i"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn sample_percentage_seed_indexed_secure() {
+    let wrk = Workdir::new("sample_indexed_secure");
+    wrk.create_indexed(
+        "in.csv",
+        vec![
+            svec!["R", "S"],
+            svec!["1", "b"],
+            svec!["2", "a"],
+            svec!["3", "d"],
+            svec!["4", "c"],
+            svec!["5", "f"],
+            svec!["6", "e"],
+            svec!["7", "i"],
+            svec!["8", "h"],
+            svec!["8", "h"],
+        ],
+    );
+
+    let mut cmd = wrk.command("sample");
+    cmd.args(["--rng", "cryptosecure"])
+        .args(["--seed", "42"])
+        .arg("0.4")
+        .arg("in.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["R", "S"],
+        svec!["3", "d"],
+        svec!["5", "f"],
         svec!["8", "h"],
     ];
     assert_eq!(got, expected);
@@ -319,7 +390,7 @@ fn sample_indexed_random_access_faster() {
     );
 
     let mut cmd = wrk.command("sample");
-    cmd.arg("--faster")
+    cmd.args(["--rng", "faster"])
         .args(["--seed", "42"])
         .arg("4")
         .arg("in.csv");
@@ -327,10 +398,63 @@ fn sample_indexed_random_access_faster() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["R", "S"],
+        svec!["4", "c"],
         svec!["19", "s"],
+        svec!["16", "p"],
         svec!["15", "o"],
-        svec!["17", "q"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn sample_indexed_random_access_secure() {
+    let wrk = Workdir::new("sample_indexed_random_access_secure");
+    wrk.create_indexed(
+        "in.csv",
+        vec![
+            svec!["R", "S"],
+            svec!["1", "b"],
+            svec!["2", "a"],
+            svec!["3", "d"],
+            svec!["4", "c"],
+            svec!["5", "f"],
+            svec!["6", "e"],
+            svec!["7", "i"],
+            svec!["8", "h"],
+            svec!["9", "i"],
+            svec!["10", "j"],
+            svec!["11", "k"],
+            svec!["12", "l"],
+            svec!["13", "m"],
+            svec!["14", "n"],
+            svec!["15", "o"],
+            svec!["16", "p"],
+            svec!["17", "q"],
+            svec!["18", "r"],
+            svec!["19", "s"],
+            svec!["20", "t"],
+            svec!["21", "u"],
+            svec!["22", "v"],
+            svec!["23", "w"],
+            svec!["24", "x"],
+            svec!["25", "y"],
+            svec!["26", "z"],
+        ],
+    );
+
+    let mut cmd = wrk.command("sample");
+    cmd.args(["--rng", "cryptosecure"])
+        .args(["--seed", "42"])
+        .arg("4")
+        .arg("in.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["R", "S"],
+        svec!["24", "x"],
+        svec!["10", "j"],
         svec!["26", "z"],
+        svec!["6", "e"],
     ];
     assert_eq!(got, expected);
 }
