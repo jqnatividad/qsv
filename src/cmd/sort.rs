@@ -20,11 +20,24 @@ sort options:
                             See 'qsv select --help' for the format details.
     -N, --numeric           Compare according to string numerical value
     -R, --reverse           Reverse order
-    --random                Random order
-    --seed <number>         Random number generator seed to use if --random is set
     -i, --ignore-case       Compare strings disregarding case
     -u, --unique            When set, identical consecutive lines will be dropped
                             to keep only one line per sorted value.
+
+    --random                Random order
+    --seed <number>         Random Number Generator (RNG) seed to use if --random is set
+    --rng <kind>            The RNG algorithm to use if --random is set.
+                            Three RNGs are supported:
+                            - standard: Use the standard RNG.
+                              1.5 GB/s throughput.
+                            - faster: Use faster RNG using the Xoshiro256Plus algorithm.
+                              8 GB/s throughput.
+                            - cryptosecure: Use cryptographically secure HC128 algorithm.
+                            Recommended by eSTREAM (https://www.ecrypt.eu.org/stream/).
+                              2.1 GB/s throughput though slow initialization.
+                            [default: standard]
+    
+
     -j, --jobs <arg>        The number of jobs to run in parallel.
                             When not set, the number of jobs is set to the
                             number of CPUs detected.
@@ -36,11 +49,6 @@ sort options:
                             which is useful for sorting large files that will 
                             otherwise NOT fit in memory using the default allocating
                             stable sort.
-                            
-                            For --random sorts, this means using an alternative
-                            random number generator (RNG) that uses the faster
-                            Wyrand algorithm instead of the ChaCha algorithm used
-                            by the standard RNG.
 
 Common options:
     -h, --help              Display this message
@@ -55,13 +63,16 @@ Common options:
                             CSV into memory using CONSERVATIVE heuristics.
 "#;
 
-use std::cmp;
+use std::{cmp, str::FromStr};
 
-use fastrand; //DevSkim: ignore DS148264
-use rand::{rngs::StdRng, seq::SliceRandom, SeedableRng};
+// use fastrand; //DevSkim: ignore DS148264
+use rand::{rngs::StdRng, seq::SliceRandom, Rng, SeedableRng};
+use rand_hc::Hc128Rng;
+use rand_xoshiro::Xoshiro256Plus;
 use rayon::slice::ParallelSliceMut;
 use serde::Deserialize;
 use simdutf8::basic::from_utf8;
+use strum_macros::EnumString;
 
 use self::Number::{Float, Int};
 use crate::{
@@ -77,16 +88,25 @@ struct Args {
     flag_select:      SelectColumns,
     flag_numeric:     bool,
     flag_reverse:     bool,
+    flag_ignore_case: bool,
+    flag_unique:      bool,
     flag_random:      bool,
     flag_seed:        Option<u64>,
-    flag_ignore_case: bool,
+    flag_rng:         String,
     flag_jobs:        Option<usize>,
     flag_faster:      bool,
     flag_output:      Option<String>,
     flag_no_headers:  bool,
     flag_delimiter:   Option<Delimiter>,
-    flag_unique:      bool,
     flag_memcheck:    bool,
+}
+
+#[derive(Debug, EnumString, PartialEq)]
+#[strum(ascii_case_insensitive)]
+enum RngKind {
+    Standard,
+    Faster,
+    Cryptosecure,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -99,6 +119,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers)
         .select(args.flag_select);
+
+    let Ok(rng_kind) = RngKind::from_str(&args.flag_rng) else {
+        return fail_incorrectusage_clierror!(
+            "Invalid RNG algorithm `{}`. Supported RNGs are: standard, faster, cryptosecure.",
+            args.flag_rng
+        );
+    };
 
     // we're loading the entire file into memory, we need to check avail memory
     if let Some(path) = rconfig.path.clone() {
@@ -124,25 +151,61 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut all = rdr.byte_records().collect::<Result<Vec<_>, _>>()?;
     match (numeric, reverse, random, faster) {
-        // --random stable sort
-        (_, _, true, false) => {
-            // we don't need cryptographically strong RNGs for this
-            // add DevSkim lint ignores to suppress warning
-            if let Some(val) = seed {
-                let mut rng = StdRng::seed_from_u64(val); //DevSkim: ignore DS148264
-                SliceRandom::shuffle(&mut *all, &mut rng); //DevSkim: ignore DS148264
-            } else {
-                let mut rng = ::rand::thread_rng();
-                SliceRandom::shuffle(&mut *all, &mut rng); //DevSkim: ignore DS148264
+        // --random sort
+        (_, _, true, _) => {
+            match rng_kind {
+                RngKind::Standard => {
+                    if let Some(val) = seed {
+                        let mut rng = StdRng::seed_from_u64(val); //DevSkim: ignore DS148264
+                        all.shuffle(&mut rng); //DevSkim: ignore DS148264
+                    } else {
+                        let mut rng = ::rand::thread_rng();
+                        all.shuffle(&mut rng); //DevSkim: ignore DS148264
+                    }
+                },
+                RngKind::Faster => {
+                    let mut rng = match args.flag_seed {
+                        None => Xoshiro256Plus::from_rng(rand::thread_rng()).unwrap(),
+                        Some(seed) => Xoshiro256Plus::seed_from_u64(seed), /* DevSkim: ignore
+                                                                            * DS148264 */
+                    };
+                    SliceRandom::shuffle(&mut *all, &mut rng); //DevSkim: ignore DS148264
+                },
+                RngKind::Cryptosecure => {
+                    let seed_32 = match args.flag_seed {
+                        None => rand::thread_rng().gen::<[u8; 32]>(),
+                        Some(seed) => {
+                            let seed_u8 = seed.to_le_bytes();
+                            let mut seed_32 = [0u8; 32];
+                            seed_32[..8].copy_from_slice(&seed_u8);
+                            seed_32
+                        },
+                    };
+                    let mut rng: Hc128Rng = match args.flag_seed {
+                        None => Hc128Rng::from_rng(rand::thread_rng()).unwrap(),
+                        Some(_) => Hc128Rng::from_seed(seed_32),
+                    };
+                    SliceRandom::shuffle(&mut *all, &mut rng);
+                },
             }
-        },
-        // --random --faster stable sort
-        (_, _, true, true) => {
-            // faster random sorts using Wyrand
-            if let Some(val) = seed {
-                fastrand::seed(val); //DevSkim: ignore DS148264
-            }
-            fastrand::shuffle(&mut all); //DevSkim: ignore DS148264
+
+            //     // we don't need cryptographically strong RNGs for this
+            //     // add DevSkim lint ignores to suppress warning
+            //     if let Some(val) = seed {
+            //         let mut rng = StdRng::seed_from_u64(val); //DevSkim: ignore DS148264
+            //         SliceRandom::shuffle(&mut *all, &mut rng); //DevSkim: ignore DS148264
+            //     } else {
+            //         let mut rng = ::rand::thread_rng();
+            //         SliceRandom::shuffle(&mut *all, &mut rng); //DevSkim: ignore DS148264
+            //     }
+            // },
+            // // --random --faster stable sort
+            // (_, _, true, true) => {
+            //     // faster random sorts using Wyrand
+            //     if let Some(val) = seed {
+            //         fastrand::seed(val); //DevSkim: ignore DS148264
+            //     }
+            //     fastrand::shuffle(&mut all); //DevSkim: ignore DS148264
         },
 
         // default stable parallel sort
