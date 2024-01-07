@@ -355,8 +355,6 @@ Luau will also serve as the backbone of a whole library of **qsv recipes** - reu
 It uses the latest stable Rust version, with an aggressive MSRV policy and the latest version of all its dependencies.
 It has an extensive test suite with more than 1,250 tests, including several [property tests](https://medium.com/criteo-engineering/introduction-to-property-based-testing-f5236229d237) which [randomly generate](https://github.com/BurntSushi/quickcheck#quickcheck) parameters for oft-used commands. It also has a [Security Policy](SECURITY.md).  
 Its prebuilt binary archives are [zipsigned](https://github.com/Kijewski/zipsign#zipsign), so you can [verify their integrity](#verifying-the-integrity-of-the-prebuilt-binaries-zip-archives). Its self-update mechanism automatically verifies the integrity of the prebuilt binaries archive before applying an update.
-However, for performance reasons, it does not use cryptographically secure random number generators (RNGs) for the `sort` & `sample` commands, as their use cases do not require it.
-(search for the codebase for _"[//DevSkim: ignore DS148264](https://github.com/search?q=repo%3Ajqnatividad%2Fqsv+%2F%2Fdevskim&type=code)"_ to find instances where qsv uses a non-cryptographically secure RNG)
 * **As Easy to Contribute to as Possible** - qsv is designed to be easy to contribute to, with a focus on maintainability. It's architecture allows the easy addition of self-contained commands gated by feature flags, the source code is heavily commented, the usage text is embedded, and there are helper functions that make it easy to create tests. See [Features](docs/FEATURES.md) and [Contributing](CONTRIBUTING.md) for more info.
 
 QuickSilver's non-goals are to be:
