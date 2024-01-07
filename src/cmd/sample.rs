@@ -43,7 +43,8 @@ sample options:
                             - cryptosecure: Use cryptographically secure HC128 algorithm.
                               Recommended by eSTREAM (https://www.ecrypt.eu.org/stream/).
                               2.1 GB/s throughput though slow initialization.
-                              [default: standard]
+                           [default: standard]
+
     --user-agent <agent>   Specify custom user agent to use when the input is a URL.
                            It supports the following variables -
                            $QSV_VERSION, $QSV_TARGET, $QSV_BIN_NAME, $QSV_KIND and $QSV_COMMAND.
