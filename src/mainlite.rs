@@ -3,6 +3,7 @@ use std::{env, io, time::Instant};
 
 extern crate qsv_docopt as docopt;
 use docopt::Docopt;
+use rand::Rng;
 use serde::Deserialize;
 
 use crate::clitypes::{CliError, CliResult, QsvExitCode, CURRENT_COMMAND};
@@ -146,8 +147,8 @@ Please choose one of the following commands:",
             ));
 
             // if no command is specified, auto-check for updates 10% of the time
-            let mut rng = fastrand::Rng::new(); //DevSkim: ignore DS148264
-            if rng.usize(0..10) == 0 {
+            let mut rng = rand::thread_rng(); //DevSkim: ignore DS148264
+            if rng.gen_range(0..10) == 0 {
                 _ = util::qsv_check_for_update(true, false);
             }
             util::log_end(qsv_args, now);
