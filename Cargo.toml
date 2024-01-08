@@ -108,8 +108,8 @@ flexi_logger = { version = "0.27", features = [
 ], default-features = false }
 futures = "0.3"
 futures-util = "0.3"
-geosuggest-core = { version = "0.5", optional = true }
-geosuggest-utils = { version = "0.5", optional = true }
+geosuggest-core = { version = "0.6", optional = true }
+geosuggest-utils = { version = "0.6", optional = true }
 governor = { version = "0.6", optional = true }
 grex = { version = "1.4", default-features = false }
 gzp = { version = "0.11", default-features = false, features = [
