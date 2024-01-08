@@ -188,24 +188,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     SliceRandom::shuffle(&mut *all, &mut rng);
                 },
             }
-
-            //     // we don't need cryptographically strong RNGs for this
-            //     // add DevSkim lint ignores to suppress warning
-            //     if let Some(val) = seed {
-            //         let mut rng = StdRng::seed_from_u64(val); //DevSkim: ignore DS148264
-            //         SliceRandom::shuffle(&mut *all, &mut rng); //DevSkim: ignore DS148264
-            //     } else {
-            //         let mut rng = ::rand::thread_rng();
-            //         SliceRandom::shuffle(&mut *all, &mut rng); //DevSkim: ignore DS148264
-            //     }
-            // },
-            // // --random --faster stable sort
-            // (_, _, true, true) => {
-            //     // faster random sorts using Wyrand
-            //     if let Some(val) = seed {
-            //         fastrand::seed(val); //DevSkim: ignore DS148264
-            //     }
-            //     fastrand::shuffle(&mut all); //DevSkim: ignore DS148264
         },
 
         // default stable parallel sort
