@@ -1364,7 +1364,7 @@ dependencies = [
  "ident_case",
  "proc-macro2",
  "quote",
- "strsim",
+ "strsim 0.10.0",
  "syn 1.0.109",
 ]
 
@@ -1976,7 +1976,7 @@ dependencies = [
  "rayon",
  "serde",
  "serde_json",
- "strsim",
+ "strsim 0.10.0",
 ]
 
 [[package]]
@@ -4098,7 +4098,7 @@ dependencies = [
  "simple-home-dir",
  "smartstring",
  "snap",
- "strsim",
+ "strsim 0.11.0",
  "strum",
  "strum_macros",
  "sysinfo",
@@ -4167,13 +4167,13 @@ dependencies = [
 
 [[package]]
 name = "qsv_docopt"
-version = "1.5.0"
+version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b17a032317fce7f5e33434d6c829d70dd75069838dc644f12df9e43e7aad9cc"
+checksum = "e8c81c56d18a2fe35fc2b17e15bd3184f547fa67140e4529704509a14d57954e"
 dependencies = [
  "regex",
  "serde",
- "strsim",
+ "strsim 0.11.0",
 ]
 
 [[package]]
@@ -5104,6 +5104,12 @@ name = "strsim"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "73473c0e59e6d5812c5dfe2a064a6444949f089e20eec9a2e5506596494e4623"
+
+[[package]]
+name = "strsim"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5ee073c9e4cd00e28217186dbe12796d692868f432bf2e97ee73bed0c56dfa01"
 
 [[package]]
 name = "strum"

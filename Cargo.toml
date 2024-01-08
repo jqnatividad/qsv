@@ -154,7 +154,7 @@ polars = { version = "0.36", features = [
 ], optional = true }
 pyo3 = { version = "0.20", features = ["auto-initialize"], optional = true }
 qsv-dateparser = "0.10"
-qsv_docopt = "1.5"
+qsv_docopt = "1.6"
 qsv-stats = "0.12"
 qsv_currency = { version = "0.6", optional = true }
 qsv-sniffer = { version = "0.10", default-features = false, features = [
@@ -197,7 +197,7 @@ simple-home-dir = { version = "0.2", features = [
 ], optional = true }
 smartstring = { version = "1", optional = true }
 snap = "1"
-strsim = { version = "0.10", optional = true }
+strsim = { version = "0.11", optional = true }
 strum = { version = "0.25", features = ["phf"] }
 strum_macros = "0.25"
 sysinfo = "0.30"
