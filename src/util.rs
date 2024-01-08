@@ -302,6 +302,7 @@ pub fn count_rows(conf: &Config) -> Result<u64, CliError> {
             if let Ok(mut rdr) = conf.reader() {
                 let mut count = 0_u64;
                 let mut _record = csv::ByteRecord::new();
+                #[allow(clippy::used_underscore_binding)]
                 while rdr.read_byte_record(&mut _record).unwrap_or_default() {
                     count += 1;
                 }
