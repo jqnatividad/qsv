@@ -33,7 +33,7 @@ sort options:
                             - faster: Use faster RNG using the Xoshiro256Plus algorithm.
                               8 GB/s throughput.
                             - cryptosecure: Use cryptographically secure HC128 algorithm.
-                            Recommended by eSTREAM (https://www.ecrypt.eu.org/stream/).
+                              Recommended by eSTREAM (https://www.ecrypt.eu.org/stream/).
                               2.1 GB/s throughput though slow initialization.
                             [default: standard]
     
