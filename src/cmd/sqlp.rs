@@ -129,7 +129,7 @@ sqlp options:
                                 avro     Apache Avro
                               (default: csv)
 
-                              POLARS CSV PARSING OPTIONS:
+                              POLARS CSV INPUT PARSING OPTIONS:
     --try-parsedates          Automatically try to parse dates/datetimes and time.
                               If parsing fails, columns remain as strings.
                               Note that if dates are not well-formatted in your CSV,
@@ -147,6 +147,9 @@ sqlp options:
                               will be skipped. If not set, the query will fail.
                               Only use this when debugging queries, as polars does batched
                               parsing and will skip the entire batch where the error occurred.
+    --rnull-values <arg>      The comma-delimited list of strings to consider as null values
+                              when READING CSV files.
+                              (default: <empty string>)                              
 
                               CSV OUTPUT FORMAT ONLY:
     --datetime-format <fmt>   The datetime format to use writing datetimes.
@@ -156,9 +159,6 @@ sqlp options:
     --time-format <fmt>       The time format to use writing times.
     --float-precision <arg>   The number of digits of precision to use when writing floats.
                               (default: 6)
-    --rnull-values <arg>      The comma-delimited list of strings to consider as null values
-                              when READING CSV files.
-                              (default: <empty string>)
     --wnull-value <arg>       The string to use when WRITING null values.
                               (default: <empty string>)
 
