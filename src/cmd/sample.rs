@@ -11,8 +11,8 @@ If you wish to limit the number of records visited, use the 'qsv slice' command
 to pipe into 'qsv sample'.
 
 This command is intended to provide a means to sample from a CSV data set that
-is too big to fit into memory (for example, for use with commands like 'qsv
-frequency' or 'qsv stats'). 
+is too big to fit into memory (for example, for use with commands like
+'qsv stats' with the '--everything' option). 
 
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_sample.rs.
 
