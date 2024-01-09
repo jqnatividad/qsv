@@ -42,7 +42,7 @@
 arg_pat="$1"
 
 # the version of this script
-bm_version=3.8.0
+bm_version=3.9.0
 
 # CONFIGURABLE VARIABLES ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -487,6 +487,7 @@ run pseudo "$qsv_bin" pseudo \'Unique Key\' "$data"
 run rename "$qsv_bin" rename \'unique_key,created_date,closed_date,agency,agency_name,complaint_type,descriptor,loctype,zip,addr1,street,xstreet1,xstreet2,inter1,inter2,addrtype,city,landmark,facility_type,status,due_date,res_desc,res_act_date,comm_board,bbl,boro,xcoord,ycoord,opendata_type,parkname,parkboro,vehtype,taxi_boro,taxi_loc,bridge_hwy_name,bridge_hwy_dir,ramp,bridge_hwy_seg,lat,long,loc\' "$data"
 run replace "$qsv_bin" replace \'zip\' \'postal\' "$data"
 run reverse "$qsv_bin" reverse "$data"
+run --index reverse_index "$qsv_bin" reverse "$data"
 run safenames "$qsv_bin" safenames "$data"
 run sample_10 "$qsv_bin" sample 10 "$data"
 run --index sample_10_index "$qsv_bin" sample 10 "$data"
@@ -495,9 +496,11 @@ run --index sample_1000_index "$qsv_bin" sample 1000 "$data"
 run sample_100000 "$qsv_bin" sample 100000 "$data"
 run --index sample_100000_index "$qsv_bin" sample 100000 "$data"
 run sample_100000_seeded "$qsv_bin" sample 100000 --seed 42 "$data"
-run sample_100000_seeded_faster "$qsv_bin" sample 100000 --faster --seed 42 "$data"
+run sample_100000_seeded_faster "$qsv_bin" sample 100000 --rng faster --seed 42 "$data"
+run sample_100000_seeded_secure "$qsv_bin" sample 100000 --rng cryptosecure --seed 42 "$data"
 run --index sample_100000_seeded_index "$qsv_bin" sample --seed 42 100000 "$data"
-run --index sample_100000_seeded_index_faster "$qsv_bin" sample --faster --seed 42 100000 "$data"
+run --index sample_100000_seeded_index_faster "$qsv_bin" sample --rng faster --seed 42 100000 "$data"
+run --index sample_100000_seeded_index_secure "$qsv_bin" sample --rng cryptosecure --seed 42 100000 "$data"
 run --index sample_25pct_index "$qsv_bin" sample 0.25 "$data"
 run --index sample_25pct_seeded_index "$qsv_bin" sample 0.25 --seed 42 "$data"
 run schema "$qsv_bin" schema --force "$data"
@@ -516,6 +519,8 @@ run snappy_decompress "$qsv_bin" snappy decompress benchmark_data.snappy
 run snappy_validate "$qsv_bin" snappy validate benchmark_data.snappy
 run sort "$qsv_bin" sort -s \'Incident Zip\' "$data"
 run sort_random_seeded "$qsv_bin" sort --random --seed 42 "$data"
+run sort_random_seeded_faster "$qsv_bin" sort --random --rng faster --seed 42 "$data"
+run sort_random_seeded_secure "$qsv_bin" sort --random --rng cryptosecure --seed 42 "$data"
 run sortcheck_sorted "$qsv_bin" sortcheck data_sorted.csv
 run sortcheck_unsorted "$qsv_bin" sortcheck data_unsorted.csv
 run sortcheck_unsorted_all "$qsv_bin" sortcheck --all data_unsorted.csv
