@@ -114,7 +114,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             wtr.write_record(row)?;
         }
     }
-    Ok(())
+    Ok(wtr.flush()?)
 }
 
 type Headers = csv::ByteRecord;
