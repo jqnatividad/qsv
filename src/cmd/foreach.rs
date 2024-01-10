@@ -197,5 +197,5 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if show_progress {
         util::finish_progress(&progress);
     }
-    Ok(())
+    Ok(wtr.flush()?)
 }
