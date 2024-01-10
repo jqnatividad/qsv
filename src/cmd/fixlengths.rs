@@ -129,6 +129,5 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
         wtr.write_byte_record(&record)?;
     }
-    wtr.flush()?;
-    Ok(())
+    Ok(wtr.flush()?)
 }
