@@ -114,6 +114,8 @@ impl Args {
                     let row = row.unwrap();
                     wtr.write_byte_record(&row).unwrap();
                 }
+                // safety: safe to unwrap because we know the writer is a file
+                // we cannot use ? here because we're in a closure
                 wtr.flush().unwrap();
             });
         }
