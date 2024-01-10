@@ -190,7 +190,7 @@ impl<R: io::Read + io::Seek, W: io::Write> IoState<R, W> {
                 }
             }
         }
-        Ok(())
+        Ok(self.wtr.flush()?)
     }
 
     fn outer_join(mut self, right: bool) -> CliResult<()> {
@@ -223,7 +223,7 @@ impl<R: io::Read + io::Seek, W: io::Write> IoState<R, W> {
                 self.wtr.write_record(row.iter().chain(&pad2))?;
             }
         }
-        Ok(())
+        Ok(self.wtr.flush()?)
     }
 
     fn left_join(mut self, anti: bool) -> CliResult<()> {
@@ -240,7 +240,7 @@ impl<R: io::Read + io::Seek, W: io::Write> IoState<R, W> {
                 self.wtr.write_record(&row)?;
             }
         }
-        Ok(())
+        Ok(self.wtr.flush()?)
     }
 
     fn full_outer_join(mut self) -> CliResult<()> {
@@ -276,7 +276,7 @@ impl<R: io::Read + io::Seek, W: io::Write> IoState<R, W> {
                 self.wtr.write_record(pad1.iter().chain(&scratch))?;
             }
         }
-        Ok(())
+        Ok(self.wtr.flush()?)
     }
 
     fn cross_join(mut self) -> CliResult<()> {
@@ -296,7 +296,7 @@ impl<R: io::Read + io::Seek, W: io::Write> IoState<R, W> {
                 self.wtr.write_record(row1.iter().chain(&row2))?;
             }
         }
-        Ok(())
+        Ok(self.wtr.flush()?)
     }
 
     fn get_padding(&mut self) -> CliResult<(csv::ByteRecord, csv::ByteRecord)> {
