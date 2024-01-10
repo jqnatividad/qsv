@@ -179,5 +179,5 @@ Use `tojsonl` command to convert _to_ jsonl instead of _from_ jsonl."#,
         wtr.write_record(&record)?;
     }
 
-    Ok(())
+    Ok(wtr.flush()?)
 }

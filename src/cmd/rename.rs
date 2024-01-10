@@ -86,8 +86,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     while rdr.read_byte_record(&mut record)? {
         wtr.write_record(&record)?;
     }
-    wtr.flush()?;
-    Ok(())
+    Ok(wtr.flush()?)
 }
 
 pub fn rename_headers_all_generic(num_of_cols: usize) -> String {

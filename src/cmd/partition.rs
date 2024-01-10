@@ -157,6 +157,7 @@ impl Args {
             } else {
                 wtr.write_byte_record(&row)?;
             }
+            wtr.flush()?;
         }
         Ok(())
     }

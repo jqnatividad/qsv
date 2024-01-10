@@ -90,8 +90,7 @@ impl Args {
         for r in idx.byte_records().take(end - start) {
             wtr.write_byte_record(&r?)?;
         }
-        wtr.flush()?;
-        Ok(())
+        Ok(wtr.flush()?)
     }
 
     fn range(&self) -> Result<(usize, usize), String> {

@@ -101,6 +101,5 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 .map(|f| util::condense(Cow::Borrowed(f), args.flag_condense)),
         )?;
     }
-    wtr.flush()?;
-    Ok(())
+    Ok(wtr.flush()?)
 }
