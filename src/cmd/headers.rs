@@ -89,6 +89,5 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
         wtr.write_all(b"\n")?;
     }
-    wtr.flush()?;
-    Ok(())
+    Ok(wtr.flush()?)
 }
