@@ -93,8 +93,7 @@ csvs_convert = { version = "0.8", default-features = false, features = [
 data-encoding = { version = "2.5", optional = true }
 dotenvy = "0.15"
 dynfmt = { version = "0.1", default-features = false, features = [
-    "curly",
-], optional = true }
+    "curly"]}
 eudex = { version = "0.1", optional = true }
 ext-sort = { version = "0.1", features = [
     "memory-limit",
@@ -256,7 +255,6 @@ apply = [
     "censor",
     "cpc",
     "data-encoding",
-    "dynfmt",
     "eudex",
     "hashbrown",
     "qsv_currency",
@@ -269,7 +267,6 @@ apply = [
 fetch = [
     "cached",
     "console",
-    "dynfmt",
     "flate2",
     "governor",
     "hashbrown",
@@ -283,7 +280,6 @@ foreach = []
 geocode = [
     "anyhow",
     "cached",
-    "dynfmt",
     "geosuggest-core",
     "geosuggest-utils",
     "phf",
@@ -294,7 +290,7 @@ python = ["pyo3"]
 to = ["csvs_convert"]
 to_parquet = ["csvs_convert/parquet"]
 lite = []
-datapusher_plus = ["dynfmt", "self_update"]
+datapusher_plus = ["self_update"]
 polars = ["dep:polars", "smartstring"]
 feature_capable = []
 nightly = [
