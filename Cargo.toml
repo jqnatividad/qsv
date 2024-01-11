@@ -92,8 +92,7 @@ csvs_convert = { version = "0.8", default-features = false, features = [
 ], optional = true }
 data-encoding = { version = "2.5", optional = true }
 dotenvy = "0.15"
-dynfmt = { version = "0.1", default-features = false, features = [
-    "curly"]}
+dynfmt = { version = "0.1", default-features = false, features = ["curly"] }
 eudex = { version = "0.1", optional = true }
 ext-sort = { version = "0.1", features = [
     "memory-limit",
@@ -128,10 +127,7 @@ jsonxf = { version = "1", optional = true }
 jql-runner = { version = "7.1", default-features = false, optional = true }
 log = "0.4"
 mimalloc = { version = "0.1", default-features = false, optional = true }
-mlua = { version = "0.9", features = [
-    "luau",
-    "serialize",
-], optional = true }
+mlua = { version = "0.9", features = ["luau", "serialize"], optional = true }
 num_cpus = "1"
 odht = "0.3"
 phf = { version = "0.11", features = ["macros"], optional = true }
@@ -233,8 +229,8 @@ serial_test = { version = "3.0", features = ["file_locks"] }
 
 [patch.crates-io]
 console = { git = "https://github.com/console-rs/console", rev = "0567bdcb6a523466586dc9ff0692c2e776f20a5f" }
-dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_ptr_as_ptr-bumpdeps"}
-grex = { git = "https://github.com/pemistahl/grex", rev="8f6b35cee5f911311c2e0ef6e56f333e4c896112" }
+dynfmt  = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_ptr_as_ptr-bumpdeps" }
+grex    = { git = "https://github.com/pemistahl/grex", rev = "8f6b35cee5f911311c2e0ef6e56f333e4c896112" }
 
 [features]
 default = ["mimalloc"]
