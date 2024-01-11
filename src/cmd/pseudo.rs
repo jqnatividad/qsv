@@ -150,6 +150,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     nvalue.to_string()
                 } else {
                     // safety: the unwrap() is here because we're in a closure
+                    #[allow(clippy::needless_return)]
                     return fail_clierror!("Invalid format string: {}", args.flag_formatstr)
                         .unwrap();
                 }
