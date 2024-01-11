@@ -2094,10 +2094,9 @@ dependencies = [
 [[package]]
 name = "halfbrown"
 version = "0.2.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5681137554ddff44396e5f149892c769d45301dd9aa19c51602a89ee214cb0ec"
+source = "git+https://github.com/licenser/halfbrown?rev=7cecc29422ae2775abe35a2e430f1678b4f1aa76#7cecc29422ae2775abe35a2e430f1678b4f1aa76"
 dependencies = [
- "hashbrown 0.13.2",
+ "hashbrown 0.14.3",
  "serde",
 ]
 
@@ -2108,15 +2107,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a9ee70c43aaf417c914396645a0fa852624801b24ebb7ae78fe8272889ac888"
 dependencies = [
  "ahash 0.7.7",
-]
-
-[[package]]
-name = "hashbrown"
-version = "0.13.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "43a3c133739dddd0d2990f9a4bdf8eb4b21ef50e4851ca85ab661199821d510e"
-dependencies = [
- "ahash 0.8.7",
 ]
 
 [[package]]
