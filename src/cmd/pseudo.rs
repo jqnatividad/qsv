@@ -1,6 +1,6 @@
 static USAGE: &str = r#"
-Pseudonymise the value of the given column by replacing it with an
-incremental identifier.
+Pseudonymise the value of a given column by replacing it with an
+incremental identifier. See https://en.wikipedia.org/wiki/Pseudonymization
 
 Once a value is pseudonymised, it will always be replaced with the same
 identifier. This means that the same value will always be replaced with
