@@ -135,9 +135,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             });
             if overflowed {
                 return fail_incorrectusage_clierror!(
-                    "Overflowed. The increment value is too large. The maximum value for \
-                     --increment is {}.",
-                    u64::MAX - curr_counter
+                    "Overflowed. The counter is larger than u64::MAX {}. The last valid counter \
+                     is {curr_counter}.",
+                    u64::MAX
                 );
             }
             record = replace_column_value(&record, column_index, &new_value.to_string());
@@ -175,9 +175,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             });
             if overflowed {
                 return fail_incorrectusage_clierror!(
-                    "Overflowed. The increment value is too large. The maximum value for \
-                     --increment is {}.",
-                    u64::MAX - curr_counter
+                    "Overflowed. The counter is larger than u64::MAX({}). The last valid counter \
+                     is {curr_counter}.",
+                    u64::MAX
                 );
             }
 
