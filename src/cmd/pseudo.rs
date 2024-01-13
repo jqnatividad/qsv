@@ -119,42 +119,67 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut record = csv::StringRecord::new();
     let mut counter: u64 = args.flag_start;
     let increment = args.flag_increment;
+    let mut curr_counter: u64 = 0;
+    let mut overflowed = false;
 
     if args.flag_formatstr == "{}" {
         // we don't need to use dynfmt::SimpleCurlyFormat if the format string is "{}"
         let mut values_num = ValuesNum::with_capacity(1000);
-        let mut curr_counter: u64 = 0;
 
         while rdr.read_record(&mut record)? {
             let value = record[column_index].to_owned();
             let new_value = values_num.entry(value.clone()).or_insert_with(|| {
                 curr_counter = counter;
-                counter = counter.wrapping_add(increment);
+                (counter, overflowed) = counter.overflowing_add(increment);
                 curr_counter
             });
+            if overflowed {
+                return fail_incorrectusage_clierror!(
+                    "Overflowed. The increment value is too large. The maximum value for \
+                     --increment is {}.",
+                    u64::MAX - curr_counter
+                );
+            }
             record = replace_column_value(&record, column_index, &new_value.to_string());
 
             wtr.write_record(&record)?;
         }
     } else {
         // we need to use dynfmt::SimpleCurlyFormat if the format string is not "{}"
+
+        // first, validate the format string
+        if !args.flag_formatstr.contains("{}")
+            || dynfmt::SimpleCurlyFormat
+                .format(&args.flag_formatstr, [0])
+                .is_err()
+        {
+            return fail_incorrectusage_clierror!(
+                "Invalid format string: \"{}\". The format string must contain a single \"{{}}\" \
+                 which will be replaced with the incremental identifier.",
+                args.flag_formatstr
+            );
+        }
+
         let mut values = Values::with_capacity(1000);
         while rdr.read_record(&mut record)? {
             let value = record[column_index].to_owned();
 
+            // safety: we checked that the format string contains "{}"
             let new_value = values.entry(value.clone()).or_insert_with(|| {
-                if let Ok(nvalue) =
-                    dynfmt::SimpleCurlyFormat.format(&args.flag_formatstr, [counter])
-                {
-                    counter = counter.wrapping_add(increment);
-                    nvalue.to_string()
-                } else {
-                    // safety: the unwrap() is here because we're in a closure
-                    #[allow(clippy::needless_return)]
-                    return fail_clierror!("Invalid format string: {}", args.flag_formatstr)
-                        .unwrap();
-                }
+                curr_counter = counter;
+                (counter, overflowed) = counter.overflowing_add(increment);
+                dynfmt::SimpleCurlyFormat
+                    .format(&args.flag_formatstr, [curr_counter])
+                    .unwrap()
+                    .to_string()
             });
+            if overflowed {
+                return fail_incorrectusage_clierror!(
+                    "Overflowed. The increment value is too large. The maximum value for \
+                     --increment is {}.",
+                    u64::MAX - curr_counter
+                );
+            }
 
             record = replace_column_value(&record, column_index, new_value);
             wtr.write_record(&record)?;
