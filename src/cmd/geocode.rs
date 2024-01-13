@@ -1624,10 +1624,8 @@ fn add_dyncols(
 
             // US FIPS fields
             "us_state_fips_code" => {
-                let us_state_code = if let Some(admin1_code) =
-                    cityrecord.admin_division.as_ref().map(|ad| ad.code.clone())
-                {
-                    if let Some(state_fips_code) = admin1_code.strip_prefix("US.") {
+                let us_state_code = if let Some(admin1_code) = cityrecord.admin_division.clone() {
+                    if let Some(state_fips_code) = admin1_code.code.strip_prefix("US.") {
                         // admin1 code is a US state code, the two-letter state code
                         // is the last two characters of the admin1 code
                         state_fips_code.to_string()
@@ -1645,27 +1643,24 @@ fn add_dyncols(
                 record.push_field(lookup_us_state_fips_code(&us_state_code).unwrap_or_default());
             },
             "us_county_fips_code" => {
-                let us_county_fips_code = if let Some(admin2_code) = cityrecord
-                    .admin2_division
-                    .as_ref()
-                    .map(|ad| ad.code.clone())
-                {
-                    if admin2_code.starts_with("US.") && admin2_code.len() == 9 {
-                        // admin2 code is a US county code, the three-digit county code
-                        // is the last three characters of the admin2 code
-                        // start at index 7 to skip the US. prefix
-                        // e.g. US.NY.061 -> 061
-                        format!("{:0>3}", admin2_code[7..].to_string())
+                let us_county_fips_code =
+                    if let Some(admin2_code) = cityrecord.admin2_division.clone() {
+                        if admin2_code.code.starts_with("US.") && admin2_code.code.len() == 9 {
+                            // admin2 code is a US county code, the three-digit county code
+                            // is the last three characters of the admin2 code
+                            // start at index 7 to skip the US. prefix
+                            // e.g. US.NY.061 -> 061
+                            format!("{:0>3}", admin2_code.code[7..].to_string())
+                        } else {
+                            // admin2 code is not a US county code
+                            // set to empty string
+                            String::new()
+                        }
                     } else {
-                        // admin2 code is not a US county code
+                        // no admin2 code
                         // set to empty string
                         String::new()
-                    }
-                } else {
-                    // no admin2 code
-                    // set to empty string
-                    String::new()
-                };
+                    };
                 record.push_field(&us_county_fips_code);
             },
 
@@ -1836,10 +1831,9 @@ fn format_result(
                 // US FIPS fields
                 // set US state FIPS code
                 "us_state_fips_code" => {
-                    let us_state_code = if let Some(admin1_code) =
-                        cityrecord.admin_division.as_ref().map(|ad| ad.code.clone())
+                    let us_state_code = if let Some(admin1_code) = cityrecord.admin_division.clone()
                     {
-                        if let Some(state_fips_code) = admin1_code.strip_prefix("US.") {
+                        if let Some(state_fips_code) = admin1_code.code.strip_prefix("US.") {
                             // admin1 code is a US state code, the two-letter state code
                             // is the last two characters of the admin1 code
                             state_fips_code.to_string()
@@ -1863,18 +1857,14 @@ fn format_result(
 
                 // set US county FIPS code
                 "us_county_fips_code" => cityrecord_map.insert("us_county_fips_code", {
-                    match cityrecord
-                        .admin2_division
-                        .as_ref()
-                        .map(|ad| ad.code.clone())
-                    {
+                    match cityrecord.admin2_division.clone() {
                         Some(admin2_code) => {
-                            if admin2_code.starts_with("US.") && admin2_code.len() == 9 {
+                            if admin2_code.code.starts_with("US.") && admin2_code.code.len() == 9 {
                                 // admin2 code is a US county code, the three-digit county code
                                 // is the last three characters of the admin2 code
                                 // start at index 7 to skip the US. prefix
                                 // e.g. US.NY.061 -> 061
-                                format!("{:0>3}", admin2_code[7..].to_string())
+                                format!("{:0>3}", admin2_code.code[7..].to_string())
                             } else {
                                 // admin2 code is not a US county code
                                 // set to empty string
@@ -2107,36 +2097,31 @@ fn lookup_us_state_fips_code(state: &str) -> Option<&'static str> {
 }
 
 fn get_us_fips_codes(cityrecord: &CitiesRecord, nameslang: &NamesLang) -> serde_json::Value {
-    let us_state_code =
-        if let Some(admin1_code) = cityrecord.admin_division.as_ref().map(|ad| ad.code.clone()) {
-            if let Some(state_fips_code) = admin1_code.strip_prefix("US.") {
-                // admin1 code is a US state code, the two-letter state code
-                // is the last two characters of the admin1 code
-                state_fips_code.to_string()
-            } else {
-                // admin1 code is not a US state code
-                // set to empty string
-                String::new()
-            }
+    let us_state_code = if let Some(admin1_code) = cityrecord.admin_division.clone() {
+        if let Some(state_fips_code) = admin1_code.code.strip_prefix("US.") {
+            // admin1 code is a US state code, the two-letter state code
+            // is the last two characters of the admin1 code
+            state_fips_code.to_string()
         } else {
-            // no admin1 code
+            // admin1 code is not a US state code
             // set to empty string
             String::new()
-        };
+        }
+    } else {
+        // no admin1 code
+        // set to empty string
+        String::new()
+    };
     let us_state_fips_code = lookup_us_state_fips_code(&us_state_code).unwrap_or("null");
 
-    let us_county_code = match cityrecord
-        .admin2_division
-        .as_ref()
-        .map(|ad| ad.code.clone())
-    {
+    let us_county_code = match cityrecord.admin2_division.clone() {
         Some(admin2_code) => {
-            if admin2_code.starts_with("US.") && admin2_code.len() == 9 {
+            if admin2_code.code.starts_with("US.") && admin2_code.code.len() == 9 {
                 // admin2 code is a US county code, the three-digit county code
                 // is the last three characters of the admin2 code
                 // start at index 7 to skip the US. prefix
                 // e.g. US.NY.061 -> 061
-                format!("{:0>3}", admin2_code[7..].to_string())
+                format!("{:0>3}", admin2_code.code[7..].to_string())
             } else {
                 // admin2 code is not a US county code
                 // set to empty string
