@@ -1204,12 +1204,9 @@ pub fn round_num(dec_f64: f64, places: u32) -> String {
 pub fn transform(bs: &[u8], casei: bool) -> ByteString {
     if let Ok(s) = simdutf8::basic::from_utf8(bs) {
         if casei {
-            let norm: String = s
-                .trim()
-                .chars()
-                .map(|c| c.to_lowercase().next().unwrap())
-                .collect();
-            norm.into_bytes()
+            let mut buffer = String::with_capacity(bs.len());
+            to_lowercase_into(s.trim(), &mut buffer);
+            buffer.into_bytes()
         } else {
             s.trim().as_bytes().to_vec()
         }
