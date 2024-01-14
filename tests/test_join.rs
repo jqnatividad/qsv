@@ -43,6 +43,7 @@ fn setup(name: &str, headers: bool) -> Workdir {
         svec!["Boston", "Boston Garden"],
         svec!["Buffalo", "Ralph Wilson Stadium"],
         svec!["Orlando", "Disney World"],
+        svec!("BOSTON", "BOSTON COMMON"),
     ];
     if headers {
         cities.insert(0, svec!["city", "state"]);
@@ -87,6 +88,25 @@ join_test!(join_inner, |wrk: Workdir,
 });
 
 join_test!(
+    join_inner_casei,
+    |wrk: Workdir, mut cmd: process::Command, headers: bool| {
+        cmd.arg("--ignore-case");
+        let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+        let expected = make_rows(
+            headers,
+            false,
+            vec![
+                svec!["Boston", "MA", "Boston", "Logan Airport"],
+                svec!["Boston", "MA", "Boston", "Boston Garden"],
+                svec!["Boston", "MA", "BOSTON", "BOSTON COMMON"],
+                svec!["Buffalo", "NY", "Buffalo", "Ralph Wilson Stadium"],
+            ],
+        );
+        assert_eq!(got, expected);
+    }
+);
+
+join_test!(
     join_outer_left,
     |wrk: Workdir, mut cmd: process::Command, headers: bool| {
         cmd.arg("--left");
@@ -97,6 +117,27 @@ join_test!(
             vec![
                 svec!["Boston", "MA", "Boston", "Logan Airport"],
                 svec!["Boston", "MA", "Boston", "Boston Garden"],
+                svec!["New York", "NY", "", ""],
+                svec!["San Francisco", "CA", "", ""],
+                svec!["Buffalo", "NY", "Buffalo", "Ralph Wilson Stadium"],
+            ],
+        );
+        assert_eq!(got, expected);
+    }
+);
+
+join_test!(
+    join_outer_left_casei,
+    |wrk: Workdir, mut cmd: process::Command, headers: bool| {
+        cmd.arg("--left").arg("--ignore-case");
+        let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+        let expected = make_rows(
+            headers,
+            false,
+            vec![
+                svec!["Boston", "MA", "Boston", "Logan Airport"],
+                svec!["Boston", "MA", "Boston", "Boston Garden"],
+                svec!["Boston", "MA", "BOSTON", "BOSTON COMMON"],
                 svec!["New York", "NY", "", ""],
                 svec!["San Francisco", "CA", "", ""],
                 svec!["Buffalo", "NY", "Buffalo", "Ralph Wilson Stadium"],
@@ -119,6 +160,27 @@ join_test!(
                 svec!["Boston", "MA", "Boston", "Boston Garden"],
                 svec!["Buffalo", "NY", "Buffalo", "Ralph Wilson Stadium"],
                 svec!["", "", "Orlando", "Disney World"],
+                svec!["", "", "BOSTON", "BOSTON COMMON"],
+            ],
+        );
+        assert_eq!(got, expected);
+    }
+);
+
+join_test!(
+    join_outer_righ_casei,
+    |wrk: Workdir, mut cmd: process::Command, headers: bool| {
+        cmd.arg("--right").arg("--ignore-case");
+        let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+        let expected = make_rows(
+            headers,
+            false,
+            vec![
+                svec!["Boston", "MA", "Boston", "Logan Airport"],
+                svec!["Boston", "MA", "Boston", "Boston Garden"],
+                svec!["Buffalo", "NY", "Buffalo", "Ralph Wilson Stadium"],
+                svec!["", "", "Orlando", "Disney World"],
+                svec!["Boston", "MA", "BOSTON", "BOSTON COMMON"],
             ],
         );
         assert_eq!(got, expected);
@@ -140,6 +202,7 @@ join_test!(
                 svec!["San Francisco", "CA", "", ""],
                 svec!["Buffalo", "NY", "Buffalo", "Ralph Wilson Stadium"],
                 svec!["", "", "Orlando", "Disney World"],
+                svec!["", "", "BOSTON", "BOSTON COMMON"],
             ],
         );
         assert_eq!(got, expected);
