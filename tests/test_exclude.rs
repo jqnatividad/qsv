@@ -37,12 +37,14 @@ fn setup(name: &str, headers: bool) -> Workdir {
         svec!["New York", "NY"],
         svec!["San Francisco", "CA"],
         svec!["Buffalo", "NY"],
+        svec!("NEW YORK", "NY"),
     ];
     let mut places = vec![
         svec!["Boston", "Logan Airport"],
         svec!["Boston", "Boston Garden"],
         svec!["Buffalo", "Ralph Wilson Stadium"],
         svec!["Orlando", "Disney World"],
+        svec!["New York", "Empire State Building"],
     ];
     if headers {
         cities.insert(0, svec!["city", "state"]);
@@ -72,8 +74,21 @@ exclude_test!(exclude, |wrk: Workdir,
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = make_rows(
         headers,
-        vec![svec!["New York", "NY"], svec!["San Francisco", "CA"]],
+        vec![
+            // svec!["New York", "NY"],
+            svec!["San Francisco", "CA"],
+            svec!["NEW YORK", "NY"],
+        ],
     );
+    assert_eq!(got, expected);
+});
+
+exclude_test!(exclude_casei, |wrk: Workdir,
+                              mut cmd: process::Command,
+                              headers: bool| {
+    cmd.arg("--ignore-case");
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = make_rows(headers, vec![svec!["San Francisco", "CA"]]);
     assert_eq!(got, expected);
 });
 
@@ -82,7 +97,31 @@ exclude_test!(include, |wrk: Workdir,
                         headers: bool| {
     cmd.arg("-v");
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = make_rows(headers, vec![svec!["Boston", "MA"], svec!["Buffalo", "NY"]]);
+    let expected = make_rows(
+        headers,
+        vec![
+            svec!["Boston", "MA"],
+            svec!["New York", "NY"],
+            svec!["Buffalo", "NY"],
+        ],
+    );
+    assert_eq!(got, expected);
+});
+
+exclude_test!(include_casei, |wrk: Workdir,
+                              mut cmd: process::Command,
+                              headers: bool| {
+    cmd.arg("-v").arg("--ignore-case");
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = make_rows(
+        headers,
+        vec![
+            svec!["Boston", "MA"],
+            svec!["New York", "NY"],
+            svec!["Buffalo", "NY"],
+            svec!["NEW YORK", "NY"],
+        ],
+    );
     assert_eq!(got, expected);
 });
 
