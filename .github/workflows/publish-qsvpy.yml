@@ -122,14 +122,14 @@ jobs:
     - name: Build qsvpy311
         # env:
         #   RUSTFLAGS: --emit=asm
-        env:
-          RUSTFLAGS: ${{ matrix.job.addl-rustflags }}
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          use-cross: false
-          toolchain: ${{ matrix.rust }}
-          args: --release --locked --bin qsv --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }},feature_capable ${{ matrix.job.default-features }}
+      env:
+        RUSTFLAGS: ${{ matrix.job.addl-rustflags }}
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        use-cross: false
+        toolchain: ${{ matrix.rust }}
+        args: --release --locked --bin qsv --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }},feature_capable ${{ matrix.job.default-features }}
     - name: Copy binaries to working dir
       shell: bash
       run: |
@@ -149,14 +149,14 @@ jobs:
     - name: Build qsvpy312
         # env:
         #   RUSTFLAGS: --emit=asm
-        env:
-          RUSTFLAGS: ${{ matrix.job.addl-rustflags }}
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          use-cross: false
-          toolchain: ${{ matrix.rust }}
-          args: --release --locked --bin qsv --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }},feature_capable ${{ matrix.job.default-features }}
+      env:
+        RUSTFLAGS: ${{ matrix.job.addl-rustflags }}
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        use-cross: false
+        toolchain: ${{ matrix.rust }}
+        args: --release --locked --bin qsv --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }},feature_capable ${{ matrix.job.default-features }}
     - name: Copy binaries to working dir
       shell: bash
       run: |
