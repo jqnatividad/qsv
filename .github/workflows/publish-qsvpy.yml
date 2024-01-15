@@ -1,4 +1,4 @@
-name: Publish qsvpy312 & qsvpy311 & qsypy310
+name: Publish qsvpy312, qsvpy311 and qsypy310
 
 on:
   workflow_dispatch:
