@@ -1,0 +1,185 @@
+name: Publish qsvpy glibc 2.31/musl 1.2.3 binaries
+
+on:
+  workflow_dispatch:
+
+env:
+  QSV_KIND: prebuilt-older
+
+jobs:
+  analyze-tags:
+    runs-on: ubuntu-20.04
+    outputs:
+      previous-tag: ${{ steps.previoustag.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      #▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼#
+      - name: Get previous tag
+        id: previoustag
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+      #▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲#
+
+  publish:
+    name: Publish for ${{ matrix.job.target }}
+    needs: analyze-tags
+    runs-on: ${{ matrix.job.os }}
+    strategy:
+      matrix:
+        rust: [stable]
+        job:
+          - os: ubuntu-20.04
+            os-name: linux
+            target: x86_64-unknown-linux-gnu
+            architecture: x86_64
+            addl-build-args: --features=apply,luau,fetch,foreach,self_update,python,polars,geocode
+            default-features:
+            addl-qsvlite-features:
+            addl-qsvdp-features: luau
+            name-suffix: glibc-2.31
+            addl-rustflags: -C target-feature=+fxsr,+sse,+sse2,+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+fma
+          - os: ubuntu-20.04
+            os-name: linux
+            target: x86_64-unknown-linux-musl
+            architecture: x86_64
+            musl-prep: true
+            addl-build-args: --features=apply,fetch,foreach,self_update,python,polars,geocode
+            default-features:
+            addl-qsvlite-features:
+            addl-qsvdp-features:
+            name-suffix: musl-1.2.3
+            addl-rustflags: -C target-feature=+fxsr,+sse,+sse2,+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+fma
+
+    steps:
+    - name: Installing Rust toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: ${{ matrix.rust }}
+        profile: minimal
+        target: ${{ matrix.job.target }}
+        override: true
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ needs.analyze-tags.outputs.previous-tag }}
+    - name: build prep for x86_64-unknown-linux-musl
+      if: ${{ matrix.job.musl-prep }}
+      run: |
+        sudo apt-get install musl-tools musl-dev
+        sudo ln -s /usr/bin/g++ /usr/bin/musl-g++
+
+        
+    - uses: actions/setup-python@v5.0.0
+      with:
+         python-version: '3.10.13'
+    - name: Build qsvpy310
+      env:
+          RUSTFLAGS: ${{ matrix.job.addl-rustflags }}
+      uses: actions-rs/cargo@v1
+      with:
+          command: build
+          use-cross: false
+          toolchain: ${{ matrix.rust }}
+          args: --release --locked --bin qsv --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }},feature_capable ${{ matrix.job.default-features }}
+    - name: Copy binaries to working dir
+      shell: bash
+      run: |
+          mkdir qsv-${{ needs.analyze-tags.outputs.previous-tag }}
+          rm target/${{ matrix.job.target }}/release/*.d 
+          cp target/${{ matrix.job.target }}/release/qsv* qsv-${{ needs.analyze-tags.outputs.previous-tag }}
+          cd qsv-${{ needs.analyze-tags.outputs.previous-tag }}
+          if [ "$RUNNER_OS" == "Windows"]; then
+               mv qsv.exe qsvpy310.exe
+          else
+               mv qsv qsvpy310
+          fi
+          cd ..
+
+    - uses: actions/setup-python@v5.0.0
+      with:
+            python-version: '3.11.7'
+    - name: Build qsvpy311
+      env:
+         RUSTFLAGS: ${{ matrix.job.addl-rustflags }}
+      uses: actions-rs/cargo@v1
+      with:
+            command: build
+            use-cross: false
+            toolchain: ${{ matrix.rust }}
+            args: --release --locked --bin qsv --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }},feature_capable ${{ matrix.job.default-features }}
+    - name: Copy binaries to working dir
+      shell: bash
+      run: |
+              rm target/${{ matrix.job.target }}/release/*.d 
+              cp target/${{ matrix.job.target }}/release/qsv* qsv-${{ needs.analyze-tags.outputs.previous-tag }}
+              cd qsv-${{ needs.analyze-tags.outputs.previous-tag }}
+              if [ "$RUNNER_OS" == "Windows"]; then
+                   mv qsv.exe qsvpy311.exe
+              else
+                   mv qsv qsvpy311
+              fi
+              cd ..
+    
+    - uses: actions/setup-python@v5.0.0
+      with:
+            python-version: '3.12.1'
+    - name: Build qsvpy312
+            
+      env:
+            RUSTFLAGS: ${{ matrix.job.addl-rustflags }}
+      uses: actions-rs/cargo@v1
+      with:
+            command: build
+            use-cross: false
+            toolchain: ${{ matrix.rust }}
+            args: --release --locked --bin qsv --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }},feature_capable ${{ matrix.job.default-features }}
+    - name: Copy binaries to working dir
+      shell: bash
+      run: |
+              rm target/${{ matrix.job.target }}/release/*.d 
+              cp target/${{ matrix.job.target }}/release/qsv* qsv-${{ needs.analyze-tags.outputs.previous-tag }}
+              cd qsv-${{ needs.analyze-tags.outputs.previous-tag }}
+              if [ "$RUNNER_OS" == "Windows"]; then
+                      mv qsv.exe qsvpy312.exe
+                else
+                      mv qsv qsvpy312
+                fi
+                rustup show > qsvpy_rust_version_info.txt
+                cd ..
+
+
+    - name: install zipsign
+      run: |
+        cargo install zipsign
+    - name: Fetch zipsign private key
+      uses: mobiledevops/secret-to-file-action@v1
+      with:
+        base64-encoded-secret: ${{ secrets.QSV_ZIPSIGN_PRIV_KEY }}
+        filename: "qsvpriv.key"
+        is-executable: false
+        working-directory: "."
+    - name: Download latest release zip
+      uses: robinraju/release-downloader@v1.8
+      with:
+        repository: "jqnatividad/qsv"
+        latest: true
+        token: ${{ secrets.GITHUB_TOKEN }}
+        fileName: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip
+    - name: remove zipsign signature from zip archive
+      run: |
+        zipsign unsign zip qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip
+    - name: add/update "older" glibc 2.31/musl 1.2.3 files to zip
+      run: 7z u -tzip qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/qsv* -mx=9 -mmt=on
+    - name: re-zipsign zip archive
+      run: |
+        zipsign sign zip qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip qsvpriv.key
+    - name: Upload zipped binaries to release
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip
+        asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip
+        overwrite: true
+        tag: ${{ needs.analyze-tags.outputs.previous-tag }}    
+ 
