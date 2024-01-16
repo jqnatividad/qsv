@@ -71,7 +71,7 @@ impl<'de> Deserialize<'de> for Delimiter {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Config {
     pub path:          Option<PathBuf>, // None implies <stdin>
     idx_path:          Option<PathBuf>,
