@@ -24,6 +24,7 @@ fmt options:
     --quote-never              Never put quotes around any value.
     --escape <arg>             The escape character to use. When not specified,
                                quotes are escaped by doubling them.
+    --no-final-newline         Do not write a newline at the end of the output.
 
 Common options:
     -h, --help             Display this message
@@ -41,16 +42,17 @@ use crate::{
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input:          Option<String>,
-    flag_out_delimiter: Option<Delimiter>,
-    flag_crlf:          bool,
-    flag_ascii:         bool,
-    flag_output:        Option<String>,
-    flag_delimiter:     Option<Delimiter>,
-    flag_quote:         Delimiter,
-    flag_quote_always:  bool,
-    flag_quote_never:   bool,
-    flag_escape:        Option<Delimiter>,
+    arg_input:             Option<String>,
+    flag_out_delimiter:    Option<Delimiter>,
+    flag_crlf:             bool,
+    flag_ascii:            bool,
+    flag_output:           Option<String>,
+    flag_delimiter:        Option<Delimiter>,
+    flag_quote:            Delimiter,
+    flag_quote_always:     bool,
+    flag_quote_never:      bool,
+    flag_escape:           Option<Delimiter>,
+    flag_no_final_newline: bool,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -81,10 +83,50 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut rdr = rconfig.reader()?;
     let mut wtr = wconfig.writer()?;
-    let mut r = csv::ByteRecord::new();
-    while rdr.read_byte_record(&mut r)? {
-        wtr.write_byte_record(&r)?;
+    let mut wsconfig = (wconfig).clone();
+
+    wsconfig.path = Some(
+        tempfile::NamedTempFile::new()?
+            .into_temp_path()
+            .to_path_buf(),
+    );
+
+    let mut temp_writer = wsconfig.writer()?;
+    let mut current_record = csv::ByteRecord::new();
+    let mut next_record = csv::ByteRecord::new();
+    let mut is_last_record;
+    let mut records_exist = rdr.read_byte_record(&mut current_record)?;
+    while records_exist {
+        is_last_record = !rdr.read_byte_record(&mut next_record)?;
+        if is_last_record {
+            // If it's the last record and the --no-final-newline flag is set,
+            // write the record to a temporary file, then read the file into a string.
+            // Remove the last character (the newline) from the string, then write the string to the
+            // output.
+            temp_writer.write_record(&current_record)?;
+            temp_writer.flush()?;
+            let mut temp_string = match std::fs::read_to_string(
+                wsconfig.path.as_ref().ok_or("Temp file path not found")?,
+            ) {
+                Ok(s) => s,
+                Err(e) => return fail_clierror!("Error reading from temp file: {}", e),
+            };
+            if args.flag_no_final_newline {
+                temp_string.pop();
+            }
+            match wtr.into_inner() {
+                Ok(mut writer) => writer.write_all(temp_string.as_bytes())?,
+                Err(e) => return fail_clierror!("Error writing to output: {}", e),
+            };
+            break;
+        }
+        wtr.write_record(&current_record)?;
+        wtr.write_record(&next_record)?;
+        records_exist = rdr.read_byte_record(&mut current_record)?;
     }
-    wtr.flush()?;
+
+    // we don't flush the writer explicitly
+    // because it will cause a borrow error
+    // let's just let it drop and flush itself implicitly
     Ok(())
 }
