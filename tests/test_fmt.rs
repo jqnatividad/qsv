@@ -62,6 +62,39 @@ mnopqr,stuvwx\r
 }
 
 #[test]
+fn fmt_nofinalnewline() {
+    let (wrk, mut cmd) = setup("fmt_nofinalnewline");
+    cmd.arg("--no-final-newline");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = r#"h1,h2
+abcdef,ghijkl
+mnopqr,stuvwx
+"ab""cd""ef","gh,ij,kl""#;
+    assert_eq!(got, expected.to_string());
+}
+
+#[test]
+fn fmt_output() {
+    let (wrk, mut cmd) = setup("fmt_output");
+
+    let output_file = wrk.path("output.csv").to_string_lossy().to_string();
+
+    cmd.args(["--output", &output_file]);
+
+    wrk.assert_success(&mut cmd);
+
+    let got = wrk.read_to_string(&output_file);
+
+    let expected = r#"h1,h2
+abcdef,ghijkl
+mnopqr,stuvwx
+"ab""cd""ef","gh,ij,kl"
+"#;
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn fmt_quote_always() {
     let (wrk, mut cmd) = setup("fmt_quote_always");
     cmd.arg("--quote-always");
