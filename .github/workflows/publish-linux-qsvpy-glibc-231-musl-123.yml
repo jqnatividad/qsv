@@ -1,4 +1,8 @@
 name: Publish qsvpy glibc 2.31/musl 1.2.3 binaries
+# disabling for now as it's not working
+# will revisit in the future should GitHub support Alpine Linux runners
+# or allow self-hosted runners to run on Alpine Linux
+# https://github.com/actions/runner/issues/801
 
 on:
   workflow_dispatch:
