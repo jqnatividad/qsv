@@ -25,6 +25,7 @@ fmt options:
     --escape <arg>             The escape character to use. When not specified,
                                quotes are escaped by doubling them.
     --no-final-newline         Do not write a newline at the end of the output.
+                               This makes it easier to paste the output into Excel.
 
 Common options:
     -h, --help             Display this message
