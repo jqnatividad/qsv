@@ -49,7 +49,7 @@ jobs:
             addl-qsvlite-features:
             addl-qsvdp-features:
             name-suffix: musl-1.2.3
-            addl-rustflags: -C target-feature=+fxsr,+sse,+sse2,+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+fma
+            addl-rustflags: -C target-feature=-crt-static,+fxsr,+sse,+sse2,+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+fma
 
     steps:
     - name: Installing Rust toolchain
