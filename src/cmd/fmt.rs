@@ -15,6 +15,8 @@ Usage:
 
 fmt options:
     -t, --out-delimiter <arg>  The field delimiter for writing CSV data.
+                               Must be a single character.
+                               If set to "T", uses tab as the delimiter.
                                [default: ,]
     --crlf                     Use '\r\n' line endings in the output.
     --ascii                    Use ASCII field and record separators. Use Substitute (U+00A1) as the
@@ -25,7 +27,7 @@ fmt options:
     --escape <arg>             The escape character to use. When not specified,
                                quotes are escaped by doubling them.
     --no-final-newline         Do not write a newline at the end of the output.
-                               This makes it easier to paste the output into Excel.
+                               This makes it easier to paste the output into Excel. 
 
 Common options:
     -h, --help             Display this message
@@ -58,6 +60,10 @@ struct Args {
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut args: Args = util::get_args(USAGE, argv)?;
+
+    if args.flag_out_delimiter == Some(Delimiter(b'T')) {
+        args.flag_out_delimiter = Some(Delimiter(b'\t'));
+    }
 
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)

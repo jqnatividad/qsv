@@ -30,7 +30,7 @@ const NO_INDEX_WARNING_FILESIZE: u64 = 100_000_000; // 100MB
 // so we don't have to keep checking if the index has been created
 static AUTO_INDEXED: AtomicBool = AtomicBool::new(false);
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Delimiter(pub u8);
 
 /// Delimiter represents values that can be passed from the command line that

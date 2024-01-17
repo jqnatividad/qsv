@@ -62,6 +62,16 @@ mnopqr,stuvwx\r
 }
 
 #[test]
+fn fmt_tab_delimiter() {
+    let (wrk, mut cmd) = setup("fmt_tab_delimiter");
+    cmd.args(["--out-delimiter", "T"]);
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = "h1\th2\nabcdef\tghijkl\nmnopqr\tstuvwx\n\"ab\"\"cd\"\"ef\"\tgh,ij,kl";
+    assert_eq!(got, expected.to_string());
+}
+
+#[test]
 fn fmt_nofinalnewline() {
     let (wrk, mut cmd) = setup("fmt_nofinalnewline");
     cmd.arg("--no-final-newline");
