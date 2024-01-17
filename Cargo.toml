@@ -1,6 +1,6 @@
 [package]
 name = "qsv"
-version = "0.121.0" #:version
+version = "0.122.0" #:version
 authors = ["Joel Natividad <joel@datHere.com>"]
 description = "A high performance CSV data-wrangling toolkit."
 documentation = "https://github.com/jqnatividad/qsv#qsv-ultra-fast-csv-data-wrangling-toolkit"
