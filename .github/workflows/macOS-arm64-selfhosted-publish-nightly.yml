@@ -1,9 +1,6 @@
 name: Publish Apple Silicon - Nightly
 
 on:
-  push:
-    tags:
-      - '*'
   workflow_dispatch:
 
 env:
