@@ -6,12 +6,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.122.0] - 2024-01-16
+## [0.122.0] - 2024-01-17
+
+## 👉  **REQUEST FOR USE CASES**: 👈 
+Please help define the future of qsv.
+Add what you're currently using qsv for here - https://github.com/jqnatividad/qsv/discussions/1529
+
+Not only does it help us catalog what use cases we should optimize for, posters will get higher priority access to the qsv pro preview.
+
+## Highlights:
+* `qsvpy` is now available in the prebuilt binaries for select platforms! It's a new qsv binary variant with the python feature, enabling the `py` command. Three subvariants are available - qsvpy310, qsvpy311 and qsvpy312, corresponding to Python 3.10, 3.11 and 3.12 respectively.
+* Removed `generate` command as `generate`'s main dependency is unmaintained and has old dependencies. `generate` was also not used much, as the test data it generated was not well suited for training models and it was too slow so we decided to remove it even before the `fake` (#235) command is ready.
+* `reverse` now has index support and can work in "streaming" mode.
+* `sort` and `sample` now have faster and cryptosecure Random Number Generators (RNG) with the `--rng` option.
+* `pseudo` now has `--start`, `--increment` & `--formatstr` options.
+* `fmt` now has a `--no-final-newline` option to suppress the final newline for better interoperability with other tools, specifically Excel. It also treats "T" as special value for tab character for the `--out-delimiter` option.
+
+---
 
 ### Added
-* added new qsv binary variant - `qsvpy` - with the python feature, enabling the `py` command. Three subvariants are available - qsvpy310, qsvpy311 and qsvpy312, corresponding to Python 3.10, 3.11 and 3.12 respectively.
 * `reverse`: now has index support and can work in "streaming" mode https://github.com/jqnatividad/qsv/pull/1531
-* `sort`: added `--rng` kinds for different kinds of Random Number Generators (RNG) - standard, faster & cryptosecure https://github.com/jqnatividad/qsv/pull/1535
+* `sort`: added `--rng <kind>` for different kinds of RNGs - standard, faster & cryptosecure https://github.com/jqnatividad/qsv/pull/1535
 * `sample`: added `--rng <kind>` option (standard, faster & cryptosecure) https://github.com/jqnatividad/qsv/pull/1532
 * `pseudo`: major refactor. Added `--start`, `--increment` & `--formatstr` options https://github.com/jqnatividad/qsv/pull/1541
 * `fmt`:  add `--no-final-newline` option https://github.com/jqnatividad/qsv/pull/1545
@@ -33,7 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * update several indirect dependencies
 
 ### Removed
-* removed `generate` command. Removed it even if the `fake` command (#235) that was supposed to replace it was not yet ready as `generate`'s main dependency is unmaintained and has old dependencies. https://github.com/jqnatividad/qsv/pull/1527
+* removed `generate` command https://github.com/jqnatividad/qsv/pull/1527
 * removed `generate` feature from GitHub Action workflows https://github.com/jqnatividad/qsv/pull/1528
 * `sample`: removed `--faster` RNG sampling option https://github.com/jqnatividad/qsv/pull/1532
 
