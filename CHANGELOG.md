@@ -6,6 +6,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.122.0] - 2024-01-16
+
+### Added
+* added new qsv binary variant - `qsvpy` - with the python feature, enabling the `py` command. Three subvariants are available - qsvpy310, qsvpy311 and qsvpy312, corresponding to Python 3.10, 3.11 and 3.12 respectively.
+* `reverse`: now has index support and can work in "streaming" mode https://github.com/jqnatividad/qsv/pull/1531
+* `sort`: added `--rng` kinds for different kinds of Random Number Generators (RNG) - standard, faster & cryptosecure https://github.com/jqnatividad/qsv/pull/1535
+* `sample`: added `--rng <kind>` option (standard, faster & cryptosecure) https://github.com/jqnatividad/qsv/pull/1532
+* `pseudo`: major refactor. Added `--start`, `--increment` & `--formatstr` options https://github.com/jqnatividad/qsv/pull/1541
+* `fmt`:  add `--no-final-newline` option https://github.com/jqnatividad/qsv/pull/1545
+* added additional benchmarks
+* added additional test for new options.  We now have ~1,300 tests!
+
+### Changed
+* `fmt`: `--out-delimiter` now treats "T" as special value for tab character https://github.com/jqnatividad/qsv/pull/1546
+* build(deps): bump whatlang from 0.16.3 to 0.16.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1525
+* build(deps): bump serde_json from 1.0.110 to 1.0.111 by @dependabot in https://github.com/jqnatividad/qsv/pull/1524
+* build(deps): bump pyo3 from 0.20.1 to 0.20.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1526
+* build(deps): bump sysinfo from 0.30.3 to 0.30.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1523
+* build(deps): bump sysinfo from 0.30.4 to 0.30.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/1530
+* build(deps): bump serial_test from 2.0.0 to 3.0.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1534
+* build(deps): bump mlua from 0.9.2 to 0.9.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1540
+* build(deps): bump mlua from 0.9.3 to 0.9.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1542
+* build(deps): bump simple-home-dir from 0.2.1 to 0.2.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1544
+* apply select clippy suggestions
+* update several indirect dependencies
+
+### Removed
+* removed `generate` command. Removed it even if the `fake` command (#235) that was supposed to replace it was not yet ready as `generate`'s main dependency is unmaintained and has old dependencies. https://github.com/jqnatividad/qsv/pull/1527
+* removed `generate` feature from GitHub Action workflows https://github.com/jqnatividad/qsv/pull/1528
+* `sample`: removed `--faster` RNG sampling option https://github.com/jqnatividad/qsv/pull/1532
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.121.0...0.122.0
+
 ## [0.121.0] - 2024-01-03
 
 We just released 0.120.0 two days ago, and hours later, Polars 0.36 was released, Homebrew released support for Rust 1.75.0 and our [pull request for cached](https://github.com/jaemk/cached/pull/176) was merged!
