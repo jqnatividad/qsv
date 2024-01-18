@@ -511,14 +511,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 wtr.write_record(vec![&*header].into_iter().chain(stat))?;
             }
 
-            // update the stats args json file
-            if write_stats_binout {
-                current_stats_args.canonical_input_path =
-                    path.canonicalize()?.to_str().unwrap().to_string();
-                current_stats_args.record_count = *record_count;
-                current_stats_args.compute_duration_ms = start_time.elapsed().as_millis() as u64;
-                current_stats_args.date_generated = chrono::Utc::now().to_rfc3339();
-            }
+            // update the stats args json metadata
+            current_stats_args.canonical_input_path =
+                path.canonicalize()?.to_str().unwrap().to_string();
+            current_stats_args.record_count = *record_count;
+            current_stats_args.compute_duration_ms = start_time.elapsed().as_millis() as u64;
+            current_stats_args.date_generated = chrono::Utc::now().to_rfc3339();
         }
     }
 
@@ -560,42 +558,45 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             fs::copy(currstats_filename.clone(), stats_pathbuf.clone())?;
         }
 
-        // save the stats args to "<FILESTEM>.stats.csv.json"
-        stats_pathbuf.set_extension("csv.json");
-        // write empty file first so we can canonicalize it
-        std::fs::File::create(stats_pathbuf.clone())?;
-        current_stats_args.canonical_stats_path = stats_pathbuf
-            .clone()
-            .canonicalize()?
-            .to_str()
-            .unwrap()
-            .to_string();
-        std::fs::write(
-            stats_pathbuf.clone(),
-            // safety: we know that current_stats_args is JSON serializable
-            serde_json::to_string_pretty(&current_stats_args).unwrap(),
-        )?;
+        if compute_stats {
+            // save the stats args to "<FILESTEM>.stats.csv.json"
+            // if we computed the stats
+            stats_pathbuf.set_extension("csv.json");
+            // write empty file first so we can canonicalize it
+            std::fs::File::create(stats_pathbuf.clone())?;
+            current_stats_args.canonical_stats_path = stats_pathbuf
+                .clone()
+                .canonicalize()?
+                .to_str()
+                .unwrap()
+                .to_string();
+            std::fs::write(
+                stats_pathbuf.clone(),
+                // safety: we know that current_stats_args is JSON serializable
+                serde_json::to_string_pretty(&current_stats_args).unwrap(),
+            )?;
 
-        // only create the binary encoded files if we computed the stats
-        // and the user specified --stats-binout
-        if compute_stats && write_stats_binout {
-            // binary encode the stats to "<FILESTEM>.stats.csv.bin.sz"
-            let mut stats_pathbuf = path;
-            stats_pathbuf.set_extension("stats.csv.bin.sz");
-            // we do the binary encoding inside a block so that the encoded_file
-            // automatically gets dropped/flushed before we copy it to the output file
-            {
-                let encoded_file = ParCompressBuilder::<Snap>::new()
-                    .num_threads(util::max_jobs())?
-                    .buffer_size(DEFAULT_WTR_BUFFER_CAPACITY * 2)?
-                    .pin_threads(Some(0))
-                    .from_writer(fs::File::create(stats_pathbuf.clone())?);
+            // only create the binary encoded files if we computed the stats
+            // and the user specified --stats-binout
+            if write_stats_binout {
+                // binary encode the stats to "<FILESTEM>.stats.csv.bin.sz"
+                let mut stats_bin_pathbuf = path;
+                stats_bin_pathbuf.set_extension("stats.csv.bin.sz");
+                // we do the binary encoding inside a block so that the encoded_file
+                // automatically gets dropped/flushed before we copy it to the output file
+                {
+                    let encoded_file = ParCompressBuilder::<Snap>::new()
+                        .num_threads(util::max_jobs())?
+                        .buffer_size(DEFAULT_WTR_BUFFER_CAPACITY * 2)?
+                        .pin_threads(Some(0))
+                        .from_writer(fs::File::create(stats_bin_pathbuf.clone())?);
 
-                if let Err(e) = bincode::serialize_into(encoded_file, &stats_for_encoding) {
-                    return fail_clierror!(
-                        "Failed to write binary encoded stats {}: {e:?}",
-                        stats_pathbuf.display()
-                    );
+                    if let Err(e) = bincode::serialize_into(encoded_file, &stats_for_encoding) {
+                        return fail_clierror!(
+                            "Failed to write binary encoded stats {}: {e:?}",
+                            stats_bin_pathbuf.display()
+                        );
+                    }
                 }
             }
         }
