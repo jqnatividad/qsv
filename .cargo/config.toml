@@ -1,31 +1,31 @@
 # to help locate python shared library in present working directory
 [target.x86_64-unknown-linux-musl]
-rustflags = "-C link-args=-Wl,-rpath,$ORIGIN"
+rustflags = ["-C", "link-args=-Wl,-rpath,$ORIGIN"]
 # linker = "x86_64-linux-musl-gcc"
 
 [target.x86_64-unknown-linux-gnu]
-rustflags = "-C link-args=-Wl,-rpath,$ORIGIN"
+rustflags = ["-C", "link-args=-Wl,-rpath,$ORIGIN"]
 
 [target.i686-unknown-linux-gnu]
-rustflags = "-C link-args=-Wl,-rpath,$ORIGIN"
+rustflags = ["-C", "link-args=-Wl,-rpath,$ORIGIN"]
 
 [target.aarch64-unknown-linux-gnu]
-rustflags = "-C link-args=-Wl,-rpath,$ORIGIN"
+rustflags = ["-C", "link-args=-Wl,-rpath,$ORIGIN"]
 
 [target.arm-unknown-linux-gnueabihf]
-rustflags = "-C link-args=-Wl,-rpath,$ORIGIN"
+rustflags = ["-C", "link-args=-Wl,-rpath,$ORIGIN"]
 
 [target.arm-unknown-linux-musleabihf]
-rustflags = "-C link-args=-Wl,-rpath,$ORIGIN"
+rustflags = ["-C", "link-args=-Wl,-rpath,$ORIGIN"]
 
 # to help locate python shared library in macOS in present working directory
 # for x86_64-apple-darwin,we also turn on CPU optimization by default
 # since there's only one kind of x86_64 CPU architecture for apple anyway
 [target.x86_64-apple-darwin]
-rustflags = "-C link-args=-Wl,-rpath,@loader_path -C target-cpu=native"
+rustflags = ["-C", "link-args=-Wl,-rpath,@loader_path", "-C", "target-cpu=native"]
 
 # sadly, we can't do the same for Apple Silicon, since GitHub's macOS action runners
 # are still x86_64, and the Apple Silicon binary is cross-compiled using the
 # macOS Intel runner 
 [target.aarch64-apple-darwin]
-rustflags = "-C link-args=-Wl,-rpath,@loader_path"
+rustflags = ["-C", "link-args=-Wl,-rpath,@loader_path"]
