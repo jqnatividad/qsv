@@ -155,7 +155,7 @@ The qsv binary was built to target the aarch64-apple-darwin platform (Apple Sili
 ## Caching
 qsv employs several caching strategies to improve performance:
 
-* qsv has large read and write buffers to minimize disk I/O. The default read buffer size is 128k and the default write buffer size is 256k. These can be fine-tuned with the `QSV_RDR_BUFFER_CAPACITY` and `QSV_WTR_BUFFER_CAPACITY` environment variables.
+* qsv has large read and write buffers to minimize disk I/O. The default read buffer size is 128k and the default write buffer size is 512k. These can be fine-tuned with the `QSV_RDR_BUFFER_CAPACITY` and `QSV_WTR_BUFFER_CAPACITY` environment variables.
 * The `stats` command caches its results in both CSV and binary formats. It does this to avoid re-computing the same statistics when the same input file/parameters are used, but also, as statistics are used in several other commands (currently - `schema` and `tojsonl`, with [more commands using cached statistics in the future](https://github.com/jqnatividad/qsv/issues/898)).
 * The `geocode` command [memoizes](https://en.wikipedia.org/wiki/Memoization) otherwise expensive geocoding operations and will report its cache hit rate. `geocode` memoization, however, is not persistent across sessions.
 * The `fetch` and `fetchpost` commands also memoizes expensive REST API calls. When the `--redis` option is enabled, it effectively has a persistent cache as the default time-to-live (TTL) before a Redis cache entry is expired is 28 days and Redis entries are persisted across restarts. Redis cache settings can be fine-tuned with the `QSV_REDIS_CONNSTR`, `QSV_REDIS_TTL_SECONDS`, `QSV_REDIS_TTL_REFRESH` and `QSV_FP_REDIS_CONNSTR` environment variables.
