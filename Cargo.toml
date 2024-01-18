@@ -251,10 +251,7 @@ distrib_features = [
     "to",
     "to_parquet",
 ]
-all_features = [
-    "distrib_features",
-    "self_update",
-]
+all_features = ["distrib_features", "self_update"]
 apply = [
     "censor",
     "cpc",
