@@ -239,7 +239,7 @@ halfbrown = { git = "https://github.com/licenser/halfbrown", rev = "7cecc29422ae
 
 [features]
 default = ["mimalloc"]
-all_features = [
+distrib_features = [
     "feature_capable",
     "apply",
     "fetch",
@@ -248,9 +248,12 @@ all_features = [
     "luau",
     "polars",
     "python",
-    "self_update",
     "to",
     "to_parquet",
+]
+all_features = [
+    "distrib_features",
+    "self_update",
 ]
 apply = [
     "censor",
