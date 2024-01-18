@@ -95,6 +95,7 @@ stats options:
                               This requires loading all CSV data in memory.
     --round <decimal_places>  Round statistics to <decimal_places>. Rounding is done following
                               Midpoint Nearest Even (aka "Bankers Rounding") rule.
+                              https://docs.rs/rust_decimal/latest/rust_decimal/enum.RoundingStrategy.html
                               For dates - range, stddev & IQR are always at least 5 decimal places as
                               they are reported in days, and 5 places gives us millisecond precision.
                               [default: 4]
@@ -114,7 +115,7 @@ stats options:
 
                               Note that false positive date matches WILL most likely occur
                               when using "all" as unix epoch timestamps are just numbers.
-                              Be sure to only use "all" if you know the columns you're
+                              Be sure to only use "all" if you know ALL the columns you're
                               inspecting are dates, boolean or string fields.
                               
                               To avoid false positives, preprocess the file first 
@@ -162,7 +163,7 @@ for Datapusher+ (https://github.com/dathere/datapusher-plus).
 
 It underpins the `schema` and `validate` commands - enabling the automatic creation of
 a JSONschema based on a CSV's summary statistics; and use the generated JSONschema to
-quickly validate complex CSVs (NYC's 311 data) at almost 350,000 records/sec.
+quickly validate complex CSVs (NYC's 311 data) at almost 930,000 records/sec.
 
 It's type inferences are also used by the `tojsonl` command to generate properly typed
 JSONL files.
