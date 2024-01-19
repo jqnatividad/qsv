@@ -168,7 +168,7 @@ join_test!(
 );
 
 join_test!(
-    join_outer_righ_casei,
+    join_outer_right_casei,
     |wrk: Workdir, mut cmd: process::Command, headers: bool| {
         cmd.arg("--right").arg("--ignore-case");
         let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);

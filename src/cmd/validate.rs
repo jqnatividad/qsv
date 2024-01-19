@@ -278,7 +278,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         // Now, let's validate the rest of the records the fastest way possible.
         // We do this by using csv::ByteRecord, which does not validate utf8
-        // making for higher througput and lower memory usage compared to csv::StringRecord
+        // making for higher throughput and lower memory usage compared to csv::StringRecord
         // which validates each field SEPARATELY as a utf8 string.
         // Combined with simdutf8::basic::from_utf8(), we utf8-validate the entire record in one go
         // as a slice of bytes, this approach is much faster than csv::StringRecord's

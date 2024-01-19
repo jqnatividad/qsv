@@ -135,7 +135,7 @@ stats options:
                               by other qsv commands (currently `schema` & `tojsonl`) to
                               load cached stats into memory faster. If set, the binary
                               encoded stats will be written to <FILESTEM>.stats.csv.bin.sz.
-                              You can preemtively create the binary encoded stats file
+                              You can preemptively create the binary encoded stats file
                               by using this option before running the `schema` and `tojsonl`
                               commands and they will automatically load the binary encoded
                               stats file if it exists.
