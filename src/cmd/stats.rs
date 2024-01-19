@@ -3,7 +3,7 @@ Compute summary statistics & infers data types for each column in a CSV.
 
 Summary statistics includes sum, min/max/range, min/max length, mean, stddev, variance,
 nullcount, sparsity, quartiles, interquartile range (IQR), lower/upper fences, skewness, median, 
-cardinality, mode/s & antimode/s, and median absolute deviation (MAD). Note that some
+cardinality, mode/s & "antimode/s", and median absolute deviation (MAD). Note that some
 statistics requires loading the entire file into memory, so they must be enabled explicitly. 
 
 By default, the following "streaming" statistics are reported for *every* column:
@@ -74,7 +74,7 @@ stats options:
                               See 'qsv select --help' for the format details.
                               This is provided here because piping 'qsv select'
                               into 'qsv stats' will disable the use of indexing.
-    --everything              Show all statistics available.
+    -E, --everything          Show all statistics available.
     --typesonly               Infer data types only and do not compute statistics.
                               Note that if you want to infer dates, you'll still need to use
                               the --infer-dates and --dates-whitelist options.
@@ -117,7 +117,7 @@ stats options:
                               when using "all" as unix epoch timestamps are just numbers.
                               Be sure to only use "all" if you know ALL the columns you're
                               inspecting are dates, boolean or string fields.
-                              
+
                               To avoid false positives, preprocess the file first 
                               with `apply datefmt` to convert unix epoch timestamp columns
                               to RFC3339 format.
