@@ -149,7 +149,7 @@ sqlp options:
                               parsing and will skip the entire batch where the error occurred.
     --rnull-values <arg>      The comma-delimited list of strings to consider as null values
                               when READING CSV files.
-                              (default: <empty string>)                              
+                              (default: <empty string>)
 
                               CSV OUTPUT FORMAT ONLY:
     --datetime-format <fmt>   The datetime format to use writing datetimes.

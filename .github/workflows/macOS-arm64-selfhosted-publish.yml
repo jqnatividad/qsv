@@ -106,7 +106,7 @@ jobs:
         working-directory: "."
     - name: zipsign binary
       run: |
-        zipsign sign zip qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip qsvpriv.key      
+        zipsign sign zip qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip qsvpriv.key
     - name: Upload zipped binaries to release
       uses: svenstaro/upload-release-action@v2
       with:
