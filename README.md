@@ -141,6 +141,8 @@ brew install qsv
 
 Apart from Homebrew, qsv is also distributed by other package managers and distros. See [Repology](https://repology.org/project/qsv/versions) for more info.
 
+[![Packaging status](https://repology.org/badge/vertical-allrepos/qsv.svg)](https://repology.org/project/qsv/versions)
+
 ### Option 4: Install with Rust
 
 If you have [Rust installed](https://www.rust-lang.org/tools/install), you can also install from source using Rust's cargo command[^1]:
