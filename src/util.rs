@@ -1403,7 +1403,7 @@ pub async fn download_file(
         eprintln!(); // newline after progress bar
     }
 
-    Ok(())
+    Ok(file.flush()?)
 }
 
 /// this is a non-allocating to_lowercase that uses an existing buffer
