@@ -4,7 +4,7 @@ use std::{
     cmp::min,
     env, fs,
     fs::File,
-    io::{BufReader, Read, Write},
+    io::{BufReader, BufWriter, Read, Write},
     path::{Path, PathBuf},
     str,
     sync::OnceLock,
@@ -23,7 +23,7 @@ use sysinfo::System;
 
 use crate::{
     config,
-    config::{Config, Delimiter},
+    config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY},
     CliError, CliResult, CURRENT_COMMAND,
 };
 
@@ -1377,7 +1377,7 @@ pub async fn download_file(
     let sample_size = sample_size.unwrap_or(0);
 
     // download chunks
-    let mut file = File::create(path)?;
+    let mut file = BufWriter::with_capacity(DEFAULT_WTR_BUFFER_CAPACITY, File::create(path)?);
     let mut downloaded: u64 = 0;
     let mut stream = res.bytes_stream();
 
