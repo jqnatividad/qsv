@@ -137,7 +137,11 @@ For [macOS and Linux (64-bit)](https://formulae.brew.sh/formula/qsv), you can qu
 brew install qsv
 ```
 
-### Option 3: Install with Rust
+### Option 3: Other Package Managers
+
+Apart from Homebrew, qsv is also distributed by other package managers and distros. See [Repology](https://repology.org/project/qsv/versions) for more info.
+
+### Option 4: Install with Rust
 
 If you have [Rust installed](https://www.rust-lang.org/tools/install), you can also install from source using Rust's cargo command[^1]:
 
@@ -170,7 +174,7 @@ cargo install qsv --locked --bin qsvlite -F lite
 cargo install qsv --locked --bin qsvdp -F datapusher_plus,luau
 ```
 
-### Option 4: Compile from Source
+### Option 5: Compile from Source
 
 Compiling from source also works similarly[^1]:
 
