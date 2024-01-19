@@ -8,7 +8,6 @@
 [![Clones](https://img.shields.io/badge/dynamic/json?color=success&label=clones&query=count&url=https://gist.githubusercontent.com/jqnatividad/13f60ad0b54856a55f60b8e653079349/raw/clone.json&logo=github)](https://github.com/MShawon/github-clone-count-badge)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/05fdfbc6ddb24e7c829d0c6c3ce82d18)](https://app.codacy.com/gh/jqnatividad/qsv/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![Discussions](https://img.shields.io/github/discussions/jqnatividad/qsv)](https://github.com/jqnatividad/qsv/discussions)
-[![HomeBrew](https://img.shields.io/homebrew/v/qsv?logo=homebrew)](https://formulae.brew.sh/formula/qsv)
 [![Crates.io](https://img.shields.io/crates/v/qsv.svg?logo=crates.io)](https://crates.io/crates/qsv)
 [![Crates.io downloads](https://img.shields.io/crates/d/qsv?color=orange&label=crates.io%20downloads)](https://crates.io/crates/qsv)
 [![Minimum supported Rust version](https://img.shields.io/badge/Rust-1.75.0-red?logo=rust)](#minimum-supported-rust-version)
@@ -129,21 +128,13 @@ cargo install zipsign
 zipsign verify zip <PREBUILT-BINARY-ARCHIVE.zip> qsv-zipsign-public.key
 ```
 
-### Option 2: Homebrew
+### Option 2: Package Managers & Distributions
 
-For [macOS and Linux (64-bit)](https://formulae.brew.sh/formula/qsv), you can quickly install qsv with [Homebrew](https://brew.sh). However, only the `apply` and `luau` [features](#feature-flags) are enabled.
-
-```
-brew install qsv
-```
-
-### Option 3: Other Package Managers
-
-Apart from Homebrew, qsv is also distributed by other package managers and distros. See [Repology](https://repology.org/project/qsv/versions) for more info.
+qsv is also distributed by several package managers and distros. Check each package manager's/distro's documentation for installation instructions.
 
 [![Packaging status](https://repology.org/badge/vertical-allrepos/qsv.svg)](https://repology.org/project/qsv/versions)
 
-### Option 4: Install with Rust
+### Option 3: Install with Rust
 
 If you have [Rust installed](https://www.rust-lang.org/tools/install), you can also install from source using Rust's cargo command[^1]:
 
@@ -176,7 +167,7 @@ cargo install qsv --locked --bin qsvlite -F lite
 cargo install qsv --locked --bin qsvdp -F datapusher_plus,luau
 ```
 
-### Option 5: Compile from Source
+### Option 4: Compile from Source
 
 Compiling from source also works similarly[^1]:
 
