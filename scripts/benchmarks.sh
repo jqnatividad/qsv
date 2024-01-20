@@ -42,7 +42,7 @@
 arg_pat="$1"
 
 # the version of this script
-bm_version=3.12.0
+bm_version=3.13.0
 
 # CONFIGURABLE VARIABLES ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -471,6 +471,7 @@ run join "$qsv_bin" join \'Community Board\' "$data" community_board communitybo
 run join_casei "$qsv_bin" join \'Community Board\' "$data" community_board --ignore-case communityboards.csv
 run joinp "$qsv_bin" joinp \'Community Board\' "$data" community_board communityboards.csv
 run jsonl "$qsv_bin" jsonl benchmark_data.jsonl
+run jsonl_j1 "$qsv_bin" jsonl -j 1 benchmark_data.jsonl
 run luau_filter "$qsv_bin" luau filter \"Location == \'\'\" "$data"
 run luau_filter_colidx "$qsv_bin" luau filter --colindex \"Location == \'\'\" "$data"
 run luau_filter_no_globals "$qsv_bin" luau filter --no-globals \"Location == \'\'\" "$data"
