@@ -88,6 +88,7 @@ use csv::ByteRecord;
 use grex::RegExpBuilder;
 use itertools::Itertools;
 use log::{debug, error, info, warn};
+use rayon::slice::ParallelSliceMut;
 use serde::Deserialize;
 use serde_json::{json, value::Number, Map, Value};
 use stats::Frequencies;
@@ -678,7 +679,7 @@ fn construct_map_of_unique_values(
         let header_string = convert_to_string(header_byte_slice)?;
 
         // sort the values so enum list so schema can be diff'ed between runs
-        unique_values.sort_unstable();
+        unique_values.par_sort_unstable();
 
         // if log::log_enabled!(log::Level::Debug) {
         //     // we do this as this debug is relatively expensive
