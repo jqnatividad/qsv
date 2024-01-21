@@ -20,6 +20,8 @@ Usage:
     qsv tojsonl --help
 
 Tojsonl options:
+    --trim                 Trim leading and trailing whitespace from fields
+                           before converting to JSON.
     -j, --jobs <arg>       The number of jobs to run in parallel.
                            When not set, the number of jobs is set to the
                            number of CPUs detected.
@@ -54,6 +56,7 @@ use crate::{
 #[derive(Deserialize, Clone)]
 struct Args {
     arg_input:      Option<String>,
+    flag_trim:      bool,
     flag_jobs:      Option<usize>,
     flag_batch:     u32,
     flag_delimiter: Option<Delimiter>,
@@ -281,7 +284,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 let mut header_key = Value::String(String::new());
                 let mut temp_val = Value::String(String::new());
 
-                record.trim();
+                if args.flag_trim {
+                    record.trim();
+                }
                 write!(temp_string, "{{").unwrap();
                 for (idx, field) in record.iter().enumerate() {
                     let field_val = if let Some(field_type) = field_type_vec.get(idx) {
