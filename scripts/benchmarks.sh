@@ -42,7 +42,7 @@
 arg_pat="$1"
 
 # the version of this script
-bm_version=3.13.0
+bm_version=3.14.0
 
 # CONFIGURABLE VARIABLES ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -564,6 +564,8 @@ run to_parquet "$qsv_bin" to parquet benchmark_work "$data"
 run to_datapackage "$qsv_bin" to datapackage benchmark_work.json "$data"
 run tojsonl "$qsv_bin" tojsonl "$data"
 run tojsonl_j1 "$qsv_bin" tojsonl -j 1 "$data"
+run tojsonl_trim "$qsv_bin" tojsonl --trim "$data"
+run tojsonl_trim_j1 "$qsv_bin" tojsonl --trim -j 1 "$data"
 run --index tojsonl_index "$qsv_bin" tojsonl "$data"
 run --index tojsonl_index_j1 "$qsv_bin" tojsonl --jobs 1 "$data"
 run transpose "$qsv_bin" transpose "$data"
