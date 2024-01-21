@@ -78,6 +78,60 @@ k,l
 }
 
 #[test]
+fn split_a_lot() {
+    let wrk = Workdir::new("split_a_lot");
+    wrk.create("in.csv", data(true));
+
+    let mut cmd = wrk.command("split");
+    cmd.args(["--size", "1000"])
+        .arg(&wrk.path("."))
+        .arg("in.csv");
+    wrk.run(&mut cmd);
+
+    split_eq!(
+        wrk,
+        "0.csv",
+        "\
+h1,h2
+a,b
+c,d
+e,f
+g,h
+i,j
+k,l
+"
+    );
+    assert!(!wrk.path("1.csv").exists());
+}
+
+#[test]
+fn split_a_lot_indexed() {
+    let wrk = Workdir::new("split_a_lot_indexed");
+    wrk.create_indexed("in.csv", data(true));
+
+    let mut cmd = wrk.command("split");
+    cmd.args(["--size", "1000"])
+        .arg(&wrk.path("."))
+        .arg("in.csv");
+    wrk.run(&mut cmd);
+
+    split_eq!(
+        wrk,
+        "0.csv",
+        "\
+h1,h2
+a,b
+c,d
+e,f
+g,h
+i,j
+k,l
+"
+    );
+    assert!(!wrk.path("1.csv").exists());
+}
+
+#[test]
 fn split_padding() {
     let wrk = Workdir::new("split");
     wrk.create("in.csv", data(true));
