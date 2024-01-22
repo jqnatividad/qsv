@@ -1,4 +1,6 @@
 // NOTE: these tests are meant for the cities15000 dataset
+use serial_test::serial;
+
 use crate::workdir::Workdir;
 
 #[test]
@@ -963,6 +965,7 @@ fn geocode_suggest_dyncols_fmt() {
 }
 
 #[test]
+#[serial]
 fn geocode_reverse_dyncols_fmt() {
     let wrk = Workdir::new("geocode_reverse_dyncols_fmt");
     wrk.create(
@@ -1063,6 +1066,7 @@ fn geocode_reverse_dyncols_fmt() {
 }
 
 #[test]
+#[serial]
 fn geocode_countryinfo() {
     let wrk = Workdir::new("geocode_countryinfo");
     wrk.create(
@@ -1100,6 +1104,7 @@ fn geocode_countryinfo() {
 }
 
 #[test]
+#[serial]
 fn geocode_countryinfo_formatstr() {
     let wrk = Workdir::new("geocode_countryinfo_formatstr");
     wrk.create(
@@ -1144,6 +1149,7 @@ fn geocode_countryinfo_formatstr() {
 }
 
 #[test]
+#[serial]
 fn geocode_countryinfo_formatstr_pretty_json() {
     let wrk = Workdir::new("geocode_countryinfo_formatstr_pretty_json");
     wrk.create(
@@ -1364,6 +1370,7 @@ fn geocode_countryinfo_formatstr_pretty_json() {
 }
 
 #[test]
+#[serial]
 fn geocode_countryinfonow() {
     let wrk = Workdir::new("geocode_countryinfonow");
     let mut cmd = wrk.command("geocode");
@@ -1375,6 +1382,7 @@ fn geocode_countryinfonow() {
 }
 
 #[test]
+#[serial]
 fn geocode_countryinfonow_formatstr() {
     let wrk = Workdir::new("geocode_countryinfonow_formatstr");
 
@@ -1394,6 +1402,7 @@ fn geocode_countryinfonow_formatstr() {
 }
 
 #[test]
+#[serial]
 fn geocode_countryinfonow_formatstr_pretty_json() {
     let wrk = Workdir::new("geocode_countryinfonow_formatstr_pretty_json");
     let mut cmd = wrk.command("geocode");
