@@ -91,6 +91,8 @@ pub struct Config {
     prefer_dmy:        bool,
     comment:           Option<u8>,
     snappy:            bool, // flag to enable snappy compression/decompression
+    read_buffer:       usize,
+    write_buffer:      usize,
 }
 
 // Empty trait as an alias for Seek and Read that avoids auto trait errors
@@ -105,6 +107,22 @@ impl Config {
         };
         let (path, mut delim, snappy) = match *path {
             None => (None, default_delim, false),
+            // WIP: support remote files; currently only http(s) is supported
+            // Some(ref s) if s.starts_with("http") && Url::parse(s).is_ok() => {
+            //     let mut snappy = false;
+            //     let delim = if s.ends_with(".csv.sz") {
+            //         snappy = true;
+            //         b','
+            //     } else if s.ends_with(".tsv.sz") || s.ends_with(".tab.sz") {
+            //         snappy = true;
+            //         b'\t'
+            //     } else {
+            //         default_delim
+            //     };
+            //     // download the file to a temporary location
+            //     util::download_file()
+            //     (Some(PathBuf::from(s)), delim, snappy)
+            // },
             Some(ref s) if &**s == "-" => (None, default_delim, false),
             Some(ref s) => {
                 let path = PathBuf::from(s);
@@ -182,6 +200,14 @@ impl Config {
             prefer_dmy: util::get_envvar_flag("QSV_PREFER_DMY"),
             comment: None,
             snappy,
+            read_buffer: std::env::var("QSV_RDR_BUFFER_CAPACITY")
+                .unwrap_or_else(|_| DEFAULT_RDR_BUFFER_CAPACITY.to_string())
+                .parse()
+                .unwrap_or(DEFAULT_RDR_BUFFER_CAPACITY),
+            write_buffer: std::env::var("QSV_WTR_BUFFER_CAPACITY")
+                .unwrap_or_else(|_| DEFAULT_WTR_BUFFER_CAPACITY.to_string())
+                .parse()
+                .unwrap_or(DEFAULT_WTR_BUFFER_CAPACITY),
         }
     }
 
@@ -265,6 +291,24 @@ impl Config {
 
     pub const fn trim(mut self, trim_type: csv::Trim) -> Config {
         self.trim = trim_type;
+        self
+    }
+
+    pub const fn get_read_buffer(&self) -> usize {
+        self.read_buffer
+    }
+
+    pub const fn read_buffer(mut self, buffer: usize) -> Config {
+        self.read_buffer = buffer;
+        self
+    }
+
+    pub const fn get_write_buffer(&self) -> usize {
+        self.write_buffer
+    }
+
+    pub const fn write_buffer(mut self, buffer: usize) -> Config {
+        self.write_buffer = buffer;
         self
     }
 
@@ -486,10 +530,6 @@ impl Config {
 
     #[allow(clippy::wrong_self_convention)]
     pub fn from_reader<R: Read>(&self, rdr: R) -> csv::Reader<R> {
-        let rdr_capacitys = env::var("QSV_RDR_BUFFER_CAPACITY")
-            .unwrap_or_else(|_| DEFAULT_RDR_BUFFER_CAPACITY.to_string());
-        let rdr_buffer: usize = rdr_capacitys.parse().unwrap_or(DEFAULT_RDR_BUFFER_CAPACITY);
-
         let rdr_comment: Option<u8> = if let Ok(comment_char) = env::var("QSV_COMMENT_CHAR") {
             Some(comment_char.as_bytes().first().unwrap().to_owned())
         } else {
@@ -503,7 +543,7 @@ impl Config {
             .quote(self.quote)
             .quoting(self.quoting)
             .escape(self.escape)
-            .buffer_capacity(rdr_buffer)
+            .buffer_capacity(self.read_buffer)
             .comment(rdr_comment)
             .trim(self.trim)
             .from_reader(rdr)
@@ -529,10 +569,6 @@ impl Config {
 
     #[allow(clippy::wrong_self_convention)]
     pub fn from_writer<W: io::Write>(&self, mut wtr: W) -> csv::Writer<W> {
-        let wtr_capacitys = env::var("QSV_WTR_BUFFER_CAPACITY")
-            .unwrap_or_else(|_| DEFAULT_WTR_BUFFER_CAPACITY.to_string());
-        let wtr_buffer: usize = wtr_capacitys.parse().unwrap_or(DEFAULT_WTR_BUFFER_CAPACITY);
-
         if util::get_envvar_flag("QSV_OUTPUT_BOM") {
             wtr.write_all("\u{FEFF}".as_bytes()).unwrap();
         }
@@ -545,7 +581,7 @@ impl Config {
             .quote_style(self.quote_style)
             .double_quote(self.double_quote)
             .escape(self.escape.unwrap_or(b'\\'))
-            .buffer_capacity(wtr_buffer)
+            .buffer_capacity(self.write_buffer)
             .from_writer(wtr)
     }
 }
