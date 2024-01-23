@@ -617,7 +617,7 @@ END {
 }
 
 #[test]
-// #[ignore = "Temporarily skip this as Boston CityScore Summary is currently unavailable"]
+#[ignore = "Temporarily skip this as Boston CityScore Summary is currently unavailable"]
 fn luau_register_lookup_table_ckan() {
     let wrk = Workdir::new("luau_register_lookup_ckan");
     wrk.create(
