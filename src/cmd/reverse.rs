@@ -46,14 +46,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers);
 
-    let mut rdr = rconfig.reader()?;
-    let mut wtr = Config::new(&args.flag_output).writer()?;
+    // quadruple the buffer sizes as this is IO intensive
+    let mut rdr = rconfig
+        .clone()
+        .read_buffer(rconfig.get_read_buffer() * 4)
+        .reader()?;
+    let mut wtr = Config::new(&args.flag_output)
+        .write_buffer(rconfig.get_write_buffer() * 4)
+        .writer()?;
 
     let Some(mut idx_file) = rconfig.indexed()? else {
         // we don't have an index, we need to read the entire file into memory
         // we're loading the entire file into memory, we need to check avail mem
-        if let Some(path) = rconfig.path.clone() {
-            util::mem_file_check(&path, false, args.flag_memcheck)?;
+        if let Some(ref path) = rconfig.path {
+            util::mem_file_check(path, false, args.flag_memcheck)?;
         }
 
         let mut all = rdr.byte_records().collect::<Result<Vec<_>, _>>()?;
