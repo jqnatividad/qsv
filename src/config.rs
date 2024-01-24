@@ -91,8 +91,8 @@ pub struct Config {
     prefer_dmy:        bool,
     comment:           Option<u8>,
     snappy:            bool, // flag to enable snappy compression/decompression
-    read_buffer:       usize,
-    write_buffer:      usize,
+    pub read_buffer:   u32,
+    pub write_buffer:  u32,
 }
 
 // Empty trait as an alias for Seek and Read that avoids auto trait errors
@@ -203,11 +203,11 @@ impl Config {
             read_buffer: std::env::var("QSV_RDR_BUFFER_CAPACITY")
                 .unwrap_or_else(|_| DEFAULT_RDR_BUFFER_CAPACITY.to_string())
                 .parse()
-                .unwrap_or(DEFAULT_RDR_BUFFER_CAPACITY),
+                .unwrap_or(DEFAULT_RDR_BUFFER_CAPACITY as u32),
             write_buffer: std::env::var("QSV_WTR_BUFFER_CAPACITY")
                 .unwrap_or_else(|_| DEFAULT_WTR_BUFFER_CAPACITY.to_string())
                 .parse()
-                .unwrap_or(DEFAULT_WTR_BUFFER_CAPACITY),
+                .unwrap_or(DEFAULT_WTR_BUFFER_CAPACITY as u32),
         }
     }
 
@@ -294,20 +294,12 @@ impl Config {
         self
     }
 
-    pub const fn get_read_buffer(&self) -> usize {
-        self.read_buffer
-    }
-
-    pub const fn read_buffer(mut self, buffer: usize) -> Config {
+    pub const fn read_buffer(mut self, buffer: u32) -> Config {
         self.read_buffer = buffer;
         self
     }
 
-    pub const fn get_write_buffer(&self) -> usize {
-        self.write_buffer
-    }
-
-    pub const fn write_buffer(mut self, buffer: usize) -> Config {
+    pub const fn write_buffer(mut self, buffer: u32) -> Config {
         self.write_buffer = buffer;
         self
     }
@@ -543,7 +535,7 @@ impl Config {
             .quote(self.quote)
             .quoting(self.quoting)
             .escape(self.escape)
-            .buffer_capacity(self.read_buffer)
+            .buffer_capacity(self.read_buffer as usize)
             .comment(rdr_comment)
             .trim(self.trim)
             .from_reader(rdr)
@@ -581,7 +573,7 @@ impl Config {
             .quote_style(self.quote_style)
             .double_quote(self.double_quote)
             .escape(self.escape.unwrap_or(b'\\'))
-            .buffer_capacity(self.write_buffer)
+            .buffer_capacity(self.write_buffer as usize)
             .from_writer(wtr)
     }
 }
