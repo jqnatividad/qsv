@@ -2,6 +2,7 @@
 
 | Variable | Description |
 | --- | --- |
+| `QSV_DOTENV_PATH` | The filename of the dotenv file to load, OVERRIDING existing environment variables. This takes precedence over any other dotenv file in the filesystem. |
 | `QSV_DEFAULT_DELIMITER` | single ascii character to use as delimiter.  Overrides `--delimiter` option. Defaults to "," (comma) for CSV files & "\t" (tab) for TSV files when not set. Note that this will also set the delimiter for qsv's output to stdout.<br>However, using the `--output` option, regardless of this environment variable, will automatically change the delimiter used in the generated file based on the file extension - i.e. comma for `.csv`, tab for `.tsv` & `.tab` files. |
 | `QSV_SNIFF_DELIMITER` | if set, the delimiter is automatically detected. Overrides `QSV_DEFAULT_DELIMITER` & `--delimiter` option. Note that this does not work with stdin. |
 | `QSV_NO_HEADERS` | if set, the first row will **NOT** be interpreted as headers. Supersedes `QSV_TOGGLE_HEADERS`. |
@@ -54,7 +55,8 @@ qsv supports the use of `.env` files to set environment variables. The `.env` fi
 
 It processes `.env` files as follows:
 
-* Upon invocation, qsv will look for a file named `.env` in the current working directory. If one is found, it will be processed.
+* Upon invocation, qsv will check if the `QSV_DOTENV_PATH` environment variable is set. If it is, it will look for the file specified by the variable. If the file is found, it will be processed.
+* If the `QSV_DOTENV_PATH` environment variable is not set, qsv will look for a file named `.env` in the current working directory. If one is found, it will be processed.
 * If no `.env` file is not found in the current working directory, qsv will next look for an `.env` file with the same filestem as the binary in the directory where the binary is (e.g. if `qsv`/`qsvlite`/`qsvdp` is in `/usr/local/bin`, it will look for `/usr/local/bin/qsv.env`, `/usr/local/bin/qsvlite.env` or `/usr/local/bin/qsvdp.env` respectively).
 * If no `.env` files are found, qsv will proceed with its default settings and the current environment variables, which may include "QSV_" variables.
 
