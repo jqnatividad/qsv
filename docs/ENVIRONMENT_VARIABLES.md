@@ -2,7 +2,7 @@
 
 | Variable | Description |
 | --- | --- |
-| `QSV_DOTENV_PATH` | The filename of the dotenv file to load, OVERRIDING existing environment variables. This takes precedence over any other dotenv file in the filesystem. |
+| `QSV_DOTENV_PATH` | The full pathname of the dotenv file to load, OVERRIDING existing environment variables. This takes precedence over any other dotenv files in the filesystem. |
 | `QSV_DEFAULT_DELIMITER` | single ascii character to use as delimiter.  Overrides `--delimiter` option. Defaults to "," (comma) for CSV files & "\t" (tab) for TSV files when not set. Note that this will also set the delimiter for qsv's output to stdout.<br>However, using the `--output` option, regardless of this environment variable, will automatically change the delimiter used in the generated file based on the file extension - i.e. comma for `.csv`, tab for `.tsv` & `.tab` files. |
 | `QSV_SNIFF_DELIMITER` | if set, the delimiter is automatically detected. Overrides `QSV_DEFAULT_DELIMITER` & `--delimiter` option. Note that this does not work with stdin. |
 | `QSV_NO_HEADERS` | if set, the first row will **NOT** be interpreted as headers. Supersedes `QSV_TOGGLE_HEADERS`. |

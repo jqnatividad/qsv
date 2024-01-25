@@ -1225,12 +1225,14 @@ pub fn load_dotenv() -> CliResult<()> {
     // whatever manually set environment variables are present.
 
     if let Ok(dotenv_path) = std::env::var("QSV_DOTENV_PATH") {
-        if let Err(e) = dotenvy::from_filename_override(dotenv_path.clone()) {
+        let canonical_dotenv_path = std::fs::canonicalize(dotenv_path)?;
+        if let Err(e) = dotenvy::from_filename_override(canonical_dotenv_path.clone()) {
             return fail_clierror!(
-                "Cannot process .env file set in QSV_DOTENV_PATH - {dotenv_path}: {e}"
+                "Cannot process .env file set in QSV_DOTENV_PATH - {}: {e}",
+                canonical_dotenv_path.display()
             );
         }
-        log::info!("Using .env file: {dotenv_path}");
+        log::info!("Using .env file: {}", canonical_dotenv_path.display());
         return Ok(());
     }
 
