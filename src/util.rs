@@ -1216,11 +1216,23 @@ pub fn transform(bs: &[u8], casei: bool) -> ByteString {
 }
 
 pub fn load_dotenv() -> CliResult<()> {
-    // Use the default .env file in the current directory.
+    // First, check if there is a QSV_DOTENV_PATH environment variable set
+    // if there is, use that as the .env file.
+    // Second, use the default .env file in the current directory.
     // If there is no .env file in the current directory, check if there is
     // an .env file with the same filestem as the binary, in the same directory as the binary.
     // If there is, use that. Failing that, qsv proceeds with its default settings and
     // whatever manually set environment variables are present.
+
+    if let Ok(dotenv_path) = std::env::var("QSV_DOTENV_PATH") {
+        if let Err(e) = dotenvy::from_filename_override(dotenv_path.clone()) {
+            return fail_clierror!(
+                "Cannot process .env file set in QSV_DOTENV_PATH - {dotenv_path}: {e}"
+            );
+        }
+        log::info!("Using .env file: {dotenv_path}");
+        return Ok(());
+    }
 
     // check if there is an .env file in the current directory
     if dotenvy::dotenv_override().is_ok() {
